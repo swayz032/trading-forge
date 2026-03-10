@@ -1,0 +1,136 @@
+"""Performance gates, tier classification, and Forge Score.
+
+Hard minimums from CLAUDE.md — all metrics on walk-forward OOS data only.
+"""
+
+from __future__ import annotations
+
+
+def check_performance_gate(stats: dict) -> tuple[bool, list[str]]:
+    """Check hard minimum performance requirements.
+
+    All metrics must be from walk-forward OUT-OF-SAMPLE data.
+
+    Returns:
+        (passed, rejection_reasons)
+    """
+    rejections: list[str] = []
+
+    # Earnings power
+    if stats["avg_daily_pnl"] < 250:
+        rejections.append(
+            f"avg_daily_pnl ${stats['avg_daily_pnl']:.0f} < $250 minimum. "
+            f"Strategy earns ${stats['avg_daily_pnl'] * 20:.0f}/month — not worth one account."
+        )
+
+    # Daily survival: 60%+ winning days
+    win_rate = stats["winning_days"] / stats["total_trading_days"]
+    if win_rate < 0.60:
+        rejections.append(
+            f"Win rate by days {win_rate:.0%} < 60% minimum. "
+            f"{stats['total_trading_days'] - stats['winning_days']} losing days "
+            f"out of {stats['total_trading_days']} — too inconsistent."
+        )
+
+    # Worst month
+    if stats.get("worst_month_win_days", 0) < 10:
+        rejections.append(
+            f"Worst month had only {stats['worst_month_win_days']} winning days. "
+            f"Minimum 10 required."
+        )
+
+    # Profit factor
+    if stats["profit_factor"] < 1.75:
+        rejections.append(
+            f"Profit factor {stats['profit_factor']:.2f} < 1.75 minimum."
+        )
+
+    # Sharpe
+    if stats["sharpe_ratio"] < 1.5:
+        rejections.append(
+            f"Sharpe ratio {stats['sharpe_ratio']:.2f} < 1.5 minimum."
+        )
+
+    # Winner/loser ratio
+    if stats.get("avg_winner_to_loser_ratio", 0) < 1.5:
+        rejections.append(
+            f"Avg winner/loser ratio {stats['avg_winner_to_loser_ratio']:.2f} < 1.5."
+        )
+
+    # Max drawdown
+    if stats["max_drawdown"] >= 2500:
+        rejections.append(
+            f"Max drawdown ${stats['max_drawdown']:.0f} >= $2,500. "
+            f"Exceeds most prop firm limits."
+        )
+
+    # Consecutive losers
+    if stats.get("max_consecutive_losing_days", 0) > 4:
+        rejections.append(
+            f"Max consecutive losing days: {stats['max_consecutive_losing_days']}. "
+            f"Maximum 4 allowed."
+        )
+
+    # Red days vs green days
+    avg_loss = abs(stats.get("avg_loss_on_red_days", 0))
+    avg_win = stats.get("avg_win_on_green_days", 0)
+    if avg_loss > avg_win and avg_loss > 0:
+        rejections.append(
+            f"Avg loss on red days (${avg_loss:.0f}) > "
+            f"avg win on green days (${avg_win:.0f}) — unsustainable."
+        )
+
+    return (len(rejections) == 0, rejections)
+
+
+def classify_tier(stats: dict) -> str:
+    """Classify strategy into performance tier.
+
+    TIER_1: $500+/day, 14+ win days, <$1,500 DD, PF >= 2.5, Sharpe >= 2.0
+    TIER_2: $350+/day, 13+ win days, <$2,000 DD, PF >= 2.0, Sharpe >= 1.75
+    TIER_3: $250+/day, 12+ win days, <$2,500 DD, PF >= 1.75, Sharpe >= 1.5
+    """
+    pnl = stats["avg_daily_pnl"]
+    win_days = stats["winning_days"] / stats["total_trading_days"] * 20
+    dd = stats["max_drawdown"]
+    pf = stats["profit_factor"]
+    sharpe = stats["sharpe_ratio"]
+
+    if pnl >= 500 and win_days >= 14 and dd < 1500 and pf >= 2.5 and sharpe >= 2.0:
+        return "TIER_1"
+    if pnl >= 350 and win_days >= 13 and dd < 2000 and pf >= 2.0 and sharpe >= 1.75:
+        return "TIER_2"
+    if pnl >= 250 and win_days >= 12 and dd < 2500 and pf >= 1.75 and sharpe >= 1.5:
+        return "TIER_3"
+    return "REJECTED"
+
+
+def compute_forge_score(stats: dict) -> float:
+    """Compute Forge Score (0-100).
+
+    Components:
+    - Earnings power (0-30): avg_daily_pnl scaled
+    - Daily survival (0-25): win day rate scaled
+    - Drawdown vs prop firm (0-20): distance from $2,500 limit
+    - Walk-forward consistency (0-25): Sharpe + profit factor
+
+    Returns:
+        float score 0-100
+    """
+    # Earnings power (0-30): $250 = 0, $750+ = 30
+    earnings = min(30, max(0, (stats["avg_daily_pnl"] - 250) / 500 * 30))
+
+    # Daily survival (0-25): 60% = 0, 80%+ = 25
+    win_rate = stats["winning_days"] / stats["total_trading_days"]
+    survival = min(25, max(0, (win_rate - 0.60) / 0.20 * 25))
+
+    # Drawdown vs prop firm (0-20): $2,500 = 0, $500 = 20
+    dd = stats["max_drawdown"]
+    drawdown_score = min(20, max(0, (2500 - dd) / 2000 * 20))
+
+    # Walk-forward consistency (0-25): based on Sharpe and PF
+    sharpe_part = min(12.5, max(0, (stats["sharpe_ratio"] - 1.5) / 1.5 * 12.5))
+    pf_part = min(12.5, max(0, (stats["profit_factor"] - 1.75) / 1.25 * 12.5))
+    consistency = sharpe_part + pf_part
+
+    return round(earnings + survival + drawdown_score + consistency, 1)
