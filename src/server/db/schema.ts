@@ -194,3 +194,27 @@ export const auditLog = pgTable(
     index("audit_entity_idx").on(table.entityType, table.entityId),
   ]
 );
+
+// ─── Data Sync Jobs ──────────────────────────────────────────────
+export const dataSyncJobs = pgTable(
+  "data_sync_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    symbol: text("symbol").notNull(),
+    source: text("source").notNull().default("databento"), // databento | massive | alphavantage
+    startDate: timestamp("start_date").notNull(),
+    endDate: timestamp("end_date").notNull(),
+    status: text("status").notNull().default("pending"), // pending | running | completed | failed
+    costUsd: numeric("cost_usd"),
+    rowsDownloaded: integer("rows_downloaded"),
+    rollsDetected: integer("rolls_detected"),
+    errorMessage: text("error_message"),
+    metadata: jsonb("metadata"), // Pipeline result JSON
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    completedAt: timestamp("completed_at"),
+  },
+  (table) => [
+    index("sync_jobs_symbol_idx").on(table.symbol),
+    index("sync_jobs_status_idx").on(table.status),
+  ]
+);
