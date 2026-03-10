@@ -314,7 +314,7 @@ def run_prop_compliance(
             "max_drawdown_limit": firm["max_drawdown"],
             "drawdown_used": round(dd_used, 2),
             "eval_cost": round(eval_cost, 2),
-            "months_to_pass": round(months_to_pass, 1) if months_to_pass != float("inf") else None,
+            "months_to_pass": round(months_to_pass, 1) if months_to_pass is not None and months_to_pass != float("inf") else None,
             "payout_split": firm["payout_split"],
             "ongoing_fee": firm["ongoing_fee"],
         }
