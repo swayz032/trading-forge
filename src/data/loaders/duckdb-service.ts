@@ -124,7 +124,7 @@ export async function listAvailableSymbols(): Promise<string[]> {
       ORDER BY symbol
     `;
     const rows = await database.all(sql);
-    return rows.map((r: { symbol: string }) => r.symbol);
+    return rows.map((r) => (r as { symbol: string }).symbol);
   } catch {
     // Fallback: try listing via S3 prefix patterns
     return [];
