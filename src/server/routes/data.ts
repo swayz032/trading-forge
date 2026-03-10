@@ -14,7 +14,7 @@ export const dataRoutes = Router();
 // ─── Validation Schemas ──────────────────────────────────────────
 
 const ohlcvQuerySchema = z.object({
-  timeframe: z.enum(["1min", "5min", "15min", "1hour", "daily"]).default("daily"),
+  timeframe: z.enum(["1min", "5min", "15min", "30min", "1hour", "4hour", "daily"]).default("daily"),
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   adjusted: z

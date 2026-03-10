@@ -17,14 +17,15 @@ from pathlib import Path
 
 import databento as db
 
-# Symbol → Databento continuous contract mapping
+# Symbol → Databento continuous front-month contract mapping
+# stype_in="continuous" with .c.0 = front month continuous
 SYMBOL_MAP = {
-    "ES": "ES.FUT",
-    "NQ": "NQ.FUT",
-    "CL": "CL.FUT",
-    "YM": "YM.FUT",
-    "RTY": "RTY.FUT",
-    "GC": "GC.FUT",
+    "ES": "ES.c.0",
+    "NQ": "NQ.c.0",
+    "CL": "CL.c.0",
+    "YM": "YM.c.0",
+    "RTY": "RTY.c.0",
+    "GC": "GC.c.0",
 }
 
 DATASET = "GLBX.MDP3"
@@ -46,6 +47,7 @@ def check_cost(client: db.Historical, symbol: str, start: str, end: str) -> floa
     cost = client.metadata.get_cost(
         dataset=DATASET,
         symbols=[dbn_symbol],
+        stype_in="continuous",
         schema="ohlcv-1m",
         start=start,
         end=end,
@@ -73,6 +75,7 @@ def download(
     data = client.timeseries.get_range(
         dataset=DATASET,
         symbols=[dbn_symbol],
+        stype_in="continuous",
         schema="ohlcv-1m",
         start=start,
         end=end,

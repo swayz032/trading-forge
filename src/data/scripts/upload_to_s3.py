@@ -10,6 +10,7 @@ Usage:
 """
 
 import argparse
+import io
 import json
 import os
 import sys
@@ -56,7 +57,9 @@ def upload_partitioned(
         key = f"futures/{symbol}/{kind}/{timeframe}/{year}/{month}/{day}.parquet"
 
         # Write to bytes buffer
-        buf = day_df.write_parquet(None)
+        buf_io = io.BytesIO()
+        day_df.write_parquet(buf_io)
+        buf = buf_io.getvalue()
 
         try:
             s3_client.put_object(Bucket=bucket, Key=key, Body=buf)

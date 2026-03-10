@@ -20,7 +20,9 @@ from upload_to_s3 import upload_partitioned, get_s3_client
 TIMEFRAMES = {
     "5min": "5m",
     "15min": "15m",
+    "30min": "30m",
     "1hour": "1h",
+    "4hour": "4h",
     "daily": "1d",
 }
 
