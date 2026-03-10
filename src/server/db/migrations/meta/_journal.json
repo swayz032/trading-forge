@@ -8,6 +8,13 @@
       "when": 1773101512065,
       "tag": "0000_previous_nuke",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773110707715,
+      "tag": "0001_flashy_hercules",
+      "breakpoints": true
     }
   ]
 }

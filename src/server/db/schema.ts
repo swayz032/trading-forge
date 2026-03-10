@@ -38,6 +38,7 @@ export const backtests = pgTable(
     timeframe: text("timeframe").notNull(),
     startDate: timestamp("start_date").notNull(),
     endDate: timestamp("end_date").notNull(),
+    status: text("status").notNull().default("pending"), // pending | running | completed | failed
     totalReturn: numeric("total_return"),
     sharpeRatio: numeric("sharpe_ratio"),
     maxDrawdown: numeric("max_drawdown"),
@@ -45,12 +46,24 @@ export const backtests = pgTable(
     profitFactor: numeric("profit_factor"),
     totalTrades: integer("total_trades"),
     avgTradePnl: numeric("avg_trade_pnl"),
+    avgDailyPnl: numeric("avg_daily_pnl"),
+    forgeScore: numeric("forge_score"),
+    tier: text("tier"), // TIER_1 | TIER_2 | TIER_3 | REJECTED
     equityCurve: jsonb("equity_curve"),
     monthlyReturns: jsonb("monthly_returns"),
+    dailyPnls: jsonb("daily_pnls"),
+    config: jsonb("config"), // Snapshot of strategy config used
+    walkForwardResults: jsonb("walk_forward_results"),
+    propCompliance: jsonb("prop_compliance"),
+    errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [index("backtests_strategy_idx").on(table.strategyId)]
+  (table) => [
+    index("backtests_strategy_idx").on(table.strategyId),
+    index("backtests_status_idx").on(table.status),
+    index("backtests_tier_idx").on(table.tier),
+  ]
 );
 
 // ─── Backtest Trades ─────────────────────────────────────────
