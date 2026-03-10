@@ -15,12 +15,15 @@
     "forge": "tsx scripts/cli.ts"
   },
   "dependencies": {
-    "express": "^5.2.1",
-    "drizzle-orm": "^0.45.1",
-    "postgres": "^3.4.7",
+    "@aws-sdk/client-s3": "^3.1005.0",
+    "@aws-sdk/lib-storage": "^3.1005.0",
     "dotenv": "^16.5.0",
+    "drizzle-orm": "^0.45.1",
+    "duckdb-async": "^1.4.2",
+    "express": "^5.2.1",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
+    "postgres": "^3.4.7",
     "zod": "^3.24.0"
   },
   "devDependencies": {
