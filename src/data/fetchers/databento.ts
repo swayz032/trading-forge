@@ -11,80 +11,108 @@
  */
 
 import { spawn } from "child_process";
+import { resolve } from "path";
 
-interface DatabentoConfig {
-  apiKey: string;
-  outputDir: string;
+const SCRIPT_PATH = resolve(
+  import.meta.dirname ?? ".",
+  "../scripts/databento_download.py"
+);
+
+interface DownloadResult {
+  status: string;
+  path?: string;
+  rows?: number;
+  columns?: string[];
+  cost_usd?: number;
+  mode?: string;
+  message?: string;
 }
 
-interface FetchRequest {
-  dataset: string; // e.g., "GLBX.MDP3" (CME Globex)
-  symbols: string[]; // e.g., ["ES.FUT", "NQ.FUT"]
-  schema: "trades" | "ohlcv-1m" | "ohlcv-1h" | "ohlcv-1d";
-  startDate: string; // ISO date
-  endDate: string;
-  outputFormat: "parquet" | "csv";
-}
-
-export function createDatabentoFetcher(config: DatabentoConfig) {
-  const { apiKey, outputDir } = config;
-
-  async function fetchHistorical(request: FetchRequest): Promise<string> {
-    // Databento Python SDK is the primary interface
-    // Node spawns Python subprocess for downloads
-    const script = `
-import databento as db
-client = db.Historical("${apiKey}")
-data = client.timeseries.get_range(
-    dataset="${request.dataset}",
-    symbols=${JSON.stringify(request.symbols)},
-    schema="${request.schema}",
-    start="${request.startDate}",
-    end="${request.endDate}",
-)
-output_path = "${outputDir}/${request.symbols[0]}_${request.schema}_${request.startDate}_${request.endDate}.parquet"
-data.to_parquet(output_path)
-print(output_path)
-`;
-
-    return new Promise((resolve, reject) => {
-      const proc = spawn("python3", ["-c", script]);
-      let output = "";
-      let error = "";
-
-      proc.stdout.on("data", (data) => (output += data.toString()));
-      proc.stderr.on("data", (data) => (error += data.toString()));
-      proc.on("close", (code) => {
-        if (code === 0) resolve(output.trim());
-        else reject(new Error(`Databento fetch failed: ${error}`));
-      });
+function runPythonScript(args: string[]): Promise<DownloadResult> {
+  return new Promise((resolve, reject) => {
+    // Try python first (Windows), fall back to python3
+    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    const proc = spawn(pythonCmd, [SCRIPT_PATH, ...args], {
+      env: { ...process.env },
     });
+
+    let stdout = "";
+    let stderr = "";
+
+    proc.stdout.on("data", (data) => (stdout += data.toString()));
+    proc.stderr.on("data", (data) => (stderr += data.toString()));
+    proc.on("close", (code) => {
+      if (code === 0) {
+        try {
+          resolve(JSON.parse(stdout.trim()));
+        } catch {
+          reject(new Error(`Failed to parse output: ${stdout}`));
+        }
+      } else {
+        reject(new Error(`Databento script failed (exit ${code}): ${stderr}`));
+      }
+    });
+    proc.on("error", (err) => {
+      if (pythonCmd === "python") {
+        // Retry with python3
+        const proc2 = spawn("python3", [SCRIPT_PATH, ...args], {
+          env: { ...process.env },
+        });
+        let stdout2 = "";
+        let stderr2 = "";
+        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
+        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
+        proc2.on("close", (code) => {
+          if (code === 0) {
+            try {
+              resolve(JSON.parse(stdout2.trim()));
+            } catch {
+              reject(new Error(`Failed to parse output: ${stdout2}`));
+            }
+          } else {
+            reject(new Error(`Databento script failed: ${stderr2}`));
+          }
+        });
+        proc2.on("error", () => reject(err));
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
+
+export function createDatabentoFetcher(config: { outputDir: string }) {
+  const { outputDir } = config;
+
+  async function fetchHistorical(
+    symbol: string,
+    startDate: string,
+    endDate: string
+  ): Promise<DownloadResult> {
+    return runPythonScript([
+      "--symbol", symbol,
+      "--start", startDate,
+      "--end", endDate,
+      "--output-dir", outputDir,
+    ]);
   }
 
-  async function getCost(request: FetchRequest): Promise<number> {
-    // Check cost before downloading to preserve credits
-    const script = `
-import databento as db
-client = db.Historical("${apiKey}")
-cost = client.metadata.get_cost(
-    dataset="${request.dataset}",
-    symbols=${JSON.stringify(request.symbols)},
-    schema="${request.schema}",
-    start="${request.startDate}",
-    end="${request.endDate}",
-)
-print(cost)
-`;
-
-    return new Promise((resolve, reject) => {
-      const proc = spawn("python3", ["-c", script]);
-      let output = "";
-      proc.stdout.on("data", (data) => (output += data.toString()));
-      proc.on("close", (code) => {
-        if (code === 0) resolve(parseFloat(output.trim()));
-        else reject(new Error("Cost check failed"));
-      });
-    });
+  async function getCost(
+    symbol: string,
+    startDate: string,
+    endDate: string
+  ): Promise<number> {
+    const result = await runPythonScript([
+      "--symbol", symbol,
+      "--start", startDate,
+      "--end", endDate,
+      "--output-dir", outputDir,
+      "--dry-run",
+    ]);
+    if (result.status === "error") {
+      throw new Error(result.message ?? "Cost check failed");
+    }
+    return result.cost_usd ?? 0;
   }
 
   return { fetchHistorical, getCost };
