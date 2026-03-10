@@ -86,6 +86,9 @@ export class AgentService {
     // 3. Run backtest (reuses existing Python bridge)
     const result = await runBacktest(strategyId, backtestConfig);
 
+    const tier = "tier" in result ? result.tier : null;
+    const forgeScore = "forge_score" in result ? result.forge_score : null;
+
     // 4. Log to systemJournal
     await db.insert(systemJournal).values({
       strategyId,
@@ -94,8 +97,8 @@ export class AgentService {
       generationPrompt: input.one_sentence,
       strategyCode: input.python_code,
       strategyParams: input.params,
-      forgeScore: result.forge_score != null ? String(result.forge_score) : null,
-      tier: result.tier ?? null,
+      forgeScore: forgeScore != null ? String(forgeScore) : null,
+      tier: tier ?? null,
       status: result.status === "completed" ? "tested" : "failed",
     });
 
@@ -108,20 +111,20 @@ export class AgentService {
       result: {
         backtestId: result.id,
         status: result.status,
-        tier: result.tier,
-        forge_score: result.forge_score,
+        tier,
+        forge_score: forgeScore,
       },
       status: result.status === "completed" ? "success" : "failure",
     });
 
-    logger.info({ strategyId, backtestId: result.id, tier: result.tier }, "Agent strategy run complete");
+    logger.info({ strategyId, backtestId: result.id, tier }, "Agent strategy run complete");
 
     return {
       strategyId,
       backtestId: result.id,
       status: result.status,
-      tier: result.tier,
-      forgeScore: result.forge_score,
+      tier,
+      forgeScore,
     };
   }
 
