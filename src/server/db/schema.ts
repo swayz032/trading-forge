@@ -114,6 +114,19 @@ export const monteCarloRuns = pgTable("monte_carlo_runs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// ─── Stress Test Runs ────────────────────────────────────────
+export const stressTestRuns = pgTable("stress_test_runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  backtestId: uuid("backtest_id")
+    .references(() => backtests.id)
+    .notNull(),
+  passed: boolean("passed").notNull(),
+  scenarios: jsonb("scenarios").notNull(), // Array of per-scenario results
+  failedScenarios: jsonb("failed_scenarios"), // Array of scenario names that failed
+  executionTimeMs: integer("execution_time_ms"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ─── Market Data Metadata ────────────────────────────────────
 export const marketDataMeta = pgTable(
   "market_data_meta",

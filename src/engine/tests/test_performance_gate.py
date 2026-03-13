@@ -189,3 +189,75 @@ class TestForgeScore:
         score_low = compute_forge_score(stats_low)
         score_high = compute_forge_score(stats_high)
         assert score_high > score_low
+
+    # ─── MC-Enhanced Forge Score Tests ────────────────────────────
+
+    def test_mc_results_increase_score(self):
+        """MC data should add to the score vs no MC data."""
+        stats = _tier1_stats()
+        score_no_mc = compute_forge_score(stats)
+        mc_results = {
+            "probability_of_ruin": 0.005,  # 99.5% survival
+            "sharpe_distribution": {"p5": 1.8, "p95": 2.5},
+        }
+        score_with_mc = compute_forge_score(stats, mc_results=mc_results)
+        assert score_with_mc > score_no_mc
+
+    def test_backward_compat_no_mc(self):
+        """None MC still works — same as before."""
+        stats = _tier1_stats()
+        score = compute_forge_score(stats, mc_results=None, crisis_results=None)
+        assert 0 <= score <= 100
+
+    def test_mc_survival_scoring(self):
+        """99%+ survival = 10 pts, 90% = 0 pts."""
+        stats = _tier1_stats()
+        mc_good = {"probability_of_ruin": 0.005, "sharpe_distribution": {"p5": 2.0, "p95": 2.5}}
+        mc_bad = {"probability_of_ruin": 0.10, "sharpe_distribution": {"p5": 2.0, "p95": 2.5}}
+        score_good = compute_forge_score(stats, mc_results=mc_good)
+        score_bad = compute_forge_score(stats, mc_results=mc_bad)
+        assert score_good > score_bad
+
+    def test_sharpe_stability_scoring(self):
+        """Narrow Sharpe spread = more points."""
+        stats = _tier1_stats()
+        mc_narrow = {"probability_of_ruin": 0.01, "sharpe_distribution": {"p5": 2.0, "p95": 2.3}}
+        mc_wide = {"probability_of_ruin": 0.01, "sharpe_distribution": {"p5": 0.5, "p95": 3.0}}
+        score_narrow = compute_forge_score(stats, mc_results=mc_narrow)
+        score_wide = compute_forge_score(stats, mc_results=mc_wide)
+        assert score_narrow > score_wide
+
+    def test_crisis_bonus_all_pass(self):
+        """All 8 crises pass = 5 bonus pts."""
+        stats = _tier1_stats()
+        mc = {"probability_of_ruin": 0.005, "sharpe_distribution": {"p5": 2.0, "p95": 2.3}}
+        crisis_all_pass = {"passed": True, "scenarios": [{"passed": True}] * 8}
+        score_with_crisis = compute_forge_score(stats, mc_results=mc, crisis_results=crisis_all_pass)
+        score_no_crisis = compute_forge_score(stats, mc_results=mc, crisis_results=None)
+        assert score_with_crisis > score_no_crisis
+
+    def test_crisis_bonus_some_fail(self):
+        """Partial failure = reduced bonus."""
+        stats = _tier1_stats()
+        mc = {"probability_of_ruin": 0.005, "sharpe_distribution": {"p5": 2.0, "p95": 2.3}}
+        crisis_partial = {
+            "passed": False,
+            "scenarios": [{"passed": True}] * 7 + [{"passed": False}],
+        }
+        crisis_all_pass = {"passed": True, "scenarios": [{"passed": True}] * 8}
+        score_partial = compute_forge_score(stats, mc_results=mc, crisis_results=crisis_partial)
+        score_all = compute_forge_score(stats, mc_results=mc, crisis_results=crisis_all_pass)
+        assert score_all > score_partial
+
+    def test_score_capped_at_100(self):
+        """Score should never exceed 100 even with crisis bonus."""
+        stats = _tier1_stats()
+        stats["avg_daily_pnl"] = 1000.0  # Max earnings
+        stats["winning_days"] = 19
+        stats["max_drawdown"] = 200.0
+        stats["sharpe_ratio"] = 4.0
+        stats["profit_factor"] = 5.0
+        mc = {"probability_of_ruin": 0.001, "sharpe_distribution": {"p5": 3.0, "p95": 3.2}}
+        crisis = {"passed": True, "scenarios": [{"passed": True}] * 8}
+        score = compute_forge_score(stats, mc_results=mc, crisis_results=crisis)
+        assert score <= 100

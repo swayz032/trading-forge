@@ -105,17 +105,22 @@ def classify_tier(stats: dict) -> str:
     return "REJECTED"
 
 
-def compute_forge_score(stats: dict) -> float:
+def compute_forge_score(
+    stats: dict,
+    mc_results: dict | None = None,
+    crisis_results: dict | None = None,
+) -> float:
     """Compute Forge Score (0-100).
 
     Components:
     - Earnings power (0-30): avg_daily_pnl scaled
     - Daily survival (0-25): win day rate scaled
     - Drawdown vs prop firm (0-20): distance from $2,500 limit
-    - Walk-forward consistency (0-25): Sharpe + profit factor
+    - MC + Walk-forward (0-25): MC survival (0-10) + WF consistency (0-10) + Sharpe stability (0-5)
+    - Crisis bonus (0-5): bonus pts for surviving historical crises (capped at 100)
 
     Returns:
-        float score 0-100
+        float score 0-100 (capped)
     """
     # Earnings power (0-30): $250 = 0, $750+ = 30
     earnings = min(30, max(0, (stats["avg_daily_pnl"] - 250) / 500 * 30))
@@ -128,9 +133,43 @@ def compute_forge_score(stats: dict) -> float:
     dd = stats["max_drawdown"]
     drawdown_score = min(20, max(0, (2500 - dd) / 2000 * 20))
 
-    # Walk-forward consistency (0-25): based on Sharpe and PF
-    sharpe_part = min(12.5, max(0, (stats["sharpe_ratio"] - 1.5) / 1.5 * 12.5))
-    pf_part = min(12.5, max(0, (stats["profit_factor"] - 1.75) / 1.25 * 12.5))
-    consistency = sharpe_part + pf_part
+    # MC + Walk-forward (0-25)
+    if mc_results is not None:
+        # MC survival rate (0-10): 99%+ = 10, 90% = 0, linear
+        ruin = mc_results.get("probability_of_ruin", 1.0)
+        survival_rate = 1.0 - ruin
+        mc_survival = min(10, max(0, (survival_rate - 0.90) / 0.09 * 10))
 
-    return round(earnings + survival + drawdown_score + consistency, 1)
+        # Walk-forward OOS consistency (0-10): Sharpe + PF from stats
+        sharpe_wf = min(5, max(0, (stats["sharpe_ratio"] - 1.5) / 1.5 * 5))
+        pf_wf = min(5, max(0, (stats["profit_factor"] - 1.75) / 1.25 * 5))
+        wf_consistency = sharpe_wf + pf_wf
+
+        # Sharpe stability (0-5): MC Sharpe spread (p95 - p5)
+        sharpe_dist = mc_results.get("sharpe_distribution", {})
+        spread = sharpe_dist.get("p95", 5.0) - sharpe_dist.get("p5", 0.0)
+        sharpe_stability = min(5, max(0, (2.0 - spread) / 1.5 * 5))
+
+        consistency = mc_survival + wf_consistency + sharpe_stability
+    else:
+        # Backward compat: original Sharpe + PF method
+        sharpe_part = min(12.5, max(0, (stats["sharpe_ratio"] - 1.5) / 1.5 * 12.5))
+        pf_part = min(12.5, max(0, (stats["profit_factor"] - 1.75) / 1.25 * 12.5))
+        consistency = sharpe_part + pf_part
+
+    base_score = earnings + survival + drawdown_score + consistency
+
+    # Crisis bonus (0-5): all pass = 5, lose ~0.6 per failure, 0 if 2+ fail
+    crisis_bonus = 0.0
+    if crisis_results is not None:
+        scenarios = crisis_results.get("scenarios", [])
+        if scenarios:
+            passed_count = sum(1 for s in scenarios if s.get("passed", False))
+            total = len(scenarios)
+            failed_count = total - passed_count
+            if failed_count >= 2:
+                crisis_bonus = 0.0
+            elif total > 0:
+                crisis_bonus = (passed_count / total) * 5.0
+
+    return round(min(100, base_score + crisis_bonus), 1)

@@ -9,6 +9,7 @@ import { dataRoutes } from "./routes/data.js";
 import { indicatorRoutes } from "./routes/indicators.js";
 import { backtestRoutes } from "./routes/backtests.js";
 import { agentRoutes } from "./routes/agent.js";
+import { monteCarloRoutes } from "./routes/monte-carlo.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -40,6 +41,7 @@ app.use("/api/data", dataRoutes);
 app.use("/api/indicators", indicatorRoutes);
 app.use("/api/backtests", backtestRoutes);
 app.use("/api/agent", agentRoutes);
+app.use("/api/monte-carlo", monteCarloRoutes);
 
 app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);

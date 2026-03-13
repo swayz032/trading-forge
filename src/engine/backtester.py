@@ -49,12 +49,15 @@ def _compute_daily_pnls(equity: np.ndarray) -> list[float]:
 def run_backtest(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,
+    fill_rate: float = 1.0,
 ) -> dict:
     """Run a single backtest and return metrics dict.
 
     Args:
         request: Backtest configuration
         data: Optional pre-loaded data (for testing). If None, loads from S3.
+        fill_rate: Fraction of entry signals to keep (0.0-1.0). Used for
+            crisis stress testing to simulate reduced fill rates.
 
     Returns:
         dict with metrics, equity_curve, trades, daily_pnls, execution_time_ms
@@ -81,7 +84,7 @@ def run_backtest(
     df = compute_indicators(data, indicator_configs)
 
     # ─── Generate signals ─────────────────────────────────────
-    df = generate_signals(df, config)
+    df = generate_signals(df, config, fill_rate=fill_rate)
 
     # ─── Position sizing ──────────────────────────────────────
     sizes = compute_position_sizes(df, config.position_size, spec, atr_period)

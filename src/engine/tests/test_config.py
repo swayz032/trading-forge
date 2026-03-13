@@ -9,6 +9,9 @@ from src.engine.config import (
     StrategyConfig,
     BacktestRequest,
     BacktestResult,
+    MonteCarloRequest,
+    CrisisScenario,
+    StressTestRequest,
     CONTRACT_SPECS,
 )
 
@@ -170,3 +173,120 @@ class TestBacktestRequest:
         )
         assert req.commission_per_side == 4.50
         assert req.slippage_ticks == 1.0
+
+
+# ─── Monte Carlo Request ─────────────────────────────────────────
+
+class TestMonteCarloRequest:
+    def test_defaults(self):
+        mc = MonteCarloRequest(backtest_id="abc-123")
+        assert mc.num_simulations == 10_000
+        assert mc.method == "both"
+        assert mc.use_gpu is True
+        assert mc.initial_capital == 100_000.0
+        assert mc.max_paths_to_store == 100
+        assert mc.ruin_threshold == 0.0
+        assert mc.confidence_levels == [0.05, 0.25, 0.50, 0.75, 0.95]
+
+    def test_custom_values(self):
+        mc = MonteCarloRequest(
+            backtest_id="abc-123",
+            num_simulations=500,
+            method="trade_resample",
+            use_gpu=False,
+            initial_capital=50_000.0,
+            max_paths_to_store=50,
+            ruin_threshold=10_000.0,
+        )
+        assert mc.num_simulations == 500
+        assert mc.method == "trade_resample"
+        assert mc.use_gpu is False
+        assert mc.initial_capital == 50_000.0
+
+    def test_invalid_method_rejected(self):
+        with pytest.raises(ValueError):
+            MonteCarloRequest(backtest_id="abc", method="invalid_method")
+
+    def test_valid_methods(self):
+        for m in ["trade_resample", "return_bootstrap", "both"]:
+            mc = MonteCarloRequest(backtest_id="abc", method=m)
+            assert mc.method == m
+
+    def test_num_simulations_must_be_positive(self):
+        with pytest.raises(ValueError):
+            MonteCarloRequest(backtest_id="abc", num_simulations=0)
+
+    def test_serialization_roundtrip(self):
+        mc = MonteCarloRequest(backtest_id="abc-123", num_simulations=5000)
+        restored = MonteCarloRequest.model_validate_json(mc.model_dump_json())
+        assert restored.backtest_id == mc.backtest_id
+        assert restored.num_simulations == mc.num_simulations
+
+
+# ─── Crisis Scenario ─────────────────────────────────────────────
+
+class TestCrisisScenario:
+    def test_defaults(self):
+        cs = CrisisScenario(
+            name="COVID Crash",
+            start_date="2020-02-01",
+            end_date="2020-04-30",
+        )
+        assert cs.spread_multiplier == 3.0
+        assert cs.fill_rate == 0.50
+        assert cs.slippage_multiplier == 2.0
+
+    def test_custom_stress_params(self):
+        cs = CrisisScenario(
+            name="Extreme",
+            start_date="2008-09-01",
+            end_date="2008-12-31",
+            spread_multiplier=5.0,
+            fill_rate=0.25,
+            slippage_multiplier=4.0,
+        )
+        assert cs.spread_multiplier == 5.0
+        assert cs.fill_rate == 0.25
+        assert cs.slippage_multiplier == 4.0
+
+    def test_fill_rate_bounds(self):
+        with pytest.raises(ValueError):
+            CrisisScenario(name="X", start_date="2020-01-01", end_date="2020-02-01", fill_rate=1.5)
+        with pytest.raises(ValueError):
+            CrisisScenario(name="X", start_date="2020-01-01", end_date="2020-02-01", fill_rate=-0.1)
+
+
+# ─── Stress Test Request ─────────────────────────────────────────
+
+class TestStressTestRequest:
+    def _make_strategy(self):
+        return StrategyConfig(
+            name="Test",
+            symbol="ES",
+            timeframe="daily",
+            indicators=[IndicatorConfig(type="sma", period=20)],
+            entry_long="close > sma_20",
+            entry_short="close < sma_20",
+            exit="close < sma_20",
+            stop_loss=StopConfig(type="atr", multiplier=2.0),
+            position_size=PositionSizeConfig(type="dynamic_atr", target_risk_dollars=500),
+        )
+
+    def test_defaults(self):
+        req = StressTestRequest(
+            backtest_id="abc-123",
+            strategy=self._make_strategy(),
+        )
+        assert req.scenarios == []
+        assert req.prop_firm_max_dd == 2000.0
+
+    def test_custom_scenarios(self):
+        scenario = CrisisScenario(name="Test", start_date="2020-01-01", end_date="2020-03-01")
+        req = StressTestRequest(
+            backtest_id="abc",
+            strategy=self._make_strategy(),
+            scenarios=[scenario],
+            prop_firm_max_dd=1500.0,
+        )
+        assert len(req.scenarios) == 1
+        assert req.prop_firm_max_dd == 1500.0

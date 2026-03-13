@@ -142,3 +142,50 @@ class BacktestResult(BaseModel):
     forge_score: float = 0.0
     walk_forward_results: Optional[dict] = None
     prop_compliance: Optional[dict] = None
+
+
+# ─── Monte Carlo Request ─────────────────────────────────────────
+
+class MonteCarloRequest(BaseModel):
+    backtest_id: str
+    num_simulations: int = 10_000
+    method: Literal["trade_resample", "return_bootstrap", "both"] = "both"
+    confidence_levels: list[float] = [0.05, 0.25, 0.50, 0.75, 0.95]
+    ruin_threshold: float = 0.0
+    initial_capital: float = 100_000.0
+    use_gpu: bool = True
+    max_paths_to_store: int = 100
+
+    @field_validator("num_simulations")
+    @classmethod
+    def validate_num_simulations(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("num_simulations must be >= 1")
+        return v
+
+
+# ─── Crisis Scenario ─────────────────────────────────────────────
+
+class CrisisScenario(BaseModel):
+    name: str
+    start_date: str  # YYYY-MM-DD
+    end_date: str    # YYYY-MM-DD
+    spread_multiplier: float = 3.0
+    fill_rate: float = 0.50
+    slippage_multiplier: float = 2.0
+
+    @field_validator("fill_rate")
+    @classmethod
+    def validate_fill_rate(cls, v: float) -> float:
+        if v < 0.0 or v > 1.0:
+            raise ValueError("fill_rate must be between 0.0 and 1.0")
+        return v
+
+
+# ─── Stress Test Request ─────────────────────────────────────────
+
+class StressTestRequest(BaseModel):
+    backtest_id: str
+    strategy: StrategyConfig
+    scenarios: list[CrisisScenario] = []
+    prop_firm_max_dd: float = 2000.0

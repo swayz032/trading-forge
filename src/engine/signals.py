@@ -122,15 +122,35 @@ def evaluate_expression(df: pl.DataFrame, expression: str) -> pl.Series:
 def generate_signals(
     df: pl.DataFrame,
     config: StrategyConfig,
+    fill_rate: float = 1.0,
+    fill_rate_seed: int | None = None,
 ) -> pl.DataFrame:
     """Generate entry/exit boolean signal columns from strategy config.
+
+    Args:
+        df: DataFrame with indicator columns
+        config: Strategy configuration
+        fill_rate: Fraction of entry signals to keep (0.0-1.0). Used for
+            crisis stress testing to simulate partial fills.
+        fill_rate_seed: Random seed for fill rate masking (reproducibility)
 
     Returns DataFrame with added columns:
         entry_long, entry_short, exit_long, exit_short
     """
+    import numpy as np
+
     entry_long = evaluate_expression(df, config.entry_long)
     entry_short = evaluate_expression(df, config.entry_short)
     exit_expr = evaluate_expression(df, config.exit)
+
+    # Apply fill rate mask to entry signals (crisis stress simulation)
+    if fill_rate < 1.0:
+        rng = np.random.default_rng(fill_rate_seed)
+        n = len(df)
+        mask_long = pl.Series("mask", rng.random(n) < fill_rate)
+        mask_short = pl.Series("mask", rng.random(n) < fill_rate)
+        entry_long = entry_long & mask_long
+        entry_short = entry_short & mask_short
 
     return df.with_columns([
         entry_long.alias("entry_long"),
