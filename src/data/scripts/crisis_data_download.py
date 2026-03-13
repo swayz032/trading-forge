@@ -1,8 +1,9 @@
 """
 Crisis Period Data Downloader
 
-Downloads targeted date ranges for 8 historical crisis scenarios from Databento.
-Only downloads pre-2020 data (2008-2019) since 2020-2026 is already available.
+Downloads targeted date ranges for historical crisis scenarios from Databento.
+Only downloads data available in GLBX.MDP3 (starts 2010-06-06).
+2008 and 2010 Flash Crash are NOT available — stress tests use synthetic degradation.
 
 Usage:
     python crisis_data_download.py --symbols ES,NQ,CL --dry-run
@@ -15,13 +16,18 @@ import os
 import sys
 from pathlib import Path
 
-# Pre-2020 crisis periods that need data download
-# Post-2020 periods already have data (2020-2026 in S3)
+# Downloadable crisis periods (GLBX.MDP3 starts 2010-06-06)
+# 2008 Financial Crisis and 2010 Flash Crash are NOT available on Databento
 CRISIS_PERIODS = {
-    "2008_financial_crisis": ("2008-09-01", "2008-12-31"),
-    "2010_flash_crash": ("2010-04-15", "2010-06-15"),
     "2015_china_devaluation": ("2015-08-01", "2015-09-30"),
     "2018_volmageddon": ("2018-01-15", "2018-03-31"),
+}
+
+# Periods NOT available on Databento (pre-2010-06-06)
+# Stress tests use synthetic degradation for these
+UNAVAILABLE_PERIODS = {
+    "2008_financial_crisis": ("2008-09-01", "2008-12-31"),
+    "2010_flash_crash": ("2010-04-15", "2010-06-15"),
 }
 
 # Post-2020 periods — data already available, no download needed
@@ -88,12 +94,15 @@ def download_period(client, symbol: str, start: str, end: str, output_dir: Path)
 
     data.to_parquet(str(out_path))
 
+    # DBNStore doesn't support len(); get row count from file size
+    file_size_mb = out_path.stat().st_size / (1024 * 1024)
+
     return {
         "symbol": symbol,
         "start": start,
         "end": end,
         "path": str(out_path),
-        "rows": len(data),
+        "file_size_mb": round(file_size_mb, 2),
     }
 
 
@@ -125,7 +134,7 @@ def main():
                 if not args.dry_run:
                     result = download_period(client, symbol, start, end, output_dir)
                     results.append(result)
-                    print(f"  -> Downloaded {result['rows']} rows to {result['path']}")
+                    print(f"  -> Downloaded {result['file_size_mb']}MB to {result['path']}")
 
             except Exception as e:
                 print(f"{period_name:<30} {symbol:<6} ERROR: {e}")
@@ -141,6 +150,10 @@ def main():
 
     print(f"\nNote: Post-2020 crisis periods already have data in S3:")
     for name, (start, end) in EXISTING_PERIODS.items():
+        print(f"  {name}: {start} to {end}")
+
+    print(f"\nUnavailable on Databento (pre-2010-06-06, stress tests use synthetic degradation):")
+    for name, (start, end) in UNAVAILABLE_PERIODS.items():
         print(f"  {name}: {start} to {end}")
 
 
