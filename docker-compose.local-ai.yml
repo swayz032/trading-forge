@@ -1,0 +1,81 @@
+# Trading Forge — Local AI Stack
+# Ollama (GPU), Redis (Upstash-compatible), pgvector extension
+#
+# Usage:
+#   docker compose -f docker-compose.local-ai.yml up -d
+#   docker compose -f docker-compose.local-ai.yml down
+
+services:
+
+  # ─── Ollama — Local LLM server ───────────────────────────────────
+  # Models: trading-quant (qwen3-coder:30b), llama3.1:8b (critic)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: trading-forge-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./ollama:/modelfiles:ro
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_MAX_LOADED_MODELS=2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── Redis — Session cache + job queue ───────────────────────────
+  # Drop-in replacement for Upstash Redis (same API)
+  redis:
+    image: redis:7-alpine
+    container_name: trading-forge-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ─── PostgreSQL + pgvector — Local dev database ──────────────────
+  # Use this for local dev only; prod uses Railway PostgreSQL
+  postgres-local:
+    image: pgvector/pgvector:pg16
+    container_name: trading-forge-postgres-local
+    restart: unless-stopped
+    ports:
+      - "5433:5432"           # 5433 to avoid conflict with local postgres
+    volumes:
+      - postgres_local_data:/var/lib/postgresql/data
+      - ./scripts/init-pgvector.sql:/docker-entrypoint-initdb.d/01-pgvector.sql:ro
+    environment:
+      POSTGRES_DB: trading_forge
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: localdev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d trading_forge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ollama_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_local_data:
+    driver: local

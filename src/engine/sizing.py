@@ -19,6 +19,7 @@ def compute_position_sizes(
     config: PositionSizeConfig,
     contract_spec: ContractSpec,
     atr_period: int = 14,
+    max_contracts: int | None = None,
 ) -> np.ndarray:
     """Compute position sizes for each bar.
 
@@ -27,6 +28,8 @@ def compute_position_sizes(
         config: Position sizing configuration
         contract_spec: Contract specifications for the symbol
         atr_period: ATR period to look up column name
+        max_contracts: Optional firm contract cap. When provided,
+            sizes are clamped to this maximum.
 
     Returns:
         numpy array of integer contract counts per bar
@@ -53,4 +56,9 @@ def compute_position_sizes(
 
     # Floor and clamp min=1
     sizes = np.where(np.isnan(raw), np.nan, np.maximum(1, np.floor(raw)))
+
+    # Apply firm contract cap
+    if max_contracts is not None:
+        sizes = np.where(np.isnan(sizes), np.nan, np.minimum(sizes, max_contracts))
+
     return sizes

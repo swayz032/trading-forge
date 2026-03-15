@@ -166,3 +166,82 @@ def optimize_strategy(
         "n_trials": len(study.trials),
         "param_importance": dict(importance),
     }
+
+
+def run_robustness_test(
+    config: StrategyConfig,
+    data: pl.DataFrame,
+    n_trials: int = 800,
+) -> dict:
+    """Run Optuna study + robustness analysis.
+
+    Combines optimization with robustness checks. Returns both the
+    best parameters and analysis of how robust they are.
+
+    Args:
+        config: Strategy configuration
+        data: OHLCV data for optimization
+        n_trials: Number of Optuna trials
+
+    Returns:
+        dict with: best_params, best_score, n_trials, param_importance,
+                   robustness (is_robust, plateau_variance, etc.),
+                   robust_ranges (per-param min/max)
+    """
+    from src.engine.robustness import (
+        analyze_optuna_study,
+        compute_param_importance,
+        extract_robust_range,
+    )
+    from src.engine.backtester import run_backtest
+
+    space = _build_search_space(config)
+
+    if not space:
+        return {
+            "best_params": {},
+            "best_score": 0.0,
+            "n_trials": 0,
+            "param_importance": {},
+            "robustness": {"is_robust": False, "plateau_variance": 0.0},
+            "robust_ranges": {},
+        }
+
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+    def objective(trial: optuna.Trial) -> float:
+        params = {}
+        for p in space:
+            params[p["name"]] = trial.suggest_int(p["name"], p["low"], p["high"])
+
+        new_config = _apply_params(config, params, space)
+        request = BacktestRequest(
+            strategy=new_config,
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+        )
+
+        try:
+            result = run_backtest(request, data=data)
+            sharpe = result.get("sharpe_ratio", 0.0)
+            return -sharpe
+        except Exception:
+            return 0.0
+
+    sampler = optuna.samplers.TPESampler(seed=42)
+    study = optuna.create_study(sampler=sampler, direction="minimize")
+    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+
+    # Robustness analysis
+    robustness = analyze_optuna_study(study)
+    importance = compute_param_importance(study)
+    robust_ranges = extract_robust_range(study)
+
+    return {
+        "best_params": study.best_params,
+        "best_score": -study.best_value,
+        "n_trials": len(study.trials),
+        "param_importance": importance,
+        "robustness": robustness,
+        "robust_ranges": {k: list(v) for k, v in robust_ranges.items()},
+    }

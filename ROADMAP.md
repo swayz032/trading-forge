@@ -11,19 +11,19 @@
 2. [Infrastructure Map](#infrastructure-map)
 3. [Local AI Lab Setup — Skytech RTX + Ollama + n8n](#local-ai-lab-setup--skytech-rtx--ollama--n8n)
 4. [Institutional Edge — What the Top 1% Do](#institutional-edge--what-the-top-1-do)
-4. [Phase 0 — Foundation](#phase-0--foundation-week-1-2)
-5. [Phase 1 — Data Pipeline](#phase-1--data-pipeline-week-3-4)
-6. [Phase 2 — Backtest Engine](#phase-2--backtest-engine-week-5-7)
-7. [Phase 3 — Monte Carlo & Risk](#phase-3--monte-carlo--risk-week-8-9)
-8. [Phase 4 — AI Research Agents](#phase-4--ai-research-agents-week-10-12)
-9. [Phase 4.5 — OpenClaw Strategy Scout](#phase-45--openclaw-strategy-scout-week-12-13)
-10. [Phase 5 — Dashboard](#phase-5--dashboard-week-14-15)
-11. [Phase 6 — Live Paper Trading](#phase-6--live-paper-trading-week-16-17)
-12. [Phase 7 — Production Hardening](#phase-7--production-hardening-week-18-19)
-13. [Phase 8 — Prop Firm Integration](#phase-8--prop-firm-integration-week-20-23)
-12. [Budget Tracker](#budget-tracker)
-12. [Risk Register](#risk-register)
-13. [Decision Log](#decision-log)
+5. [Phase 0 — Foundation](#phase-0--foundation-week-1-2)
+6. [Phase 1 — Data Pipeline](#phase-1--data-pipeline-week-3-4)
+7. [Phase 2 — Backtest Engine](#phase-2--backtest-engine-week-5-7)
+8. [Phase 3 — Monte Carlo & Risk](#phase-3--monte-carlo--risk-week-8-9)
+9. [Phase 4 — AI Research Agents](#phase-4--ai-research-agents-week-10-12)
+10. [Phase 4.5 — OpenClaw Strategy Scout](#phase-45--openclaw-strategy-scout-week-12-13)
+11. [Phase 5 — Dashboard](#phase-5--dashboard-week-14-15)
+12. [Phase 6 — Live Paper Trading](#phase-6--live-paper-trading-week-16-17)
+13. [Phase 7 — Production Hardening](#phase-7--production-hardening-week-18-19)
+14. [Phase 8 — Prop Firm Integration](#phase-8--prop-firm-integration-week-20-23)
+15. [Budget Tracker](#budget-tracker)
+16. [Risk Register](#risk-register)
+17. [Decision Log](#decision-log)
 
 ---
 
@@ -36,7 +36,7 @@
 │  ┌──────────┐   ┌──────────────┐   ┌───────────────────┐   │
 │  │ Data     │   │ Backtest     │   │ AI Research       │   │
 │  │ Pipeline │──▶│ Engine       │──▶│ Agents            │   │
-│  │ (Node)   │   │ (Python)     │   │ (Ollama+Claude)   │   │
+│  │ (Node)   │   │ (Python)     │   │ (Ollama+n8n)   │   │
 │  └────┬─────┘   └──────┬───────┘   └────────┬──────────┘   │
 │       │                │                     │              │
 │       ▼                ▼                     ▼              │
@@ -784,14 +784,121 @@ Can define a strategy, run backtest on ES 5-year data, see equity curve + stats.
   - Results → Postgres
   - Instance auto-terminates
 
+- [ ] **3.7** Time-of-day liquidity profiles
+  ```
+  Session-based slippage multipliers (all times ET):
+    Overnight (8 PM - 4 AM ET):     2.0x base slippage — thin book, wide spreads
+    Pre-market (4 AM - 9:30 AM ET):  1.5x — liquidity building but still thin
+    RTH open (9:30 - 10:00 AM ET):   1.3x — volatile open, fast fills but wide
+    RTH core (10 AM - 3:30 PM ET):   1.0x — deepest liquidity, tightest spreads
+    RTH close (3:30 - 4 PM ET):      1.2x — MOC imbalances, wider
+    FOMC/CPI/NFP windows (±15 min):  3.0x — liquidity vacuum before, spike after
+  ```
+
+- [ ] **3.8** Economic calendar filter
+  ```
+  High-impact events (must handle):
+    - FOMC rate decisions (8x/year, 2 PM ET)
+    - CPI release (monthly, 8:30 AM ET)
+    - NFP / jobs report (first Friday, 8:30 AM ET)
+    - GDP advance estimate (quarterly, 8:30 AM ET)
+    - PCE inflation (monthly, 8:30 AM ET)
+
+  Strategy options per event:
+    1. SIT_OUT — no new entries ±30 min around event
+    2. REDUCE — 50% position size ±15 min
+    3. WIDEN — 2x stop distance during event window
+    4. IGNORE — strategy explicitly trades events (breakout strategies)
+
+  Default: SIT_OUT for all events unless strategy config overrides.
+  Source: Alpha Vantage economic calendar API (free tier).
+  ```
+
+- [ ] **3.9** Overnight gap risk model
+  ```
+  Separate from intraday slippage. Applies to strategies holding across sessions.
+    - Gap risk = historical gap distribution for symbol at session boundary
+    - ES avg overnight gap: ~5-15 pts (normal), 30-80 pts (event/crisis)
+    - CL avg overnight gap: ~$0.30-0.80 (normal), $2-5 (API report/geopolitical)
+    - NQ avg overnight gap: ~20-60 pts (normal), 100-300 pts (event/crisis)
+
+  Implementation:
+    - Tag each trade: INTRADAY_ONLY vs HOLDS_OVERNIGHT
+    - If HOLDS_OVERNIGHT: add gap risk to max adverse excursion (MAE) calculation
+    - Stop loss must account for gap-through risk (stop at $X doesn't mean fill at $X)
+    - Gap-adjusted drawdown used for prop firm compliance check
+  ```
+
+- [ ] **3.10** Fill probability model
+  ```
+  Not all limit orders fill. Model realistic fill rates:
+    - Market orders: 100% fill, slippage applies
+    - Limit at current price: ~95% fill rate
+    - Limit 1 tick away: ~80% fill rate
+    - Limit at support/resistance: ~50-70% fill rate (front-running, absorption)
+    - Limit at extreme (RSI > 80 reversal): ~40-60% fill rate
+
+  Impact on strategy metrics:
+    - Mean reversion strategies most affected (entries at extremes)
+    - Missed entries reduce trade count → changes win rate and daily P&L
+    - Partial fills: model as 50% position when fill probability < 70%
+
+  Backtest adjustment:
+    - For each limit entry, roll against fill probability
+    - Missed fill → no trade (not counted as win or loss)
+    - Reduces "theoretical" P&L to "realistic" P&L
+  ```
+
+- [ ] **3.11** Per-firm commission modeling
+  ```
+  Net P&L = Gross P&L - commissions - exchange fees - data fees
+  Commissions vary by firm and contract:
+
+  Per-side, per-contract (round-trip = 2x):
+    Topstep:        ES $2.52, NQ $2.52, CL $2.52
+    MFFU:           ES $1.58, NQ $1.58, CL $1.58
+    TPT:            ES $2.04, NQ $2.04, CL $2.04
+    Apex:           ES $2.64, NQ $2.64, CL $2.64
+    Tradeify:       ES $2.52, NQ $2.52, CL $2.52
+    Alpha Futures:  ES $2.04, NQ $2.04, CL $2.04
+    FFN:            ES $2.52, NQ $2.52, CL $2.52
+
+  Impact example:
+    Strategy trades 8 round-trips/day on ES:
+      MFFU:    8 × 2 × $1.58 = $25.28/day in commissions
+      Apex:    8 × 2 × $2.64 = $42.24/day in commissions
+      Delta:   $16.96/day → $339/month difference between cheapest and most expensive
+
+  Performance gate check uses NET P&L per firm, not gross.
+  A strategy making $260/day gross might pass at MFFU ($234 net) but fail at Apex ($218 net).
+  ```
+
+- [ ] **3.12** Firm contract cap enforcement in position sizing
+  ```
+  ATR-based sizing may request more contracts than firm allows:
+    Topstep 50K:    max 5 ES / 5 NQ / 10 CL
+    MFFU 50K:       max 5 ES / 5 NQ / 10 CL
+    TPT 50K:        max 3 ES / 3 NQ / 5 CL (stricter)
+    Apex 50K:       max 4 ES / 4 NQ / 10 CL
+    Tradeify 50K:   max 5 ES / 5 NQ / 10 CL
+
+  Enforcement:
+    position_size = min(atr_based_size, firm_max_contracts)
+
+  Backtester must run with firm cap applied:
+    - Low-vol periods: ATR sizing wants 8 ES → capped to 5 → lower P&L than uncapped backtest
+    - This changes daily P&L, drawdown profile, and Forge Score
+    - Each firm gets its own backtest variant (same strategy, different sizing caps)
+  ```
+
 ### Deliverable
-Any backtest can be Monte Carlo validated. Forge Score assigned. GPU burst working.
+Any backtest can be Monte Carlo validated. Forge Score assigned. GPU burst working. Backtest realism hardened with session liquidity, event filters, gap risk, fill probability, per-firm commissions, and contract caps.
 
 ---
 
 ## Phase 4 — AI Research Agents (Week 10-12)
 
-**Goal:** Use local LLMs + Claude to discover and refine **simple, robust** strategies.
+**Goal:** Use local LLMs (Ollama) + n8n + OpenClaw to discover and refine **simple, robust** strategies.
 
 ### Strategy Philosophy
 
@@ -1454,8 +1561,19 @@ Full dashboard with all visualizations. Can monitor everything from browser.
   - Pipeline health alerts (no strategies in development)
   - Daily P&L summary (per-strategy + portfolio aggregate)
 
+- [ ] **6.10** Dynamic correlation monitoring
+  - Recalculate portfolio correlation daily after market close (5 PM ET)
+  - Alert when correlation between any 2 deployed strategies spikes > 0.5
+  - During vol events, correlations converge — exactly when you need diversification most
+  - Auto-reduce combined position size when correlation > 0.5 to maintain portfolio heat limits
+
+- [ ] **6.11** Proactive decay prediction
+  - If regime indicators shift away from strategy's preferred regime, reduce allocation BEFORE Sharpe drops
+  - Example: trend strategy has preferred regime = ADX > 25. If ADX drops from 30 to 22 over 5 days, reduce allocation by 50% even though rolling Sharpe hasn't dropped yet
+  - Reactive decay detection (rolling Sharpe) catches decay after it happens. This catches it before.
+
 ### Deliverable
-Strategies running on live data (paper). Full institutional monitoring suite: execution tracking, decay detection, drift monitoring, multi-strategy portfolio management. Alerts firing. Forward-test validation.
+Strategies running on live data (paper). Full institutional monitoring suite: execution tracking, decay detection, drift monitoring, multi-strategy portfolio management. Proactive risk management. Alerts firing. Forward-test validation.
 
 ---
 
@@ -1472,9 +1590,13 @@ Strategies running on live data (paper). Full institutional monitoring suite: ex
 - [ ] **7.5** CI/CD: GitHub Actions for lint, test, deploy
 - [ ] **7.6** Documentation: API docs (OpenAPI), strategy authoring guide
 - [ ] **7.7** Performance: connection pooling, query optimization, caching
+- [ ] **7.8** Cross-strategy signal confirmation
+  - When 2+ uncorrelated deployed strategies independently generate the same directional signal at the same time, boost size by 25-50%
+  - Requires correlation < 0.3 between the agreeing strategies (otherwise it's the same signal twice)
+  - Free alpha from infrastructure already in place — just a portfolio manager overlay
 
 ### Deliverable
-Production-ready system. Can run unattended. Self-healing where possible.
+Production-ready system. Can run unattended. Self-healing where possible. Multi-strategy synergy.
 
 ---
 
@@ -1521,10 +1643,9 @@ Forge strategies validated via backtest/MC, scored against each firm's rules. AI
 | Massive | $0 | $0 | Free tier: Currencies, Indices, Options, Stocks Basic |
 | Alpha Vantage | $0 | $0 | Free tier: indicators, sentiment, MCP |
 | Ollama / Local AI | $0 | $0 | Runs on Skytech |
-| Claude API (occasional) | $5 | $60 | Heavy research months |
 | **Prop Firm Evals** | **$49-150** | **$588-1800** | **Topstep $49, MFFU $77, TPT $150** |
-| **Total (infra only)** | **$12** | **$144** | **All data providers are free** |
-| **Total (with 1 prop eval)** | **$61-162** | **$732-1,944** | **Revenue-generating cost** |
+| **Total (infra only)** | **$7** | **$84** | **All data providers and AI are free/local** |
+| **Total (with 1 prop eval)** | **$56-157** | **$672-1,884** | **Revenue-generating cost** |
 
 **AWS $100 credits allocation:**
 - S3: $24/year → covers ~4 years

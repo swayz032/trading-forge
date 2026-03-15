@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, sql, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, systemJournal, auditLog } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
@@ -33,6 +33,10 @@ export interface ScoutIdea {
   description: string;
   url?: string;
   summary?: string;
+  source_quality?: "high" | "medium" | "low";
+  confidence_score?: number;
+  instruments?: string[];
+  indicators_mentioned?: string[];
 }
 
 export class AgentService {
@@ -211,9 +215,10 @@ Respond in strict JSON:
   }
 
   async scoutIdeas(ideas: ScoutIdea[]) {
+    // Phase 1: Batch-level dedup (in-memory)
     const seen = new Set<string>();
-    const newIdeas: ScoutIdea[] = [];
-    let duplicateCount = 0;
+    const batchDeduped: Array<ScoutIdea & { title_hash: string }> = [];
+    let batchDuplicateCount = 0;
 
     for (const idea of ideas) {
       const hash = createHash("sha256")
@@ -221,13 +226,49 @@ Respond in strict JSON:
         .digest("hex");
 
       if (seen.has(hash)) {
-        duplicateCount++;
+        batchDuplicateCount++;
         continue;
       }
       seen.add(hash);
+      batchDeduped.push({ ...idea, title_hash: hash });
+    }
+
+    // Phase 2: Cross-time dedup — check system_journal for existing scouted entries
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const existingEntries = await db
+      .select({
+        titleHash: sql<string>`strategy_params->>'title_hash'`,
+        url: sql<string>`strategy_params->>'url'`,
+      })
+      .from(systemJournal)
+      .where(
+        and(
+          eq(systemJournal.status, "scouted"),
+          gte(systemJournal.createdAt, thirtyDaysAgo),
+        )
+      );
+
+    const existingHashes = new Set(existingEntries.map((e) => e.titleHash).filter(Boolean));
+    const existingUrls = new Set(existingEntries.map((e) => e.url).filter(Boolean));
+
+    const newIdeas: Array<ScoutIdea & { title_hash: string }> = [];
+    let crossTimeDuplicateCount = 0;
+
+    for (const idea of batchDeduped) {
+      if (existingHashes.has(idea.title_hash)) {
+        crossTimeDuplicateCount++;
+        continue;
+      }
+      if (idea.url && existingUrls.has(idea.url)) {
+        crossTimeDuplicateCount++;
+        continue;
+      }
       newIdeas.push(idea);
     }
 
+    // Phase 3: Insert new ideas
     const ideaIds: string[] = [];
 
     for (const idea of newIdeas) {
@@ -237,7 +278,15 @@ Respond in strict JSON:
           source: idea.source,
           generationPrompt: idea.summary ?? idea.description,
           strategyCode: null,
-          strategyParams: { title: idea.title, url: idea.url },
+          strategyParams: {
+            title: idea.title,
+            url: idea.url,
+            title_hash: idea.title_hash,
+            source_quality: idea.source_quality,
+            confidence_score: idea.confidence_score,
+            instruments: idea.instruments,
+            indicators_mentioned: idea.indicators_mentioned,
+          },
           status: "scouted",
         })
         .returning();
@@ -247,7 +296,8 @@ Respond in strict JSON:
     return {
       received: ideas.length,
       new_count: newIdeas.length,
-      duplicate_count: duplicateCount,
+      batch_duplicate_count: batchDuplicateCount,
+      cross_time_duplicate_count: crossTimeDuplicateCount,
       idea_ids: ideaIds,
     };
   }

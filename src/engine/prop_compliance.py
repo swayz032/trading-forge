@@ -9,6 +9,8 @@ from __future__ import annotations
 import math
 from typing import Optional
 
+from src.engine.firm_config import FIRM_COMMISSIONS
+
 
 # ─── Firm Configurations ──────────────────────────────────────────
 # All from docs/prop-firm-rules.md, exact 50K account specs
@@ -219,19 +221,56 @@ def check_ffn_express_consistency(
 
 # ─── Full Compliance Run ──────────────────────────────────────────
 
+def _compute_net_daily_pnls(
+    daily_pnls: list[float],
+    firm_key: str,
+    symbol: str = "ES",
+    avg_trades_per_day: float = 2.0,
+) -> list[float]:
+    """Adjust daily PnLs for firm-specific commissions.
+
+    Args:
+        daily_pnls: Gross daily PnLs
+        firm_key: Firm identifier
+        symbol: Trading symbol
+        avg_trades_per_day: Average round-trip trades per day
+
+    Returns:
+        Net daily PnLs after per-firm commissions
+    """
+    if firm_key not in FIRM_COMMISSIONS:
+        return daily_pnls
+
+    comm_per_side = FIRM_COMMISSIONS[firm_key].get(symbol, 2.52)
+    # Round-trip = 2 sides per trade
+    daily_comm = comm_per_side * 2 * avg_trades_per_day
+    return [pnl - daily_comm for pnl in daily_pnls]
+
+
 def run_prop_compliance(
     daily_pnls: list[float],
     stats: dict,
 ) -> dict[str, dict]:
     """Simulate strategy against all 7 prop firms.
 
+    Uses per-firm net P&L (after firm-specific commissions) when symbol
+    and trade count data are available in stats. Also uses gap-adjusted
+    drawdown when available for overnight strategies.
+
     Args:
         daily_pnls: Array of daily P&L values
-        stats: Strategy statistics including max_drawdown, trades_overnight
+        stats: Strategy statistics including max_drawdown, trades_overnight,
+            symbol, total_trades, total_trading_days, gap_adjusted_drawdown
 
     Returns:
         dict mapping firm_key → compliance result
     """
+    symbol = stats.get("symbol", "ES")
+    total_trades = stats.get("total_trades", 0)
+    total_days = stats.get("total_trading_days", len(daily_pnls))
+    avg_trades_per_day = total_trades / total_days if total_days > 0 else 2.0
+    gap_dd = stats.get("gap_adjusted_drawdown")
+
     # Build equity curve from daily PnLs
     starting_balance = 50000.0
     equity = [starting_balance]
@@ -244,19 +283,29 @@ def run_prop_compliance(
         passed = True
         failures: list[str] = []
 
+        # Compute net daily PnLs for this firm
+        net_pnls = _compute_net_daily_pnls(
+            daily_pnls, firm_key, symbol, avg_trades_per_day,
+        )
+
+        # Build net equity curve for this firm
+        net_equity = [starting_balance]
+        for pnl in net_pnls:
+            net_equity.append(net_equity[-1] + pnl)
+
         # Check overnight positions
         if not firm["overnight_ok"] and stats.get("trades_overnight", False):
             passed = False
             failures.append("Strategy holds overnight positions — not allowed")
 
-        # Check drawdown
+        # Check drawdown (using net equity)
         if firm["trailing"] == "realtime":
             dd_passed, blown_day, dd_used = simulate_trailing_drawdown_realtime(
-                equity, firm["max_drawdown"], firm.get("locks_at_start", True)
+                net_equity, firm["max_drawdown"], firm.get("locks_at_start", True)
             )
         else:
             dd_passed, blown_day, dd_used = simulate_trailing_drawdown_eod(
-                equity, firm["max_drawdown"], firm.get("locks_at_start", True)
+                net_equity, firm["max_drawdown"], firm.get("locks_at_start", True)
             )
 
         if not dd_passed:
@@ -266,9 +315,17 @@ def run_prop_compliance(
                 f"used ${dd_used:.0f} vs ${firm['max_drawdown']} limit"
             )
 
-        # Check consistency rules
+        # Check gap-adjusted drawdown if available (overnight strategies)
+        if gap_dd is not None and gap_dd > firm["max_drawdown"]:
+            passed = False
+            failures.append(
+                f"Gap-adjusted drawdown ${gap_dd:.0f} exceeds "
+                f"${firm['max_drawdown']} limit (overnight risk)"
+            )
+
+        # Check consistency rules (using net PnLs)
         if firm["consistency_rule"] == "tpt_50pct":
-            cons_passed, worst_pct = check_tpt_consistency(daily_pnls)
+            cons_passed, worst_pct = check_tpt_consistency(net_pnls)
             if not cons_passed:
                 passed = False
                 failures.append(
@@ -278,7 +335,7 @@ def run_prop_compliance(
 
         elif firm["consistency_rule"] == "ffn_15pct":
             cons_passed, max_day, limit = check_ffn_express_consistency(
-                daily_pnls, firm["profit_target"]
+                net_pnls, firm["profit_target"]
             )
             if not cons_passed:
                 passed = False
@@ -289,7 +346,7 @@ def run_prop_compliance(
 
         elif firm["consistency_rule"] == "alpha_50pct":
             # Alpha uses same 50% rule as TPT during eval
-            cons_passed, worst_pct = check_tpt_consistency(daily_pnls)
+            cons_passed, worst_pct = check_tpt_consistency(net_pnls)
             if not cons_passed:
                 passed = False
                 failures.append(

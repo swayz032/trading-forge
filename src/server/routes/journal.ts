@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, gte, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { systemJournal } from "../db/schema.js";
 
@@ -104,6 +104,73 @@ journalRoutes.patch("/:id", async (req, res) => {
     return;
   }
   res.json(row);
+});
+
+// ─── GET /api/journal/scout-fingerprints ─────────────────────
+// Returns recent scout title hashes + URLs for client-side (n8n) dedup
+journalRoutes.get("/scout-fingerprints", async (req, res) => {
+  const days = Number(req.query.days) || 30;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const rows = await db
+    .select({
+      id: systemJournal.id,
+      title_hash: sql<string>`strategy_params->>'title_hash'`,
+      url: sql<string>`strategy_params->>'url'`,
+      title: sql<string>`strategy_params->>'title'`,
+      createdAt: systemJournal.createdAt,
+    })
+    .from(systemJournal)
+    .where(
+      and(
+        eq(systemJournal.status, "scouted"),
+        gte(systemJournal.createdAt, cutoff),
+      )
+    )
+    .orderBy(desc(systemJournal.createdAt));
+
+  res.json({
+    count: rows.length,
+    days,
+    fingerprints: rows.map((r) => ({
+      id: r.id,
+      title_hash: r.title_hash,
+      url: r.url,
+      title: r.title,
+      created_at: r.createdAt,
+    })),
+  });
+});
+
+// ─── GET /api/journal/scout-funnel ──────────────────────────
+// Aggregated funnel: scouted → tested → passed → deployed, grouped by source
+journalRoutes.get("/scout-funnel", async (req, res) => {
+  const days = Number(req.query.days) || 30;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const rows = await db
+    .select({
+      source: systemJournal.source,
+      status: systemJournal.status,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(systemJournal)
+    .where(gte(systemJournal.createdAt, cutoff))
+    .groupBy(systemJournal.source, systemJournal.status);
+
+  // Build funnel by source
+  const funnel: Record<string, Record<string, number>> = {};
+  const totals: Record<string, number> = {};
+
+  for (const row of rows) {
+    if (!funnel[row.source]) funnel[row.source] = {};
+    funnel[row.source][row.status] = row.count;
+    totals[row.status] = (totals[row.status] || 0) + row.count;
+  }
+
+  res.json({ days, by_source: funnel, totals });
 });
 
 // Get summary stats for the self-critique dashboard

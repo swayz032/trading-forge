@@ -192,6 +192,11 @@ describe("AgentService", () => {
 
   describe("scoutIdeas", () => {
     it("deduplicates by content hash", async () => {
+      // Mock select chain for cross-time dedup (returns empty — no existing ideas)
+      const mockWhere = vi.fn().mockResolvedValue([]);
+      const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
+      (db.select as ReturnType<typeof vi.fn>).mockReturnValue({ from: mockFrom });
+
       // Mock insert chain
       const mockReturning = vi.fn().mockResolvedValue([{ id: "idea-1" }]);
       const mockValues = vi.fn().mockReturnValue({ returning: mockReturning });
@@ -205,7 +210,8 @@ describe("AgentService", () => {
       const result = await service.scoutIdeas(ideas);
 
       expect(result.received).toBe(2);
-      expect(result.duplicate_count).toBe(1);
+      expect(result.batch_duplicate_count).toBe(1);
+      expect(result.cross_time_duplicate_count).toBe(0);
       expect(result.new_count).toBe(1);
     });
   });

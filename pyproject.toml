@@ -1,3 +1,6 @@
 [tool.pytest.ini_options]
 testpaths = ["src/engine/tests"]
 pythonpath = ["."]
+filterwarnings = [
+    "ignore:CUDA path could not be detected:UserWarning",
+]

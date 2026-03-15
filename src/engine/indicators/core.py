@@ -53,6 +53,58 @@ def compute_atr(df: pl.DataFrame, period: int) -> pl.Series:
     return true_range.ewm_mean(span=period)
 
 
+def compute_adx(df: pl.DataFrame, period: int = 14) -> pl.Series:
+    """Average Directional Index: measures trend strength (0-100).
+
+    ADX > 25 = trending, ADX < 20 = ranging.
+    Uses +DI and -DI from directional movement.
+    """
+    high = df["high"]
+    low = df["low"]
+    prev_high = high.shift(1)
+    prev_low = low.shift(1)
+
+    # Directional movement
+    plus_dm_raw = (high - prev_high).clip(lower_bound=0.0)
+    minus_dm_raw = (prev_low - low).clip(lower_bound=0.0)
+
+    # Zero out when the other is larger — evaluate via select to get Series
+    plus_mask = plus_dm_raw > minus_dm_raw
+    minus_mask = minus_dm_raw > plus_dm_raw
+    temp = df.select([
+        pl.when(plus_mask).then(plus_dm_raw).otherwise(0.0).alias("plus_dm"),
+        pl.when(minus_mask).then(minus_dm_raw).otherwise(0.0).alias("minus_dm"),
+    ])
+    plus_dm = temp["plus_dm"]
+    minus_dm = temp["minus_dm"]
+
+    # Smooth with EWM (same as ATR)
+    atr = compute_atr(df, period)
+    # Guard against zero ATR
+    safe_atr = atr.fill_null(1.0)
+    safe_atr = pl.Series([max(v, 1e-10) if v is not None else 1e-10 for v in safe_atr.to_list()])
+    plus_di = 100.0 * plus_dm.ewm_mean(span=period) / safe_atr
+    minus_di = 100.0 * minus_dm.ewm_mean(span=period) / safe_atr
+
+    # DX and ADX — guard against zero di_sum
+    di_sum = plus_di + minus_di
+    di_diff = (plus_di - minus_di).abs()
+    safe_di_sum = pl.Series([max(v, 1e-10) if v is not None and v == v else 1e-10 for v in di_sum.to_list()])
+    dx = 100.0 * di_diff / safe_di_sum
+    adx = dx.fill_nan(0.0).ewm_mean(span=period)
+
+    return adx
+
+
+def compute_adr(df: pl.DataFrame, period: int = 14) -> pl.Series:
+    """Average Day Range: rolling average of (high - low).
+
+    Used for session range expectations.
+    """
+    day_range = df["high"] - df["low"]
+    return day_range.rolling_mean(window_size=period)
+
+
 def compute_macd(
     series: pl.Series,
     fast: int = 12,
@@ -158,5 +210,13 @@ def compute_indicators(
         elif cfg.type == "vwap":
             col = compute_vwap(df)
             result = result.with_columns(col.alias("vwap"))
+
+        elif cfg.type == "adx":
+            col = compute_adx(df, cfg.period)
+            result = result.with_columns(col.alias(f"adx_{cfg.period}"))
+
+        elif cfg.type == "adr":
+            col = compute_adr(df, cfg.period)
+            result = result.with_columns(col.alias(f"adr_{cfg.period}"))
 
     return result

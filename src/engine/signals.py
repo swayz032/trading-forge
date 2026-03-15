@@ -124,6 +124,7 @@ def generate_signals(
     config: StrategyConfig,
     fill_rate: float = 1.0,
     fill_rate_seed: int | None = None,
+    event_mask: "np.ndarray | None" = None,
 ) -> pl.DataFrame:
     """Generate entry/exit boolean signal columns from strategy config.
 
@@ -133,6 +134,8 @@ def generate_signals(
         fill_rate: Fraction of entry signals to keep (0.0-1.0). Used for
             crisis stress testing to simulate partial fills.
         fill_rate_seed: Random seed for fill rate masking (reproducibility)
+        event_mask: Optional boolean numpy array from economic calendar.
+            When provided, True values block entry signals (SIT_OUT).
 
     Returns DataFrame with added columns:
         entry_long, entry_short, exit_long, exit_short
@@ -142,6 +145,12 @@ def generate_signals(
     entry_long = evaluate_expression(df, config.entry_long)
     entry_short = evaluate_expression(df, config.entry_short)
     exit_expr = evaluate_expression(df, config.exit)
+
+    # Apply economic event mask (SIT_OUT blocks entries)
+    if event_mask is not None:
+        block = pl.Series("event_block", ~event_mask.astype(bool))
+        entry_long = entry_long & block
+        entry_short = entry_short & block
 
     # Apply fill rate mask to entry signals (crisis stress simulation)
     if fill_rate < 1.0:

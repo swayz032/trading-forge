@@ -7,7 +7,7 @@ Personal futures/derivatives strategy research lab. Single user (swayz032). Not 
 - **API Server**: Express.js 5 + TypeScript (src/server/)
 - **Database**: PostgreSQL + Drizzle ORM
 - **Backtest Engine**: Python + vectorbt + Polars + DuckDB (src/engine/)
-- **AI Agents**: Python + Ollama (src/agents/)
+- **AI Agents**: TypeScript + Ollama (src/server/services/agent-service.ts, src/server/routes/agent.ts)
 - **Dashboard**: React + Vite + TailwindCSS (src/dashboard/)
 - **Data Lake**: AWS S3 (Parquet files)
 - **Data Providers**:
@@ -174,11 +174,22 @@ Rules:
 
 ## Prop Firm Integration
 - **Full rules reference:** `docs/prop-firm-rules.md` — agents MUST load this when simulating strategies
-- 7 firms tracked: MFFU, Topstep, TPT, Apex, FFN, Alpha Futures, Tradeify
+- 7 firms tracked: MFFU, Topstep, TPT, Apex, FFN, Alpha Futures, Tradeify (+ Earn2Trade)
 - Agents simulate strategies against each firm's exact rules (drawdown, consistency, contract limits)
 - Agents rank firms by expected ROI given a strategy's profile
 - Agents calculate payout projections after splits, fees, and ongoing costs
 - User trades manually — Forge provides strategy signals and firm rule compliance tracking
+
+## Prop Firm Compliance (Live Rule Enforcement)
+- **Architecture:** `docs/PROP-FIRM-COMPLIANCE.md` — three-layer compliance architecture
+- **OpenClaw Compliance Guard:** `src/agents/OPENCLAW_COMPLIANCE_GUARD.md` — system prompt for compliance sidecar
+- **Rule Engine:** `src/engine/compliance/compliance_gate.py` — deterministic enforcement (no AI judgment)
+- **API Routes:** `src/server/routes/compliance.ts` — `/api/compliance/*`
+- **Three layers:** OpenClaw monitors → Rule engine enforces → Human approves
+- **Freshness gate:** `ruleset_max_age_hours` — 24h for active trading, 72h for research, 0h after drift
+- **Drift detection:** Content hash comparison on every doc fetch — blocks approvals until human revalidates
+- **Tables:** `compliance_rulesets`, `compliance_reviews`, `compliance_drift_log`
+- **Critical rule:** No strategy runs if current rules are stale, ambiguous, or violated. Compliance beats profit.
 
 ## System Journal (AI Self-Learning Loop)
 - **Table:** `system_journal` — logs every AI-generated strategy's full backtest results, equity curve, daily P&Ls, and prop compliance
@@ -233,3 +244,9 @@ Rules:
 - Don't run just one strategy — target 2-3 uncorrelated strategies (correlation < 0.3 on returns)
 - Don't treat strategies as permanent — they have lifespans, always be developing replacements
 - Don't model slippage as a constant — it's a function of volatility (higher during vol spikes)
+- Don't ignore time-of-day liquidity — overnight ES has 2x spreads vs RTH core; slippage multipliers by session are mandatory
+- Don't trade through FOMC/CPI/NFP without explicit event handling — default is SIT_OUT ±30 min
+- Don't assume limit orders always fill — model fill probability, especially for mean reversion entries at extremes
+- Don't use gross P&L for performance gates — use net P&L per firm (commissions differ: MFFU $1.58/side vs Apex $2.64/side)
+- Don't ignore firm contract caps in backtests — ATR sizing capped to `min(ATR_size, firm_max_contracts)`
+- Don't ignore overnight gap risk — strategies holding across sessions need gap-adjusted MAE and drawdown

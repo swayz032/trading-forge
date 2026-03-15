@@ -6,7 +6,7 @@ Contract specs MUST match src/server/routes/risk.ts lines 6-15 exactly.
 from __future__ import annotations
 
 from typing import Literal, Optional
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 # ─── Contract Specs (mirrors risk.ts) ──────────────────────────────
@@ -30,7 +30,7 @@ CONTRACT_SPECS: dict[str, ContractSpec] = {
 
 VALID_SYMBOLS = set(CONTRACT_SPECS.keys())
 
-VALID_INDICATOR_TYPES = {"sma", "ema", "rsi", "macd", "vwap", "bbands", "atr"}
+VALID_INDICATOR_TYPES = {"sma", "ema", "rsi", "macd", "vwap", "bbands", "atr", "adx", "adr"}
 
 
 # ─── Indicator Config ──────────────────────────────────────────────
@@ -84,6 +84,8 @@ class StrategyConfig(BaseModel):
     stop_loss: StopConfig
     take_profit: Optional[StopConfig] = None
     position_size: PositionSizeConfig
+    overnight_hold: bool = False
+    preferred_regime: Optional[str] = None
 
     @field_validator("symbol")
     @classmethod
@@ -106,6 +108,30 @@ class StrategyConfig(BaseModel):
         return v
 
 
+# ─── Economic Event Policy ────────────────────────────────────────
+
+class EconomicEventPolicy(BaseModel):
+    event_type: str  # "FOMC", "CPI", "NFP", "GDP", "PCE"
+    action: Literal["SIT_OUT", "REDUCE", "WIDEN", "IGNORE"] = "SIT_OUT"
+    window_minutes: int = 30
+
+
+class EventCalendarConfig(BaseModel):
+    policies: list[EconomicEventPolicy] = []
+    calendar_source: Literal["static", "alpha_vantage"] = "static"
+
+
+# ─── Fill Probability Config ────────────────────────────────────
+
+class FillProbabilityConfig(BaseModel):
+    order_type: Literal["market", "limit"] = "market"
+    limit_at_current: float = 0.95
+    limit_1_tick: float = 0.80
+    limit_at_sr: float = 0.60
+    limit_at_extreme: float = 0.50
+    partial_fill_threshold: float = 0.70
+
+
 # ─── Backtest Request ─────────────────────────────────────────────
 
 class BacktestRequest(BaseModel):
@@ -116,6 +142,9 @@ class BacktestRequest(BaseModel):
     commission_per_side: float = 4.50
     mode: Literal["single", "walkforward"] = "single"
     walk_forward_splits: int = 5
+    firm_key: Optional[str] = None
+    event_calendar: Optional[EventCalendarConfig] = None
+    fill_model: Optional[FillProbabilityConfig] = None
 
 
 # ─── Backtest Result ──────────────────────────────────────────────

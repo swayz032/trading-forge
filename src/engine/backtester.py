@@ -24,7 +24,9 @@ from src.engine.config import (
     StrategyConfig,
 )
 from src.engine.data_loader import load_ohlcv
+from src.engine.firm_config import get_commission_per_side, get_contract_cap, FIRM_CONTRACT_CAPS
 from src.engine.indicators.core import compute_indicators, compute_atr
+from src.engine.liquidity import get_session_multipliers
 from src.engine.signals import generate_signals
 from src.engine.sizing import compute_position_sizes
 from src.engine.slippage import compute_slippage
@@ -83,18 +85,68 @@ def run_backtest(
 
     df = compute_indicators(data, indicator_configs)
 
+    # ─── Economic event mask (Task 3.8) ─────────────────────
+    event_mask = None
+    event_slippage_mult = None
+    if request.event_calendar and request.event_calendar.policies and "ts_event" in df.columns:
+        from src.engine.economic_calendar import (
+            generate_event_mask,
+            get_event_slippage_multipliers,
+        )
+        policies = [p.model_dump() for p in request.event_calendar.policies]
+        event_mask = generate_event_mask(df["ts_event"], policies)
+        event_slippage_mult = get_event_slippage_multipliers(df["ts_event"], policies)
+
     # ─── Generate signals ─────────────────────────────────────
-    df = generate_signals(df, config, fill_rate=fill_rate)
+    df = generate_signals(df, config, fill_rate=fill_rate, event_mask=event_mask)
+
+    # ─── Firm-specific commission (Task 3.11) ─────────────────
+    commission = request.commission_per_side
+    if request.firm_key:
+        commission = get_commission_per_side(request.firm_key, config.symbol)
+
+    # ─── Firm contract cap (Task 3.12) ────────────────────────
+    max_contracts = None
+    if request.firm_key and request.firm_key in FIRM_CONTRACT_CAPS:
+        from src.engine.firm_config import get_contract_cap
+        max_contracts = get_contract_cap(request.firm_key, config.symbol)
 
     # ─── Position sizing ──────────────────────────────────────
-    sizes = compute_position_sizes(df, config.position_size, spec, atr_period)
+    sizes = compute_position_sizes(
+        df, config.position_size, spec, atr_period,
+        max_contracts=max_contracts,
+    )
+
+    # ─── Session liquidity multipliers (Task 3.7) ─────────────
+    session_mult = None
+    if "ts_event" in df.columns:
+        session_mult = get_session_multipliers(df["ts_event"])
+
+    # Combine session + event slippage multipliers
+    combined_slippage_mult = session_mult
+    if event_slippage_mult is not None:
+        if combined_slippage_mult is not None:
+            combined_slippage_mult = combined_slippage_mult * event_slippage_mult
+        else:
+            combined_slippage_mult = event_slippage_mult
 
     # ─── Slippage ─────────────────────────────────────────────
-    slippage_arr = compute_slippage(df, spec, request.slippage_ticks, atr_period)
+    slippage_arr = compute_slippage(
+        df, spec, request.slippage_ticks, atr_period,
+        session_multipliers=combined_slippage_mult,
+    )
+
+    # ─── Fill probability model (Task 3.10) ───────────────────
+    entries_np = df["entry_long"].to_numpy()
+    if request.fill_model and request.fill_model.order_type == "limit":
+        from src.engine.fill_model import compute_fill_probabilities, apply_fill_model
+        fill_config = request.fill_model.model_dump()
+        fill_probs = compute_fill_probabilities(df, fill_config, entries_np)
+        entries_np, sizes = apply_fill_model(entries_np, fill_probs, sizes, seed=42)
 
     # ─── Convert to Pandas at vectorbt boundary (CLAUDE.md rule) ─
     close_pd = df["close"].to_pandas()
-    entries_pd = df["entry_long"].to_pandas()
+    entries_pd = pl.Series("entry_long", entries_np).to_pandas()
     exits_pd = df["exit_long"].to_pandas()
 
     # Clean NaN values
@@ -109,7 +161,7 @@ def run_backtest(
             exits=exits_pd,
             size=sizes_clean,
             slippage=slippage_clean / close_pd,  # Dollar → fraction
-            fees=request.commission_per_side / close_pd,  # Dollar → fraction
+            fees=commission / close_pd,  # Dollar → fraction (per-firm)
             freq="1D",
             init_cash=100_000.0,
         )
@@ -189,6 +241,28 @@ def run_backtest(
     if winner_loser_ratio == float("inf"):
         winner_loser_ratio = 999.99
 
+    # ─── Overnight gap risk (Task 3.9) ───────────────────────
+    gap_adjusted_dd = None
+    if config.overnight_hold and "ts_event" in df.columns and trades_list:
+        from src.engine.gap_risk import (
+            compute_overnight_gaps,
+            tag_trades_overnight,
+            compute_gap_adjusted_mae,
+            compute_gap_adjusted_drawdown,
+        )
+        gaps = compute_overnight_gaps(df)
+        trades_list = tag_trades_overnight(trades_list, df["ts_event"])
+        trades_list = compute_gap_adjusted_mae(
+            trades_list, gaps, symbol=config.symbol, seed=42,
+        )
+        gap_adjusted_dd = compute_gap_adjusted_drawdown(
+            [round(float(v), 2) for v in equity],
+            trades_list, gaps,
+            symbol=config.symbol,
+            point_value=spec.point_value,
+            seed=42,
+        )
+
     elapsed_ms = int((time.time() - start_time) * 1000)
 
     return {
@@ -209,6 +283,7 @@ def run_backtest(
         "trades": trades_list,
         "daily_pnls": daily_pnls,
         "execution_time_ms": elapsed_ms,
+        "gap_adjusted_drawdown": gap_adjusted_dd,
     }
 
 

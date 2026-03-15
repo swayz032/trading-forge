@@ -18,6 +18,7 @@ def compute_slippage(
     contract_spec: ContractSpec,
     base_ticks: float = 1.0,
     atr_period: int = 14,
+    session_multipliers: np.ndarray | None = None,
 ) -> np.ndarray:
     """Compute variable slippage per bar in dollar terms.
 
@@ -26,6 +27,8 @@ def compute_slippage(
         contract_spec: Contract spec for tick_value
         base_ticks: Base slippage in ticks (default 1)
         atr_period: ATR period for column lookup
+        session_multipliers: Optional per-bar multipliers from liquidity
+            profiles (e.g., 2.0x overnight, 1.0x RTH core)
 
     Returns:
         numpy array of slippage in dollars per bar
@@ -49,5 +52,9 @@ def compute_slippage(
     # Variable slippage: scale with ATR relative to median
     slippage_ticks = base_ticks * (atr_values / median_atr)
     slippage_dollars = slippage_ticks * contract_spec.tick_value
+
+    # Apply session-based liquidity multipliers
+    if session_multipliers is not None:
+        slippage_dollars = slippage_dollars * session_multipliers
 
     return slippage_dollars

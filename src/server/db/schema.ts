@@ -19,7 +19,10 @@ export const strategies = pgTable("strategies", {
   symbol: text("symbol").notNull(),
   timeframe: text("timeframe").notNull(),
   config: jsonb("config").notNull(), // Full strategy definition JSON
-  status: text("status").notNull().default("draft"), // draft | active | archived
+  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOYED | DECLINING | RETIRED
+  lifecycleChangedAt: timestamp("lifecycle_changed_at").defaultNow(),
+  preferredRegime: text("preferred_regime"), // TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL
+  rollingSharpe30d: numeric("rolling_sharpe_30d"),
   forgeScore: numeric("forge_score"),
   tags: text("tags").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -242,5 +245,206 @@ export const dataSyncJobs = pgTable(
   (table) => [
     index("sync_jobs_symbol_idx").on(table.symbol),
     index("sync_jobs_status_idx").on(table.status),
+  ]
+);
+
+// ─── Compliance Rulesets ────────────────────────────────────
+export const complianceRulesets = pgTable(
+  "compliance_rulesets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    firm: text("firm").notNull(), // MFFU, Topstep, TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade
+    accountType: text("account_type").notNull().default("default"), // e.g. '50K', '100K', 'Express'
+    sourceUrl: text("source_url"), // URL where rules were fetched from
+    contentHash: text("content_hash"), // SHA-256 of raw content for drift detection
+    rawContent: text("raw_content"), // Full raw text of rules
+    parsedRules: jsonb("parsed_rules"), // Structured parsed rules
+    status: text("status").notNull().default("pending"), // pending | verified | stale | drift_detected
+    driftDetected: boolean("drift_detected").default(false),
+    driftDiff: text("drift_diff"), // Diff description if drift detected
+    verifiedBy: text("verified_by"), // 'human' | 'openclaw'
+    verifiedAt: timestamp("verified_at"),
+    retrievedAt: timestamp("retrieved_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("compliance_rulesets_firm_idx").on(table.firm),
+    index("compliance_rulesets_status_idx").on(table.status),
+  ]
+);
+
+// ─── Compliance Reviews ─────────────────────────────────────
+export const complianceReviews = pgTable(
+  "compliance_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id),
+    firm: text("firm").notNull(),
+    accountType: text("account_type").notNull().default("default"),
+    rulesetId: uuid("ruleset_id").references(() => complianceRulesets.id),
+    complianceResult: text("compliance_result").notNull(), // pass | fail | warning | needs_review
+    riskScore: numeric("risk_score").default("0"), // 0-100
+    violations: jsonb("violations").default([]), // Array of violation objects
+    warnings: jsonb("warnings").default([]), // Array of warning objects
+    requiredChanges: jsonb("required_changes").default([]), // Array of required changes
+    reasoningSummary: text("reasoning_summary"), // AI reasoning
+    executionGate: text("execution_gate").notNull(), // APPROVED | BLOCKED | CONDITIONAL
+    reviewedBy: text("reviewed_by").default("openclaw"), // openclaw | human
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("compliance_reviews_strategy_idx").on(table.strategyId),
+    index("compliance_reviews_firm_idx").on(table.firm),
+  ]
+);
+
+// ─── Compliance Drift Log ───────────────────────────────────
+export const complianceDriftLog = pgTable(
+  "compliance_drift_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    firm: text("firm").notNull(),
+    accountType: text("account_type").notNull().default("default"),
+    rulesetId: uuid("ruleset_id").references(() => complianceRulesets.id),
+    previousHash: text("previous_hash"),
+    newHash: text("new_hash"),
+    driftSummary: text("drift_summary"), // What changed
+    detectedAt: timestamp("detected_at").defaultNow().notNull(),
+    resolved: boolean("resolved").default(false),
+    resolvedAt: timestamp("resolved_at"),
+    resolvedBy: text("resolved_by"),
+    notes: text("notes"),
+  },
+  (table) => [
+    index("compliance_drift_log_firm_idx").on(table.firm),
+    index("compliance_drift_log_resolved_idx").on(table.resolved),
+  ]
+);
+
+// ─── Skip Decisions (Pre-Session Classifier) ─────────────────
+export const skipDecisions = pgTable(
+  "skip_decisions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id), // nullable — can be portfolio-wide
+    decisionDate: timestamp("decision_date").notNull(),
+    decision: text("decision").notNull(), // TRADE | REDUCE | SKIP
+    score: numeric("score").notNull(),
+    signals: jsonb("signals").notNull(), // full signal breakdown
+    triggeredSignals: text("triggered_signals").array(), // array of signal names that fired
+    reason: text("reason"),
+    override: boolean("override").default(false), // human override
+    overrideReason: text("override_reason"),
+    actualOutcome: text("actual_outcome"), // WIN | LOSS | FLAT (filled post-session)
+    actualPnl: numeric("actual_pnl"), // filled post-session
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("skip_decisions_strategy_idx").on(table.strategyId),
+    index("skip_decisions_date_idx").on(table.decisionDate),
+    index("skip_decisions_decision_idx").on(table.decision),
+  ]
+);
+
+// ─── Macro Snapshots (FRED/BLS/EIA Data) ─────────────────────
+export const macroSnapshots = pgTable(
+  "macro_snapshots",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    snapshotDate: timestamp("snapshot_date").notNull().unique(),
+    fedFundsRate: numeric("fed_funds_rate"),
+    treasury10y: numeric("treasury_10y"),
+    treasury2y: numeric("treasury_2y"),
+    treasury3m: numeric("treasury_3m"),
+    vix: numeric("vix"),
+    yieldSpread10y2y: numeric("yield_spread_10y2y"),
+    unemployment: numeric("unemployment"),
+    cpiYoy: numeric("cpi_yoy"),
+    pceYoy: numeric("pce_yoy"),
+    wtiCrude: numeric("wti_crude"),
+    naturalGas: numeric("natural_gas"),
+    macroRegime: text("macro_regime"), // RISK_ON | RISK_OFF | TIGHTENING | EASING | STAGFLATION | GOLDILOCKS | TRANSITION
+    regimeConfidence: numeric("regime_confidence"),
+    rawData: jsonb("raw_data"), // Full snapshot blob from all sources
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("macro_snapshots_date_idx").on(table.snapshotDate),
+    index("macro_snapshots_regime_idx").on(table.macroRegime),
+  ]
+);
+
+// ─── Strategy Graveyard ───────────────────────────────────────
+// Vector-searchable archive of every failed strategy.
+// New candidates checked before wasting backtest compute.
+export const strategyGraveyard = pgTable(
+  "strategy_graveyard",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id), // nullable — might not have been saved
+    name: text("name").notNull(),
+    dslSnapshot: jsonb("dsl_snapshot").notNull(), // full strategy DSL at time of death
+    failureModes: text("failure_modes").array().notNull(), // array of failure mode tags
+    failureDetails: jsonb("failure_details"), // detailed analysis per failure mode
+    backtestSummary: jsonb("backtest_summary"), // key metrics at time of death
+    embedding: jsonb("embedding"), // vector as JSON array (768 dims) — using jsonb since pgvector may not be available
+    deathReason: text("death_reason"), // human-readable summary
+    deathDate: timestamp("death_date").notNull(),
+    source: text("source").default("auto"), // auto | manual | decay
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("graveyard_strategy_idx").on(table.strategyId),
+    index("graveyard_death_date_idx").on(table.deathDate),
+    index("graveyard_source_idx").on(table.source),
+  ]
+);
+
+// ─── Day Archetypes (Phase 4.13) ─────────────────────────────
+export const dayArchetypes = pgTable(
+  "day_archetypes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    symbol: text("symbol").notNull(),
+    tradingDate: timestamp("trading_date").notNull(),
+    archetype: text("archetype").notNull(), // TREND_DAY_UP | TREND_DAY_DOWN | RANGE_DAY | REVERSAL_DAY | EXPANSION_DAY | GRIND_DAY | GAP_AND_GO | INSIDE_DAY
+    confidence: numeric("confidence"),
+    metrics: jsonb("metrics"), // classification metrics
+    features: jsonb("features"), // premarket features used for prediction
+    predictedArchetype: text("predicted_archetype"), // what was predicted pre-session
+    predictionCorrect: boolean("prediction_correct"), // was prediction right?
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("day_archetypes_symbol_date_idx").on(table.symbol, table.tradingDate),
+    index("day_archetypes_archetype_idx").on(table.archetype),
+  ]
+);
+
+// ─── Tournament Results (Phase 4.8) ──────────────────────────
+export const tournamentResults = pgTable(
+  "tournament_results",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tournamentDate: timestamp("tournament_date").notNull(),
+    candidateName: text("candidate_name").notNull(),
+    candidateDsl: jsonb("candidate_dsl").notNull(),
+    proposerOutput: jsonb("proposer_output"), // qwen3 proposer reasoning
+    compilerPass: boolean("compiler_pass"),
+    graveyardPass: boolean("graveyard_pass"),
+    criticOutput: jsonb("critic_output"), // llama3.1:8b critic assessment
+    prosecutorOutput: jsonb("prosecutor_output"), // llama3.1:8b prosecutor findings
+    promoterOutput: jsonb("promoter_output"), // qwen3 final decision
+    finalVerdict: text("final_verdict").notNull(), // PROMOTE | REVISE | KILL
+    revisionNotes: text("revision_notes"),
+    backtestId: uuid("backtest_id").references(() => backtests.id),
+    expiresAt: timestamp("expires_at"), // TTL — null means no expiry
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("tournament_results_date_idx").on(table.tournamentDate),
+    index("tournament_results_verdict_idx").on(table.finalVerdict),
+    index("tournament_results_candidate_idx").on(table.candidateName),
   ]
 );
