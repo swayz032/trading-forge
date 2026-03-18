@@ -140,12 +140,13 @@ def compute_htf_context(
             float(np.mean(c4[-200:])), float(c4[-1])
         )
 
-    # Weekly trend (approximate from daily: 20-week = 100 days, 50-week = 250)
+    # Weekly trend (approximate from daily: 20-week ≈ 100 days, 50-week ≈ 250, 200-week ≈ 1000)
     weekly_trend = "neutral"
     if len(closes) >= 250:
+        sma_200w = float(np.mean(closes[-min(1000, len(closes)):])) if len(closes) >= 500 else float(np.mean(closes))
         weekly_trend = _classify_trend(
             float(np.mean(closes[-100:])), float(np.mean(closes[-250:])),
-            float(np.mean(closes[-250:])),  # Use 250-day for both 50w and 200w approximation
+            sma_200w,
             float(closes[-1])
         )
 

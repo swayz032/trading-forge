@@ -32,7 +32,7 @@ class SessionContext:
 def _get_session(hour: int, minute: int) -> str:
     """Classify current session from hour/minute (ET)."""
     t = hour * 60 + minute
-    if t >= 20 * 60 or t < 0 * 60:  # 8 PM - midnight
+    if t >= 20 * 60 or t < 2 * 60:  # 8 PM - 2 AM ET
         return "asian"
     if 2 * 60 <= t < 5 * 60:  # 2 AM - 5 AM
         return "london"
@@ -138,7 +138,7 @@ def compute_session_context(
     # Killzone status
     ny_kz = 9 * 60 + 30 <= current_hour * 60 + current_minute < 11 * 60
     london_kz = 2 * 60 <= current_hour * 60 + current_minute < 5 * 60
-    asian_kz = current_hour >= 20 or current_hour < 0
+    asian_kz = current_hour >= 20 or current_hour < 2
 
     return SessionContext(
         overnight_range=(on_high, on_low),

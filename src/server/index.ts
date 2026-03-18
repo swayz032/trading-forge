@@ -129,6 +129,14 @@ app.get("/{*splat}", (_req, res) => {
 
 const server = app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);
+
+  // Start scheduled jobs (rolling Sharpe, pre-market prep, drift checks)
+  import("./scheduler.js").then(({ initScheduler }) => {
+    initScheduler();
+    logger.info("Scheduler initialized");
+  }).catch((err) => {
+    logger.warn({ err }, "Scheduler failed to initialize — cron jobs disabled");
+  });
 });
 
 // Graceful shutdown — tear down all Massive WebSockets

@@ -612,12 +612,22 @@ def run_backtest(
             continue
         bar_slip = float(slippage_clean[i]) if not np.isnan(slippage_clean[i]) else 0.0
         bar_friction = bar_slip + commission  # one side
-        # Contracts closed (exited)
+        # Contracts closed (exited or reduced)
         if old_pos != 0:
-            bar_dollar_pnls[i] -= bar_friction * abs(old_pos)
-        # Contracts opened (entered)
-        if new_pos != 0 and np.sign(new_pos) != np.sign(old_pos):
-            bar_dollar_pnls[i] -= bar_friction * abs(new_pos)
+            if np.sign(new_pos) != np.sign(old_pos):
+                # Full exit (or reversal) — friction on all old contracts
+                bar_dollar_pnls[i] -= bar_friction * abs(old_pos)
+            elif abs(new_pos) < abs(old_pos):
+                # Partial close — friction on closed contracts
+                bar_dollar_pnls[i] -= bar_friction * (abs(old_pos) - abs(new_pos))
+        # Contracts opened (new entry, reversal, or scaling into position)
+        if new_pos != 0:
+            if np.sign(new_pos) != np.sign(old_pos):
+                # New direction entry or reversal — friction on all new contracts
+                bar_dollar_pnls[i] -= bar_friction * abs(new_pos)
+            elif abs(new_pos) > abs(old_pos):
+                # Scaling into existing position — friction on added contracts
+                bar_dollar_pnls[i] -= bar_friction * (abs(new_pos) - abs(old_pos))
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
@@ -766,8 +776,8 @@ def run_backtest(
 def _compute_tier(avg_daily_pnl: float, winning_days: int, total_trading_days: int,
                    max_dd: float, profit_factor: float, sharpe: float) -> str:
     """Classify strategy into TIER_1, TIER_2, TIER_3, or REJECTED per CLAUDE.md gates."""
-    # max_dd from vectorbt is a ratio (e.g. 0.02 = 2%). Convert to dollars on $100K.
-    max_dd_dollars = max_dd * 100_000
+    # max_dd from vectorbt is a NEGATIVE ratio (e.g. -0.02 = 2% drawdown). Convert to positive dollars on $100K.
+    max_dd_dollars = abs(max_dd) * 100_000
     win_days_per_20 = (winning_days / max(total_trading_days, 1)) * 20
 
     if (avg_daily_pnl >= 500 and win_days_per_20 >= 14 and max_dd_dollars < 1500

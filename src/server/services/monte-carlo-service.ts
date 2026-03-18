@@ -22,7 +22,9 @@ const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
 interface MCOptions {
   numSimulations?: number;
-  method?: "trade_resample" | "return_bootstrap" | "both";
+  method?: "trade_resample" | "return_bootstrap" | "block_bootstrap" | "both";
+  firms?: string[];
+  isOosTrades?: boolean;
   useGpu?: boolean;
   initialCapital?: number;
   maxPathsToStore?: number;
@@ -147,6 +149,8 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
       equity_curve: Array.isArray(bt.equityCurve)
         ? bt.equityCurve.map((pt: any) => typeof pt === "number" ? pt : pt.value ?? 0)
         : [],
+      firms: options.firms ?? [],
+      is_oos_trades: options.isOosTrades ?? false,
     };
 
     const tmpPath = pathResolve(tmpdir(), `mc-config-${randomUUID()}.json`);

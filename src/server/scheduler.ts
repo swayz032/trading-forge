@@ -120,7 +120,7 @@ async function preMarketPrep() {
 export async function onPaperTradeClose(sessionId: string, strategyId: string) {
   try {
     // Trigger drift detection
-    const response = await fetch(`http://localhost:4000/api/drift/detect/${strategyId}`).catch(() => null);
+    const response = await fetch(`http://localhost:4000/api/paper/drift/${sessionId}?strategyId=${strategyId}`).catch(() => null);
     if (response?.ok) {
       const drift = await response.json();
       const driftScore = (drift as any).driftScore ?? 0;

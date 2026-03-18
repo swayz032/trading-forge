@@ -16,6 +16,10 @@ def check_performance_gate(stats: dict) -> tuple[bool, list[str]]:
     """
     rejections: list[str] = []
 
+    # Zero-day guard
+    if stats.get("total_trading_days", 0) == 0:
+        return (False, ["No trading days — cannot evaluate performance"])
+
     # Earnings power
     if stats["avg_daily_pnl"] < 250:
         rejections.append(
@@ -135,7 +139,8 @@ def compute_forge_score(
     earnings = min(30, max(0, (stats["avg_daily_pnl"] - 250) / 500 * 30))
 
     # Daily survival (0-25): 60% = 0, 80%+ = 25
-    win_rate = stats["winning_days"] / stats["total_trading_days"]
+    total_days = max(stats["total_trading_days"], 1)
+    win_rate = stats["winning_days"] / total_days
     survival = min(25, max(0, (win_rate - 0.60) / 0.20 * 25))
 
     # Drawdown vs prop firm (0-20): $2,500 = 0, $500 = 20

@@ -135,19 +135,18 @@ def simulate_prop_firm(
             day_halted = True
             daily_loss_breaches.append(date_str)
 
+        # Compute intraday low BEFORE updating balance (for realtime DD)
+        prev_balance = balance
+        if is_realtime:
+            # Realtime: estimate intraday low from daily PnL
+            # If net_pnl is negative, worst point was at least prev_balance + net_pnl
+            # (the closing balance). Could be worse intraday but we only have daily data.
+            intraday_low = prev_balance + min(0, net_pnl)
+        else:
+            intraday_low = prev_balance + net_pnl  # EOD: use closing balance
+
         # Update balance
         balance += net_pnl
-
-        # Drawdown tracking
-        if is_realtime:
-            # Realtime: check against intraday movement (approximation —
-            # we only have daily resolution here, use worst-case).
-            # TODO(Wave 3): Replace with bar-level intraday equity tracking
-            # for accurate realtime trailing DD on Tradeify. Current daily
-            # granularity may underestimate peak-to-trough intraday swings.
-            intraday_low = balance - abs(min(0, net_pnl))
-        else:
-            intraday_low = balance  # EOD only checks closing balance
 
         # Task 3.4: Intraday max DD tracking (approximation from daily resolution)
         # NOTE: For full accuracy, bar-level equity would be needed (future enhancement).
@@ -277,6 +276,9 @@ def simulate_prop_firm(
     else:
         payout_projection = 0
 
+    # Overnight gap risk days count (must compute before violation check)
+    overnight_risk_days = sum(1 for s in daily_statements if s.get("overnight_gap_risk", False))
+
     # Overnight hold violation check
     overnight_violation = False
     if not firm.get("overnight_ok", True) and overnight_risk_days > 0:
@@ -315,9 +317,6 @@ def simulate_prop_firm(
                 if (m["year"], m["month"]) > (breach_year, breach_month):
                     break
         survival_months += 1
-
-    # Overnight gap risk days count
-    overnight_risk_days = sum(1 for s in daily_statements if s.get("overnight_gap_risk", False))
 
     return {
         "firm": firm_key,
