@@ -31,6 +31,8 @@ except ImportError:
 
 from src.engine.config import MonteCarloRequest
 
+DEFAULT_NUM_SIMULATIONS = 100_000
+
 
 def get_array_module(use_gpu: bool):
     """Return cupy if GPU requested and available, else numpy."""
@@ -658,9 +660,12 @@ def run_monte_carlo(
     sampled_paths = _sample_paths(paths, request.max_paths_to_store, request.initial_capital)
 
     # 8.6 — Convergence check at 1st percentile
+    dd_converged = check_convergence(max_drawdowns, percentile=1.0)
+    sharpe_converged = check_convergence(sharpe_ratios, percentile=1.0)
     convergence = {
-        "max_drawdown_p1_converged": check_convergence(max_drawdowns, percentile=1.0),
-        "sharpe_p1_converged": check_convergence(sharpe_ratios, percentile=1.0),
+        "max_drawdown_p1_converged": dd_converged,
+        "sharpe_p1_converged": sharpe_converged,
+        "convergence_stable": dd_converged and sharpe_converged,
     }
 
     # 8.4 — Per-firm survival simulation
@@ -730,7 +735,7 @@ def main():
 
     request = MonteCarloRequest(
         backtest_id=config.get("backtest_id", "cli"),
-        num_simulations=config.get("num_simulations", 100_000),
+        num_simulations=config.get("num_simulations", DEFAULT_NUM_SIMULATIONS),
         method=config.get("method", "both"),
         use_gpu=config.get("use_gpu", True),
         initial_capital=config.get("initial_capital", 100_000.0),
