@@ -12,11 +12,13 @@ export const monteCarloRoutes = Router();
 const mcRequestSchema = z.object({
   backtestId: z.string().uuid(),
   numSimulations: z.number().int().min(100).max(100_000).default(10_000),
-  method: z.enum(["trade_resample", "return_bootstrap", "both"]).default("both"),
+  method: z.enum(["trade_resample", "return_bootstrap", "block_bootstrap", "both"]).default("both"),
   useGpu: z.boolean().default(true),
   initialCapital: z.number().positive().default(100_000),
   maxPathsToStore: z.number().int().min(10).max(500).default(100),
   ruinThreshold: z.number().min(0).default(0),
+  firms: z.array(z.string()).optional(),
+  isOosTrades: z.boolean().optional(),
 });
 
 // ─── POST /api/monte-carlo — Run MC on a backtest (async) ────────

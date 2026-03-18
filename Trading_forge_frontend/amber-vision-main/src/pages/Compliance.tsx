@@ -10,9 +10,9 @@ export default function Compliance() {
   const { data: drifts, isLoading: driftsLoading } = useDrift();
   const { data: gate, isLoading: gateLoading } = useGate();
 
-  const canTrade = gate?.canTrade ?? false;
-  const reasons: string[] = gate?.reasons ?? [];
-  const firmStatuses: any[] = gate?.firmStatuses ?? [];
+  const canTrade = gate?.canTrade ?? gate?.allFreshForTrading ?? false;
+  const reasons: string[] = gate?.reasons ?? gate?.staleFirms ?? [];
+  const firmStatuses: any[] = gate?.firmStatuses ?? gate?.decisions ?? [];
 
   const activeRulesets = useMemo(
     () => (rulesets ?? []).filter((r) => r.status === "active").length,

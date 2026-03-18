@@ -1167,6 +1167,31 @@ def run_class_backtest(
     if winner_loser_ratio == float("inf"):
         winner_loser_ratio = 999.99
 
+    # ─── Overnight gap risk ───────────────────────────────────
+    gap_adjusted_dd = None
+    if "ts_event" in df.columns and trades_list:
+        try:
+            from src.engine.gap_risk import (
+                compute_overnight_gaps,
+                tag_trades_overnight,
+                compute_gap_adjusted_mae,
+                compute_gap_adjusted_drawdown,
+            )
+            gaps = compute_overnight_gaps(df)
+            trades_list = tag_trades_overnight(trades_list, df["ts_event"])
+            trades_list = compute_gap_adjusted_mae(
+                trades_list, gaps, symbol=symbol, seed=42,
+            )
+            gap_adjusted_dd = compute_gap_adjusted_drawdown(
+                [round(float(v), 2) for v in equity],
+                trades_list, gaps,
+                symbol=symbol,
+                point_value=spec.point_value,
+                seed=42,
+            )
+        except Exception:
+            pass  # gap_risk module may not be fully wired yet
+
     elapsed_ms = int((time.time() - start_time) * 1000)
 
     tier = _compute_tier(avg_daily_pnl, winning_days, total_trading_days,
@@ -1178,6 +1203,9 @@ def run_class_backtest(
         daily_pnl_records, trades_list,
         symbol=symbol, account_size=50_000,
     )
+
+    # ─── Advanced analytics (calendar, session, MAE/MFE) ──
+    analytics = compute_full_analytics(daily_pnl_records, trades_list)
 
     # ─── Task 3.5: Win rate per-trade AND per-day ────────────
     win_rate_per_trade = len([t for t in trades_list if float(t.get("PnL", t.get("pnl", 0))) > 0]) / max(total_trades, 1)
@@ -1227,11 +1255,16 @@ def run_class_backtest(
         "daily_pnls": daily_pnl_values,
         "daily_pnl_records": daily_pnl_records,
         "execution_time_ms": elapsed_ms,
+        "gap_adjusted_drawdown": gap_adjusted_dd,
         "tier": tier,
         "forge_score": forge_score,
+        "recency_analysis": compute_recency_weighted_score(
+            daily_pnl_records, sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl,
+        ),
         "over_risk_bars": over_risk_count,
         "over_risk_pct": round(over_risk_count / max(len(df), 1) * 100, 2),
         "prop_compliance": prop_compliance,
+        "analytics": analytics,
         "long_short_split": long_short_split,
         "confidence_intervals": {
             "win_rate_95ci": win_rate_ci,

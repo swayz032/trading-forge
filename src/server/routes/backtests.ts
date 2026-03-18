@@ -292,6 +292,29 @@ backtestRoutes.post("/matrix", async (req, res) => {
   });
 });
 
+// ─── GET /api/backtests/matrix — Latest matrix by strategyId ───────
+backtestRoutes.get("/matrix", async (req, res) => {
+  const { strategyId } = req.query;
+  if (!strategyId || typeof strategyId !== "string") {
+    res.status(400).json({ error: "strategyId query parameter required" });
+    return;
+  }
+
+  const [row] = await db
+    .select()
+    .from(backtestMatrix)
+    .where(eq(backtestMatrix.strategyId, strategyId))
+    .orderBy(desc(backtestMatrix.createdAt))
+    .limit(1);
+
+  if (!row) {
+    res.status(404).json({ error: "No matrix found for this strategy" });
+    return;
+  }
+
+  res.json(row);
+});
+
 // ─── GET /api/backtests/matrix/:id — Matrix status ────────────────
 backtestRoutes.get("/matrix/:id", async (req, res) => {
   const row = await getMatrixStatus(req.params.id);
