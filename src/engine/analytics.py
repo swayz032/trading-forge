@@ -2,12 +2,17 @@
 
 Operates on backtest output (daily_pnl_records, trades_list) to discover
 actionable patterns across 10+ years of data.
+
+CONVENTION: When both stop loss AND signal exit trigger on the same bar,
+the STOP PRICE is used (worse case). This is conservative and matches
+real trading — stop would fire first intraday.
+This is enforced in backtester.py's equity friction loop.
 """
 
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 
@@ -121,6 +126,19 @@ def compute_calendar_patterns(daily_pnl_records: list[dict]) -> dict:
             suggestions.append(
                 f"{worst_month[0]} is historically weak (avg ${worst_month[1]['avg_pnl']:.0f}, "
                 f"loss in {worst_month[1]['loss_years']}/{worst_month[1]['total_years']} years)"
+            )
+
+    # Check if recent 2 years underperform historical
+    now = datetime.now()
+    cutoff_2y = (now - timedelta(days=730)).strftime("%Y-%m-%d")
+    recent_pnls = [r["pnl"] for r in daily_pnl_records if r.get("date") and r["date"] >= cutoff_2y]
+    all_pnls = [r["pnl"] for r in daily_pnl_records if r.get("pnl") is not None]
+    if recent_pnls and all_pnls:
+        recent_avg = sum(recent_pnls) / len(recent_pnls)
+        all_avg = sum(all_pnls) / len(all_pnls)
+        if recent_avg < all_avg * 0.6 and len(recent_pnls) > 100:
+            suggestions.append(
+                f"Recent 2 years underperform historical ({recent_avg:.0f}/day vs {all_avg:.0f}/day) — edge may be decaying"
             )
 
     return {
@@ -378,6 +396,153 @@ def compute_win_loss_patterns(daily_pnl_records: list[dict]) -> dict:
     }
 
 
+def compute_regime_performance(daily_pnl_records: list[dict], trades: list[dict]) -> dict:
+    """Analyze performance by macro regime.
+
+    Requires trades to have a 'macro_regime' field (from macro_tagger.py).
+    If not present, returns empty dict.
+
+    Returns:
+        regime_performance: {regime: {win_rate, avg_pnl, trades, flag}}
+        long_short_by_regime: {regime: {long_wr, short_wr, flag}}
+    """
+    regime_stats: dict[str, dict] = {}
+    long_short_regime: dict[str, dict] = {}
+
+    for trade in trades:
+        regime = trade.get("macro_regime") or trade.get("macroRegime") or "UNKNOWN"
+        pnl = float(trade.get("PnL", trade.get("pnl", 0)))
+        direction = str(trade.get("Direction", trade.get("direction", ""))).lower()
+
+        if regime not in regime_stats:
+            regime_stats[regime] = {"pnl": 0.0, "trades": 0, "wins": 0}
+        regime_stats[regime]["pnl"] += pnl
+        regime_stats[regime]["trades"] += 1
+        if pnl > 0:
+            regime_stats[regime]["wins"] += 1
+
+        if regime not in long_short_regime:
+            long_short_regime[regime] = {
+                "long_trades": 0, "long_wins": 0,
+                "short_trades": 0, "short_wins": 0,
+            }
+        if "long" in direction:
+            long_short_regime[regime]["long_trades"] += 1
+            if pnl > 0:
+                long_short_regime[regime]["long_wins"] += 1
+        elif "short" in direction:
+            long_short_regime[regime]["short_trades"] += 1
+            if pnl > 0:
+                long_short_regime[regime]["short_wins"] += 1
+
+    # Format results
+    regime_performance: dict[str, dict] = {}
+    for regime, stats in regime_stats.items():
+        if stats["trades"] == 0:
+            continue
+        wr = stats["wins"] / stats["trades"]
+        flag: str | None = None
+        if wr < 0.40 and stats["trades"] >= 20:
+            flag = f"Strategy fails in {regime} regime ({wr:.0%} win rate)"
+        regime_performance[regime] = {
+            "win_rate": round(wr, 4),
+            "avg_pnl": round(stats["pnl"] / stats["trades"], 2),
+            "trades": stats["trades"],
+            "total_pnl": round(stats["pnl"], 2),
+            "flag": flag,
+        }
+
+    ls_by_regime: dict[str, dict] = {}
+    for regime, stats in long_short_regime.items():
+        long_wr = stats["long_wins"] / stats["long_trades"] if stats["long_trades"] > 0 else 0
+        short_wr = stats["short_wins"] / stats["short_trades"] if stats["short_trades"] > 0 else 0
+        flag = None
+        if stats["long_trades"] >= 10 and long_wr < 0.35:
+            flag = f"Longs destroyed in {regime} — only short"
+        if stats["short_trades"] >= 10 and short_wr < 0.35:
+            flag = f"Shorts destroyed in {regime} — only long"
+        ls_by_regime[regime] = {
+            "long_wr": round(long_wr, 4),
+            "long_trades": stats["long_trades"],
+            "short_wr": round(short_wr, 4),
+            "short_trades": stats["short_trades"],
+            "flag": flag,
+        }
+
+    return {
+        "regime_performance": regime_performance,
+        "long_short_by_regime": ls_by_regime,
+    }
+
+
+def compute_trade_autocorrelation(daily_pnl_records: list[dict]) -> dict:
+    """Compute autocorrelation of daily P&Ls.
+
+    If autocorrelation > 0.1, simple IID Monte Carlo is wrong —
+    must use block bootstrap. This feeds MC block length selection.
+
+    Returns:
+        lag1_autocorrelation, lag2_autocorrelation, loss_cluster_score,
+        mc_recommendation
+    """
+    import numpy as np
+
+    pnls = [r["pnl"] for r in daily_pnl_records if r.get("pnl") is not None]
+    if len(pnls) < 30:
+        return {"insufficient_data": True}
+
+    arr = np.array(pnls)
+
+    # Lag-1 autocorrelation
+    if len(arr) > 1:
+        lag1 = float(np.corrcoef(arr[:-1], arr[1:])[0, 1])
+    else:
+        lag1 = 0.0
+
+    # Lag-2 autocorrelation
+    if len(arr) > 2:
+        lag2 = float(np.corrcoef(arr[:-2], arr[2:])[0, 1])
+    else:
+        lag2 = 0.0
+
+    # Loss clustering score: ratio of actual loss streaks to expected under independence
+    losses = arr < 0
+    actual_runs = 1
+    for i in range(1, len(losses)):
+        if losses[i] != losses[i - 1]:
+            actual_runs += 1
+
+    n = len(losses)
+    n1 = int(np.sum(losses))
+    n0 = n - n1
+    if n1 > 0 and n0 > 0:
+        expected_runs = 1 + 2 * n0 * n1 / n
+        loss_cluster_score = round(1 - actual_runs / expected_runs, 4) if expected_runs > 0 else 0
+    else:
+        loss_cluster_score = 0
+
+    # Handle NaN
+    if np.isnan(lag1):
+        lag1 = 0.0
+    if np.isnan(lag2):
+        lag2 = 0.0
+
+    # MC recommendation
+    if abs(lag1) > 0.15:
+        mc_rec = "BLOCK_BOOTSTRAP (significant autocorrelation — IID MC underestimates streaks)"
+    elif abs(lag1) > 0.10:
+        mc_rec = "BLOCK_BOOTSTRAP_RECOMMENDED (moderate autocorrelation detected)"
+    else:
+        mc_rec = "IID_OK (low autocorrelation — standard MC acceptable)"
+
+    return {
+        "lag1_autocorrelation": round(lag1, 4),
+        "lag2_autocorrelation": round(lag2, 4),
+        "loss_cluster_score": loss_cluster_score,
+        "mc_recommendation": mc_rec,
+    }
+
+
 def compute_full_analytics(
     daily_pnl_records: list[dict],
     trades: list[dict],
@@ -388,4 +553,6 @@ def compute_full_analytics(
         "session_analysis": compute_session_analysis(trades),
         "mae_mfe_analysis": compute_mae_mfe_analysis(trades),
         "win_loss_patterns": compute_win_loss_patterns(daily_pnl_records),
+        "regime_performance": compute_regime_performance(daily_pnl_records, trades),
+        "autocorrelation": compute_trade_autocorrelation(daily_pnl_records),
     }
