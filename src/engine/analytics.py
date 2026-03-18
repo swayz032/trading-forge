@@ -551,16 +551,296 @@ def compute_trade_autocorrelation(daily_pnl_records: list[dict]) -> dict:
     }
 
 
+def compute_playbook_analytics(
+    trades: list[dict],
+    decisions: list[dict],
+) -> dict:
+    """Analyze P&L broken down by playbook assignment.
+
+    Requires each decision to have a 'playbook' field (from eligibility gate)
+    and each trade to be linkable to a decision via index or timestamp.
+
+    Args:
+        trades: List of trade dicts with PnL
+        decisions: List of EligibilityDecision-like dicts with 'playbook', 'action'
+
+    Returns:
+        dict keyed by playbook name with {trades, wins, total_pnl, avg_pnl, win_rate}
+    """
+    if not decisions:
+        return {"_status": "no_decisions_available", "_note": "Enable eligibility gate to populate"}
+
+    playbook_stats: dict[str, dict] = {}
+
+    for i, trade in enumerate(trades):
+        if i >= len(decisions):
+            break
+        decision = decisions[i]
+        playbook = decision.get("playbook", "UNKNOWN")
+        pnl = float(trade.get("PnL", trade.get("pnl", 0)))
+
+        if playbook not in playbook_stats:
+            playbook_stats[playbook] = {"trades": 0, "wins": 0, "total_pnl": 0.0}
+
+        playbook_stats[playbook]["trades"] += 1
+        playbook_stats[playbook]["total_pnl"] += pnl
+        if pnl > 0:
+            playbook_stats[playbook]["wins"] += 1
+
+    result = {}
+    for playbook, stats in playbook_stats.items():
+        n = stats["trades"]
+        result[playbook] = {
+            "trades": n,
+            "wins": stats["wins"],
+            "total_pnl": round(stats["total_pnl"], 2),
+            "avg_pnl": round(stats["total_pnl"] / n, 2) if n > 0 else 0,
+            "win_rate": round(stats["wins"] / n, 4) if n > 0 else 0,
+        }
+    return result
+
+
+def compute_named_session_analytics(trades: list[dict]) -> dict:
+    """Analyze P&L by named trading session (NY AM, NY PM, London, Overnight).
+
+    Session definitions (ET):
+        - London:    03:00 - 08:29
+        - NY AM:     08:30 - 11:59
+        - NY PM:     12:00 - 15:59
+        - Overnight: 16:00 - 02:59
+
+    Args:
+        trades: List of trade dicts with entry_time/Entry Timestamp and PnL
+
+    Returns:
+        dict keyed by session name with {trades, wins, total_pnl, avg_pnl, win_rate}
+    """
+    sessions = {
+        "London":    (3, 8),     # 03:00-08:29 ET
+        "NY_AM":     (8, 12),    # 08:30-11:59 ET (using 8 as start hour)
+        "NY_PM":     (12, 16),   # 12:00-15:59 ET
+        "Overnight": (16, 3),    # 16:00-02:59 ET (wraps midnight)
+    }
+    session_stats: dict[str, dict] = {
+        name: {"trades": 0, "wins": 0, "total_pnl": 0.0} for name in sessions
+    }
+
+    for trade in trades:
+        entry_ts = trade.get("Entry Timestamp") or trade.get("entry_time")
+        pnl = trade.get("PnL") or trade.get("pnl") or 0
+        if not isinstance(pnl, (int, float)):
+            try:
+                pnl = float(pnl)
+            except (TypeError, ValueError):
+                continue
+        if not entry_ts:
+            continue
+
+        try:
+            if isinstance(entry_ts, str) and "T" in entry_ts:
+                dt = datetime.fromisoformat(entry_ts.replace("Z", "+00:00"))
+                hour = (dt.hour - 5) % 24  # Approximate ET
+            elif isinstance(entry_ts, str) and len(entry_ts) >= 13:
+                dt = datetime.fromisoformat(entry_ts[:19])
+                hour = (dt.hour - 5) % 24
+            else:
+                continue
+        except (ValueError, TypeError):
+            continue
+
+        # Classify into session
+        session_name = "Overnight"  # default
+        if 3 <= hour < 8:
+            session_name = "London"
+        elif 8 <= hour < 12:
+            session_name = "NY_AM"
+        elif 12 <= hour < 16:
+            session_name = "NY_PM"
+
+        session_stats[session_name]["trades"] += 1
+        session_stats[session_name]["total_pnl"] += pnl
+        if pnl > 0:
+            session_stats[session_name]["wins"] += 1
+
+    result = {}
+    for name, stats in session_stats.items():
+        n = stats["trades"]
+        result[name] = {
+            "trades": n,
+            "wins": stats["wins"],
+            "total_pnl": round(stats["total_pnl"], 2),
+            "avg_pnl": round(stats["total_pnl"] / n, 2) if n > 0 else 0,
+            "win_rate": round(stats["wins"] / n, 4) if n > 0 else 0,
+        }
+    return result
+
+
+def compute_bias_regime_analytics(
+    trades: list[dict],
+    decisions: list[dict],
+) -> dict:
+    """Analyze P&L by bias confidence band.
+
+    Bins trades by the bias_confidence at the time of signal into bands:
+        - Strong (>=0.7), Moderate (0.5-0.7), Weak (0.3-0.5), Very Weak (<0.3)
+
+    Args:
+        trades: List of trade dicts with PnL
+        decisions: List of EligibilityDecision-like dicts with bias_state info
+
+    Returns:
+        dict keyed by confidence band with {trades, wins, total_pnl, avg_pnl, win_rate}
+    """
+    if not decisions:
+        return {"_status": "no_decisions_available", "_note": "Enable eligibility gate to populate"}
+
+    bands = {
+        "strong_>=0.7": {"trades": 0, "wins": 0, "total_pnl": 0.0},
+        "moderate_0.5-0.7": {"trades": 0, "wins": 0, "total_pnl": 0.0},
+        "weak_0.3-0.5": {"trades": 0, "wins": 0, "total_pnl": 0.0},
+        "very_weak_<0.3": {"trades": 0, "wins": 0, "total_pnl": 0.0},
+    }
+
+    for i, trade in enumerate(trades):
+        if i >= len(decisions):
+            break
+        decision = decisions[i]
+        bias_state = decision.get("bias_state")
+        if not bias_state:
+            continue
+        confidence = bias_state.get("bias_confidence", 0) if isinstance(bias_state, dict) else getattr(bias_state, "bias_confidence", 0)
+        pnl = float(trade.get("PnL", trade.get("pnl", 0)))
+
+        if confidence >= 0.7:
+            band = "strong_>=0.7"
+        elif confidence >= 0.5:
+            band = "moderate_0.5-0.7"
+        elif confidence >= 0.3:
+            band = "weak_0.3-0.5"
+        else:
+            band = "very_weak_<0.3"
+
+        bands[band]["trades"] += 1
+        bands[band]["total_pnl"] += pnl
+        if pnl > 0:
+            bands[band]["wins"] += 1
+
+    result = {}
+    for band, stats in bands.items():
+        n = stats["trades"]
+        result[band] = {
+            "trades": n,
+            "wins": stats["wins"],
+            "total_pnl": round(stats["total_pnl"], 2),
+            "avg_pnl": round(stats["total_pnl"] / n, 2) if n > 0 else 0,
+            "win_rate": round(stats["wins"] / n, 4) if n > 0 else 0,
+        }
+    return result
+
+
+def compute_rejection_quality(
+    rejections: list[dict],
+    market_outcomes: list[dict],
+) -> dict:
+    """Evaluate whether SKIP decisions successfully avoided losers.
+
+    For each SKIP decision, looks at what would have happened if the trade
+    was taken (using market_outcomes which contain hypothetical P&L).
+
+    Args:
+        rejections: List of dicts with {timestamp, direction, strategy, reasoning, ...}
+        market_outcomes: List of dicts with {timestamp, hypothetical_pnl, direction}
+            representing what would have happened if the signal was taken.
+
+    Returns:
+        dict with:
+            - total_skipped: Number of signals skipped
+            - would_have_lost: Count of skips where hypothetical P&L was negative
+            - would_have_won: Count of skips where hypothetical P&L was positive
+            - skip_accuracy: Fraction of skips that avoided losers
+            - pnl_saved: Total hypothetical losses avoided
+            - pnl_missed: Total hypothetical wins missed
+            - net_value: pnl_saved - pnl_missed (positive = gate adds value)
+    """
+    if not rejections or not market_outcomes:
+        return {
+            "_status": "no_rejection_data",
+            "_note": "Enable eligibility gate to populate. Requires hypothetical outcome tracking.",
+        }
+
+    # Match rejections to outcomes by timestamp
+    outcome_map = {}
+    for outcome in market_outcomes:
+        ts = outcome.get("timestamp")
+        if ts:
+            outcome_map[ts] = outcome
+
+    would_have_lost = 0
+    would_have_won = 0
+    pnl_saved = 0.0
+    pnl_missed = 0.0
+
+    for rejection in rejections:
+        ts = rejection.get("timestamp")
+        outcome = outcome_map.get(ts)
+        if not outcome:
+            continue
+
+        hyp_pnl = float(outcome.get("hypothetical_pnl", 0))
+        if hyp_pnl < 0:
+            would_have_lost += 1
+            pnl_saved += abs(hyp_pnl)
+        elif hyp_pnl > 0:
+            would_have_won += 1
+            pnl_missed += hyp_pnl
+
+    total = would_have_lost + would_have_won
+    return {
+        "total_skipped": len(rejections),
+        "matched_outcomes": total,
+        "would_have_lost": would_have_lost,
+        "would_have_won": would_have_won,
+        "skip_accuracy": round(would_have_lost / total, 4) if total > 0 else 0,
+        "pnl_saved": round(pnl_saved, 2),
+        "pnl_missed": round(pnl_missed, 2),
+        "net_value": round(pnl_saved - pnl_missed, 2),
+    }
+
+
 def compute_full_analytics(
     daily_pnl_records: list[dict],
     trades: list[dict],
+    decisions: list[dict] | None = None,
+    rejections: list[dict] | None = None,
+    market_outcomes: list[dict] | None = None,
 ) -> dict:
-    """Run all analytics and return combined result."""
-    return {
+    """Run all analytics and return combined result.
+
+    Args:
+        daily_pnl_records: Daily P&L records
+        trades: Trade records
+        decisions: Optional eligibility gate decisions (for layer analytics)
+        rejections: Optional SKIP decisions (for rejection quality analysis)
+        market_outcomes: Optional hypothetical outcomes for skipped signals
+    """
+    result = {
         "calendar_patterns": compute_calendar_patterns(daily_pnl_records),
         "session_analysis": compute_session_analysis(trades),
+        "named_session_analysis": compute_named_session_analytics(trades),
         "mae_mfe_analysis": compute_mae_mfe_analysis(trades),
         "win_loss_patterns": compute_win_loss_patterns(daily_pnl_records),
         "regime_performance": compute_regime_performance(daily_pnl_records, trades),
         "autocorrelation": compute_trade_autocorrelation(daily_pnl_records),
     }
+
+    # Per-layer analytics (populated when eligibility gate is active)
+    if decisions is not None:
+        result["playbook_analytics"] = compute_playbook_analytics(trades, decisions)
+        result["bias_regime_analytics"] = compute_bias_regime_analytics(trades, decisions)
+
+    if rejections is not None:
+        result["rejection_quality"] = compute_rejection_quality(
+            rejections, market_outcomes or []
+        )
+
+    return result

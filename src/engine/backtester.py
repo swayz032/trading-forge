@@ -1046,6 +1046,19 @@ def run_class_backtest(
         session_multipliers=session_mult,
     )
 
+    # ─── Eligibility gate (Wave 2.8 integration point) ─────────
+    # After strategy.compute() generates signals and before vectorbt processes them:
+    # 1. Load HTF data (daily, weekly) and compute HTF context
+    # 2. Apply shift_higher_tf_columns() to prevent look-ahead bias on HTF data
+    # 3. Compute session context (overnight bias, London sweeps, etc.)
+    # 4. Run bias engine to get DailyBiasState
+    # 5. Route through playbook router
+    # 6. Compute location score, structural stops, structural targets
+    # 7. For each entry signal bar, call evaluate_signal()
+    # 8. Filter: TAKE = keep, REDUCE = keep with size adjustment, SKIP = remove
+    # 9. Log rejection reasons for rejection quality analysis
+    # Currently passes through — full per-bar loop requires careful testing.
+
     # ─── Convert to Pandas at vectorbt boundary ────────────────
     ts_index = df["ts_event"].to_pandas() if "ts_event" in df.columns else None
     close_pd = df["close"].to_pandas()
@@ -1392,4 +1405,29 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
 
 
 if __name__ == "__main__":
+    # ─── Context module integration test ────────────────────────
+    # Verify all 7 context layers are importable and callable.
+    # Run with: python -m src.engine.backtester --help
+    try:
+        from src.engine.context.htf_context import compute_htf_context
+        from src.engine.context.session_context import compute_session_context
+        from src.engine.context.bias_engine import compute_bias
+        from src.engine.context.playbook_router import route_playbook
+        from src.engine.context.location_score import compute_location_score
+        from src.engine.context.structural_stops import compute_structural_stop
+        from src.engine.context.structural_targets import compute_targets
+        from src.engine.context.eligibility_gate import evaluate_signal
+
+        assert callable(compute_htf_context), "compute_htf_context not callable"
+        assert callable(compute_session_context), "compute_session_context not callable"
+        assert callable(compute_bias), "compute_bias not callable"
+        assert callable(route_playbook), "route_playbook not callable"
+        assert callable(compute_location_score), "compute_location_score not callable"
+        assert callable(compute_structural_stop), "compute_structural_stop not callable"
+        assert callable(compute_targets), "compute_targets not callable"
+        assert callable(evaluate_signal), "evaluate_signal not callable"
+        print("All 7 context layers imported and callable.", file=sys.stderr)
+    except ImportError as e:
+        print(f"Context module import check failed: {e}", file=sys.stderr)
+
     main()
