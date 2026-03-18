@@ -352,12 +352,6 @@ export async function runMatrix(strategyId: string) {
       tierStatus: { tier1: "completed", tier2: "completed", tier3: "running" },
     }).where(eq(backtestMatrix.id, matrixId));
 
-    broadcastSSE("backtest:matrix-tier", {
-      matrixId, tier: "tier3",
-      tier3Symbols,
-      tier2Completed: tier2Results.length,
-    });
-
     // ─── Tier 3: Heavy (1min × top symbols) ────────────────
     // Rank symbols by best score across tier 1+2, gate by promotion cutoff.
     // 1min backtests are expensive; only run for symbols that earned it.
@@ -371,6 +365,12 @@ export async function runMatrix(strategyId: string) {
       .sort((a, b) => b[1] - a[1])
       .slice(0, TIER3_MAX_SYMBOLS)
       .map(([sym]) => sym);
+
+    broadcastSSE("backtest:matrix-tier", {
+      matrixId, tier: "tier3",
+      tier3Symbols,
+      tier2Completed: tier2Results.length,
+    });
 
     const tier3Combos: MatrixCombo[] = tier3Symbols.map((symbol) => ({
       symbol,
