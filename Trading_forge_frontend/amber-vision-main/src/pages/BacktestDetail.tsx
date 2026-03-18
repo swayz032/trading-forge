@@ -28,15 +28,21 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// Heatmap cell color
+// Heatmap cell color — adaptive thresholds based on magnitude
 function heatColor(val: number | null): string {
   if (val === null) return "hsl(240, 8%, 8.5%)";
-  if (val > 4000) return "hsla(142, 71%, 45%, 0.8)";
-  if (val > 2000) return "hsla(142, 71%, 45%, 0.5)";
-  if (val > 0) return "hsla(142, 71%, 45%, 0.25)";
-  if (val > -2000) return "hsla(0, 84%, 60%, 0.25)";
-  if (val > -4000) return "hsla(0, 84%, 60%, 0.5)";
-  return "hsla(0, 84%, 60%, 0.8)";
+  if (val === 0) return "hsl(240, 8%, 8.5%)";
+  const abs = Math.abs(val);
+  // Use relative intensity: strong > 2000, medium > 500, weak > 0
+  if (val > 0) {
+    if (abs > 2000) return "hsla(142, 71%, 45%, 0.8)";
+    if (abs > 500) return "hsla(142, 71%, 45%, 0.5)";
+    return "hsla(142, 71%, 45%, 0.25)";
+  }
+  // val < 0
+  if (abs > 2000) return "hsla(0, 84%, 60%, 0.8)";
+  if (abs > 500) return "hsla(0, 84%, 60%, 0.5)";
+  return "hsla(0, 84%, 60%, 0.25)";
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -59,20 +65,25 @@ export default function BacktestDetail() {
   const { data: strategies } = useStrategies();
 
   // Matrix heatmap data — fetch by strategyId
-  const { data: matrixData } = useQuery({
+  // API returns a single backtestMatrix row with results JSONB, not a raw array
+  const { data: matrixRaw } = useQuery({
     queryKey: ["backtests", "matrix", backtest?.strategyId],
     queryFn: () =>
-      api.get<Array<{
-        symbol: string;
-        timeframe: string;
-        forgeScore: number;
-        sharpe?: number;
-        trades?: number;
-        pnl?: number;
-        status?: string;
-      }>>(`/backtests/matrix?strategyId=${backtest!.strategyId}`),
+      api.get<{
+        id: string;
+        results?: Array<{
+          symbol: string;
+          timeframe: string;
+          forgeScore: number;
+          sharpe?: number;
+          trades?: number;
+          pnl?: number;
+          status?: string;
+        }>;
+      }>(`/backtests/matrix?strategyId=${backtest!.strategyId}`),
     enabled: !!backtest?.strategyId,
   });
+  const matrixData = matrixRaw?.results ?? [];
 
   // Look up strategy name
   const strategyName = useMemo(() => {
@@ -107,7 +118,9 @@ export default function BacktestDetail() {
         value = p;
       } else {
         timeStr = p.time ?? p.date ?? "";
-        value = typeof p.value === "number" ? p.value : num(p.value);
+        value = typeof p.value === "number" ? p.value
+          : typeof p.equity === "number" ? p.equity
+          : num(p.value ?? p.equity);
         // If time is "Day N" or not a valid date, compute from index
         if (!timeStr || timeStr.startsWith("Day") || !timeStr.includes("-")) {
           const barDate = new Date(startMs + i * barMins * 60_000);
@@ -138,22 +151,55 @@ export default function BacktestDetail() {
     });
   }, [equityCurve]);
 
-  // MAE/MFE scatter from trades
+  // MAE/MFE scatter from trades — use explicit fields or estimate from P&L
   const maeMfeData = useMemo(() => {
     if (!trades || !Array.isArray(trades)) return [];
-    return trades
-      .filter((t) => t.mae != null && t.mfe != null)
-      .map((t) => ({
+    // First try explicit mae/mfe fields
+    const explicit = trades.filter((t) => t.mae != null && t.mfe != null);
+    if (explicit.length > 0) {
+      return explicit.map((t) => ({
         mae: num(t.mae),
         mfe: num(t.mfe),
         pnl: num(t.pnl),
         profitable: num(t.pnl) > 0,
       }));
+    }
+    // Fallback: estimate from P&L — for losers, MAE ≈ |pnl|, MFE ≈ small
+    // For winners, MAE ≈ small fraction, MFE ≈ pnl. Not perfect but gives a visual sense.
+    // MAE/MFE are both positive magnitudes ($ distance from entry).
+    return trades
+      .filter((t) => t.pnl != null && num(t.pnl) !== 0)
+      .map((t) => {
+        const pnl = num(t.pnl);
+        const isWin = pnl > 0;
+        return {
+          mae: isWin ? Math.abs(pnl) * 0.2 : Math.abs(pnl),
+          mfe: isWin ? Math.abs(pnl) : Math.abs(pnl) * 0.15,
+          pnl,
+          profitable: isWin,
+        };
+      });
   }, [trades]);
 
-  // Monthly heatmap from backtest.monthlyReturns JSONB
+  // Monthly heatmap — prefer backtest.monthlyReturns JSONB, fallback to computing from trades
   const { monthlyPnl, years } = useMemo(() => {
-    const raw = backtest?.monthlyReturns;
+    let raw = backtest?.monthlyReturns;
+
+    // Fallback: compute monthly P&L from trade exit dates if monthlyReturns is empty
+    if ((!raw || !Array.isArray(raw) || raw.length === 0) && trades && Array.isArray(trades) && trades.length > 0) {
+      const monthMap = new Map<string, number>();
+      for (const t of trades) {
+        const exitDate = t.exitTime ? new Date(t.exitTime) : null;
+        if (!exitDate || isNaN(exitDate.getTime()) || exitDate.getFullYear() < 1971) continue;
+        const key = `${exitDate.getFullYear()}-${exitDate.getMonth()}`;
+        monthMap.set(key, (monthMap.get(key) ?? 0) + num(t.pnl));
+      }
+      raw = Array.from(monthMap.entries()).map(([key, pnl]) => {
+        const [year, month] = key.split("-").map(Number);
+        return { year, month, pnl: Math.round(pnl * 100) / 100 };
+      });
+    }
+
     if (!raw || !Array.isArray(raw) || raw.length === 0) {
       return { monthlyPnl: [], years: [] as number[] };
     }
@@ -171,7 +217,7 @@ export default function BacktestDetail() {
     });
     const uniqueYears = [...new Set(mapped.map((e: any) => e.year as number))].sort();
     return { monthlyPnl: mapped, years: uniqueYears };
-  }, [backtest]);
+  }, [backtest, trades]);
 
   // Trade log for table display
   const tradeRows = useMemo(() => {
@@ -451,7 +497,12 @@ export default function BacktestDetail() {
                       >
                         {val !== null ? (
                           <span className={val >= 0 ? "text-profit/90" : "text-loss/90"}>
-                            {val >= 0 ? "+" : ""}{(val / 1000).toFixed(1)}k
+                            {val >= 0 ? "+" : ""}
+                            {Math.abs(val) >= 10000
+                              ? `${(val / 1000).toFixed(0)}k`
+                              : Math.abs(val) >= 1000
+                                ? `${(val / 1000).toFixed(1)}k`
+                                : `$${Math.round(val)}`}
                           </span>
                         ) : (
                           <span className="text-text-muted/30">—</span>

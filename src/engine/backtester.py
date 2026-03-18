@@ -512,6 +512,9 @@ def run_backtest(
     # Use ts_event as index so equity curve has proper datetime indices
     ts_index = df["ts_event"].to_pandas() if "ts_event" in df.columns else None
     close_pd = df["close"].to_pandas()
+    # High/Low arrays for per-trade MAE/MFE computation
+    high_np = df["high"].to_numpy() if "high" in df.columns else close_pd.to_numpy()
+    low_np = df["low"].to_numpy() if "low" in df.columns else close_pd.to_numpy()
     if ts_index is not None:
         close_pd.index = ts_index
     entries_pd = pl.Series("entry_long", entries_np).to_pandas()
@@ -641,6 +644,31 @@ def run_backtest(
             trade["GrossPnL"] = round(gross, 2)
             trade["SlippageCost"] = round(slip_cost, 2)
             trade["CommissionCost"] = round(comm_cost, 2)
+
+            # ─── Per-trade MAE/MFE ($ excursion from entry) ───────
+            # MAE = max adverse move in $ (always positive = how far against you)
+            # MFE = max favorable move in $ (always positive = how far in your favor)
+            try:
+                ei = max(0, entry_idx)
+                xi = min(exit_idx + 1, len(high_np))
+                if xi > ei:
+                    bar_highs = high_np[ei:xi]
+                    bar_lows = low_np[ei:xi]
+                    if "Short" in direction:
+                        trade_mae = round((float(np.max(bar_highs)) - entry_p) * size * spec.point_value, 2)
+                        trade_mfe = round((entry_p - float(np.min(bar_lows))) * size * spec.point_value, 2)
+                    else:
+                        trade_mae = round((entry_p - float(np.min(bar_lows))) * size * spec.point_value, 2)
+                        trade_mfe = round((float(np.max(bar_highs)) - entry_p) * size * spec.point_value, 2)
+                    trade["mae"] = max(0.0, trade_mae)
+                    trade["mfe"] = max(0.0, trade_mfe)
+                else:
+                    trade["mae"] = 0.0
+                    trade["mfe"] = 0.0
+            except Exception:
+                trade["mae"] = None
+                trade["mfe"] = None
+
             trades_list.append(trade)
 
         trade_pnls_arr = np.array(trade_pnls_list)
@@ -1089,6 +1117,9 @@ def run_class_backtest(
     # ─── Convert to Pandas at vectorbt boundary ────────────────
     ts_index = df["ts_event"].to_pandas() if "ts_event" in df.columns else None
     close_pd = df["close"].to_pandas()
+    # High/Low arrays for per-trade MAE/MFE computation
+    high_np = df["high"].to_numpy() if "high" in df.columns else close_pd.to_numpy()
+    low_np = df["low"].to_numpy() if "low" in df.columns else close_pd.to_numpy()
     entries_pd = df["entry_long"].to_pandas()
     exits_pd = df["exit_long"].to_pandas()
     short_entries_pd = df["entry_short"].to_pandas()
@@ -1176,6 +1207,31 @@ def run_class_backtest(
             trade["GrossPnL"] = round(gross, 2)
             trade["SlippageCost"] = round(slip_cost, 2)
             trade["CommissionCost"] = round(comm_cost, 2)
+
+            # ─── Per-trade MAE/MFE ($ excursion from entry) ───────
+            # MAE = max adverse move in $ (always positive = how far against you)
+            # MFE = max favorable move in $ (always positive = how far in your favor)
+            try:
+                ei = max(0, entry_idx)
+                xi = min(exit_idx + 1, len(high_np))
+                if xi > ei:
+                    bar_highs = high_np[ei:xi]
+                    bar_lows = low_np[ei:xi]
+                    if "Short" in direction:
+                        trade_mae = round((float(np.max(bar_highs)) - entry_p) * size * spec.point_value, 2)
+                        trade_mfe = round((entry_p - float(np.min(bar_lows))) * size * spec.point_value, 2)
+                    else:
+                        trade_mae = round((entry_p - float(np.min(bar_lows))) * size * spec.point_value, 2)
+                        trade_mfe = round((float(np.max(bar_highs)) - entry_p) * size * spec.point_value, 2)
+                    trade["mae"] = max(0.0, trade_mae)
+                    trade["mfe"] = max(0.0, trade_mfe)
+                else:
+                    trade["mae"] = 0.0
+                    trade["mfe"] = 0.0
+            except Exception:
+                trade["mae"] = None
+                trade["mfe"] = None
+
             trades_list.append(trade)
 
         trade_pnls_arr = np.array(trade_pnls_list)
