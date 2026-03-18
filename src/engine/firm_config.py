@@ -58,33 +58,46 @@ FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
 
 SCALING_PLANS: dict[str, list[dict]] = {
     "topstep_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
-        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 4500},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 4500, "max_contracts": 15},
     ],
     "mffu_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
-        {"profit_threshold": 15000, "new_account_size": 200000, "new_max_dd": 5000},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
+        {"profit_threshold": 15000, "new_account_size": 200000, "new_max_dd": 5000, "max_contracts": 20},
     ],
     "tpt_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500, "max_contracts": 10},
     ],
     "apex_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500},
-        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000},
-        {"profit_threshold": 20000, "new_account_size": 250000, "new_max_dd": 6500},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500, "max_contracts": 12},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000, "max_contracts": 15},
+        {"profit_threshold": 20000, "new_account_size": 250000, "new_max_dd": 6500, "max_contracts": 20},
     ],
     "tradeify_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
     ],
     "alpha_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
     ],
     "ffn_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500, "max_contracts": 10},
     ],
     "earn2trade_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
     ],
+}
+
+
+# ─── Initial Contract Caps (starting limits before scaling) ──────
+INITIAL_CONTRACT_CAPS: dict[str, int] = {
+    "topstep_50k": 5,
+    "mffu_50k": 5,
+    "tpt_50k": 3,
+    "apex_50k": 10,
+    "tradeify_50k": 5,
+    "alpha_50k": 5,
+    "ffn_50k": 5,
+    "earn2trade_50k": 3,
 }
 
 

@@ -130,10 +130,10 @@ class TestContractCaps:
         spec = CONTRACT_SPECS["ES"]
 
         # Without cap
-        sizes_uncapped = compute_position_sizes(df, config, spec, atr_period=14)
+        sizes_uncapped, _ = compute_position_sizes(df, config, spec, atr_period=14)
 
         # With Topstep cap of 5
-        sizes_capped = compute_position_sizes(
+        sizes_capped, _ = compute_position_sizes(
             df, config, spec, atr_period=14, max_contracts=5,
         )
 
@@ -165,12 +165,12 @@ class TestContractCaps:
         config = PositionSizeConfig(type="dynamic_atr", target_risk_dollars=500)
         spec = CONTRACT_SPECS["ES"]
 
-        sizes = compute_position_sizes(
+        sizes, _ = compute_position_sizes(
             df, config, spec, atr_period=14, max_contracts=5,
         )
 
         # All sizes should be <= 5 and unchanged from uncapped
-        sizes_uncapped = compute_position_sizes(df, config, spec, atr_period=14)
+        sizes_uncapped, _ = compute_position_sizes(df, config, spec, atr_period=14)
         for i in range(n):
             if not math.isnan(sizes[i]) and sizes_uncapped[i] <= 5:
                 assert sizes[i] == sizes_uncapped[i]

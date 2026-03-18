@@ -80,6 +80,23 @@ def classify_session(timestamps: pl.Series) -> np.ndarray:
     return labels
 
 
+# ─── Event-Specific Multipliers (applied ON TOP of session multipliers) ───
+
+EVENT_MULTIPLIERS = {
+    "FOMC": 4.0,          # FOMC rate decisions — 4-20 ticks possible on ES
+    "CPI": 3.0,           # CPI release at 8:30 ET — major volatility spike
+    "NFP": 3.0,           # First Friday of month
+    "PPI": 2.0,           # Producer Price Index
+    "PCE": 2.5,           # Personal Consumption Expenditures (Fed's preferred)
+    "GDP": 2.0,           # GDP release
+    "RETAIL_SALES": 2.0,  # Retail sales
+    "INVENTORY": 2.5,     # CL-specific (EIA, Wednesday 10:30 ET)
+    "OPEC": 3.0,          # CL-specific — OPEC decisions
+    "JOLTS": 1.5,         # Job openings
+    "ISM": 2.0,           # ISM Manufacturing/Services
+}
+
+
 def get_session_multipliers(timestamps: pl.Series) -> np.ndarray:
     """Get slippage multiplier for each timestamp based on session.
 
@@ -98,3 +115,28 @@ def get_session_multipliers(timestamps: pl.Series) -> np.ndarray:
         multipliers[mask] = mult
 
     return multipliers
+
+
+def get_event_adjusted_multipliers(
+    timestamps: pl.Series,
+    event_bars: np.ndarray | None = None,
+    event_type: str = "FOMC",
+) -> np.ndarray:
+    """Get slippage multipliers adjusted for both session AND event risk.
+
+    Args:
+        timestamps: Polars Series of timestamps
+        event_bars: Boolean array marking bars within event windows (+-30 min)
+        event_type: Type of event for multiplier lookup
+
+    Returns:
+        numpy array of combined multipliers
+    """
+    base = get_session_multipliers(timestamps)
+
+    if event_bars is not None:
+        event_mult = EVENT_MULTIPLIERS.get(event_type, 2.0)
+        # Apply event multiplier on top of session multiplier
+        base[event_bars.astype(bool)] *= event_mult
+
+    return base

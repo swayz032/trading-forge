@@ -86,6 +86,8 @@ def simulate_prop_firm(
     # Commission adjustment per day
     comm_per_side = FIRM_COMMISSIONS.get(firm_key, {}).get(symbol, 2.52)
     daily_loss_limit = DAILY_LOSS_LIMITS.get(firm_key)
+    # Tradeify uses realtime trailing DD (intraday equity, not EOD).
+    # Other firms (Topstep, MFFU, Apex, etc.) use EOD trailing.
     is_realtime = firm["trailing"] == "realtime"
 
     balance = account_size
@@ -131,7 +133,10 @@ def simulate_prop_firm(
         # Drawdown tracking
         if is_realtime:
             # Realtime: check against intraday movement (approximation —
-            # we only have daily resolution here, use worst-case)
+            # we only have daily resolution here, use worst-case).
+            # TODO(Wave 3): Replace with bar-level intraday equity tracking
+            # for accurate realtime trailing DD on Tradeify. Current daily
+            # granularity may underestimate peak-to-trough intraday swings.
             intraday_low = balance - abs(min(0, net_pnl))
         else:
             intraday_low = balance  # EOD only checks closing balance
@@ -259,6 +264,17 @@ def simulate_prop_firm(
     # Overall verdict
     passed = eval_passed and not trailing_dd_breached and consistency_passed
 
+    # Eval cost amortization — conservative 30% pass rate default.
+    # TODO(Wave 8): Replace with MC-derived pass probability per strategy.
+    pass_probability = 0.30
+    net_payout = payout_projection * 12 if payout_projection > 0 else 0
+    expected_eval_cost = round(
+        firm.get("monthly_fee", 0) / max(0.01, pass_probability), 2
+    )
+    true_net_payout = round(
+        net_payout - expected_eval_cost / 12, 2
+    ) if net_payout > 0 else 0
+
     return {
         "firm": firm_key,
         "firm_name": firm["name"],
@@ -282,6 +298,8 @@ def simulate_prop_firm(
         "monthly_summary": monthly_summary,
         "worst_month": worst_month,
         "recovery_days_from_max_dd": recovery_days,
+        "expected_eval_cost": expected_eval_cost,
+        "true_net_payout": true_net_payout,
     }
 
 

@@ -1,5 +1,7 @@
 """Data loading layer: S3 consolidated Parquet → DuckDB → Polars.
 
+Includes rollover-day detection utility (Task 7.1).
+
 Production-grade:
 - Reads from consolidated single Parquet files on S3 (1 file per symbol/timeframe)
 - Singleton DuckDB connection — configure S3 once, reuse across all backtests
@@ -231,5 +233,127 @@ def load_ohlcv(
 
     # ─── Validate data quality (ratio-adjusted check) ────────────
     _validate_data_quality(df, symbol, timeframe)
+
+    return df
+
+
+# ─── Rollover Day Detection (Task 7.1) ──────────────────────────────
+
+# Delivery months per symbol. Equity index futures roll quarterly;
+# crude oil rolls every month.
+ROLLOVER_MONTHS: dict[str, list[int]] = {
+    "ES": [3, 6, 9, 12],
+    "MES": [3, 6, 9, 12],
+    "NQ": [3, 6, 9, 12],
+    "MNQ": [3, 6, 9, 12],
+    "YM": [3, 6, 9, 12],
+    "RTY": [3, 6, 9, 12],
+    "CL": list(range(1, 13)),
+    "GC": [2, 4, 6, 8, 10, 12],
+}
+
+
+def _third_friday(year: int, month: int) -> int:
+    """Return day-of-month of the 3rd Friday for the given year/month."""
+    from datetime import date
+    # First day of the month
+    first = date(year, month, 1)
+    # Weekday: Monday=0 ... Friday=4
+    first_friday = 1 + (4 - first.weekday()) % 7
+    third_friday = first_friday + 14
+    return third_friday
+
+
+def _second_thursday_before_third_friday(year: int, month: int) -> "date":
+    """Standard CME equity index rollover: 2nd Thursday before 3rd Friday of delivery month.
+
+    This is typically 8 days before the 3rd Friday (the Thursday of the prior week).
+    """
+    from datetime import date, timedelta
+    tf_day = _third_friday(year, month)
+    third_friday_date = date(year, month, tf_day)
+    # Go back to the Thursday of the previous week (8 days before Friday)
+    rollover = third_friday_date - timedelta(days=8)
+    return rollover
+
+
+def compute_rollover_dates(
+    symbol: str,
+    start_year: int,
+    end_year: int,
+) -> list["date"]:
+    """Compute standard rollover dates for a futures symbol across a year range.
+
+    Uses CME convention: 2nd Thursday before 3rd Friday of each delivery month.
+
+    Args:
+        symbol: Futures symbol (ES, NQ, CL, etc.)
+        start_year: First year (inclusive)
+        end_year: Last year (inclusive)
+
+    Returns:
+        Sorted list of datetime.date objects representing rollover days
+    """
+    from datetime import date
+    months = ROLLOVER_MONTHS.get(symbol, [3, 6, 9, 12])
+    dates_list: list[date] = []
+    for year in range(start_year, end_year + 1):
+        for month in months:
+            rollover = _second_thursday_before_third_friday(year, month)
+            dates_list.append(rollover)
+    return sorted(dates_list)
+
+
+def flag_rollover_days(
+    df: pl.DataFrame,
+    symbol: str,
+) -> pl.DataFrame:
+    """Add a boolean 'is_rollover_day' column to the DataFrame.
+
+    Bars on rollover days are flagged True. The backtester can use this
+    to suppress new entries on rollover days (volume spikes, spread
+    widening, and price gaps around the roll make signals unreliable).
+
+    Args:
+        df: OHLCV DataFrame with 'ts_event' column
+        symbol: Futures symbol
+
+    Returns:
+        DataFrame with 'is_rollover_day' boolean column added
+    """
+    from datetime import date
+
+    if "ts_event" not in df.columns:
+        return df.with_columns(pl.lit(False).alias("is_rollover_day"))
+
+    # Extract year range from data
+    ts = df["ts_event"]
+    if ts.dtype == pl.Utf8:
+        # String dates — parse year from first/last
+        first_year = int(str(ts[0])[:4])
+        last_year = int(str(ts[-1])[:4])
+    else:
+        first_year = ts.dt.year().min()
+        last_year = ts.dt.year().max()
+
+    rollover_dates = compute_rollover_dates(symbol, first_year, last_year)
+    rollover_strs = {d.isoformat() for d in rollover_dates}
+
+    # Extract calendar date from each bar's timestamp
+    if ts.dtype == pl.Utf8:
+        date_col = pl.col("ts_event").str.slice(0, 10)
+    else:
+        date_col = pl.col("ts_event").dt.date().cast(pl.Utf8)
+
+    df = df.with_columns(
+        date_col.is_in(list(rollover_strs)).alias("is_rollover_day")
+    )
+
+    rollover_count = df["is_rollover_day"].sum()
+    if rollover_count > 0:
+        print(
+            f"Flagged {rollover_count} bars on {len(rollover_dates)} rollover days for {symbol}",
+            file=sys.stderr,
+        )
 
     return df

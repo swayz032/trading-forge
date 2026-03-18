@@ -23,7 +23,7 @@ from src.engine.config import (
     IndicatorConfig,
     StrategyConfig,
 )
-from src.engine.data_loader import load_ohlcv
+from src.engine.data_loader import load_ohlcv, flag_rollover_days
 from src.engine.firm_config import get_commission_per_side, get_contract_cap, FIRM_CONTRACT_CAPS
 from src.engine.indicators.core import compute_indicators, compute_atr
 from src.engine.liquidity import get_session_multipliers
@@ -60,6 +60,47 @@ from src.engine.strategy_base import BaseStrategy
 # If you need "next-bar fill" (convention 2), pass signal_shift=1 to
 # vbt.Portfolio.from_signals(). Do NOT change the signal generation logic.
 # ─────────────────────────────────────────────────────────────────────
+
+# ─── Multi-TF Look-Ahead Prevention Convention ─────────────────────
+# When using higher-timeframe (daily/4H/1H) indicators to filter
+# lower-timeframe signals (e.g., 15min entries), you MUST use the
+# PREVIOUS completed bar's value — never the current incomplete bar.
+#
+#   daily_sma = daily_df["sma_20"].shift(1)    # previous completed daily bar
+#   h4_atr    = h4_df["atr_14"].shift(1)       # previous completed 4H bar
+#
+# Rationale: At 10:30 AM on an intraday bar, today's daily SMA is
+# still forming. Using it is look-ahead bias. shift(1) ensures only
+# fully settled higher-TF values are used for filtering.
+#
+# Any function that merges higher-TF data into lower-TF DataFrames
+# must apply shift(1) to the higher-TF columns BEFORE the merge/join.
+
+
+def shift_higher_tf_columns(
+    df: pl.DataFrame,
+    higher_tf_columns: list[str],
+) -> pl.DataFrame:
+    """Apply shift(1) to higher-TF indicator columns to prevent look-ahead bias.
+
+    When higher-TF indicators (daily SMA, 4H ATR, etc.) are merged into a
+    lower-TF DataFrame for signal filtering, those columns must reflect the
+    PREVIOUS completed higher-TF bar, not the current incomplete one.
+
+    Args:
+        df: DataFrame containing merged higher-TF columns
+        higher_tf_columns: List of column names from the higher timeframe
+
+    Returns:
+        DataFrame with specified columns shifted forward by 1 row
+    """
+    shift_exprs = [
+        pl.col(col).shift(1).alias(col) for col in higher_tf_columns
+        if col in df.columns
+    ]
+    if shift_exprs:
+        df = df.with_columns(shift_exprs)
+    return df
 
 # ─── Timeframe → pandas freq mapping ────────────────────────────────
 # vectorbt uses freq to annualize Sharpe. Hardcoding "1D" deflates
@@ -219,6 +260,9 @@ def run_backtest(
             print(f"WARNING: Bar count mismatch for {config.timeframe}: expected ~{_expected}, got {_actual}. "
                   f"Possible wrong timeframe data.", file=sys.stderr)
 
+    # ─── Flag rollover days (Task 7.1) ───────────────────────
+    data = flag_rollover_days(data, config.symbol)
+
     # ─── Compute indicators ───────────────────────────────────
     # Ensure ATR is included for sizing/slippage
     indicator_configs = list(config.indicators)
@@ -242,6 +286,27 @@ def run_backtest(
     # ─── Generate signals ─────────────────────────────────────
     df = generate_signals(df, config, fill_rate=fill_rate, event_mask=event_mask)
 
+    # ─── Suppress entries on rollover days (Task 7.1) ─────────
+    if "is_rollover_day" in df.columns:
+        rollover_mask = df["is_rollover_day"]
+        suppressed = int(
+            (df.filter(rollover_mask)["entry_long"].sum() or 0)
+            + (df.filter(rollover_mask).get_column("entry_short").sum() or 0)
+            if "entry_short" in df.columns
+            else (df.filter(rollover_mask)["entry_long"].sum() or 0)
+        )
+        if suppressed > 0:
+            print(
+                f"Suppressing {suppressed} entry signals on rollover days",
+                file=sys.stderr,
+            )
+        df = df.with_columns([
+            pl.when(pl.col("is_rollover_day")).then(False).otherwise(pl.col("entry_long")).alias("entry_long"),
+            pl.when(pl.col("is_rollover_day")).then(False).otherwise(
+                pl.col("entry_short") if "entry_short" in df.columns else pl.lit(False)
+            ).alias("entry_short"),
+        ])
+
     # ─── Firm-specific commission (Task 3.11) ─────────────────
     commission = request.commission_per_side
     if request.firm_key:
@@ -254,10 +319,17 @@ def run_backtest(
         max_contracts = get_contract_cap(request.firm_key, config.symbol)
 
     # ─── Position sizing ──────────────────────────────────────
-    sizes = compute_position_sizes(
+    sizes, over_risk = compute_position_sizes(
         df, config.position_size, spec, atr_period,
         max_contracts=max_contracts,
     )
+    over_risk_count = int(np.sum(over_risk))
+    if over_risk_count > 0:
+        print(
+            f"WARNING: {over_risk_count} bars have ATR-implied risk > target "
+            f"for 1 contract (over_risk). Trading 1 contract anyway.",
+            file=sys.stderr,
+        )
 
     # ─── Session liquidity multipliers (Task 3.7) ─────────────
     session_mult = None
@@ -528,6 +600,8 @@ def run_backtest(
         "recency_analysis": compute_recency_weighted_score(
             daily_pnl_records, sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl,
         ),
+        "over_risk_bars": over_risk_count,
+        "over_risk_pct": round(over_risk_count / max(len(df), 1) * 100, 2),
         "prop_compliance": prop_compliance,
         "analytics": analytics,
     }
@@ -639,8 +713,8 @@ def compute_recency_weighted_score(
     recent_win_rate = sum(1 for r in recent if r["pnl"] > 0) / len(recent) if recent else 0
     recent_score = _compute_forge_score(sharpe, max_dd, profit_factor, recent_win_rate, recent_avg)
 
-    # Flag: strategy decaying if recent score < 70% of full score
-    decaying = recent_score < (full_score * 0.70) if full_score > 0 else False
+    # Flag: strategy decaying if recent score < 60% of full score
+    decaying = recent_score < (full_score * 0.60) if full_score > 0 else False
 
     return {
         "full_score": full_score,
@@ -739,7 +813,14 @@ def run_class_backtest(
         size_config = PositionSizeConfig(type="fixed", fixed_contracts=fixed_contracts)
     else:
         size_config = PositionSizeConfig(type="dynamic_atr", target_risk_dollars=500.0)
-    sizes = compute_position_sizes(df, size_config, spec, 14, max_contracts=max_contracts)
+    sizes, over_risk = compute_position_sizes(df, size_config, spec, 14, max_contracts=max_contracts)
+    over_risk_count = int(np.sum(over_risk))
+    if over_risk_count > 0:
+        print(
+            f"WARNING: {over_risk_count} bars have ATR-implied risk > target "
+            f"for 1 contract (over_risk). Trading 1 contract anyway.",
+            file=sys.stderr,
+        )
 
     # ─── Session liquidity multipliers ─────────────────────────
     session_mult = None
@@ -943,6 +1024,8 @@ def run_class_backtest(
         "execution_time_ms": elapsed_ms,
         "tier": tier,
         "forge_score": forge_score,
+        "over_risk_bars": over_risk_count,
+        "over_risk_pct": round(over_risk_count / max(len(df), 1) * 100, 2),
         "prop_compliance": prop_compliance,
     }
 
