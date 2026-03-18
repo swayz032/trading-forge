@@ -69,6 +69,27 @@ export const backtests = pgTable(
   ]
 );
 
+// ─── Backtest Matrix (cross-symbol × timeframe testing) ─────
+export const backtestMatrix = pgTable(
+  "backtest_matrix",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    status: text("status").notNull().default("running"), // running | tier1 | tier2 | tier3 | completed | failed
+    totalCombos: integer("total_combos").notNull(),
+    completedCombos: integer("completed_combos").notNull().default(0),
+    results: jsonb("results"), // [{symbol, timeframe, forgeScore, sharpe, trades, backtestId}]
+    bestCombo: jsonb("best_combo"), // {symbol, timeframe, forgeScore, backtestId}
+    tierStatus: jsonb("tier_status"), // {tier1: "completed", tier2: "running", tier3: "pending"}
+    executionTimeMs: integer("execution_time_ms"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("matrix_strategy_idx").on(table.strategyId),
+    index("matrix_status_idx").on(table.status),
+  ]
+);
+
 // ─── Backtest Trades ─────────────────────────────────────────
 export const backtestTrades = pgTable(
   "backtest_trades",
@@ -77,20 +98,33 @@ export const backtestTrades = pgTable(
     backtestId: uuid("backtest_id")
       .references(() => backtests.id, { onDelete: "cascade" })
       .notNull(),
+    matrixId: uuid("matrix_id").references(() => backtestMatrix.id),
+    symbol: text("symbol"),
+    timeframe: text("timeframe"),
     entryTime: timestamp("entry_time").notNull(),
     exitTime: timestamp("exit_time"),
     direction: text("direction").notNull(), // long | short
     entryPrice: numeric("entry_price").notNull(),
     exitPrice: numeric("exit_price"),
     pnl: numeric("pnl"),
+    netPnl: numeric("net_pnl"),
     contracts: integer("contracts").notNull().default(1),
     commission: numeric("commission"),
     slippage: numeric("slippage"),
-    mae: numeric("mae"), // Maximum Adverse Excursion
-    mfe: numeric("mfe"), // Maximum Favorable Excursion
+    mae: numeric("mae"), // Maximum Adverse Excursion ($)
+    mfe: numeric("mfe"), // Maximum Favorable Excursion ($)
     holdDurationMs: integer("hold_duration_ms"),
+    hourOfDay: integer("hour_of_day"),     // 0-23 ET
+    dayOfWeek: integer("day_of_week"),     // 0=Mon, 4=Fri
+    macroRegime: text("macro_regime"),     // RISK_ON, RISK_OFF, etc.
+    eventActive: boolean("event_active"),  // Was FOMC/CPI/NFP within window?
+    skipSignal: text("skip_signal"),       // What skip engine would have said
   },
-  (table) => [index("trades_backtest_idx").on(table.backtestId)]
+  (table) => [
+    index("trades_backtest_idx").on(table.backtestId),
+    index("trades_matrix_idx").on(table.matrixId),
+    index("trades_symbol_idx").on(table.symbol),
+  ]
 );
 
 // ─── Monte Carlo Runs ────────────────────────────────────────
@@ -446,5 +480,92 @@ export const tournamentResults = pgTable(
     index("tournament_results_date_idx").on(table.tournamentDate),
     index("tournament_results_verdict_idx").on(table.finalVerdict),
     index("tournament_results_candidate_idx").on(table.candidateName),
+  ]
+);
+
+// ─── Paper Trading Sessions ────────────────────────────────
+export const paperSessions = pgTable(
+  "paper_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id),
+    status: text("status").notNull().default("active"), // active | stopped
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    stoppedAt: timestamp("stopped_at"),
+    startingCapital: numeric("starting_capital").notNull().default("100000"),
+    currentEquity: numeric("current_equity").notNull().default("100000"),
+    config: jsonb("config"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("paper_sessions_strategy_idx").on(table.strategyId),
+    index("paper_sessions_status_idx").on(table.status),
+  ]
+);
+
+// ─── Paper Trading Positions ───────────────────────────────
+export const paperPositions = pgTable(
+  "paper_positions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .references(() => paperSessions.id, { onDelete: "cascade" })
+      .notNull(),
+    symbol: text("symbol").notNull(),
+    side: text("side").notNull(), // long | short
+    entryPrice: numeric("entry_price").notNull(),
+    currentPrice: numeric("current_price"),
+    contracts: integer("contracts").notNull().default(1),
+    unrealizedPnl: numeric("unrealized_pnl").default("0"),
+    entryTime: timestamp("entry_time").defaultNow().notNull(),
+    closedAt: timestamp("closed_at"),
+  },
+  (table) => [
+    index("paper_positions_session_idx").on(table.sessionId),
+  ]
+);
+
+// ─── Paper Trading Trades ──────────────────────────────────
+export const paperTrades = pgTable(
+  "paper_trades",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .references(() => paperSessions.id, { onDelete: "cascade" })
+      .notNull(),
+    symbol: text("symbol").notNull(),
+    side: text("side").notNull(), // long | short
+    entryPrice: numeric("entry_price").notNull(),
+    exitPrice: numeric("exit_price").notNull(),
+    pnl: numeric("pnl").notNull(),
+    contracts: integer("contracts").notNull().default(1),
+    entryTime: timestamp("entry_time").notNull(),
+    exitTime: timestamp("exit_time").notNull(),
+    slippage: numeric("slippage"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("paper_trades_session_idx").on(table.sessionId),
+  ]
+);
+
+// ─── Paper Signal Log ─────────────────────────────────────
+export const paperSignalLog = pgTable(
+  "paper_signal_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .references(() => paperSessions.id, { onDelete: "cascade" })
+      .notNull(),
+    symbol: text("symbol").notNull(),
+    signalType: text("signal_type").notNull(), // entry_long, entry_short, exit, stop_loss, hold
+    action: text("action").notNull(), // taken, skipped, rejected
+    reason: text("reason"), // why skipped/rejected (risk gate, session filter, cooldown, etc.)
+    price: numeric("price"),
+    indicatorValues: jsonb("indicator_values"), // snapshot of indicator values at signal time
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("paper_signal_log_session_idx").on(table.sessionId),
   ]
 );

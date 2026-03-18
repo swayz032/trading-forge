@@ -14,7 +14,7 @@ const agentService = new AgentService();
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
-const symbolEnum = z.enum(["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ"]);
+const symbolEnum = z.enum(["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"]);
 
 const runStrategySchema = z.object({
   strategy_name: z.string().min(1),
@@ -26,8 +26,8 @@ const runStrategySchema = z.object({
   ),
   symbol: symbolEnum,
   timeframe: z.string().min(1),
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   source: z.enum(["ollama", "openclaw", "manual"]).default("ollama"),
 });
 
@@ -60,8 +60,8 @@ const robustnessSchema = z.object({
 const findStrategiesSchema = z.object({
   symbol: symbolEnum,
   timeframe: z.string().default("1h"),
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   count: z.number().int().min(1).max(10).default(5),
 });
 
@@ -131,6 +131,36 @@ agentRoutes.post("/batch", async (req, res) => {
   });
 
   res.status(202).json({ count: parsed.data.strategies.length, message: "Batch submitted" });
+});
+
+// ─── POST /api/agent/run-class-strategy ──────────────────────────
+// Run a class-based strategy (BaseStrategy subclass) through the backtest engine
+
+const runClassStrategySchema = z.object({
+  strategy_name: z.string().min(1),
+  strategy_class: z.string().min(1),  // e.g. "src.engine.strategies.breaker.BreakerStrategy"
+  symbol: symbolEnum,
+  timeframe: z.string().default("15min"),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  source: z.enum(["manual", "ollama", "openclaw"]).default("manual"),
+  description: z.string().default(""),
+  params: z.record(z.unknown()).default({}),
+});
+
+agentRoutes.post("/run-class-strategy", async (req, res) => {
+  const parsed = runClassStrategySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+
+  // Fire and forget
+  agentService.runClassStrategy(parsed.data).catch(() => {
+    // Error persisted to DB by service
+  });
+
+  res.status(202).json({ message: "Class strategy submitted", strategy_class: parsed.data.strategy_class });
 });
 
 // ─── POST /api/agent/scout-ideas ─────────────────────────────────
@@ -228,12 +258,23 @@ agentRoutes.post("/find-strategies", async (req, res) => {
     const ollama = new OllamaClient();
     const results: Array<{ name: string; status: string; error?: string }> = [];
 
+    // Fetch failure patterns from recent journal entries to avoid repeating mistakes
+    let avoidBlock = "";
+    try {
+      const { avoidPatterns } = await agentService.getFailurePatterns(30, 50);
+      if (avoidPatterns.length > 0) {
+        avoidBlock = `\n\nAVOID these patterns from recent failed strategies:\n${avoidPatterns.map((p, i) => `${i + 1}. ${p}`).join("\n")}\n`;
+      }
+    } catch (err) {
+      logger.warn({ err }, "Failed to fetch failure patterns — continuing without AVOID list");
+    }
+
     for (let i = 0; i < count; i++) {
       try {
         const prompt = `Generate a unique ${symbol} futures trading strategy for the ${timeframe} timeframe.
 Strategy #${i + 1} of ${count}. Each strategy must be different.
 Focus on proven edges: trend following, mean reversion, volatility expansion, or session patterns.
-Target: $250+/day avg P&L, 60%+ win days, profit factor >= 1.75, max drawdown <= $2,000.
+Target: $250+/day avg P&L, 60%+ win days, profit factor >= 1.75, max drawdown <= $2,000.${avoidBlock}
 Output ONLY the DSL JSON object, nothing else.`;
 
         const response = await ollama.generate("trading-quant", prompt, {
@@ -312,6 +353,21 @@ Output ONLY the DSL JSON object, nothing else.`;
   });
 
   res.status(202).json({ job_id: job.id, message: "Strategy search submitted" });
+});
+
+// ─── GET /api/agent/failure-patterns ──────────────────────────────
+// Returns AVOID patterns from recent failed strategies (for n8n + Ollama prompt injection)
+
+agentRoutes.get("/failure-patterns", async (req, res) => {
+  const days = Number(req.query.days ?? 30);
+  const limit = Number(req.query.limit ?? 50);
+  try {
+    const patterns = await agentService.getFailurePatterns(days, limit);
+    res.json(patterns);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: msg });
+  }
 });
 
 // ─── GET /api/agent/jobs ───────────────────────────────────────────

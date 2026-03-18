@@ -2,8 +2,9 @@ import { Router } from "express";
 import { eq, desc, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/index.js";
-import { backtests, backtestTrades, auditLog } from "../db/schema.js";
+import { backtests, backtestTrades, backtestMatrix, monteCarloRuns, strategies, auditLog } from "../db/schema.js";
 import { runBacktest } from "../services/backtest-service.js";
+import { runMatrix, getMatrixStatus } from "../services/matrix-backtest-service.js";
 
 export const backtestRoutes = Router();
 
@@ -20,7 +21,7 @@ const indicatorSchema = z.object({
 
 const strategyConfigSchema = z.object({
   name: z.string().min(1),
-  symbol: z.enum(["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ"]),
+  symbol: z.enum(["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"]),
   timeframe: z.string().min(1),
   indicators: z.array(indicatorSchema).min(1).max(5),
   entry_long: z.string().min(1),
@@ -40,11 +41,11 @@ const strategyConfigSchema = z.object({
 const backtestRequestSchema = z.object({
   strategyId: z.string().uuid(),
   strategy: strategyConfigSchema,
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   slippage_ticks: z.number().positive().optional().default(1.0),
   commission_per_side: z.number().nonnegative().optional().default(4.50),
-  mode: z.enum(["single", "walkforward"]).optional().default("single"),
+  mode: z.enum(["single", "walkforward"]).optional().default("walkforward"),
   walk_forward_splits: z.number().int().min(2).max(10).optional().default(5),
 });
 
@@ -58,8 +59,18 @@ backtestRoutes.post("/", async (req, res) => {
 
   const { strategyId, ...config } = parsed.data;
 
+  // Look up strategy_class from strategy config (for class-based strategies)
+  let strategyClass: string | undefined;
+  try {
+    const [strat] = await db.select({ config: strategies.config }).from(strategies).where(eq(strategies.id, strategyId));
+    const stratConfig = strat?.config as Record<string, unknown> | undefined;
+    if (stratConfig?.strategy_class) {
+      strategyClass = String(stratConfig.strategy_class);
+    }
+  } catch { /* non-fatal — fall back to expression-based */ }
+
   // Fire and forget — return 202 immediately
-  const backtestPromise = runBacktest(strategyId, config);
+  const backtestPromise = runBacktest(strategyId, config, strategyClass);
 
   // Return the backtest ID immediately
   backtestPromise.then((result) => {
@@ -97,6 +108,8 @@ backtestRoutes.get("/", async (req, res) => {
       strategyId: backtests.strategyId,
       symbol: backtests.symbol,
       timeframe: backtests.timeframe,
+      startDate: backtests.startDate,
+      endDate: backtests.endDate,
       status: backtests.status,
       tier: backtests.tier,
       totalReturn: backtests.totalReturn,
@@ -148,7 +161,7 @@ backtestRoutes.get("/:id/equity", async (req, res) => {
     return;
   }
 
-  res.json({ equity_curve: row.equityCurve });
+  res.json({ equityCurve: row.equityCurve });
 });
 
 // ─── GET /api/backtests/:id/trades — Paginated trades ────────────
@@ -185,7 +198,10 @@ backtestRoutes.post("/compare", async (req, res) => {
 backtestRoutes.delete("/:id", async (req, res) => {
   const backtestId = req.params.id;
 
-  // Trades cascade automatically via FK
+  // Delete related MC runs and trades first (FK constraints)
+  await db.delete(monteCarloRuns).where(eq(monteCarloRuns.backtestId, backtestId));
+  await db.delete(backtestTrades).where(eq(backtestTrades.backtestId, backtestId));
+
   const [deleted] = await db
     .delete(backtests)
     .where(eq(backtests.id, backtestId))
@@ -207,4 +223,46 @@ backtestRoutes.delete("/:id", async (req, res) => {
   });
 
   res.json({ deleted: true, id: backtestId });
+});
+
+// ─── POST /api/backtests/matrix — Cross-matrix testing ────────────
+backtestRoutes.post("/matrix", async (req, res) => {
+  const schema = z.object({
+    strategyId: z.string().uuid(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+
+  const { strategyId } = parsed.data;
+
+  // Fire and forget — tiered execution takes ~11 min
+  runMatrix(strategyId).catch(() => {
+    // Errors persisted to DB by service
+  });
+
+  // Get the matrix ID
+  const [row] = await db
+    .select({ id: backtestMatrix.id })
+    .from(backtestMatrix)
+    .where(eq(backtestMatrix.strategyId, strategyId))
+    .orderBy(desc(backtestMatrix.createdAt))
+    .limit(1);
+
+  res.status(202).json({
+    message: "Matrix backtest started — 6 symbols × 7 timeframes, tiered execution",
+    matrixId: row?.id,
+  });
+});
+
+// ─── GET /api/backtests/matrix/:id — Matrix status ────────────────
+backtestRoutes.get("/matrix/:id", async (req, res) => {
+  const row = await getMatrixStatus(req.params.id);
+  if (!row) {
+    res.status(404).json({ error: "Matrix not found" });
+    return;
+  }
+  res.json(row);
 });

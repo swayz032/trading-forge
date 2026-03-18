@@ -1,12 +1,12 @@
 import { createHash } from "crypto";
-import { eq, and, gte, sql, inArray } from "drizzle-orm";
+import { eq, and, gte, sql, inArray, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, systemJournal, auditLog } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
 import { OllamaClient } from "./ollama-client.js";
 import { logger } from "../index.js";
 
-const SYMBOLS = ["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ"] as const;
+const SYMBOLS = ["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"] as const;
 type Symbol = (typeof SYMBOLS)[number];
 
 export interface RunStrategyInput {
@@ -122,6 +122,98 @@ export class AgentService {
     });
 
     logger.info({ strategyId, backtestId: result.id, tier }, "Agent strategy run complete");
+
+    return {
+      strategyId,
+      backtestId: result.id,
+      status: result.status,
+      tier,
+      forgeScore,
+    };
+  }
+
+  async runClassStrategy(input: {
+    strategy_name: string;
+    strategy_class: string;
+    symbol: string;
+    timeframe: string;
+    start_date: string;
+    end_date: string;
+    source: "manual" | "ollama" | "openclaw";
+    description: string;
+    params: Record<string, unknown>;
+  }) {
+    // 1. Insert strategy into DB
+    const [strategy] = await db
+      .insert(strategies)
+      .values({
+        name: input.strategy_name,
+        description: input.description,
+        symbol: input.symbol,
+        timeframe: input.timeframe,
+        config: {
+          strategy_class: input.strategy_class,
+          params: input.params,
+          source: input.source,
+        },
+        tags: [input.source, "class-based"],
+      })
+      .returning();
+
+    const strategyId = strategy.id;
+
+    // 2. Build minimal config (class-based path only needs dates + fees)
+    const backtestConfig = {
+      strategy: {
+        name: input.strategy_name,
+        symbol: input.symbol,
+        timeframe: input.timeframe,
+        indicators: [],
+        entry_long: "",
+        entry_short: "",
+        exit: "",
+        stop_loss: { type: "atr" as const, multiplier: 2.0 },
+        position_size: { type: "dynamic_atr" as const, target_risk_dollars: 500 },
+      },
+      start_date: input.start_date,
+      end_date: input.end_date,
+      mode: "single" as const,
+    };
+
+    // 3. Run backtest with strategy class path
+    const result = await runBacktest(strategyId, backtestConfig, input.strategy_class);
+
+    const tier = "tier" in result ? result.tier : null;
+    const forgeScore = "forge_score" in result ? result.forge_score : null;
+
+    // 4. Log to systemJournal
+    await db.insert(systemJournal).values({
+      strategyId,
+      backtestId: result.id,
+      source: input.source,
+      generationPrompt: input.description,
+      strategyParams: input.params,
+      forgeScore: forgeScore != null ? String(forgeScore) : null,
+      tier: tier ?? null,
+      status: result.status === "completed" ? "tested" : "failed",
+    });
+
+    // 5. Audit log
+    await db.insert(auditLog).values({
+      action: "agent.run-class-strategy",
+      entityType: "strategy",
+      entityId: strategyId,
+      input: { strategy_name: input.strategy_name, strategy_class: input.strategy_class, source: input.source },
+      result: {
+        backtestId: result.id,
+        status: result.status,
+        tier,
+        forge_score: forgeScore,
+      },
+      status: result.status === "completed" ? "success" : "failure",
+    });
+
+    logger.info({ strategyId, backtestId: result.id, tier, strategyClass: input.strategy_class }, "Class strategy run complete");
 
     return {
       strategyId,
@@ -299,6 +391,91 @@ Respond in strict JSON:
       batch_duplicate_count: batchDuplicateCount,
       cross_time_duplicate_count: crossTimeDuplicateCount,
       idea_ids: ideaIds,
+    };
+  }
+
+  /**
+   * Query recent journal entries for failure patterns to inject into strategy generation.
+   * Returns an "AVOID" list derived from analyst critiques of recent failures.
+   * Called by n8n before generating new strategies so the system learns from past mistakes.
+   */
+  async getFailurePatterns(days = 30, limit = 50): Promise<{
+    avoidPatterns: string[];
+    recentFailures: number;
+    recentSuccesses: number;
+  }> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+
+    // Fetch recent journal entries that have analyst notes
+    const entries = await db
+      .select({
+        tier: systemJournal.tier,
+        status: systemJournal.status,
+        analystNotes: systemJournal.analystNotes,
+        forgeScore: systemJournal.forgeScore,
+        source: systemJournal.source,
+        generationPrompt: systemJournal.generationPrompt,
+      })
+      .from(systemJournal)
+      .where(
+        and(
+          gte(systemJournal.createdAt, cutoff),
+          sql`${systemJournal.analystNotes} IS NOT NULL`,
+        ),
+      )
+      .orderBy(desc(systemJournal.createdAt))
+      .limit(limit);
+
+    const avoidPatterns: string[] = [];
+    let recentFailures = 0;
+    let recentSuccesses = 0;
+
+    for (const entry of entries) {
+      const isFailure = entry.tier === "REJECTED" || entry.status === "failed";
+      if (isFailure) recentFailures++;
+      else recentSuccesses++;
+
+      if (!isFailure || !entry.analystNotes) continue;
+
+      // Extract weaknesses and suggestions from analyst critique
+      try {
+        const critique = JSON.parse(entry.analystNotes);
+        if (Array.isArray(critique.weaknesses)) {
+          for (const w of critique.weaknesses) {
+            if (typeof w === "string" && w.length > 10) {
+              avoidPatterns.push(w);
+            }
+          }
+        }
+        if (Array.isArray(critique.suggestions)) {
+          for (const s of critique.suggestions) {
+            if (typeof s === "string" && s.length > 10) {
+              avoidPatterns.push(s);
+            }
+          }
+        }
+      } catch {
+        // analystNotes might be plain text — use directly
+        if (entry.analystNotes.length > 20) {
+          avoidPatterns.push(entry.analystNotes);
+        }
+      }
+    }
+
+    // Deduplicate and limit to most relevant patterns
+    const unique = [...new Set(avoidPatterns)].slice(0, 20);
+
+    logger.info({
+      patterns: unique.length,
+      recentFailures,
+      recentSuccesses,
+    }, "Failure patterns extracted for strategy generation");
+
+    return {
+      avoidPatterns: unique,
+      recentFailures,
+      recentSuccesses,
     };
   }
 }

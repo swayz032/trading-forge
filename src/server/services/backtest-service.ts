@@ -11,10 +11,13 @@ import { spawn } from "child_process";
 import { resolve as pathResolve } from "path";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { backtests, backtestTrades, auditLog } from "../db/schema.js";
+import { backtests, backtestTrades, strategies, paperSessions, auditLog } from "../db/schema.js";
+import { broadcastSSE } from "../routes/sse.js";
+import { startStream } from "./paper-trading-stream.js";
+import { queryInfo } from "../../data/loaders/duckdb-service.js";
 import { logger } from "../index.js";
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
+const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
 interface BacktestConfig {
   strategy: {
@@ -28,12 +31,30 @@ interface BacktestConfig {
     stop_loss: { type: string; multiplier: number };
     position_size: { type: string; target_risk_dollars?: number; fixed_contracts?: number };
   };
-  start_date: string;
-  end_date: string;
+  start_date?: string;
+  end_date?: string;
   slippage_ticks?: number;
   commission_per_side?: number;
   mode?: "single" | "walkforward";
   walk_forward_splits?: number;
+}
+
+/**
+ * Resolve date range from S3 data when dates are omitted.
+ * Uses DuckDB queryInfo() to find min/max timestamps for a symbol.
+ */
+async function resolveDataRange(symbol: string): Promise<{ start_date: string; end_date: string }> {
+  try {
+    const info = await queryInfo(symbol);
+    // Extract YYYY-MM-DD from ISO timestamps
+    const start = info.earliest.slice(0, 10);
+    const end = info.latest.slice(0, 10);
+    logger.info({ symbol, start, end, totalBars: info.totalBars }, "Auto-resolved data range from S3");
+    return { start_date: start, end_date: end };
+  } catch (err) {
+    logger.warn({ symbol, err }, "Failed to resolve data range from S3, using fallback");
+    return { start_date: "2010-01-01", end_date: "2030-12-31" };
+  }
 }
 
 interface BacktestResult {
@@ -50,7 +71,8 @@ interface BacktestResult {
   max_consecutive_losing_days: number;
   expectancy_per_trade: number;
   avg_winner_to_loser_ratio: number;
-  equity_curve: number[];
+  equity_curve: Array<{ time: string; value: number }>;
+  monthly_returns?: Array<{ year: number; month: number; pnl: number }>;
   trades: Array<Record<string, unknown>>;
   daily_pnls: number[];
   execution_time_ms: number;
@@ -58,10 +80,11 @@ interface BacktestResult {
   forge_score?: number;
   walk_forward_results?: Record<string, unknown>;
   prop_compliance?: Record<string, unknown>;
+  daily_pnl_records?: Array<{ date: string; pnl: number }>;
   error?: string;
 }
 
-function runPythonBacktest(configJson: string, mode: string, backtestId: string): Promise<BacktestResult> {
+function runPythonBacktest(configJson: string, mode: string, backtestId: string, strategyClass?: string): Promise<BacktestResult> {
   return new Promise((resolve, reject) => {
     const pythonCmd = process.platform === "win32" ? "python" : "python3";
     const args = [
@@ -69,6 +92,7 @@ function runPythonBacktest(configJson: string, mode: string, backtestId: string)
       "--config", configJson,
       "--backtest-id", backtestId,
       "--mode", mode,
+      ...(strategyClass ? ["--strategy-class", strategyClass] : []),
     ];
 
     const proc = spawn(pythonCmd, args, {
@@ -124,7 +148,14 @@ function runPythonBacktest(configJson: string, mode: string, backtestId: string)
   });
 }
 
-export async function runBacktest(strategyId: string, config: BacktestConfig) {
+export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string) {
+  // Auto-resolve dates from S3 when omitted
+  if (!config.start_date || !config.end_date) {
+    const resolved = await resolveDataRange(config.strategy.symbol);
+    if (!config.start_date) config.start_date = resolved.start_date;
+    if (!config.end_date) config.end_date = resolved.end_date;
+  }
+
   // Insert pending row
   const [row] = await db
     .insert(backtests)
@@ -150,7 +181,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig) {
   try {
     const configJson = JSON.stringify(config);
     const mode = config.mode ?? "single";
-    const result = await runPythonBacktest(configJson, mode, backtestId);
+    const result = await runPythonBacktest(configJson, mode, backtestId, strategyClass);
 
     if (result.error) {
       await db
@@ -181,6 +212,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig) {
         tier: result.tier ?? null,
         forgeScore: result.forge_score != null ? String(result.forge_score) : null,
         equityCurve: result.equity_curve,
+        monthlyReturns: result.monthly_returns ?? null,
         dailyPnls: result.daily_pnls,
         walkForwardResults: result.walk_forward_results ?? null,
         propCompliance: result.prop_compliance ?? null,
@@ -190,22 +222,38 @@ export async function runBacktest(strategyId: string, config: BacktestConfig) {
 
     // Bulk insert trades
     if (result.trades.length > 0) {
-      const tradeRows = result.trades.map((t) => ({
-        backtestId,
-        entryTime: new Date(t["Entry Timestamp"] as string || t["entry_time"] as string || new Date()),
-        exitTime: t["Exit Timestamp"] || t["exit_time"]
-          ? new Date(t["Exit Timestamp"] as string || t["exit_time"] as string)
-          : null,
-        direction: (t["Direction"] as string || t["direction"] as string || "long").toLowerCase().includes("short") ? "short" : "long",
-        entryPrice: String(t["Entry Price"] ?? t["entry_price"] ?? 0),
-        exitPrice: t["Exit Price"] != null || t["exit_price"] != null
-          ? String(t["Exit Price"] ?? t["exit_price"])
-          : null,
-        pnl: t["PnL"] != null || t["pnl"] != null
-          ? String(t["PnL"] ?? t["pnl"])
-          : null,
-        contracts: 1,
-      }));
+      const tradeRows = result.trades.map((t) => {
+        // vectorbt records_readable columns:
+        //   "Entry Timestamp" (int index or ISO string), "Exit Timestamp",
+        //   "Avg Entry Price", "Avg Exit Price", "PnL", "Direction", "Size"
+        const entryTs = t["Entry Timestamp"] ?? t["entry_time"];
+        const exitTs = t["Exit Timestamp"] ?? t["exit_time"];
+
+        // Entry/exit timestamps may be integer indices or ISO date strings
+        const parseTs = (v: unknown): Date => {
+          if (v == null) return new Date();
+          if (typeof v === "string" && v.includes("-")) return new Date(v);
+          // Integer index from vectorbt — use backtest start date + offset
+          return new Date(config.start_date + "T00:00:00Z");
+        };
+
+        const direction = (t["Direction"] as string ?? t["direction"] as string ?? "long");
+
+        return {
+          backtestId,
+          entryTime: parseTs(entryTs),
+          exitTime: exitTs != null ? parseTs(exitTs) : null,
+          direction: direction.toLowerCase().includes("short") ? "short" : "long",
+          entryPrice: String(t["Avg Entry Price"] ?? t["Entry Price"] ?? t["entry_price"] ?? 0),
+          exitPrice: t["Avg Exit Price"] != null || t["Exit Price"] != null || t["exit_price"] != null
+            ? String(t["Avg Exit Price"] ?? t["Exit Price"] ?? t["exit_price"])
+            : null,
+          pnl: t["PnL"] != null || t["pnl"] != null
+            ? String(t["PnL"] ?? t["pnl"])
+            : null,
+          contracts: Math.round(Number(t["Size"] ?? t["size"] ?? 1)),
+        };
+      });
 
       await db.insert(backtestTrades).values(tradeRows);
     }
@@ -225,6 +273,66 @@ export async function runBacktest(strategyId: string, config: BacktestConfig) {
       status: "success",
       durationMs: result.execution_time_ms,
     });
+
+    // ─── Auto-promote to paper trading if strategy passes gates ───
+    if (result.tier && ["TIER_1", "TIER_2", "TIER_3"].includes(result.tier)) {
+      try {
+        // Update strategy lifecycle to PAPER
+        await db.update(strategies).set({
+          lifecycleState: "PAPER",
+          lifecycleChangedAt: new Date(),
+          forgeScore: result.forge_score != null ? String(result.forge_score) : null,
+        }).where(eq(strategies.id, strategyId));
+
+        // Create paper trading session
+        const [paperSession] = await db.insert(paperSessions).values({
+          strategyId,
+          startingCapital: "100000",
+          currentEquity: "100000",
+          config: {
+            preferred_sessions: ["NY_RTH"],
+            max_concurrent_positions: 1,
+            cooldown_bars: 4,
+            daily_loss_limit: 2000,
+            backtestId,
+            tier: result.tier,
+            forge_score: result.forge_score,
+          },
+        }).returning();
+
+        // Start live stream for the paper session
+        try {
+          startStream(paperSession.id, [config.strategy.symbol]);
+        } catch (streamErr) {
+          logger.warn(streamErr, "Auto-promoted session created but stream failed to start");
+        }
+
+        // Broadcast promotion event
+        broadcastSSE("strategy:promoted", {
+          strategyId,
+          tier: result.tier,
+          forgeScore: result.forge_score,
+          paperSessionId: paperSession.id,
+        });
+
+        logger.info({
+          strategyId,
+          tier: result.tier,
+          paperSessionId: paperSession.id,
+        }, "Strategy auto-promoted to paper trading");
+
+        await db.insert(auditLog).values({
+          action: "strategy.auto-promote",
+          entityType: "strategy",
+          entityId: strategyId,
+          input: { backtestId, tier: result.tier },
+          result: { paperSessionId: paperSession.id },
+          status: "success",
+        });
+      } catch (promoErr) {
+        logger.error(promoErr, "Failed to auto-promote strategy to paper trading");
+      }
+    }
 
     return { id: backtestId, status: "completed", ...result };
   } catch (err) {

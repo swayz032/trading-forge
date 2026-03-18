@@ -54,6 +54,45 @@ FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
 }
 
 
+# ─── Scaling Plans (account upgrades after profit milestones) ─────
+
+SCALING_PLANS: dict[str, list[dict]] = {
+    "topstep_50k": [
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 4500},
+    ],
+    "mffu_50k": [
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
+        {"profit_threshold": 15000, "new_account_size": 200000, "new_max_dd": 5000},
+    ],
+    "tpt_50k": [
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500},
+    ],
+    "apex_50k": [
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000},
+        {"profit_threshold": 20000, "new_account_size": 250000, "new_max_dd": 6500},
+    ],
+    "tradeify_50k": [
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
+    ],
+    "alpha_50k": [
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
+    ],
+    "ffn_50k": [
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500},
+    ],
+    "earn2trade_50k": [
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000},
+    ],
+}
+
+
+def get_scaling_plan(firm_key: str) -> list[dict]:
+    """Get scaling plan steps for a firm."""
+    return SCALING_PLANS.get(firm_key, [])
+
+
 def get_commission_per_side(firm_key: str, symbol: str) -> float:
     """Get per-side commission for a firm and symbol.
 

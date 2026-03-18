@@ -15,17 +15,21 @@ class ContractSpec(BaseModel):
     tick_size: float
     tick_value: float
     point_value: float
+    day_margin: float = 500       # Intraday margin per contract
+    overnight_margin: float = 0   # Overnight/maintenance margin per contract
 
 
 CONTRACT_SPECS: dict[str, ContractSpec] = {
-    "ES":  ContractSpec(tick_size=0.25, tick_value=12.50, point_value=50.00),
-    "NQ":  ContractSpec(tick_size=0.25, tick_value=5.00,  point_value=20.00),
-    "CL":  ContractSpec(tick_size=0.01, tick_value=10.00, point_value=1000.00),
-    "YM":  ContractSpec(tick_size=1.00, tick_value=5.00,  point_value=5.00),
-    "RTY": ContractSpec(tick_size=0.10, tick_value=5.00,  point_value=50.00),
-    "GC":  ContractSpec(tick_size=0.10, tick_value=10.00, point_value=100.00),
-    "MES": ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00),
-    "MNQ": ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00),
+    "ES":  ContractSpec(tick_size=0.25, tick_value=12.50, point_value=50.00,   day_margin=500,  overnight_margin=12650),
+    "NQ":  ContractSpec(tick_size=0.25, tick_value=5.00,  point_value=20.00,   day_margin=500,  overnight_margin=17600),
+    "CL":  ContractSpec(tick_size=0.01, tick_value=10.00, point_value=1000.00, day_margin=500,  overnight_margin=6600),
+    "YM":  ContractSpec(tick_size=1.00, tick_value=5.00,  point_value=5.00,    day_margin=500,  overnight_margin=9900),
+    "RTY": ContractSpec(tick_size=0.10, tick_value=5.00,  point_value=50.00,   day_margin=500,  overnight_margin=7150),
+    "GC":  ContractSpec(tick_size=0.10, tick_value=10.00, point_value=100.00,  day_margin=500,  overnight_margin=10400),
+    "MES": ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=1265),
+    "MNQ": ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=1760),
+    "MCL": ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=660),
+    "MGC": ContractSpec(tick_size=0.10, tick_value=1.00,  point_value=10.00,   day_margin=50,   overnight_margin=1040),
 }
 
 VALID_SYMBOLS = set(CONTRACT_SPECS.keys())

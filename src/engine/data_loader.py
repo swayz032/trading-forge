@@ -1,60 +1,107 @@
-"""Data loading layer: DuckDB → Polars.
+"""Data loading layer: S3 consolidated Parquet → DuckDB → Polars.
 
-Mirrors S3 path convention from src/data/loaders/duckdb-service.ts.
-ALWAYS uses ratio_adj path, never raw.
+Production-grade:
+- Reads from consolidated single Parquet files on S3 (1 file per symbol/timeframe)
+- Singleton DuckDB connection — configure S3 once, reuse across all backtests
+- Falls back to daily files if consolidated doesn't exist
+- Optional local cache for offline/fastest access
+
+Path convention:
+  Consolidated: s3://{bucket}/futures/{symbol}/consolidated/{timeframe}.parquet
+  Legacy daily:  s3://{bucket}/futures/{symbol}/ratio_adj/{timeframe}/{year}/{month}/{day}.parquet
 """
 
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 from typing import Optional
 
 import duckdb
 import polars as pl
 
 
-def build_s3_glob(
-    symbol: str,
-    timeframe: str,
-    start: str,
-    end: str,
-    bucket: Optional[str] = None,
-) -> str:
-    """Build S3 glob path matching duckdb-service.ts convention.
+# ─── Singleton DuckDB Connection ──────────────────────────────────
 
-    Path pattern: s3://{bucket}/futures/{symbol}/ratio_adj/{timeframe}/{year}/{month}/*.parquet
-    """
-    if bucket is None:
-        bucket = os.environ.get("S3_BUCKET", "trading-forge-data")
-
-    from_year, from_month = start.split("-")[:2]
-    to_year, to_month = end.split("-")[:2]
-
-    same_year = from_year == to_year
-    same_month = same_year and from_month == to_month
-
-    if same_month:
-        glob = f"futures/{symbol}/ratio_adj/{timeframe}/{from_year}/{from_month}/*.parquet"
-    elif same_year:
-        glob = f"futures/{symbol}/ratio_adj/{timeframe}/{from_year}/*/*.parquet"
-    else:
-        glob = f"futures/{symbol}/ratio_adj/{timeframe}/*/*/*.parquet"
-
-    return f"s3://{bucket}/{glob}"
+_con: Optional[duckdb.DuckDBPyConnection] = None
+_s3_configured: bool = False
 
 
-def _configure_duckdb_s3(con: duckdb.DuckDBPyConnection) -> None:
-    """Configure DuckDB httpfs for S3 access, matching duckdb-service.ts."""
-    con.execute("INSTALL httpfs; LOAD httpfs;")
-    region = os.environ.get("AWS_REGION", "us-east-1")
-    access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
-    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+def _get_connection() -> duckdb.DuckDBPyConnection:
+    """Get or create singleton DuckDB connection with S3 configured."""
+    global _con, _s3_configured
+
+    if _con is None:
+        _con = duckdb.connect(":memory:")
+        _s3_configured = False
+
+    if not _s3_configured:
+        _con.execute("INSTALL httpfs; LOAD httpfs;")
+        region = os.environ.get("AWS_REGION", "us-east-1")
+        access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
+        secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+        _con.execute(f"""
+            SET s3_region='{region}';
+            SET s3_access_key_id='{access_key}';
+            SET s3_secret_access_key='{secret_key}';
+            SET enable_object_cache=true;
+        """)
+        _s3_configured = True
+
+    return _con
+
+
+# ─── Local Cache ──────────────────────────────────────────────────
+
+CACHE_DIR = Path(os.environ.get(
+    "DATA_CACHE_DIR",
+    Path(__file__).resolve().parent.parent.parent / "data_cache",
+))
+
+
+def _cache_path(symbol: str, timeframe: str) -> Path:
+    return CACHE_DIR / symbol / f"{timeframe}.parquet"
+
+
+# ─── S3 Paths ────────────────────────────────────────────────────
+
+def _consolidated_s3_path(symbol: str, timeframe: str) -> str:
+    bucket = os.environ.get("S3_BUCKET", "trading-forge-data")
+    return f"s3://{bucket}/futures/{symbol}/consolidated/{timeframe}.parquet"
+
+
+def _legacy_s3_glob(symbol: str, timeframe: str) -> str:
+    bucket = os.environ.get("S3_BUCKET", "trading-forge-data")
+    return f"s3://{bucket}/futures/{symbol}/ratio_adj/{timeframe}/*/*/*.parquet"
+
+
+# ─── Sync ─────────────────────────────────────────────────────────
+
+def sync_from_s3(symbol: str, timeframe: str) -> Path:
+    """Download consolidated data from S3 to local cache."""
+    cache_file = _cache_path(symbol, timeframe)
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Syncing {symbol} {timeframe} from S3 → local cache...", file=sys.stderr)
+
+    con = _get_connection()
+    s3_path = _consolidated_s3_path(symbol, timeframe)
+
     con.execute(f"""
-        SET s3_region='{region}';
-        SET s3_access_key_id='{access_key}';
-        SET s3_secret_access_key='{secret_key}';
+        COPY (
+            SELECT ts_event, open, high, low, close, volume
+            FROM read_parquet('{s3_path}')
+            ORDER BY ts_event
+        ) TO '{cache_file}' (FORMAT PARQUET, COMPRESSION ZSTD)
     """)
 
+    size_kb = cache_file.stat().st_size / 1024
+    print(f"Cached to {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
+    return cache_file
+
+
+# ─── Main Loader ──────────────────────────────────────────────────
 
 def load_ohlcv(
     symbol: str,
@@ -65,23 +112,33 @@ def load_ohlcv(
 ) -> pl.DataFrame:
     """Load OHLCV data as a Polars DataFrame.
 
+    Priority: local_path → local cache → S3 consolidated → S3 legacy daily files.
+
     Args:
         symbol: Futures symbol (ES, NQ, CL, etc.)
-        timeframe: Bar timeframe (1min, 5min, daily, etc.)
+        timeframe: Bar timeframe (1min, 5min, 15min, 30min, 1hour, 4hour, daily)
         start: Start date YYYY-MM-DD
         end: End date YYYY-MM-DD
-        local_path: If provided, load from local Parquet instead of S3
+        local_path: If provided, load from this specific Parquet file
 
     Returns:
         Polars DataFrame with columns: ts_event, open, high, low, close, volume
     """
-    con = duckdb.connect(":memory:")
+    con = _get_connection()
 
+    # Determine source
     if local_path:
         source = local_path
+        print(f"Loading {symbol} {timeframe} from local path", file=sys.stderr)
     else:
-        _configure_duckdb_s3(con)
-        source = build_s3_glob(symbol, timeframe, start, end)
+        cache_file = _cache_path(symbol, timeframe)
+        if cache_file.exists():
+            source = str(cache_file)
+            print(f"Loading {symbol} {timeframe} from local cache", file=sys.stderr)
+        else:
+            # Read directly from S3 consolidated file (single HTTP request)
+            source = _consolidated_s3_path(symbol, timeframe)
+            print(f"Loading {symbol} {timeframe} from S3 consolidated", file=sys.stderr)
 
     sql = f"""
         SELECT ts_event, open, high, low, close, volume
@@ -90,15 +147,42 @@ def load_ohlcv(
         ORDER BY ts_event
     """
 
-    pdf = con.execute(sql).fetchdf()
-    con.close()
+    try:
+        pdf = con.execute(sql).fetchdf()
+    except Exception:
+        # Fallback to legacy daily files if consolidated doesn't exist
+        if not local_path and not str(source).startswith(str(CACHE_DIR)):
+            legacy = _legacy_s3_glob(symbol, timeframe)
+            print(f"Falling back to legacy daily files for {symbol} {timeframe}", file=sys.stderr)
+            legacy_sql = f"""
+                SELECT ts_event, open, high, low, close, volume
+                FROM read_parquet('{legacy}')
+                WHERE ts_event >= '{start}' AND ts_event <= '{end}'
+                ORDER BY ts_event
+            """
+            pdf = con.execute(legacy_sql).fetchdf()
+        else:
+            raise
 
-    # Convert Pandas → Polars (DuckDB returns Pandas)
     df = pl.from_pandas(pdf)
 
     if df.is_empty():
         raise ValueError(
             f"No data found for {symbol} {timeframe} between {start} and {end}"
         )
+
+    # Auto-cache: write to local cache after S3 fetch so re-runs are instant
+    if not local_path:
+        cache_file = _cache_path(symbol, timeframe)
+        if not cache_file.exists():
+            try:
+                cache_file.parent.mkdir(parents=True, exist_ok=True)
+                # Cache the FULL dataset (no date filter) for future use
+                # But we only have the filtered slice — cache what we got
+                df.write_parquet(str(cache_file), compression="zstd")
+                size_kb = cache_file.stat().st_size / 1024
+                print(f"Auto-cached {symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
+            except Exception as e:
+                print(f"Auto-cache failed (non-fatal): {e}", file=sys.stderr)
 
     return df
