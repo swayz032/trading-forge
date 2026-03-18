@@ -24,6 +24,24 @@ export function useSSE(eventTypes: string[], onEvent?: SSEHandler) {
         if (type === "paper:pnl") qc.invalidateQueries({ queryKey: ["paper"] });
         if (type === "paper:signal") qc.invalidateQueries({ queryKey: ["paper", "signals"] });
         if (type === "strategy:promoted") qc.invalidateQueries({ queryKey: ["paper"] });
+        // n8n pipeline events
+        if (type === "strategy:analyzed") {
+          qc.invalidateQueries({ queryKey: ["strategies"] });
+          qc.invalidateQueries({ queryKey: ["backtests"] });
+          qc.invalidateQueries({ queryKey: ["journal"] });
+        }
+        if (type === "strategy:analysis-error") qc.invalidateQueries({ queryKey: ["strategies"] });
+        if (type === "nightly:review-complete") {
+          qc.invalidateQueries({ queryKey: ["paper"] });
+          qc.invalidateQueries({ queryKey: ["journal"] });
+        }
+        // Express scheduler events
+        if (type === "scheduler:sharpe-updated") qc.invalidateQueries({ queryKey: ["strategies"] });
+        if (type === "scheduler:pre-market-alert") qc.invalidateQueries({ queryKey: ["alerts"] });
+        if (type === "strategy:drift-alert") {
+          qc.invalidateQueries({ queryKey: ["paper"] });
+          qc.invalidateQueries({ queryKey: ["strategies"] });
+        }
       });
     }
 
