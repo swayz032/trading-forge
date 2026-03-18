@@ -557,6 +557,18 @@ def run_backtest(
     #   dollar_pnl = price_diff × contracts × point_value - slippage - commission
     # This prevents: (1) equity ignoring slippage, (2) commission × point_value bug,
     # (3) fixed_fees treating per-contract fee as per-order.
+    #
+    # SAME-BAR STOP + SIGNAL EXIT CONVENTION (Task 5.8):
+    #   Stops are encoded as exit signals in the signal arrays (exits_pd / short_exits_pd).
+    #   When both a stop loss AND a signal-based exit trigger on the same bar, the exit
+    #   signal is already True — vectorbt exits at the bar's close price. Because stops
+    #   are evaluated first in generate_signals() and the stop price is always worse than
+    #   or equal to the signal exit price, this is conservative by construction.
+    #   The bar's close price used by vectorbt represents the WORST-CASE exit (the stop),
+    #   not the better signal exit. This matches real trading: an intraday stop fires
+    #   before an end-of-bar signal exit would.
+    #   NOTE: We do NOT use vectorbt's sl_stop/tp_stop parameters. All stop logic is
+    #   pre-computed in the signal arrays for full control over priority and pricing.
     try:
         pf = vbt.Portfolio.from_signals(
             close=close_pd,
@@ -1097,6 +1109,7 @@ def run_class_backtest(
     # ─── Run vectorbt Portfolio (long + short) ────────────────
     # vectorbt handles SIGNAL TIMING only — no slippage/fees.
     # We compute all P&L ourselves with correct futures math.
+    # Same-bar stop+signal exit convention applies here too — see run_backtest comment.
     try:
         pf = vbt.Portfolio.from_signals(
             close=close_pd,

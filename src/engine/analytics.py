@@ -337,15 +337,58 @@ def tag_trade_session_fields(trades: list[dict]) -> list[dict]:
     return trades
 
 
-def compute_session_analysis(trades: list[dict]) -> dict:
-    """Analyze P&L by entry hour (time-of-day heatmap).
+def _parse_entry_hour_et(entry_ts) -> int | None:
+    """Parse entry timestamp to hour in ET (0-23). Returns None on failure."""
+    try:
+        if isinstance(entry_ts, str) and "T" in entry_ts:
+            dt = datetime.fromisoformat(entry_ts.replace("Z", "+00:00"))
+            return (dt.hour - 5) % 24
+        elif isinstance(entry_ts, str) and len(entry_ts) >= 13:
+            dt = datetime.fromisoformat(entry_ts[:19])
+            return (dt.hour - 5) % 24
+    except (ValueError, TypeError):
+        pass
+    return None
 
-    Tags each trade by entry hour (ET), computes per-hour stats.
+
+def _classify_session_extended(hour: int) -> str:
+    """Classify hour into RTH / ETH / Asian session (ET hours).
+
+    RTH:   09:30-16:00 ET  (hours 9-15)
+    Asian: 20:00-02:00 ET  (hours 20-23, 0-1)
+    ETH:   everything else (pre-market 02:00-09:29, post-market 16:00-19:59)
+    """
+    if 9 <= hour <= 15:
+        return "RTH"
+    elif hour >= 20 or hour <= 1:
+        return "Asian"
+    else:
+        return "ETH"
+
+
+def compute_session_analysis(
+    trades: list[dict],
+    backtest_slippage_assumption: float | None = None,
+) -> dict:
+    """Analyze P&L by entry hour (time-of-day heatmap) -- Task 5.5.
+
+    Tags each trade by entry hour (0-23 ET), computes per-hour:
+    P&L, trades, win%, avg trade, avg slippage.
+    Also: RTH vs ETH vs Asian session breakdown.
+    Flags sessions where actual slippage exceeds backtest assumptions.
+
+    Args:
+        trades: List of trade dicts with entry timestamps, PnL, slippage
+        backtest_slippage_assumption: Expected per-trade slippage ($).
+            If provided, hours where avg slippage exceeds 125% of this are flagged.
 
     Returns:
-        dict with hourly_breakdown and session_summary
+        dict with hourly_breakdown, session_breakdown (RTH/ETH/Asian),
+        slippage_flags, best/worst hour
     """
-    hourly: dict[int, dict] = defaultdict(lambda: {"pnl": 0.0, "trades": 0, "wins": 0})
+    hourly: dict[int, dict] = defaultdict(
+        lambda: {"pnl": 0.0, "trades": 0, "wins": 0, "total_slippage": 0.0}
+    )
 
     for trade in trades:
         entry_ts = trade.get("Entry Timestamp") or trade.get("entry_time")
@@ -359,22 +402,20 @@ def compute_session_analysis(trades: list[dict]) -> dict:
         if not entry_ts:
             continue
 
-        # Parse hour from timestamp
-        try:
-            if isinstance(entry_ts, str) and "T" in entry_ts:
-                dt = datetime.fromisoformat(entry_ts.replace("Z", "+00:00"))
-                # Approximate ET (UTC - 5)
-                hour = (dt.hour - 5) % 24
-            elif isinstance(entry_ts, str) and len(entry_ts) >= 13:
-                dt = datetime.fromisoformat(entry_ts[:19])
-                hour = (dt.hour - 5) % 24
-            else:
-                continue
-        except (ValueError, TypeError):
+        hour = _parse_entry_hour_et(entry_ts)
+        if hour is None:
             continue
+
+        slip = trade.get("slippage") or trade.get("Slippage") or 0
+        if not isinstance(slip, (int, float)):
+            try:
+                slip = float(slip)
+            except (TypeError, ValueError):
+                slip = 0
 
         hourly[hour]["pnl"] += pnl
         hourly[hour]["trades"] += 1
+        hourly[hour]["total_slippage"] += abs(slip)
         if pnl > 0:
             hourly[hour]["wins"] += 1
 
@@ -383,40 +424,95 @@ def compute_session_analysis(trades: list[dict]) -> dict:
         stats = hourly.get(hour)
         if not stats or stats["trades"] == 0:
             continue
+        n = stats["trades"]
+        avg_slip = stats["total_slippage"] / n
         hourly_breakdown.append({
             "hour": hour,
-            "hour_label": f"{hour}:00",
+            "hour_label": f"{hour:02d}:00",
             "pnl": round(stats["pnl"], 2),
-            "trades": stats["trades"],
-            "win_rate": round(stats["wins"] / stats["trades"], 4),
-            "avg_trade": round(stats["pnl"] / stats["trades"], 2),
+            "trades": n,
+            "win_rate": round(stats["wins"] / n, 4),
+            "avg_trade": round(stats["pnl"] / n, 2),
+            "avg_slippage": round(avg_slip, 2),
         })
 
     hourly_breakdown.sort(key=lambda x: x["hour"])
 
-    # Session aggregates
-    rth_pnl = sum(h["pnl"] for h in hourly_breakdown if 9 <= h["hour"] <= 15)
-    eth_pnl = sum(h["pnl"] for h in hourly_breakdown if h["hour"] < 9 or h["hour"] >= 16)
+    # ─── RTH / ETH / Asian session breakdown ───────────────────
+    session_agg: dict[str, dict] = {
+        s: {"pnl": 0.0, "trades": 0, "wins": 0, "total_slippage": 0.0}
+        for s in ("RTH", "ETH", "Asian")
+    }
+    for h in hourly_breakdown:
+        sess = _classify_session_extended(h["hour"])
+        session_agg[sess]["pnl"] += h["pnl"]
+        session_agg[sess]["trades"] += h["trades"]
+        raw = hourly.get(h["hour"])
+        if raw:
+            session_agg[sess]["wins"] += raw["wins"]
+            session_agg[sess]["total_slippage"] += raw["total_slippage"]
+
+    session_breakdown = {}
+    for sess, stats in session_agg.items():
+        n = stats["trades"]
+        session_breakdown[sess] = {
+            "total_pnl": round(stats["pnl"], 2),
+            "trades": n,
+            "win_rate": round(stats["wins"] / n, 4) if n > 0 else 0,
+            "avg_trade": round(stats["pnl"] / n, 2) if n > 0 else 0,
+            "avg_slippage": round(stats["total_slippage"] / n, 2) if n > 0 else 0,
+        }
+
+    # ─── Slippage flags -- alert when actual > assumption ──────
+    slippage_flags: list[str] = []
+    if backtest_slippage_assumption is not None and backtest_slippage_assumption > 0:
+        for h in hourly_breakdown:
+            if h["avg_slippage"] > backtest_slippage_assumption * 1.25:
+                slippage_flags.append(
+                    f"Hour {h['hour_label']} avg slippage ${h['avg_slippage']:.2f} "
+                    f"exceeds assumption ${backtest_slippage_assumption:.2f} by "
+                    f"{h['avg_slippage'] / backtest_slippage_assumption:.0%}"
+                )
+        for sess, stats in session_breakdown.items():
+            if stats["avg_slippage"] > backtest_slippage_assumption * 1.25:
+                slippage_flags.append(
+                    f"{sess} session avg slippage ${stats['avg_slippage']:.2f} "
+                    f"exceeds backtest assumption ${backtest_slippage_assumption:.2f}"
+                )
 
     best_hour = max(hourly_breakdown, key=lambda x: x["pnl"]) if hourly_breakdown else None
     worst_hour = min(hourly_breakdown, key=lambda x: x["pnl"]) if hourly_breakdown else None
 
     return {
         "hourly_breakdown": hourly_breakdown,
-        "rth_total_pnl": round(rth_pnl, 2),
-        "eth_total_pnl": round(eth_pnl, 2),
+        "session_breakdown": session_breakdown,
+        "rth_total_pnl": round(session_agg["RTH"]["pnl"], 2),
+        "eth_total_pnl": round(session_agg["ETH"]["pnl"], 2),
+        "asian_total_pnl": round(session_agg["Asian"]["pnl"], 2),
+        "slippage_flags": slippage_flags,
         "best_hour": best_hour,
         "worst_hour": worst_hour,
     }
 
 
-def compute_mae_mfe_analysis(trades: list[dict]) -> dict:
-    """Analyze Maximum Adverse Excursion and Maximum Favorable Excursion.
+def compute_mae_mfe_analysis(
+    trades: list[dict],
+    current_stop: float | None = None,
+    current_target: float | None = None,
+) -> dict:
+    """Analyze Maximum Adverse Excursion and Maximum Favorable Excursion -- Task 5.6.
 
-    Computes optimal stop and target recommendations based on trade data.
+    Computes optimal stop and target recommendations based on trade MAE/MFE data.
+    Optimal stop: smallest stop that catches 85% of winners while cutting 70% of losers.
+    Optimal target: MFE level reached by 70% of winners (conservative capture point).
+
+    Args:
+        trades: List of trade dicts with PnL, MAE, MFE fields
+        current_stop: The strategy's current stop distance ($) for comparison
+        current_target: The strategy's current target distance ($) for comparison
 
     Returns:
-        dict with mae_analysis and mfe_analysis
+        dict with mae_analysis, mfe_analysis, trade_stats, recommendations
     """
     winners = []
     losers = []
@@ -445,31 +541,92 @@ def compute_mae_mfe_analysis(trades: list[dict]) -> dict:
 
     result: dict = {}
 
-    # MAE analysis
-    winner_maes = [abs(w["mae"]) for w in winners if w["mae"] is not None]
-    loser_maes = [abs(l["mae"]) for l in losers if l["mae"] is not None]
+    # ─── MAE analysis ──────────────────────────────────────────
+    winner_maes = sorted([abs(w["mae"]) for w in winners if w["mae"] is not None])
+    loser_maes = sorted([abs(l["mae"]) for l in losers if l["mae"] is not None])
 
     if winner_maes and loser_maes:
         avg_mae_winners = sum(winner_maes) / len(winner_maes)
         avg_mae_losers = sum(loser_maes) / len(loser_maes)
-        # Optimal stop = midpoint between avg winner MAE and avg loser MAE
-        optimal_stop = (avg_mae_winners + avg_mae_losers) / 2
 
-        result["mae_analysis"] = {
+        # Optimal stop: the stop level that catches 85% of winners
+        # (i.e., 85th percentile of winner MAEs -- only 15% of winners
+        # would have been stopped out) while also cutting at least 70% of losers
+        # (i.e., 70% of loser MAEs exceed this stop level).
+        p85_winner_mae = winner_maes[int(len(winner_maes) * 0.85)] if len(winner_maes) > 1 else winner_maes[0]
+
+        # What fraction of losers would this stop cut?
+        losers_cut = sum(1 for m in loser_maes if m >= p85_winner_mae) / len(loser_maes)
+
+        # Also compute the stop that cuts 70% of losers
+        p30_loser_mae = loser_maes[int(len(loser_maes) * 0.30)] if len(loser_maes) > 1 else loser_maes[0]
+
+        # Winners preserved at that loser-cut stop
+        winners_preserved = sum(1 for m in winner_maes if m <= p30_loser_mae) / len(winner_maes)
+
+        # Use the tighter of the two as optimal_stop
+        optimal_stop = min(p85_winner_mae, p30_loser_mae)
+
+        mae_dict: dict = {
             "avg_mae_winners": round(avg_mae_winners, 2),
             "avg_mae_losers": round(avg_mae_losers, 2),
             "optimal_stop": round(optimal_stop, 2),
+            "p85_winner_mae": round(p85_winner_mae, 2),
+            "losers_cut_at_p85": round(losers_cut, 4),
+            "p30_loser_mae": round(p30_loser_mae, 2),
+            "winners_preserved_at_p30": round(winners_preserved, 4),
         }
+        if current_stop is not None:
+            mae_dict["current_stop"] = round(current_stop, 2)
+            diff = current_stop - optimal_stop
+            if abs(diff) > optimal_stop * 0.15:
+                if diff > 0:
+                    mae_dict["recommendation"] = (
+                        f"Current stop (${current_stop:.2f}) is wider than optimal "
+                        f"(${optimal_stop:.2f}) -- tighten by ${diff:.2f} to reduce losses"
+                    )
+                else:
+                    mae_dict["recommendation"] = (
+                        f"Current stop (${current_stop:.2f}) is tighter than optimal "
+                        f"(${optimal_stop:.2f}) -- you may be stopping out winners prematurely"
+                    )
+            else:
+                mae_dict["recommendation"] = "Current stop is within 15% of optimal -- no change needed"
 
-    # MFE analysis
-    winner_mfes = [w["mfe"] for w in winners if w["mfe"] is not None]
+        result["mae_analysis"] = mae_dict
+
+    # ─── MFE analysis ──────────────────────────────────────────
+    winner_mfes = sorted([w["mfe"] for w in winners if w["mfe"] is not None])
     if winner_mfes:
         avg_mfe_winners = sum(winner_mfes) / len(winner_mfes)
-        result["mfe_analysis"] = {
-            "avg_mfe_winners": round(avg_mfe_winners, 2),
-        }
+        # Optimal target: the MFE reached by 70% of winners (30th percentile)
+        # Conservative: most winners reach this level, so set target here.
+        p70_idx = int(len(winner_mfes) * 0.30)  # 30th percentile = bottom 30% reach this
+        optimal_target = winner_mfes[p70_idx] if len(winner_mfes) > 1 else winner_mfes[0]
 
-    # Win/loss stats
+        mfe_dict: dict = {
+            "avg_mfe_winners": round(avg_mfe_winners, 2),
+            "optimal_target": round(optimal_target, 2),
+        }
+        if current_target is not None:
+            mfe_dict["current_target"] = round(current_target, 2)
+            diff = current_target - optimal_target
+            if diff > optimal_target * 0.20:
+                mfe_dict["recommendation"] = (
+                    f"Current target (${current_target:.2f}) exceeds what 70% of winners "
+                    f"reach (${optimal_target:.2f}) -- consider taking partial profits earlier"
+                )
+            elif diff < -optimal_target * 0.20:
+                mfe_dict["recommendation"] = (
+                    f"Current target (${current_target:.2f}) leaves money on the table -- "
+                    f"70% of winners reach ${optimal_target:.2f}"
+                )
+            else:
+                mfe_dict["recommendation"] = "Current target is well-calibrated to winner MFE distribution"
+
+        result["mfe_analysis"] = mfe_dict
+
+    # ─── Win/loss stats ────────────────────────────────────────
     if winners or losers:
         avg_winner = sum(w["pnl"] for w in winners) / len(winners) if winners else 0
         avg_loser = sum(l["pnl"] for l in losers) / len(losers) if losers else 0
@@ -484,18 +641,78 @@ def compute_mae_mfe_analysis(trades: list[dict]) -> dict:
     return result
 
 
-def compute_win_loss_patterns(daily_pnl_records: list[dict]) -> dict:
-    """Analyze win/loss streak patterns and recovery behavior.
+def compute_win_loss_patterns(
+    daily_pnl_records: list[dict],
+    trades: list[dict] | None = None,
+) -> dict:
+    """Analyze win/loss streak patterns, recovery behavior, and trade stats -- Task 5.7.
+
+    Computes:
+    - avg_winner, avg_loser, reward_to_risk
+    - avg_hold_winners, avg_hold_losers (bar count)
+    - max_consecutive_winners, max_consecutive_losers
+    - loss_recovery pattern (after N losses, what is the win rate?)
+    - autocorrelation_lag1, autocorrelation_lag2 (feeds MC block length)
+    - loss_cluster_score
+
+    Args:
+        daily_pnl_records: Daily P&L records for streak/autocorrelation analysis
+        trades: Optional trade-level records for per-trade stats (avg_winner, hold times)
 
     Returns:
-        dict with streak analysis and recovery patterns
+        dict with comprehensive win/loss pattern analysis
     """
     if not daily_pnl_records:
         return {}
 
     pnls = [r["pnl"] for r in daily_pnl_records]
 
-    # Streak analysis
+    # ─── Per-trade stats (avg_winner, avg_loser, hold times) ───
+    trade_stats: dict = {}
+    if trades:
+        winner_pnls = []
+        loser_pnls = []
+        winner_holds = []
+        loser_holds = []
+
+        for trade in trades:
+            pnl_val = trade.get("PnL") or trade.get("pnl") or 0
+            if not isinstance(pnl_val, (int, float)):
+                try:
+                    pnl_val = float(pnl_val)
+                except (TypeError, ValueError):
+                    continue
+
+            # Hold time in bars (Entry Idx / Exit Idx from vectorbt)
+            entry_idx = trade.get("Entry Idx") or trade.get("entry_idx")
+            exit_idx = trade.get("Exit Idx") or trade.get("exit_idx")
+            hold_bars: int | None = None
+            if entry_idx is not None and exit_idx is not None:
+                try:
+                    hold_bars = int(exit_idx) - int(entry_idx)
+                except (TypeError, ValueError):
+                    pass
+
+            if pnl_val > 0:
+                winner_pnls.append(pnl_val)
+                if hold_bars is not None:
+                    winner_holds.append(hold_bars)
+            elif pnl_val < 0:
+                loser_pnls.append(pnl_val)
+                if hold_bars is not None:
+                    loser_holds.append(hold_bars)
+
+        avg_winner = sum(winner_pnls) / len(winner_pnls) if winner_pnls else 0
+        avg_loser = sum(loser_pnls) / len(loser_pnls) if loser_pnls else 0
+        trade_stats = {
+            "avg_winner": round(avg_winner, 2),
+            "avg_loser": round(avg_loser, 2),
+            "reward_to_risk": round(abs(avg_winner / avg_loser), 2) if avg_loser != 0 else 0,
+            "avg_hold_winners": round(sum(winner_holds) / len(winner_holds), 1) if winner_holds else None,
+            "avg_hold_losers": round(sum(loser_holds) / len(loser_holds), 1) if loser_holds else None,
+        }
+
+    # ─── Streak analysis ──────────────────────────────────────
     max_win_streak = 0
     max_loss_streak = 0
     current_streak = 0
@@ -524,7 +741,7 @@ def compute_win_loss_patterns(daily_pnl_records: list[dict]) -> dict:
     if current_streak > 0 and streak_type:
         streaks.append({"type": streak_type, "length": current_streak})
 
-    # After-loss recovery: win rate on the trade after N consecutive losses
+    # ─── After-loss recovery ──────────────────────────────────
     after_loss_win_rate = {}
     for n in [1, 2, 3]:
         loss_streak_count = 0
@@ -545,20 +762,9 @@ def compute_win_loss_patterns(daily_pnl_records: list[dict]) -> dict:
                 "occurrences": loss_streak_count,
             }
 
-    # After-win regression: win rate after N consecutive wins
+    # ─── After-win regression ─────────────────────────────────
     after_win_patterns = {}
     for n in [3, 5]:
-        win_streak_count = 0
-        next_win = 0
-        consecutive_wins = 0
-        for i, pnl in enumerate(pnls):
-            if pnl > 0:
-                consecutive_wins += 1
-            else:
-                if consecutive_wins >= n:
-                    win_streak_count += 1
-                    # This trade is a loss (we're in the else)
-                consecutive_wins = 0
         total_after_win = 0
         wins_after = 0
         consecutive_wins = 0
@@ -577,11 +783,47 @@ def compute_win_loss_patterns(daily_pnl_records: list[dict]) -> dict:
                 "occurrences": total_after_win,
             }
 
+    # ─── Autocorrelation + loss clustering (feeds MC block length) ─
+    autocorrelation: dict = {}
+    if len(pnls) >= 30:
+        import numpy as np
+        arr = np.array(pnls)
+
+        lag1 = float(np.corrcoef(arr[:-1], arr[1:])[0, 1]) if len(arr) > 1 else 0.0
+        lag2 = float(np.corrcoef(arr[:-2], arr[2:])[0, 1]) if len(arr) > 2 else 0.0
+        if np.isnan(lag1):
+            lag1 = 0.0
+        if np.isnan(lag2):
+            lag2 = 0.0
+
+        # Loss clustering score
+        losses = arr < 0
+        actual_runs = 1
+        for i in range(1, len(losses)):
+            if losses[i] != losses[i - 1]:
+                actual_runs += 1
+        n_total = len(losses)
+        n1 = int(np.sum(losses))
+        n0 = n_total - n1
+        if n1 > 0 and n0 > 0:
+            expected_runs = 1 + 2 * n0 * n1 / n_total
+            loss_cluster_score = round(1 - actual_runs / expected_runs, 4) if expected_runs > 0 else 0
+        else:
+            loss_cluster_score = 0
+
+        autocorrelation = {
+            "autocorrelation_lag1": round(lag1, 4),
+            "autocorrelation_lag2": round(lag2, 4),
+            "loss_cluster_score": loss_cluster_score,
+        }
+
     return {
         "max_consecutive_winners": max_win_streak,
         "max_consecutive_losers": max_loss_streak,
         "after_loss_recovery": after_loss_win_rate,
         "after_win_regression": after_win_patterns,
+        **trade_stats,
+        **autocorrelation,
     }
 
 
@@ -1023,7 +1265,7 @@ def compute_full_analytics(
         "session_analysis": compute_session_analysis(trades),
         "named_session_analysis": compute_named_session_analytics(trades),
         "mae_mfe_analysis": compute_mae_mfe_analysis(trades),
-        "win_loss_patterns": compute_win_loss_patterns(daily_pnl_records),
+        "win_loss_patterns": compute_win_loss_patterns(daily_pnl_records, trades),
         "regime_performance": compute_regime_performance(daily_pnl_records, trades),
         "autocorrelation": compute_trade_autocorrelation(daily_pnl_records),
         # ─── Task 5.2: Intelligence overlays for calendar ────
