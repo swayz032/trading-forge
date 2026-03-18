@@ -1059,7 +1059,6 @@ def run_class_backtest(
     trade_pnls_arr = np.array([])
 
     if trades_records is not None:
-        avg_slippage_dollars = float(np.nanmean(slippage_clean))
         trade_pnls_list = []
 
         for _, row in trades_records.iterrows():
@@ -1067,13 +1066,18 @@ def run_class_backtest(
             exit_p = float(row["Avg Exit Price"])
             size = float(row["Size"])
             direction = str(row["Direction"])
+            entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
+            exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
 
             if "Short" in direction:
                 gross = (entry_p - exit_p) * size * spec.point_value
             else:
                 gross = (exit_p - entry_p) * size * spec.point_value
 
-            slip_cost = avg_slippage_dollars * size * 2
+            # Per-trade friction: per-bar slippage at entry + exit bars
+            entry_slip = float(slippage_clean[entry_idx]) if entry_idx < len(slippage_clean) else 0.0
+            exit_slip = float(slippage_clean[exit_idx]) if exit_idx < len(slippage_clean) else 0.0
+            slip_cost = (entry_slip + exit_slip) * size
             comm_cost = commission * size * 2
             net_pnl = gross - slip_cost - comm_cost
 
@@ -1116,18 +1120,31 @@ def run_class_backtest(
 
     bar_dollar_pnls = prev_assets * close_diffs * spec.point_value
 
-    # Deduct friction on EVERY position change (including reversals)
+    # Deduct friction on EVERY position change (including reversals).
+    # Reversal (e.g., +15 → -15) = exit old + enter new = friction on BOTH.
     for i in range(len(bar_dollar_pnls)):
         old_pos = prev_assets[i]
         new_pos = assets[i]
         if old_pos == new_pos:
             continue
         bar_slip = float(slippage_clean[i]) if not np.isnan(slippage_clean[i]) else 0.0
-        bar_friction = bar_slip + commission
+        bar_friction = bar_slip + commission  # one side
+        # Contracts closed (exited or reduced)
         if old_pos != 0:
-            bar_dollar_pnls[i] -= bar_friction * abs(old_pos)
-        if new_pos != 0 and np.sign(new_pos) != np.sign(old_pos):
-            bar_dollar_pnls[i] -= bar_friction * abs(new_pos)
+            if np.sign(new_pos) != np.sign(old_pos):
+                # Full exit (or reversal) — friction on all old contracts
+                bar_dollar_pnls[i] -= bar_friction * abs(old_pos)
+            elif abs(new_pos) < abs(old_pos):
+                # Partial close — friction on closed contracts
+                bar_dollar_pnls[i] -= bar_friction * (abs(old_pos) - abs(new_pos))
+        # Contracts opened (new entry, reversal, or scaling into position)
+        if new_pos != 0:
+            if np.sign(new_pos) != np.sign(old_pos):
+                # New direction entry or reversal — friction on all new contracts
+                bar_dollar_pnls[i] -= bar_friction * abs(new_pos)
+            elif abs(new_pos) > abs(old_pos):
+                # Scaling into existing position — friction on added contracts
+                bar_dollar_pnls[i] -= bar_friction * (abs(new_pos) - abs(old_pos))
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
