@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import {
-  AreaChart, Area, LineChart, Line, BarChart, Bar,
+  AreaChart, Area, LineChart, Line, BarChart, Bar, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import { StatusBadge } from "@/components/forge/StatusBadge";
@@ -381,7 +381,11 @@ export default function MonteCarlo() {
                       <ReferenceLine x={histogram.findIndex(h => h.midpoint >= initialEquity) >= 0 ? histogram[histogram.findIndex(h => h.midpoint >= initialEquity)].range : undefined} stroke="hsl(240,4%,46%)" strokeDasharray="4 3" strokeOpacity={0.5} />
                       <Bar dataKey="count" radius={[2, 2, 0, 0]} name="Paths">
                         {histogram.map((entry, idx) => (
-                          <rect key={idx} fill={entry.midpoint >= initialEquity ? "hsl(45,100%,50%)" : "hsl(0,84%,60%)"} fillOpacity={0.7} />
+                          <Cell
+                            key={idx}
+                            fill={entry.midpoint >= initialEquity ? "hsl(45,100%,50%)" : "hsl(0,84%,60%)"}
+                            fillOpacity={0.7}
+                          />
                         ))}
                       </Bar>
                     </BarChart>

@@ -17,7 +17,8 @@ const statusVariant: Record<string, "profit" | "amber" | "info" | "neutral"> = {
 
 export default function Scout() {
   const { data: funnel, isLoading: funnelLoading } = useScoutFunnel();
-  const { data: entries, isLoading: entriesLoading } = useJournal({ status: "scouted", limit: 20 });
+  // Fetch all recent journal entries (scouted + tested + promoted) so we see the full pipeline
+  const { data: entries, isLoading: entriesLoading } = useJournal({ limit: 40 });
 
   const summaryCards = [
     { icon: Search, label: "Scanning", value: funnel ? funnel.scouted.toLocaleString() : "—", sub: "strategies scouted" },
@@ -29,17 +30,29 @@ export default function Scout() {
   const scoutResults = (entries ?? []).map((entry, idx) => {
     const params = entry.strategyParams ?? {};
     const perf = entry.performanceGateResult ?? {};
+    const isScouted = entry.status === "scouted";
+
+    // Scouted entries store title/description in strategyParams (from scout-ideas POST)
+    // Tested/promoted entries store name in strategyParams
+    const name =
+      params.title ??
+      params.name ??
+      (entry.generationPrompt ? entry.generationPrompt.slice(0, 60) : `Strategy #${idx + 1}`);
+
+    // For scouted (un-backtested) entries, metrics don't exist — use null so UI shows "—"
+    const hasMetrics = !isScouted && (entry.forgeScore != null || perf.sharpe != null || params.sharpe != null);
+
     return {
       id: entry.id,
-      name: params.name ?? (entry.generationPrompt ? entry.generationPrompt.slice(0, 30) : `Strategy #${idx + 1}`),
-      instrument: params.symbol ?? "—",
+      name,
+      instrument: params.symbol ?? params.instruments?.[0] ?? "—",
       timeframe: params.timeframe ?? "—",
       type: entry.source,
-      sharpe: perf.sharpe ?? params.sharpe ?? null,
-      winRate: perf.winRate ?? params.winRate ?? null,
-      trades: perf.totalTrades ?? params.totalTrades ?? null,
-      drawdown: perf.maxDrawdown ?? params.maxDrawdown ?? null,
-      forgeScore: num(entry.forgeScore),
+      sharpe: hasMetrics ? (perf.sharpe ?? perf.sharpeRatio ?? params.sharpe ?? null) : null,
+      winRate: hasMetrics ? (perf.winRate ?? perf.win_rate ?? params.winRate ?? null) : null,
+      trades: hasMetrics ? (perf.totalTrades ?? perf.total_trades ?? params.totalTrades ?? null) : null,
+      drawdown: hasMetrics ? (perf.maxDrawdown ?? perf.max_drawdown ?? params.maxDrawdown ?? null) : null,
+      forgeScore: entry.forgeScore != null ? num(entry.forgeScore) : null,
       status: entry.status,
     };
   });
@@ -104,10 +117,10 @@ export default function Scout() {
                 transition={{ delay: i * 0.05 }}
                 className="forge-card p-5 flex gap-5 cursor-pointer"
               >
-                <ForgeScoreRing score={r.forgeScore} maxScore={100} size={60} strokeWidth={5} />
+                <ForgeScoreRing score={r.forgeScore ?? 0} maxScore={100} size={60} strokeWidth={5} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-foreground truncate">{r.name}</h3>
+                    <h3 className="text-sm font-medium text-foreground line-clamp-2" title={r.name}>{r.name}</h3>
                     <StatusBadge variant={statusVariant[r.status] ?? "neutral"} dot>
                       {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
                     </StatusBadge>

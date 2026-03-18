@@ -38,15 +38,41 @@ export default function Agents() {
     const st = statusMap[job.status] ?? { variant: "neutral" as const, label: job.status };
     const result = job.result ?? {};
     const input = job.input ?? {};
+
+    // Derive a human-readable name from the action or input
+    const actionLabel = job.action
+      .replace(/^agent\./, "")
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const strategyName = input.strategy_name ?? input.strategy_class?.split(".").pop();
+    const name = strategyName
+      ? `${actionLabel}: ${strategyName}`
+      : actionLabel;
+
+    // Type context from input (e.g. "ES · 1h")
+    const typeLabel = [input.symbol, input.timeframe].filter(Boolean).join(" · ") || job.entityType || "agent";
+
+    // Discovered/accepted from result.strategies array (find-strategies jobs)
+    const strategiesArr = Array.isArray(result.strategies) ? result.strategies : [];
+    const discovered = strategiesArr.length || (result.strategiesFound ?? result.count ?? 0);
+    const accepted = strategiesArr.filter(
+      (s: any) => s.status === "completed" || s.status === "validated"
+    ).length || (result.accepted ?? result.passed ?? 0);
+
+    // Score: no forge score on audit_log, so show acceptance ratio as a proxy (0-100)
+    const score = discovered > 0
+      ? Math.round((accepted / discovered) * 100)
+      : num(result.forgeScore ?? result.score, 0);
+
     return {
       id: job.id,
-      name: job.action,
-      type: job.entityType ?? "agent",
+      name,
+      type: typeLabel,
       status: job.status,
       st,
-      strategies: result.strategiesFound ?? result.count ?? 0,
-      accepted: result.accepted ?? result.passed ?? 0,
-      score: num(result.forgeScore ?? result.score, 0),
+      strategies: discovered,
+      accepted,
+      score,
       durationMs: job.durationMs,
       lastRun: timeAgo(job.createdAt),
     };

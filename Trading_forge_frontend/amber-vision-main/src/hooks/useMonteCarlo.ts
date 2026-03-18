@@ -9,6 +9,7 @@ export function useMonteCarlo(filters?: { backtestId?: string }) {
   return useQuery({
     queryKey: ["monte-carlo", filters],
     queryFn: () => api.get<MonteCarloRun[]>(`/monte-carlo${qs ? `?${qs}` : ""}`),
+    enabled: !!filters?.backtestId,
   });
 }
 
