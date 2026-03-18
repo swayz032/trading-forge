@@ -3,6 +3,7 @@ import { paperSessions, paperPositions, paperTrades, strategies } from "../db/sc
 import { eq, and, isNull } from "drizzle-orm";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
+import { onPaperTradeClose } from "../scheduler.js";
 
 // Contract specs (same as risk.ts)
 const CONTRACT_SPECS: Record<string, { tickSize: number; tickValue: number; pointValue: number }> = {
@@ -123,6 +124,14 @@ export async function closePosition(positionId: string, exitSignalPrice: number)
 
   broadcastSSE("paper:trade", { trade, pnl });
   logger.info({ positionId, pnl, slippage }, "Paper position closed");
+
+  // Trigger drift detection after each trade close
+  if (session?.strategyId) {
+    onPaperTradeClose(pos.sessionId, session.strategyId).catch((err) => {
+      logger.error({ sessionId: pos.sessionId, err }, "onPaperTradeClose drift check failed");
+    });
+  }
+
   return { trade, pnl, slippage };
 }
 
