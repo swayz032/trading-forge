@@ -295,8 +295,10 @@ def simulate_prop_firm(
         consistency_passed = False
         consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (limit: 50%)"
 
-    # Max drawdown in dollars
+    # Max drawdown in dollars (EOD and intraday tracked separately)
     max_dd_dollars = max((s["drawdown_from_peak"] for s in daily_statements), default=0)
+    max_dd_eod = max_dd_dollars  # EOD drawdown = peak - EOD balance
+    max_dd_intraday = max((s["intraday_max_dd_approx"] for s in daily_statements), default=0)
 
     # Recovery days from max drawdown
     # Count trading days from the point of max DD until balance returns to peak
@@ -312,6 +314,19 @@ def simulate_prop_firm(
                 if s["drawdown_from_peak"] == 0:
                     # Fully recovered — back at peak equity
                     break
+
+    # Best day as pct of total profit
+    best_day_pct_of_total = round(consistency_ratio * 100, 2)
+
+    # Long/short split from trades
+    long_trades = [t for t in trades if str(t.get("Direction", t.get("direction", ""))).lower().startswith("long")]
+    short_trades = [t for t in trades if str(t.get("Direction", t.get("direction", ""))).lower().startswith("short")]
+    long_pnl = sum(float(t.get("PnL", t.get("pnl", 0))) for t in long_trades)
+    short_pnl = sum(float(t.get("PnL", t.get("pnl", 0))) for t in short_trades)
+    long_short_split = {
+        "long": {"trades": len(long_trades), "pnl": round(long_pnl, 2)},
+        "short": {"trades": len(short_trades), "pnl": round(short_pnl, 2)},
+    }
 
     # Payout projection
     total_net_profit = balance - starting_balance
@@ -390,18 +405,22 @@ def simulate_prop_firm(
         "ending_balance": round(balance, 2),
         "peak_equity": round(peak_equity, 2),
         "max_drawdown_dollars": round(max_dd_dollars, 2),
+        "max_drawdown_eod": round(max_dd_eod, 2),
+        "max_drawdown_intraday": round(max_dd_intraday, 2),
         "max_drawdown_limit": firm["max_drawdown"],
         "daily_loss_limit_breaches": daily_loss_breaches,
         "gap_breaches": gap_breaches,
         "trailing_dd_breached": trailing_dd_breached,
         "breach_day": breach_day,
         "consistency_ratio": round(consistency_ratio, 4),
+        "best_day_pct_of_total": best_day_pct_of_total,
         "consistency_passed": consistency_passed,
         "consistency_failure": consistency_failure,
         "days_to_pass_eval": days_to_pass_eval,
         "eval_passed": eval_passed,
         "passed": passed,
         "payout_split": firm["payout_split"],
+        "payout_projection": payout_projection,
         "payout_projection_monthly": payout_projection,
         "daily_account_statement": daily_statements,
         "monthly_summary": monthly_summary,
@@ -418,6 +437,7 @@ def simulate_prop_firm(
         "overnight_margin_warnings": sum(
             1 for s in daily_statements if s.get("overnight_margin_warning", False)
         ),
+        "long_short_split": long_short_split,
         "eval_phase_result": {
             "profit_target": profit_target,
             "days_to_target": days_to_pass_eval,

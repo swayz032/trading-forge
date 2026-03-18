@@ -272,10 +272,12 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
 
     def _side_metrics(trades: list[dict]) -> dict:
         if not trades:
-            return {"trades": 0, "win_rate": 0, "pnl": 0, "avg_winner": 0, "avg_loser": 0, "profit_factor": 0}
+            return {"trades": 0, "win_rate": 0, "pnl": 0, "avg_winner": 0, "avg_loser": 0, "profit_factor": 0, "sharpe": 0}
         pnls = [float(t.get("PnL", t.get("pnl", 0))) for t in trades]
         winners = [p for p in pnls if p > 0]
         losers = [p for p in pnls if p < 0]
+        pnl_arr = np.array(pnls)
+        side_sharpe = float(np.mean(pnl_arr) / np.std(pnl_arr, ddof=1) * np.sqrt(252)) if len(pnl_arr) > 1 and np.std(pnl_arr, ddof=1) > 0 else 0.0
         return {
             "trades": len(trades),
             "win_rate": round(len(winners) / len(trades), 4),
@@ -283,6 +285,7 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
             "avg_winner": round(sum(winners) / len(winners), 2) if winners else 0,
             "avg_loser": round(sum(losers) / len(losers), 2) if losers else 0,
             "profit_factor": round(sum(winners) / abs(sum(losers)), 4) if losers and sum(losers) != 0 else 999.99,
+            "sharpe": round(side_sharpe, 4),
         }
 
     long_metrics = _side_metrics(longs)
