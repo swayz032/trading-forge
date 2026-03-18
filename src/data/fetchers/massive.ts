@@ -1,3 +1,5 @@
+import WebSocket from "ws";
+
 /**
  * Massive Data Fetcher
  *
@@ -57,17 +59,131 @@ export function createMassiveFetcher(config: MassiveConfig) {
   }
 
   function createWebSocket(symbols: string[], onBar: (bar: Bar & { symbol: string }) => void) {
-    // WebSocket for real-time streaming (Phase 6 — paper/live trading)
-    // Placeholder — will implement with ws package
-    return {
-      connect: () => {
-        console.log(`[Massive WS] Connecting for symbols: ${symbols.join(", ")}`);
-        // TODO: Implement WebSocket connection
-      },
-      disconnect: () => {
-        console.log("[Massive WS] Disconnected");
-      },
-    };
+    const wsUrl = config.baseUrl?.replace(/^https?/, "wss")?.replace(/\/v1$/, "/v1/stream")
+      ?? "wss://stream.massive.io/v1/stream";
+
+    let ws: WebSocket | null = null;
+    let connected = false;
+    let reconnectAttempts = 0;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+    let intentionalClose = false;
+    const listeners = new Map<string, Set<(...args: any[]) => void>>();
+
+    function emit(event: string, ...args: any[]) {
+      const fns = listeners.get(event);
+      if (fns) fns.forEach(fn => fn(...args));
+    }
+
+    function on(event: string, fn: (...args: any[]) => void) {
+      if (!listeners.has(event)) listeners.set(event, new Set());
+      listeners.get(event)!.add(fn);
+    }
+
+    function startHeartbeat() {
+      stopHeartbeat();
+      heartbeatTimer = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.ping();
+        }
+      }, 30_000);
+    }
+
+    function stopHeartbeat() {
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
+    }
+
+    function scheduleReconnect() {
+      if (intentionalClose) return;
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30_000);
+      reconnectAttempts++;
+      emit("reconnecting", { attempt: reconnectAttempts, delayMs: delay });
+      reconnectTimer = setTimeout(() => connect(), delay);
+    }
+
+    function connect() {
+      intentionalClose = false;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+
+      ws = new WebSocket(wsUrl, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+
+      ws.on("open", () => {
+        connected = true;
+        reconnectAttempts = 0;
+        startHeartbeat();
+
+        // Subscribe to symbols
+        ws!.send(JSON.stringify({ action: "subscribe", symbols }));
+        emit("connected");
+      });
+
+      ws.on("message", (data: WebSocket.Data) => {
+        try {
+          const msg = JSON.parse(data.toString());
+          // Handle bar data — expect { symbol, timestamp, open, high, low, close, volume }
+          if (msg.timestamp !== undefined && msg.symbol) {
+            onBar({
+              symbol: msg.symbol,
+              timestamp: msg.timestamp,
+              open: Number(msg.open),
+              high: Number(msg.high),
+              low: Number(msg.low),
+              close: Number(msg.close),
+              volume: Number(msg.volume),
+            });
+          }
+        } catch {
+          // Ignore non-JSON messages (heartbeat acks, etc.)
+        }
+      });
+
+      ws.on("close", () => {
+        connected = false;
+        stopHeartbeat();
+        emit("disconnected");
+        scheduleReconnect();
+      });
+
+      ws.on("error", (err: Error) => {
+        emit("error", err);
+      });
+
+      ws.on("pong", () => {
+        // Server responded to ping — connection is alive
+      });
+    }
+
+    function disconnect() {
+      intentionalClose = true;
+      stopHeartbeat();
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+      connected = false;
+    }
+
+    function isConnected(): boolean {
+      return connected;
+    }
+
+    function subscribedSymbols(): string[] {
+      return [...symbols];
+    }
+
+    return { connect, disconnect, isConnected, subscribedSymbols, on };
   }
 
   return { fetchBars, createWebSocket };

@@ -23,7 +23,7 @@ const strategyConfigSchema = z.object({
   name: z.string().min(1),
   symbol: z.enum(["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"]),
   timeframe: z.string().min(1),
-  indicators: z.array(indicatorSchema).min(1).max(5),
+  indicators: z.array(indicatorSchema).max(5).default([]),
   entry_long: z.string().min(1),
   entry_short: z.string().min(1),
   exit: z.string().min(1),

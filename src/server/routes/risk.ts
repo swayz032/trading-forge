@@ -42,6 +42,14 @@ const FIRM_LIMITS: Record<string, Record<string, { maxDrawdown: number; maxContr
     "50k":  { maxDrawdown: 2000, maxContracts: 12, dailyLoss: null, trailing: "eod" },
     "100k": { maxDrawdown: 4000, maxContracts: 20, dailyLoss: null, trailing: "eod" },
   },
+  ffn: {
+    "50k":  { maxDrawdown: 2500, maxContracts: 5,  dailyLoss: 1250, trailing: "eod" },
+    "100k": { maxDrawdown: 3500, maxContracts: 10, dailyLoss: 2000, trailing: "eod" },
+  },
+  earn2trade: {
+    "50k":  { maxDrawdown: 2000, maxContracts: 5,  dailyLoss: null, trailing: "eod" },
+    "100k": { maxDrawdown: 3500, maxContracts: 10, dailyLoss: null, trailing: "eod" },
+  },
 };
 
 // ─── Max Contracts Calculator ────────────────────────────────

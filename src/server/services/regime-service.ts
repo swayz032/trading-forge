@@ -7,7 +7,7 @@ import { spawn } from "child_process";
 import { resolve as pathResolve } from "path";
 import { logger } from "../index.js";
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
+const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
 export interface RegimeResult {
   regime: string;

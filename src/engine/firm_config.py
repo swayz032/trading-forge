@@ -14,31 +14,31 @@ from __future__ import annotations
 FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
     "topstep_50k": {
         "ES": 2.52, "NQ": 2.52, "CL": 2.52, "YM": 2.52,
-        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62,
+        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "mffu_50k": {
         "ES": 1.58, "NQ": 1.58, "CL": 1.58, "YM": 1.58,
-        "RTY": 1.58, "GC": 1.58, "MES": 0.62, "MNQ": 0.62,
+        "RTY": 1.58, "GC": 1.58, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "tpt_50k": {
         "ES": 2.04, "NQ": 2.04, "CL": 2.04, "YM": 2.04,
-        "RTY": 2.04, "GC": 2.04, "MES": 0.62, "MNQ": 0.62,
+        "RTY": 2.04, "GC": 2.04, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "apex_50k": {
         "ES": 2.64, "NQ": 2.64, "CL": 2.64, "YM": 2.64,
-        "RTY": 2.64, "GC": 2.64, "MES": 0.62, "MNQ": 0.62,
+        "RTY": 2.64, "GC": 2.64, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "tradeify_50k": {
         "ES": 2.52, "NQ": 2.52, "CL": 2.52, "YM": 2.52,
-        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62,
+        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "alpha_50k": {
         "ES": 2.04, "NQ": 2.04, "CL": 2.04, "YM": 2.04,
-        "RTY": 2.04, "GC": 2.04, "MES": 0.62, "MNQ": 0.62,
+        "RTY": 2.04, "GC": 2.04, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "ffn_50k": {
         "ES": 2.52, "NQ": 2.52, "CL": 2.52, "YM": 2.52,
-        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62,
+        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
 }
 
@@ -46,11 +46,11 @@ FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
 # ─── Per-Firm Contract Caps (max simultaneous contracts) ─────────
 
 FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
-    "topstep_50k":   {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50},
-    "mffu_50k":      {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50},
-    "tpt_50k":       {"ES": 3,  "NQ": 3,  "CL": 5,  "YM": 3,  "RTY": 3,  "GC": 3,  "MES": 30, "MNQ": 30},
-    "apex_50k":      {"ES": 4,  "NQ": 4,  "CL": 10, "YM": 4,  "RTY": 4,  "GC": 4,  "MES": 40, "MNQ": 40},
-    "tradeify_50k":  {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50},
+    "topstep_50k":   {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100},
+    "mffu_50k":      {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100},
+    "tpt_50k":       {"ES": 3,  "NQ": 3,  "CL": 5,  "YM": 3,  "RTY": 3,  "GC": 3,  "MES": 30, "MNQ": 30, "MCL": 50},
+    "apex_50k":      {"ES": 4,  "NQ": 4,  "CL": 10, "YM": 4,  "RTY": 4,  "GC": 4,  "MES": 40, "MNQ": 40, "MCL": 100},
+    "tradeify_50k":  {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100},
 }
 
 

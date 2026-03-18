@@ -18,7 +18,7 @@ import { db } from "../db/index.js";
 import { backtests, monteCarloRuns, auditLog } from "../db/schema.js";
 import { logger } from "../index.js";
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
+const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
 interface MCOptions {
   numSimulations?: number;
@@ -143,7 +143,10 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
       ruin_threshold: options.ruinThreshold ?? 0.0,
       trades: bt.dailyPnls ?? [], // Daily P&Ls used as trade proxy if no individual trades
       daily_pnls: bt.dailyPnls ?? [],
-      equity_curve: bt.equityCurve ?? [],
+      // Normalize equity_curve: handle both flat number[] and {time,value}[] formats
+      equity_curve: Array.isArray(bt.equityCurve)
+        ? bt.equityCurve.map((pt: any) => typeof pt === "number" ? pt : pt.value ?? 0)
+        : [],
     };
 
     const tmpPath = pathResolve(tmpdir(), `mc-config-${randomUUID()}.json`);

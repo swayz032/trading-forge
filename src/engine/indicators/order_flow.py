@@ -1,321 +1,359 @@
 """ICT Order Flow indicators — Order Blocks, Breaker, Mitigation, Rejection, Propulsion.
 
-Order Blocks represent institutional footprints where large orders were placed.
-They act as supply/demand zones for future price reactions.
+Performance: Hot paths compiled with Numba @njit — handles 500K+ bars in seconds.
 """
 
 from __future__ import annotations
 
+import numpy as np
 import polars as pl
+from numba import njit
 
+
+# ─── Numba-compiled kernels (machine-code speed) ──────────────────
+
+@njit(cache=True)
+def _find_bullish_obs(opens, closes, highs, lows, sl_indices):
+    """Find last bearish candle before each swing low. Returns (index, top, bottom) arrays."""
+    n = len(sl_indices)
+    out_idx = np.empty(n, dtype=np.int64)
+    out_top = np.empty(n, dtype=np.float64)
+    out_bot = np.empty(n, dtype=np.float64)
+    count = 0
+    for k in range(n):
+        sl = sl_indices[k]
+        start = max(sl - 10, 0)
+        for j in range(sl, start - 1, -1):
+            if closes[j] < opens[j]:
+                out_idx[count] = j
+                out_top[count] = highs[j]
+                out_bot[count] = lows[j]
+                count += 1
+                break
+    return out_idx[:count], out_top[:count], out_bot[:count]
+
+
+@njit(cache=True)
+def _find_bearish_obs(opens, closes, highs, lows, sh_indices):
+    """Find last bullish candle before each swing high."""
+    n = len(sh_indices)
+    out_idx = np.empty(n, dtype=np.int64)
+    out_top = np.empty(n, dtype=np.float64)
+    out_bot = np.empty(n, dtype=np.float64)
+    count = 0
+    for k in range(n):
+        sh = sh_indices[k]
+        start = max(sh - 10, 0)
+        for j in range(sh, start - 1, -1):
+            if closes[j] > opens[j]:
+                out_idx[count] = j
+                out_top[count] = highs[j]
+                out_bot[count] = lows[j]
+                count += 1
+                break
+    return out_idx[:count], out_top[:count], out_bot[:count]
+
+
+@njit(cache=True)
+def _find_breakers(closes, ob_indices, ob_tops, ob_bottoms, ob_is_bullish, n_bars):
+    """Find first bar where each OB is broken through. O(m) per OB using numpy slice."""
+    m = len(ob_indices)
+    out_idx = np.empty(m, dtype=np.int64)
+    out_top = np.empty(m, dtype=np.float64)
+    out_bot = np.empty(m, dtype=np.float64)
+    out_broken = np.empty(m, dtype=np.int64)
+    out_is_bull_breaker = np.empty(m, dtype=np.bool_)
+    count = 0
+
+    for k in range(m):
+        ob_idx = ob_indices[k]
+        if ob_idx + 1 >= n_bars:
+            continue
+
+        if ob_is_bullish[k]:
+            # Bullish OB broken when close < bottom → bearish breaker
+            for i in range(ob_idx + 1, n_bars):
+                if closes[i] < ob_bottoms[k]:
+                    out_idx[count] = ob_idx
+                    out_top[count] = ob_tops[k]
+                    out_bot[count] = ob_bottoms[k]
+                    out_broken[count] = i
+                    out_is_bull_breaker[count] = False  # bearish breaker
+                    count += 1
+                    break
+        else:
+            # Bearish OB broken when close > top → bullish breaker
+            for i in range(ob_idx + 1, n_bars):
+                if closes[i] > ob_tops[k]:
+                    out_idx[count] = ob_idx
+                    out_top[count] = ob_tops[k]
+                    out_bot[count] = ob_bottoms[k]
+                    out_broken[count] = i
+                    out_is_bull_breaker[count] = True  # bullish breaker
+                    count += 1
+                    break
+
+    return out_idx[:count], out_top[:count], out_bot[:count], out_broken[:count], out_is_bull_breaker[:count]
+
+
+@njit(cache=True)
+def _compute_breaker_signals(closes, b_tops, b_bottoms, b_broken_at, b_is_bull, zone_age_limit, n_bars):
+    """Generate entry_long/entry_short boolean arrays from breaker zones.
+
+    Iterates over breakers (small, ~100-300), vectorized per-breaker scan over bars.
+    Total: O(m × age_limit) not O(n × m).
+    """
+    entry_long = np.zeros(n_bars, dtype=np.bool_)
+    entry_short = np.zeros(n_bars, dtype=np.bool_)
+
+    for k in range(len(b_tops)):
+        start = b_broken_at[k] + 1
+        end = min(start + zone_age_limit, n_bars)
+        top = b_tops[k]
+        bot = b_bottoms[k]
+        is_bull = b_is_bull[k]
+
+        for i in range(start, end):
+            c = closes[i]
+            if bot <= c <= top:
+                if is_bull:
+                    entry_long[i] = True
+                else:
+                    entry_short[i] = True
+
+    return entry_long, entry_short
+
+
+# ─── Public API (Polars in/out, Numba inside) ─────────────────────
 
 def detect_bullish_ob(df: pl.DataFrame, swings: pl.DataFrame) -> pl.DataFrame:
-    """Detect Bullish Order Blocks — the last bearish candle before a swing low that leads to a BOS up.
-
-    A bullish OB is the last down-close candle before price makes a swing low
-    and then breaks structure to the upside.
-
-    Args:
-        df: OHLCV DataFrame
-        swings: Output from detect_swings()
-
-    Returns:
-        DataFrame with columns: index, top (high of OB candle), bottom (low of OB candle), type="bullish"
-    """
-    records = []
+    """Detect Bullish Order Blocks — last bearish candle before a swing low."""
     swing_lows = swings.filter(pl.col("type") == "low").sort("index")
+    empty = pl.DataFrame(schema={"index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64, "type": pl.Utf8})
 
     if len(swing_lows) == 0:
-        return pl.DataFrame(schema={
-            "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64, "type": pl.Utf8,
-        })
+        return empty
 
-    opens = df["open"].to_list()
-    closes = df["close"].to_list()
-    highs = df["high"].to_list()
-    lows = df["low"].to_list()
+    idx, top, bot = _find_bullish_obs(
+        df["open"].to_numpy(), df["close"].to_numpy(),
+        df["high"].to_numpy(), df["low"].to_numpy(),
+        swing_lows["index"].to_numpy().astype(np.int64),
+    )
 
-    for row_i in range(len(swing_lows)):
-        sl_idx = int(swing_lows["index"][row_i])
+    if len(idx) == 0:
+        return empty
 
-        # Look backward from swing low for last bearish candle
-        for j in range(sl_idx, max(sl_idx - 10, 0), -1):
-            if closes[j] < opens[j]:  # bearish candle
-                records.append({
-                    "index": j,
-                    "top": highs[j],
-                    "bottom": lows[j],
-                    "type": "bullish",
-                })
-                break
-
-    if not records:
-        return pl.DataFrame(schema={
-            "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64, "type": pl.Utf8,
-        })
-
-    return pl.DataFrame(records)
+    return pl.DataFrame({"index": idx, "top": top, "bottom": bot, "type": ["bullish"] * len(idx)})
 
 
 def detect_bearish_ob(df: pl.DataFrame, swings: pl.DataFrame) -> pl.DataFrame:
-    """Detect Bearish Order Blocks — the last bullish candle before a swing high that leads to a BOS down.
-
-    Args:
-        df: OHLCV DataFrame
-        swings: Output from detect_swings()
-
-    Returns:
-        DataFrame with columns: index, top, bottom, type="bearish"
-    """
-    records = []
+    """Detect Bearish Order Blocks — last bullish candle before a swing high."""
     swing_highs = swings.filter(pl.col("type") == "high").sort("index")
+    empty = pl.DataFrame(schema={"index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64, "type": pl.Utf8})
 
     if len(swing_highs) == 0:
-        return pl.DataFrame(schema={
-            "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64, "type": pl.Utf8,
-        })
+        return empty
 
-    opens = df["open"].to_list()
-    closes = df["close"].to_list()
-    highs = df["high"].to_list()
-    lows = df["low"].to_list()
+    idx, top, bot = _find_bearish_obs(
+        df["open"].to_numpy(), df["close"].to_numpy(),
+        df["high"].to_numpy(), df["low"].to_numpy(),
+        swing_highs["index"].to_numpy().astype(np.int64),
+    )
 
-    for row_i in range(len(swing_highs)):
-        sh_idx = int(swing_highs["index"][row_i])
+    if len(idx) == 0:
+        return empty
 
-        for j in range(sh_idx, max(sh_idx - 10, 0), -1):
-            if closes[j] > opens[j]:  # bullish candle
-                records.append({
-                    "index": j,
-                    "top": highs[j],
-                    "bottom": lows[j],
-                    "type": "bearish",
-                })
-                break
-
-    if not records:
-        return pl.DataFrame(schema={
-            "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64, "type": pl.Utf8,
-        })
-
-    return pl.DataFrame(records)
+    return pl.DataFrame({"index": idx, "top": top, "bottom": bot, "type": ["bearish"] * len(idx)})
 
 
 def detect_breaker(df: pl.DataFrame, obs: pl.DataFrame) -> pl.DataFrame:
-    """Detect Breaker Blocks — Order Blocks that have been broken through and now act as opposite zones.
+    """Detect Breaker Blocks — OBs broken through, now opposite zones.
 
-    A bullish OB that gets broken becomes a bearish breaker (and vice versa).
-    Price traded through the OB zone, invalidating its original purpose.
-
-    Args:
-        df: OHLCV DataFrame
-        obs: Combined order blocks from detect_bullish_ob/detect_bearish_ob
-
-    Returns:
-        DataFrame with columns: index, top, bottom, type ("bullish_breaker"/"bearish_breaker"), broken_at
+    Numba-compiled forward scan — O(m × avg_break_distance), not O(n²).
     """
-    records = []
-    closes = df["close"].to_list()
+    empty = pl.DataFrame(schema={
+        "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64,
+        "type": pl.Utf8, "broken_at": pl.Int64,
+    })
 
-    for row_i in range(len(obs)):
-        ob_idx = int(obs["index"][row_i])
-        ob_type = str(obs["type"][row_i])
-        ob_top = float(obs["top"][row_i])
-        ob_bottom = float(obs["bottom"][row_i])
+    if len(obs) == 0:
+        return empty
 
-        # Check if OB was broken through after formation
-        for i in range(ob_idx + 1, len(df)):
-            close = closes[i]
-            if ob_type == "bullish" and close < ob_bottom:
-                # Bullish OB broken → becomes bearish breaker
-                records.append({
-                    "index": ob_idx,
-                    "top": ob_top,
-                    "bottom": ob_bottom,
-                    "type": "bearish_breaker",
-                    "broken_at": i,
-                })
-                break
-            elif ob_type == "bearish" and close > ob_top:
-                # Bearish OB broken → becomes bullish breaker
-                records.append({
-                    "index": ob_idx,
-                    "top": ob_top,
-                    "bottom": ob_bottom,
-                    "type": "bullish_breaker",
-                    "broken_at": i,
-                })
-                break
+    closes = df["close"].to_numpy()
+    ob_types = obs["type"].to_list()
+    is_bullish = np.array([t == "bullish" for t in ob_types])
 
-    if not records:
-        return pl.DataFrame(schema={
-            "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64,
-            "type": pl.Utf8, "broken_at": pl.Int64,
-        })
+    idx, top, bot, broken, is_bull_breaker = _find_breakers(
+        closes,
+        obs["index"].to_numpy().astype(np.int64),
+        obs["top"].to_numpy(),
+        obs["bottom"].to_numpy(),
+        is_bullish,
+        len(closes),
+    )
 
-    return pl.DataFrame(records)
+    if len(idx) == 0:
+        return empty
+
+    types = ["bullish_breaker" if b else "bearish_breaker" for b in is_bull_breaker]
+    return pl.DataFrame({"index": idx, "top": top, "bottom": bot, "type": types, "broken_at": broken})
+
+
+def compute_breaker_signals(df: pl.DataFrame, breakers: pl.DataFrame, zone_age_limit: int = 30):
+    """Generate entry signals from breaker zones. Numba-compiled, O(m × age_limit).
+
+    Returns (entry_long, entry_short) as numpy boolean arrays.
+    """
+    if len(breakers) == 0:
+        n = len(df)
+        return np.zeros(n, dtype=np.bool_), np.zeros(n, dtype=np.bool_)
+
+    b_types = breakers["type"].to_list()
+    is_bull = np.array([t == "bullish_breaker" for t in b_types])
+
+    return _compute_breaker_signals(
+        df["close"].to_numpy(),
+        breakers["top"].to_numpy(),
+        breakers["bottom"].to_numpy(),
+        breakers["broken_at"].to_numpy().astype(np.int64),
+        is_bull,
+        zone_age_limit,
+        len(df),
+    )
 
 
 def detect_mitigation(df: pl.DataFrame, obs: pl.DataFrame) -> pl.DataFrame:
-    """Detect Mitigation Blocks — partially filled Order Blocks.
+    """Detect Mitigation Blocks — partially filled Order Blocks."""
+    empty = pl.DataFrame(schema={
+        "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64,
+        "type": pl.Utf8, "mitigated_at": pl.Int64, "penetration_pct": pl.Float64,
+    })
 
-    Price returns to the OB zone but doesn't fully break through.
-    The OB is mitigated (partially filled) but still holds as a zone.
+    if len(obs) == 0:
+        return empty
 
-    Args:
-        df: OHLCV DataFrame
-        obs: Order blocks from detect_bullish_ob/detect_bearish_ob
-
-    Returns:
-        DataFrame with columns: index, top, bottom, type, mitigated_at, penetration_pct
-    """
+    highs = df["high"].to_numpy()
+    lows_arr = df["low"].to_numpy()
+    n = len(highs)
     records = []
-    highs = df["high"].to_list()
-    lows = df["low"].to_list()
 
-    for row_i in range(len(obs)):
-        ob_idx = int(obs["index"][row_i])
-        ob_type = str(obs["type"][row_i])
-        ob_top = float(obs["top"][row_i])
-        ob_bottom = float(obs["bottom"][row_i])
+    ob_indices = obs["index"].to_numpy()
+    ob_types = obs["type"].to_list()
+    ob_tops = obs["top"].to_numpy()
+    ob_bottoms = obs["bottom"].to_numpy()
+
+    for k in range(len(obs)):
+        ob_idx = int(ob_indices[k])
+        ob_type = ob_types[k]
+        ob_top = float(ob_tops[k])
+        ob_bottom = float(ob_bottoms[k])
         ob_range = ob_top - ob_bottom
 
-        if ob_range <= 0:
+        if ob_range <= 0 or ob_idx + 1 >= n:
             continue
 
-        for i in range(ob_idx + 1, len(df)):
-            if ob_type == "bullish":
-                # Price comes down into the bullish OB zone
-                if lows[i] <= ob_top and lows[i] >= ob_bottom:
-                    penetration = (ob_top - lows[i]) / ob_range
-                    records.append({
-                        "index": ob_idx,
-                        "top": ob_top,
-                        "bottom": ob_bottom,
-                        "type": "bullish_mitigation",
-                        "mitigated_at": i,
-                        "penetration_pct": round(penetration * 100, 1),
-                    })
-                    break
-            elif ob_type == "bearish":
-                if highs[i] >= ob_bottom and highs[i] <= ob_top:
-                    penetration = (highs[i] - ob_bottom) / ob_range
-                    records.append({
-                        "index": ob_idx,
-                        "top": ob_top,
-                        "bottom": ob_bottom,
-                        "type": "bearish_mitigation",
-                        "mitigated_at": i,
-                        "penetration_pct": round(penetration * 100, 1),
-                    })
-                    break
+        if ob_type == "bullish":
+            tail = lows_arr[ob_idx + 1:]
+            hits = np.where((tail <= ob_top) & (tail >= ob_bottom))[0]
+            if len(hits) > 0:
+                i = ob_idx + 1 + int(hits[0])
+                penetration = (ob_top - lows_arr[i]) / ob_range
+                records.append({
+                    "index": ob_idx, "top": ob_top, "bottom": ob_bottom,
+                    "type": "bullish_mitigation", "mitigated_at": i,
+                    "penetration_pct": round(float(penetration) * 100, 1),
+                })
+        elif ob_type == "bearish":
+            tail = highs[ob_idx + 1:]
+            hits = np.where((tail >= ob_bottom) & (tail <= ob_top))[0]
+            if len(hits) > 0:
+                i = ob_idx + 1 + int(hits[0])
+                penetration = (highs[i] - ob_bottom) / ob_range
+                records.append({
+                    "index": ob_idx, "top": ob_top, "bottom": ob_bottom,
+                    "type": "bearish_mitigation", "mitigated_at": i,
+                    "penetration_pct": round(float(penetration) * 100, 1),
+                })
 
-    if not records:
-        return pl.DataFrame(schema={
-            "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64,
-            "type": pl.Utf8, "mitigated_at": pl.Int64, "penetration_pct": pl.Float64,
-        })
-
-    return pl.DataFrame(records)
+    return pl.DataFrame(records) if records else empty
 
 
 def detect_rejection(df: pl.DataFrame) -> pl.DataFrame:
-    """Detect Rejection Blocks — candles with long wicks showing institutional rejection.
+    """Detect Rejection Blocks — candles with long wicks (wick >= 2x body). Fully vectorized."""
+    opens = df["open"].to_numpy()
+    highs = df["high"].to_numpy()
+    lows = df["low"].to_numpy()
+    closes = df["close"].to_numpy()
 
-    A rejection block has a wick that is >= 2x the body size,
-    indicating price was rejected at that level.
+    body = np.abs(closes - opens)
+    upper_wick = highs - np.maximum(opens, closes)
+    lower_wick = np.minimum(opens, closes) - lows
 
-    Returns:
-        DataFrame with columns: index, type ("bullish"/"bearish"), wick_high, wick_low, body_size
-    """
+    nonzero = body > 0
+    bearish_mask = nonzero & (upper_wick >= 2.0 * body) & (upper_wick > lower_wick)
+    bullish_mask = nonzero & (lower_wick >= 2.0 * body) & (lower_wick > upper_wick)
+
+    empty = pl.DataFrame(schema={
+        "index": pl.Int64, "type": pl.Utf8,
+        "wick_high": pl.Float64, "wick_low": pl.Float64, "body_size": pl.Float64,
+    })
+
+    b_idx = np.where(bearish_mask)[0]
+    u_idx = np.where(bullish_mask)[0]
+
+    if len(b_idx) == 0 and len(u_idx) == 0:
+        return empty
+
     records = []
-    opens = df["open"].to_list()
-    highs = df["high"].to_list()
-    lows = df["low"].to_list()
-    closes = df["close"].to_list()
+    for i in b_idx:
+        records.append({"index": int(i), "type": "bearish",
+                        "wick_high": float(highs[i]), "wick_low": float(np.maximum(opens[i], closes[i])),
+                        "body_size": float(body[i])})
+    for i in u_idx:
+        records.append({"index": int(i), "type": "bullish",
+                        "wick_high": float(np.minimum(opens[i], closes[i])), "wick_low": float(lows[i]),
+                        "body_size": float(body[i])})
 
-    for i in range(len(df)):
-        body = abs(closes[i] - opens[i])
-        upper_wick = highs[i] - max(opens[i], closes[i])
-        lower_wick = min(opens[i], closes[i]) - lows[i]
-
-        if body == 0:
-            continue
-
-        # Bearish rejection: long upper wick (rejected at highs)
-        if upper_wick >= 2.0 * body and upper_wick > lower_wick:
-            records.append({
-                "index": i,
-                "type": "bearish",
-                "wick_high": highs[i],
-                "wick_low": max(opens[i], closes[i]),
-                "body_size": body,
-            })
-        # Bullish rejection: long lower wick (rejected at lows)
-        elif lower_wick >= 2.0 * body and lower_wick > upper_wick:
-            records.append({
-                "index": i,
-                "type": "bullish",
-                "wick_high": min(opens[i], closes[i]),
-                "wick_low": lows[i],
-                "body_size": body,
-            })
-
-    if not records:
-        return pl.DataFrame(schema={
-            "index": pl.Int64, "type": pl.Utf8,
-            "wick_high": pl.Float64, "wick_low": pl.Float64, "body_size": pl.Float64,
-        })
-
-    return pl.DataFrame(records)
+    return pl.DataFrame(records).sort("index")
 
 
 def detect_propulsion(df: pl.DataFrame, obs: pl.DataFrame, fvgs: pl.DataFrame) -> pl.DataFrame:
-    """Detect Propulsion Blocks — Order Blocks with an overlapping FVG.
+    """Detect Propulsion Blocks — OBs with overlapping FVG."""
+    empty = pl.DataFrame(schema={
+        "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64,
+        "type": pl.Utf8, "ob_index": pl.Int64, "fvg_index": pl.Int64,
+    })
 
-    A propulsion block is a higher-confidence zone where an OB and FVG overlap,
-    creating a stronger area of institutional interest.
+    if len(obs) == 0 or len(fvgs) == 0:
+        return empty
 
-    Args:
-        df: OHLCV DataFrame
-        obs: Order blocks
-        fvgs: Fair Value Gaps from detect_fvg()
+    ob_tops = obs["top"].to_numpy()
+    ob_bottoms = obs["bottom"].to_numpy()
+    ob_indices = obs["index"].to_numpy()
+    ob_types = obs["type"].to_list()
 
-    Returns:
-        DataFrame with columns: index, top, bottom, type, ob_index, fvg_index
-    """
+    fvg_tops = fvgs["top"].to_numpy()
+    fvg_bottoms = fvgs["bottom"].to_numpy()
+    fvg_indices = fvgs["index"].to_numpy()
+
     records = []
+    for k in range(len(obs)):
+        ob_idx = int(ob_indices[k])
+        idx_mask = np.abs(fvg_indices.astype(float) - ob_idx) <= 5
+        if not idx_mask.any():
+            continue
 
-    for ob_i in range(len(obs)):
-        ob_top = float(obs["top"][ob_i])
-        ob_bottom = float(obs["bottom"][ob_i])
-        ob_idx = int(obs["index"][ob_i])
-        ob_type = str(obs["type"][ob_i])
+        overlap_tops = np.minimum(ob_tops[k], fvg_tops[idx_mask])
+        overlap_bottoms = np.maximum(ob_bottoms[k], fvg_bottoms[idx_mask])
+        valid = overlap_tops > overlap_bottoms
 
-        for fvg_i in range(len(fvgs)):
-            fvg_top = float(fvgs["top"][fvg_i])
-            fvg_bottom = float(fvgs["bottom"][fvg_i])
-            fvg_idx = int(fvgs["index"][fvg_i])
+        if valid.any():
+            first = int(np.where(valid)[0][0])
+            candidates = np.where(idx_mask)[0]
+            fvg_i = int(candidates[first])
+            records.append({
+                "index": ob_idx, "top": float(overlap_tops[first]), "bottom": float(overlap_bottoms[first]),
+                "type": ob_types[k] + "_propulsion", "ob_index": ob_idx, "fvg_index": int(fvg_indices[fvg_i]),
+            })
 
-            # Check for overlap
-            overlap_top = min(ob_top, fvg_top)
-            overlap_bottom = max(ob_bottom, fvg_bottom)
-
-            if overlap_top > overlap_bottom and abs(fvg_idx - ob_idx) <= 5:
-                records.append({
-                    "index": ob_idx,
-                    "top": overlap_top,
-                    "bottom": overlap_bottom,
-                    "type": ob_type + "_propulsion",
-                    "ob_index": ob_idx,
-                    "fvg_index": fvg_idx,
-                })
-                break  # one propulsion per OB
-
-    if not records:
-        return pl.DataFrame(schema={
-            "index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64,
-            "type": pl.Utf8, "ob_index": pl.Int64, "fvg_index": pl.Int64,
-        })
-
-    return pl.DataFrame(records)
+    return pl.DataFrame(records) if records else empty

@@ -29,7 +29,164 @@ journalRoutes.get("/", async (req, res) => {
   res.json(rows);
 });
 
+// ─── GET /api/journal/scout-fingerprints ─────────────────────
+// Returns recent scout title hashes + URLs for client-side (n8n) dedup
+// NOTE: Must be defined BEFORE /:id to avoid route collision
+journalRoutes.get("/scout-fingerprints", async (req, res) => {
+  const days = Number(req.query.days) || 30;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const rows = await db
+    .select({
+      id: systemJournal.id,
+      title_hash: sql<string>`strategy_params->>'title_hash'`,
+      url: sql<string>`strategy_params->>'url'`,
+      title: sql<string>`strategy_params->>'title'`,
+      createdAt: systemJournal.createdAt,
+    })
+    .from(systemJournal)
+    .where(
+      and(
+        eq(systemJournal.status, "scouted"),
+        gte(systemJournal.createdAt, cutoff),
+      )
+    )
+    .orderBy(desc(systemJournal.createdAt));
+
+  res.json({
+    count: rows.length,
+    days,
+    fingerprints: rows.map((r) => ({
+      id: r.id,
+      title_hash: r.title_hash,
+      url: r.url,
+      title: r.title,
+      created_at: r.createdAt,
+    })),
+  });
+});
+
+// ─── GET /api/journal/scout-funnel ──────────────────────────
+// Aggregated funnel: scouted → tested → passed → deployed, grouped by source
+// NOTE: Must be defined BEFORE /:id to avoid route collision
+journalRoutes.get("/scout-funnel", async (req, res) => {
+  const days = Number(req.query.days) || 30;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const rows = await db
+    .select({
+      source: systemJournal.source,
+      status: systemJournal.status,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(systemJournal)
+    .where(gte(systemJournal.createdAt, cutoff))
+    .groupBy(systemJournal.source, systemJournal.status);
+
+  // Build funnel by source
+  const funnel: Record<string, Record<string, number>> = {};
+  const totals: Record<string, number> = {};
+
+  for (const row of rows) {
+    if (!funnel[row.source]) funnel[row.source] = {};
+    funnel[row.source][row.status] = row.count;
+    totals[row.status] = (totals[row.status] || 0) + row.count;
+  }
+
+  res.json({ days, by_source: funnel, totals });
+});
+
+// Get summary stats for the self-critique dashboard
+// NOTE: Must be defined BEFORE /:id to avoid route collision
+journalRoutes.get("/stats/summary", async (req, res) => {
+  const all = await db.select().from(systemJournal);
+
+  const total = all.length;
+  const byTier = { TIER_1: 0, TIER_2: 0, TIER_3: 0, REJECTED: 0 };
+  const bySource = {} as Record<string, number>;
+  const byStatus = {} as Record<string, number>;
+
+  for (const entry of all) {
+    if (entry.tier && entry.tier in byTier) byTier[entry.tier as keyof typeof byTier]++;
+    bySource[entry.source] = (bySource[entry.source] || 0) + 1;
+    byStatus[entry.status] = (byStatus[entry.status] || 0) + 1;
+  }
+
+  const promoted = all.filter((e) => e.status === "promoted").length;
+  const passRate = total > 0 ? ((total - (byTier.REJECTED || 0)) / total) * 100 : 0;
+
+  res.json({
+    total,
+    promoted,
+    passRate: Math.round(passRate * 100) / 100,
+    byTier,
+    bySource,
+    byStatus,
+  });
+});
+
+// ─── GET /api/journal/source-stats ───────────────────────────
+// Hit rate metrics per source: scouted → promoted conversion rates
+// NOTE: Must be defined BEFORE /:id to avoid route collision
+journalRoutes.get("/source-stats", async (req, res) => {
+  const days = Number(req.query.days) || 90;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const rows = await db
+    .select({
+      source: systemJournal.source,
+      status: systemJournal.status,
+      tier: systemJournal.tier,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(systemJournal)
+    .where(gte(systemJournal.createdAt, cutoff))
+    .groupBy(systemJournal.source, systemJournal.status, systemJournal.tier);
+
+  // Build per-source stats
+  const sources: Record<string, {
+    total: number;
+    scouted: number;
+    tested: number;
+    promoted: number;
+    rejected: number;
+    promotionRate: number;
+    byTier: Record<string, number>;
+  }> = {};
+
+  for (const row of rows) {
+    if (!sources[row.source]) {
+      sources[row.source] = { total: 0, scouted: 0, tested: 0, promoted: 0, rejected: 0, promotionRate: 0, byTier: {} };
+    }
+    const s = sources[row.source];
+    s.total += row.count;
+    if (row.status === "scouted") s.scouted += row.count;
+    if (row.status === "tested") s.tested += row.count;
+    if (row.status === "promoted") s.promoted += row.count;
+    if (row.status === "failed" || row.tier === "REJECTED") s.rejected += row.count;
+    if (row.tier) {
+      s.byTier[row.tier] = (s.byTier[row.tier] || 0) + row.count;
+    }
+  }
+
+  // Compute promotion rates
+  for (const s of Object.values(sources)) {
+    s.promotionRate = s.total > 0 ? Math.round((s.promoted / s.total) * 10000) / 100 : 0;
+  }
+
+  // Sort by promotion rate descending
+  const ranked = Object.entries(sources)
+    .sort(([, a], [, b]) => b.promotionRate - a.promotionRate)
+    .map(([source, stats]) => ({ source, ...stats }));
+
+  res.json({ days, sources: ranked });
+});
+
 // Get single journal entry
+// NOTE: Must be AFTER all named routes (scout-fingerprints, scout-funnel, stats/summary, source-stats)
 journalRoutes.get("/:id", async (req, res) => {
   const [row] = await db
     .select()
@@ -104,99 +261,4 @@ journalRoutes.patch("/:id", async (req, res) => {
     return;
   }
   res.json(row);
-});
-
-// ─── GET /api/journal/scout-fingerprints ─────────────────────
-// Returns recent scout title hashes + URLs for client-side (n8n) dedup
-journalRoutes.get("/scout-fingerprints", async (req, res) => {
-  const days = Number(req.query.days) || 30;
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-
-  const rows = await db
-    .select({
-      id: systemJournal.id,
-      title_hash: sql<string>`strategy_params->>'title_hash'`,
-      url: sql<string>`strategy_params->>'url'`,
-      title: sql<string>`strategy_params->>'title'`,
-      createdAt: systemJournal.createdAt,
-    })
-    .from(systemJournal)
-    .where(
-      and(
-        eq(systemJournal.status, "scouted"),
-        gte(systemJournal.createdAt, cutoff),
-      )
-    )
-    .orderBy(desc(systemJournal.createdAt));
-
-  res.json({
-    count: rows.length,
-    days,
-    fingerprints: rows.map((r) => ({
-      id: r.id,
-      title_hash: r.title_hash,
-      url: r.url,
-      title: r.title,
-      created_at: r.createdAt,
-    })),
-  });
-});
-
-// ─── GET /api/journal/scout-funnel ──────────────────────────
-// Aggregated funnel: scouted → tested → passed → deployed, grouped by source
-journalRoutes.get("/scout-funnel", async (req, res) => {
-  const days = Number(req.query.days) || 30;
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-
-  const rows = await db
-    .select({
-      source: systemJournal.source,
-      status: systemJournal.status,
-      count: sql<number>`count(*)::int`,
-    })
-    .from(systemJournal)
-    .where(gte(systemJournal.createdAt, cutoff))
-    .groupBy(systemJournal.source, systemJournal.status);
-
-  // Build funnel by source
-  const funnel: Record<string, Record<string, number>> = {};
-  const totals: Record<string, number> = {};
-
-  for (const row of rows) {
-    if (!funnel[row.source]) funnel[row.source] = {};
-    funnel[row.source][row.status] = row.count;
-    totals[row.status] = (totals[row.status] || 0) + row.count;
-  }
-
-  res.json({ days, by_source: funnel, totals });
-});
-
-// Get summary stats for the self-critique dashboard
-journalRoutes.get("/stats/summary", async (req, res) => {
-  const all = await db.select().from(systemJournal);
-
-  const total = all.length;
-  const byTier = { TIER_1: 0, TIER_2: 0, TIER_3: 0, REJECTED: 0 };
-  const bySource = {} as Record<string, number>;
-  const byStatus = {} as Record<string, number>;
-
-  for (const entry of all) {
-    if (entry.tier && entry.tier in byTier) byTier[entry.tier as keyof typeof byTier]++;
-    bySource[entry.source] = (bySource[entry.source] || 0) + 1;
-    byStatus[entry.status] = (byStatus[entry.status] || 0) + 1;
-  }
-
-  const promoted = all.filter((e) => e.status === "promoted").length;
-  const passRate = total > 0 ? ((total - (byTier.REJECTED || 0)) / total) * 100 : 0;
-
-  res.json({
-    total,
-    promoted,
-    passRate: Math.round(passRate * 100) / 100,
-    byTier,
-    bySource,
-    byStatus,
-  });
 });

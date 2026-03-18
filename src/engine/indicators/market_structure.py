@@ -15,6 +15,8 @@ def detect_swings(df: pl.DataFrame, lookback: int = 5) -> pl.DataFrame:
     A swing high is a bar whose high is the highest in a (2*lookback+1) window.
     A swing low is a bar whose low is the lowest in a (2*lookback+1) window.
 
+    Vectorized — no Python row loops.
+
     Returns:
         DataFrame with columns: index, type ("high"/"low"), price, ts_event
     """
@@ -29,26 +31,41 @@ def detect_swings(df: pl.DataFrame, lookback: int = 5) -> pl.DataFrame:
     swing_high_mask = highs == rolling_max
     swing_low_mask = lows == rolling_min
 
-    records = []
-    for i in range(len(df)):
-        if swing_high_mask[i]:
-            rec = {"index": i, "type": "high", "price": float(highs[i])}
-            if "ts_event" in df.columns:
-                rec["ts_event"] = df["ts_event"][i]
-            records.append(rec)
-        if swing_low_mask[i]:
-            rec = {"index": i, "type": "low", "price": float(lows[i])}
-            if "ts_event" in df.columns:
-                rec["ts_event"] = df["ts_event"][i]
-            records.append(rec)
+    # Vectorized extraction using Polars filter — no Python loop
+    idx_col = pl.Series("index", range(len(df)), dtype=pl.Int64)
 
-    if not records:
+    swing_highs = (
+        df.with_columns(idx_col)
+        .filter(swing_high_mask)
+        .select([
+            pl.col("index"),
+            pl.lit("high").alias("type"),
+            pl.col("high").alias("price"),
+            *([pl.col("ts_event")] if "ts_event" in df.columns else []),
+        ])
+    )
+
+    swing_lows = (
+        df.with_columns(idx_col)
+        .filter(swing_low_mask)
+        .select([
+            pl.col("index"),
+            pl.lit("low").alias("type"),
+            pl.col("low").alias("price"),
+            *([pl.col("ts_event")] if "ts_event" in df.columns else []),
+        ])
+    )
+
+    parts = [swing_highs, swing_lows]
+    parts = [p for p in parts if len(p) > 0]
+
+    if not parts:
         schema = {"index": pl.Int64, "type": pl.Utf8, "price": pl.Float64}
         if "ts_event" in df.columns:
             schema["ts_event"] = df["ts_event"].dtype
         return pl.DataFrame(schema=schema)
 
-    return pl.DataFrame(records).sort("index")
+    return pl.concat(parts).sort("index")
 
 
 def detect_bos(df: pl.DataFrame, swings: pl.DataFrame) -> pl.Series:

@@ -46,9 +46,12 @@ interface BacktestConfig {
 async function resolveDataRange(symbol: string): Promise<{ start_date: string; end_date: string }> {
   try {
     const info = await queryInfo(symbol);
-    // Extract YYYY-MM-DD from ISO timestamps
-    const start = info.earliest.slice(0, 10);
-    const end = info.latest.slice(0, 10);
+    // queryInfo returns JS Date strings like "Sun Aug 02 2015 18:00:00 GMT-0400..."
+    // Parse to Date, then format as YYYY-MM-DD
+    const startDt = new Date(info.earliest);
+    const endDt = new Date(info.latest);
+    const start = startDt.toISOString().slice(0, 10);
+    const end = endDt.toISOString().slice(0, 10);
     logger.info({ symbol, start, end, totalBars: info.totalBars }, "Auto-resolved data range from S3");
     return { start_date: start, end_date: end };
   } catch (err) {
@@ -84,6 +87,9 @@ interface BacktestResult {
   error?: string;
 }
 
+// 5 minutes max per backtest — prevents matrix from hanging on slow strategies
+const BACKTEST_TIMEOUT_MS = 5 * 60 * 1000;
+
 function runPythonBacktest(configJson: string, mode: string, backtestId: string, strategyClass?: string): Promise<BacktestResult> {
   return new Promise((resolve, reject) => {
     const pythonCmd = process.platform === "win32" ? "python" : "python3";
@@ -100,6 +106,12 @@ function runPythonBacktest(configJson: string, mode: string, backtestId: string,
       cwd: PROJECT_ROOT,
     });
 
+    // Kill after timeout so matrix doesn't hang
+    const timer = setTimeout(() => {
+      proc.kill("SIGTERM");
+      reject(new Error(`Backtest timed out after ${BACKTEST_TIMEOUT_MS / 1000}s`));
+    }, BACKTEST_TIMEOUT_MS);
+
     let stdout = "";
     let stderr = "";
 
@@ -110,6 +122,7 @@ function runPythonBacktest(configJson: string, mode: string, backtestId: string,
     });
 
     proc.on("close", (code) => {
+      clearTimeout(timer);
       if (code === 0) {
         try {
           resolve(JSON.parse(stdout.trim()));
@@ -122,6 +135,7 @@ function runPythonBacktest(configJson: string, mode: string, backtestId: string,
     });
 
     proc.on("error", (err) => {
+      clearTimeout(timer);
       if (pythonCmd === "python") {
         // Retry with python3
         const proc2 = spawn("python3", args, {

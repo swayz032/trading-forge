@@ -57,8 +57,8 @@ def compute_position_sizes(
     # Floor and clamp min=1
     sizes = np.where(np.isnan(raw), np.nan, np.maximum(1, np.floor(raw)))
 
-    # Apply firm contract cap
-    if max_contracts is not None:
-        sizes = np.where(np.isnan(sizes), np.nan, np.minimum(sizes, max_contracts))
+    # Apply firm contract cap (default max 15 micros — user's standard size)
+    cap = max_contracts if max_contracts is not None else 15
+    sizes = np.where(np.isnan(sizes), np.nan, np.minimum(sizes, cap))
 
     return sizes

@@ -258,32 +258,40 @@ def run_backtest(
     if ts_index is not None:
         exits_pd.index = ts_index
 
+    # Short side signals
+    short_entries_pd = df["entry_short"].to_pandas() if "entry_short" in df.columns else entries_pd * False
+    short_exits_pd = df["exit_short"].to_pandas() if "exit_short" in df.columns else exits_pd * False
+    if ts_index is not None:
+        short_entries_pd.index = ts_index
+        short_exits_pd.index = ts_index
+
     # Clean NaN values
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
 
-    # ─── Run vectorbt Portfolio ───────────────────────────────
+    # ─── Run vectorbt Portfolio (long + short) ────────────────
+    # vectorbt handles SIGNAL TIMING only — no slippage/fees.
+    # We compute all P&L ourselves with correct futures math:
+    #   dollar_pnl = price_diff × contracts × point_value - slippage - commission
+    # This prevents: (1) equity ignoring slippage, (2) commission × point_value bug,
+    # (3) fixed_fees treating per-contract fee as per-order.
     try:
         pf = vbt.Portfolio.from_signals(
             close=close_pd,
             entries=entries_pd,
             exits=exits_pd,
+            short_entries=short_entries_pd,
+            short_exits=short_exits_pd,
             size=sizes_clean,
-            slippage=slippage_clean / close_pd,  # Dollar → fraction
-            fees=commission / close_pd,  # Dollar → fraction (per-firm)
             freq=_resolve_freq(config.timeframe),
-            init_cash=100_000.0,
+            init_cash=float("inf"),
         )
     except Exception as e:
         print(f"vectorbt error: {e}", file=sys.stderr)
         return _empty_result(str(e), time.time() - start_time)
 
-    # ─── Extract metrics ──────────────────────────────────────
-    equity_series = pf.value()
-    equity = equity_series.values
-    equity_index = equity_series.index
-    daily_pnl_records = _compute_daily_pnls(equity, equity_index)
-    daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
+    # ─── Extract metrics (futures P&L computed independently) ─
+    STARTING_CAPITAL = 100_000.0
 
     total_trades = int(pf.trades.count())
     trades_records = pf.trades.records_readable if total_trades > 0 else None
@@ -293,29 +301,36 @@ def run_backtest(
     avg_trade_pnl = 0.0
     winner_loser_ratio = 0.0
     trades_list: list[dict] = []
+    trade_pnls_arr = np.array([])
 
     if trades_records is not None:
-        # Find PnL column
-        pnl_col = next(
-            (c for c in ["PnL", "pnl", "P&L"] if c in trades_records.columns),
-            None,
-        )
-        if pnl_col:
-            trade_pnls = trades_records[pnl_col].values
-            winners = trade_pnls[trade_pnls > 0]
-            losers = trade_pnls[trade_pnls < 0]
+        # Compute correct dollar P&L per trade:
+        #   gross = (exit - entry) × size × point_value  (long)
+        #   gross = (entry - exit) × size × point_value  (short)
+        #   slippage = slippage_ticks × tick_value × size × 2  (entry + exit)
+        #   commission = commission_per_side × size × 2  (roundtrip)
+        #   net_pnl = gross - avg_slippage - commission
+        avg_slippage_dollars = float(np.nanmean(slippage_clean))
+        trade_pnls_list = []
 
-            win_rate = float(len(winners) / total_trades)
-            avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
-            avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 1.0
-            gross_profit = float(np.sum(winners))
-            gross_loss = float(np.abs(np.sum(losers)))
-            profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
-            avg_trade_pnl = float(np.mean(trade_pnls))
-            winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
-
-        # Build serializable trades list
         for _, row in trades_records.iterrows():
+            entry_p = float(row["Avg Entry Price"])
+            exit_p = float(row["Avg Exit Price"])
+            size = float(row["Size"])
+            direction = str(row["Direction"])
+
+            if "Short" in direction:
+                gross = (entry_p - exit_p) * size * spec.point_value
+            else:
+                gross = (exit_p - entry_p) * size * spec.point_value
+
+            # Per-trade friction: slippage on both sides + commission on both sides
+            slip_cost = avg_slippage_dollars * size * 2
+            comm_cost = commission * size * 2
+            net_pnl = gross - slip_cost - comm_cost
+
+            trade_pnls_list.append(net_pnl)
+
             trade: dict = {}
             for col in trades_records.columns:
                 val = row[col]
@@ -325,14 +340,66 @@ def run_backtest(
                     trade[col] = round(float(val), 4)
                 else:
                     trade[col] = val
+            trade["PnL"] = round(net_pnl, 2)
+            trade["GrossPnL"] = round(gross, 2)
+            trade["SlippageCost"] = round(slip_cost, 2)
+            trade["CommissionCost"] = round(comm_cost, 2)
             trades_list.append(trade)
 
-    # Daily stats (now correctly aggregated by calendar day)
+        trade_pnls_arr = np.array(trade_pnls_list)
+        winners = trade_pnls_arr[trade_pnls_arr > 0]
+        losers = trade_pnls_arr[trade_pnls_arr < 0]
+
+        win_rate = float(len(winners) / total_trades)
+        avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
+        avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 1.0
+        gross_profit = float(np.sum(winners))
+        gross_loss = float(np.abs(np.sum(losers)))
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
+        avg_trade_pnl = float(np.mean(trade_pnls_arr))
+        winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
+
+    # ─── Build equity curve with friction ─────────────────────
+    # Bar-level mark-to-market for intra-trade drawdown tracking,
+    # with friction costs deducted on entry/exit bars.
+    close_arr = close_pd.values
+    close_diffs = np.diff(close_arr, prepend=close_arr[0])
+    assets = pf.assets().values  # +N=long, -N=short, 0=flat
+    prev_assets = np.roll(assets, 1)
+    prev_assets[0] = 0
+
+    # Gross bar P&L (mark-to-market, no friction)
+    bar_dollar_pnls = prev_assets * close_diffs * spec.point_value
+
+    # Deduct friction on EVERY position change (including reversals).
+    # Reversal (e.g., +15 → -15) = exit old + enter new = friction on BOTH.
+    avg_slip = float(np.nanmean(slippage_clean))
+    friction_per_contract = avg_slip + commission  # one side
+
+    for i in range(len(bar_dollar_pnls)):
+        old_pos = prev_assets[i]
+        new_pos = assets[i]
+        if old_pos == new_pos:
+            continue
+        # Contracts closed (exited)
+        if old_pos != 0:
+            closed = abs(old_pos)
+            bar_dollar_pnls[i] -= friction_per_contract * closed
+        # Contracts opened (entered)
+        if new_pos != 0 and np.sign(new_pos) != np.sign(old_pos):
+            opened = abs(new_pos)
+            bar_dollar_pnls[i] -= friction_per_contract * opened
+
+    equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
+    equity_index = close_pd.index
+
+    daily_pnl_records = _compute_daily_pnls(equity, equity_index)
+    daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
+
     winning_days = sum(1 for p in daily_pnl_values if p > 0)
     total_trading_days = len(daily_pnl_values)
     avg_daily_pnl = float(np.mean(daily_pnl_values)) if daily_pnl_values else 0.0
 
-    # Max consecutive losing days
     max_consec_losers = 0
     streak = 0
     for p in daily_pnl_values:
@@ -342,10 +409,17 @@ def run_backtest(
         else:
             streak = 0
 
-    total_return = float(pf.total_return())
-    max_dd = float(pf.max_drawdown())
-    sharpe_raw = pf.sharpe_ratio()
-    sharpe = float(sharpe_raw) if not np.isnan(sharpe_raw) else 0.0
+    total_pnl_dollars = float(equity[-1] - STARTING_CAPITAL)
+    total_return = total_pnl_dollars / STARTING_CAPITAL
+    peak = np.maximum.accumulate(equity)
+    drawdown = (equity - peak) / peak
+    max_dd = float(np.min(drawdown)) if len(drawdown) > 0 else 0.0
+
+    if len(daily_pnl_values) > 1:
+        daily_arr = np.array(daily_pnl_values)
+        sharpe = float(np.mean(daily_arr) / np.std(daily_arr) * np.sqrt(252)) if np.std(daily_arr) > 0 else 0.0
+    else:
+        sharpe = 0.0
 
     # Cap infinite values for JSON
     if profit_factor == float("inf"):
@@ -576,6 +650,7 @@ def run_class_backtest(
     commission_per_side: float = 4.50,
     firm_key: Optional[str] = None,
     data: Optional[pl.DataFrame] = None,
+    fixed_contracts: Optional[int] = None,
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -620,9 +695,12 @@ def run_class_backtest(
     if firm_key and firm_key in FIRM_CONTRACT_CAPS:
         max_contracts = get_contract_cap(firm_key, symbol)
 
-    # ─── Position sizing (dynamic ATR) ─────────────────────────
+    # ─── Position sizing ────────────────────────────────────────
     from src.engine.config import PositionSizeConfig
-    size_config = PositionSizeConfig(type="dynamic_atr", target_risk_dollars=500.0)
+    if fixed_contracts is not None:
+        size_config = PositionSizeConfig(type="fixed", fixed_contracts=fixed_contracts)
+    else:
+        size_config = PositionSizeConfig(type="dynamic_atr", target_risk_dollars=500.0)
     sizes = compute_position_sizes(df, size_config, spec, 14, max_contracts=max_contracts)
 
     # ─── Session liquidity multipliers ─────────────────────────
@@ -641,36 +719,38 @@ def run_class_backtest(
     close_pd = df["close"].to_pandas()
     entries_pd = df["entry_long"].to_pandas()
     exits_pd = df["exit_long"].to_pandas()
+    short_entries_pd = df["entry_short"].to_pandas()
+    short_exits_pd = df["exit_short"].to_pandas()
     if ts_index is not None:
         close_pd.index = ts_index
         entries_pd.index = ts_index
         exits_pd.index = ts_index
+        short_entries_pd.index = ts_index
+        short_exits_pd.index = ts_index
 
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
 
-    # ─── Run vectorbt Portfolio ────────────────────────────────
+    # ─── Run vectorbt Portfolio (long + short) ────────────────
+    # vectorbt handles SIGNAL TIMING only — no slippage/fees.
+    # We compute all P&L ourselves with correct futures math.
     try:
         pf = vbt.Portfolio.from_signals(
             close=close_pd,
             entries=entries_pd,
             exits=exits_pd,
+            short_entries=short_entries_pd,
+            short_exits=short_exits_pd,
             size=sizes_clean,
-            slippage=slippage_clean / close_pd,
-            fees=commission / close_pd,
             freq=_resolve_freq(timeframe),
-            init_cash=100_000.0,
+            init_cash=float("inf"),
         )
     except Exception as e:
         print(f"vectorbt error: {e}", file=sys.stderr)
         return _empty_result(str(e), time.time() - start_time)
 
-    # ─── Extract metrics (same as run_backtest) ────────────────
-    equity_series = pf.value()
-    equity = equity_series.values
-    equity_index = equity_series.index
-    daily_pnl_records = _compute_daily_pnls(equity, equity_index)
-    daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
+    # ─── Extract metrics (futures P&L computed independently) ─
+    STARTING_CAPITAL = 100_000.0
 
     total_trades = int(pf.trades.count())
     trades_records = pf.trades.records_readable if total_trades > 0 else None
@@ -680,27 +760,29 @@ def run_class_backtest(
     avg_trade_pnl = 0.0
     winner_loser_ratio = 0.0
     trades_list: list[dict] = []
+    trade_pnls_arr = np.array([])
 
     if trades_records is not None:
-        pnl_col = next(
-            (c for c in ["PnL", "pnl", "P&L"] if c in trades_records.columns),
-            None,
-        )
-        if pnl_col:
-            trade_pnls = trades_records[pnl_col].values
-            winners = trade_pnls[trade_pnls > 0]
-            losers = trade_pnls[trade_pnls < 0]
-
-            win_rate = float(len(winners) / total_trades)
-            avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
-            avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 1.0
-            gross_profit = float(np.sum(winners))
-            gross_loss = float(np.abs(np.sum(losers)))
-            profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
-            avg_trade_pnl = float(np.mean(trade_pnls))
-            winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
+        avg_slippage_dollars = float(np.nanmean(slippage_clean))
+        trade_pnls_list = []
 
         for _, row in trades_records.iterrows():
+            entry_p = float(row["Avg Entry Price"])
+            exit_p = float(row["Avg Exit Price"])
+            size = float(row["Size"])
+            direction = str(row["Direction"])
+
+            if "Short" in direction:
+                gross = (entry_p - exit_p) * size * spec.point_value
+            else:
+                gross = (exit_p - entry_p) * size * spec.point_value
+
+            slip_cost = avg_slippage_dollars * size * 2
+            comm_cost = commission * size * 2
+            net_pnl = gross - slip_cost - comm_cost
+
+            trade_pnls_list.append(net_pnl)
+
             trade: dict = {}
             for col in trades_records.columns:
                 val = row[col]
@@ -710,7 +792,53 @@ def run_class_backtest(
                     trade[col] = round(float(val), 4)
                 else:
                     trade[col] = val
+            trade["PnL"] = round(net_pnl, 2)
+            trade["GrossPnL"] = round(gross, 2)
+            trade["SlippageCost"] = round(slip_cost, 2)
+            trade["CommissionCost"] = round(comm_cost, 2)
             trades_list.append(trade)
+
+        trade_pnls_arr = np.array(trade_pnls_list)
+        winners = trade_pnls_arr[trade_pnls_arr > 0]
+        losers = trade_pnls_arr[trade_pnls_arr < 0]
+
+        win_rate = float(len(winners) / total_trades)
+        avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
+        avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 1.0
+        gross_profit = float(np.sum(winners))
+        gross_loss = float(np.abs(np.sum(losers)))
+        profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
+        avg_trade_pnl = float(np.mean(trade_pnls_arr))
+        winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
+
+    # ─── Build equity curve with friction ─────────────────────
+    close_arr = close_pd.values
+    close_diffs = np.diff(close_arr, prepend=close_arr[0])
+    assets = pf.assets().values
+    prev_assets = np.roll(assets, 1)
+    prev_assets[0] = 0
+
+    bar_dollar_pnls = prev_assets * close_diffs * spec.point_value
+
+    # Deduct friction on EVERY position change (including reversals)
+    avg_slip = float(np.nanmean(slippage_clean))
+    friction_per_contract = avg_slip + commission
+
+    for i in range(len(bar_dollar_pnls)):
+        old_pos = prev_assets[i]
+        new_pos = assets[i]
+        if old_pos == new_pos:
+            continue
+        if old_pos != 0:
+            bar_dollar_pnls[i] -= friction_per_contract * abs(old_pos)
+        if new_pos != 0 and np.sign(new_pos) != np.sign(old_pos):
+            bar_dollar_pnls[i] -= friction_per_contract * abs(new_pos)
+
+    equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
+    equity_index = close_pd.index
+
+    daily_pnl_records = _compute_daily_pnls(equity, equity_index)
+    daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
 
     winning_days = sum(1 for p in daily_pnl_values if p > 0)
     total_trading_days = len(daily_pnl_values)
@@ -725,10 +853,19 @@ def run_class_backtest(
         else:
             streak = 0
 
-    total_return = float(pf.total_return())
-    max_dd = float(pf.max_drawdown())
-    sharpe_raw = pf.sharpe_ratio()
-    sharpe = float(sharpe_raw) if not np.isnan(sharpe_raw) else 0.0
+    # Compute return/drawdown/sharpe from the constructed equity curve
+    total_pnl_dollars = float(equity[-1] - STARTING_CAPITAL)
+    total_return = total_pnl_dollars / STARTING_CAPITAL
+    peak = np.maximum.accumulate(equity)
+    drawdown = (equity - peak) / peak
+    max_dd = float(np.min(drawdown)) if len(drawdown) > 0 else 0.0
+
+    # Sharpe from daily P&L (annualized)
+    if len(daily_pnl_values) > 1:
+        daily_arr = np.array(daily_pnl_values)
+        sharpe = float(np.mean(daily_arr) / np.std(daily_arr) * np.sqrt(252)) if np.std(daily_arr) > 0 else 0.0
+    else:
+        sharpe = 0.0
 
     if profit_factor == float("inf"):
         profit_factor = 999.99

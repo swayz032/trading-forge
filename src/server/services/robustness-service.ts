@@ -8,7 +8,7 @@ import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { logger } from "../index.js";
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
+const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
 export interface RobustnessResult {
   best_params: Record<string, number>;
