@@ -235,6 +235,77 @@ def compute_cvar(
     return result
 
 
+def compute_drawdown_duration(
+    paths: np.ndarray,
+    initial_capital: float,
+) -> dict:
+    """Compute drawdown depth AND duration for each simulation.
+
+    Tracks how long each path stays in drawdown (below its high-water mark)
+    and how long recovery takes after the max drawdown point.
+
+    Args:
+        paths: 2D array (n_sims, n_steps) of cumulative P&L
+        initial_capital: Starting capital to add to paths
+
+    Returns:
+        Dict with max_dd_duration_bars and recovery_time_bars percentiles
+        (p50, p75, p90, p95, p99)
+    """
+    equity = paths + initial_capital
+    running_max = np.maximum.accumulate(equity, axis=1)
+    in_drawdown = equity < running_max  # boolean mask: True when below HWM
+
+    n_sims = paths.shape[0]
+    max_dd_durations = np.zeros(n_sims, dtype=np.int64)
+    recovery_times = np.zeros(n_sims, dtype=np.int64)
+
+    for i in range(n_sims):
+        # Max consecutive bars in drawdown
+        dd_mask = in_drawdown[i]
+        if not np.any(dd_mask):
+            max_dd_durations[i] = 0
+            recovery_times[i] = 0
+            continue
+
+        # Find longest consecutive run of True in dd_mask
+        # Use diff to find transitions
+        changes = np.diff(dd_mask.astype(np.int8), prepend=0, append=0)
+        starts = np.where(changes == 1)[0]
+        ends = np.where(changes == -1)[0]
+        if len(starts) > 0 and len(ends) > 0:
+            durations = ends[:len(starts)] - starts[:len(ends)]
+            max_dd_durations[i] = int(np.max(durations))
+        else:
+            max_dd_durations[i] = 0
+
+        # Recovery time from max drawdown point
+        drawdowns = running_max[i] - equity[i]
+        max_dd_idx = int(np.argmax(drawdowns))
+        peak_before = running_max[i, max_dd_idx]
+
+        recovered = False
+        for j in range(max_dd_idx + 1, paths.shape[1]):
+            if equity[i, j] >= peak_before:
+                recovery_times[i] = j - max_dd_idx
+                recovered = True
+                break
+        if not recovered:
+            recovery_times[i] = paths.shape[1] - max_dd_idx
+
+    pct_levels = [50, 75, 90, 95, 99]
+    dd_duration_pcts = {}
+    recovery_pcts = {}
+    for p in pct_levels:
+        dd_duration_pcts[f"p{p}"] = int(np.percentile(max_dd_durations, p))
+        recovery_pcts[f"p{p}"] = int(np.percentile(recovery_times, p))
+
+    return {
+        "max_dd_duration_bars": dd_duration_pcts,
+        "recovery_time_bars": recovery_pcts,
+    }
+
+
 def compute_all_risk_metrics(
     paths: np.ndarray,
     initial_capital: float,
@@ -255,6 +326,7 @@ def compute_all_risk_metrics(
     recovery = compute_time_to_recovery(paths, initial_capital)
     var = compute_var(paths)
     cvar = compute_cvar(paths)
+    dd_duration = compute_drawdown_duration(paths, initial_capital)
 
     return {
         "max_drawdown_distribution": dd_dist,
@@ -263,6 +335,7 @@ def compute_all_risk_metrics(
         "calmar_ratio": calmar["median"],
         "ulcer_index": ulcer["median"],
         "time_to_recovery": recovery["median"],
+        "drawdown_duration": dd_duration,
         **var,
         **cvar,
     }
