@@ -181,19 +181,30 @@ class BacktestResult(BaseModel):
 
 class MonteCarloRequest(BaseModel):
     backtest_id: str
-    num_simulations: int = 10_000
-    method: Literal["trade_resample", "return_bootstrap", "both"] = "both"
+    num_simulations: int = 100_000
+    method: Literal["trade_resample", "return_bootstrap", "block_bootstrap", "both"] = "both"
     confidence_levels: list[float] = [0.05, 0.25, 0.50, 0.75, 0.95]
     ruin_threshold: float = 0.0
     initial_capital: float = 100_000.0
     use_gpu: bool = True
     max_paths_to_store: int = 100
+    is_oos_trades: bool = False
+    stress_level: int = 0  # 0=none, 1=moderate, 2=severe, 3=extreme
+    inject_synthetic_stress: bool = False
+    firms: list[str] = []  # If non-empty, run per-firm survival simulation
 
     @field_validator("num_simulations")
     @classmethod
     def validate_num_simulations(cls, v: int) -> int:
         if v < 1:
             raise ValueError("num_simulations must be >= 1")
+        return v
+
+    @field_validator("stress_level")
+    @classmethod
+    def validate_stress_level(cls, v: int) -> int:
+        if v < 0 or v > 3:
+            raise ValueError("stress_level must be 0, 1, 2, or 3")
         return v
 
 
