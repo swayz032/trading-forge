@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, paperSignalLog, strategies } from "../db/schema.js";
-import { eq, desc } from "drizzle-orm";
+import { paperSessions, paperPositions, paperTrades, paperSignalLog, strategies, backtests, monteCarloRuns } from "../db/schema.js";
+import { eq, desc, and } from "drizzle-orm";
 import { logger } from "../index.js";
 import { openPosition, closePosition, updatePositionPrices, getExecutionQuality } from "../services/paper-execution-service.js";
 import { detectDrift } from "../services/drift-detection-service.js";
@@ -73,12 +73,17 @@ router.post("/stop", async (req, res) => {
   }
 });
 
-// GET /api/paper/sessions — list sessions
-router.get("/sessions", async (_req, res) => {
+// GET /api/paper/sessions — list sessions (optional ?status=active|stopped)
+router.get("/sessions", async (req, res) => {
   try {
+    const statusFilter = req.query.status ? String(req.query.status) : undefined;
+    const conditions = statusFilter
+      ? eq(paperSessions.status, statusFilter)
+      : undefined;
     const sessions = await db
       .select()
       .from(paperSessions)
+      .where(conditions)
       .orderBy(desc(paperSessions.startedAt));
     res.json(sessions);
   } catch (err: any) {
@@ -296,6 +301,107 @@ router.get("/bars/:symbol", async (req, res) => {
     }));
     res.json(chartData);
   } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/paper/mc-compare/:sessionId — compare paper session P&L against MC distribution
+router.get("/mc-compare/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    // Load the paper session
+    const [session] = await db
+      .select()
+      .from(paperSessions)
+      .where(eq(paperSessions.id, sessionId));
+    if (!session) return res.status(404).json({ error: "Session not found" });
+
+    const strategyId = session.strategyId;
+    if (!strategyId) return res.status(400).json({ error: "Session has no linked strategy" });
+
+    // Sum up paper trades P&L for this session
+    const trades = await db
+      .select({ pnl: paperTrades.pnl })
+      .from(paperTrades)
+      .where(eq(paperTrades.sessionId, sessionId));
+    const paperPnl = trades.reduce((sum, t) => sum + parseFloat(t.pnl), 0);
+
+    // Get latest completed backtest for this strategy
+    const [latestBacktest] = await db
+      .select()
+      .from(backtests)
+      .where(and(eq(backtests.strategyId, strategyId), eq(backtests.status, "completed")))
+      .orderBy(desc(backtests.createdAt))
+      .limit(1);
+
+    if (!latestBacktest) {
+      return res.json({
+        sessionId,
+        strategyId,
+        paperPnl,
+        mc_percentile: null,
+        driftFromMedian: null,
+        warning: "No completed backtest found for this strategy",
+      });
+    }
+
+    // Get MC run for that backtest
+    const [mcRun] = await db
+      .select()
+      .from(monteCarloRuns)
+      .where(eq(monteCarloRuns.backtestId, latestBacktest.id))
+      .orderBy(desc(monteCarloRuns.createdAt))
+      .limit(1);
+
+    if (!mcRun) {
+      return res.json({
+        sessionId,
+        strategyId,
+        paperPnl,
+        mc_percentile: null,
+        driftFromMedian: null,
+        warning: "No MC run found for the latest backtest",
+      });
+    }
+
+    // Compare paper P&L against MC percentiles (using max drawdown distribution as proxy)
+    // MC stores p5, p50, p95 for Sharpe — use total return from backtest + MC risk metrics
+    const p5 = parseFloat(mcRun.sharpeP5 ?? "0");
+    const p50 = parseFloat(mcRun.sharpeP50 ?? "0");
+    const p95 = parseFloat(mcRun.sharpeP95 ?? "0");
+
+    // Estimate percentile of paper P&L using linear interpolation between MC bounds
+    // Use backtest total return as the MC median outcome reference
+    const backtestReturn = parseFloat(latestBacktest.totalReturn ?? "0");
+    const driftFromMedian = backtestReturn !== 0
+      ? ((paperPnl - backtestReturn) / Math.abs(backtestReturn)) * 100
+      : 0;
+
+    // Rough percentile estimation: map paper P&L into the MC distribution
+    let mc_percentile: number;
+    if (paperPnl <= backtestReturn * 0.5) mc_percentile = 5;
+    else if (paperPnl <= backtestReturn * 0.75) mc_percentile = 25;
+    else if (paperPnl <= backtestReturn) mc_percentile = 50;
+    else if (paperPnl <= backtestReturn * 1.25) mc_percentile = 75;
+    else mc_percentile = 95;
+
+    const warning = Math.abs(driftFromMedian) > 100
+      ? `Paper P&L drifts ${driftFromMedian.toFixed(1)}% from backtest median — investigate`
+      : undefined;
+
+    res.json({
+      sessionId,
+      strategyId,
+      paperPnl,
+      backtestReturn,
+      mc_percentile,
+      driftFromMedian: parseFloat(driftFromMedian.toFixed(2)),
+      mcSharpe: { p5, p50, p95 },
+      warning,
+    });
+  } catch (err: any) {
+    logger.error(err, "MC compare failed");
     res.status(500).json({ error: err.message });
   }
 });

@@ -83,6 +83,19 @@ strategyRoutes.patch("/:id/lifecycle", async (req, res) => {
   res.json({ success: true, id: req.params.id, newState: toState });
 });
 
+// POST /api/strategies/lifecycle/check — trigger auto-promotion and demotion checks
+strategyRoutes.post("/lifecycle/check", async (_req, res) => {
+  try {
+    const [promotions, demotions] = await Promise.all([
+      lifecycleService.checkAutoPromotions(),
+      lifecycleService.checkAutoDemotions(),
+    ]);
+    res.json({ promotions, demotions });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Delete strategy
 strategyRoutes.delete("/:id", async (req, res) => {
   const [row] = await db

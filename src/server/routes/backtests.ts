@@ -40,7 +40,7 @@ const strategyConfigSchema = z.object({
 
 const backtestRequestSchema = z.object({
   strategyId: z.string().uuid(),
-  strategy: strategyConfigSchema,
+  strategy: strategyConfigSchema.optional(), // Optional — if omitted, loaded from DB
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   slippage_ticks: z.number().positive().optional().default(1.0),
@@ -57,20 +57,55 @@ backtestRoutes.post("/", async (req, res) => {
     return;
   }
 
-  const { strategyId, ...config } = parsed.data;
+  const { strategyId, strategy: providedStrategy, ...config } = parsed.data;
 
-  // Look up strategy_class from strategy config (for class-based strategies)
+  // If no strategy config provided, load it from the DB
+  let resolvedStrategy = providedStrategy;
   let strategyClass: string | undefined;
+
   try {
-    const [strat] = await db.select({ config: strategies.config }).from(strategies).where(eq(strategies.id, strategyId));
+    const [strat] = await db.select().from(strategies).where(eq(strategies.id, strategyId));
+    if (!strat && !providedStrategy) {
+      res.status(404).json({ error: "Strategy not found and no config provided" });
+      return;
+    }
     const stratConfig = strat?.config as Record<string, unknown> | undefined;
     if (stratConfig?.strategy_class) {
       strategyClass = String(stratConfig.strategy_class);
     }
-  } catch { /* non-fatal — fall back to expression-based */ }
+    // If no strategy config was sent in the request, use the one from DB
+    if (!resolvedStrategy && stratConfig) {
+      // Merge DB fields with config — the DB strategy row has symbol/timeframe at top level
+      resolvedStrategy = {
+        name: strat!.name,
+        symbol: strat!.symbol as any,
+        timeframe: strat!.timeframe,
+        indicators: (stratConfig.indicators as any[]) ?? [],
+        entry_long: String(stratConfig.entry_long ?? ""),
+        entry_short: String(stratConfig.entry_short ?? ""),
+        exit: String(stratConfig.exit ?? ""),
+        stop_loss: (stratConfig.stop_loss as any) ?? { type: "atr", multiplier: 2.0 },
+        position_size: (stratConfig.position_size as any) ?? { type: "fixed", fixed_contracts: 1 },
+      };
+    }
+  } catch (err) {
+    if (!providedStrategy) {
+      res.status(500).json({ error: "Failed to load strategy from DB" });
+      return;
+    }
+    // Non-fatal if we already have a provided strategy
+  }
+
+  if (!resolvedStrategy) {
+    res.status(400).json({ error: "No strategy config provided and could not load from DB" });
+    return;
+  }
+
+  // Reassemble config with the resolved strategy
+  const fullConfig = { ...config, strategy: resolvedStrategy };
 
   // Fire and forget — return 202 immediately
-  const backtestPromise = runBacktest(strategyId, config, strategyClass);
+  const backtestPromise = runBacktest(strategyId, fullConfig, strategyClass);
 
   // Return the backtest ID immediately
   backtestPromise.then((result) => {

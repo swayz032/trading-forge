@@ -93,6 +93,42 @@ dataRoutes.get("/:symbol/info", async (req, res) => {
   }
 });
 
+// ─── GET /api/data/query-info — multi-symbol date range info ─────
+
+dataRoutes.get("/query-info", async (req, res) => {
+  const symbolsParam = req.query.symbols;
+  if (!symbolsParam || typeof symbolsParam !== "string") {
+    res.status(400).json({ error: "symbols query param required (comma-separated)" });
+    return;
+  }
+
+  const symbols = symbolsParam.split(",").map((s) => s.trim()).filter(Boolean);
+  if (symbols.length === 0) {
+    res.status(400).json({ error: "At least one symbol required" });
+    return;
+  }
+
+  const result: Record<string, { min: string; max: string; totalBars: number } | { error: string }> = {};
+
+  await Promise.all(
+    symbols.map(async (symbol) => {
+      try {
+        const info = await queryInfo(symbol);
+        result[symbol] = {
+          min: info.earliest,
+          max: info.latest,
+          totalBars: info.totalBars,
+        };
+      } catch (err) {
+        logger.warn({ err, symbol }, "Failed to get info for symbol");
+        result[symbol] = { error: "No data available" };
+      }
+    })
+  );
+
+  res.json(result);
+});
+
 // ─── POST /api/data/fetch ────────────────────────────────────────
 
 dataRoutes.post("/fetch", async (req, res) => {

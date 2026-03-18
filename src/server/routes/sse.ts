@@ -33,4 +33,16 @@ export function broadcastSSE(event: string, data: any) {
   }
 }
 
+// POST /api/sse/broadcast — broadcast event to all connected SSE clients (used by n8n)
+router.post("/broadcast", (req: Request, res: Response) => {
+  const { type, data } = req.body;
+  if (!type || typeof type !== "string") {
+    res.status(400).json({ error: "type is required and must be a string" });
+    return;
+  }
+  broadcastSSE(type, data ?? {});
+  logger.info({ type, clientCount: clients.size }, "SSE broadcast sent");
+  res.json({ ok: true, clientCount: clients.size });
+});
+
 export { router as sseRoutes };
