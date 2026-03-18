@@ -32,6 +32,10 @@ CONTRACT_SPECS: dict[str, ContractSpec] = {
     "MGC": ContractSpec(tick_size=0.10, tick_value=1.00,  point_value=10.00,   day_margin=50,   overnight_margin=1040),
 }
 
+# MCL and MGC confirmed present in CONTRACT_SPECS above (micro crude oil, micro gold)
+
+MARGIN_EXPANSION_MULTIPLIER = 2.0  # Applied when VIX > 30 or ATR > 90th percentile
+
 VALID_SYMBOLS = set(CONTRACT_SPECS.keys())
 
 VALID_INDICATOR_TYPES = {"sma", "ema", "rsi", "macd", "vwap", "bbands", "atr", "adx", "adr"}
