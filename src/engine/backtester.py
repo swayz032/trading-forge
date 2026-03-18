@@ -535,6 +535,15 @@ def run_backtest(
         short_entries_pd.index = ts_index
         short_exits_pd.index = ts_index
 
+    # TODO(rollover): Suppress new entries on rollover days.
+    # When `is_rollover_day` column is present in df, zero out entries_pd and
+    # short_entries_pd on those bars. Volume spikes, spread widening, and price
+    # gaps around the roll make signals unreliable. Use:
+    #   if "is_rollover_day" in df.columns:
+    #       rollover_mask = df["is_rollover_day"].to_numpy()
+    #       entries_pd[rollover_mask] = False
+    #       short_entries_pd[rollover_mask] = False
+
     # Clean NaN values
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
@@ -739,6 +748,7 @@ def run_backtest(
     prop_compliance = simulate_all_firms(
         daily_pnl_records, trades_list,
         symbol=config.symbol, account_size=50_000,
+        overnight_hold=config.overnight_hold,
     )
 
     # ─── Advanced analytics (calendar, session, MAE/MFE) ──
@@ -922,6 +932,7 @@ def compute_recency_weighted_score(
 
     # Flag: strategy decaying if recent score < 60% of full score
     decaying = recent_score < (full_score * 0.60) if full_score > 0 else False
+    decay_warning = "Edge may be decaying" if decaying else None
 
     return {
         "full_score": full_score,
@@ -934,6 +945,7 @@ def compute_recency_weighted_score(
         "mid_days": len(mid),
         "old_days": len(old),
         "decaying": decaying,
+        "warning": decay_warning,
     }
 
 
@@ -1072,6 +1084,9 @@ def run_class_backtest(
         exits_pd.index = ts_index
         short_entries_pd.index = ts_index
         short_exits_pd.index = ts_index
+
+    # TODO(rollover): Suppress new entries on rollover days (same as run_backtest above).
+    # When `is_rollover_day` column is present in df, zero out entries on those bars.
 
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
@@ -1268,6 +1283,7 @@ def run_class_backtest(
     prop_compliance = simulate_all_firms(
         daily_pnl_records, trades_list,
         symbol=symbol, account_size=50_000,
+        overnight_hold=getattr(strategy, "overnight_hold", False),
     )
 
     # ─── Advanced analytics (calendar, session, MAE/MFE) ──

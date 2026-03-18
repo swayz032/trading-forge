@@ -275,7 +275,9 @@ ROLLOVER_MONTHS: dict[str, list[int]] = {
     "YM": [3, 6, 9, 12],
     "RTY": [3, 6, 9, 12],
     "CL": list(range(1, 13)),
+    "MCL": list(range(1, 13)),  # Micro Crude follows same roll schedule as CL
     "GC": [2, 4, 6, 8, 10, 12],
+    "MGC": [2, 4, 6, 8, 10, 12],  # Micro Gold follows same roll schedule as GC
 }
 
 
