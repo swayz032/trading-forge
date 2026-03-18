@@ -18,6 +18,12 @@ from src.engine.backtester import run_backtest
 from src.engine.optimizer import optimize_strategy
 
 
+# ─── OOS Window Minimums ─────────────────────────────────────────
+# Below these thresholds, OOS results are statistically unreliable.
+MIN_OOS_TRADES = 30
+MIN_OOS_DAYS = 60
+
+
 def split_walk_forward_windows(
     data: pl.DataFrame,
     n_splits: int = 5,
@@ -95,6 +101,26 @@ def run_walk_forward(
             request.start_date, request.end_date,
         )
 
+    # Auto-reduce n_splits if data is too short for meaningful OOS windows.
+    # Each OOS window needs at least MIN_OOS_DAYS calendar days of data.
+    # Rough estimate: each bar ~= 1 day for daily data; for intraday, assume
+    # ~80 bars/day (15min × 6.5h RTH). Scale accordingly.
+    total_bars = len(data)
+    oos_fraction = 1.0 - is_ratio
+    min_oos_bars = MIN_OOS_DAYS  # Conservative: at least MIN_OOS_DAYS bars per OOS fold
+    required_bars_per_split = int(min_oos_bars / oos_fraction)
+
+    original_splits = n_splits
+    while n_splits > 1 and (total_bars // n_splits) < required_bars_per_split:
+        n_splits -= 1
+
+    if n_splits < original_splits:
+        print(
+            f"Walk-forward: auto-reduced n_splits from {original_splits} to {n_splits} "
+            f"(data too short for {original_splits} meaningful OOS windows)",
+            file=sys.stderr,
+        )
+
     windows = split_walk_forward_windows(data, n_splits, is_ratio)
     print(f"Walk-forward: {len(windows)} windows, IS ratio={is_ratio}", file=sys.stderr)
 
@@ -122,6 +148,10 @@ def run_walk_forward(
         )
         oos_result = run_backtest(oos_request, data=oos_data)
 
+        # OOS window minimum validation
+        oos_trade_count = oos_result["total_trades"]
+        oos_trading_days = oos_result.get("total_trading_days", 0)
+
         window_detail = {
             "window": i + 1,
             "is_bars": len(is_data),
@@ -132,9 +162,29 @@ def run_walk_forward(
                 "max_drawdown": oos_result["max_drawdown"],
                 "win_rate": oos_result["win_rate"],
                 "profit_factor": oos_result["profit_factor"],
-                "total_trades": oos_result["total_trades"],
+                "total_trades": oos_trade_count,
+                "total_trading_days": oos_trading_days,
             },
+            "confidence": "OK",
         }
+
+        # Flag statistically unreliable OOS windows
+        warnings = []
+        if oos_trade_count < MIN_OOS_TRADES:
+            warnings.append(
+                f"Only {oos_trade_count} OOS trades (min {MIN_OOS_TRADES}) — statistically unreliable"
+            )
+            window_detail["confidence"] = "LOW"
+        if oos_trading_days < MIN_OOS_DAYS:
+            warnings.append(
+                f"Only {oos_trading_days} OOS days (min {MIN_OOS_DAYS}) — insufficient sample"
+            )
+            window_detail["confidence"] = "LOW"
+
+        if warnings:
+            window_detail["warning"] = "; ".join(warnings)
+            print(f"    ⚠ Window {i+1}: {'; '.join(warnings)}", file=sys.stderr)
+
         if opt_result:
             window_detail["optimization"] = {
                 "best_params": opt_result["best_params"],
@@ -160,7 +210,13 @@ def run_walk_forward(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
+    # Overall confidence: LOW if any window is LOW
+    low_confidence_windows = [w for w in window_results if w.get("confidence") == "LOW"]
+    overall_confidence = "LOW" if low_confidence_windows else "OK"
+
     return {
+        "confidence": overall_confidence,
+        "low_confidence_windows": len(low_confidence_windows),
         "oos_metrics": {
             "total_return": round(avg_return, 6),
             "sharpe_ratio": round(avg_sharpe, 4),

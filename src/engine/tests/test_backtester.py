@@ -50,9 +50,9 @@ class TestPositionSizing:
         atr = compute_atr(df, 14)
         df_with_atr = df.with_columns(atr.alias("atr_14"))
 
-        sizes = compute_position_sizes(df_with_atr, config, spec, atr_period=14)
+        sizes, over_risk = compute_position_sizes(df_with_atr, config, spec, atr_period=14)
         assert len(sizes) == 30
-        # All sizes should be >= 1 (clamped min)
+        # All sizes should be >= 1 (clamped min) or NaN
         for s in sizes:
             if not math.isnan(s):
                 assert s >= 1
@@ -67,7 +67,7 @@ class TestPositionSizing:
         atr = compute_atr(df, 14)
         df_with_atr = df.with_columns(atr.alias("atr_14"))
 
-        sizes = compute_position_sizes(df_with_atr, config, spec, atr_period=14)
+        sizes, over_risk = compute_position_sizes(df_with_atr, config, spec, atr_period=14)
 
         # Verify last bar: floor(500 / (ATR * 12.50))
         last_atr = atr[-1]
@@ -80,7 +80,7 @@ class TestPositionSizing:
         config = PositionSizeConfig(type="fixed", fixed_contracts=3)
         spec = CONTRACT_SPECS["ES"]
 
-        sizes = compute_position_sizes(df, config, spec, atr_period=14)
+        sizes, over_risk = compute_position_sizes(df, config, spec, atr_period=14)
         assert all(s == 3 for s in sizes)
 
 
