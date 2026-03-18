@@ -63,11 +63,15 @@ async function runWithConcurrency(
   onComplete: (result: MatrixResult) => void,
 ): Promise<MatrixResult[]> {
   const results: MatrixResult[] = [];
-  let idx = 0;
+  // Atomic index: each worker grabs-and-increments before awaiting,
+  // so no two workers process the same combo even though JS is
+  // single-threaded (the race was between the check and the await).
+  let nextIdx = 0;
 
   async function runNext(): Promise<void> {
-    while (idx < combos.length) {
-      const combo = combos[idx++];
+    while (nextIdx < combos.length) {
+      const myIdx = nextIdx++;
+      const combo = combos[myIdx];
       try {
         const config = {
           strategy: {
@@ -317,6 +321,12 @@ export async function runMatrix(strategyId: string) {
       tierStatus: { tier1: "completed", tier2: "running", tier3: "pending" },
     }).where(eq(backtestMatrix.id, matrixId));
 
+    broadcastSSE("backtest:matrix-tier", {
+      matrixId, tier: "tier2",
+      survivingSymbols: Array.from(survivingSymbols),
+      tier1Completed: tier1Results.length,
+    });
+
     // ─── Tier 2: Medium (5min, 15min × survivors) ──────────
     const tier2Symbols = Array.from(survivingSymbols).slice(0, TIER2_MAX_SYMBOLS);
     const tier2Combos: MatrixCombo[] = [];
@@ -342,14 +352,22 @@ export async function runMatrix(strategyId: string) {
       tierStatus: { tier1: "completed", tier2: "completed", tier3: "running" },
     }).where(eq(backtestMatrix.id, matrixId));
 
+    broadcastSSE("backtest:matrix-tier", {
+      matrixId, tier: "tier3",
+      tier3Symbols,
+      tier2Completed: tier2Results.length,
+    });
+
     // ─── Tier 3: Heavy (1min × top symbols) ────────────────
-    // Rank symbols by best score across tier 1+2
+    // Rank symbols by best score across tier 1+2, gate by promotion cutoff.
+    // 1min backtests are expensive; only run for symbols that earned it.
     const symbolScores = new Map<string, number>();
     for (const r of [...tier1Results, ...tier2Results]) {
       const current = symbolScores.get(r.symbol) ?? 0;
       symbolScores.set(r.symbol, Math.max(current, r.forgeScore));
     }
     const tier3Symbols = Array.from(symbolScores.entries())
+      .filter(([, score]) => score >= FORGE_SCORE_PROMOTION_CUTOFF)
       .sort((a, b) => b[1] - a[1])
       .slice(0, TIER3_MAX_SYMBOLS)
       .map(([sym]) => sym);
@@ -448,7 +466,15 @@ export async function runMatrix(strategyId: string) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     await db.update(backtestMatrix).set({
       status: "failed",
+      executionTimeMs: Date.now() - startTime,
     }).where(eq(backtestMatrix.id, matrixId));
+
+    broadcastSSE("backtest:matrix-failed", {
+      matrixId,
+      strategyId,
+      error: errorMsg,
+      completedCombos,
+    });
 
     logger.error({ matrixId, err }, "Matrix failed");
     return { id: matrixId, status: "failed", error: errorMsg };

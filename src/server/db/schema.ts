@@ -111,15 +111,18 @@ export const backtestTrades = pgTable(
     netPnl: numeric("net_pnl"),
     contracts: integer("contracts").notNull().default(1),
     commission: numeric("commission"),
+    grossPnl: numeric("gross_pnl"),
     slippage: numeric("slippage"),
     mae: numeric("mae"), // Maximum Adverse Excursion ($)
     mfe: numeric("mfe"), // Maximum Favorable Excursion ($)
     holdDurationMs: integer("hold_duration_ms"),
     hourOfDay: integer("hour_of_day"),     // 0-23 ET
     dayOfWeek: integer("day_of_week"),     // 0=Mon, 4=Fri
+    sessionType: text("session_type"),     // ASIA | LONDON | NY_OPEN | NY_CORE | NY_CLOSE | OVERNIGHT
     macroRegime: text("macro_regime"),     // RISK_ON, RISK_OFF, etc.
     eventActive: boolean("event_active"),  // Was FOMC/CPI/NFP within window?
     skipSignal: text("skip_signal"),       // What skip engine would have said
+    fillProbability: numeric("fill_probability"), // Modeled fill probability (0-1)
   },
   (table) => [
     index("trades_backtest_idx").on(table.backtestId),
