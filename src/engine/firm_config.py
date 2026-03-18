@@ -40,6 +40,10 @@ FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
         "ES": 2.52, "NQ": 2.52, "CL": 2.52, "YM": 2.52,
         "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
+    "earn2trade_50k": {
+        "ES": 2.52, "NQ": 2.52, "CL": 2.52, "YM": 2.52,
+        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
+    },
 }
 
 
@@ -51,6 +55,9 @@ FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
     "tpt_50k":       {"ES": 3,  "NQ": 3,  "CL": 5,  "YM": 3,  "RTY": 3,  "GC": 3,  "MES": 30, "MNQ": 30, "MCL": 50},
     "apex_50k":      {"ES": 4,  "NQ": 4,  "CL": 10, "YM": 4,  "RTY": 4,  "GC": 4,  "MES": 40, "MNQ": 40, "MCL": 100},
     "tradeify_50k":  {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100},
+    "alpha_50k":     {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100},
+    "ffn_50k":       {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100},
+    "earn2trade_50k":{"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100},
 }
 
 

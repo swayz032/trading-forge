@@ -66,6 +66,7 @@ def route_playbook(bias: DailyBiasState) -> PlaybookDecision:
         )
 
     # SWEEP_REVERSAL — moderate bias after liquidity sweep
+    # LONG reversal requires SELL-SIDE swept (pdl_swept) — sellers exhausted
     if -20 <= nb <= 40 and session.london_swept_pdl:
         return PlaybookDecision(
             playbook="SWEEP_REVERSAL_LONG",
@@ -73,6 +74,7 @@ def route_playbook(bias: DailyBiasState) -> PlaybookDecision:
             allowed_setups=["sweep_reclaim", "breaker_retest", "turtle_soup"],
             confidence_modifier=0.9,
         )
+    # SHORT reversal requires BUY-SIDE swept (pdh_swept) — buyers exhausted
     if -40 <= nb <= 20 and session.london_swept_pdh:
         return PlaybookDecision(
             playbook="SWEEP_REVERSAL_SHORT",

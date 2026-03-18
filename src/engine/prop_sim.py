@@ -252,6 +252,7 @@ def simulate_prop_firm(
     max_dd_dollars = max((s["drawdown_from_peak"] for s in daily_statements), default=0)
 
     # Recovery days from max drawdown
+    # Count trading days from the point of max DD until balance returns to peak
     recovery_days = 0
     if max_dd_dollars > 0:
         in_recovery = False
@@ -261,7 +262,8 @@ def simulate_prop_firm(
                 recovery_days = 0
             elif in_recovery:
                 recovery_days += 1
-                if s["drawdown_from_peak"] < max_dd_dollars * 0.1:
+                if s["drawdown_from_peak"] == 0:
+                    # Fully recovered — back at peak equity
                     break
 
     # Payout projection
@@ -275,8 +277,18 @@ def simulate_prop_firm(
     else:
         payout_projection = 0
 
+    # Overnight hold violation check
+    overnight_violation = False
+    if not firm.get("overnight_ok", True) and overnight_risk_days > 0:
+        overnight_violation = True
+
     # Overall verdict
-    passed = eval_passed and not trailing_dd_breached and consistency_passed
+    passed = (
+        eval_passed
+        and not trailing_dd_breached
+        and consistency_passed
+        and not overnight_violation
+    )
 
     # ─── Eval cost amortization ──────────────────────────────
     # Conservative 30% pass rate default.
@@ -333,6 +345,7 @@ def simulate_prop_firm(
         "expected_eval_cost": expected_eval_cost,
         "true_net_payout": true_net_payout,
         "overnight_risk_days": overnight_risk_days,
+        "overnight_violation": overnight_violation,
         "eval_phase_result": {
             "profit_target": profit_target,
             "days_to_target": days_to_pass_eval,

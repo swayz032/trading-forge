@@ -77,6 +77,39 @@ from src.engine.strategy_base import BaseStrategy
 # must apply shift(1) to the higher-TF columns BEFORE the merge/join.
 
 
+def apply_eligibility_gate(
+    entry_signals, exit_signals, df, direction, symbol, firm_key=None
+):
+    """Apply eligibility gate to filter signals.
+
+    Currently a stub that passes through all signals.
+    Full implementation requires multi-TF data loading (HTF context, session context, etc.)
+    which will be wired in Wave 2.8 full integration.
+
+    Args:
+        entry_signals: numpy array of entry booleans
+        exit_signals: numpy array of exit booleans
+        df: Polars DataFrame with indicator data
+        direction: "long" or "short"
+        symbol: Contract symbol (e.g. "ES")
+        firm_key: Optional firm identifier for firm-specific gating
+
+    Returns:
+        Tuple of (filtered_entries, filtered_exits)
+    """
+    # TODO(Wave 2.8): Full 7-layer gate implementation
+    # 1. Load HTF data (daily, weekly) and compute HTF context
+    # 2. Apply shift_higher_tf_columns() to prevent look-ahead bias on HTF data
+    # 3. Compute session context (overnight bias, London sweeps, etc.)
+    # 4. Run bias engine to get DailyBiasState
+    # 5. Route through playbook router
+    # 6. Compute location score, structural stops, structural targets
+    # 7. For each entry signal, call evaluate_signal()
+    # 8. Filter: TAKE = keep, REDUCE = keep with size adjustment, SKIP = remove
+    # For now, return signals unchanged — gate integration point exists
+    return entry_signals, exit_signals
+
+
 def shift_higher_tf_columns(
     df: pl.DataFrame,
     higher_tf_columns: list[str],
@@ -272,6 +305,7 @@ def run_backtest(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,
     fill_rate: float = 1.0,
+    use_eligibility_gate: bool = False,
 ) -> dict:
     """Run a single backtest and return metrics dict.
 
@@ -280,6 +314,8 @@ def run_backtest(
         data: Optional pre-loaded data (for testing). If None, loads from S3.
         fill_rate: Fraction of entry signals to keep (0.0-1.0). Used for
             crisis stress testing to simulate reduced fill rates.
+        use_eligibility_gate: When True, apply the eligibility gate post-filter
+            to entry/exit signals. Default False to preserve existing behavior.
 
     Returns:
         dict with metrics, equity_curve, trades, daily_pnls, execution_time_ms
@@ -402,6 +438,34 @@ def run_backtest(
         session_multipliers=combined_slippage_mult,
     )
 
+    # ─── Eligibility gate (Wave 2.8 integration point) ─────────
+    entries_np = df["entry_long"].to_numpy()
+    exits_np = df["exit_long"].to_numpy()
+    if use_eligibility_gate:
+        entries_np, exits_np = apply_eligibility_gate(
+            entries_np, exits_np, df,
+            direction="long", symbol=config.symbol,
+            firm_key=request.firm_key,
+        )
+        # Update DataFrame with filtered signals
+        df = df.with_columns([
+            pl.Series("entry_long", entries_np),
+            pl.Series("exit_long", exits_np),
+        ])
+        # Apply gate to short side if present
+        if "entry_short" in df.columns:
+            short_entries_np = df["entry_short"].to_numpy()
+            short_exits_np = df["exit_short"].to_numpy()
+            short_entries_np, short_exits_np = apply_eligibility_gate(
+                short_entries_np, short_exits_np, df,
+                direction="short", symbol=config.symbol,
+                firm_key=request.firm_key,
+            )
+            df = df.with_columns([
+                pl.Series("entry_short", short_entries_np),
+                pl.Series("exit_short", short_exits_np),
+            ])
+
     # ─── Fill probability model (Task 3.10) ───────────────────
     entries_np = df["entry_long"].to_numpy()
     if request.fill_model and request.fill_model.order_type == "limit":
@@ -472,10 +536,9 @@ def run_backtest(
         # Compute correct dollar P&L per trade:
         #   gross = (exit - entry) × size × point_value  (long)
         #   gross = (entry - exit) × size × point_value  (short)
-        #   slippage = slippage_ticks × tick_value × size × 2  (entry + exit)
+        #   slippage = per-bar slippage at entry/exit × size  (both sides)
         #   commission = commission_per_side × size × 2  (roundtrip)
-        #   net_pnl = gross - avg_slippage - commission
-        avg_slippage_dollars = float(np.nanmean(slippage_clean))
+        #   net_pnl = gross - slippage - commission
         trade_pnls_list = []
 
         for _, row in trades_records.iterrows():
@@ -483,14 +546,18 @@ def run_backtest(
             exit_p = float(row["Avg Exit Price"])
             size = float(row["Size"])
             direction = str(row["Direction"])
+            entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
+            exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
 
             if "Short" in direction:
                 gross = (entry_p - exit_p) * size * spec.point_value
             else:
                 gross = (exit_p - entry_p) * size * spec.point_value
 
-            # Per-trade friction: slippage on both sides + commission on both sides
-            slip_cost = avg_slippage_dollars * size * 2
+            # Per-trade friction: per-bar slippage at entry + exit bars
+            entry_slip = float(slippage_clean[entry_idx]) if entry_idx < len(slippage_clean) else 0.0
+            exit_slip = float(slippage_clean[exit_idx]) if exit_idx < len(slippage_clean) else 0.0
+            slip_cost = (entry_slip + exit_slip) * size
             comm_cost = commission * size * 2
             net_pnl = gross - slip_cost - comm_cost
 

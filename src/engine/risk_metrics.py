@@ -178,9 +178,9 @@ def compute_time_to_recovery(
 
     arr = np.array(recovery_days)
     return {
-        "median": int(np.median(arr)),
-        "p5": int(np.percentile(arr, 5)),
-        "p95": int(np.percentile(arr, 95)),
+        "median": round(float(np.median(arr))),
+        "p5": round(float(np.percentile(arr, 5))),
+        "p95": round(float(np.percentile(arr, 95))),
     }
 
 
@@ -297,8 +297,8 @@ def compute_drawdown_duration(
     dd_duration_pcts = {}
     recovery_pcts = {}
     for p in pct_levels:
-        dd_duration_pcts[f"p{p}"] = int(np.percentile(max_dd_durations, p))
-        recovery_pcts[f"p{p}"] = int(np.percentile(recovery_times, p))
+        dd_duration_pcts[f"p{p}"] = round(float(np.percentile(max_dd_durations, p)))
+        recovery_pcts[f"p{p}"] = round(float(np.percentile(recovery_times, p)))
 
     return {
         "max_dd_duration_bars": dd_duration_pcts,

@@ -438,16 +438,24 @@ def compute_regime_performance(daily_pnl_records: list[dict], trades: list[dict]
     # Format results
     regime_performance: dict[str, dict] = {}
     for regime, stats in regime_stats.items():
-        if stats["trades"] == 0:
+        n_trades = stats["trades"]
+        if n_trades == 0:
+            regime_performance[regime] = {
+                "win_rate": 0.0,
+                "avg_pnl": 0.0,
+                "trades": 0,
+                "total_pnl": 0.0,
+                "flag": None,
+            }
             continue
-        wr = stats["wins"] / stats["trades"]
+        wr = stats["wins"] / n_trades
         flag: str | None = None
-        if wr < 0.40 and stats["trades"] >= 20:
+        if wr < 0.40 and n_trades >= 20:
             flag = f"Strategy fails in {regime} regime ({wr:.0%} win rate)"
         regime_performance[regime] = {
             "win_rate": round(wr, 4),
-            "avg_pnl": round(stats["pnl"] / stats["trades"], 2),
-            "trades": stats["trades"],
+            "avg_pnl": round(stats["pnl"] / n_trades, 2),
+            "trades": n_trades,
             "total_pnl": round(stats["pnl"], 2),
             "flag": flag,
         }

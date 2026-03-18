@@ -71,11 +71,31 @@ def _score_htf_trend(htf: HTFContext) -> int:
 
 
 def _score_pd_location(htf: HTFContext, direction_hint: int) -> int:
-    """Score premium/discount location. Longs in discount = good (+60). Longs in premium = bad (-40)."""
-    if htf.pd_location == "discount":
-        return 60  # Good for longs
-    elif htf.pd_location == "premium":
-        return -60  # Good for shorts
+    """Score premium/discount location relative to direction_hint.
+
+    direction_hint: +1 = bullish, -1 = bearish, 0 = neutral.
+    When bullish, discount is great (+60) and premium is bad (-60).
+    When bearish, premium is great (+60) and discount is bad (-60).
+    When neutral, discount is mildly bullish (+40), premium mildly bearish (-40).
+    """
+    if direction_hint > 0:
+        # Bullish hint: want to buy in discount, avoid premium
+        if htf.pd_location == "discount":
+            return 60   # Great — buying low
+        elif htf.pd_location == "premium":
+            return -60  # Bad — buying high
+    elif direction_hint < 0:
+        # Bearish hint: want to sell in premium, avoid discount
+        if htf.pd_location == "premium":
+            return 60   # Great — selling high
+        elif htf.pd_location == "discount":
+            return -60  # Bad — selling low
+    else:
+        # No direction hint — use raw location score
+        if htf.pd_location == "discount":
+            return 40   # Mildly bullish
+        elif htf.pd_location == "premium":
+            return -40  # Mildly bearish
     return 0  # Equilibrium — neutral
 
 
@@ -149,9 +169,13 @@ def compute_bias(
 
     Returns DailyBiasState with net_bias (-100..+100) and bias_confidence (0..1).
     """
+    # Derive direction hint from HTF trend for pd_location scoring
+    trend_map = {"bullish": 1, "bearish": -1, "neutral": 0}
+    direction_hint = trend_map.get(htf.daily_trend, 0)
+
     scores = {
         "htf_trend": _score_htf_trend(htf),
-        "pd_location": _score_pd_location(htf, 0),
+        "pd_location": _score_pd_location(htf, direction_hint),
         "overnight_structure": _score_overnight(session),
         "liquidity_context": _score_liquidity_context(session, htf),
         "vwap_state": _score_vwap_state(current_price, vwap),

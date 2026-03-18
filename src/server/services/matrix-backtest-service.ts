@@ -370,6 +370,17 @@ export async function runMatrix(strategyId: string) {
     }
 
     // ─── Finalize ──────────────────────────────────────────
+    if (allResults.length === 0) {
+      await db.update(backtestMatrix).set({
+        status: "completed",
+        completedCombos: 0,
+        results: [],
+        tierStatus: { tier1: "completed", tier2: "completed", tier3: "completed" },
+        executionTimeMs: Date.now() - startTime,
+      }).where(eq(backtestMatrix.id, matrixId));
+      return { id: matrixId, status: "completed", totalCombos: 0, results: [], correlations: [] };
+    }
+
     const bestCombo = allResults.reduce((best, r) =>
       r.forgeScore > best.forgeScore ? r : best, allResults[0]);
 
@@ -418,6 +429,11 @@ export async function runMatrix(strategyId: string) {
       elapsedMs,
     }, "Matrix completed");
 
+    // Enforce correlation: flag highly correlated symbols for downstream consumers
+    const correlationBlocked = correlations
+      .filter((c) => c.correlation > 0.7)
+      .map((c) => ({ pair: [c.symbol1, c.symbol2], correlation: c.correlation }));
+
     return {
       id: matrixId,
       status: "completed",
@@ -425,6 +441,7 @@ export async function runMatrix(strategyId: string) {
       bestCombo,
       results: allResults,
       correlations,
+      correlationBlocked,
       executionTimeMs: elapsedMs,
     };
   } catch (err) {

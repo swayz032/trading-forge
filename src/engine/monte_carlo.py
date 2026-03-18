@@ -284,25 +284,31 @@ def simulate_firm_survival(
     firm_key: str,
     account_size: float = 50000,
     daily_trades_per_day: int = 3,
+    granularity: str = "day",
+    symbol: str = "ES",
 ) -> dict:
     """Per-firm Monte Carlo survival simulation.
 
     Walks each MC path through firm rules (daily loss limits, trailing DD,
-    consistency). Returns pass rates, survival rates, breach reasons, and
-    drawdown percentiles.
+    consistency, commissions). Returns pass rates, survival rates, breach
+    reasons, and drawdown percentiles.
 
     Args:
         paths: 2D array (n_sims, n_steps) of cumulative P&L
         firm_key: Firm identifier (e.g. "topstep_50k")
         account_size: Starting account balance
         daily_trades_per_day: Assumed trades per day for commission calc
+        granularity: "day" or "trade". When "trade", daily loss limit
+            enforcement is skipped (each row is a trade, not a day).
+        symbol: Contract symbol for commission lookup
 
     Returns:
         Dict with eval_pass_rate, funded_survival_6mo, breach_reasons,
-        drawdown_percentiles
+        drawdown_percentiles, consistency_fail_rate
     """
     from src.engine.prop_compliance import FIRM_CONFIGS
     from src.engine.prop_sim import DAILY_LOSS_LIMITS
+    from src.engine.firm_config import FIRM_COMMISSIONS
 
     # Handle earn2trade specially
     if firm_key == "earn2trade_50k":
@@ -319,19 +325,34 @@ def simulate_firm_survival(
     profit_target = firm["profit_target"]
     is_realtime = firm["trailing"] == "realtime"
     locks_at_start = firm.get("locks_at_start", True)
+    # Map consistency rule to max single-day ratio
+    _consistency_map = {
+        "tpt_50pct": 0.50,
+        "alpha_50pct": 0.50,
+        "ffn_15pct": 0.15,
+    }
+    consistency_ratio = _consistency_map.get(firm.get("consistency_rule"), None)
+
+    # Per-firm commission per round trip per contract
+    firm_comms = FIRM_COMMISSIONS.get(firm_key, {})
+    comm_per_side = firm_comms.get(symbol, 2.52)  # default $2.52/side
+    # Daily commission cost: trades_per_day × 2 sides × commission_per_side
+    daily_commission = daily_trades_per_day * 2 * comm_per_side
 
     n_sims = paths.shape[0]
     n_steps = paths.shape[1]
 
-    # Convert cumulative P&L paths to daily P&L
-    daily_pnl = np.diff(paths, axis=1, prepend=0)
+    # Convert cumulative P&L paths to step-level P&L
+    step_pnl = np.diff(paths, axis=1, prepend=0)
 
     eval_passed_count = 0
     survived_6mo_count = 0
+    consistency_fail_count = 0
     breach_reasons: dict[str, int] = {
         "trailing_dd": 0,
         "daily_loss_limit": 0,
         "never_hit_target": 0,
+        "consistency": 0,
     }
     max_drawdowns_all = np.zeros(n_sims)
 
@@ -343,13 +364,25 @@ def simulate_firm_survival(
         breached = False
         passed_eval = False
         breach_reason: Optional[str] = None
+        best_day_pnl = 0.0
 
         for step in range(n_steps):
-            day_pnl = float(daily_pnl[sim, step])
+            day_pnl = float(step_pnl[sim, step])
 
-            # Daily loss limit enforcement
-            if daily_loss_limit is not None and day_pnl < -daily_loss_limit:
+            # Deduct per-firm commissions (per day or per trade based on granularity)
+            if granularity == "day":
+                day_pnl -= daily_commission
+            else:
+                # Per-trade: deduct one round-trip commission
+                day_pnl -= 2 * comm_per_side
+
+            # Daily loss limit enforcement — only when granularity is "day"
+            if granularity == "day" and daily_loss_limit is not None and day_pnl < -daily_loss_limit:
                 day_pnl = -daily_loss_limit
+
+            # Track best day for consistency check
+            if day_pnl > best_day_pnl:
+                best_day_pnl = day_pnl
 
             balance += day_pnl
             peak_equity = max(peak_equity, balance)
@@ -366,7 +399,7 @@ def simulate_firm_survival(
             if balance <= floor and not breached:
                 breached = True
                 breach_reason = "trailing_dd"
-                if daily_loss_limit is not None and day_pnl <= -daily_loss_limit:
+                if granularity == "day" and daily_loss_limit is not None and day_pnl <= -daily_loss_limit:
                     breach_reason = "daily_loss_limit"
                 break
 
@@ -376,6 +409,15 @@ def simulate_firm_survival(
 
         if not breached and not passed_eval:
             breach_reason = "never_hit_target"
+
+        # Consistency check: best single day cannot exceed X% of total profit
+        total_profit = balance - account_size
+        if passed_eval and not breached and consistency_ratio is not None and total_profit > 0:
+            if best_day_pnl / total_profit > consistency_ratio:
+                passed_eval = False
+                breached = True
+                breach_reason = "consistency"
+                consistency_fail_count += 1
 
         if passed_eval and not breached:
             eval_passed_count += 1
@@ -405,6 +447,9 @@ def simulate_firm_survival(
         "funded_survival_6mo": round(survived_6mo_count / n_sims, 4),
         "breach_reasons": breach_reasons,
         "drawdown_percentiles": dd_percentiles,
+        "consistency_fail_rate": round(consistency_fail_count / n_sims, 4),
+        "granularity": granularity,
+        "commission_per_side": comm_per_side,
     }
 
 
@@ -621,11 +666,15 @@ def run_monte_carlo(
     # 8.4 — Per-firm survival simulation
     firm_survival: Optional[dict[str, dict]] = None
     if request.firms:
+        # Determine granularity: trade_resample produces trade-level paths,
+        # return_bootstrap / block_bootstrap produce day-level paths
+        granularity = "trade" if request.method == "trade_resample" else "day"
         firm_survival = {}
         for firm_key in request.firms:
             firm_survival[firm_key] = simulate_firm_survival(
                 paths, firm_key,
                 account_size=request.initial_capital,
+                granularity=granularity,
             )
 
     elapsed_ms = int((time.perf_counter() - start_time) * 1000)
