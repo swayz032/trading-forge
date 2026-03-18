@@ -35,6 +35,32 @@ from src.engine.prop_sim import simulate_all_firms
 from src.engine.strategy_base import BaseStrategy
 
 
+# ─── Signal Fill Convention ──────────────────────────────────────────
+# This system uses CONVENTION 1: "same-bar fill."
+#
+# How it works:
+#   - generate_signals() evaluates entry/exit expressions against bar[i] data.
+#   - The resulting boolean arrays are passed directly to vbt.Portfolio.from_signals()
+#     WITHOUT any signal_shift parameter (default signal_shift=0).
+#   - vectorbt therefore fills the signal on the SAME bar it was generated.
+#
+# What this means:
+#   - For crosses_above/crosses_below: The crossover condition compares bar[i]
+#     vs bar[i-1] (shift(1)), so the signal requires bar[i]'s close to confirm
+#     the cross AND fills at bar[i]'s close. This is a valid end-of-bar system
+#     — you observe the close, decide, and execute at that close price.
+#   - For direct comparisons (e.g. "close > sma_20"): The condition uses bar[i]'s
+#     close and fills at bar[i]'s close. Same interpretation: end-of-bar decision
+#     with same-bar execution.
+#   - This is NOT look-ahead because the signal uses data available at bar close
+#     and assumes execution at that same close. It models a trader who watches
+#     the bar close, decides, and gets filled at (approximately) that price.
+#   - Slippage is applied separately to account for execution reality.
+#
+# If you need "next-bar fill" (convention 2), pass signal_shift=1 to
+# vbt.Portfolio.from_signals(). Do NOT change the signal generation logic.
+# ─────────────────────────────────────────────────────────────────────
+
 # ─── Timeframe → pandas freq mapping ────────────────────────────────
 # vectorbt uses freq to annualize Sharpe. Hardcoding "1D" deflates
 # Sharpe ~5x for intraday data because it assumes 1 bar = 1 day.
@@ -177,6 +203,21 @@ def run_backtest(
             config.symbol, config.timeframe,
             request.start_date, request.end_date,
         )
+
+    # ─── Validate bar count ──────────────────────────────────
+    BARS_PER_DAY = {"1min": 390, "5min": 78, "15min": 26, "30min": 13, "1hour": 7, "1h": 7, "4hour": 2, "4h": 2, "daily": 1, "1D": 1}
+
+    if config.timeframe in BARS_PER_DAY:
+        from datetime import datetime as _dt
+        _start_dt = _dt.strptime(request.start_date, "%Y-%m-%d") if isinstance(request.start_date, str) else request.start_date
+        _end_dt = _dt.strptime(request.end_date, "%Y-%m-%d") if isinstance(request.end_date, str) else request.end_date
+        _calendar_days = (_end_dt - _start_dt).days
+        _trading_days = int(_calendar_days * 252 / 365)
+        _expected = _trading_days * BARS_PER_DAY[config.timeframe]
+        _actual = len(data)
+        if _expected > 0 and abs(_actual - _expected) / _expected > 0.25:
+            print(f"WARNING: Bar count mismatch for {config.timeframe}: expected ~{_expected}, got {_actual}. "
+                  f"Possible wrong timeframe data.", file=sys.stderr)
 
     # ─── Compute indicators ───────────────────────────────────
     # Ensure ATR is included for sizing/slippage
@@ -373,22 +414,19 @@ def run_backtest(
 
     # Deduct friction on EVERY position change (including reversals).
     # Reversal (e.g., +15 → -15) = exit old + enter new = friction on BOTH.
-    avg_slip = float(np.nanmean(slippage_clean))
-    friction_per_contract = avg_slip + commission  # one side
-
     for i in range(len(bar_dollar_pnls)):
         old_pos = prev_assets[i]
         new_pos = assets[i]
         if old_pos == new_pos:
             continue
+        bar_slip = float(slippage_clean[i]) if not np.isnan(slippage_clean[i]) else 0.0
+        bar_friction = bar_slip + commission  # one side
         # Contracts closed (exited)
         if old_pos != 0:
-            closed = abs(old_pos)
-            bar_dollar_pnls[i] -= friction_per_contract * closed
+            bar_dollar_pnls[i] -= bar_friction * abs(old_pos)
         # Contracts opened (entered)
         if new_pos != 0 and np.sign(new_pos) != np.sign(old_pos):
-            opened = abs(new_pos)
-            bar_dollar_pnls[i] -= friction_per_contract * opened
+            bar_dollar_pnls[i] -= bar_friction * abs(new_pos)
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
@@ -417,7 +455,7 @@ def run_backtest(
 
     if len(daily_pnl_values) > 1:
         daily_arr = np.array(daily_pnl_values)
-        sharpe = float(np.mean(daily_arr) / np.std(daily_arr) * np.sqrt(252)) if np.std(daily_arr) > 0 else 0.0
+        sharpe = float(np.mean(daily_arr) / np.std(daily_arr, ddof=1) * np.sqrt(252)) if np.std(daily_arr, ddof=1) > 0 else 0.0
     else:
         sharpe = 0.0
 
@@ -821,18 +859,17 @@ def run_class_backtest(
     bar_dollar_pnls = prev_assets * close_diffs * spec.point_value
 
     # Deduct friction on EVERY position change (including reversals)
-    avg_slip = float(np.nanmean(slippage_clean))
-    friction_per_contract = avg_slip + commission
-
     for i in range(len(bar_dollar_pnls)):
         old_pos = prev_assets[i]
         new_pos = assets[i]
         if old_pos == new_pos:
             continue
+        bar_slip = float(slippage_clean[i]) if not np.isnan(slippage_clean[i]) else 0.0
+        bar_friction = bar_slip + commission
         if old_pos != 0:
-            bar_dollar_pnls[i] -= friction_per_contract * abs(old_pos)
+            bar_dollar_pnls[i] -= bar_friction * abs(old_pos)
         if new_pos != 0 and np.sign(new_pos) != np.sign(old_pos):
-            bar_dollar_pnls[i] -= friction_per_contract * abs(new_pos)
+            bar_dollar_pnls[i] -= bar_friction * abs(new_pos)
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
@@ -863,7 +900,7 @@ def run_class_backtest(
     # Sharpe from daily P&L (annualized)
     if len(daily_pnl_values) > 1:
         daily_arr = np.array(daily_pnl_values)
-        sharpe = float(np.mean(daily_arr) / np.std(daily_arr) * np.sqrt(252)) if np.std(daily_arr) > 0 else 0.0
+        sharpe = float(np.mean(daily_arr) / np.std(daily_arr, ddof=1) * np.sqrt(252)) if np.std(daily_arr, ddof=1) > 0 else 0.0
     else:
         sharpe = 0.0
 

@@ -53,7 +53,7 @@ _COMPARISON_OPS = {
     "<=": lambda a, b: a <= b,
     ">":  lambda a, b: a > b,
     "<":  lambda a, b: a < b,
-    "==": lambda a, b: a == b,
+    "==": lambda a, b: (a - b).abs() < 1e-9,
 }
 
 
