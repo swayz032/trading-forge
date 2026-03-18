@@ -81,6 +81,7 @@ export const backtestMatrix = pgTable(
     results: jsonb("results"), // [{symbol, timeframe, forgeScore, sharpe, trades, backtestId}]
     bestCombo: jsonb("best_combo"), // {symbol, timeframe, forgeScore, backtestId}
     tierStatus: jsonb("tier_status"), // {tier1: "completed", tier2: "running", tier3: "pending"}
+    correlations: jsonb("correlations"), // [{symbol1, symbol2, correlation, warning}]
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },

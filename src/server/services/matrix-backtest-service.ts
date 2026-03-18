@@ -122,6 +122,111 @@ async function runWithConcurrency(
   return results;
 }
 
+// ─── Cross-Instrument Correlation ──────────────────────────
+
+interface CorrelationResult {
+  symbol1: string;
+  symbol2: string;
+  correlation: number;
+  warning: string | null;
+}
+
+function pearsonCorrelation(x: number[], y: number[]): number {
+  const n = Math.min(x.length, y.length);
+  if (n < 30) return 0; // Not enough data
+
+  const meanX = x.slice(0, n).reduce((a, b) => a + b, 0) / n;
+  const meanY = y.slice(0, n).reduce((a, b) => a + b, 0) / n;
+
+  let sumXY = 0, sumX2 = 0, sumY2 = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - meanX;
+    const dy = y[i] - meanY;
+    sumXY += dx * dy;
+    sumX2 += dx * dx;
+    sumY2 += dy * dy;
+  }
+
+  const denom = Math.sqrt(sumX2 * sumY2);
+  return denom === 0 ? 0 : sumXY / denom;
+}
+
+// Known correlation priors for futures pairs (empirical baselines)
+const KNOWN_CORRELATIONS: Record<string, number> = {
+  "ES-NQ": 0.90,
+  "ES-YM": 0.85,
+  "NQ-YM": 0.80,
+  "ES-RTY": 0.75,
+  "NQ-RTY": 0.70,
+  "CL-GC": 0.25,
+};
+
+async function computeCorrelations(
+  results: MatrixResult[],
+): Promise<CorrelationResult[]> {
+  // Pick the best-scoring result per symbol (forgeScore >= 30 only)
+  const symbolBest = new Map<string, MatrixResult>();
+  for (const r of results) {
+    if (r.forgeScore < 30) continue;
+    const current = symbolBest.get(r.symbol);
+    if (!current || r.forgeScore > current.forgeScore) {
+      symbolBest.set(r.symbol, r);
+    }
+  }
+
+  const symbols = Array.from(symbolBest.keys());
+  const correlations: CorrelationResult[] = [];
+
+  // Try to load daily P&Ls from backtests table for real correlation
+  const dailyPnlsBySymbol = new Map<string, number[]>();
+  for (const [symbol, best] of symbolBest) {
+    if (!best.backtestId) continue;
+    try {
+      const [bt] = await db
+        .select({ dailyPnls: backtests.dailyPnls })
+        .from(backtests)
+        .where(eq(backtests.id, best.backtestId))
+        .limit(1);
+      if (bt?.dailyPnls && Array.isArray(bt.dailyPnls)) {
+        dailyPnlsBySymbol.set(symbol, bt.dailyPnls as number[]);
+      }
+    } catch {
+      // Silently fall back to known priors
+    }
+  }
+
+  for (let i = 0; i < symbols.length; i++) {
+    for (let j = i + 1; j < symbols.length; j++) {
+      const s1 = symbols[i];
+      const s2 = symbols[j];
+
+      // Compute real correlation if we have daily P&L data for both
+      const pnl1 = dailyPnlsBySymbol.get(s1);
+      const pnl2 = dailyPnlsBySymbol.get(s2);
+      let corr: number;
+
+      if (pnl1 && pnl2 && Math.min(pnl1.length, pnl2.length) >= 30) {
+        corr = pearsonCorrelation(pnl1, pnl2);
+      } else {
+        // Fall back to known priors
+        const pair = [s1, s2].sort().join("-");
+        corr = KNOWN_CORRELATIONS[pair] ?? 0.3;
+      }
+
+      let warning: string | null = null;
+      if (corr > 0.7) {
+        warning = `${s1} and ${s2} highly correlated (${corr.toFixed(2)}) — pick the better one, don't run both`;
+      } else if (corr > 0.5) {
+        warning = `${s1} and ${s2} correlated (${corr.toFixed(2)}) — treat as one strategy for sizing`;
+      }
+
+      correlations.push({ symbol1: s1, symbol2: s2, correlation: corr, warning });
+    }
+  }
+
+  return correlations;
+}
+
 export async function runMatrix(strategyId: string) {
   const startTime = Date.now();
 
@@ -268,6 +373,16 @@ export async function runMatrix(strategyId: string) {
     const bestCombo = allResults.reduce((best, r) =>
       r.forgeScore > best.forgeScore ? r : best, allResults[0]);
 
+    // ─── Cross-Instrument Correlation Check ──────────────
+    const correlations = await computeCorrelations(allResults);
+    const highCorrWarnings = correlations.filter((c) => c.warning !== null);
+    if (highCorrWarnings.length > 0) {
+      logger.warn(
+        { matrixId, warnings: highCorrWarnings.map((c) => c.warning) },
+        "Matrix correlation warnings — review before deploying multiple symbols",
+      );
+    }
+
     const elapsedMs = Date.now() - startTime;
 
     await db.update(backtestMatrix).set({
@@ -275,6 +390,7 @@ export async function runMatrix(strategyId: string) {
       completedCombos: allResults.length,
       results: allResults as any,
       bestCombo: bestCombo as any,
+      correlations: correlations as any,
       tierStatus: { tier1: "completed", tier2: "completed", tier3: "completed" },
       executionTimeMs: elapsedMs,
     }).where(eq(backtestMatrix.id, matrixId));
@@ -288,6 +404,7 @@ export async function runMatrix(strategyId: string) {
         timeframe: bestCombo.timeframe,
         forgeScore: bestCombo.forgeScore,
       },
+      correlations,
       executionTimeMs: elapsedMs,
     });
 
@@ -296,6 +413,8 @@ export async function runMatrix(strategyId: string) {
       totalCombos: allResults.length,
       bestScore: bestCombo.forgeScore,
       bestCombo: `${bestCombo.symbol}/${bestCombo.timeframe}`,
+      correlationPairs: correlations.length,
+      highCorrWarnings: highCorrWarnings.length,
       elapsedMs,
     }, "Matrix completed");
 
@@ -305,6 +424,7 @@ export async function runMatrix(strategyId: string) {
       totalCombos: allResults.length,
       bestCombo,
       results: allResults,
+      correlations,
       executionTimeMs: elapsedMs,
     };
   } catch (err) {
