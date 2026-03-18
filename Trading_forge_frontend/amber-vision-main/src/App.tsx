@@ -17,6 +17,9 @@ import DataPipeline from "@/pages/DataPipeline";
 import PaperTrading from "@/pages/PaperTrading";
 import MonteCarlo from "@/pages/MonteCarlo";
 import PropFirmSimulator from "@/pages/PropFirmSimulator";
+import Journal from "@/pages/Journal";
+import Compliance from "@/pages/Compliance";
+import DecayDashboard from "@/pages/DecayDashboard";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -49,6 +52,9 @@ const App = () => (
               <Route path="/data" element={<ErrorBoundary><DataPipeline /></ErrorBoundary>} />
               <Route path="/paper" element={<ErrorBoundary><PaperTrading /></ErrorBoundary>} />
               <Route path="/prop-firm" element={<ErrorBoundary><PropFirmSimulator /></ErrorBoundary>} />
+              <Route path="/journal" element={<ErrorBoundary><Journal /></ErrorBoundary>} />
+              <Route path="/compliance" element={<ErrorBoundary><Compliance /></ErrorBoundary>} />
+              <Route path="/decay" element={<ErrorBoundary><DecayDashboard /></ErrorBoundary>} />
               <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
             </Route>
             <Route path="*" element={<NotFound />} />

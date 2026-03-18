@@ -10,6 +10,9 @@ import {
   Building2,
   Settings,
   Flame,
+  BookOpen,
+  Shield,
+  Activity,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -55,11 +58,14 @@ const navGroups = [
       { title: "Data Pipeline", url: "/data", icon: Database },
       { title: "Paper Trading", url: "/paper", icon: Play },
       { title: "Prop Firm", url: "/prop-firm", icon: Building2 },
+      { title: "Compliance", url: "/compliance", icon: Shield },
     ],
   },
   {
     label: "System",
     items: [
+      { title: "Journal", url: "/journal", icon: BookOpen },
+      { title: "Decay Monitor", url: "/decay", icon: Activity },
       { title: "Settings", url: "/settings", icon: Settings },
     ],
   },
