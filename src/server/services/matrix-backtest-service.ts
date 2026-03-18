@@ -325,6 +325,8 @@ export async function runMatrix(strategyId: string) {
       matrixId, tier: "tier2",
       survivingSymbols: Array.from(survivingSymbols),
       tier1Completed: tier1Results.length,
+      completed: completedCombos,
+      total: totalEstimate,
     });
 
     // ─── Tier 2: Medium (5min, 15min × survivors) ──────────
@@ -368,8 +370,10 @@ export async function runMatrix(strategyId: string) {
 
     broadcastSSE("backtest:matrix-tier", {
       matrixId, tier: "tier3",
-      tier3Symbols,
+      promotedSymbols: tier3Symbols,
       tier2Completed: tier2Results.length,
+      completed: completedCombos,
+      total: totalEstimate,
     });
 
     const tier3Combos: MatrixCombo[] = tier3Symbols.map((symbol) => ({
