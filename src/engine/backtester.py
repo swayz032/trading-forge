@@ -14,6 +14,7 @@ from typing import Optional
 
 import click
 import numpy as np
+import pandas as pd
 import polars as pl
 import vectorbt as vbt
 
@@ -487,9 +488,19 @@ def run_backtest(
     if ts_index is not None:
         exits_pd.index = ts_index
 
-    # Short side signals
-    short_entries_pd = df["entry_short"].to_pandas() if "entry_short" in df.columns else entries_pd * False
-    short_exits_pd = df["exit_short"].to_pandas() if "exit_short" in df.columns else exits_pd * False
+    # Short side signals (use proper boolean Series, not int * False)
+    if "entry_short" in df.columns:
+        short_entries_np = df["entry_short"].to_numpy()
+        # Apply fill model to short entries too
+        if request.fill_model and request.fill_model.order_type == "limit":
+            from src.engine.fill_model import compute_fill_probabilities, apply_fill_model
+            fill_config = request.fill_model.model_dump()
+            short_fill_probs = compute_fill_probabilities(df, fill_config, short_entries_np)
+            short_entries_np, _ = apply_fill_model(short_entries_np, short_fill_probs, sizes.copy(), seed=43)
+        short_entries_pd = pl.Series("entry_short", short_entries_np).to_pandas()
+    else:
+        short_entries_pd = pd.Series(False, index=close_pd.index)
+    short_exits_pd = df["exit_short"].to_pandas() if "exit_short" in df.columns else pd.Series(False, index=close_pd.index)
     if ts_index is not None:
         short_entries_pd.index = ts_index
         short_exits_pd.index = ts_index
