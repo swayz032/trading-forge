@@ -356,13 +356,19 @@ def run_prop_compliance(
 
         # Calculate ROI estimates
         avg_daily = stats.get("avg_daily_pnl", 0)
+        mc_pass_probability = stats.get("mc_pass_probability", 0.30)
         if avg_daily > 0:
             days_to_target = firm["profit_target"] / avg_daily
             months_to_pass = days_to_target / 21
-            eval_cost = firm["monthly_fee"] * max(1, math.ceil(months_to_pass)) + firm["activation_fee"]
+            single_eval_cost = firm["monthly_fee"] * max(1, math.ceil(months_to_pass)) + firm["activation_fee"]
         else:
             months_to_pass = None
-            eval_cost = firm["monthly_fee"] + firm["activation_fee"]  # At least 1 month
+            single_eval_cost = firm["monthly_fee"] + firm["activation_fee"]  # At least 1 month
+
+        # Expected eval cost: amortize over pass probability
+        expected_eval_cost = round(
+            single_eval_cost / max(0.01, mc_pass_probability), 2
+        )
 
         results[firm_key] = {
             "name": firm["name"],
@@ -370,7 +376,8 @@ def run_prop_compliance(
             "failures": failures,
             "max_drawdown_limit": firm["max_drawdown"],
             "drawdown_used": round(dd_used, 2),
-            "eval_cost": round(eval_cost, 2),
+            "single_eval_cost": round(single_eval_cost, 2),
+            "expected_eval_cost": expected_eval_cost,
             "months_to_pass": round(months_to_pass, 1) if months_to_pass is not None and months_to_pass != float("inf") else None,
             "payout_split": firm["payout_split"],
             "ongoing_fee": firm["ongoing_fee"],
@@ -403,18 +410,23 @@ def rank_firms_for_strategy(stats: dict) -> list[dict]:
         days_to_target = firm["profit_target"] / avg_daily if avg_daily > 0 else 999
         months_to_pass = days_to_target / 21
 
-        eval_cost = firm["monthly_fee"] * max(1, math.ceil(months_to_pass)) + firm["activation_fee"]
+        single_eval_cost = firm["monthly_fee"] * max(1, math.ceil(months_to_pass)) + firm["activation_fee"]
+        # Expected eval cost: amortize over pass probability (default 30%)
+        mc_pass_probability = stats.get("mc_pass_probability", 0.30)
+        expected_eval_cost = single_eval_cost / max(0.01, mc_pass_probability)
         annual_ongoing = firm["ongoing_fee"] * 12
         annual_gross = avg_daily * 252 * firm["payout_split"]
-        annual_net = annual_gross - annual_ongoing - eval_cost
-        roi = annual_net / eval_cost if eval_cost > 0 else float("inf")
+        annual_net = annual_gross - annual_ongoing - expected_eval_cost
+        roi = annual_net / expected_eval_cost if expected_eval_cost > 0 else float("inf")
 
         rankings.append({
             "firm": firm_key,
             "name": firm["name"],
-            "eval_cost": round(eval_cost, 2),
+            "single_eval_cost": round(single_eval_cost, 2),
+            "expected_eval_cost": round(expected_eval_cost, 2),
             "months_to_pass": round(months_to_pass, 1),
             "payout_split": firm["payout_split"],
+            "ongoing_fee_annual": round(annual_ongoing, 2),
             "annual_net_estimate": round(annual_net, 2),
             "roi": round(roi, 2),
         })

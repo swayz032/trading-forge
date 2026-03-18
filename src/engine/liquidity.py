@@ -14,19 +14,27 @@ import polars as pl
 
 # ─── Session Definitions (Eastern Time) ──────────────────────────
 
+SESSION_MULTIPLIERS = {
+    "pre_market": 2.0,       # 6:00-9:30 ET — thin pre-market, wide spreads
+    "open_30min": 0.8,       # 9:30-10:00 — highest liquidity of day
+    "rth_core": 1.0,         # 10:00-15:30 — baseline liquidity
+    "close_30min": 1.2,      # 15:30-16:00 — MOC flows, wider spreads
+    "overnight": 3.0,        # 16:00-6:00 — thin book, wide spreads
+}
+
 SESSIONS = [
     # (label, start_hour, start_min, end_hour, end_min, multiplier)
-    ("RTH_CORE",    10,  0, 15, 30, 1.0),
-    ("RTH_CLOSE",   15, 30, 16,  0, 1.2),
-    ("RTH_OPEN",     9, 30, 10,  0, 1.3),
-    ("PRE_MARKET",   4,  0,  9, 30, 1.5),
-    ("OVERNIGHT",   20,  0, 24,  0, 2.0),  # 8 PM – midnight
-    ("OVERNIGHT_2",  0,  0,  4,  0, 2.0),  # midnight – 4 AM
+    # Order matters: more specific ranges first, checked sequentially
+    ("RTH_OPEN",     9, 30, 10,  0, SESSION_MULTIPLIERS["open_30min"]),
+    ("RTH_CORE",    10,  0, 15, 30, SESSION_MULTIPLIERS["rth_core"]),
+    ("RTH_CLOSE",   15, 30, 16,  0, SESSION_MULTIPLIERS["close_30min"]),
+    ("PRE_MARKET",   6,  0,  9, 30, SESSION_MULTIPLIERS["pre_market"]),
+    ("OVERNIGHT",   16,  0, 24,  0, SESSION_MULTIPLIERS["overnight"]),  # 4 PM – midnight
+    ("OVERNIGHT_2",  0,  0,  6,  0, SESSION_MULTIPLIERS["overnight"]),  # midnight – 6 AM
 ]
 
-# Default multiplier for anything not covered (e.g., 4-8 PM gap between
-# RTH close and overnight — treat as after-hours, moderate liquidity)
-_DEFAULT_MULTIPLIER = 1.5
+# Default multiplier for anything not covered
+_DEFAULT_MULTIPLIER = SESSION_MULTIPLIERS["overnight"]
 _DEFAULT_LABEL = "AFTER_HOURS"
 
 

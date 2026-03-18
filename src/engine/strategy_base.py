@@ -24,6 +24,7 @@ class BaseStrategy(ABC):
     symbol: str
     timeframe: str
     preferred_regime: Optional[str] = None
+    overnight_hold: bool = False  # DAY_ONLY (False) vs SWING (True)
 
     @abstractmethod
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -58,6 +59,7 @@ class ExpressionStrategy(BaseStrategy):
         self.symbol = config.symbol
         self.timeframe = config.timeframe
         self.preferred_regime = None
+        self.overnight_hold = config.overnight_hold
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
         """Compute indicators via dispatcher, then evaluate expressions for signals."""

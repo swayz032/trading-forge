@@ -16,7 +16,7 @@ from __future__ import annotations
 import math
 from typing import Optional
 
-from src.engine.config import CONTRACT_SPECS
+from src.engine.config import CONTRACT_SPECS, MARGIN_EXPANSION_MULTIPLIER
 from src.engine.prop_compliance import FIRM_CONFIGS
 from src.engine.firm_config import FIRM_COMMISSIONS
 
@@ -64,6 +64,8 @@ def simulate_prop_firm(
     firm_key: str,
     symbol: str = "ES",
     account_size: float = 50000,
+    overnight_hold: bool = False,
+    avg_contracts: float = 1.0,
 ) -> dict:
     """Walk through each trading day simulating a real prop firm account.
 
@@ -97,6 +99,7 @@ def simulate_prop_firm(
 
     daily_statements: list[dict] = []
     daily_loss_breaches: list[str] = []
+    gap_breaches: list[str] = []  # Task 7.11: Days where overnight gap exceeded daily loss limit
     trailing_dd_breached = False
     breach_day: Optional[str] = None
     days_to_pass_eval: Optional[int] = None
@@ -127,21 +130,60 @@ def simulate_prop_firm(
         comm_cost = comm_per_side * 2 * day_trades  # round-trip
         net_pnl = gross_pnl - comm_cost
 
+        # Overnight margin cost: if strategy holds overnight, check that
+        # account can cover overnight margin requirements (much higher than
+        # intraday). Overnight margin reduces available capital for drawdown.
+        overnight_margin_warning = False
+        if overnight_hold and date_str in overnight_days:
+            spec = CONTRACT_SPECS.get(symbol)
+            if spec and spec.overnight_margin > 0:
+                required_margin = spec.overnight_margin * avg_contracts
+                if required_margin > balance * 0.80:
+                    # Account cannot safely cover overnight margin
+                    overnight_margin_warning = True
+
         # Daily loss limit enforcement
         day_halted = False
+        gap_breached = False
         if daily_loss_limit is not None and net_pnl < -daily_loss_limit:
-            # Cap the loss at the limit — firm would have stopped trading
-            net_pnl = -daily_loss_limit
-            day_halted = True
-            daily_loss_breaches.append(date_str)
+            # Task 7.11: Distinguish gap breach from intraday breach.
+            # If holding overnight and the day opens with a loss already
+            # exceeding the daily limit, it's a gap breach — the firm couldn't
+            # have halted trading because the loss occurred at the open.
+            if date_str in overnight_days:
+                # Gap breach: loss materialised at open, couldn't be stopped.
+                # The full loss applies (no cap) because the gap happened
+                # before trading could be halted.
+                gap_breached = True
+                gap_breaches.append(date_str)
+                day_halted = True
+                daily_loss_breaches.append(date_str)
+                # net_pnl is NOT capped — the gap loss is unavoidable
+            else:
+                # Normal intraday breach: firm halts trading, cap at limit
+                net_pnl = -daily_loss_limit
+                day_halted = True
+                daily_loss_breaches.append(date_str)
 
         # Compute intraday low BEFORE updating balance (for realtime DD)
         prev_balance = balance
         if is_realtime:
-            # Realtime: estimate intraday low from daily PnL
-            # If net_pnl is negative, worst point was at least prev_balance + net_pnl
-            # (the closing balance). Could be worse intraday but we only have daily data.
-            intraday_low = prev_balance + min(0, net_pnl)
+            # Realtime trailing DD checks equity at EVERY tick, not just EOD.
+            # With only daily data, we must estimate the intraday low.
+            #
+            # Conservative heuristic: intraday low is worse than the closing PnL
+            # by a factor proportional to daily range. For losing days, the worst
+            # point was likely 20-40% worse than the close (market recovered some).
+            # For winning days, the worst point was likely a dip before recovery.
+            #
+            # Factor: on losing days, assume intraday low was 1.3x the closing loss.
+            # On winning days, assume a brief dip of 30% of the day's gain.
+            if net_pnl < 0:
+                # Losing day: intraday low was worse than close
+                intraday_low = prev_balance + net_pnl * 1.3
+            else:
+                # Winning day: assume a brief dip before recovery
+                intraday_low = prev_balance - abs(net_pnl) * 0.3
         else:
             intraday_low = prev_balance + net_pnl  # EOD: use closing balance
 
@@ -166,7 +208,11 @@ def simulate_prop_firm(
         else:
             floor = peak_equity - dd_limit
 
-        if balance <= floor and not trailing_dd_breached:
+        # For realtime DD, check intraday low against floor (not just EOD balance).
+        # This is what makes realtime trailing stricter than EOD trailing:
+        # same trades can breach realtime but survive EOD.
+        check_value = intraday_low if is_realtime else balance
+        if check_value <= floor and not trailing_dd_breached:
             trailing_dd_breached = True
             breach_day = date_str
 
@@ -185,8 +231,10 @@ def simulate_prop_firm(
             "peak_equity": round(peak_equity, 2),
             "trades": day_trades,
             "halted": day_halted,
+            "gap_breached": gap_breached,
             "intraday_max_dd_approx": intraday_max_dd_approx,
             "overnight_gap_risk": date_str in overnight_days,
+            "overnight_margin_warning": overnight_margin_warning,
         })
 
     # Monthly summary
@@ -295,17 +343,34 @@ def simulate_prop_firm(
     # ─── Eval cost amortization ──────────────────────────────
     # Conservative 30% pass rate default.
     # TODO(Wave 8): Replace with MC-derived pass probability per strategy.
-    pass_probability = 0.30
-    net_payout = payout_projection * 12 if payout_projection > 0 else 0
-    expected_eval_cost = round(
-        firm.get("monthly_fee", 0) / max(0.01, pass_probability), 2
+    mc_pass_probability = 0.30
+
+    # Eval cost = months of eval fees + activation fee for a single attempt
+    months_in_eval = max(1, (days_to_pass_eval or 60) // 20)
+    single_eval_cost = (
+        firm.get("monthly_fee", 0) * months_in_eval
+        + firm.get("activation_fee", 0)
     )
-    true_net_payout = round(
-        net_payout - expected_eval_cost / 12, 2
-    ) if net_payout > 0 else 0
+
+    # Expected eval cost accounting for failed attempts:
+    # eval_fee / mc_pass_probability = expected total spend before passing
+    expected_eval_cost = round(
+        single_eval_cost / max(0.01, mc_pass_probability), 2
+    )
+
+    # Annual net payout after all deductions
+    annual_gross_payout = payout_projection * 12 if payout_projection > 0 else 0
+    annual_ongoing_fees = firm.get("ongoing_fee", 0) * 12
+    # Amortize expected eval cost over first year
+    true_net_annual_payout = round(
+        annual_gross_payout - annual_ongoing_fees - expected_eval_cost, 2
+    ) if annual_gross_payout > 0 else 0
+    true_net_monthly_payout = round(
+        true_net_annual_payout / 12, 2
+    ) if true_net_annual_payout > 0 else 0
 
     # ─── Eval/funded phase separation ──────────────────────
-    eval_cost = firm.get("monthly_fee", 0) * max(1, (days_to_pass_eval or 60) // 20)
+    eval_cost = single_eval_cost
 
     # Funded phase: count months where account survived (not breached)
     survival_months = 0
@@ -327,6 +392,7 @@ def simulate_prop_firm(
         "max_drawdown_dollars": round(max_dd_dollars, 2),
         "max_drawdown_limit": firm["max_drawdown"],
         "daily_loss_limit_breaches": daily_loss_breaches,
+        "gap_breaches": gap_breaches,
         "trailing_dd_breached": trailing_dd_breached,
         "breach_day": breach_day,
         "consistency_ratio": round(consistency_ratio, 4),
@@ -341,10 +407,17 @@ def simulate_prop_firm(
         "monthly_summary": monthly_summary,
         "worst_month": worst_month,
         "recovery_days_from_max_dd": recovery_days,
+        "single_eval_cost": single_eval_cost,
         "expected_eval_cost": expected_eval_cost,
-        "true_net_payout": true_net_payout,
+        "mc_pass_probability": mc_pass_probability,
+        "true_net_annual_payout": true_net_annual_payout,
+        "true_net_monthly_payout": true_net_monthly_payout,
         "overnight_risk_days": overnight_risk_days,
         "overnight_violation": overnight_violation,
+        "strategy_type": "SWING" if overnight_hold else "DAY_ONLY",
+        "overnight_margin_warnings": sum(
+            1 for s in daily_statements if s.get("overnight_margin_warning", False)
+        ),
         "eval_phase_result": {
             "profit_target": profit_target,
             "days_to_target": days_to_pass_eval,
@@ -364,6 +437,8 @@ def simulate_all_firms(
     trades: list[dict],
     symbol: str = "ES",
     account_size: float = 50000,
+    overnight_hold: bool = False,
+    avg_contracts: float = 1.0,
 ) -> dict[str, dict]:
     """Run prop firm simulation against all 8 firms.
 
@@ -374,5 +449,6 @@ def simulate_all_firms(
     for firm_key in all_configs:
         results[firm_key] = simulate_prop_firm(
             daily_pnl_records, trades, firm_key, symbol, account_size,
+            overnight_hold=overnight_hold, avg_contracts=avg_contracts,
         )
     return results
