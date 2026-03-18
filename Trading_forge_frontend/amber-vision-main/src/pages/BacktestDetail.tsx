@@ -1,16 +1,21 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Target, TrendingUp, Shield } from "lucide-react";
+import { ArrowLeft, Clock, Target, TrendingUp, Shield, Grid3X3, CalendarDays } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { StatusBadge } from "@/components/forge/StatusBadge";
 import { LightweightChart } from "@/components/forge/LightweightChart";
 import { ForgeTable } from "@/components/forge/ForgeTable";
+import { MatrixHeatmap } from "@/components/forge/MatrixHeatmap";
+import { PnLCalendar } from "@/components/forge/PnLCalendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AreaChart, Area, ScatterChart, Scatter, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
 import { useBacktest, useBacktestEquity, useBacktestTrades } from "@/hooks/useBacktests";
 import { useStrategies } from "@/hooks/useStrategies";
+import { api } from "@/lib/api-client";
 import { num } from "@/lib/utils";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -52,6 +57,22 @@ export default function BacktestDetail() {
   const { data: equityData, isLoading: eqLoading } = useBacktestEquity(id);
   const { data: trades, isLoading: trLoading } = useBacktestTrades(id);
   const { data: strategies } = useStrategies();
+
+  // Matrix heatmap data — fetch by strategyId
+  const { data: matrixData } = useQuery({
+    queryKey: ["backtests", "matrix", backtest?.strategyId],
+    queryFn: () =>
+      api.get<Array<{
+        symbol: string;
+        timeframe: string;
+        forgeScore: number;
+        sharpe?: number;
+        trades?: number;
+        pnl?: number;
+        status?: string;
+      }>>(`/backtests/matrix?strategyId=${backtest!.strategyId}`),
+    enabled: !!backtest?.strategyId,
+  });
 
   // Look up strategy name
   const strategyName = useMemo(() => {
@@ -199,6 +220,32 @@ export default function BacktestDetail() {
       .sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
   }, [trades]);
 
+  // Daily P&Ls for calendar view — aggregate trade P&L by exit date
+  const dailyPnls = useMemo(() => {
+    if (!trades || !Array.isArray(trades)) return [];
+    const dayMap = new Map<string, { pnl: number; trades: number; balance: number }>();
+    let runningBalance = 100_000; // starting capital assumption
+    trades.forEach((t: any) => {
+      const exitDate = t.exitTime ? new Date(t.exitTime) : null;
+      if (!exitDate || isNaN(exitDate.getTime()) || exitDate.getFullYear() < 1971) return;
+      const dateStr = exitDate.toISOString().slice(0, 10);
+      const pnl = num(t.pnl);
+      const existing = dayMap.get(dateStr);
+      if (existing) {
+        existing.pnl += pnl;
+        existing.trades += 1;
+      } else {
+        dayMap.set(dateStr, { pnl, trades: 1, balance: 0 });
+      }
+    });
+    // Compute running balance in date order
+    const sorted = Array.from(dayMap.entries()).sort(([a], [b]) => a.localeCompare(b));
+    return sorted.map(([date, data]) => {
+      runningBalance += data.pnl;
+      return { date, pnl: data.pnl, trades: data.trades, balance: runningBalance };
+    });
+  }, [trades]);
+
   // Strategy config details for playbook
   const strategyConfig = useMemo(() => {
     const cfg = backtest?.config as any;
@@ -276,6 +323,29 @@ export default function BacktestDetail() {
           </div>
         ))}
       </motion.div>
+
+      {/* Tabs: Details / Matrix */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.4 }}>
+        <Tabs defaultValue="details" className="space-y-4">
+          <TabsList className="bg-surface-1 border border-border/20 p-1 rounded-lg">
+            {[
+              { label: "Details", value: "details" },
+              { label: "Matrix", value: "matrix", icon: Grid3X3 },
+              { label: "Calendar", value: "calendar", icon: CalendarDays },
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md px-4 gap-1.5"
+              >
+                {tab.icon && <tab.icon className="w-3 h-3" />}
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {/* Details Tab */}
+          <TabsContent value="details" className="space-y-6">
 
       {/* Equity Curve (Lightweight Charts) */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }} className="forge-card p-5">
@@ -525,6 +595,37 @@ export default function BacktestDetail() {
           </ResponsiveContainer>
         </motion.div>
       )}
+
+          </TabsContent>
+
+          {/* Matrix Tab */}
+          <TabsContent value="matrix" className="space-y-4">
+            {matrixData && matrixData.length > 0 ? (
+              <MatrixHeatmap matrixData={matrixData} />
+            ) : (
+              <div className="forge-card p-8 text-center">
+                <Grid3X3 className="w-8 h-8 text-text-muted/40 mx-auto mb-3" />
+                <p className="text-sm text-text-muted">No cross-matrix data available</p>
+                <p className="text-xs text-text-muted/60 mt-1">Run a 42-combo matrix test to see Forge Scores across symbols × timeframes</p>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Calendar Tab */}
+          <TabsContent value="calendar" className="space-y-4">
+            {dailyPnls.length > 0 ? (
+              <PnLCalendar dailyPnls={dailyPnls} />
+            ) : (
+              <div className="forge-card p-8 text-center">
+                <CalendarDays className="w-8 h-8 text-text-muted/40 mx-auto mb-3" />
+                <p className="text-sm text-text-muted">No daily P&L data available</p>
+                <p className="text-xs text-text-muted/60 mt-1">Calendar view requires trade data with valid exit dates</p>
+              </div>
+            )}
+          </TabsContent>
+
+        </Tabs>
+      </motion.div>
     </div>
   );
 }
