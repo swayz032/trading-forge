@@ -11,7 +11,7 @@ export const backtestRoutes = Router();
 // ─── Validation Schemas ──────────────────────────────────────────
 
 const indicatorSchema = z.object({
-  type: z.enum(["sma", "ema", "rsi", "macd", "vwap", "bbands", "atr"]),
+  type: z.enum(["sma", "ema", "rsi", "macd", "vwap", "bbands", "atr", "adx", "adr"]),
   period: z.number().int().positive(),
   fast: z.number().int().optional(),
   slow: z.number().int().optional(),
