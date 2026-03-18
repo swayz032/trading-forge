@@ -266,6 +266,12 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             ? String(t["PnL"] ?? t["pnl"])
             : null,
           contracts: Math.round(Number(t["Size"] ?? t["size"] ?? 1)),
+          mae: t["MAE"] != null || t["mae"] != null
+            ? String(t["MAE"] ?? t["mae"])
+            : null,
+          mfe: t["MFE"] != null || t["mfe"] != null
+            ? String(t["MFE"] ?? t["mfe"])
+            : null,
         };
       });
 
