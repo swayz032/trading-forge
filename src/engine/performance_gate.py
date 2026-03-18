@@ -80,7 +80,16 @@ def check_performance_gate(stats: dict) -> tuple[bool, list[str]]:
             f"avg win on green days (${avg_win:.0f}) — unsustainable."
         )
 
-    return (len(rejections) == 0, rejections)
+    # Task 3.7: Sample size warning (not a rejection, but flagged)
+    warnings: list[str] = []
+    total_trades = stats.get("total_trades", 0)
+    if total_trades < 500:
+        warnings.append(
+            f"Only {total_trades} trades — results may be statistically unreliable (need 500+). "
+            f"Sample confidence: {'MEDIUM' if total_trades >= 200 else 'LOW'}."
+        )
+
+    return (len(rejections) == 0, rejections + warnings)
 
 
 def classify_tier(stats: dict) -> str:

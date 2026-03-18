@@ -102,11 +102,19 @@ def simulate_prop_firm(
 
     # Count trades per day for commission calc
     trades_per_day: dict[str, int] = {}
+    # Task 3.3: Track which days have overnight holds (entry day != exit day)
+    overnight_days: set[str] = set()
     for t in trades:
         entry_ts = t.get("Entry Timestamp") or t.get("entry_time") or ""
+        exit_ts = t.get("Exit Timestamp") or t.get("exit_time") or ""
         if isinstance(entry_ts, str) and len(entry_ts) >= 10:
             day = entry_ts[:10]
             trades_per_day[day] = trades_per_day.get(day, 0) + 1
+            # If exit is on a different day, entry day has overnight exposure
+            if isinstance(exit_ts, str) and len(exit_ts) >= 10:
+                exit_day = exit_ts[:10]
+                if exit_day != day:
+                    overnight_days.add(day)
 
     for day_idx, record in enumerate(daily_pnl_records):
         date_str = record.get("date", f"day_{day_idx}")
@@ -135,6 +143,10 @@ def simulate_prop_firm(
             intraday_low = balance - abs(min(0, net_pnl))
         else:
             intraday_low = balance  # EOD only checks closing balance
+
+        # Task 3.4: Intraday max DD tracking (approximation from daily resolution)
+        # NOTE: For full accuracy, bar-level equity would be needed (future enhancement).
+        intraday_max_dd_approx = round(peak_equity - intraday_low, 2)
 
         # Update high water mark (EOD: at end of day)
         peak_equity = max(peak_equity, balance)
@@ -169,6 +181,8 @@ def simulate_prop_firm(
             "peak_equity": round(peak_equity, 2),
             "trades": day_trades,
             "halted": day_halted,
+            "intraday_max_dd_approx": intraday_max_dd_approx,
+            "overnight_gap_risk": date_str in overnight_days,
         })
 
     # Monthly summary
@@ -259,6 +273,24 @@ def simulate_prop_firm(
     # Overall verdict
     passed = eval_passed and not trailing_dd_breached and consistency_passed
 
+    # ─── Task 3.1: Eval/funded phase separation ──────────────
+    eval_cost = firm.get("monthly_fee", 0) * max(1, (days_to_pass_eval or 60) // 20)
+
+    # Funded phase: count months where account survived (not breached)
+    survival_months = 0
+    for m in monthly_summary:
+        # If drawdown was breached, stop counting
+        if trailing_dd_breached and breach_day:
+            parts = str(breach_day).split("-")
+            if len(parts) >= 2:
+                breach_year, breach_month = int(parts[0]), int(parts[1])
+                if (m["year"], m["month"]) > (breach_year, breach_month):
+                    break
+        survival_months += 1
+
+    # Overnight gap risk days count
+    overnight_risk_days = sum(1 for s in daily_statements if s.get("overnight_gap_risk", False))
+
     return {
         "firm": firm_key,
         "firm_name": firm["name"],
@@ -282,6 +314,18 @@ def simulate_prop_firm(
         "monthly_summary": monthly_summary,
         "worst_month": worst_month,
         "recovery_days_from_max_dd": recovery_days,
+        "overnight_risk_days": overnight_risk_days,
+        "eval_phase_result": {
+            "profit_target": profit_target,
+            "days_to_target": days_to_pass_eval,
+            "passed": eval_passed,
+            "cost_of_eval": eval_cost,
+        },
+        "funded_phase_result": {
+            "monthly_net_pnl": [round(m["pnl"], 2) for m in monthly_summary],
+            "survival_months": survival_months,
+            "payout_projection": payout_projection,
+        },
     }
 
 

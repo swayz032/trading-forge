@@ -149,6 +149,58 @@ def _aggregate_equity_daily(equity: np.ndarray, index) -> list[dict]:
     return [{"time": k, "value": v} for k, v in daily.items()]
 
 
+MINIMUM_TRADES = 500
+MINIMUM_TRADES_PER_SIDE = 100
+
+
+def _wilson_ci(wins: int, total: int, z: float = 1.96) -> tuple[float, float]:
+    """Wilson score confidence interval for a proportion (no scipy needed)."""
+    if total == 0:
+        return (0.0, 0.0)
+    p = wins / total
+    denom = 1 + z ** 2 / total
+    center = (p + z ** 2 / (2 * total)) / denom
+    margin = z * ((p * (1 - p) / total + z ** 2 / (4 * total ** 2)) ** 0.5) / denom
+    return (round(max(0.0, center - margin), 4), round(min(1.0, center + margin), 4))
+
+
+def _compute_long_short_split(trades_list: list[dict]) -> dict:
+    """Split metrics by direction -- catches bull-market bias."""
+    longs = [t for t in trades_list if str(t.get("Direction", t.get("direction", ""))).lower().startswith("long")]
+    shorts = [t for t in trades_list if str(t.get("Direction", t.get("direction", ""))).lower().startswith("short")]
+
+    def _side_metrics(trades: list[dict]) -> dict:
+        if not trades:
+            return {"trades": 0, "win_rate": 0, "pnl": 0, "avg_winner": 0, "avg_loser": 0, "profit_factor": 0}
+        pnls = [float(t.get("PnL", t.get("pnl", 0))) for t in trades]
+        winners = [p for p in pnls if p > 0]
+        losers = [p for p in pnls if p < 0]
+        return {
+            "trades": len(trades),
+            "win_rate": round(len(winners) / len(trades), 4),
+            "pnl": round(sum(pnls), 2),
+            "avg_winner": round(sum(winners) / len(winners), 2) if winners else 0,
+            "avg_loser": round(sum(losers) / len(losers), 2) if losers else 0,
+            "profit_factor": round(sum(winners) / abs(sum(losers)), 4) if losers and sum(losers) != 0 else 999.99,
+        }
+
+    long_metrics = _side_metrics(longs)
+    short_metrics = _side_metrics(shorts)
+
+    warnings: list[str] = []
+    if short_metrics["trades"] > 20 and short_metrics["win_rate"] < 0.40:
+        warnings.append("Long-biased strategy — short side win rate < 40%. May fail in bear markets.")
+    if long_metrics["trades"] > 20 and short_metrics["trades"] > 20:
+        if long_metrics["pnl"] > 0 and short_metrics["pnl"] < 0:
+            warnings.append("Short side is net negative. Long side carrying the strategy.")
+
+    return {
+        "long": long_metrics,
+        "short": short_metrics,
+        "warnings": warnings,
+    }
+
+
 def run_backtest(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,
@@ -464,11 +516,41 @@ def run_backtest(
     # ─── Advanced analytics (calendar, session, MAE/MFE) ──
     analytics = compute_full_analytics(daily_pnl_records, trades_list)
 
+    # ─── Task 3.5: Win rate per-trade AND per-day ────────────
+    win_rate_per_trade = len([t for t in trades_list if float(t.get("PnL", t.get("pnl", 0))) > 0]) / max(total_trades, 1)
+    win_rate_per_day = winning_days / max(total_trading_days, 1)
+
+    # ─── Task 3.6: Long/short split metrics ──────────────────
+    long_short_split = _compute_long_short_split(trades_list)
+
+    # ─── Task 3.7: Minimum sample size & confidence intervals ─
+    statistical_warnings: list[str] = []
+    if total_trades < MINIMUM_TRADES:
+        statistical_warnings.append(f"Only {total_trades} trades — statistically unreliable (need {MINIMUM_TRADES}+)")
+    if long_short_split["long"]["trades"] < MINIMUM_TRADES_PER_SIDE and long_short_split["long"]["trades"] > 0:
+        statistical_warnings.append(f"Only {long_short_split['long']['trades']} long trades — need {MINIMUM_TRADES_PER_SIDE}+ per side")
+    if long_short_split["short"]["trades"] < MINIMUM_TRADES_PER_SIDE and long_short_split["short"]["trades"] > 0:
+        statistical_warnings.append(f"Only {long_short_split['short']['trades']} short trades — need {MINIMUM_TRADES_PER_SIDE}+ per side")
+
+    # Wilson score CI for win rate (no scipy)
+    win_rate_ci = _wilson_ci(winning_days, total_trading_days)
+
+    # Sharpe CI (approximate)
+    if total_trading_days > 1:
+        sharpe_se = sharpe / (total_trading_days ** 0.5)
+        sharpe_ci = (round(sharpe - 1.96 * sharpe_se, 4), round(sharpe + 1.96 * sharpe_se, 4))
+    else:
+        sharpe_ci = (0.0, 0.0)
+
+    sample_confidence = "HIGH" if total_trades >= 500 else "MEDIUM" if total_trades >= 200 else "LOW"
+
     return {
         "total_return": round(total_return, 6),
         "sharpe_ratio": round(sharpe, 4),
         "max_drawdown": round(max_dd, 6),
         "win_rate": round(win_rate, 4),
+        "win_rate_per_trade": round(win_rate_per_trade, 4),
+        "win_rate_per_day": round(win_rate_per_day, 4),
         "profit_factor": round(profit_factor, 4),
         "total_trades": total_trades,
         "avg_trade_pnl": round(avg_trade_pnl, 2),
@@ -492,6 +574,13 @@ def run_backtest(
         ),
         "prop_compliance": prop_compliance,
         "analytics": analytics,
+        "long_short_split": long_short_split,
+        "confidence_intervals": {
+            "win_rate_95ci": win_rate_ci,
+            "sharpe_95ci": sharpe_ci,
+        },
+        "statistical_warnings": statistical_warnings,
+        "sample_confidence": sample_confidence,
     }
 
 
@@ -884,11 +973,39 @@ def run_class_backtest(
         symbol=symbol, account_size=50_000,
     )
 
+    # ─── Task 3.5: Win rate per-trade AND per-day ────────────
+    win_rate_per_trade = len([t for t in trades_list if float(t.get("PnL", t.get("pnl", 0))) > 0]) / max(total_trades, 1)
+    win_rate_per_day = winning_days / max(total_trading_days, 1)
+
+    # ─── Task 3.6: Long/short split metrics ──────────────────
+    long_short_split = _compute_long_short_split(trades_list)
+
+    # ─── Task 3.7: Minimum sample size & confidence intervals ─
+    statistical_warnings: list[str] = []
+    if total_trades < MINIMUM_TRADES:
+        statistical_warnings.append(f"Only {total_trades} trades — statistically unreliable (need {MINIMUM_TRADES}+)")
+    if long_short_split["long"]["trades"] < MINIMUM_TRADES_PER_SIDE and long_short_split["long"]["trades"] > 0:
+        statistical_warnings.append(f"Only {long_short_split['long']['trades']} long trades — need {MINIMUM_TRADES_PER_SIDE}+ per side")
+    if long_short_split["short"]["trades"] < MINIMUM_TRADES_PER_SIDE and long_short_split["short"]["trades"] > 0:
+        statistical_warnings.append(f"Only {long_short_split['short']['trades']} short trades — need {MINIMUM_TRADES_PER_SIDE}+ per side")
+
+    win_rate_ci = _wilson_ci(winning_days, total_trading_days)
+
+    if total_trading_days > 1:
+        sharpe_se = sharpe / (total_trading_days ** 0.5)
+        sharpe_ci = (round(sharpe - 1.96 * sharpe_se, 4), round(sharpe + 1.96 * sharpe_se, 4))
+    else:
+        sharpe_ci = (0.0, 0.0)
+
+    sample_confidence = "HIGH" if total_trades >= 500 else "MEDIUM" if total_trades >= 200 else "LOW"
+
     return {
         "total_return": round(total_return, 6),
         "sharpe_ratio": round(sharpe, 4),
         "max_drawdown": round(max_dd, 6),
         "win_rate": round(win_rate, 4),
+        "win_rate_per_trade": round(win_rate_per_trade, 4),
+        "win_rate_per_day": round(win_rate_per_day, 4),
         "profit_factor": round(profit_factor, 4),
         "total_trades": total_trades,
         "avg_trade_pnl": round(avg_trade_pnl, 2),
@@ -907,6 +1024,13 @@ def run_class_backtest(
         "tier": tier,
         "forge_score": forge_score,
         "prop_compliance": prop_compliance,
+        "long_short_split": long_short_split,
+        "confidence_intervals": {
+            "win_rate_95ci": win_rate_ci,
+            "sharpe_95ci": sharpe_ci,
+        },
+        "statistical_warnings": statistical_warnings,
+        "sample_confidence": sample_confidence,
     }
 
 
