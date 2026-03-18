@@ -53,6 +53,7 @@ _COMPARISON_OPS = {
     "<=": lambda a, b: a <= b,
     ">":  lambda a, b: a > b,
     "<":  lambda a, b: a < b,
+    # Float tolerance: exact == fails for e.g. 5000.4999999999 vs 5000.50
     "==": lambda a, b: (a - b).abs() < 1e-9,
 }
 

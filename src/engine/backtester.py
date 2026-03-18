@@ -302,6 +302,45 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
     }
 
 
+# ─── Bar Count Validation ─────────────────────────────────────────
+BARS_PER_DAY = {
+    "1min": 390, "5min": 78, "15min": 26, "30min": 13,
+    "1hour": 7, "1h": 7, "4hour": 2, "4h": 2,
+    "daily": 1, "1D": 1,
+}
+
+
+def _validate_bar_count(
+    df: pl.DataFrame,
+    timeframe: str,
+    start_date: str,
+    end_date: str,
+) -> None:
+    """Warn if bar count deviates >10% from expected for date range + timeframe.
+
+    Uses business-day estimate: calendar_days * 252/365.
+    Issues warnings.warn (not raise) so backtests continue but anomalies are flagged.
+    """
+    import warnings
+    from datetime import datetime as _dt
+
+    if timeframe not in BARS_PER_DAY:
+        return
+
+    _start_dt = _dt.strptime(start_date, "%Y-%m-%d") if isinstance(start_date, str) else start_date
+    _end_dt = _dt.strptime(end_date, "%Y-%m-%d") if isinstance(end_date, str) else end_date
+    _calendar_days = (_end_dt - _start_dt).days
+    _trading_days = int(_calendar_days * 252 / 365)
+    expected = _trading_days * BARS_PER_DAY[timeframe]
+    actual = len(df)
+
+    if expected > 0 and abs(actual - expected) / expected > 0.10:
+        warnings.warn(
+            f"Bar count mismatch: expected ~{expected}, got {actual}. "
+            f"Wrong timeframe data? (timeframe={timeframe})"
+        )
+
+
 def run_backtest(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,
@@ -335,19 +374,7 @@ def run_backtest(
         )
 
     # ─── Validate bar count ──────────────────────────────────
-    BARS_PER_DAY = {"1min": 390, "5min": 78, "15min": 26, "30min": 13, "1hour": 7, "1h": 7, "4hour": 2, "4h": 2, "daily": 1, "1D": 1}
-
-    if config.timeframe in BARS_PER_DAY:
-        from datetime import datetime as _dt
-        _start_dt = _dt.strptime(request.start_date, "%Y-%m-%d") if isinstance(request.start_date, str) else request.start_date
-        _end_dt = _dt.strptime(request.end_date, "%Y-%m-%d") if isinstance(request.end_date, str) else request.end_date
-        _calendar_days = (_end_dt - _start_dt).days
-        _trading_days = int(_calendar_days * 252 / 365)
-        _expected = _trading_days * BARS_PER_DAY[config.timeframe]
-        _actual = len(data)
-        if _expected > 0 and abs(_actual - _expected) / _expected > 0.25:
-            print(f"WARNING: Bar count mismatch for {config.timeframe}: expected ~{_expected}, got {_actual}. "
-                  f"Possible wrong timeframe data.", file=sys.stderr)
+    _validate_bar_count(data, config.timeframe, request.start_date, request.end_date)
 
     # ─── Flag rollover days (Task 7.1) ───────────────────────
     data = flag_rollover_days(data, config.symbol)
@@ -956,6 +983,9 @@ def run_class_backtest(
     if data is None:
         print(f"Loading {symbol} {timeframe} data...", file=sys.stderr)
         data = load_ohlcv(symbol, timeframe, start_date, end_date)
+
+    # ─── Validate bar count ──────────────────────────────────
+    _validate_bar_count(data, timeframe, start_date, end_date)
 
     # ─── Run strategy compute (produces entry/exit signal columns) ──
     print(f"Running {strategy.name} compute()...", file=sys.stderr)
