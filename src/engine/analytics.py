@@ -15,6 +15,8 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
 
+from src.engine.economic_calendar import STATIC_EVENTS
+
 
 # ─── Day-of-Week Names ──────────────────────────────────────────
 _DOW_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -24,14 +26,19 @@ _MONTH_NAMES = [
 ]
 
 
-def compute_calendar_patterns(daily_pnl_records: list[dict]) -> dict:
-    """Auto-detect patterns across calendar data.
+def compute_calendar_patterns(
+    daily_pnl_records: list[dict],
+    trades: list[dict] | None = None,
+) -> dict:
+    """Auto-detect patterns across calendar data (Task 5.4).
 
     Args:
         daily_pnl_records: list of {"date": "YYYY-MM-DD", "pnl": float}
+        trades: optional trade list (for regime_performance, long_short_by_regime)
 
     Returns:
-        dict with day_of_week_pnl, monthly_seasonality, auto_suggestions
+        dict with day_of_week_pnl, monthly_seasonality, regime_performance,
+        long_short_by_regime, auto_suggestions
     """
     if not daily_pnl_records:
         return {}
@@ -141,11 +148,193 @@ def compute_calendar_patterns(daily_pnl_records: list[dict]) -> dict:
                 f"Recent 2 years underperform historical ({recent_avg:.0f}/day vs {all_avg:.0f}/day) — edge may be decaying"
             )
 
+    # ─── Regime performance & long/short by regime (Task 5.4) ─
+    regime_perf: dict = {}
+    ls_by_regime: dict = {}
+    if trades:
+        regime_result = compute_regime_performance(daily_pnl_records, trades)
+        regime_perf = regime_result.get("regime_performance", {})
+        ls_by_regime = regime_result.get("long_short_by_regime", {})
+
+        # Regime-based auto_suggestions
+        for regime, stats in regime_perf.items():
+            if regime == "UNKNOWN":
+                continue
+            if stats.get("flag"):
+                suggestions.append(stats["flag"])
+        for regime, stats in ls_by_regime.items():
+            if regime == "UNKNOWN":
+                continue
+            if stats.get("flag"):
+                suggestions.append(stats["flag"])
+
     return {
         "day_of_week_pnl": day_of_week_pnl,
         "monthly_seasonality": month_stats,
+        "regime_performance": regime_perf,
+        "long_short_by_regime": ls_by_regime,
         "auto_suggestions": suggestions,
     }
+
+
+def enrich_daily_pnl_records(
+    daily_pnl_records: list[dict],
+    trades: list[dict],
+) -> list[dict]:
+    """Add trade_count per day to daily_pnl_records (Task 5.1).
+
+    Also adds fields needed for calendar rendering:
+    - trade_count: number of trades that entered on that date
+
+    Mutates records in place and returns the list.
+    """
+    # Build trade count per date from trade entry timestamps
+    trade_counts: dict[str, int] = defaultdict(int)
+    for trade in trades:
+        entry_ts = trade.get("Entry Timestamp") or trade.get("entry_time")
+        if not entry_ts:
+            continue
+        try:
+            if isinstance(entry_ts, str):
+                date_str = entry_ts[:10]  # "YYYY-MM-DD"
+            else:
+                date_str = str(entry_ts)[:10]
+            trade_counts[date_str] += 1
+        except (ValueError, TypeError):
+            continue
+
+    for rec in daily_pnl_records:
+        date_str = rec.get("date")
+        rec["trade_count"] = trade_counts.get(date_str, 0)
+
+    return daily_pnl_records
+
+
+def compute_event_markers(daily_pnl_records: list[dict]) -> dict[str, list[str]]:
+    """Return event markers per date from the static economic calendar (Task 5.2).
+
+    Returns:
+        dict mapping "YYYY-MM-DD" -> list of event type strings (e.g. ["FOMC", "CPI"])
+    """
+    # Build date -> event type lookup from STATIC_EVENTS
+    date_events: dict[str, list[str]] = defaultdict(list)
+    for event_type, events in STATIC_EVENTS.items():
+        for evt in events:
+            date_str = evt["date"]
+            date_events[date_str].append(event_type)
+
+    # Filter to only dates that appear in daily_pnl_records
+    record_dates = {rec["date"] for rec in daily_pnl_records if rec.get("date")}
+    return {d: evts for d, evts in date_events.items() if d in record_dates}
+
+
+def compute_streak_overlay(daily_pnl_records: list[dict]) -> list[dict]:
+    """Compute per-day streak tracking for calendar overlay (Task 5.2).
+
+    Returns list of dicts aligned with daily_pnl_records:
+        [{"date": "...", "streak": +3, "streak_type": "win"}, ...]
+    Positive streak = consecutive wins, negative = consecutive losses.
+    """
+    result = []
+    current_streak = 0
+    for rec in daily_pnl_records:
+        pnl = rec.get("pnl", 0)
+        if pnl > 0:
+            current_streak = current_streak + 1 if current_streak > 0 else 1
+        elif pnl < 0:
+            current_streak = current_streak - 1 if current_streak < 0 else -1
+        else:
+            current_streak = 0
+
+        result.append({
+            "date": rec.get("date"),
+            "streak": current_streak,
+            "streak_type": "win" if current_streak > 0 else ("loss" if current_streak < 0 else "flat"),
+        })
+    return result
+
+
+def compute_firm_limit_markers(
+    daily_pnl_records: list[dict],
+    firm_daily_limits: dict[str, float | None] | None = None,
+) -> dict[str, list[str]]:
+    """Identify days where a prop firm would have halted trading (Task 5.2).
+
+    Uses daily loss limits per firm. If a day's P&L exceeds the firm's
+    daily loss limit (negative), that day is flagged.
+
+    Args:
+        daily_pnl_records: list of {"date", "pnl"} dicts
+        firm_daily_limits: {firm_key: daily_loss_limit} — None means no limit
+
+    Returns:
+        dict mapping "YYYY-MM-DD" -> list of firm keys that would halt
+    """
+    if firm_daily_limits is None:
+        # Default known limits
+        firm_daily_limits = {
+            "topstep_50k": 1000,
+            "alpha_50k": 1000,
+        }
+
+    halt_markers: dict[str, list[str]] = {}
+    for rec in daily_pnl_records:
+        date_str = rec.get("date")
+        pnl = rec.get("pnl", 0)
+        if pnl >= 0 or not date_str:
+            continue
+
+        halted_firms = []
+        for firm, limit in firm_daily_limits.items():
+            if limit is not None and abs(pnl) >= limit:
+                halted_firms.append(firm)
+
+        if halted_firms:
+            halt_markers[date_str] = halted_firms
+
+    return halt_markers
+
+
+def tag_trade_session_fields(trades: list[dict]) -> list[dict]:
+    """Add entry_hour and session_type to each trade record (Task 5.3).
+
+    Session definitions (ET):
+        - London:    03:00 - 08:29
+        - NY_AM:     08:30 - 11:59
+        - NY_PM:     12:00 - 15:59
+        - Overnight: 16:00 - 02:59
+
+    Mutates trades in place and returns the list.
+    """
+    for trade in trades:
+        entry_ts = trade.get("Entry Timestamp") or trade.get("entry_time")
+        if not entry_ts:
+            continue
+
+        try:
+            if isinstance(entry_ts, str) and "T" in entry_ts:
+                dt = datetime.fromisoformat(entry_ts.replace("Z", "+00:00"))
+                hour = (dt.hour - 5) % 24  # Approximate ET
+            elif isinstance(entry_ts, str) and len(entry_ts) >= 13:
+                dt = datetime.fromisoformat(entry_ts[:19])
+                hour = (dt.hour - 5) % 24
+            else:
+                continue
+        except (ValueError, TypeError):
+            continue
+
+        trade["entry_hour"] = hour
+
+        if 3 <= hour < 8:
+            trade["session_type"] = "London"
+        elif 8 <= hour < 12:
+            trade["session_type"] = "NY_AM"
+        elif 12 <= hour < 16:
+            trade["session_type"] = "NY_PM"
+        else:
+            trade["session_type"] = "Overnight"
+
+    return trades
 
 
 def compute_session_analysis(trades: list[dict]) -> dict:
@@ -823,14 +1012,24 @@ def compute_full_analytics(
         rejections: Optional SKIP decisions (for rejection quality analysis)
         market_outcomes: Optional hypothetical outcomes for skipped signals
     """
+    # ─── Task 5.1: Enrich daily records with trade_count ───
+    enrich_daily_pnl_records(daily_pnl_records, trades)
+
+    # ─── Task 5.3: Tag trades with entry_hour + session_type ─
+    tag_trade_session_fields(trades)
+
     result = {
-        "calendar_patterns": compute_calendar_patterns(daily_pnl_records),
+        "calendar_patterns": compute_calendar_patterns(daily_pnl_records, trades),
         "session_analysis": compute_session_analysis(trades),
         "named_session_analysis": compute_named_session_analytics(trades),
         "mae_mfe_analysis": compute_mae_mfe_analysis(trades),
         "win_loss_patterns": compute_win_loss_patterns(daily_pnl_records),
         "regime_performance": compute_regime_performance(daily_pnl_records, trades),
         "autocorrelation": compute_trade_autocorrelation(daily_pnl_records),
+        # ─── Task 5.2: Intelligence overlays for calendar ────
+        "event_markers": compute_event_markers(daily_pnl_records),
+        "streak_overlay": compute_streak_overlay(daily_pnl_records),
+        "firm_limit_markers": compute_firm_limit_markers(daily_pnl_records),
     }
 
     # Per-layer analytics (populated when eligibility gate is active)
