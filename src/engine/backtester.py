@@ -448,9 +448,12 @@ def run_backtest(
         )
 
     # ─── Session liquidity multipliers (Task 3.7) ─────────────
+    # Prefer ts_et (Eastern Time) for session filtering — all session logic
+    # must use ET, not UTC. ts_et is added by data_loader at load time.
     session_mult = None
-    if "ts_event" in df.columns:
-        session_mult = get_session_multipliers(df["ts_event"])
+    _ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+    if _ts_col in df.columns:
+        session_mult = get_session_multipliers(df[_ts_col])
 
     # Combine session + event slippage multipliers
     combined_slippage_mult = session_mult
@@ -1030,9 +1033,12 @@ def run_class_backtest(
         )
 
     # ─── Session liquidity multipliers ─────────────────────────
+    # Prefer ts_et (Eastern Time) for session filtering — all session logic
+    # must use ET, not UTC. ts_et is added by data_loader at load time.
     session_mult = None
-    if "ts_event" in df.columns:
-        session_mult = get_session_multipliers(df["ts_event"])
+    _ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+    if _ts_col in df.columns:
+        session_mult = get_session_multipliers(df[_ts_col])
 
     # ─── Slippage ──────────────────────────────────────────────
     slippage_arr = compute_slippage(

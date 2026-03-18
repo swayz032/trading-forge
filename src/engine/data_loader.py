@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 import sys
+import warnings
 from pathlib import Path
 from typing import Optional
 
@@ -69,14 +70,27 @@ def _cache_path(symbol: str, timeframe: str) -> Path:
 
 # ─── S3 Paths ────────────────────────────────────────────────────
 
-def _consolidated_s3_path(symbol: str, timeframe: str) -> str:
+def _consolidated_s3_path(symbol: str, timeframe: str, adjusted: bool = True) -> str:
     bucket = os.environ.get("S3_BUCKET", "trading-forge-data")
-    return f"s3://{bucket}/futures/{symbol}/consolidated/{timeframe}.parquet"
+    # Consolidated files live under ratio_adj/ prefix for adjusted data
+    prefix = "ratio_adj" if adjusted else "raw"
+    return f"s3://{bucket}/futures/{symbol}/consolidated/{prefix}/{timeframe}.parquet"
 
 
-def _legacy_s3_glob(symbol: str, timeframe: str) -> str:
+def _legacy_s3_glob(symbol: str, timeframe: str, adjusted: bool = True) -> str:
     bucket = os.environ.get("S3_BUCKET", "trading-forge-data")
-    return f"s3://{bucket}/futures/{symbol}/ratio_adj/{timeframe}/*/*/*.parquet"
+    prefix = "ratio_adj" if adjusted else "raw"
+    return f"s3://{bucket}/futures/{symbol}/{prefix}/{timeframe}/*/*/*.parquet"
+
+
+def _verify_ratio_adjusted_source(source: str, adjusted: bool) -> None:
+    """Warn if the data source path does not contain ratio_adj when adjusted=True."""
+    if adjusted and "ratio_adj" not in source and "consolidated" not in source:
+        warnings.warn(
+            f"Data source '{source}' does not appear to be ratio-adjusted. "
+            f"Backtesting on unadjusted contracts creates fake signals at roll boundaries. "
+            f"Set adjusted=False to suppress this warning if intentional."
+        )
 
 
 # ─── Sync ─────────────────────────────────────────────────────────
@@ -134,6 +148,7 @@ def load_ohlcv(
     start: str,
     end: str,
     local_path: Optional[str] = None,
+    adjusted: bool = True,
 ) -> pl.DataFrame:
     """Load OHLCV data as a Polars DataFrame.
 
@@ -145,16 +160,27 @@ def load_ohlcv(
         start: Start date YYYY-MM-DD
         end: End date YYYY-MM-DD
         local_path: If provided, load from this specific Parquet file
+        adjusted: If True (default), load from ratio-adjusted path. If False,
+            load raw unadjusted data (with a warning).
 
     Returns:
         Polars DataFrame with columns: ts_event, open, high, low, close, volume
     """
+    if not adjusted:
+        warnings.warn(
+            f"Loading UNADJUSTED data for {symbol} {timeframe}. "
+            f"Backtesting on raw contracts creates fake signals at roll boundaries. "
+            f"Use adjusted=True (default) for backtesting."
+        )
+
     con = _get_connection()
 
     # Determine source
     if local_path:
         source = local_path
         print(f"Loading {symbol} {timeframe} from local path", file=sys.stderr)
+        # Verify local path looks like ratio-adjusted data
+        _verify_ratio_adjusted_source(source, adjusted)
     else:
         cache_file = _cache_path(symbol, timeframe)
         if cache_file.exists():
@@ -162,7 +188,7 @@ def load_ohlcv(
             print(f"Loading {symbol} {timeframe} from local cache", file=sys.stderr)
         else:
             # Read directly from S3 consolidated file (single HTTP request)
-            source = _consolidated_s3_path(symbol, timeframe)
+            source = _consolidated_s3_path(symbol, timeframe, adjusted=adjusted)
             print(f"Loading {symbol} {timeframe} from S3 consolidated", file=sys.stderr)
 
     sql = f"""
@@ -177,7 +203,7 @@ def load_ohlcv(
     except Exception:
         # Fallback to legacy daily files if consolidated doesn't exist
         if not local_path and not str(source).startswith(str(CACHE_DIR)):
-            legacy = _legacy_s3_glob(symbol, timeframe)
+            legacy = _legacy_s3_glob(symbol, timeframe, adjusted=adjusted)
             print(f"Falling back to legacy daily files for {symbol} {timeframe}", file=sys.stderr)
             legacy_sql = f"""
                 SELECT ts_event, open, high, low, close, volume
