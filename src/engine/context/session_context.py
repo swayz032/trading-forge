@@ -100,39 +100,63 @@ def compute_session_context(
         overnight_bias = "neutral"
 
     # London session data (bars from 2-5 AM ET)
-    london_high = prev_day_high  # Default
-    london_low = prev_day_low
+    london_high = float('nan')
+    london_low = float('nan')
     london_swept_pdh = False
     london_swept_pdl = False
 
     # Scan backwards for London session bars
+    london_found = False
     for i in range(max(0, bar_idx - 200), bar_idx):
         ts = df[ts_col][i]
         if hasattr(ts, 'hour') and 2 <= ts.hour < 5:
             h = float(highs[i])
             l = float(lows[i])
-            london_high = max(london_high, h) if london_high != prev_day_high else h
-            london_low = min(london_low, l) if london_low != prev_day_low else l
+            if not london_found:
+                london_high = h
+                london_low = l
+                london_found = True
+            else:
+                london_high = max(london_high, h)
+                london_low = min(london_low, l)
             if h > prev_day_high:
                 london_swept_pdh = True
             if l < prev_day_low:
                 london_swept_pdl = True
 
+    # Default to prev_day levels if London session hasn't occurred yet
+    if not london_found:
+        london_high = prev_day_high
+        london_low = prev_day_low
+
     # Opening range: first 15-min of RTH (9:30-9:45)
-    or_high = float(highs[bar_idx])
-    or_low = float(lows[bar_idx])
+    or_high = float('nan')
+    or_low = float('nan')
+    or_found = False
     for i in range(max(0, bar_idx - 50), bar_idx + 1):
         ts = df[ts_col][i]
         if hasattr(ts, 'hour') and ts.hour == 9 and 30 <= ts.minute < 45:
-            or_high = max(or_high, float(highs[i]))
-            or_low = min(or_low, float(lows[i]))
+            h = float(highs[i])
+            l = float(lows[i])
+            if not or_found:
+                or_high = h
+                or_low = l
+                or_found = True
+            else:
+                or_high = max(or_high, h)
+                or_low = min(or_low, l)
+
+    # Fallback if no OR bars found yet
+    if not or_found:
+        or_high = float(highs[bar_idx])
+        or_low = float(lows[bar_idx])
 
     # OR broken?
     current_close = float(closes[bar_idx])
     or_broken = None
-    if current_close > or_high:
+    if or_found and current_close > or_high:
         or_broken = "above"
-    elif current_close < or_low:
+    elif or_found and current_close < or_low:
         or_broken = "below"
 
     # Killzone status

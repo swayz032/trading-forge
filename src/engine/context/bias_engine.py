@@ -211,6 +211,20 @@ def compute_bias(
     if htf.atr_percentile < 10:
         no_trade_reasons.append("Range compression (ATR < 10th percentile)")
 
+    # Determine playbook from net_bias + confidence
+    if no_trade_reasons:
+        playbook = "NO_TRADE"
+    elif net_bias >= 40 and bias_confidence >= 0.5:
+        playbook = "FULL_LONG"
+    elif net_bias >= 15 and bias_confidence >= 0.3:
+        playbook = "LEAN_LONG"
+    elif net_bias <= -40 and bias_confidence >= 0.5:
+        playbook = "FULL_SHORT"
+    elif net_bias <= -15 and bias_confidence >= 0.3:
+        playbook = "LEAN_SHORT"
+    else:
+        playbook = "NO_TRADE"
+
     state = DailyBiasState(
         htf_context=htf,
         session_context=session,
@@ -223,6 +237,7 @@ def compute_bias(
         session_regime_score=scores["session_regime"],
         net_bias=net_bias,
         bias_confidence=bias_confidence,
+        playbook=playbook,
         no_trade_reasons=no_trade_reasons,
     )
 
