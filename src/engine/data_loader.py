@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Optional
 
 import duckdb
+import numpy as np
 import polars as pl
 
 
@@ -99,6 +100,28 @@ def sync_from_s3(symbol: str, timeframe: str) -> Path:
     size_kb = cache_file.stat().st_size / 1024
     print(f"Cached to {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
     return cache_file
+
+
+# ─── Data Quality Validation ─────────────────────────────────────
+
+def _validate_data_quality(df: pl.DataFrame, symbol: str, timeframe: str) -> None:
+    """Validate loaded data quality — check for roll gaps and basic sanity."""
+    if df.is_empty():
+        return
+
+    close = df["close"].to_numpy()
+    # Check for large day-over-day gaps that suggest unadjusted contracts
+    if len(close) > 1:
+        pct_changes = np.abs(np.diff(close) / close[:-1])
+        max_gap = float(np.nanmax(pct_changes))
+        # Ratio-adjusted contracts should NOT have >5% single-bar moves
+        # (even flash crashes rarely exceed this on adjusted data)
+        if max_gap > 0.05:
+            print(
+                f"WARNING: {symbol} {timeframe} has {max_gap:.1%} max single-bar move. "
+                f"Possible unadjusted contract data or roll gap.",
+                file=sys.stderr,
+            )
 
 
 # ─── Main Loader ──────────────────────────────────────────────────
@@ -184,5 +207,29 @@ def load_ohlcv(
                 print(f"Auto-cached {symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
             except Exception as e:
                 print(f"Auto-cache failed (non-fatal): {e}", file=sys.stderr)
+
+    # ─── Convert UTC timestamps to ET for session logic ──────────
+    # Databento data arrives with ts_event in UTC. All session filtering
+    # (killzones, RTH/ETH, event windows) must happen in ET.
+    # Keep ts_event (UTC) for storage/alignment. Add ts_et as a NEW column.
+    if "ts_event" in df.columns:
+        ts_dtype = df["ts_event"].dtype
+        if hasattr(ts_dtype, "time_zone") and ts_dtype.time_zone in ("UTC", None):
+            df = df.with_columns(
+                pl.col("ts_event")
+                .dt.convert_time_zone("America/New_York")
+                .alias("ts_et")
+            )
+        elif str(ts_dtype).startswith("Datetime"):
+            # Assume UTC if no timezone info (Databento convention)
+            df = df.with_columns(
+                pl.col("ts_event")
+                .cast(pl.Datetime("ns", "UTC"))
+                .dt.convert_time_zone("America/New_York")
+                .alias("ts_et")
+            )
+
+    # ─── Validate data quality (ratio-adjusted check) ────────────
+    _validate_data_quality(df, symbol, timeframe)
 
     return df
