@@ -113,7 +113,8 @@ def apply_fill_model(
             filtered_entries[idx] = False
         elif prob < DEFAULT_FILL_CONFIG["partial_fill_threshold"]:
             # Partial fill — reduce size to 50%
-            adjusted_sizes[idx] = max(1, int(adjusted_sizes[idx] * 0.5))
+            if not np.isnan(adjusted_sizes[idx]):
+                adjusted_sizes[idx] = max(1, int(adjusted_sizes[idx] * 0.5))
 
     return filtered_entries, adjusted_sizes
 

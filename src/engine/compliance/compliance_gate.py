@@ -42,7 +42,17 @@ def check_freshness(
             "message": str,
         }
     """
-    retrieved_at = datetime.fromisoformat(ruleset["retrieved_at"])
+    try:
+        retrieved_at = datetime.fromisoformat(ruleset["retrieved_at"])
+    except (ValueError, TypeError) as exc:
+        return {
+            "fresh": False,
+            "age_hours": float("inf"),
+            "max_age_hours": max_age_hours,
+            "drift_detected": False,
+            "status": "stale",
+            "message": f"Invalid retrieved_at timestamp: {exc}",
+        }
     # Ensure timezone-aware comparison
     if retrieved_at.tzinfo is None:
         retrieved_at = retrieved_at.replace(tzinfo=timezone.utc)

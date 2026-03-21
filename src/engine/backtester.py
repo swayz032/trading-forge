@@ -1077,7 +1077,8 @@ def run_backtest(
                 else:
                     trade["mae"] = 0.0
                     trade["mfe"] = 0.0
-            except Exception:
+            except Exception as exc:
+                print(f"WARNING: MAE/MFE computation failed for trade {len(trades_list)}: {exc}", file=sys.stderr)
                 trade["mae"] = None
                 trade["mfe"] = None
 
@@ -1132,14 +1133,15 @@ def run_backtest(
                 bar_dollar_pnls[t_exit_idx] += sign * (t_exit_p - prev_price) * t_size * spec.point_value
 
             # Friction: deducted once per trade (entry + exit)
-            friction = float(trade.get("SlippageCost", 0)) + float(trade.get("CommissionCost", 0))
-            bar_dollar_pnls[t_entry_idx] -= friction
+            if t_entry_idx < n_bars:
+                friction = float(trade.get("SlippageCost", 0)) + float(trade.get("CommissionCost", 0))
+                bar_dollar_pnls[t_entry_idx] -= friction
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
 
     # Reconciliation: equity total must match sum of per-trade P&Ls (Golden Rule)
-    if len(trade_pnls_arr) > 0:
+    if len(trade_pnls_arr) > 0 and len(equity) > 0:
         equity_total = float(equity[-1] - STARTING_CAPITAL)
         trades_total = float(np.sum(trade_pnls_arr))
         reconciliation_error = abs(equity_total - trades_total)
@@ -1894,7 +1896,8 @@ def run_class_backtest(
                 else:
                     trade["mae"] = 0.0
                     trade["mfe"] = 0.0
-            except Exception:
+            except Exception as exc:
+                print(f"WARNING: MAE/MFE computation failed for trade {len(trades_list)}: {exc}", file=sys.stderr)
                 trade["mae"] = None
                 trade["mfe"] = None
 
@@ -1949,14 +1952,15 @@ def run_class_backtest(
                 bar_dollar_pnls[t_exit_idx] += sign * (t_exit_p - prev_price) * t_size * spec.point_value
 
             # Friction: deducted once per trade (entry + exit)
-            friction = float(trade.get("SlippageCost", 0)) + float(trade.get("CommissionCost", 0))
-            bar_dollar_pnls[t_entry_idx] -= friction
+            if t_entry_idx < n_bars:
+                friction = float(trade.get("SlippageCost", 0)) + float(trade.get("CommissionCost", 0))
+                bar_dollar_pnls[t_entry_idx] -= friction
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
 
     # Reconciliation: managed equity total must match sum of per-trade P&Ls
-    if len(trade_pnls_arr) > 0:
+    if len(trade_pnls_arr) > 0 and len(equity) > 0:
         equity_total = float(equity[-1] - STARTING_CAPITAL)
         trades_total = float(np.sum(trade_pnls_arr))
         reconciliation_error = abs(equity_total - trades_total)
@@ -2170,7 +2174,8 @@ def _compute_decay_analysis(daily_pnls: list[float], trades_list: list[dict]) ->
             "decaying": composite_result.get("composite_score", 0.0) > 60,
             "signals": composite_result.get("signals", {}),
         }
-    except Exception:
+    except Exception as exc:
+        print(f"WARNING: Decay analysis failed: {exc}", file=sys.stderr)
         return {
             "half_life_days": None,
             "decay_detected": False,
