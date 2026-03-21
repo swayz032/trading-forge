@@ -271,10 +271,10 @@ def compute_firm_limit_markers(
         dict mapping "YYYY-MM-DD" -> list of firm keys that would halt
     """
     if firm_daily_limits is None:
-        # Default known limits
+        # Only FFN has a daily loss limit ($1,250 on 50K).
+        # Topstep, MFFU, TPT, Apex, Alpha, Tradeify, Earn2Trade = NO daily loss limit.
         firm_daily_limits = {
-            "topstep_50k": 1000,
-            "alpha_50k": 1000,
+            "ffn_50k": 1250,
         }
 
     halt_markers: dict[str, list[str]] = {}

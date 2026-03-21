@@ -31,6 +31,7 @@ import { alertRoutes as alertCrudRoutes } from "./routes/alerts.js";
 import { sseRoutes } from "./routes/sse.js";
 import { signalRoutes } from "./routes/signals.js";
 import { propFirmRoutes } from "./routes/prop-firm.js";
+import { portfolioRoutes } from "./routes/portfolio.js";
 import { stopAllStreams } from "./services/paper-trading-stream.js";
 
 const app = express();
@@ -113,6 +114,7 @@ app.use("/api/alerts", alertCrudRoutes);
 app.use("/api/sse", sseRoutes);
 app.use("/api/signals", signalRoutes);
 app.use("/api/prop-firm", propFirmRoutes);
+app.use("/api/portfolio", portfolioRoutes);
 
 // ─── Serve Frontend (production) ──────────────────────────────
 // Vite builds to Trading_forge_frontend/amber-vision-main/dist/

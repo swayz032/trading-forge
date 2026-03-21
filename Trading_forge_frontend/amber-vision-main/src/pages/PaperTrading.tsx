@@ -4,9 +4,11 @@ import {
   Play, Pause, DollarSign, TrendingUp, TrendingDown, BarChart3, Clock,
   Activity, Loader2, Wifi, WifiOff, Zap, ShieldCheck, ShieldX,
   Radio, ChevronDown, StopCircle, Signal, Target, AlertTriangle,
+  ChevronLeft, ChevronRight, Calendar,
 } from "lucide-react";
 import { StatusBadge } from "@/components/forge/StatusBadge";
 import { ForgeTable } from "@/components/forge/ForgeTable";
+import { Pagination } from "@/components/forge/Pagination";
 import { LightweightChart } from "@/components/forge/LightweightChart";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
@@ -36,6 +38,16 @@ function fmtDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function fmtYAxis(v: number): string {
+  const abs = Math.abs(v);
+  if (abs < 1000) return `$${v}`;
+  if (abs < 100000) return `$${(v / 1000).toFixed(1)}k`;
+  return `$${(v / 1000000).toFixed(1)}M`;
+}
+
+const TRADES_PER_PAGE = 30;
+const SIGNAL_BATCH = 50;
+
 // ── Main Page ───────────────────────────────────────────────
 
 export default function PaperTrading() {
@@ -50,6 +62,8 @@ export default function PaperTrading() {
 
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [showStrategyPicker, setShowStrategyPicker] = useState(false);
+  const [tradePage, setTradePage] = useState(1);
+  const [signalLimit, setSignalLimit] = useState(SIGNAL_BATCH);
 
   // SSE: auto-invalidate paper queries on live events
   useSSE(["paper:trade", "paper:pnl", "paper:signal", "strategy:promoted"]);
@@ -87,13 +101,16 @@ export default function PaperTrading() {
   const totalUnrealizedPnl = openPositions.reduce((sum, p) => sum + num(p.unrealizedPnl), 0);
 
   const closedTrades = trades ?? [];
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayTrades = closedTrades.filter((t) => new Date(t.exitTime) >= todayStart);
-  const winningTrades = todayTrades.filter((t) => num(t.pnl) > 0);
-  const winRate = todayTrades.length > 0 ? (winningTrades.length / todayTrades.length) * 100 : 0;
-  const dayPnl = todayTrades.reduce((sum, t) => sum + num(t.pnl), 0) + totalUnrealizedPnl;
-  const totalPnl = closedTrades.reduce((sum, t) => sum + num(t.pnl), 0);
+  const { todayTrades, winRate, dayPnl, totalPnl } = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const today = closedTrades.filter((t) => new Date(t.exitTime) >= todayStart);
+    const winning = today.filter((t) => num(t.pnl) > 0);
+    const wr = today.length > 0 ? (winning.length / today.length) * 100 : 0;
+    const dPnl = today.reduce((sum, t) => sum + num(t.pnl), 0) + totalUnrealizedPnl;
+    const tPnl = closedTrades.reduce((sum, t) => sum + num(t.pnl), 0);
+    return { todayTrades: today, winRate: wr, dayPnl: dPnl, totalPnl: tPnl };
+  }, [closedTrades, totalUnrealizedPnl]);
 
   // Stream connectivity
   const streamEntries = streams ? Object.entries(streams) : [];
@@ -109,9 +126,9 @@ export default function PaperTrading() {
     { icon: Radio, label: "Streams", value: `${connectedCount}/${totalStreams}`, positive: connectedCount > 0 ? true : totalStreams > 0 ? false : null },
   ];
 
-  // ── Equity curve ────────────────────────────────────────────
+  // ── Account Balance curve ─────────────────────────────────
 
-  const startingCapital = activeSession ? num(activeSession.startingCapital, 100000) : 100000;
+  const startingCapital = activeSession ? num(activeSession.startingCapital, 50000) : 50000;
   const equityData = useMemo(() => {
     if (closedTrades.length === 0) {
       return [
@@ -156,13 +173,16 @@ export default function PaperTrading() {
     duration: timeAgo(p.entryTime),
   }));
 
-  // ── Trade rows ──────────────────────────────────────────────
+  // ── Trade rows (paginated) ────────────────────────────────
 
-  const tradeRows = closedTrades.slice(0, 30).map((t) => ({
+  const totalTradeCount = closedTrades.length;
+  const paginatedTrades = closedTrades.slice((tradePage - 1) * TRADES_PER_PAGE, tradePage * TRADES_PER_PAGE);
+
+  const tradeRows = paginatedTrades.map((t) => ({
     time: fmtTime(t.exitTime),
     date: fmtDate(t.exitTime),
     symbol: t.symbol,
-    side: t.side === "long" ? "Buy" : "Sell",
+    side: t.side === "long" ? "Long" : "Short",
     qty: t.contracts,
     entry: num(t.entryPrice),
     exit: num(t.exitPrice),
@@ -177,7 +197,7 @@ export default function PaperTrading() {
     { key: "symbol", header: "Symbol", render: (r: TradeRow) => <span className="font-mono font-semibold text-foreground">{r.symbol}</span> },
     {
       key: "side", header: "Side",
-      render: (r: TradeRow) => <StatusBadge variant={r.side === "Buy" ? "profit" : "loss"}>{r.side}</StatusBadge>,
+      render: (r: TradeRow) => <StatusBadge variant={r.side === "Long" ? "profit" : "loss"}>{r.side}</StatusBadge>,
     },
     { key: "qty", header: "Qty", align: "right" as const, mono: true },
     { key: "entry", header: "Entry", align: "right" as const, mono: true, render: (r: TradeRow) => <span className="font-mono">{r.entry.toFixed(2)}</span> },
@@ -192,15 +212,39 @@ export default function PaperTrading() {
     },
   ];
 
+  // ── Historical performance summary ────────────────────────
+
+  const historicalStats = useMemo(() => {
+    if (stoppedSessions.length === 0) return null;
+    let totalSessions = stoppedSessions.length;
+    let totalHistPnl = 0;
+    let totalHistTrades = 0;
+    let winningSessions = 0;
+    for (const s of stoppedSessions) {
+      const equity = num(s.currentEquity, 50000);
+      const capital = num(s.startingCapital, 50000);
+      const pnl = equity - capital;
+      totalHistPnl += pnl;
+      if (pnl > 0) winningSessions++;
+    }
+    totalHistTrades = closedTrades.length;
+    return {
+      sessions: totalSessions,
+      totalPnl: totalHistPnl,
+      winRate: totalSessions > 0 ? (winningSessions / totalSessions) * 100 : 0,
+      trades: totalHistTrades,
+    };
+  }, [stoppedSessions, closedTrades]);
+
   // ── Actions ─────────────────────────────────────────────────
 
   const handleStart = (strategyId?: string) => {
     toast.info("Starting paper trading session...");
     startSession.mutate(
-      { strategyId, startingCapital: "100000" },
+      { strategyId, startingCapital: "50000" },
       {
         onSuccess: () => {
-          toast.success("Paper trading session started — stream connecting");
+          toast.success("Paper trading session started \u2014 stream connecting");
           setShowStrategyPicker(false);
         },
         onError: (err: any) => toast.error(`Failed: ${err.message}`),
@@ -246,7 +290,7 @@ export default function PaperTrading() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Paper Trading</h1>
           <p className="text-sm text-text-secondary mt-1">
-            Autopilot — winning strategies trade themselves
+            Autopilot \u2014 winning strategies trade themselves
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -350,7 +394,7 @@ export default function PaperTrading() {
       </div>
 
       {/* ── Active Sessions ────────────────────────────────── */}
-      {activeSessions.length > 0 && (
+      {activeSessions.length > 0 ? (
         <div className="forge-card p-4">
           <h2 className="text-xs font-medium text-text-secondary mb-3 flex items-center gap-2 uppercase tracking-widest">
             <Zap className="w-3.5 h-3.5 text-profit" />
@@ -360,8 +404,8 @@ export default function PaperTrading() {
             {activeSessions.map((session) => {
               const streamInfo = streams?.[session.id];
               const stratName = (allStrategies ?? []).find((s) => s.id === session.strategyId)?.name;
-              const equity = num(session.currentEquity, 100000);
-              const capital = num(session.startingCapital, 100000);
+              const equity = num(session.currentEquity, 50000);
+              const capital = num(session.startingCapital, 50000);
               const sessionPnl = equity - capital;
 
               return (
@@ -410,6 +454,14 @@ export default function PaperTrading() {
             })}
           </div>
         </div>
+      ) : (
+        <div className="forge-card p-6 text-center">
+          <Play className="w-8 h-8 text-primary/30 mx-auto mb-2" />
+          <h3 className="text-sm font-medium text-foreground mb-1">No Active Sessions</h3>
+          <p className="text-xs text-text-muted max-w-sm mx-auto">
+            Click "Start Session" to begin paper trading a strategy.
+          </p>
+        </div>
       )}
 
       {/* ── Live Price Chart ──────────────────────────────── */}
@@ -417,7 +469,7 @@ export default function PaperTrading() {
         <div className="forge-card p-6">
           <h2 className="text-sm font-medium text-text-secondary mb-4 flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary" />
-            Live Price — {activeSymbol}
+            Live Price \u2014 {activeSymbol}
             {liveBars && liveBars.length > 0 && (
               <span className="ml-auto text-[10px] font-mono text-text-muted">{liveBars.length} bars</span>
             )}
@@ -440,13 +492,13 @@ export default function PaperTrading() {
         </div>
       )}
 
-      {/* ── Two-column: Equity + Signal Stats ──────────────── */}
+      {/* ── Two-column: Account Balance + Signal Stats ──────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Equity Curve */}
+        {/* Account Balance */}
         <div className="lg:col-span-2 forge-card p-6">
           <h2 className="text-sm font-medium text-text-secondary mb-4 flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-primary" />
-            Equity Curve
+            Account Balance
           </h2>
           <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -459,11 +511,11 @@ export default function PaperTrading() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsla(240,5%,18%,0.5)" />
                 <XAxis dataKey="time" tick={{ fill: "hsl(240,4%,46%)", fontSize: 10 }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fill: "hsl(240,4%,46%)", fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} domain={["auto", "auto"]} />
+                <YAxis tick={{ fill: "hsl(240,4%,46%)", fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={fmtYAxis} domain={["auto", "auto"]} />
                 <Tooltip
                   contentStyle={{ background: "hsl(240,10%,6%)", border: "1px solid hsl(240,5%,18%)", borderRadius: 8, fontSize: 12 }}
                   labelStyle={{ color: "hsl(240,4%,63%)" }}
-                  formatter={(v: number) => [`$${v.toLocaleString()}`, "Equity"]}
+                  formatter={(v: number) => [`$${v.toLocaleString()}`, "Balance"]}
                 />
                 <Area type="monotone" dataKey="equity" stroke="hsl(45,100%,50%)" strokeWidth={2} fill="url(#paperEquity)" />
               </AreaChart>
@@ -548,7 +600,7 @@ export default function PaperTrading() {
                 <div className="flex items-center gap-3 w-32">
                   <span className="font-mono font-semibold text-foreground">{p.symbol}</span>
                   <StatusBadge variant={p.side === "long" || p.side === "Long" ? "profit" : "loss"}>
-                    {p.side.charAt(0).toUpperCase() + p.side.slice(1)}
+                    {p.side === "long" || p.side === "Long" ? "Long" : "Short"}
                   </StatusBadge>
                 </div>
                 <div className="grid grid-cols-4 gap-6 flex-1 text-xs">
@@ -584,10 +636,10 @@ export default function PaperTrading() {
           <h2 className="text-sm font-medium text-text-secondary mb-4 flex items-center gap-2">
             <Zap className="w-4 h-4 text-primary" />
             Signal Feed
-            <span className="ml-auto text-[10px] font-mono text-text-muted">Last 50</span>
+            <span className="ml-auto text-[10px] font-mono text-text-muted">{signals.length} signals</span>
           </h2>
           <div className="max-h-[300px] overflow-y-auto space-y-1">
-            {signals.map((sig) => (
+            {signals.slice(0, signalLimit).map((sig) => (
               <div
                 key={sig.id}
                 className="flex items-center gap-3 px-3 py-2 rounded text-xs hover:bg-surface-2 transition-colors"
@@ -614,10 +666,22 @@ export default function PaperTrading() {
               </div>
             ))}
           </div>
+          {signals.length > signalLimit && (
+            <div className="pt-3 text-center">
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                onClick={() => setSignalLimit((prev) => prev + SIGNAL_BATCH)}
+              >
+                Load More ({signals.length - signalLimit} remaining)
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── Trade History ──────────────────────────────────── */}
+      {/* ── Trade History (paginated) ──────────────────────── */}
       <div className="forge-card p-6">
         <h2 className="text-sm font-medium text-text-secondary mb-4 flex items-center gap-2">
           <Clock className="w-4 h-4 text-primary" />
@@ -629,28 +693,44 @@ export default function PaperTrading() {
         {tradeRows.length === 0 ? (
           <p className="text-sm text-text-muted text-center py-6">No trades yet. Start a session to begin autopilot trading.</p>
         ) : (
-          <ForgeTable columns={tradeColumns} data={tradeRows} />
+          <>
+            <ForgeTable columns={tradeColumns} data={tradeRows} />
+            <Pagination
+              page={tradePage}
+              pageSize={TRADES_PER_PAGE}
+              total={totalTradeCount}
+              onPageChange={setTradePage}
+            />
+          </>
         )}
       </div>
 
-      {/* ── Session History ────────────────────────────────── */}
-      {stoppedSessions.length > 0 && (
-        <div className="forge-card p-6">
-          <h2 className="text-sm font-medium text-text-secondary mb-4 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-text-muted" />
-            Session History
-          </h2>
+      {/* ── Session History (always visible) ────────────────── */}
+      <div className="forge-card p-6">
+        <h2 className="text-sm font-medium text-text-secondary mb-4 flex items-center gap-2">
+          <Clock className="w-4 h-4 text-text-muted" />
+          Session History
+          {stoppedSessions.length > 0 && (
+            <span className="ml-auto text-xs font-mono text-text-muted">{stoppedSessions.length} sessions</span>
+          )}
+        </h2>
+        {stoppedSessions.length === 0 ? (
+          <p className="text-sm text-text-muted text-center py-4">No completed sessions yet.</p>
+        ) : (
           <div className="space-y-1.5">
-            {stoppedSessions.slice(0, 10).map((session) => {
+            {stoppedSessions.map((session) => {
               const stratName = (allStrategies ?? []).find((s) => s.id === session.strategyId)?.name;
-              const equity = num(session.currentEquity, 100000);
-              const capital = num(session.startingCapital, 100000);
+              const equity = num(session.currentEquity, 50000);
+              const capital = num(session.startingCapital, 50000);
               const pnl = equity - capital;
 
               return (
                 <div key={session.id} className="flex items-center justify-between px-3 py-2 rounded hover:bg-surface-2 transition-colors text-xs">
                   <div className="flex items-center gap-3">
                     <span className="text-text-muted font-mono">{fmtDate(session.startedAt)}</span>
+                    {session.stoppedAt && (
+                      <span className="text-text-muted font-mono">\u2192 {fmtDate(session.stoppedAt)}</span>
+                    )}
                     <span className="text-foreground font-medium">{stratName ?? "Manual"}</span>
                     <StatusBadge variant="neutral">Stopped</StatusBadge>
                   </div>
@@ -661,23 +741,36 @@ export default function PaperTrading() {
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* ── Empty State ────────────────────────────────────── */}
-      {activeSessions.length === 0 && closedTrades.length === 0 && (
-        <div className="forge-card p-12 text-center">
-          <Play className="w-12 h-12 text-primary/30 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">No Active Paper Sessions</h3>
-          <p className="text-sm text-text-muted max-w-md mx-auto mb-6">
-            Winning strategies auto-promote to paper trading after backtesting. You can also manually start a session for any strategy.
-          </p>
-          <Button
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={() => setShowStrategyPicker(true)}
-          >
-            <Play className="w-4 h-4 mr-2" /> Start Paper Session
-          </Button>
+      {/* ── Performance Summary (always visible) ─────────────── */}
+      {historicalStats && (
+        <div className="forge-card p-6">
+          <h2 className="text-sm font-medium text-text-secondary mb-4 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            Performance Summary
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-3 rounded-lg bg-surface-2">
+              <span className="text-[10px] uppercase tracking-widest text-text-muted block mb-1">Sessions</span>
+              <span className="text-lg font-mono font-semibold text-foreground">{historicalStats.sessions}</span>
+            </div>
+            <div className="p-3 rounded-lg bg-surface-2">
+              <span className="text-[10px] uppercase tracking-widest text-text-muted block mb-1">Total P&L</span>
+              <span className={`text-lg font-mono font-semibold ${historicalStats.totalPnl >= 0 ? "text-profit" : "text-loss"}`}>
+                {fmtCurrency(historicalStats.totalPnl)}
+              </span>
+            </div>
+            <div className="p-3 rounded-lg bg-surface-2">
+              <span className="text-[10px] uppercase tracking-widest text-text-muted block mb-1">Session Win Rate</span>
+              <span className="text-lg font-mono font-semibold text-foreground">{historicalStats.winRate.toFixed(0)}%</span>
+            </div>
+            <div className="p-3 rounded-lg bg-surface-2">
+              <span className="text-[10px] uppercase tracking-widest text-text-muted block mb-1">Total Trades</span>
+              <span className="text-lg font-mono font-semibold text-foreground">{historicalStats.trades}</span>
+            </div>
+          </div>
         </div>
       )}
     </motion.div>

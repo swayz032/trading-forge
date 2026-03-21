@@ -5,10 +5,11 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import { StatusBadge } from "@/components/forge/StatusBadge";
-import { Shuffle, TrendingUp, AlertTriangle, Target, BarChart3, Percent, Play } from "lucide-react";
-import { useMonteCarlo, useMonteCarloRun, useRunMC } from "@/hooks/useMonteCarlo";
+import { Shuffle, TrendingUp, AlertTriangle, Target, BarChart3, Percent, Play, Clock } from "lucide-react";
+import { useMonteCarlo, useMonteCarloRun, useRunMC, useRecentMonteCarlo } from "@/hooks/useMonteCarlo";
 import { useBacktests } from "@/hooks/useBacktests";
-import { num } from "@/lib/utils";
+import { useStrategies } from "@/hooks/useStrategies";
+import { num, timeAgo } from "@/lib/utils";
 import { toast } from "sonner";
 
 /**
@@ -63,6 +64,24 @@ export default function MonteCarlo() {
   // Fetch completed backtests for selector
   const { data: backtests, isLoading: btLoading } = useBacktests({ status: "completed" });
 
+  // Strategy names lookup
+  const { data: rawStrategies } = useStrategies();
+  const strategyMap = useMemo(() => {
+    const map = new Map<string, { name: string; symbol: string; timeframe: string }>();
+    rawStrategies?.forEach((s) => map.set(s.id, { name: s.name, symbol: s.symbol, timeframe: s.timeframe }));
+    return map;
+  }, [rawStrategies]);
+
+  // Backtest lookup (strategyId -> details)
+  const backtestMap = useMemo(() => {
+    const map = new Map<string, { strategyId: string; symbol: string; timeframe: string }>();
+    backtests?.forEach((bt) => map.set(bt.id, { strategyId: bt.strategyId, symbol: bt.symbol, timeframe: bt.timeframe }));
+    return map;
+  }, [backtests]);
+
+  // Fetch recent MC runs for overview
+  const { data: recentMCRuns, isLoading: recentLoading } = useRecentMonteCarlo(10);
+
   // Fetch MC runs for selected backtest
   const { data: mcRuns, isLoading: mcListLoading } = useMonteCarlo(
     selectedBacktestId ? { backtestId: selectedBacktestId } : undefined
@@ -74,12 +93,12 @@ export default function MonteCarlo() {
   // Run mutation
   const runMC = useRunMC();
 
-  // Auto-select latest completed backtest if none selected
+  // Auto-select latest completed backtest if none selected (only if no recent overview)
   useEffect(() => {
-    if (!selectedBacktestId && backtests && backtests.length > 0) {
+    if (!selectedBacktestId && backtests && backtests.length > 0 && !recentMCRuns?.length) {
       setSelectedBacktestId(backtests[0].id);
     }
-  }, [backtests, selectedBacktestId]);
+  }, [backtests, selectedBacktestId, recentMCRuns]);
 
   // Auto-select latest MC run when runs load
   useEffect(() => {
@@ -107,12 +126,17 @@ export default function MonteCarlo() {
     );
   };
 
+  const handleSelectRecentRun = (run: any) => {
+    // Find the backtest for this MC run
+    setSelectedBacktestId(run.backtestId);
+    setSelectedMCId(run.id);
+  };
+
   // Parse paths JSONB into fan chart data
   const fanData = useMemo(() => {
     if (!mcRun?.paths) return [];
     const paths = mcRun.paths;
 
-    // If already in fan format (array of {day, p5, p50, ...})
     if (Array.isArray(paths) && paths.length > 0 && typeof paths[0] === "object" && "p50" in paths[0]) {
       return paths.map((p: any) => ({
         day: p.day,
@@ -127,7 +151,6 @@ export default function MonteCarlo() {
       }));
     }
 
-    // If raw paths (number[][]), compute percentiles client-side
     if (Array.isArray(paths) && paths.length > 0 && Array.isArray(paths[0])) {
       return computeFanFromPaths(paths);
     }
@@ -139,7 +162,6 @@ export default function MonteCarlo() {
   const terminalStats = useMemo(() => {
     if (!mcRun) return null;
 
-    // Try to get terminals from raw paths
     let medianTerminal = 0;
     let meanTerminal = 0;
     let p5Terminal = 0;
@@ -160,20 +182,16 @@ export default function MonteCarlo() {
   const histogram = useMemo(() => {
     if (!mcRun) return [];
 
-    // Check if riskMetrics has histogram
     if (mcRun.riskMetrics?.histogram && Array.isArray(mcRun.riskMetrics.histogram)) {
       return mcRun.riskMetrics.histogram;
     }
 
-    // Compute from raw paths terminal values
     if (mcRun.paths && Array.isArray(mcRun.paths) && mcRun.paths.length > 0 && Array.isArray(mcRun.paths[0])) {
       const terminals = mcRun.paths.map((p: number[]) => p[p.length - 1]);
       return computeHistogram(terminals);
     }
 
-    // Compute from fan data last entry
     if (fanData.length > 0) {
-      // Not enough data to build a proper histogram from percentiles alone
       return [];
     }
 
@@ -196,8 +214,11 @@ export default function MonteCarlo() {
   ] : [];
 
   // Determine initial equity for ruin line (from fan data day 0)
-  const initialEquity = fanData.length > 0 ? fanData[0].p50 : 100000;
+  const initialEquity = fanData.length > 0 ? fanData[0].p50 : 50000;
   const ruinThreshold = initialEquity * 0.5;
+
+  // Show recent simulations overview when no MC run is selected
+  const showRecentOverview = !mcRun && !mcRunLoading && !selectedMCId;
 
   return (
     <motion.div
@@ -243,6 +264,73 @@ export default function MonteCarlo() {
         </div>
       </div>
 
+      {/* Recent Simulations Overview */}
+      {showRecentOverview && recentMCRuns && recentMCRuns.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-4"
+        >
+          <h2 className="text-sm font-medium text-text-secondary">Recent Simulations</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {recentMCRuns.map((run: any) => {
+              const bt = backtestMap.get(run.backtestId);
+              const strat = bt ? strategyMap.get(bt.strategyId) : null;
+              const survivalRate = run.probabilityOfRuin != null ? (100 - num(run.probabilityOfRuin)).toFixed(1) : null;
+              const maxDDP50 = run.maxDrawdownP50 != null ? num(run.maxDrawdownP50).toFixed(1) : null;
+
+              return (
+                <motion.div
+                  key={run.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="forge-card p-4 cursor-pointer hover:border-primary/30 transition-all"
+                  onClick={() => handleSelectRecentRun(run)}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-foreground truncate">
+                      {strat?.name ?? bt?.symbol ?? "Unknown"}
+                    </span>
+                    <span className="text-[10px] text-text-muted">{timeAgo(run.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    {bt && (
+                      <>
+                        <span className="text-[10px] font-mono text-primary">{bt.symbol}</span>
+                        <span className="text-[10px] text-text-muted">{bt.timeframe}</span>
+                      </>
+                    )}
+                    <span className="text-[10px] text-text-muted">{run.numSimulations} paths</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[9px] uppercase tracking-wider text-text-muted block">Survival</span>
+                      <span className={`text-xs font-mono font-semibold ${survivalRate && parseFloat(survivalRate) > 95 ? "text-profit" : "text-loss"}`}>
+                        {survivalRate ? `${survivalRate}%` : "--"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-wider text-text-muted block">Max DD P50</span>
+                      <span className="text-xs font-mono font-semibold text-foreground">
+                        {maxDDP50 ? `${maxDDP50}%` : "--"}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Recent overview empty + loading */}
+      {showRecentOverview && recentLoading && (
+        <div className="flex items-center justify-center h-32">
+          <div className="text-text-muted text-sm">Loading recent simulations...</div>
+        </div>
+      )}
+
       {/* MC Run Selector (if runs exist) */}
       {mcRuns && mcRuns.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
@@ -265,7 +353,7 @@ export default function MonteCarlo() {
       )}
 
       {/* Empty state */}
-      {!mcRun && !mcRunLoading && (
+      {!mcRun && !mcRunLoading && selectedBacktestId && (!recentMCRuns || recentMCRuns.length === 0) && (
         <div className="forge-card p-12 text-center">
           <Shuffle className="w-8 h-8 text-text-muted mx-auto mb-3" />
           <p className="text-sm text-text-muted">
@@ -431,16 +519,16 @@ export default function MonteCarlo() {
                 <h2 className="text-sm font-medium text-text-secondary mb-4">Risk Metrics</h2>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Max DD P5", value: mcRun.maxDrawdownP5 != null ? `${num(mcRun.maxDrawdownP5).toFixed(2)}%` : "—" },
-                    { label: "Max DD P50", value: mcRun.maxDrawdownP50 != null ? `${num(mcRun.maxDrawdownP50).toFixed(2)}%` : "—" },
-                    { label: "Max DD P95", value: mcRun.maxDrawdownP95 != null ? `${num(mcRun.maxDrawdownP95).toFixed(2)}%` : "—" },
-                    { label: "Sharpe P5", value: mcRun.sharpeP5 != null ? num(mcRun.sharpeP5).toFixed(2) : "—" },
-                    { label: "Sharpe P50", value: mcRun.sharpeP50 != null ? num(mcRun.sharpeP50).toFixed(2) : "—" },
-                    { label: "Sharpe P95", value: mcRun.sharpeP95 != null ? num(mcRun.sharpeP95).toFixed(2) : "—" },
-                    { label: "VaR 95%", value: mcRun.var95 != null ? `$${num(mcRun.var95).toLocaleString()}` : "—" },
-                    { label: "VaR 99%", value: mcRun.var99 != null ? `$${num(mcRun.var99).toLocaleString()}` : "—" },
-                    { label: "CVaR 95%", value: mcRun.cvar95 != null ? `$${num(mcRun.cvar95).toLocaleString()}` : "—" },
-                    { label: "Prob. of Ruin", value: mcRun.probabilityOfRuin != null ? `${num(mcRun.probabilityOfRuin).toFixed(2)}%` : "—" },
+                    { label: "Max DD P5", value: mcRun.maxDrawdownP5 != null ? `${num(mcRun.maxDrawdownP5).toFixed(2)}%` : "--" },
+                    { label: "Max DD P50", value: mcRun.maxDrawdownP50 != null ? `${num(mcRun.maxDrawdownP50).toFixed(2)}%` : "--" },
+                    { label: "Max DD P95", value: mcRun.maxDrawdownP95 != null ? `${num(mcRun.maxDrawdownP95).toFixed(2)}%` : "--" },
+                    { label: "Sharpe P5", value: mcRun.sharpeP5 != null ? num(mcRun.sharpeP5).toFixed(2) : "--" },
+                    { label: "Sharpe P50", value: mcRun.sharpeP50 != null ? num(mcRun.sharpeP50).toFixed(2) : "--" },
+                    { label: "Sharpe P95", value: mcRun.sharpeP95 != null ? num(mcRun.sharpeP95).toFixed(2) : "--" },
+                    { label: "VaR 95%", value: mcRun.var95 != null ? `$${num(mcRun.var95).toLocaleString()}` : "--" },
+                    { label: "VaR 99%", value: mcRun.var99 != null ? `$${num(mcRun.var99).toLocaleString()}` : "--" },
+                    { label: "CVaR 95%", value: mcRun.cvar95 != null ? `$${num(mcRun.cvar95).toLocaleString()}` : "--" },
+                    { label: "Prob. of Ruin", value: mcRun.probabilityOfRuin != null ? `${num(mcRun.probabilityOfRuin).toFixed(2)}%` : "--" },
                   ].map((m) => (
                     <div key={m.label} className="flex justify-between items-center py-1.5 border-b border-border/10">
                       <span className="text-xs text-text-muted">{m.label}</span>

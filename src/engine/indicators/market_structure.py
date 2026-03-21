@@ -23,8 +23,9 @@ def detect_swings(df: pl.DataFrame, lookback: int = 5) -> pl.DataFrame:
     highs = df["high"]
     lows = df["low"]
     window = 2 * lookback + 1
+    half_window = lookback  # confirmation delay: swing not visible until this many bars later
 
-    # Rolling max/min centered on middle of window
+    # Rolling max/min centered on middle of window to find true local extrema
     rolling_max = highs.rolling_max(window_size=window, center=True)
     rolling_min = lows.rolling_min(window_size=window, center=True)
 
@@ -32,28 +33,32 @@ def detect_swings(df: pl.DataFrame, lookback: int = 5) -> pl.DataFrame:
     swing_low_mask = lows == rolling_min
 
     # Vectorized extraction using Polars filter — no Python loop
+    # Add half_window to each swing index so the swing is only "visible"
+    # after the confirmation window completes (eliminates lookahead bias).
     idx_col = pl.Series("index", range(len(df)), dtype=pl.Int64)
 
     swing_highs = (
         df.with_columns(idx_col)
         .filter(swing_high_mask)
         .select([
-            pl.col("index"),
+            (pl.col("index") + half_window).alias("index"),
             pl.lit("high").alias("type"),
             pl.col("high").alias("price"),
             *([pl.col("ts_event")] if "ts_event" in df.columns else []),
         ])
+        .filter(pl.col("index") < len(df))
     )
 
     swing_lows = (
         df.with_columns(idx_col)
         .filter(swing_low_mask)
         .select([
-            pl.col("index"),
+            (pl.col("index") + half_window).alias("index"),
             pl.lit("low").alias("type"),
             pl.col("low").alias("price"),
             *([pl.col("ts_event")] if "ts_event" in df.columns else []),
         ])
+        .filter(pl.col("index") < len(df))
     )
 
     parts = [swing_highs, swing_lows]

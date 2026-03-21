@@ -35,6 +35,29 @@ class BaseStrategy(ABC):
         """
         ...
 
+    def compute_multi(self, dfs: dict[str, pl.DataFrame]) -> pl.DataFrame:
+        """Multi-instrument compute for strategies that need cross-instrument data.
+
+        Override this instead of compute() for strategies like SMT Reversal
+        that require data from multiple instruments simultaneously.
+
+        Args:
+            dfs: Dict mapping instrument names to their OHLCV DataFrames.
+                 e.g. {"ES": df_es, "NQ": df_nq}
+
+        Returns:
+            DataFrame with signal columns, keyed to the primary instrument.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support multi-instrument compute. "
+            "Use compute() instead."
+        )
+
+    @property
+    def is_multi_instrument(self) -> bool:
+        """Whether this strategy requires multiple instruments."""
+        return False
+
     @abstractmethod
     def get_params(self) -> dict:
         """Return tunable params for optimizer. Max 5 for expression strategies."""

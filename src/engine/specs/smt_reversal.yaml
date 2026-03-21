@@ -1,0 +1,30 @@
+concept: smt_reversal
+description: "Cross-instrument divergence between correlated pairs + MSS confirmation"
+
+required_imports:
+  - smt_divergence
+  - detect_mss
+
+required_imports_any:
+  - smt_divergence
+  - custom_smt
+  - es_nq_smt
+  - nq_es_smt
+
+forbidden_imports:
+  - compute_rsi  # RSI divergence is NOT SMT divergence
+
+required_concepts:
+  - cross_instrument_divergence  # MUST compare two instruments
+  - mss_confirmation             # MSS after divergence event
+
+multi_instrument: true
+instrument_pairs:
+  - ["ES", "NQ"]
+  - ["NQ", "ES"]
+  - ["YM", "ES"]
+  - ["GC", "DXY"]
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

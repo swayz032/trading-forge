@@ -77,7 +77,7 @@ def detect_ifvg(df: pl.DataFrame, fvgs: pl.DataFrame) -> pl.DataFrame:
         midpoint = float(fvgs["midpoint"][row_idx])
 
         filled = False
-        for i in range(fvg_index + 1, len(df)):
+        for i in range(fvg_index + 2, len(df)):
             close = closes[i]
             if fvg_type == "bullish" and close < bottom:
                 filled = True
@@ -117,6 +117,37 @@ def compute_consequent_encroachment(fvgs: pl.DataFrame) -> pl.Series:
         return pl.Series("ce", [], dtype=pl.Float64)
 
     return fvgs["midpoint"].alias("ce")
+
+
+def detect_displacement(
+    df: pl.DataFrame, atr_mult: float = 2.0, atr_period: int = 14
+) -> pl.Series:
+    """Detect displacement candles — body > atr_mult * ATR.
+
+    A displacement candle is a strong institutional move that shows
+    commitment to direction. Used as confirmation for FVGs, breakers, etc.
+
+    Returns:
+        Series of str: "bullish", "bearish", or null for each bar.
+    """
+    from src.engine.indicators.core import compute_atr
+
+    atr = compute_atr(df, atr_period)
+    opens = df["open"].to_list()
+    closes = df["close"].to_list()
+    atr_list = atr.to_list()
+    n = len(df)
+
+    result = [None] * n
+    for i in range(n):
+        atr_val = atr_list[i]
+        if atr_val is None or atr_val != atr_val:
+            continue
+        body = abs(closes[i] - opens[i])
+        if body > atr_mult * atr_val:
+            result[i] = "bullish" if closes[i] > opens[i] else "bearish"
+
+    return pl.Series("displacement", result, dtype=pl.Utf8)
 
 
 def detect_volume_imbalance(df: pl.DataFrame) -> pl.DataFrame:

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { StatusBadge } from "@/components/forge/StatusBadge";
 import { ForgeTable } from "@/components/forge/ForgeTable";
+import { Pagination } from "@/components/forge/Pagination";
 import { FlaskConical, TrendingUp, Calendar, Clock } from "lucide-react";
 
 import { useBacktests } from "@/hooks/useBacktests";
@@ -22,9 +23,14 @@ function fmtDuration(ms: number | null | undefined): string {
 const statusFilters = ["All", "Completed", "Running", "Queued", "Failed"] as const;
 type StatusFilter = (typeof statusFilters)[number];
 
+const PAGE_SIZE = 25;
+
 export default function Backtests() {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<StatusFilter>("All");
+  const [symbolFilter, setSymbolFilter] = useState<string>("All");
+  const [timeframeFilter, setTimeframeFilter] = useState<string>("All");
+  const [page, setPage] = useState(1);
 
   const { data: backtests, isLoading } = useBacktests();
   const { data: strategies } = useStrategies();
@@ -33,11 +39,44 @@ export default function Backtests() {
   const strategyMap = new Map<string, string>();
   strategies?.forEach((s: Strategy) => strategyMap.set(s.id, s.name));
 
+  // Extract unique symbols and timeframes for filter dropdowns
+  const symbols = useMemo(() => {
+    if (!backtests?.length) return [];
+    return [...new Set(backtests.map((b: Backtest) => b.symbol).filter(Boolean))].sort();
+  }, [backtests]);
+
+  const timeframes = useMemo(() => {
+    if (!backtests?.length) return [];
+    return [...new Set(backtests.map((b: Backtest) => b.timeframe).filter(Boolean))].sort();
+  }, [backtests]);
+
   // Filter
-  const filtered = (backtests ?? []).filter((b: Backtest) => {
-    if (activeFilter === "All") return true;
-    return b.status === activeFilter.toLowerCase();
-  });
+  const filtered = useMemo(() => {
+    let result = backtests ?? [];
+    if (activeFilter !== "All") {
+      result = result.filter((b: Backtest) => b.status === activeFilter.toLowerCase());
+    }
+    if (symbolFilter !== "All") {
+      result = result.filter((b: Backtest) => b.symbol === symbolFilter);
+    }
+    if (timeframeFilter !== "All") {
+      result = result.filter((b: Backtest) => b.timeframe === timeframeFilter);
+    }
+    return result;
+  }, [backtests, activeFilter, symbolFilter, timeframeFilter]);
+
+  // Pagination
+  const totalFiltered = filtered.length;
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (v: any) => void, value: any) => {
+    setter(value);
+    setPage(1);
+  };
 
   const completed = (backtests ?? []).filter((b: Backtest) => b.status === "completed").length;
   const running = (backtests ?? []).filter((b: Backtest) => b.status === "running").length;
@@ -80,7 +119,8 @@ export default function Backtests() {
     { key: "pnl", header: "P&L", align: "right" as const, mono: true, sortable: true,
       render: (r: any) => {
         if (r.status !== "completed") return <span className="text-text-muted">--</span>;
-        const pnl = num(r.totalReturn) * 100_000; // ratio → dollars
+        const totalReturn = num(r.totalReturn);
+        const pnl = Math.abs(totalReturn) < 10 ? totalReturn * 50_000 : totalReturn;
         return (
           <span className={pnl >= 0 ? "text-profit" : "text-loss"}>
             {pnl >= 0 ? "+" : ""}${Math.abs(pnl).toLocaleString("en-US", { maximumFractionDigits: 0 })}
@@ -151,11 +191,11 @@ export default function Backtests() {
       </motion.div>
 
       {/* Filter chips */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="flex items-center gap-2">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="flex items-center gap-2 flex-wrap">
         {statusFilters.map((f) => (
           <button
             key={f}
-            onClick={() => setActiveFilter(f)}
+            onClick={() => handleFilterChange(setActiveFilter, f)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
               activeFilter === f
                 ? "bg-primary/10 text-primary border border-primary/20"
@@ -165,6 +205,34 @@ export default function Backtests() {
             {f}
           </button>
         ))}
+
+        {/* Symbol filter */}
+        {symbols.length > 1 && (
+          <select
+            value={symbolFilter}
+            onChange={(e) => handleFilterChange(setSymbolFilter, e.target.value)}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[hsl(var(--surface-2))] text-foreground border border-border/30 focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            <option value="All">All Symbols</option>
+            {symbols.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        )}
+
+        {/* Timeframe filter */}
+        {timeframes.length > 1 && (
+          <select
+            value={timeframeFilter}
+            onChange={(e) => handleFilterChange(setTimeframeFilter, e.target.value)}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[hsl(var(--surface-2))] text-foreground border border-border/30 focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            <option value="All">All Timeframes</option>
+            {timeframes.map((tf) => (
+              <option key={tf} value={tf}>{tf}</option>
+            ))}
+          </select>
+        )}
       </motion.div>
 
       {/* Table */}
@@ -174,13 +242,23 @@ export default function Backtests() {
         transition={{ delay: 0.2, duration: 0.5 }}
         className="forge-card p-5"
       >
-        {filtered.length > 0 ? (
-          <ForgeTable
-            columns={columns}
-            data={filtered}
-            className="cursor-pointer"
-            onRowClick={(row: any) => navigate(`/backtests/${row.id}`)}
-          />
+        {paginatedData.length > 0 ? (
+          <>
+            <ForgeTable
+              columns={columns}
+              data={paginatedData}
+              className="cursor-pointer"
+              onRowClick={(row: any) => navigate(`/backtests/${row.id}`)}
+            />
+            {totalFiltered > PAGE_SIZE && (
+              <Pagination
+                page={page}
+                pageSize={PAGE_SIZE}
+                total={totalFiltered}
+                onPageChange={setPage}
+              />
+            )}
+          </>
         ) : (
           <p className="text-sm text-text-muted text-center py-8">No backtests found</p>
         )}

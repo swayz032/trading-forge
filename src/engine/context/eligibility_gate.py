@@ -2,6 +2,11 @@
 
 Wraps all strategies via Option C (post-filter decorator). Strategies fire
 signals unchanged. This gate decides whether to take, reduce, or skip.
+
+Real ICT/SMC A+ criteria:
+  TAKE  = A+ setup (full size, all TPs) — requires 3R, sweep, confluence >= 4, kill zone
+  REDUCE = B+ setup (half size, TP1 only) — tradeable but not A+
+  SKIP  = No trade — hard blocker present
 """
 from __future__ import annotations
 
@@ -11,6 +16,7 @@ from typing import List, Optional
 from src.engine.context.bias_engine import DailyBiasState
 from src.engine.context.playbook_router import PlaybookDecision, route_playbook
 from src.engine.context.location_score import LocationScore
+from src.engine.context.session_context import SessionContext
 from src.engine.context.structural_stops import StopPlan
 from src.engine.context.structural_targets import TargetPlan
 
@@ -31,6 +37,11 @@ class EligibilityDecision:
     position_size_adjustment: float = 1.0
 
 
+def _kill_zone_active(session: SessionContext) -> bool:
+    """Return True if NY or London kill zone is active."""
+    return session.ny_killzone_active or session.london_killzone_active
+
+
 def evaluate_signal(
     signal: dict,              # {"direction": "long"|"short", "strategy_name": str, "entry_price": float}
     bias_state: DailyBiasState,
@@ -38,30 +49,33 @@ def evaluate_signal(
     location: LocationScore,
     stop_plan: StopPlan,
     target_plan: TargetPlan,
+    session: SessionContext,
     daily_loss_used_pct: float = 0.0,  # 0.0-1.0, how much of daily loss limit consumed
     max_trades_hit: bool = False,
 ) -> EligibilityDecision:
     """Evaluate a raw strategy signal through the eligibility gate.
 
-    TAKE requires ALL of:
-      1. Playbook allows this strategy family
-      2. Direction aligns with bias (or reversal playbook active)
-      3. Location score >= 40
-      4. TP2 reward:risk >= 2.0
-      5. No hard blockers (events, daily loss cap, drift)
+    HARD SKIP (any one = skip):
+      1. NO_TRADE playbook active
+      2. Strategy not in playbook's allowed list
+      3. Direction opposes bias AND not reversal playbook
+      4. Not in kill zone (NY or London)
+      5. No liquidity sweep (location.sweep_present must be True)
+      6. Location score < 60
+      7. TP2 R:R < 2.0
+      8. Max trades hit
+      9. Bias confidence < 0.4
 
-    REDUCE if:
-      - Location score 30-39
-      - Bias confidence 0.3-0.5
-      - Approaching daily loss limit (>60% used)
+    TAKE (A+ — full size, all TPs) requires ALL:
+      - Location score >= 80 (institutional grade)
+      - TP2 R:R >= 3.0
+      - Bias confidence >= 0.6
+      - Liquidity sweep present
+      - Confluence count >= 4
+      - Kill zone active
 
-    SKIP if any of:
-      - Playbook doesn't allow this strategy
-      - Direction opposes bias AND not a reversal setup
-      - Location score < 30
-      - TP2 reward:risk < 1.5
-      - Hard blocker active
-      - NO_TRADE playbook selected
+    REDUCE (B+ — half size, TP1 only):
+      Everything that passes SKIP checks but doesn't qualify for TAKE.
     """
     reasoning = []
     direction = signal.get("direction", "long")
@@ -71,7 +85,7 @@ def evaluate_signal(
 
     # 1. NO_TRADE playbook
     if playbook.playbook == "NO_TRADE":
-        reasoning.append(f"NO_TRADE playbook active")
+        reasoning.append("NO_TRADE playbook active")
         if bias_state.no_trade_reasons:
             reasoning.extend(bias_state.no_trade_reasons)
         return EligibilityDecision(
@@ -80,7 +94,6 @@ def evaluate_signal(
         )
 
     # 2. Strategy not in allowed list
-    # Normalize strategy name for matching
     strat_lower = strategy_name.lower().replace("strategy", "").strip().replace("_", "")
     allowed_lower = [s.lower().replace("_", "") for s in playbook.allowed_strategies]
     strategy_allowed = strat_lower in allowed_lower or not playbook.allowed_strategies
@@ -109,25 +122,45 @@ def evaluate_signal(
             bias_state=bias_state, playbook=playbook.playbook,
         )
 
-    # 4. Location score < 30 → hard SKIP
-    if location.score < 30:
-        reasoning.append(f"Location score {location.score} < 30 ({location.grade})")
+    # 4. Kill zone gate — signals outside NY/London kill zones are SKIP
+    if not _kill_zone_active(session):
+        reasoning.append(
+            f"Not in kill zone (session={session.current_session}, "
+            f"ny_kz={session.ny_killzone_active}, london_kz={session.london_killzone_active})"
+        )
+        return EligibilityDecision(
+            action="SKIP", confidence=0.0, reasoning=reasoning,
+            bias_state=bias_state, playbook=playbook.playbook,
+        )
+
+    # 5. Liquidity sweep required — no sweep = no trade
+    if not location.sweep_present:
+        reasoning.append("No liquidity sweep present — A+/B+ requires sweep")
         return EligibilityDecision(
             action="SKIP", confidence=0.0, reasoning=reasoning,
             bias_state=bias_state, location_score=location.score,
             playbook=playbook.playbook,
         )
 
-    # 5. TP2 R:R < 1.5 → hard SKIP
-    if target_plan.rr_achieved < 1.5:
-        reasoning.append(f"TP2 R:R {target_plan.rr_achieved:.1f} < 1.5 minimum")
+    # 6. Location score < 60 → hard SKIP
+    if location.score < 60:
+        reasoning.append(f"Location score {location.score} < 60 ({location.grade})")
+        return EligibilityDecision(
+            action="SKIP", confidence=0.0, reasoning=reasoning,
+            bias_state=bias_state, location_score=location.score,
+            playbook=playbook.playbook,
+        )
+
+    # 7. TP2 R:R < 2.0 → hard SKIP
+    if target_plan.rr_achieved < 2.0:
+        reasoning.append(f"TP2 R:R {target_plan.rr_achieved:.1f} < 2.0 minimum")
         return EligibilityDecision(
             action="SKIP", confidence=0.0, reasoning=reasoning,
             bias_state=bias_state, location_score=location.score,
             playbook=playbook.playbook, target_plan=target_plan,
         )
 
-    # 6. Max trades hit
+    # 8. Max trades hit
     if max_trades_hit:
         reasoning.append("Daily trade limit reached")
         return EligibilityDecision(
@@ -135,27 +168,44 @@ def evaluate_signal(
             bias_state=bias_state, playbook=playbook.playbook,
         )
 
-    # ─── REDUCE checks ────────────────────────────────────────
-
-    reduce_reasons = []
-
-    if 30 <= location.score < 40:
-        reduce_reasons.append(f"Borderline location score {location.score}")
-
-    if 0.3 <= bias_state.bias_confidence < 0.5:
-        reduce_reasons.append(f"Weak bias confidence {bias_state.bias_confidence:.2f}")
-
-    if daily_loss_used_pct > 0.6:
-        reduce_reasons.append(f"Daily loss {daily_loss_used_pct:.0%} consumed (>60%)")
-
-    if target_plan.rr_achieved < 2.0:
-        reduce_reasons.append(f"TP2 R:R {target_plan.rr_achieved:.1f} below ideal 2.0")
-
-    if reduce_reasons:
-        reasoning.append("REDUCE: " + "; ".join(reduce_reasons))
+    # 9. Bias confidence < 0.4 → hard SKIP
+    if bias_state.bias_confidence < 0.4:
+        reasoning.append(f"Bias confidence {bias_state.bias_confidence:.2f} < 0.4 minimum")
         return EligibilityDecision(
-            action="REDUCE",
-            confidence=bias_state.bias_confidence * playbook.confidence_modifier * 0.5,
+            action="SKIP", confidence=0.0, reasoning=reasoning,
+            bias_state=bias_state, location_score=location.score,
+            playbook=playbook.playbook,
+        )
+
+    # ─── TAKE (A+ — full size, all TPs) ─────────────────────
+
+    is_a_plus = (
+        location.score >= 80
+        and target_plan.rr_achieved >= 3.0
+        and bias_state.bias_confidence >= 0.6
+        and location.sweep_present          # Already guaranteed by SKIP #5, explicit for clarity
+        and location.confluence_count >= 4
+        and _kill_zone_active(session)       # Already guaranteed by SKIP #4, explicit for clarity
+    )
+
+    if is_a_plus:
+        reasoning.append(
+            f"TAKE (A+): playbook={playbook.playbook}, location={location.score} ({location.grade})"
+        )
+        reasoning.append(
+            f"Bias: net={bias_state.net_bias}, confidence={bias_state.bias_confidence:.2f}"
+        )
+        reasoning.append(
+            f"R:R={target_plan.rr_achieved:.1f}, confluence={location.confluence_count}, "
+            f"sweep=True, stop={stop_plan.stop_reason}"
+        )
+
+        confidence = bias_state.bias_confidence * playbook.confidence_modifier
+        confidence = max(0.0, min(1.0, confidence))
+
+        return EligibilityDecision(
+            action="TAKE",
+            confidence=confidence,
             reasoning=reasoning,
             bias_state=bias_state,
             location_score=location.score,
@@ -163,23 +213,36 @@ def evaluate_signal(
             target_plan=target_plan,
             playbook=playbook.playbook,
             override_stop=stop_plan.stop_price,
-            override_targets=[target_plan.tp1],  # TP1 only for reduced
-            partial_sizes=(1.0, 0.0, 0.0),
-            position_size_adjustment=0.5,
+            override_targets=[target_plan.tp1, target_plan.tp2],
+            partial_sizes=target_plan.partial_sizes,
+            position_size_adjustment=1.0,
         )
 
-    # ─── TAKE ─────────────────────────────────────────────────
+    # ─── REDUCE (B+ — half size, TP1 only) ──────────────────
+    # Everything that passed SKIP checks but didn't qualify for TAKE
 
-    reasoning.append(f"TAKE: playbook={playbook.playbook}, location={location.score} ({location.grade})")
-    reasoning.append(f"Bias: net={bias_state.net_bias}, confidence={bias_state.bias_confidence:.2f}")
-    reasoning.append(f"R:R={target_plan.rr_achieved:.1f}, stop={stop_plan.stop_reason}")
+    reduce_reasons = []
 
-    confidence = bias_state.bias_confidence * playbook.confidence_modifier
-    confidence = max(0.0, min(1.0, confidence))
+    if location.score < 80:
+        reduce_reasons.append(f"Location score {location.score} < 80 (not institutional)")
+
+    if target_plan.rr_achieved < 3.0:
+        reduce_reasons.append(f"TP2 R:R {target_plan.rr_achieved:.1f} < 3.0 A+ threshold")
+
+    if bias_state.bias_confidence < 0.6:
+        reduce_reasons.append(f"Bias confidence {bias_state.bias_confidence:.2f} < 0.6")
+
+    if location.confluence_count < 4:
+        reduce_reasons.append(f"Confluence count {location.confluence_count} < 4")
+
+    if daily_loss_used_pct > 0.6:
+        reduce_reasons.append(f"Daily loss {daily_loss_used_pct:.0%} consumed (>60%)")
+
+    reasoning.append("REDUCE (B+): " + "; ".join(reduce_reasons))
 
     return EligibilityDecision(
-        action="TAKE",
-        confidence=confidence,
+        action="REDUCE",
+        confidence=bias_state.bias_confidence * playbook.confidence_modifier * 0.5,
         reasoning=reasoning,
         bias_state=bias_state,
         location_score=location.score,
@@ -187,7 +250,7 @@ def evaluate_signal(
         target_plan=target_plan,
         playbook=playbook.playbook,
         override_stop=stop_plan.stop_price,
-        override_targets=[target_plan.tp1, target_plan.tp2],
-        partial_sizes=target_plan.partial_sizes,
-        position_size_adjustment=1.0,
+        override_targets=[target_plan.tp1],  # TP1 only for reduced
+        partial_sizes=(1.0, 0.0, 0.0),
+        position_size_adjustment=0.5,
     )

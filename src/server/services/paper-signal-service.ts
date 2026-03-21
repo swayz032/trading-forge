@@ -1,7 +1,7 @@
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, strategies } from "../db/schema.js";
+import { paperSessions, paperPositions, strategies, paperSignalLogs } from "../db/schema.js";
 import { openPosition, closePosition } from "./paper-execution-service.js";
-import { checkRiskGate } from "./paper-risk-gate.js"; // will exist
+import { checkRiskGate } from "./paper-risk-gate.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 import { eq, and, isNull } from "drizzle-orm";
@@ -40,7 +40,8 @@ interface CachedSession {
   config: StrategyConfig;
   strategyId: string;
   symbol: string;
-  cooldownRemaining: number;   // bars remaining in cooldown
+  timeframe: string;             // e.g. "1m", "5m", "15m", "1h"
+  cooldownRemaining: number;     // bars remaining in cooldown
 }
 
 interface SignalLogEntry {
@@ -56,6 +57,8 @@ interface SignalLogEntry {
   action: "none" | "open" | "close_signal" | "close_stop";
   indicators: Record<string, number>;
   barClose: number;
+  strategySide: "long" | "short";   // actual strategy side for correct signal logging
+  fillMiss?: boolean;               // true when fill probability model rejected the order
 }
 
 // ─── Session Config Cache ───────────────────────────────────
@@ -79,10 +82,20 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
   if (!strategy) return null;
 
   const config = strategy.config as StrategyConfig;
+
+  // Warn if no exit mechanism exists — positions will be trapped open forever
+  if ((!config.exit_rules || config.exit_rules.length === 0) && !config.stop_loss) {
+    logger.warn(
+      { sessionId, strategyId: strategy.id, name: strategy.name },
+      "Strategy has no exit rules AND no stop loss — positions can only be closed manually",
+    );
+  }
+
   const entry: CachedSession = {
     config,
     strategyId: strategy.id,
     symbol: strategy.symbol,
+    timeframe: strategy.timeframe ?? "1m",
     cooldownRemaining: 0,
   };
 
@@ -96,6 +109,17 @@ export function invalidateSessionCache(sessionId: string): void {
 
 export function clearSessionCache(): void {
   sessionCache.clear();
+}
+
+/**
+ * Clean up all in-memory state for a session (call on stop/kill).
+ * Prevents memory leaks from indicator cache and session config cache.
+ */
+export function cleanupSession(sessionId: string, symbols: string[]): void {
+  sessionCache.delete(sessionId);
+  for (const symbol of symbols) {
+    previousIndicators.delete(`${sessionId}:${symbol}`);
+  }
 }
 
 // ─── Indicator Functions (exported for testing) ─────────────
@@ -191,7 +215,9 @@ export function BollingerBands(
   if (isNaN(middle)) return { upper: NaN, middle: NaN, lower: NaN };
 
   const slice = closes.slice(-period);
-  const variance = slice.reduce((sum, v) => sum + (v - middle) ** 2, 0) / period;
+  const variance = period > 1
+    ? slice.reduce((sum, v) => sum + (v - middle) ** 2, 0) / (period - 1)
+    : 0;
   const sd = Math.sqrt(variance);
   return {
     upper: middle + stddev * sd,
@@ -387,28 +413,35 @@ function checkStopLoss(
   bar: Bar,
   stopConfig: StopLossConfig | undefined,
   indicators: IndicatorValues
-): boolean {
-  if (!stopConfig) return false;
+): { hit: boolean; stopPrice: number } {
+  if (!stopConfig) return { hit: false, stopPrice: 0 };
 
   const entryPrice = Number(position.entryPrice);
   let stopDistance: number;
 
   if (stopConfig.type === "atr") {
     const atrPeriod = stopConfig.atr_period ?? 14;
-    const atrVal = indicators[`atr_${atrPeriod}`];
-    if (isNaN(atrVal)) return false;
+    // Try exact period first, then nearest precomputed period
+    let atrVal = indicators[`atr_${atrPeriod}`];
+    if (atrVal === undefined || isNaN(atrVal)) {
+      // Fallback to nearest precomputed ATR period (7, 14, 21)
+      const available = [7, 14, 21];
+      const nearest = available.reduce((a, b) => Math.abs(b - atrPeriod) < Math.abs(a - atrPeriod) ? b : a);
+      atrVal = indicators[`atr_${nearest}`];
+      if (atrVal === undefined || isNaN(atrVal)) return { hit: false, stopPrice: 0 };
+    }
     stopDistance = atrVal * (stopConfig.multiplier ?? 2);
   } else {
     stopDistance = stopConfig.amount ?? 0;
-    if (stopDistance === 0) return false;
+    if (stopDistance === 0) return { hit: false, stopPrice: 0 };
   }
 
   if (position.side === "long") {
     const stopLevel = entryPrice - stopDistance;
-    return bar.low <= stopLevel;
+    return { hit: bar.low <= stopLevel, stopPrice: stopLevel };
   } else {
     const stopLevel = entryPrice + stopDistance;
-    return bar.high >= stopLevel;
+    return { hit: bar.high >= stopLevel, stopPrice: stopLevel };
   }
 }
 
@@ -416,14 +449,75 @@ function checkStopLoss(
 
 const previousIndicators = new Map<string, IndicatorValues>();
 
-// ─── Signal Log (in-memory buffer, flushed periodically) ────
-// In production you'd batch-insert these; for now we log + broadcast.
+// ─── Signal Log (persisted to DB + broadcast via SSE) ────────
 
 async function logSignal(entry: SignalLogEntry): Promise<void> {
-  // TODO: insert into signal_log table when it exists in schema
-  // For now, log structured data and broadcast via SSE
   logger.debug({ signalLog: entry }, "Signal evaluated");
   broadcastSSE("paper:signal", entry);
+
+  // Persist to paper_signal_logs for post-session analysis
+  if (entry.entrySignal || entry.exitSignal || entry.stopHit) {
+    try {
+      const direction = entry.strategySide; // actual strategy side, not hardcoded
+      const acted = entry.action !== "none";
+      let reason: string | null = null;
+      if (!acted) {
+        if (entry.fillMiss) reason = "fill_probability_miss";
+        else if (entry.cooldownActive) reason = "cooldown";
+        else if (entry.sessionFiltered) reason = "session_filter";
+        else if (entry.riskGatePassed === false) reason = "risk_gate_rejected";
+      }
+      if (entry.action === "close_stop") reason = "stop_loss";
+
+      await db.insert(paperSignalLogs).values({
+        sessionId: entry.sessionId,
+        symbol: entry.symbol,
+        direction,
+        signalType: entry.action === "close_stop" ? "stop_loss"
+          : (entry.action === "close_signal" ? "exit"
+          : (entry.action === "open" ? "entry" : (entry.exitSignal ? "exit" : "entry"))),
+        price: String(entry.barClose),
+        indicatorSnapshot: entry.indicators,
+        acted,
+        reason,
+      });
+    } catch (err) {
+      logger.error({ err, sessionId: entry.sessionId }, "Failed to persist signal log");
+    }
+  }
+}
+
+// ─── Bar Duration Helper ─────────────────────────────────────
+
+function getBarDurationMs(session: CachedSession): number {
+  const tf = session.timeframe.toLowerCase();
+  const match = tf.match(/^(\d+)(m|h|d)$/);
+  if (!match) return 60_000; // default 1 min
+  const [, numStr, unit] = match;
+  const num = parseInt(numStr, 10);
+  switch (unit) {
+    case "m": return num * 60_000;
+    case "h": return num * 3_600_000;
+    case "d": return num * 86_400_000;
+    default: return 60_000;
+  }
+}
+
+// ─── Cooldown Persistence Helper ─────────────────────────────
+
+async function setCooldown(sessionId: string, sessionConfig: CachedSession, cooldownBars: number): Promise<void> {
+  sessionConfig.cooldownRemaining = cooldownBars;
+  // Estimate bar duration from strategy timeframe (fallback to 1 min if unknown)
+  const barDurationMs = getBarDurationMs(sessionConfig);
+  const cooldownUntil = new Date(Date.now() + cooldownBars * barDurationMs);
+  try {
+    await db.update(paperSessions).set({
+      lastSignalTime: new Date(),
+      cooldownUntil,
+    }).where(eq(paperSessions.id, sessionId));
+  } catch (err) {
+    logger.error({ err, sessionId }, "Failed to persist cooldown");
+  }
 }
 
 // ─── Main Entry Point ───────────────────────────────────────
@@ -438,6 +532,16 @@ export async function evaluateSignals(
   bar: Bar,
   barBuffer: Bar[]
 ): Promise<void> {
+  // Single DB query for pause + cooldown + mode check
+  const [sessionRow] = await db.select({
+    status: paperSessions.status,
+    cooldownUntil: paperSessions.cooldownUntil,
+    mode: paperSessions.mode,
+  }).from(paperSessions).where(eq(paperSessions.id, sessionId));
+
+  // Skip if session doesn't exist or is paused/stopped
+  if (!sessionRow || sessionRow.status !== "active") return;
+
   const sessionConfig = await getSessionConfig(sessionId);
   if (!sessionConfig) {
     logger.warn({ sessionId }, "No strategy config found for paper session");
@@ -456,13 +560,7 @@ export async function evaluateSignals(
   // Session time filter
   const sessionFiltered = !isWithinSession(bar.timestamp, config.preferred_sessions);
 
-  // Cooldown check
-  const cooldownActive = sessionConfig.cooldownRemaining > 0;
-  if (cooldownActive) {
-    sessionConfig.cooldownRemaining--;
-  }
-
-  // Check for open position
+  // Check for open position FIRST — needed for cooldown logic
   const [openPos] = await db
     .select()
     .from(paperPositions)
@@ -474,32 +572,49 @@ export async function evaluateSignals(
       )
     );
 
+  // Cooldown check — DB-backed with in-memory fast path
+  // Only decrement when no position is open (cooldown gates RE-ENTRY, not holding)
+  const now = new Date();
+  let cooldownActive = sessionConfig.cooldownRemaining > 0;
+  if (cooldownActive && !openPos) {
+    sessionConfig.cooldownRemaining--;
+  } else if (!cooldownActive && sessionRow?.cooldownUntil && sessionRow.cooldownUntil > now) {
+    // DB cooldown survives server restart (using already-fetched data, not extra query)
+    cooldownActive = true;
+  }
+
   let action: SignalLogEntry["action"] = "none";
   let riskGatePassed: boolean | null = null;
   let stopHit = false;
+  let fillMiss = false;
 
-  if (openPos) {
+  // Shadow mode: log signals only, never execute trades
+  const isShadow = sessionRow.mode === "shadow";
+
+  if (openPos && !isShadow) {
     // ─── Position open: check for exit signal or stop-loss ──
-    stopHit = checkStopLoss(openPos, bar, config.stop_loss, indicators);
+    const stopResult = checkStopLoss(openPos, bar, config.stop_loss, indicators);
+    stopHit = stopResult.hit;
 
     if (stopHit) {
       action = "close_stop";
-      await closePosition(openPos.id, bar.close);
-      sessionConfig.cooldownRemaining = config.cooldown_bars ?? 4;
+      // Fill at the stop level, not bar.close — bar.close overstates P&L
+      await closePosition(openPos.id, stopResult.stopPrice);
+      await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
       logger.info(
-        { sessionId, symbol, reason: "stop_loss" },
+        { sessionId, symbol, reason: "stop_loss", stopPrice: stopResult.stopPrice },
         "Paper position closed — stop-loss hit"
       );
     } else if (exitSignal) {
       action = "close_signal";
       await closePosition(openPos.id, bar.close);
-      sessionConfig.cooldownRemaining = config.cooldown_bars ?? 4;
+      await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
       logger.info(
         { sessionId, symbol, reason: "exit_signal" },
         "Paper position closed — exit signal"
       );
     }
-  } else if (entrySignal && !sessionFiltered && !cooldownActive) {
+  } else if (entrySignal && !sessionFiltered && !cooldownActive && !isShadow) {
     // ─── No position: check for entry ───────────────────────
     try {
       const gateResult = await checkRiskGate(sessionId, symbol, config.contracts);
@@ -514,16 +629,27 @@ export async function evaluateSignals(
 
     if (riskGatePassed) {
       action = "open";
-      await openPosition(sessionId, {
+      // BUG 2 fix: pass RSI/ATR so fill probability model actually fires
+      const result = await openPosition(sessionId, {
         symbol,
         side: config.side,
         signalPrice: bar.close,
         contracts: config.contracts,
+        orderType: "market",   // signal-driven entries are market orders
+        rsi: indicators["rsi_14"],
+        atr: indicators["atr_14"],
       });
-      logger.info(
-        { sessionId, symbol, side: config.side, price: bar.close },
-        "Paper position opened — entry signal"
-      );
+      if (!result.position) {
+        // Fill probability miss — set short cooldown to prevent hammering every bar
+        action = "none";
+        fillMiss = true;
+        await setCooldown(sessionId, sessionConfig, Math.max(1, Math.floor((config.cooldown_bars ?? 4) / 2)));
+      } else {
+        logger.info(
+          { sessionId, symbol, side: config.side, price: bar.close },
+          "Paper position opened — entry signal"
+        );
+      }
     }
   }
 
@@ -544,5 +670,7 @@ export async function evaluateSignals(
     action,
     indicators,
     barClose: bar.close,
+    strategySide: config.side,  // BUG 1 fix: pass actual strategy side
+    fillMiss,
   });
 }

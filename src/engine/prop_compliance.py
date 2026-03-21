@@ -19,7 +19,7 @@ FIRM_CONFIGS = {
     "topstep_50k": {
         "name": "Topstep 50K",
         "monthly_fee": 49,
-        "activation_fee": 149,
+        "activation_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
         "trailing": "eod",
@@ -45,7 +45,7 @@ FIRM_CONFIGS = {
     "tpt_50k": {
         "name": "TPT 50K",
         "monthly_fee": 150,
-        "activation_fee": 130,
+        "activation_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 3000,
         "trailing": "eod",
@@ -58,7 +58,7 @@ FIRM_CONFIGS = {
     "apex_50k": {
         "name": "Apex 50K",
         "monthly_fee": 167,
-        "activation_fee": 85,
+        "activation_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2500,
         "trailing": "eod",
@@ -84,7 +84,7 @@ FIRM_CONFIGS = {
     "alpha_50k": {
         "name": "Alpha Futures 50K (Standard)",
         "monthly_fee": 99,
-        "activation_fee": 149,
+        "activation_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
         "trailing": "eod",
@@ -97,7 +97,7 @@ FIRM_CONFIGS = {
     "ffn_50k": {
         "name": "FFN 50K (Express)",
         "monthly_fee": 200,
-        "activation_fee": 120,  # Exhibition phase
+        "activation_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2500,
         "trailing": "eod",

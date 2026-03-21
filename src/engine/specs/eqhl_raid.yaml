@@ -1,0 +1,16 @@
+concept: eqhl_raid
+description: "Equal high/low raid — sweep of equal H/L levels + breaker entry"
+
+required_imports_any:
+  - detect_buyside_liquidity
+  - detect_sellside_liquidity
+  - detect_sweep
+  - detect_breaker
+
+required_concepts:
+  - equal_hl_detection     # identify equal highs/lows as liquidity targets
+  - sweep_then_reversal    # price sweeps the level then reverses
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

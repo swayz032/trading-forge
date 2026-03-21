@@ -1,0 +1,636 @@
+{
+  "updatedAt": "2026-03-20T05:36:28.987Z",
+  "createdAt": "2026-03-20T05:36:28.987Z",
+  "id": "RumAJUp4iS1TYlNm",
+  "name": "6D-compliance-gate",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 4 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-paper",
+      "name": "Fetch Paper Strategies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/strategies",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "lifecycleState",
+              "value": "PAPER"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "split-strategies",
+      "name": "Split Strategies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst items = Array.isArray(data) ? data : (data.data || []);\nif (items.length === 0) return [{ json: { _empty: true } }];\nreturn items.map(s => ({ json: { strategyId: s.id || s._id, name: s.name, config: s } }));"
+      }
+    },
+    {
+      "id": "check-empty",
+      "name": "Any Paper?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json._empty }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "compliance-review",
+      "name": "POST Compliance Review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -100
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/compliance/review",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "strategyId",
+              "value": "={{ $json.strategyId }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      }
+    },
+    {
+      "id": "build-results",
+      "name": "Build Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst total = items.length;\nconst passed = items.filter(i => i.json.compliant || i.json.status === 'passed' || i.json.pass).length;\nconst failed = total - passed;\nconst severity = failed > 0 ? 'warning' : 'info';\nreturn [{ json: { title: `Compliance Gate: ${passed}/${total} passed`, severity, body: `Reviewed ${total} paper-trading strategies.\nPassed: ${passed}\nFailed: ${failed}` } }];"
+      }
+    },
+    {
+      "id": "no-paper",
+      "name": "No Paper Strategies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        100
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { title: 'Compliance Gate: No paper strategies', severity: 'info', body: 'No strategies in PAPER state to review.' } }];"
+      }
+    },
+    {
+      "id": "send-alert",
+      "name": "Send Compliance Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4100/alert/compliance",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "severity",
+              "value": "={{ $json.severity }}"
+            },
+            {
+              "name": "body",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Paper Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Paper Strategies": {
+      "main": [
+        [
+          {
+            "node": "Split Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Strategies": {
+      "main": [
+        [
+          {
+            "node": "Any Paper?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Paper?": {
+      "main": [
+        [
+          {
+            "node": "POST Compliance Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Paper Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Compliance Review": {
+      "main": [
+        [
+          {
+            "node": "Build Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Results": {
+      "main": [
+        [
+          {
+            "node": "Send Compliance Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Paper Strategies": {
+      "main": [
+        [
+          {
+            "node": "Send Compliance Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Cron Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "7ab0156e-7af7-4d8d-90ca-9579a34cafd2",
+  "activeVersionId": "7ab0156e-7af7-4d8d-90ca-9579a34cafd2",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T05:36:28.987Z",
+      "createdAt": "2026-03-20T05:36:28.987Z",
+      "role": "workflow:owner",
+      "workflowId": "RumAJUp4iS1TYlNm",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-20T05:36:28.991Z",
+    "createdAt": "2026-03-20T05:36:28.991Z",
+    "versionId": "7ab0156e-7af7-4d8d-90ca-9579a34cafd2",
+    "workflowId": "RumAJUp4iS1TYlNm",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Cron Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 4 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-paper",
+        "name": "Fetch Paper Strategies",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/strategies",
+          "method": "GET",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "lifecycleState",
+                "value": "PAPER"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        }
+      },
+      {
+        "id": "split-strategies",
+        "name": "Split Strategies",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst items = Array.isArray(data) ? data : (data.data || []);\nif (items.length === 0) return [{ json: { _empty: true } }];\nreturn items.map(s => ({ json: { strategyId: s.id || s._id, name: s.name, config: s } }));"
+        }
+      },
+      {
+        "id": "check-empty",
+        "name": "Any Paper?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          660,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "1",
+                "leftValue": "={{ $json._empty }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "compliance-review",
+        "name": "POST Compliance Review",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          -100
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/compliance/review",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "strategyId",
+                "value": "={{ $json.strategyId }}"
+              },
+              {
+                "name": "name",
+                "value": "={{ $json.name }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        }
+      },
+      {
+        "id": "build-results",
+        "name": "Build Results",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1100,
+          -100
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst total = items.length;\nconst passed = items.filter(i => i.json.compliant || i.json.status === 'passed' || i.json.pass).length;\nconst failed = total - passed;\nconst severity = failed > 0 ? 'warning' : 'info';\nreturn [{ json: { title: `Compliance Gate: ${passed}/${total} passed`, severity, body: `Reviewed ${total} paper-trading strategies.\nPassed: ${passed}\nFailed: ${failed}` } }];"
+        }
+      },
+      {
+        "id": "no-paper",
+        "name": "No Paper Strategies",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          100
+        ],
+        "parameters": {
+          "jsCode": "return [{ json: { title: 'Compliance Gate: No paper strategies', severity: 'info', body: 'No strategies in PAPER state to review.' } }];"
+        }
+      },
+      {
+        "id": "send-alert",
+        "name": "Send Compliance Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1320,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4100/alert/compliance",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "severity",
+                "value": "={{ $json.severity }}"
+              },
+              {
+                "name": "body",
+                "value": "={{ $json.body }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Cron Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Paper Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Paper Strategies": {
+        "main": [
+          [
+            {
+              "node": "Split Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Strategies": {
+        "main": [
+          [
+            {
+              "node": "Any Paper?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Paper?": {
+        "main": [
+          [
+            {
+              "node": "POST Compliance Review",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Paper Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Compliance Review": {
+        "main": [
+          [
+            {
+              "node": "Build Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Results": {
+        "main": [
+          [
+            {
+              "node": "Send Compliance Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "No Paper Strategies": {
+        "main": [
+          [
+            {
+              "node": "Send Compliance Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-20T05:36:29.452Z",
+        "id": 1201,
+        "workflowId": "RumAJUp4iS1TYlNm",
+        "versionId": "7ab0156e-7af7-4d8d-90ca-9579a34cafd2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

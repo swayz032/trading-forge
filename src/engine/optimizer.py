@@ -164,6 +164,7 @@ def optimize_strategy(
         "best_params": best_params,
         "best_score": -study.best_value,  # Convert back to positive Sharpe
         "n_trials": len(study.trials),
+        "trials_used": len(study.trials),
         "param_importance": dict(importance),
     }
 

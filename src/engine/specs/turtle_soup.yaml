@@ -1,0 +1,20 @@
+concept: turtle_soup
+description: "Sweep of equal highs/lows or session extremes + MSS confirmation"
+
+required_imports_any:
+  - detect_sweep
+  - detect_buyside_liquidity
+  - detect_sellside_liquidity
+  - detect_mss
+
+required_concepts:
+  - equal_hl_or_session_sweep  # sweep target must be equal H/L or session H/L
+  - mss_confirmation           # MSS (not just FVG) confirms the reversal
+
+required_time_windows:
+  - {start: "08:00", end: "11:00", tz: "US/Eastern", label: "NY AM"}
+  - {start: "02:00", end: "05:00", tz: "US/Eastern", label: "London"}
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

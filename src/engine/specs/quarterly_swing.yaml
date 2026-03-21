@@ -1,0 +1,74 @@
+concept: quarterly_swing
+description: "ICT Quarterly Theory — enter during Q3 (distribution/NY AM) after Q2 (manipulation/London) liquidity sweep, confirmed by displacement + BOS"
+
+required_imports:
+  - detect_swings
+  - detect_bos
+required_imports_any:
+  - detect_sweep                  # liquidity sweep detection for Q2 manipulation
+  - detect_buyside_liquidity
+  - detect_sellside_liquidity
+  - detect_fvg                    # FVG as entry confirmation (preferred)
+  - detect_displacement           # displacement confirmation
+
+forbidden_imports:
+  - compute_rsi                   # not part of ICT Quarterly Theory
+  - compute_macd                  # not part of ICT Quarterly Theory
+
+required_session_logic:
+  description: "Must divide the trading day into 4 six-hour quarters based on session times, NOT subdivide individual hours"
+  daily_quarters:
+    Q1_asia:
+      start_hour: 18              # 18:00 ET (previous calendar day)
+      end_hour: 0                 # 00:00 ET
+      phase: accumulation
+    Q2_london:
+      start_hour: 0               # 00:00 ET
+      end_hour: 6                 # 06:00 ET
+      phase: manipulation
+    Q3_nyam:
+      start_hour: 6               # 06:00 ET
+      end_hour: 12                # 12:00 ET
+      phase: distribution
+    Q4_nypm:
+      start_hour: 12              # 12:00 ET
+      end_hour: 18                # 18:00 ET
+      phase: continuation
+
+required_concepts:
+  - daily_session_quarters        # must use 6-hour session-based quarters, not hourly subdivision
+  - true_open_reference           # must track the opening price at Q2 (London open) as reference
+  - manipulation_sweep            # Q2 must show a liquidity sweep (Judas swing) before Q3 entry
+  - distribution_entry            # entries must occur during Q3 (NY AM distribution phase)
+  - displacement_or_bos_confirm   # entry confirmed by displacement candle or BOS/MSS
+
+forbidden_concepts:
+  - hourly_quarter_subdivision    # dividing each hour into 15-min quarters is NOT quarterly theory
+  - entry_during_accumulation     # Q1 is not an entry phase — it's range establishment
+  - entry_during_manipulation     # Q2 is not an entry phase — it's the setup/trap phase
+
+entry_rules:
+  long:
+    phase: Q3                     # distribution (NY AM session)
+    pre_condition: "Q2 swept sellside liquidity (SSL) — price broke below Q1 range low"
+    true_open_filter: "Price must be below True Open (Q2 opening price)"
+    confirmation: "Bullish BOS or displacement + FVG after Q2 manipulation low"
+    zone: discount                # optional additional confluence
+  short:
+    phase: Q3                     # distribution (NY AM session)
+    pre_condition: "Q2 swept buyside liquidity (BSL) — price broke above Q1 range high"
+    true_open_filter: "Price must be above True Open (Q2 opening price)"
+    confirmation: "Bearish BOS or displacement + FVG after Q2 manipulation high"
+    zone: premium                 # optional additional confluence
+
+exit_rules:
+  - transition_to_Q4             # exit on Q3 -> Q4 phase transition
+  - opposing_bos                 # exit on opposing BOS
+  - target_liquidity             # exit at opposite liquidity level
+
+runtime_assertions:
+  - entries_only_in_Q3            # all entries must occur during NY AM (06:00-12:00 ET)
+  - no_entries_in_Q1              # zero entries during Asia session
+  - signal_count_nonzero
+  - signal_density_reasonable     # not every bar
+  - true_open_tracked             # True Open (Q2 opening price) must be computed

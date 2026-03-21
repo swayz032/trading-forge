@@ -1,6 +1,6 @@
 import { db } from "../db/index.js";
 import { backtests, paperTrades } from "../db/schema.js";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 
@@ -27,15 +27,16 @@ function stdDev(values: number[]): number {
 export async function detectDrift(strategyId: string, sessionId: string): Promise<DriftReport[]> {
   // Get latest completed backtest for this strategy
   const [backtest] = await db.select().from(backtests)
-    .where(eq(backtests.strategyId, strategyId))
+    .where(and(eq(backtests.strategyId, strategyId), eq(backtests.status, "completed")))
     .orderBy(desc(backtests.createdAt))
     .limit(1);
 
   if (!backtest) return [];
 
-  // Get paper trades for this session
+  // Get paper trades for this session (ordered by exit time — critical for drawdown calc)
   const trades = await db.select().from(paperTrades)
-    .where(eq(paperTrades.sessionId, sessionId));
+    .where(eq(paperTrades.sessionId, sessionId))
+    .orderBy(paperTrades.exitTime);
 
   if (trades.length < 5) return []; // Need enough data to compare
 

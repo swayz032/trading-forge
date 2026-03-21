@@ -5,12 +5,51 @@ import { analyzeMarket } from "../services/regime-service.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { OllamaClient } from "../services/ollama-client.js";
 import { logger } from "../index.js";
 
 export const agentRoutes = Router();
 const agentService = new AgentService();
+
+// ─── Strategy Validation Constants ──────────────────────────────
+// Known ICT concepts that have cross-validated specs
+const KNOWN_ICT_CONCEPTS = [
+  "silver_bullet", "smt_reversal", "judas_swing", "ict_2022",
+  "ote", "breaker", "turtle_soup", "iofed",
+  "midnight_open", "ny_lunch_reversal", "eqhl_raid",
+] as const;
+
+/**
+ * Run Python static validation on strategy code against its concept spec.
+ * Returns { passed: boolean, errors: string[], warnings: string[] }
+ */
+async function runPythonValidation(
+  pythonCode: string,
+  conceptName: string,
+): Promise<{ passed: boolean; errors: string[]; warnings: string[] }> {
+  const { execSync } = await import("child_process");
+  try {
+    const script = `
+import json, sys
+sys.path.insert(0, '.')
+from src.engine.validation import load_spec, validate_static_from_code
+spec = load_spec('${conceptName}')
+code = '''${pythonCode.replace(/'/g, "\\'")}'''
+result = validate_static_from_code(code, spec)
+print(json.dumps({"passed": result.passed, "errors": result.errors, "warnings": result.warnings}))
+`;
+    const output = execSync(`python -c "${script.replace(/"/g, '\\"')}"`, {
+      cwd: process.cwd(),
+      timeout: 10000,
+      encoding: "utf-8",
+    });
+    return JSON.parse(output.trim());
+  } catch {
+    // If validation can't run, let the strategy through (fail-open)
+    return { passed: true, errors: [], warnings: ["Validation could not run"] };
+  }
+}
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
@@ -90,6 +129,39 @@ agentRoutes.post("/run-strategy", async (req, res) => {
     return;
   }
 
+  const strategyName = parsed.data.strategy_name.toLowerCase().replace(/-/g, "_");
+
+  // ─── Validation gate: known ICT concepts ────────────────
+  if (KNOWN_ICT_CONCEPTS.includes(strategyName as any)) {
+    try {
+      const validation = await runPythonValidation(parsed.data.python_code, strategyName);
+      if (!validation.passed) {
+        res.status(422).json({
+          error: "strategy_validation_failed",
+          concept: strategyName,
+          errors: validation.errors,
+          warnings: validation.warnings,
+        });
+        return;
+      }
+    } catch (err) {
+      logger.warn({ err, strategyName }, "Validation gate error — proceeding anyway");
+    }
+  }
+
+  // ─── Cross-validation gate: unknown concepts ────────────
+  // If strategy claims to be an ICT concept but we don't have a spec → queue for research
+  const ictPatterns = /\b(ict|smc|order.?block|fvg|breaker|sweep|liquidity)\b/i;
+  if (!KNOWN_ICT_CONCEPTS.includes(strategyName as any) && ictPatterns.test(parsed.data.one_sentence)) {
+    logger.info({ strategyName }, "Unknown ICT concept — queued for cross-validation");
+    res.status(202).json({
+      status: "queued_for_validation",
+      reason: `Concept '${strategyName}' not yet cross-validated. Strategy queued for research.`,
+      strategy_name: strategyName,
+    });
+    return;
+  }
+
   // Fire and forget
   agentService.runStrategy(parsed.data).catch(() => {
     // Error persisted to DB by service
@@ -156,8 +228,8 @@ agentRoutes.post("/run-class-strategy", async (req, res) => {
   }
 
   // Fire and forget
-  agentService.runClassStrategy(parsed.data).catch(() => {
-    // Error persisted to DB by service
+  agentService.runClassStrategy(parsed.data).catch((err) => {
+    logger.error({ err, strategy_class: parsed.data.strategy_class }, "run-class-strategy failed");
   });
 
   res.status(202).json({ message: "Class strategy submitted", strategy_class: parsed.data.strategy_class });
@@ -371,23 +443,62 @@ agentRoutes.get("/failure-patterns", async (req, res) => {
 });
 
 // ─── GET /api/agent/jobs ───────────────────────────────────────────
-// List recent agent jobs from audit_log
+// List recent agent jobs from audit_log (paginated)
 
-agentRoutes.get("/jobs", async (_req, res) => {
-  const jobs = await db
+agentRoutes.get("/jobs", async (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 20, 100);
+  const offset = Number(req.query.offset) || 0;
+  const typeFilter = req.query.type as string | undefined;
+  const statusFilter = req.query.status as string | undefined;
+
+  // Map friendly type names to action prefixes
+  const typeActionMap: Record<string, string[]> = {
+    "trading-quant": ["agent.run-strategy", "agent.run-class-strategy", "agent.batch", "agent.robustness", "agent.analyze-market"],
+    "openclaw-scout": ["agent.find-strategies", "agent.scout-ideas"],
+    "ollama-analyst": ["agent.critique"],
+  };
+
+  // Build conditions — include all entity types that agent actions may use
+  const conditions = [sql`${auditLog.entityType} IN ('strategy', 'backtest', 'agent')` as any];
+  if (statusFilter) {
+    // Map "failed" to include "failure" status
+    if (statusFilter === "failed") {
+      conditions.push(sql`${auditLog.status} IN ('failed', 'failure')` as any);
+    } else {
+      conditions.push(eq(auditLog.status, statusFilter));
+    }
+  }
+
+  const whereClause = and(...conditions);
+
+  // Get total count (before type filtering since type filter is done in-memory)
+  const [{ count: rawTotal }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(auditLog)
+    .where(whereClause);
+
+  // Fetch more rows than needed to account for action filtering
+  const fetchLimit = typeFilter ? Math.max(limit * 5, 200) : limit + offset + 10;
+  const rows = await db
     .select()
     .from(auditLog)
-    .where(
-      eq(auditLog.entityType, "strategy"),
-    )
+    .where(whereClause)
     .orderBy(desc(auditLog.createdAt))
-    .limit(50);
+    .limit(fetchLimit);
 
-  const filtered = jobs.filter((j) =>
-    j.action.startsWith("agent."),
-  );
+  // Filter to agent actions only
+  let filtered = rows.filter((j) => j.action.startsWith("agent."));
 
-  res.json(filtered);
+  // Apply type filter
+  if (typeFilter && typeActionMap[typeFilter]) {
+    const allowedActions = typeActionMap[typeFilter];
+    filtered = filtered.filter((j) => allowedActions.includes(j.action));
+  }
+
+  const total = typeFilter ? filtered.length : rawTotal; // rawTotal is accurate when no type filter
+  const paginated = filtered.slice(offset, offset + limit);
+
+  res.json({ data: paginated, total });
 });
 
 // ─── GET /api/agent/jobs/:id ───────────────────────────────────────
@@ -405,4 +516,19 @@ agentRoutes.get("/jobs/:id", async (req, res) => {
   }
 
   res.json(job);
+});
+
+// DELETE /api/agent/jobs — Purge agent-specific jobs only (not all audit_log)
+agentRoutes.delete("/jobs", async (_req, res) => {
+  const agentActions = [
+    "agent.run-strategy",
+    "agent.run-class-strategy",
+    "agent.find-strategies",
+    "agent.critique",
+    "agent.batch",
+    "agent.scout-ideas",
+    "agent.robustness",
+  ];
+  await db.delete(auditLog).where(inArray(auditLog.action, agentActions));
+  res.json({ deleted: true, message: "Agent jobs purged (audit log preserved)" });
 });

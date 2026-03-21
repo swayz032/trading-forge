@@ -36,12 +36,18 @@ def compute_structural_stop(
     sweep_wick_low: Optional[float] = None,    # Wick of a recent sweep candle
     sweep_wick_high: Optional[float] = None,
     session_transition: bool = False,
+    max_stop_points: float = 6.0,
 ) -> StopPlan:
     """Compute structural stop placement.
 
     For LONGS: stop goes BELOW structure (sweep wick > OB bottom > FVG bottom > swing low)
     For SHORTS: stop goes ABOVE structure (sweep wick > OB top > FVG top > swing high)
     """
+    # Guard: atr=0 would produce stop_price=entry_price (zero risk).
+    # Fallback to tick_size × 20 as minimum ATR proxy.
+    if atr <= 0:
+        atr = tick_size * 20
+
     buffer = max(tick_size, atr * 0.10)
     session_adj = 1.5 if session_transition else 1.0
     buffer *= session_adj
@@ -88,6 +94,15 @@ def compute_structural_stop(
         else:
             stop_price = entry_price + (atr * 1.5 * session_adj)
             stop_reason = "atr_fallback"
+
+    # Enforce max risk cap (default 6 points on MES)
+    distance = abs(entry_price - stop_price)
+    if max_stop_points > 0 and distance > max_stop_points:
+        if direction == "long":
+            stop_price = entry_price - max_stop_points
+        else:
+            stop_price = entry_price + max_stop_points
+        stop_reason = f"{stop_reason}_capped_{max_stop_points:.0f}pt"
 
     risk_per_contract = abs(entry_price - stop_price) * point_value
 

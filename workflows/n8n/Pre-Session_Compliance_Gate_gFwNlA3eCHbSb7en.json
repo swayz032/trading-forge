@@ -1,0 +1,593 @@
+{
+  "updatedAt": "2026-03-15T00:46:58.887Z",
+  "createdAt": "2026-03-14T21:06:25.292Z",
+  "id": "gFwNlA3eCHbSb7en",
+  "name": "Pre-Session Compliance Gate",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger-schedule",
+      "name": "Daily 9:15AM ET Mon-Fri",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "15 9 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-gate",
+      "name": "Fetch Gate Decisions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:4000/api/compliance/gate/today",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "code-parse-gate",
+      "name": "Parse Gate Decisions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const response = $input.first().json;\nconst decisions = response.decisions || response.data || response;\nconst decisionList = Array.isArray(decisions) ? decisions : [];\n\nlet approved = 0;\nlet blocked = 0;\nlet restricted = 0;\nconst blockedDetails = [];\n\nfor (const d of decisionList) {\n  const decision = (d.finalDecision || d.decision || '').toUpperCase();\n  if (decision === 'APPROVED') approved++;\n  else if (decision === 'BLOCKED') {\n    blocked++;\n    blockedDetails.push({\n      strategyId: d.strategyId || d.strategy_id || 'N/A',\n      firm: d.firm || d.firmName || 'N/A',\n      reason: d.reason || d.blockReason || 'No reason provided',\n      ruleset: d.ruleset || 'N/A'\n    });\n  } else if (decision === 'RESTRICTED') restricted++;\n}\n\nreturn [{\n  json: {\n    summary: {\n      approved,\n      blocked,\n      restricted,\n      total: decisionList.length\n    },\n    blockedCount: blocked,\n    blockedDetails,\n    gateCheckTime: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "if-blocked",
+      "name": "Any Blocked Strategies?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        750,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "rightValue": ""
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "blocked-check",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $json.blockedCount }}",
+              "rightValue": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-format-blocked",
+      "name": "Format Blocked Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\nconst blocked = data.blockedDetails || [];\n\nconst details = blocked.map(b =>\n  `  - Strategy ${b.strategyId} (Firm: ${b.firm})\\n    Reason: ${b.reason}`\n).join('\\n\\n');\n\nreturn [{\n  json: {\n    title: 'Pre-Session Gate: Strategies Blocked',\n    message: `${blocked.length} strategy(ies) BLOCKED\\n\\n${details}\\n\\nSummary: ${data.summary.approved} approved, ${data.summary.blocked} blocked, ${data.summary.restricted} restricted (${data.summary.total} total)\\nChecked at: ${data.gateCheckTime}`,\n    severity: 'warning',\n    data: {\n      approved: String(data.summary.approved),\n      blocked: String(data.summary.blocked),\n      restricted: String(data.summary.restricted),\n      total: String(data.summary.total),\n      blockedStrategies: blocked.map(b => b.strategyId).join(', ')\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-send-blocked-alert",
+      "name": "Send Blocked Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1250,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/compliance",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "code-output-summary",
+      "name": "Output Gate Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        450
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\n\nreturn [{\n  json: {\n    status: data.blockedCount > 0 ? 'GATE_BLOCKED' : 'GATE_CLEAR',\n    summary: data.summary,\n    blockedDetails: data.blockedDetails || [],\n    gateCheckTime: data.gateCheckTime,\n    message: data.blockedCount > 0\n      ? `Gate blocked: ${data.summary.blocked} strategies cannot trade`\n      : `Gate clear: All ${data.summary.approved} strategies approved`\n  }\n}];"
+      }
+    },
+    {
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        600
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "http-error-alert",
+      "name": "Send Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        250,
+        600
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Pre-Session Compliance Gate', message: String($json.execution ? $json.execution.error ? $json.execution.error.message : 'Unknown error' : 'Unknown error'), severity: 'critical', data: { workflow: 'Pre-Session Compliance Gate', executionId: String($json.execution ? $json.execution.id : 'N/A'), timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Daily 9:15AM ET Mon-Fri": {
+      "main": [
+        [
+          {
+            "node": "Fetch Gate Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Gate Decisions": {
+      "main": [
+        [
+          {
+            "node": "Parse Gate Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Gate Decisions": {
+      "main": [
+        [
+          {
+            "node": "Any Blocked Strategies?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Blocked Strategies?": {
+      "main": [
+        [
+          {
+            "node": "Format Blocked Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Output Gate Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Blocked Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Blocked Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Daily 9:15AM ET Mon-Fri": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "fd0b9b49-34c9-47be-b79f-08c4ef1ae92f",
+  "activeVersionId": "fd0b9b49-34c9-47be-b79f-08c4ef1ae92f",
+  "versionCounter": 11,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T21:06:25.292Z",
+      "createdAt": "2026-03-14T21:06:25.292Z",
+      "role": "workflow:owner",
+      "workflowId": "gFwNlA3eCHbSb7en",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-14T23:19:52.460Z",
+    "createdAt": "2026-03-14T23:19:52.460Z",
+    "versionId": "fd0b9b49-34c9-47be-b79f-08c4ef1ae92f",
+    "workflowId": "gFwNlA3eCHbSb7en",
+    "nodes": [
+      {
+        "id": "trigger-schedule",
+        "name": "Daily 9:15AM ET Mon-Fri",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "15 9 * * 1-5"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "http-gate",
+        "name": "Fetch Gate Decisions",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://localhost:4000/api/compliance/gate/today",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "code-parse-gate",
+        "name": "Parse Gate Decisions",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          300
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const response = $input.first().json;\nconst decisions = response.decisions || response.data || response;\nconst decisionList = Array.isArray(decisions) ? decisions : [];\n\nlet approved = 0;\nlet blocked = 0;\nlet restricted = 0;\nconst blockedDetails = [];\n\nfor (const d of decisionList) {\n  const decision = (d.finalDecision || d.decision || '').toUpperCase();\n  if (decision === 'APPROVED') approved++;\n  else if (decision === 'BLOCKED') {\n    blocked++;\n    blockedDetails.push({\n      strategyId: d.strategyId || d.strategy_id || 'N/A',\n      firm: d.firm || d.firmName || 'N/A',\n      reason: d.reason || d.blockReason || 'No reason provided',\n      ruleset: d.ruleset || 'N/A'\n    });\n  } else if (decision === 'RESTRICTED') restricted++;\n}\n\nreturn [{\n  json: {\n    summary: {\n      approved,\n      blocked,\n      restricted,\n      total: decisionList.length\n    },\n    blockedCount: blocked,\n    blockedDetails,\n    gateCheckTime: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "if-blocked",
+        "name": "Any Blocked Strategies?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          750,
+          300
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict",
+              "rightValue": ""
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "blocked-check",
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                },
+                "leftValue": "={{ $json.blockedCount }}",
+                "rightValue": 0
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "code-format-blocked",
+        "name": "Format Blocked Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          200
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const data = $input.first().json;\nconst blocked = data.blockedDetails || [];\n\nconst details = blocked.map(b =>\n  `  - Strategy ${b.strategyId} (Firm: ${b.firm})\\n    Reason: ${b.reason}`\n).join('\\n\\n');\n\nreturn [{\n  json: {\n    title: 'Pre-Session Gate: Strategies Blocked',\n    message: `${blocked.length} strategy(ies) BLOCKED\\n\\n${details}\\n\\nSummary: ${data.summary.approved} approved, ${data.summary.blocked} blocked, ${data.summary.restricted} restricted (${data.summary.total} total)\\nChecked at: ${data.gateCheckTime}`,\n    severity: 'warning',\n    data: {\n      approved: String(data.summary.approved),\n      blocked: String(data.summary.blocked),\n      restricted: String(data.summary.restricted),\n      total: String(data.summary.total),\n      blockedStrategies: blocked.map(b => b.strategyId).join(', ')\n    }\n  }\n}];"
+        }
+      },
+      {
+        "id": "http-send-blocked-alert",
+        "name": "Send Blocked Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1250,
+          200
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/compliance",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
+      },
+      {
+        "id": "code-output-summary",
+        "name": "Output Gate Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          450
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const data = $input.first().json;\n\nreturn [{\n  json: {\n    status: data.blockedCount > 0 ? 'GATE_BLOCKED' : 'GATE_CLEAR',\n    summary: data.summary,\n    blockedDetails: data.blockedDetails || [],\n    gateCheckTime: data.gateCheckTime,\n    message: data.blockedCount > 0\n      ? `Gate blocked: ${data.summary.blocked} strategies cannot trade`\n      : `Gate clear: All ${data.summary.approved} strategies approved`\n  }\n}];"
+        }
+      },
+      {
+        "id": "error-trigger",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          600
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "http-error-alert",
+        "name": "Send Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          600
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/alerts",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Pre-Session Compliance Gate', message: String($json.execution ? $json.execution.error ? $json.execution.error.message : 'Unknown error' : 'Unknown error'), severity: 'critical', data: { workflow: 'Pre-Session Compliance Gate', executionId: String($json.execution ? $json.execution.id : 'N/A'), timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 2000
+      }
+    ],
+    "connections": {
+      "Daily 9:15AM ET Mon-Fri": {
+        "main": [
+          [
+            {
+              "node": "Fetch Gate Decisions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Gate Decisions": {
+        "main": [
+          [
+            {
+              "node": "Parse Gate Decisions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Gate Decisions": {
+        "main": [
+          [
+            {
+              "node": "Any Blocked Strategies?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Blocked Strategies?": {
+        "main": [
+          [
+            {
+              "node": "Format Blocked Alert",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Output Gate Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Blocked Alert": {
+        "main": [
+          [
+            {
+              "node": "Send Blocked Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "Send Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-14T23:19:52.481Z",
+        "id": 1132,
+        "workflowId": "gFwNlA3eCHbSb7en",
+        "versionId": "fd0b9b49-34c9-47be-b79f-08c4ef1ae92f",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

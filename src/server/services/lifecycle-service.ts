@@ -10,6 +10,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, auditLog } from "../db/schema.js";
 import { logger } from "../index.js";
+import { evolveStrategy } from "./evolution-service.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -138,6 +139,13 @@ export class LifecycleService {
         const result = await this.promoteStrategy(s.id, "DEPLOYED", "DECLINING");
         if (result.success) {
           demoted.push(s.id);
+
+          // Fire-and-forget: trigger self-evolution for declining strategy
+          evolveStrategy(s.id).then((evoResult) => {
+            logger.info({ strategyId: s.id, ...evoResult }, "Auto-evolution completed for declining strategy");
+          }).catch((evoErr) => {
+            logger.error({ strategyId: s.id, err: evoErr }, "Auto-evolution failed (non-blocking)");
+          });
         }
       }
     }

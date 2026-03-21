@@ -1,0 +1,628 @@
+{
+  "updatedAt": "2026-03-20T05:36:11.706Z",
+  "createdAt": "2026-03-20T05:36:11.706Z",
+  "id": "MIIxmilbgZv3SUBh",
+  "name": "7A-auto-evolution",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-declining",
+      "name": "Fetch Declining Strategies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/strategies",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "lifecycleState",
+              "value": "DECLINING"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "check-any",
+      "name": "Any Declining?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.length || ($json.data && $json.data.length) || 0 }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "split-items",
+      "name": "Split Strategies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst items = Array.isArray(data) ? data : (data.data || []);\nreturn items.map(s => ({ json: { strategyId: s.id || s._id, name: s.name } }));"
+      }
+    },
+    {
+      "id": "decay-check",
+      "name": "POST Decay Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -100
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/decay/check",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "strategyId",
+              "value": "={{ $json.strategyId }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      }
+    },
+    {
+      "id": "build-results",
+      "name": "Build Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst total = items.length;\nconst evolved = items.filter(i => i.json.evolved || i.json.action === 'evolved').length;\nconst retired = items.filter(i => i.json.retired || i.json.action === 'retired').length;\nreturn [{ json: { title: `Auto-Evolution: ${total} declining checked`, severity: total > 0 ? 'warning' : 'info', body: `Checked ${total} declining strategies.\nEvolved: ${evolved}\nRetired: ${retired}` } }];"
+      }
+    },
+    {
+      "id": "no-declining",
+      "name": "No Declining",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        100
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { title: 'Auto-Evolution: No declining strategies', severity: 'info', body: 'No declining strategies found. Nothing to evolve.' } }];"
+      }
+    },
+    {
+      "id": "send-alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4100/alert/alerts",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "severity",
+              "value": "={{ $json.severity }}"
+            },
+            {
+              "name": "body",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Declining Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Declining Strategies": {
+      "main": [
+        [
+          {
+            "node": "Any Declining?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Declining?": {
+      "main": [
+        [
+          {
+            "node": "Split Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Declining",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Strategies": {
+      "main": [
+        [
+          {
+            "node": "POST Decay Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Decay Check": {
+      "main": [
+        [
+          {
+            "node": "Build Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Results": {
+      "main": [
+        [
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Declining": {
+      "main": [
+        [
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Cron Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "77eae00b-b8f7-4e96-a11d-c1e726a84265",
+  "activeVersionId": "77eae00b-b8f7-4e96-a11d-c1e726a84265",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T05:36:11.706Z",
+      "createdAt": "2026-03-20T05:36:11.706Z",
+      "role": "workflow:owner",
+      "workflowId": "MIIxmilbgZv3SUBh",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-20T05:36:11.709Z",
+    "createdAt": "2026-03-20T05:36:11.709Z",
+    "versionId": "77eae00b-b8f7-4e96-a11d-c1e726a84265",
+    "workflowId": "MIIxmilbgZv3SUBh",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Cron Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 3 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-declining",
+        "name": "Fetch Declining Strategies",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/strategies",
+          "method": "GET",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "lifecycleState",
+                "value": "DECLINING"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        }
+      },
+      {
+        "id": "check-any",
+        "name": "Any Declining?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "1",
+                "leftValue": "={{ $json.length || ($json.data && $json.data.length) || 0 }}",
+                "rightValue": "0",
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "split-items",
+        "name": "Split Strategies",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          -100
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst items = Array.isArray(data) ? data : (data.data || []);\nreturn items.map(s => ({ json: { strategyId: s.id || s._id, name: s.name } }));"
+        }
+      },
+      {
+        "id": "decay-check",
+        "name": "POST Decay Check",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          -100
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/decay/check",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "strategyId",
+                "value": "={{ $json.strategyId }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        }
+      },
+      {
+        "id": "build-results",
+        "name": "Build Results",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1100,
+          -100
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst total = items.length;\nconst evolved = items.filter(i => i.json.evolved || i.json.action === 'evolved').length;\nconst retired = items.filter(i => i.json.retired || i.json.action === 'retired').length;\nreturn [{ json: { title: `Auto-Evolution: ${total} declining checked`, severity: total > 0 ? 'warning' : 'info', body: `Checked ${total} declining strategies.\nEvolved: ${evolved}\nRetired: ${retired}` } }];"
+        }
+      },
+      {
+        "id": "no-declining",
+        "name": "No Declining",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          100
+        ],
+        "parameters": {
+          "jsCode": "return [{ json: { title: 'Auto-Evolution: No declining strategies', severity: 'info', body: 'No declining strategies found. Nothing to evolve.' } }];"
+        }
+      },
+      {
+        "id": "send-alert",
+        "name": "Send Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1320,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4100/alert/alerts",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "severity",
+                "value": "={{ $json.severity }}"
+              },
+              {
+                "name": "body",
+                "value": "={{ $json.body }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Cron Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Declining Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Declining Strategies": {
+        "main": [
+          [
+            {
+              "node": "Any Declining?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Declining?": {
+        "main": [
+          [
+            {
+              "node": "Split Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Declining",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Strategies": {
+        "main": [
+          [
+            {
+              "node": "POST Decay Check",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Decay Check": {
+        "main": [
+          [
+            {
+              "node": "Build Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Results": {
+        "main": [
+          [
+            {
+              "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "No Declining": {
+        "main": [
+          [
+            {
+              "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-20T05:36:10.553Z",
+        "id": 1200,
+        "workflowId": "MIIxmilbgZv3SUBh",
+        "versionId": "77eae00b-b8f7-4e96-a11d-c1e726a84265",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

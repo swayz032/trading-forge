@@ -29,9 +29,24 @@ except ImportError:
     cp = None
     GPU_AVAILABLE = False
 
+try:
+    from numba import njit
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
+
 from src.engine.config import MonteCarloRequest
 
 DEFAULT_NUM_SIMULATIONS = 100_000
+
+
+def adjust_p_value_bonferroni(raw_p: float, n_variants: int) -> tuple:
+    """Bonferroni correction for multiple hypothesis testing.
+
+    Returns (raw_p, adjusted_threshold, passes).
+    """
+    threshold = 0.05 / max(1, n_variants)
+    return (raw_p, threshold, raw_p < threshold)
 
 
 def get_array_module(use_gpu: bool):
@@ -108,10 +123,7 @@ def return_bootstrap(
 
 
 def optimal_block_length(trades: np.ndarray) -> int:
-    """Data-driven block length: n^(1/3) adjusted for autocorrelation.
-
-    Uses the cube-root rule as a base, then scales up by 1.5x if first-order
-    autocorrelation exceeds 0.15 (indicating meaningful serial dependence).
+    """Data-driven block length: PPW (2004) when arch available, else cube-root fallback.
 
     Args:
         trades: 1D array of trade P&Ls
@@ -120,12 +132,49 @@ def optimal_block_length(trades: np.ndarray) -> int:
         Block length clamped to [3, n//10]
     """
     n = len(trades)
-    base = int(np.ceil(n ** (1 / 3)))
-    if n > 1:
-        autocorr = np.corrcoef(trades[:-1], trades[1:])[0, 1]
-        if not np.isnan(autocorr) and autocorr > 0.15:
-            base = int(base * 1.5)
-    return max(3, min(base, n // 10))
+    try:
+        from arch.bootstrap import optimal_block_length as ppw_obl
+        result = ppw_obl(trades)
+        block_len = int(np.ceil(float(result["stationary"].iloc[0])))
+    except (ImportError, Exception):
+        # Fallback: cube-root + autocorrelation
+        block_len = int(np.ceil(n ** (1 / 3)))
+        if n > 1:
+            autocorr = np.corrcoef(trades[:-1], trades[1:])[0, 1]
+            if not np.isnan(autocorr) and autocorr > 0.15:
+                block_len = int(block_len * 1.5)
+    return max(3, min(block_len, n // 10))
+
+
+if NUMBA_AVAILABLE:
+    @njit(cache=True)
+    def _block_bootstrap_core(trades, n_sims, n_trades, p,
+                               start_pos, block_draws, restart_pos):
+        """JIT-compiled inner loop for block bootstrap."""
+        paths = np.zeros((n_sims, n_trades))
+        for sim in range(n_sims):
+            pos = start_pos[sim]
+            for idx in range(n_trades):
+                paths[sim, idx] = trades[pos % n_trades]
+                if block_draws[sim, idx] < p:
+                    pos = restart_pos[sim, idx]
+                else:
+                    pos += 1
+        return paths
+
+
+def _block_bootstrap_python(trades, n_sims, n_trades, p, rng):
+    """Pure Python fallback for block bootstrap."""
+    paths = np.zeros((n_sims, n_trades))
+    for sim in range(n_sims):
+        pos = rng.integers(0, n_trades)
+        for idx in range(n_trades):
+            paths[sim, idx] = trades[pos % n_trades]
+            if rng.random() < p:
+                pos = rng.integers(0, n_trades)
+            else:
+                pos += 1
+    return paths
 
 
 def block_bootstrap(
@@ -141,6 +190,8 @@ def block_bootstrap(
     IID bootstrap destroys consecutive loss streaks (underestimates risk by
     40-60%). Block bootstrap preserves serial dependence in trade sequences.
 
+    Uses Numba JIT when available (50-100x faster), falls back to pure Python.
+
     Args:
         trades: 1D array of trade P&Ls
         n_sims: Number of simulation paths
@@ -154,22 +205,19 @@ def block_bootstrap(
     if len(trades) == 0:
         raise ValueError("Cannot bootstrap empty trades array")
 
-    # Block bootstrap is CPU-only (control flow per-sim)
-    rng = np.random.default_rng(seed)
     n_trades = len(trades)
     p = 1.0 / expected_block_length
+    rng = np.random.default_rng(seed)
 
-    paths = np.zeros((n_sims, n_trades))
-    for sim in range(n_sims):
-        idx = 0
-        pos = rng.integers(0, n_trades)
-        while idx < n_trades:
-            paths[sim, idx] = trades[pos % n_trades]
-            idx += 1
-            if rng.random() < p:
-                pos = rng.integers(0, n_trades)
-            else:
-                pos += 1
+    if NUMBA_AVAILABLE:
+        # Pre-generate all random numbers (Numba doesn't support default_rng)
+        start_pos = rng.integers(0, n_trades, size=n_sims)
+        block_draws = rng.random(size=(n_sims, n_trades))
+        restart_pos = rng.integers(0, n_trades, size=(n_sims, n_trades))
+        paths = _block_bootstrap_core(trades, n_sims, n_trades, p,
+                                       start_pos, block_draws, restart_pos)
+    else:
+        paths = _block_bootstrap_python(trades, n_sims, n_trades, p, rng)
 
     return np.cumsum(paths, axis=1)
 
@@ -182,6 +230,7 @@ def stress_test_trades(
     loss_multiplier: float = 1.5,
     win_reduction: float = 1.0,
     win_rate_reduction: float = 0.0,
+    seed: int = 123,
 ) -> np.ndarray:
     """Amplify losses and/or reduce wins for stress testing.
 
@@ -214,7 +263,7 @@ def stress_test_trades(
         win_indices = np.where(wins_mask)[0]
         n_flip = int(len(win_indices) * win_rate_reduction)
         if n_flip > 0:
-            rng = np.random.default_rng(123)
+            rng = np.random.default_rng(seed)
             flip_indices = rng.choice(win_indices, size=n_flip, replace=False)
             # Flip to a loss equal to the median loss
             median_loss = np.median(trades[losses_mask]) if np.any(losses_mask) else -100.0
@@ -226,6 +275,8 @@ def stress_test_trades(
 def inject_synthetic_stress(
     trades: np.ndarray,
     frequency: float = 2.0 / 250,
+    seed: int = 456,
+    max_loss_cap: float = 0.0,
 ) -> np.ndarray:
     """Inject synthetic catastrophic trades (5x worst normal loss) at realistic frequency.
 
@@ -235,6 +286,9 @@ def inject_synthetic_stress(
     Args:
         trades: 1D array of trade P&Ls
         frequency: Probability of catastrophic event per trade (default: ~2 per year)
+        seed: RNG seed for reproducibility
+        max_loss_cap: Cap catastrophic loss magnitude (0 = no cap).
+            E.g., 2 × 6pt × $5 = $60 for MES.
 
     Returns:
         Trade array with injected catastrophic events (copy, original unchanged)
@@ -245,13 +299,16 @@ def inject_synthetic_stress(
     # Compute catastrophic loss magnitude: 5x the worst normal loss
     losses = trades[trades < 0]
     if len(losses) == 0:
-        # No losses in history — use 5% of mean absolute trade size
         catastrophic_loss = -5.0 * np.mean(np.abs(trades))
     else:
         catastrophic_loss = 5.0 * np.min(losses)  # min is most negative, *5 makes it worse
 
+    # Cap to max risk (e.g., 2× max_stop_points × point_value = 2 × 6 × $5 = $60)
+    if max_loss_cap > 0:
+        catastrophic_loss = max(catastrophic_loss, -max_loss_cap)
+
     # Determine injection points
-    rng = np.random.default_rng(456)
+    rng = np.random.default_rng(seed)
     n_events = rng.binomial(n_trades, frequency)
     if n_events > 0:
         injection_indices = rng.choice(n_trades, size=n_events, replace=False)
@@ -359,7 +416,7 @@ def simulate_firm_survival(
     max_drawdowns_all = np.zeros(n_sims)
     days_to_pass_list: list[int] = []
 
-    six_months_bars = min(126, n_steps)  # ~6 months of trading days
+    six_months_bars = 126  # ~6 months of trading days (no shortcut for short sims)
 
     # For realtime trailing firms (e.g. Tradeify), simulate intraday equity
     # movement within each day.  Split each day's P&L into sub-steps so that
@@ -449,9 +506,11 @@ def simulate_firm_survival(
                         max(1, (pass_step + 1) // max(daily_trades_per_day, 1))
                     )
 
-        # 6-month funded survival: passed eval AND survived 6mo without breach
-        if passed_eval and not breached and n_steps >= six_months_bars:
-            survived_6mo_count += 1
+        # 6-month funded survival: passed eval AND had 126 bars AFTER passing without breach
+        if passed_eval and not breached and pass_step is not None:
+            bars_after_pass = n_steps - pass_step
+            if bars_after_pass >= six_months_bars:
+                survived_6mo_count += 1
 
         if breach_reason:
             breach_reasons[breach_reason] = breach_reasons.get(breach_reason, 0) + 1
@@ -595,13 +654,13 @@ def _compute_max_drawdowns(paths: np.ndarray, initial_capital: float) -> np.ndar
     return np.max(drawdowns, axis=1)
 
 
-def _compute_sharpe_ratios(paths: np.ndarray) -> np.ndarray:
-    """Compute annualized Sharpe ratio for each path's daily returns."""
+def _compute_sharpe_ratios(paths: np.ndarray, periods_per_year: float = 252.0) -> np.ndarray:
+    """Compute annualized Sharpe ratio for each path's step returns."""
     daily = np.diff(paths, axis=1)
     means = np.mean(daily, axis=1)
     stds = np.std(daily, axis=1, ddof=1)
     stds = np.where(stds == 0, 1e-10, stds)
-    return means / stds * np.sqrt(252)
+    return means / stds * np.sqrt(periods_per_year)
 
 
 def _compute_percentiles(values: np.ndarray, levels: list[float]) -> dict:
@@ -640,10 +699,16 @@ def _compute_risk_metrics(
     paths: np.ndarray,
     initial_capital: float,
     ruin_threshold: float,
+    periods_per_year: float = 252.0,
+    skip_drawdown_duration: bool = False,
 ) -> dict:
     """Compute all risk metrics from simulated equity paths."""
     from src.engine.risk_metrics import compute_all_risk_metrics
-    return compute_all_risk_metrics(paths, initial_capital, ruin_threshold)
+    return compute_all_risk_metrics(
+        paths, initial_capital, ruin_threshold,
+        periods_per_year=periods_per_year,
+        skip_drawdown_duration=skip_drawdown_duration,
+    )
 
 
 # ─── Main Orchestrator ──────────────────────────────────────────
@@ -674,6 +739,18 @@ def run_monte_carlo(
 
     warnings: list[str] = []
 
+    # Step 3: Minimum trade count gate
+    MIN_TRADES_IID = 30
+    MIN_TRADES_BLOCK = 50
+    min_required = MIN_TRADES_BLOCK if request.method == "block_bootstrap" else MIN_TRADES_IID
+    if len(trades_arr) < min_required:
+        return {
+            "error": f"Insufficient trades ({len(trades_arr)}) for Monte Carlo. "
+                     f"Minimum {min_required} required for {request.method}.",
+            "num_simulations": 0,
+            "method": request.method,
+        }
+
     # 8.7 — OOS gate warning
     if not request.is_oos_trades:
         warnings.append(
@@ -685,42 +762,44 @@ def run_monte_carlo(
     stress_applied: Optional[str] = None
     if request.stress_level > 0:
         params = _get_stress_params(request.stress_level)
-        trades_arr = stress_test_trades(trades_arr, **params)
-        daily_arr = stress_test_trades(daily_arr, **params)
+        trades_arr = stress_test_trades(trades_arr, seed=request.seed + 200, **params)
+        daily_arr = stress_test_trades(daily_arr, seed=request.seed + 201, **params)
         stress_applied = f"level_{request.stress_level}"
 
-    # 8.3 — Inject synthetic catastrophic events if requested
+    # 8.3 — Inject synthetic catastrophic events if requested (with max loss cap)
     if request.inject_synthetic_stress:
-        trades_arr = inject_synthetic_stress(trades_arr)
-        daily_arr = inject_synthetic_stress(daily_arr)
+        max_loss = request.stress_inject_multiplier * request.max_stop_points * request.point_value
+        trades_arr = inject_synthetic_stress(trades_arr, seed=request.seed + 100, max_loss_cap=max_loss)
+        daily_arr = inject_synthetic_stress(daily_arr, seed=request.seed + 101, max_loss_cap=max_loss)
+
+    # Determine annualization factor based on method
+    # trade_resample paths are trade-level, not daily — use 252 as default assumption
+    periods_per_year = 252.0
 
     # Generate paths based on method
     both_metrics: Optional[dict] = None
 
     if request.method == "trade_resample":
-        paths = trade_resample(trades_arr, request.num_simulations, seed=42, xp=xp)
+        paths = trade_resample(trades_arr, request.num_simulations, seed=request.seed, xp=xp)
 
     elif request.method == "return_bootstrap":
         n_days = len(daily_pnls)
-        paths = return_bootstrap(daily_arr, request.num_simulations, n_days, seed=42, xp=xp)
+        paths = return_bootstrap(daily_arr, request.num_simulations, n_days, seed=request.seed, xp=xp)
 
     elif request.method == "block_bootstrap":
-        # 8.1 — Auto-compute optimal block length
-        block_len = optimal_block_length(trades_arr)
+        computed_block_len = optimal_block_length(trades_arr)
         paths = block_bootstrap(
             trades_arr, request.num_simulations,
-            expected_block_length=block_len, seed=42,
+            expected_block_length=computed_block_len, seed=request.seed,
         )
 
     else:  # "both"
-        # 8.8 — Fixed padding bug: separate reporting instead of padding
         half = request.num_simulations // 2
         other_half = request.num_simulations - half
-        trade_paths = trade_resample(trades_arr, half, seed=42, xp=xp)
+        trade_paths = trade_resample(trades_arr, half, seed=request.seed, xp=xp)
         n_days = len(daily_pnls)
-        return_paths = return_bootstrap(daily_arr, other_half, n_days, seed=43, xp=xp)
+        return_paths = return_bootstrap(daily_arr, other_half, n_days, seed=request.seed + 1, xp=xp)
 
-        # Report metrics separately for each method (no padding)
         both_metrics = {
             "trade_resample": {
                 "max_drawdowns": _compute_percentiles(
@@ -728,7 +807,7 @@ def run_monte_carlo(
                     request.confidence_levels,
                 ),
                 "sharpe_ratios": _compute_percentiles(
-                    _compute_sharpe_ratios(trade_paths),
+                    _compute_sharpe_ratios(trade_paths, periods_per_year),
                     request.confidence_levels,
                 ),
             },
@@ -738,7 +817,7 @@ def run_monte_carlo(
                     request.confidence_levels,
                 ),
                 "sharpe_ratios": _compute_percentiles(
-                    _compute_sharpe_ratios(return_paths),
+                    _compute_sharpe_ratios(return_paths, periods_per_year),
                     request.confidence_levels,
                 ),
             },
@@ -749,36 +828,47 @@ def run_monte_carlo(
 
     # Compute main metrics
     max_drawdowns = _compute_max_drawdowns(paths, request.initial_capital)
-    sharpe_ratios = _compute_sharpe_ratios(paths)
+    sharpe_ratios = _compute_sharpe_ratios(paths, periods_per_year)
 
     confidence_intervals = {
         "max_drawdown": _compute_percentiles(max_drawdowns, request.confidence_levels),
         "sharpe_ratio": _compute_percentiles(sharpe_ratios, request.confidence_levels),
     }
 
+    # 8.5 — Drawdown depth + duration stats (compute BEFORE risk_metrics to avoid duplicate)
+    drawdown_stats = compute_drawdown_stats(paths, request.initial_capital)
+
     risk_metrics = _compute_risk_metrics(
         paths, request.initial_capital, request.ruin_threshold,
+        periods_per_year=periods_per_year,
+        skip_drawdown_duration=True,
     )
-
-    # 8.5 — Drawdown depth + duration stats
-    drawdown_stats = compute_drawdown_stats(paths, request.initial_capital)
+    # Merge duration data from drawdown_stats into risk_metrics (avoids recomputation)
+    risk_metrics["drawdown_duration"] = {
+        "max_dd_duration_bars": drawdown_stats["max_dd_duration_bars"],
+        "recovery_time_bars": drawdown_stats["recovery_time_bars"],
+    }
 
     sampled_paths = _sample_paths(paths, request.max_paths_to_store, request.initial_capital)
 
-    # 8.6 — Convergence check at 1st percentile
-    dd_converged = check_convergence(max_drawdowns, percentile=1.0)
-    sharpe_converged = check_convergence(sharpe_ratios, percentile=1.0)
+    # Multi-percentile convergence (p1, p5, p95, p99)
+    convergence_pcts = [1.0, 5.0, 95.0, 99.0]
+    dd_convergence = {f"p{int(p)}_converged": check_convergence(max_drawdowns, p) for p in convergence_pcts}
+    sharpe_convergence = {f"p{int(p)}_converged": check_convergence(sharpe_ratios, p) for p in convergence_pcts}
+
+    all_converged = all(dd_convergence.values()) and all(sharpe_convergence.values())
     convergence = {
-        "max_drawdown_p1_converged": dd_converged,
-        "sharpe_p1_converged": sharpe_converged,
-        "convergence_stable": dd_converged and sharpe_converged,
+        "max_drawdown": dd_convergence,
+        "sharpe": sharpe_convergence,
+        "convergence_stable": all_converged,
+        # Backward compat
+        "max_drawdown_p1_converged": dd_convergence["p1_converged"],
+        "sharpe_p1_converged": sharpe_convergence["p1_converged"],
     }
 
     # 8.4 — Per-firm survival simulation
     firm_survival: Optional[dict[str, dict]] = None
     if request.firms:
-        # Determine granularity: trade_resample produces trade-level paths,
-        # return_bootstrap / block_bootstrap produce day-level paths
         granularity = "trade" if request.method == "trade_resample" else "day"
         firm_survival = {}
         for firm_key in request.firms:
@@ -816,7 +906,41 @@ def run_monte_carlo(
         result["firm_survival"] = firm_survival
 
     if request.method == "block_bootstrap":
-        result["block_length"] = optimal_block_length(np.array(trades, dtype=np.float64))
+        result["block_length"] = computed_block_len
+
+    # Step 18: Optional permutation overfitting test
+    if request.run_permutation_test:
+        from src.engine.risk_metrics import compute_permutation_test
+        perm_result = compute_permutation_test(
+            trades_arr, n_permutations=request.permutation_n, seed=request.seed + 300,
+        )
+        result["permutation_test"] = perm_result
+        if not perm_result["has_edge"]:
+            warnings.append(
+                f"Permutation test: no significant edge detected (p={perm_result['p_value']:.3f}). "
+                "Strategy returns may be due to random ordering."
+            )
+
+        # Deflated Sharpe Ratio
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio
+        from scipy import stats as sp_stats
+        obs_sharpe = float(
+            np.mean(trades_arr) / max(np.std(trades_arr, ddof=1), 1e-10) * np.sqrt(252)
+        )
+        dsr_result = compute_deflated_sharpe_ratio(
+            observed_sharpe=obs_sharpe,
+            n_trials=request.n_variants,
+            n_observations=len(trades_arr),
+            skewness=float(sp_stats.skew(trades_arr)) if len(trades_arr) > 2 else 0.0,
+            kurtosis=float(sp_stats.kurtosis(trades_arr, fisher=False)) if len(trades_arr) > 2 else 3.0,
+        )
+        result["deflated_sharpe"] = dsr_result
+
+        # Bonferroni adjustment on permutation p-value
+        raw_p = result["permutation_test"]["p_value"]
+        _, threshold, bonf_passes = adjust_p_value_bonferroni(raw_p, request.n_variants)
+        result["permutation_test"]["bonferroni_threshold"] = round(threshold, 6)
+        result["permutation_test"]["bonferroni_passes"] = bonf_passes
 
     return result
 
@@ -845,13 +969,19 @@ def main():
         num_simulations=config.get("num_simulations", DEFAULT_NUM_SIMULATIONS),
         method=config.get("method", "both"),
         use_gpu=config.get("use_gpu", True),
-        initial_capital=config.get("initial_capital", 100_000.0),
+        initial_capital=config.get("initial_capital", 50_000.0),
         max_paths_to_store=config.get("max_paths_to_store", 100),
         ruin_threshold=config.get("ruin_threshold", 0.0),
         is_oos_trades=config.get("is_oos_trades", False),
         stress_level=config.get("stress_level", 0),
         inject_synthetic_stress=config.get("inject_synthetic_stress", False),
         firms=config.get("firms", []),
+        seed=config.get("seed", 42),
+        max_stop_points=config.get("max_stop_points", 6.0),
+        point_value=config.get("point_value", 5.0),
+        stress_inject_multiplier=config.get("stress_inject_multiplier", 2.0),
+        run_permutation_test=config.get("run_permutation_test", False),
+        permutation_n=config.get("permutation_n", 1000),
     )
 
     result = run_monte_carlo(
@@ -864,7 +994,29 @@ def main():
     if args.mc_id:
         result["mc_id"] = args.mc_id
 
-    json.dump(result, sys.stdout)
+    # Custom encoder for numpy types and NaN/Infinity (invalid JSON)
+    import math
+
+    def _sanitize(obj):
+        """Recursively replace NaN/Infinity with None and convert numpy types."""
+        if isinstance(obj, dict):
+            return {k: _sanitize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [_sanitize(v) for v in obj]
+        if isinstance(obj, (np.bool_,)):
+            return bool(obj)
+        if isinstance(obj, (np.integer,)):
+            return int(obj)
+        if isinstance(obj, (np.floating,)):
+            v = float(obj)
+            return None if (math.isnan(v) or math.isinf(v)) else v
+        if isinstance(obj, float):
+            return None if (math.isnan(obj) or math.isinf(obj)) else obj
+        if isinstance(obj, np.ndarray):
+            return _sanitize(obj.tolist())
+        return obj
+
+    json.dump(_sanitize(result), sys.stdout)
 
 
 if __name__ == "__main__":

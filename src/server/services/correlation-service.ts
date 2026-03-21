@@ -46,7 +46,9 @@ export async function calculateCorrelation(sessionId1: string, sessionId2: strin
   function toDailyPnl(trades: typeof trades1): Map<string, number> {
     const daily = new Map<string, number>();
     for (const t of trades) {
-      const day = t.exitTime.toISOString().slice(0, 10);
+      if (!t.exitTime) continue; // skip trades still open (no exit time)
+      const exitDate = t.exitTime instanceof Date ? t.exitTime : new Date(t.exitTime);
+      const day = exitDate.toISOString().slice(0, 10);
       daily.set(day, (daily.get(day) ?? 0) + Number(t.pnl));
     }
     return daily;

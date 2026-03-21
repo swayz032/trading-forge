@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Database, Activity, CheckCircle, AlertTriangle, XCircle, Clock, HardDrive, RefreshCw, Loader2 } from "lucide-react";
+import { Database, Activity, CheckCircle, AlertTriangle, XCircle, Clock, HardDrive, RefreshCw, Loader2, Info } from "lucide-react";
 import { StatusBadge } from "@/components/forge/StatusBadge";
 import { ForgeTable } from "@/components/forge/ForgeTable";
 import { Button } from "@/components/ui/button";
@@ -26,10 +26,10 @@ export default function DataPipeline() {
   const healthStatus = health?.status ?? "unknown";
 
   const summaryCards = [
-    { icon: Database, label: "Symbols", value: totalSymbols.toLocaleString() },
-    { icon: HardDrive, label: "Total Bars", value: totalBars.toLocaleString() },
+    { icon: Database, label: "Symbols", value: totalSymbols > 0 ? totalSymbols.toLocaleString() : "0" },
+    { icon: HardDrive, label: "Total Bars", value: totalBars > 0 ? totalBars.toLocaleString() : "0" },
     { icon: Activity, label: "API Status", value: healthStatus === "ok" || healthStatus === "healthy" ? "Healthy" : healthStatus },
-    { icon: Clock, label: "Last Check", value: health?.timestamp ? timeAgo(health.timestamp) : "—" },
+    { icon: Clock, label: "Last Check", value: health?.timestamp ? timeAgo(health.timestamp) : "\u2014" },
   ];
 
   // Determine data freshness: within 24h = complete, otherwise stale
@@ -40,9 +40,9 @@ export default function DataPipeline() {
     return {
       symbol: s.symbol,
       timeframe: s.timeframe,
-      totalBars: s.totalBars?.toLocaleString() ?? "—",
-      earliestDate: s.earliestDate ? new Date(s.earliestDate).toLocaleDateString() : "—",
-      latestDate: s.latestDate ? new Date(s.latestDate).toLocaleDateString() : "—",
+      totalBars: s.totalBars?.toLocaleString() ?? "\u2014",
+      earliestDate: s.earliestDate ? new Date(s.earliestDate).toLocaleDateString() : "\u2014",
+      latestDate: s.latestDate ? new Date(s.latestDate).toLocaleDateString() : "\u2014",
       coverage: s.totalBars ?? 0,
       status: isRecent ? "complete" : s.lastSyncAt ? "stale" : "no data",
     };
@@ -148,7 +148,7 @@ export default function DataPipeline() {
               </div>
               <div className="text-right text-[11px]">
                 <p className="text-text-muted">Checked</p>
-                <p className="font-mono text-foreground">{health?.timestamp ? timeAgo(health.timestamp) : "—"}</p>
+                <p className="font-mono text-foreground">{health?.timestamp ? timeAgo(health.timestamp) : "\u2014"}</p>
               </div>
             </motion.div>
           </div>
@@ -167,7 +167,14 @@ export default function DataPipeline() {
             <span className="text-sm">Loading symbols...</span>
           </div>
         ) : symbolRows.length === 0 ? (
-          <p className="text-sm text-text-muted text-center py-4">No symbols ingested yet. Use "Sync Data" to fetch market data.</p>
+          <div className="text-center py-10">
+            <Info className="w-8 h-8 text-primary/40 mx-auto mb-3" />
+            <p className="text-sm font-medium text-text-secondary mb-2">No market data loaded yet</p>
+            <p className="text-xs text-text-muted max-w-sm mx-auto">
+              Market data is stored in S3 and synced on-demand during backtests. Use the "Sync Data" button above to
+              manually fetch data for a specific symbol, or data will be automatically downloaded when you run your first backtest.
+            </p>
+          </div>
         ) : (
           <ForgeTable columns={symbolColumns} data={symbolRows} />
         )}

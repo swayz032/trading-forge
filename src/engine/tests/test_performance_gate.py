@@ -15,8 +15,9 @@ def _tier1_stats():
     """Stats that should pass TIER_1."""
     return {
         "avg_daily_pnl": 600.0,
-        "winning_days": 15,
-        "total_trading_days": 20,
+        "winning_days": 56,
+        "total_trading_days": 75,
+        "total_trades": 200,
         "worst_month_win_days": 13,
         "profit_factor": 3.0,
         "sharpe_ratio": 2.5,
@@ -32,13 +33,14 @@ def _tier3_stats():
     """Stats that should pass TIER_3 but not TIER_2."""
     return {
         "avg_daily_pnl": 280.0,
-        "winning_days": 12,
-        "total_trading_days": 20,
+        "winning_days": 48,
+        "total_trading_days": 75,
+        "total_trades": 150,
         "worst_month_win_days": 11,
         "profit_factor": 1.80,
         "sharpe_ratio": 1.6,
         "avg_winner_to_loser_ratio": 1.6,
-        "max_drawdown": 2200.0,
+        "max_drawdown": 1800.0,
         "max_consecutive_losing_days": 3,
         "avg_loss_on_red_days": -300.0,
         "avg_win_on_green_days": 400.0,
@@ -49,8 +51,9 @@ def _failing_stats():
     """Stats that should be REJECTED."""
     return {
         "avg_daily_pnl": 150.0,
-        "winning_days": 10,
-        "total_trading_days": 20,
+        "winning_days": 30,
+        "total_trading_days": 75,
+        "total_trades": 150,
         "worst_month_win_days": 8,
         "profit_factor": 1.3,
         "sharpe_ratio": 1.0,
@@ -66,8 +69,10 @@ def _failing_stats():
 
 class TestPerformanceGate:
     def test_tier1_passes(self):
-        passed, rejections = check_performance_gate(_tier1_stats())
+        passed, messages = check_performance_gate(_tier1_stats())
         assert passed is True
+        # Messages may include warnings (e.g., sample size < 500) — that's OK, not rejections
+        rejections = [m for m in messages if "statistically unreliable" not in m and "DECAYING" not in m]
         assert len(rejections) == 0
 
     def test_tier3_passes(self):
@@ -88,14 +93,14 @@ class TestPerformanceGate:
 
     def test_high_drawdown_rejected(self):
         stats = _tier1_stats()
-        stats["max_drawdown"] = 2600.0
+        stats["max_drawdown"] = 2100.0
         passed, rejections = check_performance_gate(stats)
         assert passed is False
         assert any("drawdown" in r.lower() for r in rejections)
 
     def test_low_win_rate_rejected(self):
         stats = _tier1_stats()
-        stats["winning_days"] = 11
+        stats["winning_days"] = 40  # 40/75 = 53% < 60%
         passed, rejections = check_performance_gate(stats)
         assert passed is False
 
@@ -146,8 +151,8 @@ class TestClassifyTier:
     def test_tier2(self):
         stats = _tier1_stats()
         stats["avg_daily_pnl"] = 400.0
-        stats["winning_days"] = 13
-        stats["max_drawdown"] = 1800.0
+        stats["winning_days"] = 49  # 49/75 * 20 = 13.07 win days per 20
+        stats["max_drawdown"] = 1600.0
         stats["profit_factor"] = 2.2
         stats["sharpe_ratio"] = 1.8
         assert classify_tier(stats) == "TIER_2"

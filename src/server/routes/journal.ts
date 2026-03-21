@@ -7,9 +7,7 @@ export const journalRoutes = Router();
 
 // List journal entries (most recent first, optional filters)
 journalRoutes.get("/", async (req, res) => {
-  const { status, tier, source, limit } = req.query;
-
-  let query = db.select().from(systemJournal).orderBy(desc(systemJournal.createdAt));
+  const { status, tier, source, limit, offset } = req.query;
 
   // Build conditions array
   const conditions = [];
@@ -17,16 +15,30 @@ journalRoutes.get("/", async (req, res) => {
   if (tier) conditions.push(eq(systemJournal.tier, tier as string));
   if (source) conditions.push(eq(systemJournal.source, source as string));
 
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as typeof query;
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  // Get total count
+  const [{ count: total }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(systemJournal)
+    .where(whereClause);
+
+  let query = db.select().from(systemJournal).orderBy(desc(systemJournal.createdAt));
+
+  if (whereClause) {
+    query = query.where(whereClause) as typeof query;
   }
 
   if (limit) {
     query = query.limit(Number(limit)) as typeof query;
   }
 
+  if (offset) {
+    query = query.offset(Number(offset)) as typeof query;
+  }
+
   const rows = await query;
-  res.json(rows);
+  res.json({ data: rows, total });
 });
 
 // ─── GET /api/journal/scout-fingerprints ─────────────────────
@@ -101,20 +113,38 @@ journalRoutes.get("/scout-funnel", async (req, res) => {
 // Get summary stats for the self-critique dashboard
 // NOTE: Must be defined BEFORE /:id to avoid route collision
 journalRoutes.get("/stats/summary", async (req, res) => {
-  const all = await db.select().from(systemJournal);
+  // Use SQL aggregation instead of loading all rows into memory
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(systemJournal);
 
-  const total = all.length;
-  const byTier = { TIER_1: 0, TIER_2: 0, TIER_3: 0, REJECTED: 0 };
-  const bySource = {} as Record<string, number>;
-  const byStatus = {} as Record<string, number>;
+  const tierRows = await db
+    .select({ tier: systemJournal.tier, count: sql<number>`count(*)::int` })
+    .from(systemJournal)
+    .groupBy(systemJournal.tier);
 
-  for (const entry of all) {
-    if (entry.tier && entry.tier in byTier) byTier[entry.tier as keyof typeof byTier]++;
-    bySource[entry.source] = (bySource[entry.source] || 0) + 1;
-    byStatus[entry.status] = (byStatus[entry.status] || 0) + 1;
+  const sourceRows = await db
+    .select({ source: systemJournal.source, count: sql<number>`count(*)::int` })
+    .from(systemJournal)
+    .groupBy(systemJournal.source);
+
+  const statusRows = await db
+    .select({ status: systemJournal.status, count: sql<number>`count(*)::int` })
+    .from(systemJournal)
+    .groupBy(systemJournal.status);
+
+  const byTier: Record<string, number> = { TIER_1: 0, TIER_2: 0, TIER_3: 0, REJECTED: 0 };
+  for (const r of tierRows) {
+    if (r.tier) byTier[r.tier] = r.count;
   }
 
-  const promoted = all.filter((e) => e.status === "promoted").length;
+  const bySource: Record<string, number> = {};
+  for (const r of sourceRows) bySource[r.source] = r.count;
+
+  const byStatus: Record<string, number> = {};
+  for (const r of statusRows) byStatus[r.status] = r.count;
+
+  const promoted = byStatus["promoted"] ?? 0;
   const passRate = total > 0 ? ((total - (byTier.REJECTED || 0)) / total) * 100 : 0;
 
   res.json({
@@ -261,4 +291,10 @@ journalRoutes.patch("/:id", async (req, res) => {
     return;
   }
   res.json(row);
+});
+
+// DELETE /api/journal — Purge all journal entries (clean slate)
+journalRoutes.delete("/", async (_req, res) => {
+  await db.delete(systemJournal);
+  res.json({ deleted: true, message: "All journal entries purged" });
 });

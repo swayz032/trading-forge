@@ -62,6 +62,9 @@ export function createMassiveFetcher(config: MassiveConfig) {
     const wsUrl = config.baseUrl?.replace(/^https?/, "wss")?.replace(/\/v1$/, "/v1/stream")
       ?? "wss://stream.massive.io/v1/stream";
 
+    // Fast lookup set — only process bars for symbols we actually subscribed to
+    const symbolSet = new Set(symbols);
+
     let ws: WebSocket | null = null;
     let connected = false;
     let reconnectAttempts = 0;
@@ -129,16 +132,16 @@ export function createMassiveFetcher(config: MassiveConfig) {
         try {
           const msg = JSON.parse(data.toString());
           // Handle bar data — expect { symbol, timestamp, open, high, low, close, volume }
-          if (msg.timestamp !== undefined && msg.symbol) {
-            onBar({
-              symbol: msg.symbol,
-              timestamp: msg.timestamp,
-              open: Number(msg.open),
-              high: Number(msg.high),
-              low: Number(msg.low),
-              close: Number(msg.close),
-              volume: Number(msg.volume),
-            });
+          // Filter to only subscribed symbols — Massive may send data for entire tier
+          if (msg.timestamp !== undefined && msg.symbol && symbolSet.has(msg.symbol)) {
+            const open = Number(msg.open);
+            const high = Number(msg.high);
+            const low = Number(msg.low);
+            const close = Number(msg.close);
+            const volume = Number(msg.volume);
+            // Drop bars with invalid/NaN prices — prevents NaN from propagating through the pipeline
+            if (isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) return;
+            onBar({ symbol: msg.symbol, timestamp: msg.timestamp, open, high, low, close, volume: isNaN(volume) ? 0 : volume });
           }
         } catch {
           // Ignore non-JSON messages (heartbeat acks, etc.)

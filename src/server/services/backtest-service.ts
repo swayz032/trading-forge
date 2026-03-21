@@ -9,15 +9,29 @@
 
 import { spawn } from "child_process";
 import { resolve as pathResolve } from "path";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { backtests, backtestTrades, strategies, paperSessions, auditLog } from "../db/schema.js";
+import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { startStream } from "./paper-trading-stream.js";
+import { runMonteCarlo } from "./monte-carlo-service.js";
 import { queryInfo } from "../../data/loaders/duckdb-service.js";
 import { logger } from "../index.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+
+/** Convert decay_analysis from Python snake_case to frontend camelCase. */
+function normalizeDecayAnalysis(raw: Record<string, unknown> | undefined): Record<string, unknown> | null {
+  if (!raw) return null;
+  return {
+    halfLifeDays: raw.half_life_days ?? null,
+    decayDetected: raw.decay_detected ?? false,
+    trend: raw.trend === "accelerating_decline" ? "declining" : (raw.trend ?? "stable"),
+    compositeScore: raw.composite_score ?? 0,
+    decaying: raw.decaying ?? false,
+    signals: raw.signals ?? {},
+  };
+}
 
 interface BacktestConfig {
   strategy: {
@@ -37,6 +51,7 @@ interface BacktestConfig {
   commission_per_side?: number;
   mode?: "single" | "walkforward";
   walk_forward_splits?: number;
+  embargo_bars?: number;  // Bars to skip between IS/OOS windows (prevents data leakage)
 }
 
 /**
@@ -83,7 +98,17 @@ interface BacktestResult {
   forge_score?: number;
   walk_forward_results?: Record<string, unknown>;
   prop_compliance?: Record<string, unknown>;
+  crisis_results?: Record<string, unknown>;
+  decay_analysis?: Record<string, unknown>;
+  run_receipt?: Record<string, unknown>;
+  sanity_checks?: Record<string, unknown>;
+  cross_validation?: Record<string, unknown>;
   daily_pnl_records?: Array<{ date: string; pnl: number }>;
+  oos_metrics?: Record<string, unknown>;
+  confidence?: string;
+  windows?: Array<Record<string, unknown>>;
+  n_splits?: number;
+  param_stability?: Record<string, unknown>;
   error?: string;
 }
 
@@ -107,9 +132,13 @@ function runPythonBacktest(configJson: string, mode: string, backtestId: string,
     });
 
     // Kill after timeout so matrix doesn't hang
+    let settled = false;
     const timer = setTimeout(() => {
-      proc.kill("SIGTERM");
-      reject(new Error(`Backtest timed out after ${BACKTEST_TIMEOUT_MS / 1000}s`));
+      if (!settled) {
+        settled = true;
+        proc.kill("SIGTERM");
+        reject(new Error(`Backtest timed out after ${BACKTEST_TIMEOUT_MS / 1000}s`));
+      }
     }, BACKTEST_TIMEOUT_MS);
 
     let stdout = "";
@@ -123,6 +152,8 @@ function runPythonBacktest(configJson: string, mode: string, backtestId: string,
 
     proc.on("close", (code) => {
       clearTimeout(timer);
+      if (settled) return;
+      settled = true;
       if (code === 0) {
         try {
           resolve(JSON.parse(stdout.trim()));
@@ -137,16 +168,21 @@ function runPythonBacktest(configJson: string, mode: string, backtestId: string,
     proc.on("error", (err) => {
       clearTimeout(timer);
       if (pythonCmd === "python") {
-        // Retry with python3
+        // Retry with python3 (same timeout to prevent infinite hang)
         const proc2 = spawn("python3", args, {
           env: { ...process.env },
           cwd: PROJECT_ROOT,
         });
+        const timer2 = setTimeout(() => {
+          proc2.kill("SIGTERM");
+          reject(new Error(`Backtest retry timed out after ${BACKTEST_TIMEOUT_MS / 1000}s`));
+        }, BACKTEST_TIMEOUT_MS);
         let stdout2 = "";
         let stderr2 = "";
         proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
         proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
         proc2.on("close", (code) => {
+          clearTimeout(timer2);
           if (code === 0) {
             try { resolve(JSON.parse(stdout2.trim())); }
             catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
@@ -154,7 +190,7 @@ function runPythonBacktest(configJson: string, mode: string, backtestId: string,
             reject(new Error(`Backtest failed: ${stderr2}`));
           }
         });
-        proc2.on("error", () => reject(err));
+        proc2.on("error", () => { clearTimeout(timer2); reject(err); });
       } else {
         reject(err);
       }
@@ -210,33 +246,84 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       return { id: backtestId, status: "failed", error: result.error };
     }
 
+    // Walk-forward returns metrics nested under oos_metrics — unwrap for DB storage
+    const metrics = result.oos_metrics ?? result;
+    // Store full walk-forward structure (windows, confidence, param_stability) separately
+    const wfResults: { confidence?: string; windows?: Array<Record<string, unknown>>; n_splits?: number; param_stability?: Record<string, unknown> } | null = result.oos_metrics
+      ? { confidence: result.confidence, windows: result.windows as Array<Record<string, unknown>>, n_splits: result.n_splits, param_stability: result.param_stability }
+      : (result.walk_forward_results as { confidence?: string; windows?: Array<Record<string, unknown>>; n_splits?: number; param_stability?: Record<string, unknown> } ?? null);
+
     // Update backtest row with results
     await db
       .update(backtests)
       .set({
         status: "completed",
-        totalReturn: String(result.total_return),
-        sharpeRatio: String(result.sharpe_ratio),
-        maxDrawdown: String(result.max_drawdown),
-        winRate: String(result.win_rate),
-        profitFactor: String(result.profit_factor),
-        totalTrades: result.total_trades,
-        avgTradePnl: String(result.avg_trade_pnl),
-        avgDailyPnl: String(result.avg_daily_pnl),
+        totalReturn: metrics.total_return != null ? String(metrics.total_return) : null,
+        sharpeRatio: metrics.sharpe_ratio != null ? String(metrics.sharpe_ratio) : null,
+        maxDrawdown: metrics.max_drawdown != null ? String(metrics.max_drawdown) : null,
+        winRate: metrics.win_rate != null ? String(metrics.win_rate) : null,
+        profitFactor: metrics.profit_factor != null ? String(metrics.profit_factor) : null,
+        totalTrades: (metrics.total_trades as number) ?? null,
+        avgTradePnl: metrics.avg_trade_pnl != null ? String(metrics.avg_trade_pnl) : null,
+        avgDailyPnl: metrics.avg_daily_pnl != null ? String(metrics.avg_daily_pnl) : null,
         tier: result.tier ?? null,
         forgeScore: result.forge_score != null ? String(result.forge_score) : null,
-        equityCurve: result.equity_curve,
+        equityCurve: result.equity_curve ?? metrics.equity_curve ?? null,
         monthlyReturns: result.monthly_returns ?? null,
-        dailyPnls: result.daily_pnls,
-        walkForwardResults: result.walk_forward_results ?? null,
+        dailyPnls: result.daily_pnls ?? metrics.daily_pnls ?? null,
+        walkForwardResults: wfResults,
         propCompliance: result.prop_compliance ?? null,
+        decayAnalysis: normalizeDecayAnalysis(result.decay_analysis as Record<string, unknown> | undefined),
+        runReceipt: result.run_receipt ?? null,
+        sanityChecks: result.sanity_checks ?? null,
+        crossValidation: result.cross_validation ?? null,
         executionTimeMs: result.execution_time_ms,
       })
       .where(eq(backtests.id, backtestId));
 
-    // Bulk insert trades
-    if (result.trades.length > 0) {
-      const tradeRows = result.trades.map((t) => {
+    // Persist walk-forward windows for queryability
+    if (wfResults?.windows?.length) {
+        await db.insert(walkForwardWindows).values(
+            wfResults.windows.map((w: any, idx: number) => ({
+                backtestId: backtestId,
+                windowIndex: w.window ?? idx + 1,
+                isStart: w.is_start ?? null,
+                isEnd: w.is_end ?? null,
+                oosStart: w.oos_start ?? null,
+                oosEnd: w.oos_end ?? null,
+                bestParams: w.optimization?.best_params ?? null,
+                isMetrics: null,
+                oosMetrics: w.oos_metrics ?? null,
+                paramStability: null,
+                confidence: w.confidence ?? null,
+            }))
+        );
+    }
+
+    // Track search budget (cumulative Optuna trials)
+    if (wfResults?.windows?.length) {
+      const totalTrials = wfResults.windows.reduce(
+        (sum: number, w: Record<string, unknown>) => {
+          const opt = w.optimization as Record<string, unknown> | undefined;
+          return sum + (Number(opt?.trials_used ?? opt?.n_trials ?? 0));
+        },
+        0,
+      );
+      if (totalTrials > 0) {
+        // Atomic increment to avoid race condition on concurrent backtests
+        await db
+          .update(strategies)
+          .set({
+            searchBudgetUsed: sql`COALESCE(${strategies.searchBudgetUsed}, 0) + ${totalTrials}`,
+          })
+          .where(eq(strategies.id, strategyId));
+      }
+    }
+
+    // Bulk insert trades (walk-forward may not have trades at top level)
+    const trades = result.trades ?? [];
+    if (trades.length > 0) {
+      const tradeRows = trades.map((t) => {
         // vectorbt records_readable columns:
         //   "Entry Timestamp" (int index or ISO string), "Exit Timestamp",
         //   "Avg Entry Price", "Avg Exit Price", "PnL", "Direction", "Size"
@@ -248,7 +335,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           if (v == null) return new Date();
           if (typeof v === "string" && v.includes("-")) return new Date(v);
           // Integer index from vectorbt — use backtest start date + offset
-          return new Date(config.start_date + "T00:00:00Z");
+          return config.start_date ? new Date(config.start_date + "T00:00:00Z") : new Date();
         };
 
         const direction = (t["Direction"] as string ?? t["direction"] as string ?? "long");
@@ -265,6 +352,18 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           pnl: t["PnL"] != null || t["pnl"] != null
             ? String(t["PnL"] ?? t["pnl"])
             : null,
+          netPnl: t["PnL"] != null || t["pnl"] != null
+            ? String(t["PnL"] ?? t["pnl"])
+            : null,
+          grossPnl: t["GrossPnL"] != null || t["gross_pnl"] != null
+            ? String(t["GrossPnL"] ?? t["gross_pnl"])
+            : null,
+          slippage: t["SlippageCost"] != null || t["slippage_cost"] != null
+            ? String(t["SlippageCost"] ?? t["slippage_cost"])
+            : null,
+          commission: t["CommissionCost"] != null || t["commission_cost"] != null
+            ? String(t["CommissionCost"] ?? t["commission_cost"])
+            : null,
           contracts: Math.round(Number(t["Size"] ?? t["size"] ?? 1)),
           mae: t["MAE"] != null || t["mae"] != null
             ? String(t["MAE"] ?? t["mae"])
@@ -276,6 +375,22 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       });
 
       await db.insert(backtestTrades).values(tradeRows);
+    }
+
+    // Persist crisis/stress test results if present
+    if (result.crisis_results && typeof result.crisis_results === "object") {
+      try {
+        const cr = result.crisis_results as Record<string, unknown>;
+        await db.insert(stressTestRuns).values({
+          backtestId,
+          passed: cr.passed === true,
+          scenarios: cr.scenarios ?? [],
+          failedScenarios: cr.failed_scenarios ?? [],
+          executionTimeMs: typeof cr.execution_time_ms === "number" ? cr.execution_time_ms : null,
+        });
+      } catch (stressErr) {
+        logger.warn(stressErr, "Failed to persist stress test results");
+      }
     }
 
     // Audit log
@@ -294,6 +409,20 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       durationMs: result.execution_time_ms,
     });
 
+    // ─── Auto Monte Carlo for all completed backtests (fire-and-forget) ───
+    // MC data is needed to evaluate ANY strategy properly — don't gate behind tier
+    if (result.daily_pnls?.length > 0) {
+      runMonteCarlo(backtestId, {
+        numSimulations: 50_000,
+        method: "both",
+        firms: ["topstep", "mffu", "tpt", "apex", "ffn", "alpha_futures", "tradeify", "earn2trade"],
+      }).then((mcResult) => {
+        logger.info({ backtestId, mcId: mcResult.id, status: mcResult.status }, "Auto MC completed");
+      }).catch((mcErr) => {
+        logger.error({ backtestId, err: mcErr }, "Auto MC failed (non-blocking)");
+      });
+    }
+
     // ─── Auto-promote to paper trading if strategy passes gates ───
     if (result.tier && ["TIER_1", "TIER_2", "TIER_3"].includes(result.tier)) {
       try {
@@ -307,8 +436,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         // Create paper trading session
         const [paperSession] = await db.insert(paperSessions).values({
           strategyId,
-          startingCapital: "100000",
-          currentEquity: "100000",
+          startingCapital: "50000",
+          currentEquity: "50000",
           config: {
             preferred_sessions: ["NY_RTH"],
             max_concurrent_positions: 1,

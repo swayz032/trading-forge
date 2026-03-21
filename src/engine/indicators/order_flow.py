@@ -23,7 +23,7 @@ def _find_bullish_obs(opens, closes, highs, lows, sl_indices):
     for k in range(n):
         sl = sl_indices[k]
         start = max(sl - 10, 0)
-        for j in range(sl, start - 1, -1):
+        for j in range(sl - 1, start - 1, -1):
             if closes[j] < opens[j]:
                 out_idx[count] = j
                 out_top[count] = highs[j]
@@ -44,7 +44,7 @@ def _find_bearish_obs(opens, closes, highs, lows, sh_indices):
     for k in range(n):
         sh = sh_indices[k]
         start = max(sh - 10, 0)
-        for j in range(sh, start - 1, -1):
+        for j in range(sh - 1, start - 1, -1):
             if closes[j] > opens[j]:
                 out_idx[count] = j
                 out_top[count] = highs[j]

@@ -1,0 +1,340 @@
+{
+  "updatedAt": "2026-03-20T05:35:37.427Z",
+  "createdAt": "2026-03-20T05:35:37.427Z",
+  "id": "8HKXzNmo9KF59SBu",
+  "name": "10A-master-orchestration",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 23 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-stats",
+      "name": "Fetch Pipeline Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/journal/stats/summary",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "format-summary",
+      "name": "Format Daily Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const stats = $input.first().json;\nconst s = stats.data || stats;\nconst lines = [\n  `Ideas sourced: ${s.totalIdeas ?? s.ideas ?? 'N/A'}`,\n  `Strategies generated: ${s.totalStrategies ?? s.strategies ?? 'N/A'}`,\n  `Backtests run: ${s.totalBacktests ?? s.backtests ?? 'N/A'}`,\n  `Pass rate: ${s.passRate ?? 'N/A'}`,\n  `Active strategies: ${s.activeStrategies ?? s.active ?? 'N/A'}`,\n  `Declining: ${s.declining ?? 'N/A'}`,\n  `Paper trading: ${s.paper ?? s.paperTrading ?? 'N/A'}`\n];\nreturn [{ json: { title: 'Daily Pipeline Summary', severity: 'info', body: lines.join('\n') } }];"
+      }
+    },
+    {
+      "id": "send-alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4100/alert/alerts",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "severity",
+              "value": "={{ $json.severity }}"
+            },
+            {
+              "name": "body",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pipeline Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pipeline Stats": {
+      "main": [
+        [
+          {
+            "node": "Format Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Daily Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Cron Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "8611ac75-ff9e-4d82-a1dd-3431c2a1d249",
+  "activeVersionId": "8611ac75-ff9e-4d82-a1dd-3431c2a1d249",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T05:35:37.427Z",
+      "createdAt": "2026-03-20T05:35:37.427Z",
+      "role": "workflow:owner",
+      "workflowId": "8HKXzNmo9KF59SBu",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-20T05:35:37.452Z",
+    "createdAt": "2026-03-20T05:35:37.452Z",
+    "versionId": "8611ac75-ff9e-4d82-a1dd-3431c2a1d249",
+    "workflowId": "8HKXzNmo9KF59SBu",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Cron Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 23 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-stats",
+        "name": "Fetch Pipeline Stats",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/journal/stats/summary",
+          "method": "GET",
+          "options": {
+            "timeout": 30000
+          }
+        }
+      },
+      {
+        "id": "format-summary",
+        "name": "Format Daily Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const stats = $input.first().json;\nconst s = stats.data || stats;\nconst lines = [\n  `Ideas sourced: ${s.totalIdeas ?? s.ideas ?? 'N/A'}`,\n  `Strategies generated: ${s.totalStrategies ?? s.strategies ?? 'N/A'}`,\n  `Backtests run: ${s.totalBacktests ?? s.backtests ?? 'N/A'}`,\n  `Pass rate: ${s.passRate ?? 'N/A'}`,\n  `Active strategies: ${s.activeStrategies ?? s.active ?? 'N/A'}`,\n  `Declining: ${s.declining ?? 'N/A'}`,\n  `Paper trading: ${s.paper ?? s.paperTrading ?? 'N/A'}`\n];\nreturn [{ json: { title: 'Daily Pipeline Summary', severity: 'info', body: lines.join('\n') } }];"
+        }
+      },
+      {
+        "id": "send-alert",
+        "name": "Send Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4100/alert/alerts",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "severity",
+                "value": "={{ $json.severity }}"
+              },
+              {
+                "name": "body",
+                "value": "={{ $json.body }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Cron Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Pipeline Stats",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Pipeline Stats": {
+        "main": [
+          [
+            {
+              "node": "Format Daily Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Daily Summary": {
+        "main": [
+          [
+            {
+              "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-20T05:35:37.917Z",
+        "id": 1198,
+        "workflowId": "8HKXzNmo9KF59SBu",
+        "versionId": "8611ac75-ff9e-4d82-a1dd-3431c2a1d249",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

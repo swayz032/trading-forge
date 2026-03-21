@@ -19,6 +19,7 @@ def compute_slippage(
     base_ticks: float = 1.0,
     atr_period: int = 14,
     session_multipliers: np.ndarray | None = None,
+    order_type: str = "market",
 ) -> np.ndarray:
     """Compute variable slippage per bar in dollar terms.
 
@@ -52,6 +53,15 @@ def compute_slippage(
     # Variable slippage: scale with ATR relative to median
     slippage_ticks = base_ticks * (atr_values / median_atr)
     slippage_dollars = slippage_ticks * contract_spec.tick_value
+
+    # Order-type slippage modifier
+    if order_type == "stop" or order_type == "stop_market":
+        slippage_dollars = slippage_dollars * 2.0  # Stop-market: 2x slippage
+    elif order_type == "limit":
+        # Limit orders: slippage = half-spread only (better fill)
+        slippage_dollars = slippage_dollars * 0.5
+    elif order_type == "stop_limit":
+        pass  # Base slippage * 1.0 (no modifier)
 
     # Apply session-based liquidity multipliers
     if session_multipliers is not None:

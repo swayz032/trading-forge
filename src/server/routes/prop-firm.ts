@@ -3,162 +3,74 @@ import { z } from "zod";
 import { db } from "../db/index.js";
 import { backtests } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import {
+  FIRMS,
+  FirmAccountConfig,
+  FirmConfig,
+  CONTRACT_SPECS,
+  DEFAULT_ACCOUNT_SIZE,
+  getFirmAccount,
+  getBufferAmount,
+  getTotalHurdle,
+  getAllFirms,
+} from "../../shared/firm-config.js";
 
 export const propFirmRoutes = Router();
 
-// ─── Firm Configuration (all 8 firms) ─────────────────────────
-interface FirmConfig {
-  name: string;
-  displayName: string;
-  accountTypes: Record<string, {
-    accountSize: number;
-    monthlyFee: number;
-    activationFee: number;
-    profitTarget: number;
-    maxDrawdown: number;
-    maxContracts: number;
-    trailing: "eod" | "realtime";
-    payoutSplit: number;
-    minPayoutDays: number;
-    consistencyRule: number | null;  // max % from best day (e.g., 0.50 for TPT)
-    overnightOk: boolean;
-  }>;
-}
-
-const FIRMS: Record<string, FirmConfig> = {
-  mffu: {
-    name: "mffu",
-    displayName: "MyFundedFutures (MFFU)",
-    accountTypes: {
-      "50k": {
-        accountSize: 50000, monthlyFee: 77, activationFee: 0, profitTarget: 3000,
-        maxDrawdown: 2500, maxContracts: 5, trailing: "eod", payoutSplit: 0.90,
-        minPayoutDays: 10, consistencyRule: null, overnightOk: true,
-      },
-      "100k": {
-        accountSize: 100000, monthlyFee: 167, activationFee: 0, profitTarget: 6000,
-        maxDrawdown: 3500, maxContracts: 10, trailing: "eod", payoutSplit: 0.90,
-        minPayoutDays: 10, consistencyRule: null, overnightOk: true,
-      },
-    },
-  },
-  topstep: {
-    name: "topstep",
-    displayName: "Topstep",
-    accountTypes: {
-      "50k": {
-        accountSize: 50000, monthlyFee: 49, activationFee: 149, profitTarget: 3000,
-        maxDrawdown: 2000, maxContracts: 5, trailing: "eod", payoutSplit: 0.90,
-        minPayoutDays: 5, consistencyRule: null, overnightOk: false,
-      },
-      "100k": {
-        accountSize: 100000, monthlyFee: 99, activationFee: 149, profitTarget: 6000,
-        maxDrawdown: 3000, maxContracts: 10, trailing: "eod", payoutSplit: 0.90,
-        minPayoutDays: 5, consistencyRule: null, overnightOk: false,
-      },
-    },
-  },
-  tpt: {
-    name: "tpt",
-    displayName: "Take Profit Trader (TPT)",
-    accountTypes: {
-      "50k": {
-        accountSize: 50000, monthlyFee: 150, activationFee: 0, profitTarget: 3000,
-        maxDrawdown: 3000, maxContracts: 6, trailing: "eod", payoutSplit: 0.80,
-        minPayoutDays: 15, consistencyRule: 0.50, overnightOk: true,
-      },
-      "100k": {
-        accountSize: 100000, monthlyFee: 350, activationFee: 0, profitTarget: 6000,
-        maxDrawdown: 6000, maxContracts: 12, trailing: "eod", payoutSplit: 0.80,
-        minPayoutDays: 15, consistencyRule: 0.50, overnightOk: true,
-      },
-    },
-  },
-  apex: {
-    name: "apex",
-    displayName: "Apex Trader Funding",
-    accountTypes: {
-      "50k": {
-        accountSize: 50000, monthlyFee: 147, activationFee: 85, profitTarget: 3000,
-        maxDrawdown: 2500, maxContracts: 10, trailing: "eod", payoutSplit: 1.00,
-        minPayoutDays: 8, consistencyRule: null, overnightOk: true,
-      },
-      "100k": {
-        accountSize: 100000, monthlyFee: 167, activationFee: 85, profitTarget: 6000,
-        maxDrawdown: 3000, maxContracts: 14, trailing: "eod", payoutSplit: 1.00,
-        minPayoutDays: 8, consistencyRule: null, overnightOk: true,
-      },
-    },
-  },
-  ffn: {
-    name: "ffn",
-    displayName: "Fast Fund Now (FFN)",
-    accountTypes: {
-      "50k": {
-        accountSize: 50000, monthlyFee: 115, activationFee: 0, profitTarget: 3000,
-        maxDrawdown: 2500, maxContracts: 5, trailing: "eod", payoutSplit: 0.80,
-        minPayoutDays: 10, consistencyRule: 0.15, overnightOk: true,
-      },
-      "100k": {
-        accountSize: 100000, monthlyFee: 200, activationFee: 0, profitTarget: 6000,
-        maxDrawdown: 3500, maxContracts: 10, trailing: "eod", payoutSplit: 0.80,
-        minPayoutDays: 10, consistencyRule: 0.15, overnightOk: true,
-      },
-    },
-  },
-  alpha: {
-    name: "alpha",
-    displayName: "Alpha Futures",
-    accountTypes: {
-      "50k": {
-        accountSize: 50000, monthlyFee: 97, activationFee: 0, profitTarget: 3000,
-        maxDrawdown: 2000, maxContracts: 12, trailing: "eod", payoutSplit: 0.80,
-        minPayoutDays: 10, consistencyRule: null, overnightOk: true,
-      },
-      "100k": {
-        accountSize: 100000, monthlyFee: 197, activationFee: 0, profitTarget: 6000,
-        maxDrawdown: 4000, maxContracts: 20, trailing: "eod", payoutSplit: 0.80,
-        minPayoutDays: 10, consistencyRule: null, overnightOk: true,
-      },
-    },
-  },
-  tradeify: {
-    name: "tradeify",
-    displayName: "Tradeify",
-    accountTypes: {
-      "50k": {
-        accountSize: 50000, monthlyFee: 99, activationFee: 0, profitTarget: 3000,
-        maxDrawdown: 2500, maxContracts: 5, trailing: "realtime", payoutSplit: 0.80,
-        minPayoutDays: 10, consistencyRule: null, overnightOk: true,
-      },
-      "100k": {
-        accountSize: 100000, monthlyFee: 150, activationFee: 0, profitTarget: 6000,
-        maxDrawdown: 5000, maxContracts: 10, trailing: "realtime", payoutSplit: 0.80,
-        minPayoutDays: 10, consistencyRule: null, overnightOk: true,
-      },
-    },
-  },
-  earn2trade: {
-    name: "earn2trade",
-    displayName: "Earn2Trade",
-    accountTypes: {
-      "50k": {
-        accountSize: 50000, monthlyFee: 150, activationFee: 0, profitTarget: 3000,
-        maxDrawdown: 2000, maxContracts: 5, trailing: "eod", payoutSplit: 0.80,
-        minPayoutDays: 15, consistencyRule: null, overnightOk: true,
-      },
-    },
-  },
-};
+// All firms are 50K only. No multi-account-type logic needed.
+const ACCOUNT_TYPE = "50k";
 
 // ─── GET /api/prop-firm/firms — List all firms ────────────────
 propFirmRoutes.get("/firms", (_req, res) => {
-  const firmList = Object.values(FIRMS).map(f => ({
+  const firmList = getAllFirms().map(f => ({
     name: f.name,
     displayName: f.displayName,
+    evaluationType: f.evaluationType,
     accountTypes: Object.keys(f.accountTypes),
   }));
   res.json(firmList);
+});
+
+// ─── GET /api/prop-firm/firms/:firm — Single firm config ──
+propFirmRoutes.get("/firms/:firm", (req, res) => {
+  const firmConfig = FIRMS[req.params.firm.toLowerCase()];
+  if (!firmConfig) {
+    res.status(404).json({ error: `Unknown firm: ${req.params.firm}. Available: ${Object.keys(FIRMS).join(", ")}` });
+    return;
+  }
+  res.json(firmConfig);
+});
+
+// ─── GET /api/prop-firm/firms/:firm/:accountType — Single firm + account config ──
+propFirmRoutes.get("/firms/:firm/:accountType", (req, res) => {
+  const firmConfig = FIRMS[req.params.firm.toLowerCase()];
+  if (!firmConfig) {
+    res.status(404).json({ error: `Unknown firm: ${req.params.firm}. Available: ${Object.keys(FIRMS).join(", ")}` });
+    return;
+  }
+
+  const requestedType = (req.params.accountType ?? ACCOUNT_TYPE).toLowerCase();
+  if (requestedType !== ACCOUNT_TYPE) {
+    // Warn but still return 50K config
+    console.warn(`[prop-firm] Requested account type "${requestedType}" — only 50K accounts exist. Returning 50K config.`);
+  }
+
+  const acct = firmConfig.accountTypes[ACCOUNT_TYPE];
+  if (!acct) {
+    res.status(404).json({ error: `No 50K config for firm: ${firmConfig.name}` });
+    return;
+  }
+  const buffer = getBufferAmount(firmConfig.name)!;
+  const hurdle = getTotalHurdle(firmConfig.name)!;
+  res.json({
+    firm: firmConfig.name,
+    displayName: firmConfig.displayName,
+    evaluationType: firmConfig.evaluationType,
+    accountType: ACCOUNT_TYPE,
+    config: acct,
+    bufferAmount: buffer,
+    totalHurdle: hurdle,
+  });
 });
 
 // ─── POST /api/prop-firm/rank — Rank firms by ROI ─────────────
@@ -169,7 +81,6 @@ const rankSchema = z.object({
   profitFactor: z.number().positive(),
   holdsOvernight: z.boolean().default(false),
   bestDayPct: z.number().min(0).max(1).optional(), // % of total profit from best day
-  accountType: z.string().default("50k"),
   months: z.number().int().min(1).max(24).default(12),
 });
 
@@ -180,13 +91,13 @@ propFirmRoutes.post("/rank", (req, res) => {
     return;
   }
 
-  const { avgDailyPnl, maxDrawdown, winRate, profitFactor, holdsOvernight, bestDayPct, accountType, months } = parsed.data;
+  const { avgDailyPnl, maxDrawdown, winRate, profitFactor, holdsOvernight, bestDayPct, months } = parsed.data;
   const tradingDaysPerMonth = 20;
 
   const rankings = Object.values(FIRMS)
-    .filter(firm => firm.accountTypes[accountType])
+    .filter(firm => firm.accountTypes[ACCOUNT_TYPE])
     .map(firm => {
-      const acct = firm.accountTypes[accountType];
+      const acct = firm.accountTypes[ACCOUNT_TYPE];
 
       // Check compliance
       const violations: string[] = [];
@@ -195,25 +106,41 @@ propFirmRoutes.post("/rank", (req, res) => {
       if (acct.consistencyRule && bestDayPct && bestDayPct > acct.consistencyRule) {
         violations.push(`Best day ${(bestDayPct * 100).toFixed(0)}% > consistency limit ${(acct.consistencyRule * 100).toFixed(0)}%`);
       }
+      if (acct.dailyLossLimit !== null) {
+        violations.push(`Daily loss limit: $${acct.dailyLossLimit}`);
+      }
 
       const passes = violations.length === 0;
 
       // Estimate days to pass evaluation
-      const netDailyPnl = avgDailyPnl * (winRate + (1 - winRate) * -1); // simplified
       const daysToTarget = avgDailyPnl > 0 ? Math.ceil(acct.profitTarget / avgDailyPnl) : 999;
       const evalDays = Math.max(daysToTarget, acct.minPayoutDays);
 
+      // Buffer phase: after passing eval, must build buffer = maxDrawdown before payouts
+      const bufferDays = avgDailyPnl > 0 ? Math.ceil(acct.maxDrawdown / avgDailyPnl) : 999;
+      const totalDaysToFirstPayout = evalDays + bufferDays;
+
       // Monthly costs during evaluation
       const evalMonths = Math.ceil(evalDays / tradingDaysPerMonth);
-      const totalEvalCost = acct.monthlyFee * evalMonths + acct.activationFee;
+      const bufferMonths = Math.ceil(bufferDays / tradingDaysPerMonth);
+      const totalEvalCost = acct.monthlyFee * evalMonths;
 
-      // Monthly gross from funded account
+      // Monthly gross from funded account (after buffer phase)
       const monthlyGross = avgDailyPnl * tradingDaysPerMonth;
-      const monthlyNet = monthlyGross * acct.payoutSplit;
+      // monthlyNet = true take-home after split AND ongoing fees
+      const monthlyNet = (monthlyGross * acct.payoutSplit) - acct.ongoingMonthlyFee;
+
+      // Funded months available for payouts (subtract eval + buffer months)
+      const totalPrePayoutMonths = evalMonths + bufferMonths;
+      const fundedPayoutMonths = Math.max(0, months - totalPrePayoutMonths);
+
+      // Ongoing fees during buffer months (funded but no payouts yet)
+      const bufferOngoingFees = acct.ongoingMonthlyFee * bufferMonths;
 
       // ROI over projection period
-      const totalPayouts = monthlyNet * (months - evalMonths);
-      const roi = totalEvalCost > 0 ? ((totalPayouts - totalEvalCost) / totalEvalCost) * 100 : 0;
+      const totalPayouts = monthlyNet * fundedPayoutMonths;
+      const totalCosts = totalEvalCost + bufferOngoingFees;
+      const roi = totalCosts > 0 ? ((totalPayouts - totalCosts) / totalCosts) * 100 : 0;
 
       // Annualized ROI
       const annualizedRoi = months > 0 ? roi * (12 / months) : 0;
@@ -221,16 +148,23 @@ propFirmRoutes.post("/rank", (req, res) => {
       return {
         firm: firm.name,
         displayName: firm.displayName,
-        accountType,
+        accountType: ACCOUNT_TYPE,
         passes,
         violations,
         evalDays,
+        bufferDays,
+        totalDaysToFirstPayout,
         evalMonths,
+        bufferMonths,
         totalEvalCost: Math.round(totalEvalCost),
+        ongoingMonthlyFee: acct.ongoingMonthlyFee,
+        bufferOngoingFees: Math.round(bufferOngoingFees),
         monthlyGross: Math.round(monthlyGross),
         monthlyNet: Math.round(monthlyNet),
         payoutSplit: acct.payoutSplit,
+        fundedPayoutMonths,
         totalPayouts: Math.round(totalPayouts),
+        totalCosts: Math.round(totalCosts),
         roi: Math.round(roi),
         annualizedRoi: Math.round(annualizedRoi),
         trailing: acct.trailing,
@@ -255,7 +189,6 @@ propFirmRoutes.post("/rank", (req, res) => {
 // ─── POST /api/prop-firm/payout — Payout projection ──────────
 const payoutSchema = z.object({
   firm: z.string(),
-  accountType: z.string().default("50k"),
   avgDailyPnl: z.number().positive(),
   numAccounts: z.number().int().min(1).max(20).default(1),
   months: z.number().int().min(1).max(36).default(12),
@@ -268,16 +201,16 @@ propFirmRoutes.post("/payout", (req, res) => {
     return;
   }
 
-  const { firm, accountType, avgDailyPnl, numAccounts, months } = parsed.data;
+  const { firm, avgDailyPnl, numAccounts, months } = parsed.data;
   const firmConfig = FIRMS[firm];
   if (!firmConfig) {
     res.status(400).json({ error: `Unknown firm: ${firm}. Available: ${Object.keys(FIRMS).join(", ")}` });
     return;
   }
 
-  const acct = firmConfig.accountTypes[accountType];
+  const acct = firmConfig.accountTypes[ACCOUNT_TYPE];
   if (!acct) {
-    res.status(400).json({ error: `Unknown account type: ${accountType}. Available: ${Object.keys(firmConfig.accountTypes).join(", ")}` });
+    res.status(400).json({ error: `No 50K config for firm: ${firm}` });
     return;
   }
 
@@ -285,25 +218,38 @@ propFirmRoutes.post("/payout", (req, res) => {
   const daysToTarget = Math.ceil(acct.profitTarget / avgDailyPnl);
   const evalMonths = Math.ceil(Math.max(daysToTarget, acct.minPayoutDays) / tradingDaysPerMonth);
 
+  // Buffer phase: after eval, must earn maxDrawdown before payouts
+  const bufferDays = Math.ceil(acct.maxDrawdown / avgDailyPnl);
+  const bufferMonths = Math.ceil(bufferDays / tradingDaysPerMonth);
+  const totalPrePayoutMonths = evalMonths + bufferMonths;
+
   const monthlyProjection = [];
   let cumulativePayout = 0;
   let cumulativeCost = 0;
 
   for (let m = 1; m <= months; m++) {
     const isEval = m <= evalMonths;
-    const monthlyFee = isEval ? acct.monthlyFee * numAccounts : 0;
-    const activationFee = m === 1 ? acct.activationFee * numAccounts : 0;
-    const costs = monthlyFee + activationFee;
+    const isBuffer = !isEval && m <= totalPrePayoutMonths;
+    const isFunded = m > totalPrePayoutMonths;
+
+    const evalFee = isEval ? acct.monthlyFee * numAccounts : 0;
+    const ongoingFee = !isEval ? acct.ongoingMonthlyFee * numAccounts : 0;
+    const costs = evalFee + ongoingFee;
 
     const monthlyGross = isEval ? 0 : avgDailyPnl * tradingDaysPerMonth * numAccounts;
-    const monthlyNet = monthlyGross * acct.payoutSplit;
+    const monthlyNet = isFunded ? monthlyGross * acct.payoutSplit : 0;
 
     cumulativeCost += costs;
     cumulativePayout += monthlyNet;
 
+    let phase: string;
+    if (isEval) phase = "evaluation";
+    else if (isBuffer) phase = "buffer";
+    else phase = "funded";
+
     monthlyProjection.push({
       month: m,
-      phase: isEval ? "evaluation" : "funded",
+      phase,
       grossPnl: Math.round(monthlyGross),
       netPayout: Math.round(monthlyNet),
       costs: Math.round(costs),
@@ -317,11 +263,14 @@ propFirmRoutes.post("/payout", (req, res) => {
 
   res.json({
     firm: firmConfig.displayName,
-    accountType,
+    accountType: ACCOUNT_TYPE,
     numAccounts,
     avgDailyPnl,
     payoutSplit: acct.payoutSplit,
+    ongoingMonthlyFee: acct.ongoingMonthlyFee,
     evalMonths,
+    bufferMonths,
+    totalPrePayoutMonths,
     breakEvenMonth,
     totalPayout: Math.round(cumulativePayout),
     totalCosts: Math.round(cumulativeCost),
@@ -333,7 +282,6 @@ propFirmRoutes.post("/payout", (req, res) => {
 // ─── POST /api/prop-firm/timeline — Evaluation timeline ──────
 const timelineSchema = z.object({
   firm: z.string(),
-  accountType: z.string().default("50k"),
   avgDailyPnl: z.number().positive(),
   winRate: z.number().min(0).max(1),
   maxDrawdown: z.number().positive(),
@@ -346,16 +294,16 @@ propFirmRoutes.post("/timeline", (req, res) => {
     return;
   }
 
-  const { firm, accountType, avgDailyPnl, winRate, maxDrawdown } = parsed.data;
+  const { firm, avgDailyPnl, winRate, maxDrawdown } = parsed.data;
   const firmConfig = FIRMS[firm];
   if (!firmConfig) {
     res.status(400).json({ error: `Unknown firm: ${firm}` });
     return;
   }
 
-  const acct = firmConfig.accountTypes[accountType];
+  const acct = firmConfig.accountTypes[ACCOUNT_TYPE];
   if (!acct) {
-    res.status(400).json({ error: `Unknown account type: ${accountType}` });
+    res.status(400).json({ error: `No 50K config for firm: ${firm}` });
     return;
   }
 
@@ -364,7 +312,7 @@ propFirmRoutes.post("/timeline", (req, res) => {
 
   // Realistic: account for losing days
   const avgWinDay = avgDailyPnl / winRate;
-  const avgLossDay = avgWinDay * 0.5; // Assume avg loss = 50% of avg win
+  const avgLossDay = avgWinDay * 0.5;
   const netPerDay = winRate * avgWinDay - (1 - winRate) * avgLossDay;
   const daysRealistic = netPerDay > 0 ? Math.ceil(acct.profitTarget / netPerDay) : 999;
 
@@ -374,40 +322,53 @@ propFirmRoutes.post("/timeline", (req, res) => {
   const adjustedTarget = acct.profitTarget + setbackAmount;
   const daysConservative = netPerDay > 0 ? Math.ceil(adjustedTarget / netPerDay) : 999;
 
+  // Buffer phase days (after passing eval)
+  const bufferDaysOptimistic = Math.ceil(acct.maxDrawdown / avgDailyPnl);
+  const bufferDaysRealistic = netPerDay > 0 ? Math.ceil(acct.maxDrawdown / netPerDay) : 999;
+
   // Check if strategy can survive at this firm
   const survives = maxDrawdown <= acct.maxDrawdown;
 
   res.json({
     firm: firmConfig.displayName,
-    accountType,
+    accountType: ACCOUNT_TYPE,
     profitTarget: acct.profitTarget,
     maxDrawdown: acct.maxDrawdown,
     strategyMaxDrawdown: maxDrawdown,
     survives,
+    bufferAmount: acct.maxDrawdown,
+    totalHurdle: acct.profitTarget + acct.maxDrawdown,
     timeline: {
       optimistic: {
-        tradingDays: Math.max(daysOptimistic, acct.minPayoutDays),
-        calendarDays: Math.ceil(Math.max(daysOptimistic, acct.minPayoutDays) * 1.4), // weekdays → calendar
+        evalDays: Math.max(daysOptimistic, acct.minPayoutDays),
+        bufferDays: bufferDaysOptimistic,
+        totalDays: Math.max(daysOptimistic, acct.minPayoutDays) + bufferDaysOptimistic,
+        calendarDays: Math.ceil((Math.max(daysOptimistic, acct.minPayoutDays) + bufferDaysOptimistic) * 1.4),
         description: "Assumes every trading day is profitable at avg P&L",
       },
       realistic: {
-        tradingDays: Math.max(daysRealistic, acct.minPayoutDays),
-        calendarDays: Math.ceil(Math.max(daysRealistic, acct.minPayoutDays) * 1.4),
+        evalDays: Math.max(daysRealistic, acct.minPayoutDays),
+        bufferDays: bufferDaysRealistic,
+        totalDays: Math.max(daysRealistic, acct.minPayoutDays) + bufferDaysRealistic,
+        calendarDays: Math.ceil((Math.max(daysRealistic, acct.minPayoutDays) + bufferDaysRealistic) * 1.4),
         description: `Based on ${(winRate * 100).toFixed(0)}% win rate with avg loss at 50% of avg win`,
       },
       conservative: {
-        tradingDays: Math.max(daysConservative, acct.minPayoutDays),
-        calendarDays: Math.ceil(Math.max(daysConservative, acct.minPayoutDays) * 1.4),
+        evalDays: Math.max(daysConservative, acct.minPayoutDays),
+        bufferDays: bufferDaysRealistic,
+        totalDays: Math.max(daysConservative, acct.minPayoutDays) + bufferDaysRealistic,
+        calendarDays: Math.ceil((Math.max(daysConservative, acct.minPayoutDays) + bufferDaysRealistic) * 1.4),
         description: "Includes 2-day losing streak setback buffer",
       },
     },
     minPayoutDays: acct.minPayoutDays,
     monthlyFee: acct.monthlyFee,
+    ongoingMonthlyFee: acct.ongoingMonthlyFee,
     estimatedEvalCost: Math.round(acct.monthlyFee * Math.ceil(Math.max(daysRealistic, acct.minPayoutDays) / 20)),
   });
 });
 
-// ─── GET /api/prop-firm/simulate/:backtestId — Simulate backtest against all firms ──
+// ─── GET /api/prop-firm/simulate/:backtestId — Simulate backtest against all 50K firms ──
 propFirmRoutes.get("/simulate/:backtestId", async (req, res) => {
   try {
     const [bt] = await db.select().from(backtests).where(eq(backtests.id, req.params.backtestId)).limit(1);
@@ -426,36 +387,56 @@ propFirmRoutes.get("/simulate/:backtestId", async (req, res) => {
       return;
     }
 
-    const results = Object.values(FIRMS).flatMap(firm =>
-      Object.entries(firm.accountTypes).map(([acctType, acct]) => {
+    // Only simulate against 50K accounts (one per firm)
+    const results = Object.values(FIRMS)
+      .filter(firm => firm.accountTypes[ACCOUNT_TYPE])
+      .map(firm => {
+        const acct = firm.accountTypes[ACCOUNT_TYPE];
+
         const violations: string[] = [];
         if (maxDrawdown > acct.maxDrawdown) violations.push(`Drawdown exceeds limit`);
+        if (acct.dailyLossLimit !== null) {
+          violations.push(`Daily loss limit: $${acct.dailyLossLimit}`);
+        }
 
         const daysToTarget = Math.ceil(acct.profitTarget / avgDailyPnl);
         const evalDays = Math.max(daysToTarget, acct.minPayoutDays);
         const evalMonths = Math.ceil(evalDays / 20);
-        const evalCost = acct.monthlyFee * evalMonths + acct.activationFee;
-        const monthlyNet = avgDailyPnl * 20 * acct.payoutSplit;
-        const annualProfit = monthlyNet * 12 - evalCost;
-        const roi = evalCost > 0 ? Math.round((annualProfit / evalCost) * 100) : 0;
+        const evalCost = acct.monthlyFee * evalMonths;
+
+        // Buffer phase
+        const bufferDays = Math.ceil(acct.maxDrawdown / avgDailyPnl);
+        const bufferMonths = Math.ceil(bufferDays / 20);
+
+        // monthlyNet = true take-home after split AND ongoing fees
+        const monthlyNet = (avgDailyPnl * 20 * acct.payoutSplit) - acct.ongoingMonthlyFee;
+        const fundedPayoutMonths = Math.max(0, 12 - evalMonths - bufferMonths);
+        const bufferOngoingFees = acct.ongoingMonthlyFee * bufferMonths;
+        const annualPayouts = monthlyNet * fundedPayoutMonths;
+        const annualCosts = evalCost + bufferOngoingFees;
+        const annualProfit = annualPayouts - annualCosts;
+        const roi = annualCosts > 0 ? Math.round((annualProfit / annualCosts) * 100) : 0;
 
         return {
           firm: firm.name,
           displayName: firm.displayName,
-          accountType: acctType,
+          accountType: ACCOUNT_TYPE,
           passes: violations.length === 0,
           violations,
           evalDays,
+          bufferDays,
           evalCost: Math.round(evalCost),
+          ongoingMonthlyFee: acct.ongoingMonthlyFee,
           monthlyNet: Math.round(monthlyNet),
+          fundedPayoutMonths,
           annualProfit: Math.round(annualProfit),
           roi,
         };
       })
-    ).sort((a, b) => {
-      if (a.passes !== b.passes) return a.passes ? -1 : 1;
-      return b.roi - a.roi;
-    });
+      .sort((a, b) => {
+        if (a.passes !== b.passes) return a.passes ? -1 : 1;
+        return b.roi - a.roi;
+      });
 
     res.json({
       backtestId: bt.id,

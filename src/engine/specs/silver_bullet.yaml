@@ -1,0 +1,30 @@
+concept: silver_bullet
+description: "FVG entry during specific 1-hour Silver Bullet windows with displacement confirmation"
+
+required_imports:
+  - detect_fvg
+required_imports_any:
+  - is_silver_bullet_nyam
+  - is_silver_bullet_nypm
+  - is_silver_bullet_london
+  - sb_nyam
+  - sb_nypm
+  - sb_london
+
+forbidden_imports:
+  - is_nyam_killzone  # too wide (8-11 AM), SB is only 10-11 AM
+  - compute_rsi       # not part of Silver Bullet concept
+
+required_time_windows:
+  - {start: "10:00", end: "11:00", tz: "US/Eastern", label: "NY AM Silver Bullet"}
+  - {start: "14:00", end: "15:00", tz: "US/Eastern", label: "NY PM Silver Bullet"}
+  - {start: "03:00", end: "04:00", tz: "US/Eastern", label: "London Silver Bullet"}
+
+required_concepts:
+  - fvg_entry          # must enter on FVG fill
+  - displacement       # FVG must be created by displacement candle
+
+runtime_assertions:
+  - all_entries_in_windows  # 0% tolerance — every entry must be in one of the 3 windows
+  - signal_count_nonzero
+  - signal_density_reasonable  # not every bar

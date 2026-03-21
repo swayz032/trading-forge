@@ -151,3 +151,45 @@ def compute_targets(
         partial_sizes=partials,
         rr_achieved=rr_achieved,
     )
+
+
+def compute_single_tp(
+    direction: str,
+    entry_price: float,
+    stop_price: float,
+    nearest_bsl: Optional[float] = None,
+    nearest_ssl: Optional[float] = None,
+    nearest_old_high: Optional[float] = None,
+    nearest_old_low: Optional[float] = None,
+    nearest_untested_ob: Optional[float] = None,
+    nearest_unfilled_fvg: Optional[float] = None,
+    atr: float = 0.0,
+) -> Optional[float]:
+    """Single structural TP using DOL hierarchy. Returns None if no target >= 2R.
+
+    Priority: BSL/SSL > old high/low > untested OB > unfilled FVG > 3×ATR fallback.
+    Hard rule: TP must be >= 2R from entry. If nothing qualifies, return None (skip trade).
+    """
+    risk = abs(entry_price - stop_price)
+    if risk < 1e-9:
+        return None
+    min_tp_distance = risk * 2.0
+
+    candidates: List[float] = []
+    if direction == "long":
+        for level in [nearest_bsl, nearest_old_high, nearest_untested_ob, nearest_unfilled_fvg]:
+            if level is not None and level > entry_price:
+                candidates.append(level)
+        if atr > 0:
+            candidates.append(entry_price + atr * 3.0)
+    else:
+        for level in [nearest_ssl, nearest_old_low, nearest_untested_ob, nearest_unfilled_fvg]:
+            if level is not None and level < entry_price:
+                candidates.append(level)
+        if atr > 0:
+            candidates.append(entry_price - atr * 3.0)
+
+    for tp in candidates:
+        if abs(tp - entry_price) >= min_tp_distance:
+            return tp
+    return None

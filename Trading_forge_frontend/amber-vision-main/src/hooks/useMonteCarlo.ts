@@ -8,7 +8,13 @@ export function useMonteCarlo(filters?: { backtestId?: string }) {
   const qs = params.toString();
   return useQuery({
     queryKey: ["monte-carlo", filters],
-    queryFn: () => api.get<MonteCarloRun[]>(`/monte-carlo${qs ? `?${qs}` : ""}`),
+    queryFn: async () => {
+      const res = await api.get<{ data: MonteCarloRun[]; total: number } | MonteCarloRun[]>(
+        `/monte-carlo${qs ? `?${qs}` : ""}`
+      );
+      if (Array.isArray(res)) return res;
+      return res.data;
+    },
     enabled: !!filters?.backtestId,
   });
 }
@@ -18,6 +24,20 @@ export function useMonteCarloRun(id: string | undefined) {
     queryKey: ["monte-carlo", id],
     queryFn: () => api.get<MonteCarloRun>(`/monte-carlo/${id}`),
     enabled: !!id,
+  });
+}
+
+/** Fetch recent MC runs across all backtests (for the overview panel) */
+export function useRecentMonteCarlo(limit = 10) {
+  return useQuery({
+    queryKey: ["monte-carlo", "recent", limit],
+    queryFn: async () => {
+      const res = await api.get<{ data: any[]; total: number } | any[]>(
+        `/monte-carlo/recent?limit=${limit}`
+      );
+      if (Array.isArray(res)) return res;
+      return res.data;
+    },
   });
 }
 

@@ -4,6 +4,7 @@ import { db } from "../db/index.js";
 import { strategies, systemJournal, auditLog } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
 import { OllamaClient } from "./ollama-client.js";
+import { GraveyardGate } from "./graveyard-gate.js";
 import { logger } from "../index.js";
 
 const SYMBOLS = ["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"] as const;
@@ -16,8 +17,8 @@ export interface RunStrategyInput {
   params: Record<string, unknown>;
   symbol: Symbol;
   timeframe: string;
-  start_date: string;
-  end_date: string;
+  start_date?: string;
+  end_date?: string;
   source: "ollama" | "openclaw" | "manual";
 }
 
@@ -41,12 +42,30 @@ export interface ScoutIdea {
 
 export class AgentService {
   private ollama: OllamaClient;
+  private graveyardGate: GraveyardGate;
 
   constructor(ollamaClient?: OllamaClient) {
     this.ollama = ollamaClient ?? new OllamaClient();
+    this.graveyardGate = new GraveyardGate(this.ollama);
   }
 
   async runStrategy(input: RunStrategyInput) {
+    // 0. Graveyard gate — reject if too similar to a dead strategy
+    const graveyardCheck = await this.graveyardGate.check(
+      `${input.strategy_name}: ${input.one_sentence}`,
+    );
+    if (graveyardCheck.blocked) {
+      logger.info({ graveyardCheck }, "Strategy blocked by graveyard gate");
+      return {
+        strategyId: null,
+        backtestId: null,
+        status: "blocked",
+        tier: null,
+        forgeScore: null,
+        graveyardCheck,
+      };
+    }
+
     // 1. Insert strategy into DB
     const [strategy] = await db
       .insert(strategies)
@@ -137,8 +156,8 @@ export class AgentService {
     strategy_class: string;
     symbol: string;
     timeframe: string;
-    start_date: string;
-    end_date: string;
+    start_date?: string;
+    end_date?: string;
     source: "manual" | "ollama" | "openclaw";
     description: string;
     params: Record<string, unknown>;
@@ -177,7 +196,7 @@ export class AgentService {
       },
       start_date: input.start_date,
       end_date: input.end_date,
-      mode: "single" as const,
+      mode: "walkforward" as const,
     };
 
     // 3. Run backtest with strategy class path
@@ -225,7 +244,7 @@ export class AgentService {
   }
 
   async critiqueResults(input: CritiqueInput) {
-    const model = input.model ?? "llama3:8b";
+    const model = input.model ?? "fast";
     let metricsText: string;
 
     if (input.results) {
@@ -254,7 +273,7 @@ Respond in strict JSON:
   "overall_assessment": "string"
 }`;
 
-    const response = await this.ollama.generate(model, prompt);
+    const response = await this.ollama.generate(model, prompt, undefined, true);
 
     let critique: { strengths: string[]; weaknesses: string[]; suggestions: string[]; overall_assessment: string };
     try {
@@ -283,7 +302,7 @@ Respond in strict JSON:
       throw new Error("Maximum 20 strategies per batch");
     }
 
-    const results: Array<{ strategy_name: string; status: string; strategyId?: string; backtestId?: string; error?: string }> = [];
+    const results: Array<{ strategy_name: string; status: string; strategyId?: string | null; backtestId?: string | null; error?: string }> = [];
 
     for (const input of strategyInputs) {
       try {
@@ -307,6 +326,62 @@ Respond in strict JSON:
   }
 
   async scoutIdeas(ideas: ScoutIdea[]) {
+    const receivedCount = ideas.length;
+
+    // Phase 0: Preprocessing — filter, clean, extract metadata
+    const htmlEntityMap: Record<string, string> = {
+      "&amp;": "&", "&lt;": "<", "&gt;": ">",
+      "&quot;": '"', "&#39;": "'", "&apos;": "'",
+      "&#x2F;": "/", "&#x27;": "'",
+    };
+    const stripHtmlEntities = (s: string) =>
+      s.replace(/&[#\w]+;/g, (match) => htmlEntityMap[match] || match);
+
+    const titleSuffixPattern = /\s*[-|]\s*(Reddit|YouTube|TradingView)|\[[^\]]*\]/gi;
+    const instrumentPattern = /(ES|NQ|CL)\b/gi;
+    const indicatorPattern = /(VWAP|RSI|SMA|EMA|MACD|ATR|Bollinger|ORB|Order Block|FVG|ICT|SMC)\b/gi;
+
+    ideas = ideas
+      .filter((idea) => (idea.confidence_score ?? 1) >= 0.3)
+      .map((idea) => {
+        // Strip HTML entities
+        const title = stripHtmlEntities(idea.title || "");
+        const rawDescription = stripHtmlEntities(idea.description || "");
+
+        // Clean title suffixes
+        const cleanTitle = title.replace(titleSuffixPattern, "").trim();
+
+        // Empty description fallback
+        const description = rawDescription || idea.summary || cleanTitle || "No description";
+
+        // Extract instruments from title + description (only if not already populated)
+        const combined = `${cleanTitle} ${description}`;
+        let instruments = idea.instruments;
+        if (!instruments || instruments.length === 0) {
+          const instrumentMatches = combined.match(instrumentPattern) || [];
+          const extracted = [
+            ...new Set(instrumentMatches.map((m) => m.toUpperCase())),
+          ];
+          if (extracted.length > 0) instruments = extracted;
+        }
+
+        // Extract indicators from title + description (only if not already populated)
+        let indicators_mentioned = idea.indicators_mentioned;
+        if (!indicators_mentioned || indicators_mentioned.length === 0) {
+          const indicatorMatches = combined.match(indicatorPattern) || [];
+          const extracted = [...new Set(indicatorMatches)];
+          if (extracted.length > 0) indicators_mentioned = extracted;
+        }
+
+        return {
+          ...idea,
+          title: cleanTitle,
+          description,
+          instruments,
+          indicators_mentioned,
+        };
+      });
+
     // Phase 1: Batch-level dedup (in-memory)
     const seen = new Set<string>();
     const batchDeduped: Array<ScoutIdea & { title_hash: string }> = [];
@@ -386,7 +461,7 @@ Respond in strict JSON:
     }
 
     return {
-      received: ideas.length,
+      received: receivedCount,
       new_count: newIdeas.length,
       batch_duplicate_count: batchDuplicateCount,
       cross_time_duplicate_count: crossTimeDuplicateCount,

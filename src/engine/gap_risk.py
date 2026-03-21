@@ -38,7 +38,7 @@ def compute_overnight_gaps(df: pl.DataFrame) -> pl.Series:
     Returns:
         Polars Series of gap values (0 for non-session-open bars)
     """
-    ts = df["ts_event"].cast(pl.Datetime("us"))
+    ts = df["ts_event"]
     dates = ts.dt.date()
     close = df["close"]
     open_col = df["open"]
@@ -76,10 +76,15 @@ def tag_trades_overnight(
     Returns:
         trades list with added 'hold_type' field
     """
-    ts = timestamps.cast(pl.Datetime("us"))
-    # Convert to ET for session detection
-    et = ts.dt.offset_by("-5h")
-    dates = et.dt.date().to_list()
+    ts = timestamps
+    # If timezone-aware, Polars extracts ET components directly.
+    # If naive, assume already ET (consistent with rest of codebase).
+    tz = getattr(ts.dtype, 'time_zone', None)
+    if tz is not None:
+        dates = ts.dt.date().to_list()
+    else:
+        et = ts.dt.offset_by("-5h")
+        dates = et.dt.date().to_list()
 
     tagged = []
     for trade in trades:

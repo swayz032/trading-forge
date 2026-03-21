@@ -2,7 +2,7 @@ import { Router } from "express";
 import { eq, desc, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/index.js";
-import { backtests, backtestTrades, backtestMatrix, monteCarloRuns, strategies, auditLog } from "../db/schema.js";
+import { backtests, backtestTrades, backtestMatrix, monteCarloRuns, stressTestRuns, strategies, auditLog } from "../db/schema.js";
 import { runBacktest } from "../services/backtest-service.js";
 import { runMatrix, getMatrixStatus } from "../services/matrix-backtest-service.js";
 
@@ -48,6 +48,12 @@ const backtestRequestSchema = z.object({
   mode: z.enum(["single", "walkforward"]).optional().default("walkforward"),
   walk_forward_splits: z.number().int().min(2).max(10).optional().default(5),
 });
+
+// ══════════════════════════════════════════════════════════════════
+// IMPORTANT: Named routes (/compare, /matrix, /matrix/:id) MUST be
+// registered BEFORE the parameterized /:id catch-all, otherwise
+// Express matches "matrix" and "compare" as :id values.
+// ══════════════════════════════════════════════════════════════════
 
 // ─── POST /api/backtests — Run a new backtest (async) ────────────
 backtestRoutes.post("/", async (req, res) => {
@@ -167,52 +173,6 @@ backtestRoutes.get("/", async (req, res) => {
   res.json(rows);
 });
 
-// ─── GET /api/backtests/:id — Full backtest detail ───────────────
-backtestRoutes.get("/:id", async (req, res) => {
-  const [row] = await db
-    .select()
-    .from(backtests)
-    .where(eq(backtests.id, req.params.id))
-    .limit(1);
-
-  if (!row) {
-    res.status(404).json({ error: "Backtest not found" });
-    return;
-  }
-
-  res.json(row);
-});
-
-// ─── GET /api/backtests/:id/equity — Equity curve ────────────────
-backtestRoutes.get("/:id/equity", async (req, res) => {
-  const [row] = await db
-    .select({ equityCurve: backtests.equityCurve })
-    .from(backtests)
-    .where(eq(backtests.id, req.params.id))
-    .limit(1);
-
-  if (!row) {
-    res.status(404).json({ error: "Backtest not found" });
-    return;
-  }
-
-  res.json({ equityCurve: row.equityCurve });
-});
-
-// ─── GET /api/backtests/:id/trades — Paginated trades ────────────
-backtestRoutes.get("/:id/trades", async (req, res) => {
-  const { limit = "100", offset = "0" } = req.query;
-
-  const trades = await db
-    .select()
-    .from(backtestTrades)
-    .where(eq(backtestTrades.backtestId, req.params.id))
-    .limit(Number(limit))
-    .offset(Number(offset));
-
-  res.json(trades);
-});
-
 // ─── POST /api/backtests/compare — Side-by-side metrics ──────────
 backtestRoutes.post("/compare", async (req, res) => {
   const { ids } = req.body;
@@ -227,37 +187,6 @@ backtestRoutes.post("/compare", async (req, res) => {
     .where(inArray(backtests.id, ids));
 
   res.json(rows);
-});
-
-// ─── DELETE /api/backtests/:id — Cascade delete ──────────────────
-backtestRoutes.delete("/:id", async (req, res) => {
-  const backtestId = req.params.id;
-
-  // Delete related MC runs and trades first (FK constraints)
-  await db.delete(monteCarloRuns).where(eq(monteCarloRuns.backtestId, backtestId));
-  await db.delete(backtestTrades).where(eq(backtestTrades.backtestId, backtestId));
-
-  const [deleted] = await db
-    .delete(backtests)
-    .where(eq(backtests.id, backtestId))
-    .returning({ id: backtests.id });
-
-  if (!deleted) {
-    res.status(404).json({ error: "Backtest not found" });
-    return;
-  }
-
-  // Audit log
-  await db.insert(auditLog).values({
-    action: "backtest.delete",
-    entityType: "backtest",
-    entityId: backtestId,
-    input: {},
-    result: {},
-    status: "success",
-  });
-
-  res.json({ deleted: true, id: backtestId });
 });
 
 // ─── POST /api/backtests/matrix — Cross-matrix testing ────────────
@@ -292,11 +221,30 @@ backtestRoutes.post("/matrix", async (req, res) => {
   });
 });
 
+// ─── GET /api/backtests/matrix/:id — Matrix status ────────────────
+backtestRoutes.get("/matrix/:id", async (req, res) => {
+  const id = req.params.id;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    res.status(400).json({ error: "Invalid matrix ID format (expected UUID)" });
+    return;
+  }
+  const row = await getMatrixStatus(id);
+  if (!row) {
+    res.status(404).json({ error: "Matrix not found" });
+    return;
+  }
+  res.json(row);
+});
+
 // ─── GET /api/backtests/matrix — Latest matrix by strategyId ───────
 backtestRoutes.get("/matrix", async (req, res) => {
   const { strategyId } = req.query;
   if (!strategyId || typeof strategyId !== "string") {
     res.status(400).json({ error: "strategyId query parameter required" });
+    return;
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(strategyId)) {
+    res.status(400).json({ error: "Invalid strategyId format (expected UUID)" });
     return;
   }
 
@@ -315,12 +263,98 @@ backtestRoutes.get("/matrix", async (req, res) => {
   res.json(row);
 });
 
-// ─── GET /api/backtests/matrix/:id — Matrix status ────────────────
-backtestRoutes.get("/matrix/:id", async (req, res) => {
-  const row = await getMatrixStatus(req.params.id);
-  if (!row) {
-    res.status(404).json({ error: "Matrix not found" });
+// ─── GET /api/backtests/:id — Full backtest detail ───────────────
+// NOTE: This catch-all MUST be after all named routes (/compare, /matrix)
+backtestRoutes.get("/:id", async (req, res) => {
+  const id = req.params.id;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    res.status(400).json({ error: "Invalid backtest ID format (expected UUID)" });
     return;
   }
-  res.json(row);
+  const [row] = await db
+    .select()
+    .from(backtests)
+    .where(eq(backtests.id, id))
+    .limit(1);
+
+  if (!row) {
+    res.status(404).json({ error: "Backtest not found" });
+    return;
+  }
+
+  // Attach crisis/stress test results if they exist
+  const [stressRow] = await db
+    .select()
+    .from(stressTestRuns)
+    .where(eq(stressTestRuns.backtestId, req.params.id))
+    .limit(1);
+
+  const result: Record<string, unknown> = { ...row };
+  if (stressRow) {
+    result.crisisResults = stressRow.scenarios;
+  }
+
+  res.json(result);
+});
+
+// ─── GET /api/backtests/:id/equity — Equity curve ────────────────
+backtestRoutes.get("/:id/equity", async (req, res) => {
+  const [row] = await db
+    .select({ equityCurve: backtests.equityCurve })
+    .from(backtests)
+    .where(eq(backtests.id, req.params.id))
+    .limit(1);
+
+  if (!row) {
+    res.status(404).json({ error: "Backtest not found" });
+    return;
+  }
+
+  res.json({ equityCurve: row.equityCurve });
+});
+
+// ─── GET /api/backtests/:id/trades — Paginated trades ────────────
+backtestRoutes.get("/:id/trades", async (req, res) => {
+  const { limit = "100", offset = "0" } = req.query;
+
+  const trades = await db
+    .select()
+    .from(backtestTrades)
+    .where(eq(backtestTrades.backtestId, req.params.id))
+    .limit(Number(limit))
+    .offset(Number(offset));
+
+  res.json(trades);
+});
+
+// ─── DELETE /api/backtests/:id — Cascade delete ──────────────────
+backtestRoutes.delete("/:id", async (req, res) => {
+  const backtestId = req.params.id;
+
+  // Delete related records first (FK constraints)
+  await db.delete(monteCarloRuns).where(eq(monteCarloRuns.backtestId, backtestId));
+  await db.delete(stressTestRuns).where(eq(stressTestRuns.backtestId, backtestId));
+  await db.delete(backtestTrades).where(eq(backtestTrades.backtestId, backtestId));
+
+  const [deleted] = await db
+    .delete(backtests)
+    .where(eq(backtests.id, backtestId))
+    .returning({ id: backtests.id });
+
+  if (!deleted) {
+    res.status(404).json({ error: "Backtest not found" });
+    return;
+  }
+
+  // Audit log
+  await db.insert(auditLog).values({
+    action: "backtest.delete",
+    entityType: "backtest",
+    entityId: backtestId,
+    input: {},
+    result: {},
+    status: "success",
+  });
+
+  res.json({ deleted: true, id: backtestId });
 });

@@ -17,6 +17,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { backtests, monteCarloRuns, auditLog } from "../db/schema.js";
 import { logger } from "../index.js";
+import { runMatrix } from "./matrix-backtest-service.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -29,6 +30,9 @@ interface MCOptions {
   initialCapital?: number;
   maxPathsToStore?: number;
   ruinThreshold?: number;
+  runPermutationTest?: boolean;
+  permutationN?: number;
+  nVariants?: number;
 }
 
 interface MCResult {
@@ -42,6 +46,19 @@ interface MCResult {
   paths: number[][];
   execution_time_ms: number;
   gpu_accelerated: boolean;
+  permutation_test?: {
+    p_value: number;
+    has_edge: boolean;
+    bonferroni_threshold?: number;
+    bonferroni_passes?: boolean;
+  };
+  deflated_sharpe?: {
+    dsr: number;
+    p_value: number;
+    passes: boolean;
+    sr_expected_max: number;
+    interpretation: string;
+  };
 }
 
 function runPythonMonteCarlo(configPath: string, mcId: string): Promise<MCResult> {
@@ -58,6 +75,17 @@ function runPythonMonteCarlo(configPath: string, mcId: string): Promise<MCResult
       cwd: PROJECT_ROOT,
     });
 
+    // Kill after 10 minutes to prevent hung processes
+    const MC_TIMEOUT_MS = 600_000;
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        proc.kill("SIGTERM");
+        reject(new Error(`Monte Carlo timed out after ${MC_TIMEOUT_MS / 1000}s`));
+      }
+    }, MC_TIMEOUT_MS);
+
     let stdout = "";
     let stderr = "";
 
@@ -68,6 +96,9 @@ function runPythonMonteCarlo(configPath: string, mcId: string): Promise<MCResult
     });
 
     proc.on("close", (code) => {
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true;
       if (code === 0) {
         try {
           resolve(JSON.parse(stdout.trim()));
@@ -140,7 +171,7 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
       num_simulations: options.numSimulations ?? 10_000,
       method: options.method ?? "both",
       use_gpu: options.useGpu ?? true,
-      initial_capital: options.initialCapital ?? 100_000.0,
+      initial_capital: options.initialCapital ?? 50_000.0,
       max_paths_to_store: options.maxPathsToStore ?? 100,
       ruin_threshold: options.ruinThreshold ?? 0.0,
       trades: bt.dailyPnls ?? [], // Daily P&Ls used as trade proxy if no individual trades
@@ -151,6 +182,9 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
         : [],
       firms: options.firms ?? [],
       is_oos_trades: options.isOosTrades ?? false,
+      run_permutation_test: options.runPermutationTest ?? false,
+      permutation_n: options.permutationN ?? 1000,
+      n_variants: options.nVariants ?? 1,
     };
 
     const tmpPath = pathResolve(tmpdir(), `mc-config-${randomUUID()}.json`);
@@ -202,9 +236,31 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
       durationMs: result.execution_time_ms,
     });
 
+    // ─── Auto Cross Matrix if MC survival is strong (fire-and-forget) ───
+    if (bt.strategyId && result.risk_metrics) {
+      const ruin = Number(result.risk_metrics.probability_of_ruin ?? 1);
+      const survivalRate = 1 - ruin;
+      if (survivalRate > 0.8) {
+        runMatrix(bt.strategyId).then((matrixResult) => {
+          logger.info(
+            { strategyId: bt.strategyId, matrixId: matrixResult.id, status: matrixResult.status },
+            "Auto matrix completed after MC survival > 80%",
+          );
+        }).catch((matrixErr) => {
+          logger.error({ strategyId: bt.strategyId, err: matrixErr }, "Auto matrix failed (non-blocking)");
+        });
+      }
+    }
+
     return { id: mcId, status: "completed", ...result };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
+
+    // Mark the MC row as failed so it doesn't stay in pending state
+    await db
+      .update(monteCarloRuns)
+      .set({ riskMetrics: { error: errorMsg } })
+      .where(eq(monteCarloRuns.id, mcId));
 
     await db.insert(auditLog).values({
       action: "mc.run",

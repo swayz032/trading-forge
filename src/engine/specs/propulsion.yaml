@@ -1,0 +1,28 @@
+concept: propulsion
+description: "Candle-2 body within an FVG (the displacement candle) — enter on retest, invalidate at mean threshold"
+
+required_imports:
+  - detect_fvg
+  - detect_displacement
+  - compute_atr
+
+required_imports_any:
+  - detect_bos
+  - detect_swings
+
+forbidden_imports:
+  - detect_propulsion   # existing indicator uses wrong OB+FVG overlap definition
+
+required_concepts:
+  - fvg_formation             # 3-candle FVG must form first
+  - displacement_candle       # candle 2 must be a displacement candle (body > ATR threshold)
+  - zone_is_candle2_body      # PB zone = open-to-close of candle 2, NOT OB+FVG overlap
+  - mean_threshold            # 50% of candle 2 full range (high+low)/2 — invalidation line
+  - retest_entry              # enter when price returns to the PB zone
+  - continuation_direction    # trade in the direction of the displacement, not counter
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable      # not every bar
+  - entries_follow_displacement    # entry direction matches prior displacement direction
+  - mean_threshold_invalidation    # exits triggered when close crosses mean threshold

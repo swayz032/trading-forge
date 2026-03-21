@@ -1,0 +1,22 @@
+concept: ict_2022
+description: "HTF bias + liquidity sweep + MSS + FVG entry at OTE zone"
+
+required_imports:
+  - detect_fvg
+  - detect_mss
+  - ote_zone
+
+required_imports_any:
+  - detect_buyside_liquidity
+  - detect_sellside_liquidity
+  - detect_sweep
+
+required_concepts:
+  - htf_bias              # must use higher timeframe for directional bias
+  - liquidity_sweep       # sweep of liquidity BEFORE MSS
+  - mss_after_sweep       # MSS confirms direction change after sweep
+  - fvg_at_ote            # FVG entry within OTE zone (0.618-0.786)
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

@@ -119,15 +119,39 @@ class EqhlRaidStrategy(BaseStrategy):
                     last_eqh_sweep_bar = i
                     last_eqh_sweep_price = price
 
+            # Guard: prevent entry on same bar as exit (vectorbt drops the entry)
+            exited_this_bar_long = False
+            exited_this_bar_short = False
+
+            # ── Exit long first: reach BSL target or bearish structure break ──
+            if in_long:
+                hit_target = long_target is not None and highs[i] >= long_target
+                bearish_break = choch_list[i] == "bearish" or mss_list[i] == "bearish"
+                if hit_target or bearish_break:
+                    exit_long[i] = True
+                    in_long = False
+                    long_target = None
+                    exited_this_bar_long = True
+
+            # ── Exit short first: reach SSL target or bullish structure break ──
+            if in_short:
+                hit_target = short_target is not None and lows[i] <= short_target
+                bullish_break = choch_list[i] == "bullish" or mss_list[i] == "bullish"
+                if hit_target or bullish_break:
+                    exit_short[i] = True
+                    in_short = False
+                    short_target = None
+                    exited_this_bar_short = True
+
             # ── Entry long: EQL sweep within reversal_bars + bullish CHoCH or MSS ──
             if (
-                not in_long
+                not exited_this_bar_long
+                and not in_long
                 and 0 < (i - last_eql_sweep_bar) <= self.reversal_bars
                 and (choch_list[i] == "bullish" or mss_list[i] == "bullish")
             ):
                 entry_long[i] = True
                 in_long = True
-                # Target: nearest BSL above current price
                 long_target = None
                 for bp in sorted(bsl_prices):
                     if bp > closes[i]:
@@ -136,36 +160,18 @@ class EqhlRaidStrategy(BaseStrategy):
 
             # ── Entry short: EQH sweep within reversal_bars + bearish CHoCH or MSS ──
             if (
-                not in_short
+                not exited_this_bar_short
+                and not in_short
                 and 0 < (i - last_eqh_sweep_bar) <= self.reversal_bars
                 and (choch_list[i] == "bearish" or mss_list[i] == "bearish")
             ):
                 entry_short[i] = True
                 in_short = True
-                # Target: nearest SSL below current price
                 short_target = None
                 for sp in sorted(ssl_prices, reverse=True):
                     if sp < closes[i]:
                         short_target = sp
                         break
-
-            # ── Exit long: reach BSL target or bearish structure break ──
-            if in_long:
-                hit_target = long_target is not None and highs[i] >= long_target
-                bearish_break = choch_list[i] == "bearish" or mss_list[i] == "bearish"
-                if hit_target or bearish_break:
-                    exit_long[i] = True
-                    in_long = False
-                    long_target = None
-
-            # ── Exit short: reach SSL target or bullish structure break ──
-            if in_short:
-                hit_target = short_target is not None and lows[i] <= short_target
-                bullish_break = choch_list[i] == "bullish" or mss_list[i] == "bullish"
-                if hit_target or bullish_break:
-                    exit_short[i] = True
-                    in_short = False
-                    short_target = None
 
         result = result.with_columns([
             pl.Series("entry_long", entry_long),

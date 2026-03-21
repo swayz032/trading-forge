@@ -1,0 +1,68 @@
+concept: mitigation
+description: "Failed order block that does NOT sweep liquidity — price fails to make new HH/LL, structure shifts, OB zone becomes re-entry in new direction"
+
+required_imports:
+  - detect_swings
+  - detect_bullish_ob
+  - detect_bearish_ob
+  - detect_bos          # structure shift confirmation is mandatory
+  - compute_atr
+
+forbidden_imports:
+  - detect_mitigation   # the indicator detects OB penetration, NOT ICT Mitigation Blocks
+  - compute_rsi         # not part of ICT Mitigation Block concept
+
+required_concepts:
+  - failed_ob_no_new_extreme   # OB must fail to push price to new HH/LL — this distinguishes MB from breaker
+  - bos_after_failure          # Break of Structure must confirm the shift BEFORE MB is valid
+  - retest_entry               # entry is on price retesting the failed OB zone in the new trend direction
+
+optional_concepts:
+  - displacement               # impulsive move away from zone adds confluence but not strictly required
+  - session_filter             # MB is structural, not session-bound — session filter is optional
+
+formation_rules:
+  bullish_mitigation_block:
+    context: "bearish trend — series of LH and LL"
+    step_1: "bearish OB forms during downtrend"
+    step_2: "price reaches bearish OB but FAILS to make new LL (no lower low)"
+    step_3: "price reverses and breaks above prior LH (bullish BOS)"
+    step_4: "the failed bearish OB zone = bullish mitigation block"
+    entry: "buy on retest of MB zone"
+    stop_loss: "below MB zone low"
+    direction: long
+
+  bearish_mitigation_block:
+    context: "bullish trend — series of HH and HL"
+    step_1: "bullish OB forms during uptrend"
+    step_2: "price reaches bullish OB but FAILS to make new HH (no higher high)"
+    step_3: "price reverses and breaks below prior HL (bearish BOS)"
+    step_4: "the failed bullish OB zone = bearish mitigation block"
+    entry: "sell on retest of MB zone"
+    stop_loss: "above MB zone high"
+    direction: short
+
+not_mitigation_block:
+  - "OB that is simply penetrated/broken through — that is a breaker block"
+  - "OB where price makes new HH/LL before reversing — that is a breaker block"
+  - "Any zone defined by % penetration of OB — not an ICT concept"
+
+runtime_assertions:
+  - bos_precedes_every_entry     # no entry without prior BOS confirmation
+  - failed_ob_verified           # the OB must have failed to extend the trend
+  - signal_count_nonzero
+  - signal_density_reasonable    # not every bar
+
+parameters:
+  lookback:
+    type: int
+    default: 5
+    description: "swing detection sensitivity"
+  atr_period:
+    type: int
+    default: 14
+    description: "ATR period for tolerance and stop sizing"
+  retest_tolerance:
+    type: float
+    default: 0.3
+    description: "how close price must come to MB zone edge (ATR multiple)"

@@ -1,0 +1,340 @@
+{
+  "updatedAt": "2026-03-20T05:35:50.999Z",
+  "createdAt": "2026-03-20T05:35:50.999Z",
+  "id": "LQtqeWAcNOlkqROH",
+  "name": "8B-source-quality-review",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-stats",
+      "name": "Fetch Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/journal/stats/summary",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "calc-quality",
+      "name": "Calculate Source Quality",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const stats = $input.first().json;\nconst s = stats.data || stats;\nconst sources = s.sources || s.bySource || {};\nconst lines = [];\nconst flagged = [];\nfor (const [name, data] of Object.entries(sources)) {\n  const total = data.total || data.count || 0;\n  const passed = data.passed || data.pass || 0;\n  const rate = total > 0 ? ((passed / total) * 100).toFixed(1) : 'N/A';\n  lines.push(`${name}: ${rate}% (${passed}/${total})`);\n  if (total > 0 && (passed / total) < 0.05) flagged.push(name);\n}\nconst severity = flagged.length > 0 ? 'warning' : 'info';\nconst body = lines.length > 0 ? lines.join('\n') + (flagged.length > 0 ? `\n\nFLAGGED (<5%): ${flagged.join(', ')}` : '') : 'No source data available yet.';\nreturn [{ json: { title: 'Weekly Source Quality Review', severity, body } }];"
+      }
+    },
+    {
+      "id": "send-alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4100/alert/alerts",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "severity",
+              "value": "={{ $json.severity }}"
+            },
+            {
+              "name": "body",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Stats": {
+      "main": [
+        [
+          {
+            "node": "Calculate Source Quality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Source Quality": {
+      "main": [
+        [
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Cron Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "ebcbd892-e200-4a57-853e-ca44066298d2",
+  "activeVersionId": "ebcbd892-e200-4a57-853e-ca44066298d2",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T05:35:50.999Z",
+      "createdAt": "2026-03-20T05:35:50.999Z",
+      "role": "workflow:owner",
+      "workflowId": "LQtqeWAcNOlkqROH",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-20T05:35:51.002Z",
+    "createdAt": "2026-03-20T05:35:51.002Z",
+    "versionId": "ebcbd892-e200-4a57-853e-ca44066298d2",
+    "workflowId": "LQtqeWAcNOlkqROH",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Cron Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 18 * * 0"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-stats",
+        "name": "Fetch Stats",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/journal/stats/summary",
+          "method": "GET",
+          "options": {
+            "timeout": 30000
+          }
+        }
+      },
+      {
+        "id": "calc-quality",
+        "name": "Calculate Source Quality",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const stats = $input.first().json;\nconst s = stats.data || stats;\nconst sources = s.sources || s.bySource || {};\nconst lines = [];\nconst flagged = [];\nfor (const [name, data] of Object.entries(sources)) {\n  const total = data.total || data.count || 0;\n  const passed = data.passed || data.pass || 0;\n  const rate = total > 0 ? ((passed / total) * 100).toFixed(1) : 'N/A';\n  lines.push(`${name}: ${rate}% (${passed}/${total})`);\n  if (total > 0 && (passed / total) < 0.05) flagged.push(name);\n}\nconst severity = flagged.length > 0 ? 'warning' : 'info';\nconst body = lines.length > 0 ? lines.join('\n') + (flagged.length > 0 ? `\n\nFLAGGED (<5%): ${flagged.join(', ')}` : '') : 'No source data available yet.';\nreturn [{ json: { title: 'Weekly Source Quality Review', severity, body } }];"
+        }
+      },
+      {
+        "id": "send-alert",
+        "name": "Send Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4100/alert/alerts",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "severity",
+                "value": "={{ $json.severity }}"
+              },
+              {
+                "name": "body",
+                "value": "={{ $json.body }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Cron Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Stats",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Stats": {
+        "main": [
+          [
+            {
+              "node": "Calculate Source Quality",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculate Source Quality": {
+        "main": [
+          [
+            {
+              "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-20T05:35:51.462Z",
+        "id": 1199,
+        "workflowId": "LQtqeWAcNOlkqROH",
+        "versionId": "ebcbd892-e200-4a57-853e-ca44066298d2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

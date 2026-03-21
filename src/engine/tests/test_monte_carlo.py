@@ -7,6 +7,8 @@ from src.engine.monte_carlo import (
     get_array_module,
     trade_resample,
     return_bootstrap,
+    block_bootstrap,
+    inject_synthetic_stress,
     run_monte_carlo,
 )
 from src.engine.config import MonteCarloRequest
@@ -115,7 +117,7 @@ class TestRunMonteCarlo:
             method=method,
             use_gpu=False,
             max_paths_to_store=20,
-            initial_capital=100_000.0,
+            initial_capital=50_000.0,
         )
         return run_monte_carlo(request, trades, daily_pnls, equity_curve)
 
@@ -171,8 +173,208 @@ class TestRunMonteCarlo:
         """Equity paths should start from initial_capital."""
         result = self._run()
         for path in result["paths"]:
-            assert path[0] == pytest.approx(100_000.0, abs=1.0)
+            assert path[0] == pytest.approx(50_000.0, abs=1.0)
 
     def test_num_simulations_in_result(self):
         result = self._run(n_sims=300)
         assert result["num_simulations"] == 300
+
+    def test_new_risk_metrics_present(self):
+        """New metrics from production hardening: Lo Sharpe, Omega, Tail, Kelly."""
+        result = self._run()
+        rm = result["risk_metrics"]
+        for key in ["lo_sharpe_distribution", "omega_ratio", "tail_ratio", "kelly_fraction"]:
+            assert key in rm, f"Missing new risk metric: {key}"
+
+    def test_multi_convergence_keys(self):
+        """Convergence should have multi-percentile keys (p1, p5, p95, p99)."""
+        result = self._run(n_sims=1000)
+        conv = result["convergence"]
+        assert "max_drawdown" in conv
+        assert "sharpe" in conv
+        assert "p1_converged" in conv["max_drawdown"]
+        assert "p5_converged" in conv["max_drawdown"]
+        assert "p95_converged" in conv["max_drawdown"]
+        assert "p99_converged" in conv["max_drawdown"]
+        # Backward compat keys
+        assert "max_drawdown_p1_converged" in conv
+        assert "sharpe_p1_converged" in conv
+        assert "convergence_stable" in conv
+
+
+# ─── Min Trade Count Gate ───────────────────────────────────────
+
+class TestMinTradeGate:
+    def test_rejects_under_30_trades_iid(self):
+        """IID methods require >= 30 trades."""
+        trades = _make_trades(20).tolist()
+        daily_pnls = _make_daily_pnls(50).tolist()
+        request = MonteCarloRequest(
+            backtest_id="test", num_simulations=100,
+            method="trade_resample", use_gpu=False,
+        )
+        result = run_monte_carlo(request, trades, daily_pnls, [])
+        assert "error" in result
+        assert result["num_simulations"] == 0
+
+    def test_rejects_under_50_trades_block(self):
+        """Block bootstrap requires >= 50 trades."""
+        trades = _make_trades(40).tolist()
+        daily_pnls = _make_daily_pnls(100).tolist()
+        request = MonteCarloRequest(
+            backtest_id="test", num_simulations=100,
+            method="block_bootstrap", use_gpu=False,
+        )
+        result = run_monte_carlo(request, trades, daily_pnls, [])
+        assert "error" in result
+
+    def test_accepts_30_trades_iid(self):
+        """30 trades should pass for IID methods."""
+        trades = _make_trades(30).tolist()
+        daily_pnls = _make_daily_pnls(60).tolist()
+        request = MonteCarloRequest(
+            backtest_id="test", num_simulations=100,
+            method="trade_resample", use_gpu=False,
+        )
+        result = run_monte_carlo(request, trades, daily_pnls, [])
+        assert "error" not in result
+
+    def test_accepts_50_trades_block(self):
+        """50 trades should pass for block bootstrap."""
+        trades = _make_trades(50).tolist()
+        daily_pnls = _make_daily_pnls(100).tolist()
+        request = MonteCarloRequest(
+            backtest_id="test", num_simulations=100,
+            method="block_bootstrap", use_gpu=False,
+        )
+        result = run_monte_carlo(request, trades, daily_pnls, [])
+        assert "error" not in result
+
+
+# ─── Configurable Seed ──────────────────────────────────────────
+
+class TestConfigurableSeed:
+    def test_same_seed_same_result(self):
+        """Same seed must produce identical results."""
+        trades = _make_trades(80).tolist()
+        daily = _make_daily_pnls(200).tolist()
+        eq = np.cumsum(daily).tolist()
+
+        def _run(seed):
+            req = MonteCarloRequest(
+                backtest_id="test", num_simulations=200,
+                method="trade_resample", use_gpu=False, seed=seed,
+            )
+            return run_monte_carlo(req, trades, daily, eq)
+
+        a = _run(42)
+        b = _run(42)
+        assert a["confidence_intervals"] == b["confidence_intervals"]
+
+    def test_different_seed_different_result(self):
+        """Different seeds must produce different results."""
+        trades = _make_trades(80).tolist()
+        daily = _make_daily_pnls(200).tolist()
+        eq = np.cumsum(daily).tolist()
+
+        def _run(seed):
+            req = MonteCarloRequest(
+                backtest_id="test", num_simulations=200,
+                method="trade_resample", use_gpu=False, seed=seed,
+            )
+            return run_monte_carlo(req, trades, daily, eq)
+
+        a = _run(42)
+        b = _run(99)
+        assert a["confidence_intervals"] != b["confidence_intervals"]
+
+
+# ─── Stress Injection Cap ──────────────────────────────────────
+
+class TestStressInjectionCap:
+    def test_injected_loss_capped(self):
+        """Catastrophic injected losses must not exceed max_loss_cap.
+
+        Note: the cap only applies to the synthetic catastrophic loss,
+        not to existing trade losses already in the array.
+        """
+        # Use trades with small losses so existing losses don't exceed cap
+        rng = np.random.default_rng(99)
+        trades = rng.normal(50, 20, size=200)  # Small std, losses well within cap
+        max_cap = 200.0
+        original_min = np.min(trades)
+        injected = inject_synthetic_stress(trades, max_loss_cap=max_cap, seed=42)
+        # Injected values should not be worse than -max_cap
+        # (original losses might still exist, but catastrophic injections are capped)
+        injected_diff = injected - trades
+        changed_mask = injected_diff != 0
+        if np.any(changed_mask):
+            # The injected (changed) values should respect the cap
+            assert np.min(injected[changed_mask]) >= -max_cap
+
+    def test_no_cap_produces_worse_losses(self):
+        """Without cap, catastrophic losses can be much worse."""
+        trades = _make_trades(200, mean=50, std=100)
+        capped = inject_synthetic_stress(trades, max_loss_cap=60.0, seed=42)
+        uncapped = inject_synthetic_stress(trades, max_loss_cap=0.0, seed=42)
+        # Uncapped should produce equal or worse losses than capped
+        assert np.min(uncapped) <= np.min(capped)
+
+
+# ─── 6-Month Survival Fix ──────────────────────────────────────
+
+class TestSixMonthSurvivalFix:
+    def test_eval_on_last_step_not_6mo(self):
+        """If eval passes on the very last step, 6-month survival should be 0."""
+        from src.engine.monte_carlo import simulate_firm_survival
+
+        # Create paths that hit profit target only at the very end
+        n_sims, n_steps = 10, 50  # 50 steps, way less than 126
+        paths = np.zeros((n_sims, n_steps))
+        for i in range(n_sims):
+            # Slowly accumulate to just below target, then hit it on last step
+            daily_gain = 3000 / n_steps  # Target is typically 3000
+            paths[i] = np.cumsum(np.full(n_steps, daily_gain))
+
+        # This should pass eval but NOT count as 6-month survival
+        # because there aren't 126 bars after passing
+        result = simulate_firm_survival(paths, "topstep_50k", account_size=50000)
+        assert result["funded_survival_6mo"] == 0.0
+
+
+# ─── Block Bootstrap ───────────────────────────────────────────
+
+class TestBlockBootstrap:
+    def test_output_shape(self):
+        trades = _make_trades(100)
+        paths = block_bootstrap(trades, n_sims=200, expected_block_length=8, seed=42)
+        assert paths.shape == (200, 100)
+
+    def test_deterministic(self):
+        trades = _make_trades(100)
+        a = block_bootstrap(trades, n_sims=100, seed=42)
+        b = block_bootstrap(trades, n_sims=100, seed=42)
+        np.testing.assert_array_equal(a, b)
+
+    def test_different_seeds(self):
+        trades = _make_trades(100)
+        a = block_bootstrap(trades, n_sims=100, seed=1)
+        b = block_bootstrap(trades, n_sims=100, seed=2)
+        assert not np.array_equal(a, b)
+
+    def test_empty_raises(self):
+        with pytest.raises(ValueError, match="empty"):
+            block_bootstrap(np.array([]), n_sims=100)
+
+    def test_block_bootstrap_method_runs(self):
+        """Full MC run with block_bootstrap method."""
+        trades = _make_trades(80).tolist()
+        daily = _make_daily_pnls(200).tolist()
+        req = MonteCarloRequest(
+            backtest_id="test", num_simulations=200,
+            method="block_bootstrap", use_gpu=False,
+        )
+        result = run_monte_carlo(req, trades, daily, [])
+        assert result["method"] == "block_bootstrap"
+        assert "block_length" in result
+        assert "confidence_intervals" in result

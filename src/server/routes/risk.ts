@@ -1,63 +1,14 @@
 import { Router } from "express";
+import { CONTRACT_SPECS, FIRMS, getFirmLimit } from "../../shared/firm-config.js";
 
 export const riskRoutes = Router();
-
-// ─── Contract Specs ─────────────────────────────────────────
-const CONTRACT_SPECS: Record<string, { tickSize: number; tickValue: number; pointValue: number }> = {
-  ES:  { tickSize: 0.25, tickValue: 12.50, pointValue: 50.00 },
-  NQ:  { tickSize: 0.25, tickValue: 5.00,  pointValue: 20.00 },
-  CL:  { tickSize: 0.01, tickValue: 10.00, pointValue: 1000.00 },
-  YM:  { tickSize: 1.00, tickValue: 5.00,  pointValue: 5.00 },
-  RTY: { tickSize: 0.10, tickValue: 5.00,  pointValue: 50.00 },
-  GC:  { tickSize: 0.10, tickValue: 10.00, pointValue: 100.00 },
-  MES: { tickSize: 0.25, tickValue: 1.25,  pointValue: 5.00 },
-  MNQ: { tickSize: 0.25, tickValue: 0.50,  pointValue: 2.00 },
-};
-
-// ─── Prop Firm Limits ────────────────────────────────────────
-const FIRM_LIMITS: Record<string, Record<string, { maxDrawdown: number; maxContracts: number; dailyLoss: number | null; trailing: string }>> = {
-  topstep: {
-    "50k":  { maxDrawdown: 2000, maxContracts: 5,  dailyLoss: null, trailing: "eod" },
-    "100k": { maxDrawdown: 3000, maxContracts: 10, dailyLoss: null, trailing: "eod" },
-    "150k": { maxDrawdown: 4500, maxContracts: 15, dailyLoss: null, trailing: "eod" },
-  },
-  mffu: {
-    "50k":  { maxDrawdown: 2500, maxContracts: 5,  dailyLoss: null, trailing: "eod" },
-    "100k": { maxDrawdown: 3500, maxContracts: 10, dailyLoss: null, trailing: "eod" },
-    "150k": { maxDrawdown: 5000, maxContracts: 15, dailyLoss: null, trailing: "eod" },
-  },
-  tpt: {
-    "50k":  { maxDrawdown: 3000, maxContracts: 6,  dailyLoss: null, trailing: "eod" },
-    "100k": { maxDrawdown: 6000, maxContracts: 12, dailyLoss: null, trailing: "eod" },
-  },
-  apex: {
-    "50k":  { maxDrawdown: 2500, maxContracts: 10, dailyLoss: null, trailing: "eod" },
-    "100k": { maxDrawdown: 3000, maxContracts: 14, dailyLoss: null, trailing: "eod" },
-  },
-  tradeify: {
-    "50k":  { maxDrawdown: 2500, maxContracts: 5,  dailyLoss: null, trailing: "realtime" },
-    "100k": { maxDrawdown: 5000, maxContracts: 10, dailyLoss: null, trailing: "realtime" },
-  },
-  alpha_standard: {
-    "50k":  { maxDrawdown: 2000, maxContracts: 12, dailyLoss: null, trailing: "eod" },
-    "100k": { maxDrawdown: 4000, maxContracts: 20, dailyLoss: null, trailing: "eod" },
-  },
-  ffn: {
-    "50k":  { maxDrawdown: 2500, maxContracts: 5,  dailyLoss: 1250, trailing: "eod" },
-    "100k": { maxDrawdown: 3500, maxContracts: 10, dailyLoss: 2000, trailing: "eod" },
-  },
-  earn2trade: {
-    "50k":  { maxDrawdown: 2000, maxContracts: 5,  dailyLoss: null, trailing: "eod" },
-    "100k": { maxDrawdown: 3500, maxContracts: 10, dailyLoss: null, trailing: "eod" },
-  },
-};
 
 // ─── Max Contracts Calculator ────────────────────────────────
 // POST /api/risk/max-contracts
 // Given a symbol, ATR, and firm+account, returns the safe max contracts
 // so you NEVER breach daily loss / drawdown across all accounts.
 riskRoutes.post("/max-contracts", (req, res) => {
-  const { symbol, currentAtr, firm, accountSize, numAccounts = 1, riskPerTradePercent = 1 } = req.body;
+  const { symbol, currentAtr, firm, accountSize = "50k", numAccounts = 1, riskPerTradePercent = 1 } = req.body;
 
   const spec = CONTRACT_SPECS[symbol?.toUpperCase()];
   if (!spec) {
@@ -65,10 +16,14 @@ riskRoutes.post("/max-contracts", (req, res) => {
     return;
   }
 
-  const firmLimits = FIRM_LIMITS[firm?.toLowerCase()]?.[accountSize?.toLowerCase()];
+  // Always use 50K — accountSize param kept for backward compat
+  const firmLimits = getFirmLimit(firm, "50k");
   if (!firmLimits) {
+    const available = Object.entries(FIRMS)
+      .map(([k, v]) => `${k} (${Object.keys(v.accountTypes).join(",")})`)
+      .join("; ");
     res.status(400).json({
-      error: `Unknown firm/size: ${firm}/${accountSize}. Supported: ${Object.keys(FIRM_LIMITS).map((f) => `${f} (${Object.keys(FIRM_LIMITS[f]).join(",")})`).join("; ")}`,
+      error: `Unknown firm/size: ${firm}/${accountSize}. Supported: ${available}`,
     });
     return;
   }
@@ -89,8 +44,14 @@ riskRoutes.post("/max-contracts", (req, res) => {
   // Hard cap from firm rules
   const maxByFirm = firmLimits.maxContracts;
 
+  // Daily loss limit cap (if applicable)
+  let maxByDailyLoss = Infinity;
+  if (firmLimits.dailyLossLimit !== null) {
+    maxByDailyLoss = Math.floor(firmLimits.dailyLossLimit / dollarRiskPerContract);
+  }
+
   // Per-account safe max
-  const safePerAccount = Math.min(maxByRisk, maxByFirm);
+  const safePerAccount = Math.min(maxByRisk, maxByFirm, maxByDailyLoss);
 
   // Total across all accounts
   const totalContracts = safePerAccount * numAccounts;
@@ -104,6 +65,7 @@ riskRoutes.post("/max-contracts", (req, res) => {
     dollarRiskPerContract: Math.round(dollarRiskPerContract * 100) / 100,
     firmMaxContracts: maxByFirm,
     riskBasedMaxContracts: maxByRisk,
+    dailyLossLimit: firmLimits.dailyLossLimit,
     safeContractsPerAccount: safePerAccount,
     numAccounts,
     totalContractsAllAccounts: totalContracts,
@@ -139,7 +101,8 @@ riskRoutes.post("/portfolio-heat", (req, res) => {
     const spec = CONTRACT_SPECS[pos.symbol?.toUpperCase()];
     if (!spec) continue;
 
-    const firmLimits = FIRM_LIMITS[pos.firm?.toLowerCase()]?.[pos.accountSize?.toLowerCase()];
+    // Always use 50K accounts
+    const firmLimits = getFirmLimit(pos.firm, "50k");
     if (!firmLimits) continue;
 
     const pnl = (pos.currentPrice - pos.entryPrice) * spec.pointValue * pos.contracts;
@@ -156,6 +119,7 @@ riskRoutes.post("/portfolio-heat", (req, res) => {
       unrealizedPnl: Math.round(pnl * 100) / 100,
       drawdownUsed: pnl < 0 ? Math.round(Math.abs(pnl) * 100) / 100 : 0,
       drawdownRemaining: Math.round((firmLimits.maxDrawdown + Math.min(pnl, 0)) * 100) / 100,
+      dailyLossLimit: firmLimits.dailyLossLimit,
     });
   }
 

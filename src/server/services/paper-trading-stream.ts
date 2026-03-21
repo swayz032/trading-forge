@@ -37,6 +37,9 @@ const sharedSockets = new Map<string, SharedSocket>();
 /** symbol → rolling window of last 200 bars */
 const barBuffer = new Map<string, Bar[]>();
 
+/** Per-session lock to prevent concurrent evaluateSignals calls */
+const sessionLocks = new Map<string, Promise<void>>();
+
 const BAR_BUFFER_SIZE = 200;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -71,8 +74,30 @@ function sessionsForSymbol(symbol: string): string[] {
 }
 
 /**
+ * Process a single session's price update + signal evaluation.
+ * Serialized per-session via sessionLocks to prevent concurrent evaluateSignals.
+ */
+async function processSessionBar(sessionId: string, bar: Bar) {
+  const priceMap = { [bar.symbol]: bar.close };
+
+  try {
+    await updatePositionPrices(sessionId, priceMap);
+  } catch (err) {
+    logger.error({ err, sessionId, symbol: bar.symbol }, "Failed to update position prices");
+  }
+
+  try {
+    await evaluateSignals(sessionId, bar.symbol, bar, getBarBuffer(bar.symbol));
+  } catch (err) {
+    logger.error({ err, sessionId, symbol: bar.symbol }, "Failed to evaluate signals");
+  }
+}
+
+/**
  * Called on every bar from any shared WebSocket.
  * Fans out price updates and signal evaluation to every session that cares.
+ * Uses per-session locks to serialize processing — prevents race conditions
+ * where two bars for the same session overlap and corrupt state.
  */
 async function handleBar(bar: Bar) {
   pushBar(bar.symbol, bar);
@@ -80,21 +105,17 @@ async function handleBar(bar: Bar) {
   const sessions = sessionsForSymbol(bar.symbol);
   if (sessions.length === 0) return;
 
-  const priceMap = { [bar.symbol]: bar.close };
+  const promises = sessions.map((sessionId) => {
+    // Chain onto the existing lock for this session (or start fresh)
+    const prev = sessionLocks.get(sessionId) ?? Promise.resolve();
+    const next = prev.then(() => processSessionBar(sessionId, bar)).catch((err) => {
+      logger.error({ err, sessionId, symbol: bar.symbol }, "Session bar processing failed");
+    });
+    sessionLocks.set(sessionId, next);
+    return next;
+  });
 
-  for (const sessionId of sessions) {
-    try {
-      await updatePositionPrices(sessionId, priceMap);
-    } catch (err) {
-      logger.error({ err, sessionId, symbol: bar.symbol }, "Failed to update position prices");
-    }
-
-    try {
-      await evaluateSignals(sessionId, bar.symbol, bar, getBarBuffer(bar.symbol));
-    } catch (err) {
-      logger.error({ err, sessionId, symbol: bar.symbol }, "Failed to evaluate signals");
-    }
-  }
+  await Promise.all(promises);
 }
 
 /**
@@ -219,6 +240,7 @@ export function stopStream(sessionId: string): void {
   }
 
   sessionSymbols.delete(sessionId);
+  sessionLocks.delete(sessionId);
   logger.info({ sessionId }, "Paper trading stream stopped");
 }
 

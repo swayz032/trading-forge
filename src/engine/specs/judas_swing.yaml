@@ -1,0 +1,23 @@
+concept: judas_swing
+description: "Fade the fake opening move after MSS confirms reversal, enter on FVG"
+
+required_imports:
+  - detect_fvg
+  - detect_mss
+
+required_imports_any:
+  - is_nyam_killzone
+  - is_london_killzone
+
+required_concepts:
+  - fake_opening_move   # must track opening direction (first 15-30 min)
+  - reversal_fade       # entry OPPOSES the opening move direction
+  - mss_confirmation    # MSS confirms the reversal
+
+required_time_windows:
+  - {start: "08:30", end: "11:00", tz: "US/Eastern", label: "NY AM Judas"}
+  - {start: "02:00", end: "05:00", tz: "US/Eastern", label: "London Judas"}
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

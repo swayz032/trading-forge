@@ -20,6 +20,20 @@ def check_performance_gate(stats: dict) -> tuple[bool, list[str]]:
     if stats.get("total_trading_days", 0) == 0:
         return (False, ["No trading days — cannot evaluate performance"])
 
+    # Hard gate: minimum sample days
+    if stats.get("total_trading_days", 0) < 60:
+        return (False, [
+            f"Only {stats.get('total_trading_days', 0)} OOS trading days — "
+            f"minimum 60 required for statistical reliability"
+        ])
+
+    # Hard gate: minimum sample trades
+    if stats.get("total_trades", 0) < 100:
+        return (False, [
+            f"Only {stats.get('total_trades', 0)} OOS trades — "
+            f"minimum 100 required for statistical reliability"
+        ])
+
     # Earnings power
     if stats["avg_daily_pnl"] < 250:
         rejections.append(
@@ -61,11 +75,11 @@ def check_performance_gate(stats: dict) -> tuple[bool, list[str]]:
             f"Avg winner/loser ratio {stats['avg_winner_to_loser_ratio']:.2f} < 1.5."
         )
 
-    # Max drawdown
-    if stats["max_drawdown"] >= 2500:
+    # Max drawdown — must survive tightest 50K prop firm (Topstep/Alpha/Earn2Trade = $2,000)
+    if stats["max_drawdown"] >= 2000:
         rejections.append(
-            f"Max drawdown ${stats['max_drawdown']:.0f} >= $2,500. "
-            f"Exceeds most prop firm limits."
+            f"Max drawdown ${stats['max_drawdown']:.0f} >= $2,000. "
+            f"Exceeds tightest prop firm DD limit (Topstep 50K)."
         )
 
     # Consecutive losers
@@ -93,6 +107,15 @@ def check_performance_gate(stats: dict) -> tuple[bool, list[str]]:
             f"Sample confidence: {'MEDIUM' if total_trades >= 200 else 'LOW'}."
         )
 
+    # Alpha decay flag (warning, not rejection)
+    decay = stats.get("decay_analysis", {})
+    if decay.get("composite_score", 0) > 60:
+        warnings.append(
+            f"DECAYING: composite decay score {decay['composite_score']:.1f}/100. "
+            f"Half-life: {decay.get('half_life_days', 'N/A')} days. "
+            f"Trend: {decay.get('trend', 'unknown')}. Monitor closely."
+        )
+
     return (len(rejections) == 0, rejections + warnings)
 
 
@@ -111,9 +134,9 @@ def classify_tier(stats: dict) -> str:
 
     if pnl >= 500 and win_days >= 14 and dd < 1500 and pf >= 2.5 and sharpe >= 2.0:
         return "TIER_1"
-    if pnl >= 350 and win_days >= 13 and dd < 2000 and pf >= 2.0 and sharpe >= 1.75:
+    if pnl >= 350 and win_days >= 13 and dd < 1750 and pf >= 2.0 and sharpe >= 1.75:
         return "TIER_2"
-    if pnl >= 250 and win_days >= 12 and dd < 2500 and pf >= 1.75 and sharpe >= 1.5:
+    if pnl >= 250 and win_days >= 12 and dd < 2000 and pf >= 1.75 and sharpe >= 1.5:
         return "TIER_3"
     return "REJECTED"
 
@@ -143,9 +166,9 @@ def compute_forge_score(
     win_rate = stats["winning_days"] / total_days
     survival = min(25, max(0, (win_rate - 0.60) / 0.20 * 25))
 
-    # Drawdown vs prop firm (0-20): $2,500 = 0, $500 = 20
+    # Drawdown vs prop firm (0-20): $2,000 = 0 (tightest 50K firm), $500 = 20
     dd = stats["max_drawdown"]
-    drawdown_score = min(20, max(0, (2500 - dd) / 2000 * 20))
+    drawdown_score = min(20, max(0, (2000 - dd) / 1500 * 20))
 
     # MC + Walk-forward (0-25)
     if mc_results is not None:

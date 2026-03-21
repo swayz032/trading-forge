@@ -1,12 +1,12 @@
 /**
  * Matrix Backtest Service — Tiered cross-symbol × timeframe testing.
  *
- * Runs 42 combos (6 symbols × 7 timeframes) in 3 tiers:
- *   Tier 1: Fast scan (30min, 1hr, 4hr, daily × 6 symbols) — ~2 min
- *   Tier 2: Medium (15min, 5min × survivors scoring > 30) — ~5 min
- *   Tier 3: Heavy (1min × top 3-4 from Tier 2) — ~4 min
+ * Runs 21 combos (3 symbols × 7 timeframes) in 3 tiers:
+ *   Tier 1: Fast scan (30min, 1hr, 4hr, daily × 3 symbols) — ~1 min
+ *   Tier 2: Medium (15min, 5min × survivors scoring > 30) — ~3 min
+ *   Tier 3: Heavy (1min × top 2-3 from Tier 2) — ~3 min
  *
- * Total wall time on Skytech (8-16 cores, 32-64GB RAM): ~11 min
+ * Total wall time on Skytech: ~7 min. Only ES/NQ/CL (S3 data available).
  */
 
 import { eq } from "drizzle-orm";
@@ -16,7 +16,7 @@ import { runBacktest } from "./backtest-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 
-const ALL_SYMBOLS = ["ES", "NQ", "CL", "YM", "RTY", "GC"] as const;
+const ALL_SYMBOLS = ["ES", "NQ", "CL"] as const;
 const TIER1_TIMEFRAMES = ["30min", "1hour", "4hour", "daily"];
 const TIER2_TIMEFRAMES = ["15min", "5min"];
 const TIER3_TIMEFRAMES = ["1min"];
@@ -82,7 +82,7 @@ async function runWithConcurrency(
           mode: "walkforward" as const,
         };
 
-        const result = await runBacktest(strategyId, config as any);
+        const result = await runBacktest(strategyId, config as any) as any;
         const matrixResult: MatrixResult = {
           symbol: combo.symbol,
           timeframe: combo.timeframe,
@@ -157,12 +157,9 @@ function pearsonCorrelation(x: number[], y: number[]): number {
 
 // Known correlation priors for futures pairs (empirical baselines)
 const KNOWN_CORRELATIONS: Record<string, number> = {
+  "CL-ES": 0.35,
+  "CL-NQ": 0.30,
   "ES-NQ": 0.90,
-  "ES-YM": 0.85,
-  "NQ-YM": 0.80,
-  "ES-RTY": 0.75,
-  "NQ-RTY": 0.70,
-  "CL-GC": 0.25,
 };
 
 async function computeCorrelations(

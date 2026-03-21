@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { Pagination } from "./Pagination";
 
 interface Column<T> {
   key: string;
@@ -16,6 +17,14 @@ interface ForgeTableProps<T> {
   data: T[];
   className?: string;
   onRowClick?: (row: T) => void;
+  maxHeight?: string;
+  /** Pagination: pass all three to enable built-in pagination below the table */
+  page?: number;
+  pageSize?: number;
+  total?: number;
+  onPageChange?: (page: number) => void;
+  /** Highlight selected row by id/key */
+  selectedKey?: string;
 }
 
 export function ForgeTable<T extends Record<string, any>>({
@@ -23,6 +32,12 @@ export function ForgeTable<T extends Record<string, any>>({
   data,
   className,
   onRowClick,
+  maxHeight,
+  page,
+  pageSize,
+  total,
+  onPageChange,
+  selectedKey,
 }: ForgeTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -40,6 +55,11 @@ export function ForgeTable<T extends Record<string, any>>({
     ? [...data].sort((a, b) => {
         const aVal = a[sortKey];
         const bVal = b[sortKey];
+        const aNull = aVal == null;
+        const bNull = bVal == null;
+        if (aNull && bNull) return 0;
+        if (aNull) return 1;
+        if (bNull) return -1;
         if (typeof aVal === "number" && typeof bVal === "number") {
           return sortDir === "asc" ? aVal - bVal : bVal - aVal;
         }
@@ -49,61 +69,72 @@ export function ForgeTable<T extends Record<string, any>>({
       })
     : data;
 
+  const showPagination = page != null && pageSize != null && total != null && onPageChange != null;
+
   return (
-    <div className={cn("overflow-auto rounded-lg", className)}>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border/30">
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className={cn(
-                  "px-4 py-3 text-[10px] uppercase tracking-widest font-medium text-text-muted",
-                  col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
-                  col.sortable && "cursor-pointer hover:text-text-secondary transition-colors select-none"
-                )}
-                onClick={() => col.sortable && handleSort(col.key)}
-              >
-                <span className="inline-flex items-center gap-1">
-                  {col.header}
-                  {col.sortable && sortKey === col.key && (
-                    sortDir === "asc" ? (
-                      <ChevronUp className="w-3 h-3" />
-                    ) : (
-                      <ChevronDown className="w-3 h-3" />
-                    )
-                  )}
-                </span>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedData.map((row, i) => (
-            <tr
-              key={i}
-              className={cn(
-                "border-b border-border/10 hover:bg-surface-1/50 transition-colors duration-150",
-                onRowClick && "cursor-pointer"
-              )}
-              onClick={() => onRowClick?.(row)}
-            >
+    <div className={cn("rounded-lg", className)}>
+      <div
+        className="overflow-auto"
+        style={maxHeight ? { maxHeight, overflowY: "auto" } : undefined}
+      >
+        <table className="w-full text-sm">
+          <thead className={maxHeight ? "sticky top-0 z-10 bg-card" : undefined}>
+            <tr className="border-b border-border/30">
               {columns.map((col) => (
-                <td
+                <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-3",
+                    "px-4 py-3 text-[10px] uppercase tracking-widest font-medium text-text-muted",
                     col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
-                    col.mono && "font-mono"
+                    col.sortable && "cursor-pointer hover:text-text-secondary transition-colors select-none"
                   )}
+                  onClick={() => col.sortable && handleSort(col.key)}
                 >
-                  {col.render ? col.render(row) : row[col.key]}
-                </td>
+                  <span className="inline-flex items-center gap-1">
+                    {col.header}
+                    {col.sortable && sortKey === col.key && (
+                      sortDir === "asc" ? (
+                        <ChevronUp className="w-3 h-3" />
+                      ) : (
+                        <ChevronDown className="w-3 h-3" />
+                      )
+                    )}
+                  </span>
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedData.map((row, i) => (
+              <tr
+                key={row.id ?? row.key ?? i}
+                className={cn(
+                  "border-b border-border/10 hover:bg-surface-1/50 transition-colors duration-150",
+                  onRowClick && "cursor-pointer",
+                  selectedKey && (row.id ?? row.key) === selectedKey && "bg-primary/10 border-l-2 border-l-primary"
+                )}
+                onClick={() => onRowClick?.(row)}
+              >
+                {columns.map((col) => (
+                  <td
+                    key={col.key}
+                    className={cn(
+                      "px-4 py-3",
+                      col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
+                      col.mono && "font-mono"
+                    )}
+                  >
+                    {col.render ? col.render(row) : row[col.key]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {showPagination && (
+        <Pagination page={page} pageSize={pageSize} total={total} onPageChange={onPageChange} />
+      )}
     </div>
   );
 }

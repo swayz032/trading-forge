@@ -17,22 +17,24 @@ class ContractSpec(BaseModel):
     point_value: float
     day_margin: float = 500       # Intraday margin per contract
     overnight_margin: float = 0   # Overnight/maintenance margin per contract
+    default_commission: float = 0.62  # Per-side commission (MES/micro default)
 
 
 CONTRACT_SPECS: dict[str, ContractSpec] = {
-    "ES":  ContractSpec(tick_size=0.25, tick_value=12.50, point_value=50.00,   day_margin=500,  overnight_margin=12650),
-    "NQ":  ContractSpec(tick_size=0.25, tick_value=5.00,  point_value=20.00,   day_margin=500,  overnight_margin=17600),
-    "CL":  ContractSpec(tick_size=0.01, tick_value=10.00, point_value=1000.00, day_margin=500,  overnight_margin=6600),
-    "YM":  ContractSpec(tick_size=1.00, tick_value=5.00,  point_value=5.00,    day_margin=500,  overnight_margin=8250),
-    "RTY": ContractSpec(tick_size=0.10, tick_value=5.00,  point_value=50.00,   day_margin=500,  overnight_margin=6600),
-    "GC":  ContractSpec(tick_size=0.10, tick_value=10.00, point_value=100.00,  day_margin=500,  overnight_margin=9900),
+    # We trade MICRO contracts (MES/MNQ/MCL) but S3 data is labeled ES/NQ/CL.
+    # Same price data — just 1/10th the multiplier. Map ES→MES specs so P&L is correct.
+    "ES":  ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=1265),
+    "NQ":  ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=1760),
+    "CL":  ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=660),
+    "YM":  ContractSpec(tick_size=1.00, tick_value=0.50,  point_value=0.50,    day_margin=50,   overnight_margin=825),
+    "RTY": ContractSpec(tick_size=0.10, tick_value=0.50,  point_value=5.00,    day_margin=50,   overnight_margin=660),
+    "GC":  ContractSpec(tick_size=0.10, tick_value=1.00,  point_value=10.00,   day_margin=50,   overnight_margin=990),
+    # Explicit micro symbols (same specs, for clarity)
     "MES": ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=1265),
     "MNQ": ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=1760),
     "MCL": ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=660),
     "MGC": ContractSpec(tick_size=0.10, tick_value=1.00,  point_value=10.00,   day_margin=50,   overnight_margin=990),
 }
-
-# MCL and MGC confirmed present in CONTRACT_SPECS above (micro crude oil, micro gold)
 
 MARGIN_EXPANSION_MULTIPLIER = 2.0  # Applied when VIX > 30 or ATR > 90th percentile
 
@@ -132,12 +134,13 @@ class EventCalendarConfig(BaseModel):
 # ─── Fill Probability Config ────────────────────────────────────
 
 class FillProbabilityConfig(BaseModel):
-    order_type: Literal["market", "limit"] = "market"
+    order_type: Literal["market", "limit", "stop", "stop_limit"] = "market"
     limit_at_current: float = 0.95
     limit_1_tick: float = 0.80
     limit_at_sr: float = 0.60
     limit_at_extreme: float = 0.50
     partial_fill_threshold: float = 0.70
+    latency_ms: int = 50  # Simulated order latency
 
 
 # ─── Backtest Request ─────────────────────────────────────────────
@@ -147,9 +150,10 @@ class BacktestRequest(BaseModel):
     start_date: str  # YYYY-MM-DD
     end_date: str    # YYYY-MM-DD
     slippage_ticks: float = 1.0
-    commission_per_side: float = 4.50
+    commission_per_side: float = 0.62  # MES micro default (was 4.50 ES full-size — 7x too high)
     mode: Literal["single", "walkforward"] = "single"
     walk_forward_splits: int = 5
+    embargo_bars: int = 0  # Bars to skip between IS/OOS (prevents data leakage)
     firm_key: Optional[str] = None
     event_calendar: Optional[EventCalendarConfig] = None
     fill_model: Optional[FillProbabilityConfig] = None
@@ -179,6 +183,40 @@ class BacktestResult(BaseModel):
     forge_score: float = 0.0
     walk_forward_results: Optional[dict] = None
     prop_compliance: Optional[dict] = None
+    run_receipt: Optional[dict] = None
+
+
+# ─── Run Receipt (Reproducibility) ───────────────────────────
+
+class RunReceipt(BaseModel):
+    engine_version: str = ""
+    git_commit: str = ""
+    code_hash: str = ""
+    config_hash: str = ""
+    dataset_hash: str = ""
+    random_seed: int = 42
+    numpy_version: str = ""
+    polars_version: str = ""
+    python_version: str = ""
+    timestamp_utc: str = ""
+    determinism_verified: bool = False
+
+
+# ─── Data Quality Report ─────────────────────────────────────────
+
+class DataQualityReport(BaseModel):
+    total_bars: int
+    duplicate_timestamps: int = 0
+    duplicate_ohlcv_rows: int = 0
+    ohlc_violations: int = 0        # high < low, close outside range
+    zero_volume_bars: int = 0
+    out_of_session_bars: int = 0
+    large_gap_bars: int = 0         # reuse existing 5% threshold
+    coverage_pct: float = 100.0     # actual bars / expected bars
+    zero_negative_prices: int = 0   # bars with zero or negative prices
+    dataset_hash: str = ""
+    warnings: list[str] = []
+    passed: bool = True
 
 
 # ─── Monte Carlo Request ─────────────────────────────────────────
@@ -189,13 +227,20 @@ class MonteCarloRequest(BaseModel):
     method: Literal["trade_resample", "return_bootstrap", "block_bootstrap", "both"] = "both"
     confidence_levels: list[float] = [0.05, 0.25, 0.50, 0.75, 0.95]
     ruin_threshold: float = 0.0
-    initial_capital: float = 100_000.0
+    initial_capital: float = 50_000.0
     use_gpu: bool = True
     max_paths_to_store: int = 100
     is_oos_trades: bool = False
     stress_level: int = 0  # 0=none, 1=moderate, 2=severe, 3=extreme
     inject_synthetic_stress: bool = False
     firms: list[str] = []  # If non-empty, run per-firm survival simulation
+    seed: int = 42
+    max_stop_points: float = 6.0       # For stress injection cap
+    point_value: float = 5.0           # MES default
+    stress_inject_multiplier: float = 2.0  # Cap synthetic loss at multiplier × max_stop_points × point_value
+    run_permutation_test: bool = False
+    permutation_n: int = 1000
+    n_variants: int = 1  # Number of strategy variants tested (for Bonferroni/DSR correction)
 
     @field_validator("num_simulations")
     @classmethod

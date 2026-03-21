@@ -1,10 +1,14 @@
 """ICT Breaker strategy — failed OB becomes breaker, enter on retest.
 
-One-sentence: Enter when price returns to a broken order block (breaker zone).
+One-sentence: Enter when price returns to a broken order block (breaker zone),
+validated by BOS at the break point.
 
 Performance: Numba @njit compiled — 153K bars in ~1.3s.
 
 Exit logic: ATR-based stop loss (2× ATR) + ATR-based take profit (3× ATR) + opposite signal.
+
+Fix: Added BOS validation at the break point — a breaker is only valid if the OB
+was broken through with a confirmed Break of Structure, not just any price crossing.
 """
 
 from __future__ import annotations
@@ -13,7 +17,7 @@ import polars as pl
 from numba import njit
 from src.engine.strategy_base import BaseStrategy
 from src.engine.indicators.core import compute_atr
-from src.engine.indicators.market_structure import detect_swings
+from src.engine.indicators.market_structure import detect_swings, detect_bos
 from src.engine.indicators.order_flow import detect_bullish_ob, detect_bearish_ob, detect_breaker, compute_breaker_signals
 
 
@@ -105,6 +109,7 @@ class BreakerStrategy(BaseStrategy):
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
         result = df.clone()
         swings = detect_swings(df, self.swing_lookback)
+        bos = detect_bos(df, swings)
         atr = compute_atr(df, self.atr_period)
 
         bull_obs = detect_bullish_ob(df, swings)
@@ -124,8 +129,32 @@ class BreakerStrategy(BaseStrategy):
             all_obs = pl.concat(all_obs_list)
             breakers = detect_breaker(df, all_obs)
 
+            # Filter breakers: BOS must exist near the break point
+            # A valid breaker has BOS confirming the break of the OB
             if len(breakers) > 0:
-                entry_long_raw, entry_short_raw = compute_breaker_signals(df, breakers, self.zone_age_limit)
+                bos_list = bos.to_list()
+                valid_indices = []
+                for b_idx in range(len(breakers)):
+                    broken_at = int(breakers["broken_at"][b_idx])
+                    breaker_type = str(breakers["type"][b_idx])
+                    # Check if BOS occurred at or near the break point (±3 bars)
+                    bos_found = False
+                    for check_bar in range(max(0, broken_at - 3), min(n, broken_at + 4)):
+                        if bos_list[check_bar] is not None:
+                            # Bullish breaker = bearish OB broken = bearish BOS at break
+                            if breaker_type == "bullish_breaker" and bos_list[check_bar] == "bullish":
+                                bos_found = True
+                                break
+                            elif breaker_type == "bearish_breaker" and bos_list[check_bar] == "bearish":
+                                bos_found = True
+                                break
+                    if bos_found:
+                        valid_indices.append(b_idx)
+
+                if valid_indices:
+                    validated_breakers = breakers[valid_indices]
+                    entry_long_raw, entry_short_raw = compute_breaker_signals(df, validated_breakers, self.zone_age_limit)
+                # If no valid breakers after BOS filter, entry arrays stay zeros
 
         # Apply exit logic: ATR stop/target + opposite signal
         atr_vals = atr.to_numpy().astype(np.float64)

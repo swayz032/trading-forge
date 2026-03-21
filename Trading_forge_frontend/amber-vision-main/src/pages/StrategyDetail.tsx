@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { ArrowLeft, Play, Pause, Copy, FlaskConical, Zap, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/forge/Pagination";
 import { toast } from "sonner";
 
 import { useStrategy } from "@/hooks/useStrategies";
@@ -63,6 +64,65 @@ function fmtDuration(ms: number | null | undefined): string {
   const min = Math.floor(sec / 60);
   const rem = sec % 60;
   return `${min}m ${rem}s`;
+}
+
+const TRADES_PAGE_SIZE = 50;
+
+function StrategyTradesPanel({ trades, tradeColumns }: { trades: any[] | undefined; tradeColumns: any[] }) {
+  const [tradePage, setTradePage] = useState(1);
+  const [dirFilter, setDirFilter] = useState<"all" | "long" | "short">("all");
+
+  const filteredTrades = useMemo(() => {
+    if (!trades?.length) return [];
+    if (dirFilter === "all") return trades;
+    return trades.filter((t: any) => t.direction === dirFilter);
+  }, [trades, dirFilter]);
+
+  const paginatedTrades = useMemo(() => {
+    const start = (tradePage - 1) * TRADES_PAGE_SIZE;
+    return filteredTrades.slice(start, start + TRADES_PAGE_SIZE);
+  }, [filteredTrades, tradePage]);
+
+  return (
+    <div className="forge-card p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-medium text-foreground">Trade Log</h2>
+        <div className="flex items-center gap-2">
+          {(["all", "long", "short"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => { setDirFilter(f); setTradePage(1); }}
+              className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
+                dirFilter === f
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "text-text-secondary hover:text-foreground border border-transparent"
+              }`}
+            >
+              {f === "all" ? "All" : f === "long" ? "Long" : "Short"}
+            </button>
+          ))}
+          <span className="text-xs text-text-muted font-mono ml-2">{filteredTrades.length} trades</span>
+        </div>
+      </div>
+      {paginatedTrades.length > 0 ? (
+        <>
+          <div className="max-h-[500px] overflow-y-auto">
+            <ForgeTable columns={tradeColumns} data={paginatedTrades} />
+          </div>
+          {filteredTrades.length > TRADES_PAGE_SIZE && (
+            <Pagination
+              page={tradePage}
+              pageSize={TRADES_PAGE_SIZE}
+              total={filteredTrades.length}
+              onPageChange={setTradePage}
+            />
+          )}
+        </>
+      ) : (
+        <p className="text-sm text-text-muted text-center py-8">No trades for latest backtest</p>
+      )}
+    </div>
+  );
 }
 
 export default function StrategyDetail() {
@@ -323,7 +383,7 @@ export default function StrategyDetail() {
                 <LightweightChart type="candlestick" data={ohlcv} height={400} />
               ) : equityCurveData.length > 0 ? (
                 <>
-                  <p className="text-xs text-text-muted mb-2">No OHLCV data — showing equity curve from latest backtest</p>
+                  <p className="text-xs text-text-muted mb-2">No OHLCV data — showing P&L curve from latest backtest</p>
                   <LightweightChart type="area" data={equityCurveData} height={400} />
                 </>
               ) : (
@@ -533,17 +593,7 @@ export default function StrategyDetail() {
 
           {/* Trades Tab */}
           <TabsContent value="trades">
-            <div className="forge-card p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-medium text-foreground">Trade Log</h2>
-                <span className="text-xs text-text-muted font-mono">{trades?.length ?? 0} trades shown</span>
-              </div>
-              {trades && trades.length > 0 ? (
-                <ForgeTable columns={tradeColumns} data={trades} />
-              ) : (
-                <p className="text-sm text-text-muted text-center py-8">No trades for latest backtest</p>
-              )}
-            </div>
+            <StrategyTradesPanel trades={trades} tradeColumns={tradeColumns} />
           </TabsContent>
 
           {/* Config Tab */}

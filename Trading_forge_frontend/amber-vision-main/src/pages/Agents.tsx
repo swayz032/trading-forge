@@ -1,12 +1,48 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Bot, Zap, Search, TrendingUp, Filter, ArrowRight, Activity, Loader2 } from "lucide-react";
+import { Bot, Zap, Search, TrendingUp, Filter, ArrowRight, Activity, Loader2, Cpu, Brain } from "lucide-react";
 import { ForgeScoreRing } from "@/components/forge/ForgeScoreRing";
 import { StatusBadge } from "@/components/forge/StatusBadge";
+import { Pagination } from "@/components/forge/Pagination";
 import { Button } from "@/components/ui/button";
 import { useAgentJobs, useFindStrategies } from "@/hooks/useAgent";
 import { useScoutFunnel } from "@/hooks/useJournal";
 import { num, timeAgo } from "@/lib/utils";
 import { toast } from "sonner";
+
+// ── Agent identity mapping ──────────────────────────────────
+const AGENT_IDENTITY: Record<string, { name: string; icon: string }> = {
+  "agent.run-class-strategy": { name: "Trading Quant", icon: "Cpu" },
+  "agent.run-strategy": { name: "Trading Quant", icon: "Cpu" },
+  "agent.critique": { name: "Ollama Analyst", icon: "Brain" },
+  "agent.find-strategies": { name: "OpenClaw Scout", icon: "Search" },
+  "agent.scout-ideas": { name: "OpenClaw Scout", icon: "Search" },
+  "agent.batch": { name: "Trading Quant", icon: "Cpu" },
+  "agent.robustness": { name: "Trading Quant", icon: "Cpu" },
+  "agent.analyze-market": { name: "Trading Quant", icon: "Cpu" },
+};
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  Cpu,
+  Brain,
+  Search,
+};
+
+// ── Agent type filter options ───────────────────────────────
+const AGENT_TYPE_FILTERS = [
+  { label: "All", value: "" },
+  { label: "Trading Quant", value: "trading-quant" },
+  { label: "OpenClaw Scout", value: "openclaw-scout" },
+  { label: "Ollama Analyst", value: "ollama-analyst" },
+];
+
+const STATUS_FILTERS = [
+  { label: "All", value: "" },
+  { label: "Success", value: "success" },
+  { label: "Running", value: "running" },
+  { label: "Pending", value: "pending" },
+  { label: "Failed", value: "failed" },
+];
 
 const statusMap: Record<string, { variant: "profit" | "amber" | "neutral" | "info"; label: string }> = {
   success: { variant: "profit", label: "Success" },
@@ -16,12 +52,27 @@ const statusMap: Record<string, { variant: "profit" | "amber" | "neutral" | "inf
   pending: { variant: "amber", label: "Pending" },
   failed: { variant: "neutral", label: "Failed" },
   error: { variant: "neutral", label: "Error" },
+  failure: { variant: "neutral", label: "Failed" },
 };
 
+const PAGE_SIZE = 20;
+
 export default function Agents() {
-  const { data: jobs, isLoading: jobsLoading } = useAgentJobs();
+  const [page, setPage] = useState(1);
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const { data: jobsResponse, isLoading: jobsLoading } = useAgentJobs({
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+    type: typeFilter || undefined,
+    status: statusFilter || undefined,
+  });
   const { data: funnel, isLoading: funnelLoading } = useScoutFunnel();
   const findStrategies = useFindStrategies();
+
+  const jobs = jobsResponse?.data ?? (Array.isArray(jobsResponse) ? jobsResponse : []);
+  const totalJobs = jobsResponse?.total ?? jobs.length;
 
   const funnelStages = funnel
     ? [
@@ -34,20 +85,14 @@ export default function Agents() {
 
   const maxFunnel = funnelStages.length > 0 ? Math.max(funnelStages[0].count, 1) : 1;
 
-  const agents = (jobs ?? []).map((job) => {
+  const agents = (jobs ?? []).map((job: any) => {
     const st = statusMap[job.status] ?? { variant: "neutral" as const, label: job.status };
     const result = job.result ?? {};
     const input = job.input ?? {};
 
-    // Derive a human-readable name from the action or input
-    const actionLabel = job.action
-      .replace(/^agent\./, "")
-      .replace(/[-_]/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+    // Use agent identity for display name
+    const identity = AGENT_IDENTITY[job.action] ?? { name: "Agent", icon: "Bot" };
     const strategyName = input.strategy_name ?? input.strategy_class?.split(".").pop();
-    const name = strategyName
-      ? `${actionLabel}: ${strategyName}`
-      : actionLabel;
 
     // Type context from input (e.g. "ES · 1h")
     const typeLabel = [input.symbol, input.timeframe].filter(Boolean).join(" · ") || job.entityType || "agent";
@@ -66,7 +111,9 @@ export default function Agents() {
 
     return {
       id: job.id,
-      name,
+      agentName: identity.name,
+      agentIcon: identity.icon,
+      strategyName,
       type: typeLabel,
       status: job.status,
       st,
@@ -160,6 +207,42 @@ export default function Agents() {
         )}
       </div>
 
+      {/* Filters */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-widest text-text-muted">Agent:</span>
+          {AGENT_TYPE_FILTERS.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => { setTypeFilter(f.value); setPage(1); }}
+              className={`text-[11px] px-2.5 py-1 rounded-md transition-colors ${
+                typeFilter === f.value
+                  ? "bg-primary/15 text-primary font-medium"
+                  : "text-text-muted hover:text-foreground hover:bg-surface-2"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-widest text-text-muted">Status:</span>
+          {STATUS_FILTERS.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => { setStatusFilter(f.value); setPage(1); }}
+              className={`text-[11px] px-2.5 py-1 rounded-md transition-colors ${
+                statusFilter === f.value
+                  ? "bg-primary/15 text-primary font-medium"
+                  : "text-text-muted hover:text-foreground hover:bg-surface-2"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Agent Job Cards Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12 text-text-muted gap-2">
@@ -171,52 +254,68 @@ export default function Agents() {
           <p className="text-sm text-text-muted">No agent jobs yet. Click "Find Strategies" to start the discovery pipeline.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {agents.map((agent, i) => (
-            <motion.div
-              key={agent.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06, duration: 0.4 }}
-              className="forge-card p-5 flex flex-col gap-4 cursor-pointer"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--surface-3))" }}>
-                    <Bot className="w-4 h-4 text-primary" />
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {agents.map((agent: any, i: number) => {
+              const IconComponent = ICON_MAP[agent.agentIcon] ?? Bot;
+              return (
+                <motion.div
+                  key={agent.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06, duration: 0.4 }}
+                  className="forge-card p-5 flex flex-col gap-4 cursor-pointer"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--surface-3))" }}>
+                        <IconComponent className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-foreground">{agent.agentName}</h3>
+                        {agent.strategyName && (
+                          <p className="text-[11px] text-text-secondary">{agent.strategyName}</p>
+                        )}
+                        <p className="text-[10px] text-text-muted">{agent.type}</p>
+                      </div>
+                    </div>
+                    <StatusBadge variant={agent.st.variant} dot>{agent.st.label}</StatusBadge>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-foreground">{agent.name}</h3>
-                    <p className="text-[11px] text-text-muted">{agent.type}</p>
-                  </div>
-                </div>
-                <StatusBadge variant={agent.st.variant} dot>{agent.st.label}</StatusBadge>
-              </div>
 
-              <div className="flex items-center gap-5">
-                <ForgeScoreRing score={agent.score} maxScore={100} size={56} strokeWidth={5} />
-                <div className="grid grid-cols-2 gap-x-6 gap-y-1 flex-1 text-xs">
-                  <div>
-                    <span className="text-text-muted">Discovered</span>
-                    <p className="font-mono text-foreground">{agent.strategies}</p>
+                  <div className="flex items-center gap-5">
+                    <ForgeScoreRing score={agent.score} maxScore={100} size={56} strokeWidth={5} />
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-1 flex-1 text-xs">
+                      <div>
+                        <span className="text-text-muted">Discovered</span>
+                        <p className="font-mono text-foreground">{agent.strategies}</p>
+                      </div>
+                      <div>
+                        <span className="text-text-muted">Accepted</span>
+                        <p className="font-mono text-profit">{agent.accepted}</p>
+                      </div>
+                      <div>
+                        <span className="text-text-muted">Duration</span>
+                        <p className="font-mono text-foreground">{agent.durationMs != null ? `${(agent.durationMs / 1000).toFixed(1)}s` : "\u2014"}</p>
+                      </div>
+                      <div>
+                        <span className="text-text-muted">Last Run</span>
+                        <p className="font-mono text-foreground">{agent.lastRun}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-text-muted">Accepted</span>
-                    <p className="font-mono text-profit">{agent.accepted}</p>
-                  </div>
-                  <div>
-                    <span className="text-text-muted">Duration</span>
-                    <p className="font-mono text-foreground">{agent.durationMs != null ? `${(agent.durationMs / 1000).toFixed(1)}s` : "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-text-muted">Last Run</span>
-                    <p className="font-mono text-foreground">{agent.lastRun}</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={totalJobs}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </motion.div>
   );

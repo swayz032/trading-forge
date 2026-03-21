@@ -53,10 +53,11 @@ def compute_position_sizes(
         atr_series = df[atr_col]
 
     atr_values = atr_series.to_numpy().astype(np.float64)
-    tick_value = contract_spec.tick_value
+    # ATR is in points, so multiply by point_value to get dollar risk per contract
+    point_value = contract_spec.point_value
 
     with np.errstate(divide="ignore", invalid="ignore"):
-        raw = config.target_risk_dollars / (atr_values * tick_value)
+        raw = config.target_risk_dollars / (atr_values * point_value)
 
     # Floor raw values. Bars where raw > 0 but < 1.0 mean ATR-implied risk
     # exceeds target for even 1 contract — flag as over_risk.

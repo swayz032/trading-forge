@@ -59,20 +59,22 @@ def mc_drawdown_breach(
     # than close-to-close moves suggest
     intraday_multiplier = 1.2 if drawdown_type == "intraday" else 1.0
 
-    # Simulate by shuffling daily P&Ls
-    breach_count = 0
+    # Vectorized: all sims at once, chunked for memory safety
+    CHUNK_SIZE = 50_000
     max_dds = np.empty(num_sims, dtype=np.float64)
 
-    for i in range(num_sims):
-        shuffled = rng.permutation(arr)
-        equity = np.cumsum(shuffled)
-        running_peak = np.maximum.accumulate(equity)
-        drawdowns = (running_peak - equity) * intraday_multiplier
-        sim_max_dd = float(np.max(drawdowns))
-        max_dds[i] = sim_max_dd
-        if sim_max_dd >= max_dd_limit:
-            breach_count += 1
+    for chunk_start in range(0, num_sims, CHUNK_SIZE):
+        chunk_end = min(chunk_start + CHUNK_SIZE, num_sims)
+        chunk_size = chunk_end - chunk_start
 
+        tiled = np.tile(arr, (chunk_size, 1))
+        shuffled = rng.permuted(tiled, axis=1)  # independent permutation per row
+        equity = np.cumsum(shuffled, axis=1)
+        running_peak = np.maximum.accumulate(equity, axis=1)
+        drawdowns = (running_peak - equity) * intraday_multiplier
+        max_dds[chunk_start:chunk_end] = np.max(drawdowns, axis=1)
+
+    breach_count = int(np.sum(max_dds >= max_dd_limit))
     breach_probability = breach_count / num_sims
     median_max_dd = float(np.median(max_dds))
     p95_max_dd = float(np.percentile(max_dds, 95))

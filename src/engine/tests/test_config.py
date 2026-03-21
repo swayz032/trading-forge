@@ -183,7 +183,7 @@ class TestMonteCarloRequest:
         assert mc.num_simulations == 10_000
         assert mc.method == "both"
         assert mc.use_gpu is True
-        assert mc.initial_capital == 100_000.0
+        assert mc.initial_capital == 50_000.0
         assert mc.max_paths_to_store == 100
         assert mc.ruin_threshold == 0.0
         assert mc.confidence_levels == [0.05, 0.25, 0.50, 0.75, 0.95]

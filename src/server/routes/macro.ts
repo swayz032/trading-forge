@@ -5,7 +5,7 @@
  * GET   /api/macro/history            — Historical snapshots (with pagination ?limit=&offset=)
  * POST  /api/macro/sync               — Trigger manual data sync from FRED/BLS/EIA
  * GET   /api/macro/calendar           — Upcoming FOMC/CPI/NFP events
- * GET   /api/macro/strategy-fit/:id   — Strategy performance across macro regimes (stub)
+ * GET   /api/macro/strategy-fit/:id   — Strategy performance across macro regimes
  */
 
 import { Router } from "express";
@@ -13,8 +13,8 @@ import { spawn } from "child_process";
 import { resolve as pathResolve } from "path";
 import { z } from "zod";
 import { db } from "../db/index.js";
-import { macroSnapshots } from "../db/schema.js";
-import { desc, eq, sql } from "drizzle-orm";
+import { macroSnapshots, backtests, backtestTrades } from "../db/schema.js";
+import { desc, eq, sql, inArray } from "drizzle-orm";
 import { logger } from "../index.js";
 
 export const macroRoutes = Router();
@@ -200,8 +200,11 @@ print(json.dumps(results))
       logger.info({ component: "macro-sync" }, data.toString().trim());
     });
 
+    let responded = false;
     proc.on("close", async (code) => {
+      if (responded) return;
       if (code !== 0) {
+        responded = true;
         res.status(500).json({
           error: "Macro sync failed",
           details: stderr,
@@ -233,6 +236,7 @@ print(json.dumps(results))
           rawData: result,
         });
 
+        responded = true;
         res.json({
           status: "ok",
           regime: regime.regime || "TRANSITION",
@@ -242,11 +246,13 @@ print(json.dumps(results))
         });
       } catch (parseErr) {
         logger.error({ parseErr, stdout }, "Failed to parse/store macro sync result");
-        res.status(500).json({ error: "Failed to store sync result", details: String(parseErr) });
+        if (!responded) { responded = true; res.status(500).json({ error: "Failed to store sync result", details: String(parseErr) }); }
       }
     });
 
     proc.on("error", (err) => {
+      if (responded) return;
+      responded = true;
       res.status(500).json({ error: "Failed to start Python process", details: String(err) });
     });
   } catch (err) {
@@ -287,7 +293,10 @@ print(json.dumps({
     proc.stdout.on("data", (data) => (stdout += data.toString()));
     proc.stderr.on("data", (data) => (stderr += data.toString()));
 
+    let calResponded = false;
     proc.on("close", (code) => {
+      if (calResponded) return;
+      calResponded = true;
       if (code === 0) {
         try {
           res.json(JSON.parse(stdout.trim()));
@@ -300,6 +309,8 @@ print(json.dumps({
     });
 
     proc.on("error", (err) => {
+      if (calResponded) return;
+      calResponded = true;
       res.status(500).json({ error: "Failed to start Python", details: String(err) });
     });
   } catch (err) {
@@ -309,17 +320,145 @@ print(json.dumps({
 });
 
 // ─── GET /api/macro/strategy-fit/:id ───────────────────────────
-// Strategy performance across macro regimes (future use, stub)
+// Strategy performance across macro regimes (real DB query)
 macroRoutes.get("/strategy-fit/:id", async (req, res) => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-  res.json({
-    strategy_id: id,
-    message: "Strategy-fit analysis coming soon. Will show performance breakdown by macro regime.",
-    regimes: [
-      "RISK_ON", "RISK_OFF", "TIGHTENING", "EASING",
-      "STAGFLATION", "GOLDILOCKS", "TRANSITION",
-    ],
-    hint: "Run backtests across multiple macro regimes to populate this endpoint.",
-  });
+    // Find all completed backtests for this strategy
+    const strategyBacktests = await db
+      .select({ id: backtests.id })
+      .from(backtests)
+      .where(
+        sql`${backtests.strategyId} = ${id} AND ${backtests.status} = 'completed'`
+      );
+
+    if (strategyBacktests.length === 0) {
+      return res.json({
+        strategy_id: id,
+        total_trades: 0,
+        by_regime: {},
+        by_session: {},
+        by_day_of_week: {},
+        message: "No completed backtests found for this strategy.",
+      });
+    }
+
+    const backtestIds = strategyBacktests.map((b) => b.id);
+
+    // Pull all trades for those backtests
+    const trades = await db
+      .select({
+        pnl: backtestTrades.pnl,
+        netPnl: backtestTrades.netPnl,
+        macroRegime: backtestTrades.macroRegime,
+        sessionType: backtestTrades.sessionType,
+        dayOfWeek: backtestTrades.dayOfWeek,
+      })
+      .from(backtestTrades)
+      .where(inArray(backtestTrades.backtestId, backtestIds));
+
+    if (trades.length === 0) {
+      return res.json({
+        strategy_id: id,
+        total_trades: 0,
+        by_regime: {},
+        by_session: {},
+        by_day_of_week: {},
+        message: "No trades found across backtests.",
+      });
+    }
+
+    // Helper to compute group stats
+    function groupStats(items: typeof trades) {
+      if (items.length === 0) return null;
+      const pnls = items.map((t) => parseFloat(String(t.netPnl ?? t.pnl ?? "0")));
+      const wins = pnls.filter((p) => p > 0);
+      const losses = pnls.filter((p) => p < 0);
+      const avgPnl = pnls.reduce((s, v) => s + v, 0) / pnls.length;
+      const winRate = pnls.length > 0 ? wins.length / pnls.length : 0;
+      const grossWin = wins.reduce((s, v) => s + v, 0);
+      const grossLoss = Math.abs(losses.reduce((s, v) => s + v, 0));
+      const pf = grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? 999.99 : 0;
+      return {
+        avg_pnl: Math.round(avgPnl * 100) / 100,
+        win_rate: Math.round(winRate * 1000) / 1000,
+        profit_factor: Math.round(pf * 100) / 100,
+        trades: pnls.length,
+      };
+    }
+
+    // Group by regime
+    const byRegime: Record<string, any> = {};
+    const regimeGroups = new Map<string, typeof trades>();
+    for (const t of trades) {
+      const key = t.macroRegime ?? "UNKNOWN";
+      if (!regimeGroups.has(key)) regimeGroups.set(key, []);
+      regimeGroups.get(key)!.push(t);
+    }
+    for (const [key, group] of regimeGroups) {
+      byRegime[key] = groupStats(group);
+    }
+
+    // Group by session
+    const bySession: Record<string, any> = {};
+    const sessionGroups = new Map<string, typeof trades>();
+    for (const t of trades) {
+      const key = t.sessionType ?? "UNKNOWN";
+      if (!sessionGroups.has(key)) sessionGroups.set(key, []);
+      sessionGroups.get(key)!.push(t);
+    }
+    for (const [key, group] of sessionGroups) {
+      bySession[key] = groupStats(group);
+    }
+
+    // Group by day of week
+    const byDayOfWeek: Record<string, any> = {};
+    const dayGroups = new Map<number, typeof trades>();
+    for (const t of trades) {
+      const key = t.dayOfWeek ?? -1;
+      if (!dayGroups.has(key)) dayGroups.set(key, []);
+      dayGroups.get(key)!.push(t);
+    }
+    for (const [key, group] of dayGroups) {
+      byDayOfWeek[String(key)] = groupStats(group);
+    }
+
+    // Find best regime
+    let bestRegime = "";
+    let bestAvgPnl = -Infinity;
+    for (const [key, stats] of Object.entries(byRegime)) {
+      if (stats && stats.avg_pnl > bestAvgPnl) {
+        bestAvgPnl = stats.avg_pnl;
+        bestRegime = key;
+      }
+    }
+
+    // Find worst regime
+    let worstRegime = "";
+    let worstAvgPnl = Infinity;
+    for (const [key, stats] of Object.entries(byRegime)) {
+      if (stats && stats.avg_pnl < worstAvgPnl) {
+        worstAvgPnl = stats.avg_pnl;
+        worstRegime = key;
+      }
+    }
+
+    const recommendation = bestRegime
+      ? `Strategy performs best in ${bestRegime}. ${worstRegime && worstAvgPnl < 0 ? `Consider pausing during ${worstRegime}.` : ""}`
+      : "Insufficient data for regime recommendation.";
+
+    res.json({
+      strategy_id: id,
+      total_trades: trades.length,
+      by_regime: byRegime,
+      by_session: bySession,
+      by_day_of_week: byDayOfWeek,
+      best_regime: bestRegime,
+      recommendation,
+    });
+  } catch (err) {
+    logger.error({ err }, "Strategy-fit analysis failed");
+    res.status(500).json({ error: "Strategy-fit analysis failed", details: String(err) });
+  }
 });

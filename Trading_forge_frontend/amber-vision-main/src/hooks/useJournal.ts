@@ -2,16 +2,58 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import type { JournalEntry, JournalStats, ScoutFunnelResponse, ScoutFunnel } from "@/types/api";
 
-export function useJournal(filters?: { status?: string; tier?: string; source?: string; limit?: number }) {
+export interface JournalFilters {
+  status?: string;
+  tier?: string;
+  source?: string;
+  limit?: number;
+  offset?: number;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export function useJournal(filters?: JournalFilters) {
   const params = new URLSearchParams();
   if (filters?.status) params.set("status", filters.status);
   if (filters?.tier) params.set("tier", filters.tier);
   if (filters?.source) params.set("source", filters.source);
   if (filters?.limit) params.set("limit", String(filters.limit));
+  if (filters?.offset != null) params.set("offset", String(filters.offset));
+  if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters?.dateTo) params.set("dateTo", filters.dateTo);
   const qs = params.toString();
   return useQuery({
     queryKey: ["journal", filters],
-    queryFn: () => api.get<JournalEntry[]>(`/journal${qs ? `?${qs}` : ""}`),
+    queryFn: async () => {
+      const res = await api.get<{ data: JournalEntry[]; total: number } | JournalEntry[]>(
+        `/journal${qs ? `?${qs}` : ""}`
+      );
+      // Backend now returns { data, total } — unwrap to array for backward compat
+      if (Array.isArray(res)) return res;
+      return res.data;
+    },
+  });
+}
+
+export function useJournalPaginated(filters?: JournalFilters) {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.tier) params.set("tier", filters.tier);
+  if (filters?.source) params.set("source", filters.source);
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  if (filters?.offset != null) params.set("offset", String(filters.offset));
+  if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters?.dateTo) params.set("dateTo", filters.dateTo);
+  const qs = params.toString();
+  return useQuery({
+    queryKey: ["journal", "paginated", filters],
+    queryFn: async () => {
+      const res = await api.get<{ data: JournalEntry[]; total: number } | JournalEntry[]>(
+        `/journal${qs ? `?${qs}` : ""}`
+      );
+      if (Array.isArray(res)) return { data: res, total: res.length };
+      return res;
+    },
   });
 }
 

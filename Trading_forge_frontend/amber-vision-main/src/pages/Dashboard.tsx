@@ -1,481 +1,563 @@
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { MetricCard } from "@/components/forge/MetricCard";
-import { ForgeScoreRing } from "@/components/forge/ForgeScoreRing";
-import { StatusBadge } from "@/components/forge/StatusBadge";
-import { ForgeTable } from "@/components/forge/ForgeTable";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { AlertTriangle, CheckCircle, Info, TrendingUp } from "lucide-react";
+  ChevronRight, BarChart3, Activity, Crosshair, Route,
+  Check, X, Minus, Loader2,
+} from "lucide-react";
 import { TradingViewWidget } from "@/components/forge/TradingViewWidget";
+import { StrategyLeaderboard } from "@/components/forge/StrategyLeaderboard";
+import { StrategySpotlight } from "@/components/forge/StrategySpotlight";
 import { useStrategies } from "@/hooks/useStrategies";
-import { useBacktests } from "@/hooks/useBacktests";
-import { useBacktestEquity } from "@/hooks/useBacktests";
-import { useBacktestTrades } from "@/hooks/useBacktests";
-import { useAlerts } from "@/hooks/useAlerts";
-import { useJournalStats } from "@/hooks/useJournal";
-import { num, timeAgo, fmtCurrency } from "@/lib/utils";
+import { useBacktests, useBacktestTrades } from "@/hooks/useBacktests";
+import { useMonteCarlo } from "@/hooks/useMonteCarlo";
+import type { LeaderboardRow } from "@/components/forge/StrategyLeaderboard";
+import { num, dollarsToPoints, fmtPoints } from "@/lib/utils";
 
-// === Lifecycle → UI status mapping ===
-function mapStatus(lifecycleState: string): "active" | "paused" | "testing" | "retired" {
-  switch (lifecycleState) {
-    case "DEPLOYED":
-    case "PAPER":
-      return "active";
-    case "DECLINING":
-      return "paused";
-    case "TESTING":
-    case "CANDIDATE":
-      return "testing";
-    case "RETIRED":
-      return "retired";
-    default:
-      return "testing";
-  }
+// ── Session ──
+function getETTime() {
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+}
+function getSession() {
+  const et = getETTime();
+  const d = et.getDay(), mins = et.getHours() * 60 + et.getMinutes();
+  if (d === 0 || d === 6) return { label: "CLOSED", color: "text-text-muted", dot: "bg-text-muted/50" };
+  if (mins >= 570 && mins < 960) return { label: "RTH OPEN", color: "text-profit", dot: "bg-profit" };
+  if (mins >= 480 && mins < 570) return { label: "PRE-MARKET", color: "text-primary", dot: "bg-primary" };
+  if (mins >= 1080 || mins < 480) return { label: "OVERNIGHT", color: "text-info", dot: "bg-info" };
+  return { label: "CLOSED", color: "text-text-muted", dot: "bg-text-muted/50" };
+}
+function formatET() {
+  return getETTime().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-const tradeColumns = [
-  { key: "instrument", header: "Symbol", sortable: true },
-  {
-    key: "direction",
-    header: "Side",
-    render: (row: any) => (
-      <StatusBadge variant={row.direction?.toLowerCase() === "long" ? "profit" : "loss"} dot>
-        {row.direction?.toUpperCase()}
-      </StatusBadge>
-    ),
-  },
-  { key: "entry", header: "Entry", align: "right" as const, mono: true },
-  { key: "exit", header: "Exit", align: "right" as const, mono: true },
-  {
-    key: "pnl",
-    header: "P&L",
-    align: "right" as const,
-    sortable: true,
-    mono: true,
-    render: (row: any) => (
-      <span className={row.pnl >= 0 ? "text-profit" : "text-loss"}>
-        {row.pnl >= 0 ? "+" : ""}${Math.abs(row.pnl).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-      </span>
-    ),
-  },
-  { key: "time", header: "Time", align: "right" as const, mono: true },
-];
-
-const alertIcons = {
-  success: <CheckCircle className="w-3.5 h-3.5 text-profit" />,
-  warning: <AlertTriangle className="w-3.5 h-3.5 text-primary" />,
-  info: <Info className="w-3.5 h-3.5 text-info" />,
-};
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="glass rounded-lg border border-border/30 px-3 py-2">
-        <p className="text-xs text-text-muted mb-1">{label}</p>
-        <p className="text-sm font-mono font-semibold text-foreground">
-          ${payload[0].value.toLocaleString()}
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
-
 export default function Dashboard() {
-  // === Data hooks ===
-  const { data: rawStrategies, isLoading: strategiesLoading } = useStrategies();
-  const { data: rawBacktests, isLoading: backtestsLoading } = useBacktests();
-  const { data: rawAlerts, isLoading: alertsLoading } = useAlerts();
-  const { data: journalStats, isLoading: journalLoading } = useJournalStats();
+  const [etTime, setEtTime] = useState(formatET());
+  const [session, setSession] = useState(getSession());
+  useEffect(() => {
+    const iv = setInterval(() => { setEtTime(formatET()); setSession(getSession()); }, 1000);
+    return () => clearInterval(iv);
+  }, []);
 
-  // Find latest completed backtest for equity curve and trades
-  const latestBacktest = useMemo(() => {
-    if (!rawBacktests?.length) return null;
-    return rawBacktests
-      .filter((bt) => bt.status === "completed")
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ?? null;
-  }, [rawBacktests]);
+  const { data: strategies, isLoading: sLoad } = useStrategies();
+  const { data: backtests, isLoading: bLoad } = useBacktests();
+  const [selectedRow, setSelectedRow] = useState<LeaderboardRow | null>(null);
+  const { data: selectedTrades } = useBacktestTrades(selectedRow?.backtestId ?? undefined);
 
-  const latestBacktestId = latestBacktest?.id;
+  const selectedBacktest = useMemo(() => {
+    if (!selectedRow?.backtestId || !backtests) return null;
+    return backtests.find((bt) => bt.id === selectedRow.backtestId) ?? null;
+  }, [selectedRow, backtests]);
 
-  const { data: equityResponse } = useBacktestEquity(latestBacktestId);
-  const { data: rawTrades } = useBacktestTrades(latestBacktestId);
+  // MC data for selected strategy's backtest
+  const { data: mcRuns } = useMonteCarlo(
+    selectedRow?.backtestId ? { backtestId: selectedRow.backtestId } : undefined
+  );
+  const latestMC = useMemo(() => {
+    if (!mcRuns?.length) return null;
+    return mcRuns[0];
+  }, [mcRuns]);
 
-  // === Derived data ===
-  const strategies = useMemo(() => {
-    if (!rawStrategies?.length) return [];
-    return rawStrategies.map((s) => ({
-      name: s.name,
-      status: mapStatus(s.lifecycleState),
-      score: num(s.forgeScore),
-      instrument: s.symbol,
-    }));
-  }, [rawStrategies]);
-
-  const equityData = useMemo(() => {
-    const curve = equityResponse?.equityCurve ?? latestBacktest?.equityCurve;
-    if (!curve || !Array.isArray(curve)) return [];
-
-    const tfMinutes: Record<string, number> = {
-      "1min": 1, "5min": 5, "15min": 15, "30min": 30, "1h": 60, "4h": 240, "1D": 1440,
+  // ── Pipeline counts ──
+  const pipeline = useMemo(() => {
+    const s = strategies ?? [];
+    return {
+      scouted: s.filter((x) => x.lifecycleState === "CANDIDATE").length,
+      testing: s.filter((x) => x.lifecycleState === "TESTING").length,
+      paper: s.filter((x) => x.lifecycleState === "PAPER").length,
+      funded: s.filter((x) => x.lifecycleState === "DEPLOYED").length,
     };
-    const barMins = tfMinutes[latestBacktest?.timeframe ?? "15min"] ?? 15;
-    const startMs = latestBacktest?.startDate ? new Date(latestBacktest.startDate).getTime() : Date.now();
+  }, [strategies]);
 
-    // Map to { date, value } with computed dates for flat arrays
-    const points: { date: string; value: number }[] = [];
-    for (let i = 0; i < curve.length; i++) {
-      const pt = curve[i];
-      let dateStr: string;
-      let value: number;
+  // ── Panel 1: Trade Breakdown stats ──
+  const tradeStats = useMemo(() => {
+    if (!selectedRow || !selectedBacktest) return null;
 
-      if (typeof pt === "number") {
-        const barDate = new Date(startMs + i * barMins * 60_000);
-        dateStr = barDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        value = pt;
-      } else {
-        const rawDate = pt.date ?? pt.time ?? "";
-        value = typeof pt.value === "number" ? pt.value : num(pt.value);
-        if (!rawDate || rawDate.startsWith("Day") || !rawDate.includes("-")) {
-          const barDate = new Date(startMs + i * barMins * 60_000);
-          dateStr = barDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const bt = selectedBacktest;
+    const symbol = selectedRow.symbol || "ES";
+    const trades = selectedTrades ?? [];
+
+    const totalTrades = bt.totalTrades ?? 0;
+    const winRate = num(bt.winRate) * 100;
+    const profitFactor = num(bt.profitFactor);
+    const sharpe = num(bt.sharpeRatio);
+    const maxDdDollars = Math.abs(num(bt.maxDrawdown));
+    const maxDdPts = maxDdDollars > 0 ? dollarsToPoints(maxDdDollars, symbol, 1) : 0;
+    const expectancyDollars = num(bt.avgTradePnl);
+    const expectancyPts = expectancyDollars !== 0 ? dollarsToPoints(expectancyDollars, symbol, 1) : 0;
+
+    // Compute net P&L from totalReturn or sum of trades
+    const totalReturnDollars = num(bt.totalReturn);
+    const netPnlPts = totalReturnDollars !== 0
+      ? dollarsToPoints(totalReturnDollars, symbol, 1)
+      : 0;
+
+    // Compute per-trade stats from trades array
+    let avgWinnerPts = 0;
+    let avgLoserPts = 0;
+    let largestWinPts = 0;
+    let largestLossPts = 0;
+    let rr = 0;
+
+    if (trades.length > 0) {
+      const winners: number[] = [];
+      const losers: number[] = [];
+
+      for (const t of trades) {
+        const pnlDollars = num(t.pnl);
+        const pnlPts = dollarsToPoints(pnlDollars, symbol, t.contracts || 1);
+        if (pnlPts >= 0) {
+          winners.push(pnlPts);
         } else {
-          dateStr = new Date(rawDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          losers.push(pnlPts);
         }
       }
-      points.push({ date: dateStr, value });
-    }
 
-    // Aggregate to daily (last value per day) for clean chart
-    const dailyMap = new Map<string, number>();
-    for (const pt of points) {
-      dailyMap.set(pt.date, pt.value);
-    }
-    return Array.from(dailyMap.entries()).map(([date, value]) => ({ date, value }));
-  }, [equityResponse, latestBacktest]);
-
-  const recentTrades = useMemo(() => {
-    if (!rawTrades?.length) return [];
-    const fmtDate = (d: string | null) => {
-      if (!d) return "—";
-      try {
-        return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      } catch { return "—"; }
-    };
-    return rawTrades.slice(0, 10).map((t) => ({
-      instrument: latestBacktest?.symbol ?? "—",
-      direction: t.direction,
-      entry: num(t.entryPrice) > 0
-        ? num(t.entryPrice).toLocaleString("en-US", { minimumFractionDigits: 2 })
-        : "—",
-      exit: t.exitPrice && num(t.exitPrice) > 0
-        ? num(t.exitPrice).toLocaleString("en-US", { minimumFractionDigits: 2 })
-        : "—",
-      pnl: num(t.pnl),
-      time: fmtDate(t.exitTime ?? t.entryTime),
-    }));
-  }, [rawTrades, latestBacktest]);
-
-  const alerts = useMemo(() => {
-    if (!rawAlerts?.length) return [];
-    return rawAlerts.slice(0, 8).map((a) => {
-      let type: "warning" | "info" | "success";
-      switch (a.severity) {
-        case "critical":
-        case "warning":
-          type = "warning";
-          break;
-        case "info":
-          type = "info";
-          break;
-        default:
-          type = "success";
+      if (winners.length > 0) {
+        avgWinnerPts = winners.reduce((a, b) => a + b, 0) / winners.length;
+        largestWinPts = Math.max(...winners);
       }
-      return {
-        type,
-        message: a.message || a.title,
-        time: timeAgo(a.createdAt),
-      };
-    });
-  }, [rawAlerts]);
+      if (losers.length > 0) {
+        avgLoserPts = losers.reduce((a, b) => a + b, 0) / losers.length;
+        largestLossPts = Math.min(...losers);
+      }
+      if (avgLoserPts !== 0) {
+        rr = Math.abs(avgWinnerPts / avgLoserPts);
+      }
+    }
 
-  // === KPI computations ===
-  const activeCount = strategies.filter((s) => s.status === "active").length;
-  const testingCount = strategies.filter((s) => s.status === "testing").length;
-  const totalCount = strategies.length;
-  const bestScore = strategies.length
-    ? Math.max(...strategies.map((s) => s.score))
-    : 0;
+    return {
+      totalTrades,
+      netPnlPts,
+      winRate,
+      profitFactor,
+      expectancyPts,
+      maxDdPts,
+      rr,
+      avgWinnerPts,
+      avgLoserPts,
+      largestWinPts,
+      largestLossPts,
+      sharpe,
+    };
+  }, [selectedRow, selectedBacktest, selectedTrades]);
 
-  const totalPnl = useMemo(() => {
-    if (!rawBacktests?.length) return 0;
-    // totalReturn is a ratio from vectorbt (e.g. 0.043 = 4.3%), convert to dollars
-    const INITIAL_CAPITAL = 100_000;
-    return rawBacktests
-      .filter((bt) => bt.status === "completed")
-      .reduce((sum, bt) => sum + num(bt.totalReturn) * INITIAL_CAPITAL, 0);
-  }, [rawBacktests]);
+  // ── Panel 3: Journey stages ──
+  const journeyStages = useMemo(() => {
+    if (!selectedRow) return null;
 
-  const maxDrawdown = useMemo(() => {
-    if (!rawBacktests?.length) return 0;
-    const dds = rawBacktests
-      .filter((bt) => bt.status === "completed" && bt.maxDrawdown != null)
-      .map((bt) => num(bt.maxDrawdown));
-    return dds.length ? Math.min(...dds) : 0;
-  }, [rawBacktests]);
+    const bt = selectedBacktest;
+    const symbol = selectedRow.symbol || "ES";
+    const lifecycle = strategies?.find((s) => s.id === selectedRow.strategyId)?.lifecycleState ?? "CANDIDATE";
 
-  const equityReturn = useMemo(() => {
-    if (equityData.length < 2) return 0;
-    const first = equityData[0].value;
-    const last = equityData[equityData.length - 1].value;
-    if (!first) return 0;
-    return ((last - first) / first) * 100;
-  }, [equityData]);
+    // Backtest stage
+    const btNetPnl = bt ? dollarsToPoints(num(bt.totalReturn), symbol, 1) : 0;
+    const btTotalTrades = bt?.totalTrades ?? 0;
+    const btWinRate = num(bt?.winRate) * 100;
+    const btForgeScore = num(bt?.forgeScore);
+    const btStatus: "passed" | "running" | "not_started" =
+      bt?.status === "completed" ? "passed" :
+      bt?.status === "running" ? "running" : "not_started";
 
-  const isLoading = strategiesLoading || backtestsLoading || alertsLoading || journalLoading;
+    // Monte Carlo stage
+    const mcSurvival = latestMC ? (1 - num(latestMC.probabilityOfRuin)) * 100 : null;
+    const mcMedian = latestMC ? num(latestMC.sharpeP50) : null;
+    const mcWorst = latestMC ? num(latestMC.maxDrawdownP95) : null;
+    const mcStatus: "passed" | "not_run" =
+      latestMC ? "passed" : "not_run";
 
-  if (isLoading) {
+    // Eval stage — based on lifecycle
+    const evalStatus: "passed" | "in_progress" | "not_started" =
+      lifecycle === "DEPLOYED" ? "passed" :
+      lifecycle === "PAPER" || lifecycle === "TESTING" ? "in_progress" : "not_started";
+
+    // Buffer stage
+    const bufferStatus: "passed" | "building" | "not_started" =
+      lifecycle === "DEPLOYED" ? "building" : "not_started";
+
+    // Payout stage
+    const payoutStatus: "active" | "not_started" =
+      lifecycle === "DEPLOYED" ? "active" : "not_started";
+
+    return {
+      backtest: { netPnl: btNetPnl, totalTrades: btTotalTrades, winRate: btWinRate, forgeScore: btForgeScore, status: btStatus },
+      monteCarlo: { survivalRate: mcSurvival, medianOutcome: mcMedian, worstCase: mcWorst, status: mcStatus },
+      eval: { profitTarget: 3000, earned: 0, days: 0, status: evalStatus },
+      buffer: { target: 2500, built: 0, status: bufferStatus },
+      payout: { totalWithdrawn: 0, monthlyAvg: 0, split: 90, status: payoutStatus },
+    };
+  }, [selectedRow, selectedBacktest, latestMC, strategies]);
+
+  if (sLoad || bLoad) {
     return (
-      <div className="space-y-6 max-w-[1400px]">
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-            Command Center
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">Loading data...</p>
-        </motion.div>
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="text-center">
+          <div className="w-3 h-3 rounded-full bg-primary animate-pulse mx-auto mb-3" />
+          <p className="text-sm text-text-secondary">Loading strategies...</p>
+        </div>
       </div>
     );
   }
 
+  const hasStrategies = (strategies ?? []).length > 0;
+
   return (
-    <div className="space-y-6 max-w-[1400px]">
-      {/* Page header */}
+    <div className="space-y-4 max-w-[1600px]">
+
+      {/* ROW 1: Header + Ticker Tape */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-semibold text-foreground">Command Center</h1>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-1 border border-border/20">
+              <span className={`w-2 h-2 rounded-full ${session.dot} status-dot`} />
+              <span className={`text-xs font-semibold uppercase tracking-wider ${session.color}`}>{session.label}</span>
+              <span className="text-xs font-mono text-text-muted">{etTime} ET</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 text-xs">
+            <span className="font-mono text-info font-bold">{pipeline.scouted}</span>
+            <span className="text-text-muted">scouted</span>
+            <ChevronRight className="w-3 h-3 text-text-muted/30" />
+            <span className="font-mono text-primary font-bold">{pipeline.testing}</span>
+            <span className="text-text-muted">testing</span>
+            <ChevronRight className="w-3 h-3 text-text-muted/30" />
+            <span className="font-mono text-regime font-bold">{pipeline.paper}</span>
+            <span className="text-text-muted">paper</span>
+            <ChevronRight className="w-3 h-3 text-text-muted/30" />
+            <span className="font-mono text-profit font-bold">{pipeline.funded}</span>
+            <span className="text-text-muted">funded</span>
+          </div>
+        </div>
+        <div className="rounded-lg overflow-hidden">
+          <TradingViewWidget type="ticker-tape" />
+        </div>
+      </motion.div>
+
+      {/* ROW 2: Strategy Scoreboard */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.35, delay: 0.1 }}
+        style={{ minHeight: 200 }}
       >
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-          Command Center
-        </h1>
-        <p className="text-sm text-text-secondary mt-1">
-          Real-time overview of your trading operations
-        </p>
-      </motion.div>
-
-      {/* Live Market Ticker */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="rounded-lg overflow-hidden"
-      >
-        <TradingViewWidget type="ticker-tape" />
-      </motion.div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          label="Total P&L"
-          value={fmtCurrency(totalPnl)}
-          change={totalPnl !== 0 ? `${totalPnl >= 0 ? "+" : ""}${(totalPnl / 1000).toFixed(1)}%` : "—"}
-          changeType={totalPnl >= 0 ? "profit" : "loss"}
-          glow
-          delay={0}
-        />
-        <MetricCard label="Forge Score" value="" delay={0.1}>
-          <div className="flex justify-center -mt-2">
-            <ForgeScoreRing score={bestScore} size={100} strokeWidth={6} />
+        {hasStrategies ? (
+          <StrategyLeaderboard
+            strategies={strategies ?? []}
+            backtests={backtests ?? []}
+            selectedId={selectedRow?.id ?? null}
+            onSelect={setSelectedRow}
+          />
+        ) : (
+          <div className="forge-card p-8 text-center">
+            <p className="text-sm text-text-muted">No strategies yet — run the scout pipeline to discover strategies</p>
           </div>
-        </MetricCard>
-        <MetricCard
-          label="Active Strategies"
-          value={`${activeCount} / ${totalCount}`}
-          change={testingCount ? `${testingCount} testing` : "—"}
-          changeType="neutral"
-          delay={0.2}
-        />
-        <MetricCard
-          label="Max Drawdown"
-          value={maxDrawdown !== 0 ? `${maxDrawdown.toFixed(1)}%` : "—"}
-          change={maxDrawdown !== 0 ? fmtCurrency(maxDrawdown * 1000) : "—"}
-          changeType="loss"
-          delay={0.3}
-        />
-      </div>
+        )}
+      </motion.div>
 
-      {/* Main content grid */}
+      {/* ROW 3: Three Detail Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Equity Curve — spans 2 cols */}
+
+        {/* Panel 1 — Trade Breakdown */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="lg:col-span-2 forge-card p-5"
+          transition={{ duration: 0.35, delay: 0.15 }}
+          className="forge-card p-4"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-sm font-medium text-foreground">Equity Curve</h2>
-              <p className="text-xs text-text-muted mt-0.5">Portfolio performance YTD</p>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4 text-profit" />
-              <span className="text-sm font-mono font-semibold text-profit">
-                {equityReturn !== 0 ? `${equityReturn >= 0 ? "+" : ""}${equityReturn.toFixed(1)}%` : "—"}
-              </span>
-            </div>
+          <div className="flex items-center gap-2 mb-3">
+            <Activity className="w-4 h-4 text-text-muted" />
+            <span className="text-xs uppercase tracking-widest text-text-muted font-medium">Trade Breakdown</span>
           </div>
-          {equityData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={equityData}>
-                <defs>
-                  <linearGradient id="amberGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(45, 100%, 50%)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(45, 100%, 50%)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(240, 5%, 14%)" />
-                <XAxis
-                  dataKey="date"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "hsl(240, 4%, 46%)", fontSize: 11 }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "hsl(240, 4%, 46%)", fontSize: 11 }}
-                  tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="hsl(45, 100%, 50%)"
-                  strokeWidth={2}
-                  fill="url(#amberGradient)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+
+          {!selectedRow ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-sm text-text-muted">Click a strategy above</p>
+            </div>
+          ) : !tradeStats ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-sm text-text-muted">No backtest data</p>
+            </div>
           ) : (
-            <div className="flex items-center justify-center h-[280px] text-sm text-text-muted">
-              No equity data yet
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <StatTile label="Total Trades" value={tradeStats.totalTrades > 0 ? tradeStats.totalTrades.toLocaleString() : "--"} />
+                <StatTile
+                  label="Net P&L"
+                  value={tradeStats.netPnlPts !== 0 ? fmtPoints(tradeStats.netPnlPts) : "--"}
+                  color={tradeStats.netPnlPts > 0 ? "text-profit" : tradeStats.netPnlPts < 0 ? "text-loss" : undefined}
+                />
+                <StatTile
+                  label="Win Rate"
+                  value={tradeStats.winRate > 0 ? `${tradeStats.winRate.toFixed(0)}%` : "--"}
+                  color={tradeStats.winRate >= 60 ? "text-profit" : undefined}
+                />
+                <StatTile
+                  label="Profit Factor"
+                  value={tradeStats.profitFactor > 0 ? `${tradeStats.profitFactor.toFixed(1)}x` : "--"}
+                  color={tradeStats.profitFactor >= 2 ? "text-profit" : undefined}
+                />
+                <StatTile
+                  label="Expectancy"
+                  value={tradeStats.expectancyPts !== 0 ? `${tradeStats.expectancyPts >= 0 ? "+" : ""}${tradeStats.expectancyPts.toFixed(1)} pts/trade` : "--"}
+                  color={tradeStats.expectancyPts > 0 ? "text-profit" : tradeStats.expectancyPts < 0 ? "text-loss" : undefined}
+                />
+                <StatTile
+                  label="Max DD"
+                  value={tradeStats.maxDdPts > 0 ? `-${tradeStats.maxDdPts.toFixed(1)} pts` : "--"}
+                  color="text-loss"
+                />
+                <StatTile
+                  label="R:R"
+                  value={tradeStats.rr > 0 ? `${tradeStats.rr.toFixed(1)}:1` : "--"}
+                  color={tradeStats.rr >= 1.5 ? "text-profit" : undefined}
+                />
+                <StatTile
+                  label="Avg Winner"
+                  value={tradeStats.avgWinnerPts > 0 ? `+${tradeStats.avgWinnerPts.toFixed(1)} pts` : "--"}
+                  color="text-profit"
+                />
+                <StatTile
+                  label="Avg Loser"
+                  value={tradeStats.avgLoserPts < 0 ? `${tradeStats.avgLoserPts.toFixed(1)} pts` : "--"}
+                  color="text-loss"
+                />
+                <StatTile
+                  label="Largest Win"
+                  value={tradeStats.largestWinPts > 0 ? `+${tradeStats.largestWinPts.toFixed(1)} pts` : "--"}
+                  color="text-profit"
+                />
+                <StatTile
+                  label="Largest Loss"
+                  value={tradeStats.largestLossPts < 0 ? `${tradeStats.largestLossPts.toFixed(1)} pts` : "--"}
+                  color="text-loss"
+                />
+                <StatTile
+                  label="Sharpe"
+                  value={tradeStats.sharpe > 0 ? tradeStats.sharpe.toFixed(1) : "--"}
+                  color={tradeStats.sharpe >= 2 ? "text-profit" : tradeStats.sharpe >= 1.5 ? "text-primary" : undefined}
+                />
+              </div>
+
+              {/* Monte Carlo summary */}
+              {latestMC && (
+                <div className="pt-2 border-t border-border/10">
+                  <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1.5">Monte Carlo</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <StatTile
+                      label="Survival"
+                      value={`${((1 - num(latestMC.probabilityOfRuin)) * 100).toFixed(0)}%`}
+                      color={num(latestMC.probabilityOfRuin) < 0.1 ? "text-profit" : "text-loss"}
+                    />
+                    <StatTile
+                      label="Median Sharpe"
+                      value={num(latestMC.sharpeP50) > 0 ? num(latestMC.sharpeP50).toFixed(2) : "--"}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </motion.div>
 
-        {/* Strategy Status */}
+        {/* Panel 2 — Strategy Spotlight */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="forge-card p-5"
+          transition={{ duration: 0.35, delay: 0.2 }}
         >
-          <h2 className="text-sm font-medium text-foreground mb-4">Strategy Status</h2>
-          <div className="space-y-3">
-            {strategies.length > 0 ? (
-              strategies.map((s) => (
-                <div
-                  key={s.name}
-                  className="flex items-center justify-between p-3 rounded-lg bg-surface-0/50 hover:bg-surface-2/30 transition-colors duration-200"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-mono text-primary">{s.instrument}</span>
-                      <StatusBadge
-                        variant={
-                          s.status === "active" ? "profit" : s.status === "paused" ? "amber" : "info"
-                        }
-                        dot
-                      >
-                        {s.status}
-                      </StatusBadge>
-                    </div>
-                    <p className="text-sm text-foreground truncate">{s.name}</p>
-                  </div>
-                  <div className="flex flex-col items-center ml-3">
-                    <span className="text-lg font-mono font-bold text-foreground">{s.score}</span>
-                    <span className="text-[9px] text-text-muted uppercase">Score</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-text-muted text-center py-4">No strategies yet</p>
-            )}
-          </div>
+          <StrategySpotlight
+            row={selectedRow}
+            backtest={selectedBacktest}
+            trades={selectedTrades ?? []}
+          />
         </motion.div>
-      </div>
 
-      {/* Bottom grid: Trades + Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Recent Trades */}
+        {/* Panel 3 — Strategy Journey */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="lg:col-span-2 forge-card p-5"
+          transition={{ duration: 0.35, delay: 0.25 }}
+          className="forge-card p-4"
         >
-          <h2 className="text-sm font-medium text-foreground mb-4">Recent Trades</h2>
-          {recentTrades.length > 0 ? (
-            <ForgeTable columns={tradeColumns} data={recentTrades} />
+          <div className="flex items-center gap-2 mb-3">
+            <Route className="w-4 h-4 text-text-muted" />
+            <span className="text-xs uppercase tracking-widest text-text-muted font-medium">Strategy Journey</span>
+          </div>
+
+          {!selectedRow ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-sm text-text-muted">Click a strategy above</p>
+            </div>
+          ) : !journeyStages ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-sm text-text-muted">No data yet</p>
+            </div>
           ) : (
-            <p className="text-sm text-text-muted text-center py-4">No trades yet</p>
+            <div className="space-y-2">
+              {/* BACKTEST */}
+              <JourneyStage
+                label="BACKTEST"
+                status={journeyStages.backtest.status === "passed" ? "green" : journeyStages.backtest.status === "running" ? "amber" : "grey"}
+                items={journeyStages.backtest.status !== "not_started" ? [
+                  { label: "Net P&L", value: journeyStages.backtest.netPnl !== 0 ? fmtPoints(journeyStages.backtest.netPnl) : "--" },
+                  { label: "Trades", value: journeyStages.backtest.totalTrades > 0 ? journeyStages.backtest.totalTrades.toLocaleString() : "--" },
+                  { label: "Win Rate", value: journeyStages.backtest.winRate > 0 ? `${journeyStages.backtest.winRate.toFixed(0)}%` : "--" },
+                  { label: "Forge Score", value: journeyStages.backtest.forgeScore > 0 ? journeyStages.backtest.forgeScore.toFixed(0) : "--" },
+                ] : undefined}
+              />
+
+              {/* MONTE CARLO */}
+              <JourneyStage
+                label="MONTE CARLO"
+                status={journeyStages.monteCarlo.status === "passed" ? "green" : "grey"}
+                items={journeyStages.monteCarlo.status === "passed" ? [
+                  { label: "Survival", value: journeyStages.monteCarlo.survivalRate != null ? `${journeyStages.monteCarlo.survivalRate.toFixed(0)}%` : "--" },
+                  { label: "Median", value: journeyStages.monteCarlo.medianOutcome != null ? journeyStages.monteCarlo.medianOutcome.toFixed(2) : "--" },
+                  { label: "Worst Case", value: journeyStages.monteCarlo.worstCase != null ? `$${Math.abs(journeyStages.monteCarlo.worstCase).toLocaleString()}` : "--" },
+                ] : undefined}
+              />
+
+              {/* EVAL */}
+              <JourneyStage
+                label="EVAL"
+                status={journeyStages.eval.status === "passed" ? "green" : journeyStages.eval.status === "in_progress" ? "amber" : "grey"}
+                progress={journeyStages.eval.status !== "not_started" ? {
+                  current: journeyStages.eval.earned,
+                  target: journeyStages.eval.profitTarget,
+                  label: `$${journeyStages.eval.earned.toLocaleString()} / $${journeyStages.eval.profitTarget.toLocaleString()}`,
+                } : undefined}
+              />
+
+              {/* BUFFER */}
+              <JourneyStage
+                label="BUFFER"
+                status={journeyStages.buffer.status === "passed" ? "green" : journeyStages.buffer.status === "building" ? "amber" : "grey"}
+                progress={journeyStages.buffer.status !== "not_started" ? {
+                  current: journeyStages.buffer.built,
+                  target: journeyStages.buffer.target,
+                  label: `$${journeyStages.buffer.built.toLocaleString()} / $${journeyStages.buffer.target.toLocaleString()}`,
+                } : undefined}
+              />
+
+              {/* PAYOUT */}
+              <JourneyStage
+                label="PAYOUT"
+                status={journeyStages.payout.status === "active" ? "green" : "grey"}
+                items={journeyStages.payout.status === "active" ? [
+                  { label: "Withdrawn", value: `$${journeyStages.payout.totalWithdrawn.toLocaleString()}` },
+                  { label: "Monthly Avg", value: `$${journeyStages.payout.monthlyAvg.toLocaleString()}` },
+                  { label: "Split", value: `${journeyStages.payout.split}%` },
+                ] : undefined}
+              />
+            </div>
           )}
         </motion.div>
-
-        {/* Alerts Feed */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="forge-card p-5"
-        >
-          <h2 className="text-sm font-medium text-foreground mb-4">Alerts</h2>
-          <div className="space-y-2">
-            {alerts.length > 0 ? (
-              alerts.map((alert, i) => (
-                <div
-                  key={i}
-                  className="flex gap-3 p-3 rounded-lg hover:bg-surface-0/50 transition-colors duration-200"
-                >
-                  <div className="mt-0.5 shrink-0">
-                    {alertIcons[alert.type as keyof typeof alertIcons]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-foreground leading-relaxed">{alert.message}</p>
-                    <p className="text-[10px] text-text-muted mt-1">{alert.time}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-text-muted text-center py-4">No alerts</p>
-            )}
-          </div>
-        </motion.div>
       </div>
 
-      {/* Live Market Overview */}
+      {/* ROW 4: Your Markets — ES, NQ, CL */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-        className="forge-card p-5"
+        transition={{ duration: 0.35, delay: 0.3 }}
       >
-        <h2 className="text-sm font-medium text-foreground mb-4">Market Overview</h2>
-        <TradingViewWidget type="market-overview" height={500} />
+        <div className="flex items-center gap-2 mb-2">
+          <BarChart3 className="w-4 h-4 text-text-muted" />
+          <span className="text-xs uppercase tracking-widest text-text-muted font-medium">Your Markets</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            { symbol: "FOREXCOM:SPXUSD", label: "ES", name: "S&P 500 Futures" },
+            { symbol: "FOREXCOM:NSXUSD", label: "NQ", name: "Nasdaq Futures" },
+            { symbol: "TVC:USOIL", label: "CL", name: "Crude Oil" },
+          ].map((mkt) => (
+            <div key={mkt.symbol} className="forge-card overflow-hidden">
+              <div style={{ height: 220 }}>
+                <TradingViewWidget type="symbol-chart" symbol={mkt.symbol} height={220} />
+              </div>
+            </div>
+          ))}
+        </div>
       </motion.div>
+    </div>
+  );
+}
+
+// ── Stat Tile (for Trade Breakdown grid) ──
+function StatTile({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="px-3 py-2 rounded-lg bg-surface-0/60 border border-border/10">
+      <p className={`text-[15px] font-mono font-bold ${color ?? "text-foreground"}`}>{value}</p>
+      <p className="text-[10px] text-text-muted mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+// ── Journey Stage Card (for Strategy Journey) ──
+function JourneyStage({
+  label,
+  status,
+  items,
+  progress,
+}: {
+  label: string;
+  status: "green" | "amber" | "grey";
+  items?: { label: string; value: string }[];
+  progress?: { current: number; target: number; label: string };
+}) {
+  const bgColor = status === "green" ? "bg-profit/5 border-profit/20"
+    : status === "amber" ? "bg-primary/5 border-primary/20"
+    : "bg-surface-0/40 border-border/10";
+
+  const dotColor = status === "green" ? "bg-profit"
+    : status === "amber" ? "bg-primary"
+    : "bg-text-muted/30";
+
+  const labelColor = status === "grey" ? "text-text-muted" : "text-foreground";
+
+  const StatusIcon = status === "green" ? Check
+    : status === "amber" ? Loader2
+    : Minus;
+
+  const iconColor = status === "green" ? "text-profit"
+    : status === "amber" ? "text-primary animate-spin"
+    : "text-text-muted/40";
+
+  return (
+    <div className={`px-3 py-2.5 rounded-lg border ${bgColor}`}>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+          <span className={`text-[11px] font-semibold uppercase tracking-wider ${labelColor}`}>{label}</span>
+        </div>
+        <StatusIcon className={`w-3.5 h-3.5 ${iconColor}`} />
+      </div>
+
+      {status === "grey" && !items && !progress && (
+        <p className="text-[11px] text-text-muted/50 ml-4">—</p>
+      )}
+
+      {items && (
+        <div className="flex flex-wrap gap-x-4 gap-y-0.5 ml-4">
+          {items.map((item) => (
+            <div key={item.label} className="flex items-center gap-1">
+              <span className="text-[10px] text-text-muted">{item.label}:</span>
+              <span className="text-[11px] font-mono font-medium text-foreground">{item.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {progress && (
+        <div className="ml-4 mt-1">
+          <div className="w-full h-1.5 rounded-full bg-surface-3 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${status === "green" ? "bg-profit" : "bg-primary"}`}
+              style={{ width: `${Math.min(100, progress.target > 0 ? (progress.current / progress.target) * 100 : 0)}%` }}
+            />
+          </div>
+          <p className="text-[10px] font-mono text-text-muted mt-0.5">{progress.label}</p>
+        </div>
+      )}
     </div>
   );
 }

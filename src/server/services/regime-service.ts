@@ -30,6 +30,16 @@ function runPythonRegime(configJson: string): Promise<RegimeResult> {
       cwd: PROJECT_ROOT,
     });
 
+    const REGIME_TIMEOUT_MS = 120_000;
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        proc.kill("SIGTERM");
+        reject(new Error(`Regime detection timed out after ${REGIME_TIMEOUT_MS / 1000}s`));
+      }
+    }, REGIME_TIMEOUT_MS);
+
     let stdout = "";
     let stderr = "";
 
@@ -40,6 +50,9 @@ function runPythonRegime(configJson: string): Promise<RegimeResult> {
     });
 
     proc.on("close", (code) => {
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true;
       if (code === 0) {
         try {
           resolve(JSON.parse(stdout.trim()));

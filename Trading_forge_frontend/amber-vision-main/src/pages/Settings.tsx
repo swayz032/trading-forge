@@ -194,7 +194,7 @@ export default function Settings() {
             </div>
             <p className="text-xs text-text-muted mb-3">
               Free real-time streaming for currencies, indices, options, and
-              stocks. Used for paper/live trading.
+              futures contracts. Used for paper/live trading.
             </p>
             <StatusBadge variant="info" dot>
               Free tier

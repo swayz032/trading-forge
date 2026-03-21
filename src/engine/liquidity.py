@@ -41,13 +41,10 @@ _DEFAULT_LABEL = "AFTER_HOURS"
 def _to_et_hours_minutes(timestamps: pl.Series) -> tuple[np.ndarray, np.ndarray]:
     """Convert timestamps to ET hour and minute arrays.
 
-    Assumes input is UTC. ET = UTC - 5 (EST) or UTC - 4 (EDT).
-    We use EST (UTC-5) as a conservative default — slightly earlier session
-    boundaries mean slightly higher slippage estimates, which is safer.
+    Assumes input is UTC. Converts to America/New_York (handles EST/EDT automatically).
     """
-    # Cast to datetime if needed, subtract 5 hours for ET
-    ts = timestamps.cast(pl.Datetime("us"))
-    et = ts.dt.offset_by("-5h")
+    ts = timestamps.cast(pl.Datetime("us", time_zone="UTC"))
+    et = ts.dt.convert_time_zone("America/New_York")
     hours = et.dt.hour().to_numpy().astype(np.int32)
     minutes = et.dt.minute().to_numpy().astype(np.int32)
     return hours, minutes

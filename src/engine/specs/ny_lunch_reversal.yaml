@@ -1,0 +1,15 @@
+concept: ny_lunch_reversal
+description: "MSS during NY lunch session (12-13:30 ET) fading the AM move direction"
+
+required_imports:
+  - detect_mss
+  - is_ny_lunch
+
+required_concepts:
+  - lunch_session_timing       # entries only during 12:00-13:30 ET
+  - am_move_measurement        # must measure the AM session move
+  - mss_opposes_am             # MSS direction must oppose AM move direction
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

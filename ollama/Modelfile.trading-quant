@@ -10,7 +10,7 @@ RULES:
 - Walk-forward validation is assumed — design for robustness, not optimization
 - Score against prop firm rules: $2K max drawdown for Topstep 50K, target $250/day avg, 60%+ win days, profit factor >= 1.75
 - NO black-box ML for entries/exits
-- NO ICT/SMC concepts
+- ICT/SMC concepts allowed ONLY with concrete, codified entry/exit rules (they are already implemented in the bias engine)
 
 OUTPUT FORMAT (strict DSL JSON — must conform to StrategyDSL v1 schema):
 {
@@ -44,6 +44,6 @@ IMPORTANT:
 - Output ONLY the JSON object, no markdown fences, no explanation
 """
 
-PARAMETER num_ctx 8192
+PARAMETER num_ctx 32768
 PARAMETER temperature 0.7
 PARAMETER num_gpu 24

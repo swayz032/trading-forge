@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, Target, TrendingUp, Shield, Grid3X3, CalendarDays } from "lucide-react";
@@ -8,6 +8,7 @@ import { LightweightChart } from "@/components/forge/LightweightChart";
 import { ForgeTable } from "@/components/forge/ForgeTable";
 import { MatrixHeatmap } from "@/components/forge/MatrixHeatmap";
 import { PnLCalendar } from "@/components/forge/PnLCalendar";
+import { Pagination } from "@/components/forge/Pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AreaChart, Area, ScatterChart, Scatter, BarChart, Bar,
@@ -17,6 +18,15 @@ import { useBacktest, useBacktestEquity, useBacktestTrades } from "@/hooks/useBa
 import { useStrategies } from "@/hooks/useStrategies";
 import { api } from "@/lib/api-client";
 import { num } from "@/lib/utils";
+
+/** Adaptive P&L formatter for heatmap cells */
+function adaptivePnlFormat(val: number): string {
+  const abs = Math.abs(val);
+  if (abs < 1) return `$${val.toFixed(2)}`;
+  if (abs < 100) return `$${Math.round(val)}`;
+  if (abs < 10000) return `$${val.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  return `$${(val / 1000).toFixed(1)}k`;
+}
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -58,6 +68,10 @@ function getSession(utcHour: number): string {
 export default function BacktestDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const [tradePage, setTradePage] = useState(1);
+  const [directionFilter, setDirectionFilter] = useState<"all" | "long" | "short">("all");
+  const TRADES_PER_PAGE = 50;
 
   const { data: backtest, isLoading: btLoading } = useBacktest(id);
   const { data: equityData, isLoading: eqLoading } = useBacktestEquity(id);
@@ -270,7 +284,7 @@ export default function BacktestDetail() {
   const dailyPnls = useMemo(() => {
     if (!trades || !Array.isArray(trades)) return [];
     const dayMap = new Map<string, { pnl: number; trades: number; balance: number }>();
-    let runningBalance = 100_000; // starting capital assumption
+    let runningBalance = 50_000; // starting capital (prop firm default)
     trades.forEach((t: any) => {
       const exitDate = t.exitTime ? new Date(t.exitTime) : null;
       if (!exitDate || isNaN(exitDate.getTime()) || exitDate.getFullYear() < 1971) return;
@@ -328,7 +342,7 @@ export default function BacktestDetail() {
   }
 
   const totalReturnRatio = num(backtest.totalReturn);
-  const totalReturnDollars = totalReturnRatio * 100_000; // vectorbt returns ratio, convert to $
+  const totalReturnDollars = totalReturnRatio * 50_000; // vectorbt returns ratio, convert to $ (prop firm 50K)
   const sharpeRatio = num(backtest.sharpeRatio);
   const winRate = num(backtest.winRate);
   const profitFactor = num(backtest.profitFactor);
@@ -393,16 +407,16 @@ export default function BacktestDetail() {
           {/* Details Tab */}
           <TabsContent value="details" className="space-y-6">
 
-      {/* Equity Curve (Lightweight Charts) */}
+      {/* Account Balance (Lightweight Charts) */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }} className="forge-card p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium text-foreground">Equity Curve</h2>
+          <h2 className="text-sm font-medium text-foreground">Account Balance</h2>
           <span className="text-xs text-text-muted font-mono">{equityCurve.length} sessions</span>
         </div>
         {equityCurve.length > 0 ? (
           <LightweightChart type="area" data={equityCurve} height={320} />
         ) : (
-          <div className="h-[320px] flex items-center justify-center text-text-muted text-sm">No equity curve data</div>
+          <div className="h-[320px] flex items-center justify-center text-text-muted text-sm">No account balance data</div>
         )}
       </motion.div>
 
@@ -470,7 +484,17 @@ export default function BacktestDetail() {
           <h2 className="text-sm font-medium text-foreground mb-1">Monthly P&L Heatmap</h2>
           <p className="text-xs text-text-muted mb-4">Performance by month across years</p>
 
-          {monthlyPnl.length > 0 ? (
+          {monthlyPnl.length > 0 ? (() => {
+            // Check if all values are near-zero (< $1)
+            const allNearZero = monthlyPnl.every((c: any) => c.pnl === null || Math.abs(c.pnl) < 1);
+            if (allNearZero) {
+              return (
+                <div className="h-[200px] flex items-center justify-center text-text-muted text-sm">
+                  Strategy had minimal activity — monthly P&L values &lt; $1
+                </div>
+              );
+            }
+            return (
             <div className="space-y-1">
               {/* Month headers */}
               <div className="grid grid-cols-[60px_repeat(12,1fr)] gap-1">
@@ -497,12 +521,7 @@ export default function BacktestDetail() {
                       >
                         {val !== null ? (
                           <span className={val >= 0 ? "text-profit/90" : "text-loss/90"}>
-                            {val >= 0 ? "+" : ""}
-                            {Math.abs(val) >= 10000
-                              ? `${(val / 1000).toFixed(0)}k`
-                              : Math.abs(val) >= 1000
-                                ? `${(val / 1000).toFixed(1)}k`
-                                : `$${Math.round(val)}`}
+                            {val >= 0 ? "+" : ""}{adaptivePnlFormat(val)}
                           </span>
                         ) : (
                           <span className="text-text-muted/30">—</span>
@@ -513,7 +532,8 @@ export default function BacktestDetail() {
                 </div>
               ))}
             </div>
-          ) : (
+            );
+          })() : (
             <div className="h-[200px] flex items-center justify-center text-text-muted text-sm">No monthly data</div>
           )}
 
@@ -588,12 +608,37 @@ export default function BacktestDetail() {
       )}
 
       {/* Trade Log */}
-      {tradeRows.length > 0 && (
+      {tradeRows.length > 0 && (() => {
+        const filteredTrades = directionFilter === "all"
+          ? tradeRows
+          : tradeRows.filter((t) => t.direction === directionFilter);
+        const totalFiltered = filteredTrades.length;
+        const start = (tradePage - 1) * TRADES_PER_PAGE;
+        const paginatedTrades = filteredTrades.slice(start, start + TRADES_PER_PAGE);
+
+        return (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.5 }} className="forge-card p-5">
-          <h2 className="text-sm font-medium text-foreground mb-4">Trade Log</h2>
-          <div className="overflow-x-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-medium text-foreground">Trade Log</h2>
+            <div className="flex items-center gap-2">
+              {(["all", "long", "short"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => { setDirectionFilter(f); setTradePage(1); }}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
+                    directionFilter === f
+                      ? "bg-primary/10 text-primary border border-primary/20"
+                      : "text-text-secondary hover:text-foreground border border-transparent"
+                  }`}
+                >
+                  {f === "all" ? "All" : f === "long" ? "Long" : "Short"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
             <table className="w-full text-xs">
-              <thead>
+              <thead className="sticky top-0 bg-card z-10">
                 <tr className="border-b border-border/20">
                   {["#", "Direction", "Entry Date", "Entry Time", "Entry Price", "Exit Date", "Exit Time", "Exit Price", "P&L", "Contracts", "Session", "Hold Time"].map((h) => (
                     <th key={h} className="text-left text-[10px] uppercase tracking-wider text-text-muted py-2 px-2 font-medium">{h}</th>
@@ -601,9 +646,9 @@ export default function BacktestDetail() {
                 </tr>
               </thead>
               <tbody>
-                {tradeRows.map((t, i) => (
+                {paginatedTrades.map((t, i) => (
                   <tr key={i} className="border-b border-border/10 hover:bg-surface-0/30 transition-colors">
-                    <td className="py-2 px-2 font-mono text-text-muted">{i + 1}</td>
+                    <td className="py-2 px-2 font-mono text-text-muted">{start + i + 1}</td>
                     <td className="py-2 px-2">
                       <StatusBadge variant={t.direction === "long" ? "profit" : "loss"} dot>
                         {t.direction?.toUpperCase()}
@@ -626,8 +671,17 @@ export default function BacktestDetail() {
               </tbody>
             </table>
           </div>
+          {totalFiltered > TRADES_PER_PAGE && (
+            <Pagination
+              page={tradePage}
+              pageSize={TRADES_PER_PAGE}
+              total={totalFiltered}
+              onPageChange={setTradePage}
+            />
+          )}
         </motion.div>
-      )}
+        );
+      })()}
 
       {/* Entry Hour Distribution */}
       {entryHourDist.length > 0 && (

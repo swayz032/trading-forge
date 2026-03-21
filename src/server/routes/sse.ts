@@ -6,6 +6,22 @@ const router = Router();
 // Connected SSE clients
 const clients: Set<Response> = new Set();
 
+// SSE heartbeat — keeps connections alive through proxies and detects dead clients
+const HEARTBEAT_INTERVAL_MS = 30_000;
+setInterval(() => {
+  for (const client of clients) {
+    if (client.writableEnded || client.destroyed) {
+      clients.delete(client);
+      continue;
+    }
+    try {
+      client.write(":ping\n\n");
+    } catch {
+      clients.delete(client);
+    }
+  }
+}, HEARTBEAT_INTERVAL_MS);
+
 // GET /api/sse/events — SSE stream
 router.get("/events", (req: Request, res: Response) => {
   res.writeHead(200, {
@@ -19,6 +35,11 @@ router.get("/events", (req: Request, res: Response) => {
   clients.add(res);
   logger.info(`SSE client connected (${clients.size} total)`);
 
+  // Detect dead clients via error event (write() doesn't throw synchronously)
+  res.on("error", () => {
+    clients.delete(res);
+  });
+
   req.on("close", () => {
     clients.delete(res);
     logger.info(`SSE client disconnected (${clients.size} total)`);
@@ -29,6 +50,10 @@ router.get("/events", (req: Request, res: Response) => {
 export function broadcastSSE(event: string, data: any) {
   const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const client of clients) {
+    if (client.writableEnded || client.destroyed) {
+      clients.delete(client);
+      continue;
+    }
     client.write(message);
   }
 }

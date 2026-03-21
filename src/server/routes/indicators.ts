@@ -23,6 +23,16 @@ function getFetcher() {
   return createAlphaVantageFetcher({ apiKey });
 }
 
+// ─── GET /api/indicators/supported ───────────────────────────────
+// MUST be registered before /:symbol/:indicator to avoid shadowing
+
+indicatorRoutes.get("/supported", (_req, res) => {
+  res.json({
+    indicators: SUPPORTED_INDICATORS,
+    intervals: INTERVALS,
+  });
+});
+
 // ─── GET /api/indicators/:symbol/:indicator ──────────────────────
 
 indicatorRoutes.get("/:symbol/:indicator", async (req, res) => {
@@ -67,11 +77,3 @@ indicatorRoutes.get("/:symbol/:indicator", async (req, res) => {
   }
 });
 
-// ─── GET /api/indicators/supported ───────────────────────────────
-
-indicatorRoutes.get("/supported", (_req, res) => {
-  res.json({
-    indicators: SUPPORTED_INDICATORS,
-    intervals: INTERVALS,
-  });
-});

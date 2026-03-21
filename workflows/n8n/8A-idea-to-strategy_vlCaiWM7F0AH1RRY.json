@@ -1,0 +1,614 @@
+{
+  "updatedAt": "2026-03-20T05:21:46.715Z",
+  "createdAt": "2026-03-20T05:21:46.715Z",
+  "id": "vlCaiWM7F0AH1RRY",
+  "name": "8A-idea-to-strategy",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 19,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=10",
+        "options": {}
+      },
+      "id": "fetch-ideas",
+      "name": "Fetch Scouted Ideas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ideas = $input.first().json;\nconst items = Array.isArray(ideas) ? ideas : (ideas.data || ideas.ideas || [ideas]);\nconst results = [];\nfor (const idea of items) {\n  const prompt = `You are a quantitative trading strategy architect. Convert the following trading idea into a Trading Forge DSL strategy definition in JSON format.\n\nThe DSL must include:\n- name: strategy name (snake_case)\n- version: \"1.0\"\n- market: futures market symbol (e.g. \"ES\", \"NQ\", \"CL\")\n- timeframe: candle timeframe (e.g. \"5m\", \"15m\", \"1h\")\n- indicators: array of {name, type, params}\n- entry_rules: array of conditions for entry\n- exit_rules: array of conditions for exit\n- risk: {stop_loss_ticks, take_profit_ticks, max_position_size, max_daily_loss}\n- metadata: {source_idea_id, description}\n\nTrading Idea:\nTitle: ${(idea.title || '').replace(/\"/g, \"'\")}\nDescription: ${(idea.description || '').substring(0, 500).replace(/\"/g, \"'\")}\nSource: ${idea.source || 'unknown'}\nURL: ${idea.url || ''}\n\nRespond ONLY with valid JSON matching the DSL schema above.`;\n\n  results.push({\n    json: {\n      idea_id: idea.id || idea._id || '',\n      prompt: prompt,\n      idea: idea\n    }\n  });\n}\nreturn results;"
+      },
+      "id": "build-prompts",
+      "name": "Build Ollama Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'trading-quant', prompt: $json.prompt, format: 'json', stream: false }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "call-ollama",
+      "name": "Call Ollama",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\nfor (const item of items) {\n  try {\n    const response = item.json.response || item.json;\n    const strategy = typeof response === 'string' ? JSON.parse(response) : response;\n    results.push({\n      json: {\n        strategy: strategy,\n        idea_id: item.json.idea_id || $('Build Ollama Prompts').first().json.idea_id,\n        valid: true\n      }\n    });\n  } catch (e) {\n    results.push({\n      json: {\n        strategy: null,\n        idea_id: item.json.idea_id || '',\n        valid: false,\n        error: e.message\n      }\n    });\n  }\n}\nreturn results;"
+      },
+      "id": "parse-ollama",
+      "name": "Parse Ollama Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/compiler/compile",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.strategy) }}",
+        "options": {}
+      },
+      "id": "compile-dsl",
+      "name": "Compile DSL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "valid-check",
+              "leftValue": "={{ $json.valid !== false && $json.error === undefined }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-valid",
+      "name": "IF Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/run-strategy",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "run-strategy",
+      "name": "Run Strategy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://host.docker.internal:4000/api/journal/{{ $('Parse Ollama Response').item.json.idea_id }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"status\": \"testing\"}",
+        "options": {}
+      },
+      "id": "update-journal",
+      "name": "Update Journal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        -100
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Scouted Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Scouted Ideas": {
+      "main": [
+        [
+          {
+            "node": "Build Ollama Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Ollama Prompts": {
+      "main": [
+        [
+          {
+            "node": "Call Ollama",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Ollama": {
+      "main": [
+        [
+          {
+            "node": "Parse Ollama Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Ollama Response": {
+      "main": [
+        [
+          {
+            "node": "Compile DSL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compile DSL": {
+      "main": [
+        [
+          {
+            "node": "IF Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Valid": {
+      "main": [
+        [
+          {
+            "node": "Run Strategy",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Run Strategy": {
+      "main": [
+        [
+          {
+            "node": "Update Journal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "dbfa24cb-1c8c-494f-b787-a59aa1e6581a",
+  "activeVersionId": "dbfa24cb-1c8c-494f-b787-a59aa1e6581a",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T05:21:46.715Z",
+      "createdAt": "2026-03-20T05:21:46.715Z",
+      "role": "workflow:owner",
+      "workflowId": "vlCaiWM7F0AH1RRY",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-20T05:21:46.718Z",
+    "createdAt": "2026-03-20T05:21:46.718Z",
+    "versionId": "dbfa24cb-1c8c-494f-b787-a59aa1e6581a",
+    "workflowId": "vlCaiWM7F0AH1RRY",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 19,
+                "triggerAtMinute": 30
+              }
+            ]
+          }
+        },
+        "id": "schedule-trigger",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=10",
+          "options": {}
+        },
+        "id": "fetch-ideas",
+        "name": "Fetch Scouted Ideas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const ideas = $input.first().json;\nconst items = Array.isArray(ideas) ? ideas : (ideas.data || ideas.ideas || [ideas]);\nconst results = [];\nfor (const idea of items) {\n  const prompt = `You are a quantitative trading strategy architect. Convert the following trading idea into a Trading Forge DSL strategy definition in JSON format.\n\nThe DSL must include:\n- name: strategy name (snake_case)\n- version: \"1.0\"\n- market: futures market symbol (e.g. \"ES\", \"NQ\", \"CL\")\n- timeframe: candle timeframe (e.g. \"5m\", \"15m\", \"1h\")\n- indicators: array of {name, type, params}\n- entry_rules: array of conditions for entry\n- exit_rules: array of conditions for exit\n- risk: {stop_loss_ticks, take_profit_ticks, max_position_size, max_daily_loss}\n- metadata: {source_idea_id, description}\n\nTrading Idea:\nTitle: ${(idea.title || '').replace(/\"/g, \"'\")}\nDescription: ${(idea.description || '').substring(0, 500).replace(/\"/g, \"'\")}\nSource: ${idea.source || 'unknown'}\nURL: ${idea.url || ''}\n\nRespond ONLY with valid JSON matching the DSL schema above.`;\n\n  results.push({\n    json: {\n      idea_id: idea.id || idea._id || '',\n      prompt: prompt,\n      idea: idea\n    }\n  });\n}\nreturn results;"
+        },
+        "id": "build-prompts",
+        "name": "Build Ollama Prompts",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:11434/api/generate",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ model: 'trading-quant', prompt: $json.prompt, format: 'json', stream: false }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "id": "call-ollama",
+        "name": "Call Ollama",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst results = [];\nfor (const item of items) {\n  try {\n    const response = item.json.response || item.json;\n    const strategy = typeof response === 'string' ? JSON.parse(response) : response;\n    results.push({\n      json: {\n        strategy: strategy,\n        idea_id: item.json.idea_id || $('Build Ollama Prompts').first().json.idea_id,\n        valid: true\n      }\n    });\n  } catch (e) {\n    results.push({\n      json: {\n        strategy: null,\n        idea_id: item.json.idea_id || '',\n        valid: false,\n        error: e.message\n      }\n    });\n  }\n}\nreturn results;"
+        },
+        "id": "parse-ollama",
+        "name": "Parse Ollama Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/compiler/compile",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.strategy) }}",
+          "options": {}
+        },
+        "id": "compile-dsl",
+        "name": "Compile DSL",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1100,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "valid-check",
+                "leftValue": "={{ $json.valid !== false && $json.error === undefined }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-valid",
+        "name": "IF Valid",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1320,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/run-strategy",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}",
+          "options": {}
+        },
+        "id": "run-strategy",
+        "name": "Run Strategy",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1540,
+          -100
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=http://host.docker.internal:4000/api/journal/{{ $('Parse Ollama Response').item.json.idea_id }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\"status\": \"testing\"}",
+          "options": {}
+        },
+        "id": "update-journal",
+        "name": "Update Journal",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1760,
+          -100
+        ]
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Scouted Ideas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Scouted Ideas": {
+        "main": [
+          [
+            {
+              "node": "Build Ollama Prompts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Ollama Prompts": {
+        "main": [
+          [
+            {
+              "node": "Call Ollama",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call Ollama": {
+        "main": [
+          [
+            {
+              "node": "Parse Ollama Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Ollama Response": {
+        "main": [
+          [
+            {
+              "node": "Compile DSL",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Compile DSL": {
+        "main": [
+          [
+            {
+              "node": "IF Valid",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Valid": {
+        "main": [
+          [
+            {
+              "node": "Run Strategy",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Run Strategy": {
+        "main": [
+          [
+            {
+              "node": "Update Journal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-20T05:22:23.320Z",
+        "id": 1189,
+        "workflowId": "vlCaiWM7F0AH1RRY",
+        "versionId": "dbfa24cb-1c8c-494f-b787-a59aa1e6581a",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

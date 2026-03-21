@@ -15,6 +15,7 @@ import { db } from "./db/index.js";
 import { strategies, paperSessions, paperTrades, backtests, systemJournal } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./index.js";
+import { LifecycleService } from "./services/lifecycle-service.js";
 
 let initialized = false;
 
@@ -52,7 +53,27 @@ export function initScheduler() {
     }
   });
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:30 AM ET weekdays), paper-vs-backtest (1h)");
+  // ─── Every 6 hours: Lifecycle auto-promotions/demotions ────
+  const lifecycle = new LifecycleService();
+  cron.schedule("0 */6 * * *", async () => {
+    logger.info("Scheduler: Running lifecycle auto-checks");
+    try {
+      const promoted = await lifecycle.checkAutoPromotions();
+      const demoted = await lifecycle.checkAutoDemotions();
+      if (promoted.length > 0 || demoted.length > 0) {
+        broadcastSSE("lifecycle:auto-check", {
+          promoted,
+          demoted,
+          timestamp: new Date().toISOString(),
+        });
+      }
+      logger.info({ promoted: promoted.length, demoted: demoted.length }, "Lifecycle auto-check complete");
+    } catch (err) {
+      logger.error({ err }, "Scheduler: Lifecycle auto-check failed");
+    }
+  });
+
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:30 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h)");
 }
 
 /**
@@ -171,15 +192,16 @@ async function comparePaperToBacktest() {
       const winners = pnls.filter((p) => p > 0);
       const paperWinRate = winners.length / pnls.length;
       const avgPnl = pnls.reduce((a, b) => a + b, 0) / pnls.length;
-      const pnlStdDev = Math.sqrt(
-        pnls.reduce((sum, p) => sum + (p - avgPnl) ** 2, 0) / pnls.length,
-      );
+      const pnlStdDev = pnls.length > 1
+        ? Math.sqrt(pnls.reduce((sum, p) => sum + (p - avgPnl) ** 2, 0) / (pnls.length - 1))
+        : 0;
       const paperSharpe = pnlStdDev > 0 ? (avgPnl / pnlStdDev) * Math.sqrt(252) : 0;
 
       // Group trades by day for avg daily PnL
       const dailyPnlMap = new Map<string, number>();
       for (const t of trades) {
-        const day = (t.exitTime ?? t.entryTime).toISOString().slice(0, 10);
+        const rawTime = t.exitTime ?? t.entryTime;
+        const day = (rawTime instanceof Date ? rawTime : new Date(rawTime)).toISOString().slice(0, 10);
         dailyPnlMap.set(day, (dailyPnlMap.get(day) ?? 0) + Number(t.pnl));
       }
       const dailyPnls = [...dailyPnlMap.values()];
@@ -291,20 +313,25 @@ async function comparePaperToBacktest() {
  */
 export async function onPaperTradeClose(sessionId: string, strategyId: string) {
   try {
-    // Trigger drift detection
-    const response = await fetch(`http://localhost:4000/api/paper/drift/${sessionId}?strategyId=${strategyId}`).catch(() => null);
-    if (response?.ok) {
-      const drift = await response.json();
-      const driftScore = (drift as any).driftScore ?? 0;
-      if (driftScore > 2.0) {
-        broadcastSSE("strategy:drift-alert", {
-          strategyId,
-          sessionId,
-          driftScore,
-          message: `Strategy drifting: ${driftScore.toFixed(1)}σ from backtest expectations`,
-        });
-        logger.warn({ strategyId, driftScore }, "Strategy drift detected after paper trade");
-      }
+    // Call detectDrift directly instead of HTTP self-request (avoids fragile localhost fetch)
+    const { detectDrift } = await import("./services/drift-detection-service.js");
+    const reports = await detectDrift(strategyId, sessionId);
+
+    if (reports.length === 0) return; // Not enough data or no backtest
+
+    // Find the worst deviation across all metrics
+    const maxDeviation = Math.max(...reports.map(r => r.deviationStdDevs));
+    const alerts = reports.filter(r => r.severity === "alert");
+
+    if (alerts.length > 0) {
+      broadcastSSE("strategy:drift-alert", {
+        strategyId,
+        sessionId,
+        driftScore: maxDeviation,
+        alerts,
+        message: `Strategy drifting: ${maxDeviation.toFixed(1)}σ from backtest expectations`,
+      });
+      logger.warn({ strategyId, maxDeviation, alerts }, "Strategy drift detected after paper trade");
     }
   } catch (err) {
     logger.error({ sessionId, strategyId, err }, "Drift check failed after paper trade close");

@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import sys
 import time
+from pathlib import Path
 from typing import Optional
 
 import click
@@ -24,7 +25,7 @@ from src.engine.config import (
     IndicatorConfig,
     StrategyConfig,
 )
-from src.engine.data_loader import load_ohlcv, flag_rollover_days
+from src.engine.data_loader import load_ohlcv, flag_rollover_days, compute_dataset_hash
 from src.engine.firm_config import get_commission_per_side, get_contract_cap, FIRM_CONTRACT_CAPS
 from src.engine.indicators.core import compute_indicators, compute_atr
 from src.engine.liquidity import get_session_multipliers
@@ -34,32 +35,31 @@ from src.engine.slippage import compute_slippage
 from src.engine.analytics import compute_full_analytics
 from src.engine.prop_sim import simulate_all_firms
 from src.engine.strategy_base import BaseStrategy
+from src.engine.decay.half_life import fit_decay
+from src.engine.decay.sub_signals import composite_decay_score
+from src.engine.sanity_checks import run_sanity_checks
+from src.engine.cross_validation import run_cross_validation
 
 
 # ─── Signal Fill Convention ──────────────────────────────────────────
-# This system uses CONVENTION 1: "same-bar fill."
+# PRODUCTION STANDARD: "next-bar fill" — signal on bar N, fill on bar N+1.
 #
 # How it works:
-#   - generate_signals() evaluates entry/exit expressions against bar[i] data.
-#   - The resulting boolean arrays are passed directly to vbt.Portfolio.from_signals()
-#     WITHOUT any signal_shift parameter (default signal_shift=0).
-#   - vectorbt therefore fills the signal on the SAME bar it was generated.
+#   - generate_signals() / strategy.compute() produce entry signals on bar N.
+#   - Before passing to vectorbt, we shift all entry signals forward by 1 bar
+#     using np.roll(). This means the signal generated from bar N's data is
+#     filled at bar N+1's close price.
+#   - This eliminates lookahead bias: you observe bar N, decide to enter, and
+#     your fill occurs at the next available bar (N+1).
+#   - Exit signals are NOT shifted — exits are managed by _apply_trade_management()
+#     bar-by-bar for class-based strategies, or by vectorbt for DSL strategies.
 #
-# What this means:
-#   - For crosses_above/crosses_below: The crossover condition compares bar[i]
-#     vs bar[i-1] (shift(1)), so the signal requires bar[i]'s close to confirm
-#     the cross AND fills at bar[i]'s close. This is a valid end-of-bar system
-#     — you observe the close, decide, and execute at that close price.
-#   - For direct comparisons (e.g. "close > sma_20"): The condition uses bar[i]'s
-#     close and fills at bar[i]'s close. Same interpretation: end-of-bar decision
-#     with same-bar execution.
-#   - This is NOT look-ahead because the signal uses data available at bar close
-#     and assumes execution at that same close. It models a trader who watches
-#     the bar close, decides, and gets filled at (approximately) that price.
-#   - Slippage is applied separately to account for execution reality.
-#
-# If you need "next-bar fill" (convention 2), pass signal_shift=1 to
-# vbt.Portfolio.from_signals(). Do NOT change the signal generation logic.
+# Why this matters:
+#   - Same-bar fills assume you can observe a bar's close AND get filled at that
+#     same close. In practice, by the time you see the close, the next bar has
+#     already started. NautilusTrader, QuantConnect, Zipline, and Backtrader all
+#     default to next-bar fills.
+#   - Every result produced with same-bar fills is inflated by lookahead.
 # ─────────────────────────────────────────────────────────────────────
 
 # ─── Multi-TF Look-Ahead Prevention Convention ─────────────────────
@@ -79,36 +79,344 @@ from src.engine.strategy_base import BaseStrategy
 
 
 def apply_eligibility_gate(
-    entry_signals, exit_signals, df, direction, symbol, firm_key=None
+    entry_signals,
+    exit_signals,
+    df,
+    direction,
+    symbol,
+    firm_key=None,
+    htf_cache=None,
+    spec=None,
+    strategy_name: str = "",
 ):
-    """Apply eligibility gate to filter signals.
+    """Apply 7-layer eligibility gate to filter signals (A+ only).
 
-    Currently a stub that passes through all signals.
-    Full implementation requires multi-TF data loading (HTF context, session context, etc.)
-    which will be wired in Wave 2.8 full integration.
+    Per-bar loop: for each True entry signal, compute session context, bias,
+    playbook, location score, structural stop, targets, then call evaluate_signal().
+    TAKE = keep, REDUCE = keep, SKIP = remove.
 
-    Args:
-        entry_signals: numpy array of entry booleans
-        exit_signals: numpy array of exit booleans
-        df: Polars DataFrame with indicator data
-        direction: "long" or "short"
-        symbol: Contract symbol (e.g. "ES")
-        firm_key: Optional firm identifier for firm-specific gating
+    Graceful fallback: if htf_cache is None, return signals unchanged (backward compatible).
 
     Returns:
-        Tuple of (filtered_entries, filtered_exits)
+        Tuple of (filtered_entries, filtered_exits, gate_stats)
     """
-    # TODO(Wave 2.8): Full 7-layer gate implementation
-    # 1. Load HTF data (daily, weekly) and compute HTF context
-    # 2. Apply shift_higher_tf_columns() to prevent look-ahead bias on HTF data
-    # 3. Compute session context (overnight bias, London sweeps, etc.)
-    # 4. Run bias engine to get DailyBiasState
-    # 5. Route through playbook router
-    # 6. Compute location score, structural stops, structural targets
-    # 7. For each entry signal, call evaluate_signal()
-    # 8. Filter: TAKE = keep, REDUCE = keep with size adjustment, SKIP = remove
-    # For now, return signals unchanged — gate integration point exists
-    return entry_signals, exit_signals
+    from src.engine.context.htf_context import HTFContext
+    from src.engine.context.session_context import compute_session_context
+    from src.engine.context.bias_engine import compute_bias
+    from src.engine.context.playbook_router import route_playbook
+    from src.engine.context.location_score import compute_location_score
+    from src.engine.context.structural_stops import compute_structural_stop
+    from src.engine.context.structural_targets import compute_targets
+    from src.engine.context.eligibility_gate import evaluate_signal
+
+    gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}}
+
+    # Backward compatible: no HTF cache → passthrough
+    if htf_cache is None or len(htf_cache) == 0:
+        return entry_signals, exit_signals, gate_stats
+
+    # Unregistered strategy bypass: if strategy_name doesn't appear in ANY
+    # playbook's allowed_strategies, skip the gate entirely. This prevents
+    # new/unregistered strategies from being silently killed during backtesting.
+    from src.engine.context.playbook_router import ALL_STRATS
+    strat_normalized = strategy_name.lower().replace("strategy", "").strip().replace("_", "")
+    all_normalized = [s.lower().replace("_", "") for s in ALL_STRATS]
+    if strat_normalized and strat_normalized not in all_normalized:
+        return entry_signals, exit_signals, gate_stats
+
+    filtered = entry_signals.copy()
+    signal_indices = np.where(entry_signals)[0]
+    gate_stats["total"] = len(signal_indices)
+
+    if len(signal_indices) == 0:
+        return filtered, exit_signals, gate_stats
+
+    # Pre-extract numpy arrays for speed
+    close_np = df["close"].to_numpy()
+    high_np = df["high"].to_numpy() if "high" in df.columns else close_np
+    low_np = df["low"].to_numpy() if "low" in df.columns else close_np
+    ts_col = "ts_event"
+    has_ts = ts_col in df.columns
+
+    # Structural columns (may not exist for non-ICT strategies)
+    has_ob = "at_order_block" in df.columns
+    has_fvg = "at_fvg" in df.columns
+    has_sweep = "after_sweep" in df.columns
+
+    # VWAP (pass 0 if not available — location score gives neutral 8/15)
+    has_vwap = "vwap" in df.columns
+
+    # ATR for stop/target computation
+    atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 0.0)
+
+    point_value = spec.point_value if spec else 5.0
+    tick_size = spec.tick_size if spec else 0.25
+
+    for idx in signal_indices:
+        entry_price = float(close_np[idx])
+
+        # Get day key for HTF cache lookup (use ET to match HTF cache keys)
+        _gate_ts_col = "ts_et" if "ts_et" in df.columns else ts_col
+        if has_ts:
+            bar_ts = df[_gate_ts_col][int(idx)]
+            day_key = str(bar_ts)[:10]
+        else:
+            day_key = None
+
+        # Look up HTF context from pre-computed cache
+        htf = htf_cache.get(day_key) if day_key else None
+        if htf is None:
+            # No HTF data for this day — keep signal (can't evaluate without context)
+            # but count it as a passthrough so stats are honest
+            gate_stats["take"] += 1
+            gate_stats["skip_reasons"]["no_htf_passthrough"] = gate_stats["skip_reasons"].get("no_htf_passthrough", 0) + 1
+            continue
+
+        try:
+            # Session context
+            session = compute_session_context(df, idx, htf.prev_day_high, htf.prev_day_low)
+
+            # Bias engine
+            vwap_val = float(df["vwap"][int(idx)]) if has_vwap else 0.0
+            bias_state = compute_bias(htf, session, current_price=entry_price, vwap=vwap_val)
+
+            # Playbook router
+            playbook = route_playbook(bias_state)
+
+            # Location score
+            location = compute_location_score(
+                entry_price=entry_price,
+                direction=direction,
+                htf=htf,
+                session=session,
+                vwap=vwap_val,
+                at_order_block=bool(df["at_order_block"][int(idx)]) if has_ob else False,
+                at_fvg=bool(df["at_fvg"][int(idx)]) if has_fvg else False,
+                after_sweep=bool(df["after_sweep"][int(idx)]) if has_sweep else False,
+                in_killzone=session.ny_killzone_active or session.london_killzone_active,
+            )
+
+            # Structural stop (with 6pt cap)
+            atr_val = float(atr_np[idx]) if not np.isnan(atr_np[idx]) else 1.0
+            stop_plan = compute_structural_stop(
+                direction=direction,
+                entry_price=entry_price,
+                point_value=point_value,
+                atr=atr_val,
+                tick_size=tick_size,
+                max_stop_points=6.0,
+            )
+
+            # Structural targets
+            target_plan = compute_targets(
+                direction=direction,
+                entry_price=entry_price,
+                stop_price=stop_plan.stop_price,
+                nearest_bsl=htf.weekly_high if direction == "long" else None,
+                nearest_ssl=htf.weekly_low if direction == "short" else None,
+                nearest_old_high=htf.prev_day_high if direction == "long" else None,
+                nearest_old_low=htf.prev_day_low if direction == "short" else None,
+                vwap=vwap_val,
+            )
+
+            # Evaluate through eligibility gate
+            signal_dict = {
+                "direction": direction,
+                "strategy_name": strategy_name or symbol,
+                "entry_price": entry_price,
+            }
+            decision = evaluate_signal(
+                signal=signal_dict,
+                bias_state=bias_state,
+                playbook=playbook,
+                location=location,
+                stop_plan=stop_plan,
+                target_plan=target_plan,
+                session=session,
+            )
+
+            if decision.action == "SKIP":
+                filtered[idx] = False
+                gate_stats["skip"] += 1
+                reason = decision.reasoning[0] if decision.reasoning else "unknown"
+                gate_stats["skip_reasons"][reason] = gate_stats["skip_reasons"].get(reason, 0) + 1
+            elif decision.action == "REDUCE":
+                gate_stats["reduce"] += 1
+                # Keep signal but note it was reduced
+            else:
+                gate_stats["take"] += 1
+
+        except Exception as e:
+            # Context computation failed for this bar — skip conservatively
+            filtered[idx] = False
+            gate_stats["skip"] += 1
+            gate_stats["skip_reasons"]["context_error"] = gate_stats["skip_reasons"].get("context_error", 0) + 1
+
+    return filtered, exit_signals, gate_stats
+
+
+def _apply_trade_management(
+    trades_records,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    atr_np: np.ndarray,
+    spec,
+    htf_cache: Optional[dict],
+    df,
+) -> list[dict]:
+    """Bar-by-bar trade management: 6pt max SL, structural TP, trailing stop.
+
+    Rules:
+    - Stop loss: max 6 points from entry
+    - Take profit: single structural TP via DOL hierarchy (>= 2R or skip)
+    - After 1R profit: move stop to breakeven
+    - After 2R profit: trail 1R behind price, min 2pt breathing room
+    - Exit priority per bar: TP hit > trailing stop hit > original exit
+    - Safety cap: MAX_HOLD_BARS (200) — ~16h on 5m, forces exit if nothing else triggers
+
+    Returns list of managed trade dicts with updated exit_price, exit_idx, exit_reason.
+    """
+    from src.engine.context.structural_targets import compute_single_tp
+
+    managed_trades = []
+    ts_col = "ts_event"
+    has_ts = ts_col in df.columns
+
+    for _, row in trades_records.iterrows():
+        entry_p = float(row["Avg Entry Price"])
+        original_exit_p = float(row["Avg Exit Price"])
+        size = float(row["Size"])
+        direction_str = str(row["Direction"])
+        entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
+        original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
+        # Safety cap: no trade held longer than MAX_HOLD_BARS (~16h on 5m)
+        MAX_HOLD_BARS = 200
+        if original_exit_idx - entry_idx > MAX_HOLD_BARS:
+            original_exit_idx = entry_idx + MAX_HOLD_BARS
+        is_short = "Short" in direction_str
+
+        atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
+        risk_points = min(6.0, atr_at_entry * 2.0)
+        # Min breathing room: 2pt for MES/ES (tick_size=0.25), scaled for other instruments
+        tick = spec.tick_size if spec else 0.25
+        min_trail = max(2.0, tick * 8)  # 8 ticks minimum breathing room
+
+        if is_short:
+            initial_stop = entry_p + risk_points
+        else:
+            initial_stop = entry_p - risk_points
+
+        # Compute structural TP via DOL hierarchy
+        # Get HTF data for weekly high/low as BSL/SSL
+        htf = None
+        if htf_cache and has_ts:
+            day_key = str(df[ts_col][entry_idx])[:10]
+            htf = htf_cache.get(day_key)
+
+        tp_price = compute_single_tp(
+            direction="short" if is_short else "long",
+            entry_price=entry_p,
+            stop_price=initial_stop,
+            nearest_bsl=htf.weekly_high if htf and not is_short else None,
+            nearest_ssl=htf.weekly_low if htf and is_short else None,
+            nearest_old_high=htf.prev_day_high if htf and not is_short else None,
+            nearest_old_low=htf.prev_day_low if htf and is_short else None,
+            atr=atr_at_entry,
+        )
+
+        # Build managed trade record
+        managed = {
+            "entry_idx": entry_idx,
+            "entry_price": entry_p,
+            "original_exit_idx": original_exit_idx,
+            "original_exit_price": original_exit_p,
+            "size": size,
+            "direction": direction_str,
+            "risk_points": round(risk_points, 2),
+        }
+
+        # If no structural TP gives >= 2R, use original exit (no TP enforcement
+        # during backtest — the gate already filtered for quality, and not all
+        # strategies have structural data for DOL targets)
+        if tp_price is None:
+            tp_price = float("inf") if not is_short else float("-inf")
+            managed["tp_source"] = "none"
+        else:
+            managed["tp_source"] = "structural"
+
+        trail_stop = initial_stop
+        exit_price = original_exit_p
+        exit_idx = original_exit_idx
+        exit_reason = "signal"
+
+        # Bar-by-bar simulation
+        for bar in range(entry_idx + 1, original_exit_idx + 1):
+            if bar >= len(high_np):
+                break
+
+            bar_high = float(high_np[bar])
+            bar_low = float(low_np[bar])
+
+            # Conservative intra-bar ordering: check stop BEFORE advancing trail.
+            # We cannot know if the high or low came first within a bar, so we
+            # check stops against the CURRENT trail (not an advanced one).
+
+            # 1. Check trailing/initial stop hit first (conservative)
+            if not is_short and bar_low <= trail_stop:
+                exit_price = trail_stop
+                exit_reason = "trailing_stop" if trail_stop > initial_stop else "stop_loss"
+                exit_idx = bar
+                break
+            elif is_short and bar_high >= trail_stop:
+                exit_price = trail_stop
+                exit_reason = "trailing_stop" if trail_stop < initial_stop else "stop_loss"
+                exit_idx = bar
+                break
+
+            # 2. Check TP hit (full exit)
+            if not is_short and bar_high >= tp_price:
+                exit_price = tp_price
+                exit_reason = "take_profit"
+                exit_idx = bar
+                break
+            elif is_short and bar_low <= tp_price:
+                exit_price = tp_price
+                exit_reason = "take_profit"
+                exit_idx = bar
+                break
+
+            # 3. Advance trailing stop for NEXT bar (only after confirming
+            #    no stop was hit on this bar)
+            if not is_short:
+                pnl_points = bar_high - entry_p
+            else:
+                pnl_points = entry_p - bar_low
+
+            # After 1R: move to breakeven
+            if pnl_points >= risk_points:
+                be_stop = entry_p
+                if not is_short:
+                    trail_stop = max(trail_stop, be_stop)
+                else:
+                    trail_stop = min(trail_stop, be_stop)
+
+            # After 2R: trail 1R behind, min breathing room
+            if pnl_points >= risk_points * 2:
+                if not is_short:
+                    new_stop = bar_high - max(risk_points, min_trail)
+                    trail_stop = max(trail_stop, new_stop)
+                else:
+                    new_stop = bar_low + max(risk_points, min_trail)
+                    trail_stop = min(trail_stop, new_stop)
+
+        managed["exit_price"] = exit_price
+        managed["exit_idx"] = exit_idx
+        managed["exit_reason"] = exit_reason
+        managed["trail_stop_final"] = round(trail_stop, 4)
+        managed_trades.append(managed)
+
+    return managed_trades
 
 
 def shift_higher_tf_columns(
@@ -344,6 +652,55 @@ def _validate_bar_count(
         )
 
 
+def _build_run_receipt(config: "StrategyConfig", dataset_hash: str = "") -> dict:
+    """Build a run receipt for reproducibility tracking."""
+    import hashlib
+    import subprocess
+
+    # Git commit
+    try:
+        git_commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL
+        ).decode().strip()
+    except Exception:
+        git_commit = "unknown"
+
+    # Config hash
+    if hasattr(config, "model_dump_json"):
+        config_hash = hashlib.sha256(config.model_dump_json().encode()).hexdigest()
+    else:
+        config_hash = hashlib.sha256(json.dumps(config, sort_keys=True, default=str).encode()).hexdigest()
+
+    # Engine version
+    engine_version = "unknown"
+    try:
+        from importlib.metadata import version as pkg_version
+        engine_version = pkg_version("trading-forge")
+    except Exception:
+        pass
+
+    # Code hash: hash the backtester source for reproducibility
+    try:
+        source_path = Path(__file__).resolve()
+        code_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()[:12]
+    except Exception:
+        code_hash = "unknown"
+
+    return {
+        "engine_version": "2.0",
+        "git_commit": git_commit,
+        "code_hash": code_hash,
+        "config_hash": config_hash,
+        "dataset_hash": dataset_hash[:12] if len(dataset_hash) > 12 else dataset_hash,
+        "random_seed": 42,
+        "numpy_version": np.__version__,
+        "polars_version": pl.__version__,
+        "python_version": sys.version.split()[0],
+        "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "determinism_verified": False,  # Set True after determinism test passes
+    }
+
+
 def run_backtest(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,
@@ -426,10 +783,12 @@ def run_backtest(
             ).alias("entry_short"),
         ])
 
-    # ─── Firm-specific commission (Task 3.11) ─────────────────
+    # ─── Commission: firm override → request value → contract spec default ──
     commission = request.commission_per_side
     if request.firm_key:
         commission = get_commission_per_side(request.firm_key, config.symbol)
+    elif commission == 0.62:  # default unchanged — use contract spec
+        commission = spec.default_commission
 
     # ─── Firm contract cap (Task 3.12) ────────────────────────
     max_contracts = None
@@ -467,16 +826,18 @@ def run_backtest(
             combined_slippage_mult = event_slippage_mult
 
     # ─── Slippage ─────────────────────────────────────────────
+    _order_type = request.fill_model.order_type if request.fill_model else "market"
     slippage_arr = compute_slippage(
         df, spec, request.slippage_ticks, atr_period,
         session_multipliers=combined_slippage_mult,
+        order_type=_order_type,
     )
 
     # ─── Eligibility gate (Wave 2.8 integration point) ─────────
     entries_np = df["entry_long"].to_numpy()
     exits_np = df["exit_long"].to_numpy()
     if use_eligibility_gate:
-        entries_np, exits_np = apply_eligibility_gate(
+        entries_np, exits_np, _ = apply_eligibility_gate(
             entries_np, exits_np, df,
             direction="long", symbol=config.symbol,
             firm_key=request.firm_key,
@@ -490,7 +851,7 @@ def run_backtest(
         if "entry_short" in df.columns:
             short_entries_np = df["entry_short"].to_numpy()
             short_exits_np = df["exit_short"].to_numpy()
-            short_entries_np, short_exits_np = apply_eligibility_gate(
+            short_entries_np, short_exits_np, _ = apply_eligibility_gate(
                 short_entries_np, short_exits_np, df,
                 direction="short", symbol=config.symbol,
                 firm_key=request.firm_key,
@@ -502,11 +863,19 @@ def run_backtest(
 
     # ─── Fill probability model (Task 3.10) ───────────────────
     entries_np = df["entry_long"].to_numpy()
-    if request.fill_model and request.fill_model.order_type == "limit":
-        from src.engine.fill_model import compute_fill_probabilities, apply_fill_model
+    if request.fill_model:
+        from src.engine.fill_model import compute_fill_probabilities_v2, apply_fill_model
         fill_config = request.fill_model.model_dump()
-        fill_probs = compute_fill_probabilities(df, fill_config, entries_np)
+        fill_probs = compute_fill_probabilities_v2(
+            df, fill_config, entries_np,
+            order_type=request.fill_model.order_type,
+            symbol=config.symbol,
+        )
         entries_np, sizes = apply_fill_model(entries_np, fill_probs, sizes, seed=42)
+
+    # ─── Shift entry signals by 1 bar (next-bar fill) ──────────
+    # Signal on bar N → fill on bar N+1. Eliminates lookahead bias.
+    entries_np = np.roll(entries_np, 1); entries_np[0] = False
 
     # ─── Convert to Pandas at vectorbt boundary (CLAUDE.md rule) ─
     # Use ts_event as index so equity curve has proper datetime indices
@@ -533,6 +902,8 @@ def run_backtest(
             fill_config = request.fill_model.model_dump()
             short_fill_probs = compute_fill_probabilities(df, fill_config, short_entries_np)
             short_entries_np, _ = apply_fill_model(short_entries_np, short_fill_probs, sizes.copy(), seed=43)
+        # Shift short entries by 1 bar (next-bar fill)
+        short_entries_np = np.roll(short_entries_np, 1); short_entries_np[0] = False
         short_entries_pd = pl.Series("entry_short", short_entries_np).to_pandas()
     else:
         short_entries_pd = pd.Series(False, index=close_pd.index)
@@ -540,15 +911,6 @@ def run_backtest(
     if ts_index is not None:
         short_entries_pd.index = ts_index
         short_exits_pd.index = ts_index
-
-    # TODO(rollover): Suppress new entries on rollover days.
-    # When `is_rollover_day` column is present in df, zero out entries_pd and
-    # short_entries_pd on those bars. Volume spikes, spread widening, and price
-    # gaps around the roll make signals unreliable. Use:
-    #   if "is_rollover_day" in df.columns:
-    #       rollover_mask = df["is_rollover_day"].to_numpy()
-    #       entries_pd[rollover_mask] = False
-    #       short_entries_pd[rollover_mask] = False
 
     # Clean NaN values
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
@@ -588,10 +950,27 @@ def run_backtest(
         return _empty_result(str(e), time.time() - start_time)
 
     # ─── Extract metrics (futures P&L computed independently) ─
-    STARTING_CAPITAL = 100_000.0
+    STARTING_CAPITAL = 50_000.0
 
     total_trades = int(pf.trades.count())
     trades_records = pf.trades.records_readable if total_trades > 0 else None
+
+    # ─── Add Entry/Exit Idx columns (VBT v2 uses timestamps, not indices) ──
+    if trades_records is not None and "Entry Idx" not in trades_records.columns:
+        ts_to_idx = {ts: i for i, ts in enumerate(close_pd.index)}
+        if "Entry Timestamp" in trades_records.columns:
+            trades_records = trades_records.copy()
+            entry_idx_mapped = trades_records["Entry Timestamp"].map(ts_to_idx)
+            exit_idx_mapped = trades_records["Exit Timestamp"].map(ts_to_idx)
+            unmapped = int(entry_idx_mapped.isna().sum() + exit_idx_mapped.isna().sum())
+            if unmapped > 0:
+                raise ValueError(
+                    f"CRITICAL: {unmapped} trade timestamps unmapped to bar indices. "
+                    f"Data integrity compromised — timestamp mismatch between "
+                    f"trades and price data."
+                )
+            trades_records["Entry Idx"] = entry_idx_mapped.astype(int)
+            trades_records["Exit Idx"] = exit_idx_mapped.astype(int)
 
     win_rate = 0.0
     profit_factor = 0.0
@@ -645,6 +1024,19 @@ def run_backtest(
             trade["SlippageCost"] = round(slip_cost, 2)
             trade["CommissionCost"] = round(comm_cost, 2)
 
+            # ─── Per-trade R:R (reward / risk) ─────────────────────
+            # Risk = ATR at entry × atr_sl_mult × point_value (1R stop in $)
+            atr_col_name = "atr_14"
+            atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
+            sl_mult = 2.0  # default ATR stop multiplier
+            risk_points = min(atr_at_entry * sl_mult, 6.0)  # 6pt max cap
+            risk_dollars = risk_points * spec.point_value
+            if risk_dollars > 0 and size > 0:
+                reward_dollars = net_pnl / size
+                trade["rr"] = round(reward_dollars / risk_dollars, 2)
+            else:
+                trade["rr"] = 0.0
+
             # ─── Per-trade MAE/MFE ($ excursion from entry) ───────
             # MAE = max adverse move in $ (always positive = how far against you)
             # MFE = max favorable move in $ (always positive = how far in your favor)
@@ -684,46 +1076,59 @@ def run_backtest(
         avg_trade_pnl = float(np.mean(trade_pnls_arr))
         winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
 
-    # ─── Build equity curve with friction ─────────────────────
-    # Bar-level mark-to-market for intra-trade drawdown tracking,
-    # with friction costs deducted on entry/exit bars.
+    # ─── Build equity curve from per-trade data ─────────────────
+    # Uses per-trade entry/exit data so equity matches per-trade P&L exactly.
+    # Same approach as run_class_backtest(): mark-to-market bar-by-bar per
+    # trade with friction deducted once on entry/exit bars.
     close_arr = close_pd.values
-    close_diffs = np.diff(close_arr, prepend=close_arr[0])
-    assets = pf.assets().values  # +N=long, -N=short, 0=flat
-    prev_assets = np.roll(assets, 1)
-    prev_assets[0] = 0
+    n_bars = len(close_arr)
+    bar_dollar_pnls = np.zeros(n_bars)
 
-    # Gross bar P&L (mark-to-market, no friction)
-    bar_dollar_pnls = prev_assets * close_diffs * spec.point_value
+    if trades_list:
+        for trade in trades_list:
+            t_entry_idx = int(trade.get("Entry Idx", 0))
+            t_exit_idx = int(trade.get("Exit Idx", t_entry_idx + 1))
+            t_entry_p = float(trade.get("Avg Entry Price", 0))
+            t_exit_p = float(trade.get("Avg Exit Price", 0))
+            t_size = float(trade.get("Size", 1))
+            t_dir = str(trade.get("Direction", "Long"))
+            is_short = "Short" in t_dir
+            sign = -1.0 if is_short else 1.0
 
-    # Deduct friction on EVERY position change (including reversals).
-    # Reversal (e.g., +15 → -15) = exit old + enter new = friction on BOTH.
-    for i in range(len(bar_dollar_pnls)):
-        old_pos = prev_assets[i]
-        new_pos = assets[i]
-        if old_pos == new_pos:
-            continue
-        bar_slip = float(slippage_clean[i]) if not np.isnan(slippage_clean[i]) else 0.0
-        bar_friction = bar_slip + commission  # one side
-        # Contracts closed (exited or reduced)
-        if old_pos != 0:
-            if np.sign(new_pos) != np.sign(old_pos):
-                # Full exit (or reversal) — friction on all old contracts
-                bar_dollar_pnls[i] -= bar_friction * abs(old_pos)
-            elif abs(new_pos) < abs(old_pos):
-                # Partial close — friction on closed contracts
-                bar_dollar_pnls[i] -= bar_friction * (abs(old_pos) - abs(new_pos))
-        # Contracts opened (new entry, reversal, or scaling into position)
-        if new_pos != 0:
-            if np.sign(new_pos) != np.sign(old_pos):
-                # New direction entry or reversal — friction on all new contracts
-                bar_dollar_pnls[i] -= bar_friction * abs(new_pos)
-            elif abs(new_pos) > abs(old_pos):
-                # Scaling into existing position — friction on added contracts
-                bar_dollar_pnls[i] -= bar_friction * (abs(new_pos) - abs(old_pos))
+            # Entry bar mark-to-market: entry_price → bar close
+            if t_entry_idx < n_bars:
+                bar_close = float(close_arr[t_entry_idx])
+                bar_dollar_pnls[t_entry_idx] += sign * (bar_close - t_entry_p) * t_size * spec.point_value
+
+            # Intermediate bars: close-to-close mark-to-market
+            prev_price = float(close_arr[t_entry_idx]) if t_entry_idx < n_bars else t_entry_p
+            for bar in range(t_entry_idx + 1, min(t_exit_idx, n_bars)):
+                bar_close = float(close_arr[bar])
+                bar_dollar_pnls[bar] += sign * (bar_close - prev_price) * t_size * spec.point_value
+                prev_price = bar_close
+
+            # Exit bar: prev close → exit price
+            if t_exit_idx < n_bars:
+                bar_dollar_pnls[t_exit_idx] += sign * (t_exit_p - prev_price) * t_size * spec.point_value
+
+            # Friction: deducted once per trade (entry + exit)
+            friction = float(trade.get("SlippageCost", 0)) + float(trade.get("CommissionCost", 0))
+            bar_dollar_pnls[t_entry_idx] -= friction
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
+
+    # Reconciliation: equity total must match sum of per-trade P&Ls (Golden Rule)
+    if len(trade_pnls_arr) > 0:
+        equity_total = float(equity[-1] - STARTING_CAPITAL)
+        trades_total = float(np.sum(trade_pnls_arr))
+        reconciliation_error = abs(equity_total - trades_total)
+        if reconciliation_error > 1.0:
+            raise ValueError(
+                f"RECONCILIATION FAILED: equity={equity_total:.2f}, "
+                f"trades={trades_total:.2f}, diff={reconciliation_error:.2f}. "
+                f"Results are untrustworthy."
+            )
 
     daily_pnl_records = _compute_daily_pnls(equity, equity_index)
     daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
@@ -742,10 +1147,10 @@ def run_backtest(
             streak = 0
 
     total_pnl_dollars = float(equity[-1] - STARTING_CAPITAL)
-    total_return = total_pnl_dollars / STARTING_CAPITAL
+    total_return = total_pnl_dollars  # Dollar P&L — futures are margin instruments, % is misleading
     peak = np.maximum.accumulate(equity)
-    drawdown = (equity - peak) / peak
-    max_dd = float(np.min(drawdown)) if len(drawdown) > 0 else 0.0
+    drawdown_dollars = peak - equity  # Dollar drawdown (positive = how much lost from peak)
+    max_dd = float(np.max(drawdown_dollars)) if len(drawdown_dollars) > 0 else 0.0  # Max $ lost from peak
 
     if len(daily_pnl_values) > 1:
         daily_arr = np.array(daily_pnl_values)
@@ -783,9 +1188,25 @@ def run_backtest(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
+    # Avg R:R on winning trades (must be >= 2.0 to pass any tier)
+    winner_rrs = [t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0]
+    avg_winner_rr = float(np.mean(winner_rrs)) if winner_rrs else 0.0
+
     tier = _compute_tier(avg_daily_pnl, winning_days, total_trading_days,
-                         max_dd, profit_factor, sharpe)
+                         max_dd, profit_factor, sharpe, avg_rr=avg_winner_rr)
     forge_score = _compute_forge_score(sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl)
+
+    # ─── Sanity checks + cross-validation ─────────────────────
+    _prelim = {
+        "total_return": round(total_return, 6), "sharpe_ratio": round(sharpe, 4),
+        "max_drawdown": round(max_dd, 6), "win_rate": round(win_rate, 4),
+        "profit_factor": round(profit_factor, 4), "total_trades": total_trades,
+        "avg_trade_pnl": round(avg_trade_pnl, 2), "total_trading_days": total_trading_days,
+        "trades": trades_list, "daily_pnls": daily_pnl_values,
+        "equity_curve": _aggregate_equity_daily(equity, equity_index),
+    }
+    sanity = run_sanity_checks(_prelim, symbol=config.symbol)
+    cross_val = run_cross_validation(_prelim)
 
     # ─── Prop firm simulation (all 8 firms) ─────────────────
     prop_compliance = simulate_all_firms(
@@ -818,7 +1239,8 @@ def run_backtest(
 
     # Sharpe CI (approximate)
     if total_trading_days > 1:
-        sharpe_se = sharpe / (total_trading_days ** 0.5)
+        # Lo (2002) formula: SE(Sharpe) = sqrt((1 + sharpe^2/2) / n)
+        sharpe_se = ((1 + sharpe ** 2 / 2) / total_trading_days) ** 0.5
         sharpe_ci = (round(sharpe - 1.96 * sharpe_se, 4), round(sharpe + 1.96 * sharpe_se, 4))
     else:
         sharpe_ci = (0.0, 0.0)
@@ -841,6 +1263,9 @@ def run_backtest(
         "max_consecutive_losing_days": max_consec_losers,
         "expectancy_per_trade": round(avg_trade_pnl, 2),
         "avg_winner_to_loser_ratio": round(winner_loser_ratio, 4),
+        "avg_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None])), 2) if trades_list else 0.0,
+        "avg_winner_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0])), 2) if any(t.get("rr", 0) > 0 for t in trades_list) else 0.0,
+        "avg_loser_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] < 0])), 2) if any(t.get("rr", 0) < 0 for t in trades_list) else 0.0,
         "equity_curve": _aggregate_equity_daily(equity, equity_index),
         "monthly_returns": _compute_monthly_returns(equity, equity_index),
         "trades": trades_list,
@@ -850,9 +1275,15 @@ def run_backtest(
         "gap_adjusted_drawdown": gap_adjusted_dd,
         "tier": tier,
         "forge_score": forge_score,
+        "sanity_checks": sanity,
+        "cross_validation": cross_val,
+        "sortino_ratio": cross_val.get("sortino_ratio", 0.0),
+        "bootstrap_ci_95": cross_val.get("bootstrap_ci_95", [0, 0]),
+        "deflated_sharpe": cross_val.get("deflated_sharpe", {}),
         "recency_analysis": compute_recency_weighted_score(
             daily_pnl_records, sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl,
         ),
+        "decay_analysis": _compute_decay_analysis(daily_pnl_values, trades_list),
         "over_risk_bars": over_risk_count,
         "over_risk_pct": round(over_risk_count / max(len(df), 1) * 100, 2),
         "prop_compliance": prop_compliance,
@@ -864,15 +1295,21 @@ def run_backtest(
         },
         "statistical_warnings": statistical_warnings,
         "sample_confidence": sample_confidence,
+        "run_receipt": _build_run_receipt(config, dataset_hash=compute_dataset_hash(df)),
     }
 
 
 def _compute_tier(avg_daily_pnl: float, winning_days: int, total_trading_days: int,
-                   max_dd: float, profit_factor: float, sharpe: float) -> str:
+                   max_dd: float, profit_factor: float, sharpe: float,
+                   avg_rr: float = 0.0) -> str:
     """Classify strategy into TIER_1, TIER_2, TIER_3, or REJECTED per CLAUDE.md gates."""
-    # max_dd from vectorbt is a NEGATIVE ratio (e.g. -0.02 = 2% drawdown). Convert to positive dollars on $100K.
-    max_dd_dollars = abs(max_dd) * 100_000
+    # max_dd is now in positive dollars (e.g. 1500 = $1500 max drawdown from peak)
+    max_dd_dollars = abs(max_dd)
     win_days_per_20 = (winning_days / max(total_trading_days, 1)) * 20
+
+    # Hard gate: minimum 1:2 R:R on winning trades
+    if avg_rr < 2.0:
+        return "REJECTED"
 
     if (avg_daily_pnl >= 500 and win_days_per_20 >= 14 and max_dd_dollars < 1500
             and profit_factor >= 2.5 and sharpe >= 2.0):
@@ -896,8 +1333,8 @@ def _compute_forge_score(sharpe: float, max_dd: float, profit_factor: float,
     # Sharpe: 0 at 0, 100 at 3.0+
     sharpe_score = min(100, max(0, (sharpe / 3.0) * 100))
 
-    # Max DD: 100 at 0%, 0 at 5%+ (ratio)
-    dd_score = min(100, max(0, (1 - max_dd / 0.05) * 100))
+    # Max DD: 100 at $0, 0 at $2500+ (dollar drawdown on $50K account)
+    dd_score = min(100, max(0, (1 - abs(max_dd) / 2500) * 100))
 
     # Profit Factor: 0 at 1.0, 100 at 4.0+
     pf_score = min(100, max(0, ((profit_factor - 1.0) / 3.0) * 100))
@@ -999,6 +1436,8 @@ def _empty_result(error: str, elapsed: float) -> dict:
         "sharpe_ratio": 0.0,
         "max_drawdown": 0.0,
         "win_rate": 0.0,
+        "win_rate_per_trade": 0.0,
+        "win_rate_per_day": 0.0,
         "profit_factor": 0.0,
         "total_trades": 0,
         "avg_trade_pnl": 0.0,
@@ -1008,11 +1447,16 @@ def _empty_result(error: str, elapsed: float) -> dict:
         "max_consecutive_losing_days": 0,
         "expectancy_per_trade": 0.0,
         "avg_winner_to_loser_ratio": 0.0,
+        "avg_rr": 0.0,
+        "avg_winner_rr": 0.0,
+        "avg_loser_rr": 0.0,
         "equity_curve": [],
         "trades": [],
         "daily_pnls": [],
+        "daily_pnl_records": [],
         "execution_time_ms": int(elapsed * 1000),
         "error": error,
+        "gate_stats": {"total_signals": 0, "total_taken": 0, "total_skipped": 0, "total_reduced": 0, "filter_rate": 0.0},
     }
 
 
@@ -1025,6 +1469,9 @@ def run_class_backtest(
     firm_key: Optional[str] = None,
     data: Optional[pl.DataFrame] = None,
     fixed_contracts: Optional[int] = None,
+    htf_cache: Optional[dict] = None,
+    daily_data: Optional[pl.DataFrame] = None,
+    skip_eligibility_gate: bool = False,
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -1042,8 +1489,50 @@ def run_class_backtest(
         print(f"Loading {symbol} {timeframe} data...", file=sys.stderr)
         data = load_ohlcv(symbol, timeframe, start_date, end_date)
 
+    # ─── Load daily data for HTF context (needed by eligibility gate) ──
+    if htf_cache is None and daily_data is None:
+        try:
+            daily_data = load_ohlcv(symbol, "daily", start_date, end_date)
+            print(f"Loaded {len(daily_data)} daily bars for HTF context", file=sys.stderr)
+        except Exception as e:
+            print(f"WARNING: Could not load daily data for HTF gate: {e}", file=sys.stderr)
+            daily_data = None
+
+    if htf_cache is None and daily_data is not None and len(daily_data) >= 200:
+        from src.engine.context.htf_context import compute_htf_context
+        htf_cache = {}
+        # Use ts_et for day keys to avoid UTC/ET date mismatch at midnight boundary
+        _htf_ts_col = "ts_et" if "ts_et" in daily_data.columns else "ts_event"
+        for day_idx in range(200, len(daily_data)):
+            bar_date = daily_data[_htf_ts_col][day_idx]
+            day_key = str(bar_date)[:10]
+            htf_cache[day_key] = compute_htf_context(
+                daily_df=daily_data.slice(0, day_idx),
+                four_h_df=None,
+                one_h_df=None,
+                current_price=float(daily_data["close"][day_idx - 1]),
+                bar_date=bar_date,
+            )
+        print(f"Built HTF cache: {len(htf_cache)} days", file=sys.stderr)
+
     # ─── Validate bar count ──────────────────────────────────
     _validate_bar_count(data, timeframe, start_date, end_date)
+
+    # ─── Strategy validation gate (static) ───────────────────
+    from src.engine.validation import validate_static, load_spec, STRATEGY_CONCEPT_MAP
+    concept = STRATEGY_CONCEPT_MAP.get(strategy.name)
+    validation_warnings = []
+    if concept:
+        try:
+            val_spec = load_spec(concept)
+            import inspect
+            source_file = inspect.getfile(strategy.__class__)
+            static_result = validate_static(source_file, val_spec)
+            if not static_result.passed:
+                print(f"WARNING: Static validation failed for {strategy.name}: {static_result.errors}", file=sys.stderr)
+            validation_warnings.extend(static_result.warnings)
+        except Exception as e:
+            print(f"WARNING: Could not validate {strategy.name}: {e}", file=sys.stderr)
 
     # ─── Run strategy compute (produces entry/exit signal columns) ──
     print(f"Running {strategy.name} compute()...", file=sys.stderr)
@@ -1062,10 +1551,12 @@ def run_class_backtest(
         atr = compute_atr(df, 14)
         df = df.with_columns(atr.alias("atr_14"))
 
-    # ─── Firm-specific commission ──────────────────────────────
+    # ─── Commission: firm override → explicit value → contract spec default ──
     commission = commission_per_side
     if firm_key:
         commission = get_commission_per_side(firm_key, symbol)
+    elif commission == 0.62:  # default unchanged — use contract spec
+        commission = spec.default_commission
 
     # ─── Firm contract cap ─────────────────────────────────────
     max_contracts = None
@@ -1101,18 +1592,85 @@ def run_class_backtest(
         session_multipliers=session_mult,
     )
 
-    # ─── Eligibility gate (Wave 2.8 integration point) ─────────
-    # After strategy.compute() generates signals and before vectorbt processes them:
-    # 1. Load HTF data (daily, weekly) and compute HTF context
-    # 2. Apply shift_higher_tf_columns() to prevent look-ahead bias on HTF data
-    # 3. Compute session context (overnight bias, London sweeps, etc.)
-    # 4. Run bias engine to get DailyBiasState
-    # 5. Route through playbook router
-    # 6. Compute location score, structural stops, structural targets
-    # 7. For each entry signal bar, call evaluate_signal()
-    # 8. Filter: TAKE = keep, REDUCE = keep with size adjustment, SKIP = remove
-    # 9. Log rejection reasons for rejection quality analysis
-    # Currently passes through — full per-bar loop requires careful testing.
+    # ─── Eligibility gate (A+ setup filter) ─────────────────────
+    # In backtest mode, skip the gate to see raw strategy performance.
+    # Gate is for live/paper A+ filtering, not for backtesting signal quality.
+    long_entries_np = df["entry_long"].to_numpy()
+    short_entries_np = df["entry_short"].to_numpy()
+    long_exits_np = df["exit_long"].to_numpy()
+    short_exits_np = df["exit_short"].to_numpy()
+
+    # ─── Strategy validation gate (runtime) ──────────────────
+    if concept:
+        try:
+            from src.engine.validation import validate_runtime
+            rt_result = validate_runtime(df, val_spec)
+            if not rt_result.passed:
+                print(f"WARNING: Runtime validation failed for {strategy.name}: {rt_result.errors}", file=sys.stderr)
+            validation_warnings.extend(rt_result.warnings)
+        except Exception as e:
+            print(f"WARNING: Runtime validation error for {strategy.name}: {e}", file=sys.stderr)
+
+    # ─── Signal pipeline diagnostics ─────────────────────────
+    diag_raw_long = int(np.sum(long_entries_np))
+    diag_raw_short = int(np.sum(short_entries_np))
+    diag_raw_exit_long = int(np.sum(long_exits_np))
+    diag_raw_exit_short = int(np.sum(short_exits_np))
+
+    # Count same-bar collisions (entry + exit both True on same bar)
+    diag_collision_long = int(np.sum(long_entries_np & long_exits_np))
+    diag_collision_short = int(np.sum(short_entries_np & short_exits_np))
+
+    if skip_eligibility_gate:
+        empty_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}}
+        long_gate_stats = empty_stats
+        short_gate_stats = empty_stats.copy()
+    else:
+        long_entries_np, _, long_gate_stats = apply_eligibility_gate(
+            long_entries_np, long_exits_np, df, "long", symbol,
+            firm_key=firm_key, htf_cache=htf_cache, spec=spec,
+            strategy_name=strategy.name,
+        )
+        short_entries_np, _, short_gate_stats = apply_eligibility_gate(
+            short_entries_np, short_exits_np, df, "short", symbol,
+            firm_key=firm_key, htf_cache=htf_cache, spec=spec,
+            strategy_name=strategy.name,
+        )
+
+    # Merge gate stats
+    gate_stats = {
+        "long": long_gate_stats,
+        "short": short_gate_stats,
+        "total_signals": long_gate_stats["total"] + short_gate_stats["total"],
+        "total_taken": long_gate_stats["take"] + short_gate_stats["take"],
+        "total_reduced": long_gate_stats["reduce"] + short_gate_stats["reduce"],
+        "total_skipped": long_gate_stats["skip"] + short_gate_stats["skip"],
+    }
+    total_sigs = gate_stats["total_signals"]
+    if total_sigs > 0:
+        gate_stats["filter_rate"] = round(gate_stats["total_skipped"] / total_sigs * 100, 1)
+        print(
+            f"Gate: {gate_stats['total_taken']} TAKE, {gate_stats['total_reduced']} REDUCE, "
+            f"{gate_stats['total_skipped']} SKIP out of {total_sigs} signals "
+            f"({gate_stats['filter_rate']}% filtered)",
+            file=sys.stderr,
+        )
+    else:
+        gate_stats["filter_rate"] = 0.0
+
+    diag_post_gate_long = int(np.sum(long_entries_np))
+    diag_post_gate_short = int(np.sum(short_entries_np))
+
+    # ─── Shift entry signals by 1 bar (next-bar fill) ──────────
+    # Signal on bar N → fill on bar N+1. Eliminates lookahead bias.
+    long_entries_np = np.roll(long_entries_np, 1); long_entries_np[0] = False
+    short_entries_np = np.roll(short_entries_np, 1); short_entries_np[0] = False
+
+    # Replace signal columns with filtered+shifted versions
+    df = df.with_columns([
+        pl.Series("entry_long", long_entries_np),
+        pl.Series("entry_short", short_entries_np),
+    ])
 
     # ─── Convert to Pandas at vectorbt boundary ────────────────
     ts_index = df["ts_event"].to_pandas() if "ts_event" in df.columns else None
@@ -1131,8 +1689,30 @@ def run_class_backtest(
         short_entries_pd.index = ts_index
         short_exits_pd.index = ts_index
 
-    # TODO(rollover): Suppress new entries on rollover days (same as run_backtest above).
-    # When `is_rollover_day` column is present in df, zero out entries on those bars.
+    # ─── Suppress entries on rollover days ────────────────────────
+    if "is_rollover_day" not in df.columns:
+        df = flag_rollover_days(df, symbol)
+    if "is_rollover_day" in df.columns:
+        rollover_mask = df["is_rollover_day"].to_numpy()
+        suppressed = int(np.sum(entries_pd.values[rollover_mask]) + np.sum(short_entries_pd.values[rollover_mask]))
+        if suppressed > 0:
+            print(f"Suppressing {suppressed} entry signals on rollover days", file=sys.stderr)
+            entries_pd[rollover_mask] = False
+            short_entries_pd[rollover_mask] = False
+
+    diag_post_rollover_long = int(np.sum(entries_pd.values))
+    diag_post_rollover_short = int(np.sum(short_entries_pd.values))
+
+    # ─── Signal pipeline diagnostic (stderr) ─────────────────
+    print(
+        f"Signal pipeline: raw={diag_raw_long+diag_raw_short} "
+        f"(L:{diag_raw_long} S:{diag_raw_short}) "
+        f"→ gate={diag_post_gate_long+diag_post_gate_short} "
+        f"→ rollover={diag_post_rollover_long+diag_post_rollover_short} "
+        f"| collisions: L={diag_collision_long} S={diag_collision_short} "
+        f"| exits: L={diag_raw_exit_long} S={diag_raw_exit_short}",
+        file=sys.stderr,
+    )
 
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
@@ -1157,10 +1737,51 @@ def run_class_backtest(
         return _empty_result(str(e), time.time() - start_time)
 
     # ─── Extract metrics (futures P&L computed independently) ─
-    STARTING_CAPITAL = 100_000.0
+    STARTING_CAPITAL = 50_000.0
 
     total_trades = int(pf.trades.count())
     trades_records = pf.trades.records_readable if total_trades > 0 else None
+    print(
+        f"Signal pipeline → trades={total_trades} "
+        f"(vectorbt drop: {100 - (total_trades / max(diag_post_rollover_long + diag_post_rollover_short, 1)) * 100:.0f}%)",
+        file=sys.stderr,
+    )
+
+    # ─── Add Entry/Exit Idx columns (VBT v2 uses timestamps, not indices) ──
+    if trades_records is not None and "Entry Idx" not in trades_records.columns:
+        ts_to_idx = {ts: i for i, ts in enumerate(close_pd.index)}
+        if "Entry Timestamp" in trades_records.columns:
+            trades_records = trades_records.copy()
+            entry_idx_mapped = trades_records["Entry Timestamp"].map(ts_to_idx)
+            exit_idx_mapped = trades_records["Exit Timestamp"].map(ts_to_idx)
+            unmapped = int(entry_idx_mapped.isna().sum() + exit_idx_mapped.isna().sum())
+            if unmapped > 0:
+                raise ValueError(
+                    f"CRITICAL: {unmapped} trade timestamps unmapped to bar indices. "
+                    f"Data integrity compromised — timestamp mismatch between "
+                    f"trades and price data."
+                )
+            trades_records["Entry Idx"] = entry_idx_mapped.astype(int)
+            trades_records["Exit Idx"] = exit_idx_mapped.astype(int)
+
+    # ─── Trade management: SL/TP/trailing applied bar-by-bar ──
+    close_np = df["close"].to_numpy()
+    atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 1.0)
+    managed_trades = []
+    if trades_records is not None:
+        managed_trades = _apply_trade_management(
+            trades_records, high_np, low_np, close_np, atr_np,
+            spec, htf_cache, df,
+        )
+        mgmt_exits = {m["exit_reason"] for m in managed_trades}
+        tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
+        sl_count = sum(1 for m in managed_trades if m["exit_reason"] == "stop_loss")
+        trail_count = sum(1 for m in managed_trades if m["exit_reason"] == "trailing_stop")
+        print(
+            f"Trade mgmt: {tp_count} TP, {sl_count} SL, {trail_count} trail, "
+            f"{len(managed_trades) - tp_count - sl_count - trail_count} signal exits",
+            file=sys.stderr,
+        )
 
     win_rate = 0.0
     profit_factor = 0.0
@@ -1172,13 +1793,24 @@ def run_class_backtest(
     if trades_records is not None:
         trade_pnls_list = []
 
-        for _, row in trades_records.iterrows():
+        for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
-            exit_p = float(row["Avg Exit Price"])
             size = float(row["Size"])
             direction = str(row["Direction"])
             entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
-            exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
+
+            # Use managed exit if available, otherwise original
+            if trade_i < len(managed_trades):
+                mgmt = managed_trades[trade_i]
+                exit_p = mgmt["exit_price"]
+                exit_idx = mgmt["exit_idx"]
+                exit_reason = mgmt["exit_reason"]
+                risk_pts = mgmt["risk_points"]
+            else:
+                exit_p = float(row["Avg Exit Price"])
+                exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
+                exit_reason = "signal"
+                risk_pts = min(float(atr_np[entry_idx]) * 2.0, 6.0) if entry_idx < len(atr_np) else 6.0
 
             if "Short" in direction:
                 gross = (entry_p - exit_p) * size * spec.point_value
@@ -1203,14 +1835,26 @@ def run_class_backtest(
                     trade[col] = round(float(val), 4)
                 else:
                     trade[col] = val
+
+            # Override with managed exit data
+            trade["Avg Exit Price"] = round(exit_p, 4)
+            trade["Exit Idx"] = exit_idx
+            trade["exit_reason"] = exit_reason
             trade["PnL"] = round(net_pnl, 2)
             trade["GrossPnL"] = round(gross, 2)
             trade["SlippageCost"] = round(slip_cost, 2)
             trade["CommissionCost"] = round(comm_cost, 2)
 
+            # ─── Per-trade R:R (using 6pt capped risk) ───────────────
+            risk_dollars = risk_pts * spec.point_value
+            if risk_dollars > 0 and size > 0:
+                reward_dollars = net_pnl / size
+                trade["rr"] = round(reward_dollars / risk_dollars, 2)
+            else:
+                trade["rr"] = 0.0
+            trade["risk_points"] = round(risk_pts, 2)
+
             # ─── Per-trade MAE/MFE ($ excursion from entry) ───────
-            # MAE = max adverse move in $ (always positive = how far against you)
-            # MFE = max favorable move in $ (always positive = how far in your favor)
             try:
                 ei = max(0, entry_idx)
                 xi = min(exit_idx + 1, len(high_np))
@@ -1247,43 +1891,59 @@ def run_class_backtest(
         avg_trade_pnl = float(np.mean(trade_pnls_arr))
         winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
 
-    # ─── Build equity curve with friction ─────────────────────
+    # ─── Build equity curve from managed trades ─────────────────
+    # Uses managed entry/exit data so equity matches per-trade P&L exactly.
+    # Each trade contributes mark-to-market P&L bar-by-bar, with the managed
+    # exit price used on the exit bar instead of close.
     close_arr = close_pd.values
-    close_diffs = np.diff(close_arr, prepend=close_arr[0])
-    assets = pf.assets().values
-    prev_assets = np.roll(assets, 1)
-    prev_assets[0] = 0
+    n_bars = len(close_arr)
+    bar_dollar_pnls = np.zeros(n_bars)
 
-    bar_dollar_pnls = prev_assets * close_diffs * spec.point_value
+    if trades_list:
+        for trade in trades_list:
+            t_entry_idx = int(trade.get("Entry Idx", 0))
+            t_exit_idx = int(trade.get("Exit Idx", t_entry_idx + 1))
+            t_entry_p = float(trade.get("Avg Entry Price", 0))
+            t_exit_p = float(trade.get("Avg Exit Price", 0))
+            t_size = float(trade.get("Size", 1))
+            t_dir = str(trade.get("Direction", "Long"))
+            is_short = "Short" in t_dir
+            sign = -1.0 if is_short else 1.0
 
-    # Deduct friction on EVERY position change (including reversals).
-    # Reversal (e.g., +15 → -15) = exit old + enter new = friction on BOTH.
-    for i in range(len(bar_dollar_pnls)):
-        old_pos = prev_assets[i]
-        new_pos = assets[i]
-        if old_pos == new_pos:
-            continue
-        bar_slip = float(slippage_clean[i]) if not np.isnan(slippage_clean[i]) else 0.0
-        bar_friction = bar_slip + commission  # one side
-        # Contracts closed (exited or reduced)
-        if old_pos != 0:
-            if np.sign(new_pos) != np.sign(old_pos):
-                # Full exit (or reversal) — friction on all old contracts
-                bar_dollar_pnls[i] -= bar_friction * abs(old_pos)
-            elif abs(new_pos) < abs(old_pos):
-                # Partial close — friction on closed contracts
-                bar_dollar_pnls[i] -= bar_friction * (abs(old_pos) - abs(new_pos))
-        # Contracts opened (new entry, reversal, or scaling into position)
-        if new_pos != 0:
-            if np.sign(new_pos) != np.sign(old_pos):
-                # New direction entry or reversal — friction on all new contracts
-                bar_dollar_pnls[i] -= bar_friction * abs(new_pos)
-            elif abs(new_pos) > abs(old_pos):
-                # Scaling into existing position — friction on added contracts
-                bar_dollar_pnls[i] -= bar_friction * (abs(new_pos) - abs(old_pos))
+            # Entry bar mark-to-market: entry_price → bar close
+            if t_entry_idx < n_bars:
+                bar_close = float(close_arr[t_entry_idx])
+                bar_dollar_pnls[t_entry_idx] += sign * (bar_close - t_entry_p) * t_size * spec.point_value
+
+            # Intermediate bars: close-to-close mark-to-market
+            prev_price = float(close_arr[t_entry_idx]) if t_entry_idx < n_bars else t_entry_p
+            for bar in range(t_entry_idx + 1, min(t_exit_idx, n_bars)):
+                bar_close = float(close_arr[bar])
+                bar_dollar_pnls[bar] += sign * (bar_close - prev_price) * t_size * spec.point_value
+                prev_price = bar_close
+
+            # Exit bar: prev close → managed exit price
+            if t_exit_idx < n_bars:
+                bar_dollar_pnls[t_exit_idx] += sign * (t_exit_p - prev_price) * t_size * spec.point_value
+
+            # Friction: deducted once per trade (entry + exit)
+            friction = float(trade.get("SlippageCost", 0)) + float(trade.get("CommissionCost", 0))
+            bar_dollar_pnls[t_entry_idx] -= friction
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
+
+    # Reconciliation: managed equity total must match sum of per-trade P&Ls
+    if len(trade_pnls_arr) > 0:
+        equity_total = float(equity[-1] - STARTING_CAPITAL)
+        trades_total = float(np.sum(trade_pnls_arr))
+        reconciliation_error = abs(equity_total - trades_total)
+        if reconciliation_error > 1.0:  # $1 tolerance for floating point
+            raise ValueError(
+                f"RECONCILIATION FAILED: equity={equity_total:.2f}, "
+                f"trades={trades_total:.2f}, diff={reconciliation_error:.2f}. "
+                f"Results are untrustworthy."
+            )
 
     daily_pnl_records = _compute_daily_pnls(equity, equity_index)
     daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
@@ -1303,10 +1963,10 @@ def run_class_backtest(
 
     # Compute return/drawdown/sharpe from the constructed equity curve
     total_pnl_dollars = float(equity[-1] - STARTING_CAPITAL)
-    total_return = total_pnl_dollars / STARTING_CAPITAL
+    total_return = total_pnl_dollars  # Dollar P&L — futures are margin instruments, % is misleading
     peak = np.maximum.accumulate(equity)
-    drawdown = (equity - peak) / peak
-    max_dd = float(np.min(drawdown)) if len(drawdown) > 0 else 0.0
+    drawdown_dollars = peak - equity  # Dollar drawdown (positive = how much lost from peak)
+    max_dd = float(np.max(drawdown_dollars)) if len(drawdown_dollars) > 0 else 0.0  # Max $ lost from peak
 
     # Sharpe from daily P&L (annualized)
     if len(daily_pnl_values) > 1:
@@ -1347,11 +2007,27 @@ def run_class_backtest(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
+    # Avg R:R on winning trades (must be >= 2.0 to pass any tier)
+    winner_rrs = [t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0]
+    avg_winner_rr = float(np.mean(winner_rrs)) if winner_rrs else 0.0
+
     tier = _compute_tier(avg_daily_pnl, winning_days, total_trading_days,
-                         max_dd, profit_factor, sharpe)
+                         max_dd, profit_factor, sharpe, avg_rr=avg_winner_rr)
     forge_score = _compute_forge_score(sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl)
 
     # ─── Prop firm simulation (all 8 firms) ─────────────────
+    # ─── Sanity checks + cross-validation ─────────────────────
+    _prelim_class = {
+        "total_return": round(total_return, 6), "sharpe_ratio": round(sharpe, 4),
+        "max_drawdown": round(max_dd, 6), "win_rate": round(win_rate, 4),
+        "profit_factor": round(profit_factor, 4), "total_trades": total_trades,
+        "avg_trade_pnl": round(avg_trade_pnl, 2), "total_trading_days": total_trading_days,
+        "trades": trades_list, "daily_pnls": daily_pnl_values,
+        "equity_curve": _aggregate_equity_daily(equity, equity_index),
+    }
+    sanity = run_sanity_checks(_prelim_class, symbol=symbol)
+    cross_val = run_cross_validation(_prelim_class)
+
     prop_compliance = simulate_all_firms(
         daily_pnl_records, trades_list,
         symbol=symbol, account_size=50_000,
@@ -1380,7 +2056,8 @@ def run_class_backtest(
     win_rate_ci = _wilson_ci(winning_days, total_trading_days)
 
     if total_trading_days > 1:
-        sharpe_se = sharpe / (total_trading_days ** 0.5)
+        # Lo (2002) formula: SE(Sharpe) = sqrt((1 + sharpe^2/2) / n)
+        sharpe_se = ((1 + sharpe ** 2 / 2) / total_trading_days) ** 0.5
         sharpe_ci = (round(sharpe - 1.96 * sharpe_se, 4), round(sharpe + 1.96 * sharpe_se, 4))
     else:
         sharpe_ci = (0.0, 0.0)
@@ -1403,6 +2080,9 @@ def run_class_backtest(
         "max_consecutive_losing_days": max_consec_losers,
         "expectancy_per_trade": round(avg_trade_pnl, 2),
         "avg_winner_to_loser_ratio": round(winner_loser_ratio, 4),
+        "avg_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None])), 2) if trades_list else 0.0,
+        "avg_winner_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0])), 2) if any(t.get("rr", 0) > 0 for t in trades_list) else 0.0,
+        "avg_loser_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] < 0])), 2) if any(t.get("rr", 0) < 0 for t in trades_list) else 0.0,
         "equity_curve": _aggregate_equity_daily(equity, equity_index),
         "monthly_returns": _compute_monthly_returns(equity, equity_index),
         "trades": trades_list,
@@ -1412,9 +2092,15 @@ def run_class_backtest(
         "gap_adjusted_drawdown": gap_adjusted_dd,
         "tier": tier,
         "forge_score": forge_score,
+        "sanity_checks": sanity,
+        "cross_validation": cross_val,
+        "sortino_ratio": cross_val.get("sortino_ratio", 0.0),
+        "bootstrap_ci_95": cross_val.get("bootstrap_ci_95", [0, 0]),
+        "deflated_sharpe": cross_val.get("deflated_sharpe", {}),
         "recency_analysis": compute_recency_weighted_score(
             daily_pnl_records, sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl,
         ),
+        "decay_analysis": _compute_decay_analysis(daily_pnl_values, trades_list),
         "over_risk_bars": over_risk_count,
         "over_risk_pct": round(over_risk_count / max(len(df), 1) * 100, 2),
         "prop_compliance": prop_compliance,
@@ -1426,7 +2112,51 @@ def run_class_backtest(
         },
         "statistical_warnings": statistical_warnings,
         "sample_confidence": sample_confidence,
+        "gate_stats": gate_stats,
+        "signal_diagnostics": {
+            "raw_long": diag_raw_long,
+            "raw_short": diag_raw_short,
+            "raw_total": diag_raw_long + diag_raw_short,
+            "post_gate_long": diag_post_gate_long,
+            "post_gate_short": diag_post_gate_short,
+            "post_rollover_long": diag_post_rollover_long,
+            "post_rollover_short": diag_post_rollover_short,
+            "actual_trades": total_trades,
+            "collision_long": diag_collision_long,
+            "collision_short": diag_collision_short,
+            "exit_long_count": diag_raw_exit_long,
+            "exit_short_count": diag_raw_exit_short,
+        },
+        "run_receipt": _build_run_receipt(strategy._config if hasattr(strategy, '_config') else StrategyConfig(
+            name=strategy.name, symbol=strategy.symbol, timeframe=strategy.timeframe,
+            indicators=[], entry_long="", entry_short="", exit="",
+            stop_loss={"type": "atr"}, position_size={"type": "fixed"},
+        ), dataset_hash=compute_dataset_hash(df)),
     }
+
+
+def _compute_decay_analysis(daily_pnls: list[float], trades_list: list[dict]) -> dict:
+    """Compute combined decay analysis from half-life fit + 6 sub-signals."""
+    try:
+        half_life_result = fit_decay(daily_pnls)
+        composite_result = composite_decay_score(daily_pnls, trades_list)
+        return {
+            "half_life_days": half_life_result.get("half_life_days"),
+            "decay_detected": half_life_result.get("decay_detected", False),
+            "trend": half_life_result.get("trend", "stable"),
+            "composite_score": composite_result.get("composite_score", 0.0),
+            "decaying": composite_result.get("composite_score", 0.0) > 60,
+            "signals": composite_result.get("signals", {}),
+        }
+    except Exception:
+        return {
+            "half_life_days": None,
+            "decay_detected": False,
+            "trend": "stable",
+            "composite_score": 0.0,
+            "decaying": False,
+            "signals": {},
+        }
 
 
 def _load_strategy_class(class_path: str) -> BaseStrategy:
@@ -1464,14 +2194,54 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
             print(json.dumps({"error": f"Failed to load strategy class '{strategy_class}': {e}"}))
             sys.exit(1)
 
-        result = run_class_backtest(
-            strategy=strategy,
-            start_date=config.get("start_date", "2010-01-01"),
-            end_date=config.get("end_date", "2030-12-31"),
-            slippage_ticks=config.get("slippage_ticks", 1.0),
-            commission_per_side=config.get("commission_per_side", 4.50),
-            firm_key=config.get("firm_key"),
-        )
+        if mode == "walkforward":
+            # Walk-forward for class-based strategies: run run_class_backtest per OOS window
+            from src.engine.walk_forward import run_walk_forward_class
+            result = run_walk_forward_class(
+                strategy=strategy,
+                start_date=config.get("start_date", "2010-01-01"),
+                end_date=config.get("end_date", "2030-12-31"),
+                slippage_ticks=config.get("slippage_ticks", 1.0),
+                commission_per_side=config.get("commission_per_side", 0.62),
+                firm_key=config.get("firm_key"),
+                embargo_bars=config.get("embargo_bars", 0),
+            )
+            # Compute tier from OOS metrics (walk-forward doesn't do this itself)
+            oos = result.get("oos_metrics", {})
+            # Collect avg winner R:R across OOS windows
+            wf_winner_rrs = [w.get("avg_winner_rr", 0) for w in result.get("windows", []) if w.get("avg_winner_rr")]
+            wf_avg_winner_rr = float(np.mean(wf_winner_rrs)) if wf_winner_rrs else 0.0
+            result["avg_winner_rr"] = round(wf_avg_winner_rr, 2)
+            result["tier"] = _compute_tier(
+                oos.get("avg_daily_pnl", 0),
+                oos.get("winning_days", 0),
+                max(oos.get("total_trading_days", 1), 1),
+                abs(oos.get("max_drawdown", 0)),
+                oos.get("profit_factor", 0),
+                oos.get("sharpe_ratio", 0),
+                avg_rr=wf_avg_winner_rr,
+            )
+            result["forge_score"] = _compute_forge_score(
+                oos.get("sharpe_ratio", 0),
+                abs(oos.get("max_drawdown", 0)),
+                oos.get("profit_factor", 0),
+                oos.get("win_rate", 0),
+                oos.get("avg_daily_pnl", 0),
+            )
+            print(f"Walk-forward OOS: tier={result['tier']}, forge_score={result['forge_score']:.1f}", file=sys.stderr)
+            # Attach run receipt for walk-forward (single backtests attach it themselves)
+            from src.engine.data_loader import compute_dataset_hash
+            result["run_receipt"] = _build_run_receipt(config, dataset_hash="wf-aggregate")
+        else:
+            result = run_class_backtest(
+                strategy=strategy,
+                start_date=config.get("start_date", "2010-01-01"),
+                end_date=config.get("end_date", "2030-12-31"),
+                slippage_ticks=config.get("slippage_ticks", 1.0),
+                commission_per_side=config.get("commission_per_side", 0.62),
+                firm_key=config.get("firm_key"),
+                skip_eligibility_gate=True,
+            )
     else:
         # DSL expression-based strategy path (original)
         try:
@@ -1482,9 +2252,56 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
 
         if mode == "walkforward":
             from src.engine.walk_forward import run_walk_forward
-            result = run_walk_forward(request)
+            result = run_walk_forward(request, embargo_bars=request.embargo_bars)
         else:
             result = run_backtest(request)
+
+    # ─── Chain stress testing after walk-forward ─────────────────
+    if mode == "walkforward" and "error" not in result:
+        try:
+            from src.engine.stress_test import run_stress_test
+            from src.engine.config import StressTestRequest, StrategyConfig
+            strategy_cfg = config.get("strategy", {})
+            if strategy_class and hasattr(strategy, 'symbol'):
+                # Class-based: build minimal StrategyConfig from the strategy instance
+                strategy_cfg = {
+                    "name": strategy.name,
+                    "symbol": strategy.symbol,
+                    "timeframe": strategy.timeframe,
+                    "indicators": [],
+                    "entry_long": "", "entry_short": "", "exit": "",
+                    "stop_loss": {"type": "atr", "multiplier": 2.0},
+                    "position_size": {"type": "dynamic_atr", "target_risk_dollars": 500},
+                }
+            stress_req = StressTestRequest(
+                backtest_id=backtest_id or "cli",
+                strategy=StrategyConfig(**strategy_cfg) if isinstance(strategy_cfg, dict) else strategy_cfg,
+                prop_firm_max_dd=config.get("prop_firm_max_dd", 2000.0),
+            )
+            crisis = run_stress_test(stress_req)
+            result["crisis_results"] = crisis
+            # Recalculate Forge Score with crisis bonus using full formula
+            from src.engine.performance_gate import compute_forge_score as full_forge_score
+            oos = result.get("oos_metrics", result)
+            mc = result.get("mc_results") or result.get("monte_carlo")
+            result["forge_score"] = full_forge_score(
+                {
+                    "avg_daily_pnl": oos.get("avg_daily_pnl", 0),
+                    "winning_days": oos.get("winning_days", 0),
+                    "total_trading_days": max(oos.get("total_trading_days", 1), 1),
+                    "max_drawdown": abs(oos.get("max_drawdown", 0)),  # Already in dollars
+                    "sharpe_ratio": oos.get("sharpe_ratio", 0),
+                    "profit_factor": oos.get("profit_factor", 0),
+                },
+                mc_results=mc,
+                crisis_results=crisis,
+            )
+            print(f"Stress test: {len(crisis.get('scenarios', []))} scenarios, "
+                  f"passed={crisis.get('passed', False)}, "
+                  f"forge_score={result['forge_score']}", file=sys.stderr)
+        except Exception as e:
+            print(f"Stress test skipped: {e}", file=sys.stderr)
+            result["crisis_results"] = None
 
     if backtest_id:
         result["backtest_id"] = backtest_id

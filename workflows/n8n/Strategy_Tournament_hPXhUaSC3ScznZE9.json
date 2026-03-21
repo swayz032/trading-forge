@@ -1,0 +1,1766 @@
+{
+  "updatedAt": "2026-03-15T00:46:13.491Z",
+  "createdAt": "2026-03-14T21:22:42.049Z",
+  "id": "hPXhUaSC3ScznZE9",
+  "name": "Strategy Tournament",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Daily 6AM ET Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        400
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "proposer-call",
+      "name": "Proposer (qwen3)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        260,
+        400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"model\": \"qwen3\", \"messages\": [ { \"role\": \"system\", \"content\": \"You are a quantitative trading strategy proposer. Generate a new strategy idea in strict JSON DSL format. The strategy must have max 5 parameters, use proven technical indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD), target futures (ES, NQ, CL, YM), and be describable in one sentence. Output ONLY valid JSON matching the StrategyDSL schema.\" }, { \"role\": \"user\", \"content\": \"Propose a new trading strategy. Consider recent market conditions and avoid strategies similar to recent failures. Focus on simplicity and robustness.\" } ], \"stream\": false, \"options\": { \"temperature\": 0.8, \"num_predict\": 2048 } }",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "parse-proposal",
+      "name": "Parse Proposer Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet content = '';\nif (response.message && response.message.content) {\n  content = response.message.content;\n} else if (response.response) {\n  content = response.response;\n}\n\ncontent = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\nlet strategyDSL = null;\nlet parseError = null;\ntry {\n  strategyDSL = JSON.parse(content);\n} catch (e) {\n  const match = content.match(/\\{[\\s\\S]*\\}/);\n  if (match) {\n    try {\n      strategyDSL = JSON.parse(match[0]);\n    } catch (e2) {\n      parseError = `Failed to parse strategy JSON: ${e2.message}`;\n    }\n  } else {\n    parseError = `No JSON found in proposer output: ${content.substring(0, 200)}`;\n  }\n}\n\nreturn [{\n  json: {\n    strategyDSL,\n    rawProposerOutput: content,\n    parseError,\n    proposerModel: 'qwen3',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "check-parse-ok",
+      "name": "Proposal Parsed OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        740,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "parse-check",
+              "leftValue": "={{ $json.parseError }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compiler-validate",
+      "name": "Compiler Validate Strategy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1000,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/compiler/validate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.strategyDSL) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "check-compiler-ok",
+      "name": "Compiler Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1260,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "compiler-check",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-kill-compiler",
+      "name": "Log KILL Compilation Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        500
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nreturn [{\n  json: {\n    verdict: 'KILL',\n    reason: 'Failed compilation',\n    compilerErrors: data.errors || data.message || 'Unknown compiler error',\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "graveyard-check",
+      "name": "Graveyard Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1520,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/graveyard/check",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($node['Parse Proposer Output'].json.strategyDSL) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "check-graveyard-ok",
+      "name": "Graveyard Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1780,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "graveyard-pass",
+              "leftValue": "={{ $json.rejected }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "graveyard-no-reject",
+              "leftValue": "={{ $json.rejected }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log-kill-graveyard",
+      "name": "Log KILL Graveyard Match",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2040,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nreturn [{\n  json: {\n    verdict: 'KILL',\n    reason: 'Too similar to dead strategy',\n    similarity: data.similarity || data.score || 'unknown',\n    matchedStrategy: data.matched_strategy || data.match || 'unknown',\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "critic-call",
+      "name": "Critic (llama3.1:8b)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2040,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'llama3.1:8b', messages: [ { role: 'system', content: 'You are a critical analyst reviewing trading strategies. Your job is to find weaknesses, overfitting risks, regime dependencies, and practical problems. Be specific and quantitative. Rate the strategy 1-10 on robustness, simplicity, and edge quality.' }, { role: 'user', content: 'Review this strategy proposal:\\n\\nStrategy DSL:\\n' + JSON.stringify($node['Parse Proposer Output'].json.strategyDSL, null, 2) + '\\n\\nCompiler validation passed successfully.' } ], stream: false, options: { temperature: 0.3, num_predict: 2048 } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "parse-critic",
+      "name": "Parse Critic Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2300,
+        100
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet criticAnalysis = '';\nif (response.message && response.message.content) {\n  criticAnalysis = response.message.content;\n} else if (response.response) {\n  criticAnalysis = response.response;\n} else {\n  criticAnalysis = 'ERROR: Could not extract critic analysis from response';\n}\n\nreturn [{\n  json: {\n    criticAnalysis,\n    criticModel: 'llama3.1:8b',\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "prosecutor-call",
+      "name": "Prosecutor (llama3.1:8b)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2560,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'llama3.1:8b', messages: [ { role: 'system', content: 'You are a hostile prosecutor of trading strategies. Your job is to find fatal flaws. Search for: curve fitting risk, regime dependency, commission death, liquidity problems, parameter sensitivity. If you find a fatal flaw, recommend KILL. If fixable, recommend REVISE with specific changes. Only pass strategies that could survive 6 months of live trading.' }, { role: 'user', content: 'Prosecute this strategy:\\n\\nStrategy DSL:\\n' + JSON.stringify($json.strategyDSL, null, 2) + '\\n\\nCritic Analysis:\\n' + $json.criticAnalysis } ], stream: false, options: { temperature: 0.3, num_predict: 2048 } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "parse-prosecutor",
+      "name": "Parse Prosecutor Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2820,
+        100
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet prosecutorFindings = '';\nif (response.message && response.message.content) {\n  prosecutorFindings = response.message.content;\n} else if (response.response) {\n  prosecutorFindings = response.response;\n} else {\n  prosecutorFindings = 'ERROR: Could not extract prosecutor findings from response';\n}\n\nreturn [{\n  json: {\n    prosecutorFindings,\n    prosecutorModel: 'llama3.1:8b',\n    criticAnalysis: $node['Parse Critic Output'].json.criticAnalysis,\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "promoter-call",
+      "name": "Promoter (qwen3)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3080,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'qwen3', messages: [ { role: 'system', content: 'You are the final decision maker. Given the strategy proposal, critic analysis, and prosecutor findings, make a FINAL decision: PROMOTE (send to backtest), REVISE (send back with specific fixes), or KILL (reject permanently). Provide clear reasoning. Your response MUST start with one of: PROMOTE, REVISE, or KILL followed by your reasoning.' }, { role: 'user', content: 'Make your final decision on this strategy:\\n\\nStrategy DSL:\\n' + JSON.stringify($json.strategyDSL, null, 2) + '\\n\\nCritic Analysis:\\n' + $json.criticAnalysis + '\\n\\nProsecutor Findings:\\n' + $json.prosecutorFindings } ], stream: false, options: { temperature: 0.2, num_predict: 2048 } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "parse-verdict",
+      "name": "Parse Promoter Verdict",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3340,
+        100
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet promoterOutput = '';\nif (response.message && response.message.content) {\n  promoterOutput = response.message.content;\n} else if (response.response) {\n  promoterOutput = response.response;\n} else {\n  promoterOutput = 'ERROR: Could not extract promoter decision';\n}\n\nconst upperOutput = promoterOutput.toUpperCase().trim();\nlet verdict = 'KILL';\nif (upperOutput.startsWith('PROMOTE') || upperOutput.includes('DECISION: PROMOTE') || upperOutput.includes('VERDICT: PROMOTE')) {\n  verdict = 'PROMOTE';\n} else if (upperOutput.startsWith('REVISE') || upperOutput.includes('DECISION: REVISE') || upperOutput.includes('VERDICT: REVISE')) {\n  verdict = 'REVISE';\n}\n\nreturn [{\n  json: {\n    verdict,\n    promoterOutput,\n    promoterModel: 'qwen3',\n    prosecutorFindings: $node['Parse Prosecutor Output'].json.prosecutorFindings,\n    criticAnalysis: $node['Parse Critic Output'].json.criticAnalysis,\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    rawProposerOutput: $node['Parse Proposer Output'].json.rawProposerOutput,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "post-tournament-result",
+      "name": "POST Tournament Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3600,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/tournament/run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, proposerOutput: $json.rawProposerOutput, criticAnalysis: $json.criticAnalysis, prosecutorFindings: $json.prosecutorFindings, promoterDecision: $json.promoterOutput, finalVerdict: $json.verdict, timestamp: $json.timestamp }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "check-promote",
+      "name": "Verdict is PROMOTE?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3860,
+        100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "promote-check",
+              "leftValue": "={{ $node['Parse Promoter Verdict'].json.verdict }}",
+              "rightValue": "PROMOTE",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compile-for-backtest",
+      "name": "Compile Strategy for Backtest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4120,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/compiler/compile",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($node['Parse Promoter Verdict'].json.strategyDSL) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "queue-backtest",
+      "name": "Queue Backtest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4380,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/backtests",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategyDSL: $node['Parse Promoter Verdict'].json.strategyDSL, compiledStrategy: $json, source: 'tournament', tournamentTimestamp: $node['Parse Promoter Verdict'].json.timestamp }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "post-kill-compiler-result",
+      "name": "POST Compiler KILL Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1780,
+        500
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/tournament/run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, finalVerdict: 'KILL', reason: $json.reason, compilerErrors: $json.compilerErrors, timestamp: $json.timestamp }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "post-kill-graveyard-result",
+      "name": "POST Graveyard KILL Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2300,
+        400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/tournament/run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, finalVerdict: 'KILL', reason: $json.reason, similarity: $json.similarity, matchedStrategy: $json.matchedStrategy, timestamp: $json.timestamp }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "log-parse-fail",
+      "name": "Log Parse Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        600
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nreturn [{\n  json: {\n    verdict: 'KILL',\n    reason: 'Proposer output failed to parse as valid JSON',\n    parseError: data.parseError,\n    rawOutput: data.rawProposerOutput ? data.rawProposerOutput.substring(0, 500) : 'empty',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "post-kill-parse-result",
+      "name": "POST Parse Fail Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1260,
+        600
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/tournament/run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ candidateDSL: null, finalVerdict: 'KILL', reason: $json.reason, parseError: $json.parseError, timestamp: $json.timestamp }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "noop-end-revise-kill",
+      "name": "Tournament Complete (No Promote)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4120,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        800
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "post-error-alert",
+      "name": "POST Tournament Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        260,
+        800
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Strategy Tournament', message: $json.execution ? (typeof $json.execution.error === 'object' ? $json.execution.error.message : String($json.execution.error)) : 'Unknown error', severity: 'critical', data: { workflow: 'Strategy Tournament', executionId: $json.execution ? String($json.execution.id) : 'N/A', timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Daily 6AM ET Trigger": {
+      "main": [
+        [
+          {
+            "node": "Proposer (qwen3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposer (qwen3)": {
+      "main": [
+        [
+          {
+            "node": "Parse Proposer Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Proposer Output": {
+      "main": [
+        [
+          {
+            "node": "Proposal Parsed OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposal Parsed OK?": {
+      "main": [
+        [
+          {
+            "node": "Compiler Validate Strategy",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Parse Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Parse Failure": {
+      "main": [
+        [
+          {
+            "node": "POST Parse Fail Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compiler Validate Strategy": {
+      "main": [
+        [
+          {
+            "node": "Compiler Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compiler Passed?": {
+      "main": [
+        [
+          {
+            "node": "Graveyard Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log KILL Compilation Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log KILL Compilation Failed": {
+      "main": [
+        [
+          {
+            "node": "POST Compiler KILL Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Graveyard Check": {
+      "main": [
+        [
+          {
+            "node": "Graveyard Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Graveyard Passed?": {
+      "main": [
+        [
+          {
+            "node": "Critic (llama3.1:8b)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log KILL Graveyard Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log KILL Graveyard Match": {
+      "main": [
+        [
+          {
+            "node": "POST Graveyard KILL Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Critic (llama3.1:8b)": {
+      "main": [
+        [
+          {
+            "node": "Parse Critic Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Critic Output": {
+      "main": [
+        [
+          {
+            "node": "Prosecutor (llama3.1:8b)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prosecutor (llama3.1:8b)": {
+      "main": [
+        [
+          {
+            "node": "Parse Prosecutor Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Prosecutor Output": {
+      "main": [
+        [
+          {
+            "node": "Promoter (qwen3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Promoter (qwen3)": {
+      "main": [
+        [
+          {
+            "node": "Parse Promoter Verdict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Promoter Verdict": {
+      "main": [
+        [
+          {
+            "node": "POST Tournament Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Tournament Results": {
+      "main": [
+        [
+          {
+            "node": "Verdict is PROMOTE?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verdict is PROMOTE?": {
+      "main": [
+        [
+          {
+            "node": "Compile Strategy for Backtest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tournament Complete (No Promote)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compile Strategy for Backtest": {
+      "main": [
+        [
+          {
+            "node": "Queue Backtest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "POST Tournament Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Daily 6AM ET Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "d16d14a8-68a1-483f-9b06-ff0b20f6e018",
+  "activeVersionId": "d16d14a8-68a1-483f-9b06-ff0b20f6e018",
+  "versionCounter": 10,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T21:22:42.049Z",
+      "createdAt": "2026-03-14T21:22:42.049Z",
+      "role": "workflow:owner",
+      "workflowId": "hPXhUaSC3ScznZE9",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-14T23:20:38.332Z",
+    "createdAt": "2026-03-14T23:20:38.332Z",
+    "versionId": "d16d14a8-68a1-483f-9b06-ff0b20f6e018",
+    "workflowId": "hPXhUaSC3ScznZE9",
+    "nodes": [
+      {
+        "id": "schedule-trigger",
+        "name": "Daily 6AM ET Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          400
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 6 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "proposer-call",
+        "name": "Proposer (qwen3)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          260,
+          400
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:11434/api/chat",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={ \"model\": \"qwen3\", \"messages\": [ { \"role\": \"system\", \"content\": \"You are a quantitative trading strategy proposer. Generate a new strategy idea in strict JSON DSL format. The strategy must have max 5 parameters, use proven technical indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD), target futures (ES, NQ, CL, YM), and be describable in one sentence. Output ONLY valid JSON matching the StrategyDSL schema.\" }, { \"role\": \"user\", \"content\": \"Propose a new trading strategy. Consider recent market conditions and avoid strategies similar to recent failures. Focus on simplicity and robustness.\" } ], \"stream\": false, \"options\": { \"temperature\": 0.8, \"num_predict\": 2048 } }",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "parse-proposal",
+        "name": "Parse Proposer Output",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          400
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet content = '';\nif (response.message && response.message.content) {\n  content = response.message.content;\n} else if (response.response) {\n  content = response.response;\n}\n\ncontent = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\nlet strategyDSL = null;\nlet parseError = null;\ntry {\n  strategyDSL = JSON.parse(content);\n} catch (e) {\n  const match = content.match(/\\{[\\s\\S]*\\}/);\n  if (match) {\n    try {\n      strategyDSL = JSON.parse(match[0]);\n    } catch (e2) {\n      parseError = `Failed to parse strategy JSON: ${e2.message}`;\n    }\n  } else {\n    parseError = `No JSON found in proposer output: ${content.substring(0, 200)}`;\n  }\n}\n\nreturn [{\n  json: {\n    strategyDSL,\n    rawProposerOutput: content,\n    parseError,\n    proposerModel: 'qwen3',\n    timestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "check-parse-ok",
+        "name": "Proposal Parsed OK?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          740,
+          400
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "parse-check",
+                "leftValue": "={{ $json.parseError }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notExists"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "compiler-validate",
+        "name": "Compiler Validate Strategy",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1000,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/compiler/validate",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.strategyDSL) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "check-compiler-ok",
+        "name": "Compiler Passed?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1260,
+          300
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "compiler-check",
+                "leftValue": "={{ $json.valid }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "log-kill-compiler",
+        "name": "Log KILL Compilation Failed",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1520,
+          500
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nreturn [{\n  json: {\n    verdict: 'KILL',\n    reason: 'Failed compilation',\n    compilerErrors: data.errors || data.message || 'Unknown compiler error',\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "graveyard-check",
+        "name": "Graveyard Check",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1520,
+          200
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/graveyard/check",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($node['Parse Proposer Output'].json.strategyDSL) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "check-graveyard-ok",
+        "name": "Graveyard Passed?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1780,
+          200
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "combinator": "or",
+            "conditions": [
+              {
+                "id": "graveyard-pass",
+                "leftValue": "={{ $json.rejected }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "graveyard-no-reject",
+                "leftValue": "={{ $json.rejected }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notExists"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "log-kill-graveyard",
+        "name": "Log KILL Graveyard Match",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2040,
+          400
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nreturn [{\n  json: {\n    verdict: 'KILL',\n    reason: 'Too similar to dead strategy',\n    similarity: data.similarity || data.score || 'unknown',\n    matchedStrategy: data.matched_strategy || data.match || 'unknown',\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "critic-call",
+        "name": "Critic (llama3.1:8b)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2040,
+          100
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:11434/api/chat",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ model: 'llama3.1:8b', messages: [ { role: 'system', content: 'You are a critical analyst reviewing trading strategies. Your job is to find weaknesses, overfitting risks, regime dependencies, and practical problems. Be specific and quantitative. Rate the strategy 1-10 on robustness, simplicity, and edge quality.' }, { role: 'user', content: 'Review this strategy proposal:\\n\\nStrategy DSL:\\n' + JSON.stringify($node['Parse Proposer Output'].json.strategyDSL, null, 2) + '\\n\\nCompiler validation passed successfully.' } ], stream: false, options: { temperature: 0.3, num_predict: 2048 } }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "parse-critic",
+        "name": "Parse Critic Output",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2300,
+          100
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet criticAnalysis = '';\nif (response.message && response.message.content) {\n  criticAnalysis = response.message.content;\n} else if (response.response) {\n  criticAnalysis = response.response;\n} else {\n  criticAnalysis = 'ERROR: Could not extract critic analysis from response';\n}\n\nreturn [{\n  json: {\n    criticAnalysis,\n    criticModel: 'llama3.1:8b',\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "prosecutor-call",
+        "name": "Prosecutor (llama3.1:8b)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2560,
+          100
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:11434/api/chat",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ model: 'llama3.1:8b', messages: [ { role: 'system', content: 'You are a hostile prosecutor of trading strategies. Your job is to find fatal flaws. Search for: curve fitting risk, regime dependency, commission death, liquidity problems, parameter sensitivity. If you find a fatal flaw, recommend KILL. If fixable, recommend REVISE with specific changes. Only pass strategies that could survive 6 months of live trading.' }, { role: 'user', content: 'Prosecute this strategy:\\n\\nStrategy DSL:\\n' + JSON.stringify($json.strategyDSL, null, 2) + '\\n\\nCritic Analysis:\\n' + $json.criticAnalysis } ], stream: false, options: { temperature: 0.3, num_predict: 2048 } }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "parse-prosecutor",
+        "name": "Parse Prosecutor Output",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2820,
+          100
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet prosecutorFindings = '';\nif (response.message && response.message.content) {\n  prosecutorFindings = response.message.content;\n} else if (response.response) {\n  prosecutorFindings = response.response;\n} else {\n  prosecutorFindings = 'ERROR: Could not extract prosecutor findings from response';\n}\n\nreturn [{\n  json: {\n    prosecutorFindings,\n    prosecutorModel: 'llama3.1:8b',\n    criticAnalysis: $node['Parse Critic Output'].json.criticAnalysis,\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "promoter-call",
+        "name": "Promoter (qwen3)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3080,
+          100
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:11434/api/chat",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ model: 'qwen3', messages: [ { role: 'system', content: 'You are the final decision maker. Given the strategy proposal, critic analysis, and prosecutor findings, make a FINAL decision: PROMOTE (send to backtest), REVISE (send back with specific fixes), or KILL (reject permanently). Provide clear reasoning. Your response MUST start with one of: PROMOTE, REVISE, or KILL followed by your reasoning.' }, { role: 'user', content: 'Make your final decision on this strategy:\\n\\nStrategy DSL:\\n' + JSON.stringify($json.strategyDSL, null, 2) + '\\n\\nCritic Analysis:\\n' + $json.criticAnalysis + '\\n\\nProsecutor Findings:\\n' + $json.prosecutorFindings } ], stream: false, options: { temperature: 0.2, num_predict: 2048 } }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "parse-verdict",
+        "name": "Parse Promoter Verdict",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3340,
+          100
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet promoterOutput = '';\nif (response.message && response.message.content) {\n  promoterOutput = response.message.content;\n} else if (response.response) {\n  promoterOutput = response.response;\n} else {\n  promoterOutput = 'ERROR: Could not extract promoter decision';\n}\n\nconst upperOutput = promoterOutput.toUpperCase().trim();\nlet verdict = 'KILL';\nif (upperOutput.startsWith('PROMOTE') || upperOutput.includes('DECISION: PROMOTE') || upperOutput.includes('VERDICT: PROMOTE')) {\n  verdict = 'PROMOTE';\n} else if (upperOutput.startsWith('REVISE') || upperOutput.includes('DECISION: REVISE') || upperOutput.includes('VERDICT: REVISE')) {\n  verdict = 'REVISE';\n}\n\nreturn [{\n  json: {\n    verdict,\n    promoterOutput,\n    promoterModel: 'qwen3',\n    prosecutorFindings: $node['Parse Prosecutor Output'].json.prosecutorFindings,\n    criticAnalysis: $node['Parse Critic Output'].json.criticAnalysis,\n    strategyDSL: $node['Parse Proposer Output'].json.strategyDSL,\n    rawProposerOutput: $node['Parse Proposer Output'].json.rawProposerOutput,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "post-tournament-result",
+        "name": "POST Tournament Results",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3600,
+          100
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/tournament/run",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, proposerOutput: $json.rawProposerOutput, criticAnalysis: $json.criticAnalysis, prosecutorFindings: $json.prosecutorFindings, promoterDecision: $json.promoterOutput, finalVerdict: $json.verdict, timestamp: $json.timestamp }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "check-promote",
+        "name": "Verdict is PROMOTE?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          3860,
+          100
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "promote-check",
+                "leftValue": "={{ $node['Parse Promoter Verdict'].json.verdict }}",
+                "rightValue": "PROMOTE",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "compile-for-backtest",
+        "name": "Compile Strategy for Backtest",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          4120,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/compiler/compile",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($node['Parse Promoter Verdict'].json.strategyDSL) }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "queue-backtest",
+        "name": "Queue Backtest",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          4380,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/backtests",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ strategyDSL: $node['Parse Promoter Verdict'].json.strategyDSL, compiledStrategy: $json, source: 'tournament', tournamentTimestamp: $node['Parse Promoter Verdict'].json.timestamp }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "post-kill-compiler-result",
+        "name": "POST Compiler KILL Result",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1780,
+          500
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/tournament/run",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, finalVerdict: 'KILL', reason: $json.reason, compilerErrors: $json.compilerErrors, timestamp: $json.timestamp }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "post-kill-graveyard-result",
+        "name": "POST Graveyard KILL Result",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2300,
+          400
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/tournament/run",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, finalVerdict: 'KILL', reason: $json.reason, similarity: $json.similarity, matchedStrategy: $json.matchedStrategy, timestamp: $json.timestamp }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "log-parse-fail",
+        "name": "Log Parse Failure",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          600
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nreturn [{\n  json: {\n    verdict: 'KILL',\n    reason: 'Proposer output failed to parse as valid JSON',\n    parseError: data.parseError,\n    rawOutput: data.rawProposerOutput ? data.rawProposerOutput.substring(0, 500) : 'empty',\n    timestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "post-kill-parse-result",
+        "name": "POST Parse Fail Result",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1260,
+          600
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/tournament/run",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ candidateDSL: null, finalVerdict: 'KILL', reason: $json.reason, parseError: $json.parseError, timestamp: $json.timestamp }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "noop-end-revise-kill",
+        "name": "Tournament Complete (No Promote)",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          4120,
+          200
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          800
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "post-error-alert",
+        "name": "POST Tournament Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          260,
+          800
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/alerts",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Strategy Tournament', message: $json.execution ? (typeof $json.execution.error === 'object' ? $json.execution.error.message : String($json.execution.error)) : 'Unknown error', severity: 'critical', data: { workflow: 'Strategy Tournament', executionId: $json.execution ? String($json.execution.id) : 'N/A', timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Daily 6AM ET Trigger": {
+        "main": [
+          [
+            {
+              "node": "Proposer (qwen3)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Proposer (qwen3)": {
+        "main": [
+          [
+            {
+              "node": "Parse Proposer Output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Proposer Output": {
+        "main": [
+          [
+            {
+              "node": "Proposal Parsed OK?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Proposal Parsed OK?": {
+        "main": [
+          [
+            {
+              "node": "Compiler Validate Strategy",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log Parse Failure",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Parse Failure": {
+        "main": [
+          [
+            {
+              "node": "POST Parse Fail Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Compiler Validate Strategy": {
+        "main": [
+          [
+            {
+              "node": "Compiler Passed?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Compiler Passed?": {
+        "main": [
+          [
+            {
+              "node": "Graveyard Check",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log KILL Compilation Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log KILL Compilation Failed": {
+        "main": [
+          [
+            {
+              "node": "POST Compiler KILL Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Graveyard Check": {
+        "main": [
+          [
+            {
+              "node": "Graveyard Passed?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Graveyard Passed?": {
+        "main": [
+          [
+            {
+              "node": "Critic (llama3.1:8b)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log KILL Graveyard Match",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log KILL Graveyard Match": {
+        "main": [
+          [
+            {
+              "node": "POST Graveyard KILL Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Critic (llama3.1:8b)": {
+        "main": [
+          [
+            {
+              "node": "Parse Critic Output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Critic Output": {
+        "main": [
+          [
+            {
+              "node": "Prosecutor (llama3.1:8b)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prosecutor (llama3.1:8b)": {
+        "main": [
+          [
+            {
+              "node": "Parse Prosecutor Output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Prosecutor Output": {
+        "main": [
+          [
+            {
+              "node": "Promoter (qwen3)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Promoter (qwen3)": {
+        "main": [
+          [
+            {
+              "node": "Parse Promoter Verdict",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Promoter Verdict": {
+        "main": [
+          [
+            {
+              "node": "POST Tournament Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Tournament Results": {
+        "main": [
+          [
+            {
+              "node": "Verdict is PROMOTE?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verdict is PROMOTE?": {
+        "main": [
+          [
+            {
+              "node": "Compile Strategy for Backtest",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Tournament Complete (No Promote)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Compile Strategy for Backtest": {
+        "main": [
+          [
+            {
+              "node": "Queue Backtest",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "POST Tournament Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-14T23:20:38.360Z",
+        "id": 1137,
+        "workflowId": "hPXhUaSC3ScznZE9",
+        "versionId": "d16d14a8-68a1-483f-9b06-ff0b20f6e018",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

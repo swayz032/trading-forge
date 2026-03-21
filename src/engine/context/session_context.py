@@ -64,7 +64,7 @@ def compute_session_context(
     """
     # Determine current time
     ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
-    current_ts = df[ts_col][bar_idx]
+    current_ts = df[ts_col][int(bar_idx)]
 
     # Extract hour and minute
     if hasattr(current_ts, 'hour'):

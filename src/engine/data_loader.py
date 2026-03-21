@@ -15,6 +15,7 @@ Path convention:
 
 from __future__ import annotations
 
+import hashlib
 import os
 import sys
 import warnings
@@ -24,6 +25,8 @@ from typing import Optional
 import duckdb
 import numpy as np
 import polars as pl
+
+from src.engine.config import DataQualityReport
 
 
 # ─── Singleton DuckDB Connection ──────────────────────────────────
@@ -72,9 +75,8 @@ def _cache_path(symbol: str, timeframe: str) -> Path:
 
 def _consolidated_s3_path(symbol: str, timeframe: str, adjusted: bool = True) -> str:
     bucket = os.environ.get("S3_BUCKET", "trading-forge-data")
-    # Consolidated files live under ratio_adj/ prefix for adjusted data
-    prefix = "ratio_adj" if adjusted else "raw"
-    return f"s3://{bucket}/futures/{symbol}/consolidated/{prefix}/{timeframe}.parquet"
+    # Consolidated files live directly under consolidated/ (no ratio_adj subfolder)
+    return f"s3://{bucket}/futures/{symbol}/consolidated/{timeframe}.parquet"
 
 
 def _legacy_s3_glob(symbol: str, timeframe: str, adjusted: bool = True) -> str:
@@ -140,6 +142,139 @@ def _validate_data_quality(df: pl.DataFrame, symbol: str, timeframe: str) -> Non
             )
 
 
+# ─── Comprehensive Data Quality Validation ───────────────────────
+
+def compute_dataset_hash(df: pl.DataFrame) -> str:
+    """Compute SHA-256 hash of OHLCV data for reproducibility tracking."""
+    csv_bytes = (
+        df.sort("ts_event")
+        .select(["ts_event", "open", "high", "low", "close", "volume"])
+        .to_pandas()
+        .to_csv(index=False)
+        .encode()
+    )
+    return hashlib.sha256(csv_bytes).hexdigest()
+
+
+def validate_bars(df: pl.DataFrame, symbol: str = "", timeframe: str = "") -> DataQualityReport:
+    """Run comprehensive data quality checks on OHLCV bars.
+
+    Returns a DataQualityReport with counts of issues found.
+    Sets passed=False if duplicate timestamps or OHLC violations exist.
+    Prints warnings to stderr but never raises.
+    """
+    if df.is_empty():
+        return DataQualityReport(total_bars=0)
+
+    warn_list: list[str] = []
+    total = len(df)
+
+    # ── Duplicate timestamps ──
+    dup_ts = df.filter(pl.col("ts_event").is_duplicated()).height
+    if dup_ts > 0:
+        warn_list.append(f"{dup_ts} duplicate timestamps found")
+
+    # ── Duplicate OHLCV rows ──
+    dup_rows = int(df.is_duplicated().sum())
+    if dup_rows > 0:
+        warn_list.append(f"{dup_rows} fully duplicate rows found")
+
+    # ── OHLC sanity violations ──
+    ohlc_violations = df.filter(
+        (pl.col("high") < pl.col("low"))
+        | (pl.col("close") < pl.col("low"))
+        | (pl.col("close") > pl.col("high"))
+        | (pl.col("open") < pl.col("low"))
+        | (pl.col("open") > pl.col("high"))
+        | (pl.col("volume") < 0)
+    ).height
+    if ohlc_violations > 0:
+        warn_list.append(f"{ohlc_violations} OHLC sanity violations (high<low, close/open outside range, negative volume)")
+
+    # ── Zero-volume bars ──
+    zero_vol = df.filter(pl.col("volume") == 0).height
+    if zero_vol > 0:
+        warn_list.append(f"{zero_vol} zero-volume bars")
+
+    # ── Session boundary check (intraday only) ──
+    out_of_session = 0
+    intraday_timeframes = {"1min", "5min", "15min", "30min", "1hour", "4hour"}
+    if timeframe in intraday_timeframes and "ts_et" in df.columns:
+        # CME Globex session: 18:00 (6 PM) to 17:00 (5 PM) ET next day
+        # Out-of-session = hour 17 with minute > 0, or exactly between 17:01 and 17:59
+        hours = df.select(pl.col("ts_et").dt.hour().alias("h")).to_series()
+        # The only invalid window is 17:00-17:59 ET (CME maintenance)
+        out_of_session = int((hours == 17).sum())
+        if out_of_session > 0:
+            warn_list.append(f"{out_of_session} bars outside CME Globex session (17:xx ET)")
+
+    # ── Zero or negative prices (hard fail) ──
+    zero_neg = df.filter(
+        (pl.col("close") <= 0) | (pl.col("open") <= 0)
+        | (pl.col("high") <= 0) | (pl.col("low") <= 0)
+    ).height
+    if zero_neg > 0:
+        warn_list.append(f"{zero_neg} bars with zero or negative prices")
+
+    # ── Large gap detection (reuse 5% threshold) ──
+    large_gap_bars = 0
+    close = df["close"].to_numpy()
+    if len(close) > 1:
+        pct_changes = np.abs(np.diff(close) / close[:-1])
+        large_gap_bars = int(np.sum(pct_changes > 0.05))
+        if large_gap_bars > 0:
+            warn_list.append(f"{large_gap_bars} bars with >5% single-bar move")
+        # Roll gap detection: single-bar return > 15% likely unadjusted
+        roll_gaps = int(np.sum(pct_changes > 0.15))
+        if roll_gaps > 0:
+            warn_list.append(f"{roll_gaps} bars with >15% single-bar move (likely unadjusted roll gap)")
+
+    # ── Coverage / gap detection ──
+    coverage_pct = 100.0
+    bars_per_day_map = {
+        "1min": 390, "5min": 78, "15min": 26, "30min": 13,
+        "1hour": 7, "1h": 7, "4hour": 2, "4h": 2, "daily": 1, "1D": 1,
+    }
+    if timeframe in bars_per_day_map and "ts_event" in df.columns:
+        ts_series = df["ts_event"]
+        try:
+            first_date = ts_series[0]
+            last_date = ts_series[-1]
+            if hasattr(first_date, "date"):
+                calendar_days = (last_date.date() - first_date.date()).days
+            else:
+                calendar_days = (last_date - first_date).days
+            if calendar_days > 0:
+                trading_days = int(calendar_days * 252 / 365)
+                expected_bars = trading_days * bars_per_day_map[timeframe]
+                if expected_bars > 0:
+                    coverage_pct = round(total / expected_bars * 100, 1)
+                    if coverage_pct < 80:
+                        warn_list.append(
+                            f"Data coverage {coverage_pct:.1f}% ({total}/{expected_bars} expected bars) — below 80% threshold"
+                        )
+        except Exception:
+            pass
+
+    # ── Determine pass/fail ──
+    passed = (dup_ts == 0) and (ohlc_violations == 0) and (zero_neg == 0) and (coverage_pct >= 80)
+
+    return DataQualityReport(
+        total_bars=total,
+        duplicate_timestamps=dup_ts,
+        duplicate_ohlcv_rows=dup_rows,
+        ohlc_violations=ohlc_violations,
+        zero_volume_bars=zero_vol,
+        out_of_session_bars=out_of_session,
+        large_gap_bars=large_gap_bars,
+        coverage_pct=coverage_pct,
+        zero_negative_prices=zero_neg,
+        dataset_hash="",
+        warnings=warn_list,
+        passed=passed,
+    )
+
+
 # ─── Main Loader ──────────────────────────────────────────────────
 
 def load_ohlcv(
@@ -166,30 +301,36 @@ def load_ohlcv(
     Returns:
         Polars DataFrame with columns: ts_event, open, high, low, close, volume
     """
+    # Map micro symbols to full-size equivalents for S3 data paths.
+    # MES/MNQ/MCL/MGC use the same price data as ES/NQ/CL/GC — just 1/10th multiplier.
+    # S3 stores data under the full-size symbol only.
+    MICRO_TO_FULL = {"MES": "ES", "MNQ": "NQ", "MCL": "CL", "MGC": "GC"}
+    data_symbol = MICRO_TO_FULL.get(symbol, symbol)
+
     if not adjusted:
         warnings.warn(
-            f"Loading UNADJUSTED data for {symbol} {timeframe}. "
+            f"Loading UNADJUSTED data for {data_symbol} {timeframe}. "
             f"Backtesting on raw contracts creates fake signals at roll boundaries. "
             f"Use adjusted=True (default) for backtesting."
         )
 
     con = _get_connection()
 
-    # Determine source
+    # Determine source (use data_symbol for paths — micro symbols share full-size data)
     if local_path:
         source = local_path
-        print(f"Loading {symbol} {timeframe} from local path", file=sys.stderr)
+        print(f"Loading {data_symbol} {timeframe} from local path", file=sys.stderr)
         # Verify local path looks like ratio-adjusted data
         _verify_ratio_adjusted_source(source, adjusted)
     else:
-        cache_file = _cache_path(symbol, timeframe)
+        cache_file = _cache_path(data_symbol, timeframe)
         if cache_file.exists():
             source = str(cache_file)
-            print(f"Loading {symbol} {timeframe} from local cache", file=sys.stderr)
+            print(f"Loading {data_symbol} {timeframe} from local cache", file=sys.stderr)
         else:
             # Read directly from S3 consolidated file (single HTTP request)
-            source = _consolidated_s3_path(symbol, timeframe, adjusted=adjusted)
-            print(f"Loading {symbol} {timeframe} from S3 consolidated", file=sys.stderr)
+            source = _consolidated_s3_path(data_symbol, timeframe, adjusted=adjusted)
+            print(f"Loading {data_symbol} {timeframe} from S3 consolidated", file=sys.stderr)
 
     sql = f"""
         SELECT ts_event, open, high, low, close, volume
@@ -203,8 +344,8 @@ def load_ohlcv(
     except Exception:
         # Fallback to legacy daily files if consolidated doesn't exist
         if not local_path and not str(source).startswith(str(CACHE_DIR)):
-            legacy = _legacy_s3_glob(symbol, timeframe, adjusted=adjusted)
-            print(f"Falling back to legacy daily files for {symbol} {timeframe}", file=sys.stderr)
+            legacy = _legacy_s3_glob(data_symbol, timeframe, adjusted=adjusted)
+            print(f"Falling back to legacy daily files for {data_symbol} {timeframe}", file=sys.stderr)
             legacy_sql = f"""
                 SELECT ts_event, open, high, low, close, volume
                 FROM read_parquet('{legacy}')
@@ -257,8 +398,31 @@ def load_ohlcv(
                 .alias("ts_et")
             )
 
+    # ─── Deduplicate timestamps (keep last occurrence) ──────────
+    pre_dedup = len(df)
+    df = df.unique(subset=["ts_event"], keep="last").sort("ts_event")
+    deduped = pre_dedup - len(df)
+    if deduped > 0:
+        print(
+            f"DATA QUALITY [{symbol} {timeframe}]: Removed {deduped} duplicate timestamps (kept last)",
+            file=sys.stderr,
+        )
+
     # ─── Validate data quality (ratio-adjusted check) ────────────
     _validate_data_quality(df, symbol, timeframe)
+
+    # ─── Comprehensive data quality validation ───────────────
+    quality_report = validate_bars(df, symbol, timeframe)
+    if quality_report.warnings:
+        for w in quality_report.warnings:
+            print(f"DATA QUALITY [{symbol} {timeframe}]: {w}", file=sys.stderr)
+
+    # ─── Hard fail on critical data issues ────────────────────
+    if not quality_report.passed:
+        issues = [w for w in quality_report.warnings if "OHLC" in w or "duplicate" in w]
+        raise ValueError(
+            f"DATA QUALITY GATE FAILED for {symbol} {timeframe}: {'; '.join(issues) or 'critical violations detected'}"
+        )
 
     return df
 
@@ -371,7 +535,8 @@ def flag_rollover_days(
     if ts.dtype == pl.Utf8:
         date_col = pl.col("ts_event").str.slice(0, 10)
     else:
-        date_col = pl.col("ts_event").dt.date().cast(pl.Utf8)
+        ts_col_name = "ts_et" if "ts_et" in df.columns else "ts_event"
+        date_col = pl.col(ts_col_name).dt.date().cast(pl.Utf8)
 
     df = df.with_columns(
         date_col.is_in(list(rollover_strs)).alias("is_rollover_day")

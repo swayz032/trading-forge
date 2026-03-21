@@ -41,6 +41,14 @@ export interface Backtest {
   config: any;
   walkForwardResults: any;
   propCompliance: any;
+  decayAnalysis: {
+    halfLifeDays: number | null;
+    compositeScore: number;
+    decaying: boolean;
+    trend: "improving" | "declining" | "stable";
+    decayDetected: boolean;
+    signals: Record<string, any>;
+  } | null;
   errorMessage: string | null;
   executionTimeMs: number | null;
   createdAt: string;

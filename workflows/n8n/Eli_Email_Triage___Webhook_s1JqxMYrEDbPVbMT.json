@@ -1,0 +1,844 @@
+{
+  "updatedAt": "2026-03-05T05:33:30.434Z",
+  "createdAt": "2026-02-16T13:48:18.888Z",
+  "id": "s1JqxMYrEDbPVbMT",
+  "name": "Eli Email Triage — Webhook",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "eli-email-triage",
+        "responseMode": "lastNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Email Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "webhookId": "eli-email-triage"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Kill switch check\nconst enabled = $env.N8N_WORKFLOW_ELI_EMAIL_TRIAGE_ENABLED;\nif (enabled === 'false' || enabled === '0') {\n  return [{ json: { killed: true, reason: 'kill_switch_disabled' } }];\n}\n\n// --- HMAC signature validation (canonical JSON) ---\nconst crypto = require('crypto');\nconst secret = $env.N8N_ELI_WEBHOOK_SECRET;\nconst signature = $input.first().json.headers['x-webhook-signature'] || '';\n\nfunction sortKeys(obj) {\n  if (Array.isArray(obj)) return obj.map(sortKeys);\n  if (obj !== null && typeof obj === 'object') {\n    return Object.keys(obj).sort().reduce((acc, key) => {\n      acc[key] = sortKeys(obj[key]);\n      return acc;\n    }, {});\n  }\n  return obj;\n}\n\nconst body = $input.first().json.body;\nconst canonicalBody = JSON.stringify(sortKeys(body));\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(canonicalBody).digest('hex');\n\nconst sigBuf = Buffer.from(signature);\nconst expBuf = Buffer.from(expected);\nif (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {\n  return [{ json: { killed: true, reason: 'hmac_validation_failed' } }];\n}\n\n// Extract and validate payload\nconst requestId = 'eli-triage-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);\nconst correlationId = body.correlation_id || 'n8n-eli-triage-' + Date.now();\nconst payloadHash = crypto.createHash('sha256').update(JSON.stringify(sortKeys({ email_id: body.email_id, from: body.from, subject: body.subject }))).digest('hex');\nconst idempotencyKey = crypto.createHash('sha256').update(requestId + 'eli.triage_email' + payloadHash).digest('hex');\nreturn [{ json: { killed: false, requestId, correlationId, idempotencyKey, email_id: body.email_id, from: body.from, subject: body.subject, body_preview: body.body_preview, suite_id: body.suite_id, office_id: body.office_id } }];"
+      },
+      "id": "kill-switch-and-prep",
+      "name": "Kill Switch + HMAC + Prep",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.killed }}",
+              "operation": "equals",
+              "value2": "true"
+            }
+          ]
+        }
+      },
+      "id": "check-killed",
+      "name": "Kill Switch Active?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ASPIRE_GATEWAY_URL }}/api/orchestrator/intent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-suite-id",
+              "value": "={{ $json.suite_id || $env.DEFAULT_SUITE_ID }}"
+            },
+            {
+              "name": "x-office-id",
+              "value": "={{ $json.office_id || $env.DEFAULT_OFFICE_ID }}"
+            },
+            {
+              "name": "x-correlation-id",
+              "value": "={{ $json.correlationId }}"
+            },
+            {
+              "name": "x-n8n-workflow-id",
+              "value": "eli-email-triage"
+            },
+            {
+              "name": "x-idempotency-key",
+              "value": "={{ $json.idempotencyKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ intent: 'eli.triage_email', agent: 'eli', suite_id: $json.suite_id || $env.DEFAULT_SUITE_ID, office_id: $json.office_id || $env.DEFAULT_OFFICE_ID, request_id: $json.requestId, correlation_id: $json.correlationId, payload: { email_id: $json.email_id, from: $json.from, subject: $json.subject, body_preview: $json.body_preview } }) }}",
+        "options": {
+          "timeout": 15000,
+          "retry": {
+            "maxRetries": 3,
+            "retryInterval": 1000,
+            "retryIntervalBackoff": true
+          }
+        }
+      },
+      "id": "call-orchestrator",
+      "name": "POST Intent → Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "J84m12hyzSwSHo6S",
+          "name": "Gateway Internal Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-eli-triage-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: $('Kill Switch + HMAC + Prep').item.json.suite_id || 'ffffffff-0000-0000-0000-system000000', tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_agent', status: 'SUCCEEDED', correlation_id: $('Kill Switch + HMAC + Prep').item.json.correlationId, actor_type: 'SYSTEM', actor_id: 'n8n-eli-email-triage', action: { action_type: 'agent.eli.triage_email', risk_tier: 'yellow', email_id: $('Kill Switch + HMAC + Prep').item.json.email_id }, created_at: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "emit-receipt-success",
+      "name": "Emit Success Receipt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-eli-triage-killed-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_agent', status: 'SKIPPED', correlation_id: 'n8n-eli-email-triage-killed-' + new Date().toISOString().slice(0, 10), actor_type: 'SYSTEM', actor_id: 'n8n-eli-email-triage', action: { action_type: 'agent.eli.triage_email', reason: ($json.reason || 'kill_switch_disabled') }, created_at: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "emit-receipt-killed",
+      "name": "Emit Kill Switch Receipt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        200
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        440,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-eli-triage-fail-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_agent', status: 'FAILED', correlation_id: 'n8n-eli-email-triage', actor_type: 'SYSTEM', actor_id: 'n8n-eli-email-triage', action: { action_type: 'agent.eli.triage_email' }, result: { error_message: $json.message || 'Email triage failed' }, created_at: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "emit-receipt-failure",
+      "name": "Emit Failure Receipt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        560
+      ]
+    }
+  ],
+  "connections": {
+    "Email Webhook": {
+      "main": [
+        [
+          {
+            "node": "Kill Switch + HMAC + Prep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kill Switch + HMAC + Prep": {
+      "main": [
+        [
+          {
+            "node": "Kill Switch Active?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kill Switch Active?": {
+      "main": [
+        [
+          {
+            "node": "POST Intent → Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Emit Kill Switch Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Intent → Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Emit Success Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Emit Failure Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+  "activeVersionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+  "versionCounter": 74,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-02-16T13:48:18.888Z",
+      "createdAt": "2026-02-16T13:48:18.888Z",
+      "role": "workflow:owner",
+      "workflowId": "s1JqxMYrEDbPVbMT",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-02-19T01:40:47.655Z",
+    "createdAt": "2026-02-19T01:40:47.655Z",
+    "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+    "workflowId": "s1JqxMYrEDbPVbMT",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "eli-email-triage",
+          "responseMode": "lastNode",
+          "options": {
+            "rawBody": true
+          }
+        },
+        "id": "webhook-trigger",
+        "name": "Email Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          220,
+          300
+        ],
+        "webhookId": "eli-email-triage"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Kill switch check\nconst enabled = $env.N8N_WORKFLOW_ELI_EMAIL_TRIAGE_ENABLED;\nif (enabled === 'false' || enabled === '0') {\n  return [{ json: { killed: true, reason: 'kill_switch_disabled' } }];\n}\n\n// --- HMAC signature validation (canonical JSON) ---\nconst crypto = require('crypto');\nconst secret = $env.N8N_ELI_WEBHOOK_SECRET;\nconst signature = $input.first().json.headers['x-webhook-signature'] || '';\n\nfunction sortKeys(obj) {\n  if (Array.isArray(obj)) return obj.map(sortKeys);\n  if (obj !== null && typeof obj === 'object') {\n    return Object.keys(obj).sort().reduce((acc, key) => {\n      acc[key] = sortKeys(obj[key]);\n      return acc;\n    }, {});\n  }\n  return obj;\n}\n\nconst body = $input.first().json.body;\nconst canonicalBody = JSON.stringify(sortKeys(body));\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(canonicalBody).digest('hex');\n\nconst sigBuf = Buffer.from(signature);\nconst expBuf = Buffer.from(expected);\nif (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {\n  return [{ json: { killed: true, reason: 'hmac_validation_failed' } }];\n}\n\n// Extract and validate payload\nconst requestId = 'eli-triage-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);\nconst correlationId = body.correlation_id || 'n8n-eli-triage-' + Date.now();\nconst payloadHash = crypto.createHash('sha256').update(JSON.stringify(sortKeys({ email_id: body.email_id, from: body.from, subject: body.subject }))).digest('hex');\nconst idempotencyKey = crypto.createHash('sha256').update(requestId + 'eli.triage_email' + payloadHash).digest('hex');\nreturn [{ json: { killed: false, requestId, correlationId, idempotencyKey, email_id: body.email_id, from: body.from, subject: body.subject, body_preview: body.body_preview, suite_id: body.suite_id, office_id: body.office_id } }];"
+        },
+        "id": "kill-switch-and-prep",
+        "name": "Kill Switch + HMAC + Prep",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{ $json.killed }}",
+                "operation": "equals",
+                "value2": "true"
+              }
+            ]
+          }
+        },
+        "id": "check-killed",
+        "name": "Kill Switch Active?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          660,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.ASPIRE_GATEWAY_URL }}/api/orchestrator/intent",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-suite-id",
+                "value": "={{ $json.suite_id || $env.DEFAULT_SUITE_ID }}"
+              },
+              {
+                "name": "x-office-id",
+                "value": "={{ $json.office_id || $env.DEFAULT_OFFICE_ID }}"
+              },
+              {
+                "name": "x-correlation-id",
+                "value": "={{ $json.correlationId }}"
+              },
+              {
+                "name": "x-n8n-workflow-id",
+                "value": "eli-email-triage"
+              },
+              {
+                "name": "x-idempotency-key",
+                "value": "={{ $json.idempotencyKey }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ intent: 'eli.triage_email', agent: 'eli', suite_id: $json.suite_id || $env.DEFAULT_SUITE_ID, office_id: $json.office_id || $env.DEFAULT_OFFICE_ID, request_id: $json.requestId, correlation_id: $json.correlationId, payload: { email_id: $json.email_id, from: $json.from, subject: $json.subject, body_preview: $json.body_preview } }) }}",
+          "options": {
+            "timeout": 15000,
+            "retry": {
+              "maxRetries": 3,
+              "retryInterval": 1000,
+              "retryIntervalBackoff": true
+            }
+          }
+        },
+        "id": "call-orchestrator",
+        "name": "POST Intent → Orchestrator",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          400
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "J84m12hyzSwSHo6S",
+            "name": "Gateway Internal Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-eli-triage-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: $('Kill Switch + HMAC + Prep').item.json.suite_id || 'ffffffff-0000-0000-0000-system000000', tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_agent', status: 'SUCCEEDED', correlation_id: $('Kill Switch + HMAC + Prep').item.json.correlationId, actor_type: 'SYSTEM', actor_id: 'n8n-eli-email-triage', action: { action_type: 'agent.eli.triage_email', risk_tier: 'yellow', email_id: $('Kill Switch + HMAC + Prep').item.json.email_id }, created_at: new Date().toISOString() }) }}",
+          "options": {
+            "timeout": 5000
+          }
+        },
+        "id": "emit-receipt-success",
+        "name": "Emit Success Receipt",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1100,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-eli-triage-killed-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_agent', status: 'SKIPPED', correlation_id: 'n8n-eli-email-triage-killed-' + new Date().toISOString().slice(0, 10), actor_type: 'SYSTEM', actor_id: 'n8n-eli-email-triage', action: { action_type: 'agent.eli.triage_email', reason: ($json.reason || 'kill_switch_disabled') }, created_at: new Date().toISOString() }) }}",
+          "options": {
+            "timeout": 5000
+          }
+        },
+        "id": "emit-receipt-killed",
+        "name": "Emit Kill Switch Receipt",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          200
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          440,
+          560
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-eli-triage-fail-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_agent', status: 'FAILED', correlation_id: 'n8n-eli-email-triage', actor_type: 'SYSTEM', actor_id: 'n8n-eli-email-triage', action: { action_type: 'agent.eli.triage_email' }, result: { error_message: $json.message || 'Email triage failed' }, created_at: new Date().toISOString() }) }}",
+          "options": {
+            "timeout": 5000
+          }
+        },
+        "id": "emit-receipt-failure",
+        "name": "Emit Failure Receipt",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          560
+        ]
+      }
+    ],
+    "connections": {
+      "Email Webhook": {
+        "main": [
+          [
+            {
+              "node": "Kill Switch + HMAC + Prep",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Kill Switch + HMAC + Prep": {
+        "main": [
+          [
+            {
+              "node": "Kill Switch Active?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Kill Switch Active?": {
+        "main": [
+          [
+            {
+              "node": "POST Intent → Orchestrator",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Emit Kill Switch Receipt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Intent → Orchestrator": {
+        "main": [
+          [
+            {
+              "node": "Emit Success Receipt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Emit Failure Receipt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Aspire Admin",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-04T22:30:35.782Z",
+        "id": 527,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-05T05:30:38.395Z",
+        "id": 694,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-02-19T01:40:47.688Z",
+        "id": 35,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-02-19T01:49:02.421Z",
+        "id": 46,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-02-19T01:49:02.988Z",
+        "id": 57,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-02-19T02:00:37.102Z",
+        "id": 68,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-05T05:32:22.401Z",
+        "id": 705,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-02-19T02:00:38.452Z",
+        "id": 82,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-02-19T02:01:45.872Z",
+        "id": 100,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-02-19T02:01:47.350Z",
+        "id": 118,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-05T05:33:30.464Z",
+        "id": 716,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-05T00:34:30.402Z",
+        "id": 589,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-05T00:34:31.795Z",
+        "id": 607,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-05T01:47:05.229Z",
+        "id": 625,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-05T01:47:06.566Z",
+        "id": 643,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-05T02:02:30.659Z",
+        "id": 661,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-05T02:02:32.190Z",
+        "id": 679,
+        "workflowId": "s1JqxMYrEDbPVbMT",
+        "versionId": "0cfa46f9-5375-4f2a-99d3-4b27e70cbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

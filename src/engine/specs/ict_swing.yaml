@@ -1,0 +1,33 @@
+concept: ict_swing
+description: "HTF bias + liquidity sweep + premium/discount filter + BOS confirmation + PD array (OB/FVG) entry, targeting opposing liquidity pools"
+
+required_imports:
+  - detect_swings
+  - detect_bos
+  - compute_premium_discount
+  - detect_sweep
+
+required_imports_any:
+  - detect_bullish_ob
+  - detect_bearish_ob
+  - detect_fvg
+
+forbidden_imports:
+  - compute_adx        # ICT swing is pure price-action; no trend indicators
+  - compute_rsi
+  - compute_macd
+  - compute_bbands
+
+required_time_windows: []  # swing trades hold multi-day, no intraday time windows
+
+required_concepts:
+  - htf_market_structure_bias    # daily/4H swing structure defines direction
+  - premium_discount_filter      # longs in discount, shorts in premium
+  - liquidity_sweep_trigger      # sweep of BSL/SSL precedes entry
+  - bos_confirmation_post_sweep  # BOS after sweep confirms institutional intent
+  - pd_array_entry               # OB or FVG as the entry zone
+  - liquidity_target_exit        # exit at opposing liquidity pool or structure break
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

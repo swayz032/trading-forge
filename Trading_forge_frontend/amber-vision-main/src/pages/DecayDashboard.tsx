@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, Cell,
 } from "recharts";
 import { StatusBadge } from "@/components/forge/StatusBadge";
+import { Pagination } from "@/components/forge/Pagination";
 import { Activity, TrendingDown, Clock, AlertTriangle, Heart } from "lucide-react";
 import { useDecayDashboard } from "@/hooks/useDecay";
 import { num, timeAgo } from "@/lib/utils";
@@ -39,13 +40,22 @@ function statusVariant(status: string): "profit" | "amber" | "loss" | "neutral" 
   return "neutral";
 }
 
+const PAGE_SIZE = 25;
+
 export default function DecayDashboard() {
   const { data, isLoading } = useDecayDashboard();
+  const [page, setPage] = useState(1);
 
   const strategies: DecayStrategy[] = useMemo(() => {
     if (!data?.strategies || !Array.isArray(data.strategies)) return [];
     return data.strategies;
   }, [data]);
+
+  // Paginated strategies for the table
+  const paginatedStrategies = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return strategies.slice(start, start + PAGE_SIZE);
+  }, [strategies, page]);
 
   const kpis = useMemo(() => {
     const total = strategies.length;
@@ -230,9 +240,9 @@ export default function DecayDashboard() {
                 Strategy Decay Details
               </h2>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
               <table className="w-full">
-                <thead>
+                <thead className="sticky top-0 bg-card z-10">
                   <tr className="border-b border-border/10">
                     <th className="text-left px-6 py-3 text-[10px] uppercase tracking-widest text-text-muted font-medium">
                       Strategy
@@ -255,11 +265,11 @@ export default function DecayDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {strategies.map((s, i) => {
+                  {paginatedStrategies.map((s, i) => {
                     const sharpe = num(s.rollingSharpe30d);
                     const halfLife = num(s.halfLifeDays);
                     const decay = num(s.decayRate);
-                    const status = s.status?.toUpperCase() ?? "—";
+                    const status = s.status?.toUpperCase() ?? "--";
 
                     return (
                       <motion.tr
@@ -279,7 +289,7 @@ export default function DecayDashboard() {
                         </td>
                         <td className="px-6 py-3.5 text-right">
                           <span className="text-sm font-mono text-foreground">
-                            {halfLife > 0 ? `${halfLife.toFixed(0)}d` : "—"}
+                            {halfLife > 0 ? `${halfLife.toFixed(0)}d` : "--"}
                           </span>
                         </td>
                         <td className="px-6 py-3.5 text-right">
@@ -288,7 +298,7 @@ export default function DecayDashboard() {
                               decay > 5 ? "text-loss" : decay > 2 ? "text-primary" : "text-text-secondary"
                             }`}
                           >
-                            {decay > 0 ? `-${decay.toFixed(1)}%/mo` : "—"}
+                            {decay > 0 ? `-${decay.toFixed(1)}%/mo` : "--"}
                           </span>
                         </td>
                         <td className="px-6 py-3.5 text-center">
@@ -298,7 +308,7 @@ export default function DecayDashboard() {
                         </td>
                         <td className="px-6 py-3.5 text-right">
                           <span className="text-xs text-text-muted">
-                            {s.lastUpdated ? timeAgo(s.lastUpdated) : "—"}
+                            {s.lastUpdated ? timeAgo(s.lastUpdated) : "--"}
                           </span>
                         </td>
                       </motion.tr>
@@ -307,6 +317,16 @@ export default function DecayDashboard() {
                 </tbody>
               </table>
             </div>
+            {strategies.length > PAGE_SIZE && (
+              <div className="px-6 py-3">
+                <Pagination
+                  page={page}
+                  pageSize={PAGE_SIZE}
+                  total={strategies.length}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
           </div>
         </>
       )}

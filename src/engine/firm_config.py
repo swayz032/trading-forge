@@ -50,62 +50,236 @@ FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
 # ─── Per-Firm Contract Caps (max simultaneous contracts) ─────────
 
 FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
-    "topstep_50k":   {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100, "MGC": 50},
-    "mffu_50k":      {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100, "MGC": 50},
-    "tpt_50k":       {"ES": 3,  "NQ": 3,  "CL": 5,  "YM": 3,  "RTY": 3,  "GC": 3,  "MES": 30, "MNQ": 30, "MCL": 50,  "MGC": 30},
-    "apex_50k":      {"ES": 4,  "NQ": 4,  "CL": 10, "YM": 4,  "RTY": 4,  "GC": 4,  "MES": 40, "MNQ": 40, "MCL": 100, "MGC": 40},
-    "tradeify_50k":  {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100, "MGC": 50},
-    "alpha_50k":     {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100, "MGC": 50},
-    "ffn_50k":       {"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100, "MGC": 50},
-    "earn2trade_50k":{"ES": 5,  "NQ": 5,  "CL": 10, "YM": 5,  "RTY": 5,  "GC": 5,  "MES": 50, "MNQ": 50, "MCL": 100, "MGC": 50},
+    "topstep_50k":   {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
+    "mffu_50k":      {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
+    "tpt_50k":       {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
+    "apex_50k":      {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
+    "tradeify_50k":  {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
+    "alpha_50k":     {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
+    "ffn_50k":       {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
+    "earn2trade_50k":{"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
 }
 
 
 # ─── Scaling Plans (account upgrades after profit milestones) ─────
+# NOTE: new_account_size values (100K, 150K, 200K) are NOT starting accounts.
+# They represent the upgraded account size AFTER the trader hits profit_threshold
+# on their original 50K account. All traders START at 50K.
 
 SCALING_PLANS: dict[str, list[dict]] = {
     "topstep_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
-        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 4500, "max_contracts": 15},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 15},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 4500, "max_contracts": 20},
     ],
     "mffu_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 15},
         {"profit_threshold": 15000, "new_account_size": 200000, "new_max_dd": 5000, "max_contracts": 20},
     ],
     "tpt_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500, "max_contracts": 10},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500, "max_contracts": 15},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000, "max_contracts": 20},
     ],
     "apex_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500, "max_contracts": 12},
-        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000, "max_contracts": 15},
-        {"profit_threshold": 20000, "new_account_size": 250000, "new_max_dd": 6500, "max_contracts": 20},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500, "max_contracts": 15},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000, "max_contracts": 20},
     ],
     "tradeify_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 15},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000, "max_contracts": 20},
     ],
     "alpha_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 15},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000, "max_contracts": 20},
     ],
     "ffn_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500, "max_contracts": 10},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3500, "max_contracts": 15},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000, "max_contracts": 20},
     ],
     "earn2trade_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 15},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 5000, "max_contracts": 20},
     ],
 }
 
 
 # ─── Initial Contract Caps (starting limits before scaling) ──────
 INITIAL_CONTRACT_CAPS: dict[str, int] = {
-    "topstep_50k": 5,
-    "mffu_50k": 5,
-    "tpt_50k": 3,
-    "apex_50k": 10,
-    "tradeify_50k": 5,
-    "alpha_50k": 5,
-    "ffn_50k": 5,
-    "earn2trade_50k": 3,
+    "topstep_50k": 15,
+    "mffu_50k": 15,
+    "tpt_50k": 15,
+    "apex_50k": 15,
+    "tradeify_50k": 15,
+    "alpha_50k": 15,
+    "ffn_50k": 15,
+    "earn2trade_50k": 15,
 }
+
+
+# ─── Full Firm Rules (mirrors src/shared/firm-config.ts) ─────────
+# Single source of truth for Python code. Keep in sync with TypeScript shared config.
+
+FIRM_RULES: dict[str, dict] = {
+    "topstep_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 49,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2000,  # Also = buffer amount
+        "max_contracts": 15,  # Base 10, scales to 15→20
+        "trailing": "eod",
+        "payout_split": 0.90,
+        "min_payout_days": 5,
+        "consistency_rule": None,
+        "daily_loss_limit": None,
+        "overnight_ok": True,
+        "weekend_ok": False,
+    },
+    "mffu_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 77,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2500,
+        "max_contracts": 15,
+        "trailing": "eod",
+        "payout_split": 0.90,
+        "min_payout_days": 1,
+        "consistency_rule": None,
+        "daily_loss_limit": None,
+        "overnight_ok": True,
+        "weekend_ok": False,
+    },
+    "tpt_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 150,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 3000,
+        "max_contracts": 15,
+        "trailing": "eod",
+        "payout_split": 0.80,
+        "payout_split_tiers": [{"threshold": 5000, "split": 0.90}],
+        "min_payout_days": 5,
+        "consistency_rule": 0.50,
+        "daily_loss_limit": None,
+        "overnight_ok": True,
+        "weekend_ok": False,
+    },
+    "apex_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 167,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 85,
+        "profit_target": 3000,
+        "max_drawdown": 2500,
+        "max_contracts": 15,
+        "trailing": "eod",
+        "payout_split": 1.00,
+        "payout_split_tiers": [{"threshold": 25000, "split": 0.90}],
+        "min_payout_days": 7,
+        "consistency_rule": None,
+        "daily_loss_limit": None,
+        "overnight_ok": True,
+        "weekend_ok": False,
+    },
+    "ffn_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 150,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 126,
+        "profit_target": 3000,
+        "max_drawdown": 2500,
+        "max_contracts": 15,
+        "trailing": "eod",
+        "payout_split": 0.80,
+        "payout_split_tiers": [{"threshold": 5000, "split": 0.90}],
+        "min_payout_days": 3,
+        "consistency_rule": None,
+        "daily_loss_limit": 1250,
+        "overnight_ok": False,
+        "weekend_ok": False,
+    },
+    "alpha_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 99,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2000,
+        "max_contracts": 15,
+        "trailing": "eod",
+        "payout_split": 0.70,
+        "payout_split_tiers": [
+            {"threshold": 0, "split": 0.70},
+            {"threshold": 1, "split": 0.75},
+            {"threshold": 2, "split": 0.80},
+            {"threshold": 3, "split": 0.90},
+        ],
+        "min_payout_days": 2,
+        "consistency_rule": 0.50,
+        "daily_loss_limit": None,
+        "overnight_ok": False,
+        "weekend_ok": False,
+    },
+    "tradeify_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 99,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2500,
+        "max_contracts": 15,
+        "trailing": "realtime",
+        "payout_split": 0.80,
+        "min_payout_days": 10,
+        "consistency_rule": None,
+        "daily_loss_limit": None,
+        "overnight_ok": True,
+        "weekend_ok": False,
+    },
+    "earn2trade_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 150,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2000,
+        "max_contracts": 15,
+        "trailing": "eod",
+        "payout_split": 0.80,
+        "min_payout_days": 15,
+        "consistency_rule": None,
+        "daily_loss_limit": None,
+        "overnight_ok": True,
+        "weekend_ok": False,
+    },
+}
+
+
+def get_firm_rules(firm_key: str) -> dict:
+    """Get full rules for a firm. Raises ValueError if not found."""
+    if firm_key not in FIRM_RULES:
+        raise ValueError(f"Unknown firm '{firm_key}'. Valid: {sorted(FIRM_RULES.keys())}")
+    return FIRM_RULES[firm_key]
+
+
+def get_max_drawdown(firm_key: str) -> float:
+    """Get max drawdown for a firm."""
+    return get_firm_rules(firm_key)["max_drawdown"]
+
+
+def get_buffer_amount(firm_key: str) -> float:
+    """Buffer = maxDrawdown. Must build this before any payouts."""
+    return get_firm_rules(firm_key)["max_drawdown"]
+
+
+def get_total_hurdle(firm_key: str) -> float:
+    """Total profit needed before first payout = profitTarget + buffer."""
+    rules = get_firm_rules(firm_key)
+    return rules["profit_target"] + rules["max_drawdown"]
 
 
 def get_scaling_plan(firm_key: str) -> list[dict]:

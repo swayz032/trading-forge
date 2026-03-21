@@ -4,7 +4,35 @@ import { api } from "@/lib/api-client";
 interface Firm {
   name: string;
   displayName: string;
+  evaluationType: string;
   accountTypes: string[];
+}
+
+interface FirmAccountConfig {
+  accountSize: number;
+  monthlyFee: number;
+  activationFee: number;
+  ongoingMonthlyFee: number;
+  profitTarget: number;
+  maxDrawdown: number;
+  maxContracts: number;
+  trailing: string;
+  payoutSplit: number;
+  minPayoutDays: number;
+  consistencyRule: number | null;
+  dailyLossLimit: number | null;
+  overnightOk: boolean;
+  weekendOk: boolean;
+}
+
+export interface FirmAccountDetail {
+  firm: string;
+  displayName: string;
+  evaluationType: string;
+  accountType: string;
+  config: FirmAccountConfig;
+  bufferAmount: number;
+  totalHurdle: number;
 }
 
 interface FirmRanking {
@@ -14,12 +42,19 @@ interface FirmRanking {
   passes: boolean;
   violations: string[];
   evalDays: number;
+  bufferDays: number;
+  totalDaysToFirstPayout: number;
   evalMonths: number;
+  bufferMonths: number;
   totalEvalCost: number;
+  ongoingMonthlyFee: number;
+  bufferOngoingFees: number;
   monthlyGross: number;
   monthlyNet: number;
   payoutSplit: number;
+  fundedPayoutMonths: number;
   totalPayouts: number;
+  totalCosts: number;
   roi: number;
   annualizedRoi: number;
   trailing: string;
@@ -36,7 +71,7 @@ interface RankingResponse {
 
 interface PayoutMonth {
   month: number;
-  phase: "evaluation" | "funded";
+  phase: "evaluation" | "buffer" | "funded";
   grossPnl: number;
   netPayout: number;
   costs: number;
@@ -51,7 +86,10 @@ interface PayoutResponse {
   numAccounts: number;
   avgDailyPnl: number;
   payoutSplit: number;
+  ongoingMonthlyFee: number;
   evalMonths: number;
+  bufferMonths: number;
+  totalPrePayoutMonths: number;
   breakEvenMonth: number | null;
   totalPayout: number;
   totalCosts: number;
@@ -60,7 +98,9 @@ interface PayoutResponse {
 }
 
 interface TimelineEstimate {
-  tradingDays: number;
+  evalDays: number;
+  bufferDays: number;
+  totalDays: number;
   calendarDays: number;
   description: string;
 }
@@ -72,6 +112,8 @@ interface TimelineResponse {
   maxDrawdown: number;
   strategyMaxDrawdown: number;
   survives: boolean;
+  bufferAmount: number;
+  totalHurdle: number;
   timeline: {
     optimistic: TimelineEstimate;
     realistic: TimelineEstimate;
@@ -79,6 +121,7 @@ interface TimelineResponse {
   };
   minPayoutDays: number;
   monthlyFee: number;
+  ongoingMonthlyFee: number;
   estimatedEvalCost: number;
 }
 
@@ -89,8 +132,11 @@ interface SimulateResult {
   passes: boolean;
   violations: string[];
   evalDays: number;
+  bufferDays: number;
   evalCost: number;
+  ongoingMonthlyFee: number;
   monthlyNet: number;
+  fundedPayoutMonths: number;
   annualProfit: number;
   roi: number;
 }
@@ -103,12 +149,36 @@ interface SimulateResponse {
   bestFirm: SimulateResult | null;
 }
 
-export type { Firm, FirmRanking, RankingResponse, PayoutMonth, PayoutResponse, TimelineResponse, SimulateResult, SimulateResponse };
+export type { Firm, FirmRanking, RankingResponse, PayoutMonth, PayoutResponse, TimelineResponse, SimulateResult, SimulateResponse, FirmAccountDetail };
 
 export function useFirms() {
   return useQuery<Firm[]>({
     queryKey: ["prop-firm", "firms"],
     queryFn: () => api.get<Firm[]>("/prop-firm/firms"),
+  });
+}
+
+export function useAllFirmAccounts() {
+  const { data: firms } = useFirms();
+  return useQuery<FirmAccountDetail[]>({
+    queryKey: ["prop-firm", "all-accounts"],
+    queryFn: async () => {
+      if (!firms?.length) return [];
+      const results = await Promise.all(
+        firms.map((f) => api.get<FirmAccountDetail>(`/prop-firm/firms/${f.name}/50k`))
+      );
+      return results;
+    },
+    enabled: !!firms?.length,
+  });
+}
+
+export function useFirmAccount(firmName: string, _accountType: string = "50k") {
+  // All firms are 50K only — accountType param kept for backward compat
+  return useQuery<FirmAccountDetail>({
+    queryKey: ["prop-firm", "account", firmName, "50k"],
+    queryFn: () => api.get<FirmAccountDetail>(`/prop-firm/firms/${firmName}/50k`),
+    enabled: !!firmName,
   });
 }
 
@@ -120,7 +190,6 @@ export function useRankFirms() {
     profitFactor: number;
     holdsOvernight?: boolean;
     bestDayPct?: number;
-    accountType?: string;
     months?: number;
   }>({
     mutationFn: (params) => api.post<RankingResponse>("/prop-firm/rank", params),
@@ -130,7 +199,6 @@ export function useRankFirms() {
 export function usePayoutProjection() {
   return useMutation<PayoutResponse, Error, {
     firm: string;
-    accountType?: string;
     avgDailyPnl: number;
     numAccounts?: number;
     months?: number;
@@ -142,7 +210,6 @@ export function usePayoutProjection() {
 export function useEvalTimeline() {
   return useMutation<TimelineResponse, Error, {
     firm: string;
-    accountType?: string;
     avgDailyPnl: number;
     winRate: number;
     maxDrawdown: number;

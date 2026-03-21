@@ -66,6 +66,7 @@ def simulate_prop_firm(
     account_size: float = 50000,
     overnight_hold: bool = False,
     avg_contracts: float = 1.0,
+    mc_eval_pass_rate: Optional[float] = None,
 ) -> dict:
     """Walk through each trading day simulating a real prop firm account.
 
@@ -356,9 +357,8 @@ def simulate_prop_firm(
     )
 
     # ─── Eval cost amortization ──────────────────────────────
-    # Conservative 30% pass rate default.
-    # TODO(Wave 8): Replace with MC-derived pass probability per strategy.
-    mc_pass_probability = 0.30
+    # Use MC-derived pass probability when available, else conservative 30%.
+    mc_pass_probability = mc_eval_pass_rate if mc_eval_pass_rate is not None else 0.30
 
     # Eval cost = months of eval fees + activation fee for a single attempt
     months_in_eval = max(1, (days_to_pass_eval or 60) // 20)
@@ -459,6 +459,7 @@ def simulate_all_firms(
     account_size: float = 50000,
     overnight_hold: bool = False,
     avg_contracts: float = 1.0,
+    mc_pass_rates: Optional[dict[str, float]] = None,
 ) -> dict[str, dict]:
     """Run prop firm simulation against all 8 firms.
 
@@ -467,8 +468,10 @@ def simulate_all_firms(
     all_configs = _get_all_firm_configs()
     results = {}
     for firm_key in all_configs:
+        rate = mc_pass_rates.get(firm_key) if mc_pass_rates else None
         results[firm_key] = simulate_prop_firm(
             daily_pnl_records, trades, firm_key, symbol, account_size,
             overnight_hold=overnight_hold, avg_contracts=avg_contracts,
+            mc_eval_pass_rate=rate,
         )
     return results

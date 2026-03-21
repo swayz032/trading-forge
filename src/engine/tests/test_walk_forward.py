@@ -131,3 +131,73 @@ class TestWalkForward:
         # The aggregate oos_metrics should exist and be from OOS
         assert "oos_metrics" in result
         assert "total_return" in result["oos_metrics"]
+
+
+# ─── Embargo Tests ──────────────────────────────────────────
+
+class TestEmbargo:
+    def test_embargo_creates_gap(self):
+        """With embargo_bars > 0, OOS should start later than without."""
+        n = 1000
+        dates = [datetime(2023, 1, 1) + timedelta(hours=i) for i in range(n)]
+        df = pl.DataFrame({
+            "ts_event": dates,
+            "open": [100.0] * n,
+            "high": [101.0] * n,
+            "low": [99.0] * n,
+            "close": [100.5] * n,
+            "volume": [1000] * n,
+        })
+
+        windows_no_embargo = split_walk_forward_windows(df, n_splits=3, embargo_bars=0)
+        windows_with_embargo = split_walk_forward_windows(df, n_splits=3, embargo_bars=10)
+
+        # With embargo, OOS data should start later (fewer bars in IS+OOS combined)
+        for (is_no, oos_no), (is_emb, oos_emb) in zip(windows_no_embargo, windows_with_embargo):
+            # IS should be shorter or same with embargo
+            assert len(is_emb) <= len(is_no) + 10
+            # OOS should have same or fewer bars
+            assert len(oos_emb) <= len(oos_no)
+
+    def test_embargo_zero_is_default(self):
+        """embargo_bars=0 should produce same results as no embargo."""
+        n = 500
+        dates = [datetime(2023, 1, 1) + timedelta(hours=i) for i in range(n)]
+        df = pl.DataFrame({
+            "ts_event": dates,
+            "open": [100.0] * n,
+            "high": [101.0] * n,
+            "low": [99.0] * n,
+            "close": [100.5] * n,
+            "volume": [1000] * n,
+        })
+
+        windows_default = split_walk_forward_windows(df, n_splits=3)
+        windows_zero = split_walk_forward_windows(df, n_splits=3, embargo_bars=0)
+
+        assert len(windows_default) == len(windows_zero)
+        for (is_d, oos_d), (is_z, oos_z) in zip(windows_default, windows_zero):
+            assert len(is_d) == len(is_z)
+            assert len(oos_d) == len(oos_z)
+
+    def test_embargo_no_overlap(self):
+        """IS end + embargo gap + OOS start should not overlap."""
+        n = 1000
+        dates = [datetime(2023, 1, 1) + timedelta(hours=i) for i in range(n)]
+        df = pl.DataFrame({
+            "ts_event": dates,
+            "open": [100.0 + i*0.1 for i in range(n)],
+            "high": [101.0 + i*0.1 for i in range(n)],
+            "low": [99.0 + i*0.1 for i in range(n)],
+            "close": [100.5 + i*0.1 for i in range(n)],
+            "volume": [1000] * n,
+        })
+
+        embargo = 20
+        windows = split_walk_forward_windows(df, n_splits=3, embargo_bars=embargo)
+
+        for is_data, oos_data in windows:
+            # The last IS timestamp should be before the first OOS timestamp
+            is_last = is_data["ts_event"][-1]
+            oos_first = oos_data["ts_event"][0]
+            assert is_last < oos_first

@@ -29,7 +29,7 @@ class PlaybookDecision:
 # ---------------------------------------------------------------------------
 # Strategy family mappings
 # ---------------------------------------------------------------------------
-CONTINUATION_STRATS = ["ote", "ict_swing", "propulsion", "power_of_3", "quarterly_swing"]
+CONTINUATION_STRATS = ["ote", "ict_swing", "propulsion", "power_of_3", "quarterly_swing", "silver_bullet"]
 REVERSAL_STRATS = ["breaker", "eqhl_raid", "london_raid", "judas_swing", "mitigation"]
 MEAN_REV_STRATS = ["ny_lunch_reversal", "midnight_open"]
 ORB_STRATS = ["iofed", "ict_scalp"]
