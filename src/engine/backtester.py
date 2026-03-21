@@ -488,7 +488,7 @@ def _compute_daily_pnls(equity: np.ndarray, index=None) -> list[dict]:
         return []
 
     # If no datetime index, fall back to per-bar diff (daily data)
-    if index is None or not hasattr(index[0], "date"):
+    if index is None or len(index) == 0 or not hasattr(index[0], "date"):
         pnls = np.diff(equity)
         return [{"date": None, "pnl": round(float(p), 2)} for p in pnls]
 
@@ -1089,7 +1089,7 @@ def run_backtest(
 
         win_rate = float(len(winners) / total_trades)
         avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
-        avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 1.0
+        avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 0.0
         gross_profit = float(np.sum(winners))
         gross_loss = float(np.abs(np.sum(losers)))
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
@@ -1906,7 +1906,7 @@ def run_class_backtest(
 
         win_rate = float(len(winners) / total_trades)
         avg_winner = float(np.mean(winners)) if len(winners) > 0 else 0.0
-        avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 1.0
+        avg_loser = float(np.mean(np.abs(losers))) if len(losers) > 0 else 0.0
         gross_profit = float(np.sum(winners))
         gross_loss = float(np.abs(np.sum(losers)))
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
@@ -2024,8 +2024,8 @@ def run_class_backtest(
                 point_value=spec.point_value,
                 seed=42,
             )
-        except Exception:
-            pass  # gap_risk module may not be fully wired yet
+        except Exception as exc:
+            print(f"WARNING: gap_risk computation failed: {exc}", file=sys.stderr)
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
