@@ -111,6 +111,8 @@ function runPythonMonteCarlo(configPath: string, mcId: string): Promise<MCResult
     });
 
     proc.on("error", (err) => {
+      clearTimeout(timer);
+      if (settled) return;
       if (pythonCmd === "python") {
         const proc2 = spawn("python3", args, {
           env: { ...process.env },
@@ -118,9 +120,16 @@ function runPythonMonteCarlo(configPath: string, mcId: string): Promise<MCResult
         });
         let stdout2 = "";
         let stderr2 = "";
+        let settled2 = false;
+        const timer2 = setTimeout(() => {
+          if (!settled2) { settled2 = true; proc2.kill("SIGTERM"); reject(new Error(`Monte Carlo retry timed out after ${MC_TIMEOUT_MS / 1000}s`)); }
+        }, MC_TIMEOUT_MS);
         proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
         proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
         proc2.on("close", (code) => {
+          clearTimeout(timer2);
+          if (settled2) return;
+          settled2 = true;
           if (code === 0) {
             try { resolve(JSON.parse(stdout2.trim())); }
             catch { reject(new Error(`Failed to parse: ${stdout2.slice(0, 500)}`)); }
@@ -128,8 +137,9 @@ function runPythonMonteCarlo(configPath: string, mcId: string): Promise<MCResult
             reject(new Error(`Monte Carlo failed: ${stderr2}`));
           }
         });
-        proc2.on("error", () => reject(err));
+        proc2.on("error", () => { clearTimeout(timer2); if (!settled2) { settled2 = true; reject(err); } });
       } else {
+        settled = true;
         reject(err);
       }
     });

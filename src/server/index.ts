@@ -46,7 +46,7 @@ export const logger = pino({
 });
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 // Rate limiting (before auth gate)
 app.use("/api", standardRateLimit);
@@ -65,6 +65,14 @@ app.get("/api/health", async (_req, res) => {
     dbStatus = "error";
   }
 
+  // Ollama connectivity check
+  let ollamaStatus = "unknown";
+  try {
+    const ollamaUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+    const resp = await fetch(`${ollamaUrl}/api/tags`, { signal: AbortSignal.timeout(3000) });
+    ollamaStatus = resp.ok ? "ok" : "error";
+  } catch { ollamaStatus = "unreachable"; }
+
   const memUsage = process.memoryUsage();
 
   res.json({
@@ -76,6 +84,9 @@ app.get("/api/health", async (_req, res) => {
     database: {
       status: dbStatus,
       latencyMs: dbLatencyMs,
+    },
+    ollama: {
+      status: ollamaStatus,
     },
     memory: {
       heapUsedMb: Math.round(memUsage.heapUsed / 1024 / 1024),
@@ -116,6 +127,17 @@ app.use("/api/signals", signalRoutes);
 app.use("/api/prop-firm", propFirmRoutes);
 app.use("/api/portfolio", portfolioRoutes);
 
+// 404 handler for API routes — returns JSON instead of Express default HTML
+app.use("/api", (_req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
+
+// Global error handler for API routes
+app.use("/api", (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  logger.error({ err }, "Unhandled error");
+  res.status(500).json({ error: "Internal server error" });
+});
+
 // ─── Serve Frontend (production) ──────────────────────────────
 // Vite builds to Trading_forge_frontend/amber-vision-main/dist/
 // In prod (Railway), serve the built SPA from Express directly.
@@ -145,10 +167,12 @@ const server = app.listen(port, () => {
 process.on("SIGTERM", () => {
   logger.info("SIGTERM received — stopping all paper streams");
   stopAllStreams();
-  server.close();
+  server.close(() => { process.exit(0); });
+  setTimeout(() => { logger.error("Shutdown timeout — forcing exit"); process.exit(1); }, 10_000);
 });
 process.on("SIGINT", () => {
   logger.info("SIGINT received — stopping all paper streams");
   stopAllStreams();
-  server.close();
+  server.close(() => { process.exit(0); });
+  setTimeout(() => { logger.error("Shutdown timeout — forcing exit"); process.exit(1); }, 10_000);
 });

@@ -76,7 +76,7 @@ class TestFirmProfiles:
         profile = get_firm_profile("MFFU", "50K")
         assert profile is not None
         assert profile["max_drawdown"] == 2000
-        assert profile["drawdown_type"] == "trailing"
+        assert profile["drawdown_type"] == "EOD"
 
     def test_get_firm_profile_invalid(self):
         assert get_firm_profile("NonExistent") is None

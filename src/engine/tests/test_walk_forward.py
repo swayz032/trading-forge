@@ -106,27 +106,27 @@ class TestOptimizer:
 
 class TestWalkForward:
     def test_walk_forward_returns_oos_metrics(self):
-        data = _make_synthetic_data(300)
+        data = _make_synthetic_data(1000)
         config = _make_config()
-        result = run_walk_forward(config, data=data, n_splits=3)
+        result = run_walk_forward(config, data=data, n_splits=3, embargo_bars=0)
 
         assert "oos_metrics" in result
         assert "windows" in result
         assert len(result["windows"]) == 3
 
     def test_walk_forward_has_per_window_results(self):
-        data = _make_synthetic_data(300)
+        data = _make_synthetic_data(1000)
         config = _make_config()
-        result = run_walk_forward(config, data=data, n_splits=3)
+        result = run_walk_forward(config, data=data, n_splits=3, embargo_bars=0)
 
         for window in result["windows"]:
             assert "is_sharpe" in window or "oos_sharpe" in window or "oos_metrics" in window
 
     def test_walk_forward_aggregate_is_oos_only(self):
         """Aggregate metrics must come from OOS data only."""
-        data = _make_synthetic_data(300)
+        data = _make_synthetic_data(1000)
         config = _make_config()
-        result = run_walk_forward(config, data=data, n_splits=3)
+        result = run_walk_forward(config, data=data, n_splits=3, embargo_bars=0)
 
         # The aggregate oos_metrics should exist and be from OOS
         assert "oos_metrics" in result

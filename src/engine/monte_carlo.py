@@ -305,7 +305,7 @@ def inject_synthetic_stress(
 
     # Cap to max risk (e.g., 2× max_stop_points × point_value = 2 × 6 × $5 = $60)
     if max_loss_cap > 0:
-        catastrophic_loss = max(catastrophic_loss, -max_loss_cap)
+        catastrophic_loss = min(catastrophic_loss, -max_loss_cap)
 
     # Determine injection points
     rng = np.random.default_rng(seed)
@@ -383,7 +383,7 @@ def simulate_firm_survival(
     max_dd = firm["max_drawdown"]
     profit_target = firm["profit_target"]
     is_realtime = firm["trailing"] == "realtime"
-    locks_at_start = firm.get("locks_at_start", True)
+    locks_at_start = firm.get("locks_at_start", False)
     # Map consistency rule to max single-day ratio
     _consistency_map = {
         "tpt_50pct": 0.50,
@@ -424,6 +424,13 @@ def simulate_firm_survival(
     # EOD-only tracking.
     intraday_substeps = daily_trades_per_day if (is_realtime and granularity == "day") else 1
 
+    # Compute commission delta ONCE (constant across all sims/steps)
+    backtest_comm_rt = 0.62 * 2  # Default backtest commission per round trip
+    firm_comm_rt = comm_per_side * 2
+    comm_delta = firm_comm_rt - backtest_comm_rt
+    comm_adj_day = comm_delta * daily_trades_per_day
+    comm_adj_trade = comm_delta
+
     for sim in range(n_sims):
         balance = account_size
         peak_equity = account_size
@@ -436,12 +443,12 @@ def simulate_firm_survival(
         for step in range(n_steps):
             day_pnl = float(step_pnl[sim, step])
 
-            # Deduct per-firm commissions (per day or per trade based on granularity)
+            # Paths are already net of backtest commission (default $0.62/side).
+            # Only adjust for firm-specific commission DELTA vs backtest default.
             if granularity == "day":
-                day_pnl -= daily_commission
+                day_pnl -= comm_adj_day
             else:
-                # Per-trade: deduct one round-trip commission
-                day_pnl -= 2 * comm_per_side
+                day_pnl -= comm_adj_trade
 
             # Daily loss limit enforcement — only when granularity is "day"
             if granularity == "day" and daily_loss_limit is not None and day_pnl < -daily_loss_limit:
@@ -508,7 +515,7 @@ def simulate_firm_survival(
 
         # 6-month funded survival: passed eval AND had 126 bars AFTER passing without breach
         if passed_eval and not breached and pass_step is not None:
-            bars_after_pass = n_steps - pass_step
+            bars_after_pass = n_steps - pass_step - 1  # Exclude the pass bar itself
             if bars_after_pass >= six_months_bars:
                 survived_6mo_count += 1
 
@@ -773,8 +780,14 @@ def run_monte_carlo(
         daily_arr = inject_synthetic_stress(daily_arr, seed=request.seed + 101, max_loss_cap=max_loss)
 
     # Determine annualization factor based on method
-    # trade_resample paths are trade-level, not daily — use 252 as default assumption
-    periods_per_year = 252.0
+    if request.method == "trade_resample":
+        # trade_resample: compute trades per year from actual data
+        n_trading_days = len(daily_pnls) if len(daily_pnls) > 0 else 1
+        years = n_trading_days / 252.0
+        periods_per_year = len(trades_arr) / years if years > 0 else 252.0
+    else:
+        # return_bootstrap / block_bootstrap: daily data → 252
+        periods_per_year = 252.0
 
     # Generate paths based on method
     both_metrics: Optional[dict] = None

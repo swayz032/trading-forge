@@ -30,7 +30,7 @@ DAILY_LOSS_LIMITS: dict[str, Optional[float]] = {
     "apex_50k": None,
     "tradeify_50k": None,
     "alpha_50k": 1000,
-    "ffn_50k": None,
+    "ffn_50k": 1250.0,
     "earn2trade_50k": None,
 }
 
@@ -62,7 +62,7 @@ def simulate_prop_firm(
     daily_pnl_records: list[dict],
     trades: list[dict],
     firm_key: str,
-    symbol: str = "ES",
+    symbol: str = "MES",
     account_size: float = 50000,
     overnight_hold: bool = False,
     avg_contracts: float = 1.0,
@@ -124,12 +124,12 @@ def simulate_prop_firm(
 
     for day_idx, record in enumerate(daily_pnl_records):
         date_str = record.get("date", f"day_{day_idx}")
-        gross_pnl = record["pnl"]
+        # P&L from backtester is already net of commission — do NOT deduct again.
+        net_pnl = record["pnl"]
 
-        # Apply per-firm commission adjustment
+        # Commission cost kept for display-only in daily statements
         day_trades = trades_per_day.get(date_str, 0)
-        comm_cost = comm_per_side * 2 * day_trades  # round-trip
-        net_pnl = gross_pnl - comm_cost
+        comm_cost = comm_per_side * 2 * day_trades  # round-trip (display only)
 
         # Overnight margin cost: if strategy holds overnight, check that
         # account can cover overnight margin requirements (much higher than
@@ -224,7 +224,7 @@ def simulate_prop_firm(
 
         daily_statements.append({
             "date": date_str,
-            "gross_pnl": round(gross_pnl, 2),
+            "gross_pnl": round(net_pnl + comm_cost, 2),  # Reconstruct for display
             "commission": round(comm_cost, 2),
             "net_pnl": round(net_pnl, 2),
             "balance": round(balance, 2),
@@ -282,6 +282,12 @@ def simulate_prop_firm(
     consistency_ratio = best_single_day / total_profit if total_profit > 0 else 0.0
 
     # Consistency check
+    _KNOWN_CONSISTENCY_RULES = {"tpt_50pct", "alpha_50pct", "ffn_15pct"}
+    rule = firm.get("consistency_rule")
+    if rule and rule not in _KNOWN_CONSISTENCY_RULES:
+        import warnings
+        warnings.warn(f"Unknown consistency rule '{rule}' — check for typos")
+
     consistency_passed = True
     consistency_failure = None
     if firm.get("consistency_rule") == "tpt_50pct" and consistency_ratio > 0.50:
@@ -455,7 +461,7 @@ def simulate_prop_firm(
 def simulate_all_firms(
     daily_pnl_records: list[dict],
     trades: list[dict],
-    symbol: str = "ES",
+    symbol: str = "MES",
     account_size: float = 50000,
     overnight_hold: bool = False,
     avg_contracts: float = 1.0,

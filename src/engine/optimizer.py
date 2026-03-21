@@ -145,7 +145,8 @@ def optimize_strategy(
             result = run_backtest(request, data=data)
             sharpe = result.get("sharpe_ratio", 0.0)
             return -sharpe  # Minimize negative Sharpe
-        except Exception:
+        except Exception as exc:
+            print(f"    Optuna trial {trial.number} failed: {exc}", file=sys.stderr)
             return 0.0  # Neutral on error
 
     sampler = optuna.samplers.TPESampler(seed=42)
@@ -226,7 +227,8 @@ def run_robustness_test(
             result = run_backtest(request, data=data)
             sharpe = result.get("sharpe_ratio", 0.0)
             return -sharpe
-        except Exception:
+        except Exception as exc:
+            print(f"    Optuna trial {trial.number} failed: {exc}", file=sys.stderr)
             return 0.0
 
     sampler = optuna.samplers.TPESampler(seed=42)

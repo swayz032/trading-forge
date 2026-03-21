@@ -44,16 +44,15 @@ def _get_connection() -> duckdb.DuckDBPyConnection:
         _s3_configured = False
 
     if not _s3_configured:
+        # DuckDB 1.0+ auto-reads AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+        # from environment variables when httpfs is loaded. No manual SET needed,
+        # which avoids SQL injection risk from credentials with special chars.
         _con.execute("INSTALL httpfs; LOAD httpfs;")
-        region = os.environ.get("AWS_REGION", "us-east-1")
-        access_key = os.environ.get("AWS_ACCESS_KEY_ID", "")
-        secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
-        _con.execute(f"""
-            SET s3_region='{region}';
-            SET s3_access_key_id='{access_key}';
-            SET s3_secret_access_key='{secret_key}';
-            SET enable_object_cache=true;
-        """)
+        _con.execute("SET enable_object_cache=true;")
+        region = os.environ.get("AWS_REGION", "")
+        if region:
+            # Sanitize: strip any single quotes to prevent SQL injection
+            _con.execute(f"SET s3_region='{region.replace(chr(39), '')}';")
         _s3_configured = True
 
     return _con
@@ -253,8 +252,8 @@ def validate_bars(df: pl.DataFrame, symbol: str = "", timeframe: str = "") -> Da
                         warn_list.append(
                             f"Data coverage {coverage_pct:.1f}% ({total}/{expected_bars} expected bars) — below 80% threshold"
                         )
-        except Exception:
-            pass
+        except Exception as exc:
+            print(f"WARNING: Coverage calculation failed: {exc}", file=sys.stderr)
 
     # ── Determine pass/fail ──
     passed = (dup_ts == 0) and (ohlc_violations == 0) and (zero_neg == 0) and (coverage_pct >= 80)

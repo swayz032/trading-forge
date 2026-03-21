@@ -147,7 +147,7 @@ class TestE2EBacktest:
         assert len(compliance) == 7
         for firm, details in compliance.items():
             assert "passed" in details
-            assert "eval_cost" in details
+            assert "expected_eval_cost" in details
             assert "payout_split" in details
 
     def test_equity_curve_starts_at_init_cash(self):
@@ -157,7 +157,7 @@ class TestE2EBacktest:
         result = run_backtest(request, data=data)
 
         if result["equity_curve"]:
-            assert result["equity_curve"][0] == pytest.approx(50000.0, rel=0.01)
+            assert result["equity_curve"][0]["value"] == pytest.approx(50000.0, rel=0.01)
 
     def test_daily_pnls_match_equity(self):
         """Daily P&Ls should approximately match equity curve diffs."""
@@ -169,14 +169,14 @@ class TestE2EBacktest:
         pnls = result["daily_pnls"]
 
         if len(equity) > 1 and len(pnls) > 0:
-            # First PnL should match equity[1] - equity[0]
-            assert pnls[0] == pytest.approx(equity[1] - equity[0], abs=0.01)
+            # First PnL should match equity[1]["value"] - equity[0]["value"]
+            assert pnls[0] == pytest.approx(equity[1]["value"] - equity[0]["value"], abs=0.01)
 
     def test_walk_forward_mode(self):
         """Walk-forward mode returns OOS metrics."""
         from src.engine.walk_forward import run_walk_forward
 
-        data = _make_trending_data(300)
+        data = _make_trending_data(1000)
         request = self._make_request()
         result = run_walk_forward(request, data=data, n_splits=3)
 

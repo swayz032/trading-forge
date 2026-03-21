@@ -662,7 +662,8 @@ def _build_run_receipt(config: "StrategyConfig", dataset_hash: str = "") -> dict
         git_commit = subprocess.check_output(
             ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL
         ).decode().strip()
-    except Exception:
+    except Exception as exc:
+        print(f"WARNING: Failed to get git commit: {exc}", file=sys.stderr)
         git_commit = "unknown"
 
     # Config hash
@@ -676,14 +677,15 @@ def _build_run_receipt(config: "StrategyConfig", dataset_hash: str = "") -> dict
     try:
         from importlib.metadata import version as pkg_version
         engine_version = pkg_version("trading-forge")
-    except Exception:
-        pass
+    except Exception as exc:
+        print(f"WARNING: Failed to get engine version: {exc}", file=sys.stderr)
 
     # Code hash: hash the backtester source for reproducibility
     try:
         source_path = Path(__file__).resolve()
         code_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()[:12]
-    except Exception:
+    except Exception as exc:
+        print(f"WARNING: Failed to compute code hash: {exc}", file=sys.stderr)
         code_hash = "unknown"
 
     return {
@@ -706,6 +708,7 @@ def run_backtest(
     data: Optional[pl.DataFrame] = None,
     fill_rate: float = 1.0,
     use_eligibility_gate: bool = False,
+    spread_multiplier: float = 1.0,
 ) -> dict:
     """Run a single backtest and return metrics dict.
 
@@ -801,6 +804,8 @@ def run_backtest(
         df, config.position_size, spec, atr_period,
         max_contracts=max_contracts,
     )
+    # Defense-in-depth: replace any inf/nan sizes with 1 contract
+    sizes = np.where(np.isfinite(sizes), sizes, 1.0)
     over_risk_count = int(np.sum(over_risk))
     if over_risk_count > 0:
         print(
@@ -870,6 +875,7 @@ def run_backtest(
             df, fill_config, entries_np,
             order_type=request.fill_model.order_type,
             symbol=config.symbol,
+            spread_multiplier=spread_multiplier,
         )
         entries_np, sizes = apply_fill_model(entries_np, fill_probs, sizes, seed=42)
 
@@ -897,11 +903,20 @@ def run_backtest(
     if "entry_short" in df.columns:
         short_entries_np = df["entry_short"].to_numpy()
         # Apply fill model to short entries too
-        if request.fill_model and request.fill_model.order_type == "limit":
-            from src.engine.fill_model import compute_fill_probabilities, apply_fill_model
+        if request.fill_model:
+            from src.engine.fill_model import compute_fill_probabilities_v2, apply_fill_model
             fill_config = request.fill_model.model_dump()
-            short_fill_probs = compute_fill_probabilities(df, fill_config, short_entries_np)
-            short_entries_np, _ = apply_fill_model(short_entries_np, short_fill_probs, sizes.copy(), seed=43)
+            short_fill_probs = compute_fill_probabilities_v2(
+                df, fill_config, short_entries_np,
+                order_type=request.fill_model.order_type,
+                symbol=config.symbol,
+                spread_multiplier=spread_multiplier,
+            )
+            short_entries_np, short_adjusted_sizes = apply_fill_model(short_entries_np, short_fill_probs, sizes.copy(), seed=43)
+            # Merge short partial fill adjustments into main sizes array
+            # (safe: same bar can't have both long and short entry)
+            short_fill_mask = short_entries_np.astype(bool)
+            sizes[short_fill_mask] = short_adjusted_sizes[short_fill_mask]
         # Shift short entries by 1 bar (next-bar fill)
         short_entries_np = np.roll(short_entries_np, 1); short_entries_np[0] = False
         short_entries_pd = pl.Series("entry_short", short_entries_np).to_pandas()
@@ -912,7 +927,12 @@ def run_backtest(
         short_entries_pd.index = ts_index
         short_exits_pd.index = ts_index
 
-    # Clean NaN values
+    # NaN sizes = position sizer couldn't compute → suppress those entries
+    nan_mask = np.isnan(sizes)
+    entries_np[nan_mask] = False
+    if "entry_short" in df.columns:
+        short_entries_np[nan_mask] = False
+    # Clean NaN values (safety — no NaNs remain after mask)
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
 
@@ -1205,7 +1225,7 @@ def run_backtest(
         "trades": trades_list, "daily_pnls": daily_pnl_values,
         "equity_curve": _aggregate_equity_daily(equity, equity_index),
     }
-    sanity = run_sanity_checks(_prelim, symbol=config.symbol)
+    sanity = run_sanity_checks(_prelim, symbol=config.symbol, timeframe=config.timeframe)
     cross_val = run_cross_validation(_prelim)
 
     # ─── Prop firm simulation (all 8 firms) ─────────────────
@@ -1570,6 +1590,8 @@ def run_class_backtest(
     else:
         size_config = PositionSizeConfig(type="dynamic_atr", target_risk_dollars=500.0)
     sizes, over_risk = compute_position_sizes(df, size_config, spec, 14, max_contracts=max_contracts)
+    # Defense-in-depth: replace any inf/nan sizes with 1 contract
+    sizes = np.where(np.isfinite(sizes), sizes, 1.0)
     over_risk_count = int(np.sum(over_risk))
     if over_risk_count > 0:
         print(
@@ -2025,7 +2047,7 @@ def run_class_backtest(
         "trades": trades_list, "daily_pnls": daily_pnl_values,
         "equity_curve": _aggregate_equity_daily(equity, equity_index),
     }
-    sanity = run_sanity_checks(_prelim_class, symbol=symbol)
+    sanity = run_sanity_checks(_prelim_class, symbol=symbol, timeframe=timeframe)
     cross_val = run_cross_validation(_prelim_class)
 
     prop_compliance = simulate_all_firms(

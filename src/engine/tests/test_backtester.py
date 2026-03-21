@@ -69,10 +69,11 @@ class TestPositionSizing:
 
         sizes, over_risk = compute_position_sizes(df_with_atr, config, spec, atr_period=14)
 
-        # Verify last bar: floor(500 / (ATR * 12.50))
+        # Verify last bar: floor(500 / (ATR * point_value))
+        # Production uses point_value (not tick_value) for dollar risk per contract
         last_atr = atr[-1]
         if not math.isnan(last_atr):
-            expected = max(1, int(500 / (last_atr * 12.50)))
+            expected = max(1, int(500 / (last_atr * spec.point_value)))
             assert sizes[-1] == expected
 
     def test_fixed_sizing(self):
@@ -254,6 +255,6 @@ class TestBacktesterOutput:
         result = run_backtest(config, data=df)
 
         assert 0.0 <= result["win_rate"] <= 1.0
-        assert result["max_drawdown"] <= 0  # Drawdown is negative
+        assert result["max_drawdown"] >= 0  # Drawdown is a positive dollar amount
         assert result["total_trades"] >= 0
         assert isinstance(result["equity_curve"], list)

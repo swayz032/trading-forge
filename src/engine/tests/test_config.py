@@ -22,38 +22,38 @@ class TestContractSpecs:
     def test_es_spec(self):
         s = CONTRACT_SPECS["ES"]
         assert s.tick_size == 0.25
-        assert s.tick_value == 12.50
-        assert s.point_value == 50.00
+        assert s.tick_value == 1.25
+        assert s.point_value == 5.00
 
     def test_nq_spec(self):
         s = CONTRACT_SPECS["NQ"]
         assert s.tick_size == 0.25
-        assert s.tick_value == 5.00
-        assert s.point_value == 20.00
+        assert s.tick_value == 0.50
+        assert s.point_value == 2.00
 
     def test_cl_spec(self):
         s = CONTRACT_SPECS["CL"]
         assert s.tick_size == 0.01
-        assert s.tick_value == 10.00
-        assert s.point_value == 1000.00
+        assert s.tick_value == 1.00
+        assert s.point_value == 100.00
 
     def test_ym_spec(self):
         s = CONTRACT_SPECS["YM"]
         assert s.tick_size == 1.00
-        assert s.tick_value == 5.00
-        assert s.point_value == 5.00
+        assert s.tick_value == 0.50
+        assert s.point_value == 0.50
 
     def test_rty_spec(self):
         s = CONTRACT_SPECS["RTY"]
         assert s.tick_size == 0.10
-        assert s.tick_value == 5.00
-        assert s.point_value == 50.00
+        assert s.tick_value == 0.50
+        assert s.point_value == 5.00
 
     def test_gc_spec(self):
         s = CONTRACT_SPECS["GC"]
         assert s.tick_size == 0.10
-        assert s.tick_value == 10.00
-        assert s.point_value == 100.00
+        assert s.tick_value == 1.00
+        assert s.point_value == 10.00
 
     def test_mes_spec(self):
         s = CONTRACT_SPECS["MES"]
@@ -67,8 +67,8 @@ class TestContractSpecs:
         assert s.tick_value == 0.50
         assert s.point_value == 2.00
 
-    def test_all_eight_symbols(self):
-        expected = {"ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ"}
+    def test_all_ten_symbols(self):
+        expected = {"ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"}
         assert set(CONTRACT_SPECS.keys()) == expected
 
 
@@ -171,7 +171,7 @@ class TestBacktestRequest:
             start_date="2023-01-01",
             end_date="2023-06-30",
         )
-        assert req.commission_per_side == 4.50
+        assert req.commission_per_side == 0.62
         assert req.slippage_ticks == 1.0
 
 
@@ -180,7 +180,7 @@ class TestBacktestRequest:
 class TestMonteCarloRequest:
     def test_defaults(self):
         mc = MonteCarloRequest(backtest_id="abc-123")
-        assert mc.num_simulations == 10_000
+        assert mc.num_simulations == 100_000
         assert mc.method == "both"
         assert mc.use_gpu is True
         assert mc.initial_capital == 50_000.0

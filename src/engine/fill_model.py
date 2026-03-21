@@ -152,6 +152,7 @@ def compute_fill_probabilities_v2(
     entries: np.ndarray,
     order_type: str = "market",
     symbol: str = "ES",
+    spread_multiplier: float = 1.0,
 ) -> np.ndarray:
     """V2 fill model with order-type-specific behavior and spread awareness.
 
@@ -201,7 +202,7 @@ def compute_fill_probabilities_v2(
         atr_values = df[atr_col].to_numpy().astype(np.float64)
         spec = CONTRACT_SPECS.get(symbol)
         tick_size = spec.tick_size if spec else config.get("tick_size", 0.25)
-        spreads = estimate_spread_ticks(atr_values, tick_size)
+        spreads = estimate_spread_ticks(atr_values, tick_size) * spread_multiplier
 
         # When spread > 1 tick, limit orders at the bid/ask are less likely to fill
         # 1 tick spread = normal, 2+ ticks = reduce fill prob by 5% per extra tick

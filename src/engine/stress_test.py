@@ -112,11 +112,12 @@ def _run_crisis_backtest(
             start_date=scenario.start_date,
             end_date=scenario.end_date,
             slippage_ticks=1.0 * scenario.slippage_multiplier,
-            commission_per_side=4.50,
+            commission_per_side=0.62,
             mode="single",
         )
 
-        result = run_backtest(request, data=data, fill_rate=scenario.fill_rate)
+        result = run_backtest(request, data=data, fill_rate=scenario.fill_rate,
+                              spread_multiplier=scenario.spread_multiplier)
         return {
             "name": scenario.name,
             "passed": True,  # Will be checked against DD limit later
@@ -125,8 +126,8 @@ def _run_crisis_backtest(
             "sharpe_ratio": result.get("sharpe_ratio", 0),
             "total_trades": result.get("total_trades", 0),
         }
-    except Exception as e:
-        # If backtest fails (e.g., missing deps, no data), mark as error
+    except (ValueError, IndexError, KeyError) as e:
+        # Data-related errors: mark as error. Let RuntimeError/ImportError/TypeError propagate.
         return {
             "name": scenario.name,
             "passed": False,

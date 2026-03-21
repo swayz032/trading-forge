@@ -56,6 +56,10 @@ def compute_position_sizes(
     # ATR is in points, so multiply by point_value to get dollar risk per contract
     point_value = contract_spec.point_value
 
+    # Floor ATR at 1 tick to prevent inf sizes on zero-range bars (holidays, data gaps)
+    min_atr = contract_spec.tick_size
+    atr_values = np.maximum(atr_values, min_atr)
+
     with np.errstate(divide="ignore", invalid="ignore"):
         raw = config.target_risk_dollars / (atr_values * point_value)
 

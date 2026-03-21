@@ -62,7 +62,7 @@ def bootstrap_ci(
             "detail": "insufficient data (<10 daily P&Ls)",
         }
 
-    rng = np.random.RandomState(seed)
+    rng = np.random.default_rng(seed)
     arr = np.array(daily_pnls)
     means = np.array([
         rng.choice(arr, size=len(arr), replace=True).mean()
@@ -199,29 +199,33 @@ def determinism_test(result1: dict, result2: dict) -> dict:
 
 
 def compute_sortino_ratio(daily_pnls: list[float]) -> float:
-    """Sortino ratio: annualized return / downside deviation."""
+    """Sortino ratio: annualized return / downside deviation.
+
+    Downside deviation = sqrt(mean(min(r, 0)^2)) using ALL returns
+    (zeros for positive days). This is the standard Sortino denominator.
+    """
     if len(daily_pnls) < 2:
         return 0.0
     arr = np.array(daily_pnls)
     mean_return = np.mean(arr)
-    downside = arr[arr < 0]
-    if len(downside) == 0:
-        return 999.99
-    downside_std = np.std(downside, ddof=1)
-    if downside_std <= 0:
-        return 999.99
-    return round(float(mean_return / downside_std * np.sqrt(252)), 4)
+    downside_returns = np.minimum(arr, 0)
+    downside_dev = np.sqrt(np.mean(downside_returns ** 2))
+    if downside_dev <= 0:
+        return 99.99  # No downside risk — capped to avoid distorting aggregations
+    return round(float(mean_return / downside_dev * np.sqrt(252)), 4)
 
 
 def run_cross_validation(
     result: dict,
     n_trials: int = 1,
+    is_sharpe: float | None = None,
 ) -> dict:
     """Run all cross-validation tests on a backtest result.
 
     Args:
         result: Backtest result dict
         n_trials: Number of strategy variants tested (for DSR)
+        is_sharpe: In-sample Sharpe from walk-forward optimization (for WFE)
 
     Returns:
         dict with all cross-validation results
@@ -252,6 +256,11 @@ def run_cross_validation(
     trades = result.get("trades", [])
     verification = _verify_metrics(result, trades, daily_pnls)
 
+    # WFE (when IS Sharpe available from walk-forward optimization)
+    wfe = None
+    if is_sharpe is not None:
+        wfe = compute_wfe(is_sharpe, sharpe)
+
     output = {
         "bootstrap_ci_95": [bootstrap["ci_lower"], bootstrap["ci_upper"]],
         "bootstrap_significant": bootstrap["significant"],
@@ -260,6 +269,7 @@ def run_cross_validation(
         "daily_pnl_skewness": round(skew, 4),
         "daily_pnl_kurtosis": round(kurt, 4),
         "metric_verification": verification,
+        "wfe": wfe,
     }
     return output
 

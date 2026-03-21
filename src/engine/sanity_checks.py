@@ -6,6 +6,8 @@ into a sanity report that's included in the backtest result schema.
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 from src.engine.config import CONTRACT_SPECS
@@ -16,6 +18,7 @@ def run_sanity_checks(
     initial_capital: float = 50_000.0,
     is_walk_forward_aggregate: bool = False,
     symbol: str = "ES",
+    timeframe: str = "5min",
 ) -> dict:
     """Run all 8 sanity checks against a backtest result.
 
@@ -109,8 +112,9 @@ def run_sanity_checks(
     else:
         equity_total = sum(daily_pnls) if daily_pnls else 0
     recon_error = abs(equity_total - trades_total)
-    # Tolerance scales with trade count: $1 base + $0.50 per trade (float rounding compounds)
-    recon_tolerance = 1.0 + 0.50 * max(total_trades, 0)
+    # Tolerance: $1 base + $0.01/trade linear + $0.50*log10 for float64 accumulation
+    # 100 trades → $2.35, 1000 trades → $12.50, 5000 trades → $52.35
+    recon_tolerance = 1.0 + 0.01 * max(total_trades, 0) + 0.50 * math.log10(max(total_trades, 1))
     recon_ok = recon_error <= recon_tolerance
     checks.append({
         "name": "reconciliation",
@@ -118,18 +122,22 @@ def run_sanity_checks(
         "detail": f"equity_total=${equity_total:.2f}, trades_total=${trades_total:.2f}, error=${recon_error:.2f} (tolerance=${recon_tolerance:.0f})",
     })
 
-    # 7. Trade Duration — no intraday trade > 24h (1440 min)
+    # 7. Trade Duration — timeframe-aware max bars
+    TIMEFRAME_MAX_BARS = {
+        "1min": 1440, "5min": 288, "15min": 96, "30min": 48,
+        "1h": 24, "4h": 6, "daily": 200,
+    }
+    max_bars = TIMEFRAME_MAX_BARS.get(timeframe, 288)
     duration_ok = True
     duration_detail = "all trades within bounds"
     if trades:
         for t in trades:
             entry_idx = t.get("Entry Idx", 0)
             exit_idx = t.get("Exit Idx", entry_idx)
-            # Rough check: on 5min data, 288 bars = 24h
             bar_count = exit_idx - entry_idx
-            if bar_count > 288:
+            if bar_count > max_bars:
                 duration_ok = False
-                duration_detail = f"trade held {bar_count} bars (>288 = ~24h on 5min)"
+                duration_detail = f"trade held {bar_count} bars (>{max_bars} for {timeframe})"
                 break
     checks.append({
         "name": "trade_duration",

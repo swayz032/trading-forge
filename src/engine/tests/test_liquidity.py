@@ -9,16 +9,16 @@ import pytest
 from src.engine.liquidity import classify_session, get_session_multipliers
 
 
-def _make_utc_timestamps(et_hours: list[tuple[int, int]], base_date: str = "2024-06-15") -> pl.Series:
+def _make_utc_timestamps(et_hours: list[tuple[int, int]], base_date: str = "2024-01-15") -> pl.Series:
     """Create UTC timestamps from ET (hour, minute) pairs.
 
-    ET = UTC - 5 (EST), so UTC = ET + 5.
+    Uses a winter date (EST = UTC - 5) by default so UTC = ET + 5.
     """
     base = datetime.strptime(base_date, "%Y-%m-%d")
     timestamps = []
     for h, m in et_hours:
         et_dt = base.replace(hour=h, minute=m)
-        utc_dt = et_dt + timedelta(hours=5)  # ET → UTC
+        utc_dt = et_dt + timedelta(hours=5)  # EST → UTC
         timestamps.append(utc_dt)
     return pl.Series("ts_event", timestamps)
 
@@ -62,11 +62,11 @@ class TestClassifySession:
 
 
 class TestSessionMultipliers:
-    def test_overnight_2x(self):
-        """2 AM ET → 2.0x multiplier."""
+    def test_overnight_3x(self):
+        """2 AM ET → 3.0x multiplier (OVERNIGHT_2 = thin book)."""
         ts = _make_utc_timestamps([(2, 0)])
         mults = get_session_multipliers(ts)
-        assert mults[0] == 2.0
+        assert mults[0] == 3.0
 
     def test_rth_core_1x(self):
         """11 AM ET → 1.0x multiplier (best liquidity)."""
@@ -74,11 +74,11 @@ class TestSessionMultipliers:
         mults = get_session_multipliers(ts)
         assert mults[0] == 1.0
 
-    def test_rth_open_13x(self):
-        """9:45 AM ET → 1.3x multiplier."""
+    def test_rth_open_08x(self):
+        """9:45 AM ET → 0.8x multiplier (RTH_OPEN = highest liquidity)."""
         ts = _make_utc_timestamps([(9, 45)])
         mults = get_session_multipliers(ts)
-        assert mults[0] == 1.3
+        assert mults[0] == 0.8
 
     def test_rth_close_12x(self):
         """3:45 PM ET → 1.2x multiplier."""
@@ -86,30 +86,30 @@ class TestSessionMultipliers:
         mults = get_session_multipliers(ts)
         assert mults[0] == 1.2
 
-    def test_pre_market_15x(self):
-        """7 AM ET → 1.5x multiplier."""
+    def test_pre_market_2x(self):
+        """7 AM ET → 2.0x multiplier (PRE_MARKET = thin, wide spreads)."""
         ts = _make_utc_timestamps([(7, 0)])
         mults = get_session_multipliers(ts)
-        assert mults[0] == 1.5
+        assert mults[0] == 2.0
 
     def test_multiple_bars_vectorized(self):
         """Multiple timestamps processed correctly."""
         ts = _make_utc_timestamps([
-            (2, 0),    # overnight → 2.0
-            (7, 0),    # pre-market → 1.5
-            (9, 45),   # RTH open → 1.3
-            (11, 0),   # RTH core → 1.0
-            (15, 45),  # RTH close → 1.2
+            (2, 0),    # OVERNIGHT_2 → 3.0
+            (7, 0),    # PRE_MARKET → 2.0
+            (9, 45),   # RTH_OPEN → 0.8
+            (11, 0),   # RTH_CORE → 1.0
+            (15, 45),  # RTH_CLOSE → 1.2
         ])
         mults = get_session_multipliers(ts)
         assert len(mults) == 5
-        np.testing.assert_array_equal(mults, [2.0, 1.5, 1.3, 1.0, 1.2])
+        np.testing.assert_array_equal(mults, [3.0, 2.0, 0.8, 1.0, 1.2])
 
     def test_midnight_crossing_overnight(self):
         """Midnight (0:00 ET) is still overnight (OVERNIGHT_2)."""
         ts = _make_utc_timestamps([(0, 0)])
         mults = get_session_multipliers(ts)
-        assert mults[0] == 2.0
+        assert mults[0] == 3.0
 
     def test_session_boundary_rth_open_exact(self):
         """9:30 AM ET exactly → RTH_OPEN (inclusive start)."""

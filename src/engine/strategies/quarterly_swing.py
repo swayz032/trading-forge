@@ -46,13 +46,14 @@ def _daily_quarter_phase(ts: pl.Series) -> pl.Series:
     # Q2: 00:00 - 05:59 (hour >= 0 and hour < 6)
     # Q3: 06:00 - 11:59 (hour >= 6 and hour < 12)
     # Q4: 12:00 - 17:59 (hour >= 12 and hour < 18)
-    phase = (
-        pl.when(hour >= 18).then(pl.lit("Q1"))
-        .when(hour < 6).then(pl.lit("Q2"))
-        .when(hour < 12).then(pl.lit("Q3"))
+    phase_expr = (
+        pl.when(pl.col("__hour") >= 18).then(pl.lit("Q1"))
+        .when(pl.col("__hour") < 6).then(pl.lit("Q2"))
+        .when(pl.col("__hour") < 12).then(pl.lit("Q3"))
         .otherwise(pl.lit("Q4"))
+        .alias("quarterly_phase")
     )
-    return phase.alias("quarterly_phase")
+    return hour.to_frame("__hour").select(phase_expr).to_series()
 
 
 def _compute_true_open(df: pl.DataFrame) -> pl.Series:

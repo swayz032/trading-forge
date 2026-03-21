@@ -84,7 +84,7 @@ def run_walk_forward(
     is_ratio: float = 0.7,
     optimize: bool = False,
     n_trials: int = 800,
-    embargo_bars: int = 0,
+    embargo_bars: int = 20,
 ) -> dict:
     """Run walk-forward validation.
 
@@ -227,7 +227,14 @@ def run_walk_forward(
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates
     total_trades = len(all_oos_trades)
     total_return = float(sum(w["oos_metrics"]["total_return"] for w in window_results))  # Sum dollar P&L
-    max_dd = max(w["oos_metrics"]["max_drawdown"] for w in window_results)  # Worst dollar drawdown
+
+    # Continuous max DD: compute from concatenated OOS daily P&Ls (not per-window max)
+    if all_oos_pnls:
+        cum_pnl = np.cumsum(all_oos_pnls)
+        running_peak = np.maximum.accumulate(cum_pnl)
+        max_dd = float(np.max(running_peak - cum_pnl))
+    else:
+        max_dd = 0.0
 
     # Win rate: count wins across ALL trades (not averaged per-window)
     if all_oos_trades:
@@ -329,7 +336,7 @@ def run_walk_forward_class(
     firm_key: Optional[str] = None,
     n_splits: int = 8,
     is_ratio: float = 0.5,
-    embargo_bars: int = 0,
+    embargo_bars: int = 20,
 ) -> dict:
     """Walk-forward validation for class-based (BaseStrategy) strategies.
 
@@ -464,7 +471,14 @@ def run_walk_forward_class(
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates
     total_trades = len(all_oos_trades)
     total_return = float(sum(w["oos_metrics"]["total_return"] for w in window_results))  # Sum of dollar P&L across windows
-    max_dd = max(w["oos_metrics"]["max_drawdown"] for w in window_results)  # Worst dollar drawdown
+
+    # Continuous max DD: compute from concatenated OOS daily P&Ls (not per-window max)
+    if all_oos_pnls:
+        cum_pnl = np.cumsum(all_oos_pnls)
+        running_peak = np.maximum.accumulate(cum_pnl)
+        max_dd = float(np.max(running_peak - cum_pnl))
+    else:
+        max_dd = 0.0
 
     # Win rate: count wins across ALL trades (not averaged per-window)
     if all_oos_trades:
@@ -509,8 +523,16 @@ def run_walk_forward_class(
         "equity_curve": [],
         "trades": all_oos_trades,
     }
-    sanity = run_sanity_checks(_oos_aggregate, is_walk_forward_aggregate=True, symbol=symbol)
-    cross_val = run_cross_validation(_oos_aggregate)
+    sanity = run_sanity_checks(_oos_aggregate, is_walk_forward_aggregate=True, symbol=symbol, timeframe=strategy.timeframe)
+
+    # Compute average IS Sharpe across optimization windows for WFE
+    avg_is_sharpe = None
+    if optimize:
+        is_sharpes = [w["optimization"]["best_sharpe"] for w in window_results if w.get("optimization")]
+        if is_sharpes:
+            avg_is_sharpe = float(np.mean(is_sharpes))
+
+    cross_val = run_cross_validation(_oos_aggregate, is_sharpe=avg_is_sharpe)
 
     return {
         "confidence": "LOW" if low_confidence_windows else "OK",

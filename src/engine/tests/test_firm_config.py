@@ -23,11 +23,11 @@ from src.engine.config import (
 # ─── Task 3.11: Per-Firm Commission Tests ────────────────────────
 
 class TestFirmCommissions:
-    def test_all_7_firms_present(self):
-        """All 7 prop firms have commission data."""
+    def test_all_8_firms_present(self):
+        """All 8 prop firms have commission data."""
         expected_firms = {
             "topstep_50k", "mffu_50k", "tpt_50k", "apex_50k",
-            "tradeify_50k", "alpha_50k", "ffn_50k",
+            "tradeify_50k", "alpha_50k", "ffn_50k", "earn2trade_50k",
         }
         assert set(FIRM_COMMISSIONS.keys()) == expected_firms
 
@@ -92,34 +92,32 @@ class TestFirmCommissions:
 # ─── Task 3.12: Contract Cap Tests ──────────────────────────────
 
 class TestContractCaps:
-    def test_topstep_es_cap_5(self):
-        """Topstep 50K caps ES at 5 contracts."""
-        assert get_contract_cap("topstep_50k", "ES") == 5
+    def test_topstep_es_cap_15(self):
+        """Topstep 50K caps ES at 15 contracts."""
+        assert get_contract_cap("topstep_50k", "ES") == 15
 
-    def test_tpt_stricter_than_topstep(self):
-        """TPT is stricter: 3 ES vs Topstep's 5 ES."""
+    def test_tpt_same_cap_as_topstep(self):
+        """TPT and Topstep both cap ES at 15 contracts."""
         tpt = get_contract_cap("tpt_50k", "ES")
         topstep = get_contract_cap("topstep_50k", "ES")
-        assert tpt < topstep
-        assert tpt == 3
-        assert topstep == 5
+        assert tpt == topstep == 15
 
-    def test_atr_wants_8_capped_to_5(self):
-        """ATR sizing wants 8 ES, Topstep cap 5 → capped to 5."""
+    def test_atr_wants_more_capped_to_15(self):
+        """ATR sizing wants >15 ES, Topstep cap 15 → capped to 15."""
         from datetime import datetime, timedelta
         from src.engine.indicators.core import compute_atr
 
-        # Create data that would produce ~8 contracts with dynamic ATR
+        # Create data that would produce >15 contracts with dynamic ATR
         n = 30
         dates = [datetime(2023, 1, 1) + timedelta(days=i) for i in range(n)]
-        # Low ATR to get high contract count: target_risk / (ATR * tick_value)
-        # Want ~8: 500 / (ATR * 12.50) = 8 → ATR ≈ 5.0
+        # Very low ATR to get high contract count: target_risk / (ATR * tick_value)
+        # Want >15: 500 / (ATR * 12.50) > 15 → ATR < 2.67
         df = pl.DataFrame({
             "ts_event": dates,
             "open":   [4000.0] * n,
-            "high":   [4003.0] * n,  # tight range → low ATR
-            "low":    [3997.0] * n,
-            "close":  [4001.0] * n,
+            "high":   [4001.0] * n,  # very tight range → very low ATR
+            "low":    [3999.0] * n,
+            "close":  [4000.5] * n,
             "volume": [50000] * n,
         })
 
@@ -132,18 +130,18 @@ class TestContractCaps:
         # Without cap
         sizes_uncapped, _ = compute_position_sizes(df, config, spec, atr_period=14)
 
-        # With Topstep cap of 5
+        # With Topstep cap of 15
         sizes_capped, _ = compute_position_sizes(
-            df, config, spec, atr_period=14, max_contracts=5,
+            df, config, spec, atr_period=14, max_contracts=15,
         )
 
-        # Find bars where uncapped > 5
+        # Find bars where uncapped > 15
         for i in range(n):
-            if not math.isnan(sizes_uncapped[i]) and sizes_uncapped[i] > 5:
-                assert sizes_capped[i] == 5
+            if not math.isnan(sizes_uncapped[i]) and sizes_uncapped[i] > 15:
+                assert sizes_capped[i] == 15
 
     def test_atr_below_cap_unchanged(self):
-        """ATR wants 3 ES, Topstep cap 5 → stays at 3."""
+        """ATR wants 3 ES, Topstep cap 15 → stays at 3."""
         from datetime import datetime, timedelta
         from src.engine.indicators.core import compute_atr
 
@@ -166,19 +164,19 @@ class TestContractCaps:
         spec = CONTRACT_SPECS["ES"]
 
         sizes, _ = compute_position_sizes(
-            df, config, spec, atr_period=14, max_contracts=5,
+            df, config, spec, atr_period=14, max_contracts=15,
         )
 
-        # All sizes should be <= 5 and unchanged from uncapped
+        # All sizes should be <= 15 and unchanged from uncapped
         sizes_uncapped, _ = compute_position_sizes(df, config, spec, atr_period=14)
         for i in range(n):
-            if not math.isnan(sizes[i]) and sizes_uncapped[i] <= 5:
+            if not math.isnan(sizes[i]) and sizes_uncapped[i] <= 15:
                 assert sizes[i] == sizes_uncapped[i]
 
     def test_unknown_firm_cap_raises(self):
         """Firm not in cap table raises ValueError."""
         with pytest.raises(ValueError, match="No contract cap"):
-            get_contract_cap("alpha_50k", "ES")
+            get_contract_cap("unknown_firm", "ES")
 
     def test_cl_higher_cap_than_es(self):
         """CL generally has higher caps than ES (10 vs 5)."""
