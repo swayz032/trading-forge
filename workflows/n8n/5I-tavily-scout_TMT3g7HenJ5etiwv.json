@@ -63,7 +63,7 @@
         "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json.ideas) }}",
+        "jsonBody": "={{ JSON.stringify({ ideas: $json.ideas }) }}",
         "options": {}
       },
       "id": "post-ideas",
@@ -238,7 +238,7 @@
           "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify($json.ideas) }}",
+          "jsonBody": "={{ JSON.stringify({ ideas: $json.ideas }) }}",
           "options": {}
         },
         "id": "post-ideas",

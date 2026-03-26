@@ -238,7 +238,17 @@ agentRoutes.post("/run-class-strategy", async (req, res) => {
 // ─── POST /api/agent/scout-ideas ─────────────────────────────────
 
 agentRoutes.post("/scout-ideas", async (req, res) => {
-  const parsed = scoutSchema.safeParse(req.body);
+  let parsed = scoutSchema.safeParse(req.body);
+  // Backward compatibility: some n8n workflows still send a raw ideas array.
+  if (!parsed.success && Array.isArray(req.body)) {
+    parsed = scoutSchema.safeParse({ ideas: req.body });
+    if (parsed.success) {
+      logger.warn(
+        { route: "/api/agent/scout-ideas" },
+        "Received deprecated raw array payload; normalize sender to { ideas: [...] }",
+      );
+    }
+  }
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
     return;

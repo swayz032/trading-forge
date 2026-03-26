@@ -56,10 +56,33 @@ function pushBar(symbol: string, bar: Bar) {
     buf = [];
     barBuffer.set(symbol, buf);
   }
+  const last = buf.length > 0 ? buf[buf.length - 1] : null;
+  if (last) {
+    const lastTs = new Date(last.timestamp).getTime();
+    const nextTs = new Date(bar.timestamp).getTime();
+    if (isFinite(lastTs) && isFinite(nextTs)) {
+      if (nextTs < lastTs) return;
+      if (nextTs === lastTs) {
+        buf[buf.length - 1] = bar;
+        return;
+      }
+    }
+  }
   buf.push(bar);
   if (buf.length > BAR_BUFFER_SIZE) {
     buf.shift();
   }
+}
+
+function isValidCoreBar(bar: Bar): boolean {
+  const ts = new Date(bar.timestamp).getTime();
+  if (!isFinite(ts)) return false;
+  if (![bar.open, bar.high, bar.low, bar.close].every((v) => Number.isFinite(v))) return false;
+  if (!Number.isFinite(bar.volume)) return false;
+  if (bar.high < bar.low) return false;
+  if (bar.open < bar.low || bar.open > bar.high) return false;
+  if (bar.close < bar.low || bar.close > bar.high) return false;
+  return true;
 }
 
 /**
@@ -100,6 +123,10 @@ async function processSessionBar(sessionId: string, bar: Bar) {
  * where two bars for the same session overlap and corrupt state.
  */
 async function handleBar(bar: Bar) {
+  if (!isValidCoreBar(bar)) {
+    logger.warn({ symbol: bar.symbol, bar }, "Dropping invalid market data bar");
+    return;
+  }
   pushBar(bar.symbol, bar);
 
   const sessions = sessionsForSymbol(bar.symbol);

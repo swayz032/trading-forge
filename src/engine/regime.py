@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import math
 import sys
+from datetime import date
 from typing import Optional
 
 import click
@@ -170,10 +171,12 @@ def main(config_json: str):
 
     symbol = config.get("symbol", "ES")
     timeframe = config.get("timeframe", "1h")
+    start_date = config.get("start_date", "2010-01-01")
+    end_date = config.get("end_date", date.today().isoformat())
 
     try:
         from src.engine.data_loader import load_ohlcv
-        df = load_ohlcv(symbol, timeframe)
+        df = load_ohlcv(symbol, timeframe, start_date, end_date)
     except Exception as e:
         print(json.dumps({"error": f"Data load failed: {e}"}))
         sys.exit(1)

@@ -33,9 +33,13 @@ export function buildOhlcvQuery(params: OhlcvQueryParams): string {
 
   const s3Url = `s3://${bucket}/${globPath}`;
 
+  const toPredicate = to.includes("T")
+    ? `ts_event <= '${to}'`
+    : `ts_event <= '${to}T23:59:59.999999999'`;
+
   let sql = `SELECT ts_event, open, high, low, close, volume
 FROM read_parquet('${s3Url}')
-WHERE ts_event >= '${from}' AND ts_event <= '${to}'
+WHERE ts_event >= '${from}' AND ${toPredicate}
 ORDER BY ts_event`;
 
   if (limit) {

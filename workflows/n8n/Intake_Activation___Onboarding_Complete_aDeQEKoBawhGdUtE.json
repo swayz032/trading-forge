@@ -579,7 +579,7 @@
         ]
       ]
     },
-    "Emit Kill Switch Receipt": {
+    "Emit Kill/Reject Receipt": {
       "main": [
         [
           {
@@ -1228,7 +1228,7 @@
           ]
         ]
       },
-      "Emit Kill Switch Receipt": {
+      "Emit Kill/Reject Receipt": {
         "main": [
           [
             {

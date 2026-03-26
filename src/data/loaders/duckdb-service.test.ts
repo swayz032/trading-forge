@@ -12,7 +12,7 @@ describe("buildOhlcvQuery", () => {
     });
     expect(sql).toContain("futures/ES/ratio_adj/1min/2024/01/*.parquet");
     expect(sql).toContain("ts_event >= '2024-01-01'");
-    expect(sql).toContain("ts_event <= '2024-01-31'");
+    expect(sql).toContain("ts_event <= '2024-01-31T23:59:59.999999999'");
   });
 
   it("builds query for multi-month range in same year", () => {

@@ -365,6 +365,41 @@ function evaluateRules(
   return rules.every((rule) => evaluateExpression(rule, current, previous));
 }
 
+function getRequiredIndicatorKeys(config: StrategyConfig): string[] {
+  const keys = new Set<string>(["open", "high", "low", "close", "volume"]);
+  const allRules = [...(config.entry_rules ?? []), ...(config.exit_rules ?? [])];
+  const regex = /\b(sma_\d+|ema_\d+|rsi_\d+|atr_\d+|bbands_\d+_(?:upper|middle|lower)|vwap|open|high|low|close|volume)\b/g;
+
+  for (const rule of allRules) {
+    for (const match of rule.matchAll(regex)) {
+      keys.add(match[1]);
+    }
+  }
+
+  if (config.stop_loss?.type === "atr") {
+    keys.add(`atr_${config.stop_loss.atr_period ?? 14}`);
+  }
+
+  return [...keys];
+}
+
+function hasCorruptedCoreData(bar: Bar, indicators: IndicatorValues, requiredKeys: string[]): string[] {
+  const issues: string[] = [];
+  if (![bar.open, bar.high, bar.low, bar.close, bar.volume].every((v) => Number.isFinite(v))) {
+    issues.push("non_finite_bar_values");
+  }
+  if (!(bar.high >= bar.low && bar.open >= bar.low && bar.open <= bar.high && bar.close >= bar.low && bar.close <= bar.high)) {
+    issues.push("ohlc_sanity_violation");
+  }
+  for (const key of requiredKeys) {
+    const value = indicators[key];
+    if (value === undefined || !Number.isFinite(value)) {
+      issues.push(`missing_or_non_finite_${key}`);
+    }
+  }
+  return issues;
+}
+
 // ─── Session Time Filters ───────────────────────────────────
 
 interface SessionWindow {
@@ -552,6 +587,34 @@ export async function evaluateSignals(
   const indicators = computeIndicators(barBuffer);
   const prevKey = `${sessionId}:${symbol}`;
   const prevIndicators = previousIndicators.get(prevKey) ?? null;
+  const requiredKeys = getRequiredIndicatorKeys(config);
+  const dataIssues = hasCorruptedCoreData(bar, indicators, requiredKeys);
+
+  // Hybrid-safe gate policy: fail-closed on corrupted/missing core market data.
+  if (dataIssues.length > 0) {
+    logger.warn(
+      { sessionId, symbol, issues: dataIssues.slice(0, 8) },
+      "Core market data invalid or insufficient — skipping signal evaluation",
+    );
+    previousIndicators.set(prevKey, indicators);
+    await logSignal({
+      sessionId,
+      symbol,
+      timestamp: bar.timestamp,
+      entrySignal: false,
+      exitSignal: false,
+      stopHit: false,
+      sessionFiltered: false,
+      cooldownActive: false,
+      riskGatePassed: false,
+      action: "none",
+      indicators,
+      barClose: bar.close,
+      strategySide: config.side,
+      fillMiss: false,
+    });
+    return;
+  }
 
   // Evaluate entry and exit rules
   const entrySignal = evaluateRules(config.entry_rules ?? [], indicators, prevIndicators);
