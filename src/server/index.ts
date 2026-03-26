@@ -32,6 +32,7 @@ import { sseRoutes } from "./routes/sse.js";
 import { signalRoutes } from "./routes/signals.js";
 import { propFirmRoutes } from "./routes/prop-firm.js";
 import { portfolioRoutes } from "./routes/portfolio.js";
+import { contextRoutes } from "./routes/context.js";
 import { stopAllStreams } from "./services/paper-trading-stream.js";
 
 const app = express();
@@ -126,6 +127,7 @@ app.use("/api/sse", sseRoutes);
 app.use("/api/signals", signalRoutes);
 app.use("/api/prop-firm", propFirmRoutes);
 app.use("/api/portfolio", portfolioRoutes);
+app.use("/api/context", contextRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {

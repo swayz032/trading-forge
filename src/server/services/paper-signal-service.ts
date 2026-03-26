@@ -2,6 +2,7 @@ import { db } from "../db/index.js";
 import { paperSessions, paperPositions, strategies, paperSignalLogs } from "../db/schema.js";
 import { openPosition, closePosition } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
+import { evaluateContextGate } from "./context-gate-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 import { eq, and, isNull } from "drizzle-orm";
@@ -39,6 +40,7 @@ interface StopLossConfig {
 interface CachedSession {
   config: StrategyConfig;
   strategyId: string;
+  strategyName: string;
   symbol: string;
   timeframe: string;             // e.g. "1m", "5m", "15m", "1h"
   cooldownRemaining: number;     // bars remaining in cooldown
@@ -94,6 +96,7 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
   const entry: CachedSession = {
     config,
     strategyId: strategy.id,
+    strategyName: strategy.name,
     symbol: strategy.symbol,
     timeframe: strategy.timeframe ?? "1m",
     cooldownRemaining: 0,
@@ -678,39 +681,69 @@ export async function evaluateSignals(
       );
     }
   } else if (entrySignal && !sessionFiltered && !cooldownActive && !isShadow) {
-    // ─── No position: check for entry ───────────────────────
+    let plannedContracts = config.contracts;
+    let contextAction: "TAKE" | "REDUCE" | "SKIP" = "TAKE";
+
     try {
-      const gateResult = await checkRiskGate(sessionId, symbol, config.contracts);
-      riskGatePassed = gateResult.allowed;
-      if (!riskGatePassed) {
-        logger.info({ sessionId, symbol, reason: gateResult.reason }, "Risk gate rejected entry");
+      const context = await evaluateContextGate(
+        symbol,
+        config.side,
+        bar.close,
+        sessionConfig.strategyName,
+        barBuffer,
+        indicators,
+      );
+      contextAction = context.action;
+
+      if (context.action === "SKIP") {
+        logger.info(
+          { sessionId, symbol, reason: context.reasoning.slice(0, 3) },
+          "Context gate rejected entry",
+        );
+      } else if (context.action === "REDUCE") {
+        plannedContracts = Math.max(
+          1,
+          Math.floor(config.contracts * Math.max(0, context.positionSizeAdjustment)),
+        );
       }
     } catch (err) {
-      logger.error({ err, sessionId }, "Risk gate check failed — skipping entry");
+      logger.warn({ err, sessionId, symbol }, "Context gate failed - defaulting to TAKE");
+    }
+
+    if (contextAction === "SKIP") {
       riskGatePassed = false;
+    } else {
+      try {
+        const gateResult = await checkRiskGate(sessionId, symbol, plannedContracts);
+        riskGatePassed = gateResult.allowed;
+        if (!riskGatePassed) {
+          logger.info({ sessionId, symbol, reason: gateResult.reason }, "Risk gate rejected entry");
+        }
+      } catch (err) {
+        logger.error({ err, sessionId }, "Risk gate check failed - skipping entry");
+        riskGatePassed = false;
+      }
     }
 
     if (riskGatePassed) {
       action = "open";
-      // BUG 2 fix: pass RSI/ATR so fill probability model actually fires
       const result = await openPosition(sessionId, {
         symbol,
         side: config.side,
         signalPrice: bar.close,
-        contracts: config.contracts,
-        orderType: "market",   // signal-driven entries are market orders
+        contracts: plannedContracts,
+        orderType: "market",
         rsi: indicators["rsi_14"],
         atr: indicators["atr_14"],
       });
       if (!result.position) {
-        // Fill probability miss — set short cooldown to prevent hammering every bar
         action = "none";
         fillMiss = true;
         await setCooldown(sessionId, sessionConfig, Math.max(1, Math.floor((config.cooldown_bars ?? 4) / 2)));
       } else {
         logger.info(
-          { sessionId, symbol, side: config.side, price: bar.close },
-          "Paper position opened — entry signal"
+          { sessionId, symbol, side: config.side, price: bar.close, contracts: plannedContracts, contextAction },
+          "Paper position opened - entry signal",
         );
       }
     }
