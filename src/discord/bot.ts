@@ -125,7 +125,7 @@ async function registerCommands() {
 }
 
 // ─── Event handlers ─────────────────────────────────────────
-client.once("clientReady", async () => {
+client.once("ready", async () => {
   log.info(`Discord bot ready as ${client.user?.tag}`);
   await registerCommands();
 

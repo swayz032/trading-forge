@@ -32,15 +32,20 @@ MACRO_WINDOWS = [
 
 
 def _to_et_components(ts: pl.Series) -> tuple[pl.Series, pl.Series]:
-    """Extract hour and minute from timestamps, assuming ET timezone.
+    """Extract hour and minute from timestamps in Eastern Time.
 
-    Note: For production use, timestamps should already be in ET.
-    This is a simplified version that works with naive timestamps.
+    If the series is timezone-aware (e.g. America/New_York), extract
+    components directly — Polars respects the timezone. If naive,
+    assume timestamps are already in ET.
     """
-    # Cast to datetime if needed, extract components
-    dt = ts.cast(pl.Datetime("us"))
-    hour = dt.dt.hour()
-    minute = dt.dt.minute()
+    if ts.dtype == pl.Datetime("us") or getattr(ts.dtype, 'time_zone', None) is None:
+        # Naive datetime — assume ET
+        hour = ts.dt.hour()
+        minute = ts.dt.minute()
+    else:
+        # Timezone-aware — extract directly (Polars uses the tz)
+        hour = ts.dt.hour()
+        minute = ts.dt.minute()
     return hour, minute
 
 
@@ -102,6 +107,24 @@ def is_nypm_killzone(ts: pl.Series) -> pl.Series:
     return in_pm.alias("nypm_killzone")
 
 
+def is_silver_bullet_nyam(ts: pl.Series) -> pl.Series:
+    """Silver Bullet NY AM window: 10:00 AM - 11:00 AM ET."""
+    hour, minute = _to_et_components(ts)
+    return ((hour == 10)).alias("sb_nyam")
+
+
+def is_silver_bullet_nypm(ts: pl.Series) -> pl.Series:
+    """Silver Bullet NY PM window: 14:00 - 15:00 (2-3 PM) ET."""
+    hour, minute = _to_et_components(ts)
+    return ((hour == 14)).alias("sb_nypm")
+
+
+def is_silver_bullet_london(ts: pl.Series) -> pl.Series:
+    """Silver Bullet London window: 03:00 - 04:00 AM ET."""
+    hour, minute = _to_et_components(ts)
+    return ((hour == 3)).alias("sb_london")
+
+
 def is_macro_time(ts: pl.Series) -> pl.Series:
     """ICT Macro times — specific high-probability windows.
 
@@ -134,9 +157,8 @@ def day_of_week_profile(ts: pl.Series) -> pl.Series:
     Returns:
         Series of str: day name (Monday-Sunday).
     """
-    dt = ts.cast(pl.Datetime("us"))
     # Polars weekday: Monday=1 ... Sunday=7
-    weekday = dt.dt.weekday()
+    weekday = ts.dt.weekday()
     day_names = {1: "Monday", 2: "Tuesday", 3: "Wednesday",
                  4: "Thursday", 5: "Friday", 6: "Saturday", 7: "Sunday"}
 
@@ -155,14 +177,13 @@ def quarterly_theory(ts: pl.Series, timeframe: str = "1h") -> pl.Series:
     Returns:
         Series of str: "Q1", "Q2", "Q3", or "Q4".
     """
-    dt = ts.cast(pl.Datetime("us"))
-    minute = dt.dt.minute()
+    minute = ts.dt.minute()
 
     if timeframe in ("1h", "60min"):
         # Quarter of the hour
         quarter = (minute // 15) + 1
     elif timeframe in ("4h", "240min"):
-        hour_in_session = dt.dt.hour() % 4
+        hour_in_session = ts.dt.hour() % 4
         quarter = (hour_in_session) + 1
         quarter = quarter.clip(1, 4)
     else:
@@ -178,7 +199,8 @@ def true_day_open(df: pl.DataFrame) -> pl.Series:
     Returns:
         Series of float: the true day open price for each bar.
     """
-    ts = df["ts_event"].cast(pl.Datetime("us"))
+    ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+    ts = df[ts_col]
     dates = ts.dt.date()
 
     # Get first open price per date

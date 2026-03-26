@@ -29,8 +29,8 @@ def compute_rsi(series: pl.Series, period: int) -> pl.Series:
     gains = delta.clip(lower_bound=0.0)
     losses = (-delta).clip(lower_bound=0.0)
 
-    avg_gain = gains.ewm_mean(span=period)
-    avg_loss = losses.ewm_mean(span=period)
+    avg_gain = gains.ewm_mean(alpha=1.0 / period, adjust=False)
+    avg_loss = losses.ewm_mean(alpha=1.0 / period, adjust=False)
 
     rs = avg_gain / avg_loss
     rsi = 100.0 - (100.0 / (1.0 + rs))
@@ -50,7 +50,7 @@ def compute_atr(df: pl.DataFrame, period: int) -> pl.Series:
     # True range = max of the three components
     true_range = pl.DataFrame({"tr1": tr1, "tr2": tr2, "tr3": tr3}).max_horizontal()
 
-    return true_range.ewm_mean(span=period)
+    return true_range.ewm_mean(alpha=1.0 / period, adjust=False)
 
 
 def compute_adx(df: pl.DataFrame, period: int = 14) -> pl.Series:
@@ -83,15 +83,15 @@ def compute_adx(df: pl.DataFrame, period: int = 14) -> pl.Series:
     # Guard against zero ATR
     safe_atr = atr.fill_null(1.0)
     safe_atr = pl.Series([max(v, 1e-10) if v is not None else 1e-10 for v in safe_atr.to_list()])
-    plus_di = 100.0 * plus_dm.ewm_mean(span=period) / safe_atr
-    minus_di = 100.0 * minus_dm.ewm_mean(span=period) / safe_atr
+    plus_di = 100.0 * plus_dm.ewm_mean(alpha=1.0 / period, adjust=False) / safe_atr
+    minus_di = 100.0 * minus_dm.ewm_mean(alpha=1.0 / period, adjust=False) / safe_atr
 
     # DX and ADX — guard against zero di_sum
     di_sum = plus_di + minus_di
     di_diff = (plus_di - minus_di).abs()
     safe_di_sum = pl.Series([max(v, 1e-10) if v is not None and v == v else 1e-10 for v in di_sum.to_list()])
     dx = 100.0 * di_diff / safe_di_sum
-    adx = dx.fill_nan(0.0).ewm_mean(span=period)
+    adx = dx.fill_nan(0.0).ewm_mean(alpha=1.0 / period, adjust=False)
 
     return adx
 
@@ -141,8 +141,9 @@ def compute_vwap(df: pl.DataFrame) -> pl.Series:
     typical_price = (df["high"] + df["low"] + df["close"]) / 3.0
     tp_vol = typical_price * df["volume"]
 
-    # Extract date for daily reset
-    dates = df["ts_event"].cast(pl.Date)
+    # Extract date for daily reset (prefer ET timezone if available)
+    ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+    dates = df[ts_col].dt.date()
 
     # Build a temporary DataFrame for grouped cumsum
     temp = pl.DataFrame({

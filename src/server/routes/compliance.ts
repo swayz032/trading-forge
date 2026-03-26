@@ -75,7 +75,7 @@ router.get("/rulesets/:firm", async (req: Request, res: Response) => {
   const rulesets = await db
     .select()
     .from(complianceRulesets)
-    .where(eq(complianceRulesets.firm, firm));
+    .where(eq(complianceRulesets.firm, String(firm)));
 
   if (rulesets.length === 0) {
     res.status(404).json({ error: `No rulesets found for firm: ${firm}` });
@@ -100,7 +100,7 @@ router.patch("/rulesets/:id/verify", async (req: Request, res: Response) => {
       verifiedAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(complianceRulesets.id, id))
+    .where(eq(complianceRulesets.id, String(id)))
     .returning();
 
   if (updated.length === 0) {
@@ -163,7 +163,7 @@ router.get("/review/:strategyId", async (req: Request, res: Response) => {
   const reviews = await db
     .select()
     .from(complianceReviews)
-    .where(eq(complianceReviews.strategyId, strategyId))
+    .where(eq(complianceReviews.strategyId, String(strategyId)))
     .orderBy(desc(complianceReviews.createdAt));
 
   res.json({ reviews });
@@ -179,8 +179,8 @@ router.get("/review/:strategyId/:firm", async (req: Request, res: Response) => {
     .from(complianceReviews)
     .where(
       and(
-        eq(complianceReviews.strategyId, strategyId),
-        eq(complianceReviews.firm, firm)
+        eq(complianceReviews.strategyId, String(strategyId)),
+        eq(complianceReviews.firm, String(firm))
       )
     )
     .orderBy(desc(complianceReviews.createdAt))
@@ -275,7 +275,7 @@ router.patch("/drift/:id/resolve", async (req: Request, res: Response) => {
       resolvedBy: resolvedBy || "human",
       notes,
     })
-    .where(eq(complianceDriftLog.id, id))
+    .where(eq(complianceDriftLog.id, String(id)))
     .returning();
 
   if (updated.length === 0) {

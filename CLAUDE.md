@@ -60,7 +60,7 @@ src/
 - **Walk-forward validation is mandatory.** No strategy passes without out-of-sample testing.
 - **No black-box ML for entries/exits.** ML is fine for regime detection and position sizing, not for signal generation.
 - Agents must REJECT strategies that require tight parameter optimization to be profitable.
-- **Technical strategies only for agents.** Agents find simple technical strategies (MAs, RSI, Bollinger, breakouts, VWAP, ATR). ICT/SMC concepts (order blocks, FVGs, liquidity sweeps) are discretionary and applied manually by the trader — agents do NOT codify ICT.
+- **ICT/SMC concepts are fully codified.** 54 ICT indicators and 15 ICT strategies are implemented in `src/engine/indicators/` and `src/engine/strategies/`. Agents CAN generate, test, and optimize ICT-based strategies. ICT constructs (order blocks, FVGs, breakers, sweeps, market structure) are subject to the same robustness rules as any other codified strategy.
 - **ONE account must be profitable.** Agents REJECT any strategy that requires multi-account scaling to be worth trading. If a strategy can't earn serious money on a single $50K prop firm account, it's not good enough.
 
 ## Strategy Performance Requirements — HARD MINIMUMS

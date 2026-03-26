@@ -1,0 +1,488 @@
+{
+  "updatedAt": "2026-03-20T05:21:35.995Z",
+  "createdAt": "2026-03-20T05:21:35.995Z",
+  "id": "ZMgHYjcTq4YTRQXh",
+  "name": "5H-reddit-scout",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 18,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.reddit.com/r/algotrading/top.json?t=day&limit=25",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "reddit-algotrading",
+      "name": "Reddit algotrading",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.reddit.com/r/futurestrading/top.json?t=day&limit=25",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "reddit-futurestrading",
+      "name": "Reddit futurestrading",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.reddit.com/r/prop_firms/top.json?t=day&limit=25",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "reddit-propfirms",
+      "name": "Reddit prop_firms",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "merge-reddit",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst ideas = [];\nfor (const item of allItems) {\n  const data = item.json;\n  const posts = data?.data?.children || [];\n  for (const post of posts) {\n    const d = post.data;\n    if ((d.ups || 0) > 10) {\n      ideas.push({\n        source: 'reddit',\n        title: d.title || '',\n        description: (d.selftext || '').substring(0, 1000),\n        url: 'https://www.reddit.com' + (d.permalink || ''),\n        confidence_score: Math.min(1, (d.ups || 0) / 100)\n      });\n    }\n  }\n}\nreturn [{ json: { ideas } }];"
+      },
+      "id": "parse-reddit",
+      "name": "Parse Reddit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.ideas) }}",
+        "options": {}
+      },
+      "id": "post-ideas",
+      "name": "Post Scout Ideas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Reddit algotrading",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit futurestrading",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit prop_firms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit algotrading": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit futurestrading": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Reddit prop_firms": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Parse Reddit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Reddit": {
+      "main": [
+        [
+          {
+            "node": "Post Scout Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "d3bf4aa3-1282-4eb3-b2b9-b448f1950ec2",
+  "activeVersionId": "d3bf4aa3-1282-4eb3-b2b9-b448f1950ec2",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T05:21:35.995Z",
+      "createdAt": "2026-03-20T05:21:35.995Z",
+      "role": "workflow:owner",
+      "workflowId": "ZMgHYjcTq4YTRQXh",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-20T05:21:35.998Z",
+    "createdAt": "2026-03-20T05:21:35.998Z",
+    "versionId": "d3bf4aa3-1282-4eb3-b2b9-b448f1950ec2",
+    "workflowId": "ZMgHYjcTq4YTRQXh",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 18,
+                "triggerAtMinute": 30
+              }
+            ]
+          }
+        },
+        "id": "schedule-trigger",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "https://www.reddit.com/r/algotrading/top.json?t=day&limit=25",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "reddit-algotrading",
+        "name": "Reddit algotrading",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          -200
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "https://www.reddit.com/r/futurestrading/top.json?t=day&limit=25",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "reddit-futurestrading",
+        "name": "Reddit futurestrading",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "https://www.reddit.com/r/prop_firms/top.json?t=day&limit=25",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "reddit-propfirms",
+        "name": "Reddit prop_firms",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combinationMode": "multiplex",
+          "options": {}
+        },
+        "id": "merge-reddit",
+        "name": "Merge",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          440,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const allItems = $input.all();\nconst ideas = [];\nfor (const item of allItems) {\n  const data = item.json;\n  const posts = data?.data?.children || [];\n  for (const post of posts) {\n    const d = post.data;\n    if ((d.ups || 0) > 10) {\n      ideas.push({\n        source: 'reddit',\n        title: d.title || '',\n        description: (d.selftext || '').substring(0, 1000),\n        url: 'https://www.reddit.com' + (d.permalink || ''),\n        confidence_score: Math.min(1, (d.ups || 0) / 100)\n      });\n    }\n  }\n}\nreturn [{ json: { ideas } }];"
+        },
+        "id": "parse-reddit",
+        "name": "Parse Reddit",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.ideas) }}",
+          "options": {}
+        },
+        "id": "post-ideas",
+        "name": "Post Scout Ideas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Reddit algotrading",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Reddit futurestrading",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Reddit prop_firms",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reddit algotrading": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reddit futurestrading": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Reddit prop_firms": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Parse Reddit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Reddit": {
+        "main": [
+          [
+            {
+              "node": "Post Scout Ideas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-20T05:22:10.390Z",
+        "id": 1187,
+        "workflowId": "ZMgHYjcTq4YTRQXh",
+        "versionId": "d3bf4aa3-1282-4eb3-b2b9-b448f1950ec2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

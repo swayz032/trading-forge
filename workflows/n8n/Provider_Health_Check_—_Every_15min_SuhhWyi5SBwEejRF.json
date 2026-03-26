@@ -1,0 +1,1056 @@
+{
+  "updatedAt": "2026-03-13T05:43:59.394Z",
+  "createdAt": "2026-02-16T13:48:31.254Z",
+  "id": "SuhhWyi5SBwEejRF",
+  "name": "Provider Health Check \u2014 Every 15min",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "interval-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const enabled = $env.N8N_WORKFLOW_PROVIDER_HEALTH_ENABLED;\nif (enabled === 'false' || enabled === '0') {\n  return [{ json: { killed: true, reason: 'kill_switch_disabled' } }];\n}\nconst requestId = 'ops-provider-health-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);\nconst correlationId = 'n8n-provider-health-' + new Date().toISOString().slice(0, 16);\nconst crypto = require('crypto');\nconst payloadHash = crypto.createHash('sha256').update(JSON.stringify({ action: 'ops.provider_health_check', ts: new Date().toISOString().slice(0, 16) })).digest('hex');\nconst idempotencyKey = crypto.createHash('sha256').update(requestId + 'ops.provider_health_check' + payloadHash).digest('hex');\nreturn [{ json: { killed: false, requestId, correlationId, idempotencyKey, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "kill-switch-and-prep",
+      "name": "Kill Switch + Prep",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.killed }}",
+              "operation": "equals",
+              "value2": "true"
+            }
+          ]
+        }
+      },
+      "id": "check-killed",
+      "name": "Kill Switch Active?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/provider_call_log?select=external_provider,status,http_status,started_at,completed_at,created_at&order=started_at.desc&limit=250",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "retry": {
+            "maxRetries": 3,
+            "retryInterval": 1000,
+            "retryIntervalBackoff": true
+          }
+        }
+      },
+      "id": "check-providers",
+      "name": "Load Provider Calls (via Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        400
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-provider-health-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_ops', status: 'SUCCEEDED', correlation_id: $('Kill Switch + Prep').first().json.correlationId, actor_type: 'SYSTEM', actor_id: 'n8n-provider-health', action: { action_type: 'ops.provider_health_check', risk_tier: ($json.overallStatus === 'passed' ? 'green' : 'yellow'), providers: $json.providers || [], robot_status: $json.overallStatus || 'partial', source: $json.source || 'provider_call_log', queried_rows: $json.queriedRows || 0 }, created_at: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "emit-receipt",
+      "name": "Emit Health Receipt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-provider-health-killed-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_ops', status: 'SKIPPED', correlation_id: 'n8n-provider-health-killed-' + new Date().toISOString().slice(0, 16), actor_type: 'SYSTEM', actor_id: 'n8n-provider-health', action: { action_type: 'ops.provider_health_check', reason: 'kill_switch_disabled' }, created_at: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "emit-receipt-killed",
+      "name": "Emit Kill Switch Receipt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        200
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        440,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-provider-health-fail-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_ops', status: 'FAILED', correlation_id: 'n8n-provider-health', actor_type: 'SYSTEM', actor_id: 'n8n-provider-health', action: { action_type: 'ops.provider_health_check' }, result: { error_message: $json.message || 'Health check failed' }, created_at: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "emit-failure-receipt",
+      "name": "Emit Failure Receipt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawItems = $input.all().map((item) => item.json || {});\nconst rows = Array.isArray(rawItems[0]) ? rawItems[0] : rawItems;\nconst explicitMonitored = ($env.ASPIRE_PROVIDER_MONITOR_LIST || '').split(',').map((value) => value.trim().toLowerCase()).filter(Boolean);\nconst requireRecent = ['true', '1', 'yes'].includes(String($env.ASPIRE_PROVIDER_REQUIRE_RECENT || 'false').toLowerCase());\nconst providersMap = new Map();\nconst windowStart = Date.now() - (24 * 60 * 60 * 1000);\nconst dataRows = rows.filter((row) => {\n  if (!row || typeof row !== 'object' || Array.isArray(row) || !(row.external_provider || row.provider)) {\n    return false;\n  }\n  const started = Date.parse(row.started_at || row.created_at || '');\n  return Number.isFinite(started) && started >= windowStart;\n});\nconst derivedMonitored = [...new Set(dataRows.map((row) => String(row.external_provider || row.provider || 'unknown').trim().toLowerCase()).filter(Boolean))];\nconst monitored = explicitMonitored.length > 0 ? explicitMonitored : derivedMonitored;\nfor (const name of monitored) {\n  providersMap.set(name, {\n    provider: name,\n    totalCalls: 0,\n    failedCalls: 0,\n    avgLatencyMs: 0,\n    healthStatus: 'no_data',\n    lastSeen: null,\n    lastSuccessfulCall: null,\n  });\n}\nfor (const row of dataRows) {\n  const name = String(row.external_provider || row.provider || 'unknown').trim().toLowerCase();\n  if (!providersMap.has(name)) {\n    providersMap.set(name, {\n      provider: name,\n      totalCalls: 0,\n      failedCalls: 0,\n      avgLatencyMs: 0,\n      healthStatus: 'no_data',\n      lastSeen: null,\n      lastSuccessfulCall: null,\n    });\n  }\n  const entry = providersMap.get(name);\n  entry.totalCalls += 1;\n  const status = String(row.status || '').toLowerCase();\n  if (['failed', 'partial', 'canceled', 'error'].includes(status)) {\n    entry.failedCalls += 1;\n  }\n  const started = Date.parse(row.started_at || row.created_at || '');\n  const completed = Date.parse(row.completed_at || row.finished_at || row.created_at || '');\n  if (Number.isFinite(started) && Number.isFinite(completed) && completed >= started) {\n    const latency = completed - started;\n    const previousCount = Math.max(entry.totalCalls - 1, 0);\n    entry.avgLatencyMs = Math.round(((entry.avgLatencyMs * previousCount) + latency) / entry.totalCalls);\n  }\n  entry.lastSeen = row.started_at || row.created_at || entry.lastSeen;\n  if (status === 'success') {\n    entry.lastSuccessfulCall = row.completed_at || row.finished_at || row.started_at || row.created_at || entry.lastSuccessfulCall;\n  }\n}\nconst providers = Array.from(providersMap.values()).map((entry) => {\n  if (entry.totalCalls === 0) {\n    entry.healthStatus = 'no_data';\n    entry.errorRate = 0;\n    return entry;\n  }\n  entry.errorRate = Math.round((entry.failedCalls / entry.totalCalls) * 10000) / 100;\n  if (entry.errorRate >= 50) {\n    entry.healthStatus = 'disconnected';\n  } else if (entry.errorRate > 0) {\n    entry.healthStatus = 'degraded';\n  } else {\n    entry.healthStatus = 'connected';\n  }\n  return entry;\n});\nconst disconnected = providers.filter((entry) => entry.healthStatus === 'disconnected');\nconst degraded = providers.filter((entry) => entry.healthStatus === 'degraded');\nconst noData = providers.filter((entry) => entry.healthStatus === 'no_data');\nlet overallStatus = 'passed';\nlet summary = '';\nif (disconnected.length > 0) {\n  overallStatus = 'failed';\n  summary = `Disconnected providers detected (${disconnected.map((entry) => entry.provider).join(', ')})`;\n} else if (degraded.length > 0) {\n  overallStatus = 'partial';\n  summary = `Provider health degraded (${degraded.map((entry) => `${entry.provider}:${entry.errorRate}%`).join(', ')})`;\n} else if (providers.length === 0) {\n  summary = 'No recent provider traffic in last 24h';\n} else if (noData.length > 0 && requireRecent) {\n  overallStatus = 'partial';\n  summary = `Missing recent provider traffic (${noData.map((entry) => entry.provider).join(', ')})`;\n} else if (noData.length > 0) {\n  summary = `No provider errors detected; idle providers (${noData.map((entry) => entry.provider).join(', ')})`;\n} else {\n  summary = `All monitored providers healthy (${providers.length} providers)`;\n}\nreturn [{ json: { overallStatus, summary, providers, source: 'provider_call_log', queriedRows: dataRows.length, requireRecent, explicitMonitorCount: explicitMonitored.length } }];"
+      },
+      "id": "provider-evaluate-health",
+      "name": "Evaluate Provider Health",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst prep = $('Kill Switch + Prep').first().json;\nconst payload = {\n  id: prep.requestId,\n  env: $env.ASPIRE_ROBOT_ENV || 'production',\n  suite: $env.ASPIRE_ROBOT_SUITE || 'aspire_robots',\n  status: $json.overallStatus || 'partial',\n  startedAt: prep.timestamp || new Date().toISOString(),\n  finishedAt: new Date().toISOString(),\n  versionRef: ($env.ASPIRE_ROBOT_VERSION_REF || 'n8n-live') + ':provider-health',\n  summary: $json.summary || 'Provider health workflow completed',\n  scenarios: [{\n    name: 'provider_health',\n    status: $json.overallStatus || 'partial',\n    summary: $json.summary || 'Provider health workflow completed',\n    evidence: [\n      `correlation:${prep.correlationId}`,\n      `providers:${($json.providers || []).length}`,\n      `invalid_source:${Boolean($json.invalidSource)}`\n    ]\n  }],\n  meta: { workflow: 'provider-health', correlationId: prep.correlationId, requestId: prep.requestId, invalidSource: Boolean($json.invalidSource), providers: $json.providers || [] }\n};\nconst robotBody = JSON.stringify(payload);\nconst robotSignature = crypto.createHmac('sha256', $env.ASPIRE_ROBOT_S2S_SECRET).update(robotBody).digest('hex');\nreturn [{ json: { ...$json, robotBody, robotSignature } }];"
+      },
+      "id": "provider-build-robot",
+      "name": "Build Provider Robot Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ASPIRE_ROBOT_INGEST_URL }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-robot-signature",
+              "value": "={{ $json.robotSignature }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.robotBody }}",
+        "options": {
+          "timeout": 10000,
+          "retry": {
+            "maxRetries": 3,
+            "retryInterval": 1000,
+            "retryIntervalBackoff": true
+          }
+        }
+      },
+      "id": "provider-post-robot",
+      "name": "POST Provider Robot Run ? Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst payload = {\n  id: 'n8n-provider-health-error-' + Date.now(),\n  env: $env.ASPIRE_ROBOT_ENV || 'production',\n  suite: $env.ASPIRE_ROBOT_SUITE || 'aspire_robots',\n  status: 'failed',\n  startedAt: new Date().toISOString(),\n  finishedAt: new Date().toISOString(),\n  versionRef: ($env.ASPIRE_ROBOT_VERSION_REF || 'n8n-live') + ':provider-health',\n  summary: $json.message || 'Provider health workflow failed',\n  scenarios: [{ name: 'provider_health', status: 'failed', summary: $json.message || 'Provider health workflow failed', evidence: [($json.message || 'workflow_error')] }],\n  meta: { workflow: 'provider-health', error: $json.message || 'Provider health workflow failed' }\n};\nconst robotBody = JSON.stringify(payload);\nconst robotSignature = crypto.createHmac('sha256', $env.ASPIRE_ROBOT_S2S_SECRET).update(robotBody).digest('hex');\nreturn [{ json: { ...$json, robotBody, robotSignature } }];"
+      },
+      "id": "provider-build-error-robot",
+      "name": "Build Provider Error Robot Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ASPIRE_ROBOT_INGEST_URL }}",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-robot-signature",
+              "value": "={{ $json.robotSignature }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.robotBody }}",
+        "options": {
+          "timeout": 10000,
+          "retry": {
+            "maxRetries": 3,
+            "retryInterval": 1000,
+            "retryIntervalBackoff": true
+          }
+        }
+      },
+      "id": "provider-post-error-robot",
+      "name": "POST Provider Error Robot Run ? Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        640
+      ]
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Kill Switch + Prep",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kill Switch + Prep": {
+      "main": [
+        [
+          {
+            "node": "Kill Switch Active?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kill Switch Active?": {
+      "main": [
+        [
+          {
+            "node": "Load Provider Calls (via Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Emit Kill Switch Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Provider Error Robot Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Provider Health": {
+      "main": [
+        [
+          {
+            "node": "Build Provider Robot Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Provider Robot Run": {
+      "main": [
+        [
+          {
+            "node": "POST Provider Robot Run ? Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Provider Robot Run ? Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Emit Health Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Provider Error Robot Run": {
+      "main": [
+        [
+          {
+            "node": "POST Provider Error Robot Run ? Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Provider Error Robot Run ? Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Emit Failure Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Provider Calls (via Supabase)": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Provider Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Every 15 Minutes": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "df4173a4-fbcd-4924-8e77-e08428b68f30",
+  "activeVersionId": "df4173a4-fbcd-4924-8e77-e08428b68f30",
+  "versionCounter": 344,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-02-16T13:48:31.254Z",
+      "createdAt": "2026-02-16T13:48:31.254Z",
+      "role": "workflow:owner",
+      "workflowId": "SuhhWyi5SBwEejRF",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-13T04:08:36.526Z",
+    "createdAt": "2026-03-13T04:08:36.526Z",
+    "versionId": "df4173a4-fbcd-4924-8e77-e08428b68f30",
+    "workflowId": "SuhhWyi5SBwEejRF",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 15
+              }
+            ]
+          }
+        },
+        "id": "interval-trigger",
+        "name": "Every 15 Minutes",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          220,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const enabled = $env.N8N_WORKFLOW_PROVIDER_HEALTH_ENABLED;\nif (enabled === 'false' || enabled === '0') {\n  return [{ json: { killed: true, reason: 'kill_switch_disabled' } }];\n}\nconst requestId = 'ops-provider-health-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);\nconst correlationId = 'n8n-provider-health-' + new Date().toISOString().slice(0, 16);\nconst crypto = require('crypto');\nconst payloadHash = crypto.createHash('sha256').update(JSON.stringify({ action: 'ops.provider_health_check', ts: new Date().toISOString().slice(0, 16) })).digest('hex');\nconst idempotencyKey = crypto.createHash('sha256').update(requestId + 'ops.provider_health_check' + payloadHash).digest('hex');\nreturn [{ json: { killed: false, requestId, correlationId, idempotencyKey, timestamp: new Date().toISOString() } }];"
+        },
+        "id": "kill-switch-and-prep",
+        "name": "Kill Switch + Prep",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{ $json.killed }}",
+                "operation": "equals",
+                "value2": "true"
+              }
+            ]
+          }
+        },
+        "id": "check-killed",
+        "name": "Kill Switch Active?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          660,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "={{ $env.SUPABASE_URL }}/rest/v1/provider_call_log?select=external_provider,status,http_status,started_at,completed_at,created_at&order=started_at.desc&limit=250",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000,
+            "retry": {
+              "maxRetries": 3,
+              "retryInterval": 1000,
+              "retryIntervalBackoff": true
+            }
+          }
+        },
+        "id": "check-providers",
+        "name": "Load Provider Calls (via Supabase)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          400
+        ],
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-provider-health-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_ops', status: 'SUCCEEDED', correlation_id: $('Kill Switch + Prep').first().json.correlationId, actor_type: 'SYSTEM', actor_id: 'n8n-provider-health', action: { action_type: 'ops.provider_health_check', risk_tier: ($json.overallStatus === 'passed' ? 'green' : 'yellow'), providers: $json.providers || [], robot_status: $json.overallStatus || 'partial', source: $json.source || 'provider_call_log', queried_rows: $json.queriedRows || 0 }, created_at: new Date().toISOString() }) }}",
+          "options": {
+            "timeout": 5000
+          }
+        },
+        "id": "emit-receipt",
+        "name": "Emit Health Receipt",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1100,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-provider-health-killed-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_ops', status: 'SKIPPED', correlation_id: 'n8n-provider-health-killed-' + new Date().toISOString().slice(0, 16), actor_type: 'SYSTEM', actor_id: 'n8n-provider-health', action: { action_type: 'ops.provider_health_check', reason: 'kill_switch_disabled' }, created_at: new Date().toISOString() }) }}",
+          "options": {
+            "timeout": 5000
+          }
+        },
+        "id": "emit-receipt-killed",
+        "name": "Emit Kill Switch Receipt",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          200
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          440,
+          560
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.SUPABASE_URL }}/rest/v1/receipts",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ receipt_id: 'n8n-provider-health-fail-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), suite_id: ($env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), tenant_id: 'system', office_id: ($env.DEFAULT_OFFICE_ID || $env.DEFAULT_SUITE_ID || 'ffffffff-0000-0000-0000-system000000'), receipt_type: 'n8n_ops', status: 'FAILED', correlation_id: 'n8n-provider-health', actor_type: 'SYSTEM', actor_id: 'n8n-provider-health', action: { action_type: 'ops.provider_health_check' }, result: { error_message: $json.message || 'Health check failed' }, created_at: new Date().toISOString() }) }}",
+          "options": {
+            "timeout": 5000
+          }
+        },
+        "id": "emit-failure-receipt",
+        "name": "Emit Failure Receipt",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          560
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const rawItems = $input.all().map((item) => item.json || {});\nconst rows = Array.isArray(rawItems[0]) ? rawItems[0] : rawItems;\nconst explicitMonitored = ($env.ASPIRE_PROVIDER_MONITOR_LIST || '').split(',').map((value) => value.trim().toLowerCase()).filter(Boolean);\nconst requireRecent = ['true', '1', 'yes'].includes(String($env.ASPIRE_PROVIDER_REQUIRE_RECENT || 'false').toLowerCase());\nconst providersMap = new Map();\nconst windowStart = Date.now() - (24 * 60 * 60 * 1000);\nconst dataRows = rows.filter((row) => {\n  if (!row || typeof row !== 'object' || Array.isArray(row) || !(row.external_provider || row.provider)) {\n    return false;\n  }\n  const started = Date.parse(row.started_at || row.created_at || '');\n  return Number.isFinite(started) && started >= windowStart;\n});\nconst derivedMonitored = [...new Set(dataRows.map((row) => String(row.external_provider || row.provider || 'unknown').trim().toLowerCase()).filter(Boolean))];\nconst monitored = explicitMonitored.length > 0 ? explicitMonitored : derivedMonitored;\nfor (const name of monitored) {\n  providersMap.set(name, {\n    provider: name,\n    totalCalls: 0,\n    failedCalls: 0,\n    avgLatencyMs: 0,\n    healthStatus: 'no_data',\n    lastSeen: null,\n    lastSuccessfulCall: null,\n  });\n}\nfor (const row of dataRows) {\n  const name = String(row.external_provider || row.provider || 'unknown').trim().toLowerCase();\n  if (!providersMap.has(name)) {\n    providersMap.set(name, {\n      provider: name,\n      totalCalls: 0,\n      failedCalls: 0,\n      avgLatencyMs: 0,\n      healthStatus: 'no_data',\n      lastSeen: null,\n      lastSuccessfulCall: null,\n    });\n  }\n  const entry = providersMap.get(name);\n  entry.totalCalls += 1;\n  const status = String(row.status || '').toLowerCase();\n  if (['failed', 'partial', 'canceled', 'error'].includes(status)) {\n    entry.failedCalls += 1;\n  }\n  const started = Date.parse(row.started_at || row.created_at || '');\n  const completed = Date.parse(row.completed_at || row.finished_at || row.created_at || '');\n  if (Number.isFinite(started) && Number.isFinite(completed) && completed >= started) {\n    const latency = completed - started;\n    const previousCount = Math.max(entry.totalCalls - 1, 0);\n    entry.avgLatencyMs = Math.round(((entry.avgLatencyMs * previousCount) + latency) / entry.totalCalls);\n  }\n  entry.lastSeen = row.started_at || row.created_at || entry.lastSeen;\n  if (status === 'success') {\n    entry.lastSuccessfulCall = row.completed_at || row.finished_at || row.started_at || row.created_at || entry.lastSuccessfulCall;\n  }\n}\nconst providers = Array.from(providersMap.values()).map((entry) => {\n  if (entry.totalCalls === 0) {\n    entry.healthStatus = 'no_data';\n    entry.errorRate = 0;\n    return entry;\n  }\n  entry.errorRate = Math.round((entry.failedCalls / entry.totalCalls) * 10000) / 100;\n  if (entry.errorRate >= 50) {\n    entry.healthStatus = 'disconnected';\n  } else if (entry.errorRate > 0) {\n    entry.healthStatus = 'degraded';\n  } else {\n    entry.healthStatus = 'connected';\n  }\n  return entry;\n});\nconst disconnected = providers.filter((entry) => entry.healthStatus === 'disconnected');\nconst degraded = providers.filter((entry) => entry.healthStatus === 'degraded');\nconst noData = providers.filter((entry) => entry.healthStatus === 'no_data');\nlet overallStatus = 'passed';\nlet summary = '';\nif (disconnected.length > 0) {\n  overallStatus = 'failed';\n  summary = `Disconnected providers detected (${disconnected.map((entry) => entry.provider).join(', ')})`;\n} else if (degraded.length > 0) {\n  overallStatus = 'partial';\n  summary = `Provider health degraded (${degraded.map((entry) => `${entry.provider}:${entry.errorRate}%`).join(', ')})`;\n} else if (providers.length === 0) {\n  summary = 'No recent provider traffic in last 24h';\n} else if (noData.length > 0 && requireRecent) {\n  overallStatus = 'partial';\n  summary = `Missing recent provider traffic (${noData.map((entry) => entry.provider).join(', ')})`;\n} else if (noData.length > 0) {\n  summary = `No provider errors detected; idle providers (${noData.map((entry) => entry.provider).join(', ')})`;\n} else {\n  summary = `All monitored providers healthy (${providers.length} providers)`;\n}\nreturn [{ json: { overallStatus, summary, providers, source: 'provider_call_log', queriedRows: dataRows.length, requireRecent, explicitMonitorCount: explicitMonitored.length } }];"
+        },
+        "id": "provider-evaluate-health",
+        "name": "Evaluate Provider Health",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1100,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const crypto = require('crypto');\nconst prep = $('Kill Switch + Prep').first().json;\nconst payload = {\n  id: prep.requestId,\n  env: $env.ASPIRE_ROBOT_ENV || 'production',\n  suite: $env.ASPIRE_ROBOT_SUITE || 'aspire_robots',\n  status: $json.overallStatus || 'partial',\n  startedAt: prep.timestamp || new Date().toISOString(),\n  finishedAt: new Date().toISOString(),\n  versionRef: ($env.ASPIRE_ROBOT_VERSION_REF || 'n8n-live') + ':provider-health',\n  summary: $json.summary || 'Provider health workflow completed',\n  scenarios: [{\n    name: 'provider_health',\n    status: $json.overallStatus || 'partial',\n    summary: $json.summary || 'Provider health workflow completed',\n    evidence: [\n      `correlation:${prep.correlationId}`,\n      `providers:${($json.providers || []).length}`,\n      `invalid_source:${Boolean($json.invalidSource)}`\n    ]\n  }],\n  meta: { workflow: 'provider-health', correlationId: prep.correlationId, requestId: prep.requestId, invalidSource: Boolean($json.invalidSource), providers: $json.providers || [] }\n};\nconst robotBody = JSON.stringify(payload);\nconst robotSignature = crypto.createHmac('sha256', $env.ASPIRE_ROBOT_S2S_SECRET).update(robotBody).digest('hex');\nreturn [{ json: { ...$json, robotBody, robotSignature } }];"
+        },
+        "id": "provider-build-robot",
+        "name": "Build Provider Robot Run",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1320,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.ASPIRE_ROBOT_INGEST_URL }}",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "x-robot-signature",
+                "value": "={{ $json.robotSignature }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.robotBody }}",
+          "options": {
+            "timeout": 10000,
+            "retry": {
+              "maxRetries": 3,
+              "retryInterval": 1000,
+              "retryIntervalBackoff": true
+            }
+          }
+        },
+        "id": "provider-post-robot",
+        "name": "POST Provider Robot Run ? Orchestrator",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1540,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const crypto = require('crypto');\nconst payload = {\n  id: 'n8n-provider-health-error-' + Date.now(),\n  env: $env.ASPIRE_ROBOT_ENV || 'production',\n  suite: $env.ASPIRE_ROBOT_SUITE || 'aspire_robots',\n  status: 'failed',\n  startedAt: new Date().toISOString(),\n  finishedAt: new Date().toISOString(),\n  versionRef: ($env.ASPIRE_ROBOT_VERSION_REF || 'n8n-live') + ':provider-health',\n  summary: $json.message || 'Provider health workflow failed',\n  scenarios: [{ name: 'provider_health', status: 'failed', summary: $json.message || 'Provider health workflow failed', evidence: [($json.message || 'workflow_error')] }],\n  meta: { workflow: 'provider-health', error: $json.message || 'Provider health workflow failed' }\n};\nconst robotBody = JSON.stringify(payload);\nconst robotSignature = crypto.createHmac('sha256', $env.ASPIRE_ROBOT_S2S_SECRET).update(robotBody).digest('hex');\nreturn [{ json: { ...$json, robotBody, robotSignature } }];"
+        },
+        "id": "provider-build-error-robot",
+        "name": "Build Provider Error Robot Run",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          640
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.ASPIRE_ROBOT_INGEST_URL }}",
+          "authentication": "none",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "x-robot-signature",
+                "value": "={{ $json.robotSignature }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.robotBody }}",
+          "options": {
+            "timeout": 10000,
+            "retry": {
+              "maxRetries": 3,
+              "retryInterval": 1000,
+              "retryIntervalBackoff": true
+            }
+          }
+        },
+        "id": "provider-post-error-robot",
+        "name": "POST Provider Error Robot Run ? Orchestrator",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          640
+        ]
+      }
+    ],
+    "connections": {
+      "Every 15 Minutes": {
+        "main": [
+          [
+            {
+              "node": "Kill Switch + Prep",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Kill Switch + Prep": {
+        "main": [
+          [
+            {
+              "node": "Kill Switch Active?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Kill Switch Active?": {
+        "main": [
+          [
+            {
+              "node": "Load Provider Calls (via Supabase)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Emit Kill Switch Receipt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Build Provider Error Robot Run",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Evaluate Provider Health": {
+        "main": [
+          [
+            {
+              "node": "Build Provider Robot Run",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Provider Robot Run": {
+        "main": [
+          [
+            {
+              "node": "POST Provider Robot Run ? Orchestrator",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Provider Robot Run ? Orchestrator": {
+        "main": [
+          [
+            {
+              "node": "Emit Health Receipt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Provider Error Robot Run": {
+        "main": [
+          [
+            {
+              "node": "POST Provider Error Robot Run ? Orchestrator",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Provider Error Robot Run ? Orchestrator": {
+        "main": [
+          [
+            {
+              "node": "Emit Failure Receipt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Load Provider Calls (via Supabase)": {
+        "main": [
+          [
+            {
+              "node": "Evaluate Provider Health",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-13T04:08:36.573Z",
+        "id": 1101,
+        "workflowId": "SuhhWyi5SBwEejRF",
+        "versionId": "df4173a4-fbcd-4924-8e77-e08428b68f30",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-13T05:43:59.435Z",
+        "id": 1108,
+        "workflowId": "SuhhWyi5SBwEejRF",
+        "versionId": "df4173a4-fbcd-4924-8e77-e08428b68f30",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-13T05:43:59.492Z",
+        "id": 1109,
+        "workflowId": "SuhhWyi5SBwEejRF",
+        "versionId": "df4173a4-fbcd-4924-8e77-e08428b68f30",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

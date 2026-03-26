@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 
 import numpy as np
+import pandas as pd
 import polars as pl
 import pytest
 
@@ -10,6 +11,8 @@ from src.engine.fill_model import (
     compute_fill_probabilities,
     apply_fill_model,
     DEFAULT_FILL_CONFIG,
+    estimate_spread_ticks,
+    compute_fill_probabilities_v2,
 )
 
 
@@ -164,3 +167,73 @@ class TestDeterminism:
 
         # Extremely unlikely to be identical with 50 coin flips
         assert not np.array_equal(f1, f2)
+
+
+# ─── V2 Fill Model Tests ──────────────────────────────────────
+
+
+class TestSpreadEstimation:
+    def test_spread_estimation_scales_with_atr(self):
+        """Spread should increase at high ATR percentiles."""
+        atr = np.array([1.0] * 80 + [5.0] * 15 + [10.0] * 5)
+        spreads = estimate_spread_ticks(atr, contract_tick_size=0.25)
+        # Low ATR bars should have base spread
+        assert spreads[0] == 1.0
+        # High ATR bars should have wider spread
+        assert spreads[-1] >= 2.0
+
+
+class TestFillV2:
+    def test_stop_market_guaranteed_fill(self):
+        """Stop-market orders should always have 1.0 fill probability."""
+        df = pl.DataFrame({
+            "ts_event": pd.date_range("2024-01-01", periods=10, freq="h"),
+            "open": [100.0] * 10,
+            "high": [101.0] * 10,
+            "low": [99.0] * 10,
+            "close": [100.5] * 10,
+            "volume": [1000] * 10,
+            "rsi_14": [50.0] * 10,
+        })
+        entries = np.array([True] * 10)
+        config = {"order_type": "stop", "limit_at_current": 0.95}
+        probs = compute_fill_probabilities_v2(df, config, entries, order_type="stop_market")
+        assert np.all(probs == 1.0)
+
+    def test_stop_limit_reduced_probability(self):
+        """Stop-limit should have lower fill probability than limit."""
+        df = pl.DataFrame({
+            "ts_event": pd.date_range("2024-01-01", periods=10, freq="h"),
+            "open": [100.0] * 10,
+            "high": [101.0] * 10,
+            "low": [99.0] * 10,
+            "close": [100.5] * 10,
+            "volume": [1000] * 10,
+            "rsi_14": [50.0] * 10,
+        })
+        entries = np.array([True] * 10)
+        config = {"order_type": "limit", "limit_at_current": 0.95, "limit_at_extreme": 0.50, "limit_at_sr": 0.60}
+
+        limit_probs = compute_fill_probabilities_v2(df, config, entries, order_type="limit")
+        stop_limit_probs = compute_fill_probabilities_v2(df, config, entries, order_type="stop_limit")
+
+        # Stop-limit should be lower than limit at same RSI
+        assert np.all(stop_limit_probs <= limit_probs)
+
+    def test_backward_compat_unchanged(self):
+        """Original compute_fill_probabilities should remain unchanged."""
+        df = pl.DataFrame({
+            "ts_event": pd.date_range("2024-01-01", periods=5, freq="h"),
+            "open": [100.0] * 5,
+            "high": [101.0] * 5,
+            "low": [99.0] * 5,
+            "close": [100.5] * 5,
+            "volume": [1000] * 5,
+            "rsi_14": [50.0] * 5,
+        })
+        entries = np.array([True] * 5)
+        config = {"order_type": "market"}
+
+        # V1 should still work unchanged
+        probs = compute_fill_probabilities(df, config, entries)
+        assert np.all(probs == 1.0)

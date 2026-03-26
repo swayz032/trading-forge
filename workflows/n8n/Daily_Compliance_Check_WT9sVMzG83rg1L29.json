@@ -1,0 +1,595 @@
+{
+  "updatedAt": "2026-03-19T01:38:31.329Z",
+  "createdAt": "2026-03-14T21:05:47.562Z",
+  "id": "WT9sVMzG83rg1L29",
+  "name": "Daily Compliance Check",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger-schedule",
+      "name": "Daily 9AM ET Mon-Fri",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-freshness",
+      "name": "Fetch Ruleset Freshness",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:4000/api/compliance/rulesets/freshness",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "code-check-stale",
+      "name": "Check for Stale Firms",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const response = $input.first().json;\nconst firms = response.firms || response.data || response;\nconst staleFirms = [];\n\nif (Array.isArray(firms)) {\n  for (const firm of firms) {\n    if (firm.freshForTrading === false) {\n      staleFirms.push({\n        firm: firm.firm || firm.name || 'Unknown',\n        ageHours: firm.ageHours || firm.age_hours || 0,\n        lastParsed: firm.lastParsed || firm.last_parsed || 'N/A'\n      });\n    }\n  }\n} else if (typeof firms === 'object') {\n  for (const [key, val] of Object.entries(firms)) {\n    if (val && val.freshForTrading === false) {\n      staleFirms.push({\n        firm: key,\n        ageHours: val.ageHours || val.age_hours || 0,\n        lastParsed: val.lastParsed || val.last_parsed || 'N/A'\n      });\n    }\n  }\n}\n\nreturn [{\n  json: {\n    staleFirms,\n    staleFirmCount: staleFirms.length,\n    checkTime: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "if-stale",
+      "name": "Any Stale Firms?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        750,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "rightValue": ""
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "stale-check",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $json.staleFirmCount }}",
+              "rightValue": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-format-alert",
+      "name": "Format Stale Firm Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\nconst staleFirms = data.staleFirms || [];\n\nconst firmDetails = staleFirms.map(f => \n  `  - ${f.firm}: ${f.ageHours.toFixed(1)}h stale (last parsed: ${f.lastParsed})`\n).join('\\n');\n\nconst alertMessage = `${staleFirms.length} firm(s) have stale rulesets\\n\\n${firmDetails}\\n\\nChecked at: ${data.checkTime}\\nAction Required: Re-parse stale rulesets before trading session.`;\n\nreturn [{\n  json: {\n    title: 'Stale Rulesets Detected',\n    message: alertMessage,\n    severity: 'warning',\n    data: {\n      staleFirmCount: String(staleFirms.length),\n      firms: staleFirms.map(f => f.firm).join(', '),\n      checkTime: data.checkTime\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-send-alert",
+      "name": "Send Stale Firm Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1250,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/compliance",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "code-all-fresh",
+      "name": "Log All Firms Fresh",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        450
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const data = $input.first().json;\n\nreturn [{\n  json: {\n    alert: false,\n    status: 'ALL_FRESH',\n    message: 'All firms fresh - no stale rulesets detected.',\n    checkTime: data.checkTime || new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        600
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "http-error-alert",
+      "name": "Send Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        250,
+        600
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Compliance Check Error', message: $input.first().json.execution ? ($input.first().json.execution.error ? $input.first().json.execution.error.message : 'Unknown error') : ($input.first().json.error ? $input.first().json.error.message : JSON.stringify($input.first().json).substring(0, 500)), severity: 'critical', data: { workflow: 'Daily Compliance Check', timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Daily 9AM ET Mon-Fri": {
+      "main": [
+        [
+          {
+            "node": "Fetch Ruleset Freshness",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Ruleset Freshness": {
+      "main": [
+        [
+          {
+            "node": "Check for Stale Firms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Stale Firms": {
+      "main": [
+        [
+          {
+            "node": "Any Stale Firms?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Stale Firms?": {
+      "main": [
+        [
+          {
+            "node": "Format Stale Firm Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log All Firms Fresh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Stale Firm Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Stale Firm Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Daily 9AM ET Mon-Fri": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "4312a752-a05e-4cc9-98e3-0664d2c35581",
+  "activeVersionId": "4312a752-a05e-4cc9-98e3-0664d2c35581",
+  "versionCounter": 14,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T21:05:47.562Z",
+      "createdAt": "2026-03-14T21:05:47.562Z",
+      "role": "workflow:owner",
+      "workflowId": "WT9sVMzG83rg1L29",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-19T01:38:31.330Z",
+    "createdAt": "2026-03-19T01:38:31.330Z",
+    "versionId": "4312a752-a05e-4cc9-98e3-0664d2c35581",
+    "workflowId": "WT9sVMzG83rg1L29",
+    "nodes": [
+      {
+        "id": "trigger-schedule",
+        "name": "Daily 9AM ET Mon-Fri",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 9 * * 1-5"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "http-freshness",
+        "name": "Fetch Ruleset Freshness",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://localhost:4000/api/compliance/rulesets/freshness",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "code-check-stale",
+        "name": "Check for Stale Firms",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          300
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const response = $input.first().json;\nconst firms = response.firms || response.data || response;\nconst staleFirms = [];\n\nif (Array.isArray(firms)) {\n  for (const firm of firms) {\n    if (firm.freshForTrading === false) {\n      staleFirms.push({\n        firm: firm.firm || firm.name || 'Unknown',\n        ageHours: firm.ageHours || firm.age_hours || 0,\n        lastParsed: firm.lastParsed || firm.last_parsed || 'N/A'\n      });\n    }\n  }\n} else if (typeof firms === 'object') {\n  for (const [key, val] of Object.entries(firms)) {\n    if (val && val.freshForTrading === false) {\n      staleFirms.push({\n        firm: key,\n        ageHours: val.ageHours || val.age_hours || 0,\n        lastParsed: val.lastParsed || val.last_parsed || 'N/A'\n      });\n    }\n  }\n}\n\nreturn [{\n  json: {\n    staleFirms,\n    staleFirmCount: staleFirms.length,\n    checkTime: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "if-stale",
+        "name": "Any Stale Firms?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          750,
+          300
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict",
+              "rightValue": ""
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "stale-check",
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                },
+                "leftValue": "={{ $json.staleFirmCount }}",
+                "rightValue": 0
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "code-format-alert",
+        "name": "Format Stale Firm Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          200
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const data = $input.first().json;\nconst staleFirms = data.staleFirms || [];\n\nconst firmDetails = staleFirms.map(f => \n  `  - ${f.firm}: ${f.ageHours.toFixed(1)}h stale (last parsed: ${f.lastParsed})`\n).join('\\n');\n\nconst alertMessage = `${staleFirms.length} firm(s) have stale rulesets\\n\\n${firmDetails}\\n\\nChecked at: ${data.checkTime}\\nAction Required: Re-parse stale rulesets before trading session.`;\n\nreturn [{\n  json: {\n    title: 'Stale Rulesets Detected',\n    message: alertMessage,\n    severity: 'warning',\n    data: {\n      staleFirmCount: String(staleFirms.length),\n      firms: staleFirms.map(f => f.firm).join(', '),\n      checkTime: data.checkTime\n    }\n  }\n}];"
+        }
+      },
+      {
+        "id": "http-send-alert",
+        "name": "Send Stale Firm Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1250,
+          200
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/compliance",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
+      },
+      {
+        "id": "code-all-fresh",
+        "name": "Log All Firms Fresh",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          450
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const data = $input.first().json;\n\nreturn [{\n  json: {\n    alert: false,\n    status: 'ALL_FRESH',\n    message: 'All firms fresh - no stale rulesets detected.',\n    checkTime: data.checkTime || new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "error-trigger",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          600
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "http-error-alert",
+        "name": "Send Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          600
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4100/alert/alerts",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Compliance Check Error', message: $input.first().json.execution ? ($input.first().json.execution.error ? $input.first().json.execution.error.message : 'Unknown error') : ($input.first().json.error ? $input.first().json.error.message : JSON.stringify($input.first().json).substring(0, 500)), severity: 'critical', data: { workflow: 'Daily Compliance Check', timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Daily 9AM ET Mon-Fri": {
+        "main": [
+          [
+            {
+              "node": "Fetch Ruleset Freshness",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Ruleset Freshness": {
+        "main": [
+          [
+            {
+              "node": "Check for Stale Firms",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check for Stale Firms": {
+        "main": [
+          [
+            {
+              "node": "Any Stale Firms?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Stale Firms?": {
+        "main": [
+          [
+            {
+              "node": "Format Stale Firm Alert",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log All Firms Fresh",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Stale Firm Alert": {
+        "main": [
+          [
+            {
+              "node": "Send Stale Firm Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "Send Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-19T01:38:31.351Z",
+        "id": 1181,
+        "workflowId": "WT9sVMzG83rg1L29",
+        "versionId": "4312a752-a05e-4cc9-98e3-0664d2c35581",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

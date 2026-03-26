@@ -1,0 +1,16 @@
+concept: ote
+description: "BOS + Fibonacci OTE zone (0.618-0.786) retracement + FVG confluence"
+
+required_imports:
+  - ote_zone
+  - detect_fvg
+  - detect_bos
+
+required_concepts:
+  - bos_first             # BOS establishes the impulse leg
+  - fib_from_impulse      # measure fib from the impulsive (displacement) leg
+  - fvg_at_ote            # FVG within the OTE zone for entry
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

@@ -140,12 +140,24 @@ def _get_events_for_policies(
 
 
 def _timestamps_to_et_date_and_minutes(timestamps: pl.Series) -> tuple[list, np.ndarray]:
-    """Convert UTC timestamps to ET dates and minutes-from-midnight."""
-    ts = timestamps.cast(pl.Datetime("us"))
-    et = ts.dt.offset_by("-5h")
-    dates = et.dt.date().to_list()
-    hours = et.dt.hour().to_numpy().astype(np.int32)
-    minutes = et.dt.minute().to_numpy().astype(np.int32)
+    """Convert timestamps to ET dates and minutes-from-midnight.
+
+    If timezone-aware (America/New_York), extract directly — Polars respects tz.
+    If naive, apply -5h offset (assumes UTC input).
+    """
+    ts = timestamps
+    tz = getattr(ts.dtype, 'time_zone', None)
+    if tz is not None:
+        # Timezone-aware — Polars extracts ET components directly
+        dates = ts.dt.date().to_list()
+        hours = ts.dt.hour().to_numpy().astype(np.int32)
+        minutes = ts.dt.minute().to_numpy().astype(np.int32)
+    else:
+        # Naive — assume UTC, shift to ET
+        et = ts.dt.offset_by("-5h")
+        dates = et.dt.date().to_list()
+        hours = et.dt.hour().to_numpy().astype(np.int32)
+        minutes = et.dt.minute().to_numpy().astype(np.int32)
     minutes_from_midnight = hours * 60 + minutes
     return dates, minutes_from_midnight
 

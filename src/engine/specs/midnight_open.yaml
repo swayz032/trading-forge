@@ -1,0 +1,14 @@
+concept: midnight_open
+description: "Mean reversion to midnight ET (00:00) reference level"
+
+required_imports_any:
+  - midnight_open
+  - true_day_open
+
+required_concepts:
+  - midnight_reference_level   # 00:00 ET open price as key level
+  - mean_reversion             # fade moves away from midnight open
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

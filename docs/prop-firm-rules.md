@@ -46,7 +46,7 @@ scaling_plan: false  # Full contracts from day one
 ### Funded Account (XFA)
 
 ```yaml
-activation_fee: $149  # One-time
+activation_fee: $0  # All firms have $0 activation fee
 monthly_fee: $0  # No recurring fees once funded
 starting_balance: $0  # You trade up from zero
 profit_split: 0.90  # 90% to trader, 10% to Topstep
@@ -115,7 +115,7 @@ scaling_plan: false
 ### Funded Account (PRO → PRO+)
 
 ```yaml
-activation_fee: $130
+activation_fee: $0  # All firms have $0 activation fee
 monthly_fee: $0  # No recurring fees once funded
 starting_balance: account_size  # Unlike Topstep, starts at full size
 profit_split_tiers:
@@ -283,7 +283,7 @@ max_simultaneous_accounts: 20  # Most in industry
 ### Funded Account (PA — Performance Account)
 
 ```yaml
-activation_fee: $85  # Per account
+activation_fee: $0  # All firms have $0 activation fee
 monthly_fee: $85  # Ongoing monthly data fee
 starting_balance: $0  # Trade up from zero
 profit_split_tiers:
@@ -371,7 +371,7 @@ scaling_plan: false
 
 ```yaml
 # After passing evaluation, must pass Exhibition before real funding
-exhibition_activation_fee: $120
+exhibition_activation_fee: $0  # All firms have $0 activation fee
 exhibition_rules:
   profit_target: varies  # Buffer target, lower than eval
   consistency_rule: none
@@ -382,7 +382,7 @@ exhibition_rules:
 ### Funded Account
 
 ```yaml
-activation_fee: $120  # Exhibition activation
+activation_fee: $0  # All firms have $0 activation fee
 monthly_data_fee: $126  # Ongoing — significant cost
 starting_balance: account_size
 profit_split_tiers:
@@ -432,12 +432,12 @@ net_monthly = trader_payout - 126  # Ongoing data fee
 
 | Type | Size | Monthly Fee | Profit Target | Trailing Drawdown (EOD) | Activation Fee |
 |------|------|------------|---------------|------------------------|----------------|
-| Standard | $50K | $99 | $3,000 (6%) | $2,000 (4%) | $149 |
-| Standard | $100K | $179 | $6,000 (6%) | $4,000 (4%) | $149 |
-| Standard | $150K | $279 | $9,000 (6%) | $6,000 (4%) | $149 |
-| Advanced | $50K | $149 | $4,000 (8%) | $1,750 (3.5%) | $149 |
-| Advanced | $100K | $279 | $8,000 (8%) | $3,500 (3.5%) | $149 |
-| Advanced | $150K | $419 | $12,000 (8%) | $5,250 (3.5%) | $149 |
+| Standard | $50K | $99 | $3,000 (6%) | $2,000 (4%) | $0 |
+| Standard | $100K | $179 | $6,000 (6%) | $4,000 (4%) | $0 |
+| Standard | $150K | $279 | $9,000 (6%) | $6,000 (4%) | $0 |
+| Advanced | $50K | $149 | $4,000 (8%) | $1,750 (3.5%) | $0 |
+| Advanced | $100K | $279 | $8,000 (8%) | $3,500 (3.5%) | $0 |
+| Advanced | $150K | $419 | $12,000 (8%) | $5,250 (3.5%) | $0 |
 | Zero | $25K | $79 | varies | varies | $0 |
 | Zero | $50K | $119 | varies | varies | $0 |
 | Zero | $100K | $199 | varies | varies | $0 |
@@ -467,10 +467,7 @@ scaling_plan: false
 ### Funded Account
 
 ```yaml
-activation_fee:
-  standard: $149
-  advanced: $149
-  zero: $0
+activation_fee: $0  # All firms have $0 activation fee
 monthly_fee: $0
 starting_balance: account_size
 profit_split_tiers:

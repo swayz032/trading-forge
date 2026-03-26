@@ -137,10 +137,33 @@ class MidnightOpenStrategy(BaseStrategy):
             distance = abs(close - mo)
             within_threshold = distance <= self.distance_threshold_atr * atr_val
 
+            # Guard: prevent entry on same bar as exit (vectorbt drops the entry)
+            exited_this_bar_long = False
+            exited_this_bar_short = False
+
+            # ── Exit long first: price reaches midnight open (target) or moves 2x away ──
+            if in_long:
+                reached_target = highs[i] >= mo
+                moved_away = (mo - lows[i]) >= 2.0 * long_entry_distance and long_entry_distance > 0
+                if reached_target or moved_away:
+                    exit_long[i] = True
+                    in_long = False
+                    exited_this_bar_long = True
+
+            # ── Exit short first: price reaches midnight open (target) or moves 2x away ──
+            if in_short:
+                reached_target = lows[i] <= mo
+                moved_away = (highs[i] - mo) >= 2.0 * short_entry_distance and short_entry_distance > 0
+                if reached_target or moved_away:
+                    exit_short[i] = True
+                    in_short = False
+                    exited_this_bar_short = True
+
             # ── Entry long: price below midnight open, within ATR threshold,
             #    in session, with bullish FVG fill or bullish MSS ──
             if (
-                not in_long
+                not exited_this_bar_long
+                and not in_long
                 and session_list[i]
                 and close < mo
                 and within_threshold
@@ -153,7 +176,8 @@ class MidnightOpenStrategy(BaseStrategy):
             # ── Entry short: price above midnight open, within ATR threshold,
             #    in session, with bearish FVG fill or bearish MSS ──
             if (
-                not in_short
+                not exited_this_bar_short
+                and not in_short
                 and session_list[i]
                 and close > mo
                 and within_threshold
@@ -162,22 +186,6 @@ class MidnightOpenStrategy(BaseStrategy):
                 entry_short[i] = True
                 in_short = True
                 short_entry_distance = distance
-
-            # ── Exit long: price reaches midnight open (target) or moves 2x away ──
-            if in_long:
-                reached_target = highs[i] >= mo
-                moved_away = (mo - lows[i]) >= 2.0 * long_entry_distance and long_entry_distance > 0
-                if reached_target or moved_away:
-                    exit_long[i] = True
-                    in_long = False
-
-            # ── Exit short: price reaches midnight open (target) or moves 2x away ──
-            if in_short:
-                reached_target = lows[i] <= mo
-                moved_away = (highs[i] - mo) >= 2.0 * short_entry_distance and short_entry_distance > 0
-                if reached_target or moved_away:
-                    exit_short[i] = True
-                    in_short = False
 
         result = result.with_columns([
             pl.Series("entry_long", entry_long),

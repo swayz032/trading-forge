@@ -26,6 +26,9 @@ export class DataFetchStack extends cdk.Stack {
         S3_BUCKET: "trading-forge-data",
         SYMBOLS: "ES,NQ,CL",
         SNS_TOPIC_ARN: failureTopic.topicArn,
+        BRAVE_API_KEY: process.env.BRAVE_API_KEY || "",
+        BRAVE_SEARCH_API_KEY: process.env.BRAVE_SEARCH_API_KEY || "",
+        N8N_API_KEY: process.env.N8N_API_KEY || "",
       },
     });
 

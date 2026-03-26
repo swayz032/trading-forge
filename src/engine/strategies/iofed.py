@@ -1,7 +1,11 @@
 """ICT IOFED strategy — Institutional Order Flow Entry Drill.
 
 One-sentence: Enter on FVG fill after a displacement candle creates the FVG,
-catching institutional re-entry into the established order flow direction.
+aligned with HTF order flow direction (trend bias).
+
+Fix: Added HTF structure check so IOFED entries align with the larger trend,
+not just any displacement + FVG. The "Institutional Order Flow" part means
+the trade must be in the direction institutions are moving.
 """
 
 from __future__ import annotations
@@ -10,7 +14,8 @@ import polars as pl
 
 from src.engine.strategy_base import BaseStrategy
 from src.engine.indicators.core import compute_atr
-from src.engine.indicators.price_delivery import detect_fvg
+from src.engine.indicators.price_delivery import detect_fvg, detect_displacement
+from src.engine.indicators.market_structure import detect_swings, compute_premium_discount
 
 
 class IOFEDStrategy(BaseStrategy):
@@ -45,6 +50,11 @@ class IOFEDStrategy(BaseStrategy):
         # Compute indicators
         atr = compute_atr(df, 14)
         fvgs = detect_fvg(df)
+
+        # HTF structure for order flow direction (wider lookback)
+        htf_swings = detect_swings(df, 20)
+        pd_zones = compute_premium_discount(df, htf_swings)
+        pd_list = pd_zones.to_list()
 
         # Identify displacement candles: |close - open| > displacement_mult * ATR
         opens = df["open"].to_list()
@@ -123,46 +133,53 @@ class IOFEDStrategy(BaseStrategy):
                 bottom = vfvg["bottom"]
 
                 # Bullish FVG fill: price retraces down into the FVG zone
+                # HTF filter: only take bullish entries in discount (institutional buying)
                 if vfvg["type"] == "bullish" and bottom <= close <= top:
-                    entry_long[i] = True
-                    consumed.add(v_idx)
-                    break
+                    if pd_list[i] in ("discount", "equilibrium"):
+                        entry_long[i] = True
+                        consumed.add(v_idx)
+                        break
 
                 # Bearish FVG fill: price retraces up into the FVG zone
+                # HTF filter: only take bearish entries in premium (institutional selling)
                 if vfvg["type"] == "bearish" and bottom <= close <= top:
-                    entry_short[i] = True
-                    consumed.add(v_idx)
-                    break
+                    if pd_list[i] in ("premium", "equilibrium"):
+                        entry_short[i] = True
+                        consumed.add(v_idx)
+                        break
 
         # Exit: opposing displacement or FVG in opposite direction
+        # Process exits BEFORE entries to prevent same-bar collision
         in_position_long = False
         in_position_short = False
         for i in range(n):
-            if entry_long[i]:
-                in_position_long = True
-                in_position_short = False
-            elif entry_short[i]:
-                in_position_short = True
-                in_position_long = False
+            exited_this_bar_long = False
+            exited_this_bar_short = False
 
+            # ── Exit checks first ──
             if in_position_long:
-                # Exit on bearish displacement
-                if i in displacement_bars and displacement_dir[i] == "bearish":
+                if (i in displacement_bars and displacement_dir[i] == "bearish") or entry_short[i]:
                     exit_long[i] = True
                     in_position_long = False
-                # Exit on opposing entry
-                elif entry_short[i]:
-                    exit_long[i] = True
-                    in_position_long = False
+                    exited_this_bar_long = True
 
             if in_position_short:
-                # Exit on bullish displacement
-                if i in displacement_bars and displacement_dir[i] == "bullish":
+                if (i in displacement_bars and displacement_dir[i] == "bullish") or entry_long[i]:
                     exit_short[i] = True
                     in_position_short = False
-                elif entry_long[i]:
-                    exit_short[i] = True
-                    in_position_short = False
+                    exited_this_bar_short = True
+
+            # ── Entry checks (skip if just exited this bar) ──
+            if not exited_this_bar_long and entry_long[i]:
+                in_position_long = True
+            elif not exited_this_bar_short and entry_short[i]:
+                in_position_short = True
+
+            # Suppress entry signals on bars where we just exited
+            if exited_this_bar_long and entry_long[i]:
+                entry_long[i] = False
+            if exited_this_bar_short and entry_short[i]:
+                entry_short[i] = False
 
         result = result.with_columns([
             pl.Series("entry_long", entry_long),

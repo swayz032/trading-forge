@@ -1,0 +1,27 @@
+concept: unicorn
+description: "Enter when price retraces to a Unicorn Zone — the overlap between a Breaker Block and an FVG created during displacement"
+
+required_imports:
+  - detect_fvg
+  - detect_breaker
+  - detect_displacement
+
+required_imports_any:
+  - detect_bullish_ob
+  - detect_bearish_ob
+
+required_concepts:
+  - breaker_fvg_overlap    # the Unicorn Zone: FVG must overlap with the breaker block range
+  - displacement_at_break  # the OB break must be accompanied by displacement (strong candle)
+  - directional_alignment  # FVG type must match breaker type (both bullish or both bearish)
+  - zone_invalidation      # if price closes past breaker boundary, zone is dead
+
+forbidden_imports:
+  - compute_rsi            # not part of Unicorn concept
+  - compute_macd           # not part of Unicorn concept
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable   # not every bar
+  - exit_logic_present          # must have exit signals (SL beyond breaker, or time/structure exit)
+  - breaker_fvg_overlap_check   # entries only where FVG overlaps breaker range

@@ -1,0 +1,18 @@
+concept: breaker
+description: "Failed order block that was mitigated (swept through) — enter on retest"
+
+required_imports:
+  - detect_breaker
+
+required_imports_any:
+  - detect_bullish_ob
+  - detect_bearish_ob
+  - detect_bos
+
+required_concepts:
+  - mitigated_ob          # breaker = OB that price swept through (failed)
+  - bos_at_break          # BOS validates the break of the OB
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

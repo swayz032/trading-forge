@@ -1,0 +1,318 @@
+{
+  "updatedAt": "2026-03-20T05:34:36.467Z",
+  "createdAt": "2026-03-20T05:34:36.467Z",
+  "id": "J0p8oYkONmN7pYn6",
+  "name": "3A-workflow-backup",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "sched",
+      "name": "Weekly Sunday 5 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "g",
+      "name": "GET All Workflows",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "http://localhost:5678/api/v1/workflows",
+        "options": {},
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmQ3OWU4OS0zMDE3LTRkYmUtOGNlYy02NzZmY2FiNmY5MzgiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMjIyNGQ5OTktYWVlMS00ZmE5LThlNDctODJkNDZlYmRkYWQwIiwiaWF0IjoxNzczOTgzNTYxLCJleHAiOjE3NzY1NzEyMDB9.--guaYDRzthDN8dzLsr9hY5K7zaY3qqrjiZYmRJU6zc"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f",
+      "name": "Format Backup Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const workflows = $input.first().json.data || $input.first().json;\nconst count = Array.isArray(workflows) ? workflows.length : 0;\nconst backup = { timestamp: new Date().toISOString(), workflowCount: count, workflows: workflows };\nconsole.log('Backup created: ' + count + ' workflows at ' + backup.timestamp);\nreturn [{ json: backup }];"
+      }
+    },
+    {
+      "id": "b",
+      "name": "Broadcast Backup Complete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: 'workflow-backup', message: 'Workflow backup completed: ' + $json.workflowCount + ' workflows archived', timestamp: $json.timestamp }) }}",
+        "options": {}
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Weekly Sunday 5 AM": {
+      "main": [
+        [
+          {
+            "node": "GET All Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET All Workflows": {
+      "main": [
+        [
+          {
+            "node": "Format Backup Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Backup Payload": {
+      "main": [
+        [
+          {
+            "node": "Broadcast Backup Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Weekly Sunday 5 AM": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "ccbec641-a3d5-4ad4-8ec9-f76fe5c36674",
+  "activeVersionId": "ccbec641-a3d5-4ad4-8ec9-f76fe5c36674",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T05:34:36.467Z",
+      "createdAt": "2026-03-20T05:34:36.467Z",
+      "role": "workflow:owner",
+      "workflowId": "J0p8oYkONmN7pYn6",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-20T05:34:36.473Z",
+    "createdAt": "2026-03-20T05:34:36.473Z",
+    "versionId": "ccbec641-a3d5-4ad4-8ec9-f76fe5c36674",
+    "workflowId": "J0p8oYkONmN7pYn6",
+    "nodes": [
+      {
+        "id": "sched",
+        "name": "Weekly Sunday 5 AM",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 5 * * 0"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "g",
+        "name": "GET All Workflows",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "url": "http://localhost:5678/api/v1/workflows",
+          "options": {},
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-N8N-API-KEY",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmQ3OWU4OS0zMDE3LTRkYmUtOGNlYy02NzZmY2FiNmY5MzgiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMjIyNGQ5OTktYWVlMS00ZmE5LThlNDctODJkNDZlYmRkYWQwIiwiaWF0IjoxNzczOTgzNTYxLCJleHAiOjE3NzY1NzEyMDB9.--guaYDRzthDN8dzLsr9hY5K7zaY3qqrjiZYmRJU6zc"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "f",
+        "name": "Format Backup Payload",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const workflows = $input.first().json.data || $input.first().json;\nconst count = Array.isArray(workflows) ? workflows.length : 0;\nconst backup = { timestamp: new Date().toISOString(), workflowCount: count, workflows: workflows };\nconsole.log('Backup created: ' + count + ' workflows at ' + backup.timestamp);\nreturn [{ json: backup }];"
+        }
+      },
+      {
+        "id": "b",
+        "name": "Broadcast Backup Complete",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: 'workflow-backup', message: 'Workflow backup completed: ' + $json.workflowCount + ' workflows archived', timestamp: $json.timestamp }) }}",
+          "options": {}
+        },
+        "continueOnFail": true
+      }
+    ],
+    "connections": {
+      "Weekly Sunday 5 AM": {
+        "main": [
+          [
+            {
+              "node": "GET All Workflows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET All Workflows": {
+        "main": [
+          [
+            {
+              "node": "Format Backup Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Backup Payload": {
+        "main": [
+          [
+            {
+              "node": "Broadcast Backup Complete",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-20T05:34:53.068Z",
+        "id": 1190,
+        "workflowId": "J0p8oYkONmN7pYn6",
+        "versionId": "ccbec641-a3d5-4ad4-8ec9-f76fe5c36674",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

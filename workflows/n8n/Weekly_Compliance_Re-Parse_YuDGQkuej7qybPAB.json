@@ -1,0 +1,639 @@
+{
+  "updatedAt": "2026-03-15T00:46:50.315Z",
+  "createdAt": "2026-03-14T21:06:50.619Z",
+  "id": "YuDGQkuej7qybPAB",
+  "name": "Weekly Compliance Re-Parse",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger-schedule",
+      "name": "Sunday 8PM ET Weekly",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 20 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-all-rulesets",
+      "name": "Fetch All Rulesets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:4000/api/compliance/rulesets",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "code-extract-firms",
+      "name": "Extract Unique Firms",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const response = $input.first().json;\nconst rulesets = response.rulesets || response.data || response;\nconst firmSet = new Set();\n\nif (Array.isArray(rulesets)) {\n  for (const r of rulesets) {\n    const firm = r.firm || r.firmName || r.name;\n    if (firm) firmSet.add(firm);\n  }\n} else if (typeof rulesets === 'object') {\n  for (const key of Object.keys(rulesets)) {\n    firmSet.add(key);\n  }\n}\n\nconst firms = Array.from(firmSet);\nreturn firms.map(firm => ({ json: { firm } }));"
+      }
+    },
+    {
+      "id": "split-batches",
+      "name": "Process Each Firm",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        750,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "http-firm-data",
+      "name": "Fetch Firm Ruleset",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1000,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=http://localhost:4000/api/compliance/rulesets/{{ $json.firm }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "code-check-firm",
+      "name": "Evaluate Firm Health",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const item = $input.first().json;\nconst firm = item.firm || item.name || 'Unknown';\nconst status = item.status || item.verificationStatus || 'unknown';\nconst ageHours = item.ageHours || item.age_hours || 0;\nconst drift = item.drift_detected || item.driftDetected || false;\n\nlet health = 'healthy';\nif (drift) health = 'unhealthy';\nelse if (status !== 'verified' && status !== 'active') health = 'unhealthy';\nelse if (ageHours > 168) health = 'unhealthy';\nelse if (ageHours > 72) health = 'degraded';\n\nreturn [{\n  json: {\n    firm,\n    status,\n    age_hours: Math.round(ageHours * 10) / 10,\n    drift,\n    health\n  }\n}];"
+      }
+    },
+    {
+      "id": "code-aggregate-report",
+      "name": "Aggregate Weekly Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst firms = items.map(item => item.json);\n\nlet healthy = 0;\nlet unhealthy = 0;\nlet degraded = 0;\n\nfor (const f of firms) {\n  if (f.health === 'healthy') healthy++;\n  else if (f.health === 'unhealthy') unhealthy++;\n  else if (f.health === 'degraded') degraded++;\n}\n\nconst now = new Date();\nconst reportDate = now.toISOString().split('T')[0];\n\nreturn [{\n  json: {\n    report_date: reportDate,\n    firms,\n    summary: {\n      healthy,\n      unhealthy,\n      degraded,\n      total: firms.length\n    },\n    generated_at: now.toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-send-report",
+      "name": "Send Weekly Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1250,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/compliance",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Weekly Compliance Report', message: 'Report for ' + ($json.report_date || 'unknown date') + ': ' + ($json.summary ? ($json.summary.healthy + ' healthy, ' + $json.summary.unhealthy + ' unhealthy, ' + $json.summary.degraded + ' degraded') : 'No summary'), severity: ($json.summary && $json.summary.unhealthy > 0) ? 'warning' : 'info', data: { reportDate: $json.report_date || '', healthy: String($json.summary ? $json.summary.healthy : 0), unhealthy: String($json.summary ? $json.summary.unhealthy : 0), degraded: String($json.summary ? $json.summary.degraded : 0), total: String($json.summary ? $json.summary.total : 0) } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        600
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "http-error-alert",
+      "name": "Send Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        250,
+        600
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Weekly Compliance Re-Parse', message: String($json.execution ? $json.execution.error ? $json.execution.error.message : 'Unknown error' : 'Unknown error'), severity: 'critical', data: { workflow: 'Weekly Compliance Re-Parse', executionId: String($json.execution ? $json.execution.id : 'N/A'), timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Sunday 8PM ET Weekly": {
+      "main": [
+        [
+          {
+            "node": "Fetch All Rulesets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch All Rulesets": {
+      "main": [
+        [
+          {
+            "node": "Extract Unique Firms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Unique Firms": {
+      "main": [
+        [
+          {
+            "node": "Process Each Firm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each Firm": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Weekly Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Firm Ruleset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Firm Ruleset": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Firm Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Firm Health": {
+      "main": [
+        [
+          {
+            "node": "Process Each Firm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Weekly Report": {
+      "main": [
+        [
+          {
+            "node": "Send Weekly Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Sunday 8PM ET Weekly": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "56c008a3-1159-442b-83ca-cad012c2e71e",
+  "activeVersionId": "56c008a3-1159-442b-83ca-cad012c2e71e",
+  "versionCounter": 11,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T21:06:50.619Z",
+      "createdAt": "2026-03-14T21:06:50.619Z",
+      "role": "workflow:owner",
+      "workflowId": "YuDGQkuej7qybPAB",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-14T23:19:58.529Z",
+    "createdAt": "2026-03-14T23:19:58.529Z",
+    "versionId": "56c008a3-1159-442b-83ca-cad012c2e71e",
+    "workflowId": "YuDGQkuej7qybPAB",
+    "nodes": [
+      {
+        "id": "trigger-schedule",
+        "name": "Sunday 8PM ET Weekly",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 20 * * 0"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "http-all-rulesets",
+        "name": "Fetch All Rulesets",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://localhost:4000/api/compliance/rulesets",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "code-extract-firms",
+        "name": "Extract Unique Firms",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          500,
+          300
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const response = $input.first().json;\nconst rulesets = response.rulesets || response.data || response;\nconst firmSet = new Set();\n\nif (Array.isArray(rulesets)) {\n  for (const r of rulesets) {\n    const firm = r.firm || r.firmName || r.name;\n    if (firm) firmSet.add(firm);\n  }\n} else if (typeof rulesets === 'object') {\n  for (const key of Object.keys(rulesets)) {\n    firmSet.add(key);\n  }\n}\n\nconst firms = Array.from(firmSet);\nreturn firms.map(firm => ({ json: { firm } }));"
+        }
+      },
+      {
+        "id": "split-batches",
+        "name": "Process Each Firm",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          750,
+          300
+        ],
+        "parameters": {
+          "batchSize": 1,
+          "options": {}
+        }
+      },
+      {
+        "id": "http-firm-data",
+        "name": "Fetch Firm Ruleset",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1000,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=http://localhost:4000/api/compliance/rulesets/{{ $json.firm }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 2000
+      },
+      {
+        "id": "code-check-firm",
+        "name": "Evaluate Firm Health",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1250,
+          300
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const item = $input.first().json;\nconst firm = item.firm || item.name || 'Unknown';\nconst status = item.status || item.verificationStatus || 'unknown';\nconst ageHours = item.ageHours || item.age_hours || 0;\nconst drift = item.drift_detected || item.driftDetected || false;\n\nlet health = 'healthy';\nif (drift) health = 'unhealthy';\nelse if (status !== 'verified' && status !== 'active') health = 'unhealthy';\nelse if (ageHours > 168) health = 'unhealthy';\nelse if (ageHours > 72) health = 'degraded';\n\nreturn [{\n  json: {\n    firm,\n    status,\n    age_hours: Math.round(ageHours * 10) / 10,\n    drift,\n    health\n  }\n}];"
+        }
+      },
+      {
+        "id": "code-aggregate-report",
+        "name": "Aggregate Weekly Report",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          100
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const items = $input.all();\nconst firms = items.map(item => item.json);\n\nlet healthy = 0;\nlet unhealthy = 0;\nlet degraded = 0;\n\nfor (const f of firms) {\n  if (f.health === 'healthy') healthy++;\n  else if (f.health === 'unhealthy') unhealthy++;\n  else if (f.health === 'degraded') degraded++;\n}\n\nconst now = new Date();\nconst reportDate = now.toISOString().split('T')[0];\n\nreturn [{\n  json: {\n    report_date: reportDate,\n    firms,\n    summary: {\n      healthy,\n      unhealthy,\n      degraded,\n      total: firms.length\n    },\n    generated_at: now.toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "http-send-report",
+        "name": "Send Weekly Report",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1250,
+          100
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/compliance",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Weekly Compliance Report', message: 'Report for ' + ($json.report_date || 'unknown date') + ': ' + ($json.summary ? ($json.summary.healthy + ' healthy, ' + $json.summary.unhealthy + ' unhealthy, ' + $json.summary.degraded + ' degraded') : 'No summary'), severity: ($json.summary && $json.summary.unhealthy > 0) ? 'warning' : 'info', data: { reportDate: $json.report_date || '', healthy: String($json.summary ? $json.summary.healthy : 0), unhealthy: String($json.summary ? $json.summary.unhealthy : 0), degraded: String($json.summary ? $json.summary.degraded : 0), total: String($json.summary ? $json.summary.total : 0) } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
+      },
+      {
+        "id": "error-trigger",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          600
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "http-error-alert",
+        "name": "Send Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          600
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/alerts",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Weekly Compliance Re-Parse', message: String($json.execution ? $json.execution.error ? $json.execution.error.message : 'Unknown error' : 'Unknown error'), severity: 'critical', data: { workflow: 'Weekly Compliance Re-Parse', executionId: String($json.execution ? $json.execution.id : 'N/A'), timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 2000
+      }
+    ],
+    "connections": {
+      "Sunday 8PM ET Weekly": {
+        "main": [
+          [
+            {
+              "node": "Fetch All Rulesets",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch All Rulesets": {
+        "main": [
+          [
+            {
+              "node": "Extract Unique Firms",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Unique Firms": {
+        "main": [
+          [
+            {
+              "node": "Process Each Firm",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Process Each Firm": {
+        "main": [
+          [
+            {
+              "node": "Aggregate Weekly Report",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Fetch Firm Ruleset",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Firm Ruleset": {
+        "main": [
+          [
+            {
+              "node": "Evaluate Firm Health",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Evaluate Firm Health": {
+        "main": [
+          [
+            {
+              "node": "Process Each Firm",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate Weekly Report": {
+        "main": [
+          [
+            {
+              "node": "Send Weekly Report",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "Send Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-14T23:19:58.551Z",
+        "id": 1133,
+        "workflowId": "YuDGQkuej7qybPAB",
+        "versionId": "56c008a3-1159-442b-83ca-cad012c2e71e",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

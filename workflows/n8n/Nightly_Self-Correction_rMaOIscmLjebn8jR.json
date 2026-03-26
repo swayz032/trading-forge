@@ -1,0 +1,394 @@
+{
+  "updatedAt": "2026-03-19T06:26:16.949Z",
+  "createdAt": "2026-03-17T23:59:10.535Z",
+  "id": "rMaOIscmLjebn8jR",
+  "name": "Nightly Self-Correction",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 23 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-sessions",
+      "name": "Fetch Active Paper Sessions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        470,
+        300
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/paper/sessions",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "active"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "split-sessions",
+      "name": "Split Sessions",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        690,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "detect-drift",
+      "name": "Detect Drift",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        910,
+        300
+      ],
+      "parameters": {
+        "url": "=http://localhost:4000/api/paper/drift/{{ $json.id }}?strategyId={{ $json.strategyId }}",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "check-drift",
+      "name": "IF Drift > 2\u03c3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1130,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "or",
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-drift",
+              "leftValue": "={{ $json.driftScore }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "condition-mc-pct",
+              "leftValue": "={{ $json.mc_percentile }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ollama-drift-critique",
+      "name": "Ollama Drift Critique",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1350,
+        200
+      ],
+      "parameters": {
+        "url": "http://localhost:11434/api/generate",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'llama3:8b', prompt: 'This strategy is drifting from backtest expectations. Drift score: ' + $('Detect Drift').first().json.driftScore + '. MC percentile: ' + ($('Compare Paper to MC').first().json.mc_percentile || 'N/A') + '. Paper metrics vs backtest diverging. Check: regime shift? Execution quality? Slippage > assumptions? Recommendation: continue, reduce size, or stop?', stream: false }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "lifecycle-check",
+      "name": "Lifecycle Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1570,
+        200
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/strategies/lifecycle/check"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "journal-nightly",
+      "name": "Journal Nightly Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1790,
+        300
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/journal",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: 'n8n', status: 'tested', analystNotes: 'Nightly review: ' + $('Fetch Active Paper Sessions').all().length + ' active sessions checked' }) }}"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "broadcast-nightly",
+      "name": "Broadcast Nightly SSE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2010,
+        300
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/sse/broadcast",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'nightly:review-complete', data: { timestamp: new Date().toISOString() } }) }}"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "1142ff2e-0a35-49f5-9e2e-498ea320eb72",
+      "name": "Compare Paper to MC",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=http://localhost:4000/api/paper/mc-compare/{{ $json.id }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Paper Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Paper Sessions": {
+      "main": [
+        [
+          {
+            "node": "Split Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Sessions": {
+      "main": [
+        [
+          {
+            "node": "Detect Drift",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Journal Nightly Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Drift": {
+      "main": [
+        [
+          {
+            "node": "Compare Paper to MC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Drift > 2\u03c3": {
+      "main": [
+        [
+          {
+            "node": "Ollama Drift Critique",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Drift Critique": {
+      "main": [
+        [
+          {
+            "node": "Lifecycle Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lifecycle Check": {
+      "main": [
+        [
+          {
+            "node": "Split Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Journal Nightly Summary": {
+      "main": [
+        [
+          {
+            "node": "Broadcast Nightly SSE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Paper to MC": {
+      "main": [
+        [
+          {
+            "node": "IF Drift > 2\u03c3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "4c45efc9-f84b-4999-8d63-2d3e1088f976",
+  "activeVersionId": null,
+  "versionCounter": 11,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-17T23:59:10.535Z",
+      "createdAt": "2026-03-17T23:59:10.535Z",
+      "role": "workflow:owner",
+      "workflowId": "rMaOIscmLjebn8jR",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

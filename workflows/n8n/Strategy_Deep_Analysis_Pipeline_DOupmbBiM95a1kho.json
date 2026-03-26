@@ -1,0 +1,629 @@
+{
+  "updatedAt": "2026-03-19T06:26:22.591Z",
+  "createdAt": "2026-03-17T23:58:53.241Z",
+  "id": "DOupmbBiM95a1kho",
+  "name": "Strategy Deep Analysis Pipeline",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "path": "analyze-strategy",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      }
+    },
+    {
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        470,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const strategyId = $input.first().json.body?.strategy_id;\nif (!strategyId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(strategyId)) {\n  throw new Error('Invalid strategy_id: must be a valid UUID');\n}\nreturn [{ json: { strategy_id: strategyId } }];"
+      }
+    },
+    {
+      "id": "resolve-data-ranges",
+      "name": "Resolve Data Ranges",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        690,
+        300
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/data/query-info",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbols",
+              "value": "ES,NQ,CL,YM,RTY,GC"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "core-backtest",
+      "name": "Core Backtest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        910,
+        300
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/backtests",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id, mode: 'walkforward' }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    },
+    {
+      "id": "check-core-score",
+      "name": "IF Core Passes",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1130,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-score",
+              "leftValue": "={{ $json.forgeScore }}",
+              "rightValue": 30,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "condition-trades",
+              "leftValue": "={{ $json.totalTrades }}",
+              "rightValue": 500,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "cross-matrix",
+      "name": "Cross-Matrix Testing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1350,
+        200
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/backtests/matrix",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id }) }}",
+        "options": {
+          "timeout": 900000
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "journal-results",
+      "name": "Journal Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1570,
+        200
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/journal",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id, source: 'n8n', tier: $json.tier || 'REJECTED', forgeScore: $json.forgeScore || 0 }) }}"
+      }
+    },
+    {
+      "id": "ollama-critique",
+      "name": "Ollama Critique",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1790,
+        200
+      ],
+      "parameters": {
+        "url": "http://localhost:11434/api/generate",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'llama3:8b', prompt: 'Analyze this strategy backtest result. What are the strengths? Weaknesses? What patterns emerge? What should the next generation avoid? Results: ' + JSON.stringify({ forgeScore: $('Core Backtest').first().json.forgeScore, sharpe: $('Core Backtest').first().json.sharpeRatio, winRate: $('Core Backtest').first().json.winRate, profitFactor: $('Core Backtest').first().json.profitFactor }), stream: false }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "check-promote",
+      "name": "IF Best Combo Passes",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2010,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-forge",
+              "leftValue": "={{ $('Cross-Matrix Testing').first().json.forgeScore }}",
+              "rightValue": 60,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "condition-mc",
+              "leftValue": "={{ $('Monte Carlo Stress Test').first().json.mc_survival_p5 }}",
+              "rightValue": 0.85,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "condition-trades",
+              "leftValue": "={{ $('Cross-Matrix Testing').first().json.totalTrades }}",
+              "rightValue": 500,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "condition-short-wr",
+              "leftValue": "={{ $('Cross-Matrix Testing').first().json.shortWinRate }}",
+              "rightValue": 0.4,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "auto-promote",
+      "name": "Auto-Promote to Paper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2230,
+        100
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/paper/start",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id }) }}"
+      }
+    },
+    {
+      "id": "broadcast-results",
+      "name": "Broadcast Results SSE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2230,
+        300
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/sse/broadcast",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'strategy:analyzed', data: { strategyId: $('Validate Input').first().json.strategy_id, forgeScore: $('Core Backtest').first().json.forgeScore, tier: $('Core Backtest').first().json.tier } }) }}"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "journal-failure",
+      "name": "Journal Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1350,
+        400
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/journal",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id, source: 'n8n', tier: 'REJECTED', status: 'failed', analystNotes: 'Core backtest Forge Score below 30 \u2014 strategy rejected at gate' }) }}"
+      }
+    },
+    {
+      "id": "6b9cab36-c44d-477b-a028-dc17906e4707",
+      "name": "Monte Carlo Stress Test",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1460,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/monte-carlo",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ backtestId: $('Core Backtest').first().json.backtestId || $json.id, numSimulations: 100000, method: 'block_bootstrap', firms: ['topstep_50k','mffu_50k','tpt_50k','apex_50k','tradeify_50k','alpha_50k','ffn_50k','earn2trade_50k'], isOosTrades: true }) }}",
+        "options": {
+          "timeout": 300000
+        }
+      }
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        550
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "broadcast-error",
+      "name": "Broadcast Error SSE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        470,
+        550
+      ],
+      "parameters": {
+        "url": "http://localhost:4000/api/sse/broadcast",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'strategy:analysis-error', data: { error: ($json.execution && $json.execution.error && $json.execution.error.message) || 'Unknown error', workflowName: 'Strategy Deep Analysis Pipeline', timestamp: new Date().toISOString() } }) }}"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "poll-backtest",
+      "name": "Poll Backtest Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Poll backtest until complete\nconst backtestId = $input.first().json.backtestId;\nconst maxAttempts = 20; // 20 x 15s = 5 min\nconst interval = 15000;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  const response = await fetch(`http://localhost:4000/api/backtests/${backtestId}`);\n  const data = await response.json();\n\n  if (data.status === 'completed') {\n    return [{ json: data }];\n  }\n  if (data.status === 'failed') {\n    throw new Error(`Backtest failed: ${data.error || 'unknown'}`);\n  }\n\n  await new Promise(resolve => setTimeout(resolve, interval));\n}\n\nthrow new Error('Backtest timed out after 5 minutes');"
+      }
+    },
+    {
+      "id": "poll-matrix",
+      "name": "Poll Matrix Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        100
+      ],
+      "parameters": {
+        "jsCode": "// Poll matrix until complete\nconst matrixId = $input.first().json.id || $input.first().json.matrixId;\nconst maxAttempts = 30; // 30 x 30s = 15 min\nconst interval = 30000;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  const response = await fetch(`http://localhost:4000/api/backtests/matrix/${matrixId}`);\n  const data = await response.json();\n\n  if (data.status === 'completed') {\n    return [{ json: data }];\n  }\n  if (data.status === 'failed') {\n    throw new Error(`Matrix failed: ${data.error || 'unknown'}`);\n  }\n\n  await new Promise(resolve => setTimeout(resolve, interval));\n}\n\nthrow new Error('Matrix timed out after 15 minutes');"
+      }
+    },
+    {
+      "id": "poll-mc",
+      "name": "Poll MC Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1570,
+        100
+      ],
+      "parameters": {
+        "jsCode": "// Poll Monte Carlo until complete\nconst mcId = $input.first().json.id || $input.first().json.mcId;\nconst maxAttempts = 20; // 20 x 15s = 5 min\nconst interval = 15000;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  const response = await fetch(`http://localhost:4000/api/monte-carlo/${mcId}`);\n  const data = await response.json();\n\n  if (data.status === 'completed') {\n    return [{ json: data }];\n  }\n  if (data.status === 'failed') {\n    throw new Error(`Monte Carlo failed: ${data.error || 'unknown'}`);\n  }\n\n  await new Promise(resolve => setTimeout(resolve, interval));\n}\n\nthrow new Error('Monte Carlo timed out after 5 minutes');"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Resolve Data Ranges",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Data Ranges": {
+      "main": [
+        [
+          {
+            "node": "Core Backtest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Core Passes": {
+      "main": [
+        [
+          {
+            "node": "Cross-Matrix Testing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Journal Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Journal Results": {
+      "main": [
+        [
+          {
+            "node": "Ollama Critique",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Critique": {
+      "main": [
+        [
+          {
+            "node": "IF Best Combo Passes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Best Combo Passes": {
+      "main": [
+        [
+          {
+            "node": "Auto-Promote to Paper",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Broadcast Results SSE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-Promote to Paper": {
+      "main": [
+        [
+          {
+            "node": "Broadcast Results SSE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Broadcast Error SSE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Core Backtest": {
+      "main": [
+        [
+          {
+            "node": "Poll Backtest Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Backtest Status": {
+      "main": [
+        [
+          {
+            "node": "IF Core Passes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cross-Matrix Testing": {
+      "main": [
+        [
+          {
+            "node": "Poll Matrix Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Matrix Status": {
+      "main": [
+        [
+          {
+            "node": "Monte Carlo Stress Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monte Carlo Stress Test": {
+      "main": [
+        [
+          {
+            "node": "Poll MC Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll MC Status": {
+      "main": [
+        [
+          {
+            "node": "Journal Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "5cd038f7-dd57-4c80-b053-46bb9a16ab2e",
+  "activeVersionId": null,
+  "versionCounter": 12,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-17T23:58:53.241Z",
+      "createdAt": "2026-03-17T23:58:53.241Z",
+      "role": "workflow:owner",
+      "workflowId": "DOupmbBiM95a1kho",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

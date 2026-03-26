@@ -52,7 +52,8 @@ class NYLunchReversalStrategy(BaseStrategy):
         if "ts_event" in df.columns:
             lunch_mask = is_ny_lunch(df["ts_event"])
             nypm_mask = is_nypm_killzone(df["ts_event"])
-            hour = df["ts_event"].cast(pl.Datetime("us")).dt.hour()
+            _ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+            hour = df[_ts_col].dt.hour()
         else:
             lunch_mask = pl.Series("ny_lunch", [True] * n)
             nypm_mask = pl.Series("nypm", [False] * n)
@@ -69,6 +70,7 @@ class NYLunchReversalStrategy(BaseStrategy):
         nypm_list = nypm_mask.to_list()
         atr_list = atr.to_list()
         hour_list = hour.to_list()
+        closes = df["close"].to_list()
         highs = df["high"].to_list()
         lows = df["low"].to_list()
 
@@ -102,43 +104,60 @@ class NYLunchReversalStrategy(BaseStrategy):
             if am_range < self.min_am_move_atr * atr_val:
                 continue
 
-            # Check for MSS during lunch
-            if mss_list[i] == "bullish":
-                # Bullish MSS during lunch = AM was bearish, now reversing up
+            # Determine AM move direction from the AM high/low
+            am_direction = None
+            if am_high is not None and am_low is not None:
+                am_mid = (am_high + am_low) / 2
+                # Use the close of the bar just before lunch to gauge AM direction
+                prev_close = closes[max(0, i - 1)]
+                if prev_close > am_mid:
+                    am_direction = "bullish"
+                elif prev_close < am_mid:
+                    am_direction = "bearish"
+
+            # Check for MSS during lunch — MUST oppose AM direction
+            if mss_list[i] == "bullish" and am_direction == "bearish":
+                # AM was bearish, bullish MSS confirms reversal UP — valid
                 entry_long[i] = True
-            elif mss_list[i] == "bearish":
-                # Bearish MSS during lunch = AM was bullish, now reversing down
+            elif mss_list[i] == "bearish" and am_direction == "bullish":
+                # AM was bullish, bearish MSS confirms reversal DOWN — valid
                 entry_short[i] = True
+            # If MSS matches AM direction, it's continuation not reversal — skip
 
         # Exit: end of NY PM session or opposing signal
+        # Process exits BEFORE entries to prevent same-bar collision
         in_position_long = False
         in_position_short = False
         for i in range(n):
-            if entry_long[i]:
-                in_position_long = True
-                in_position_short = False
-            elif entry_short[i]:
-                in_position_short = True
-                in_position_long = False
+            exited_this_bar_long = False
+            exited_this_bar_short = False
 
-            # Exit at end of PM session (hour >= 16) or opposing entry
+            # ── Exit checks first ──
             if in_position_long:
                 h = hour_list[i]
-                if h is not None and h >= 16:
+                if (h is not None and h >= 16) or entry_short[i]:
                     exit_long[i] = True
                     in_position_long = False
-                elif entry_short[i]:
-                    exit_long[i] = True
-                    in_position_long = False
+                    exited_this_bar_long = True
 
             if in_position_short:
                 h = hour_list[i]
-                if h is not None and h >= 16:
+                if (h is not None and h >= 16) or entry_long[i]:
                     exit_short[i] = True
                     in_position_short = False
-                elif entry_long[i]:
-                    exit_short[i] = True
-                    in_position_short = False
+                    exited_this_bar_short = True
+
+            # ── Entry checks (skip if just exited this bar) ──
+            if not exited_this_bar_long and entry_long[i]:
+                in_position_long = True
+            if not exited_this_bar_short and entry_short[i]:
+                in_position_short = True
+
+            # Suppress entry signals on bars where we just exited
+            if exited_this_bar_long and entry_long[i]:
+                entry_long[i] = False
+            if exited_this_bar_short and entry_short[i]:
+                entry_short[i] = False
 
         result = result.with_columns([
             pl.Series("entry_long", entry_long),

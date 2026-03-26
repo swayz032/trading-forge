@@ -1,0 +1,918 @@
+{
+  "updatedAt": "2026-03-19T01:38:26.680Z",
+  "createdAt": "2026-03-14T08:36:09.173Z",
+  "id": "u0RcmfuClgRinXAX",
+  "name": "Daily Portfolio Monitor",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "5PM EST Weekday Trigger",
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "expression": "0 17 * * 1-5",
+              "field": "cronExpression"
+            }
+          ]
+        }
+      },
+      "position": [
+        0,
+        300
+      ],
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3
+    },
+    {
+      "id": "fetch-deployed",
+      "maxTries": 3,
+      "name": "Fetch DEPLOYED Strategies",
+      "parameters": {
+        "options": {},
+        "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED"
+      },
+      "position": [
+        224,
+        300
+      ],
+      "retryOnFail": true,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "check-any-deployed",
+      "name": "Any DEPLOYED Strategies?",
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-has-strategies",
+              "leftValue": "={{ $json.length > 0 }}",
+              "operator": {
+                "operation": "equals",
+                "type": "boolean"
+              },
+              "rightValue": true
+            }
+          ],
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
+      },
+      "position": [
+        448,
+        300
+      ],
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3
+    },
+    {
+      "id": "log-no-strategies",
+      "name": "Log No DEPLOYED Strategies",
+      "parameters": {
+        "jsonBody": "={ \"type\": \"portfolio_monitor\", \"message\": \"No DEPLOYED strategies found - nothing to monitor\", \"timestamp\": \"{{ $now.toISO() }}\" }",
+        "method": "POST",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "url": "http://localhost:3000/api/journal"
+      },
+      "position": [
+        672,
+        500
+      ],
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4
+    },
+    {
+      "id": "split-strategies",
+      "name": "Loop Over Strategies",
+      "parameters": {
+        "options": {}
+      },
+      "position": [
+        672,
+        300
+      ],
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3
+    },
+    {
+      "id": "compute-sharpe",
+      "name": "Compute Rolling Sharpe",
+      "parameters": {
+        "jsCode": "const strategy = $input.first().json;\n\nconst rollingSharpe = Number(strategy.rolling_sharpe_30d || strategy.sharpeRatio || 0);\nconst strategyId = strategy.id;\nconst strategyName = strategy.name || strategy.strategy_name || 'Unknown';\n\nreturn [{\n  json: {\n    strategyId,\n    strategyName,\n    rolling_sharpe_30d: rollingSharpe,\n    drifting: rollingSharpe < 1.0,\n    lifecycle_state: strategy.lifecycle_state || 'DEPLOYED'\n  }\n}];"
+      },
+      "position": [
+        896,
+        100
+      ],
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2
+    },
+    {
+      "id": "check-drift",
+      "name": "Detect Drift",
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-drift",
+              "leftValue": "={{ $json.drifting }}",
+              "operator": {
+                "operation": "equals",
+                "type": "boolean"
+              },
+              "rightValue": true
+            }
+          ],
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          }
+        },
+        "options": {}
+      },
+      "position": [
+        1120,
+        100
+      ],
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3
+    },
+    {
+      "id": "transition-declining",
+      "maxTries": 2,
+      "name": "Log Drift Alert and Transition",
+      "parameters": {
+        "jsonBody": "={ \"fromState\": \"DEPLOYED\", \"toState\": \"DECLINING\" }",
+        "method": "PATCH",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "url": "=http://localhost:3000/api/strategies/{{ $json.strategyId }}/lifecycle"
+      },
+      "position": [
+        1344,
+        0
+      ],
+      "retryOnFail": true,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "log-healthy",
+      "name": "Log Healthy",
+      "parameters": {},
+      "position": [
+        1344,
+        200
+      ],
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1
+    },
+    {
+      "id": "fetch-pipeline",
+      "maxTries": 2,
+      "name": "Fetch Pipeline Health",
+      "parameters": {
+        "options": {},
+        "url": "http://localhost:3000/api/strategies/pipeline"
+      },
+      "position": [
+        896,
+        500
+      ],
+      "retryOnFail": true,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "build-summary",
+      "name": "Build Summary",
+      "parameters": {
+        "jsCode": "const pipeline = $input.first().json;\n\nconst lines = [\n  '=== Daily Portfolio Monitor Summary ===',\n  `Date: ${new Date().toISOString().split('T')[0]}`,\n  '',\n  '--- Pipeline Health ---'\n];\n\nconst states = ['CANDIDATE', 'TESTING', 'PAPER', 'DEPLOYED', 'DECLINING', 'RETIRED'];\nfor (const state of states) {\n  const count = pipeline[state] || pipeline[state.toLowerCase()] || 0;\n  lines.push(`  ${state}: ${count}`);\n}\n\nlines.push('');\nlines.push('--- End of Report ---');\n\nreturn [{\n  json: {\n    type: 'portfolio_monitor_daily',\n    summary: lines.join('\\n'),\n    pipeline: pipeline,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "position": [
+        1120,
+        500
+      ],
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2
+    },
+    {
+      "id": "log-journal",
+      "maxTries": 2,
+      "name": "Log Summary to Journal",
+      "parameters": {
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "method": "POST",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "url": "http://localhost:3000/api/journal"
+      },
+      "position": [
+        1344,
+        500
+      ],
+      "retryOnFail": true,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "error-trigger-pm",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        700
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "http-error-alert-pm",
+      "name": "Discord Portfolio Monitor Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        250,
+        700
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Portfolio Monitor Error', message: $input.first().json.execution ? ($input.first().json.execution.error ? $input.first().json.execution.error.message : 'Unknown error') : ($input.first().json.error ? $input.first().json.error.message : JSON.stringify($input.first().json).substring(0, 500)), severity: 'critical', data: { workflow: 'Daily Portfolio Monitor', timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "5PM EST Weekday Trigger": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Fetch DEPLOYED Strategies",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Any DEPLOYED Strategies?": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Loop Over Strategies",
+            "type": "main"
+          }
+        ],
+        [
+          {
+            "index": 0,
+            "node": "Log No DEPLOYED Strategies",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Build Summary": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Log Summary to Journal",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Compute Rolling Sharpe": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Detect Drift",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Detect Drift": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Log Drift Alert and Transition",
+            "type": "main"
+          }
+        ],
+        [
+          {
+            "index": 0,
+            "node": "Log Healthy",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Fetch DEPLOYED Strategies": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Any DEPLOYED Strategies?",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Fetch Pipeline Health": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Build Summary",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Log Drift Alert and Transition": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Loop Over Strategies",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Log Healthy": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Loop Over Strategies",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Loop Over Strategies": {
+      "main": [
+        [
+          {
+            "index": 0,
+            "node": "Fetch Pipeline Health",
+            "type": "main"
+          }
+        ],
+        [
+          {
+            "index": 0,
+            "node": "Compute Rolling Sharpe",
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Discord Portfolio Monitor Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:5PM EST Weekday Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "a23dfe90-7bde-4747-bd87-0a70e4fae6bb",
+  "activeVersionId": "a23dfe90-7bde-4747-bd87-0a70e4fae6bb",
+  "versionCounter": 13,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T08:36:09.173Z",
+      "createdAt": "2026-03-14T08:36:09.173Z",
+      "role": "workflow:owner",
+      "workflowId": "u0RcmfuClgRinXAX",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-19T01:38:26.682Z",
+    "createdAt": "2026-03-19T01:38:26.682Z",
+    "versionId": "a23dfe90-7bde-4747-bd87-0a70e4fae6bb",
+    "workflowId": "u0RcmfuClgRinXAX",
+    "nodes": [
+      {
+        "id": "schedule-trigger",
+        "name": "5PM EST Weekday Trigger",
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "expression": "0 17 * * 1-5",
+                "field": "cronExpression"
+              }
+            ]
+          }
+        },
+        "position": [
+          0,
+          300
+        ],
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3
+      },
+      {
+        "id": "fetch-deployed",
+        "maxTries": 3,
+        "name": "Fetch DEPLOYED Strategies",
+        "parameters": {
+          "options": {},
+          "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED"
+        },
+        "position": [
+          224,
+          300
+        ],
+        "retryOnFail": true,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "check-any-deployed",
+        "name": "Any DEPLOYED Strategies?",
+        "parameters": {
+          "conditions": {
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "cond-has-strategies",
+                "leftValue": "={{ $json.length > 0 }}",
+                "operator": {
+                  "operation": "equals",
+                  "type": "boolean"
+                },
+                "rightValue": true
+              }
+            ],
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            }
+          },
+          "options": {}
+        },
+        "position": [
+          448,
+          300
+        ],
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3
+      },
+      {
+        "id": "log-no-strategies",
+        "name": "Log No DEPLOYED Strategies",
+        "parameters": {
+          "jsonBody": "={ \"type\": \"portfolio_monitor\", \"message\": \"No DEPLOYED strategies found - nothing to monitor\", \"timestamp\": \"{{ $now.toISO() }}\" }",
+          "method": "POST",
+          "options": {},
+          "sendBody": true,
+          "specifyBody": "json",
+          "url": "http://localhost:3000/api/journal"
+        },
+        "position": [
+          672,
+          500
+        ],
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4
+      },
+      {
+        "id": "split-strategies",
+        "name": "Loop Over Strategies",
+        "parameters": {
+          "options": {}
+        },
+        "position": [
+          672,
+          300
+        ],
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3
+      },
+      {
+        "id": "compute-sharpe",
+        "name": "Compute Rolling Sharpe",
+        "parameters": {
+          "jsCode": "const strategy = $input.first().json;\n\nconst rollingSharpe = Number(strategy.rolling_sharpe_30d || strategy.sharpeRatio || 0);\nconst strategyId = strategy.id;\nconst strategyName = strategy.name || strategy.strategy_name || 'Unknown';\n\nreturn [{\n  json: {\n    strategyId,\n    strategyName,\n    rolling_sharpe_30d: rollingSharpe,\n    drifting: rollingSharpe < 1.0,\n    lifecycle_state: strategy.lifecycle_state || 'DEPLOYED'\n  }\n}];"
+        },
+        "position": [
+          896,
+          100
+        ],
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2
+      },
+      {
+        "id": "check-drift",
+        "name": "Detect Drift",
+        "parameters": {
+          "conditions": {
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "cond-drift",
+                "leftValue": "={{ $json.drifting }}",
+                "operator": {
+                  "operation": "equals",
+                  "type": "boolean"
+                },
+                "rightValue": true
+              }
+            ],
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            }
+          },
+          "options": {}
+        },
+        "position": [
+          1120,
+          100
+        ],
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3
+      },
+      {
+        "id": "transition-declining",
+        "maxTries": 2,
+        "name": "Log Drift Alert and Transition",
+        "parameters": {
+          "jsonBody": "={ \"fromState\": \"DEPLOYED\", \"toState\": \"DECLINING\" }",
+          "method": "PATCH",
+          "options": {},
+          "sendBody": true,
+          "specifyBody": "json",
+          "url": "=http://localhost:3000/api/strategies/{{ $json.strategyId }}/lifecycle"
+        },
+        "position": [
+          1344,
+          0
+        ],
+        "retryOnFail": true,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "log-healthy",
+        "name": "Log Healthy",
+        "parameters": {},
+        "position": [
+          1344,
+          200
+        ],
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1
+      },
+      {
+        "id": "fetch-pipeline",
+        "maxTries": 2,
+        "name": "Fetch Pipeline Health",
+        "parameters": {
+          "options": {},
+          "url": "http://localhost:3000/api/strategies/pipeline"
+        },
+        "position": [
+          896,
+          500
+        ],
+        "retryOnFail": true,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "build-summary",
+        "name": "Build Summary",
+        "parameters": {
+          "jsCode": "const pipeline = $input.first().json;\n\nconst lines = [\n  '=== Daily Portfolio Monitor Summary ===',\n  `Date: ${new Date().toISOString().split('T')[0]}`,\n  '',\n  '--- Pipeline Health ---'\n];\n\nconst states = ['CANDIDATE', 'TESTING', 'PAPER', 'DEPLOYED', 'DECLINING', 'RETIRED'];\nfor (const state of states) {\n  const count = pipeline[state] || pipeline[state.toLowerCase()] || 0;\n  lines.push(`  ${state}: ${count}`);\n}\n\nlines.push('');\nlines.push('--- End of Report ---');\n\nreturn [{\n  json: {\n    type: 'portfolio_monitor_daily',\n    summary: lines.join('\\n'),\n    pipeline: pipeline,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        },
+        "position": [
+          1120,
+          500
+        ],
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2
+      },
+      {
+        "id": "log-journal",
+        "maxTries": 2,
+        "name": "Log Summary to Journal",
+        "parameters": {
+          "jsonBody": "={{ JSON.stringify($json) }}",
+          "method": "POST",
+          "options": {},
+          "sendBody": true,
+          "specifyBody": "json",
+          "url": "http://localhost:3000/api/journal"
+        },
+        "position": [
+          1344,
+          500
+        ],
+        "retryOnFail": true,
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "error-trigger-pm",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          700
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "http-error-alert-pm",
+        "name": "Discord Portfolio Monitor Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          700
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4100/alert/alerts",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Portfolio Monitor Error', message: $input.first().json.execution ? ($input.first().json.execution.error ? $input.first().json.execution.error.message : 'Unknown error') : ($input.first().json.error ? $input.first().json.error.message : JSON.stringify($input.first().json).substring(0, 500)), severity: 'critical', data: { workflow: 'Daily Portfolio Monitor', timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "5PM EST Weekday Trigger": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Fetch DEPLOYED Strategies",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Any DEPLOYED Strategies?": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Loop Over Strategies",
+              "type": "main"
+            }
+          ],
+          [
+            {
+              "index": 0,
+              "node": "Log No DEPLOYED Strategies",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Build Summary": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Log Summary to Journal",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Compute Rolling Sharpe": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Detect Drift",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Detect Drift": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Log Drift Alert and Transition",
+              "type": "main"
+            }
+          ],
+          [
+            {
+              "index": 0,
+              "node": "Log Healthy",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Fetch DEPLOYED Strategies": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Any DEPLOYED Strategies?",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Fetch Pipeline Health": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Build Summary",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Log Drift Alert and Transition": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Loop Over Strategies",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Log Healthy": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Loop Over Strategies",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Loop Over Strategies": {
+        "main": [
+          [
+            {
+              "index": 0,
+              "node": "Fetch Pipeline Health",
+              "type": "main"
+            }
+          ],
+          [
+            {
+              "index": 0,
+              "node": "Compute Rolling Sharpe",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "Discord Portfolio Monitor Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-19T01:38:26.717Z",
+        "id": 1180,
+        "workflowId": "u0RcmfuClgRinXAX",
+        "versionId": "a23dfe90-7bde-4747-bd87-0a70e4fae6bb",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

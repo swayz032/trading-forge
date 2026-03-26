@@ -166,7 +166,7 @@ class TestGapAdjustedDrawdown:
     def test_overnight_increases_drawdown(self):
         """Gap-adjusted drawdown > raw drawdown for overnight strategies."""
         # Equity curve: rising then plateau
-        equity = [100000, 100500, 101000, 101200, 101300, 101400]
+        equity = [50000, 100500, 101000, 101200, 101300, 101400]
         trades = [{
             "Entry Index": 1,
             "Exit Index": 3,
@@ -191,7 +191,7 @@ class TestGapAdjustedDrawdown:
 
     def test_intraday_no_drawdown_change(self):
         """Intraday-only trades don't change gap-adjusted drawdown."""
-        equity = [100000, 100500, 101000, 100200, 100800]
+        equity = [50000, 100500, 101000, 100200, 100800]
         trades = [{
             "Entry Index": 1,
             "Exit Index": 2,

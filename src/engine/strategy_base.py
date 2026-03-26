@@ -24,6 +24,7 @@ class BaseStrategy(ABC):
     symbol: str
     timeframe: str
     preferred_regime: Optional[str] = None
+    overnight_hold: bool = False  # DAY_ONLY (False) vs SWING (True)
 
     @abstractmethod
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -33,6 +34,29 @@ class BaseStrategy(ABC):
             DataFrame with all original columns plus signal columns.
         """
         ...
+
+    def compute_multi(self, dfs: dict[str, pl.DataFrame]) -> pl.DataFrame:
+        """Multi-instrument compute for strategies that need cross-instrument data.
+
+        Override this instead of compute() for strategies like SMT Reversal
+        that require data from multiple instruments simultaneously.
+
+        Args:
+            dfs: Dict mapping instrument names to their OHLCV DataFrames.
+                 e.g. {"ES": df_es, "NQ": df_nq}
+
+        Returns:
+            DataFrame with signal columns, keyed to the primary instrument.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support multi-instrument compute. "
+            "Use compute() instead."
+        )
+
+    @property
+    def is_multi_instrument(self) -> bool:
+        """Whether this strategy requires multiple instruments."""
+        return False
 
     @abstractmethod
     def get_params(self) -> dict:
@@ -58,6 +82,7 @@ class ExpressionStrategy(BaseStrategy):
         self.symbol = config.symbol
         self.timeframe = config.timeframe
         self.preferred_regime = None
+        self.overnight_hold = config.overnight_hold
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
         """Compute indicators via dispatcher, then evaluate expressions for signals."""

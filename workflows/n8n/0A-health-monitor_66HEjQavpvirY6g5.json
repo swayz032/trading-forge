@@ -1,0 +1,609 @@
+{
+  "updatedAt": "2026-03-20T05:16:50.112Z",
+  "createdAt": "2026-03-20T05:16:50.112Z",
+  "id": "66HEjQavpvirY6g5",
+  "name": "0A-health-monitor",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-api",
+      "name": "Check Trading Forge API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        250,
+        -150
+      ],
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/health",
+        "method": "GET",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "check-openclaw",
+      "name": "Check OpenClaw Gateway",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        250,
+        0
+      ],
+      "parameters": {
+        "url": "http://host.docker.internal:18789/health",
+        "method": "GET",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "check-ollama",
+      "name": "Check Ollama",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        250,
+        150
+      ],
+      "parameters": {
+        "url": "http://host.docker.internal:11434/api/tags",
+        "method": "GET",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "check-discord",
+      "name": "Check Discord Bot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "url": "http://host.docker.internal:4100/health",
+        "method": "GET",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "evaluate",
+      "name": "Evaluate Health",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        550,
+        75
+      ],
+      "parameters": {
+        "jsCode": "const api = $('Check Trading Forge API').first();\nconst openclaw = $('Check OpenClaw Gateway').first();\nconst ollama = $('Check Ollama').first();\nconst discord = $('Check Discord Bot').first();\nconst services = [\n  { name: 'Trading Forge API', port: 4000, result: api },\n  { name: 'OpenClaw Gateway', port: 18789, result: openclaw },\n  { name: 'Ollama', port: 11434, result: ollama },\n  { name: 'Discord Bot', port: 4100, result: discord }\n];\nconst failures = [];\nfor (const svc of services) {\n  const json = svc.result?.json || {};\n  const hasError = json.error || json.code === 'ECONNREFUSED' || json.code === 'ETIMEDOUT';\n  const status = json.status;\n  if (hasError || (!status && !json.models && !json.connected)) {\n    failures.push(`${svc.name} (port ${svc.port}): ${json.error || json.code || 'no response'}`);\n  }\n}\nreturn [{ json: { allHealthy: failures.length === 0, failureCount: failures.length, failures, checkedAt: new Date().toISOString() } }];"
+      }
+    },
+    {
+      "id": "check-failures",
+      "name": "Any Failures?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        800,
+        75
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.failureCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "alert-discord",
+      "name": "Alert Discord",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1050,
+        0
+      ],
+      "parameters": {
+        "url": "http://host.docker.internal:4100/alert/alerts",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"title\": \"Service Down Alert\", \"message\": \"{{ $json.failures.join(' | ') }}\", \"severity\": \"critical\", \"data\": {\"failureCount\": {{ $json.failureCount }}, \"checkedAt\": \"{{ $json.checkedAt }}\"}}",
+        "options": {
+          "timeout": 10000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Check Trading Forge API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check OpenClaw Gateway",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Ollama",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Discord Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Trading Forge API": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check OpenClaw Gateway": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Ollama": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Discord Bot": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Health": {
+      "main": [
+        [
+          {
+            "node": "Any Failures?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Failures?": {
+      "main": [
+        [
+          {
+            "node": "Alert Discord",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Every 5 Minutes": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "8b474838-3891-4f7c-b917-b997a75da234",
+  "activeVersionId": "8b474838-3891-4f7c-b917-b997a75da234",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T05:16:50.112Z",
+      "createdAt": "2026-03-20T05:16:50.112Z",
+      "role": "workflow:owner",
+      "workflowId": "66HEjQavpvirY6g5",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-20T05:16:50.116Z",
+    "createdAt": "2026-03-20T05:16:50.116Z",
+    "versionId": "8b474838-3891-4f7c-b917-b997a75da234",
+    "workflowId": "66HEjQavpvirY6g5",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Every 5 Minutes",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 5
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "check-api",
+        "name": "Check Trading Forge API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          250,
+          -150
+        ],
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/health",
+          "method": "GET",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "check-openclaw",
+        "name": "Check OpenClaw Gateway",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          250,
+          0
+        ],
+        "parameters": {
+          "url": "http://host.docker.internal:18789/health",
+          "method": "GET",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "check-ollama",
+        "name": "Check Ollama",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          250,
+          150
+        ],
+        "parameters": {
+          "url": "http://host.docker.internal:11434/api/tags",
+          "method": "GET",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "check-discord",
+        "name": "Check Discord Bot",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "url": "http://host.docker.internal:4100/health",
+          "method": "GET",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "evaluate",
+        "name": "Evaluate Health",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          550,
+          75
+        ],
+        "parameters": {
+          "jsCode": "const api = $('Check Trading Forge API').first();\nconst openclaw = $('Check OpenClaw Gateway').first();\nconst ollama = $('Check Ollama').first();\nconst discord = $('Check Discord Bot').first();\nconst services = [\n  { name: 'Trading Forge API', port: 4000, result: api },\n  { name: 'OpenClaw Gateway', port: 18789, result: openclaw },\n  { name: 'Ollama', port: 11434, result: ollama },\n  { name: 'Discord Bot', port: 4100, result: discord }\n];\nconst failures = [];\nfor (const svc of services) {\n  const json = svc.result?.json || {};\n  const hasError = json.error || json.code === 'ECONNREFUSED' || json.code === 'ETIMEDOUT';\n  const status = json.status;\n  if (hasError || (!status && !json.models && !json.connected)) {\n    failures.push(`${svc.name} (port ${svc.port}): ${json.error || json.code || 'no response'}`);\n  }\n}\nreturn [{ json: { allHealthy: failures.length === 0, failureCount: failures.length, failures, checkedAt: new Date().toISOString() } }];"
+        }
+      },
+      {
+        "id": "check-failures",
+        "name": "Any Failures?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          800,
+          75
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "1",
+                "leftValue": "={{ $json.failureCount }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "alert-discord",
+        "name": "Alert Discord",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1050,
+          0
+        ],
+        "parameters": {
+          "url": "http://host.docker.internal:4100/alert/alerts",
+          "method": "POST",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\"title\": \"Service Down Alert\", \"message\": \"{{ $json.failures.join(' | ') }}\", \"severity\": \"critical\", \"data\": {\"failureCount\": {{ $json.failureCount }}, \"checkedAt\": \"{{ $json.checkedAt }}\"}}",
+          "options": {
+            "timeout": 10000
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Every 5 Minutes": {
+        "main": [
+          [
+            {
+              "node": "Check Trading Forge API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check OpenClaw Gateway",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check Ollama",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check Discord Bot",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Trading Forge API": {
+        "main": [
+          [
+            {
+              "node": "Evaluate Health",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check OpenClaw Gateway": {
+        "main": [
+          [
+            {
+              "node": "Evaluate Health",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Ollama": {
+        "main": [
+          [
+            {
+              "node": "Evaluate Health",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Discord Bot": {
+        "main": [
+          [
+            {
+              "node": "Evaluate Health",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Evaluate Health": {
+        "main": [
+          [
+            {
+              "node": "Any Failures?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Failures?": {
+        "main": [
+          [
+            {
+              "node": "Alert Discord",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-20T05:17:04.884Z",
+        "id": 1185,
+        "workflowId": "66HEjQavpvirY6g5",
+        "versionId": "8b474838-3891-4f7c-b917-b997a75da234",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

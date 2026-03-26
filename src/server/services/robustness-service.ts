@@ -8,7 +8,7 @@ import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { logger } from "../index.js";
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
+const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
 export interface RobustnessResult {
   best_params: Record<string, number>;
@@ -37,6 +37,16 @@ function runPythonRobustness(configJson: string): Promise<RobustnessResult> {
       cwd: PROJECT_ROOT,
     });
 
+    const ROBUSTNESS_TIMEOUT_MS = 600_000;
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        proc.kill("SIGTERM");
+        reject(new Error(`Robustness test timed out after ${ROBUSTNESS_TIMEOUT_MS / 1000}s`));
+      }
+    }, ROBUSTNESS_TIMEOUT_MS);
+
     let stdout = "";
     let stderr = "";
 
@@ -47,6 +57,9 @@ function runPythonRobustness(configJson: string): Promise<RobustnessResult> {
     });
 
     proc.on("close", (code) => {
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true;
       if (code === 0) {
         try {
           resolve(JSON.parse(stdout.trim()));

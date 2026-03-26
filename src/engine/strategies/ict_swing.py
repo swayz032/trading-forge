@@ -1,7 +1,8 @@
-"""ICT Swing Trade strategy — HTF structure + OTE zone + FVG confluence.
+"""ICT Swing Trade strategy — HTF bias + liquidity sweep + PD array entry.
 
-One-sentence: Enter on bullish BOS + price retracing to the OTE zone (0.618-0.786
-fib) with an FVG present in that zone, targeting fib extension levels.
+One-sentence: Enter after a liquidity sweep when price retraces into a
+discount/premium-aligned PD array (order block or FVG) with BOS confirmation,
+targeting the opposing liquidity pool.
 """
 
 from __future__ import annotations
@@ -9,25 +10,35 @@ from __future__ import annotations
 import polars as pl
 
 from src.engine.strategy_base import BaseStrategy
-from src.engine.indicators.core import compute_atr, compute_adx
-from src.engine.indicators.market_structure import detect_swings, detect_bos
+from src.engine.indicators.core import compute_atr
+from src.engine.indicators.market_structure import (
+    detect_swings,
+    detect_bos,
+    compute_premium_discount,
+)
 from src.engine.indicators.price_delivery import detect_fvg
-from src.engine.indicators.fibonacci import ote_zone, fib_extensions
+from src.engine.indicators.order_flow import detect_bullish_ob, detect_bearish_ob
+from src.engine.indicators.liquidity import (
+    detect_buyside_liquidity,
+    detect_sellside_liquidity,
+    detect_sweep,
+)
 
 
 class ICTSwingStrategy(BaseStrategy):
     name = "ict_swing"
     preferred_regime = "TRENDING_UP"
+    overnight_hold = True  # swing trade: holds multi-day
 
     def __init__(
         self,
         htf_lookback: int = 10,
-        ote_tolerance: float = 0.1,
-        min_adx: float = 20.0,
+        sweep_lookback: int = 40,
+        pd_array_lookback: int = 20,
     ):
         self.htf_lookback = htf_lookback
-        self.ote_tolerance = ote_tolerance
-        self.min_adx = min_adx
+        self.sweep_lookback = sweep_lookback
+        self.pd_array_lookback = pd_array_lookback
         self.symbol = "ES"
         self.timeframe = "1h"
 
@@ -44,58 +55,84 @@ class ICTSwingStrategy(BaseStrategy):
                 pl.lit(False).alias("exit_short"),
             ])
 
-        # Compute indicators
+        # ── Core indicators ──────────────────────────────────────────
         atr = compute_atr(df, 14)
-        adx = compute_adx(df, 14)
         swings = detect_swings(df, self.htf_lookback)
         bos = detect_bos(df, swings)
+        pd_zone = compute_premium_discount(df, swings)
+
+        # Liquidity detection
+        bsl = detect_buyside_liquidity(df, swings)
+        ssl = detect_sellside_liquidity(df, swings)
+        sweep_bsl = detect_sweep(df, bsl)
+        sweep_ssl = detect_sweep(df, ssl)
+
+        # PD arrays: order blocks + FVGs
+        bull_obs = detect_bullish_ob(df, swings)
+        bear_obs = detect_bearish_ob(df, swings)
         fvgs = detect_fvg(df)
 
-        # Pre-extract swing data
-        swing_highs = swings.filter(pl.col("type") == "high").sort("index")
-        swing_lows = swings.filter(pl.col("type") == "low").sort("index")
+        # ── Pre-extract to lists for the bar loop ────────────────────
+        closes = df["close"].to_list()
+        bos_list = bos.to_list()
+        pd_list = pd_zone.to_list()
+        sweep_bsl_list = sweep_bsl.to_list()
+        sweep_ssl_list = sweep_ssl.to_list()
 
-        sh_prices = swing_highs["price"].to_list() if len(swing_highs) > 0 else []
-        sh_indices = swing_highs["index"].to_list() if len(swing_highs) > 0 else []
-        sl_prices = swing_lows["price"].to_list() if len(swing_lows) > 0 else []
-        sl_indices = swing_lows["index"].to_list() if len(swing_lows) > 0 else []
-
-        # Pre-extract FVG data
+        # Extract bullish PD arrays (bullish OBs + bullish FVGs)
+        bull_pd_bars = []
+        bull_pd_tops = []
+        bull_pd_bots = []
+        if len(bull_obs) > 0:
+            for idx in range(len(bull_obs)):
+                bull_pd_bars.append(int(bull_obs["index"][idx]))
+                bull_pd_tops.append(float(bull_obs["top"][idx]))
+                bull_pd_bots.append(float(bull_obs["bottom"][idx]))
         bullish_fvgs = fvgs.filter(pl.col("type") == "bullish") if len(fvgs) > 0 else fvgs
-        bearish_fvgs = fvgs.filter(pl.col("type") == "bearish") if len(fvgs) > 0 else fvgs
+        if len(bullish_fvgs) > 0:
+            for idx in range(len(bullish_fvgs)):
+                bull_pd_bars.append(int(bullish_fvgs["index"][idx]))
+                bull_pd_tops.append(float(bullish_fvgs["top"][idx]))
+                bull_pd_bots.append(float(bullish_fvgs["bottom"][idx]))
 
-        # Build signal arrays
+        # Extract bearish PD arrays (bearish OBs + bearish FVGs)
+        bear_pd_bars = []
+        bear_pd_tops = []
+        bear_pd_bots = []
+        if len(bear_obs) > 0:
+            for idx in range(len(bear_obs)):
+                bear_pd_bars.append(int(bear_obs["index"][idx]))
+                bear_pd_tops.append(float(bear_obs["top"][idx]))
+                bear_pd_bots.append(float(bear_obs["bottom"][idx]))
+        bearish_fvgs = fvgs.filter(pl.col("type") == "bearish") if len(fvgs) > 0 else fvgs
+        if len(bearish_fvgs) > 0:
+            for idx in range(len(bearish_fvgs)):
+                bear_pd_bars.append(int(bearish_fvgs["index"][idx]))
+                bear_pd_tops.append(float(bearish_fvgs["top"][idx]))
+                bear_pd_bots.append(float(bearish_fvgs["bottom"][idx]))
+
+        # Extract BSL/SSL target prices for exit targeting
+        bsl_prices = bsl["price"].to_list() if len(bsl) > 0 else []
+        ssl_prices = ssl["price"].to_list() if len(ssl) > 0 else []
+
+        # ── Build signal arrays ──────────────────────────────────────
         entry_long = [False] * n
         entry_short = [False] * n
         exit_long = [False] * n
         exit_short = [False] * n
 
-        closes = df["close"].to_list()
-        bos_list = bos.to_list()
-        adx_list = adx.to_list()
-        atr_list = atr.to_list()
-
-        # Track state: after a bullish BOS, look for OTE retracement
-        last_bullish_bos_bar = None
-        last_bearish_bos_bar = None
-        last_swing_high = None
-        last_swing_low = None
-        sh_ptr = 0
-        sl_ptr = 0
+        # State tracking
+        last_ssl_sweep_bar = -999  # last bar where SSL was swept (bullish trigger)
+        last_bsl_sweep_bar = -999  # last bar where BSL was swept (bearish trigger)
+        last_bullish_bos_bar = -999
+        last_bearish_bos_bar = -999
 
         for i in range(n):
-            # Update swing pointers
-            while sh_ptr < len(sh_indices) and sh_indices[sh_ptr] < i:
-                last_swing_high = sh_prices[sh_ptr]
-                sh_ptr += 1
-            while sl_ptr < len(sl_indices) and sl_indices[sl_ptr] < i:
-                last_swing_low = sl_prices[sl_ptr]
-                sl_ptr += 1
-
-            # ADX filter: need trending conditions
-            adx_val = adx_list[i]
-            if adx_val is None or adx_val != adx_val or adx_val < self.min_adx:
-                continue
+            # Track liquidity sweep events
+            if sweep_ssl_list[i]:
+                last_ssl_sweep_bar = i
+            if sweep_bsl_list[i]:
+                last_bsl_sweep_bar = i
 
             # Track BOS events
             if bos_list[i] == "bullish":
@@ -105,91 +142,75 @@ class ICTSwingStrategy(BaseStrategy):
 
             close = closes[i]
 
-            # ---- LONG ENTRY: Bullish BOS + OTE retracement + FVG ----
+            # ── LONG ENTRY ───────────────────────────────────────────
+            # Conditions:
+            #   1. SSL sweep occurred recently (liquidity grab below lows)
+            #   2. Bullish BOS after the sweep (confirms institutional reversal)
+            #   3. Price is in discount zone
+            #   4. Price is at a bullish PD array (OB or FVG)
             if (
-                last_bullish_bos_bar is not None
-                and last_swing_high is not None
-                and last_swing_low is not None
-                and last_swing_high > last_swing_low
+                last_ssl_sweep_bar >= i - self.sweep_lookback
+                and last_bullish_bos_bar > last_ssl_sweep_bar
+                and last_bullish_bos_bar <= i
+                and pd_list[i] == "discount"
             ):
-                ote_upper, ote_lower = ote_zone(last_swing_high, last_swing_low)
-                rng = last_swing_high - last_swing_low
-                tolerance = self.ote_tolerance * rng
-
-                # Price in or near OTE zone
-                if ote_lower - tolerance <= close <= ote_upper + tolerance:
-                    # Check for bullish FVG in OTE zone
-                    fvg_in_ote = False
-                    for f_idx in range(len(bullish_fvgs)):
-                        fvg_bar = int(bullish_fvgs["index"][f_idx])
-                        if fvg_bar >= i or i - fvg_bar > self.htf_lookback * 4:
-                            continue
-                        fvg_top = float(bullish_fvgs["top"][f_idx])
-                        fvg_bottom = float(bullish_fvgs["bottom"][f_idx])
-                        # FVG overlaps with OTE zone
-                        if fvg_bottom <= ote_upper and fvg_top >= ote_lower:
-                            fvg_in_ote = True
-                            break
-
-                    if fvg_in_ote:
+                # Check for bullish PD array (OB or FVG) at current price
+                for k in range(len(bull_pd_bars)):
+                    bar_k = bull_pd_bars[k]
+                    if bar_k >= i or i - bar_k > self.pd_array_lookback:
+                        continue
+                    if bull_pd_bots[k] <= close <= bull_pd_tops[k]:
                         entry_long[i] = True
+                        break
 
-            # ---- SHORT ENTRY: Bearish BOS + OTE retracement + FVG ----
+            # ── SHORT ENTRY ──────────────────────────────────────────
+            # Conditions:
+            #   1. BSL sweep occurred recently (liquidity grab above highs)
+            #   2. Bearish BOS after the sweep (confirms institutional reversal)
+            #   3. Price is in premium zone
+            #   4. Price is at a bearish PD array (OB or FVG)
             if (
-                last_bearish_bos_bar is not None
-                and last_swing_high is not None
-                and last_swing_low is not None
-                and last_swing_high > last_swing_low
+                last_bsl_sweep_bar >= i - self.sweep_lookback
+                and last_bearish_bos_bar > last_bsl_sweep_bar
+                and last_bearish_bos_bar <= i
+                and pd_list[i] == "premium"
             ):
-                ote_upper, ote_lower = ote_zone(last_swing_high, last_swing_low)
-                # For shorts, OTE is measured from low up (premium zone)
-                short_ote_lower = last_swing_low + 0.618 * (last_swing_high - last_swing_low)
-                short_ote_upper = last_swing_low + 0.786 * (last_swing_high - last_swing_low)
-                rng = last_swing_high - last_swing_low
-                tolerance = self.ote_tolerance * rng
-
-                if short_ote_lower - tolerance <= close <= short_ote_upper + tolerance:
-                    fvg_in_ote = False
-                    for f_idx in range(len(bearish_fvgs)):
-                        fvg_bar = int(bearish_fvgs["index"][f_idx])
-                        if fvg_bar >= i or i - fvg_bar > self.htf_lookback * 4:
-                            continue
-                        fvg_top = float(bearish_fvgs["top"][f_idx])
-                        fvg_bottom = float(bearish_fvgs["bottom"][f_idx])
-                        if fvg_bottom <= short_ote_upper and fvg_top >= short_ote_lower:
-                            fvg_in_ote = True
-                            break
-
-                    if fvg_in_ote:
+                for k in range(len(bear_pd_bars)):
+                    bar_k = bear_pd_bars[k]
+                    if bar_k >= i or i - bar_k > self.pd_array_lookback:
+                        continue
+                    if bear_pd_bots[k] <= close <= bear_pd_tops[k]:
                         entry_short[i] = True
+                        break
 
-        # Exit logic: fib extension targets or structure break
+        # ── Exit logic: opposing liquidity pool or structure break ────
         in_long = False
         in_short = False
         long_target = None
         short_target = None
-        long_swing_high = None
-        long_swing_low = None
 
         for i in range(n):
             if entry_long[i]:
                 in_long = True
                 in_short = False
-                # Set exit target at 1.0 extension (or -0.272 fib extension)
-                if last_swing_high is not None and last_swing_low is not None:
-                    exts = fib_extensions(last_swing_high, last_swing_low, closes[i])
-                    long_target = exts.get("-0.272")
-                    long_swing_high = last_swing_high
-                    long_swing_low = last_swing_low
+                # Target = nearest BSL above current price
+                long_target = None
+                for p in bsl_prices:
+                    if p > closes[i]:
+                        if long_target is None or p < long_target:
+                            long_target = p
 
             elif entry_short[i]:
                 in_short = True
                 in_long = False
-                if last_swing_high is not None and last_swing_low is not None:
-                    exts = fib_extensions(last_swing_high, last_swing_low, closes[i])
-                    short_target = exts.get("-0.272")
+                # Target = nearest SSL below current price
+                short_target = None
+                for p in ssl_prices:
+                    if p < closes[i]:
+                        if short_target is None or p > short_target:
+                            short_target = p
 
-            # Exit long: target hit or bearish BOS
+            # Exit long: BSL target hit or bearish BOS
             if in_long:
                 if long_target is not None and closes[i] >= long_target:
                     exit_long[i] = True
@@ -198,7 +219,7 @@ class ICTSwingStrategy(BaseStrategy):
                     exit_long[i] = True
                     in_long = False
 
-            # Exit short: target hit or bullish BOS
+            # Exit short: SSL target hit or bullish BOS
             if in_short:
                 if short_target is not None and closes[i] <= short_target:
                     exit_short[i] = True
@@ -213,8 +234,10 @@ class ICTSwingStrategy(BaseStrategy):
             pl.Series("exit_long", exit_long),
             pl.Series("exit_short", exit_short),
             atr.alias("atr_14"),
-            adx.alias("adx_14"),
             bos.alias("bos"),
+            pd_zone.alias("premium_discount"),
+            sweep_bsl.alias("sweep_bsl"),
+            sweep_ssl.alias("sweep_ssl"),
         ])
 
         return result
@@ -222,13 +245,13 @@ class ICTSwingStrategy(BaseStrategy):
     def get_params(self) -> dict:
         return {
             "htf_lookback": self.htf_lookback,
-            "ote_tolerance": self.ote_tolerance,
-            "min_adx": self.min_adx,
+            "sweep_lookback": self.sweep_lookback,
+            "pd_array_lookback": self.pd_array_lookback,
         }
 
     def get_default_config(self) -> dict:
         return {
             "htf_lookback": 10,
-            "ote_tolerance": 0.1,
-            "min_adx": 20.0,
+            "sweep_lookback": 40,
+            "pd_array_lookback": 20,
         }

@@ -1,0 +1,37 @@
+concept: london_raid
+description: "Asia range sweep during London killzone + MSS/displacement reversal + FVG entry"
+
+required_imports:
+  - detect_fvg
+  - detect_displacement
+  - detect_mss
+  - is_asia_killzone
+  - is_london_killzone
+  - compute_atr
+
+required_imports_any:
+  - detect_swings     # needed for MSS detection
+  - detect_mss        # direct MSS detection
+
+forbidden_imports:
+  - compute_rsi       # not part of London Raid concept
+  - compute_vwap      # not part of London Raid concept
+
+required_time_windows:
+  - {start: "20:00", end: "00:00", tz: "US/Eastern", label: "Asia Range (setup)"}
+  - {start: "02:00", end: "05:00", tz: "US/Eastern", label: "London Killzone (execution)"}
+
+required_concepts:
+  - asia_range_tracking     # must track Asia session high and low
+  - liquidity_sweep         # price must sweep above Asia high or below Asia low
+  - displacement            # aggressive candle opposite to sweep direction
+  - market_structure_shift  # MSS must confirm reversal after sweep
+  - fvg_entry               # enter on FVG retrace, not raw displacement
+  - exit_logic              # must have real exit signals (session exit + SL-based exit)
+
+runtime_assertions:
+  - all_entries_in_london_killzone  # entries only during 02:00-05:00 ET
+  - no_entry_without_asia_range     # Asia H/L must be defined before any entry
+  - exit_signals_nonzero            # exit arrays must not be all-False
+  - signal_count_nonzero
+  - signal_density_reasonable       # not every bar

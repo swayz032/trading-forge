@@ -1,0 +1,57 @@
+concept: power_of_3
+description: "Fade the London Judas Swing of Asia range during NY AM, confirmed by displacement"
+
+required_imports:
+  - compute_atr
+  - is_asia_killzone
+  - is_london_killzone
+  - is_nyam_killzone
+  - detect_displacement
+
+required_imports_any:
+  - detect_fvg           # preferred entry model
+  - detect_mss           # alternative confirmation
+  - detect_displacement  # displacement confirms reversal direction (used in current impl)
+
+forbidden_imports:
+  - compute_rsi          # not part of PO3 concept
+  - compute_macd         # not part of PO3 concept
+
+required_phases:
+  accumulation:
+    session: asia_killzone
+    time: {start: "20:00", end: "00:00", tz: "US/Eastern"}
+    must_track: [asia_high, asia_low]
+  manipulation:
+    session: london_killzone
+    time: {start: "02:00", end: "05:00", tz: "US/Eastern"}
+    must_detect: sweep_of_asia_range
+  distribution:
+    session: nyam_killzone
+    time: {start: "08:30", end: "11:00", tz: "US/Eastern"}
+    must_enter: opposite_to_sweep
+
+required_concepts:
+  - asia_range_tracking     # must build Asia H/L during accumulation
+  - london_sweep_detection  # must detect sweep of Asia H or L during London
+  - displacement_confirm    # displacement candle must confirm reversal direction
+  - fade_sweep_direction    # entry is OPPOSITE to the London sweep direction
+  - exit_logic_present      # MUST have non-trivial exit arrays (session exit + structure exit)
+
+direction_logic:
+  asia_high_swept: short    # London sweeps high -> NY goes short (bearish distribution)
+  asia_low_swept: long      # London sweeps low -> NY goes long (bullish distribution)
+
+risk_management:
+  stop_loss: beyond_manipulation_extreme  # below sweep low (longs) / above sweep high (shorts)
+  min_reward_risk: 2.0
+  session_exit: "15:45 ET"
+  max_bars_held: 20
+
+runtime_assertions:
+  - all_entries_in_nyam           # 0% tolerance — entries only during NY AM (8:30-11:00 ET)
+  - no_entries_without_sweep      # every entry must be preceded by a London sweep of Asia range
+  - displacement_before_entry     # displacement must occur between sweep and entry
+  - exit_arrays_nonzero           # exit_long and exit_short must not be all-False
+  - signal_count_nonzero
+  - signal_density_reasonable     # not every bar

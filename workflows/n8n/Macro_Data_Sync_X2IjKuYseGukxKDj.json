@@ -1,0 +1,782 @@
+{
+  "updatedAt": "2026-03-15T00:46:41.255Z",
+  "createdAt": "2026-03-14T21:15:54.390Z",
+  "id": "X2IjKuYseGukxKDj",
+  "name": "Macro Data Sync",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger-schedule",
+      "name": "Daily 7PM ET Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 19 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-sync",
+      "name": "Trigger Macro Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/macro/sync",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 10000
+    },
+    {
+      "id": "code-parse-sync",
+      "name": "Parse Sync Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\n\nconst sources = ['FRED', 'BLS', 'EIA'];\nconst failures = [];\nconst successes = [];\n\nfor (const source of sources) {\n  const sourceData = response[source.toLowerCase()] || response[source];\n  if (sourceData && sourceData.error) {\n    failures.push({\n      source,\n      error: sourceData.error,\n      details: sourceData.details || 'No details provided'\n    });\n  } else {\n    successes.push(source);\n  }\n}\n\nreturn [{\n  json: {\n    hasFailures: failures.length > 0,\n    failures,\n    successes,\n    totalSources: sources.length,\n    failedCount: failures.length,\n    syncTimestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "if-any-failed",
+      "name": "Any Source Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-failed",
+              "leftValue": "={{ $json.hasFailures }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "code-format-error",
+      "name": "Format Error Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -120
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst errorLines = data.failures.map(f => \n  `- ${f.source}: ${f.error} (${f.details})`\n).join('\\n');\n\nreturn [{\n  json: {\n    title: 'Macro Data Sync Partial Failure',\n    message: `Failed sources (${data.failedCount}/${data.totalSources}):\\n${errorLines}\\n\\nSuccessful: ${data.successes.join(', ') || 'None'}`,\n    severity: 'warning',\n    data: {\n      failedCount: String(data.failedCount),\n      totalSources: String(data.totalSources),\n      failedSources: data.failures.map(f => f.source).join(', '),\n      successfulSources: data.successes.join(', ') || 'None',\n      timestamp: data.syncTimestamp\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-alert-failure",
+      "name": "POST Failure Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1100,
+        -120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/macro",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "noop-success-log",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        120
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "http-get-regime",
+      "name": "Fetch Current Regime",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:4000/api/macro/current",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "code-format-summary",
+      "name": "Format Regime Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const regime = $input.first().json;\n\nconst regimeName = regime.regime || regime.name || 'UNKNOWN';\nconst confidence = regime.confidence !== undefined ? regime.confidence : 'N/A';\nconst vix = regime.vix !== undefined ? regime.vix : 'N/A';\nconst tenYear = regime.tenYear !== undefined ? regime.tenYear : (regime['10y'] !== undefined ? regime['10y'] : 'N/A');\n\nreturn [{\n  json: {\n    title: 'Macro Regime Update',\n    message: `Current regime: ${regimeName} (confidence: ${confidence}). VIX: ${vix}. 10Y: ${tenYear}%`,\n    severity: 'info',\n    data: {\n      regime: String(regimeName),\n      confidence: String(confidence),\n      vix: String(vix),\n      tenYear: String(tenYear),\n      timestamp: new Date().toISOString()\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-post-summary",
+      "name": "POST Regime Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/macro",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "http-error-alert",
+      "name": "POST Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/alerts",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ alert_type: 'WORKFLOW_ERROR', workflow: 'Macro Data Sync', error: $json.execution ? $json.execution.error.message : 'Unknown error', timestamp: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 10000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Macro Data Sync', message: $json.execution ? $json.execution.error.message : 'Unknown error', severity: 'critical', data: { workflow: 'Macro Data Sync', timestamp: new Date().toISOString() } }) }}"
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Daily 7PM ET Trigger": {
+      "main": [
+        [
+          {
+            "node": "Trigger Macro Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Macro Sync": {
+      "main": [
+        [
+          {
+            "node": "Parse Sync Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Sync Response": {
+      "main": [
+        [
+          {
+            "node": "Any Source Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Source Failed?": {
+      "main": [
+        [
+          {
+            "node": "Format Error Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Details": {
+      "main": [
+        [
+          {
+            "node": "POST Failure Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Failure Alert": {
+      "main": [
+        [
+          {
+            "node": "Fetch Current Regime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Success": {
+      "main": [
+        [
+          {
+            "node": "Fetch Current Regime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Current Regime": {
+      "main": [
+        [
+          {
+            "node": "Format Regime Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Regime Summary": {
+      "main": [
+        [
+          {
+            "node": "POST Regime Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "POST Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Daily 7PM ET Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "3c03218c-8c85-48e6-9b15-f6210a3eb6cd",
+  "activeVersionId": "3c03218c-8c85-48e6-9b15-f6210a3eb6cd",
+  "versionCounter": 11,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T21:15:54.390Z",
+      "createdAt": "2026-03-14T21:15:54.390Z",
+      "role": "workflow:owner",
+      "workflowId": "X2IjKuYseGukxKDj",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-14T23:20:07.981Z",
+    "createdAt": "2026-03-14T23:20:07.981Z",
+    "versionId": "3c03218c-8c85-48e6-9b15-f6210a3eb6cd",
+    "workflowId": "X2IjKuYseGukxKDj",
+    "nodes": [
+      {
+        "id": "trigger-schedule",
+        "name": "Daily 7PM ET Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 19 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "http-sync",
+        "name": "Trigger Macro Sync",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/macro/sync",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 10000
+      },
+      {
+        "id": "code-parse-sync",
+        "name": "Parse Sync Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const response = $input.first().json;\n\nconst sources = ['FRED', 'BLS', 'EIA'];\nconst failures = [];\nconst successes = [];\n\nfor (const source of sources) {\n  const sourceData = response[source.toLowerCase()] || response[source];\n  if (sourceData && sourceData.error) {\n    failures.push({\n      source,\n      error: sourceData.error,\n      details: sourceData.details || 'No details provided'\n    });\n  } else {\n    successes.push(source);\n  }\n}\n\nreturn [{\n  json: {\n    hasFailures: failures.length > 0,\n    failures,\n    successes,\n    totalSources: sources.length,\n    failedCount: failures.length,\n    syncTimestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "if-any-failed",
+        "name": "Any Source Failed?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          660,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "condition-failed",
+                "leftValue": "={{ $json.hasFailures }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "code-format-error",
+        "name": "Format Error Details",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          -120
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\n\nconst errorLines = data.failures.map(f => \n  `- ${f.source}: ${f.error} (${f.details})`\n).join('\\n');\n\nreturn [{\n  json: {\n    title: 'Macro Data Sync Partial Failure',\n    message: `Failed sources (${data.failedCount}/${data.totalSources}):\\n${errorLines}\\n\\nSuccessful: ${data.successes.join(', ') || 'None'}`,\n    severity: 'warning',\n    data: {\n      failedCount: String(data.failedCount),\n      totalSources: String(data.totalSources),\n      failedSources: data.failures.map(f => f.source).join(', '),\n      successfulSources: data.successes.join(', ') || 'None',\n      timestamp: data.syncTimestamp\n    }\n  }\n}];"
+        }
+      },
+      {
+        "id": "http-alert-failure",
+        "name": "POST Failure Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1100,
+          -120
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/macro",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 10000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}"
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "noop-success-log",
+        "name": "Log Success",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          880,
+          120
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "http-get-regime",
+        "name": "Fetch Current Regime",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1320,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://localhost:4000/api/macro/current",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "code-format-summary",
+        "name": "Format Regime Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1540,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const regime = $input.first().json;\n\nconst regimeName = regime.regime || regime.name || 'UNKNOWN';\nconst confidence = regime.confidence !== undefined ? regime.confidence : 'N/A';\nconst vix = regime.vix !== undefined ? regime.vix : 'N/A';\nconst tenYear = regime.tenYear !== undefined ? regime.tenYear : (regime['10y'] !== undefined ? regime['10y'] : 'N/A');\n\nreturn [{\n  json: {\n    title: 'Macro Regime Update',\n    message: `Current regime: ${regimeName} (confidence: ${confidence}). VIX: ${vix}. 10Y: ${tenYear}%`,\n    severity: 'info',\n    data: {\n      regime: String(regimeName),\n      confidence: String(confidence),\n      vix: String(vix),\n      tenYear: String(tenYear),\n      timestamp: new Date().toISOString()\n    }\n  }\n}];"
+        }
+      },
+      {
+        "id": "http-post-summary",
+        "name": "POST Regime Summary",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1760,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/macro",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 10000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}"
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "http-error-alert",
+        "name": "POST Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          220,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/alerts",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify({ alert_type: 'WORKFLOW_ERROR', workflow: 'Macro Data Sync', error: $json.execution ? $json.execution.error.message : 'Unknown error', timestamp: new Date().toISOString() }) }}",
+          "options": {
+            "timeout": 10000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Macro Data Sync', message: $json.execution ? $json.execution.error.message : 'Unknown error', severity: 'critical', data: { workflow: 'Macro Data Sync', timestamp: new Date().toISOString() } }) }}"
+        },
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Daily 7PM ET Trigger": {
+        "main": [
+          [
+            {
+              "node": "Trigger Macro Sync",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trigger Macro Sync": {
+        "main": [
+          [
+            {
+              "node": "Parse Sync Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Sync Response": {
+        "main": [
+          [
+            {
+              "node": "Any Source Failed?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Source Failed?": {
+        "main": [
+          [
+            {
+              "node": "Format Error Details",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Error Details": {
+        "main": [
+          [
+            {
+              "node": "POST Failure Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Failure Alert": {
+        "main": [
+          [
+            {
+              "node": "Fetch Current Regime",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Success": {
+        "main": [
+          [
+            {
+              "node": "Fetch Current Regime",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Current Regime": {
+        "main": [
+          [
+            {
+              "node": "Format Regime Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Regime Summary": {
+        "main": [
+          [
+            {
+              "node": "POST Regime Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "POST Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-14T23:20:08.003Z",
+        "id": 1134,
+        "workflowId": "X2IjKuYseGukxKDj",
+        "versionId": "3c03218c-8c85-48e6-9b15-f6210a3eb6cd",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

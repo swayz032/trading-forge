@@ -1,0 +1,300 @@
+{
+  "updatedAt": "2026-03-20T05:34:36.658Z",
+  "createdAt": "2026-03-20T05:34:36.658Z",
+  "id": "2rVOEn4LnMAubTmW",
+  "name": "5A-weekly-tournament",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "sched",
+      "name": "Weekly Sunday 7 PM ET",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 19 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "rt",
+      "name": "Run Tournament",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/tournament/run",
+        "options": {}
+      }
+    },
+    {
+      "id": "fr",
+      "name": "Format Tournament Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const results = $input.first().json;\nconst summary = { timestamp: new Date().toISOString(), winner: results.winner || results.topStrategy || 'N/A', participants: results.participants || results.count || 0, rankings: results.rankings || results.results || [], message: 'Tournament complete: ' + (results.participants || results.count || 0) + ' strategies competed. Winner: ' + (results.winner || results.topStrategy || 'N/A') };\nreturn [{ json: summary }];"
+      }
+    },
+    {
+      "id": "at",
+      "name": "Alert Tournament Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4100/alert/tournament",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Weekly Tournament Results', message: $json.message, severity: 'info', data: { winner: $json.winner, participants: $json.participants, rankings: $json.rankings } }) }}",
+        "options": {}
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Weekly Sunday 7 PM ET": {
+      "main": [
+        [
+          {
+            "node": "Run Tournament",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Tournament": {
+      "main": [
+        [
+          {
+            "node": "Format Tournament Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Tournament Results": {
+      "main": [
+        [
+          {
+            "node": "Alert Tournament Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Weekly Sunday 7 PM ET": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "3a27685d-8ec5-4ac9-aa84-b9c82eec2ddb",
+  "activeVersionId": "3a27685d-8ec5-4ac9-aa84-b9c82eec2ddb",
+  "versionCounter": 4,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T05:34:36.658Z",
+      "createdAt": "2026-03-20T05:34:36.658Z",
+      "role": "workflow:owner",
+      "workflowId": "2rVOEn4LnMAubTmW",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-20T05:34:36.662Z",
+    "createdAt": "2026-03-20T05:34:36.662Z",
+    "versionId": "3a27685d-8ec5-4ac9-aa84-b9c82eec2ddb",
+    "workflowId": "2rVOEn4LnMAubTmW",
+    "nodes": [
+      {
+        "id": "sched",
+        "name": "Weekly Sunday 7 PM ET",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 19 * * 0"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "rt",
+        "name": "Run Tournament",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/tournament/run",
+          "options": {}
+        }
+      },
+      {
+        "id": "fr",
+        "name": "Format Tournament Results",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const results = $input.first().json;\nconst summary = { timestamp: new Date().toISOString(), winner: results.winner || results.topStrategy || 'N/A', participants: results.participants || results.count || 0, rankings: results.rankings || results.results || [], message: 'Tournament complete: ' + (results.participants || results.count || 0) + ' strategies competed. Winner: ' + (results.winner || results.topStrategy || 'N/A') };\nreturn [{ json: summary }];"
+        }
+      },
+      {
+        "id": "at",
+        "name": "Alert Tournament Results",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4100/alert/tournament",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Weekly Tournament Results', message: $json.message, severity: 'info', data: { winner: $json.winner, participants: $json.participants, rankings: $json.rankings } }) }}",
+          "options": {}
+        },
+        "continueOnFail": true
+      }
+    ],
+    "connections": {
+      "Weekly Sunday 7 PM ET": {
+        "main": [
+          [
+            {
+              "node": "Run Tournament",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Run Tournament": {
+        "main": [
+          [
+            {
+              "node": "Format Tournament Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Tournament Results": {
+        "main": [
+          [
+            {
+              "node": "Alert Tournament Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-20T05:35:01.700Z",
+        "id": 1194,
+        "workflowId": "2rVOEn4LnMAubTmW",
+        "versionId": "3a27685d-8ec5-4ac9-aa84-b9c82eec2ddb",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

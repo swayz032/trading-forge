@@ -1,0 +1,988 @@
+{
+  "updatedAt": "2026-03-19T06:25:46.369Z",
+  "createdAt": "2026-03-15T02:13:51.252Z",
+  "id": "7GCDtSCifGgdpeuq",
+  "name": "Daily Scout (5E)",
+  "description": null,
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 23 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-6pm-est",
+      "name": "Daily 6PM EST (23:00 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst now = new Date();\nconst currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;\n\nif (staticData.braveMonth !== currentMonth) {\n  staticData.braveMonth = currentMonth;\n  staticData.braveCallCount = 0;\n}\n\nconst braveCallCount = staticData.braveCallCount || 0;\nconst braveLimit = 180;\nconst skipBrave = braveCallCount >= braveLimit;\n\nreturn [{\n  json: {\n    skipBrave,\n    braveCallCount,\n    braveLimit,\n    braveRemaining: braveLimit - braveCallCount,\n    currentMonth,\n    timestamp: now.toISOString()\n  }\n}];"
+      },
+      "id": "code-budget-check",
+      "name": "Budget Check (180 Brave/mo)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "rightValue": ""
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "brave-budget-check",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $json.braveRemaining }}",
+              "rightValue": 0
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "if-brave-budget",
+      "name": "Brave Budget Available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.search.brave.com/res/v1/web/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ (function() { const pool = [\"scalping strategy ES futures 5 minute chart entry exit rules\", \"ES NQ futures intraday strategy backtest profitable\", \"moving average crossover futures strategy backtest\", \"VWAP strategy futures day trading rules setup\", \"session open range breakout futures strategy results\", \"ATR trailing stop futures intraday strategy\", \"volume profile strategy futures entry exit\", \"price action support resistance futures strategy\", \"candlestick pattern strategy futures backtest\", \"gap fill strategy futures overnight ES NQ\"]; const day = Math.floor(Date.now() / 86400000); return pool[day % pool.length]; })() }}"
+            },
+            {
+              "name": "count",
+              "value": "10"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Subscription-Token",
+              "value": "BSAgu5P1nU6-AGkVyT5faLz63AphY18"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-brave-1",
+      "name": "Brave: Futures Strategy 2026",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        208
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.search.brave.com/res/v1/web/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ (function() { const pool = [\"opening range breakout ORB strategy futures backtest results\", \"RSI divergence futures trading strategy rules\", \"Bollinger Band squeeze futures breakout strategy\", \"trend following futures strategy simple rules backtest\", \"mean reversion futures strategy intraday setup\", \"momentum strategy futures ADX filter rules\", \"London breakout strategy futures session timing\", \"initial balance strategy futures day trading\", \"range expansion strategy futures volatility\", \"pullback strategy futures trend continuation entry\"]; const day = Math.floor(Date.now() / 86400000); return pool[day % pool.length]; })() }}"
+            },
+            {
+              "name": "count",
+              "value": "10"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Subscription-Token",
+              "value": "BSAgu5P1nU6-AGkVyT5faLz63AphY18"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-brave-2",
+      "name": "Brave: Prop Firm Rules 2026",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        400
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://api.search.brave.com/res/v1/web/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ (function() { const pool = [\"VWAP bounce strategy futures intraday setup rules\", \"quantitative futures strategy simple parameters backtest\", \"prop firm compatible futures strategy low drawdown\", \"order flow strategy futures delta volume\", \"swing trading futures strategy overnight hold rules\", \"volatility expansion strategy futures ATR breakout\", \"market profile strategy futures value area\", \"time of day strategy futures session open close\", \"correlation strategy futures pairs trading\", \"tick chart strategy futures scalping NQ ES\"]; const day = Math.floor(Date.now() / 86400000); return pool[day % pool.length]; })() }}"
+            },
+            {
+              "name": "count",
+              "value": "10"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Subscription-Token",
+              "value": "BSAgu5P1nU6-AGkVyT5faLz63AphY18"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-brave-3",
+      "name": "Brave: New Technical Indicators",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        608
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/r/algotrading/top.json?t=day&limit=10",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "TradingForgeScout/1.0"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-reddit-1",
+      "name": "Reddit: r/algotrading",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        864
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/r/futurestrading/top.json?t=day&limit=10",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "TradingForgeScout/1.0"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-reddit-2",
+      "name": "Reddit: r/futurestrading",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        1056
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/r/Daytrading/top.json?t=day&limit=10",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "TradingForgeScout/1.0"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-reddit-3",
+      "name": "Reddit: r/Daytrading",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        1264
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "merge-brave",
+      "name": "Merge Brave Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1008,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "merge-reddit",
+      "name": "Merge Reddit Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1008,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst ideas = [];\nconst seenUrls = new Set();\n\nfor (const item of items) {\n  const data = item.json;\n\n  // Parse Brave results\n  if (data.web && data.web.results) {\n    for (const r of data.web.results) {\n      if (r.url && !seenUrls.has(r.url)) {\n        seenUrls.add(r.url);\n        ideas.push({\n          source: 'brave',\n          title: r.title || '',\n          description: r.description || '',\n          url: r.url,\n          upvotes: null\n        });\n      }\n    }\n  }\n\n  // Parse Reddit results\n  if (data.data && data.data.children) {\n    for (const child of data.data.children) {\n      const post = child.data;\n      if (!post) continue;\n      const ups = post.ups || 0;\n      if (ups < 50) continue;\n      const url = post.url || `https://reddit.com${post.permalink}`;\n      if (seenUrls.has(url)) continue;\n      seenUrls.add(url);\n      ideas.push({\n        source: 'reddit',\n        title: post.title || '',\n        description: (post.selftext || '').substring(0, 300),\n        url,\n        upvotes: ups,\n        subreddit: post.subreddit || ''\n      });\n    }\n  }\n}\n\nif (ideas.length === 0) {\n  return [{ json: { ideas: [], count: 0, skipped: true } }];\n}\n\nreturn [{ json: { ideas, count: ideas.length } }];"
+      },
+      "id": "code-normalize-dedup",
+      "name": "Normalize + URL Dedup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "rightValue": ""
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "ideas-check",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "if-has-ideas",
+      "name": "Any Ideas Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1504,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/journal/scout-fingerprints?days=30",
+        "options": {}
+      },
+      "id": "http-fingerprints",
+      "name": "Fetch Scout Fingerprints (30d)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1760,
+        608
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet ideas = [];\nlet fingerprints = [];\n\nfor (const item of items) {\n  const d = item.json;\n  if (d.ideas && Array.isArray(d.ideas)) ideas = d.ideas;\n  if (d.fingerprints && Array.isArray(d.fingerprints)) fingerprints = d.fingerprints;\n  if (d.url && d.title && !d.ideas) fingerprints.push(d);\n}\n\nif (ideas.length === 0) {\n  try { ideas = $('Any Ideas Found?').first().json.ideas || []; } catch(e) { ideas = []; }\n}\n\nconst existingUrls = new Set(fingerprints.map(f => f.url).filter(Boolean));\nconst existingTitles = new Set(fingerprints.map(f => (f.title || '').toLowerCase()).filter(t => t.length > 0));\n\nconst novel = ideas.filter(idea => {\n  if (existingUrls.has(idea.url)) return false;\n  if (existingTitles.has((idea.title || '').toLowerCase())) return false;\n  return true;\n});\n\nreturn [{ json: { ideas: novel, count: novel.length, dedupedOut: ideas.length - novel.length } }];"
+      },
+      "id": "code-cross-dedup",
+      "name": "Cross-Run Dedup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "rightValue": ""
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "novel-check",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "if-novel-ideas",
+      "name": "Novel Ideas Remain?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2256,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"llama3.1:8b\", prompt: \"You are a trading strategy scout for a futures prop-firm trader. Score each idea for how useful it is as a STARTING POINT for building a testable trading strategy (0-10).\\n\\nSCORING RUBRIC:\\n8-10: Describes a specific trading approach with clear logic. Can use indicators (RSI, VWAP, MA, ATR, Bollinger), price action (support/resistance, breakouts, candlestick patterns), session timing (open range, London/NY overlap), order flow, volume profile, or any other concrete method. Must have enough detail to attempt coding it.\\n5-7: Mentions a tradeable concept or strategy idea. May lack full details but describes a real edge or setup that could be researched further. Includes specific markets, timeframes, or conditions.\\n3-4: General trading discussion, education, or experience sharing. Not a strategy you could test.\\n1-2: Not about trading strategies at all, or pure opinion/news/memes.\\n\\nIMPORTANT: Score ANY kind of trading strategy highly, not just indicator-based ones. Price action strategies, session strategies, volatility strategies, and pattern-based strategies are all valid.\\n\\nReturn ONLY a JSON array with objects: {title, summary (2 sentences max), relevance_score}.\\n\\nIdeas:\\n\" + JSON.stringify($input.first().json.ideas, null, 2), stream: false, options: { num_predict: 4096 } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "http-ollama-summarize",
+      "name": "Ollama Summarize + Score",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2512,
+        512
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst ollamaResponse = items[0]?.json;\n\nlet originalIdeas = [];\ntry { originalIdeas = $('Cross-Run Dedup').first().json.ideas || []; } catch(e) { originalIdeas = []; }\n\nlet scored = [];\ntry {\n  const responseText = ollamaResponse?.response || '';\n  const jsonMatch = responseText.match(/\\[[\\s\\S]*\\]/);\n  if (jsonMatch) scored = JSON.parse(jsonMatch[0]);\n} catch(e) {\n  // Fallback: junk gets filtered OUT (score 1, not 3)\n  scored = originalIdeas.map(i => ({ title: i.title, summary: (i.description || '').substring(0, 200), relevance_score: 1 }));\n}\n\nconst enriched = [];\nfor (let i = 0; i < originalIdeas.length; i++) {\n  const orig = originalIdeas[i];\n  const score = scored.find(s => s.title && orig.title && s.title.toLowerCase().includes(orig.title.substring(0, 20).toLowerCase())) || scored[i] || {};\n  const relevance = score.relevance_score || 1;\n  // Filter threshold: >= 6 (not >= 5)\n  if (relevance >= 6) {\n    // Source quality based on Reddit upvotes\n    let source_quality = 'low';\n    if (orig.source === 'brave') {\n      source_quality = 'medium';\n    } else if (orig.source === 'reddit') {\n      const upvotes = orig.upvotes || orig.ups || 0;\n      if (upvotes > 200) source_quality = 'high';\n      else if (upvotes > 50) source_quality = 'medium';\n    }\n    // Confidence from relevance (not hardcoded 0.5)\n    const confidence_score = Math.round((relevance / 10) * 100) / 100;\n    enriched.push({\n      ...orig,\n      summary: score.summary || (orig.description || '').substring(0, 200),\n      relevance_score: relevance,\n      source_quality,\n      confidence_score\n    });\n  }\n}\n\nreturn [{ json: { ideas: enriched, count: enriched.length } }];"
+      },
+      "id": "code-relevance-filter",
+      "name": "Parse LLM + Relevance Filter (>=6)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2752,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "rightValue": ""
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "relevant-check",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "if-relevant-ideas",
+      "name": "Relevant Ideas Exist?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3008,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/agent/scout-ideas",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ideas: ($input.first().json.ideas || []).map(i => ({ source: i.source || \"brave\", title: i.title, description: i.description || i.summary || i.title || \"No description\", url: i.url, summary: i.summary, source_quality: i.source_quality || \"medium\", confidence_score: i.confidence_score || 0.5 })) }) }}",
+        "options": {}
+      },
+      "id": "http-post-ideas",
+      "name": "POST Scout Ideas to Forge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3264,
+        400
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({title: 'Daily Scout: ' + String(($input.first().json.new_count || $input.first().json.received || 0)) + ' New Strategy Ideas', message: ($('Parse LLM + Relevance Filter (>=6)').first().json.ideas || []).slice(0, 5).map(function(i) { return '- ' + i.title + ' (score: ' + i.relevance_score + ')' }).join('\n'), severity: 'success', data: { received: $input.first().json.received, new_count: $input.first().json.new_count }}) }}",
+        "options": {}
+      },
+      "id": "http-discord-alert",
+      "name": "Discord: Top 3 Scout Ideas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3504,
+        400
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nlet skipBrave = false;\ntry { skipBrave = $('Budget Check (180 Brave/mo)').first().json.skipBrave; } catch(e) { skipBrave = false; }\n\nif (!skipBrave) staticData.braveCallCount = (staticData.braveCallCount || 0) + 3;\n\nconst ideasPosted = $json.ideas ? $json.ideas.length : 0;\n\nreturn [{ json: { status: 'complete', braveCallsUsed: staticData.braveCallCount || 0, braveRemaining: 180 - (staticData.braveCallCount || 0), ideasPosted, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "code-update-budget",
+      "name": "Update Brave Budget Counter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3760,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { status: 'no_ideas', message: 'No new ideas found today.', timestamp: new Date().toISOString() } }];"
+      },
+      "id": "code-no-ideas-log",
+      "name": "Log: No New Ideas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { status: 'brave_budget_exhausted', message: 'Brave budget exhausted. Running Reddit-only scan.', braveCallCount: $json.braveCallCount, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "code-budget-skip-log",
+      "name": "Log: Budget Skip (Reddit Only)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        64
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: \"Daily Scout Error\", message: $input.first().json.error?.message || JSON.stringify($input.first().json).substring(0, 500), severity: \"critical\", data: { workflow: \"Daily Scout (5E)\", timestamp: new Date().toISOString() } }) }}",
+        "options": {}
+      },
+      "id": "http-error-alert",
+      "name": "Discord: Scout Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        256,
+        1408
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Daily 6PM EST (23:00 UTC)": {
+      "main": [
+        [
+          {
+            "node": "Budget Check (180 Brave/mo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Budget Check (180 Brave/mo)": {
+      "main": [
+        [
+          {
+            "node": "Brave Budget Available?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brave Budget Available?": {
+      "main": [
+        [
+          {
+            "node": "Brave: Futures Strategy 2026",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Brave: Prop Firm Rules 2026",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Brave: New Technical Indicators",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit: r/algotrading",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit: r/futurestrading",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit: r/Daytrading",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log: Budget Skip (Reddit Only)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit: r/algotrading",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit: r/futurestrading",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit: r/Daytrading",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brave: Futures Strategy 2026": {
+      "main": [
+        [
+          {
+            "node": "Merge Brave Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brave: Prop Firm Rules 2026": {
+      "main": [
+        [
+          {
+            "node": "Merge Brave Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brave: New Technical Indicators": {
+      "main": [
+        [
+          {
+            "node": "Merge Brave Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Brave Results": {
+      "main": [
+        [
+          {
+            "node": "Normalize + URL Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit: r/algotrading": {
+      "main": [
+        [
+          {
+            "node": "Merge Reddit Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit: r/futurestrading": {
+      "main": [
+        [
+          {
+            "node": "Merge Reddit Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit: r/Daytrading": {
+      "main": [
+        [
+          {
+            "node": "Merge Reddit Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Reddit Results": {
+      "main": [
+        [
+          {
+            "node": "Normalize + URL Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize + URL Dedup": {
+      "main": [
+        [
+          {
+            "node": "Any Ideas Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Ideas Found?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Scout Fingerprints (30d)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log: No New Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Scout Fingerprints (30d)": {
+      "main": [
+        [
+          {
+            "node": "Cross-Run Dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cross-Run Dedup": {
+      "main": [
+        [
+          {
+            "node": "Novel Ideas Remain?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Novel Ideas Remain?": {
+      "main": [
+        [
+          {
+            "node": "Ollama Summarize + Score",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log: No New Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Summarize + Score": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM + Relevance Filter (>=6)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM + Relevance Filter (>=6)": {
+      "main": [
+        [
+          {
+            "node": "Relevant Ideas Exist?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Relevant Ideas Exist?": {
+      "main": [
+        [
+          {
+            "node": "POST Scout Ideas to Forge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log: No New Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Scout Ideas to Forge": {
+      "main": [
+        [
+          {
+            "node": "Discord: Top 3 Scout Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord: Top 3 Scout Ideas": {
+      "main": [
+        [
+          {
+            "node": "Update Brave Budget Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Discord: Scout Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Daily 6PM EST (23:00 UTC)": {
+      "recurrenceRules": []
+    },
+    "global": {
+      "braveMonth": "2026-03",
+      "braveCallCount": 12
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "8c891bf3-48bc-4086-94c1-190f8505c42b",
+  "activeVersionId": null,
+  "versionCounter": 90,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-15T02:13:51.252Z",
+      "createdAt": "2026-03-15T02:13:51.252Z",
+      "role": "workflow:owner",
+      "workflowId": "7GCDtSCifGgdpeuq",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

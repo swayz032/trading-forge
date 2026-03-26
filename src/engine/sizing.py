@@ -20,7 +20,7 @@ def compute_position_sizes(
     contract_spec: ContractSpec,
     atr_period: int = 14,
     max_contracts: int | None = None,
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     """Compute position sizes for each bar.
 
     Args:
@@ -32,12 +32,16 @@ def compute_position_sizes(
             sizes are clamped to this maximum.
 
     Returns:
-        numpy array of integer contract counts per bar
+        Tuple of (sizes, over_risk):
+          - sizes: numpy array of integer contract counts per bar
+          - over_risk: boolean numpy array flagging bars where ATR-implied
+            risk exceeds target for even 1 contract (raw < 1.0). These bars
+            still get size=1 but callers should log warnings.
     """
     n = len(df)
 
     if config.type == "fixed":
-        return np.full(n, config.fixed_contracts, dtype=np.float64)
+        return np.full(n, config.fixed_contracts, dtype=np.float64), np.zeros(n, dtype=bool)
 
     # dynamic_atr: contracts = floor(target_risk / (ATR * tick_value))
     atr_col = f"atr_{atr_period}"
@@ -49,16 +53,30 @@ def compute_position_sizes(
         atr_series = df[atr_col]
 
     atr_values = atr_series.to_numpy().astype(np.float64)
-    tick_value = contract_spec.tick_value
+    # ATR is in points, so multiply by point_value to get dollar risk per contract
+    point_value = contract_spec.point_value
+
+    # Floor ATR at 1 tick to prevent inf sizes on zero-range bars (holidays, data gaps)
+    min_atr = contract_spec.tick_size
+    atr_values = np.maximum(atr_values, min_atr)
 
     with np.errstate(divide="ignore", invalid="ignore"):
-        raw = config.target_risk_dollars / (atr_values * tick_value)
+        raw = config.target_risk_dollars / (atr_values * point_value)
 
-    # Floor and clamp min=1
-    sizes = np.where(np.isnan(raw), np.nan, np.maximum(1, np.floor(raw)))
+    # Floor raw values. Bars where raw > 0 but < 1.0 mean ATR-implied risk
+    # exceeds target for even 1 contract — flag as over_risk.
+    sizes = np.where(np.isnan(raw), np.nan, np.floor(raw))
+    over_risk = (raw > 0) & (raw < 1.0)  # ATR says <1 contract but we'd still trade
 
-    # Apply firm contract cap
-    if max_contracts is not None:
-        sizes = np.where(np.isnan(sizes), np.nan, np.minimum(sizes, max_contracts))
+    # Set over_risk bars to 1 contract (minimum tradeable) but the mask
+    # is returned so the backtester can log warnings about excess risk.
+    sizes = np.where(over_risk, 1.0, sizes)
 
-    return sizes
+    # Bars with zero or negative raw get NaN (no trade)
+    sizes = np.where((~np.isnan(raw)) & (raw <= 0), np.nan, sizes)
+
+    # Apply firm contract cap (default max 15 micros — user's standard size)
+    cap = max_contracts if max_contracts is not None else 15
+    sizes = np.where(np.isnan(sizes), np.nan, np.minimum(sizes, cap))
+
+    return sizes, over_risk

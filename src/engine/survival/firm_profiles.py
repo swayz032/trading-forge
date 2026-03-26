@@ -10,7 +10,7 @@ FIRM_PROFILES: dict[str, dict] = {
         "accounts": {
             "50K": {
                 "max_drawdown": 2000,
-                "drawdown_type": "trailing",  # trailing | EOD | intraday
+                "drawdown_type": "EOD",  # EOD trailing (checked at end of day, not intraday)
                 "drawdown_locks_at": "starting_balance",  # trailing DD locks once account hits starting balance
                 "daily_loss_limit": None,  # MFFU has no daily loss limit
                 "consistency_threshold": None,  # No consistency rule
@@ -21,7 +21,7 @@ FIRM_PROFILES: dict[str, dict] = {
             },
             "100K": {
                 "max_drawdown": 3000,
-                "drawdown_type": "trailing",
+                "drawdown_type": "EOD",  # EOD trailing
                 "drawdown_locks_at": "starting_balance",
                 "daily_loss_limit": None,
                 "consistency_threshold": None,
@@ -70,7 +70,7 @@ FIRM_PROFILES: dict[str, dict] = {
         "accounts": {
             "50K": {
                 "max_drawdown": 2500,
-                "drawdown_type": "trailing",
+                "drawdown_type": "EOD",  # EOD trailing
                 "drawdown_locks_at": None,
                 "daily_loss_limit": None,
                 "consistency_threshold": None,

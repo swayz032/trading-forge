@@ -1,0 +1,892 @@
+{
+  "updatedAt": "2026-03-19T01:38:32.125Z",
+  "createdAt": "2026-03-14T21:16:23.958Z",
+  "id": "eaq72MwKwCjv7g7F",
+  "name": "Pre-Session Skip Check",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger-schedule",
+      "name": "Weekday 9AM ET Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-get-skip",
+      "name": "GET Skip Decisions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:4000/api/skip/today",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "code-parse-decisions",
+      "name": "Parse Skip Decisions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\n\nconst decisions = Array.isArray(response) ? response : (response.decisions || response.data || []);\n\nconst trade = [];\nconst reduce = [];\nconst skip = [];\n\nfor (const d of decisions) {\n  const name = d.strategyName || d.strategy || d.name || 'Unknown';\n  const reason = d.reason || d.rationale || '';\n  const decision = (d.decision || d.action || 'TRADE').toUpperCase();\n\n  if (decision === 'SKIP') {\n    skip.push({ name, reason });\n  } else if (decision === 'REDUCE') {\n    reduce.push({ name, reason });\n  } else {\n    trade.push({ name, reason });\n  }\n}\n\nreturn [{\n  json: {\n    hasSkips: skip.length > 0,\n    hasReduces: reduce.length > 0,\n    trade,\n    reduce,\n    skip,\n    totalStrategies: decisions.length,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "if-any-skips",
+      "name": "Any SKIP Decisions?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        660,
+        -80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-skip",
+              "leftValue": "={{ $json.hasSkips }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "code-format-skip-alert",
+      "name": "Format SKIP Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -180
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst skipLines = data.skip.map(s => `- ${s.name}: ${s.reason}`).join('\\n');\n\nreturn [{\n  json: {\n    title: 'Strategies Skipped Today',\n    message: `${data.skip.length} strategies will be SKIPPED today\\n\\n${skipLines}`,\n    severity: 'warning',\n    data: {\n      skipCount: String(data.skip.length),\n      strategies: data.skip.map(s => s.name).join(', '),\n      timestamp: data.timestamp\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-post-skip-alert",
+      "name": "POST SKIP Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1100,
+        -180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/skip",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "if-any-reduces",
+      "name": "Any REDUCE Decisions?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        660,
+        120
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-reduce",
+              "leftValue": "={{ $json.hasReduces }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "code-format-reduce-alert",
+      "name": "Format REDUCE Advisory",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        60
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst reduceLines = data.reduce.map(r => `- ${r.name}: ${r.reason}`).join('\\n');\n\nreturn [{\n  json: {\n    title: 'Strategies Reduced Today',\n    message: `${data.reduce.length} strategies with reduced sizing\\n\\n${reduceLines}`,\n    severity: 'info',\n    data: {\n      reduceCount: String(data.reduce.length),\n      strategies: data.reduce.map(r => r.name).join(', '),\n      timestamp: data.timestamp\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-post-reduce-alert",
+      "name": "POST REDUCE Advisory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1100,
+        60
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/skip",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "code-session-briefing",
+      "name": "Build Session Briefing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst today = new Date();\nconst dateStr = today.toISOString().split('T')[0];\n\nconst briefing = {\n  date: dateStr,\n  trade: data.trade.map(t => t.name),\n  reduce: data.reduce.map(r => `${r.name} (${r.reason})`),\n  skip: data.skip.map(s => `${s.name} (${s.reason})`),\n  summary: {\n    totalStrategies: data.totalStrategies,\n    tradingCount: data.trade.length,\n    reduceCount: data.reduce.length,\n    skipCount: data.skip.length\n  },\n  timestamp: data.timestamp\n};\n\nreturn [{\n  json: briefing\n}];"
+      }
+    },
+    {
+      "id": "http-post-briefing",
+      "name": "POST Session Briefing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/skip",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Pre-Session Briefing', message: 'Trading: ' + ($json.summary ? $json.summary.tradingCount : 0) + ' | Reduce: ' + ($json.summary ? $json.summary.reduceCount : 0) + ' | Skip: ' + ($json.summary ? $json.summary.skipCount : 0) + ' (Total: ' + ($json.summary ? $json.summary.totalStrategies : 0) + ')', severity: 'info', data: { date: $json.date || '', tradingCount: String($json.summary ? $json.summary.tradingCount : 0), reduceCount: String($json.summary ? $json.summary.reduceCount : 0), skipCount: String($json.summary ? $json.summary.skipCount : 0), totalStrategies: String($json.summary ? $json.summary.totalStrategies : 0) } }) }}"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        400
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "http-error-alert",
+      "name": "POST Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        220,
+        400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Skip Check Error', message: $input.first().json.execution ? ($input.first().json.execution.error ? $input.first().json.execution.error.message : 'Unknown error') : ($input.first().json.error ? $input.first().json.error.message : JSON.stringify($input.first().json).substring(0, 500)), severity: 'critical', data: { workflow: 'Pre-Session Skip Check', timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    }
+  ],
+  "connections": {
+    "Weekday 9AM ET Trigger": {
+      "main": [
+        [
+          {
+            "node": "GET Skip Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Skip Decisions": {
+      "main": [
+        [
+          {
+            "node": "Parse Skip Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Skip Decisions": {
+      "main": [
+        [
+          {
+            "node": "Any SKIP Decisions?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Any REDUCE Decisions?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any SKIP Decisions?": {
+      "main": [
+        [
+          {
+            "node": "Format SKIP Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Format SKIP Alert": {
+      "main": [
+        [
+          {
+            "node": "POST SKIP Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST SKIP Alert": {
+      "main": [
+        [
+          {
+            "node": "Build Session Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any REDUCE Decisions?": {
+      "main": [
+        [
+          {
+            "node": "Format REDUCE Advisory",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Session Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format REDUCE Advisory": {
+      "main": [
+        [
+          {
+            "node": "POST REDUCE Advisory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST REDUCE Advisory": {
+      "main": [
+        [
+          {
+            "node": "Build Session Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Session Briefing": {
+      "main": [
+        [
+          {
+            "node": "POST Session Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "POST Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Weekday 9AM ET Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "c5d37a25-6906-4146-ba33-89abd7fde630",
+  "activeVersionId": "c5d37a25-6906-4146-ba33-89abd7fde630",
+  "versionCounter": 14,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T21:16:23.958Z",
+      "createdAt": "2026-03-14T21:16:23.958Z",
+      "role": "workflow:owner",
+      "workflowId": "eaq72MwKwCjv7g7F",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-19T01:38:32.126Z",
+    "createdAt": "2026-03-19T01:38:32.126Z",
+    "versionId": "c5d37a25-6906-4146-ba33-89abd7fde630",
+    "workflowId": "eaq72MwKwCjv7g7F",
+    "nodes": [
+      {
+        "id": "trigger-schedule",
+        "name": "Weekday 9AM ET Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 9 * * 1-5"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "http-get-skip",
+        "name": "GET Skip Decisions",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://localhost:4000/api/skip/today",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "code-parse-decisions",
+        "name": "Parse Skip Decisions",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const response = $input.first().json;\n\nconst decisions = Array.isArray(response) ? response : (response.decisions || response.data || []);\n\nconst trade = [];\nconst reduce = [];\nconst skip = [];\n\nfor (const d of decisions) {\n  const name = d.strategyName || d.strategy || d.name || 'Unknown';\n  const reason = d.reason || d.rationale || '';\n  const decision = (d.decision || d.action || 'TRADE').toUpperCase();\n\n  if (decision === 'SKIP') {\n    skip.push({ name, reason });\n  } else if (decision === 'REDUCE') {\n    reduce.push({ name, reason });\n  } else {\n    trade.push({ name, reason });\n  }\n}\n\nreturn [{\n  json: {\n    hasSkips: skip.length > 0,\n    hasReduces: reduce.length > 0,\n    trade,\n    reduce,\n    skip,\n    totalStrategies: decisions.length,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "if-any-skips",
+        "name": "Any SKIP Decisions?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          660,
+          -80
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cond-skip",
+                "leftValue": "={{ $json.hasSkips }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "code-format-skip-alert",
+        "name": "Format SKIP Alert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          -180
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\n\nconst skipLines = data.skip.map(s => `- ${s.name}: ${s.reason}`).join('\\n');\n\nreturn [{\n  json: {\n    title: 'Strategies Skipped Today',\n    message: `${data.skip.length} strategies will be SKIPPED today\\n\\n${skipLines}`,\n    severity: 'warning',\n    data: {\n      skipCount: String(data.skip.length),\n      strategies: data.skip.map(s => s.name).join(', '),\n      timestamp: data.timestamp\n    }\n  }\n}];"
+        }
+      },
+      {
+        "id": "http-post-skip-alert",
+        "name": "POST SKIP Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1100,
+          -180
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/skip",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 10000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}"
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "if-any-reduces",
+        "name": "Any REDUCE Decisions?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          660,
+          120
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cond-reduce",
+                "leftValue": "={{ $json.hasReduces }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "code-format-reduce-alert",
+        "name": "Format REDUCE Advisory",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          60
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\n\nconst reduceLines = data.reduce.map(r => `- ${r.name}: ${r.reason}`).join('\\n');\n\nreturn [{\n  json: {\n    title: 'Strategies Reduced Today',\n    message: `${data.reduce.length} strategies with reduced sizing\\n\\n${reduceLines}`,\n    severity: 'info',\n    data: {\n      reduceCount: String(data.reduce.length),\n      strategies: data.reduce.map(r => r.name).join(', '),\n      timestamp: data.timestamp\n    }\n  }\n}];"
+        }
+      },
+      {
+        "id": "http-post-reduce-alert",
+        "name": "POST REDUCE Advisory",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1100,
+          60
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/skip",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 10000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}"
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "code-session-briefing",
+        "name": "Build Session Briefing",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1320,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\n\nconst today = new Date();\nconst dateStr = today.toISOString().split('T')[0];\n\nconst briefing = {\n  date: dateStr,\n  trade: data.trade.map(t => t.name),\n  reduce: data.reduce.map(r => `${r.name} (${r.reason})`),\n  skip: data.skip.map(s => `${s.name} (${s.reason})`),\n  summary: {\n    totalStrategies: data.totalStrategies,\n    tradingCount: data.trade.length,\n    reduceCount: data.reduce.length,\n    skipCount: data.skip.length\n  },\n  timestamp: data.timestamp\n};\n\nreturn [{\n  json: briefing\n}];"
+        }
+      },
+      {
+        "id": "http-post-briefing",
+        "name": "POST Session Briefing",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1540,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/skip",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 10000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Pre-Session Briefing', message: 'Trading: ' + ($json.summary ? $json.summary.tradingCount : 0) + ' | Reduce: ' + ($json.summary ? $json.summary.reduceCount : 0) + ' | Skip: ' + ($json.summary ? $json.summary.skipCount : 0) + ' (Total: ' + ($json.summary ? $json.summary.totalStrategies : 0) + ')', severity: 'info', data: { date: $json.date || '', tradingCount: String($json.summary ? $json.summary.tradingCount : 0), reduceCount: String($json.summary ? $json.summary.reduceCount : 0), skipCount: String($json.summary ? $json.summary.skipCount : 0), totalStrategies: String($json.summary ? $json.summary.totalStrategies : 0) } }) }}"
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          400
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "http-error-alert",
+        "name": "POST Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          220,
+          400
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4100/alert/alerts",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Skip Check Error', message: $input.first().json.execution ? ($input.first().json.execution.error ? $input.first().json.execution.error.message : 'Unknown error') : ($input.first().json.error ? $input.first().json.error.message : JSON.stringify($input.first().json).substring(0, 500)), severity: 'critical', data: { workflow: 'Pre-Session Skip Check', timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 2000
+      }
+    ],
+    "connections": {
+      "Weekday 9AM ET Trigger": {
+        "main": [
+          [
+            {
+              "node": "GET Skip Decisions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET Skip Decisions": {
+        "main": [
+          [
+            {
+              "node": "Parse Skip Decisions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Skip Decisions": {
+        "main": [
+          [
+            {
+              "node": "Any SKIP Decisions?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Any REDUCE Decisions?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any SKIP Decisions?": {
+        "main": [
+          [
+            {
+              "node": "Format SKIP Alert",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Format SKIP Alert": {
+        "main": [
+          [
+            {
+              "node": "POST SKIP Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST SKIP Alert": {
+        "main": [
+          [
+            {
+              "node": "Build Session Briefing",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any REDUCE Decisions?": {
+        "main": [
+          [
+            {
+              "node": "Format REDUCE Advisory",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Build Session Briefing",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format REDUCE Advisory": {
+        "main": [
+          [
+            {
+              "node": "POST REDUCE Advisory",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST REDUCE Advisory": {
+        "main": [
+          [
+            {
+              "node": "Build Session Briefing",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Session Briefing": {
+        "main": [
+          [
+            {
+              "node": "POST Session Briefing",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "POST Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-19T01:38:32.160Z",
+        "id": 1182,
+        "workflowId": "eaq72MwKwCjv7g7F",
+        "versionId": "c5d37a25-6906-4146-ba33-89abd7fde630",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

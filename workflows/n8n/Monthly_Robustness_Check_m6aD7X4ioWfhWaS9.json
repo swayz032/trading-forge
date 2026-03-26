@@ -1,0 +1,892 @@
+{
+  "updatedAt": "2026-03-14T08:31:30.156Z",
+  "createdAt": "2026-03-10T04:27:54.534Z",
+  "id": "m6aD7X4ioWfhWaS9",
+  "name": "Monthly Robustness Check",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Monthly 1st 6AM EST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        88
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED",
+        "options": {}
+      },
+      "id": "fetch-deployed",
+      "name": "Fetch Deployed Strategies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        88
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Loop Over Strategies",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        88
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const current = $input.first().json;\nconst original = $('Loop Over Strategies').first().json;\n\nconst sharpeDrop = original.sharpeRatio > 0 \n  ? (Number(original.sharpeRatio) - Number(current.sharpeRatio)) / Number(original.sharpeRatio) \n  : 0;\nconst winRateDrop = Number(original.winRate) - Number(current.winRate);\n\nconst degraded = sharpeDrop > 0.20 || winRateDrop > 0.10;\n\nreturn [{\n  json: {\n    strategyId: current.strategyId,\n    strategyName: original.name,\n    degraded,\n    sharpeDrop: (sharpeDrop * 100).toFixed(1) + '%',\n    winRateDrop: (winRateDrop * 100).toFixed(1) + '%',\n    currentSharpe: current.sharpeRatio,\n    originalSharpe: original.sharpeRatio,\n    currentWinRate: current.winRate,\n    originalWinRate: original.winRate,\n  }\n}];"
+      },
+      "id": "compare-metrics",
+      "name": "Compare Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-degraded",
+              "leftValue": "={{ $json.degraded }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-degraded",
+      "name": "Degraded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/journal",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"robustness_alert\",\n  \"strategyId\": \"{{ $json.strategyId }}\",\n  \"strategyName\": \"{{ $json.strategyName }}\",\n  \"message\": \"Strategy degradation detected - flagged for review\",\n  \"sharpeDrop\": \"{{ $json.sharpeDrop }}\",\n  \"winRateDrop\": \"{{ $json.winRateDrop }}\",\n  \"currentSharpe\": {{ $json.currentSharpe }},\n  \"originalSharpe\": {{ $json.originalSharpe }},\n  \"currentWinRate\": {{ $json.currentWinRate }},\n  \"originalWinRate\": {{ $json.originalWinRate }},\n  \"flagForReview\": true,\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}",
+        "options": {}
+      },
+      "id": "log-degraded",
+      "name": "Log Degradation to Journal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        -56
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/journal",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"robustness_check\",\n  \"strategyId\": \"{{ $json.strategyId }}\",\n  \"strategyName\": \"{{ $json.strategyName }}\",\n  \"message\": \"Strategy still healthy\",\n  \"currentSharpe\": {{ $json.currentSharpe }},\n  \"originalSharpe\": {{ $json.originalSharpe }},\n  \"currentWinRate\": {{ $json.currentWinRate }},\n  \"originalWinRate\": {{ $json.originalWinRate }},\n  \"flagForReview\": false,\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}",
+        "options": {}
+      },
+      "id": "log-healthy",
+      "name": "Log Healthy to Journal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        136
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "submit-robustness",
+      "name": "Submit Robustness Test",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        -128
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/agents/robustness",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"strategyId\": \"{{ $json.id }}\", \"config\": {{ JSON.stringify($json.config) }} }",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "wait-robustness",
+      "name": "Wait 2 Min for Robustness",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        -128
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "poll-job-status",
+      "name": "Poll Job Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        -128
+      ],
+      "parameters": {
+        "url": "=http://localhost:3000/api/agents/jobs/{{ $('Submit Robustness Test').item.json.jobId }}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "check-job-complete",
+      "name": "Job Complete?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -128
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-job-done",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "transition-declining",
+      "name": "Transition to DECLINING",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2016,
+        -56
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://localhost:3000/api/strategies/{{ $json.strategyId }}/lifecycle",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"fromState\":\"DEPLOYED\",\"toState\":\"DECLINING\"}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    }
+  ],
+  "connections": {
+    "Monthly 1st 6AM EST": {
+      "main": [
+        [
+          {
+            "node": "Fetch Deployed Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Deployed Strategies": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Metrics": {
+      "main": [
+        [
+          {
+            "node": "Degraded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Degraded?": {
+      "main": [
+        [
+          {
+            "node": "Log Degradation to Journal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Healthy to Journal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Healthy to Journal": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Strategies": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Submit Robustness Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Robustness Test": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 Min for Robustness",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 Min for Robustness": {
+      "main": [
+        [
+          {
+            "node": "Poll Job Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Job Status": {
+      "main": [
+        [
+          {
+            "node": "Job Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Complete?": {
+      "main": [
+        [
+          {
+            "node": "Compare Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 2 Min for Robustness",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Degradation to Journal": {
+      "main": [
+        [
+          {
+            "node": "Transition to DECLINING",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transition to DECLINING": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Monthly 1st 6AM EST": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "4fde0139-9a26-413b-94d6-a2072fcbbbf2",
+  "activeVersionId": "4fde0139-9a26-413b-94d6-a2072fcbbbf2",
+  "versionCounter": 26,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-10T04:27:54.534Z",
+      "createdAt": "2026-03-10T04:27:54.534Z",
+      "role": "workflow:owner",
+      "workflowId": "m6aD7X4ioWfhWaS9",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-14T08:31:30.158Z",
+    "createdAt": "2026-03-14T08:31:30.158Z",
+    "versionId": "4fde0139-9a26-413b-94d6-a2072fcbbbf2",
+    "workflowId": "m6aD7X4ioWfhWaS9",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 6 1 * *"
+              }
+            ]
+          }
+        },
+        "id": "schedule-trigger",
+        "name": "Monthly 1st 6AM EST",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          88
+        ]
+      },
+      {
+        "parameters": {
+          "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED",
+          "options": {}
+        },
+        "id": "fetch-deployed",
+        "name": "Fetch Deployed Strategies",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          224,
+          88
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "split-batches",
+        "name": "Loop Over Strategies",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          448,
+          88
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const current = $input.first().json;\nconst original = $('Loop Over Strategies').first().json;\n\nconst sharpeDrop = original.sharpeRatio > 0 \n  ? (Number(original.sharpeRatio) - Number(current.sharpeRatio)) / Number(original.sharpeRatio) \n  : 0;\nconst winRateDrop = Number(original.winRate) - Number(current.winRate);\n\nconst degraded = sharpeDrop > 0.20 || winRateDrop > 0.10;\n\nreturn [{\n  json: {\n    strategyId: current.strategyId,\n    strategyName: original.name,\n    degraded,\n    sharpeDrop: (sharpeDrop * 100).toFixed(1) + '%',\n    winRateDrop: (winRateDrop * 100).toFixed(1) + '%',\n    currentSharpe: current.sharpeRatio,\n    originalSharpe: original.sharpeRatio,\n    currentWinRate: current.winRate,\n    originalWinRate: original.winRate,\n  }\n}];"
+        },
+        "id": "compare-metrics",
+        "name": "Compare Metrics",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1344,
+          -128
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "condition-degraded",
+                "leftValue": "={{ $json.degraded }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "check-degraded",
+        "name": "Degraded?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1568,
+          -128
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/journal",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"type\": \"robustness_alert\",\n  \"strategyId\": \"{{ $json.strategyId }}\",\n  \"strategyName\": \"{{ $json.strategyName }}\",\n  \"message\": \"Strategy degradation detected - flagged for review\",\n  \"sharpeDrop\": \"{{ $json.sharpeDrop }}\",\n  \"winRateDrop\": \"{{ $json.winRateDrop }}\",\n  \"currentSharpe\": {{ $json.currentSharpe }},\n  \"originalSharpe\": {{ $json.originalSharpe }},\n  \"currentWinRate\": {{ $json.currentWinRate }},\n  \"originalWinRate\": {{ $json.originalWinRate }},\n  \"flagForReview\": true,\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}",
+          "options": {}
+        },
+        "id": "log-degraded",
+        "name": "Log Degradation to Journal",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1792,
+          -56
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/journal",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"type\": \"robustness_check\",\n  \"strategyId\": \"{{ $json.strategyId }}\",\n  \"strategyName\": \"{{ $json.strategyName }}\",\n  \"message\": \"Strategy still healthy\",\n  \"currentSharpe\": {{ $json.currentSharpe }},\n  \"originalSharpe\": {{ $json.originalSharpe }},\n  \"currentWinRate\": {{ $json.currentWinRate }},\n  \"originalWinRate\": {{ $json.originalWinRate }},\n  \"flagForReview\": false,\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}",
+          "options": {}
+        },
+        "id": "log-healthy",
+        "name": "Log Healthy to Journal",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1792,
+          136
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "submit-robustness",
+        "name": "Submit Robustness Test",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          672,
+          -128
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:3000/api/agents/robustness",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={ \"strategyId\": \"{{ $json.id }}\", \"config\": {{ JSON.stringify($json.config) }} }",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "wait-robustness",
+        "name": "Wait 2 Min for Robustness",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          896,
+          -128
+        ],
+        "parameters": {
+          "amount": 2,
+          "unit": "minutes"
+        }
+      },
+      {
+        "id": "poll-job-status",
+        "name": "Poll Job Status",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1120,
+          -128
+        ],
+        "parameters": {
+          "url": "=http://localhost:3000/api/agents/jobs/{{ $('Submit Robustness Test').item.json.jobId }}",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "check-job-complete",
+        "name": "Job Complete?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1344,
+          -128
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cond-job-done",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "completed",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "transition-declining",
+        "name": "Transition to DECLINING",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2016,
+          -56
+        ],
+        "parameters": {
+          "method": "PATCH",
+          "url": "=http://localhost:3000/api/strategies/{{ $json.strategyId }}/lifecycle",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\"fromState\":\"DEPLOYED\",\"toState\":\"DECLINING\"}",
+          "options": {}
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 3000
+      }
+    ],
+    "connections": {
+      "Monthly 1st 6AM EST": {
+        "main": [
+          [
+            {
+              "node": "Fetch Deployed Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Deployed Strategies": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Compare Metrics": {
+        "main": [
+          [
+            {
+              "node": "Degraded?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Degraded?": {
+        "main": [
+          [
+            {
+              "node": "Log Degradation to Journal",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log Healthy to Journal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Healthy to Journal": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Strategies": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Submit Robustness Test",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Submit Robustness Test": {
+        "main": [
+          [
+            {
+              "node": "Wait 2 Min for Robustness",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 2 Min for Robustness": {
+        "main": [
+          [
+            {
+              "node": "Poll Job Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Poll Job Status": {
+        "main": [
+          [
+            {
+              "node": "Job Complete?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Job Complete?": {
+        "main": [
+          [
+            {
+              "node": "Compare Metrics",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait 2 Min for Robustness",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Degradation to Journal": {
+        "main": [
+          [
+            {
+              "node": "Transition to DECLINING",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transition to DECLINING": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-14T08:31:30.177Z",
+        "id": 1116,
+        "workflowId": "m6aD7X4ioWfhWaS9",
+        "versionId": "4fde0139-9a26-413b-94d6-a2072fcbbbf2",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

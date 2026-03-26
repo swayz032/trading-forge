@@ -163,7 +163,7 @@ class TestRunPropCompliance:
         results = run_prop_compliance(daily_pnls, stats)
         for firm, result in results.items():
             assert "passed" in result
-            assert "eval_cost" in result
+            assert "expected_eval_cost" in result
             assert "payout_split" in result
 
 

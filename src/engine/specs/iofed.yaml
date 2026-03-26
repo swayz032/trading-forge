@@ -1,0 +1,18 @@
+concept: iofed
+description: "Displacement + FVG retrace + HTF order flow direction"
+
+required_imports:
+  - detect_fvg
+
+required_imports_any:
+  - detect_displacement
+  - displacement
+
+required_concepts:
+  - displacement_creates_fvg   # displacement candle must create the FVG
+  - fvg_retrace_entry          # enter when price retraces into FVG
+  - htf_direction              # must align with HTF order flow direction
+
+runtime_assertions:
+  - signal_count_nonzero
+  - signal_density_reasonable

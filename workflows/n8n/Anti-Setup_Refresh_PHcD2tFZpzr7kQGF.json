@@ -1,0 +1,778 @@
+{
+  "updatedAt": "2026-03-15T00:46:06.974Z",
+  "createdAt": "2026-03-14T21:23:16.745Z",
+  "id": "PHcD2tFZpzr7kQGF",
+  "name": "Anti-Setup Refresh",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Monthly 1st 3AM ET Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 1 * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-active-strategies",
+      "name": "Fetch Active Strategies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:4000/api/strategies?status=active",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "extract-ids",
+      "name": "Extract Strategy IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\n// Handle various API response shapes\nlet strategies = [];\nif (Array.isArray(response)) {\n  strategies = response;\n} else if (response.data && Array.isArray(response.data)) {\n  strategies = response.data;\n} else if (response.strategies && Array.isArray(response.strategies)) {\n  strategies = response.strategies;\n}\n\nif (strategies.length === 0) {\n  return [{\n    json: {\n      _noStrategies: true,\n      report_date: new Date().toISOString().split('T')[0],\n      strategies_analyzed: 0,\n      total_anti_setups_found: 0,\n      by_strategy: [],\n      message: 'No active strategies found'\n    }\n  }];\n}\n\n// Return each strategy as a separate item for SplitInBatches\nreturn strategies.map(s => ({\n  json: {\n    strategy_id: s.id || s.strategy_id,\n    strategy_name: s.name || s.strategy_name || s.id || 'Unknown',\n    total_strategies: strategies.length\n  }\n}));"
+      }
+    },
+    {
+      "id": "check-has-strategies",
+      "name": "Has Strategies?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        780,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "has-strats",
+              "leftValue": "={{ $json._noStrategies }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "split-batches",
+      "name": "Loop Over Strategies",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1040,
+        200
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "mine-anti-setups",
+      "name": "Mine Anti-Setups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1300,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/api/anti-setups/mine",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategy_id: $json.strategy_id, lookback_days: 90 }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 10000
+    },
+    {
+      "id": "parse-mining-result",
+      "name": "Parse Mining Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\n// Get the strategy info from the loop item\nconst strategyName = $node['Loop Over Strategies'].json.strategy_name;\nconst strategyId = $node['Loop Over Strategies'].json.strategy_id;\n\n// Parse anti-setup count from response\nlet antiSetupCount = 0;\nlet estimatedPnlImpact = '$0';\n\nif (response.anti_setups && Array.isArray(response.anti_setups)) {\n  antiSetupCount = response.anti_setups.length;\n} else if (typeof response.count === 'number') {\n  antiSetupCount = response.count;\n} else if (response.results && Array.isArray(response.results)) {\n  antiSetupCount = response.results.length;\n}\n\nif (response.estimated_pnl_impact) {\n  estimatedPnlImpact = response.estimated_pnl_impact;\n} else if (response.pnl_impact) {\n  estimatedPnlImpact = response.pnl_impact;\n}\n\nreturn [{\n  json: {\n    strategy: strategyName,\n    strategy_id: strategyId,\n    anti_setups: antiSetupCount,\n    estimated_pnl_impact: estimatedPnlImpact,\n    raw_response: response\n  }\n}];"
+      }
+    },
+    {
+      "id": "aggregate-results",
+      "name": "Aggregate Final Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        100
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Collect all mining results from the loop\nconst byStrategy = items.map(item => ({\n  strategy: item.json.strategy || 'Unknown',\n  strategy_id: item.json.strategy_id || 'unknown',\n  anti_setups: item.json.anti_setups || 0,\n  estimated_pnl_impact: item.json.estimated_pnl_impact || '$0'\n}));\n\nconst totalAntiSetups = byStrategy.reduce((sum, s) => sum + s.anti_setups, 0);\n\nconst report = {\n  report_date: new Date().toISOString().split('T')[0],\n  strategies_analyzed: byStrategy.length,\n  total_anti_setups_found: totalAntiSetups,\n  by_strategy: byStrategy,\n  generated_at: new Date().toISOString()\n};\n\nreturn [{ json: report }];"
+      }
+    },
+    {
+      "id": "post-report",
+      "name": "POST Anti-Setup Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1560,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Anti-Setup Refresh Report', message: 'Analyzed ' + ($json.strategies_analyzed || 0) + ' strategies, found ' + ($json.total_anti_setups_found || 0) + ' anti-setups', severity: ($json.total_anti_setups_found > 0) ? 'warning' : 'info', data: { reportDate: $json.report_date || '', strategiesAnalyzed: String($json.strategies_analyzed || 0), totalAntiSetups: String($json.total_anti_setups_found || 0), generatedAt: $json.generated_at || new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "post-empty-report",
+      "name": "POST Empty Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1040,
+        500
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Anti-Setup Refresh: No Strategies', message: $json.message || 'No active strategies found', severity: 'info', data: { reportDate: $json.report_date || new Date().toISOString().split('T')[0] } }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        600
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "post-error-alert",
+      "name": "POST Anti-Setup Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        260,
+        600
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4100/alert/alerts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Anti-Setup Refresh', message: $json.execution ? (typeof $json.execution.error === 'object' ? $json.execution.error.message : String($json.execution.error)) : 'Unknown error', severity: 'critical', data: { workflow: 'Anti-Setup Refresh', executionId: $json.execution ? String($json.execution.id) : 'unknown', timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Monthly 1st 3AM ET Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Strategies": {
+      "main": [
+        [
+          {
+            "node": "Extract Strategy IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Strategy IDs": {
+      "main": [
+        [
+          {
+            "node": "Has Strategies?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Strategies?": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "POST Empty Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Strategies": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Final Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mine Anti-Setups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mine Anti-Setups": {
+      "main": [
+        [
+          {
+            "node": "Parse Mining Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Mining Results": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Final Report": {
+      "main": [
+        [
+          {
+            "node": "POST Anti-Setup Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "POST Anti-Setup Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Monthly 1st 3AM ET Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "6898a3ab-a66a-4531-b48c-58cfc880a824",
+  "activeVersionId": "6898a3ab-a66a-4531-b48c-58cfc880a824",
+  "versionCounter": 10,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-14T21:23:16.745Z",
+      "createdAt": "2026-03-14T21:23:16.745Z",
+      "role": "workflow:owner",
+      "workflowId": "PHcD2tFZpzr7kQGF",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-20",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-14T23:20:43.442Z",
+    "createdAt": "2026-03-14T23:20:43.442Z",
+    "versionId": "6898a3ab-a66a-4531-b48c-58cfc880a824",
+    "workflowId": "PHcD2tFZpzr7kQGF",
+    "nodes": [
+      {
+        "id": "schedule-trigger",
+        "name": "Monthly 1st 3AM ET Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 3 1 * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-active-strategies",
+        "name": "Fetch Active Strategies",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          260,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://localhost:4000/api/strategies?status=active",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "extract-ids",
+        "name": "Extract Strategy IDs",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          520,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\n// Handle various API response shapes\nlet strategies = [];\nif (Array.isArray(response)) {\n  strategies = response;\n} else if (response.data && Array.isArray(response.data)) {\n  strategies = response.data;\n} else if (response.strategies && Array.isArray(response.strategies)) {\n  strategies = response.strategies;\n}\n\nif (strategies.length === 0) {\n  return [{\n    json: {\n      _noStrategies: true,\n      report_date: new Date().toISOString().split('T')[0],\n      strategies_analyzed: 0,\n      total_anti_setups_found: 0,\n      by_strategy: [],\n      message: 'No active strategies found'\n    }\n  }];\n}\n\n// Return each strategy as a separate item for SplitInBatches\nreturn strategies.map(s => ({\n  json: {\n    strategy_id: s.id || s.strategy_id,\n    strategy_name: s.name || s.strategy_name || s.id || 'Unknown',\n    total_strategies: strategies.length\n  }\n}));"
+        }
+      },
+      {
+        "id": "check-has-strategies",
+        "name": "Has Strategies?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          780,
+          300
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "has-strats",
+                "leftValue": "={{ $json._noStrategies }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notExists"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "split-batches",
+        "name": "Loop Over Strategies",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          1040,
+          200
+        ],
+        "parameters": {
+          "batchSize": 1,
+          "options": {}
+        }
+      },
+      {
+        "id": "mine-anti-setups",
+        "name": "Mine Anti-Setups",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1300,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/anti-setups/mine",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ strategy_id: $json.strategy_id, lookback_days: 90 }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 10000
+      },
+      {
+        "id": "parse-mining-result",
+        "name": "Parse Mining Results",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1560,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\n// Get the strategy info from the loop item\nconst strategyName = $node['Loop Over Strategies'].json.strategy_name;\nconst strategyId = $node['Loop Over Strategies'].json.strategy_id;\n\n// Parse anti-setup count from response\nlet antiSetupCount = 0;\nlet estimatedPnlImpact = '$0';\n\nif (response.anti_setups && Array.isArray(response.anti_setups)) {\n  antiSetupCount = response.anti_setups.length;\n} else if (typeof response.count === 'number') {\n  antiSetupCount = response.count;\n} else if (response.results && Array.isArray(response.results)) {\n  antiSetupCount = response.results.length;\n}\n\nif (response.estimated_pnl_impact) {\n  estimatedPnlImpact = response.estimated_pnl_impact;\n} else if (response.pnl_impact) {\n  estimatedPnlImpact = response.pnl_impact;\n}\n\nreturn [{\n  json: {\n    strategy: strategyName,\n    strategy_id: strategyId,\n    anti_setups: antiSetupCount,\n    estimated_pnl_impact: estimatedPnlImpact,\n    raw_response: response\n  }\n}];"
+        }
+      },
+      {
+        "id": "aggregate-results",
+        "name": "Aggregate Final Report",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1300,
+          100
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\n// Collect all mining results from the loop\nconst byStrategy = items.map(item => ({\n  strategy: item.json.strategy || 'Unknown',\n  strategy_id: item.json.strategy_id || 'unknown',\n  anti_setups: item.json.anti_setups || 0,\n  estimated_pnl_impact: item.json.estimated_pnl_impact || '$0'\n}));\n\nconst totalAntiSetups = byStrategy.reduce((sum, s) => sum + s.anti_setups, 0);\n\nconst report = {\n  report_date: new Date().toISOString().split('T')[0],\n  strategies_analyzed: byStrategy.length,\n  total_anti_setups_found: totalAntiSetups,\n  by_strategy: byStrategy,\n  generated_at: new Date().toISOString()\n};\n\nreturn [{ json: report }];"
+        }
+      },
+      {
+        "id": "post-report",
+        "name": "POST Anti-Setup Report",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1560,
+          100
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/alerts",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Anti-Setup Refresh Report', message: 'Analyzed ' + ($json.strategies_analyzed || 0) + ' strategies, found ' + ($json.total_anti_setups_found || 0) + ' anti-setups', severity: ($json.total_anti_setups_found > 0) ? 'warning' : 'info', data: { reportDate: $json.report_date || '', strategiesAnalyzed: String($json.strategies_analyzed || 0), totalAntiSetups: String($json.total_anti_setups_found || 0), generatedAt: $json.generated_at || new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "post-empty-report",
+        "name": "POST Empty Report",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1040,
+          500
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/alerts",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Anti-Setup Refresh: No Strategies', message: $json.message || 'No active strategies found', severity: 'info', data: { reportDate: $json.report_date || new Date().toISOString().split('T')[0] } }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          600
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "post-error-alert",
+        "name": "POST Anti-Setup Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          260,
+          600
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4100/alert/alerts",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Anti-Setup Refresh', message: $json.execution ? (typeof $json.execution.error === 'object' ? $json.execution.error.message : String($json.execution.error)) : 'Unknown error', severity: 'critical', data: { workflow: 'Anti-Setup Refresh', executionId: $json.execution ? String($json.execution.id) : 'unknown', timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Monthly 1st 3AM ET Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Active Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Active Strategies": {
+        "main": [
+          [
+            {
+              "node": "Extract Strategy IDs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Strategy IDs": {
+        "main": [
+          [
+            {
+              "node": "Has Strategies?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has Strategies?": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "POST Empty Report",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Strategies": {
+        "main": [
+          [
+            {
+              "node": "Aggregate Final Report",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mine Anti-Setups",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mine Anti-Setups": {
+        "main": [
+          [
+            {
+              "node": "Parse Mining Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Mining Results": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate Final Report": {
+        "main": [
+          [
+            {
+              "node": "POST Anti-Setup Report",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "POST Anti-Setup Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-14T23:20:43.464Z",
+        "id": 1138,
+        "workflowId": "PHcD2tFZpzr7kQGF",
+        "versionId": "6898a3ab-a66a-4531-b48c-58cfc880a824",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

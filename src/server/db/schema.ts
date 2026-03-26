@@ -25,6 +25,9 @@ export const strategies = pgTable("strategies", {
   rollingSharpe30d: numeric("rolling_sharpe_30d"),
   forgeScore: numeric("forge_score"),
   tags: text("tags").array(),
+  searchBudgetUsed: integer("search_budget_used"),  // Cumulative Optuna trials across all WF windows
+  parentStrategyId: uuid("parent_strategy_id"), // Self-evolution: links to parent strategy
+  generation: integer("generation").notNull().default(0), // Evolution generation (0 = original)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -58,6 +61,10 @@ export const backtests = pgTable(
     config: jsonb("config"), // Snapshot of strategy config used
     walkForwardResults: jsonb("walk_forward_results"),
     propCompliance: jsonb("prop_compliance"),
+    decayAnalysis: jsonb("decay_analysis"),
+    runReceipt: jsonb("run_receipt"),
+    sanityChecks: jsonb("sanity_checks"),
+    crossValidation: jsonb("cross_validation"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -69,6 +76,28 @@ export const backtests = pgTable(
   ]
 );
 
+// ─── Backtest Matrix (cross-symbol × timeframe testing) ─────
+export const backtestMatrix = pgTable(
+  "backtest_matrix",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    status: text("status").notNull().default("running"), // running | tier1 | tier2 | tier3 | completed | failed
+    totalCombos: integer("total_combos").notNull(),
+    completedCombos: integer("completed_combos").notNull().default(0),
+    results: jsonb("results"), // [{symbol, timeframe, forgeScore, sharpe, trades, backtestId}]
+    bestCombo: jsonb("best_combo"), // {symbol, timeframe, forgeScore, backtestId}
+    tierStatus: jsonb("tier_status"), // {tier1: "completed", tier2: "running", tier3: "pending"}
+    correlations: jsonb("correlations"), // [{symbol1, symbol2, correlation, warning}]
+    executionTimeMs: integer("execution_time_ms"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("matrix_strategy_idx").on(table.strategyId),
+    index("matrix_status_idx").on(table.status),
+  ]
+);
+
 // ─── Backtest Trades ─────────────────────────────────────────
 export const backtestTrades = pgTable(
   "backtest_trades",
@@ -77,20 +106,36 @@ export const backtestTrades = pgTable(
     backtestId: uuid("backtest_id")
       .references(() => backtests.id, { onDelete: "cascade" })
       .notNull(),
+    matrixId: uuid("matrix_id").references(() => backtestMatrix.id),
+    symbol: text("symbol"),
+    timeframe: text("timeframe"),
     entryTime: timestamp("entry_time").notNull(),
     exitTime: timestamp("exit_time"),
     direction: text("direction").notNull(), // long | short
     entryPrice: numeric("entry_price").notNull(),
     exitPrice: numeric("exit_price"),
     pnl: numeric("pnl"),
+    netPnl: numeric("net_pnl"),
     contracts: integer("contracts").notNull().default(1),
     commission: numeric("commission"),
+    grossPnl: numeric("gross_pnl"),
     slippage: numeric("slippage"),
-    mae: numeric("mae"), // Maximum Adverse Excursion
-    mfe: numeric("mfe"), // Maximum Favorable Excursion
+    mae: numeric("mae"), // Maximum Adverse Excursion ($)
+    mfe: numeric("mfe"), // Maximum Favorable Excursion ($)
     holdDurationMs: integer("hold_duration_ms"),
+    hourOfDay: integer("hour_of_day"),     // 0-23 ET
+    dayOfWeek: integer("day_of_week"),     // 0=Mon, 4=Fri
+    sessionType: text("session_type"),     // ASIA | LONDON | NY_OPEN | NY_CORE | NY_CLOSE | OVERNIGHT
+    macroRegime: text("macro_regime"),     // RISK_ON, RISK_OFF, etc.
+    eventActive: boolean("event_active"),  // Was FOMC/CPI/NFP within window?
+    skipSignal: text("skip_signal"),       // What skip engine would have said
+    fillProbability: numeric("fill_probability"), // Modeled fill probability (0-1)
   },
-  (table) => [index("trades_backtest_idx").on(table.backtestId)]
+  (table) => [
+    index("trades_backtest_idx").on(table.backtestId),
+    index("trades_matrix_idx").on(table.matrixId),
+    index("trades_symbol_idx").on(table.symbol),
+  ]
 );
 
 // ─── Monte Carlo Runs ────────────────────────────────────────
@@ -447,4 +492,154 @@ export const tournamentResults = pgTable(
     index("tournament_results_verdict_idx").on(table.finalVerdict),
     index("tournament_results_candidate_idx").on(table.candidateName),
   ]
+);
+
+// ─── Paper Trading Sessions ────────────────────────────────
+export const paperSessions = pgTable(
+  "paper_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id),
+    status: text("status").notNull().default("active"), // active | stopped | paused
+    mode: text("mode").notNull().default("paper"), // paper | shadow
+    firmId: text("firm_id"),                          // e.g. "mffu", "topstep" — null = tightest defaults
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    stoppedAt: timestamp("stopped_at"),
+    pausedAt: timestamp("paused_at"),                 // Gap 9: pause/resume
+    startingCapital: numeric("starting_capital").notNull().default("50000"),
+    currentEquity: numeric("current_equity").notNull().default("50000"),
+    peakEquity: numeric("peak_equity").notNull().default("50000"),
+    config: jsonb("config"),
+    lastSignalTime: timestamp("last_signal_time"),    // Gap 3: cooldown persistence
+    cooldownUntil: timestamp("cooldown_until"),        // Gap 3: cooldown persistence
+    dailyPnlBreakdown: jsonb("daily_pnl_breakdown").default({}), // Gap 4: consistency tracking
+    metricsSnapshot: jsonb("metrics_snapshot").default({}),       // Gap 5: rolling Sharpe
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("paper_sessions_strategy_idx").on(table.strategyId),
+    index("paper_sessions_status_idx").on(table.status),
+  ]
+);
+
+// ─── Paper Trading Positions ───────────────────────────────
+export const paperPositions = pgTable(
+  "paper_positions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .references(() => paperSessions.id, { onDelete: "cascade" })
+      .notNull(),
+    symbol: text("symbol").notNull(),
+    side: text("side").notNull(), // long | short
+    entryPrice: numeric("entry_price").notNull(),
+    currentPrice: numeric("current_price"),
+    contracts: integer("contracts").notNull().default(1),
+    unrealizedPnl: numeric("unrealized_pnl").default("0"),
+    entryTime: timestamp("entry_time").defaultNow().notNull(),
+    closedAt: timestamp("closed_at"),
+    arrivalPrice: numeric("arrival_price"),                  // Gap 8: TCA — signal price before latency/slippage
+    implementationShortfall: numeric("implementation_shortfall"), // Gap 8: TCA — cost of execution
+    fillRatio: numeric("fill_ratio").default("1.0"),         // Gap 8: TCA — intended vs filled
+  },
+  (table) => [
+    index("paper_positions_session_idx").on(table.sessionId),
+  ]
+);
+
+// ─── Paper Trading Trades ──────────────────────────────────
+export const paperTrades = pgTable(
+  "paper_trades",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .references(() => paperSessions.id, { onDelete: "cascade" })
+      .notNull(),
+    symbol: text("symbol").notNull(),
+    side: text("side").notNull(), // long | short
+    entryPrice: numeric("entry_price").notNull(),
+    exitPrice: numeric("exit_price").notNull(),
+    pnl: numeric("pnl").notNull(),
+    contracts: integer("contracts").notNull().default(1),
+    entryTime: timestamp("entry_time").notNull(),
+    exitTime: timestamp("exit_time").notNull(),
+    slippage: numeric("slippage"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("paper_trades_session_idx").on(table.sessionId),
+  ]
+);
+
+// ─── Paper Signal Logs (Full-Potential: detailed signal persistence) ──────
+// Note: legacy "paper_signal_log" table still exists in DB (migration 0005) but is unused.
+export const paperSignalLogs = pgTable(
+  "paper_signal_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .references(() => paperSessions.id, { onDelete: "cascade" })
+      .notNull(),
+    symbol: text("symbol").notNull(),
+    direction: text("direction").notNull(),           // "long" | "short"
+    signalType: text("signal_type"),                  // "sma_cross", "rsi_reversal", etc.
+    confidence: numeric("confidence"),
+    price: numeric("price"),                          // market price at signal time
+    indicatorSnapshot: jsonb("indicator_snapshot"),    // RSI, ATR, VWAP values at signal time
+    acted: boolean("acted").default(false),            // was a position opened?
+    reason: text("reason"),                           // if not acted, why (cooldown, risk gate, etc.)
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("paper_signal_logs_session_idx").on(table.sessionId),
+    index("paper_signal_logs_created_idx").on(table.createdAt),
+  ]
+);
+
+// ─── Shadow Signals (Gap 9 — Signal vs Reality) ──────────────
+export const shadowSignals = pgTable(
+    "shadow_signals",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        sessionId: uuid("session_id")
+            .references(() => paperSessions.id, { onDelete: "cascade" })
+            .notNull(),
+        signalTime: timestamp("signal_time").notNull(),
+        direction: text("direction").notNull(), // long | short
+        expectedEntry: numeric("expected_entry").notNull(),
+        expectedExit: numeric("expected_exit"),
+        actualMarketPrice: numeric("actual_market_price"),
+        wouldHaveFilled: boolean("would_have_filled"),
+        theoreticalPnl: numeric("theoretical_pnl"),
+        modelSlippage: numeric("model_slippage"),
+        actualSlippage: numeric("actual_slippage"),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+    },
+    (table) => [
+        index("shadow_signals_session_idx").on(table.sessionId),
+        index("shadow_signals_time_idx").on(table.signalTime),
+    ]
+);
+
+// ─── Walk-Forward Windows ────────────────────────────────────
+export const walkForwardWindows = pgTable(
+    "walk_forward_windows",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "cascade" }).notNull(),
+        windowIndex: integer("window_index").notNull(),
+        isStart: text("is_start"),
+        isEnd: text("is_end"),
+        oosStart: text("oos_start"),
+        oosEnd: text("oos_end"),
+        bestParams: jsonb("best_params"),
+        isMetrics: jsonb("is_metrics"),
+        oosMetrics: jsonb("oos_metrics"),
+        paramStability: jsonb("param_stability"),
+        confidence: text("confidence"),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+    },
+    (table) => [
+        index("wf_windows_backtest_idx").on(table.backtestId),
+    ]
 );

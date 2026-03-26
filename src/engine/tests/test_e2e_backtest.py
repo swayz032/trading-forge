@@ -108,7 +108,7 @@ class TestE2EBacktest:
             "profit_factor": result["profit_factor"],
             "sharpe_ratio": result["sharpe_ratio"],
             "avg_winner_to_loser_ratio": result["avg_winner_to_loser_ratio"],
-            "max_drawdown": abs(result["max_drawdown"]) * 100000,  # Convert from fraction
+            "max_drawdown": abs(result["max_drawdown"]) * 50000,  # Convert from fraction (50K account)
             "max_consecutive_losing_days": result["max_consecutive_losing_days"],
             "avg_loss_on_red_days": -100,
             "avg_win_on_green_days": 200,
@@ -136,7 +136,7 @@ class TestE2EBacktest:
 
         stats = {
             "avg_daily_pnl": result["avg_daily_pnl"],
-            "max_drawdown": abs(result["max_drawdown"]) * 100000,
+            "max_drawdown": abs(result["max_drawdown"]) * 50000,
             "trades_overnight": False,
             "consistency_ratio": 0.10,
         }
@@ -147,17 +147,17 @@ class TestE2EBacktest:
         assert len(compliance) == 7
         for firm, details in compliance.items():
             assert "passed" in details
-            assert "eval_cost" in details
+            assert "expected_eval_cost" in details
             assert "payout_split" in details
 
     def test_equity_curve_starts_at_init_cash(self):
-        """Equity curve should start near initial cash ($100K)."""
+        """Equity curve should start near initial cash ($50K)."""
         data = _make_trending_data(200)
         request = self._make_request()
         result = run_backtest(request, data=data)
 
         if result["equity_curve"]:
-            assert result["equity_curve"][0] == pytest.approx(100000.0, rel=0.01)
+            assert result["equity_curve"][0]["value"] == pytest.approx(50000.0, rel=0.01)
 
     def test_daily_pnls_match_equity(self):
         """Daily P&Ls should approximately match equity curve diffs."""
@@ -169,14 +169,14 @@ class TestE2EBacktest:
         pnls = result["daily_pnls"]
 
         if len(equity) > 1 and len(pnls) > 0:
-            # First PnL should match equity[1] - equity[0]
-            assert pnls[0] == pytest.approx(equity[1] - equity[0], abs=0.01)
+            # First PnL should match equity[1]["value"] - equity[0]["value"]
+            assert pnls[0] == pytest.approx(equity[1]["value"] - equity[0]["value"], abs=0.01)
 
     def test_walk_forward_mode(self):
         """Walk-forward mode returns OOS metrics."""
         from src.engine.walk_forward import run_walk_forward
 
-        data = _make_trending_data(300)
+        data = _make_trending_data(1000)
         request = self._make_request()
         result = run_walk_forward(request, data=data, n_splits=3)
 

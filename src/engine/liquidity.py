@@ -14,32 +14,37 @@ import polars as pl
 
 # ─── Session Definitions (Eastern Time) ──────────────────────────
 
+SESSION_MULTIPLIERS = {
+    "pre_market": 2.0,       # 6:00-9:30 ET — thin pre-market, wide spreads
+    "open_30min": 0.8,       # 9:30-10:00 — highest liquidity of day
+    "rth_core": 1.0,         # 10:00-15:30 — baseline liquidity
+    "close_30min": 1.2,      # 15:30-16:00 — MOC flows, wider spreads
+    "overnight": 3.0,        # 16:00-6:00 — thin book, wide spreads
+}
+
 SESSIONS = [
     # (label, start_hour, start_min, end_hour, end_min, multiplier)
-    ("RTH_CORE",    10,  0, 15, 30, 1.0),
-    ("RTH_CLOSE",   15, 30, 16,  0, 1.2),
-    ("RTH_OPEN",     9, 30, 10,  0, 1.3),
-    ("PRE_MARKET",   4,  0,  9, 30, 1.5),
-    ("OVERNIGHT",   20,  0, 24,  0, 2.0),  # 8 PM – midnight
-    ("OVERNIGHT_2",  0,  0,  4,  0, 2.0),  # midnight – 4 AM
+    # Order matters: more specific ranges first, checked sequentially
+    ("RTH_OPEN",     9, 30, 10,  0, SESSION_MULTIPLIERS["open_30min"]),
+    ("RTH_CORE",    10,  0, 15, 30, SESSION_MULTIPLIERS["rth_core"]),
+    ("RTH_CLOSE",   15, 30, 16,  0, SESSION_MULTIPLIERS["close_30min"]),
+    ("PRE_MARKET",   6,  0,  9, 30, SESSION_MULTIPLIERS["pre_market"]),
+    ("OVERNIGHT",   16,  0, 24,  0, SESSION_MULTIPLIERS["overnight"]),  # 4 PM – midnight
+    ("OVERNIGHT_2",  0,  0,  6,  0, SESSION_MULTIPLIERS["overnight"]),  # midnight – 6 AM
 ]
 
-# Default multiplier for anything not covered (e.g., 4-8 PM gap between
-# RTH close and overnight — treat as after-hours, moderate liquidity)
-_DEFAULT_MULTIPLIER = 1.5
+# Default multiplier for anything not covered
+_DEFAULT_MULTIPLIER = SESSION_MULTIPLIERS["overnight"]
 _DEFAULT_LABEL = "AFTER_HOURS"
 
 
 def _to_et_hours_minutes(timestamps: pl.Series) -> tuple[np.ndarray, np.ndarray]:
     """Convert timestamps to ET hour and minute arrays.
 
-    Assumes input is UTC. ET = UTC - 5 (EST) or UTC - 4 (EDT).
-    We use EST (UTC-5) as a conservative default — slightly earlier session
-    boundaries mean slightly higher slippage estimates, which is safer.
+    Assumes input is UTC. Converts to America/New_York (handles EST/EDT automatically).
     """
-    # Cast to datetime if needed, subtract 5 hours for ET
-    ts = timestamps.cast(pl.Datetime("us"))
-    et = ts.dt.offset_by("-5h")
+    ts = timestamps.cast(pl.Datetime("us", time_zone="UTC"))
+    et = ts.dt.convert_time_zone("America/New_York")
     hours = et.dt.hour().to_numpy().astype(np.int32)
     minutes = et.dt.minute().to_numpy().astype(np.int32)
     return hours, minutes
@@ -80,6 +85,23 @@ def classify_session(timestamps: pl.Series) -> np.ndarray:
     return labels
 
 
+# ─── Event-Specific Multipliers (applied ON TOP of session multipliers) ───
+
+EVENT_MULTIPLIERS = {
+    "FOMC": 4.0,          # FOMC rate decisions — 4-20 ticks possible on ES
+    "CPI": 3.0,           # CPI release at 8:30 ET — major volatility spike
+    "NFP": 3.0,           # First Friday of month
+    "PPI": 2.0,           # Producer Price Index
+    "PCE": 2.5,           # Personal Consumption Expenditures (Fed's preferred)
+    "GDP": 2.0,           # GDP release
+    "RETAIL_SALES": 2.0,  # Retail sales
+    "INVENTORY": 2.5,     # CL-specific (EIA, Wednesday 10:30 ET)
+    "OPEC": 3.0,          # CL-specific — OPEC decisions
+    "JOLTS": 1.5,         # Job openings
+    "ISM": 2.0,           # ISM Manufacturing/Services
+}
+
+
 def get_session_multipliers(timestamps: pl.Series) -> np.ndarray:
     """Get slippage multiplier for each timestamp based on session.
 
@@ -98,3 +120,28 @@ def get_session_multipliers(timestamps: pl.Series) -> np.ndarray:
         multipliers[mask] = mult
 
     return multipliers
+
+
+def get_event_adjusted_multipliers(
+    timestamps: pl.Series,
+    event_bars: np.ndarray | None = None,
+    event_type: str = "FOMC",
+) -> np.ndarray:
+    """Get slippage multipliers adjusted for both session AND event risk.
+
+    Args:
+        timestamps: Polars Series of timestamps
+        event_bars: Boolean array marking bars within event windows (+-30 min)
+        event_type: Type of event for multiplier lookup
+
+    Returns:
+        numpy array of combined multipliers
+    """
+    base = get_session_multipliers(timestamps)
+
+    if event_bars is not None:
+        event_mult = EVENT_MULTIPLIERS.get(event_type, 2.0)
+        # Apply event multiplier on top of session multiplier
+        base[event_bars.astype(bool)] *= event_mult
+
+    return base

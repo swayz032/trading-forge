@@ -2,15 +2,16 @@ import { Router } from "express";
 import { eq, desc, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/index.js";
-import { backtests, backtestTrades, auditLog } from "../db/schema.js";
+import { backtests, backtestTrades, backtestMatrix, monteCarloRuns, stressTestRuns, strategies, auditLog } from "../db/schema.js";
 import { runBacktest } from "../services/backtest-service.js";
+import { runMatrix, getMatrixStatus } from "../services/matrix-backtest-service.js";
 
 export const backtestRoutes = Router();
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
 const indicatorSchema = z.object({
-  type: z.enum(["sma", "ema", "rsi", "macd", "vwap", "bbands", "atr"]),
+  type: z.enum(["sma", "ema", "rsi", "macd", "vwap", "bbands", "atr", "adx", "adr"]),
   period: z.number().int().positive(),
   fast: z.number().int().optional(),
   slow: z.number().int().optional(),
@@ -20,9 +21,9 @@ const indicatorSchema = z.object({
 
 const strategyConfigSchema = z.object({
   name: z.string().min(1),
-  symbol: z.enum(["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ"]),
+  symbol: z.enum(["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"]),
   timeframe: z.string().min(1),
-  indicators: z.array(indicatorSchema).min(1).max(5),
+  indicators: z.array(indicatorSchema).max(5).default([]),
   entry_long: z.string().min(1),
   entry_short: z.string().min(1),
   exit: z.string().min(1),
@@ -39,14 +40,20 @@ const strategyConfigSchema = z.object({
 
 const backtestRequestSchema = z.object({
   strategyId: z.string().uuid(),
-  strategy: strategyConfigSchema,
-  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  strategy: strategyConfigSchema.optional(), // Optional — if omitted, loaded from DB
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   slippage_ticks: z.number().positive().optional().default(1.0),
   commission_per_side: z.number().nonnegative().optional().default(4.50),
-  mode: z.enum(["single", "walkforward"]).optional().default("single"),
+  mode: z.enum(["single", "walkforward"]).optional().default("walkforward"),
   walk_forward_splits: z.number().int().min(2).max(10).optional().default(5),
 });
+
+// ══════════════════════════════════════════════════════════════════
+// IMPORTANT: Named routes (/compare, /matrix, /matrix/:id) MUST be
+// registered BEFORE the parameterized /:id catch-all, otherwise
+// Express matches "matrix" and "compare" as :id values.
+// ══════════════════════════════════════════════════════════════════
 
 // ─── POST /api/backtests — Run a new backtest (async) ────────────
 backtestRoutes.post("/", async (req, res) => {
@@ -56,10 +63,55 @@ backtestRoutes.post("/", async (req, res) => {
     return;
   }
 
-  const { strategyId, ...config } = parsed.data;
+  const { strategyId, strategy: providedStrategy, ...config } = parsed.data;
+
+  // If no strategy config provided, load it from the DB
+  let resolvedStrategy = providedStrategy;
+  let strategyClass: string | undefined;
+
+  try {
+    const [strat] = await db.select().from(strategies).where(eq(strategies.id, strategyId));
+    if (!strat && !providedStrategy) {
+      res.status(404).json({ error: "Strategy not found and no config provided" });
+      return;
+    }
+    const stratConfig = strat?.config as Record<string, unknown> | undefined;
+    if (stratConfig?.strategy_class) {
+      strategyClass = String(stratConfig.strategy_class);
+    }
+    // If no strategy config was sent in the request, use the one from DB
+    if (!resolvedStrategy && stratConfig) {
+      // Merge DB fields with config — the DB strategy row has symbol/timeframe at top level
+      resolvedStrategy = {
+        name: strat!.name,
+        symbol: strat!.symbol as any,
+        timeframe: strat!.timeframe,
+        indicators: (stratConfig.indicators as any[]) ?? [],
+        entry_long: String(stratConfig.entry_long ?? ""),
+        entry_short: String(stratConfig.entry_short ?? ""),
+        exit: String(stratConfig.exit ?? ""),
+        stop_loss: (stratConfig.stop_loss as any) ?? { type: "atr", multiplier: 2.0 },
+        position_size: (stratConfig.position_size as any) ?? { type: "fixed", fixed_contracts: 1 },
+      };
+    }
+  } catch (err) {
+    if (!providedStrategy) {
+      res.status(500).json({ error: "Failed to load strategy from DB" });
+      return;
+    }
+    // Non-fatal if we already have a provided strategy
+  }
+
+  if (!resolvedStrategy) {
+    res.status(400).json({ error: "No strategy config provided and could not load from DB" });
+    return;
+  }
+
+  // Reassemble config with the resolved strategy
+  const fullConfig = { ...config, strategy: resolvedStrategy };
 
   // Fire and forget — return 202 immediately
-  const backtestPromise = runBacktest(strategyId, config);
+  const backtestPromise = runBacktest(strategyId, fullConfig, strategyClass);
 
   // Return the backtest ID immediately
   backtestPromise.then((result) => {
@@ -97,6 +149,8 @@ backtestRoutes.get("/", async (req, res) => {
       strategyId: backtests.strategyId,
       symbol: backtests.symbol,
       timeframe: backtests.timeframe,
+      startDate: backtests.startDate,
+      endDate: backtests.endDate,
       status: backtests.status,
       tier: backtests.tier,
       totalReturn: backtests.totalReturn,
@@ -119,52 +173,6 @@ backtestRoutes.get("/", async (req, res) => {
   res.json(rows);
 });
 
-// ─── GET /api/backtests/:id — Full backtest detail ───────────────
-backtestRoutes.get("/:id", async (req, res) => {
-  const [row] = await db
-    .select()
-    .from(backtests)
-    .where(eq(backtests.id, req.params.id))
-    .limit(1);
-
-  if (!row) {
-    res.status(404).json({ error: "Backtest not found" });
-    return;
-  }
-
-  res.json(row);
-});
-
-// ─── GET /api/backtests/:id/equity — Equity curve ────────────────
-backtestRoutes.get("/:id/equity", async (req, res) => {
-  const [row] = await db
-    .select({ equityCurve: backtests.equityCurve })
-    .from(backtests)
-    .where(eq(backtests.id, req.params.id))
-    .limit(1);
-
-  if (!row) {
-    res.status(404).json({ error: "Backtest not found" });
-    return;
-  }
-
-  res.json({ equity_curve: row.equityCurve });
-});
-
-// ─── GET /api/backtests/:id/trades — Paginated trades ────────────
-backtestRoutes.get("/:id/trades", async (req, res) => {
-  const { limit = "100", offset = "0" } = req.query;
-
-  const trades = await db
-    .select()
-    .from(backtestTrades)
-    .where(eq(backtestTrades.backtestId, req.params.id))
-    .limit(Number(limit))
-    .offset(Number(offset));
-
-  res.json(trades);
-});
-
 // ─── POST /api/backtests/compare — Side-by-side metrics ──────────
 backtestRoutes.post("/compare", async (req, res) => {
   const { ids } = req.body;
@@ -181,11 +189,153 @@ backtestRoutes.post("/compare", async (req, res) => {
   res.json(rows);
 });
 
+// ─── POST /api/backtests/matrix — Cross-matrix testing ────────────
+backtestRoutes.post("/matrix", async (req, res) => {
+  const schema = z.object({
+    strategyId: z.string().uuid(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+
+  const { strategyId } = parsed.data;
+
+  // Fire and forget — tiered execution takes ~11 min
+  runMatrix(strategyId).catch(() => {
+    // Errors persisted to DB by service
+  });
+
+  // Get the matrix ID
+  const [row] = await db
+    .select({ id: backtestMatrix.id })
+    .from(backtestMatrix)
+    .where(eq(backtestMatrix.strategyId, strategyId))
+    .orderBy(desc(backtestMatrix.createdAt))
+    .limit(1);
+
+  res.status(202).json({
+    message: "Matrix backtest started — 6 symbols × 7 timeframes, tiered execution",
+    matrixId: row?.id,
+  });
+});
+
+// ─── GET /api/backtests/matrix/:id — Matrix status ────────────────
+backtestRoutes.get("/matrix/:id", async (req, res) => {
+  const id = req.params.id;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    res.status(400).json({ error: "Invalid matrix ID format (expected UUID)" });
+    return;
+  }
+  const row = await getMatrixStatus(id);
+  if (!row) {
+    res.status(404).json({ error: "Matrix not found" });
+    return;
+  }
+  res.json(row);
+});
+
+// ─── GET /api/backtests/matrix — Latest matrix by strategyId ───────
+backtestRoutes.get("/matrix", async (req, res) => {
+  const { strategyId } = req.query;
+  if (!strategyId || typeof strategyId !== "string") {
+    res.status(400).json({ error: "strategyId query parameter required" });
+    return;
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(strategyId)) {
+    res.status(400).json({ error: "Invalid strategyId format (expected UUID)" });
+    return;
+  }
+
+  const [row] = await db
+    .select()
+    .from(backtestMatrix)
+    .where(eq(backtestMatrix.strategyId, strategyId))
+    .orderBy(desc(backtestMatrix.createdAt))
+    .limit(1);
+
+  if (!row) {
+    res.status(404).json({ error: "No matrix found for this strategy" });
+    return;
+  }
+
+  res.json(row);
+});
+
+// ─── GET /api/backtests/:id — Full backtest detail ───────────────
+// NOTE: This catch-all MUST be after all named routes (/compare, /matrix)
+backtestRoutes.get("/:id", async (req, res) => {
+  const id = req.params.id;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    res.status(400).json({ error: "Invalid backtest ID format (expected UUID)" });
+    return;
+  }
+  const [row] = await db
+    .select()
+    .from(backtests)
+    .where(eq(backtests.id, id))
+    .limit(1);
+
+  if (!row) {
+    res.status(404).json({ error: "Backtest not found" });
+    return;
+  }
+
+  // Attach crisis/stress test results if they exist
+  const [stressRow] = await db
+    .select()
+    .from(stressTestRuns)
+    .where(eq(stressTestRuns.backtestId, req.params.id))
+    .limit(1);
+
+  const result: Record<string, unknown> = { ...row };
+  if (stressRow) {
+    result.crisisResults = stressRow.scenarios;
+  }
+
+  res.json(result);
+});
+
+// ─── GET /api/backtests/:id/equity — Equity curve ────────────────
+backtestRoutes.get("/:id/equity", async (req, res) => {
+  const [row] = await db
+    .select({ equityCurve: backtests.equityCurve })
+    .from(backtests)
+    .where(eq(backtests.id, req.params.id))
+    .limit(1);
+
+  if (!row) {
+    res.status(404).json({ error: "Backtest not found" });
+    return;
+  }
+
+  res.json({ equityCurve: row.equityCurve });
+});
+
+// ─── GET /api/backtests/:id/trades — Paginated trades ────────────
+backtestRoutes.get("/:id/trades", async (req, res) => {
+  const { limit = "100", offset = "0" } = req.query;
+
+  const trades = await db
+    .select()
+    .from(backtestTrades)
+    .where(eq(backtestTrades.backtestId, req.params.id))
+    .limit(Number(limit))
+    .offset(Number(offset));
+
+  res.json(trades);
+});
+
 // ─── DELETE /api/backtests/:id — Cascade delete ──────────────────
 backtestRoutes.delete("/:id", async (req, res) => {
   const backtestId = req.params.id;
 
-  // Trades cascade automatically via FK
+  // Delete related records first (FK constraints)
+  await db.delete(monteCarloRuns).where(eq(monteCarloRuns.backtestId, backtestId));
+  await db.delete(stressTestRuns).where(eq(stressTestRuns.backtestId, backtestId));
+  await db.delete(backtestTrades).where(eq(backtestTrades.backtestId, backtestId));
+
   const [deleted] = await db
     .delete(backtests)
     .where(eq(backtests.id, backtestId))
