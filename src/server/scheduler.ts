@@ -129,8 +129,9 @@ async function preMarketPrep() {
     // Call the skip classifier endpoint
     const response = await fetch("http://localhost:4000/api/skip/today").catch(() => null);
     if (response?.ok) {
-      const data = await response.json();
-      const sitOuts = (data as any[]).filter((d: any) => d.decision === "SKIP" || d.decision === "SIT_OUT");
+      const payload = await response.json() as { decisions?: Array<{ decision?: string }> };
+      const decisions = Array.isArray(payload?.decisions) ? payload.decisions : [];
+      const sitOuts = decisions.filter((d) => d.decision === "SKIP" || d.decision === "SIT_OUT");
       if (sitOuts.length > 0) {
         broadcastSSE("scheduler:pre-market-alert", {
           message: `${sitOuts.length} strategies sitting out today`,
