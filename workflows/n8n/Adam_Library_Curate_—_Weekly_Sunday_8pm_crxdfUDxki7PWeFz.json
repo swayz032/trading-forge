@@ -2,9 +2,9 @@
   "updatedAt": "2026-03-05T05:33:30.335Z",
   "createdAt": "2026-02-16T13:48:18.585Z",
   "id": "crxdfUDxki7PWeFz",
-  "name": "Adam Library Curate \u2014 Weekly Sunday 8pm",
+  "name": "Adam Library Curate — Weekly Sunday 8pm [DUPLICATE-INACTIVE]",
   "description": null,
-  "active": true,
+  "active": false,
   "isArchived": false,
   "nodes": [
     {
@@ -157,7 +157,7 @@
         }
       },
       "id": "call-orchestrator",
-      "name": "POST Intent \u2192 Orchestrator",
+      "name": "POST Intent → Orchestrator",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -365,14 +365,14 @@
       "main": [
         [
           {
-            "node": "POST Intent \u2192 Orchestrator",
+            "node": "POST Intent → Orchestrator",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "POST Intent \u2192 Orchestrator": {
+    "POST Intent → Orchestrator": {
       "main": [
         [
           {
@@ -614,7 +614,7 @@
           }
         },
         "id": "call-orchestrator",
-        "name": "POST Intent \u2192 Orchestrator",
+        "name": "POST Intent → Orchestrator",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -822,14 +822,14 @@
         "main": [
           [
             {
-              "node": "POST Intent \u2192 Orchestrator",
+              "node": "POST Intent → Orchestrator",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "POST Intent \u2192 Orchestrator": {
+      "POST Intent → Orchestrator": {
         "main": [
           [
             {

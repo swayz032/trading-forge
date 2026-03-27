@@ -2,9 +2,9 @@
   "updatedAt": "2026-03-05T02:02:30.484Z",
   "createdAt": "2026-02-16T13:48:30.770Z",
   "id": "UP1XYgy2jFAsn4N1",
-  "name": "Analytics Rollup \u2014 Nightly 3am",
+  "name": "Analytics Rollup — Nightly 3am [DUPLICATE-INACTIVE]",
   "description": null,
-  "active": true,
+  "active": false,
   "isArchived": false,
   "nodes": [
     {

@@ -2,9 +2,9 @@
   "updatedAt": "2026-03-05T05:33:30.582Z",
   "createdAt": "2026-02-16T13:48:19.201Z",
   "id": "AwRm4u3aRZdBJC9E",
-  "name": "Quinn Invoice Reminder \u2014 Daily 9am",
+  "name": "Quinn Invoice Reminder — Daily 9am [DUPLICATE-INACTIVE]",
   "description": null,
-  "active": true,
+  "active": false,
   "isArchived": false,
   "nodes": [
     {
@@ -104,7 +104,7 @@
         }
       },
       "id": "call-orchestrator",
-      "name": "POST Intent \u2192 Orchestrator",
+      "name": "POST Intent → Orchestrator",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -283,7 +283,7 @@
       "main": [
         [
           {
-            "node": "POST Intent \u2192 Orchestrator",
+            "node": "POST Intent → Orchestrator",
             "type": "main",
             "index": 0
           }
@@ -297,7 +297,7 @@
         ]
       ]
     },
-    "POST Intent \u2192 Orchestrator": {
+    "POST Intent → Orchestrator": {
       "main": [
         [
           {
@@ -486,7 +486,7 @@
           }
         },
         "id": "call-orchestrator",
-        "name": "POST Intent \u2192 Orchestrator",
+        "name": "POST Intent → Orchestrator",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -665,7 +665,7 @@
         "main": [
           [
             {
-              "node": "POST Intent \u2192 Orchestrator",
+              "node": "POST Intent → Orchestrator",
               "type": "main",
               "index": 0
             }
@@ -679,7 +679,7 @@
           ]
         ]
       },
-      "POST Intent \u2192 Orchestrator": {
+      "POST Intent → Orchestrator": {
         "main": [
           [
             {

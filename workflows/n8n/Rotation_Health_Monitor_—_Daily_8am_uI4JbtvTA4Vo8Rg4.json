@@ -2,9 +2,9 @@
   "updatedAt": "2026-03-13T05:43:59.281Z",
   "createdAt": "2026-02-20T21:35:45.526Z",
   "id": "uI4JbtvTA4Vo8Rg4",
-  "name": "Rotation Health Monitor \u2014 Daily 8am",
+  "name": "Rotation Health Monitor — Daily 8am [DUPLICATE-INACTIVE]",
   "description": null,
-  "active": true,
+  "active": false,
   "isArchived": false,
   "nodes": [
     {
@@ -151,7 +151,7 @@
         }
       },
       "id": "query-rotation-status",
-      "name": "Query Rotation Status \u2192 Gateway",
+      "name": "Query Rotation Status → Gateway",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -282,7 +282,7 @@
         }
       },
       "id": "alert-unhealthy",
-      "name": "Alert Unhealthy \u2192 Gateway",
+      "name": "Alert Unhealthy → Gateway",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -631,14 +631,14 @@
       "main": [
         [
           {
-            "node": "Query Rotation Status \u2192 Gateway",
+            "node": "Query Rotation Status → Gateway",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Query Rotation Status \u2192 Gateway": {
+    "Query Rotation Status → Gateway": {
       "main": [
         [
           {
@@ -678,7 +678,7 @@
         ]
       ]
     },
-    "Alert Unhealthy \u2192 Gateway": {
+    "Alert Unhealthy → Gateway": {
       "main": [
         [
           {
@@ -737,7 +737,7 @@
       "main": [
         [
           {
-            "node": "Alert Unhealthy \u2192 Gateway",
+            "node": "Alert Unhealthy → Gateway",
             "type": "main",
             "index": 0
           }
@@ -984,7 +984,7 @@
           }
         },
         "id": "query-rotation-status",
-        "name": "Query Rotation Status \u2192 Gateway",
+        "name": "Query Rotation Status → Gateway",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -1115,7 +1115,7 @@
           }
         },
         "id": "alert-unhealthy",
-        "name": "Alert Unhealthy \u2192 Gateway",
+        "name": "Alert Unhealthy → Gateway",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -1464,14 +1464,14 @@
         "main": [
           [
             {
-              "node": "Query Rotation Status \u2192 Gateway",
+              "node": "Query Rotation Status → Gateway",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "Query Rotation Status \u2192 Gateway": {
+      "Query Rotation Status → Gateway": {
         "main": [
           [
             {
@@ -1511,7 +1511,7 @@
           ]
         ]
       },
-      "Alert Unhealthy \u2192 Gateway": {
+      "Alert Unhealthy → Gateway": {
         "main": [
           [
             {
@@ -1570,7 +1570,7 @@
         "main": [
           [
             {
-              "node": "Alert Unhealthy \u2192 Gateway",
+              "node": "Alert Unhealthy → Gateway",
               "type": "main",
               "index": 0
             }

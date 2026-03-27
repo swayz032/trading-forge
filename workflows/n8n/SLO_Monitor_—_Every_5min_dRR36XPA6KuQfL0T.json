@@ -2,9 +2,9 @@
   "updatedAt": "2026-03-13T05:43:59.522Z",
   "createdAt": "2026-02-16T13:48:31.715Z",
   "id": "dRR36XPA6KuQfL0T",
-  "name": "SLO Monitor \u2014 Every 5min",
+  "name": "SLO Monitor — Every 5min [DUPLICATE-INACTIVE]",
   "description": null,
-  "active": true,
+  "active": false,
   "isArchived": false,
   "nodes": [
     {
