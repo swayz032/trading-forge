@@ -31,7 +31,7 @@ class MidnightOpenStrategy(BaseStrategy):
         self.lookback = lookback
         self.distance_threshold_atr = distance_threshold_atr
         self.session_filter = session_filter
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "5min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:

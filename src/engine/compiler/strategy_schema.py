@@ -54,7 +54,7 @@ class StrategyDSL(BaseModel):
 
     # Core identity
     symbol: str = Field(
-        ..., description="Futures symbol (ES, NQ, CL, YM, RTY, GC, MES, MNQ)"
+        ..., description="Futures symbol (MES, MNQ, MCL)"
     )
     timeframe: Timeframe
     direction: Direction

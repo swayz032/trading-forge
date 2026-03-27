@@ -37,7 +37,7 @@ def _make_config() -> BacktestRequest:
     return BacktestRequest(
         strategy=StrategyConfig(
             name="SMA Cross WF",
-            symbol="ES",
+            symbol="MES",
             timeframe="daily",
             indicators=[
                 IndicatorConfig(type="sma", period=5),

@@ -1,6 +1,6 @@
 import { createMassiveFetcher } from "../../data/fetchers/massive.js";
 import { updatePositionPrices } from "./paper-execution-service.js";
-import { evaluateSignals } from "./paper-signal-service.js";
+import { evaluateSignals, updateStateOnly } from "./paper-signal-service.js";
 import { logger } from "../index.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -41,6 +41,12 @@ const barBuffer = new Map<string, Bar[]>();
 const sessionLocks = new Map<string, Promise<void>>();
 
 const BAR_BUFFER_SIZE = 200;
+
+/** Symbol → whether backfill is in progress */
+const isBackfilling = new Map<string, boolean>();
+
+/** Symbol → bars received while backfilling */
+const pendingRealtimeBars = new Map<string, Bar[]>();
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -100,6 +106,17 @@ async function processSessionBar(sessionId: string, bar: Bar) {
  * where two bars for the same session overlap and corrupt state.
  */
 async function handleBar(bar: Bar) {
+  // If backfilling, buffer this bar to process later (in order)
+  if (isBackfilling.get(bar.symbol)) {
+    let pending = pendingRealtimeBars.get(bar.symbol);
+    if (!pending) {
+      pending = [];
+      pendingRealtimeBars.set(bar.symbol, pending);
+    }
+    pending.push(bar);
+    return;
+  }
+
   pushBar(bar.symbol, bar);
 
   const sessions = sessionsForSymbol(bar.symbol);
@@ -116,6 +133,64 @@ async function handleBar(bar: Bar) {
   });
 
   await Promise.all(promises);
+}
+
+async function backfillBars(symbol: string, lastTimestamp: string) {
+  if (isBackfilling.get(symbol)) return; // Already backfilling
+
+  isBackfilling.set(symbol, true);
+  logger.info({ symbol, lastTimestamp }, "Starting backfill for symbol");
+
+  try {
+    const fetcher = getMassiveFetcher();
+    const now = new Date().toISOString();
+    
+    // Fetch 1min bars to fill the gap
+    const bars = await fetcher.fetchBars({
+      symbol,
+      timeframe: "1min",
+      from: lastTimestamp,
+      to: now,
+    });
+
+    if (bars.length > 0) {
+      logger.info({ symbol, count: bars.length }, "Backfilled bars fetched");
+      
+      // Sort just in case API returns out of order
+      bars.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      // Filter out bars we already have (duplicate overlap)
+      const lastTs = new Date(lastTimestamp).getTime();
+      const newBars = bars.filter(b => new Date(b.timestamp).getTime() > lastTs);
+
+      for (const rawBar of newBars) {
+        const bar: Bar = { ...rawBar, symbol };
+        pushBar(bar.symbol, bar);
+        
+        // Update state for all sessions (indicators only, no trading)
+        const sessions = sessionsForSymbol(bar.symbol);
+        await Promise.all(sessions.map(sid => 
+          updateStateOnly(sid, bar.symbol, bar, getBarBuffer(bar.symbol))
+        ));
+      }
+    }
+  } catch (err) {
+    logger.error({ err, symbol }, "Failed to backfill bars");
+  } finally {
+    // Process any buffered real-time bars
+    const pending = pendingRealtimeBars.get(symbol) || [];
+    pendingRealtimeBars.delete(symbol);
+    isBackfilling.set(symbol, false);
+
+    logger.info({ symbol, pendingCount: pending.length }, "Finished backfill, processing pending bars");
+    
+    // Sort pending bars by time to ensure order
+    pending.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    
+    for (const bar of pending) {
+      await handleBar(bar);
+    }
+  }
 }
 
 /**
@@ -146,6 +221,17 @@ function ensureSocket(symbol: string, sessionId: string) {
 
   ws.on("connected", () => {
     logger.info({ symbol }, "Massive WebSocket connected");
+    
+    // Check if we need to backfill (do we have existing bars?)
+    const buffer = barBuffer.get(symbol);
+    if (buffer && buffer.length > 0) {
+      const lastBar = buffer[buffer.length - 1];
+      // Fire and forget backfill — it will buffer real-time bars until done
+      backfillBars(symbol, lastBar.timestamp).catch(err => {
+        logger.error({ err, symbol }, "Backfill error");
+      });
+    }
+
     const s = sharedSockets.get(symbol);
     if (s) {
       // Mark all sessions using this symbol as connected

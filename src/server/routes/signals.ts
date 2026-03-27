@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { checkSignalConfirmation } from "../services/signal-confirmation-service.js";
+import { logger } from "../index.js";
 
 export const signalRoutes = Router();
 
@@ -13,6 +14,7 @@ signalRoutes.get("/confirmation/:symbol", async (req, res) => {
     }
     res.json({ confirmed: true, ...result });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    logger.error({ err, symbol: req.params.symbol }, "Signal confirmation check failed");
+    res.status(500).json({ error: "Signal confirmation check failed", details: err.message });
   }
 });

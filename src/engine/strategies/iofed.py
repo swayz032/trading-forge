@@ -31,7 +31,7 @@ class IOFEDStrategy(BaseStrategy):
         self.lookback = lookback
         self.displacement_mult = displacement_mult
         self.fvg_min_size = fvg_min_size
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "5min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:

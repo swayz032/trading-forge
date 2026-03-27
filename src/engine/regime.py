@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import sys
 from typing import Optional
 
@@ -84,6 +85,14 @@ def classify_regime(
     else:
         ma_slope = 0.0
 
+    # Sanitize NaN BEFORE classification to prevent NaN propagation
+    if math.isnan(current_adx):
+        current_adx = 0.0
+    if math.isnan(atr_percentile):
+        atr_percentile = 50.0
+    if math.isnan(ma_slope):
+        ma_slope = 0.0
+
     # Classification logic
     if current_adx > 25:
         if ma_slope > 0:
@@ -105,16 +114,6 @@ def classify_regime(
     else:
         regime = "TRANSITIONAL"
         confidence = 0.3
-
-    # Handle NaN
-    if math.isnan(current_adx):
-        current_adx = 0.0
-    if math.isnan(atr_percentile):
-        atr_percentile = 50.0
-    if math.isnan(ma_slope):
-        ma_slope = 0.0
-    if math.isnan(confidence):
-        confidence = 0.0
 
     return {
         "regime": regime,
@@ -159,16 +158,20 @@ def should_strategy_trade(regime: str, preferred_regime: Optional[str]) -> bool:
 # ─── CLI Entry Point ──────────────────────────────────────────────
 
 @click.command()
-@click.option("--config", "config_json", required=True, help="JSON config string")
-def main(config_json: str):
+@click.option("--config", "config_input", required=True, help="JSON config string or file path")
+def main(config_input: str):
     """Run regime detection. Outputs JSON to stdout."""
     try:
-        config = json.loads(config_json)
-    except json.JSONDecodeError as e:
-        print(json.dumps({"error": f"Invalid JSON: {e}"}))
+        if os.path.isfile(config_input):
+            with open(config_input, 'r') as f:
+                config = json.load(f)
+        else:
+            config = json.loads(config_input)
+    except Exception as e:
+        print(json.dumps({"error": f"Invalid JSON config: {e}"}))
         sys.exit(1)
 
-    symbol = config.get("symbol", "ES")
+    symbol = config.get("symbol", "MES")
     timeframe = config.get("timeframe", "1h")
 
     try:

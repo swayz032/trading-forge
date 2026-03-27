@@ -11,8 +11,26 @@ export interface OhlcvQueryParams {
   limit?: number;
 }
 
+export const ALLOWED_SYMBOLS = ["ES", "NQ", "CL", "MES", "MNQ", "MCL"];
+export const ALLOWED_TIMEFRAMES = ["1min", "5min", "15min", "30min", "1hour", "4hour", "daily"];
+
 export function buildOhlcvQuery(params: OhlcvQueryParams): string {
   const { symbol, timeframe, from, to, adjusted = true, limit } = params;
+
+  const DATE_REGEX = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?$/;
+
+  if (!ALLOWED_SYMBOLS.includes(symbol)) {
+    throw new Error(`Invalid symbol: ${symbol}`);
+  }
+  if (!ALLOWED_TIMEFRAMES.includes(timeframe)) {
+    throw new Error(`Invalid timeframe: ${timeframe}`);
+  }
+  if (from && !DATE_REGEX.test(from)) {
+    throw new Error(`Invalid from date: ${from}`);
+  }
+  if (to && !DATE_REGEX.test(to)) {
+    throw new Error(`Invalid to date: ${to}`);
+  }
   const kind = adjusted ? "ratio_adj" : "raw";
   const bucket = process.env.S3_BUCKET ?? "trading-forge-data";
 
@@ -47,25 +65,24 @@ ORDER BY ts_event`;
 
 // ─── DuckDB Service ─────────────────────────────────────────────
 
-let db: Database | null = null;
-let configured = false;
+let dbPromise: Promise<Database> | null = null;
 
 async function getDb(): Promise<Database> {
-  if (!db) {
-    db = await Database.create(":memory:");
-  }
+  if (dbPromise) return dbPromise;
 
-  if (!configured) {
+  dbPromise = (async () => {
+    const db = await Database.create(":memory:");
     await db.exec("INSTALL httpfs; LOAD httpfs;");
+    const sanitize = (v: string) => v.replace(/'/g, "");
     await db.exec(`
-      SET s3_region='${process.env.AWS_REGION ?? "us-east-1"}';
-      SET s3_access_key_id='${process.env.AWS_ACCESS_KEY_ID ?? ""}';
-      SET s3_secret_access_key='${process.env.AWS_SECRET_ACCESS_KEY ?? ""}';
+      SET s3_region='${sanitize(process.env.AWS_REGION ?? "us-east-1")}';
+      SET s3_access_key_id='${sanitize(process.env.AWS_ACCESS_KEY_ID ?? "")}';
+      SET s3_secret_access_key='${sanitize(process.env.AWS_SECRET_ACCESS_KEY ?? "")}';
     `);
-    configured = true;
-  }
+    return db;
+  })();
 
-  return db;
+  return dbPromise;
 }
 
 export interface OhlcvBar {
@@ -92,6 +109,9 @@ export interface SymbolInfo {
 }
 
 export async function queryInfo(symbol: string): Promise<SymbolInfo> {
+  if (!ALLOWED_SYMBOLS.includes(symbol)) {
+    throw new Error(`Invalid symbol: ${symbol}`);
+  }
   const database = await getDb();
   const bucket = process.env.S3_BUCKET ?? "trading-forge-data";
   const sql = `
@@ -103,7 +123,11 @@ export async function queryInfo(symbol: string): Promise<SymbolInfo> {
   `;
 
   const rows = await database.all(sql);
-  const row = rows[0] as { earliest: string; latest: string; total_bars: number };
+  const row = rows[0] as { earliest: string | null; latest: string | null; total_bars: number };
+
+  if (!row || row.earliest == null || row.latest == null) {
+    return { symbol, earliest: "", latest: "", totalBars: 0 };
+  }
 
   return {
     symbol,

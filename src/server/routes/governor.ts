@@ -16,6 +16,7 @@ import { logger } from "../index.js";
 export const governorRoutes = Router();
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
+const GOVERNOR_TIMEOUT_MS = 60_000;
 
 // ─── Python subprocess helper ──────────────────────────────────
 
@@ -31,6 +32,14 @@ function runPython(module: string, configJson: string): Promise<Record<string, u
 
     let stdout = "";
     let stderr = "";
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      proc.kill("SIGKILL");
+      reject(new Error(`Governor engine timed out after ${GOVERNOR_TIMEOUT_MS}ms`));
+    }, GOVERNOR_TIMEOUT_MS);
 
     proc.stdout.on("data", (data) => (stdout += data.toString()));
     proc.stderr.on("data", (data) => {
@@ -39,6 +48,9 @@ function runPython(module: string, configJson: string): Promise<Record<string, u
     });
 
     proc.on("close", (code) => {
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true;
       if (code === 0) {
         try {
           resolve(JSON.parse(stdout.trim()));
@@ -51,6 +63,9 @@ function runPython(module: string, configJson: string): Promise<Record<string, u
     });
 
     proc.on("error", (err) => {
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true;
       if (pythonCmd === "python") {
         const proc2 = spawn("python3", args, {
           env: { ...process.env },
@@ -105,17 +120,8 @@ const backtestSchema = z.object({
 
 // ─── GET /api/governor/status/:strategyId ───────────────────────
 // Current governor state for a strategy
-governorRoutes.get("/status/:strategyId", async (req, res) => {
-  const { strategyId } = req.params;
-
-  // In a full implementation, this would query stored governor state
-  res.json({
-    strategy_id: strategyId,
-    state: "normal",
-    size_multiplier: 1.0,
-    can_trade: true,
-    message: "Governor state tracking. Use POST /api/governor/trade to process trades through the governor.",
-  });
+governorRoutes.get("/status/:strategyId", async (_req, res) => {
+  res.status(501).json({ error: "Not implemented — governor state persisted in backtest output only" });
 });
 
 // ─── POST /api/governor/trade ───────────────────────────────────

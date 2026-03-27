@@ -12,6 +12,7 @@ import numpy as np
 import polars as pl
 
 from src.engine.config import ContractSpec, PositionSizeConfig
+from src.engine.firm_config import CONTRACT_CAP_MIN, CONTRACT_CAP_MAX
 
 
 def compute_position_sizes(
@@ -75,8 +76,11 @@ def compute_position_sizes(
     # Bars with zero or negative raw get NaN (no trade)
     sizes = np.where((~np.isnan(raw)) & (raw <= 0), np.nan, sizes)
 
-    # Apply firm contract cap (default max 15 micros — user's standard size)
-    cap = max_contracts if max_contracts is not None else 15
+    # Apply firm contract cap, clamped to [10, 20] range (default 15 micros)
+    if max_contracts is not None:
+        cap = max(CONTRACT_CAP_MIN, min(max_contracts, CONTRACT_CAP_MAX))
+    else:
+        cap = 15
     sizes = np.where(np.isnan(sizes), np.nan, np.minimum(sizes, cap))
 
     return sizes, over_risk

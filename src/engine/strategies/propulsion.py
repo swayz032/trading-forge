@@ -43,7 +43,7 @@ class PropulsionStrategy(BaseStrategy):
         self.lookback = lookback
         self.disp_atr_mult = disp_atr_mult
         self.pb_max_age = pb_max_age
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "15min"
 
     # ────────────────────────────────────────────────────────────────
@@ -132,8 +132,23 @@ class PropulsionStrategy(BaseStrategy):
         short_mean_thresh = 0.0
 
         for i in range(n):
+            exited_this_bar_long = False
+            exited_this_bar_short = False
+
+            # ── Exit long: close below mean threshold (before entries) ──
+            if long_active and closes[i] < long_mean_thresh:
+                exit_long[i] = True
+                long_active = False
+                exited_this_bar_long = True
+
+            # ── Exit short: close above mean threshold (before entries) ─
+            if short_active and closes[i] > short_mean_thresh:
+                exit_short[i] = True
+                short_active = False
+                exited_this_bar_short = True
+
             # ── Entry long: price retraces into bullish PB zone ─────
-            if not long_active:
+            if not long_active and not short_active and not exited_this_bar_long:
                 for form_idx, z_top, z_bot, mt, direction, has_bos in pb_list:
                     if direction != "bullish":
                         continue
@@ -148,7 +163,7 @@ class PropulsionStrategy(BaseStrategy):
                         break
 
             # ── Entry short: price retraces into bearish PB zone ────
-            if not short_active:
+            if not short_active and not long_active and not exited_this_bar_short:
                 for form_idx, z_top, z_bot, mt, direction, has_bos in pb_list:
                     if direction != "bearish":
                         continue
@@ -161,16 +176,6 @@ class PropulsionStrategy(BaseStrategy):
                         short_active = True
                         short_mean_thresh = mt
                         break
-
-            # ── Exit long: close below mean threshold ───────────────
-            if long_active and closes[i] < long_mean_thresh:
-                exit_long[i] = True
-                long_active = False
-
-            # ── Exit short: close above mean threshold ──────────────
-            if short_active and closes[i] > short_mean_thresh:
-                exit_short[i] = True
-                short_active = False
 
         result = df.with_columns([
             pl.Series("entry_long", entry_long),

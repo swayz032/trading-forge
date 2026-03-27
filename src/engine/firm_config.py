@@ -1,7 +1,7 @@
 """Per-firm commission and contract cap data.
 
 Per CLAUDE.md: Don't use gross P&L for performance gates — use net P&L
-per firm (commissions differ: MFFU $1.58/side vs Apex $2.64/side).
+per firm (commissions differ: Topstep $0.37/side, Alpha $0.00, Tradeify $1.29, others $0.62).
 Don't ignore firm contract caps in backtests.
 """
 
@@ -13,52 +13,49 @@ from __future__ import annotations
 
 FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
     "topstep_50k": {
-        "ES": 2.52, "NQ": 2.52, "CL": 2.52, "YM": 2.52,
-        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62, "MGC": 0.62,
+        "MES": 0.37, "MNQ": 0.37, "MCL": 0.37,
     },
     "mffu_50k": {
-        "ES": 1.58, "NQ": 1.58, "CL": 1.58, "YM": 1.58,
-        "RTY": 1.58, "GC": 1.58, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62, "MGC": 0.62,
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "tpt_50k": {
-        "ES": 2.04, "NQ": 2.04, "CL": 2.04, "YM": 2.04,
-        "RTY": 2.04, "GC": 2.04, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62, "MGC": 0.62,
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "apex_50k": {
-        "ES": 2.64, "NQ": 2.64, "CL": 2.64, "YM": 2.64,
-        "RTY": 2.64, "GC": 2.64, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62, "MGC": 0.62,
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "tradeify_50k": {
-        "ES": 2.52, "NQ": 2.52, "CL": 2.52, "YM": 2.52,
-        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62, "MGC": 0.62,
+        "MES": 1.29, "MNQ": 1.29, "MCL": 1.29,
     },
     "alpha_50k": {
-        "ES": 2.04, "NQ": 2.04, "CL": 2.04, "YM": 2.04,
-        "RTY": 2.04, "GC": 2.04, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62, "MGC": 0.62,
+        "MES": 0.00, "MNQ": 0.00, "MCL": 0.00,
     },
     "ffn_50k": {
-        "ES": 2.52, "NQ": 2.52, "CL": 2.52, "YM": 2.52,
-        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62, "MGC": 0.62,
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
     "earn2trade_50k": {
-        "ES": 2.52, "NQ": 2.52, "CL": 2.52, "YM": 2.52,
-        "RTY": 2.52, "GC": 2.52, "MES": 0.62, "MNQ": 0.62, "MCL": 0.62, "MGC": 0.62,
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
 }
 
 
 # ─── Per-Firm Contract Caps (max simultaneous contracts) ─────────
 
+# Contract caps: 10 min / 15 default / 20 max for all micro contracts, all firms.
 FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
-    "topstep_50k":   {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
-    "mffu_50k":      {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
-    "tpt_50k":       {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
-    "apex_50k":      {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
-    "tradeify_50k":  {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
-    "alpha_50k":     {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
-    "ffn_50k":       {"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
-    "earn2trade_50k":{"ES": 15, "NQ": 15, "CL": 15, "YM": 15, "RTY": 15, "GC": 15, "MES": 150, "MNQ": 150, "MCL": 150, "MGC": 150},
+    "topstep_50k":    {"MES": 15, "MNQ": 15, "MCL": 15},
+    "mffu_50k":       {"MES": 15, "MNQ": 15, "MCL": 15},
+    "tpt_50k":        {"MES": 15, "MNQ": 15, "MCL": 15},
+    "apex_50k":       {"MES": 15, "MNQ": 15, "MCL": 15},
+    "tradeify_50k":   {"MES": 15, "MNQ": 15, "MCL": 15},
+    "alpha_50k":      {"MES": 15, "MNQ": 15, "MCL": 15},
+    "ffn_50k":        {"MES": 15, "MNQ": 15, "MCL": 15},
+    "earn2trade_50k": {"MES": 15, "MNQ": 15, "MCL": 15},
 }
+
+# Hard bounds: min 10, max 20. ATR sizing is clamped to this range.
+CONTRACT_CAP_MIN = 10
+CONTRACT_CAP_MAX = 20
 
 
 # ─── Scaling Plans (account upgrades after profit milestones) ─────
@@ -117,6 +114,8 @@ INITIAL_CONTRACT_CAPS: dict[str, int] = {
 
 # ─── Full Firm Rules (mirrors src/shared/firm-config.ts) ─────────
 # Single source of truth for Python code. Keep in sync with TypeScript shared config.
+# NOTE: prop_compliance.py has its own FIRM_CONFIGS dict that duplicates some of these
+# rules. Both must stay in sync. Do NOT delete either without full regression testing.
 
 FIRM_RULES: dict[str, dict] = {
     "topstep_50k": {
@@ -125,14 +124,15 @@ FIRM_RULES: dict[str, dict] = {
         "activation_fee": 0,
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
-        "max_drawdown": 2000,  # Also = buffer amount
-        "max_contracts": 15,  # Base 10, scales to 15→20
+        "max_drawdown": 2000,
+        "max_contracts": 15,
         "trailing": "eod",
         "payout_split": 0.90,
         "min_payout_days": 5,
+        "min_trading_days": 5,
         "consistency_rule": None,
-        "daily_loss_limit": None,
-        "overnight_ok": True,
+        "daily_loss_limit": 1000,
+        "overnight_ok": False,
         "weekend_ok": False,
     },
     "mffu_50k": {
@@ -141,48 +141,51 @@ FIRM_RULES: dict[str, dict] = {
         "activation_fee": 0,
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
-        "max_drawdown": 2500,
+        "max_drawdown": 2000,
         "max_contracts": 15,
         "trailing": "eod",
-        "payout_split": 0.90,
-        "min_payout_days": 1,
-        "consistency_rule": None,
+        "payout_split": 0.80,
+        "min_payout_days": 5,
+        "min_trading_days": 5,
+        "consistency_rule": "mffu_50pct",
         "daily_loss_limit": None,
-        "overnight_ok": True,
+        "overnight_ok": False,
         "weekend_ok": False,
     },
     "tpt_50k": {
         "account_size": 50_000,
-        "monthly_fee": 150,
+        "monthly_fee": 170,
         "activation_fee": 0,
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
-        "max_drawdown": 3000,
+        "max_drawdown": 2000,
         "max_contracts": 15,
         "trailing": "eod",
         "payout_split": 0.80,
         "payout_split_tiers": [{"threshold": 5000, "split": 0.90}],
         "min_payout_days": 5,
-        "consistency_rule": 0.50,
+        "min_trading_days": 5,
+        "consistency_rule": "tpt_50pct",
         "daily_loss_limit": None,
-        "overnight_ok": True,
+        "overnight_ok": False,
         "weekend_ok": False,
     },
     "apex_50k": {
         "account_size": 50_000,
-        "monthly_fee": 167,
+        "monthly_fee": 99,
         "activation_fee": 0,
         "ongoing_monthly_fee": 85,
         "profit_target": 3000,
-        "max_drawdown": 2500,
+        "max_drawdown": 2000,
         "max_contracts": 15,
         "trailing": "eod",
         "payout_split": 1.00,
         "payout_split_tiers": [{"threshold": 25000, "split": 0.90}],
-        "min_payout_days": 7,
-        "consistency_rule": None,
-        "daily_loss_limit": None,
-        "overnight_ok": True,
+        "min_payout_days": 1,
+        "min_trading_days": 1,
+        "consistency_rule": "apex_50pct_funded",
+        "daily_loss_limit": 1000,
+        "overnight_ok": False,
         "weekend_ok": False,
     },
     "ffn_50k": {
@@ -191,14 +194,15 @@ FIRM_RULES: dict[str, dict] = {
         "activation_fee": 0,
         "ongoing_monthly_fee": 126,
         "profit_target": 3000,
-        "max_drawdown": 2500,
+        "max_drawdown": 2000,
         "max_contracts": 15,
         "trailing": "eod",
         "payout_split": 0.80,
         "payout_split_tiers": [{"threshold": 5000, "split": 0.90}],
         "min_payout_days": 3,
-        "consistency_rule": None,
-        "daily_loss_limit": 1250,
+        "min_trading_days": 3,
+        "consistency_rule": "ffn_40pct",
+        "daily_loss_limit": None,
         "overnight_ok": False,
         "weekend_ok": False,
     },
@@ -212,37 +216,40 @@ FIRM_RULES: dict[str, dict] = {
         "max_contracts": 15,
         "trailing": "eod",
         "payout_split": 0.70,
-        "payout_split_tiers": [
-            {"threshold": 0, "split": 0.70},
-            {"threshold": 1, "split": 0.75},
-            {"threshold": 2, "split": 0.80},
-            {"threshold": 3, "split": 0.90},
+        # Alpha tiers are payout-count based (1st=70%, 2nd=80%, 3rd+=90%), NOT dollar thresholds.
+        "payout_split_tiers": None,
+        "payout_count_tiers": [
+            {"payout_number": 1, "split": 0.70},
+            {"payout_number": 2, "split": 0.80},
+            {"payout_number": 3, "split": 0.90},
         ],
         "min_payout_days": 2,
-        "consistency_rule": 0.50,
+        "min_trading_days": 2,
+        "consistency_rule": "alpha_50pct",
         "daily_loss_limit": None,
         "overnight_ok": False,
         "weekend_ok": False,
     },
     "tradeify_50k": {
         "account_size": 50_000,
-        "monthly_fee": 99,
+        "monthly_fee": 159,
         "activation_fee": 0,
         "ongoing_monthly_fee": 0,
-        "profit_target": 3000,
-        "max_drawdown": 2500,
+        "profit_target": 2500,
+        "max_drawdown": 2000,
         "max_contracts": 15,
-        "trailing": "realtime",
-        "payout_split": 0.80,
-        "min_payout_days": 10,
-        "consistency_rule": None,
+        "trailing": "eod",
+        "payout_split": 0.90,
+        "min_payout_days": 3,
+        "min_trading_days": 3,
+        "consistency_rule": "tradeify_40pct",
         "daily_loss_limit": None,
-        "overnight_ok": True,
+        "overnight_ok": False,
         "weekend_ok": False,
     },
     "earn2trade_50k": {
         "account_size": 50_000,
-        "monthly_fee": 150,
+        "monthly_fee": 170,
         "activation_fee": 0,
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
@@ -250,10 +257,11 @@ FIRM_RULES: dict[str, dict] = {
         "max_contracts": 15,
         "trailing": "eod",
         "payout_split": 0.80,
-        "min_payout_days": 15,
-        "consistency_rule": None,
-        "daily_loss_limit": None,
-        "overnight_ok": True,
+        "min_payout_days": 10,
+        "min_trading_days": 10,
+        "consistency_rule": "earn2trade_consistency",
+        "daily_loss_limit": 1100,
+        "overnight_ok": False,
         "weekend_ok": False,
     },
 }
@@ -292,7 +300,7 @@ def get_commission_per_side(firm_key: str, symbol: str) -> float:
 
     Args:
         firm_key: Firm identifier (e.g., 'mffu_50k')
-        symbol: Contract symbol (e.g., 'ES')
+        symbol: Contract symbol (e.g., 'MES')
 
     Returns:
         Commission in dollars per side per contract
@@ -316,12 +324,14 @@ def get_commission_per_side(firm_key: str, symbol: str) -> float:
 def get_contract_cap(firm_key: str, symbol: str) -> int:
     """Get maximum simultaneous contracts for a firm and symbol.
 
+    Returns the firm's per-symbol cap, clamped to [CONTRACT_CAP_MIN, CONTRACT_CAP_MAX].
+
     Args:
         firm_key: Firm identifier (e.g., 'topstep_50k')
-        symbol: Contract symbol (e.g., 'ES')
+        symbol: Contract symbol (e.g., 'MES')
 
     Returns:
-        Max contracts allowed
+        Max contracts allowed (clamped to 10-20 range)
 
     Raises:
         ValueError: If firm_key not found or no cap data
@@ -337,4 +347,5 @@ def get_contract_cap(firm_key: str, symbol: str) -> int:
             f"No contract cap for symbol '{symbol}' at firm '{firm_key}'. "
             f"Available: {sorted(caps.keys())}"
         )
-    return caps[symbol]
+    raw = caps[symbol]
+    return max(CONTRACT_CAP_MIN, min(raw, CONTRACT_CAP_MAX))

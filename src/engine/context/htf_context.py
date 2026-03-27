@@ -77,7 +77,7 @@ def compute_htf_context(
 
     if len(d) < 200:
         # Not enough data for full analysis — return neutral defaults
-        last = d[-1] if len(d) > 0 else None
+        last = d.row(-1, named=True) if len(d) > 0 else None
         return HTFContext(
             daily_trend="neutral", weekly_trend="neutral", four_h_trend="neutral",
             pd_location="equilibrium",

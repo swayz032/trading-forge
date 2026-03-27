@@ -63,12 +63,12 @@ def compute_fill_probabilities(
     if rsi_col is not None:
         rsi_values = df[rsi_col].to_numpy().astype(np.float64)
         # Extreme RSI = lower fill probability
-        extreme_mask = (rsi_values > 70) | (rsi_values < 30)
+        extreme_mask = (rsi_values >= 70) | (rsi_values <= 30)
         fill_probs[extreme_mask] = config.get("limit_at_extreme", 0.50)
 
         # Moderate RSI (near S/R levels) = medium fill probability
-        sr_mask = ((rsi_values > 60) & (rsi_values <= 70)) | \
-                  ((rsi_values >= 30) & (rsi_values < 40))
+        sr_mask = ((rsi_values > 60) & (rsi_values < 70)) | \
+                  ((rsi_values > 30) & (rsi_values < 40))
         fill_probs[sr_mask] = config.get("limit_at_sr", 0.60)
 
     return fill_probs
@@ -152,7 +152,7 @@ def compute_fill_probabilities_v2(
     config: dict,
     entries: np.ndarray,
     order_type: str = "market",
-    symbol: str = "ES",
+    symbol: str = "MES",
     spread_multiplier: float = 1.0,
 ) -> np.ndarray:
     """V2 fill model with order-type-specific behavior and spread awareness.
@@ -185,11 +185,11 @@ def compute_fill_probabilities_v2(
 
     if rsi_col is not None:
         rsi_values = df[rsi_col].to_numpy().astype(np.float64)
-        extreme_mask = (rsi_values > 70) | (rsi_values < 30)
+        extreme_mask = (rsi_values >= 70) | (rsi_values <= 30)
         fill_probs[extreme_mask] = config.get("limit_at_extreme", 0.50)
 
-        sr_mask = ((rsi_values > 60) & (rsi_values <= 70)) | \
-                  ((rsi_values >= 30) & (rsi_values < 40))
+        sr_mask = ((rsi_values > 60) & (rsi_values < 70)) | \
+                  ((rsi_values > 30) & (rsi_values < 40))
         fill_probs[sr_mask] = config.get("limit_at_sr", 0.60)
 
     # Spread-aware adjustment for limit orders

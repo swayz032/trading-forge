@@ -1,24 +1,32 @@
 import { Router } from "express";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, and, ilike } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, backtests, backtestTrades, monteCarloRuns, stressTestRuns, backtestMatrix, systemJournal, complianceReviews, paperSessions, skipDecisions, strategyGraveyard } from "../db/schema.js";
+import { strategies, strategyNames, backtests, backtestTrades, monteCarloRuns, stressTestRuns, backtestMatrix, systemJournal, complianceReviews, paperSessions, skipDecisions, strategyGraveyard } from "../db/schema.js";
 import { inArray } from "drizzle-orm";
 import { LifecycleService } from "../services/lifecycle-service.js";
 
 export const strategyRoutes = Router();
 const lifecycleService = new LifecycleService();
 
-// List all strategies (with optional pagination)
+// List all strategies (with optional pagination + filters)
 strategyRoutes.get("/", async (req, res) => {
-  const { limit, offset } = req.query;
+  const { limit, offset, name, lifecycleState, symbol } = req.query;
+
+  // Build filter conditions
+  const conditions = [];
+  if (name) conditions.push(ilike(strategies.name, `%${String(name)}%`));
+  if (lifecycleState) conditions.push(eq(strategies.lifecycleState, String(lifecycleState)));
+  if (symbol) conditions.push(eq(strategies.symbol, String(symbol)));
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
 
   if (limit) {
     // Paginated mode
-    const [{ count: total }] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(strategies);
+    const countQuery = where
+      ? db.select({ count: sql<number>`count(*)::int` }).from(strategies).where(where)
+      : db.select({ count: sql<number>`count(*)::int` }).from(strategies);
+    const [{ count: total }] = await countQuery;
 
-    let query = db.select().from(strategies).orderBy(desc(strategies.createdAt));
+    let query = db.select().from(strategies).where(where).orderBy(desc(strategies.createdAt));
     query = query.limit(Number(limit)) as typeof query;
     if (offset) {
       query = query.offset(Number(offset)) as typeof query;
@@ -27,7 +35,7 @@ strategyRoutes.get("/", async (req, res) => {
     res.json({ data: rows, total });
   } else {
     // Non-paginated (backward compatible)
-    const rows = await db.select().from(strategies).orderBy(strategies.createdAt);
+    const rows = await db.select().from(strategies).where(where).orderBy(strategies.createdAt);
     res.json(rows);
   }
 });

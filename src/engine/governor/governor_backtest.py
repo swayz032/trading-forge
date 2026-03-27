@@ -89,9 +89,8 @@ def backtest_governor(
 
         if not filtered["allowed"]:
             trades_blocked += 1
-            # Still process the trade outcome for governor state tracking
-            # (governor sees the loss it would have taken)
-            gov.on_trade(pnl, mae)
+            # Do NOT feed blocked trade outcome to governor — it never executed.
+            # Governor state should only reflect trades that actually happened.
             state_history.append({
                 "event": "trade_blocked",
                 "pnl_avoided": pnl,

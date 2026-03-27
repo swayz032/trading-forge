@@ -42,38 +42,47 @@ def _apply_exits(entry_long_raw, entry_short_raw, closes, highs, lows,
         if atr_val != atr_val or atr_val <= 0:  # NaN check
             continue
 
+        exited_this_bar_long = False
+        exited_this_bar_short = False
+
         # ─── Exit checks first ────────────────────────────
         if in_long:
             if lows[i] <= stop_price:
                 exit_long[i] = True
                 in_long = False
+                exited_this_bar_long = True
             elif highs[i] >= target_price:
                 exit_long[i] = True
                 in_long = False
+                exited_this_bar_long = True
             elif entry_short_raw[i]:
                 exit_long[i] = True
                 in_long = False
+                exited_this_bar_long = True
 
         if in_short:
             if highs[i] >= stop_price:
                 exit_short[i] = True
                 in_short = False
+                exited_this_bar_short = True
             elif lows[i] <= target_price:
                 exit_short[i] = True
                 in_short = False
+                exited_this_bar_short = True
             elif entry_long_raw[i]:
                 exit_short[i] = True
                 in_short = False
+                exited_this_bar_short = True
 
-        # ─── Entry checks (only if flat) ──────────────────
+        # ─── Entry checks (only if flat, not exited this bar) ─
         if not in_long and not in_short:
-            if entry_long_raw[i]:
+            if not exited_this_bar_long and entry_long_raw[i]:
                 entry_long[i] = True
                 in_long = True
                 entry_price = closes[i]
                 stop_price = entry_price - sl_mult * atr_val
                 target_price = entry_price + tp_mult * atr_val
-            elif entry_short_raw[i]:
+            elif not exited_this_bar_short and entry_short_raw[i]:
                 entry_short[i] = True
                 in_short = True
                 entry_price = closes[i]
@@ -119,7 +128,7 @@ class MitigationStrategy(BaseStrategy):
         self.retest_tolerance = retest_tolerance
         self.sl_mult = sl_mult
         self.tp_mult = tp_mult
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "15min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -138,8 +147,8 @@ class MitigationStrategy(BaseStrategy):
         bos = detect_bos(df, swings)
         atr = compute_atr(df, self.atr_period)
 
-        bull_obs = detect_bullish_ob(df, swings)
-        bear_obs = detect_bearish_ob(df, swings)
+        bull_obs = detect_bullish_ob(df, swings, lookback=self.lookback)
+        bear_obs = detect_bearish_ob(df, swings, lookback=self.lookback)
 
         # Extract swing data for "failed to make new extreme" check
         swing_highs = swings.filter(pl.col("type") == "high")

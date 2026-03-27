@@ -6,135 +6,11 @@
  */
 
 import { Router } from "express";
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
 import { z } from "zod";
 import { logger } from "../index.js";
+import { runPythonModule } from "../lib/python-runner.js";
 
 export const archetypeRoutes = Router();
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
-
-// ─── Python subprocess helper ──────────────────────────────────
-
-function runPython(scriptPath: string, inputJson: string): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-c", `
-import sys, json
-sys.path.insert(0, '.')
-input_data = json.loads(sys.argv[1])
-${scriptPath}
-`, inputJson];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "archetype-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse archetype output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Archetype engine failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      if (pythonCmd === "python") {
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let stdout2 = "";
-        let stderr2 = "";
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
-          } else {
-            reject(new Error(`Archetype engine failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => reject(err));
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
-
-function runPythonModule(module: string, configJson: string): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", module, "--config", configJson];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "archetype-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse archetype output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Archetype engine failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      if (pythonCmd === "python") {
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let stdout2 = "";
-        let stderr2 = "";
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
-          } else {
-            reject(new Error(`Archetype engine failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => reject(err));
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
@@ -168,15 +44,8 @@ const strategyFitSchema = z.object({
 
 // ─── GET /api/archetypes/today/:symbol ───────────────────────────
 // Today's predicted archetype for a symbol
-archetypeRoutes.get("/today/:symbol", async (req, res) => {
-  const { symbol } = req.params;
-  // In production, this would fetch premarket data + historical features
-  // and run the KNN predictor. For now, return a placeholder.
-  res.json({
-    symbol,
-    message: "Prediction requires premarket data. Use POST /api/archetypes/classify for manual classification.",
-    hint: "Connect to Massive WebSocket for real-time premarket data to enable auto-prediction.",
-  });
+archetypeRoutes.get("/today/:symbol", async (_req, res) => {
+  res.status(501).json({ error: "Not implemented — use POST /api/archetypes/classify instead" });
 });
 
 // ─── POST /api/archetypes/classify ───────────────────────────────
@@ -189,13 +58,11 @@ archetypeRoutes.post("/classify", async (req, res) => {
   }
 
   try {
-    const result = await runPythonModule(
-      "src.engine.archetypes.classifier",
-      JSON.stringify({
-        action: "classify",
-        ...parsed.data,
-      }),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.archetypes.classifier",
+      config: { action: "classify", ...parsed.data } as unknown as Record<string, unknown>,
+      componentName: "archetype-classifier",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Archetype classification failed");
@@ -242,13 +109,11 @@ archetypeRoutes.post("/strategy-fit", async (req, res) => {
   }
 
   try {
-    const result = await runPythonModule(
-      "src.engine.archetypes.strategy_mapper",
-      JSON.stringify({
-        action: "map",
-        ...parsed.data,
-      }),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.archetypes.strategy_mapper",
+      config: { action: "map", ...parsed.data } as unknown as Record<string, unknown>,
+      componentName: "archetype-mapper",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Strategy-archetype mapping failed");

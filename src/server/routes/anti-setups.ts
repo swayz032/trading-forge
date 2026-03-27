@@ -8,73 +8,11 @@
  */
 
 import { Router } from "express";
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
 import { z } from "zod";
 import { logger } from "../index.js";
+import { runPythonModule } from "../lib/python-runner.js";
 
 export const antiSetupRoutes = Router();
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
-
-// ─── Python subprocess helper ──────────────────────────────────
-
-function runPython(module: string, configJson: string): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", module, "--config", configJson];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "anti-setups-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse anti-setup output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Anti-setup engine failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      if (pythonCmd === "python") {
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let stdout2 = "";
-        let stderr2 = "";
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
-          } else {
-            reject(new Error(`Anti-setup engine failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => reject(err));
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
@@ -132,10 +70,12 @@ antiSetupRoutes.post("/mine", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.anti_setups.miner",
-      JSON.stringify(parsed.data),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.anti_setups.miner",
+      config: parsed.data as unknown as Record<string, unknown>,
+      timeoutMs: 300_000,
+      componentName: "anti-setup-miner",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Anti-setup mining failed");
@@ -153,10 +93,11 @@ antiSetupRoutes.post("/check", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.anti_setups.filter_gate",
-      JSON.stringify(parsed.data),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.anti_setups.filter_gate",
+      config: parsed.data as unknown as Record<string, unknown>,
+      componentName: "anti-setup-check",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Anti-setup check failed");
@@ -166,15 +107,8 @@ antiSetupRoutes.post("/check", async (req, res) => {
 
 // ─── GET /api/anti-setups/active/:strategyId ────────────────────
 // Get active anti-setup filters for a strategy
-antiSetupRoutes.get("/active/:strategyId", async (req, res) => {
-  const { strategyId } = req.params;
-
-  // In a full implementation, this would query the database for stored anti-setups
-  res.json({
-    strategy_id: strategyId,
-    active_filters: [],
-    message: "Use POST /api/anti-setups/mine to discover anti-setups, then store them for real-time filtering",
-  });
+antiSetupRoutes.get("/active/:strategyId", async (_req, res) => {
+  res.status(501).json({ error: "Not implemented — anti-setup persistence not yet available" });
 });
 
 // ─── POST /api/anti-setups/backtest ─────────────────────────────
@@ -187,10 +121,11 @@ antiSetupRoutes.post("/backtest", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.anti_setups.anti_setup_backtest",
-      JSON.stringify(parsed.data),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.anti_setups.anti_setup_backtest",
+      config: parsed.data as unknown as Record<string, unknown>,
+      componentName: "anti-setup-backtester",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Anti-setup backtest failed");

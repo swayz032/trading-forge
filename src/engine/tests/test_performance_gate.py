@@ -26,6 +26,7 @@ def _tier1_stats():
         "max_consecutive_losing_days": 2,
         "avg_loss_on_red_days": -200.0,
         "avg_win_on_green_days": 400.0,
+        "expectancy_per_trade": 150.0,
     }
 
 
@@ -39,11 +40,12 @@ def _tier3_stats():
         "worst_month_win_days": 11,
         "profit_factor": 1.80,
         "sharpe_ratio": 1.6,
-        "avg_winner_to_loser_ratio": 1.6,
+        "avg_winner_to_loser_ratio": 2.1,
         "max_drawdown": 1800.0,
         "max_consecutive_losing_days": 3,
         "avg_loss_on_red_days": -300.0,
         "avg_win_on_green_days": 400.0,
+        "expectancy_per_trade": 85.0,
     }
 
 

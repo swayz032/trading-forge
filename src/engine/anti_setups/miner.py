@@ -120,7 +120,7 @@ def _get_day_of_week(trade: dict) -> int | None:
         dt_str = str(entry_time)
         for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%d"):
             try:
-                dt = datetime.strptime(dt_str[:len(fmt) + 3], fmt)
+                dt = datetime.strptime(dt_str, fmt)
                 return dt.weekday()
             except ValueError:
                 continue

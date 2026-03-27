@@ -69,16 +69,16 @@ def check_performance_gate(stats: dict) -> tuple[bool, list[str]]:
             f"Sharpe ratio {stats['sharpe_ratio']:.2f} < 1.5 minimum."
         )
 
-    # Winner/loser ratio
-    if stats.get("avg_winner_to_loser_ratio", 0) < 1.5:
+    # Winner/loser ratio — minimum 1:2 R:R (avg win $ must be 2x avg loss $)
+    if stats.get("avg_winner_to_loser_ratio", 0) < 2.0:
         rejections.append(
-            f"Avg winner/loser ratio {stats['avg_winner_to_loser_ratio']:.2f} < 1.5."
+            f"Avg winner/loser ratio {stats['avg_winner_to_loser_ratio']:.2f} < 2.0."
         )
 
     # Max drawdown — must survive tightest 50K prop firm (Topstep/Alpha/Earn2Trade = $2,000)
-    if stats["max_drawdown"] >= 2000:
+    if stats["max_drawdown"] > 2000:
         rejections.append(
-            f"Max drawdown ${stats['max_drawdown']:.0f} >= $2,000. "
+            f"Max drawdown ${stats['max_drawdown']:.0f} > $2,000. "
             f"Exceeds tightest prop firm DD limit (Topstep 50K)."
         )
 
@@ -89,6 +89,10 @@ def check_performance_gate(stats: dict) -> tuple[bool, list[str]]:
             f"Maximum 4 allowed."
         )
 
+    # Expectancy per trade
+    if stats.get("expectancy_per_trade", 0) < 75:
+        rejections.append("expectancy_per_trade < $75")
+
     # Red days vs green days
     avg_loss = abs(stats.get("avg_loss_on_red_days", 0))
     avg_win = stats.get("avg_win_on_green_days", 0)
@@ -96,6 +100,13 @@ def check_performance_gate(stats: dict) -> tuple[bool, list[str]]:
         rejections.append(
             f"Avg loss on red days (${avg_loss:.0f}) > "
             f"avg win on green days (${avg_win:.0f}) — unsustainable."
+        )
+
+    # B-6: Recovery days gate — flag if DD recovery > 5 days
+    recovery_days = stats.get("recovery_days_from_max_dd", 0)
+    if recovery_days > 5:
+        rejections.append(
+            f"Recovery from max drawdown took {recovery_days} days (max 5 allowed)."
         )
 
     # Task 3.7: Sample size warning (not a rejection, but flagged)
@@ -134,9 +145,9 @@ def classify_tier(stats: dict) -> str:
 
     if pnl >= 500 and win_days >= 14 and dd < 1500 and pf >= 2.5 and sharpe >= 2.0:
         return "TIER_1"
-    if pnl >= 350 and win_days >= 13 and dd < 1750 and pf >= 2.0 and sharpe >= 1.75:
+    if pnl >= 350 and win_days >= 13 and dd < 2000 and pf >= 2.0 and sharpe >= 1.75:
         return "TIER_2"
-    if pnl >= 250 and win_days >= 12 and dd < 2000 and pf >= 1.75 and sharpe >= 1.5:
+    if pnl >= 250 and win_days >= 12 and dd < 2500 and pf >= 1.75 and sharpe >= 1.5:
         return "TIER_3"
     return "REJECTED"
 
@@ -210,3 +221,116 @@ def compute_forge_score(
                 crisis_bonus = (passed_count / total) * 5.0
 
     return round(min(100, base_score + crisis_bonus), 1)
+
+
+# ─── Kill Signal Logic (Refinement Loop) ────────────────────────────────
+
+# TIER_3 minimums for reference (used by kill signal)
+_TIER3_MINS = {
+    "sharpe_ratio": 1.5,
+    "profit_factor": 1.75,
+    "avg_daily_pnl": 250,
+    "win_rate": 0.60,
+}
+
+
+def compute_kill_signal(attempts: list[dict]) -> str | None:
+    """Decide whether to kill a strategy concept during refinement.
+
+    Called after each iteration by the n8n refinement loop.
+    Examines the history of all attempts so far.
+
+    Args:
+        attempts: List of backtest result dicts (one per iteration).
+                  Each must contain at least: sharpe_ratio, max_drawdown,
+                  win_rate (0-1), profit_factor, avg_daily_pnl.
+
+    Returns:
+        Kill signal string, or None to continue refinement.
+        - "no_edge"           — Best Sharpe < 0.8 (no exploitable edge)
+        - "catastrophic_risk" — Any attempt has DD > $6,000 (3x firm limit)
+        - "wrong_direction"   — All attempts have win_rate < 0.40
+        - "unprofitable"      — All attempts have profit_factor < 1.0
+        - "flat_improvement"  — Sharpe improvement < 0.1 between iterations
+        - "below_tier3"       — Best attempt < 70% of TIER_3 minimums (Stage 2+ only)
+        - None                — Keep refining
+    """
+    if not attempts:
+        return None
+
+    # ── Catastrophic risk: immediate kill ──
+    for a in attempts:
+        if a.get("max_drawdown", 0) > 6000:
+            return "catastrophic_risk"
+
+    best_sharpe = max(a.get("sharpe_ratio", 0) for a in attempts)
+    best_pf = max(a.get("profit_factor", 0) for a in attempts)
+    best_wr = max(a.get("win_rate", 0) for a in attempts)
+    best_pnl = max(a.get("avg_daily_pnl", 0) for a in attempts)
+
+    # ── No edge: Sharpe too low across all attempts ──
+    if best_sharpe < 0.8:
+        return "no_edge"
+
+    # ── Wrong direction: win rate < 40% across all ──
+    if best_wr < 0.40:
+        return "wrong_direction"
+
+    # ── Unprofitable: PF < 1.0 across all ──
+    if best_pf < 1.0:
+        return "unprofitable"
+
+    # ── Flat improvement: Sharpe delta < 0.1 between last two attempts ──
+    if len(attempts) >= 2:
+        prev_sharpe = attempts[-2].get("sharpe_ratio", 0)
+        curr_sharpe = attempts[-1].get("sharpe_ratio", 0)
+        if abs(curr_sharpe - prev_sharpe) < 0.1 and curr_sharpe < _TIER3_MINS["sharpe_ratio"]:
+            return "flat_improvement"
+
+    # ── Below TIER_3 threshold (for Stage 2+ decisions) ──
+    # Best must reach at least 70% of TIER_3 mins to justify continuing
+    if len(attempts) >= 3:
+        pct_sharpe = best_sharpe / _TIER3_MINS["sharpe_ratio"]
+        pct_pf = best_pf / _TIER3_MINS["profit_factor"]
+        pct_pnl = best_pnl / _TIER3_MINS["avg_daily_pnl"]
+        avg_pct = (pct_sharpe + pct_pf + pct_pnl) / 3
+        if avg_pct < 0.70:
+            return "below_tier3"
+
+    return None
+
+
+def get_refinement_stage(iteration: int) -> int:
+    """Map iteration number (0-8) to refinement stage (1-3).
+
+    Stage 1 (iterations 0-2): Parameter refinement
+    Stage 2 (iterations 3-5): Logic variant
+    Stage 3 (iterations 6-8): Concept pivot
+    """
+    if iteration < 3:
+        return 1
+    if iteration < 6:
+        return 2
+    return 3
+
+
+def get_stage_prompt(stage: int) -> str:
+    """Return the Ollama prompt modifier for each refinement stage."""
+    prompts = {
+        1: (
+            "STAGE 1 — PARAMETER REFINEMENT: Same strategy logic, adjust parameters. "
+            "Try different lookback periods, ATR multiples, or threshold values. "
+            "Do NOT change the core entry/exit logic."
+        ),
+        2: (
+            "STAGE 2 — LOGIC VARIANT: Same edge thesis, different execution. "
+            "Try a different entry method (e.g., mean reversion instead of breakout) "
+            "or different exit logic. Keep the same market hypothesis."
+        ),
+        3: (
+            "STAGE 3 — CONCEPT PIVOT: Different edge entirely for this symbol/session. "
+            "Abandon the previous approach. Try a completely different strategy concept "
+            "(e.g., session pattern instead of momentum)."
+        ),
+    }
+    return prompts.get(stage, prompts[1])

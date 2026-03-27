@@ -81,7 +81,7 @@ portfolioRoutes.get("/heat", async (_req, res) => {
     const strategyIds = [
       ...new Set(activeSessions.map((s) => s.strategyId).filter((id): id is string => id != null)),
     ];
-    let regimeConcentration: Record<string, number> = {};
+    const regimeConcentration: Record<string, number> = {};
     if (strategyIds.length > 0) {
       const strats = await db
         .select({ preferredRegime: strategies.preferredRegime })

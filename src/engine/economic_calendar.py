@@ -143,21 +143,21 @@ def _timestamps_to_et_date_and_minutes(timestamps: pl.Series) -> tuple[list, np.
     """Convert timestamps to ET dates and minutes-from-midnight.
 
     If timezone-aware (America/New_York), extract directly — Polars respects tz.
-    If naive, apply -5h offset (assumes UTC input).
+    If naive, cast to UTC then convert to ET (handles EST/EDT automatically).
     """
     ts = timestamps
     tz = getattr(ts.dtype, 'time_zone', None)
     if tz is not None:
-        # Timezone-aware — Polars extracts ET components directly
-        dates = ts.dt.date().to_list()
-        hours = ts.dt.hour().to_numpy().astype(np.int32)
-        minutes = ts.dt.minute().to_numpy().astype(np.int32)
+        if tz == "America/New_York":
+            et = ts
+        else:
+            et = ts.dt.convert_time_zone("America/New_York")
     else:
-        # Naive — assume UTC, shift to ET
-        et = ts.dt.offset_by("-5h")
-        dates = et.dt.date().to_list()
-        hours = et.dt.hour().to_numpy().astype(np.int32)
-        minutes = et.dt.minute().to_numpy().astype(np.int32)
+        # Naive — assume UTC, cast then convert (handles EST/EDT correctly)
+        et = ts.cast(pl.Datetime("us", time_zone="UTC")).dt.convert_time_zone("America/New_York")
+    dates = et.dt.date().to_list()
+    hours = et.dt.hour().to_numpy().astype(np.int32)
+    minutes = et.dt.minute().to_numpy().astype(np.int32)
     minutes_from_midnight = hours * 60 + minutes
     return dates, minutes_from_midnight
 

@@ -72,16 +72,29 @@ function runPythonRobustness(configJson: string): Promise<RobustnessResult> {
     });
 
     proc.on("error", (err) => {
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true;
       if (pythonCmd === "python") {
         const proc2 = spawn("python3", args, {
           env: { ...process.env },
           cwd: PROJECT_ROOT,
         });
+        let settled2 = false;
+        const timer2 = setTimeout(() => {
+          if (settled2) return;
+          settled2 = true;
+          proc2.kill("SIGTERM");
+          reject(new Error(`Robustness retry timed out after ${ROBUSTNESS_TIMEOUT_MS / 1000}s`));
+        }, ROBUSTNESS_TIMEOUT_MS);
         let stdout2 = "";
         let stderr2 = "";
         proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
         proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
         proc2.on("close", (code) => {
+          if (settled2) return;
+          settled2 = true;
+          clearTimeout(timer2);
           if (code === 0) {
             try { resolve(JSON.parse(stdout2.trim())); }
             catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
@@ -89,7 +102,12 @@ function runPythonRobustness(configJson: string): Promise<RobustnessResult> {
             reject(new Error(`Robustness test failed: ${stderr2}`));
           }
         });
-        proc2.on("error", () => reject(err));
+        proc2.on("error", () => {
+          if (settled2) return;
+          settled2 = true;
+          clearTimeout(timer2);
+          reject(err);
+        });
       } else {
         reject(err);
       }

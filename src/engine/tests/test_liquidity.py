@@ -25,10 +25,10 @@ def _make_utc_timestamps(et_hours: list[tuple[int, int]], base_date: str = "2024
 
 class TestClassifySession:
     def test_overnight_2am(self):
-        """2 AM ET → OVERNIGHT_2 session."""
+        """2 AM ET → OVERNIGHT_3 session (midnight-6am)."""
         ts = _make_utc_timestamps([(2, 0)])
         labels = classify_session(ts)
-        assert labels[0] == "OVERNIGHT_2"
+        assert labels[0] == "OVERNIGHT_3"
 
     def test_rth_core_11am(self):
         """11 AM ET → RTH_CORE session."""
@@ -55,10 +55,10 @@ class TestClassifySession:
         assert labels[0] == "PRE_MARKET"
 
     def test_overnight_10pm(self):
-        """10 PM ET → OVERNIGHT session."""
+        """10 PM ET → OVERNIGHT_2 session (6pm-midnight)."""
         ts = _make_utc_timestamps([(22, 0)])
         labels = classify_session(ts)
-        assert labels[0] == "OVERNIGHT"
+        assert labels[0] == "OVERNIGHT_2"
 
 
 class TestSessionMultipliers:
@@ -95,7 +95,7 @@ class TestSessionMultipliers:
     def test_multiple_bars_vectorized(self):
         """Multiple timestamps processed correctly."""
         ts = _make_utc_timestamps([
-            (2, 0),    # OVERNIGHT_2 → 3.0
+            (2, 0),    # OVERNIGHT_3 → 3.0
             (7, 0),    # PRE_MARKET → 2.0
             (9, 45),   # RTH_OPEN → 0.8
             (11, 0),   # RTH_CORE → 1.0
@@ -106,7 +106,7 @@ class TestSessionMultipliers:
         np.testing.assert_array_equal(mults, [3.0, 2.0, 0.8, 1.0, 1.2])
 
     def test_midnight_crossing_overnight(self):
-        """Midnight (0:00 ET) is still overnight (OVERNIGHT_2)."""
+        """Midnight (0:00 ET) is still overnight (OVERNIGHT_3)."""
         ts = _make_utc_timestamps([(0, 0)])
         mults = get_session_multipliers(ts)
         assert mults[0] == 3.0

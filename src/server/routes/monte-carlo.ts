@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "../db/index.js";
 import { monteCarloRuns, stressTestRuns, backtests, strategies } from "../db/schema.js";
 import { runMonteCarlo } from "../services/monte-carlo-service.js";
+import { logger } from "../index.js";
 
 export const monteCarloRoutes = Router();
 
@@ -32,8 +33,8 @@ monteCarloRoutes.post("/", async (req, res) => {
   const { backtestId, ...options } = parsed.data;
 
   // Fire and forget
-  runMonteCarlo(backtestId, options).catch(() => {
-    // Error already persisted to audit log
+  runMonteCarlo(backtestId, options).catch((err) => {
+    logger.error({ err, backtestId }, "Fire-and-forget Monte Carlo simulation failed");
   });
 
   // Return immediately with 202

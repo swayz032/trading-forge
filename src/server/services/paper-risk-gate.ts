@@ -43,7 +43,7 @@ export interface RiskGateResult {
 
 // Per-symbol contract defaults (used when no firm config or firm doesn't specify per-symbol)
 const DEFAULT_MAX_CONTRACTS: Record<string, number> = {
-  ES: 15, NQ: 15, CL: 15, YM: 15, RTY: 15, GC: 15, MES: 150, MNQ: 150,
+  MES: 150, MNQ: 150, MCL: 150,
 };
 
 const DEFAULT_SESSION_DRAWDOWN = getTightestDrawdown()?.maxDrawdown ?? 2_000;
@@ -81,6 +81,15 @@ export async function checkRiskGate(
 
   const config = (session.config ?? {}) as Record<string, unknown>;
   const firmConfig = resolveFirmConfig(session.firmId);
+
+  // If session is tied to a firm but the firm config is missing, reject — don't silently fall back to defaults
+  if (session.firmId && !firmConfig) {
+    return {
+      allowed: false,
+      reason: `Firm "${session.firmId}" not found in config — cannot apply risk limits`,
+      check: "firm_config_missing",
+    };
+  }
 
   // ── a) Max concurrent positions ────────────────────────────
   const maxPositions = (config.max_positions as number) ?? DEFAULT_MAX_POSITIONS;

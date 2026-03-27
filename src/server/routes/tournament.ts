@@ -6,16 +6,13 @@
  */
 
 import { Router } from "express";
+import { eq, desc, sql } from "drizzle-orm";
 import { z } from "zod";
+import { db } from "../db/index.js";
+import { tournamentResults } from "../db/schema.js";
 import { logger } from "../index.js";
 
 export const tournamentRoutes = Router();
-
-// ─── In-memory store (replaced by DB queries in production) ─────
-
-// Tournament results are stored by n8n via POST /api/tournament/run
-// For now, use a simple in-memory array as a staging area
-const tournamentResults: Record<string, unknown>[] = [];
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
@@ -36,60 +33,85 @@ const tournamentRunSchema = z.object({
 // ─── GET /api/tournament/history ─────────────────────────────────
 // Past tournament results
 tournamentRoutes.get("/history", async (req, res) => {
-  const { limit = "50", offset = "0" } = req.query;
-  const start = Number(offset);
-  const end = start + Number(limit);
+  try {
+    const { limit = "50", offset = "0" } = req.query;
+    const lim = Number(limit);
+    const off = Number(offset);
 
-  // In production, query tournament_results table
-  const slice = tournamentResults.slice(start, end);
-  res.json({
-    total: tournamentResults.length,
-    limit: Number(limit),
-    offset: start,
-    results: slice,
-  });
+    const [{ count: total }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tournamentResults);
+
+    const rows = await db
+      .select()
+      .from(tournamentResults)
+      .orderBy(desc(tournamentResults.createdAt))
+      .limit(lim)
+      .offset(off);
+
+    res.json({ total, limit: lim, offset: off, results: rows });
+  } catch (err: any) {
+    logger.error({ err }, "Failed to fetch tournament history");
+    res.status(500).json({ error: "Failed to fetch tournament history", details: err.message });
+  }
 });
 
 // ─── GET /api/tournament/latest ──────────────────────────────────
 // Most recent tournament result
 tournamentRoutes.get("/latest", async (_req, res) => {
-  if (tournamentResults.length === 0) {
-    res.json({ message: "No tournament results yet. Run a tournament via n8n or POST /api/tournament/run." });
-    return;
+  try {
+    const [row] = await db
+      .select()
+      .from(tournamentResults)
+      .orderBy(desc(tournamentResults.createdAt))
+      .limit(1);
+
+    if (!row) {
+      res.json({ message: "No tournament results yet. Run a tournament via n8n or POST /api/tournament/run." });
+      return;
+    }
+    res.json(row);
+  } catch (err: any) {
+    logger.error({ err }, "Failed to fetch latest tournament result");
+    res.status(500).json({ error: "Failed to fetch latest tournament result", details: err.message });
   }
-  res.json(tournamentResults[tournamentResults.length - 1]);
 });
 
 // ─── GET /api/tournament/stats ───────────────────────────────────
 // Win/loss/revision rates
 tournamentRoutes.get("/stats", async (_req, res) => {
-  const total = tournamentResults.length;
-  if (total === 0) {
+  try {
+    const verdictRows = await db
+      .select({
+        finalVerdict: tournamentResults.finalVerdict,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(tournamentResults)
+      .groupBy(tournamentResults.finalVerdict);
+
+    const total = verdictRows.reduce((sum, r) => sum + r.count, 0);
+    if (total === 0) {
+      res.json({ total: 0, promoted: 0, revised: 0, killed: 0, promote_rate: 0, revise_rate: 0, kill_rate: 0 });
+      return;
+    }
+
+    const promoted = verdictRows.find((r) => r.finalVerdict === "PROMOTE")?.count ?? 0;
+    const revised = verdictRows.find((r) => r.finalVerdict === "REVISE")?.count ?? 0;
+    const killed = verdictRows.find((r) => r.finalVerdict === "KILL")?.count ?? 0;
+
     res.json({
-      total: 0,
-      promoted: 0,
-      revised: 0,
-      killed: 0,
-      promote_rate: 0,
-      revise_rate: 0,
-      kill_rate: 0,
+      total,
+      promoted,
+      revised,
+      killed,
+      promote_rate: Math.round((promoted / total) * 10000) / 100,
+      revise_rate: Math.round((revised / total) * 10000) / 100,
+      kill_rate: Math.round((killed / total) * 10000) / 100,
     });
-    return;
+  } catch (err: any) {
+    logger.error({ err }, "Failed to fetch tournament stats");
+    res.status(500).json({ error: "Failed to fetch tournament stats", details: err.message });
   }
-
-  const promoted = tournamentResults.filter((r) => r.final_verdict === "PROMOTE").length;
-  const revised = tournamentResults.filter((r) => r.final_verdict === "REVISE").length;
-  const killed = tournamentResults.filter((r) => r.final_verdict === "KILL").length;
-
-  res.json({
-    total,
-    promoted,
-    revised,
-    killed,
-    promote_rate: Math.round((promoted / total) * 10000) / 100,
-    revise_rate: Math.round((revised / total) * 10000) / 100,
-    kill_rate: Math.round((killed / total) * 10000) / 100,
-  });
 });
 
 // ─── POST /api/tournament/run ────────────────────────────────────
@@ -101,34 +123,60 @@ tournamentRoutes.post("/run", async (req, res) => {
     return;
   }
 
-  const result = {
-    id: crypto.randomUUID(),
-    tournament_date: new Date().toISOString(),
-    ...parsed.data,
-    created_at: new Date().toISOString(),
-  };
+  try {
+    const [row] = await db
+      .insert(tournamentResults)
+      .values({
+        tournamentDate: new Date(),
+        candidateName: parsed.data.candidate_name,
+        candidateDsl: parsed.data.candidate_dsl,
+        proposerOutput: parsed.data.proposer_output ?? null,
+        compilerPass: parsed.data.compiler_pass ?? null,
+        graveyardPass: parsed.data.graveyard_pass ?? null,
+        criticOutput: parsed.data.critic_output ?? null,
+        prosecutorOutput: parsed.data.prosecutor_output ?? null,
+        promoterOutput: parsed.data.promoter_output ?? null,
+        finalVerdict: parsed.data.final_verdict,
+        revisionNotes: parsed.data.revision_notes ?? null,
+        backtestId: parsed.data.backtest_id ?? null,
+      })
+      .returning();
 
-  tournamentResults.push(result);
-  logger.info({ candidate: parsed.data.candidate_name, verdict: parsed.data.final_verdict }, "Tournament result stored");
-
-  res.status(201).json(result);
+    logger.info({ candidate: parsed.data.candidate_name, verdict: parsed.data.final_verdict }, "Tournament result stored");
+    res.status(201).json(row);
+  } catch (err: any) {
+    logger.error({ err }, "Failed to store tournament result");
+    res.status(500).json({ error: "Failed to store tournament result", details: err.message });
+  }
 });
 
 // ─── GET /api/tournament/leaderboard ─────────────────────────────
 // Strategies that survived the tournament (PROMOTE verdicts)
 tournamentRoutes.get("/leaderboard", async (req, res) => {
-  const { limit = "20" } = req.query;
+  try {
+    const { limit = "20" } = req.query;
 
-  const promoted = tournamentResults
-    .filter((r) => r.final_verdict === "PROMOTE")
-    .slice(-(Number(limit)));
+    const rows = await db
+      .select({
+        candidateName: tournamentResults.candidateName,
+        tournamentDate: tournamentResults.tournamentDate,
+        backtestId: tournamentResults.backtestId,
+      })
+      .from(tournamentResults)
+      .where(eq(tournamentResults.finalVerdict, "PROMOTE"))
+      .orderBy(desc(tournamentResults.createdAt))
+      .limit(Number(limit));
 
-  res.json({
-    total_promoted: promoted.length,
-    strategies: promoted.map((r) => ({
-      candidate_name: r.candidate_name,
-      tournament_date: r.tournament_date,
-      backtest_id: r.backtest_id || null,
-    })),
-  });
+    res.json({
+      total_promoted: rows.length,
+      strategies: rows.map((r) => ({
+        candidate_name: r.candidateName,
+        tournament_date: r.tournamentDate,
+        backtest_id: r.backtestId || null,
+      })),
+    });
+  } catch (err: any) {
+    logger.error({ err }, "Failed to fetch tournament leaderboard");
+    res.status(500).json({ error: "Failed to fetch tournament leaderboard", details: err.message });
+  }
 });

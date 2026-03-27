@@ -42,6 +42,16 @@ const CHANNEL_MAP: Record<string, string> = {
 
 // POST /alert/:channel — receives alerts from n8n workflows
 alertApp.post("/alert/:channel", async (req, res) => {
+  // Verify shared secret to prevent unauthorized Discord messages
+  const apiKey = process.env.API_KEY;
+  if (apiKey) {
+    const auth = req.headers.authorization;
+    if (!auth || auth !== `Bearer ${apiKey}`) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+  }
+
   const { channel } = req.params;
   const channelId = CHANNEL_MAP[channel];
 
@@ -141,7 +151,13 @@ client.on("interactionCreate", async (interaction) => {
   await handleCommand(interaction, FORGE_API, CHANNEL_MAP);
 });
 
+client.on("error", (err) => {
+  log.error({ err }, "Discord client connection error");
+});
+
 // ─── Start ──────────────────────────────────────────────────
-client.login(process.env.DISCORD_BOT_TOKEN);
+client.login(process.env.DISCORD_BOT_TOKEN).catch((err) => {
+  log.error({ err }, "Failed to login to Discord");
+});
 
 export { client, CHANNEL_MAP };

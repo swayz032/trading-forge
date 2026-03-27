@@ -149,6 +149,7 @@ def compute_targets(
         tp3_trail_structure=tp3_trail,
         regime_adjustment=adjustment,
         partial_sizes=partials,
+        min_rr_ratio=2.0 * adjustment,  # Ranging=1.5R, normal=2.0R, high_vol=2.5R
         rr_achieved=rr_achieved,
     )
 

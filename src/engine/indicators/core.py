@@ -33,8 +33,9 @@ def compute_rsi(series: pl.Series, period: int) -> pl.Series:
     avg_loss = losses.ewm_mean(alpha=1.0 / period, adjust=False)
 
     rs = avg_gain / avg_loss
+    # Guard: flat market → avg_loss=0 → rs=inf → rsi=100; both=0 → rs=NaN → fill with 50 (neutral)
     rsi = 100.0 - (100.0 / (1.0 + rs))
-    return rsi
+    return rsi.fill_nan(50.0)
 
 
 def compute_atr(df: pl.DataFrame, period: int) -> pl.Series:
@@ -157,7 +158,9 @@ def compute_vwap(df: pl.DataFrame) -> pl.Series:
         pl.col("volume").cum_sum().over("date").alias("cum_vol"),
     ])
 
-    vwap = result["cum_tp_vol"] / result["cum_vol"]
+    # Guard: zero-volume bars at day start → cum_vol=0 → NaN/inf; fill forward from last valid VWAP
+    safe_cum_vol = result["cum_vol"].replace(0, None)
+    vwap = (result["cum_tp_vol"] / safe_cum_vol).fill_null(strategy="forward").fill_null(0.0)
     return vwap
 
 

@@ -38,7 +38,7 @@ class SilverBulletStrategy(BaseStrategy):
         self.atr_period = atr_period
         self.atr_sl_mult = atr_sl_mult
         self.displacement_mult = displacement_mult
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "5min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -158,7 +158,7 @@ class SilverBulletStrategy(BaseStrategy):
                         long_is_nyam = nyam_list[i]
                         break
 
-            if not exited_this_bar_short and short_entry_bar < 0:
+            if not exited_this_bar_short and short_entry_bar < 0 and long_entry_bar < 0:
                 close = closes[i]
                 for fvg in valid_bearish_fvgs:
                     if fvg["bar"] >= i:

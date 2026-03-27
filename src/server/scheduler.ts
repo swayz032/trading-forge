@@ -10,12 +10,13 @@
  */
 
 import cron from "node-cron";
-import { eq, and, gte, desc } from "drizzle-orm";
+import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { strategies, paperSessions, paperTrades, backtests, systemJournal } from "./db/schema.js";
+import { strategies, paperSessions, paperTrades, backtests, systemJournal, skipDecisions } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./index.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
+import { AlertFactory } from "./services/alert-service.js";
 
 let initialized = false;
 
@@ -33,8 +34,12 @@ export function initScheduler() {
     }
   });
 
-  // ─── Daily at 6:30 AM ET (11:30 UTC): Pre-market prep ────
-  cron.schedule("30 11 * * 1-5", async () => {
+  // ─── Daily at 6:30 AM ET: Pre-market prep (DST-aware) ────
+  // Run at both 10:30 and 11:30 UTC to cover EDT and EST.
+  // The handler checks if it's actually 6:30 AM ET before executing.
+  cron.schedule("30 10,11 * * 1-5", async () => {
+    const etHour = new Date().toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false });
+    if (parseInt(etHour) !== 6) return; // Only run at 6 AM ET
     logger.info("Scheduler: Pre-market prep");
     try {
       await preMarketPrep();
@@ -92,11 +97,14 @@ async function updateRollingSharpe() {
     return;
   }
 
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const results: { strategyId: string; name: string; sharpe: number; drifted: boolean }[] = [];
+
   for (const strat of activeStrategies) {
     try {
-      // Fetch recent paper trades for this strategy
-      const sessions = await db
-        .select({ id: paperSessions.id, currentEquity: paperSessions.currentEquity })
+      // Fetch paper trades from the last 30 days across all active sessions for this strategy
+      const activeSessions = await db
+        .select({ id: paperSessions.id })
         .from(paperSessions)
         .where(
           and(
@@ -105,11 +113,100 @@ async function updateRollingSharpe() {
           ),
         );
 
-      if (sessions.length === 0) continue;
+      if (activeSessions.length === 0) continue;
 
-      // For now, store a placeholder — the actual computation
-      // happens when drift-detection-service compares paper vs backtest
-      logger.info({ strategyId: strat.id, name: strat.name }, "Rolling Sharpe checked");
+      // Collect all trades from active sessions within last 30 days
+      const allTrades: { pnl: string; exitTime: Date | string }[] = [];
+      for (const session of activeSessions) {
+        const trades = await db
+          .select({ pnl: paperTrades.pnl, exitTime: paperTrades.exitTime })
+          .from(paperTrades)
+          .where(
+            and(
+              eq(paperTrades.sessionId, session.id),
+              gte(paperTrades.exitTime, thirtyDaysAgo),
+            ),
+          );
+        allTrades.push(...trades);
+      }
+
+      if (allTrades.length < 5) {
+        logger.info({ strategyId: strat.id, name: strat.name, trades: allTrades.length }, "Not enough trades for rolling Sharpe (need >= 5)");
+        continue;
+      }
+
+      // Group trades into daily P&L buckets
+      const dailyPnlMap = new Map<string, number>();
+      for (const t of allTrades) {
+        const day = (t.exitTime instanceof Date ? t.exitTime : new Date(t.exitTime)).toISOString().slice(0, 10);
+        dailyPnlMap.set(day, (dailyPnlMap.get(day) ?? 0) + Number(t.pnl));
+      }
+      const dailyReturns = [...dailyPnlMap.values()];
+
+      if (dailyReturns.length < 3) {
+        logger.info({ strategyId: strat.id, name: strat.name, days: dailyReturns.length }, "Not enough trading days for rolling Sharpe (need >= 3)");
+        continue;
+      }
+
+      // Calculate rolling Sharpe: mean(daily_returns) / std(daily_returns) * sqrt(252)
+      const mean = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+      const variance = dailyReturns.reduce((sum, r) => sum + (r - mean) ** 2, 0) / (dailyReturns.length - 1);
+      const stdDev = Math.sqrt(variance);
+      const liveSharpe = stdDev > 0 ? (mean / stdDev) * Math.sqrt(252) : 0;
+
+      // Persist rolling Sharpe to the strategies table
+      await db
+        .update(strategies)
+        .set({ rollingSharpe30d: liveSharpe.toFixed(4), updatedAt: new Date() })
+        .where(eq(strategies.id, strat.id));
+
+      // Compare against backtest Sharpe if available
+      const [latestBacktest] = await db
+        .select({ sharpeRatio: backtests.sharpeRatio })
+        .from(backtests)
+        .where(
+          and(
+            eq(backtests.strategyId, strat.id),
+            eq(backtests.status, "completed"),
+          ),
+        )
+        .orderBy(desc(backtests.createdAt))
+        .limit(1);
+
+      let drifted = false;
+      if (latestBacktest?.sharpeRatio != null) {
+        const btSharpe = Number(latestBacktest.sharpeRatio);
+        const deviation = Math.abs(liveSharpe - btSharpe);
+        // Use backtest Sharpe magnitude as a rough 1-sigma estimate (conservative heuristic)
+        const oneSigma = Math.max(Math.abs(btSharpe) * 0.3, 0.2);
+
+        if (deviation > 2 * oneSigma) {
+          drifted = true;
+          logger.error(
+            { strategyId: strat.id, name: strat.name, liveSharpe, btSharpe, deviation, threshold: 2 * oneSigma },
+            "DRIFT ALERT: Live Sharpe deviates > 2σ from backtest",
+          );
+          // Persist alert to DB + broadcast SSE
+          AlertFactory.driftAlert(strat.id, "Sharpe", deviation / oneSigma).catch(() => {});
+        } else if (deviation > oneSigma) {
+          logger.warn(
+            { strategyId: strat.id, name: strat.name, liveSharpe, btSharpe, deviation, threshold: oneSigma },
+            "Rolling Sharpe drifting from backtest (> 1σ)",
+          );
+        } else {
+          logger.info(
+            { strategyId: strat.id, name: strat.name, liveSharpe, btSharpe },
+            "Rolling Sharpe within expected range",
+          );
+        }
+      } else {
+        logger.info(
+          { strategyId: strat.id, name: strat.name, liveSharpe },
+          "Rolling Sharpe computed (no backtest baseline for comparison)",
+        );
+      }
+
+      results.push({ strategyId: strat.id, name: strat.name, sharpe: liveSharpe, drifted });
     } catch (err) {
       logger.error({ strategyId: strat.id, err }, "Failed to update rolling Sharpe");
     }
@@ -117,6 +214,7 @@ async function updateRollingSharpe() {
 
   broadcastSSE("scheduler:sharpe-updated", {
     strategies: activeStrategies.length,
+    results,
     timestamp: new Date().toISOString(),
   });
 }
@@ -126,11 +224,24 @@ async function updateRollingSharpe() {
  */
 async function preMarketPrep() {
   try {
-    // Call the skip classifier endpoint
-    const response = await fetch("http://localhost:4000/api/skip/today").catch(() => null);
-    if (response?.ok) {
-      const data = await response.json();
-      const sitOuts = (data as any[]).filter((d: any) => d.decision === "SKIP" || d.decision === "SIT_OUT");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Query today's skip decisions directly from DB
+    const decisions = await db
+      .select()
+      .from(skipDecisions)
+      .where(
+        and(
+          gte(skipDecisions.decisionDate, today),
+          lte(skipDecisions.decisionDate, tomorrow),
+        )
+      );
+
+    if (decisions.length > 0) {
+      const sitOuts = decisions.filter((d) => d.decision === "SKIP" || d.decision === "REDUCE" || d.decision === "SIT_OUT");
       if (sitOuts.length > 0) {
         broadcastSSE("scheduler:pre-market-alert", {
           message: `${sitOuts.length} strategies sitting out today`,
@@ -140,7 +251,7 @@ async function preMarketPrep() {
       }
     }
   } catch (err) {
-    logger.warn({ err }, "Pre-market prep: skip classifier unavailable");
+    logger.warn({ err }, "Pre-market prep failed");
   }
 }
 
@@ -257,7 +368,7 @@ async function comparePaperToBacktest() {
       const maxDeviation = deviations.reduce((max, d) => Math.max(max, d.sigmas), 0);
       const alertTriggered = maxDeviation > 2.0;
 
-      // 4. If deviation > 2 std dev, broadcast SSE alert
+      // 4. If deviation > 2 std dev, broadcast SSE alert + persist
       if (alertTriggered) {
         broadcastSSE("strategy:paper-vs-backtest-alert", {
           strategyId: session.strategyId,
@@ -266,6 +377,9 @@ async function comparePaperToBacktest() {
           deviations,
           message: `Paper session diverged ${maxDeviation.toFixed(1)}σ from backtest — review strategy`,
         });
+        // Persist alert to DB
+        const worstMetric = deviations.reduce((w, d) => d.sigmas > w.sigmas ? d : w, deviations[0]);
+        AlertFactory.driftAlert(session.strategyId, worstMetric.metric, maxDeviation).catch(() => {});
         logger.warn(
           { strategyId: session.strategyId, sessionId: session.id, maxDeviation, deviations },
           "Paper-vs-backtest deviation alert triggered",
@@ -321,17 +435,19 @@ export async function onPaperTradeClose(sessionId: string, strategyId: string) {
 
     // Find the worst deviation across all metrics
     const maxDeviation = Math.max(...reports.map(r => r.deviationStdDevs));
-    const alerts = reports.filter(r => r.severity === "alert");
+    const driftAlerts = reports.filter(r => r.severity === "alert");
 
-    if (alerts.length > 0) {
+    if (driftAlerts.length > 0) {
       broadcastSSE("strategy:drift-alert", {
         strategyId,
         sessionId,
         driftScore: maxDeviation,
-        alerts,
+        alerts: driftAlerts,
         message: `Strategy drifting: ${maxDeviation.toFixed(1)}σ from backtest expectations`,
       });
-      logger.warn({ strategyId, maxDeviation, alerts }, "Strategy drift detected after paper trade");
+      // Persist alert to DB
+      AlertFactory.driftAlert(strategyId, "live_drift", maxDeviation).catch(() => {});
+      logger.warn({ strategyId, maxDeviation, alerts: driftAlerts }, "Strategy drift detected after paper trade");
     }
   } catch (err) {
     logger.error({ sessionId, strategyId, err }, "Drift check failed after paper trade close");

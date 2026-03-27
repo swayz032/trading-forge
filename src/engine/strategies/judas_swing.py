@@ -36,7 +36,7 @@ class JudasSwingStrategy(BaseStrategy):
         self.atr_period = atr_period
         self.fvg_window = fvg_window
         self.opening_bars = opening_bars
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "5min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:

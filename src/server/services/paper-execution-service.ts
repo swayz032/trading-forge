@@ -143,7 +143,10 @@ export async function openPosition(sessionId: string, params: {
 
   // Gap 8: TCA — implementation shortfall
   const spec = CONTRACT_SPECS[params.symbol];
-  const implementationShortfall = Math.abs(actualEntry - arrivalPrice) * (spec?.pointValue ?? 1) * params.contracts;
+  if (!spec) {
+    throw new Error(`Unknown symbol "${params.symbol}" — no CONTRACT_SPECS entry. Cannot open position.`);
+  }
+  const implementationShortfall = Math.abs(actualEntry - arrivalPrice) * spec.pointValue * params.contracts;
 
   const [position] = await db.insert(paperPositions).values({
     sessionId,
@@ -386,9 +389,13 @@ export async function updatePositionPrices(sessionId: string, prices: Record<str
     if (currentPrice === undefined) continue;
 
     const spec = CONTRACT_SPECS[pos.symbol];
+    if (!spec) {
+      logger.warn({ symbol: pos.symbol, positionId: pos.id }, "Missing CONTRACT_SPECS — skipping unrealized P&L update");
+      continue;
+    }
     const entryPrice = Number(pos.entryPrice);
     const direction = pos.side === "long" ? 1 : -1;
-    const unrealizedPnl = direction * (currentPrice - entryPrice) * (spec?.pointValue ?? 1) * pos.contracts;
+    const unrealizedPnl = direction * (currentPrice - entryPrice) * spec.pointValue * pos.contracts;
 
     await db.update(paperPositions).set({
       currentPrice: String(currentPrice),

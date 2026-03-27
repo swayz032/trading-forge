@@ -1,0 +1,204 @@
+{
+  "best_params": {
+    "sma_period": 50.0,
+    "stop_loss_atr": 4.0,
+    "take_profit_atr": 8.0
+  },
+  "best_energy": -10.300000000000036,
+  "best_objective_value": 10.300000000000036,
+  "all_solutions": [
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    },
+    {
+      "params": {
+        "sma_period": 50.0,
+        "stop_loss_atr": 4.0,
+        "take_profit_atr": 8.0
+      },
+      "energy": -10.300000000000036
+    }
+  ],
+  "robust_plateau": {
+    "sma_period": {
+      "min": 50.0,
+      "max": 50.0,
+      "mean": 50.0,
+      "std": 0.0,
+      "range_pct": 0.0
+    },
+    "stop_loss_atr": {
+      "min": 4.0,
+      "max": 4.0,
+      "mean": 4.0,
+      "std": 0.0,
+      "range_pct": 0.0
+    },
+    "take_profit_atr": {
+      "min": 8.0,
+      "max": 8.0,
+      "mean": 8.0,
+      "std": 0.0,
+      "range_pct": 0.0
+    }
+  },
+  "execution_time_ms": 4,
+  "n_reads": 50,
+  "n_params": 3,
+  "total_bits": 12,
+  "method": "sqa",
+  "governance": {
+    "experimental": true,
+    "authoritative": false,
+    "decision_role": "challenger_only"
+  }
+}

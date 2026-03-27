@@ -29,7 +29,7 @@ riskRoutes.post("/max-contracts", (req, res) => {
   }
 
   if (!currentAtr || currentAtr <= 0) {
-    res.status(400).json({ error: "currentAtr must be a positive number (e.g., 15.5 for ES)" });
+    res.status(400).json({ error: "currentAtr must be a positive number (e.g., 15.5 for MES)" });
     return;
   }
 
@@ -96,14 +96,21 @@ riskRoutes.post("/portfolio-heat", (req, res) => {
   let totalDollarExposure = 0;
   let totalMaxDrawdown = 0;
   const details = [];
+  const skipped: string[] = [];
 
   for (const pos of positions) {
     const spec = CONTRACT_SPECS[pos.symbol?.toUpperCase()];
-    if (!spec) continue;
+    if (!spec) {
+      skipped.push(`Unknown symbol: ${pos.symbol}`);
+      continue;
+    }
 
     // Always use 50K accounts
     const firmLimits = getFirmLimit(pos.firm, "50k");
-    if (!firmLimits) continue;
+    if (!firmLimits) {
+      skipped.push(`Unknown firm: ${pos.firm}`);
+      continue;
+    }
 
     const pnl = (pos.currentPrice - pos.entryPrice) * spec.pointValue * pos.contracts;
     const exposure = Math.abs(pos.contracts * pos.currentPrice * spec.pointValue);
@@ -134,5 +141,6 @@ riskRoutes.post("/portfolio-heat", (req, res) => {
     portfolioHeatPercent: heatPercent,
     status: heatPercent > 75 ? "DANGER" : heatPercent > 50 ? "WARNING" : "OK",
     positions: details,
+    ...(skipped.length > 0 && { warnings: skipped }),
   });
 });

@@ -1,8 +1,8 @@
 """
 Skip Engine — Pre-session classifier.
-Evaluates 9 signals before market open. Decision: TRADE | REDUCE | SKIP.
+Evaluates 10 signals before market open. Decision: TRADE | REDUCE | SKIP.
 
-The 9 Skip Signals:
+The 10 Skip Signals:
 1. FOMC/CPI/NFP proximity (±30 min = SIT_OUT)
 2. VIX level (>30 = SKIP, 25-30 = REDUCE)
 3. Overnight gap size (>1.5 ATR = SKIP)
@@ -12,6 +12,7 @@ The 9 Skip Signals:
 7. Monthly P&L vs drawdown budget (>60% used = REDUCE, >80% = SKIP)
 8. Correlation spike (portfolio strategies correlated >0.7 today = REDUCE)
 9. Calendar filter (holiday, triple witching, roll week)
+10. QUBO timing (experimental — penalize blocks optimizer says to skip)
 """
 
 from __future__ import annotations
@@ -29,6 +30,7 @@ SIGNAL_WEIGHTS: dict[str, float] = {
     "monthly_budget": 2.5,
     "correlation_spike": 1.5,
     "calendar_filter": 2.0,
+    "qubo_timing": 1.5,
 }
 
 # Thresholds
@@ -197,6 +199,23 @@ def _score_calendar_filter(signals: dict[str, Any]) -> float:
     return score
 
 
+def _score_qubo_timing(signals: dict[str, Any]) -> float:
+    """
+    QUBO timing signal — if a QUBO timing schedule exists for this session,
+    penalize trading during blocks the optimizer says to skip.
+
+    Expects signals["qubo_timing"] = {"current_block_trade": bool, "schedule_active": bool}
+    """
+    qubo = signals.get("qubo_timing")
+    if not qubo or not qubo.get("schedule_active"):
+        return 0.0
+
+    if not qubo.get("current_block_trade", True):
+        return 1.0  # Moderate penalty — QUBO says skip this time block
+
+    return 0.0
+
+
 # ─── Main Classifier ──────────────────────────────────────────────
 
 
@@ -243,6 +262,7 @@ def classify_session(
         "monthly_budget": _score_monthly_budget(signals),
         "correlation_spike": _score_correlation_spike(signals),
         "calendar_filter": _score_calendar_filter(signals),
+        "qubo_timing": _score_qubo_timing(signals),
     }
 
     # Total weighted score
@@ -312,6 +332,8 @@ def classify_session(
         reason_parts.append("portfolio correlation spike")
     if signal_scores["calendar_filter"] > 0:
         reason_parts.append("calendar filter (holiday/witching/roll)")
+    if signal_scores["qubo_timing"] > 0:
+        reason_parts.append("QUBO timing (skip block)")
 
     reason = (
         f"{decision}: " + ", ".join(reason_parts)

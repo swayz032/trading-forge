@@ -22,7 +22,7 @@
 
 | Size | Monthly Fee | Profit Target | Trailing Drawdown (EOD) | Max Contracts |
 |------|------------|---------------|------------------------|---------------|
-| $50K | $49 | $3,000 | $2,000 | 5 ES / 50 MES |
+| $50K | $49 | $3,000 | $2,000 | 15 micros |
 | $100K | $99 | $6,000 | $3,000 | 10 ES / 100 MES |
 | $150K | $149 | $9,000 | $4,500 | 15 ES / 150 MES |
 
@@ -31,13 +31,14 @@
 ```yaml
 firm: topstep
 evaluation_type: one_step
-daily_loss_limit: null  # No daily loss limit
+daily_loss_limit: $1,000  # Soft daily loss limit (March 2026)
 trailing_drawdown_type: EOD  # Calculated at end of day, not intraday
 trailing_drawdown_locks: true  # Stops trailing once it reaches starting balance
 consistency_rule: null  # No consistency rule
-min_trading_days: null  # No minimum
+min_trading_days: 5  # Minimum 5 trading days
 max_trading_days: null  # No time limit
-overnight_positions: allowed  # But higher margin requirements
+overnight_positions: not_allowed  # User constraint: no overnight positions
+commission_per_side: $0.37  # TopstepX clearing fees only (March 2026)
 weekend_positions: not_allowed
 news_trading: allowed
 scaling_plan: false  # Full contracts from day one
@@ -70,9 +71,9 @@ data_feed: TopstepX_proprietary  # Was Rithmic/CQG, now proprietary
 ```
 gross_profit = total_pnl
 trader_payout = gross_profit * 0.90
-net_after_activation = trader_payout - 149  # First payout only
+net_after_activation = trader_payout  # activation_fee = $0
 monthly_cost_to_pass = monthly_fee * months_to_pass
-total_cost = monthly_cost_to_pass + 149
+total_cost = monthly_cost_to_pass
 ROI = trader_payout / total_cost
 ```
 
@@ -84,11 +85,11 @@ ROI = trader_payout / total_cost
 
 | Size | Monthly Fee | Profit Target | Trailing Drawdown (EOD) | Max Contracts |
 |------|------------|---------------|------------------------|---------------|
-| $25K | $150 | $1,500 (6%) | $1,500 (6%) | 3 ES / 30 MES |
-| $50K | $150 | $3,000 (6%) | $3,000 (6%) | 6 ES / 60 MES |
-| $75K | $200 | $4,500 (6%) | $4,500 (6%) | 9 ES / 90 MES |
-| $100K | $250 | $6,000 (6%) | $6,000 (6%) | 12 ES / 120 MES |
-| $150K | $360 | $9,000 (6%) | $9,000 (6%) | 15 ES / 150 MES |
+| $25K | $150 | $1,500 | $1,500 | 3 ES / 30 MES |
+| $50K | $170 | $3,000 | $2,000 | 15 micros |
+| $75K | $200 | $4,500 | $3,000 | 9 ES / 90 MES |
+| $100K | $250 | $6,000 | $4,000 | 12 ES / 120 MES |
+| $150K | $360 | $9,000 | $6,000 | 15 ES / 150 MES |
 
 ### Rules
 
@@ -106,7 +107,7 @@ consistency_rule:
   removed_at: PRO_plus  # No consistency rule after PRO+
 min_trading_days: 5
 max_trading_days: null  # No time limit
-overnight_positions: allowed
+overnight_positions: not_allowed  # User constraint: no overnight positions
 weekend_positions: not_allowed
 news_trading: allowed
 scaling_plan: false
@@ -161,7 +162,7 @@ trader_payout_PRO = gross_profit * 0.80
 trader_payout_PRO_plus = gross_profit * 0.90
 
 # Break-even calculation
-total_cost = (monthly_fee * months_to_pass) + 130
+total_cost = (monthly_fee * months_to_pass)
 break_even_profit = total_cost / 0.80  # Need this much gross to cover costs
 ```
 
@@ -187,7 +188,8 @@ def check_consistency(daily_pnls):
 
 | Size | Monthly Fee | Profit Target | Trailing Drawdown (EOD) | Max Contracts |
 |------|------------|---------------|------------------------|---------------|
-| $50K | $77 | $3,000 | $2,500 | 5 ES |
+| $50K (Core) | $77 | $3,000 | $2,000 | 15 micros |
+| $50K (Rapid) | $97 | $3,000 | $2,000 | 15 micros |
 | $100K | $137 | $5,500 | $3,500 | 10 ES |
 | $150K | $197 | $9,000 | $5,000 | 15 ES |
 
@@ -199,10 +201,13 @@ evaluation_type: one_step
 daily_loss_limit: null
 trailing_drawdown_type: EOD
 trailing_drawdown_locks: true  # Locks at starting balance
-consistency_rule: null  # No consistency rule
-min_trading_days: 1  # Just 1 day minimum
+consistency_rule:
+  type: single_day_cap
+  evaluation: 0.50  # No single day > 50% of total profit
+  funded: 0.40  # 40% consistency on funded
+min_trading_days: 5  # Updated March 2026
 max_trading_days: null  # No time limit
-overnight_positions: allowed
+overnight_positions: not_allowed  # User constraint: no overnight positions
 weekend_positions: not_allowed
 news_trading: allowed
 scaling_plan: false
@@ -214,7 +219,7 @@ scaling_plan: false
 activation_fee: $0  # No activation fee — standout feature
 monthly_fee: $0
 starting_balance: $0  # Trade up from zero (like Topstep)
-profit_split: 0.90  # 90% from day one
+profit_split: 0.80  # Core plan: 80% (Rapid plan: 90%)
 payout_minimum: $250
 payout_frequency: bi_weekly  # Every 2 weeks
 payout_processing: 2-5_business_days
@@ -240,7 +245,7 @@ platforms:
 
 ```
 gross_profit = total_pnl
-trader_payout = gross_profit * 0.90
+trader_payout = gross_profit * 0.80
 total_cost = monthly_fee * months_to_pass  # No activation fee
 ROI = trader_payout / total_cost
 # Best ROI of any firm due to $0 activation + lowest monthly fees
@@ -254,37 +259,34 @@ ROI = trader_payout / total_cost
 
 | Size | Monthly Fee | Profit Target | Trailing Drawdown (EOD) | Max Contracts |
 |------|------------|---------------|------------------------|---------------|
-| $25K | $147 | $1,500 | $1,500 | 4 ES |
-| $50K | $167 | $3,000 | $2,500 | 10 ES |
-| $75K | $207 | $4,250 | $2,750 | 12 ES |
-| $100K | $237 | $6,000 | $3,000 | 14 ES |
-| $150K | $297 | $9,000 | $5,000 | 17 ES |
-| $250K | $517 | $15,000 | $6,500 | 27 ES |
-| $300K | $657 | $20,000 | $7,500 | 35 ES |
+| $50K (EOD) | $99 one-time | $3,000 | $2,000 | 15 micros |
+| $50K (Intraday) | $79 one-time | $3,000 | $2,000 | 15 micros |
 
 ### Rules
 
 ```yaml
 firm: apex_trader_funding
 evaluation_type: one_step
-daily_loss_limit: null  # No daily loss limit
+daily_loss_limit: $1,000  # EOD accounts only (March 2026)
 trailing_drawdown_type: EOD
 trailing_drawdown_locks: true  # Locks at starting balance once reached
-consistency_rule: null
-min_trading_days: 7
+consistency_rule:
+  evaluation: null  # No consistency on eval
+  funded: 0.50  # 50% single-day cap on funded payouts
+min_trading_days: 1  # Reduced from 7 (March 2026)
 max_trading_days: null
-overnight_positions: allowed  # Reduced contracts overnight
+overnight_positions: not_allowed  # User constraint: no overnight positions
 weekend_positions: not_allowed
-news_trading: allowed  # Standout — most firms restrict this
+news_trading: allowed
 scaling_plan: false
-max_simultaneous_accounts: 20  # Most in industry
+max_payouts_per_account: 6  # Max 6 payouts per account (March 2026)
 ```
 
 ### Funded Account (PA — Performance Account)
 
 ```yaml
 activation_fee: $0  # All firms have $0 activation fee
-monthly_fee: $85  # Ongoing monthly data fee
+monthly_fee: $85  # $85/month ongoing fee in funded phase (March 2026)
 starting_balance: $0  # Trade up from zero
 profit_split_tiers:
   - tier: first_25k
@@ -325,7 +327,7 @@ else:
 
 # BUT: $85/month ongoing data fee eats into profits
 net_monthly = trader_payout - 85
-total_cost = (eval_months * monthly_fee) + 85  # Activation
+total_cost = (eval_months * monthly_fee)  # $0 activation, $85/mo ongoing
 ```
 
 ---
@@ -336,34 +338,28 @@ total_cost = (eval_months * monthly_fee) + 85  # Activation
 
 | Type | Size | Monthly Fee | Profit Target | Trailing Drawdown |
 |------|------|------------|---------------|-------------------|
-| Standard | $50K | $150 | $3,000 | $2,500 |
+| Standard | $50K | $150 | $3,000 | $2,000 |
 | Standard | $100K | $260 | $6,000 | $3,500 |
 | Standard | $150K | $350 | $9,000 | $5,000 |
-| Express | $50K | $200 | $3,000 | $2,500 |
-| Express | $100K | $350 | $6,000 | $3,500 |
 
 ### Rules
 
 ```yaml
 firm: funded_futures_network
 evaluation_type: two_step  # Evaluation → Exhibition → Funded
-daily_loss_limit: null
+daily_loss_limit: null  # No daily loss limit (March 2026)
 trailing_drawdown_type: EOD
 trailing_drawdown_locks: true
 consistency_rule:
-  standard:
-    type: none
-  express:
-    type: single_day_cap
-    max_single_day_percent: 0.15  # Max 15% of profit target per day
-    # Example 50K Express: $3,000 target → max $450/day
+  type: single_day_cap
+  max_single_day_percent: 0.40  # 40% consistency rule (March 2026)
 min_trading_days:
   evaluation: 3
-  exhibition: 0  # No minimum for exhibition
+  exhibition: 0
 max_trading_days: null
-overnight_positions: not_allowed
+overnight_positions: not_allowed  # User constraint: no overnight positions
 weekend_positions: not_allowed
-news_trading: restricted  # Varies by contract
+news_trading: restricted
 scaling_plan: false
 ```
 
@@ -412,7 +408,7 @@ platforms:
 
 ```
 # Two-step process increases time-to-funded
-total_eval_cost = (eval_months * monthly_fee) + 120 + (funded_months * 126)
+total_eval_cost = (eval_months * monthly_fee) + (funded_months * 126)
 # $126/month data fee is highest ongoing cost of any firm
 
 # First $5K at 80%, then 90%
@@ -475,10 +471,8 @@ profit_split_tiers:
     - tier: first_payout
       split: 0.70
     - tier: second_payout
-      split: 0.75
-    - tier: third_payout
       split: 0.80
-    - tier: fourth_payout_plus
+    - tier: third_payout_plus
       split: 0.90
   advanced:
     - tier: all_payouts
@@ -523,10 +517,7 @@ platforms:
 
 | Size | Monthly Fee | Profit Target | Trailing Drawdown | Max Contracts |
 |------|------------|---------------|-------------------|---------------|
-| $25K | $49 | $1,250 | $1,250 | 2 ES |
-| $50K | $99 | $2,500 | $2,500 | 5 ES |
-| $100K | $179 | $5,000 | $5,000 | 10 ES |
-| $150K | $249 | $7,500 | $7,500 | 15 ES |
+| $50K (Select) | $159 | $2,500 | $2,000 | 15 micros |
 
 ### Rules
 
@@ -534,15 +525,18 @@ platforms:
 firm: tradeify
 evaluation_type: one_step
 daily_loss_limit: null
-trailing_drawdown_type: realtime  # WARNING: Real-time, not EOD
+trailing_drawdown_type: EOD  # Changed from realtime to EOD (March 2026)
 trailing_drawdown_locks: true
-consistency_rule: null  # No consistency rule
+consistency_rule:
+  type: single_day_cap
+  max_single_day_percent: 0.40  # 40% consistency rule (March 2026)
 min_trading_days: 3
 max_trading_days: null
-overnight_positions: allowed
+overnight_positions: not_allowed  # User constraint: no overnight positions
 weekend_positions: not_allowed
 news_trading: allowed
 scaling_plan: false
+commission_per_side: $1.29  # Higher than most firms
 ```
 
 ### Funded Account
@@ -551,11 +545,7 @@ scaling_plan: false
 activation_fee: $0  # No activation fee
 monthly_fee: $0
 starting_balance: $0  # Trade up from zero
-profit_split_tiers:
-  - tier: first_15k
-    split: 1.00  # 100% of first $15,000
-  - tier: after_15k
-    split: 0.90
+profit_split: 0.90  # 90% to trader (March 2026)
 payout_minimum: $200
 payout_frequency: weekly
 payout_processing: 1-3_business_days
@@ -580,6 +570,73 @@ else:
 
 total_cost = monthly_fee * months_to_pass  # No activation fee
 # Cheapest total path to funded
+```
+
+---
+
+## Earn2Trade
+
+### Evaluation Accounts (Gauntlet Mini)
+
+| Size | Monthly Fee | Profit Target | Trailing Drawdown (EOD) | Max Contracts |
+|------|------------|---------------|------------------------|---------------|
+| $50K | $170 | $3,000 | $2,000 | 15 micros |
+
+### Rules
+
+```yaml
+firm: earn2trade
+evaluation_type: one_step
+daily_loss_limit: $1,100
+trailing_drawdown_type: EOD
+trailing_drawdown_locks: true
+consistency_rule:
+  type: single_day_cap
+  max_single_day_percent: 0.50  # 50% consistency rule
+min_trading_days: 10
+max_trading_days: null
+overnight_positions: NOT_ALLOWED
+weekend_positions: NOT_ALLOWED
+news_trading: allowed
+scaling_plan: false
+commission_per_side: $0.62
+max_withdrawal_cap: $4,000  # Severe limitation — total withdrawal cap
+```
+
+### Funded Account
+
+```yaml
+activation_fee: $0  # All firms have $0 activation fee
+monthly_fee: $0
+starting_balance: account_size
+profit_split: 0.80  # 80% to trader
+payout_minimum: $200
+payout_frequency: bi_weekly
+payout_processing: 3-5_business_days
+drawdown_same_as_eval: true
+max_withdrawal_cap: $4,000  # Total lifetime cap — severe limitation
+```
+
+### Platform
+
+```yaml
+data_feed: Rithmic
+platforms:
+  - NinjaTrader
+  - R|Trader Pro
+```
+
+### Payout Formula
+
+```
+gross_profit = total_pnl
+trader_payout = gross_profit * 0.80
+
+# CRITICAL: $4,000 total withdrawal cap
+# Once trader has withdrawn $4,000 total, account is done
+# This makes Earn2Trade the worst firm for long-term funded trading
+total_cost = monthly_fee * months_to_pass
+max_lifetime_payout = $4,000  # Hard cap
 ```
 
 ---
@@ -639,16 +696,16 @@ def check_performance_gate(strategy_stats):
             f"Risk-adjusted returns too weak."
         )
 
-    if strategy_stats.get('avg_winner_to_loser_ratio', 0) < 1.5:
+    if strategy_stats.get('avg_winner_to_loser_ratio', 0) < 2.0:
         rejections.append(
-            f"Avg winner/loser ratio {strategy_stats['avg_winner_to_loser_ratio']:.2f} < 1.5. "
+            f"Avg winner/loser ratio {strategy_stats['avg_winner_to_loser_ratio']:.2f} < 2.0. "
             f"Average loss is too close to average win."
         )
 
     # --- DRAWDOWN ---
-    if strategy_stats['max_drawdown'] >= 2500:
+    if strategy_stats['max_drawdown'] > 2000:
         rejections.append(
-            f"Max drawdown ${strategy_stats['max_drawdown']:.0f} >= $2,500. "
+            f"Max drawdown ${strategy_stats['max_drawdown']:.0f} > $2,000. "
             f"Exceeds most prop firm limits. Would blow Topstep 50K ($2K limit)."
         )
 
@@ -830,34 +887,44 @@ def rank_firms_for_strategy(strategy_stats):
     """
     firms = {
         'topstep_50k': {
-            'monthly_fee': 49, 'activation': 149, 'profit_target': 3000,
+            'monthly_fee': 49, 'activation': 0, 'profit_target': 3000,
             'max_drawdown': 2000, 'split': 0.90, 'consistency': None,
             'overnight_ok': True, 'ongoing_fee': 0
         },
         'tpt_50k': {
-            'monthly_fee': 150, 'activation': 130, 'profit_target': 3000,
-            'max_drawdown': 3000, 'split': 0.80, 'consistency': 0.50,
+            'monthly_fee': 170, 'activation': 0, 'profit_target': 3000,
+            'max_drawdown': 2000, 'split': 0.80, 'consistency': 0.50,
             'overnight_ok': True, 'ongoing_fee': 0
         },
         'mffu_50k': {
             'monthly_fee': 77, 'activation': 0, 'profit_target': 3000,
-            'max_drawdown': 2500, 'split': 0.90, 'consistency': None,
+            'max_drawdown': 2000, 'split': 0.80, 'consistency': 0.50,
             'overnight_ok': True, 'ongoing_fee': 0
         },
         'apex_50k': {
-            'monthly_fee': 167, 'activation': 85, 'profit_target': 3000,
-            'max_drawdown': 2500, 'split': 1.00, 'consistency': None,
+            'monthly_fee': 99, 'activation': 0, 'profit_target': 3000,
+            'max_drawdown': 2000, 'split': 1.00, 'consistency': 0.50,
             'overnight_ok': True, 'ongoing_fee': 85
         },
         'tradeify_50k': {
-            'monthly_fee': 99, 'activation': 0, 'profit_target': 2500,
-            'max_drawdown': 2500, 'split': 1.00, 'consistency': None,
+            'monthly_fee': 159, 'activation': 0, 'profit_target': 2500,
+            'max_drawdown': 2000, 'split': 0.90, 'consistency': 0.40,
             'overnight_ok': True, 'ongoing_fee': 0
         },
-        'alpha_standard_50k': {
-            'monthly_fee': 99, 'activation': 149, 'profit_target': 3000,
+        'alpha_50k': {
+            'monthly_fee': 99, 'activation': 0, 'profit_target': 3000,
             'max_drawdown': 2000, 'split': 0.70, 'consistency': 0.50,
             'overnight_ok': False, 'ongoing_fee': 0
+        },
+        'ffn_50k': {
+            'monthly_fee': 150, 'activation': 0, 'profit_target': 3000,
+            'max_drawdown': 2000, 'split': 0.80, 'consistency': 0.40,
+            'overnight_ok': True, 'ongoing_fee': 126
+        },
+        'earn2trade_50k': {
+            'monthly_fee': 170, 'activation': 0, 'profit_target': 3000,
+            'max_drawdown': 2000, 'split': 0.80, 'consistency': 0.50,
+            'overnight_ok': True, 'ongoing_fee': 0
         },
     }
 
@@ -901,16 +968,17 @@ def rank_firms_for_strategy(strategy_stats):
 |------|----------|----------|
 | **Topstep** | Cheapest eval ($49), no consistency rule | Strategy needs > $2K drawdown (tight at 4%) |
 | **TPT** | Daily payouts, 15+ platforms | Large single-day winners (50% consistency rule) |
-| **MFFU** | Best value ($77, $0 activation, 90% split) | Need TradingView... wait, they support it |
+| **MFFU** | Best value ($77, $0 activation, 80% split) | Need TradingView... wait, they support it |
 | **Apex** | Scaling (20 accounts), 100% first $25K | $85/month ongoing fee eats small profits |
 | **FFN** | Free Quantower + MotiveWave | $126/month data fee, 15% Express consistency, no TradingView |
 | **Alpha Futures** | Advanced = 90% from day one | Overnight strategies (must flatten), tight 3.5% drawdown |
-| **Tradeify** | Cheapest total, 100% first $15K | DXtrade only, limited platform support |
+| **Tradeify** | Cheapest total, 100% first $15K, 40% consistency rule | DXtrade only, limited platform support |
+| **Earn2Trade** | Low commission ($0.62), familiar Rithmic/NinjaTrader setup | $4,000 total withdrawal cap (worst payout ceiling), 10 min days, $1,100 daily loss limit |
 
 ### Recommended Evaluation Order (Cost-Optimized)
 
-1. **MFFU $50K** — $77/mo, $0 activation, 90% split, no consistency rule
-2. **Topstep $50K** — $49/mo, $149 activation, 90% split, tightest drawdown
-3. **Tradeify $50K** — $99/mo, $0 activation, 100% first $15K
-4. **Apex $50K** — $167/mo, $85 activation, 100% first $25K (best if high volume)
-5. **TPT $50K** — $150/mo, $130 activation (only if strategy passes consistency check)
+1. **MFFU $50K** — $77/mo, $0 activation, 80% split, no consistency rule
+2. **Topstep $50K** — $49/mo, $0 activation, 90% split, tightest drawdown
+3. **Tradeify $50K** — $159/mo, $0 activation, 90% split, 100% first $15K
+4. **Apex $50K** — $99/mo, $0 activation, 100% first $25K ($85/mo ongoing fee)
+5. **TPT $50K** — $170/mo, $0 activation (only if strategy passes 50% consistency check)

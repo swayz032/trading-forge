@@ -226,7 +226,7 @@ export async function handleCommand(
         .setFooter({ text: "Trading Forge" });
       for (const d of data.slice(0, 25)) {
         const decision = d.decision || d.action || "UNKNOWN";
-        const color = decision === "TRADE" ? "green" : decision === "SKIP" ? "red" : "orange";
+        const _color = decision === "TRADE" ? "green" : decision === "SKIP" ? "red" : "orange";
         embed.addFields({
           name: `${d.strategy || d.strategyId || "?"} — ${decision}`,
           value: truncate(d.reasons?.join(", ") || d.reason || "No reason provided"),

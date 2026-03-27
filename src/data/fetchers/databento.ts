@@ -7,11 +7,12 @@
  * - Budget: $125 credits — prioritize ES, NQ, CL
  *
  * API Docs: https://docs.databento.com
- * Supported: ES, NQ, YM, RTY, CL, GC, SI, ZB, ZN, 6E, 6J
+ * Supported: ES (→MES), NQ (→MNQ), CL (→MCL) — micro contracts only
  */
 
 import { spawn } from "child_process";
 import { resolve } from "path";
+import { parsePythonJson } from "../../shared/utils.js";
 
 const SCRIPT_PATH = resolve(
   import.meta.dirname ?? ".",
@@ -44,7 +45,7 @@ function runPythonScript(args: string[]): Promise<DownloadResult> {
     proc.on("close", (code) => {
       if (code === 0) {
         try {
-          resolve(JSON.parse(stdout.trim()));
+          resolve(parsePythonJson<DownloadResult>(stdout));
         } catch {
           reject(new Error(`Failed to parse output: ${stdout}`));
         }
@@ -65,7 +66,7 @@ function runPythonScript(args: string[]): Promise<DownloadResult> {
         proc2.on("close", (code) => {
           if (code === 0) {
             try {
-              resolve(JSON.parse(stdout2.trim()));
+              resolve(parsePythonJson<DownloadResult>(stdout2));
             } catch {
               reject(new Error(`Failed to parse output: ${stdout2}`));
             }

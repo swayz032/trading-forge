@@ -1,5 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
+import { writeFileSync, unlinkSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
+import { randomUUID } from "crypto";
 import { AgentService } from "../services/agent-service.js";
 import { analyzeMarket } from "../services/regime-service.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
@@ -29,17 +33,23 @@ async function runPythonValidation(
   conceptName: string,
 ): Promise<{ passed: boolean; errors: string[]; warnings: string[] }> {
   const { execSync } = await import("child_process");
+  // Write python code to a temp file to avoid string interpolation injection
+  const tmpFile = join(tmpdir(), `tf_validate_${randomUUID()}.py`);
+  const codeFile = join(tmpdir(), `tf_code_${randomUUID()}.py`);
   try {
+    writeFileSync(codeFile, pythonCode, "utf-8");
     const script = `
 import json, sys
 sys.path.insert(0, '.')
 from src.engine.validation import load_spec, validate_static_from_code
 spec = load_spec('${conceptName}')
-code = '''${pythonCode.replace(/'/g, "\\'")}'''
+with open(r'${codeFile.replace(/\\/g, "\\\\")}', 'r') as f:
+    code = f.read()
 result = validate_static_from_code(code, spec)
 print(json.dumps({"passed": result.passed, "errors": result.errors, "warnings": result.warnings}))
 `;
-    const output = execSync(`python -c "${script.replace(/"/g, '\\"')}"`, {
+    writeFileSync(tmpFile, script, "utf-8");
+    const output = execSync(`python "${tmpFile}"`, {
       cwd: process.cwd(),
       timeout: 10000,
       encoding: "utf-8",
@@ -48,12 +58,15 @@ print(json.dumps({"passed": result.passed, "errors": result.errors, "warnings": 
   } catch {
     // If validation can't run, let the strategy through (fail-open)
     return { passed: true, errors: [], warnings: ["Validation could not run"] };
+  } finally {
+    try { unlinkSync(tmpFile); } catch { /* ignore */ }
+    try { unlinkSync(codeFile); } catch { /* ignore */ }
   }
 }
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
-const symbolEnum = z.enum(["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"]);
+const symbolEnum = z.enum(["MES", "MNQ", "MCL"]);
 
 const runStrategySchema = z.object({
   strategy_name: z.string().min(1),
@@ -145,7 +158,13 @@ agentRoutes.post("/run-strategy", async (req, res) => {
         return;
       }
     } catch (err) {
-      logger.warn({ err, strategyName }, "Validation gate error — proceeding anyway");
+      logger.error({ err, strategyName }, "Validation gate error — blocking strategy (fail-closed)");
+      res.status(500).json({
+        error: "strategy_validation_error",
+        concept: strategyName,
+        message: "Validation crashed — strategy blocked. Fix validation before retrying.",
+      });
+      return;
     }
   }
 
@@ -163,8 +182,8 @@ agentRoutes.post("/run-strategy", async (req, res) => {
   }
 
   // Fire and forget
-  agentService.runStrategy(parsed.data).catch(() => {
-    // Error persisted to DB by service
+  agentService.runStrategy(parsed.data).catch((err) => {
+    logger.error({ err, strategy: parsed.data.strategy_name }, "Fire-and-forget run-strategy failed");
   });
 
   res.status(202).json({ message: "Strategy submitted" });
@@ -198,8 +217,8 @@ agentRoutes.post("/batch", async (req, res) => {
   }
 
   // Fire and forget
-  agentService.batchSubmit(parsed.data.strategies).catch(() => {
-    // Errors persisted per-strategy
+  agentService.batchSubmit(parsed.data.strategies).catch((err) => {
+    logger.error({ err }, "Fire-and-forget batch submit failed");
   });
 
   res.status(202).json({ count: parsed.data.strategies.length, message: "Batch submitted" });
@@ -297,8 +316,8 @@ agentRoutes.post("/robustness", async (req, res) => {
 
   // Fire and forget
   const configJson = JSON.stringify(parsed.data.config);
-  runRobustnessTest(parsed.data.strategy_id, configJson).catch(() => {
-    // Error persisted by service
+  runRobustnessTest(parsed.data.strategy_id, configJson).catch((err) => {
+    logger.error({ err, strategyId: parsed.data.strategy_id }, "Fire-and-forget robustness test failed");
   });
 
   res.status(202).json({ job_id: job.id, message: "Robustness test submitted" });
@@ -392,7 +411,7 @@ Output ONLY the DSL JSON object, nothing else.`;
             one_sentence: String(dsl.description),
             python_code: pythonCode,
             params: (entryParams ?? {}) as Record<string, unknown>,
-            symbol: symbol as "ES" | "NQ" | "CL" | "YM" | "RTY" | "GC" | "MES" | "MNQ",
+            symbol: symbol as "MES" | "MNQ" | "MCL",
             timeframe,
             start_date,
             end_date,
@@ -421,7 +440,9 @@ Output ONLY the DSL JSON object, nothing else.`;
     db.update(auditLog).set({
       status: "failure",
       result: { error: err instanceof Error ? err.message : String(err) } as unknown as Record<string, unknown>,
-    }).where(eq(auditLog.id, job.id)).catch(() => {});
+    }).where(eq(auditLog.id, job.id)).catch((err) => {
+      logger.error({ err, jobId: job.id }, "Failed to update audit log after find-strategies failure");
+    });
   });
 
   res.status(202).json({ job_id: job.id, message: "Strategy search submitted" });
@@ -431,8 +452,8 @@ Output ONLY the DSL JSON object, nothing else.`;
 // Returns AVOID patterns from recent failed strategies (for n8n + Ollama prompt injection)
 
 agentRoutes.get("/failure-patterns", async (req, res) => {
-  const days = Number(req.query.days ?? 30);
-  const limit = Number(req.query.limit ?? 50);
+  const days = parseInt(String(req.query.days ?? "30"), 10) || 30;
+  const limit = parseInt(String(req.query.limit ?? "50"), 10) || 50;
   try {
     const patterns = await agentService.getFailurePatterns(days, limit);
     res.json(patterns);

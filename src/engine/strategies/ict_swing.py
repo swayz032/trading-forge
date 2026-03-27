@@ -39,7 +39,7 @@ class ICTSwingStrategy(BaseStrategy):
         self.htf_lookback = htf_lookback
         self.sweep_lookback = sweep_lookback
         self.pd_array_lookback = pd_array_lookback
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "1h"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -68,8 +68,8 @@ class ICTSwingStrategy(BaseStrategy):
         sweep_ssl = detect_sweep(df, ssl)
 
         # PD arrays: order blocks + FVGs
-        bull_obs = detect_bullish_ob(df, swings)
-        bear_obs = detect_bearish_ob(df, swings)
+        bull_obs = detect_bullish_ob(df, swings, lookback=self.htf_lookback)
+        bear_obs = detect_bearish_ob(df, swings, lookback=self.htf_lookback)
         fvgs = detect_fvg(df)
 
         # ── Pre-extract to lists for the bar loop ────────────────────
@@ -191,6 +191,8 @@ class ICTSwingStrategy(BaseStrategy):
 
         for i in range(n):
             if entry_long[i]:
+                if in_short:
+                    exit_short[i] = True  # Close short before flipping to long
                 in_long = True
                 in_short = False
                 # Target = nearest BSL above current price
@@ -201,6 +203,8 @@ class ICTSwingStrategy(BaseStrategy):
                             long_target = p
 
             elif entry_short[i]:
+                if in_long:
+                    exit_long[i] = True  # Close long before flipping to short
                 in_short = True
                 in_long = False
                 # Target = nearest SSL below current price
@@ -210,8 +214,8 @@ class ICTSwingStrategy(BaseStrategy):
                         if short_target is None or p > short_target:
                             short_target = p
 
-            # Exit long: BSL target hit or bearish BOS
-            if in_long:
+            # Exit long: BSL target hit or bearish BOS (skip entry bar)
+            if in_long and not entry_long[i]:
                 if long_target is not None and closes[i] >= long_target:
                     exit_long[i] = True
                     in_long = False
@@ -219,8 +223,8 @@ class ICTSwingStrategy(BaseStrategy):
                     exit_long[i] = True
                     in_long = False
 
-            # Exit short: SSL target hit or bullish BOS
-            if in_short:
+            # Exit short: SSL target hit or bullish BOS (skip entry bar)
+            if in_short and not entry_short[i]:
                 if short_target is not None and closes[i] <= short_target:
                     exit_short[i] = True
                     in_short = False

@@ -30,7 +30,11 @@ export const strategies = pgTable("strategies", {
   generation: integer("generation").notNull().default(0), // Evolution generation (0 = original)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+},
+  (table) => [
+    index("strategies_lifecycle_state_idx").on(table.lifecycleState),
+  ]
+);
 
 // ─── Backtests ───────────────────────────────────────────────
 export const backtests = pgTable(
@@ -73,6 +77,8 @@ export const backtests = pgTable(
     index("backtests_strategy_idx").on(table.strategyId),
     index("backtests_status_idx").on(table.status),
     index("backtests_tier_idx").on(table.tier),
+    index("backtests_strategy_status_idx").on(table.strategyId, table.status),
+    index("backtests_strategy_tier_idx").on(table.strategyId, table.tier),
   ]
 );
 
@@ -160,7 +166,11 @@ export const monteCarloRuns = pgTable("monte_carlo_runs", {
   executionTimeMs: integer("execution_time_ms"),
   gpuAccelerated: boolean("gpu_accelerated").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+},
+  (table) => [
+    index("monte_carlo_runs_backtest_idx").on(table.backtestId),
+  ]
+);
 
 // ─── Stress Test Runs ────────────────────────────────────────
 export const stressTestRuns = pgTable("stress_test_runs", {
@@ -173,7 +183,11 @@ export const stressTestRuns = pgTable("stress_test_runs", {
   failedScenarios: jsonb("failed_scenarios"), // Array of scenario names that failed
   executionTimeMs: integer("execution_time_ms"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+},
+  (table) => [
+    index("stress_test_runs_backtest_idx").on(table.backtestId),
+  ]
+);
 
 // ─── Market Data Metadata ────────────────────────────────────
 export const marketDataMeta = pgTable(
@@ -202,7 +216,11 @@ export const watchlist = pgTable("watchlist", {
   active: boolean("active").default(true),
   notes: text("notes"),
   addedAt: timestamp("added_at").defaultNow().notNull(),
-});
+},
+  (table) => [
+    index("watchlist_active_idx").on(table.active),
+  ]
+);
 
 // ─── Alerts ──────────────────────────────────────────────────
 export const alerts = pgTable("alerts", {
@@ -214,7 +232,12 @@ export const alerts = pgTable("alerts", {
   metadata: jsonb("metadata"),
   acknowledged: boolean("acknowledged").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+},
+  (table) => [
+    index("alerts_type_idx").on(table.type),
+    index("alerts_severity_idx").on(table.severity),
+  ]
+);
 
 // ─── System Journal (AI Self-Learning Loop) ─────────────────
 // Logs every AI-generated strategy's simulated performance so
@@ -238,7 +261,7 @@ export const systemJournal = pgTable(
     tier: text("tier"), // TIER_1 | TIER_2 | TIER_3 | REJECTED
     analystNotes: text("analyst_notes"), // Ollama Analyst self-critique
     parentJournalId: uuid("parent_journal_id"), // Links refinements to original
-    status: text("status").notNull().default("tested"), // tested | promoted | archived | failed
+    status: text("status").notNull().default("tested"), // tested | promoted | archived | failed | scouted | flagged
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -568,6 +591,9 @@ export const paperTrades = pgTable(
   },
   (table) => [
     index("paper_trades_session_idx").on(table.sessionId),
+    index("paper_trades_symbol_idx").on(table.symbol),
+    index("paper_trades_exit_time_idx").on(table.exitTime),
+    index("paper_trades_created_idx").on(table.createdAt),
   ]
 );
 
@@ -643,3 +669,99 @@ export const walkForwardWindows = pgTable(
         index("wf_windows_backtest_idx").on(table.backtestId),
     ]
 );
+
+// ── Quantum Risk Lab ──────────────────────────────────────────────────
+
+export const quantumMcRuns = pgTable("quantum_mc_runs", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+    method: text("method").notNull(), // iae | sqa | tensor_mps | qubo_timing | quantum_rl
+    backend: text("backend"), // aer_statevector | aer_gpu | cpu | dwave_neal | pennylane
+    numQubits: integer("num_qubits"),
+    estimatedValue: numeric("estimated_value"),
+    classicalValue: numeric("classical_value"),
+    toleranceDelta: numeric("tolerance_delta"),
+    withinTolerance: boolean("within_tolerance"),
+    confidenceInterval: jsonb("confidence_interval"), // {lower, upper, confidence_level}
+    executionTimeMs: integer("execution_time_ms"),
+    gpuAccelerated: boolean("gpu_accelerated").default(false),
+    governanceLabels: jsonb("governance_labels").notNull().default({}), // {experimental: true, authoritative: false, decision_role: "challenger_only"}
+    rawResult: jsonb("raw_result"),
+    reproducibilityHash: text("reproducibility_hash"), // SHA-256 of run config
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("qmc_runs_backtest_idx").on(table.backtestId),
+    index("qmc_runs_method_idx").on(table.method),
+]);
+
+export const quantumMcBenchmarks = pgTable("quantum_mc_benchmarks", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    quantumRunId: uuid("quantum_run_id").references(() => quantumMcRuns.id).notNull(),
+    classicalRunId: uuid("classical_run_id").references(() => monteCarloRuns.id),
+    metric: text("metric").notNull(), // breach_probability | ruin_probability | target_hit | tail_loss | sharpe | max_drawdown
+    quantumValue: numeric("quantum_value"),
+    classicalValue: numeric("classical_value"),
+    absoluteDelta: numeric("absolute_delta"),
+    relativeDelta: numeric("relative_delta"),
+    toleranceThreshold: numeric("tolerance_threshold"),
+    passes: boolean("passes"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("qmc_bench_quantum_run_idx").on(table.quantumRunId),
+    index("qmc_bench_metric_idx").on(table.metric),
+]);
+
+// ─── Strategy Names (Forge Codename Pool) ────────────────────────────
+export const strategyNames = pgTable("strategy_names", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    codename: text("codename").notNull().unique(),
+    fullName: text("full_name").notNull().unique(),
+    strategyId: uuid("strategy_id").references(() => strategies.id),
+    claimed: boolean("claimed").default(false),
+    claimedAt: timestamp("claimed_at"),
+    retired: boolean("retired").default(false),
+    retiredAt: timestamp("retired_at"),
+    version: text("version").default("v1.0"),
+    originClass: text("origin_class"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("strategy_names_claimed_idx").on(table.claimed),
+    index("strategy_names_strategy_id_idx").on(table.strategyId),
+]);
+
+// ── Strategy Exports ──────────────────────────────────────────────────
+
+export const strategyExports = pgTable("strategy_exports", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    exportType: text("export_type").notNull(), // pine_indicator | pine_strategy | alert_only
+    pineVersion: text("pine_version").default("v6"),
+    exportabilityScore: numeric("exportability_score"), // 0-100
+    exportabilityDetails: jsonb("exportability_details"),
+    status: text("status").notNull().default("pending"), // pending | compiling | completed | failed
+    errorMessage: text("error_message"),
+    propOverlayFirm: text("prop_overlay_firm"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("strat_exports_strategy_idx").on(table.strategyId),
+    index("strat_exports_status_idx").on(table.status),
+]);
+
+export const strategyExportArtifacts = pgTable("strategy_export_artifacts", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    exportId: uuid("export_id").references(() => strategyExports.id, { onDelete: "cascade" }).notNull(),
+    artifactType: text("artifact_type").notNull(), // indicator | strategy_shell | prop_overlay | alerts_json
+    fileName: text("file_name").notNull(),
+    content: text("content").notNull(),
+    sizeBytes: integer("size_bytes"),
+    pineVersion: text("pine_version").default("v6"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("strat_export_artifacts_export_idx").on(table.exportId),
+]);

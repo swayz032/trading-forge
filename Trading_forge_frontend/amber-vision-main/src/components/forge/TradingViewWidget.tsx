@@ -12,9 +12,6 @@ const TV_SYMBOLS: Record<string, string> = {
   "ES": "FOREXCOM:SPXUSD",
   "NQ": "FOREXCOM:NSXUSD",
   "CL": "TVC:USOIL",
-  "GC": "TVC:GOLD",
-  "YM": "TVC:DJI",
-  "RTY": "TVC:RUT",
 };
 
 function TradingViewWidgetInner({ type, symbol = "FOREXCOM:SPXUSD", width = "100%", height = 400, colorTheme = "dark" }: TradingViewWidgetProps) {
@@ -40,9 +37,6 @@ function TradingViewWidgetInner({ type, symbol = "FOREXCOM:SPXUSD", width = "100
           { proName: "FOREXCOM:SPXUSD", title: "ES" },
           { proName: "FOREXCOM:NSXUSD", title: "NQ" },
           { proName: "TVC:USOIL",       title: "CL" },
-          { proName: "TVC:GOLD",         title: "GC" },
-          { proName: "TVC:DJI",          title: "YM" },
-          { proName: "TVC:RUT",          title: "RTY" },
         ],
         showSymbolLogo: true,
         isTransparent: true,
@@ -112,9 +106,6 @@ function TradingViewWidgetInner({ type, symbol = "FOREXCOM:SPXUSD", width = "100
               { s: "FOREXCOM:SPXUSD", d: "E-mini S&P 500" },
               { s: "FOREXCOM:NSXUSD", d: "E-mini NASDAQ" },
               { s: "TVC:USOIL",       d: "Crude Oil" },
-              { s: "TVC:GOLD",         d: "Gold" },
-              { s: "TVC:DJI",          d: "E-mini Dow" },
-              { s: "TVC:RUT",          d: "E-mini Russell" },
             ],
           },
         ],

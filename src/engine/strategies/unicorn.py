@@ -40,7 +40,7 @@ class UnicornStrategy(BaseStrategy):
         self.max_zone_age = max_zone_age
         self.atr_sl_mult = atr_sl_mult
         self.max_hold_bars = max_hold_bars
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "15min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -53,8 +53,8 @@ class UnicornStrategy(BaseStrategy):
         displacement = detect_displacement(df, atr_mult=1.5, atr_period=self.atr_period)
 
         # Get order blocks and breakers
-        bull_obs = detect_bullish_ob(df, swings)
-        bear_obs = detect_bearish_ob(df, swings)
+        bull_obs = detect_bullish_ob(df, swings, lookback=self.swing_lookback)
+        bear_obs = detect_bearish_ob(df, swings, lookback=self.swing_lookback)
 
         all_obs_list = []
         if len(bull_obs) > 0:
@@ -163,6 +163,9 @@ class UnicornStrategy(BaseStrategy):
             if atr_val is None or atr_val != atr_val:
                 atr_val = 0.0
 
+            exited_this_bar_long = False
+            exited_this_bar_short = False
+
             # ─── Exit checks first ────────────────────────────────
             if long_entry_bar >= 0:
                 bars_held = i - long_entry_bar
@@ -171,6 +174,7 @@ class UnicornStrategy(BaseStrategy):
                 if close < sl_level or bars_held >= self.max_hold_bars:
                     exit_long[i] = True
                     long_entry_bar = -1
+                    exited_this_bar_long = True
 
             if short_entry_bar >= 0:
                 bars_held = i - short_entry_bar
@@ -179,8 +183,9 @@ class UnicornStrategy(BaseStrategy):
                 if close > sl_level or bars_held >= self.max_hold_bars:
                     exit_short[i] = True
                     short_entry_bar = -1
+                    exited_this_bar_short = True
 
-            # ─── Entry checks (only if flat) ──────────────────────
+            # ─── Entry checks (only if flat, not exited this bar) ─
             for zone in unicorn_zones:
                 formed = zone["formed_at"]
 
@@ -204,7 +209,7 @@ class UnicornStrategy(BaseStrategy):
                     continue
 
                 # Entry: price retraces into the Unicorn Zone
-                if zone["type"] == "bullish_breaker" and long_entry_bar < 0:
+                if zone["type"] == "bullish_breaker" and long_entry_bar < 0 and not exited_this_bar_long:
                     if zone["zone_bottom"] <= close <= zone["zone_top"]:
                         entry_long[i] = True
                         long_entry_bar = i
@@ -212,7 +217,7 @@ class UnicornStrategy(BaseStrategy):
                         long_atr_at_entry = atr_val
                         break
 
-                elif zone["type"] == "bearish_breaker" and short_entry_bar < 0:
+                elif zone["type"] == "bearish_breaker" and short_entry_bar < 0 and not exited_this_bar_short:
                     if zone["zone_bottom"] <= close <= zone["zone_top"]:
                         entry_short[i] = True
                         short_entry_bar = i

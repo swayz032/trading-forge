@@ -26,19 +26,21 @@ export interface EmbedResponse {
 
 // Model routing: task type → model name
 const MODEL_ROUTES: Record<string, string> = {
-  fast: "llama3.1:8b",
+  fast: "deepseek-r1:14b",
   generate: "trading-quant",
   embed: "nomic-embed-text",
 };
 
 export type ModelRole = keyof typeof MODEL_ROUTES;
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export class OllamaClient {
   public readonly baseUrl: string;
   private timeoutMs: number;
 
   constructor(baseUrl?: string, timeoutMs = 120_000) {
-    this.baseUrl = baseUrl ?? process.env.OLLAMA_HOST ?? "http://localhost:11434";
+    this.baseUrl = baseUrl ?? process.env.OLLAMA_HOST ?? process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
     this.timeoutMs = timeoutMs;
   }
 
@@ -106,81 +108,129 @@ export class OllamaClient {
   }
 
   private async request<T>(path: string, body: Record<string, unknown>): Promise<T> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+    let lastError: unknown;
 
-    let res: Response;
-    try {
-      res = await fetch(`${this.baseUrl}${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-    } catch (err) {
-      clearTimeout(timeout);
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`Ollama unreachable at ${this.baseUrl}: ${msg}`);
-    } finally {
-      clearTimeout(timeout);
-    }
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`Ollama error ${res.status}: ${text}`);
-    }
+      try {
+        const res = await fetch(`${this.baseUrl}${path}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
 
-    try {
-      return (await res.json()) as T;
-    } catch {
-      throw new Error("Failed to parse Ollama response");
+        // 503 = Service Unavailable (often model loading)
+        if (!res.ok) {
+          if (res.status === 503 && attempt < 2) {
+            clearTimeout(timeout);
+            await sleep(1000 * Math.pow(2, attempt));
+            continue;
+          }
+          const text = await res.text().catch(() => "");
+          throw new Error(`Ollama error ${res.status}: ${text}`);
+        }
+
+        try {
+          return (await res.json()) as T;
+        } catch {
+          throw new Error("Failed to parse Ollama response");
+        }
+      } catch (err) {
+        lastError = err;
+        const isRetryable =
+          err instanceof Error &&
+          (err.name === "AbortError" || // Timeout
+            (err.cause as any)?.code === "ECONNREFUSED" || // Connection refused
+            (err.cause as any)?.code === "ETIMEDOUT"); // Network timeout
+
+        if (isRetryable && attempt < 2) {
+          clearTimeout(timeout);
+          await sleep(1000 * Math.pow(2, attempt));
+          continue;
+        }
+        
+        clearTimeout(timeout);
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Ollama unreachable at ${this.baseUrl}: ${msg}`, { cause: err });
+      } finally {
+        clearTimeout(timeout);
+      }
     }
+    
+    throw lastError;
   }
 
   private async *streamRequest(path: string, body: Record<string, unknown>): AsyncGenerator<string> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+    let lastError: unknown;
 
-    let res: Response;
-    try {
-      res = await fetch(`${this.baseUrl}${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-    } catch (err) {
-      clearTimeout(timeout);
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`Ollama unreachable at ${this.baseUrl}: ${msg}`);
-    }
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
-    if (!res.ok) {
-      clearTimeout(timeout);
-      const text = await res.text().catch(() => "");
-      throw new Error(`Ollama error ${res.status}: ${text}`);
-    }
+      try {
+        const res = await fetch(`${this.baseUrl}${path}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
 
-    try {
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response body");
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split("\n").filter(Boolean)) {
-          try {
-            const parsed = JSON.parse(line);
-            if (parsed.response) yield parsed.response;
-          } catch {
-            // Skip malformed lines
+        if (!res.ok) {
+          if (res.status === 503 && attempt < 2) {
+            clearTimeout(timeout);
+            await sleep(1000 * Math.pow(2, attempt));
+            continue;
           }
+          const text = await res.text().catch(() => "");
+          throw new Error(`Ollama error ${res.status}: ${text}`);
         }
+
+        // Connection established — stream the body
+        try {
+          const reader = res.body?.getReader();
+          if (!reader) throw new Error("No response body");
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            for (const line of chunk.split("\n").filter(Boolean)) {
+              try {
+                const parsed = JSON.parse(line);
+                if (parsed.response) yield parsed.response;
+              } catch {
+                // Skip malformed lines
+              }
+            }
+          }
+          return; // Success
+        } finally {
+          clearTimeout(timeout);
+        }
+      } catch (err) {
+        lastError = err;
+        const isRetryable =
+          err instanceof Error &&
+          (err.name === "AbortError" ||
+            (err.cause as any)?.code === "ECONNREFUSED" ||
+            (err.cause as any)?.code === "ETIMEDOUT");
+
+        if (isRetryable && attempt < 2) {
+          clearTimeout(timeout);
+          await sleep(1000 * Math.pow(2, attempt));
+          continue;
+        }
+        
+        clearTimeout(timeout);
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Ollama unreachable at ${this.baseUrl}: ${msg}`, { cause: err });
       }
-    } finally {
-      clearTimeout(timeout);
     }
+    
+    throw lastError;
   }
 }

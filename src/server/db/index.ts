@@ -8,7 +8,7 @@ if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is required");
 }
 
-const client = postgres(connectionString, {
+export const client = postgres(connectionString, {
   max: 20,
   idle_timeout: 30,
   connect_timeout: 10,

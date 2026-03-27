@@ -13,9 +13,9 @@ from src.engine.compiler.pattern_library import validate_entry_params, list_patt
 def _valid_dsl_dict() -> dict:
     """Minimal valid strategy DSL dict."""
     return {
-        "name": "SMA Crossover ES",
-        "description": "Go long when fast SMA crosses above slow SMA on ES 15m chart",
-        "symbol": "ES",
+        "name": "SMA Crossover MES",
+        "description": "Go long when fast SMA crosses above slow SMA on MES 15m chart",
+        "symbol": "MES",
         "timeframe": "15m",
         "direction": "long",
         "entry_type": "trend_follow",
@@ -55,8 +55,8 @@ class TestValidDSL:
         assert valid is True
         assert model is not None
         assert errors == []
-        assert model.name == "SMA Crossover ES"
-        assert model.symbol == "ES"
+        assert model.name == "SMA Crossover MES"
+        assert model.symbol == "MES"
 
     def test_valid_dsl_roundtrip(self):
         data = _valid_dsl_dict()
@@ -214,8 +214,8 @@ class TestCompileToBacktest:
         # Must have strategy key with required backtest fields
         assert "strategy" in config
         strat = config["strategy"]
-        assert strat["name"] == "SMA Crossover ES"
-        assert strat["symbol"] == "ES"
+        assert strat["name"] == "SMA Crossover MES"
+        assert strat["symbol"] == "MES"
         assert strat["timeframe"] == "15m"
         assert "indicators" in strat
         assert "stop_loss" in strat
@@ -301,7 +301,7 @@ class TestDiffStrategies:
     def test_diff_multiple_changes(self):
         a = _valid_dsl_dict()
         b = _valid_dsl_dict()
-        b["symbol"] = "NQ"
+        b["symbol"] = "MNQ"
         b["timeframe"] = "5m"
         result = diff_strategies(a, b)
         assert "symbol" in result["changed"]

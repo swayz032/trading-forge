@@ -43,7 +43,7 @@ class TurtleSoupStrategy(BaseStrategy):
         self.atr_period = atr_period
         self.confirmation_window = confirmation_window
         self.equal_hl_tolerance = equal_hl_tolerance
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "15min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -153,6 +153,7 @@ class TurtleSoupStrategy(BaseStrategy):
             if (
                 not exited_this_bar_short
                 and short_entry_bar < 0
+                and long_entry_bar < 0
                 and (i - last_bsl_sweep) <= self.confirmation_window
                 and last_bsl_sweep > 0
                 and (i - last_bearish_mss) <= self.confirmation_window

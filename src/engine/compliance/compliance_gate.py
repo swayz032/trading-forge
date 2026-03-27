@@ -42,13 +42,14 @@ def check_freshness(
             "message": str,
         }
     """
+    max_age = RULESET_MAX_AGE_HOURS.get(context, 24)
     try:
         retrieved_at = datetime.fromisoformat(ruleset["retrieved_at"])
     except (ValueError, TypeError) as exc:
         return {
             "fresh": False,
             "age_hours": float("inf"),
-            "max_age_hours": max_age_hours,
+            "max_age_hours": max_age,
             "drift_detected": False,
             "status": "stale",
             "message": f"Invalid retrieved_at timestamp: {exc}",
@@ -77,7 +78,6 @@ def check_freshness(
             ),
         }
 
-    max_age = RULESET_MAX_AGE_HOURS.get(context, 24)
     fresh = age_hours <= max_age
 
     if fresh:

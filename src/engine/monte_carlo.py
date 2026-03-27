@@ -344,7 +344,7 @@ def simulate_firm_survival(
     account_size: float = 50000,
     daily_trades_per_day: int = 3,
     granularity: str = "day",
-    symbol: str = "ES",
+    symbol: str = "MES",
 ) -> dict:
     """Per-firm Monte Carlo survival simulation.
 
@@ -369,12 +369,7 @@ def simulate_firm_survival(
     from src.engine.prop_sim import DAILY_LOSS_LIMITS
     from src.engine.firm_config import FIRM_COMMISSIONS
 
-    # Handle earn2trade specially
-    if firm_key == "earn2trade_50k":
-        from src.engine.prop_sim import EARN2TRADE_CONFIG
-        firm = EARN2TRADE_CONFIG
-    else:
-        firm = FIRM_CONFIGS.get(firm_key)
+    firm = FIRM_CONFIGS.get(firm_key)
 
     if firm is None:
         return {"error": f"Unknown firm: {firm_key}"}
@@ -388,16 +383,18 @@ def simulate_firm_survival(
     _consistency_map = {
         "tpt_50pct": 0.50,
         "alpha_50pct": 0.50,
-        "ffn_15pct": 0.15,
+        "mffu_50pct": 0.50,
+        "ffn_40pct": 0.40,
+        "tradeify_40pct": 0.40,
+        "earn2trade_consistency": 0.50,
+        # apex_50pct_funded: applies only to funded payouts, not eval sim
     }
     consistency_ratio = _consistency_map.get(firm.get("consistency_rule"), None)
 
     # Per-firm commission per round trip per contract
     firm_comms = FIRM_COMMISSIONS.get(firm_key, {})
-    comm_per_side = firm_comms.get(symbol, 2.52)  # default $2.52/side
+    comm_per_side = firm_comms.get(symbol, 0.62)  # default micro commission
     # Daily commission cost: trades_per_day × 2 sides × commission_per_side
-    daily_commission = daily_trades_per_day * 2 * comm_per_side
-
     n_sims = paths.shape[0]
     n_steps = paths.shape[1]
 
@@ -596,8 +593,14 @@ def compute_drawdown_stats(paths: np.ndarray, initial_capital: float) -> dict:
         starts = np.where(diff[sim] == 1)[0]
         ends = np.where(diff[sim] == -1)[0]
         if len(starts) > 0 and len(ends) > 0:
-            runs = ends[:len(starts)] - starts[:len(ends)]
+            # If last drawdown is still open, append n_steps as synthetic end
+            if len(starts) > len(ends):
+                ends = np.append(ends, n_steps)
+            runs = ends[:len(starts)] - starts[:len(starts)]
             max_dd_duration[sim] = int(np.max(runs)) if len(runs) > 0 else 0
+        elif len(starts) > 0:
+            # Drawdown started but never ended — duration = remaining bars
+            max_dd_duration[sim] = int(n_steps - starts[0])
 
     # ── Recovery time: bars from max DD trough back to previous peak ──
     # Find bar index of the deepest drawdown point per sim
@@ -780,14 +783,17 @@ def run_monte_carlo(
         daily_arr = inject_synthetic_stress(daily_arr, seed=request.seed + 101, max_loss_cap=max_loss)
 
     # Determine annualization factor based on method
+    # Compute both variants — "both" method needs trade-level AND daily
+    n_trading_days = len(daily_pnls) if len(daily_pnls) > 0 else 1
+    years = n_trading_days / 252.0
+    periods_per_year_trades = len(trades_arr) / years if years > 0 else 252.0
+    periods_per_year_daily = 252.0
+
     if request.method == "trade_resample":
-        # trade_resample: compute trades per year from actual data
-        n_trading_days = len(daily_pnls) if len(daily_pnls) > 0 else 1
-        years = n_trading_days / 252.0
-        periods_per_year = len(trades_arr) / years if years > 0 else 252.0
+        periods_per_year = periods_per_year_trades
     else:
-        # return_bootstrap / block_bootstrap: daily data → 252
-        periods_per_year = 252.0
+        # return_bootstrap / block_bootstrap / both: daily default
+        periods_per_year = periods_per_year_daily
 
     # Generate paths based on method
     both_metrics: Optional[dict] = None
@@ -820,7 +826,7 @@ def run_monte_carlo(
                     request.confidence_levels,
                 ),
                 "sharpe_ratios": _compute_percentiles(
-                    _compute_sharpe_ratios(trade_paths, periods_per_year),
+                    _compute_sharpe_ratios(trade_paths, periods_per_year_trades),
                     request.confidence_levels,
                 ),
             },
@@ -830,7 +836,7 @@ def run_monte_carlo(
                     request.confidence_levels,
                 ),
                 "sharpe_ratios": _compute_percentiles(
-                    _compute_sharpe_ratios(return_paths, periods_per_year),
+                    _compute_sharpe_ratios(return_paths, periods_per_year_daily),
                     request.confidence_levels,
                 ),
             },
@@ -937,8 +943,12 @@ def run_monte_carlo(
         # Deflated Sharpe Ratio
         from src.engine.risk_metrics import compute_deflated_sharpe_ratio
         from scipy import stats as sp_stats
+        # Annualize trade-level Sharpe: use actual trades/year from daily data
+        n_trading_days = len(daily_pnls) if len(daily_pnls) > 0 else 1
+        years = n_trading_days / 252.0
+        trades_per_year = len(trades_arr) / years if years > 0 else 252.0
         obs_sharpe = float(
-            np.mean(trades_arr) / max(np.std(trades_arr, ddof=1), 1e-10) * np.sqrt(252)
+            np.mean(trades_arr) / max(np.std(trades_arr, ddof=1), 1e-10) * np.sqrt(trades_per_year)
         )
         dsr_result = compute_deflated_sharpe_ratio(
             observed_sharpe=obs_sharpe,

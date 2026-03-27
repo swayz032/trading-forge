@@ -74,12 +74,16 @@ export function createS3Service(config?: {
   region?: string;
   bucket?: string;
 }) {
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    throw new Error("AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set");
+  }
+
   const bucket = config?.bucket ?? process.env.S3_BUCKET ?? "trading-forge-data";
   const client = new S3Client({
     region: config?.region ?? process.env.AWS_REGION ?? "us-east-1",
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
   });
 

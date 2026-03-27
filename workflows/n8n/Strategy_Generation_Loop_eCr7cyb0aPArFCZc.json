@@ -1,1132 +1,13 @@
 {
-  "updatedAt": "2026-03-17T07:43:49.509Z",
-  "createdAt": "2026-03-10T04:18:51.671Z",
-  "id": "eCr7cyb0aPArFCZc",
-  "name": "Strategy Generation Loop",
-  "description": null,
-  "active": true,
-  "isArchived": false,
-  "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "trading-forge/generate",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "id": "webhook-trigger",
-      "name": "Webhook Trigger",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        0,
-        736
-      ],
-      "webhookId": "c0bd2ff0-3667-4e64-952b-a456d2b05730",
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst body = items[0].json.body;\n\nreturn [{\n  json: {\n    symbol: body.symbol || 'NQ',\n    strategy_type: body.strategy_type || 'momentum',\n    constraints: body.constraints || 'max drawdown 5%, Sharpe > 1.5',\n    iteration: 0,\n    max_iterations: 3,\n    refinement_notes: '',\n    status: 'generating'\n  }\n}];"
-      },
-      "id": "init-counter",
-      "name": "Init Iteration Counter",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        224,
-        736
-      ]
-    },
-    {
-      "parameters": {
-        "model": "trading-quant",
-        "options": {}
-      },
-      "id": "ollama-model",
-      "name": "Ollama Chat Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
-      "typeVersion": 1,
-      "position": [
-        448,
-        960
-      ],
-      "credentials": {
-        "ollamaApi": {
-          "id": "BLgLWvmLGaJQOYaF",
-          "name": "Ollama account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=Generate a {{ $json.strategy_type }} strategy for {{ $json.symbol }} futures.\n\nConstraints: {{ $json.constraints }}\n\nIteration: {{ $json.iteration }} of {{ $json.max_iterations }}\n{% if $json.refinement_notes %}\nPrevious attempt feedback: {{ $json.refinement_notes }}\nPlease refine the strategy based on this feedback.\n{% endif %}\n\nOutput EXACTLY:\n1. A strategy name (short, descriptive)\n2. A one-sentence description\n3. Valid vectorbt Python code implementing the strategy\n4. JSON parameters object with keys: fast_period, slow_period, stop_loss, take_profit, position_size\n5. Recommended timeframe (e.g., 1h, 4h, 1d)\n\nFormat your response as valid JSON:\n{\n  \"strategy_name\": \"...\",\n  \"one_sentence\": \"...\",\n  \"python_code\": \"...\",\n  \"params\": {...},\n  \"timeframe\": \"...\"\n}",
-        "options": {
-          "systemMessage": "You are an expert quantitative trading strategist specializing in futures markets. You generate production-ready vectorbt Python strategies with precise risk management. Always output valid JSON. Never hallucinate indicators or functions that don't exist in vectorbt."
-        }
-      },
-      "id": "ai-agent",
-      "name": "AI Strategy Generator",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        504,
-        736
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst aiOutput = items[0].json.output || items[0].json.text || '';\n\nlet parsed;\ntry {\n  const jsonMatch = aiOutput.match(/```json?\\s*([\\s\\S]*?)```/) || \n                    aiOutput.match(/(\\{[\\s\\S]*\\})/);\n  const jsonStr = jsonMatch ? jsonMatch[1].trim() : aiOutput.trim();\n  parsed = JSON.parse(jsonStr);\n} catch (e) {\n  return [{\n    json: {\n      error: true,\n      message: `Failed to parse AI output: ${e.message}`,\n      raw_output: aiOutput,\n      iteration: $('Init Iteration Counter').first().json?.iteration || 0\n    }\n  }];\n}\n\nconst ctx = $('Init Iteration Counter').first().json || {};\nconst now = new Date();\nconst startDate = new Date(now);\nstartDate.setFullYear(startDate.getFullYear() - 2);\n\nreturn [{\n  json: {\n    strategy_name: parsed.strategy_name || 'unnamed_strategy',\n    one_sentence: parsed.one_sentence || '',\n    python_code: parsed.python_code || '',\n    params: parsed.params || {},\n    symbol: ctx.symbol || 'NQ',\n    timeframe: parsed.timeframe || '1h',\n    start_date: startDate.toISOString().split('T')[0],\n    end_date: now.toISOString().split('T')[0],\n    source: 'n8n-strategy-generation-loop',\n    iteration: ctx.iteration || 0,\n    max_iterations: ctx.max_iterations || 3,\n    strategy_type: ctx.strategy_type || 'momentum',\n    constraints: ctx.constraints || '',\n    error: false\n  }\n}];"
-      },
-      "id": "parse-strategy",
-      "name": "Parse AI Strategy Output",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1096,
-        664
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:4000/api/agent/run-strategy",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ strategy_name: $json.strategy_name, one_sentence: $json.one_sentence, python_code: $json.python_code, params: $json.params, symbol: $json.symbol, timeframe: $json.timeframe, start_date: $json.start_date, end_date: $json.end_date, source: $json.source }) }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "id": "submit-backtest",
-      "name": "Submit Backtest",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1768,
-        568
-      ],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "amount": 2,
-        "unit": "minutes"
-      },
-      "id": "wait-backtest",
-      "name": "Wait for Backtest",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        1992,
-        568
-      ],
-      "webhookId": "fae041fe-73ab-4343-b617-ec496c983d5f"
-    },
-    {
-      "parameters": {
-        "url": "=http://host.docker.internal:4000/api/backtests/{{ $json.backtestId }}",
-        "options": {
-          "timeout": 15000
-        }
-      },
-      "id": "fetch-results",
-      "name": "Fetch Backtest Results",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        2216,
-        568
-      ],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "version": 2,
-            "leftValue": "",
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "tier-check",
-              "leftValue": "={{ $json.tier }}",
-              "rightValue": "REJECTED",
-              "operator": {
-                "type": "string",
-                "operation": "notEquals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "check-tier",
-      "name": "Check Strategy Tier",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        2440,
-        568
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:4000/api/journal",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ event: 'strategy_accepted', strategy_name: $json.strategy_name || $node['Parse AI Strategy Output'].json.strategy_name, tier: $json.tier, backtest_id: $json.id || $json.backtestId, metrics: { sharpe: $json.sharpe, max_drawdown: $json.max_drawdown, total_return: $json.total_return }, source: 'n8n-strategy-generation-loop', timestamp: new Date().toISOString() }) }}",
-        "options": {
-          "timeout": 10000
-        }
-      },
-      "id": "log-accepted",
-      "name": "Log Strategy to Journal",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        2664,
-        160
-      ],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const backtest = $('Fetch Backtest Results').first().json;\nconst strategy = $('Parse AI Strategy Output').first().json;\n\nreturn [{\n  json: {\n    success: true,\n    status: 'accepted',\n    strategy_name: strategy.strategy_name,\n    tier: backtest.tier,\n    iteration: strategy.iteration + 1,\n    metrics: {\n      sharpe: backtest.sharpe,\n      max_drawdown: backtest.max_drawdown,\n      total_return: backtest.total_return\n    },\n    backtest_id: backtest.id || backtest.backtestId,\n    message: `Strategy '${strategy.strategy_name}' accepted with tier ${backtest.tier}`\n  }\n}];"
-      },
-      "id": "prepare-response-accepted",
-      "name": "Prepare Accepted Response",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3324,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "id": "respond-accepted",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        3760,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const backtest = $('Fetch Backtest Results').first().json;\nconst strategy = $('Parse AI Strategy Output').first().json;\nconst currentIteration = (strategy.iteration || 0) + 1;\nconst maxIterations = strategy.max_iterations || 3;\n\nif (currentIteration >= maxIterations) {\n  return [{\n    json: {\n      can_retry: false,\n      iteration: currentIteration,\n      max_iterations: maxIterations,\n      symbol: strategy.symbol,\n      strategy_type: strategy.strategy_type,\n      constraints: strategy.constraints,\n      rejection_reason: backtest.rejection_reason || 'Strategy did not meet tier criteria',\n      last_tier: backtest.tier,\n      last_metrics: {\n        sharpe: backtest.sharpe,\n        max_drawdown: backtest.max_drawdown,\n        total_return: backtest.total_return\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    can_retry: true,\n    iteration: currentIteration,\n    max_iterations: maxIterations,\n    symbol: strategy.symbol,\n    strategy_type: strategy.strategy_type,\n    constraints: strategy.constraints,\n    rejection_reason: backtest.rejection_reason || 'Strategy did not meet tier criteria',\n    last_tier: backtest.tier,\n    last_metrics: {\n      sharpe: backtest.sharpe,\n      max_drawdown: backtest.max_drawdown,\n      total_return: backtest.total_return\n    }\n  }\n}];"
-      },
-      "id": "check-iteration-limit",
-      "name": "Check Iteration Limit",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2664,
-        820
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "version": 2,
-            "leftValue": "",
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "retry-check",
-              "leftValue": "={{ $json.can_retry }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if-can-retry",
-      "name": "Can Retry?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        2888,
-        820
-      ]
-    },
-    {
-      "parameters": {
-        "model": "llama3.1:8b",
-        "options": {}
-      },
-      "id": "ollama-critique-model",
-      "name": "Ollama Critique Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
-      "typeVersion": 1,
-      "position": [
-        3112,
-        576
-      ],
-      "credentials": {
-        "ollamaApi": {
-          "id": "BLgLWvmLGaJQOYaF",
-          "name": "Ollama account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=A {{ $json.strategy_type }} strategy for {{ $json.symbol }} futures was REJECTED.\n\nRejection reason: {{ $json.rejection_reason }}\nTier: {{ $json.last_tier }}\nMetrics: Sharpe={{ $json.last_metrics.sharpe }}, MaxDD={{ $json.last_metrics.max_drawdown }}, Return={{ $json.last_metrics.total_return }}\nConstraints: {{ $json.constraints }}\n\nThis is iteration {{ $json.iteration }} of {{ $json.max_iterations }}.\n\nAnalyze why this strategy failed and provide specific, actionable refinement suggestions. Focus on:\n1. What parameters should change and in which direction\n2. Whether the strategy logic itself needs restructuring\n3. Risk management improvements\n\nOutput a concise refinement note (max 200 words) that will guide the next strategy generation attempt.",
-        "options": {
-          "systemMessage": "You are a senior quantitative analyst reviewing rejected trading strategies. Be specific and data-driven in your critique. Focus on actionable improvements."
-        }
-      },
-      "id": "ai-critique",
-      "name": "AI Strategy Critique",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        3168,
-        352
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst critiqueOutput = items[0].json.output || items[0].json.text || 'No refinement suggestions available';\nconst ctx = $('Check Iteration Limit').first().json;\n\nreturn [{\n  json: {\n    symbol: ctx.symbol,\n    strategy_type: ctx.strategy_type,\n    constraints: ctx.constraints,\n    iteration: ctx.iteration,\n    max_iterations: ctx.max_iterations,\n    refinement_notes: critiqueOutput,\n    status: 'refining'\n  }\n}];"
-      },
-      "id": "extract-refinement",
-      "name": "Extract Refinement Notes",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3760,
-        760
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const ctx = $('Check Iteration Limit').first().json;\n\nreturn [{\n  json: {\n    success: false,\n    status: 'rejected_max_iterations',\n    strategy_type: ctx.strategy_type,\n    symbol: ctx.symbol,\n    iterations_used: ctx.iteration,\n    max_iterations: ctx.max_iterations,\n    last_tier: ctx.last_tier,\n    last_metrics: ctx.last_metrics,\n    rejection_reason: ctx.rejection_reason,\n    message: `Strategy generation failed after ${ctx.iteration} iterations. Last tier: ${ctx.last_tier}`\n  }\n}];"
-      },
-      "id": "prepare-rejected-response",
-      "name": "Prepare Rejected Response",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3324,
-        1168
-      ]
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "id": "respond-rejected",
-      "name": "Respond Rejected",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        3760,
-        1264
-      ]
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "5b-strategy-gen",
-        "tableName": "memory_5b_strategy_gen",
-        "contextWindowLength": 10
-      },
-      "id": "c728c1ea-5d0d-4fee-b3e8-b35ae78269c3",
-      "name": "5B Gen Chat Memory",
-      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
-      "typeVersion": 1.3,
-      "position": [
-        576,
-        960
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "XDOEjC2s3oL432Lj",
-          "name": "Postgres account"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "model": "nomic-embed-text"
-      },
-      "id": "fa23e8ca-1a03-4701-86f5-2e1ec4dd33d2",
-      "name": "5B Gen Embeddings",
-      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
-      "typeVersion": 1,
-      "position": [
-        680,
-        1376
-      ],
-      "credentials": {
-        "ollamaApi": {
-          "id": "BLgLWvmLGaJQOYaF",
-          "name": "Ollama account"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "tableName": "vectors_5b_strategy_gen",
-        "options": {}
-      },
-      "id": "3742413a-877e-4e40-b1b3-9d1e3fd35470",
-      "name": "5B Gen Vector Store",
-      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
-      "typeVersion": 1.3,
-      "position": [
-        600,
-        1168
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "XDOEjC2s3oL432Lj",
-          "name": "Postgres account"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "5b-strategy-critique",
-        "tableName": "memory_5b_strategy_critique",
-        "contextWindowLength": 10
-      },
-      "id": "b5bcb3ee-14d5-431f-ae61-3eb75bc0f3eb",
-      "name": "5B Critique Chat Memory",
-      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
-      "typeVersion": 1.3,
-      "position": [
-        3240,
-        576
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "XDOEjC2s3oL432Lj",
-          "name": "Postgres account"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "model": "nomic-embed-text"
-      },
-      "id": "085d9b96-d5fb-4e2d-b2c7-4598fa79c33e",
-      "name": "5B Critique Embeddings",
-      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
-      "typeVersion": 1,
-      "position": [
-        3344,
-        992
-      ],
-      "credentials": {
-        "ollamaApi": {
-          "id": "BLgLWvmLGaJQOYaF",
-          "name": "Ollama account"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "tableName": "vectors_5b_strategy_critique",
-        "options": {}
-      },
-      "id": "752e8c8e-af9a-4639-b5de-a095db50658a",
-      "name": "5B Critique Vector Store",
-      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
-      "typeVersion": 1.3,
-      "position": [
-        3264,
-        784
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "XDOEjC2s3oL432Lj",
-          "name": "Postgres account"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "description": "Search past strategy generations to avoid duplicates and learn from previous attempts."
-      },
-      "id": "83feaa30-6043-4f17-83a1-450261457286",
-      "name": "5B Gen Memory QA Tool",
-      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
-      "typeVersion": 1.1,
-      "position": [
-        704,
-        960
-      ],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "description": "Search past critique assessments for consistency and reference previous evaluations."
-      },
-      "id": "281fa509-f240-4709-82c5-14bda60a6d84",
-      "name": "5B Critique Memory QA Tool",
-      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
-      "typeVersion": 1.1,
-      "position": [
-        3368,
-        576
-      ],
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "model": "llama3.1:8b",
-        "options": {}
-      },
-      "id": "f0fcf175-15db-45d3-a6e8-d8889309245e",
-      "name": "5B Gen QA LLM",
-      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
-      "typeVersion": 1,
-      "position": [
-        888,
-        1168
-      ],
-      "credentials": {
-        "ollamaApi": {
-          "id": "BLgLWvmLGaJQOYaF",
-          "name": "Ollama account"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "model": "llama3.1:8b",
-        "options": {}
-      },
-      "id": "7fe46d0f-a97e-4c9c-91d0-b2ada8af482a",
-      "name": "5B Critique QA LLM",
-      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
-      "typeVersion": 1,
-      "position": [
-        3552,
-        784
-      ],
-      "credentials": {
-        "ollamaApi": {
-          "id": "BLgLWvmLGaJQOYaF",
-          "name": "Ollama account"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "method": "PATCH",
-        "url": "=http://host.docker.internal:4000/api/journal/{{ $json.journalId }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ status: 'promoted', tier: $json.tier || 'TIER_3' }) }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 15000
-        }
-      },
-      "id": "set-lifecycle-candidate",
-      "name": "Set Lifecycle CANDIDATE",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        2888,
-        160
-      ],
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:4000/api/agent/run-strategy",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 60000
-        }
-      },
-      "id": "compiler-gate-validate",
-      "name": "Compiler Validate DSL",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1320,
-        664
-      ],
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "version": 2,
-            "leftValue": "",
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
-          "combinator": "and",
-          "conditions": [
-            {
-              "id": "compile-ok",
-              "leftValue": "={{ $json.valid }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "compiler-gate-check",
-      "name": "Compilation Passed?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        1544,
-        664
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nconsole.log('COMPILER GATE: Strategy failed compilation');\nconsole.log('Errors:', JSON.stringify(data.errors || data.message || 'Unknown'));\n\nreturn [{\n  json: {\n    status: 'compilation_failed',\n    errors: data.errors || data.message || 'Unknown compiler error',\n    skipped_backtest: true,\n    timestamp: new Date().toISOString()\n  }\n}];"
-      },
-      "id": "compiler-gate-failed",
-      "name": "Log Compilation Failed",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1768,
-        1264
-      ]
-    },
-    {
-      "id": "error-trigger",
-      "name": "On Workflow Error",
-      "type": "n8n-nodes-base.errorTrigger",
-      "typeVersion": 1,
-      "position": [
-        0,
-        1400
-      ],
-      "parameters": {}
-    },
-    {
-      "id": "http-error-alert",
-      "name": "Discord: Strategy Gen Error",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        250,
-        1400
-      ],
-      "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:4100/alert/alerts",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ title: 'Strategy Gen Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Strategy Generation Loop', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 15000
-        }
-      }
-    }
-  ],
-  "connections": {
-    "Webhook Trigger": {
-      "main": [
-        [
-          {
-            "node": "Init Iteration Counter",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Init Iteration Counter": {
-      "main": [
-        [
-          {
-            "node": "AI Strategy Generator",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ollama Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Strategy Generator",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Strategy Generator": {
-      "main": [
-        [
-          {
-            "node": "Parse AI Strategy Output",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Submit Backtest": {
-      "main": [
-        [
-          {
-            "node": "Wait for Backtest",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait for Backtest": {
-      "main": [
-        [
-          {
-            "node": "Fetch Backtest Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch Backtest Results": {
-      "main": [
-        [
-          {
-            "node": "Check Strategy Tier",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Strategy Tier": {
-      "main": [
-        [
-          {
-            "node": "Log Strategy to Journal",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Check Iteration Limit",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Accepted Response": {
-      "main": [
-        [
-          {
-            "node": "Respond to Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Iteration Limit": {
-      "main": [
-        [
-          {
-            "node": "Can Retry?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Can Retry?": {
-      "main": [
-        [
-          {
-            "node": "AI Strategy Critique",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prepare Rejected Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ollama Critique Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Strategy Critique",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Strategy Critique": {
-      "main": [
-        [
-          {
-            "node": "Extract Refinement Notes",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract Refinement Notes": {
-      "main": [
-        [
-          {
-            "node": "AI Strategy Generator",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Rejected Response": {
-      "main": [
-        [
-          {
-            "node": "Respond Rejected",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Gen Chat Memory": {
-      "ai_memory": [
-        [
-          {
-            "node": "AI Strategy Generator",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Gen Embeddings": {
-      "ai_embedding": [
-        [
-          {
-            "node": "5B Gen Vector Store",
-            "type": "ai_embedding",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Critique Chat Memory": {
-      "ai_memory": [
-        [
-          {
-            "node": "AI Strategy Critique",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Critique Embeddings": {
-      "ai_embedding": [
-        [
-          {
-            "node": "5B Critique Vector Store",
-            "type": "ai_embedding",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Gen Vector Store": {
-      "ai_vectorStore": [
-        [
-          {
-            "node": "5B Gen Memory QA Tool",
-            "type": "ai_vectorStore",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Gen Memory QA Tool": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Strategy Generator",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Critique Vector Store": {
-      "ai_vectorStore": [
-        [
-          {
-            "node": "5B Critique Memory QA Tool",
-            "type": "ai_vectorStore",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Critique Memory QA Tool": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Strategy Critique",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Gen QA LLM": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "5B Gen Memory QA Tool",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5B Critique QA LLM": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "5B Critique Memory QA Tool",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Log Strategy to Journal": {
-      "main": [
-        [
-          {
-            "node": "Set Lifecycle CANDIDATE",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Lifecycle CANDIDATE": {
-      "main": [
-        [
-          {
-            "node": "Prepare Accepted Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse AI Strategy Output": {
-      "main": [
-        [
-          {
-            "node": "Compiler Validate DSL",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Compiler Validate DSL": {
-      "main": [
-        [
-          {
-            "node": "Compilation Passed?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Compilation Passed?": {
-      "main": [
-        [
-          {
-            "node": "Submit Backtest",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Log Compilation Failed",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "On Workflow Error": {
-      "main": [
-        [
-          {
-            "node": "Discord: Strategy Gen Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "settings": {
-    "executionOrder": "v1",
-    "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all",
-    "saveExecutionProgress": true,
-    "executionTimeout": 600,
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
-  },
-  "staticData": null,
-  "meta": null,
-  "pinData": {},
-  "versionId": "a90fa1ef-9e62-4870-9cb6-6b5a4f970666",
-  "activeVersionId": "a90fa1ef-9e62-4870-9cb6-6b5a4f970666",
-  "versionCounter": 78,
-  "triggerCount": 1,
-  "shared": [
-    {
-      "updatedAt": "2026-03-10T04:18:51.671Z",
-      "createdAt": "2026-03-10T04:18:51.671Z",
-      "role": "workflow:owner",
-      "workflowId": "eCr7cyb0aPArFCZc",
-      "projectId": "l9zgLNMKv7CjloiW",
-      "project": {
-        "updatedAt": "2026-02-19T03:51:50.171Z",
-        "createdAt": "2026-02-12T09:44:05.561Z",
-        "id": "l9zgLNMKv7CjloiW",
-        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
-        "projectRelations": [
-          {
-            "updatedAt": "2026-02-12T09:44:05.561Z",
-            "createdAt": "2026-02-12T09:44:05.561Z",
-            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
-            "projectId": "l9zgLNMKv7CjloiW",
-            "user": {
-              "updatedAt": "2026-03-20T05:10:41.391Z",
-              "createdAt": "2026-02-12T09:44:05.126Z",
-              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
-              "email": "tonioswayz32@gmail.com",
-              "firstName": "Tonio",
-              "lastName": "tonioswayz32@gmail.com",
-              "personalizationAnswers": null,
-              "settings": {
-                "userActivated": true,
-                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
-                "userActivatedAt": 1771445749501,
-                "easyAIWorkflowOnboarded": true
-              },
-              "disabled": false,
-              "mfaEnabled": false,
-              "lastActiveAt": "2026-03-20",
-              "isPending": false
-            }
-          }
-        ]
-      }
-    }
-  ],
-  "tags": [],
-  "activeVersion": {
-    "updatedAt": "2026-03-17T07:43:49.510Z",
-    "createdAt": "2026-03-17T07:43:49.510Z",
-    "versionId": "a90fa1ef-9e62-4870-9cb6-6b5a4f970666",
-    "workflowId": "eCr7cyb0aPArFCZc",
+  "success": true,
+  "data": {
+    "updatedAt": "2026-03-23T20:40:25.656Z",
+    "createdAt": "2026-03-10T04:18:51.671Z",
+    "id": "eCr7cyb0aPArFCZc",
+    "name": "Strategy Generation Loop",
+    "description": null,
+    "active": true,
+    "isArchived": false,
     "nodes": [
       {
         "parameters": {
@@ -1148,7 +29,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const items = $input.all();\nconst body = items[0].json.body;\n\nreturn [{\n  json: {\n    symbol: body.symbol || 'NQ',\n    strategy_type: body.strategy_type || 'momentum',\n    constraints: body.constraints || 'max drawdown 5%, Sharpe > 1.5',\n    iteration: 0,\n    max_iterations: 3,\n    refinement_notes: '',\n    status: 'generating'\n  }\n}];"
+          "jsCode": "const items = $input.all();\nconst body = items[0].json.body;\n\nreturn [{\n  json: {\n    symbol: body.symbol || 'MES',\n    strategy_type: body.strategy_type || 'momentum',\n    constraints: body.constraints || 'max drawdown 5%, Sharpe > 1.5',\n    iteration: 0,\n    max_iterations: 9,\n    stage: 1,\n    stage_prompt: '',\n    best_metrics_so_far: null,\n    attempts: [],\n    kill_signal: null,\n    refinement_notes: '',\n    status: 'generating'\n  }\n}];"
         },
         "id": "init-counter",
         "name": "Init Iteration Counter",
@@ -1182,9 +63,9 @@
       {
         "parameters": {
           "promptType": "define",
-          "text": "=Generate a {{ $json.strategy_type }} strategy for {{ $json.symbol }} futures.\n\nConstraints: {{ $json.constraints }}\n\nIteration: {{ $json.iteration }} of {{ $json.max_iterations }}\n{% if $json.refinement_notes %}\nPrevious attempt feedback: {{ $json.refinement_notes }}\nPlease refine the strategy based on this feedback.\n{% endif %}\n\nOutput EXACTLY:\n1. A strategy name (short, descriptive)\n2. A one-sentence description\n3. Valid vectorbt Python code implementing the strategy\n4. JSON parameters object with keys: fast_period, slow_period, stop_loss, take_profit, position_size\n5. Recommended timeframe (e.g., 1h, 4h, 1d)\n\nFormat your response as valid JSON:\n{\n  \"strategy_name\": \"...\",\n  \"one_sentence\": \"...\",\n  \"python_code\": \"...\",\n  \"params\": {...},\n  \"timeframe\": \"...\"\n}",
+          "text": "=Generate a {{ $json.strategy_type }} strategy for {{ $json.symbol }} futures.\n\nConstraints: {{ $json.constraints }}\n\nIteration: {{ $json.iteration }} of {{ $json.max_iterations }} (Stage {{ $json.stage }})\n{{ $json.stage_prompt ? 'REFINEMENT DIRECTIVE: ' + $json.stage_prompt : '' }}\n{{ $json.refinement_notes ? 'Previous attempt feedback: ' + $json.refinement_notes : '' }}\n\nOutput a single StrategyDSL JSON object. No code, no markdown, just the JSON.",
           "options": {
-            "systemMessage": "You are an expert quantitative trading strategist specializing in futures markets. You generate production-ready vectorbt Python strategies with precise risk management. Always output valid JSON. Never hallucinate indicators or functions that don't exist in vectorbt."
+            "systemMessage": "You are an expert quantitative trading strategist specializing in futures markets (MES, MNQ, MCL). You generate strategy definitions in StrategyDSL JSON format.\n\nYou MUST output valid JSON matching the StrategyDSL schema. No Python code. No prose outside JSON.\n\n## StrategyDSL Schema\n```json\n{\n  \"name\": \"string (snake_case, descriptive)\",\n  \"description\": \"One sentence describing the strategy edge\",\n  \"symbol\": \"MES | MNQ | MCL\",\n  \"timeframe\": \"1m | 5m | 15m | 30m | 1h | 4h | 1d\",\n  \"direction\": \"long | short | both\",\n  \"entry_type\": \"breakout | mean_reversion | trend_follow | volatility_expansion | session_pattern\",\n  \"entry_indicator\": \"<one of the 10 supported patterns>\",\n  \"entry_params\": { \"<max 5 params with values in valid ranges>\" },\n  \"entry_condition\": \"Human-readable description of entry trigger\",\n  \"exit_type\": \"fixed_target | trailing_stop | time_exit | indicator_signal | atr_multiple\",\n  \"exit_params\": {},\n  \"stop_loss_atr_multiple\": 1.0-4.0,\n  \"take_profit_atr_multiple\": 2.0-8.0,\n  \"preferred_regime\": \"TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL\",\n  \"session_filter\": \"RTH_ONLY | ETH_ONLY | ALL_SESSIONS | LONDON | ASIA\",\n  \"source\": \"n8n\",\n  \"tags\": [\"array of descriptive tags\"]\n}\n```\n\n## Supported Entry Patterns & Parameter Ranges\n1. sma_crossover: fast_period(5-50), slow_period(20-200), confirmation_bars(1-5)\n2. ema_crossover: fast_period(5-50), slow_period(20-200), confirmation_bars(1-5)\n3. rsi_reversal: period(7-21), oversold(20-40), overbought(60-80)\n4. bollinger_breakout: period(10-30), std_dev(1.5-3.0), confirmation_bars(1-3)\n5. atr_breakout: period(10-30), multiplier(1.0-3.0)\n6. vwap_reversion: deviation_threshold(0.5-3.0), confirmation_bars(1-5)\n7. donchian_breakout: period(10-55)\n8. keltner_squeeze: bb_period(15-25), kc_period(15-25), kc_multiplier(1.0-2.0)\n9. session_open_breakout: range_minutes(5-60), buffer_ticks(1-10)\n10. macd_crossover: fast_period(8-16), slow_period(20-30), signal_period(7-12)\n\n## Rules\n- Max 5 entry_params\n- All parameter values MUST be within the specified ranges\n- stop_loss_atr_multiple < take_profit_atr_multiple\n- Match entry_type to the entry_indicator logically\n- Output ONLY the JSON object, no markdown fences, no explanation"
           }
         },
         "id": "ai-agent",
@@ -1198,7 +79,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const items = $input.all();\nconst aiOutput = items[0].json.output || items[0].json.text || '';\n\nlet parsed;\ntry {\n  const jsonMatch = aiOutput.match(/```json?\\s*([\\s\\S]*?)```/) || \n                    aiOutput.match(/(\\{[\\s\\S]*\\})/);\n  const jsonStr = jsonMatch ? jsonMatch[1].trim() : aiOutput.trim();\n  parsed = JSON.parse(jsonStr);\n} catch (e) {\n  return [{\n    json: {\n      error: true,\n      message: `Failed to parse AI output: ${e.message}`,\n      raw_output: aiOutput,\n      iteration: $('Init Iteration Counter').first().json?.iteration || 0\n    }\n  }];\n}\n\nconst ctx = $('Init Iteration Counter').first().json || {};\nconst now = new Date();\nconst startDate = new Date(now);\nstartDate.setFullYear(startDate.getFullYear() - 2);\n\nreturn [{\n  json: {\n    strategy_name: parsed.strategy_name || 'unnamed_strategy',\n    one_sentence: parsed.one_sentence || '',\n    python_code: parsed.python_code || '',\n    params: parsed.params || {},\n    symbol: ctx.symbol || 'NQ',\n    timeframe: parsed.timeframe || '1h',\n    start_date: startDate.toISOString().split('T')[0],\n    end_date: now.toISOString().split('T')[0],\n    source: 'n8n-strategy-generation-loop',\n    iteration: ctx.iteration || 0,\n    max_iterations: ctx.max_iterations || 3,\n    strategy_type: ctx.strategy_type || 'momentum',\n    constraints: ctx.constraints || '',\n    error: false\n  }\n}];"
+          "jsCode": "const items = $input.all();\nconst aiOutput = items[0].json.output || items[0].json.text || '';\n\nlet parsed;\ntry {\n  const jsonMatch = aiOutput.match(/```json?\\s*([\\s\\S]*?)```/) ||\n                    aiOutput.match(/(\\{[\\s\\S]*\\})/);\n  const jsonStr = jsonMatch ? jsonMatch[1].trim() : aiOutput.trim();\n  parsed = JSON.parse(jsonStr);\n} catch (e) {\n  return [{\n    json: {\n      error: true,\n      message: `Failed to parse AI output: ${e.message}`,\n      raw_output: aiOutput,\n      iteration: $('Init Iteration Counter').first().json.iteration || 0\n    }\n  }];\n}\n\nconst ctx = $('Init Iteration Counter').first().json || {};\nconst now = new Date();\nconst startDate = new Date(now);\nstartDate.setFullYear(startDate.getFullYear() - 2);\n\n// Validate required DSL fields\nconst requiredFields = ['name', 'entry_indicator', 'entry_params', 'entry_type', 'exit_type'];\nconst missing = requiredFields.filter(f => !parsed[f]);\nif (missing.length > 0) {\n  return [{\n    json: {\n      error: true,\n      message: `Missing required DSL fields: ${missing.join(', ')}`,\n      raw_output: aiOutput,\n      iteration: ctx.iteration || 0\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    // DSL fields\n    name: parsed.name || 'unnamed_strategy',\n    description: parsed.description || '',\n    symbol: parsed.symbol || ctx.symbol || 'MES',\n    timeframe: parsed.timeframe || '1h',\n    direction: parsed.direction || 'both',\n    entry_type: parsed.entry_type || 'trend_follow',\n    entry_indicator: parsed.entry_indicator || 'sma_crossover',\n    entry_params: parsed.entry_params || {},\n    entry_condition: parsed.entry_condition || '',\n    exit_type: parsed.exit_type || 'atr_multiple',\n    exit_params: parsed.exit_params || {},\n    stop_loss_atr_multiple: parsed.stop_loss_atr_multiple || 2.0,\n    take_profit_atr_multiple: parsed.take_profit_atr_multiple || 4.0,\n    preferred_regime: parsed.preferred_regime || 'TRENDING_UP',\n    session_filter: parsed.session_filter || 'RTH_ONLY',\n    source: 'n8n',\n    tags: parsed.tags || [],\n    // Backtest config\n    start_date: startDate.toISOString().split('T')[0],\n    end_date: now.toISOString().split('T')[0],\n    // Loop context\n    iteration: ctx.iteration || 0,\n    max_iterations: ctx.max_iterations || 9,\n    stage: ctx.stage || 1,\n    strategy_type: ctx.strategy_type || 'momentum',\n    constraints: ctx.constraints || '',\n    error: false\n  }\n}];"
         },
         "id": "parse-strategy",
         "name": "Parse AI Strategy Output",
@@ -1212,12 +93,12 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/agent/run-strategy",
+          "url": "http://host.docker.internal:4000/api/backtests",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({ strategy_name: $json.strategy_name, one_sentence: $json.one_sentence, python_code: $json.python_code, params: $json.params, symbol: $json.symbol, timeframe: $json.timeframe, start_date: $json.start_date, end_date: $json.end_date, source: $json.source }) }}",
+          "jsonBody": "={{ JSON.stringify({ name: $json.name, description: $json.description, symbol: $json.symbol, timeframe: $json.timeframe, direction: $json.direction, entry_type: $json.entry_type, entry_indicator: $json.entry_indicator, entry_params: $json.entry_params, entry_condition: $json.entry_condition, exit_type: $json.exit_type, exit_params: $json.exit_params, stop_loss_atr_multiple: $json.stop_loss_atr_multiple, take_profit_atr_multiple: $json.take_profit_atr_multiple, preferred_regime: $json.preferred_regime, session_filter: $json.session_filter, source: $json.source, tags: $json.tags, start_date: $json.start_date, end_date: $json.end_date, refinement_stage: $json.stage, refinement_iteration: $json.iteration }) }}",
           "options": {
-            "timeout": 30000
+            "timeout": 60000
           }
         },
         "id": "submit-backtest",
@@ -1344,7 +225,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const backtest = $('Fetch Backtest Results').first().json;\nconst strategy = $('Parse AI Strategy Output').first().json;\nconst currentIteration = (strategy.iteration || 0) + 1;\nconst maxIterations = strategy.max_iterations || 3;\n\nif (currentIteration >= maxIterations) {\n  return [{\n    json: {\n      can_retry: false,\n      iteration: currentIteration,\n      max_iterations: maxIterations,\n      symbol: strategy.symbol,\n      strategy_type: strategy.strategy_type,\n      constraints: strategy.constraints,\n      rejection_reason: backtest.rejection_reason || 'Strategy did not meet tier criteria',\n      last_tier: backtest.tier,\n      last_metrics: {\n        sharpe: backtest.sharpe,\n        max_drawdown: backtest.max_drawdown,\n        total_return: backtest.total_return\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    can_retry: true,\n    iteration: currentIteration,\n    max_iterations: maxIterations,\n    symbol: strategy.symbol,\n    strategy_type: strategy.strategy_type,\n    constraints: strategy.constraints,\n    rejection_reason: backtest.rejection_reason || 'Strategy did not meet tier criteria',\n    last_tier: backtest.tier,\n    last_metrics: {\n      sharpe: backtest.sharpe,\n      max_drawdown: backtest.max_drawdown,\n      total_return: backtest.total_return\n    }\n  }\n}];"
+          "jsCode": "// Get backtest results - try Fetch Backtest Results first, fall back to direct input\n// (compilation failures route here directly with fake metrics)\nlet backtest;\ntry {\n  backtest = $('Fetch Backtest Results').first().json;\n} catch (e) {\n  backtest = $input.first().json;\n}\nif (!backtest || !backtest.tier) {\n  backtest = $input.first().json;\n}\n\nconst strategy = $('Parse AI Strategy Output').first().json;\nconst initCtx = $('Init Iteration Counter').first().json;\n\nconst currentIteration = (strategy.iteration || 0) + 1;\nconst maxIterations = strategy.max_iterations || 9;\n\n// Compute stage (1-3, each stage = 3 iterations)\nconst stage = Math.floor(currentIteration / 3) + 1;\n\n// Stage prompts\nconst stagePrompts = {\n  1: 'Adjust parameters within the current entry pattern. Try different period lengths, thresholds, and ATR multiples. Keep the same entry_indicator.',\n  2: 'Change entry/exit logic. Try a different entry_indicator or exit_type while keeping the same general concept and symbol.',\n  3: 'Pivot to a completely different concept. Try a different entry_type, direction, or regime. The current approach is not working.'\n};\nconst stagePrompt = stagePrompts[Math.min(stage, 3)] || stagePrompts[3];\n\n// Current attempt metrics\nconst currentMetrics = {\n  sharpe: backtest.sharpe || 0,\n  max_drawdown: backtest.max_drawdown || 0,\n  win_rate: backtest.win_rate || 0,\n  profit_factor: backtest.profit_factor || 0,\n  total_return: backtest.total_return || 0,\n  iteration: currentIteration,\n  stage: stage,\n  compilation_failed: backtest.status === 'compilation_failed'\n};\n\n// Accumulate attempts\nconst prevAttempts = initCtx.attempts || [];\nconst attempts = [...prevAttempts, currentMetrics];\n\n// Track best metrics (ignore compilation failures)\nconst validAttempts = attempts.filter(a => !a.compilation_failed);\nconst bestSharpe = validAttempts.length > 0 ? Math.max(...validAttempts.map(a => a.sharpe)) : 0;\nconst prevBest = initCtx.best_metrics_so_far;\nconst bestMetrics = prevBest && prevBest.sharpe >= bestSharpe ? prevBest : currentMetrics;\n\n// Kill signal checks\nlet killSignal = null;\n\n// After stage 1 (iteration 3+): if best Sharpe < 0.8, no edge\nif (currentIteration >= 3 && bestSharpe < 0.8) {\n  killSignal = 'no_edge';\n}\n\n// Any iteration: catastrophic max drawdown\nif (validAttempts.length > 0) {\n  const worstDD = Math.max(...validAttempts.map(a => Math.abs(a.max_drawdown)));\n  if (worstDD > 6000) {\n    killSignal = 'catastrophic_risk';\n  }\n}\n\n// All valid attempts have win rate < 0.40\nif (validAttempts.length >= 3 && validAttempts.every(a => a.win_rate < 0.40)) {\n  killSignal = 'wrong_direction';\n}\n\n// All valid attempts have profit factor < 1.0\nif (validAttempts.length >= 3 && validAttempts.every(a => a.profit_factor < 1.0)) {\n  killSignal = 'unprofitable';\n}\n\n// Flat improvement: last 3 valid attempts Sharpe improvement < 0.1\nif (validAttempts.length >= 3) {\n  const last3 = validAttempts.slice(-3);\n  const sharpeRange = Math.max(...last3.map(a => a.sharpe)) - Math.min(...last3.map(a => a.sharpe));\n  if (sharpeRange < 0.1 && bestSharpe < 1.5) {\n    killSignal = 'flat_improvement';\n  }\n}\n\n// Determine if we can retry\nconst canRetry = !killSignal && currentIteration < maxIterations;\n\nreturn [{\n  json: {\n    can_retry: canRetry,\n    kill_signal: killSignal,\n    iteration: currentIteration,\n    max_iterations: maxIterations,\n    stage: Math.min(stage, 3),\n    stage_prompt: stagePrompt,\n    symbol: strategy.symbol,\n    strategy_type: strategy.strategy_type,\n    constraints: strategy.constraints,\n    rejection_reason: killSignal\n      ? `Kill signal: ${killSignal}`\n      : (backtest.rejection_reason || 'Strategy did not meet tier criteria'),\n    last_tier: backtest.tier,\n    last_metrics: currentMetrics,\n    best_metrics_so_far: bestMetrics,\n    attempts: attempts\n  }\n}];"
         },
         "id": "check-iteration-limit",
         "name": "Check Iteration Limit",
@@ -1427,7 +308,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const items = $input.all();\nconst critiqueOutput = items[0].json.output || items[0].json.text || 'No refinement suggestions available';\nconst ctx = $('Check Iteration Limit').first().json;\n\nreturn [{\n  json: {\n    symbol: ctx.symbol,\n    strategy_type: ctx.strategy_type,\n    constraints: ctx.constraints,\n    iteration: ctx.iteration,\n    max_iterations: ctx.max_iterations,\n    refinement_notes: critiqueOutput,\n    status: 'refining'\n  }\n}];"
+          "jsCode": "const items = $input.all();\nconst critiqueOutput = items[0].json.output || items[0].json.text || 'No refinement suggestions available';\nconst ctx = $('Check Iteration Limit').first().json;\n\nreturn [{\n  json: {\n    symbol: ctx.symbol,\n    strategy_type: ctx.strategy_type,\n    constraints: ctx.constraints,\n    iteration: ctx.iteration,\n    max_iterations: ctx.max_iterations,\n    stage: ctx.stage,\n    stage_prompt: ctx.stage_prompt,\n    best_metrics_so_far: ctx.best_metrics_so_far,\n    attempts: ctx.attempts,\n    kill_signal: null,\n    refinement_notes: critiqueOutput,\n    status: 'refining'\n  }\n}];"
         },
         "id": "extract-refinement",
         "name": "Extract Refinement Notes",
@@ -1594,7 +475,7 @@
       },
       {
         "parameters": {
-          "description": "Search past strategy generations to avoid duplicates and learn from previous attempts."
+          "toolDescription": "Search past strategy generation memory for patterns, successful approaches, and failed experiments to avoid repeating mistakes."
         },
         "id": "83feaa30-6043-4f17-83a1-450261457286",
         "name": "5B Gen Memory QA Tool",
@@ -1608,7 +489,7 @@
       },
       {
         "parameters": {
-          "description": "Search past critique assessments for consistency and reference previous evaluations."
+          "toolDescription": "Search past strategy critique memory for common failure modes, edge decay patterns, and quality benchmarks."
         },
         "id": "281fa509-f240-4709-82c5-14bda60a6d84",
         "name": "5B Critique Memory QA Tool",
@@ -1698,10 +579,10 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/agent/run-strategy",
+          "url": "http://host.docker.internal:4000/api/compiler/validate",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify($json) }}",
+          "jsonBody": "={{ JSON.stringify({ name: $json.name, description: $json.description, symbol: $json.symbol, timeframe: $json.timeframe, direction: $json.direction, entry_type: $json.entry_type, entry_indicator: $json.entry_indicator, entry_params: $json.entry_params, entry_condition: $json.entry_condition, exit_type: $json.exit_type, exit_params: $json.exit_params, stop_loss_atr_multiple: $json.stop_loss_atr_multiple, take_profit_atr_multiple: $json.take_profit_atr_multiple, preferred_regime: $json.preferred_regime, session_filter: $json.session_filter, source: $json.source, tags: $json.tags }) }}",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -1764,7 +645,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nconsole.log('COMPILER GATE: Strategy failed compilation');\nconsole.log('Errors:', JSON.stringify(data.errors || data.message || 'Unknown'));\n\nreturn [{\n  json: {\n    status: 'compilation_failed',\n    errors: data.errors || data.message || 'Unknown compiler error',\n    skipped_backtest: true,\n    timestamp: new Date().toISOString()\n  }\n}];"
+          "jsCode": "const items = $input.all();\nconst data = items[0].json;\nconst ctx = $('Parse AI Strategy Output').first().json || {};\n\nconsole.log('COMPILER GATE: Strategy failed compilation');\nconsole.log('Errors:', JSON.stringify(data.errors || data.message || 'Unknown'));\n\n// Pass through enough context for Check Iteration Limit to work\nreturn [{\n  json: {\n    status: 'compilation_failed',\n    errors: data.errors || data.message || 'Unknown compiler error',\n    skipped_backtest: true,\n    // Fake backtest results so Check Iteration Limit can process\n    sharpe: 0,\n    max_drawdown: 0,\n    win_rate: 0,\n    profit_factor: 0,\n    total_return: 0,\n    rejection_reason: 'Compilation failed: ' + JSON.stringify(data.errors || data.message || 'Unknown'),\n    tier: 'REJECTED',\n    timestamp: new Date().toISOString()\n  }\n}];"
         },
         "id": "compiler-gate-failed",
         "name": "Log Compilation Failed",
@@ -1812,6 +693,57 @@
           },
           "options": {
             "timeout": 15000
+          }
+        }
+      },
+      {
+        "id": "d75d2649-cfac-4b7d-8af6-67b529688c40",
+        "name": "Cross-Validate Concept",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1656,
+          400
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:4000/api/validation/cross",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ concept: ($json.strategy && $json.strategy.entry_type) || $json.entry_type || 'unknown' }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        }
+      },
+      {
+        "id": "6492e69d-ccdb-4795-8793-840f6db1107a",
+        "name": "Concept Validated?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1656,
+          568
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "concept-check",
+                "leftValue": "={{ $json.requires_research }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false"
+                }
+              }
+            ],
+            "combinator": "and"
           }
         }
       }
@@ -2154,7 +1086,7 @@
         "main": [
           [
             {
-              "node": "Submit Backtest",
+              "node": "Cross-Validate Concept",
               "type": "main",
               "index": 0
             }
@@ -2178,21 +1110,1274 @@
             }
           ]
         ]
+      },
+      "Cross-Validate Concept": {
+        "main": [
+          [
+            {
+              "node": "Concept Validated?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Concept Validated?": {
+        "main": [
+          [
+            {
+              "node": "Submit Backtest",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Check Iteration Limit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Compilation Failed": {
+        "main": [
+          [
+            {
+              "node": "Check Iteration Limit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
-    "authors": "Tonio tonioswayz32@gmail.com",
-    "name": null,
-    "description": null,
-    "autosaved": false,
-    "workflowPublishHistory": [
+    "settings": {
+      "executionOrder": "v1",
+      "saveDataErrorExecution": "all",
+      "saveDataSuccessExecution": "all",
+      "saveExecutionProgress": true,
+      "executionTimeout": 600,
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": {},
+    "versionId": "9a13f72f-1a2d-4007-90d6-91f7b1813e1a",
+    "activeVersionId": "9a13f72f-1a2d-4007-90d6-91f7b1813e1a",
+    "versionCounter": 104,
+    "triggerCount": 1,
+    "shared": [
       {
-        "createdAt": "2026-03-17T07:43:49.545Z",
-        "id": 1165,
+        "updatedAt": "2026-03-10T04:18:51.671Z",
+        "createdAt": "2026-03-10T04:18:51.671Z",
+        "role": "workflow:owner",
         "workflowId": "eCr7cyb0aPArFCZc",
-        "versionId": "a90fa1ef-9e62-4870-9cb6-6b5a4f970666",
-        "event": "activated",
-        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+        "projectId": "l9zgLNMKv7CjloiW",
+        "project": {
+          "updatedAt": "2026-02-19T03:51:50.171Z",
+          "createdAt": "2026-02-12T09:44:05.561Z",
+          "id": "l9zgLNMKv7CjloiW",
+          "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+          "projectRelations": [
+            {
+              "updatedAt": "2026-02-12T09:44:05.561Z",
+              "createdAt": "2026-02-12T09:44:05.561Z",
+              "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "projectId": "l9zgLNMKv7CjloiW",
+              "user": {
+                "updatedAt": "2026-03-23T20:36:55.643Z",
+                "createdAt": "2026-02-12T09:44:05.126Z",
+                "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+                "email": "tonioswayz32@gmail.com",
+                "firstName": "Tonio",
+                "lastName": "tonioswayz32@gmail.com",
+                "personalizationAnswers": null,
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                  "userActivatedAt": 1771445749501,
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-03-23",
+                "isPending": false
+              }
+            }
+          ]
+        }
       }
-    ]
+    ],
+    "tags": [],
+    "activeVersion": {
+      "updatedAt": "2026-03-23T20:40:25.657Z",
+      "createdAt": "2026-03-23T20:40:25.657Z",
+      "versionId": "9a13f72f-1a2d-4007-90d6-91f7b1813e1a",
+      "workflowId": "eCr7cyb0aPArFCZc",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "trading-forge/generate",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "id": "webhook-trigger",
+          "name": "Webhook Trigger",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            0,
+            736
+          ],
+          "webhookId": "c0bd2ff0-3667-4e64-952b-a456d2b05730",
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "jsCode": "const items = $input.all();\nconst body = items[0].json.body;\n\nreturn [{\n  json: {\n    symbol: body.symbol || 'MES',\n    strategy_type: body.strategy_type || 'momentum',\n    constraints: body.constraints || 'max drawdown 5%, Sharpe > 1.5',\n    iteration: 0,\n    max_iterations: 9,\n    stage: 1,\n    stage_prompt: '',\n    best_metrics_so_far: null,\n    attempts: [],\n    kill_signal: null,\n    refinement_notes: '',\n    status: 'generating'\n  }\n}];"
+          },
+          "id": "init-counter",
+          "name": "Init Iteration Counter",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            224,
+            736
+          ]
+        },
+        {
+          "parameters": {
+            "model": "trading-quant",
+            "options": {}
+          },
+          "id": "ollama-model",
+          "name": "Ollama Chat Model",
+          "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+          "typeVersion": 1,
+          "position": [
+            448,
+            960
+          ],
+          "credentials": {
+            "ollamaApi": {
+              "id": "BLgLWvmLGaJQOYaF",
+              "name": "Ollama account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "promptType": "define",
+            "text": "=Generate a {{ $json.strategy_type }} strategy for {{ $json.symbol }} futures.\n\nConstraints: {{ $json.constraints }}\n\nIteration: {{ $json.iteration }} of {{ $json.max_iterations }} (Stage {{ $json.stage }})\n{{ $json.stage_prompt ? 'REFINEMENT DIRECTIVE: ' + $json.stage_prompt : '' }}\n{{ $json.refinement_notes ? 'Previous attempt feedback: ' + $json.refinement_notes : '' }}\n\nOutput a single StrategyDSL JSON object. No code, no markdown, just the JSON.",
+            "options": {
+              "systemMessage": "You are an expert quantitative trading strategist specializing in futures markets (MES, MNQ, MCL). You generate strategy definitions in StrategyDSL JSON format.\n\nYou MUST output valid JSON matching the StrategyDSL schema. No Python code. No prose outside JSON.\n\n## StrategyDSL Schema\n```json\n{\n  \"name\": \"string (snake_case, descriptive)\",\n  \"description\": \"One sentence describing the strategy edge\",\n  \"symbol\": \"MES | MNQ | MCL\",\n  \"timeframe\": \"1m | 5m | 15m | 30m | 1h | 4h | 1d\",\n  \"direction\": \"long | short | both\",\n  \"entry_type\": \"breakout | mean_reversion | trend_follow | volatility_expansion | session_pattern\",\n  \"entry_indicator\": \"<one of the 10 supported patterns>\",\n  \"entry_params\": { \"<max 5 params with values in valid ranges>\" },\n  \"entry_condition\": \"Human-readable description of entry trigger\",\n  \"exit_type\": \"fixed_target | trailing_stop | time_exit | indicator_signal | atr_multiple\",\n  \"exit_params\": {},\n  \"stop_loss_atr_multiple\": 1.0-4.0,\n  \"take_profit_atr_multiple\": 2.0-8.0,\n  \"preferred_regime\": \"TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL\",\n  \"session_filter\": \"RTH_ONLY | ETH_ONLY | ALL_SESSIONS | LONDON | ASIA\",\n  \"source\": \"n8n\",\n  \"tags\": [\"array of descriptive tags\"]\n}\n```\n\n## Supported Entry Patterns & Parameter Ranges\n1. sma_crossover: fast_period(5-50), slow_period(20-200), confirmation_bars(1-5)\n2. ema_crossover: fast_period(5-50), slow_period(20-200), confirmation_bars(1-5)\n3. rsi_reversal: period(7-21), oversold(20-40), overbought(60-80)\n4. bollinger_breakout: period(10-30), std_dev(1.5-3.0), confirmation_bars(1-3)\n5. atr_breakout: period(10-30), multiplier(1.0-3.0)\n6. vwap_reversion: deviation_threshold(0.5-3.0), confirmation_bars(1-5)\n7. donchian_breakout: period(10-55)\n8. keltner_squeeze: bb_period(15-25), kc_period(15-25), kc_multiplier(1.0-2.0)\n9. session_open_breakout: range_minutes(5-60), buffer_ticks(1-10)\n10. macd_crossover: fast_period(8-16), slow_period(20-30), signal_period(7-12)\n\n## Rules\n- Max 5 entry_params\n- All parameter values MUST be within the specified ranges\n- stop_loss_atr_multiple < take_profit_atr_multiple\n- Match entry_type to the entry_indicator logically\n- Output ONLY the JSON object, no markdown fences, no explanation"
+            }
+          },
+          "id": "ai-agent",
+          "name": "AI Strategy Generator",
+          "type": "@n8n/n8n-nodes-langchain.agent",
+          "typeVersion": 3.1,
+          "position": [
+            504,
+            736
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const items = $input.all();\nconst aiOutput = items[0].json.output || items[0].json.text || '';\n\nlet parsed;\ntry {\n  const jsonMatch = aiOutput.match(/```json?\\s*([\\s\\S]*?)```/) ||\n                    aiOutput.match(/(\\{[\\s\\S]*\\})/);\n  const jsonStr = jsonMatch ? jsonMatch[1].trim() : aiOutput.trim();\n  parsed = JSON.parse(jsonStr);\n} catch (e) {\n  return [{\n    json: {\n      error: true,\n      message: `Failed to parse AI output: ${e.message}`,\n      raw_output: aiOutput,\n      iteration: $('Init Iteration Counter').first().json.iteration || 0\n    }\n  }];\n}\n\nconst ctx = $('Init Iteration Counter').first().json || {};\nconst now = new Date();\nconst startDate = new Date(now);\nstartDate.setFullYear(startDate.getFullYear() - 2);\n\n// Validate required DSL fields\nconst requiredFields = ['name', 'entry_indicator', 'entry_params', 'entry_type', 'exit_type'];\nconst missing = requiredFields.filter(f => !parsed[f]);\nif (missing.length > 0) {\n  return [{\n    json: {\n      error: true,\n      message: `Missing required DSL fields: ${missing.join(', ')}`,\n      raw_output: aiOutput,\n      iteration: ctx.iteration || 0\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    // DSL fields\n    name: parsed.name || 'unnamed_strategy',\n    description: parsed.description || '',\n    symbol: parsed.symbol || ctx.symbol || 'MES',\n    timeframe: parsed.timeframe || '1h',\n    direction: parsed.direction || 'both',\n    entry_type: parsed.entry_type || 'trend_follow',\n    entry_indicator: parsed.entry_indicator || 'sma_crossover',\n    entry_params: parsed.entry_params || {},\n    entry_condition: parsed.entry_condition || '',\n    exit_type: parsed.exit_type || 'atr_multiple',\n    exit_params: parsed.exit_params || {},\n    stop_loss_atr_multiple: parsed.stop_loss_atr_multiple || 2.0,\n    take_profit_atr_multiple: parsed.take_profit_atr_multiple || 4.0,\n    preferred_regime: parsed.preferred_regime || 'TRENDING_UP',\n    session_filter: parsed.session_filter || 'RTH_ONLY',\n    source: 'n8n',\n    tags: parsed.tags || [],\n    // Backtest config\n    start_date: startDate.toISOString().split('T')[0],\n    end_date: now.toISOString().split('T')[0],\n    // Loop context\n    iteration: ctx.iteration || 0,\n    max_iterations: ctx.max_iterations || 9,\n    stage: ctx.stage || 1,\n    strategy_type: ctx.strategy_type || 'momentum',\n    constraints: ctx.constraints || '',\n    error: false\n  }\n}];"
+          },
+          "id": "parse-strategy",
+          "name": "Parse AI Strategy Output",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1096,
+            664
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "http://host.docker.internal:4000/api/backtests",
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ JSON.stringify({ name: $json.name, description: $json.description, symbol: $json.symbol, timeframe: $json.timeframe, direction: $json.direction, entry_type: $json.entry_type, entry_indicator: $json.entry_indicator, entry_params: $json.entry_params, entry_condition: $json.entry_condition, exit_type: $json.exit_type, exit_params: $json.exit_params, stop_loss_atr_multiple: $json.stop_loss_atr_multiple, take_profit_atr_multiple: $json.take_profit_atr_multiple, preferred_regime: $json.preferred_regime, session_filter: $json.session_filter, source: $json.source, tags: $json.tags, start_date: $json.start_date, end_date: $json.end_date, refinement_stage: $json.stage, refinement_iteration: $json.iteration }) }}",
+            "options": {
+              "timeout": 60000
+            }
+          },
+          "id": "submit-backtest",
+          "name": "Submit Backtest",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.4,
+          "position": [
+            1768,
+            568
+          ],
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "amount": 2,
+            "unit": "minutes"
+          },
+          "id": "wait-backtest",
+          "name": "Wait for Backtest",
+          "type": "n8n-nodes-base.wait",
+          "typeVersion": 1.1,
+          "position": [
+            1992,
+            568
+          ],
+          "webhookId": "fae041fe-73ab-4343-b617-ec496c983d5f"
+        },
+        {
+          "parameters": {
+            "url": "=http://host.docker.internal:4000/api/backtests/{{ $json.backtestId }}",
+            "options": {
+              "timeout": 15000
+            }
+          },
+          "id": "fetch-results",
+          "name": "Fetch Backtest Results",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.4,
+          "position": [
+            2216,
+            568
+          ],
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "version": 2,
+                "leftValue": "",
+                "caseSensitive": true,
+                "typeValidation": "strict"
+              },
+              "conditions": [
+                {
+                  "id": "tier-check",
+                  "leftValue": "={{ $json.tier }}",
+                  "rightValue": "REJECTED",
+                  "operator": {
+                    "type": "string",
+                    "operation": "notEquals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "check-tier",
+          "name": "Check Strategy Tier",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            2440,
+            568
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "http://host.docker.internal:4000/api/journal",
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ JSON.stringify({ event: 'strategy_accepted', strategy_name: $json.strategy_name || $node['Parse AI Strategy Output'].json.strategy_name, tier: $json.tier, backtest_id: $json.id || $json.backtestId, metrics: { sharpe: $json.sharpe, max_drawdown: $json.max_drawdown, total_return: $json.total_return }, source: 'n8n-strategy-generation-loop', timestamp: new Date().toISOString() }) }}",
+            "options": {
+              "timeout": 10000
+            }
+          },
+          "id": "log-accepted",
+          "name": "Log Strategy to Journal",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.4,
+          "position": [
+            2664,
+            160
+          ],
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "jsCode": "const backtest = $('Fetch Backtest Results').first().json;\nconst strategy = $('Parse AI Strategy Output').first().json;\n\nreturn [{\n  json: {\n    success: true,\n    status: 'accepted',\n    strategy_name: strategy.strategy_name,\n    tier: backtest.tier,\n    iteration: strategy.iteration + 1,\n    metrics: {\n      sharpe: backtest.sharpe,\n      max_drawdown: backtest.max_drawdown,\n      total_return: backtest.total_return\n    },\n    backtest_id: backtest.id || backtest.backtestId,\n    message: `Strategy '${strategy.strategy_name}' accepted with tier ${backtest.tier}`\n  }\n}];"
+          },
+          "id": "prepare-response-accepted",
+          "name": "Prepare Accepted Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            3324,
+            160
+          ]
+        },
+        {
+          "parameters": {
+            "options": {}
+          },
+          "id": "respond-accepted",
+          "name": "Respond to Webhook",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            3760,
+            160
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "// Get backtest results - try Fetch Backtest Results first, fall back to direct input\n// (compilation failures route here directly with fake metrics)\nlet backtest;\ntry {\n  backtest = $('Fetch Backtest Results').first().json;\n} catch (e) {\n  backtest = $input.first().json;\n}\nif (!backtest || !backtest.tier) {\n  backtest = $input.first().json;\n}\n\nconst strategy = $('Parse AI Strategy Output').first().json;\nconst initCtx = $('Init Iteration Counter').first().json;\n\nconst currentIteration = (strategy.iteration || 0) + 1;\nconst maxIterations = strategy.max_iterations || 9;\n\n// Compute stage (1-3, each stage = 3 iterations)\nconst stage = Math.floor(currentIteration / 3) + 1;\n\n// Stage prompts\nconst stagePrompts = {\n  1: 'Adjust parameters within the current entry pattern. Try different period lengths, thresholds, and ATR multiples. Keep the same entry_indicator.',\n  2: 'Change entry/exit logic. Try a different entry_indicator or exit_type while keeping the same general concept and symbol.',\n  3: 'Pivot to a completely different concept. Try a different entry_type, direction, or regime. The current approach is not working.'\n};\nconst stagePrompt = stagePrompts[Math.min(stage, 3)] || stagePrompts[3];\n\n// Current attempt metrics\nconst currentMetrics = {\n  sharpe: backtest.sharpe || 0,\n  max_drawdown: backtest.max_drawdown || 0,\n  win_rate: backtest.win_rate || 0,\n  profit_factor: backtest.profit_factor || 0,\n  total_return: backtest.total_return || 0,\n  iteration: currentIteration,\n  stage: stage,\n  compilation_failed: backtest.status === 'compilation_failed'\n};\n\n// Accumulate attempts\nconst prevAttempts = initCtx.attempts || [];\nconst attempts = [...prevAttempts, currentMetrics];\n\n// Track best metrics (ignore compilation failures)\nconst validAttempts = attempts.filter(a => !a.compilation_failed);\nconst bestSharpe = validAttempts.length > 0 ? Math.max(...validAttempts.map(a => a.sharpe)) : 0;\nconst prevBest = initCtx.best_metrics_so_far;\nconst bestMetrics = prevBest && prevBest.sharpe >= bestSharpe ? prevBest : currentMetrics;\n\n// Kill signal checks\nlet killSignal = null;\n\n// After stage 1 (iteration 3+): if best Sharpe < 0.8, no edge\nif (currentIteration >= 3 && bestSharpe < 0.8) {\n  killSignal = 'no_edge';\n}\n\n// Any iteration: catastrophic max drawdown\nif (validAttempts.length > 0) {\n  const worstDD = Math.max(...validAttempts.map(a => Math.abs(a.max_drawdown)));\n  if (worstDD > 6000) {\n    killSignal = 'catastrophic_risk';\n  }\n}\n\n// All valid attempts have win rate < 0.40\nif (validAttempts.length >= 3 && validAttempts.every(a => a.win_rate < 0.40)) {\n  killSignal = 'wrong_direction';\n}\n\n// All valid attempts have profit factor < 1.0\nif (validAttempts.length >= 3 && validAttempts.every(a => a.profit_factor < 1.0)) {\n  killSignal = 'unprofitable';\n}\n\n// Flat improvement: last 3 valid attempts Sharpe improvement < 0.1\nif (validAttempts.length >= 3) {\n  const last3 = validAttempts.slice(-3);\n  const sharpeRange = Math.max(...last3.map(a => a.sharpe)) - Math.min(...last3.map(a => a.sharpe));\n  if (sharpeRange < 0.1 && bestSharpe < 1.5) {\n    killSignal = 'flat_improvement';\n  }\n}\n\n// Determine if we can retry\nconst canRetry = !killSignal && currentIteration < maxIterations;\n\nreturn [{\n  json: {\n    can_retry: canRetry,\n    kill_signal: killSignal,\n    iteration: currentIteration,\n    max_iterations: maxIterations,\n    stage: Math.min(stage, 3),\n    stage_prompt: stagePrompt,\n    symbol: strategy.symbol,\n    strategy_type: strategy.strategy_type,\n    constraints: strategy.constraints,\n    rejection_reason: killSignal\n      ? `Kill signal: ${killSignal}`\n      : (backtest.rejection_reason || 'Strategy did not meet tier criteria'),\n    last_tier: backtest.tier,\n    last_metrics: currentMetrics,\n    best_metrics_so_far: bestMetrics,\n    attempts: attempts\n  }\n}];"
+          },
+          "id": "check-iteration-limit",
+          "name": "Check Iteration Limit",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            2664,
+            820
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "version": 2,
+                "leftValue": "",
+                "caseSensitive": true,
+                "typeValidation": "strict"
+              },
+              "conditions": [
+                {
+                  "id": "retry-check",
+                  "leftValue": "={{ $json.can_retry }}",
+                  "rightValue": true,
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "equals"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "if-can-retry",
+          "name": "Can Retry?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            2888,
+            820
+          ]
+        },
+        {
+          "parameters": {
+            "model": "llama3.1:8b",
+            "options": {}
+          },
+          "id": "ollama-critique-model",
+          "name": "Ollama Critique Model",
+          "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+          "typeVersion": 1,
+          "position": [
+            3112,
+            576
+          ],
+          "credentials": {
+            "ollamaApi": {
+              "id": "BLgLWvmLGaJQOYaF",
+              "name": "Ollama account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "promptType": "define",
+            "text": "=A {{ $json.strategy_type }} strategy for {{ $json.symbol }} futures was REJECTED.\n\nRejection reason: {{ $json.rejection_reason }}\nTier: {{ $json.last_tier }}\nMetrics: Sharpe={{ $json.last_metrics.sharpe }}, MaxDD={{ $json.last_metrics.max_drawdown }}, Return={{ $json.last_metrics.total_return }}\nConstraints: {{ $json.constraints }}\n\nThis is iteration {{ $json.iteration }} of {{ $json.max_iterations }}.\n\nAnalyze why this strategy failed and provide specific, actionable refinement suggestions. Focus on:\n1. What parameters should change and in which direction\n2. Whether the strategy logic itself needs restructuring\n3. Risk management improvements\n\nOutput a concise refinement note (max 200 words) that will guide the next strategy generation attempt.",
+            "options": {
+              "systemMessage": "You are a senior quantitative analyst reviewing rejected trading strategies. Be specific and data-driven in your critique. Focus on actionable improvements."
+            }
+          },
+          "id": "ai-critique",
+          "name": "AI Strategy Critique",
+          "type": "@n8n/n8n-nodes-langchain.agent",
+          "typeVersion": 3.1,
+          "position": [
+            3168,
+            352
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const items = $input.all();\nconst critiqueOutput = items[0].json.output || items[0].json.text || 'No refinement suggestions available';\nconst ctx = $('Check Iteration Limit').first().json;\n\nreturn [{\n  json: {\n    symbol: ctx.symbol,\n    strategy_type: ctx.strategy_type,\n    constraints: ctx.constraints,\n    iteration: ctx.iteration,\n    max_iterations: ctx.max_iterations,\n    stage: ctx.stage,\n    stage_prompt: ctx.stage_prompt,\n    best_metrics_so_far: ctx.best_metrics_so_far,\n    attempts: ctx.attempts,\n    kill_signal: null,\n    refinement_notes: critiqueOutput,\n    status: 'refining'\n  }\n}];"
+          },
+          "id": "extract-refinement",
+          "name": "Extract Refinement Notes",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            3760,
+            760
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const ctx = $('Check Iteration Limit').first().json;\n\nreturn [{\n  json: {\n    success: false,\n    status: 'rejected_max_iterations',\n    strategy_type: ctx.strategy_type,\n    symbol: ctx.symbol,\n    iterations_used: ctx.iteration,\n    max_iterations: ctx.max_iterations,\n    last_tier: ctx.last_tier,\n    last_metrics: ctx.last_metrics,\n    rejection_reason: ctx.rejection_reason,\n    message: `Strategy generation failed after ${ctx.iteration} iterations. Last tier: ${ctx.last_tier}`\n  }\n}];"
+          },
+          "id": "prepare-rejected-response",
+          "name": "Prepare Rejected Response",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            3324,
+            1168
+          ]
+        },
+        {
+          "parameters": {
+            "options": {}
+          },
+          "id": "respond-rejected",
+          "name": "Respond Rejected",
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            3760,
+            1264
+          ]
+        },
+        {
+          "parameters": {
+            "sessionIdType": "customKey",
+            "sessionKey": "5b-strategy-gen",
+            "tableName": "memory_5b_strategy_gen",
+            "contextWindowLength": 10
+          },
+          "id": "c728c1ea-5d0d-4fee-b3e8-b35ae78269c3",
+          "name": "5B Gen Chat Memory",
+          "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+          "typeVersion": 1.3,
+          "position": [
+            576,
+            960
+          ],
+          "credentials": {
+            "postgres": {
+              "id": "XDOEjC2s3oL432Lj",
+              "name": "Postgres account"
+            }
+          },
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "model": "nomic-embed-text"
+          },
+          "id": "fa23e8ca-1a03-4701-86f5-2e1ec4dd33d2",
+          "name": "5B Gen Embeddings",
+          "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+          "typeVersion": 1,
+          "position": [
+            680,
+            1376
+          ],
+          "credentials": {
+            "ollamaApi": {
+              "id": "BLgLWvmLGaJQOYaF",
+              "name": "Ollama account"
+            }
+          },
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "tableName": "vectors_5b_strategy_gen",
+            "options": {}
+          },
+          "id": "3742413a-877e-4e40-b1b3-9d1e3fd35470",
+          "name": "5B Gen Vector Store",
+          "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+          "typeVersion": 1.3,
+          "position": [
+            600,
+            1168
+          ],
+          "credentials": {
+            "postgres": {
+              "id": "XDOEjC2s3oL432Lj",
+              "name": "Postgres account"
+            }
+          },
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "sessionIdType": "customKey",
+            "sessionKey": "5b-strategy-critique",
+            "tableName": "memory_5b_strategy_critique",
+            "contextWindowLength": 10
+          },
+          "id": "b5bcb3ee-14d5-431f-ae61-3eb75bc0f3eb",
+          "name": "5B Critique Chat Memory",
+          "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+          "typeVersion": 1.3,
+          "position": [
+            3240,
+            576
+          ],
+          "credentials": {
+            "postgres": {
+              "id": "XDOEjC2s3oL432Lj",
+              "name": "Postgres account"
+            }
+          },
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "model": "nomic-embed-text"
+          },
+          "id": "085d9b96-d5fb-4e2d-b2c7-4598fa79c33e",
+          "name": "5B Critique Embeddings",
+          "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+          "typeVersion": 1,
+          "position": [
+            3344,
+            992
+          ],
+          "credentials": {
+            "ollamaApi": {
+              "id": "BLgLWvmLGaJQOYaF",
+              "name": "Ollama account"
+            }
+          },
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "tableName": "vectors_5b_strategy_critique",
+            "options": {}
+          },
+          "id": "752e8c8e-af9a-4639-b5de-a095db50658a",
+          "name": "5B Critique Vector Store",
+          "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+          "typeVersion": 1.3,
+          "position": [
+            3264,
+            784
+          ],
+          "credentials": {
+            "postgres": {
+              "id": "XDOEjC2s3oL432Lj",
+              "name": "Postgres account"
+            }
+          },
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "toolDescription": "Search past strategy generation memory for patterns, successful approaches, and failed experiments to avoid repeating mistakes."
+          },
+          "id": "83feaa30-6043-4f17-83a1-450261457286",
+          "name": "5B Gen Memory QA Tool",
+          "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+          "typeVersion": 1.1,
+          "position": [
+            704,
+            960
+          ],
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "toolDescription": "Search past strategy critique memory for common failure modes, edge decay patterns, and quality benchmarks."
+          },
+          "id": "281fa509-f240-4709-82c5-14bda60a6d84",
+          "name": "5B Critique Memory QA Tool",
+          "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+          "typeVersion": 1.1,
+          "position": [
+            3368,
+            576
+          ],
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "model": "llama3.1:8b",
+            "options": {}
+          },
+          "id": "f0fcf175-15db-45d3-a6e8-d8889309245e",
+          "name": "5B Gen QA LLM",
+          "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+          "typeVersion": 1,
+          "position": [
+            888,
+            1168
+          ],
+          "credentials": {
+            "ollamaApi": {
+              "id": "BLgLWvmLGaJQOYaF",
+              "name": "Ollama account"
+            }
+          },
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "model": "llama3.1:8b",
+            "options": {}
+          },
+          "id": "7fe46d0f-a97e-4c9c-91d0-b2ada8af482a",
+          "name": "5B Critique QA LLM",
+          "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+          "typeVersion": 1,
+          "position": [
+            3552,
+            784
+          ],
+          "credentials": {
+            "ollamaApi": {
+              "id": "BLgLWvmLGaJQOYaF",
+              "name": "Ollama account"
+            }
+          },
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "method": "PATCH",
+            "url": "=http://host.docker.internal:4000/api/journal/{{ $json.journalId }}",
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ JSON.stringify({ status: 'promoted', tier: $json.tier || 'TIER_3' }) }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "options": {
+              "timeout": 15000
+            }
+          },
+          "id": "set-lifecycle-candidate",
+          "name": "Set Lifecycle CANDIDATE",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.4,
+          "position": [
+            2888,
+            160
+          ],
+          "retryOnFail": true,
+          "maxTries": 2,
+          "waitBetweenTries": 3000,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "http://host.docker.internal:4000/api/compiler/validate",
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ JSON.stringify({ name: $json.name, description: $json.description, symbol: $json.symbol, timeframe: $json.timeframe, direction: $json.direction, entry_type: $json.entry_type, entry_indicator: $json.entry_indicator, entry_params: $json.entry_params, entry_condition: $json.entry_condition, exit_type: $json.exit_type, exit_params: $json.exit_params, stop_loss_atr_multiple: $json.stop_loss_atr_multiple, take_profit_atr_multiple: $json.take_profit_atr_multiple, preferred_regime: $json.preferred_regime, session_filter: $json.session_filter, source: $json.source, tags: $json.tags }) }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "options": {
+              "timeout": 60000
+            }
+          },
+          "id": "compiler-gate-validate",
+          "name": "Compiler Validate DSL",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.4,
+          "position": [
+            1320,
+            664
+          ],
+          "retryOnFail": true,
+          "maxTries": 2,
+          "waitBetweenTries": 3000,
+          "onError": "continueRegularOutput"
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "version": 2,
+                "leftValue": "",
+                "caseSensitive": true,
+                "typeValidation": "strict"
+              },
+              "combinator": "and",
+              "conditions": [
+                {
+                  "id": "compile-ok",
+                  "leftValue": "={{ $json.valid }}",
+                  "rightValue": "",
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "true",
+                    "singleValue": true
+                  }
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "compiler-gate-check",
+          "name": "Compilation Passed?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.3,
+          "position": [
+            1544,
+            664
+          ]
+        },
+        {
+          "parameters": {
+            "jsCode": "const items = $input.all();\nconst data = items[0].json;\nconst ctx = $('Parse AI Strategy Output').first().json || {};\n\nconsole.log('COMPILER GATE: Strategy failed compilation');\nconsole.log('Errors:', JSON.stringify(data.errors || data.message || 'Unknown'));\n\n// Pass through enough context for Check Iteration Limit to work\nreturn [{\n  json: {\n    status: 'compilation_failed',\n    errors: data.errors || data.message || 'Unknown compiler error',\n    skipped_backtest: true,\n    // Fake backtest results so Check Iteration Limit can process\n    sharpe: 0,\n    max_drawdown: 0,\n    win_rate: 0,\n    profit_factor: 0,\n    total_return: 0,\n    rejection_reason: 'Compilation failed: ' + JSON.stringify(data.errors || data.message || 'Unknown'),\n    tier: 'REJECTED',\n    timestamp: new Date().toISOString()\n  }\n}];"
+          },
+          "id": "compiler-gate-failed",
+          "name": "Log Compilation Failed",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1768,
+            1264
+          ]
+        },
+        {
+          "id": "error-trigger",
+          "name": "On Workflow Error",
+          "type": "n8n-nodes-base.errorTrigger",
+          "typeVersion": 1,
+          "position": [
+            0,
+            1400
+          ],
+          "parameters": {}
+        },
+        {
+          "id": "http-error-alert",
+          "name": "Discord: Strategy Gen Error",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.4,
+          "position": [
+            250,
+            1400
+          ],
+          "parameters": {
+            "method": "POST",
+            "url": "http://host.docker.internal:4100/alert/alerts",
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ JSON.stringify({ title: 'Strategy Gen Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Strategy Generation Loop', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "options": {
+              "timeout": 15000
+            }
+          }
+        },
+        {
+          "id": "d75d2649-cfac-4b7d-8af6-67b529688c40",
+          "name": "Cross-Validate Concept",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            1656,
+            400
+          ],
+          "parameters": {
+            "method": "POST",
+            "url": "http://localhost:4000/api/validation/cross",
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={{ JSON.stringify({ concept: ($json.strategy && $json.strategy.entry_type) || $json.entry_type || 'unknown' }) }}",
+            "options": {
+              "timeout": 10000
+            }
+          }
+        },
+        {
+          "id": "6492e69d-ccdb-4795-8793-840f6db1107a",
+          "name": "Concept Validated?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2,
+          "position": [
+            1656,
+            568
+          ],
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict"
+              },
+              "conditions": [
+                {
+                  "id": "concept-check",
+                  "leftValue": "={{ $json.requires_research }}",
+                  "rightValue": "",
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "false"
+                  }
+                }
+              ],
+              "combinator": "and"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Webhook Trigger": {
+          "main": [
+            [
+              {
+                "node": "Init Iteration Counter",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Init Iteration Counter": {
+          "main": [
+            [
+              {
+                "node": "AI Strategy Generator",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Ollama Chat Model": {
+          "ai_languageModel": [
+            [
+              {
+                "node": "AI Strategy Generator",
+                "type": "ai_languageModel",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "AI Strategy Generator": {
+          "main": [
+            [
+              {
+                "node": "Parse AI Strategy Output",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Submit Backtest": {
+          "main": [
+            [
+              {
+                "node": "Wait for Backtest",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Wait for Backtest": {
+          "main": [
+            [
+              {
+                "node": "Fetch Backtest Results",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Fetch Backtest Results": {
+          "main": [
+            [
+              {
+                "node": "Check Strategy Tier",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Check Strategy Tier": {
+          "main": [
+            [
+              {
+                "node": "Log Strategy to Journal",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Check Iteration Limit",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Accepted Response": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Check Iteration Limit": {
+          "main": [
+            [
+              {
+                "node": "Can Retry?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Can Retry?": {
+          "main": [
+            [
+              {
+                "node": "AI Strategy Critique",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Prepare Rejected Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Ollama Critique Model": {
+          "ai_languageModel": [
+            [
+              {
+                "node": "AI Strategy Critique",
+                "type": "ai_languageModel",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "AI Strategy Critique": {
+          "main": [
+            [
+              {
+                "node": "Extract Refinement Notes",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extract Refinement Notes": {
+          "main": [
+            [
+              {
+                "node": "AI Strategy Generator",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Rejected Response": {
+          "main": [
+            [
+              {
+                "node": "Respond Rejected",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Gen Chat Memory": {
+          "ai_memory": [
+            [
+              {
+                "node": "AI Strategy Generator",
+                "type": "ai_memory",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Gen Embeddings": {
+          "ai_embedding": [
+            [
+              {
+                "node": "5B Gen Vector Store",
+                "type": "ai_embedding",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Critique Chat Memory": {
+          "ai_memory": [
+            [
+              {
+                "node": "AI Strategy Critique",
+                "type": "ai_memory",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Critique Embeddings": {
+          "ai_embedding": [
+            [
+              {
+                "node": "5B Critique Vector Store",
+                "type": "ai_embedding",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Gen Vector Store": {
+          "ai_vectorStore": [
+            [
+              {
+                "node": "5B Gen Memory QA Tool",
+                "type": "ai_vectorStore",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Gen Memory QA Tool": {
+          "ai_tool": [
+            [
+              {
+                "node": "AI Strategy Generator",
+                "type": "ai_tool",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Critique Vector Store": {
+          "ai_vectorStore": [
+            [
+              {
+                "node": "5B Critique Memory QA Tool",
+                "type": "ai_vectorStore",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Critique Memory QA Tool": {
+          "ai_tool": [
+            [
+              {
+                "node": "AI Strategy Critique",
+                "type": "ai_tool",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Gen QA LLM": {
+          "ai_languageModel": [
+            [
+              {
+                "node": "5B Gen Memory QA Tool",
+                "type": "ai_languageModel",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "5B Critique QA LLM": {
+          "ai_languageModel": [
+            [
+              {
+                "node": "5B Critique Memory QA Tool",
+                "type": "ai_languageModel",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Log Strategy to Journal": {
+          "main": [
+            [
+              {
+                "node": "Set Lifecycle CANDIDATE",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Set Lifecycle CANDIDATE": {
+          "main": [
+            [
+              {
+                "node": "Prepare Accepted Response",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Parse AI Strategy Output": {
+          "main": [
+            [
+              {
+                "node": "Compiler Validate DSL",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Compiler Validate DSL": {
+          "main": [
+            [
+              {
+                "node": "Compilation Passed?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Compilation Passed?": {
+          "main": [
+            [
+              {
+                "node": "Cross-Validate Concept",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Log Compilation Failed",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "On Workflow Error": {
+          "main": [
+            [
+              {
+                "node": "Discord: Strategy Gen Error",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Cross-Validate Concept": {
+          "main": [
+            [
+              {
+                "node": "Concept Validated?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Concept Validated?": {
+          "main": [
+            [
+              {
+                "node": "Submit Backtest",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Check Iteration Limit",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Log Compilation Failed": {
+          "main": [
+            [
+              {
+                "node": "Check Iteration Limit",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "Tonio tonioswayz32@gmail.com",
+      "name": null,
+      "description": null,
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-03-23T20:40:25.695Z",
+          "id": 1292,
+          "workflowId": "eCr7cyb0aPArFCZc",
+          "versionId": "9a13f72f-1a2d-4007-90d6-91f7b1813e1a",
+          "event": "activated",
+          "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+        }
+      ]
+    }
   }
 }

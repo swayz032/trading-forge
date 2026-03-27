@@ -107,7 +107,7 @@ class TestGenerateSignals:
     def _make_config(self) -> StrategyConfig:
         return StrategyConfig(
             name="Test",
-            symbol="ES",
+            symbol="MES",
             timeframe="daily",
             indicators=[
                 IndicatorConfig(type="sma", period=20),

@@ -140,6 +140,7 @@ def run_walk_forward(
 
     window_results = []
     all_oos_pnls: list[float] = []
+    all_oos_pnl_records: list[dict] = []
     all_oos_equity: list[float] = []
     all_oos_trades: list[dict] = []
 
@@ -163,6 +164,10 @@ def run_walk_forward(
             end_date=request.end_date,
             slippage_ticks=request.slippage_ticks,
             commission_per_side=request.commission_per_side,
+            firm_key=request.firm_key,
+            max_trades_per_day=request.max_trades_per_day,
+            event_calendar=request.event_calendar,
+            fill_model=request.fill_model,
         )
         oos_result = run_backtest(oos_request, data=oos_data)
 
@@ -221,6 +226,7 @@ def run_walk_forward(
 
         window_results.append(window_detail)
         all_oos_pnls.extend(oos_result.get("daily_pnls", []))
+        all_oos_pnl_records.extend(oos_result.get("daily_pnl_records", []))
         all_oos_equity.extend(oos_result.get("equity_curve", []))
         all_oos_trades.extend(oos_result.get("trades", []))
 
@@ -302,6 +308,17 @@ def run_walk_forward(
                 overall_confidence = "LOW"
                 print(f"  Param stability: FRAGILE — variance > 30% across windows", file=sys.stderr)
 
+    # ─── Prop firm compliance on aggregated OOS results ─────
+    prop_compliance = None
+    if all_oos_pnl_records and all_oos_trades:
+        from src.engine.prop_sim import simulate_all_firms
+        symbol = request.strategy.symbol if hasattr(request.strategy, "symbol") else request.strategy.get("symbol", "MES")
+        prop_compliance = simulate_all_firms(
+            all_oos_pnl_records, all_oos_trades,
+            symbol=symbol, account_size=50_000,
+            overnight_hold=False,
+        )
+
     return {
         "confidence": overall_confidence,
         "low_confidence_windows": len(low_confidence_windows),
@@ -318,11 +335,13 @@ def run_walk_forward(
         },
         "trades": all_oos_trades,
         "daily_pnls": all_oos_pnls,
+        "daily_pnl_records": all_oos_pnl_records,
         "equity_curve": all_oos_equity,
         "windows": window_results,
         "n_splits": len(windows),
         "is_ratio": is_ratio,
         "param_stability": param_stability,
+        "prop_compliance": prop_compliance,
         "execution_time_ms": elapsed_ms,
     }
 
@@ -398,6 +417,7 @@ def run_walk_forward_class(
 
     window_results = []
     all_oos_pnls: list[float] = []
+    all_oos_pnl_records: list[dict] = []
     all_oos_trades: list[dict] = []
 
     for i, (is_data, oos_data) in enumerate(windows):
@@ -466,6 +486,7 @@ def run_walk_forward_class(
 
         window_results.append(window_detail)
         all_oos_pnls.extend(oos_result.get("daily_pnls", []))
+        all_oos_pnl_records.extend(oos_result.get("daily_pnl_records", []))
         all_oos_trades.extend(oos_result.get("trades", []))
 
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates
@@ -534,6 +555,16 @@ def run_walk_forward_class(
 
     cross_val = run_cross_validation(_oos_aggregate, is_sharpe=avg_is_sharpe)
 
+    # ─── Prop firm compliance on aggregated OOS results ─────
+    prop_compliance = None
+    if all_oos_pnl_records and all_oos_trades:
+        from src.engine.prop_sim import simulate_all_firms
+        prop_compliance = simulate_all_firms(
+            all_oos_pnl_records, all_oos_trades,
+            symbol=symbol, account_size=50_000,
+            overnight_hold=False,
+        )
+
     return {
         "confidence": "LOW" if low_confidence_windows else "OK",
         "low_confidence_windows": len(low_confidence_windows),
@@ -549,6 +580,7 @@ def run_walk_forward_class(
             "total_trading_days": total_days,
         },
         "daily_pnls": all_oos_pnls,
+        "daily_pnl_records": all_oos_pnl_records,
         "trades": all_oos_trades,
         "windows": window_results,
         "n_splits": len(windows),
@@ -556,4 +588,5 @@ def run_walk_forward_class(
         "execution_time_ms": elapsed_ms,
         "sanity_checks": sanity,
         "cross_validation": cross_val,
+        "prop_compliance": prop_compliance,
     }

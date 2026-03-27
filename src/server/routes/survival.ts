@@ -8,74 +8,11 @@
  */
 
 import { Router } from "express";
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
 import { z } from "zod";
 import { logger } from "../index.js";
+import { runPythonModule } from "../lib/python-runner.js";
 
 export const survivalRoutes = Router();
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
-
-// ─── Python subprocess helper ──────────────────────────────────
-
-function runPython(module: string, configJson: string): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", module, "--config", configJson];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "survival-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse survival output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Survival engine failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      if (pythonCmd === "python") {
-        // Retry with python3
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let stdout2 = "";
-        let stderr2 = "";
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
-          } else {
-            reject(new Error(`Survival engine failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => reject(err));
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
@@ -115,10 +52,11 @@ survivalRoutes.post("/score", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.survival.survival_scorer",
-      JSON.stringify(parsed.data),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.survival.survival_scorer",
+      config: parsed.data as unknown as Record<string, unknown>,
+      componentName: "survival-scorer",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Survival score failed");
@@ -136,10 +74,11 @@ survivalRoutes.post("/compare", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.survival.survival_comparator",
-      JSON.stringify(parsed.data),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.survival.survival_comparator",
+      config: parsed.data as unknown as Record<string, unknown>,
+      componentName: "survival-comparator",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Survival compare failed");
@@ -148,17 +87,17 @@ survivalRoutes.post("/compare", async (req, res) => {
 });
 
 // ─── GET /api/survival/firm-profiles ─────────────────────────────
-// List all firm survival profiles (no Python needed — read from JSON)
+// List all firm survival profiles
 survivalRoutes.get("/firm-profiles", async (_req, res) => {
   try {
-    const result = await runPython(
-      "src.engine.survival.firm_profiles",
-      JSON.stringify({ action: "list" }),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.survival.firm_profiles",
+      config: { action: "list" },
+      componentName: "firm-profiles",
+    });
     res.json(result);
   } catch {
-    // Fallback: return firm list from a simple Python call
-    // If that also fails, return hardcoded list
+    // Fallback: return firm list if python fails
     res.json({
       firms: [
         "MFFU", "Topstep", "TPT", "Apex", "FFN", "Alpha", "Tradeify", "Earn2Trade",
@@ -177,10 +116,11 @@ survivalRoutes.post("/monte-carlo", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.survival.drawdown_simulator",
-      JSON.stringify(parsed.data),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.survival.drawdown_simulator",
+      config: parsed.data as unknown as Record<string, unknown>,
+      componentName: "survival-mc",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Survival MC failed");
@@ -191,16 +131,6 @@ survivalRoutes.post("/monte-carlo", async (req, res) => {
 // ─── GET /api/survival/leaderboard ───────────────────────────────
 // Rank strategies by survival per firm
 // Query params: ?firm=MFFU&account_type=50K&limit=20
-survivalRoutes.get("/leaderboard", async (req, res) => {
-  // This would typically query the database for stored survival scores.
-  // For now, return a placeholder indicating the endpoint is available
-  // and scores should be computed via POST /api/survival/compare
-  const { firm, limit = "20" } = req.query;
-
-  res.json({
-    message: "Use POST /api/survival/compare with strategy daily_pnls to generate leaderboard",
-    firm: firm || "all",
-    limit: Number(limit),
-    hint: "POST to /api/survival/compare with strategies array to get ranked results",
-  });
+survivalRoutes.get("/leaderboard", async (_req, res) => {
+  res.status(501).json({ error: "Not implemented — use POST /api/survival/compare instead" });
 });

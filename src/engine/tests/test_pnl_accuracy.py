@@ -14,7 +14,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from src.engine.backtester import run_backtest, _compute_daily_pnls, _build_run_receipt
+from src.engine.backtester import run_backtest, _compute_daily_pnls, _build_run_receipt, _apply_max_trades_per_day
 from src.engine.config import (
     BacktestRequest,
     ContractSpec,
@@ -56,30 +56,30 @@ class TestSingleTradePnL:
 
     def test_long_trade_gross_pnl(self):
         """
-        1 MES contract (labeled "ES" in config), entry at 5000, exit at 5010.
+        1 MES contract, entry at 5000, exit at 5010.
         Gross P&L = (5010 - 5000) * 1 * 5.0 = $50.
-        (ES maps to MES micro specs — point_value=5.0, not 50.0)
+        (MES micro specs — point_value=5.0, not 50.0)
         """
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
         gross = (5010 - 5000) * 1 * spec.point_value
         assert gross == pytest.approx(50.0)
 
     def test_long_trade_commission_deduction(self):
         """
         Commission = commission_per_side * size * 2 (roundtrip).
-        MFFU MES: $1.58/side * 1 contract * 2 = $3.16.
+        MFFU MES: $0.62/side * 1 contract * 2 = $1.24.
         """
-        commission_per_side = 1.58
+        commission_per_side = 0.62
         size = 1
         roundtrip = commission_per_side * size * 2
-        assert roundtrip == pytest.approx(3.16)
+        assert roundtrip == pytest.approx(1.24)
 
     def test_short_trade_gross_pnl(self):
         """
         1 MES short, entry at 5010, exit at 5000.
         Gross = (5010 - 5000) * 1 * 5.0 = $50.
         """
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
         gross = (5010 - 5000) * 1 * spec.point_value
         assert gross == pytest.approx(50.0)
 
@@ -88,7 +88,7 @@ class TestSingleTradePnL:
         1 MES short, entry at 5000, exit at 5010.
         Gross = (5000 - 5010) * 1 * 5.0 = -$50.
         """
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
         gross = (5000 - 5010) * 1 * spec.point_value
         assert gross == pytest.approx(-50.0)
 
@@ -98,7 +98,7 @@ class TestSingleTradePnL:
 class TestMultiContractPnL:
     def test_3_contract_long(self):
         """3 MES contracts, +10 points = $150 gross."""
-        spec = CONTRACT_SPECS["ES"]  # ES = MES specs in this codebase
+        spec = CONTRACT_SPECS["MES"]
         gross = (5010 - 5000) * 3 * spec.point_value
         assert gross == pytest.approx(150.0)
 
@@ -107,13 +107,12 @@ class TestMultiContractPnL:
         comm = 4.50 * 3 * 2
         assert comm == 27.0
 
-    def test_es_and_mes_are_same_spec(self):
-        """ES and MES map to the same spec (micro contracts)."""
-        es = CONTRACT_SPECS["ES"]
+    def test_mes_spec_is_micro(self):
+        """MES maps to micro contract specs."""
         mes = CONTRACT_SPECS["MES"]
-        assert es.point_value == mes.point_value
-        assert es.tick_value == mes.tick_value
-        assert es.tick_size == mes.tick_size
+        assert mes.point_value == 5.0
+        assert mes.tick_value == 1.25
+        assert mes.tick_size == 0.25
 
 
 # ─── Test 3: Equity curve correctness ─────────────────────────────
@@ -124,7 +123,7 @@ class TestEquityCurve:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -151,7 +150,7 @@ class TestEquityCurve:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -166,7 +165,7 @@ class TestEquityCurve:
             ),
             start_date="2023-01-01",
             end_date="2023-12-31",
-            commission_per_side=4.50,
+            commission_per_side=0.62,
         )
 
         df = _make_controlled_ohlcv([4000 + i * 0.5 + (i % 7) * 3 for i in range(200)])
@@ -191,7 +190,7 @@ class TestEquityCurve:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -255,7 +254,7 @@ class TestMaxDrawdown:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -413,7 +412,7 @@ class TestCommissionImpact:
         base_config = dict(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -446,7 +445,7 @@ class TestCommissionImpact:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -461,7 +460,7 @@ class TestCommissionImpact:
             ),
             start_date="2023-01-01",
             end_date="2023-12-31",
-            commission_per_side=4.50,
+            commission_per_side=0.62,
         )
 
         df = _make_controlled_ohlcv([4000 + i * 0.5 for i in range(200)])
@@ -469,7 +468,7 @@ class TestCommissionImpact:
 
         for trade in result["trades"]:
             size = float(trade["Size"])
-            expected_comm = 4.50 * size * 2
+            expected_comm = 0.62 * size * 2
             actual_comm = float(trade["CommissionCost"])
             assert actual_comm == pytest.approx(expected_comm, abs=0.01), (
                 f"Trade commission {actual_comm} != expected {expected_comm} "
@@ -512,7 +511,7 @@ class TestConsecutiveLosers:
 def _minimal_strategy_config():
     return StrategyConfig(
         name="Test",
-        symbol="ES",
+        symbol="MES",
         timeframe="daily",
         indicators=[IndicatorConfig(type="sma", period=5), IndicatorConfig(type="atr", period=14)],
         entry_long="close crosses_above sma_5",
@@ -553,7 +552,7 @@ class TestEdgeCases:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="NoTrades",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -583,7 +582,7 @@ class TestEdgeCases:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -614,15 +613,10 @@ class TestEdgeCases:
 
 class TestContractSpecs:
     @pytest.mark.parametrize("symbol,expected_pv,expected_tv", [
-        # ES/NQ/YM/RTY map to MICRO specs (MES/MNQ etc.) — see config.py line 24
-        ("ES", 5.0, 1.25),
+        # Micro contract specs — see config.py
         ("MES", 5.0, 1.25),
-        ("NQ", 2.0, 0.50),
         ("MNQ", 2.0, 0.50),
-        ("CL", 100.0, 1.0),
-        ("YM", 0.50, 0.50),
-        ("RTY", 5.0, 0.50),
-        ("GC", 10.0, 1.0),
+        ("MCL", 100.0, 1.0),
     ])
     def test_point_value_and_tick_value(self, symbol, expected_pv, expected_tv):
         """Contract specs must match micro CME specifications."""
@@ -638,3 +632,126 @@ class TestContractSpecs:
                 f"{symbol}: tick_value={spec.tick_value} != "
                 f"tick_size({spec.tick_size}) * point_value({spec.point_value}) = {calculated}"
             )
+
+
+# ─── Max Trades Per Day Tests ─────────────────────────────────────────
+
+
+class TestMaxTradesPerDay:
+    """Verify _apply_max_trades_per_day suppresses entries beyond the daily limit."""
+
+    def _make_timestamps(self, dates: list[str]) -> np.ndarray:
+        """Create numpy array of datetime-like strings."""
+        return np.array(dates, dtype="datetime64[ns]")
+
+    def test_no_suppression_within_limit(self):
+        """2 entries on day 1, 1 on day 2 — max=2 should keep all."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00", "2025-01-06T10:30:00",
+            "2025-01-07T09:30:00", "2025-01-07T10:00:00",
+        ])
+        long_e = np.array([True, True, False, True, False])
+        short_e = np.array([False, False, False, False, False])
+
+        filt_long, filt_short = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        assert filt_long.tolist() == [True, True, False, True, False]
+        assert filt_short.tolist() == [False, False, False, False, False]
+
+    def test_suppresses_third_entry(self):
+        """3 long entries on same day, max=2 → third suppressed."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-06T10:30:00", "2025-01-06T11:00:00",
+        ])
+        long_e = np.array([True, True, True, False])
+        short_e = np.array([False, False, False, False])
+
+        filt_long, filt_short = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        assert filt_long.tolist() == [True, True, False, False]
+
+    def test_long_and_short_count_together(self):
+        """1 long + 1 short = 2 trades. Third entry (either side) suppressed."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-06T10:30:00", "2025-01-06T11:00:00",
+        ])
+        long_e = np.array([True, False, True, False])
+        short_e = np.array([False, True, False, False])
+
+        filt_long, filt_short = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        # First long kept, short kept, second long suppressed (already at 2)
+        assert filt_long.tolist() == [True, False, False, False]
+        assert filt_short.tolist() == [False, True, False, False]
+
+    def test_separate_days_independent(self):
+        """Each day gets its own counter. 2 entries on day 1 + 2 on day 2 = all kept."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-07T09:30:00", "2025-01-07T10:00:00",
+        ])
+        long_e = np.array([True, True, True, True])
+        short_e = np.array([False, False, False, False])
+
+        filt_long, _ = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        assert filt_long.tolist() == [True, True, True, True]
+
+    def test_max_trades_zero_means_unlimited(self):
+        """max_trades=0 → no filtering."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-06T10:30:00", "2025-01-06T11:00:00",
+        ])
+        long_e = np.array([True, True, True, True])
+        short_e = np.array([False, False, False, False])
+
+        filt_long, _ = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=0)
+
+        assert filt_long.tolist() == [True, True, True, True]
+
+    def test_max_trades_one(self):
+        """Strict 1 trade per day — only first entry kept."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-06T10:30:00",
+        ])
+        long_e = np.array([True, True, True])
+        short_e = np.array([False, False, False])
+
+        filt_long, _ = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=1)
+
+        assert filt_long.tolist() == [True, False, False]
+
+    def test_no_entries_no_change(self):
+        """No entries → no change."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+        ])
+        long_e = np.array([False, False])
+        short_e = np.array([False, False])
+
+        filt_long, filt_short = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        assert filt_long.tolist() == [False, False]
+        assert filt_short.tolist() == [False, False]
+
+    def test_backtest_request_default(self):
+        """BacktestRequest should default max_trades_per_day to 2."""
+        from src.engine.config import BacktestRequest, StrategyConfig, IndicatorConfig, StopConfig, PositionSizeConfig
+        req = BacktestRequest(
+            strategy=StrategyConfig(
+                name="test", symbol="MES", timeframe="15min",
+                indicators=[IndicatorConfig(type="sma", period=20)],
+                entry_long="close crosses_above sma_20",
+                entry_short="close crosses_below sma_20",
+                exit="close crosses_below sma_20",
+                stop_loss=StopConfig(type="atr", multiplier=2.0),
+                position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
+            ),
+            start_date="2025-01-01",
+            end_date="2025-03-01",
+        )
+        assert req.max_trades_per_day == 2

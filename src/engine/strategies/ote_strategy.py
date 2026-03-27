@@ -23,7 +23,7 @@ class OTEStrategy(BaseStrategy):
         self.swing_lookback = swing_lookback
         self.atr_period = atr_period
         self.ote_lookback = ote_lookback
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "15min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -128,7 +128,7 @@ class OTEStrategy(BaseStrategy):
 
             # ─── Short: after bearish BOS, price in OTE zone + FVG ─
             # Fib from the impulsive leg (swing high to swing low before BOS)
-            if not exited_this_bar_short and short_entry_bar < 0 and (i - last_bearish_bos) <= self.ote_lookback and last_bearish_bos > 0:
+            if not exited_this_bar_short and short_entry_bar < 0 and long_entry_bar < 0 and (i - last_bearish_bos) <= self.ote_lookback and last_bearish_bos > 0:
                 recent_sh = None
                 recent_sl = None
                 for j in range(len(sh_indices) - 1, -1, -1):

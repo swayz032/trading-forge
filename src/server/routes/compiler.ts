@@ -8,74 +8,25 @@
  */
 
 import { Router } from "express";
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
 import { readFileSync } from "fs";
+import { resolve as pathResolve } from "path";
 import { logger } from "../index.js";
+import { runPythonModule } from "../lib/python-runner.js";
 
 export const compilerRoutes = Router();
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
-
-// ─── Helper: run Python compiler subprocess ─────────────────────────
-
-function runCompilerAction(action: string, input: unknown): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const inputJson = JSON.stringify(input);
-    const args = [
-      "-m", "src.engine.compiler.compiler",
-      "--action", action,
-      "--input", inputJson,
-    ];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data: Buffer) => {
-      stdout += data.toString();
-    });
-
-    proc.stderr.on("data", (data: Buffer) => {
-      stderr += data.toString();
-    });
-
-    proc.on("close", (code) => {
-      if (stderr) {
-        logger.warn({ action, stderr: stderr.trim() }, "Compiler stderr");
-      }
-      if (code !== 0) {
-        try {
-          const errResult = JSON.parse(stdout);
-          reject(errResult);
-        } catch {
-          reject(new Error(`Compiler exited with code ${code}: ${stderr || stdout}`));
-        }
-        return;
-      }
-      try {
-        resolve(JSON.parse(stdout));
-      } catch {
-        reject(new Error(`Invalid JSON from compiler: ${stdout.slice(0, 500)}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      reject(new Error(`Failed to spawn compiler: ${err.message}`));
-    });
-  });
-}
+const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
 // ─── POST /api/compiler/validate — Validate a strategy DSL ─────────
 
 compilerRoutes.post("/validate", async (req, res) => {
   try {
-    const result = await runCompilerAction("validate", req.body);
+    const result = await runPythonModule({
+      module: "src.engine.compiler.compiler",
+      args: ["--action", "validate"],
+      config: req.body,
+      componentName: "compiler-validate",
+    });
     res.json(result);
   } catch (err: any) {
     if (err.errors) {
@@ -91,7 +42,12 @@ compilerRoutes.post("/validate", async (req, res) => {
 
 compilerRoutes.post("/compile", async (req, res) => {
   try {
-    const result = await runCompilerAction("compile", req.body);
+    const result = await runPythonModule({
+      module: "src.engine.compiler.compiler",
+      args: ["--action", "compile"],
+      config: req.body,
+      componentName: "compiler-compile",
+    });
     res.json(result);
   } catch (err: any) {
     if (err.errors) {
@@ -128,7 +84,12 @@ compilerRoutes.post("/diff", async (req, res) => {
     return;
   }
   try {
-    const result = await runCompilerAction("diff", { a, b });
+    const result = await runPythonModule({
+      module: "src.engine.compiler.compiler",
+      args: ["--action", "diff"],
+      config: { a, b },
+      componentName: "compiler-diff",
+    });
     res.json(result);
   } catch (err: any) {
     logger.error({ err }, "Compiler diff error");

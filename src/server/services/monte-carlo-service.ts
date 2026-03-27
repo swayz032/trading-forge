@@ -8,18 +8,14 @@
  * - stderr → logging
  */
 
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
-import { writeFileSync, unlinkSync } from "fs";
-import { tmpdir } from "os";
-import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { backtests, monteCarloRuns, auditLog } from "../db/schema.js";
 import { logger } from "../index.js";
 import { runMatrix } from "./matrix-backtest-service.js";
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+import { runQuantumMC } from "./quantum-mc-service.js";
+import { compilePineExport } from "./pine-export-service.js";
+import { runPythonModule } from "../lib/python-runner.js";
 
 interface MCOptions {
   numSimulations?: number;
@@ -61,91 +57,6 @@ interface MCResult {
   };
 }
 
-function runPythonMonteCarlo(configPath: string, mcId: string): Promise<MCResult> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = [
-      "-m", "src.engine.monte_carlo",
-      "--config", configPath,
-      "--mc-id", mcId,
-    ];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    // Kill after 10 minutes to prevent hung processes
-    const MC_TIMEOUT_MS = 600_000;
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        proc.kill("SIGTERM");
-        reject(new Error(`Monte Carlo timed out after ${MC_TIMEOUT_MS / 1000}s`));
-      }
-    }, MC_TIMEOUT_MS);
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "monte-carlo-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      clearTimeout(timer);
-      if (settled) return;
-      settled = true;
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse MC output: ${stdout.slice(0, 500)}`));
-        }
-      } else {
-        reject(new Error(`Monte Carlo failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      clearTimeout(timer);
-      if (settled) return;
-      if (pythonCmd === "python") {
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let stdout2 = "";
-        let stderr2 = "";
-        let settled2 = false;
-        const timer2 = setTimeout(() => {
-          if (!settled2) { settled2 = true; proc2.kill("SIGTERM"); reject(new Error(`Monte Carlo retry timed out after ${MC_TIMEOUT_MS / 1000}s`)); }
-        }, MC_TIMEOUT_MS);
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          clearTimeout(timer2);
-          if (settled2) return;
-          settled2 = true;
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2.slice(0, 500)}`)); }
-          } else {
-            reject(new Error(`Monte Carlo failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => { clearTimeout(timer2); if (!settled2) { settled2 = true; reject(err); } });
-      } else {
-        settled = true;
-        reject(err);
-      }
-    });
-  });
-}
-
 export async function runMonteCarlo(backtestId: string, options: MCOptions = {}) {
   // Fetch backtest data (trades, daily_pnls, equity_curve)
   const [bt] = await db
@@ -175,7 +86,6 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
   const mcId = mcRow.id;
 
   try {
-    // Build config JSON — write to temp file (trade lists can be large)
     const config = {
       backtest_id: backtestId,
       num_simulations: options.numSimulations ?? 10_000,
@@ -197,15 +107,13 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
       n_variants: options.nVariants ?? 1,
     };
 
-    const tmpPath = pathResolve(tmpdir(), `mc-config-${randomUUID()}.json`);
-    writeFileSync(tmpPath, JSON.stringify(config));
-
-    let result: MCResult;
-    try {
-      result = await runPythonMonteCarlo(tmpPath, mcId);
-    } finally {
-      try { unlinkSync(tmpPath); } catch { /* ignore cleanup errors */ }
-    }
+    const result = await runPythonModule<MCResult>({
+      module: "src.engine.monte_carlo",
+      args: ["--mc-id", mcId],
+      config: config as unknown as Record<string, unknown>,
+      timeoutMs: 600_000, // 10m
+      componentName: "monte-carlo-engine",
+    });
 
     // Update MC row with results
     const ci = result.confidence_intervals;
@@ -258,6 +166,39 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
           );
         }).catch((matrixErr) => {
           logger.error({ strategyId: bt.strategyId, err: matrixErr }, "Auto matrix failed (non-blocking)");
+        });
+      }
+
+      // ─── Auto Quantum Challenger (fire-and-forget) ───
+      // Run quantum breach estimation as experimental challenger alongside classical MC
+      if (result.risk_metrics && result.risk_metrics.probability_of_ruin != null) {
+        runQuantumMC(backtestId, "breach", "topstep_50k").then((qmcResult) => {
+          logger.info(
+            { backtestId, qmcId: qmcResult.id, status: qmcResult.status },
+            "Auto quantum challenger completed",
+          );
+        }).catch((qmcErr) => {
+          logger.error({ backtestId, err: qmcErr }, "Auto quantum challenger failed (non-blocking)");
+        });
+      }
+
+      // ─── Auto Pine Export for deployment-ready strategies (fire-and-forget) ───
+      if (bt.strategyId && survivalRate > 0.8) {
+        compilePineExport(bt.strategyId, "topstep_50k").then((pineResult) => {
+          const score = pineResult.exportabilityScore ?? 0;
+          if (pineResult.status === "completed" && score >= 70) {
+            logger.info(
+              { strategyId: bt.strategyId, exportId: pineResult.id, score },
+              "Auto Pine export compiled (score >= 70)",
+            );
+          } else {
+            logger.info(
+              { strategyId: bt.strategyId, exportId: pineResult.id, score, status: pineResult.status },
+              "Auto Pine export attempted (below threshold or failed)",
+            );
+          }
+        }).catch((pineErr) => {
+          logger.error({ strategyId: bt.strategyId, err: pineErr }, "Auto Pine export failed (non-blocking)");
         });
       }
     }

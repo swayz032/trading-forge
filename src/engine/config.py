@@ -21,19 +21,14 @@ class ContractSpec(BaseModel):
 
 
 CONTRACT_SPECS: dict[str, ContractSpec] = {
-    # We trade MICRO contracts (MES/MNQ/MCL) but S3 data is labeled ES/NQ/CL.
-    # Same price data — just 1/10th the multiplier. Map ES→MES specs so P&L is correct.
-    "ES":  ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=1265),
-    "NQ":  ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=1760),
-    "CL":  ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=660),
-    "YM":  ContractSpec(tick_size=1.00, tick_value=0.50,  point_value=0.50,    day_margin=50,   overnight_margin=825),
-    "RTY": ContractSpec(tick_size=0.10, tick_value=0.50,  point_value=5.00,    day_margin=50,   overnight_margin=660),
-    "GC":  ContractSpec(tick_size=0.10, tick_value=1.00,  point_value=10.00,   day_margin=50,   overnight_margin=990),
-    # Explicit micro symbols (same specs, for clarity)
-    "MES": ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=1265),
-    "MNQ": ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=1760),
-    "MCL": ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=660),
-    "MGC": ContractSpec(tick_size=0.10, tick_value=1.00,  point_value=10.00,   day_margin=50,   overnight_margin=990),
+    # Micro contracts only — user trades MES/MNQ/MCL exclusively
+    "MES": ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=2659),
+    "MNQ": ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=4044),
+    "MCL": ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=1120),
+    # S3 data path labels — map to micro specs (ES→MES, NQ→MNQ, CL→MCL)
+    "ES":  ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=2659),
+    "NQ":  ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=4044),
+    "CL":  ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=1120),
 }
 
 MARGIN_EXPANSION_MULTIPLIER = 2.0  # Applied when VIX > 30 or ATR > 90th percentile
@@ -97,6 +92,13 @@ class StrategyConfig(BaseModel):
     overnight_hold: bool = False
     preferred_regime: Optional[str] = None
 
+    @field_validator("overnight_hold")
+    @classmethod
+    def reject_overnight(cls, v: bool) -> bool:
+        if v:
+            raise ValueError("Overnight holding is disabled — all strategies must be intraday-only")
+        return v
+
     @field_validator("symbol")
     @classmethod
     def validate_symbol(cls, v: str) -> str:
@@ -154,6 +156,7 @@ class BacktestRequest(BaseModel):
     mode: Literal["single", "walkforward"] = "single"
     walk_forward_splits: int = 5
     embargo_bars: int = 0  # Bars to skip between IS/OOS (prevents data leakage)
+    max_trades_per_day: int = 2  # Max entries per calendar day (long + short combined)
     firm_key: Optional[str] = None
     event_calendar: Optional[EventCalendarConfig] = None
     fill_model: Optional[FillProbabilityConfig] = None

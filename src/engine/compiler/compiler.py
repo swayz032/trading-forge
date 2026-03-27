@@ -160,13 +160,28 @@ def diff_strategies(dsl_a: dict, dsl_b: dict) -> dict:
 def _cli_main() -> None:
     """Called when invoked as: python -m src.engine.compiler.compiler --action <action> --input <json>"""
     import argparse
+    import os
 
     parser = argparse.ArgumentParser(description="Strategy Compiler CLI")
     parser.add_argument("--action", required=True, choices=["validate", "compile", "diff"])
-    parser.add_argument("--input", required=True, help="JSON string input")
+    parser.add_argument("--input", help="JSON string input or file path")
+    parser.add_argument("--config", help="Alias for --input")
     args = parser.parse_args()
 
-    data = json.loads(args.input)
+    input_data = args.input or args.config
+    if not input_data:
+        print(json.dumps({"error": "No input provided"}))
+        sys.exit(1)
+
+    try:
+        if os.path.isfile(input_data):
+            with open(input_data, 'r') as f:
+                data = json.load(f)
+        else:
+            data = json.loads(input_data)
+    except Exception as e:
+        print(json.dumps({"error": f"Invalid input: {e}"}))
+        sys.exit(1)
 
     if args.action == "validate":
         valid, model, errors = validate_dsl(data)

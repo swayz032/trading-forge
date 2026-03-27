@@ -15,7 +15,21 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
 
+import numpy as np
+
+from zoneinfo import ZoneInfo
+
 from src.engine.economic_calendar import STATIC_EVENTS
+
+_ET = ZoneInfo("America/New_York")
+_UTC = ZoneInfo("UTC")
+
+
+def _utc_to_et_hour(dt: datetime) -> int:
+    """Convert a UTC datetime to Eastern Time hour, handling EST/EDT correctly."""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=_UTC)
+    return dt.astimezone(_ET).hour
 
 
 # ─── Day-of-Week Names ──────────────────────────────────────────
@@ -271,10 +285,10 @@ def compute_firm_limit_markers(
         dict mapping "YYYY-MM-DD" -> list of firm keys that would halt
     """
     if firm_daily_limits is None:
-        # Only FFN has a daily loss limit ($1,250 on 50K).
-        # Topstep, MFFU, TPT, Apex, Alpha, Tradeify, Earn2Trade = NO daily loss limit.
         firm_daily_limits = {
-            "ffn_50k": 1250,
+            "topstep_50k": 1000,
+            "apex_50k": 1000,
+            "earn2trade_50k": 1100,
         }
 
     halt_markers: dict[str, list[str]] = {}
@@ -299,8 +313,8 @@ def tag_trade_session_fields(trades: list[dict]) -> list[dict]:
     """Add entry_hour and session_type to each trade record (Task 5.3).
 
     Session definitions (ET):
-        - London:    03:00 - 08:29
-        - NY_AM:     08:30 - 11:59
+        - London:    03:00 - 08:59  (includes pre-open 8:00-8:59)
+        - NY_AM:     09:00 - 11:59  (starts at RTH approach)
         - NY_PM:     12:00 - 15:59
         - Overnight: 16:00 - 02:59
 
@@ -314,10 +328,10 @@ def tag_trade_session_fields(trades: list[dict]) -> list[dict]:
         try:
             if isinstance(entry_ts, str) and "T" in entry_ts:
                 dt = datetime.fromisoformat(entry_ts.replace("Z", "+00:00"))
-                hour = (dt.hour - 5) % 24  # Approximate ET
+                hour = _utc_to_et_hour(dt)
             elif isinstance(entry_ts, str) and len(entry_ts) >= 13:
                 dt = datetime.fromisoformat(entry_ts[:19])
-                hour = (dt.hour - 5) % 24
+                hour = _utc_to_et_hour(dt)
             else:
                 continue
         except (ValueError, TypeError):
@@ -325,9 +339,9 @@ def tag_trade_session_fields(trades: list[dict]) -> list[dict]:
 
         trade["entry_hour"] = hour
 
-        if 3 <= hour < 8:
+        if 3 <= hour < 9:
             trade["session_type"] = "London"
-        elif 8 <= hour < 12:
+        elif 9 <= hour < 12:
             trade["session_type"] = "NY_AM"
         elif 12 <= hour < 16:
             trade["session_type"] = "NY_PM"
@@ -342,10 +356,10 @@ def _parse_entry_hour_et(entry_ts) -> int | None:
     try:
         if isinstance(entry_ts, str) and "T" in entry_ts:
             dt = datetime.fromisoformat(entry_ts.replace("Z", "+00:00"))
-            return (dt.hour - 5) % 24
+            return _utc_to_et_hour(dt)
         elif isinstance(entry_ts, str) and len(entry_ts) >= 13:
             dt = datetime.fromisoformat(entry_ts[:19])
-            return (dt.hour - 5) % 24
+            return _utc_to_et_hour(dt)
     except (ValueError, TypeError):
         pass
     return None
@@ -553,13 +567,13 @@ def compute_mae_mfe_analysis(
         # (i.e., 85th percentile of winner MAEs -- only 15% of winners
         # would have been stopped out) while also cutting at least 70% of losers
         # (i.e., 70% of loser MAEs exceed this stop level).
-        p85_winner_mae = winner_maes[int(len(winner_maes) * 0.85)] if len(winner_maes) > 1 else winner_maes[0]
+        p85_winner_mae = winner_maes[min(int(len(winner_maes) * 0.85), len(winner_maes) - 1)] if len(winner_maes) > 1 else winner_maes[0]
 
         # What fraction of losers would this stop cut?
         losers_cut = sum(1 for m in loser_maes if m >= p85_winner_mae) / len(loser_maes)
 
         # Also compute the stop that cuts 70% of losers
-        p30_loser_mae = loser_maes[int(len(loser_maes) * 0.30)] if len(loser_maes) > 1 else loser_maes[0]
+        p30_loser_mae = loser_maes[min(int(len(loser_maes) * 0.30), len(loser_maes) - 1)] if len(loser_maes) > 1 else loser_maes[0]
 
         # Winners preserved at that loser-cut stop
         winners_preserved = sum(1 for m in winner_maes if m <= p30_loser_mae) / len(winner_maes)
@@ -742,24 +756,37 @@ def compute_win_loss_patterns(
         streaks.append({"type": streak_type, "length": current_streak})
 
     # ─── After-loss recovery ──────────────────────────────────
+    # Measure: after N+ consecutive losses, what is the win rate of the NEXT day?
     after_loss_win_rate = {}
     for n in [1, 2, 3]:
-        loss_streak_count = 0
+        total_after_streak = 0
         next_win = 0
         consecutive_losses = 0
+        streak_triggered = False
         for i, pnl in enumerate(pnls):
-            if pnl < 0:
+            if pnl == 0:
+                continue  # Skip flat days — don't break or count streaks
+            if streak_triggered:
+                # This is the first non-flat day after N+ losses
+                total_after_streak += 1
+                if pnl > 0:
+                    next_win += 1
+                streak_triggered = False
+                # Reset or continue tracking
+                if pnl < 0:
+                    consecutive_losses = 1
+                else:
+                    consecutive_losses = 0
+            elif pnl < 0:
                 consecutive_losses += 1
+                if consecutive_losses >= n:
+                    streak_triggered = True
             else:
-                if consecutive_losses >= n and i < len(pnls):
-                    loss_streak_count += 1
-                    if pnl > 0:
-                        next_win += 1
                 consecutive_losses = 0
-        if loss_streak_count > 0:
+        if total_after_streak > 0:
             after_loss_win_rate[f"after_{n}_losses"] = {
-                "win_rate": round(next_win / loss_streak_count, 4),
-                "occurrences": loss_streak_count,
+                "win_rate": round(next_win / total_after_streak, 4),
+                "occurrences": total_after_streak,
             }
 
     # ─── After-win regression ─────────────────────────────────
@@ -895,11 +922,16 @@ def compute_regime_performance(daily_pnl_records: list[dict], trades: list[dict]
     for regime, stats in long_short_regime.items():
         long_wr = stats["long_wins"] / stats["long_trades"] if stats["long_trades"] > 0 else 0
         short_wr = stats["short_wins"] / stats["short_trades"] if stats["short_trades"] > 0 else 0
-        flag = None
-        if stats["long_trades"] >= 10 and long_wr < 0.35:
+        long_bad = stats["long_trades"] >= 10 and long_wr < 0.35
+        short_bad = stats["short_trades"] >= 10 and short_wr < 0.35
+        if long_bad and short_bad:
+            flag = f"Both directions destroyed in {regime} — SKIP this regime"
+        elif long_bad:
             flag = f"Longs destroyed in {regime} — only short"
-        if stats["short_trades"] >= 10 and short_wr < 0.35:
+        elif short_bad:
             flag = f"Shorts destroyed in {regime} — only long"
+        else:
+            flag = None
         ls_by_regime[regime] = {
             "long_wr": round(long_wr, 4),
             "long_trades": stats["long_trades"],
@@ -1035,8 +1067,8 @@ def compute_named_session_analytics(trades: list[dict]) -> dict:
     """Analyze P&L by named trading session (NY AM, NY PM, London, Overnight).
 
     Session definitions (ET):
-        - London:    03:00 - 08:29
-        - NY AM:     08:30 - 11:59
+        - London:    03:00 - 08:59  (includes pre-open 8:00-8:59)
+        - NY AM:     09:00 - 11:59  (starts at RTH approach)
         - NY PM:     12:00 - 15:59
         - Overnight: 16:00 - 02:59
 
@@ -1047,8 +1079,8 @@ def compute_named_session_analytics(trades: list[dict]) -> dict:
         dict keyed by session name with {trades, wins, total_pnl, avg_pnl, win_rate}
     """
     sessions = {
-        "London":    (3, 8),     # 03:00-08:29 ET
-        "NY_AM":     (8, 12),    # 08:30-11:59 ET (using 8 as start hour)
+        "London":    (3, 9),     # 03:00-08:59 ET (includes pre-open hour)
+        "NY_AM":     (9, 12),    # 09:00-11:59 ET (starts at RTH approach)
         "NY_PM":     (12, 16),   # 12:00-15:59 ET
         "Overnight": (16, 3),    # 16:00-02:59 ET (wraps midnight)
     }
@@ -1070,10 +1102,10 @@ def compute_named_session_analytics(trades: list[dict]) -> dict:
         try:
             if isinstance(entry_ts, str) and "T" in entry_ts:
                 dt = datetime.fromisoformat(entry_ts.replace("Z", "+00:00"))
-                hour = (dt.hour - 5) % 24  # Approximate ET
+                hour = _utc_to_et_hour(dt)
             elif isinstance(entry_ts, str) and len(entry_ts) >= 13:
                 dt = datetime.fromisoformat(entry_ts[:19])
-                hour = (dt.hour - 5) % 24
+                hour = _utc_to_et_hour(dt)
             else:
                 continue
         except (ValueError, TypeError):
@@ -1081,9 +1113,9 @@ def compute_named_session_analytics(trades: list[dict]) -> dict:
 
         # Classify into session
         session_name = "Overnight"  # default
-        if 3 <= hour < 8:
+        if 3 <= hour < 9:
             session_name = "London"
-        elif 8 <= hour < 12:
+        elif 9 <= hour < 12:
             session_name = "NY_AM"
         elif 12 <= hour < 16:
             session_name = "NY_PM"
@@ -1235,6 +1267,90 @@ def compute_rejection_quality(
         "pnl_saved": round(pnl_saved, 2),
         "pnl_missed": round(pnl_missed, 2),
         "net_value": round(pnl_saved - pnl_missed, 2),
+    }
+
+
+def compute_portfolio_correlation(
+    strategies_daily_pnl: dict[str, list[float]],
+    threshold: float = 0.3,
+) -> dict:
+    """Compute pairwise Pearson correlation between strategy daily P&Ls.
+
+    Per CLAUDE.md: Target 2-3 uncorrelated strategies (correlation < 0.3).
+    If correlation > 0.5, treat as one strategy for sizing.
+
+    Args:
+        strategies_daily_pnl: {"strategy_a": [pnl, ...], "strategy_b": [pnl, ...]}
+        threshold: Flag pairs above this correlation (default 0.3 per CLAUDE.md)
+
+    Returns:
+        {
+            "correlation_matrix": {("a","b"): 0.15, ...},
+            "flagged_pairs": [{"pair": ["a","b"], "correlation": 0.85, "action": "TREAT_AS_ONE"}],
+            "diversification_score": float (0-100),
+            "portfolio_ok": bool,
+        }
+    """
+    names = sorted(strategies_daily_pnl.keys())
+    n = len(names)
+
+    if n < 2:
+        return {
+            "correlation_matrix": {},
+            "flagged_pairs": [],
+            "diversification_score": 100.0,
+            "portfolio_ok": True,
+        }
+
+    # Align lengths (truncate to shortest)
+    min_len = min(len(v) for v in strategies_daily_pnl.values())
+    if min_len < 10:
+        return {
+            "correlation_matrix": {},
+            "flagged_pairs": [],
+            "diversification_score": 0.0,
+            "portfolio_ok": False,
+            "error": f"Only {min_len} overlapping days — need 10+ for correlation",
+        }
+
+    matrix = {}
+    flagged = []
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            a_arr = np.array(strategies_daily_pnl[names[i]][:min_len])
+            b_arr = np.array(strategies_daily_pnl[names[j]][:min_len])
+
+            # Pearson correlation
+            std_a, std_b = np.std(a_arr), np.std(b_arr)
+            if std_a == 0 or std_b == 0:
+                corr = 0.0
+            else:
+                corr = float(np.corrcoef(a_arr, b_arr)[0, 1])
+                if np.isnan(corr):
+                    corr = 0.0
+
+            pair_key = f"{names[i]}|{names[j]}"
+            matrix[pair_key] = round(corr, 4)
+
+            if abs(corr) > threshold:
+                action = "TREAT_AS_ONE" if abs(corr) > 0.5 else "MONITOR"
+                flagged.append({
+                    "pair": [names[i], names[j]],
+                    "correlation": round(corr, 4),
+                    "action": action,
+                })
+
+    # Diversification score: 100 = all pairs at 0, 0 = all pairs at 1.0
+    all_corrs = [abs(v) for v in matrix.values()]
+    avg_abs_corr = float(np.mean(all_corrs)) if all_corrs else 0.0
+    diversification = round(max(0, (1.0 - avg_abs_corr)) * 100, 1)
+
+    return {
+        "correlation_matrix": matrix,
+        "flagged_pairs": flagged,
+        "diversification_score": diversification,
+        "portfolio_ok": len(flagged) == 0,
     }
 
 

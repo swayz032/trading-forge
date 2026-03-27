@@ -28,9 +28,11 @@ SESSIONS = [
     ("RTH_OPEN",     9, 30, 10,  0, SESSION_MULTIPLIERS["open_30min"]),
     ("RTH_CORE",    10,  0, 15, 30, SESSION_MULTIPLIERS["rth_core"]),
     ("RTH_CLOSE",   15, 30, 16,  0, SESSION_MULTIPLIERS["close_30min"]),
+    ("CME_HALT",    16,  0, 17,  0, 100.0),  # CME Globex daily halt 4-5 PM ET — prohibitive but finite
     ("PRE_MARKET",   6,  0,  9, 30, SESSION_MULTIPLIERS["pre_market"]),
-    ("OVERNIGHT",   16,  0, 24,  0, SESSION_MULTIPLIERS["overnight"]),  # 4 PM – midnight
-    ("OVERNIGHT_2",  0,  0,  6,  0, SESSION_MULTIPLIERS["overnight"]),  # midnight – 6 AM
+    ("OVERNIGHT",   17,  0, 18,  0, SESSION_MULTIPLIERS["overnight"]),  # 5-6 PM ET (post-halt)
+    ("OVERNIGHT_2", 18,  0, 24,  0, SESSION_MULTIPLIERS["overnight"]),  # 6 PM – midnight
+    ("OVERNIGHT_3",  0,  0,  6,  0, SESSION_MULTIPLIERS["overnight"]),  # midnight – 6 AM
 ]
 
 # Default multiplier for anything not covered
@@ -41,10 +43,17 @@ _DEFAULT_LABEL = "AFTER_HOURS"
 def _to_et_hours_minutes(timestamps: pl.Series) -> tuple[np.ndarray, np.ndarray]:
     """Convert timestamps to ET hour and minute arrays.
 
-    Assumes input is UTC. Converts to America/New_York (handles EST/EDT automatically).
+    Handles both UTC and already-ET-aware timestamps (e.g. ts_et from data_loader).
     """
-    ts = timestamps.cast(pl.Datetime("us", time_zone="UTC"))
-    et = ts.dt.convert_time_zone("America/New_York")
+    tz = getattr(timestamps.dtype, "time_zone", None)
+    if tz is not None and tz != "":
+        if tz == "America/New_York":
+            et = timestamps
+        else:
+            et = timestamps.dt.convert_time_zone("America/New_York")
+    else:
+        ts = timestamps.cast(pl.Datetime("us", time_zone="UTC"))
+        et = ts.dt.convert_time_zone("America/New_York")
     hours = et.dt.hour().to_numpy().astype(np.int32)
     minutes = et.dt.minute().to_numpy().astype(np.int32)
     return hours, minutes

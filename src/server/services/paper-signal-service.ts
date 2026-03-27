@@ -2,6 +2,7 @@ import { db } from "../db/index.js";
 import { paperSessions, paperPositions, strategies, paperSignalLogs } from "../db/schema.js";
 import { openPosition, closePosition } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
+import { evaluateContextGate } from "./context-gate-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 import { eq, and, isNull } from "drizzle-orm";
@@ -375,21 +376,42 @@ interface SessionWindow {
   crossesMidnight: boolean;
 }
 
-const SESSION_WINDOWS: Record<string, SessionWindow> = {
-  NY_RTH: { startHour: 13, startMinute: 30, endHour: 20, endMinute: 0, crossesMidnight: false },
-  London: { startHour: 8, startMinute: 0, endHour: 16, endMinute: 30, crossesMidnight: false },
-  Asia: { startHour: 23, startMinute: 0, endHour: 6, endMinute: 0, crossesMidnight: true },
-};
+/** Check if US is currently observing DST (second Sunday Mar — first Sunday Nov). */
+function isUsDst(date: Date): boolean {
+  const year = date.getUTCFullYear();
+  // Second Sunday of March (UTC)
+  const mar1 = new Date(Date.UTC(year, 2, 1));
+  const marSun2 = 8 + ((7 - mar1.getUTCDay()) % 7); // first Sunday >= 8
+  const dstStart = Date.UTC(year, 2, marSun2, 7); // 2am ET = 7am UTC
+  // First Sunday of November (UTC)
+  const nov1 = new Date(Date.UTC(year, 10, 1));
+  const novSun1 = 1 + ((7 - nov1.getUTCDay()) % 7);
+  const dstEnd = Date.UTC(year, 10, novSun1, 6); // 2am ET = 6am UTC (still EDT)
+  const ts = date.getTime();
+  return ts >= dstStart && ts < dstEnd;
+}
+
+function getSessionWindows(date: Date): Record<string, SessionWindow> {
+  const dst = isUsDst(date);
+  // NY RTH: 9:30-16:00 ET → EDT=UTC-4, EST=UTC-5
+  const nyOffset = dst ? 4 : 5;
+  return {
+    NY_RTH: { startHour: 9 + nyOffset, startMinute: 30, endHour: 16 + nyOffset, endMinute: 0, crossesMidnight: false },
+    London: { startHour: 8, startMinute: 0, endHour: 16, endMinute: 30, crossesMidnight: false },
+    Asia: { startHour: 23, startMinute: 0, endHour: 6, endMinute: 0, crossesMidnight: true },
+  };
+}
 
 function isWithinSession(timestamp: string, preferredSessions?: string[]): boolean {
   const sessions = preferredSessions?.length ? preferredSessions : ["NY_RTH"];
   const date = new Date(timestamp);
+  const sessionWindows = getSessionWindows(date);
   const utcHour = date.getUTCHours();
   const utcMinute = date.getUTCMinutes();
   const timeVal = utcHour * 60 + utcMinute;
 
   for (const sessionName of sessions) {
-    const window = SESSION_WINDOWS[sessionName];
+    const window = sessionWindows[sessionName];
     if (!window) continue;
 
     const startVal = window.startHour * 60 + window.startMinute;
@@ -628,27 +650,55 @@ export async function evaluateSignals(
     }
 
     if (riskGatePassed) {
-      action = "open";
-      // BUG 2 fix: pass RSI/ATR so fill probability model actually fires
-      const result = await openPosition(sessionId, {
-        symbol,
-        side: config.side,
-        signalPrice: bar.close,
-        contracts: config.contracts,
-        orderType: "market",   // signal-driven entries are market orders
-        rsi: indicators["rsi_14"],
-        atr: indicators["atr_14"],
-      });
-      if (!result.position) {
-        // Fill probability miss — set short cooldown to prevent hammering every bar
-        action = "none";
-        fillMiss = true;
-        await setCooldown(sessionId, sessionConfig, Math.max(1, Math.floor((config.cooldown_bars ?? 4) / 2)));
-      } else {
-        logger.info(
-          { sessionId, symbol, side: config.side, price: bar.close },
-          "Paper position opened — entry signal"
+      // ─── Context Gate: TAKE/REDUCE/SKIP ───────────────────
+      let contextContracts = config.contracts;
+      try {
+        const ctxGate = await evaluateContextGate(
+          symbol, config.side, bar.close,
+          sessionConfig.strategyId, barBuffer, indicators,
         );
+        if (ctxGate.action === "SKIP") {
+          riskGatePassed = false;
+          logger.info(
+            { sessionId, symbol, action: "SKIP", reasons: ctxGate.reasoning },
+            "Context gate SKIP — signal rejected",
+          );
+        } else if (ctxGate.action === "REDUCE") {
+          contextContracts = Math.max(1, Math.round(config.contracts * ctxGate.positionSizeAdjustment));
+          logger.info(
+            { sessionId, symbol, action: "REDUCE", from: config.contracts, to: contextContracts },
+            "Context gate REDUCE — position size halved",
+          );
+        }
+        // TAKE → proceed with full size
+      } catch (err) {
+        // Fail-open: context gate error does NOT block the trade
+        logger.debug({ err, sessionId }, "Context gate error — proceeding with TAKE");
+      }
+
+      if (riskGatePassed) {
+        action = "open";
+        // BUG 2 fix: pass RSI/ATR so fill probability model actually fires
+        const result = await openPosition(sessionId, {
+          symbol,
+          side: config.side,
+          signalPrice: bar.close,
+          contracts: contextContracts,
+          orderType: "market",   // signal-driven entries are market orders
+          rsi: indicators["rsi_14"],
+          atr: indicators["atr_14"],
+        });
+        if (!result.position) {
+          // Fill probability miss — set short cooldown to prevent hammering every bar
+          action = "none";
+          fillMiss = true;
+          await setCooldown(sessionId, sessionConfig, Math.max(1, Math.floor((config.cooldown_bars ?? 4) / 2)));
+        } else {
+          logger.info(
+            { sessionId, symbol, side: config.side, price: bar.close, contracts: contextContracts },
+            "Paper position opened — entry signal"
+          );
+        }
       }
     }
   }
@@ -673,4 +723,24 @@ export async function evaluateSignals(
     strategySide: config.side,  // BUG 1 fix: pass actual strategy side
     fillMiss,
   });
+}
+
+/**
+ * Backfill state for a bar without executing trades or logging signals.
+ * Used to repair indicator state after a connection drop.
+ */
+export async function updateStateOnly(
+  sessionId: string,
+  symbol: string,
+  bar: Bar,
+  barBuffer: Bar[]
+): Promise<void> {
+  const sessionConfig = await getSessionConfig(sessionId);
+  if (!sessionConfig) return;
+
+  const indicators = computeIndicators(barBuffer);
+  const prevKey = `${sessionId}:${symbol}`;
+  
+  // Just update the previous indicators so the NEXT real-time bar has correct context
+  previousIndicators.set(prevKey, indicators);
 }

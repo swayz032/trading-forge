@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, paperSignalLogs, strategies, backtests, monteCarloRuns } from "../db/schema.js";
 import { eq, desc, and } from "drizzle-orm";
@@ -12,10 +13,23 @@ import { cleanupSession } from "../services/paper-signal-service.js";
 
 const router = Router();
 
+const paperStartSchema = z.object({
+  strategyId: z.string().uuid(),
+  startingCapital: z.coerce.number().min(1000).max(500000).default(50000).transform(String),
+  config: z.record(z.unknown()).optional(),
+  mode: z.enum(["paper", "shadow"]).default("paper"),
+  firmId: z.string().optional().nullable(),
+});
+
 // POST /api/paper/start — start paper trading session + live stream
 router.post("/start", async (req, res) => {
   try {
-    const { strategyId, startingCapital = "50000", config, mode = "paper", firmId } = req.body;
+    const parsed = paperStartSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    const { strategyId, startingCapital, config, mode, firmId } = parsed.data;
     const [session] = await db
       .insert(paperSessions)
       .values({ strategyId, startingCapital, currentEquity: startingCapital, config, mode, firmId: firmId ?? null })
@@ -432,7 +446,8 @@ router.get("/mc-compare/:sessionId", async (req, res) => {
     // Rough percentile estimation: map paper P&L into the MC distribution
     // Use absolute distance from backtest median, works for both positive and negative returns
     let mc_percentile: number;
-    if (backtestReturn === 0) {
+    if (backtestReturn <= 0) {
+      // Can't estimate percentile without a positive baseline (negative-return strategies are rejected by gates)
       mc_percentile = 50;
     } else {
       const ratio = paperPnl / backtestReturn; // >1 = outperforming, <1 = underperforming

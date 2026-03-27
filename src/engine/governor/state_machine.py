@@ -128,7 +128,7 @@ class Governor:
             if (self.consecutive_losses >= 3 or session_loss_pct >= 0.50):
                 new_state = GovernorState.CAUTIOUS
                 reason = self._transition_reason("cautious", session_loss_pct)
-            elif (self.consecutive_wins >= 2 or self.session_pnl > 0):
+            elif self.consecutive_wins >= 2:
                 new_state = GovernorState.NORMAL
                 reason = "recovered_to_normal"
 
@@ -211,11 +211,15 @@ class Governor:
         return result
 
     def reset_session(self):
-        """Reset session-level counters (called at start of new session)."""
+        """Reset session-level counters (called at start of new session).
+
+        Preserves consecutive_losses/consecutive_wins across sessions so that
+        cross-session loss streaks still escalate the state machine correctly.
+        """
         self.session_pnl = 0.0
         self.session_trades = 0
-        self.consecutive_losses = 0
-        self.consecutive_wins = 0
+        # NOTE: consecutive_losses and consecutive_wins are NOT reset here.
+        # They persist across sessions so the governor tracks true streaks.
 
     def get_status(self) -> dict:
         """Current governor state summary."""

@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { eq, and, gte, sql, inArray, desc } from "drizzle-orm";
+import { eq, and, gte, sql, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, systemJournal, auditLog } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
@@ -7,8 +7,8 @@ import { OllamaClient } from "./ollama-client.js";
 import { GraveyardGate } from "./graveyard-gate.js";
 import { logger } from "../index.js";
 
-const SYMBOLS = ["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"] as const;
-type Symbol = (typeof SYMBOLS)[number];
+const _SYMBOLS = ["MES", "MNQ", "MCL"] as const;
+type Symbol = (typeof _SYMBOLS)[number];
 
 export interface RunStrategyInput {
   strategy_name: string;
@@ -338,7 +338,7 @@ Respond in strict JSON:
       s.replace(/&[#\w]+;/g, (match) => htmlEntityMap[match] || match);
 
     const titleSuffixPattern = /\s*[-|]\s*(Reddit|YouTube|TradingView)|\[[^\]]*\]/gi;
-    const instrumentPattern = /(ES|NQ|CL)\b/gi;
+    const instrumentPattern = /(MES|MNQ|MCL|ES|NQ|CL)\b/gi;
     const indicatorPattern = /(VWAP|RSI|SMA|EMA|MACD|ATR|Bollinger|ORB|Order Block|FVG|ICT|SMC)\b/gi;
 
     ideas = ideas

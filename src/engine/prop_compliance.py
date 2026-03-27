@@ -1,7 +1,7 @@
-"""Prop firm compliance simulation — 7 firms from docs/prop-firm-rules.md.
+"""Prop firm compliance simulation — 8 firms from docs/prop-firm-rules.md.
 
 Per CLAUDE.md: Agents MUST load prop-firm-rules.md when simulating.
-risk.ts has 6 firms (missing FFN) — Python has all 7.
+All 8 firms: Topstep, MFFU, TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade.
 """
 
 from __future__ import annotations
@@ -25,87 +25,139 @@ FIRM_CONFIGS = {
         "trailing": "eod",
         "locks_at_start": True,
         "consistency_rule": None,
-        "overnight_ok": True,
+        "overnight_ok": False,
         "payout_split": 0.90,
+        "payout_split_tiers": None,
         "ongoing_fee": 0,
+        "daily_loss_limit": 1000,
+        "min_payout_days": 5,
+        "min_trading_days": 5,
     },
     "mffu_50k": {
-        "name": "MFFU 50K",
+        "name": "MFFU 50K (Core)",
         "monthly_fee": 77,
         "activation_fee": 0,
         "profit_target": 3000,
-        "max_drawdown": 2500,
+        "max_drawdown": 2000,
         "trailing": "eod",
         "locks_at_start": True,
-        "consistency_rule": None,
-        "overnight_ok": True,
-        "payout_split": 0.90,
+        "consistency_rule": "mffu_50pct",
+        "overnight_ok": False,
+        "payout_split": 0.80,
+        "payout_split_tiers": None,
         "ongoing_fee": 0,
+        "daily_loss_limit": None,
+        "min_payout_days": 5,
+        "min_trading_days": 5,
     },
     "tpt_50k": {
         "name": "TPT 50K",
-        "monthly_fee": 150,
+        "monthly_fee": 170,
         "activation_fee": 0,
         "profit_target": 3000,
-        "max_drawdown": 3000,
+        "max_drawdown": 2000,
         "trailing": "eod",
         "locks_at_start": False,
         "consistency_rule": "tpt_50pct",
-        "overnight_ok": True,
-        "payout_split": 0.80,  # PRO phase
+        "overnight_ok": False,
+        "payout_split": 0.80,
+        "payout_split_tiers": [{"threshold": 5000, "split": 0.90}],
         "ongoing_fee": 0,
+        "daily_loss_limit": None,
+        "min_payout_days": 5,
+        "min_trading_days": 5,
     },
     "apex_50k": {
         "name": "Apex 50K",
-        "monthly_fee": 167,
-        "activation_fee": 0,
-        "profit_target": 3000,
-        "max_drawdown": 2500,
-        "trailing": "eod",
-        "locks_at_start": True,
-        "consistency_rule": None,
-        "overnight_ok": True,
-        "payout_split": 1.00,  # First $25K at 100%
-        "ongoing_fee": 85,
-    },
-    "tradeify_50k": {
-        "name": "Tradeify 50K",
-        "monthly_fee": 99,
-        "activation_fee": 0,
-        "profit_target": 2500,
-        "max_drawdown": 2500,
-        "trailing": "realtime",
-        "locks_at_start": True,
-        "consistency_rule": None,
-        "overnight_ok": True,
-        "payout_split": 1.00,  # First $15K at 100%
-        "ongoing_fee": 0,
-    },
-    "alpha_50k": {
-        "name": "Alpha Futures 50K (Standard)",
         "monthly_fee": 99,
         "activation_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
         "trailing": "eod",
         "locks_at_start": True,
-        "consistency_rule": "alpha_50pct",  # Eval only
-        "overnight_ok": False,  # Must flatten before close
-        "payout_split": 0.70,  # Standard first payout
-        "ongoing_fee": 0,
+        "consistency_rule": "apex_50pct_funded",
+        "overnight_ok": False,
+        "payout_split": 1.00,
+        "payout_split_tiers": [{"threshold": 25000, "split": 0.90}],
+        "ongoing_fee": 85,
+        "daily_loss_limit": 1000,
+        "min_payout_days": 1,
+        "min_trading_days": 1,
     },
-    "ffn_50k": {
-        "name": "FFN 50K (Express)",
-        "monthly_fee": 200,
+    "tradeify_50k": {
+        "name": "Tradeify 50K (Select)",
+        "monthly_fee": 159,
         "activation_fee": 0,
-        "profit_target": 3000,
-        "max_drawdown": 2500,
+        "profit_target": 2500,
+        "max_drawdown": 2000,
         "trailing": "eod",
         "locks_at_start": True,
-        "consistency_rule": "ffn_15pct",
+        "consistency_rule": "tradeify_40pct",
         "overnight_ok": False,
-        "payout_split": 0.80,  # First $5K
-        "ongoing_fee": 126,  # Monthly data fee
+        "payout_split": 0.90,
+        "payout_split_tiers": None,
+        "ongoing_fee": 0,
+        "daily_loss_limit": None,
+        "min_payout_days": 3,
+        "min_trading_days": 3,
+    },
+    "alpha_50k": {
+        "name": "Alpha Futures 50K",
+        "monthly_fee": 99,
+        "activation_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2000,
+        "trailing": "eod",
+        "locks_at_start": True,
+        "consistency_rule": "alpha_50pct",
+        "overnight_ok": False,
+        "payout_split": 0.70,
+        # Alpha tiers are payout-count based (1st=70%, 2nd=80%, 3rd+=90%), not dollar-based.
+        # Handled separately in prop_sim via payout_count_tiers.
+        "payout_split_tiers": None,
+        "payout_count_tiers": [
+            {"payout_number": 1, "split": 0.70},
+            {"payout_number": 2, "split": 0.80},
+            {"payout_number": 3, "split": 0.90},
+        ],
+        "ongoing_fee": 0,
+        "daily_loss_limit": None,
+        "min_payout_days": 2,
+        "min_trading_days": 2,
+    },
+    "ffn_50k": {
+        "name": "FFN 50K",
+        "monthly_fee": 150,
+        "activation_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2000,
+        "trailing": "eod",
+        "locks_at_start": True,
+        "consistency_rule": "ffn_40pct",
+        "overnight_ok": False,
+        "payout_split": 0.80,
+        "payout_split_tiers": [{"threshold": 5000, "split": 0.90}],
+        "ongoing_fee": 126,
+        "daily_loss_limit": None,
+        "min_payout_days": 3,
+        "min_trading_days": 3,
+    },
+    "earn2trade_50k": {
+        "name": "Earn2Trade 50K",
+        "monthly_fee": 170,
+        "activation_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2000,
+        "trailing": "eod",
+        "locks_at_start": True,
+        "consistency_rule": "earn2trade_consistency",
+        "overnight_ok": False,
+        "payout_split": 0.80,
+        "payout_split_tiers": None,
+        "ongoing_fee": 0,
+        "daily_loss_limit": 1100,
+        "min_payout_days": 10,
+        "min_trading_days": 10,
     },
 }
 
@@ -224,7 +276,7 @@ def check_ffn_express_consistency(
 def _compute_net_daily_pnls(
     daily_pnls: list[float],
     firm_key: str,
-    symbol: str = "ES",
+    symbol: str = "MES",
     avg_trades_per_day: float = 2.0,
 ) -> list[float]:
     """Adjust daily PnLs for firm-specific commissions.
@@ -251,7 +303,7 @@ def run_prop_compliance(
     daily_pnls: list[float],
     stats: dict,
 ) -> dict[str, dict]:
-    """Simulate strategy against all 7 prop firms.
+    """Simulate strategy against all 8 prop firms.
 
     Uses per-firm net P&L (after firm-specific commissions) when symbol
     and trade count data are available in stats. Also uses gap-adjusted
@@ -265,7 +317,7 @@ def run_prop_compliance(
     Returns:
         dict mapping firm_key → compliance result
     """
-    symbol = stats.get("symbol", "ES")
+    symbol = stats.get("symbol", "MES")
     total_trades = stats.get("total_trades", 0)
     total_days = stats.get("total_trading_days", len(daily_pnls))
     avg_trades_per_day = total_trades / total_days if total_days > 0 else 2.0
@@ -333,15 +385,14 @@ def run_prop_compliance(
                     f"best day = {worst_pct:.0%} of total profit"
                 )
 
-        elif firm["consistency_rule"] == "ffn_15pct":
-            cons_passed, max_day, limit = check_ffn_express_consistency(
-                net_pnls, firm["profit_target"]
-            )
-            if not cons_passed:
+        elif firm["consistency_rule"] == "ffn_40pct":
+            # FFN uses 40% threshold, not 50% — check directly
+            _, worst_pct = check_tpt_consistency(net_pnls)
+            if worst_pct > 0.40:
                 passed = False
                 failures.append(
-                    f"FFN 15% consistency violation: "
-                    f"max day ${max_day:.0f} > ${limit:.0f} limit"
+                    f"FFN 40% consistency violation: "
+                    f"best day = {worst_pct:.0%} of total profit"
                 )
 
         elif firm["consistency_rule"] == "alpha_50pct":
@@ -352,6 +403,38 @@ def run_prop_compliance(
                 failures.append(
                     f"Alpha 50% consistency violation: "
                     f"best day = {worst_pct:.0%} of total profit"
+                )
+
+        elif firm["consistency_rule"] == "mffu_50pct":
+            cons_passed, worst_pct = check_tpt_consistency(net_pnls)
+            if not cons_passed:
+                passed = False
+                failures.append(
+                    f"MFFU 50% consistency violation: "
+                    f"best day = {worst_pct:.0%} of total profit"
+                )
+
+        elif firm["consistency_rule"] == "tradeify_40pct":
+            # Tradeify uses 40% threshold — check directly
+            cons_passed, worst_pct = check_tpt_consistency(net_pnls)
+            if worst_pct > 0.40:
+                passed = False
+                failures.append(
+                    f"Tradeify 40% consistency violation: "
+                    f"best day = {worst_pct:.0%} of total profit"
+                )
+
+        elif firm["consistency_rule"] == "apex_50pct_funded":
+            pass  # Apex 50% applies only to funded payouts, not eval
+
+        elif firm["consistency_rule"] == "earn2trade_consistency":
+            # Earn2Trade uses 50% consistency (no single day > 50% of total profit)
+            cons_passed, worst_pct = check_tpt_consistency(net_pnls)
+            if not cons_passed:
+                passed = False
+                failures.append(
+                    f"Earn2Trade consistency violation: "
+                    f"best day = {worst_pct:.0%} of total profit (max 50%)"
                 )
 
         # Calculate ROI estimates
@@ -401,9 +484,10 @@ def rank_firms_for_strategy(stats: dict) -> list[dict]:
             continue
         if not firm["overnight_ok"] and stats.get("trades_overnight", False):
             continue
-        if firm["consistency_rule"] == "tpt_50pct" and stats.get("consistency_ratio", 0) > 0.50:
+        if firm["consistency_rule"] in ("tpt_50pct", "alpha_50pct", "mffu_50pct", "earn2trade_consistency") and stats.get("consistency_ratio", 0) > 0.50:
             continue
-        if firm["consistency_rule"] == "ffn_15pct" and stats.get("consistency_ratio", 0) > 0.15:
+        # ffn_40pct and tradeify_40pct already handled below
+        if firm["consistency_rule"] in ("ffn_40pct", "tradeify_40pct") and stats.get("consistency_ratio", 0) > 0.40:
             continue
 
         avg_daily = stats["avg_daily_pnl"]

@@ -48,7 +48,7 @@ export class GraveyardGate {
       const embeddings = await this.ollama.embed(strategyDescription);
       candidateEmbedding = embeddings[0];
     } catch (err) {
-      logger.warn({ err }, "Graveyard gate: embedding failed, allowing strategy through");
+      logger.warn({ err }, "Graveyard gate BYPASSED — Ollama embedding unavailable");
       return {
         blocked: false,
         similarity: 0,

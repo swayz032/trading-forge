@@ -197,7 +197,7 @@ def validate_bars(df: pl.DataFrame, symbol: str = "", timeframe: str = "") -> Da
 
     # ── Session boundary check (intraday only) ──
     out_of_session = 0
-    intraday_timeframes = {"1min", "5min", "15min", "30min", "1hour", "4hour"}
+    intraday_timeframes = {"1min", "5min", "15min", "30min", "1hour", "1h", "4hour", "4h"}
     if timeframe in intraday_timeframes and "ts_et" in df.columns:
         # CME Globex session: 18:00 (6 PM) to 17:00 (5 PM) ET next day
         # Out-of-session = hour 17 with minute > 0, or exactly between 17:01 and 17:59
@@ -219,20 +219,23 @@ def validate_bars(df: pl.DataFrame, symbol: str = "", timeframe: str = "") -> Da
     large_gap_bars = 0
     close = df["close"].to_numpy()
     if len(close) > 1:
-        pct_changes = np.abs(np.diff(close) / close[:-1])
-        large_gap_bars = int(np.sum(pct_changes > 0.05))
+        denom = close[:-1]
+        safe_denom = np.where(denom == 0, np.nan, denom)
+        pct_changes = np.abs(np.diff(close) / safe_denom)
+        large_gap_bars = int(np.nansum(pct_changes > 0.05))
         if large_gap_bars > 0:
             warn_list.append(f"{large_gap_bars} bars with >5% single-bar move")
         # Roll gap detection: single-bar return > 15% likely unadjusted
-        roll_gaps = int(np.sum(pct_changes > 0.15))
+        roll_gaps = int(np.nansum(pct_changes > 0.15))
         if roll_gaps > 0:
             warn_list.append(f"{roll_gaps} bars with >15% single-bar move (likely unadjusted roll gap)")
 
     # ── Coverage / gap detection ──
-    coverage_pct = 100.0
+    coverage_pct = -1.0  # Sentinel: not yet computed
+    # CME Globex futures trade ~23 hours/day (not NYSE 6.5h stock hours)
     bars_per_day_map = {
-        "1min": 390, "5min": 78, "15min": 26, "30min": 13,
-        "1hour": 7, "1h": 7, "4hour": 2, "4h": 2, "daily": 1, "1D": 1,
+        "1min": 1380, "5min": 276, "15min": 92, "30min": 46,
+        "1hour": 23, "1h": 23, "4hour": 6, "4h": 6, "daily": 1, "1D": 1,
     }
     if timeframe in bars_per_day_map and "ts_event" in df.columns:
         ts_series = df["ts_event"]
@@ -241,6 +244,9 @@ def validate_bars(df: pl.DataFrame, symbol: str = "", timeframe: str = "") -> Da
             last_date = ts_series[-1]
             if hasattr(first_date, "date"):
                 calendar_days = (last_date.date() - first_date.date()).days
+            elif isinstance(first_date, (int, float)):
+                # Raw epoch timestamps (nanoseconds) — convert to days
+                calendar_days = int((last_date - first_date) / (86400 * 1_000_000_000))
             else:
                 calendar_days = (last_date - first_date).days
             if calendar_days > 0:
@@ -252,8 +258,22 @@ def validate_bars(df: pl.DataFrame, symbol: str = "", timeframe: str = "") -> Da
                         warn_list.append(
                             f"Data coverage {coverage_pct:.1f}% ({total}/{expected_bars} expected bars) — below 80% threshold"
                         )
+            elif calendar_days == 0:
+                # Single-day data: coverage = actual bars / expected bars per day
+                expected_bars = bars_per_day_map[timeframe]
+                if expected_bars > 0:
+                    coverage_pct = round(total / expected_bars * 100, 1)
+                    if coverage_pct < 80:
+                        warn_list.append(
+                            f"Data coverage {coverage_pct:.1f}% ({total}/{expected_bars} expected bars) — below 80% threshold"
+                        )
         except Exception as exc:
             print(f"WARNING: Coverage calculation failed: {exc}", file=sys.stderr)
+            warn_list.append(f"Coverage calculation failed: {exc}")
+
+    # If coverage was never computed (timeframe not in map or no ts_event), default pass
+    if coverage_pct < 0:
+        coverage_pct = 100.0  # No coverage check applicable
 
     # ── Determine pass/fail ──
     passed = (dup_ts == 0) and (ohlc_violations == 0) and (zero_neg == 0) and (coverage_pct >= 80)
@@ -301,9 +321,9 @@ def load_ohlcv(
         Polars DataFrame with columns: ts_event, open, high, low, close, volume
     """
     # Map micro symbols to full-size equivalents for S3 data paths.
-    # MES/MNQ/MCL/MGC use the same price data as ES/NQ/CL/GC — just 1/10th multiplier.
+    # MES/MNQ/MCL use the same price data as ES/NQ/CL — just 1/10th multiplier.
     # S3 stores data under the full-size symbol only.
-    MICRO_TO_FULL = {"MES": "ES", "MNQ": "NQ", "MCL": "CL", "MGC": "GC"}
+    MICRO_TO_FULL = {"MES": "ES", "MNQ": "NQ", "MCL": "CL"}
     data_symbol = MICRO_TO_FULL.get(symbol, symbol)
 
     if not adjusted:
@@ -334,7 +354,7 @@ def load_ohlcv(
     sql = f"""
         SELECT ts_event, open, high, low, close, volume
         FROM read_parquet('{source}')
-        WHERE ts_event >= '{start}' AND ts_event <= '{end}'
+        WHERE ts_event >= '{start}' AND ts_event < '{end}T23:59:59.999999999'
         ORDER BY ts_event
     """
 
@@ -348,7 +368,7 @@ def load_ohlcv(
             legacy_sql = f"""
                 SELECT ts_event, open, high, low, close, volume
                 FROM read_parquet('{legacy}')
-                WHERE ts_event >= '{start}' AND ts_event <= '{end}'
+                WHERE ts_event >= '{start}' AND ts_event < '{end}T23:59:59.999999999'
                 ORDER BY ts_event
             """
             pdf = con.execute(legacy_sql).fetchdf()
@@ -362,17 +382,26 @@ def load_ohlcv(
             f"No data found for {symbol} {timeframe} between {start} and {end}"
         )
 
-    # Auto-cache: write to local cache after S3 fetch so re-runs are instant
-    if not local_path:
-        cache_file = _cache_path(symbol, timeframe)
+    # Auto-cache: write to local cache after S3 fetch so re-runs are instant.
+    # NOTE: Cache stores a date-filtered slice. On cache hit, we re-query with
+    # the user's date range, so wider requests will read from S3 if cache is too narrow.
+    # To avoid stale narrow cache, we skip caching if the source was already cached.
+    if not local_path and not str(source).startswith(str(CACHE_DIR)):
+        cache_file = _cache_path(data_symbol, timeframe)
         if not cache_file.exists():
             try:
                 cache_file.parent.mkdir(parents=True, exist_ok=True)
-                # Cache the FULL dataset (no date filter) for future use
-                # But we only have the filtered slice — cache what we got
-                df.write_parquet(str(cache_file), compression="zstd")
+                # Re-fetch the FULL dataset (no date filter) for caching
+                full_sql = f"SELECT ts_event, open, high, low, close, volume FROM read_parquet('{source}') ORDER BY ts_event"
+                try:
+                    full_pdf = con.execute(full_sql).fetchdf()
+                    full_df = pl.from_pandas(full_pdf)
+                    full_df.write_parquet(str(cache_file), compression="zstd")
+                except Exception:
+                    # Fallback: cache the filtered slice (better than nothing)
+                    df.write_parquet(str(cache_file), compression="zstd")
                 size_kb = cache_file.stat().st_size / 1024
-                print(f"Auto-cached {symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
+                print(f"Auto-cached {data_symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
             except Exception as e:
                 print(f"Auto-cache failed (non-fatal): {e}", file=sys.stderr)
 
@@ -382,14 +411,16 @@ def load_ohlcv(
     # Keep ts_event (UTC) for storage/alignment. Add ts_et as a NEW column.
     if "ts_event" in df.columns:
         ts_dtype = df["ts_event"].dtype
-        if hasattr(ts_dtype, "time_zone") and ts_dtype.time_zone in ("UTC", None):
+        tz = getattr(ts_dtype, "time_zone", None)
+        if tz is not None and tz != "":
+            # Timezone-aware (e.g. UTC) — convert directly
             df = df.with_columns(
                 pl.col("ts_event")
                 .dt.convert_time_zone("America/New_York")
                 .alias("ts_et")
             )
         elif str(ts_dtype).startswith("Datetime"):
-            # Assume UTC if no timezone info (Databento convention)
+            # Naive datetime — assume UTC (Databento convention), cast then convert
             df = df.with_columns(
                 pl.col("ts_event")
                 .cast(pl.Datetime("ns", "UTC"))
@@ -435,12 +466,8 @@ ROLLOVER_MONTHS: dict[str, list[int]] = {
     "MES": [3, 6, 9, 12],
     "NQ": [3, 6, 9, 12],
     "MNQ": [3, 6, 9, 12],
-    "YM": [3, 6, 9, 12],
-    "RTY": [3, 6, 9, 12],
     "CL": list(range(1, 13)),
     "MCL": list(range(1, 13)),  # Micro Crude follows same roll schedule as CL
-    "GC": [2, 4, 6, 8, 10, 12],
-    "MGC": [2, 4, 6, 8, 10, 12],  # Micro Gold follows same roll schedule as GC
 }
 
 
@@ -531,11 +558,11 @@ def flag_rollover_days(
     rollover_strs = {d.isoformat() for d in rollover_dates}
 
     # Extract calendar date from each bar's timestamp
+    # Use ts_event (UTC) consistently — rollover_strs are UTC dates from CME calendar
     if ts.dtype == pl.Utf8:
         date_col = pl.col("ts_event").str.slice(0, 10)
     else:
-        ts_col_name = "ts_et" if "ts_et" in df.columns else "ts_event"
-        date_col = pl.col(ts_col_name).dt.date().cast(pl.Utf8)
+        date_col = pl.col("ts_event").dt.date().cast(pl.Utf8)
 
     df = df.with_columns(
         date_col.is_in(list(rollover_strs)).alias("is_rollover_day")

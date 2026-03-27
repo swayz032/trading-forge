@@ -5,6 +5,7 @@ import { db } from "../db/index.js";
 import { backtests, backtestTrades, backtestMatrix, monteCarloRuns, stressTestRuns, strategies, auditLog } from "../db/schema.js";
 import { runBacktest } from "../services/backtest-service.js";
 import { runMatrix, getMatrixStatus } from "../services/matrix-backtest-service.js";
+import { logger } from "../index.js";
 
 export const backtestRoutes = Router();
 
@@ -21,7 +22,7 @@ const indicatorSchema = z.object({
 
 const strategyConfigSchema = z.object({
   name: z.string().min(1),
-  symbol: z.enum(["ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"]),
+  symbol: z.enum(["MES", "MNQ", "MCL"]),
   timeframe: z.string().min(1),
   indicators: z.array(indicatorSchema).max(5).default([]),
   entry_long: z.string().min(1),
@@ -44,9 +45,12 @@ const backtestRequestSchema = z.object({
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   slippage_ticks: z.number().positive().optional().default(1.0),
-  commission_per_side: z.number().nonnegative().optional().default(4.50),
+  commission_per_side: z.number().nonnegative().optional().default(0.62),
   mode: z.enum(["single", "walkforward"]).optional().default("walkforward"),
   walk_forward_splits: z.number().int().min(2).max(10).optional().default(5),
+  optimizer: z.enum(["optuna", "sqa"]).optional().default("optuna"),
+  refinement_stage: z.number().int().min(1).max(3).optional(),
+  refinement_iteration: z.number().int().min(0).max(8).optional(),
 });
 
 // ══════════════════════════════════════════════════════════════════
@@ -94,7 +98,7 @@ backtestRoutes.post("/", async (req, res) => {
         position_size: (stratConfig.position_size as any) ?? { type: "fixed", fixed_contracts: 1 },
       };
     }
-  } catch (err) {
+  } catch {
     if (!providedStrategy) {
       res.status(500).json({ error: "Failed to load strategy from DB" });
       return;
@@ -114,10 +118,10 @@ backtestRoutes.post("/", async (req, res) => {
   const backtestPromise = runBacktest(strategyId, fullConfig, strategyClass);
 
   // Return the backtest ID immediately
-  backtestPromise.then((result) => {
+  backtestPromise.then((_result) => {
     // Logged internally
-  }).catch(() => {
-    // Error already persisted to DB
+  }).catch((err) => {
+    logger.error({ err, strategyId }, "Fire-and-forget backtest failed");
   });
 
   // Quick insert to get the ID
@@ -189,6 +193,81 @@ backtestRoutes.post("/compare", async (req, res) => {
   res.json(rows);
 });
 
+// ─── POST /api/backtests/kill-signal — Evaluate refinement kill signal ──
+backtestRoutes.post("/kill-signal", async (req, res) => {
+  const schema = z.object({
+    attempts: z.array(z.object({
+      sharpe_ratio: z.number(),
+      max_drawdown: z.number(),
+      win_rate: z.number(),
+      profit_factor: z.number(),
+      avg_daily_pnl: z.number(),
+    })).min(1),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+
+  const { attempts } = parsed.data;
+  const TIER3_MINS = { sharpe_ratio: 1.5, profit_factor: 1.75, avg_daily_pnl: 250, win_rate: 0.60 };
+
+  // Catastrophic risk: immediate kill
+  for (const a of attempts) {
+    if (a.max_drawdown > 6000) {
+      res.json({ kill_signal: "catastrophic_risk", stage: getStage(attempts.length), stage_prompt: getStagePrompt(getStage(attempts.length)) });
+      return;
+    }
+  }
+
+  const bestSharpe = Math.max(...attempts.map((a) => a.sharpe_ratio));
+  const bestPf = Math.max(...attempts.map((a) => a.profit_factor));
+  const bestWr = Math.max(...attempts.map((a) => a.win_rate));
+  const bestPnl = Math.max(...attempts.map((a) => a.avg_daily_pnl));
+
+  if (bestSharpe < 0.8) { res.json({ kill_signal: "no_edge", stage: getStage(attempts.length) }); return; }
+  if (bestWr < 0.40) { res.json({ kill_signal: "wrong_direction", stage: getStage(attempts.length) }); return; }
+  if (bestPf < 1.0) { res.json({ kill_signal: "unprofitable", stage: getStage(attempts.length) }); return; }
+
+  if (attempts.length >= 2) {
+    const prevSharpe = attempts[attempts.length - 2].sharpe_ratio;
+    const currSharpe = attempts[attempts.length - 1].sharpe_ratio;
+    if (Math.abs(currSharpe - prevSharpe) < 0.1 && currSharpe < TIER3_MINS.sharpe_ratio) {
+      res.json({ kill_signal: "flat_improvement", stage: getStage(attempts.length) });
+      return;
+    }
+  }
+
+  if (attempts.length >= 3) {
+    const pctSharpe = bestSharpe / TIER3_MINS.sharpe_ratio;
+    const pctPf = bestPf / TIER3_MINS.profit_factor;
+    const pctPnl = bestPnl / TIER3_MINS.avg_daily_pnl;
+    if ((pctSharpe + pctPf + pctPnl) / 3 < 0.70) {
+      res.json({ kill_signal: "below_tier3", stage: getStage(attempts.length) });
+      return;
+    }
+  }
+
+  const stage = getStage(attempts.length);
+  res.json({ kill_signal: null, stage, stage_prompt: getStagePrompt(stage) });
+});
+
+function getStage(iterationCount: number): number {
+  if (iterationCount <= 3) return 1;
+  if (iterationCount <= 6) return 2;
+  return 3;
+}
+
+function getStagePrompt(stage: number): string {
+  const prompts: Record<number, string> = {
+    1: "STAGE 1 — PARAMETER REFINEMENT: Same strategy logic, adjust parameters. Try different lookback periods, ATR multiples, or threshold values. Do NOT change the core entry/exit logic.",
+    2: "STAGE 2 — LOGIC VARIANT: Same edge thesis, different execution. Try a different entry method (e.g., mean reversion instead of breakout) or different exit logic.",
+    3: "STAGE 3 — CONCEPT PIVOT: Different edge entirely for this symbol/session. Abandon the previous approach. Try a completely different strategy concept.",
+  };
+  return prompts[stage] ?? prompts[1];
+}
+
 // ─── POST /api/backtests/matrix — Cross-matrix testing ────────────
 backtestRoutes.post("/matrix", async (req, res) => {
   const schema = z.object({
@@ -203,8 +282,8 @@ backtestRoutes.post("/matrix", async (req, res) => {
   const { strategyId } = parsed.data;
 
   // Fire and forget — tiered execution takes ~11 min
-  runMatrix(strategyId).catch(() => {
-    // Errors persisted to DB by service
+  runMatrix(strategyId).catch((err) => {
+    logger.error({ err, strategyId }, "Fire-and-forget matrix backtest failed");
   });
 
   // Get the matrix ID
@@ -216,7 +295,7 @@ backtestRoutes.post("/matrix", async (req, res) => {
     .limit(1);
 
   res.status(202).json({
-    message: "Matrix backtest started — 6 symbols × 7 timeframes, tiered execution",
+    message: "Matrix backtest started — 3 symbols × 7 timeframes, tiered execution",
     matrixId: row?.id,
   });
 });

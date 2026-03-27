@@ -13,11 +13,14 @@ export interface FirmAccountConfig {
   trailing: "eod" | "realtime";
   payoutSplit: number;            // Initial split
   payoutSplitTiers?: { threshold: number; split: number }[];
+  payoutCountTiers?: { payoutNumber: number; split: number }[];  // Alpha: count-based tiers
   minPayoutDays: number;
   consistencyRule: number | null;
   dailyLossLimit: number | null;
   overnightOk: boolean;
   weekendOk: boolean;             // All firms = false
+  commissionPerSide: number;      // Per-side commission in dollars
+  minTradingDays: number;         // Min trading days required to pass eval
 }
 
 export interface FirmConfig {
@@ -37,9 +40,10 @@ export const FIRMS: Record<string, FirmConfig> = {
     accountTypes: {
       "50k": {
         accountSize: 50_000, monthlyFee: 77, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2500, maxContracts: 15, trailing: "eod",
-        payoutSplit: 0.90, minPayoutDays: 1, consistencyRule: null,
-        dailyLossLimit: null, overnightOk: true, weekendOk: false,
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
+        payoutSplit: 0.80, minPayoutDays: 5, consistencyRule: 0.50, // Python: "mffu_50pct"
+        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
+        minTradingDays: 5,
       },
     },
   },
@@ -53,7 +57,8 @@ export const FIRMS: Record<string, FirmConfig> = {
         accountSize: 50_000, monthlyFee: 49, activationFee: 0, ongoingMonthlyFee: 0,
         profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
         payoutSplit: 0.90, minPayoutDays: 5, consistencyRule: null,
-        dailyLossLimit: null, overnightOk: true, weekendOk: false,
+        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.37,
+        minTradingDays: 5,
       },
     },
   },
@@ -64,12 +69,13 @@ export const FIRMS: Record<string, FirmConfig> = {
     evaluationType: "one_step",
     accountTypes: {
       "50k": {
-        accountSize: 50_000, monthlyFee: 150, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 3000, maxContracts: 15, trailing: "eod",
+        accountSize: 50_000, monthlyFee: 170, activationFee: 0, ongoingMonthlyFee: 0,
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
         payoutSplit: 0.80,
         payoutSplitTiers: [{ threshold: 5000, split: 0.90 }],
-        minPayoutDays: 5, consistencyRule: 0.50,
-        dailyLossLimit: null, overnightOk: true, weekendOk: false,
+        minPayoutDays: 5, consistencyRule: 0.50, // Python: "tpt_50pct"
+        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
+        minTradingDays: 5,
       },
     },
   },
@@ -80,12 +86,13 @@ export const FIRMS: Record<string, FirmConfig> = {
     evaluationType: "one_step",
     accountTypes: {
       "50k": {
-        accountSize: 50_000, monthlyFee: 167, activationFee: 0, ongoingMonthlyFee: 85,
-        profitTarget: 3000, maxDrawdown: 2500, maxContracts: 15, trailing: "eod",  // base 10, scales to 15→20
+        accountSize: 50_000, monthlyFee: 99, activationFee: 0, ongoingMonthlyFee: 85,
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
         payoutSplit: 1.00,
         payoutSplitTiers: [{ threshold: 25000, split: 0.90 }],
-        minPayoutDays: 7, consistencyRule: null,
-        dailyLossLimit: null, overnightOk: true, weekendOk: false,
+        minPayoutDays: 1, consistencyRule: 0.50, // Python: "apex_50pct_funded"
+        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
+        minTradingDays: 1,
       },
     },
   },
@@ -97,11 +104,12 @@ export const FIRMS: Record<string, FirmConfig> = {
     accountTypes: {
       "50k": {
         accountSize: 50_000, monthlyFee: 150, activationFee: 0, ongoingMonthlyFee: 126,
-        profitTarget: 3000, maxDrawdown: 2500, maxContracts: 15, trailing: "eod",
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
         payoutSplit: 0.80,
         payoutSplitTiers: [{ threshold: 5000, split: 0.90 }],
-        minPayoutDays: 3, consistencyRule: null,
-        dailyLossLimit: 1250, overnightOk: false, weekendOk: false,
+        minPayoutDays: 3, consistencyRule: 0.40, // Python: "ffn_40pct"
+        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
+        minTradingDays: 3,
       },
     },
   },
@@ -115,14 +123,15 @@ export const FIRMS: Record<string, FirmConfig> = {
         accountSize: 50_000, monthlyFee: 99, activationFee: 0, ongoingMonthlyFee: 0,
         profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
         payoutSplit: 0.70,
-        payoutSplitTiers: [
-          { threshold: 1, split: 0.70 },   // 1st payout
-          { threshold: 2, split: 0.75 },   // 2nd payout
-          { threshold: 3, split: 0.80 },   // 3rd payout
-          { threshold: 4, split: 0.90 },   // 4th+ payout
+        payoutSplitTiers: undefined,
+        payoutCountTiers: [
+          { payoutNumber: 1, split: 0.70 },
+          { payoutNumber: 2, split: 0.80 },
+          { payoutNumber: 3, split: 0.90 },  // 3rd+ payout
         ],
-        minPayoutDays: 2, consistencyRule: 0.50,
-        dailyLossLimit: null, overnightOk: false, weekendOk: false,
+        minPayoutDays: 2, consistencyRule: 0.50, // Python: "alpha_50pct"
+        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.00,
+        minTradingDays: 2,
       },
     },
   },
@@ -133,10 +142,11 @@ export const FIRMS: Record<string, FirmConfig> = {
     evaluationType: "one_step",
     accountTypes: {
       "50k": {
-        accountSize: 50_000, monthlyFee: 99, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2500, maxContracts: 15, trailing: "realtime",
-        payoutSplit: 0.80, minPayoutDays: 10, consistencyRule: null,
-        dailyLossLimit: null, overnightOk: true, weekendOk: false,
+        accountSize: 50_000, monthlyFee: 159, activationFee: 0, ongoingMonthlyFee: 0,
+        profitTarget: 2500, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
+        payoutSplit: 0.90, minPayoutDays: 3, consistencyRule: 0.40, // Python: "tradeify_40pct"
+        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 1.29,
+        minTradingDays: 3,
       },
     },
   },
@@ -147,10 +157,11 @@ export const FIRMS: Record<string, FirmConfig> = {
     evaluationType: "one_step",
     accountTypes: {
       "50k": {
-        accountSize: 50_000, monthlyFee: 150, activationFee: 0, ongoingMonthlyFee: 0,
+        accountSize: 50_000, monthlyFee: 170, activationFee: 0, ongoingMonthlyFee: 0,
         profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
-        payoutSplit: 0.80, minPayoutDays: 15, consistencyRule: null,
-        dailyLossLimit: null, overnightOk: true, weekendOk: false,
+        payoutSplit: 0.80, minPayoutDays: 10, consistencyRule: 0.50, // Python: "earn2trade_consistency"
+        dailyLossLimit: 1100, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
+        minTradingDays: 10,
       },
     },
   },
@@ -159,15 +170,15 @@ export const FIRMS: Record<string, FirmConfig> = {
 // ─── Contract Specs ─────────────────────────────────────────────────────────
 
 export const CONTRACT_SPECS: Record<string, { tickSize: number; tickValue: number; pointValue: number }> = {
-  ES:  { tickSize: 0.25, tickValue: 12.50, pointValue: 50.00 },
-  NQ:  { tickSize: 0.25, tickValue: 5.00,  pointValue: 20.00 },
-  CL:  { tickSize: 0.01, tickValue: 10.00, pointValue: 1000.00 },
-  YM:  { tickSize: 1.00, tickValue: 5.00,  pointValue: 5.00 },
-  RTY: { tickSize: 0.10, tickValue: 5.00,  pointValue: 50.00 },
-  GC:  { tickSize: 0.10, tickValue: 10.00, pointValue: 100.00 },
   MES: { tickSize: 0.25, tickValue: 1.25,  pointValue: 5.00 },
   MNQ: { tickSize: 0.25, tickValue: 0.50,  pointValue: 2.00 },
+  MCL: { tickSize: 0.01, tickValue: 1.00,  pointValue: 100.00 },
 };
+
+// ─── Contract Cap Bounds (mirrors Python firm_config.py) ────────────────────
+
+export const CONTRACT_CAP_MIN = 10;
+export const CONTRACT_CAP_MAX = 20;
 
 // ─── Defaults ───────────────────────────────────────────────────────────────
 

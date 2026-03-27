@@ -45,7 +45,7 @@ class SMTReversalStrategy(BaseStrategy):
         self.lookback = lookback
         self.swing_lookback = swing_lookback
         self.confirmation_bars = confirmation_bars
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "15min"
 
     @property

@@ -23,9 +23,6 @@ SYMBOL_MAP = {
     "ES": "ES.c.0",
     "NQ": "NQ.c.0",
     "CL": "CL.c.0",
-    "YM": "YM.c.0",
-    "RTY": "RTY.c.0",
-    "GC": "GC.c.0",
 }
 
 DATASET = "GLBX.MDP3"

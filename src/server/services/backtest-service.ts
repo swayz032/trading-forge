@@ -7,18 +7,16 @@
  * - stderr → logging
  */
 
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
-import { eq, sql } from "drizzle-orm";
-import { db } from "../db/index.js";
-import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows } from "../db/schema.js";
+import { eq, and, sql } from "drizzle-orm";
+import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { startStream } from "./paper-trading-stream.js";
 import { runMonteCarlo } from "./monte-carlo-service.js";
 import { queryInfo } from "../../data/loaders/duckdb-service.js";
+import { getFirmLimit } from "../../shared/firm-config.js";
 import { logger } from "../index.js";
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+import { runPythonModule } from "../lib/python-runner.js";
+import { db } from "../db/index.js";
 
 /** Convert decay_analysis from Python snake_case to frontend camelCase. */
 function normalizeDecayAnalysis(raw: Record<string, unknown> | undefined): Record<string, unknown> | null {
@@ -52,6 +50,24 @@ interface BacktestConfig {
   mode?: "single" | "walkforward";
   walk_forward_splits?: number;
   embargo_bars?: number;  // Bars to skip between IS/OOS windows (prevents data leakage)
+  max_trades_per_day?: number;
+  firm_key?: string;
+  fill_model?: {
+    order_type: string;
+    limit_at_current?: number;
+    limit_1_tick?: number;
+    limit_at_sr?: number;
+    limit_at_extreme?: number;
+    partial_fill_threshold?: number;
+    latency_ms?: number;
+  };
+  event_calendar?: {
+    policies: Array<{ event_type: string; action: string; window_minutes: number }>;
+    calendar_source: string;
+  };
+  optimizer?: "optuna" | "sqa";
+  refinement_stage?: number;  // 1=param refinement, 2=logic variant, 3=concept pivot
+  refinement_iteration?: number;  // 0-8 iteration counter
 }
 
 /**
@@ -112,91 +128,8 @@ interface BacktestResult {
   error?: string;
 }
 
-// 5 minutes max per backtest — prevents matrix from hanging on slow strategies
-const BACKTEST_TIMEOUT_MS = 5 * 60 * 1000;
-
-function runPythonBacktest(configJson: string, mode: string, backtestId: string, strategyClass?: string): Promise<BacktestResult> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = [
-      "-m", "src.engine.backtester",
-      "--config", configJson,
-      "--backtest-id", backtestId,
-      "--mode", mode,
-      ...(strategyClass ? ["--strategy-class", strategyClass] : []),
-    ];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    // Kill after timeout so matrix doesn't hang
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        proc.kill("SIGTERM");
-        reject(new Error(`Backtest timed out after ${BACKTEST_TIMEOUT_MS / 1000}s`));
-      }
-    }, BACKTEST_TIMEOUT_MS);
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "backtest-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      clearTimeout(timer);
-      if (settled) return;
-      settled = true;
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse backtest output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Backtest failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      clearTimeout(timer);
-      if (pythonCmd === "python") {
-        // Retry with python3 (same timeout to prevent infinite hang)
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        const timer2 = setTimeout(() => {
-          proc2.kill("SIGTERM");
-          reject(new Error(`Backtest retry timed out after ${BACKTEST_TIMEOUT_MS / 1000}s`));
-        }, BACKTEST_TIMEOUT_MS);
-        let stdout2 = "";
-        let stderr2 = "";
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          clearTimeout(timer2);
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
-          } else {
-            reject(new Error(`Backtest failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => { clearTimeout(timer2); reject(err); });
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
+// 10 minutes max per backtest — prevents matrix from hanging on slow strategies
+const BACKTEST_TIMEOUT_MS = 10 * 60 * 1000;
 
 export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string) {
   // Auto-resolve dates from S3 when omitted
@@ -229,9 +162,18 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     .where(eq(backtests.id, backtestId));
 
   try {
-    const configJson = JSON.stringify(config);
     const mode = config.mode ?? "single";
-    const result = await runPythonBacktest(configJson, mode, backtestId, strategyClass);
+    const result = await runPythonModule<BacktestResult>({
+      module: "src.engine.backtester",
+      args: [
+        "--backtest-id", backtestId,
+        "--mode", mode,
+        ...(strategyClass ? ["--strategy-class", strategyClass] : []),
+      ],
+      config: config as unknown as Record<string, unknown>,
+      timeoutMs: BACKTEST_TIMEOUT_MS,
+      componentName: "backtest-engine",
+    });
 
     if (result.error) {
       await db
@@ -409,13 +351,74 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       durationMs: result.execution_time_ms,
     });
 
+    // ─── Optional SQA parameter optimization (fire-and-forget) ───
+    if (config.optimizer === "sqa" && config.strategy?.indicators?.length) {
+      (async () => {
+        try {
+          // Build param ranges from strategy indicator parameters
+          const paramRanges: Array<{ name: string; min_val: number; max_val: number; n_bits: number }> = [];
+          for (const ind of config.strategy.indicators) {
+            if (ind.period) {
+              paramRanges.push({
+                name: `${ind.type}_period`,
+                min_val: Math.max(1, Math.round(ind.period * 0.5)),
+                max_val: Math.round(ind.period * 2.0),
+                n_bits: 4,
+              });
+            }
+          }
+          if (config.strategy.stop_loss?.multiplier) {
+            paramRanges.push({
+              name: "stop_loss_multiplier",
+              min_val: config.strategy.stop_loss.multiplier * 0.5,
+              max_val: config.strategy.stop_loss.multiplier * 2.0,
+              n_bits: 4,
+            });
+          }
+
+          if (paramRanges.length === 0) return;
+
+          const sqaConfig = {
+            param_ranges: paramRanges,
+            num_reads: 100,
+            num_sweeps: 1000,
+            objective: "maximize_sharpe",
+          };
+
+          const sqaResult = await runPythonModule({
+            module: "src.engine.quantum_annealing_optimizer",
+            config: sqaConfig,
+            componentName: "sqa-optimizer",
+          });
+
+          // Store SQA results on the backtest record
+          await db.update(backtests).set({
+            walkForwardResults: {
+              ...((result.walk_forward_results ?? {}) as Record<string, unknown>),
+              sqa_optimization: {
+                best_params: (sqaResult as any).best_params,
+                best_energy: (sqaResult as any).best_energy,
+                robust_plateau: (sqaResult as any).robust_plateau,
+                method: "sqa",
+                governance: { experimental: true, decision_role: "challenger_only" },
+              },
+            },
+          }).where(eq(backtests.id, backtestId));
+          
+          logger.info({ backtestId, bestParams: (sqaResult as any).best_params }, "SQA optimization completed");
+        } catch (sqaErr) {
+          logger.error({ backtestId, err: sqaErr }, "SQA optimization failed (non-blocking)");
+        }
+      })();
+    }
+
     // ─── Auto Monte Carlo for all completed backtests (fire-and-forget) ───
     // MC data is needed to evaluate ANY strategy properly — don't gate behind tier
     if (result.daily_pnls?.length > 0) {
       runMonteCarlo(backtestId, {
         numSimulations: 50_000,
         method: "both",
-        firms: ["topstep", "mffu", "tpt", "apex", "ffn", "alpha_futures", "tradeify", "earn2trade"],
+        firms: ["topstep_50k", "mffu_50k", "tpt_50k", "apex_50k", "ffn_50k", "alpha_50k", "tradeify_50k", "earn2trade_50k"],
       }).then((mcResult) => {
         logger.info({ backtestId, mcId: mcResult.id, status: mcResult.status }, "Auto MC completed");
       }).catch((mcErr) => {
@@ -426,6 +429,72 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // ─── Auto-promote to paper trading if strategy passes gates ───
     if (result.tier && ["TIER_1", "TIER_2", "TIER_3"].includes(result.tier)) {
       try {
+        // Auto-name assignment for TIER_1 strategies
+        if (result.tier === "TIER_1") {
+          try {
+            // Idempotency: skip if strategy already has a Forge name
+            const [existingName] = await db
+              .select()
+              .from(strategyNames)
+              .where(eq(strategyNames.strategyId, strategyId))
+              .limit(1);
+
+            if (existingName) {
+              logger.info({ strategyId, forgeName: existingName.fullName }, "Strategy already has Forge name, skipping");
+            } else {
+              // Atomic claim: UPDATE ... WHERE claimed=false RETURNING * (race-safe)
+              const [claimedName] = await db
+                .update(strategyNames)
+                .set({
+                  claimed: true,
+                  claimedAt: new Date(),
+                  strategyId,
+                  originClass: strategyClass ?? null,
+                })
+                .where(
+                  and(
+                    eq(strategyNames.claimed, false),
+                    eq(strategyNames.retired, false),
+                    // Use a subquery-like approach: only claim the first unclaimed row
+                    eq(strategyNames.id, sql`(SELECT id FROM strategy_names WHERE claimed = false AND retired = false LIMIT 1 FOR UPDATE SKIP LOCKED)`),
+                  )
+                )
+                .returning();
+
+              if (claimedName) {
+                await db.update(strategies).set({
+                  name: claimedName.fullName,
+                }).where(eq(strategies.id, strategyId));
+
+                logger.info({
+                  strategyId,
+                  forgeName: claimedName.fullName,
+                  codename: claimedName.codename,
+                }, "Strategy auto-named on TIER_1 promotion");
+
+                await db.insert(auditLog).values({
+                  action: "strategy.auto-named",
+                  entityType: "strategy",
+                  entityId: strategyId,
+                  input: { codename: claimedName.codename },
+                  result: { fullName: claimedName.fullName },
+                  status: "success",
+                });
+              } else {
+                // Fallback: generate unique name with crypto random suffix
+                const { randomUUID } = await import("crypto");
+                const fallbackName = `Forge Alpha-${randomUUID().slice(0, 8).toUpperCase()}`;
+                await db.update(strategies).set({
+                  name: fallbackName,
+                }).where(eq(strategies.id, strategyId));
+                logger.warn({ strategyId, fallbackName }, "No codenames available, used fallback name");
+              }
+            }
+          } catch (nameErr) {
+            logger.warn(nameErr, "Auto-naming failed (non-blocking)");
+          }
+        }
+
         // Update strategy lifecycle to PAPER
         await db.update(strategies).set({
           lifecycleState: "PAPER",
@@ -442,7 +511,18 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             preferred_sessions: ["NY_RTH"],
             max_concurrent_positions: 1,
             cooldown_bars: 4,
-            daily_loss_limit: 2000,
+            daily_loss_limit: (() => {
+              const firmKey = config.firm_key;
+              if (firmKey) {
+                // firm_key may be "topstep_50k" — strip the account suffix for lookup
+                const firmName = firmKey.replace(/_\d+k$/i, "");
+                const limits = getFirmLimit(firmName);
+                if (limits) {
+                  return limits.dailyLossLimit ?? limits.maxDrawdown;
+                }
+              }
+              return 2000; // fallback if no firm configured
+            })(),
             backtestId,
             tier: result.tier,
             forge_score: result.forge_score,

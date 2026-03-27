@@ -15,19 +15,13 @@
  * - New variant must beat parent OOS Sharpe by >= 10%
  */
 
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
-import { writeFileSync, unlinkSync } from "fs";
-import { tmpdir } from "os";
-import { randomUUID } from "crypto";
 import { eq, and, gte, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, backtests, auditLog } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+import { runPythonModule } from "../lib/python-runner.js";
 
 const MAX_GENERATIONS = 3;
 const IMPROVEMENT_THRESHOLD = 0.10; // 10% improvement required
@@ -43,54 +37,6 @@ interface EvolverOutput {
   model: string;
   parent_params: Record<string, number>;
   error?: string;
-}
-
-function runPythonEvolver(configPath: string): Promise<EvolverOutput> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", "src.engine.parameter_evolver", "--config", configPath];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    const EVOLVER_TIMEOUT_MS = 300_000;
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        proc.kill("SIGTERM");
-        reject(new Error(`Evolution timed out after ${EVOLVER_TIMEOUT_MS / 1000}s`));
-      }
-    }, EVOLVER_TIMEOUT_MS);
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "evolution-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      clearTimeout(timer);
-      if (settled) return;
-      settled = true;
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse evolver output: ${stdout.slice(0, 500)}`));
-        }
-      } else {
-        reject(new Error(`Evolution failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => reject(err));
-  });
 }
 
 export async function evolveStrategy(strategyId: string): Promise<{
@@ -200,14 +146,17 @@ export async function evolveStrategy(strategyId: string): Promise<{
       : [],
   };
 
-  const tmpPath = pathResolve(tmpdir(), `evolution-config-${randomUUID()}.json`);
-  writeFileSync(tmpPath, JSON.stringify(evolverConfig));
-
   let evolverOutput: EvolverOutput;
   try {
-    evolverOutput = await runPythonEvolver(tmpPath);
-  } finally {
-    try { unlinkSync(tmpPath); } catch { /* ignore */ }
+    evolverOutput = await runPythonModule<EvolverOutput>({
+      module: "src.engine.parameter_evolver",
+      config: evolverConfig as unknown as Record<string, unknown>,
+      timeoutMs: 300_000,
+      componentName: "evolution-engine",
+    });
+  } catch (err) {
+    logger.error({ strategyId, err }, "Evolution engine failed");
+    return { status: "failed", error: String(err) };
   }
 
   if (!evolverOutput.mutations || evolverOutput.mutations.length === 0) {

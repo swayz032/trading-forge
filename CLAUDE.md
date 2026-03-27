@@ -58,7 +58,7 @@ src/
 - **Proven edges only:** Trend following, mean reversion, volatility expansion, session patterns. No exotic ML signals.
 - **Robustness > optimization.** A strategy that works with MA=15-25 is better than one that only works with MA=17.
 - **Walk-forward validation is mandatory.** No strategy passes without out-of-sample testing.
-- **No black-box ML for entries/exits.** ML is fine for regime detection and position sizing, not for signal generation.
+- **Signal generation is method-agnostic.** ML, tensor networks, and quantum-inspired methods are permitted IF they pass the full walk-forward + MC + OOS pipeline. The gates decide, not the method.
 - Agents must REJECT strategies that require tight parameter optimization to be profitable.
 - **ICT/SMC concepts are fully codified.** 54 ICT indicators and 15 ICT strategies are implemented in `src/engine/indicators/` and `src/engine/strategies/`. Agents CAN generate, test, and optimize ICT-based strategies. ICT constructs (order blocks, FVGs, breakers, sweeps, market structure) are subject to the same robustness rules as any other codified strategy.
 - **ONE account must be profitable.** Agents REJECT any strategy that requires multi-account scaling to be worth trading. If a strategy can't earn serious money on a single $50K prop firm account, it's not good enough.
@@ -82,7 +82,7 @@ minimum_sharpe_ratio: 1.5          # Risk-adjusted returns must be strong
 maximum_max_drawdown: $2,000       # Must survive tightest prop firm (Topstep 50K = $2K)
 maximum_consecutive_losers: 4      # Max 4 losing days in a row (mental + drawdown survival)
 minimum_expectancy_per_trade: $75  # Every trade must be worth taking
-minimum_avg_winner_to_loser: 1.5   # Avg win must be 1.5x avg loss minimum
+minimum_avg_winner_to_loser: 2.0   # Avg win must be 2x avg loss minimum (1:2 R:R)
 ```
 
 ### Performance Tiers (for ranking strategies)
@@ -121,15 +121,15 @@ tier_3:
 MFFU 50K account costs $77/month to evaluate.
 If strategy makes $5,000/month gross:
   - Pass evaluation in ~12-15 trading days (< 1 month)
-  - Funded payout: $5,000 × 0.90 = $4,500/month to you
-  - ROI on $77 eval fee = 5,844% annualized
+  - Funded payout: $5,000 × 0.80 = $4,000/month to you
+  - ROI on $77 eval fee = 5,194% annualized
   - One account. No scaling needed. No 20-account Apex games.
 
 If strategy only makes $500/month (the kind we REJECT):
   - Takes 6+ months to pass evaluation = $462 in fees before funding
-  - Funded payout: $500 × 0.90 = $450/month
+  - Funded payout: $500 × 0.80 = $400/month
   - Barely covers the eval cost in year one
-  - You'd need 10 accounts to make $4,500/month = complexity, risk, headache
+  - You'd need 10 accounts to make $4,000/month = complexity, risk, headache
 ```
 
 ### Daily Survival Requirement
@@ -174,7 +174,7 @@ Rules:
 
 ## Prop Firm Integration
 - **Full rules reference:** `docs/prop-firm-rules.md` — agents MUST load this when simulating strategies
-- 7 firms tracked: MFFU, Topstep, TPT, Apex, FFN, Alpha Futures, Tradeify (+ Earn2Trade)
+- 8 firms tracked: MFFU, Topstep, TPT, Apex, FFN, Alpha Futures, Tradeify, Earn2Trade
 - Agents simulate strategies against each firm's exact rules (drawdown, consistency, contract limits)
 - Agents rank firms by expected ROI given a strategy's profile
 - Agents calculate payout projections after splits, fees, and ongoing costs
@@ -207,7 +207,7 @@ Rules:
   - `POST /api/risk/max-contracts` — Given symbol, ATR, firm, account size, returns safe max contracts per account and across all accounts
   - `POST /api/risk/portfolio-heat` — Given all open positions, returns total exposure, unrealized P&L, drawdown usage per account, and heat percentage
 - **Purpose:** Call before every live session to ensure you never breach drawdown limits across multiple prop accounts
-- Supports all 7 firms (Topstep, MFFU, TPT, Apex, Tradeify, Alpha, FFN) and all contract specs (ES, NQ, CL, YM, RTY, GC, MES, MNQ)
+- Supports all 8 firms (Topstep, MFFU, TPT, Apex, Tradeify, Alpha, FFN, Earn2Trade) and contract specs (MES, MNQ, MCL)
 
 ## Data Provider Roles
 - **Databento** → Historical bulk downloads (Phase 1 backfill). Download once to S3, never re-pay.
@@ -228,7 +228,7 @@ Rules:
 - Don't over-engineer — MVP each phase, iterate
 - Don't generate complex strategies — max 5 parameters, one-sentence logic, proven edges only
 - Don't optimize parameters to find "the best" — test robustness across a wide range instead
-- Don't use ML/neural nets for entry/exit signals — only for regime detection and sizing
+- Signal generation methods (including ML, tensor networks, quantum-inspired) are permitted IF validated through the same walk-forward + Monte Carlo + OOS pipeline as any other strategy. No method gets a free pass — the gates decide, not the method.
 - Don't store secrets in code — use .env
 - Don't commit the data/ directory — it's gitignored (lives in S3)
 - Don't waste Databento credits on data you can get from Massive/Alpha Vantage for free
@@ -247,6 +247,6 @@ Rules:
 - Don't ignore time-of-day liquidity — overnight ES has 2x spreads vs RTH core; slippage multipliers by session are mandatory
 - Don't trade through FOMC/CPI/NFP without explicit event handling — default is SIT_OUT ±30 min
 - Don't assume limit orders always fill — model fill probability, especially for mean reversion entries at extremes
-- Don't use gross P&L for performance gates — use net P&L per firm (commissions differ: MFFU $1.58/side vs Apex $2.64/side)
+- Don't use gross P&L for performance gates — use net P&L per firm (commissions differ: Topstep $0.37/side, Alpha $0.00/side, Tradeify $1.29/side, others $0.62/side)
 - Don't ignore firm contract caps in backtests — ATR sizing capped to `min(ATR_size, firm_max_contracts)`
 - Don't ignore overnight gap risk — strategies holding across sessions need gap-adjusted MAE and drawdown

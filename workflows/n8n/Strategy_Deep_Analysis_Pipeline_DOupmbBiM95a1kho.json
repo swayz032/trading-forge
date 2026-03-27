@@ -53,7 +53,7 @@
           "parameters": [
             {
               "name": "symbols",
-              "value": "ES,NQ,CL,YM,RTY,GC"
+              "value": "ES,NQ,CL"
             }
           ]
         },

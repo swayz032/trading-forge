@@ -4,9 +4,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import pino from "pino";
 import { sql } from "drizzle-orm";
-import { db } from "./db/index.js";
+import { db, client as dbClient } from "./db/index.js";
 import { authMiddleware } from "./middleware/auth.js";
-import { standardRateLimit, strictRateLimit } from "./middleware/rate-limit.js";
+import { standardRateLimit } from "./middleware/rate-limit.js";
 import { strategyRoutes } from "./routes/strategies.js";
 import { journalRoutes } from "./routes/journal.js";
 import { riskRoutes } from "./routes/risk.js";
@@ -32,6 +32,11 @@ import { sseRoutes } from "./routes/sse.js";
 import { signalRoutes } from "./routes/signals.js";
 import { propFirmRoutes } from "./routes/prop-firm.js";
 import { portfolioRoutes } from "./routes/portfolio.js";
+import { contextRoutes } from "./routes/context.js";
+import { validationRoutes } from "./routes/validation.js";
+import { pineExportRoutes } from "./routes/pine-export.js";
+import { quantumMcRoutes } from "./routes/quantum-mc.js";
+import { strategyNameRoutes } from "./routes/strategy-names.js";
 import { stopAllStreams } from "./services/paper-trading-stream.js";
 
 const app = express();
@@ -66,7 +71,7 @@ app.get("/api/health", async (_req, res) => {
   }
 
   // Ollama connectivity check
-  let ollamaStatus = "unknown";
+  let ollamaStatus: string;
   try {
     const ollamaUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
     const resp = await fetch(`${ollamaUrl}/api/tags`, { signal: AbortSignal.timeout(3000) });
@@ -126,6 +131,11 @@ app.use("/api/sse", sseRoutes);
 app.use("/api/signals", signalRoutes);
 app.use("/api/prop-firm", propFirmRoutes);
 app.use("/api/portfolio", portfolioRoutes);
+app.use("/api/context", contextRoutes);
+app.use("/api/validation", validationRoutes);
+app.use("/api/pine-export", pineExportRoutes);
+app.use("/api/quantum-mc", quantumMcRoutes);
+app.use("/api/strategy-names", strategyNameRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {
@@ -151,6 +161,15 @@ app.get("/{*splat}", (_req, res) => {
   res.sendFile(path.join(frontendDist, "index.html"));
 });
 
+process.on("unhandledRejection", (reason, _promise) => {
+  logger.error({ reason }, "Unhandled promise rejection");
+});
+
+process.on("uncaughtException", (err) => {
+  logger.error({ err }, "Uncaught exception — shutting down");
+  process.exit(1);
+});
+
 const server = app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);
 
@@ -167,12 +186,18 @@ const server = app.listen(port, () => {
 process.on("SIGTERM", () => {
   logger.info("SIGTERM received — stopping all paper streams");
   stopAllStreams();
+  dbClient.end({ timeout: 5 }).catch((err) => {
+    logger.error({ err }, "Failed to close DB connection pool");
+  });
   server.close(() => { process.exit(0); });
   setTimeout(() => { logger.error("Shutdown timeout — forcing exit"); process.exit(1); }, 10_000);
 });
 process.on("SIGINT", () => {
   logger.info("SIGINT received — stopping all paper streams");
   stopAllStreams();
+  dbClient.end({ timeout: 5 }).catch((err) => {
+    logger.error({ err }, "Failed to close DB connection pool");
+  });
   server.close(() => { process.exit(0); });
   setTimeout(() => { logger.error("Shutdown timeout — forcing exit"); process.exit(1); }, 10_000);
 });

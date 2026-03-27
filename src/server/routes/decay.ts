@@ -8,73 +8,11 @@
  */
 
 import { Router } from "express";
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
 import { z } from "zod";
 import { logger } from "../index.js";
+import { runPythonModule } from "../lib/python-runner.js";
 
 export const decayRoutes = Router();
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
-
-// ─── Python subprocess helper ──────────────────────────────────
-
-function runPython(module: string, configJson: string): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", module, "--config", configJson];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "decay-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse decay output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Decay engine failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      if (pythonCmd === "python") {
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let stdout2 = "";
-        let stderr2 = "";
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
-          } else {
-            reject(new Error(`Decay engine failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => reject(err));
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
@@ -99,14 +37,16 @@ decayRoutes.get("/status/:strategyId", async (req, res) => {
   const { strategyId } = req.params;
 
   try {
-    const result = await runPython(
-      "src.engine.decay.half_life",
-      JSON.stringify({ action: "status", strategy_id: strategyId }),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.decay.half_life",
+      config: { action: "status", strategy_id: strategyId },
+      componentName: "decay-status",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Decay status failed");
-    res.status(500).json({ error: "Failed to get decay status", details: String(err) });
+    const status = String(err).includes("timed out") ? 504 : 500;
+    res.status(status).json({ error: "Failed to get decay status", details: String(err) });
   }
 });
 
@@ -120,14 +60,16 @@ decayRoutes.post("/analyze", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.decay.half_life",
-      JSON.stringify({ action: "analyze", ...parsed.data }),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.decay.half_life",
+      config: { action: "analyze", ...parsed.data } as unknown as Record<string, unknown>,
+      componentName: "decay-analysis",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Decay analysis failed");
-    res.status(500).json({ error: "Decay analysis failed", details: String(err) });
+    const status = String(err).includes("timed out") ? 504 : 500;
+    res.status(status).json({ error: "Decay analysis failed", details: String(err) });
   }
 });
 
@@ -137,14 +79,16 @@ decayRoutes.get("/signals/:strategyId", async (req, res) => {
   const { strategyId } = req.params;
 
   try {
-    const result = await runPython(
-      "src.engine.decay.sub_signals",
-      JSON.stringify({ action: "signals", strategy_id: strategyId }),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.decay.sub_signals",
+      config: { action: "signals", strategy_id: strategyId },
+      componentName: "decay-signals",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Decay signals failed");
-    res.status(500).json({ error: "Failed to get decay signals", details: String(err) });
+    const status = String(err).includes("timed out") ? 504 : 500;
+    res.status(status).json({ error: "Failed to get decay signals", details: String(err) });
   }
 });
 
@@ -158,14 +102,16 @@ decayRoutes.post("/quarantine/evaluate", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.decay.quarantine",
-      JSON.stringify({ action: "evaluate", ...parsed.data }),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.decay.quarantine",
+      config: { action: "evaluate", ...parsed.data } as unknown as Record<string, unknown>,
+      componentName: "quarantine-eval",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Quarantine evaluation failed");
-    res.status(500).json({ error: "Quarantine evaluation failed", details: String(err) });
+    const status = String(err).includes("timed out") ? 504 : 500;
+    res.status(status).json({ error: "Quarantine evaluation failed", details: String(err) });
   }
 });
 
@@ -173,13 +119,15 @@ decayRoutes.post("/quarantine/evaluate", async (req, res) => {
 // All strategies with their decay status
 decayRoutes.get("/dashboard", async (_req, res) => {
   try {
-    const result = await runPython(
-      "src.engine.decay.half_life",
-      JSON.stringify({ action: "dashboard" }),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.decay.half_life",
+      config: { action: "dashboard" },
+      componentName: "decay-dashboard",
+    });
     res.json(result);
   } catch (err) {
     logger.error({ err }, "Decay dashboard failed");
-    res.status(500).json({ error: "Failed to get decay dashboard", details: String(err) });
+    const status = String(err).includes("timed out") ? 504 : 500;
+    res.status(status).json({ error: "Failed to get decay dashboard", details: String(err) });
   }
 });

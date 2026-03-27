@@ -5,15 +5,11 @@ import { backtests } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import {
   FIRMS,
-  FirmAccountConfig,
-  FirmConfig,
-  CONTRACT_SPECS,
-  DEFAULT_ACCOUNT_SIZE,
-  getFirmAccount,
   getBufferAmount,
   getTotalHurdle,
   getAllFirms,
 } from "../../shared/firm-config.js";
+import { logger } from "../index.js";
 
 export const propFirmRoutes = Router();
 
@@ -52,7 +48,7 @@ propFirmRoutes.get("/firms/:firm/:accountType", (req, res) => {
   const requestedType = (req.params.accountType ?? ACCOUNT_TYPE).toLowerCase();
   if (requestedType !== ACCOUNT_TYPE) {
     // Warn but still return 50K config
-    console.warn(`[prop-firm] Requested account type "${requestedType}" — only 50K accounts exist. Returning 50K config.`);
+    logger.warn(`Requested account type "${requestedType}" — only 50K accounts exist. Returning 50K config.`);
   }
 
   const acct = firmConfig.accountTypes[ACCOUNT_TYPE];
@@ -60,8 +56,12 @@ propFirmRoutes.get("/firms/:firm/:accountType", (req, res) => {
     res.status(404).json({ error: `No 50K config for firm: ${firmConfig.name}` });
     return;
   }
-  const buffer = getBufferAmount(firmConfig.name)!;
-  const hurdle = getTotalHurdle(firmConfig.name)!;
+  const buffer = getBufferAmount(firmConfig.name);
+  const hurdle = getTotalHurdle(firmConfig.name);
+  if (buffer == null || hurdle == null) {
+    res.status(500).json({ error: `Missing buffer/hurdle config for firm: ${firmConfig.name}` });
+    return;
+  }
   res.json({
     firm: firmConfig.name,
     displayName: firmConfig.displayName,
@@ -106,9 +106,8 @@ propFirmRoutes.post("/rank", (req, res) => {
       if (acct.consistencyRule && bestDayPct && bestDayPct > acct.consistencyRule) {
         violations.push(`Best day ${(bestDayPct * 100).toFixed(0)}% > consistency limit ${(acct.consistencyRule * 100).toFixed(0)}%`);
       }
-      if (acct.dailyLossLimit !== null) {
-        violations.push(`Daily loss limit: $${acct.dailyLossLimit}`);
-      }
+      // Daily loss limit is informational — we don't have worstDailyLoss in the request
+      // so we can't check for a breach. Don't count as a violation.
 
       const passes = violations.length === 0;
 
@@ -310,6 +309,20 @@ propFirmRoutes.post("/timeline", (req, res) => {
   // Optimistic: straight-line P&L
   const daysOptimistic = Math.ceil(acct.profitTarget / avgDailyPnl);
 
+  // Guard: winRate=0 makes timeline meaningless — return max placeholders
+  if (winRate <= 0) {
+    res.json({
+      firm,
+      accountType: ACCOUNT_TYPE,
+      daysOptimistic,
+      daysRealistic: 999,
+      daysConservative: 999,
+      bufferDaysOptimistic: Math.ceil(acct.maxDrawdown / avgDailyPnl),
+      bufferDaysRealistic: 999,
+    });
+    return;
+  }
+
   // Realistic: account for losing days
   const avgWinDay = avgDailyPnl / winRate;
   const avgLossDay = avgWinDay * 0.5;
@@ -395,9 +408,6 @@ propFirmRoutes.get("/simulate/:backtestId", async (req, res) => {
 
         const violations: string[] = [];
         if (maxDrawdown > acct.maxDrawdown) violations.push(`Drawdown exceeds limit`);
-        if (acct.dailyLossLimit !== null) {
-          violations.push(`Daily loss limit: $${acct.dailyLossLimit}`);
-        }
 
         const daysToTarget = Math.ceil(acct.profitTarget / avgDailyPnl);
         const evalDays = Math.max(daysToTarget, acct.minPayoutDays);

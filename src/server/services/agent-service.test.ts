@@ -74,10 +74,10 @@ describe("AgentService", () => {
 
       const input = {
         strategy_name: "BB Mean Reversion",
-        one_sentence: "Buy when price touches lower BB on ES 15min",
+        one_sentence: "Buy when price touches lower BB on MES 15min",
         python_code: "import vectorbt as vbt\n# strategy code here",
         params: { period: 20, std_dev: 2.0 },
-        symbol: "ES" as const,
+        symbol: "MES" as const,
         timeframe: "15min",
         start_date: "2024-01-01",
         end_date: "2024-12-31",
@@ -96,7 +96,7 @@ describe("AgentService", () => {
         expect.objectContaining({
           strategy: expect.objectContaining({
             name: "BB Mean Reversion",
-            symbol: "ES",
+            symbol: "MES",
             python_code: "import vectorbt as vbt\n# strategy code here",
           }),
         })
@@ -141,7 +141,7 @@ describe("AgentService", () => {
         one_sentence: "test",
         python_code: "pass",
         params: {},
-        symbol: "ES" as const,
+        symbol: "MES" as const,
         timeframe: "15min",
         start_date: "2024-01-01",
         end_date: "2024-12-31",
@@ -164,7 +164,7 @@ describe("AgentService", () => {
           one_sentence: "test A",
           python_code: "pass",
           params: {},
-          symbol: "ES" as const,
+          symbol: "MES" as const,
           timeframe: "15min",
           start_date: "2024-01-01",
           end_date: "2024-12-31",
@@ -175,7 +175,7 @@ describe("AgentService", () => {
           one_sentence: "test B",
           python_code: "pass",
           params: {},
-          symbol: "NQ" as const,
+          symbol: "MNQ" as const,
           timeframe: "15min",
           start_date: "2024-01-01",
           end_date: "2024-12-31",

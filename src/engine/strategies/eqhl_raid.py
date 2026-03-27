@@ -34,7 +34,7 @@ class EqhlRaidStrategy(BaseStrategy):
         self.tolerance = tolerance
         self.lookback = lookback
         self.reversal_bars = reversal_bars
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "15min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -147,6 +147,7 @@ class EqhlRaidStrategy(BaseStrategy):
             if (
                 not exited_this_bar_long
                 and not in_long
+                and not in_short
                 and 0 < (i - last_eql_sweep_bar) <= self.reversal_bars
                 and (choch_list[i] == "bullish" or mss_list[i] == "bullish")
             ):
@@ -162,6 +163,7 @@ class EqhlRaidStrategy(BaseStrategy):
             if (
                 not exited_this_bar_short
                 and not in_short
+                and not in_long
                 and 0 < (i - last_eqh_sweep_bar) <= self.reversal_bars
                 and (choch_list[i] == "bearish" or mss_list[i] == "bearish")
             ):

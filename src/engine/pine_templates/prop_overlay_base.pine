@@ -1,0 +1,42 @@
+//@version=6
+// Trading Forge — Prop Firm Risk Overlay
+// Firm: {{FIRM_KEY}}
+// Standalone overlay — add to any chart for risk monitoring
+
+indicator("Prop Risk Monitor ({{FIRM_KEY}})", overlay=true)
+
+// ─── Firm Constants ─────────────────────────────────────────────
+var float MAX_DRAWDOWN = {{MAX_DRAWDOWN}}
+var float DAILY_LOSS_LIMIT = {{DAILY_LOSS_LIMIT}}
+var int MAX_CONTRACTS = {{MAX_CONTRACTS}}
+var float COMMISSION = {{COMMISSION}}
+var float PROFIT_TARGET = {{PROFIT_TARGET}}
+
+// ─── Tracking ───────────────────────────────────────────────────
+var float session_pnl = 0.0
+var float peak_equity = 0.0
+var float current_dd = 0.0
+
+// Reset daily
+if ta.change(time("D"))
+    session_pnl := 0.0
+
+// ─── Lockout ────────────────────────────────────────────────────
+risk_lockout = (not na(DAILY_LOSS_LIMIT) and session_pnl <= -DAILY_LOSS_LIMIT) or current_dd >= MAX_DRAWDOWN
+bgcolor(risk_lockout ? color.new(color.red, 85) : na, title="LOCKOUT")
+
+// ─── Info Table ─────────────────────────────────────────────────
+var table info = table.new(position.top_right, 2, 6, bgcolor=color.new(color.black, 80))
+if barstate.islastconfirmedhistory
+    table.cell(info, 0, 0, "Firm", text_color=color.white, text_size=size.small)
+    table.cell(info, 1, 0, "{{FIRM_KEY}}", text_color=color.yellow, text_size=size.small)
+    table.cell(info, 0, 1, "Max DD", text_color=color.white, text_size=size.small)
+    table.cell(info, 1, 1, "$" + str.tostring(MAX_DRAWDOWN), text_color=color.red, text_size=size.small)
+    table.cell(info, 0, 2, "Daily Limit", text_color=color.white, text_size=size.small)
+    table.cell(info, 1, 2, na(DAILY_LOSS_LIMIT) ? "None" : "$" + str.tostring(DAILY_LOSS_LIMIT), text_color=color.orange, text_size=size.small)
+    table.cell(info, 0, 3, "Target", text_color=color.white, text_size=size.small)
+    table.cell(info, 1, 3, "$" + str.tostring(PROFIT_TARGET), text_color=color.green, text_size=size.small)
+    table.cell(info, 0, 4, "Max Contracts", text_color=color.white, text_size=size.small)
+    table.cell(info, 1, 4, str.tostring(MAX_CONTRACTS), text_color=color.white, text_size=size.small)
+    table.cell(info, 0, 5, "Commission", text_color=color.white, text_size=size.small)
+    table.cell(info, 1, 5, "$" + str.tostring(COMMISSION) + "/side", text_color=color.white, text_size=size.small)

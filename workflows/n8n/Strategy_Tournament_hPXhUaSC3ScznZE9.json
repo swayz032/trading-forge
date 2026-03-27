@@ -41,7 +41,7 @@
         "url": "http://localhost:11434/api/chat",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={ \"model\": \"qwen3\", \"messages\": [ { \"role\": \"system\", \"content\": \"You are a quantitative trading strategy proposer. Generate a new strategy idea in strict JSON DSL format. The strategy must have max 5 parameters, use proven technical indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD), target futures (ES, NQ, CL, YM), and be describable in one sentence. Output ONLY valid JSON matching the StrategyDSL schema.\" }, { \"role\": \"user\", \"content\": \"Propose a new trading strategy. Consider recent market conditions and avoid strategies similar to recent failures. Focus on simplicity and robustness.\" } ], \"stream\": false, \"options\": { \"temperature\": 0.8, \"num_predict\": 2048 } }",
+        "jsonBody": "={ \"model\": \"qwen3\", \"messages\": [ { \"role\": \"system\", \"content\": \"You are a quantitative trading strategy proposer. Generate a new strategy idea in strict JSON DSL format. The strategy must have max 5 parameters, use proven technical indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD), target futures (MES, MNQ, MCL), and be describable in one sentence. Output ONLY valid JSON matching the StrategyDSL schema.\" }, { \"role\": \"user\", \"content\": \"Propose a new trading strategy. Consider recent market conditions and avoid strategies similar to recent failures. Focus on simplicity and robustness.\" } ], \"stream\": false, \"options\": { \"temperature\": 0.8, \"num_predict\": 2048 } }",
         "options": {
           "timeout": 120000
         }
@@ -948,7 +948,7 @@
           "url": "http://localhost:11434/api/chat",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={ \"model\": \"qwen3\", \"messages\": [ { \"role\": \"system\", \"content\": \"You are a quantitative trading strategy proposer. Generate a new strategy idea in strict JSON DSL format. The strategy must have max 5 parameters, use proven technical indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD), target futures (ES, NQ, CL, YM), and be describable in one sentence. Output ONLY valid JSON matching the StrategyDSL schema.\" }, { \"role\": \"user\", \"content\": \"Propose a new trading strategy. Consider recent market conditions and avoid strategies similar to recent failures. Focus on simplicity and robustness.\" } ], \"stream\": false, \"options\": { \"temperature\": 0.8, \"num_predict\": 2048 } }",
+          "jsonBody": "={ \"model\": \"qwen3\", \"messages\": [ { \"role\": \"system\", \"content\": \"You are a quantitative trading strategy proposer. Generate a new strategy idea in strict JSON DSL format. The strategy must have max 5 parameters, use proven technical indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD), target futures (MES, MNQ, MCL), and be describable in one sentence. Output ONLY valid JSON matching the StrategyDSL schema.\" }, { \"role\": \"user\", \"content\": \"Propose a new trading strategy. Consider recent market conditions and avoid strategies similar to recent failures. Focus on simplicity and robustness.\" } ], \"stream\": false, \"options\": { \"temperature\": 0.8, \"num_predict\": 2048 } }",
           "options": {
             "timeout": 120000
           }

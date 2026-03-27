@@ -16,14 +16,9 @@ import polars as pl
 # Derived from multi-year session open vs prior close analysis.
 
 GAP_DISTRIBUTIONS: dict[str, dict[str, float]] = {
-    "ES": {"normal_mean": 10, "normal_std": 5, "crisis_mean": 50, "crisis_std": 25},
-    "NQ": {"normal_mean": 40, "normal_std": 20, "crisis_mean": 150, "crisis_std": 75},
-    "CL": {"normal_mean": 0.50, "normal_std": 0.25, "crisis_mean": 3.0, "crisis_std": 1.5},
-    "YM": {"normal_mean": 80, "normal_std": 40, "crisis_mean": 400, "crisis_std": 200},
-    "RTY": {"normal_mean": 5, "normal_std": 2.5, "crisis_mean": 25, "crisis_std": 12.5},
-    "GC": {"normal_mean": 5, "normal_std": 2.5, "crisis_mean": 30, "crisis_std": 15},
     "MES": {"normal_mean": 10, "normal_std": 5, "crisis_mean": 50, "crisis_std": 25},
     "MNQ": {"normal_mean": 40, "normal_std": 20, "crisis_mean": 150, "crisis_std": 75},
+    "MCL": {"normal_mean": 0.50, "normal_std": 0.25, "crisis_mean": 3.0, "crisis_std": 1.5},
 }
 
 
@@ -81,9 +76,12 @@ def tag_trades_overnight(
     # If naive, assume already ET (consistent with rest of codebase).
     tz = getattr(ts.dtype, 'time_zone', None)
     if tz is not None:
-        dates = ts.dt.date().to_list()
+        # Timezone-aware: convert to ET for correct date boundaries
+        et = ts.dt.convert_time_zone("America/New_York")
+        dates = et.dt.date().to_list()
     else:
-        et = ts.dt.offset_by("-5h")
+        # Naive timestamps: assume UTC, cast then convert to ET
+        et = ts.cast(pl.Datetime("ns", "UTC")).dt.convert_time_zone("America/New_York")
         dates = et.dt.date().to_list()
 
     tagged = []
@@ -114,7 +112,7 @@ def tag_trades_overnight(
 def compute_gap_adjusted_mae(
     trades: list[dict],
     gaps: pl.Series,
-    symbol: str = "ES",
+    symbol: str = "MES",
     seed: int | None = None,
 ) -> list[dict]:
     """Add simulated gap exposure to overnight trades' MAE.
@@ -132,7 +130,7 @@ def compute_gap_adjusted_mae(
         trades with added 'gap_adjusted_mae' field
     """
     rng = np.random.default_rng(seed)
-    dist = GAP_DISTRIBUTIONS.get(symbol, GAP_DISTRIBUTIONS["ES"])
+    dist = GAP_DISTRIBUTIONS.get(symbol, GAP_DISTRIBUTIONS["MES"])
 
     adjusted = []
     for trade in trades:
@@ -157,8 +155,8 @@ def compute_gap_adjusted_drawdown(
     equity_curve: list[float],
     trades: list[dict],
     gaps: pl.Series,
-    symbol: str = "ES",
-    point_value: float = 50.0,
+    symbol: str = "MES",
+    point_value: float = 5.0,
     seed: int | None = None,
 ) -> float:
     """Compute worst-case drawdown accounting for overnight gap risk.
@@ -181,7 +179,7 @@ def compute_gap_adjusted_drawdown(
         return 0.0
 
     rng = np.random.default_rng(seed)
-    dist = GAP_DISTRIBUTIONS.get(symbol, GAP_DISTRIBUTIONS["ES"])
+    dist = GAP_DISTRIBUTIONS.get(symbol, GAP_DISTRIBUTIONS["MES"])
 
     # Start with original equity
     equity = np.array(equity_curve, dtype=np.float64)
@@ -194,15 +192,15 @@ def compute_gap_adjusted_drawdown(
             continue
 
         exit_idx = int(exit_idx)
-        if exit_idx >= len(equity):
+        if exit_idx + 1 >= len(equity):
             continue
 
         # Simulate adverse gap
         gap_points = abs(rng.normal(dist["normal_mean"], dist["normal_std"]))
         gap_dollars = gap_points * point_value
 
-        # Subtract gap impact from equity at exit and all subsequent bars
-        equity[exit_idx:] -= gap_dollars
+        # Subtract gap impact from bars AFTER exit (gap manifests on next session open)
+        equity[exit_idx + 1:] -= gap_dollars
 
     # Compute max drawdown on gap-adjusted equity
     running_max = np.maximum.accumulate(equity)

@@ -47,41 +47,50 @@ def _apply_exits(entry_long_raw, entry_short_raw, closes, highs, lows, atr_vals,
         if atr_val != atr_val or atr_val <= 0:  # NaN check
             continue
 
+        exited_this_bar_long = False
+        exited_this_bar_short = False
+
         # ─── Exit checks first (before new entries) ─────────
         if in_long:
             # Stop loss: low pierces stop
             if lows[i] <= stop_price:
                 exit_long[i] = True
                 in_long = False
+                exited_this_bar_long = True
             # Take profit: high reaches target
             elif highs[i] >= target_price:
                 exit_long[i] = True
                 in_long = False
+                exited_this_bar_long = True
             # Opposite signal: bearish breaker entry → close long
             elif entry_short_raw[i]:
                 exit_long[i] = True
                 in_long = False
+                exited_this_bar_long = True
 
         if in_short:
             if highs[i] >= stop_price:
                 exit_short[i] = True
                 in_short = False
+                exited_this_bar_short = True
             elif lows[i] <= target_price:
                 exit_short[i] = True
                 in_short = False
+                exited_this_bar_short = True
             elif entry_long_raw[i]:
                 exit_short[i] = True
                 in_short = False
+                exited_this_bar_short = True
 
-        # ─── Entry checks (only if flat) ────────────────────
+        # ─── Entry checks (only if flat, not exited this bar) ─
         if not in_long and not in_short:
-            if entry_long_raw[i]:
+            if not exited_this_bar_long and entry_long_raw[i]:
                 entry_long[i] = True
                 in_long = True
                 entry_price = closes[i]
                 stop_price = entry_price - sl_mult * atr_val
                 target_price = entry_price + tp_mult * atr_val
-            elif entry_short_raw[i]:
+            elif not exited_this_bar_short and entry_short_raw[i]:
                 entry_short[i] = True
                 in_short = True
                 entry_price = closes[i]
@@ -112,8 +121,8 @@ class BreakerStrategy(BaseStrategy):
         bos = detect_bos(df, swings)
         atr = compute_atr(df, self.atr_period)
 
-        bull_obs = detect_bullish_ob(df, swings)
-        bear_obs = detect_bearish_ob(df, swings)
+        bull_obs = detect_bullish_ob(df, swings, lookback=self.swing_lookback)
+        bear_obs = detect_bearish_ob(df, swings, lookback=self.swing_lookback)
 
         all_obs_list = []
         if len(bull_obs) > 0:

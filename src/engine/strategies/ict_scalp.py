@@ -42,7 +42,7 @@ class ICTScalpStrategy(BaseStrategy):
         self.max_hold_bars = max_hold_bars
         self.swing_lookback = swing_lookback
         self.disp_atr_mult = disp_atr_mult
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "5min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:

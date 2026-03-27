@@ -1,0 +1,32 @@
+{
+  "estimated_value": 0.01,
+  "confidence_interval": {
+    "lower": 0,
+    "upper": 0.02,
+    "confidence_level": 0.95
+  },
+  "num_oracle_calls": 0,
+  "num_qubits": 4,
+  "backend_used": "aer_gpu",
+  "execution_time_ms": 39,
+  "governance_labels": {
+    "experimental": true,
+    "authoritative": false,
+    "decision_role": "challenger_only",
+    "description": "Quantum estimates are experimental \u2014 always compare with classical MC"
+  },
+  "reproducibility_hash": "c28206033e19b12184302da26a25cb4b9e40cd01b7b76e0d9a7f1e58817b0edc",
+  "raw_result": {
+    "method": "iae_classical_fallback",
+    "classical_fallback": true,
+    "note": "IAE infrastructure validated; full circuit execution pending Qiskit Algorithms API stabilization",
+    "n_bins": 10,
+    "threshold_idx": 9,
+    "objective_qubits": [
+      0,
+      1,
+      2,
+      3
+    ]
+  }
+}

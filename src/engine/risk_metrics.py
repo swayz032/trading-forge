@@ -276,7 +276,7 @@ def compute_drawdown_duration(
         starts = np.where(changes == 1)[0]
         ends = np.where(changes == -1)[0]
         if len(starts) > 0 and len(ends) > 0:
-            durations = ends[:len(starts)] - starts[:len(ends)]
+            durations = ends[:len(starts)] - starts[:len(starts)]
             max_dd_durations[i] = int(np.max(durations))
         else:
             max_dd_durations[i] = 0
