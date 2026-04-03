@@ -155,6 +155,120 @@ def should_strategy_trade(regime: str, preferred_regime: Optional[str]) -> bool:
     return regime in allowed
 
 
+# ─── HMM Probabilistic Regime Detection ──────────────────────────
+
+
+try:
+    from hmmlearn.hmm import GaussianHMM
+    HMM_AVAILABLE = True
+except ImportError:
+    HMM_AVAILABLE = False
+
+import numpy as np
+
+
+def fit_hmm_regime(
+    returns: np.ndarray,
+    n_regimes: int = 3,
+    n_iter: int = 100,
+    seed: int = 42,
+) -> dict:
+    """Fit Hidden Markov Model for probabilistic regime detection.
+
+    3 default regimes: low-vol, high-vol trending, mean-reverting.
+    Returns regime labels, transition matrix, state probabilities.
+
+    Falls back to rule-based classify_regime() if hmmlearn unavailable.
+    """
+    returns = np.asarray(returns, dtype=np.float64).flatten()
+    returns = returns[np.isfinite(returns)]
+
+    if len(returns) < 50:
+        return {"method": "insufficient_data", "n_observations": len(returns)}
+
+    if not HMM_AVAILABLE:
+        return {"method": "rule_based", "hmm_available": False}
+
+    try:
+        X = returns.reshape(-1, 1)
+        model = GaussianHMM(
+            n_components=n_regimes,
+            covariance_type="full",
+            n_iter=n_iter,
+            random_state=seed,
+        )
+        model.fit(X)
+
+        states = model.predict(X)
+        probs = model.predict_proba(X)
+
+        # Build regime stats sorted by volatility
+        regime_stats = []
+        for i in range(n_regimes):
+            mask = states == i
+            count = int(mask.sum())
+            if count == 0:
+                continue
+            regime_stats.append({
+                "regime_id": int(i),
+                "mean_return": float(model.means_[i, 0]),
+                "volatility": float(np.sqrt(model.covars_[i, 0, 0])),
+                "frequency": float(mask.mean()),
+                "avg_duration": float(_compute_avg_duration(states, i)),
+            })
+
+        regime_stats.sort(key=lambda r: r["volatility"])
+
+        # Transition matrix and persistence
+        transition = model.transmat_.tolist()
+        persistence = _compute_regime_persistence(model.transmat_)
+
+        return {
+            "method": "hmm",
+            "n_regimes": n_regimes,
+            "current_regime": int(states[-1]),
+            "current_probabilities": probs[-1].tolist(),
+            "transition_matrix": transition,
+            "persistence": persistence,
+            "regime_stats": regime_stats,
+            "log_likelihood": float(model.score(X)),
+            "n_observations": len(returns),
+            "hmm_available": True,
+        }
+    except Exception as e:
+        return {"method": "hmm_failed", "error": str(e), "hmm_available": True}
+
+
+def _compute_avg_duration(states: np.ndarray, target_state: int) -> float:
+    """Compute average consecutive duration of a state."""
+    durations = []
+    current_run = 0
+    for s in states:
+        if s == target_state:
+            current_run += 1
+        else:
+            if current_run > 0:
+                durations.append(current_run)
+            current_run = 0
+    if current_run > 0:
+        durations.append(current_run)
+    return float(np.mean(durations)) if durations else 0.0
+
+
+def _compute_regime_persistence(transition_matrix: np.ndarray) -> dict:
+    """Compute expected regime durations from transition matrix."""
+    n = transition_matrix.shape[0]
+    persistence = {}
+    for i in range(n):
+        p_stay = transition_matrix[i, i]
+        expected_days = 1.0 / (1.0 - p_stay) if p_stay < 1.0 else float("inf")
+        persistence[f"regime_{i}"] = {
+            "stay_probability": float(p_stay),
+            "expected_duration_days": float(expected_days),
+        }
+    return persistence
+
+
 # ─── CLI Entry Point ──────────────────────────────────────────────
 
 @click.command()
@@ -181,17 +295,32 @@ def main(config_input: str):
         print(json.dumps({"error": f"Data load failed: {e}"}))
         sys.exit(1)
 
-    result = classify_regime(
-        df,
-        adx_period=config.get("adx_period", 14),
-        atr_lookback=config.get("atr_lookback", 252),
-        ma_period=config.get("ma_period", 50),
-    )
+    mode = config.get("mode", "classify")
+
+    if mode == "hmm":
+        # HMM probabilistic regime detection
+        close = df["close"].to_numpy() if "close" in df.columns else np.array([])
+        if len(close) > 1:
+            returns = np.diff(close) / close[:-1]
+        else:
+            returns = np.array([])
+
+        result = fit_hmm_regime(
+            returns,
+            n_regimes=config.get("n_regimes", 3),
+        )
+    else:
+        result = classify_regime(
+            df,
+            adx_period=config.get("adx_period", 14),
+            atr_lookback=config.get("atr_lookback", 252),
+            ma_period=config.get("ma_period", 50),
+        )
 
     result["symbol"] = symbol
     result["timeframe"] = timeframe
 
-    print(json.dumps(result))
+    print(json.dumps(result, default=str))
 
 
 if __name__ == "__main__":

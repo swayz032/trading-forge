@@ -9,7 +9,7 @@
   "nodes": [
     {
       "id": "sched",
-      "name": "Weekly Sunday 5 AM",
+      "name": "Daily 3 AM ET",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
@@ -21,7 +21,7 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 5 * * 0"
+              "expression": "0 3 * * *"
             }
           ]
         }
@@ -38,7 +38,9 @@
       ],
       "parameters": {
         "url": "http://localhost:5678/api/v1/workflows",
-        "options": {},
+        "options": {
+          "timeout": 15000
+        },
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -48,7 +50,11 @@
             }
           ]
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "f",
@@ -60,7 +66,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const workflows = $input.first().json.data || $input.first().json;\nconst count = Array.isArray(workflows) ? workflows.length : 0;\nconst backup = { timestamp: new Date().toISOString(), workflowCount: count, workflows: workflows };\nconsole.log('Backup created: ' + count + ' workflows at ' + backup.timestamp);\nreturn [{ json: backup }];"
+        "jsCode": "const resp = $input.first().json;\nconst workflows = resp.data || resp;\nconst count = Array.isArray(workflows) ? workflows.length : 0;\nconst items = [];\nif (Array.isArray(workflows)) {\n  for (const wf of workflows) {\n    items.push({ json: { id: wf.id, name: wf.name, active: wf.active, updatedAt: wf.updatedAt } });\n  }\n}\nif (items.length === 0) items.push({ json: { id: 'none', name: 'No workflows found' } });\nreturn items;"
       }
     },
     {
@@ -69,7 +75,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        660,
+        1100,
         0
       ],
       "parameters": {
@@ -77,14 +83,96 @@
         "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ event: 'workflow-backup', message: 'Workflow backup completed: ' + $json.workflowCount + ' workflows archived', timestamp: $json.timestamp }) }}",
-        "options": {}
+        "jsonBody": "={{ JSON.stringify({ event: \"backup:complete\", data: { workflowCount: .workflowCount, timestamp: .timestamp } }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "fd",
+      "name": "Fetch Workflow Detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "=http://localhost:5678/api/v1/workflows/{{ .id }}",
+        "method": "GET",
+        "options": {
+          "timeout": 15000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmQ3OWU4OS0zMDE3LTRkYmUtOGNlYy02NzZmY2FiNmY5MzgiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMjIyNGQ5OTktYWVlMS00ZmE5LThlNDctODJkNDZlYmRkYWQwIiwiaWF0IjoxNzczOTgzNTYxLCJleHAiOjE3NzY1NzEyMDB9.--guaYDRzthDN8dzLsr9hY5K7zaY3qqrjiZYmRJU6zc"
+            }
+          ]
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "sb",
+      "name": "Store Backup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\nconst backup = {\n  timestamp: new Date().toISOString(),\n  workflowCount: allItems.length,\n  workflows: allItems.map(i => ({ id: i.json.id, name: i.json.name, active: i.json.active, nodeCount: (i.json.nodes || []).length }))\n};\nreturn [{ json: backup }];"
+      }
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"3A-workflow-backup\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
-    "Weekly Sunday 5 AM": {
+    "Daily 3 AM ET": {
       "main": [
         [
           {
@@ -110,7 +198,40 @@
       "main": [
         [
           {
+            "node": "Fetch Workflow Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Workflow Detail": {
+      "main": [
+        [
+          {
+            "node": "Store Backup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Backup": {
+      "main": [
+        [
+          {
             "node": "Broadcast Backup Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
             "type": "main",
             "index": 0
           }
@@ -126,7 +247,7 @@
     "availableInMCP": false
   },
   "staticData": {
-    "node:Weekly Sunday 5 AM": {
+    "node:Daily 3 AM ET": {
       "recurrenceRules": []
     }
   },
@@ -191,7 +312,7 @@
     "nodes": [
       {
         "id": "sched",
-        "name": "Weekly Sunday 5 AM",
+        "name": "Daily 3 AM ET",
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1.2,
         "position": [
@@ -203,7 +324,7 @@
             "interval": [
               {
                 "field": "cronExpression",
-                "expression": "0 5 * * 0"
+                "expression": "0 3 * * *"
               }
             ]
           }
@@ -220,7 +341,9 @@
         ],
         "parameters": {
           "url": "http://localhost:5678/api/v1/workflows",
-          "options": {},
+          "options": {
+            "timeout": 15000
+          },
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -230,7 +353,11 @@
               }
             ]
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "f",
@@ -242,7 +369,7 @@
           0
         ],
         "parameters": {
-          "jsCode": "const workflows = $input.first().json.data || $input.first().json;\nconst count = Array.isArray(workflows) ? workflows.length : 0;\nconst backup = { timestamp: new Date().toISOString(), workflowCount: count, workflows: workflows };\nconsole.log('Backup created: ' + count + ' workflows at ' + backup.timestamp);\nreturn [{ json: backup }];"
+          "jsCode": "const resp = $input.first().json;\nconst workflows = resp.data || resp;\nconst count = Array.isArray(workflows) ? workflows.length : 0;\nconst items = [];\nif (Array.isArray(workflows)) {\n  for (const wf of workflows) {\n    items.push({ json: { id: wf.id, name: wf.name, active: wf.active, updatedAt: wf.updatedAt } });\n  }\n}\nif (items.length === 0) items.push({ json: { id: 'none', name: 'No workflows found' } });\nreturn items;"
         }
       },
       {
@@ -251,7 +378,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          660,
+          1100,
           0
         ],
         "parameters": {
@@ -259,14 +386,96 @@
           "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({ event: 'workflow-backup', message: 'Workflow backup completed: ' + $json.workflowCount + ' workflows archived', timestamp: $json.timestamp }) }}",
-          "options": {}
+          "jsonBody": "={{ JSON.stringify({ event: \"backup:complete\", data: { workflowCount: .workflowCount, timestamp: .timestamp } }) }}",
+          "options": {
+            "timeout": 15000
+          }
         },
-        "continueOnFail": true
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "fd",
+        "name": "Fetch Workflow Detail",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "=http://localhost:5678/api/v1/workflows/{{ .id }}",
+          "method": "GET",
+          "options": {
+            "timeout": 15000
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-N8N-API-KEY",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmQ3OWU4OS0zMDE3LTRkYmUtOGNlYy02NzZmY2FiNmY5MzgiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMjIyNGQ5OTktYWVlMS00ZmE5LThlNDctODJkNDZlYmRkYWQwIiwiaWF0IjoxNzczOTgzNTYxLCJleHAiOjE3NzY1NzEyMDB9.--guaYDRzthDN8dzLsr9hY5K7zaY3qqrjiZYmRJU6zc"
+              }
+            ]
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "sb",
+        "name": "Store Backup",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const allItems = $input.all();\nconst backup = {\n  timestamp: new Date().toISOString(),\n  workflowCount: allItems.length,\n  workflows: allItems.map(i => ({ id: i.json.id, name: i.json.name, active: i.json.active, nodeCount: (i.json.nodes || []).length }))\n};\nreturn [{ json: backup }];"
+        }
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"3A-workflow-backup\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
-      "Weekly Sunday 5 AM": {
+      "Daily 3 AM ET": {
         "main": [
           [
             {
@@ -292,7 +501,40 @@
         "main": [
           [
             {
+              "node": "Fetch Workflow Detail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Workflow Detail": {
+        "main": [
+          [
+            {
+              "node": "Store Backup",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Store Backup": {
+        "main": [
+          [
+            {
               "node": "Broadcast Backup Complete",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
               "type": "main",
               "index": 0
             }

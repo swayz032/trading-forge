@@ -93,7 +93,10 @@
           "timeout": 30000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "http-tavily-2",
@@ -114,7 +117,10 @@
           "timeout": 30000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "http-tavily-3",
@@ -135,7 +141,10 @@
           "timeout": 30000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "http-arxiv",
@@ -153,7 +162,10 @@
           "timeout": 20000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "code-parse-arxiv",
@@ -248,7 +260,8 @@
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "continueOnFail": true
     },
     {
       "id": "code-cross-dedup-5f",
@@ -316,7 +329,10 @@
           "timeout": 120000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "code-deep-filter",
@@ -386,7 +402,9 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "http-discord-weekly",
@@ -407,7 +425,10 @@
           "timeout": 10000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "code-budget-report",
@@ -481,7 +502,10 @@
           "timeout": 10000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     }
   ],
   "connections": {

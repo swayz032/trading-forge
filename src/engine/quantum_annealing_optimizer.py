@@ -23,6 +23,7 @@ from typing import Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
+from src.engine.nvtx_markers import annotate
 
 # Optional dwave-samplers (preferred) or legacy dwave-neal
 try:
@@ -172,6 +173,7 @@ def build_parameter_qubo(
     return Q, formulation
 
 
+@annotate("forge/sqa_optimize")
 def run_sqa_optimization(
     qubo: dict,
     param_ranges: list[ParamRange],

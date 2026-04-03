@@ -13,7 +13,7 @@ import numpy as np
 import polars as pl
 
 
-# ─── Static Event Calendar (2023-2026) ───────────────────────────
+# ─── Static Event Calendar (2023-2027) ───────────────────────────
 # All times in ET. Only high-impact events that move futures.
 
 STATIC_EVENTS: dict[str, list[dict]] = {
@@ -54,6 +54,15 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2026-09-16", "time_et": "14:00"},
         {"date": "2026-11-04", "time_et": "14:00"},
         {"date": "2026-12-16", "time_et": "14:00"},
+        # 2027
+        {"date": "2027-01-27", "time_et": "14:00"},
+        {"date": "2027-03-17", "time_et": "14:00"},
+        {"date": "2027-05-05", "time_et": "14:00"},
+        {"date": "2027-06-16", "time_et": "14:00"},
+        {"date": "2027-07-28", "time_et": "14:00"},
+        {"date": "2027-09-22", "time_et": "14:00"},
+        {"date": "2027-11-03", "time_et": "14:00"},
+        {"date": "2027-12-15", "time_et": "14:00"},
     ],
     "CPI": [
         # 2024 (monthly, 8:30 AM ET)
@@ -69,6 +78,32 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2024-10-10", "time_et": "08:30"},
         {"date": "2024-11-13", "time_et": "08:30"},
         {"date": "2024-12-11", "time_et": "08:30"},
+        # 2026 (monthly, 8:30 AM ET — second Tuesday/Wednesday)
+        {"date": "2026-01-14", "time_et": "08:30"},
+        {"date": "2026-02-11", "time_et": "08:30"},
+        {"date": "2026-03-11", "time_et": "08:30"},
+        {"date": "2026-04-14", "time_et": "08:30"},
+        {"date": "2026-05-12", "time_et": "08:30"},
+        {"date": "2026-06-10", "time_et": "08:30"},
+        {"date": "2026-07-14", "time_et": "08:30"},
+        {"date": "2026-08-12", "time_et": "08:30"},
+        {"date": "2026-09-15", "time_et": "08:30"},
+        {"date": "2026-10-13", "time_et": "08:30"},
+        {"date": "2026-11-10", "time_et": "08:30"},
+        {"date": "2026-12-10", "time_et": "08:30"},
+        # 2027 (monthly, 8:30 AM ET)
+        {"date": "2027-01-13", "time_et": "08:30"},
+        {"date": "2027-02-10", "time_et": "08:30"},
+        {"date": "2027-03-10", "time_et": "08:30"},
+        {"date": "2027-04-13", "time_et": "08:30"},
+        {"date": "2027-05-12", "time_et": "08:30"},
+        {"date": "2027-06-10", "time_et": "08:30"},
+        {"date": "2027-07-13", "time_et": "08:30"},
+        {"date": "2027-08-11", "time_et": "08:30"},
+        {"date": "2027-09-14", "time_et": "08:30"},
+        {"date": "2027-10-13", "time_et": "08:30"},
+        {"date": "2027-11-10", "time_et": "08:30"},
+        {"date": "2027-12-10", "time_et": "08:30"},
     ],
     "NFP": [
         # 2024 (first Friday, 8:30 AM ET)
@@ -84,6 +119,32 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2024-10-04", "time_et": "08:30"},
         {"date": "2024-11-01", "time_et": "08:30"},
         {"date": "2024-12-06", "time_et": "08:30"},
+        # 2026 (first Friday, 8:30 AM ET)
+        {"date": "2026-01-02", "time_et": "08:30"},
+        {"date": "2026-02-06", "time_et": "08:30"},
+        {"date": "2026-03-06", "time_et": "08:30"},
+        {"date": "2026-04-03", "time_et": "08:30"},
+        {"date": "2026-05-01", "time_et": "08:30"},
+        {"date": "2026-06-05", "time_et": "08:30"},
+        {"date": "2026-07-02", "time_et": "08:30"},
+        {"date": "2026-08-07", "time_et": "08:30"},
+        {"date": "2026-09-04", "time_et": "08:30"},
+        {"date": "2026-10-02", "time_et": "08:30"},
+        {"date": "2026-11-06", "time_et": "08:30"},
+        {"date": "2026-12-04", "time_et": "08:30"},
+        # 2027 (first Friday, 8:30 AM ET)
+        {"date": "2027-01-08", "time_et": "08:30"},
+        {"date": "2027-02-05", "time_et": "08:30"},
+        {"date": "2027-03-05", "time_et": "08:30"},
+        {"date": "2027-04-02", "time_et": "08:30"},
+        {"date": "2027-05-07", "time_et": "08:30"},
+        {"date": "2027-06-04", "time_et": "08:30"},
+        {"date": "2027-07-02", "time_et": "08:30"},
+        {"date": "2027-08-06", "time_et": "08:30"},
+        {"date": "2027-09-03", "time_et": "08:30"},
+        {"date": "2027-10-01", "time_et": "08:30"},
+        {"date": "2027-11-05", "time_et": "08:30"},
+        {"date": "2027-12-03", "time_et": "08:30"},
     ],
     "GDP": [
         # 2024 (quarterly, 8:30 AM ET)

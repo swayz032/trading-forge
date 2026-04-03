@@ -2,7 +2,7 @@
   "updatedAt": "2026-03-13T05:43:59.394Z",
   "createdAt": "2026-02-16T13:48:31.254Z",
   "id": "SuhhWyi5SBwEejRF",
-  "name": "Provider Health Check \u2014 Every 15min",
+  "name": "Provider Health Check — Every 15min",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -104,7 +104,11 @@
         880,
         400
       ],
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -146,7 +150,11 @@
       "position": [
         1100,
         400
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -188,7 +196,11 @@
       "position": [
         880,
         200
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -241,7 +253,11 @@
       "position": [
         660,
         560
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -306,7 +322,11 @@
       "position": [
         1540,
         400
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -358,7 +378,11 @@
       "position": [
         880,
         640
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -646,7 +670,11 @@
           880,
           400
         ],
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -688,7 +716,11 @@
         "position": [
           1100,
           400
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -730,7 +762,11 @@
         "position": [
           880,
           200
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {},
@@ -783,7 +819,11 @@
         "position": [
           660,
           560
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -848,7 +888,11 @@
         "position": [
           1540,
           400
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -900,7 +944,11 @@
         "position": [
           880,
           640
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {

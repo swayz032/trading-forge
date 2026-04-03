@@ -45,7 +45,9 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 10000
+      "waitBetweenTries": 10000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "code-parse-sync",
@@ -116,7 +118,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/macro",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "contentType": "json",
         "body": "={{ JSON.stringify($json) }}",
@@ -126,7 +128,10 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}"
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "noop-success-log",
@@ -157,7 +162,9 @@
       },
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "code-format-summary",
@@ -183,7 +190,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/macro",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "contentType": "json",
         "body": "={{ JSON.stringify($json) }}",
@@ -193,7 +200,10 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}"
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "error-trigger",
@@ -217,7 +227,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/alerts",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "contentType": "json",
         "body": "={{ JSON.stringify({ alert_type: 'WORKFLOW_ERROR', workflow: 'Macro Data Sync', error: $json.execution ? $json.execution.error.message : 'Unknown error', timestamp: new Date().toISOString() }) }}",
@@ -227,7 +237,10 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Macro Data Sync', message: $json.execution ? $json.execution.error.message : 'Unknown error', severity: 'critical', data: { workflow: 'Macro Data Sync', timestamp: new Date().toISOString() } }) }}"
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -460,7 +473,9 @@
         },
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 10000
+        "waitBetweenTries": 10000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "code-parse-sync",
@@ -531,7 +546,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/macro",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "contentType": "json",
           "body": "={{ JSON.stringify($json) }}",
@@ -541,7 +556,10 @@
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify($json) }}"
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "id": "noop-success-log",
@@ -572,7 +590,9 @@
         },
         "retryOnFail": true,
         "maxTries": 2,
-        "waitBetweenTries": 5000
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "code-format-summary",
@@ -598,7 +618,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/macro",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "contentType": "json",
           "body": "={{ JSON.stringify($json) }}",
@@ -608,7 +628,10 @@
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify($json) }}"
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "id": "error-trigger",
@@ -632,7 +655,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/alerts",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "contentType": "json",
           "body": "={{ JSON.stringify({ alert_type: 'WORKFLOW_ERROR', workflow: 'Macro Data Sync', error: $json.execution ? $json.execution.error.message : 'Unknown error', timestamp: new Date().toISOString() }) }}",
@@ -642,7 +665,10 @@
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Macro Data Sync', message: $json.execution ? $json.execution.error.message : 'Unknown error', severity: 'critical', data: { workflow: 'Macro Data Sync', timestamp: new Date().toISOString() } }) }}"
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       }
     ],
     "connections": {

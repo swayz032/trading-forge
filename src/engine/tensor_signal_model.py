@@ -22,6 +22,7 @@ import os
 import sys
 import time
 import hashlib
+from src.engine.nvtx_markers import annotate
 from typing import Optional
 from pathlib import Path
 
@@ -43,6 +44,13 @@ try:
     QUIMB_AVAILABLE = True
 except ImportError:
     QUIMB_AVAILABLE = False
+
+# Optional Braket TN1 (cloud tensor network simulator — larger bond dims)
+try:
+    from braket.aws import AwsDevice  # noqa: F401 — presence check only
+    BRAKET_TN1_AVAILABLE = True
+except ImportError:
+    BRAKET_TN1_AVAILABLE = False
 
 
 # ─── Feature Encoding ────────────────────────────────────────────
@@ -78,6 +86,10 @@ class MPSModelConfig(BaseModel):
         "authoritative": False,
         "decision_role": "challenger_only",
     })
+    # Braket TN1 options — opt-in for larger bond dimensions (bond_dim >= 8)
+    # TN1 circuit conversion is complex; local quimb is used until the bridge is implemented.
+    use_cloud_tn1: bool = False
+    cloud_bond_dim: int = 16
 
 
 class MPSPrediction(BaseModel):
@@ -290,6 +302,7 @@ def build_mps_model(feature_config: Optional[FeatureConfig] = None, bond_dim: in
     return model
 
 
+@annotate("forge/tensor_train")
 def train_mps(
     model: MPSModel,
     features: np.ndarray,
@@ -316,6 +329,27 @@ def train_mps(
 
     if not model._initialized:
         model.build(seed)
+
+    # Braket TN1 cloud path — planned for large bond dimensions.
+    # When use_cloud_tn1=True and bond_dim >= 8 the intent is to offload contraction to
+    # Amazon Braket TN1, which supports up to 50 qubits and handles larger bond dims cheaply.
+    # Converting the MPS training loop to TN1 circuits requires a non-trivial bridge
+    # (MPS tensors → parameterized Braket circuits → gradient estimation via finite diff on QPU).
+    # TODO(Q3.3): Implement TN1 circuit conversion bridge. Until then, fall back to local quimb.
+    if model.config.bond_dim >= 8:
+        import logging as _logging
+        _tn1_logger = _logging.getLogger(__name__)
+        if BRAKET_TN1_AVAILABLE:
+            _tn1_logger.info(
+                "Braket TN1 selected (bond_dim=%d >= 8) but TN1 circuit bridge not yet implemented. "
+                "Running on local quimb. Set use_cloud_tn1=False to suppress this message.",
+                model.config.bond_dim,
+            )
+        else:
+            _tn1_logger.debug(
+                "bond_dim=%d >= 8: Braket TN1 library not installed — running on local quimb.",
+                model.config.bond_dim,
+            )
 
     # Encode features
     encoded = encode_features(features, model.config)
@@ -378,6 +412,7 @@ def train_mps(
     )
 
 
+@annotate("forge/tensor_predict")
 def predict_trade_outcome(
     model: MPSModel,
     features: np.ndarray,
@@ -470,6 +505,76 @@ def load_mps(path: str) -> MPSModel:
     return model
 
 
+# ─── Fragility Scoring ───────────────────────────────────────────────
+
+
+def compute_fragility_score(
+    model: MPSModel,
+    features: np.ndarray,
+    regime_labels: np.ndarray,
+    param_perturbations: list[dict] | None = None,
+) -> dict:
+    """Measure how stable P(profitable) is across regimes and param perturbations.
+
+    Fragility = how much the model's prediction changes when conditions change.
+    High fragility (>0.7) → strategy works in one regime but fails in others.
+
+    Args:
+        model: Trained MPS model
+        features: (n_samples, n_features) raw features
+        regime_labels: (n_samples,) regime tag per sample
+        param_perturbations: Optional list of {feature_idx: delta} dicts
+
+    Returns:
+        {fragility_score: 0-1, regime_variance, param_sensitivity, regime_breakdown}
+    """
+    if features.ndim == 1:
+        features = features.reshape(1, -1)
+
+    # 1. Per-regime predictions
+    unique_regimes = np.unique(regime_labels)
+    regime_probs: dict[str, float] = {}
+
+    for regime in unique_regimes:
+        mask = regime_labels == regime
+        if mask.sum() < 5:
+            continue
+        regime_features = features[mask]
+        preds = predict_trade_outcome(model, regime_features)
+        avg_prob = float(np.mean([p.probability_profitable for p in preds]))
+        regime_probs[str(regime)] = avg_prob
+
+    regime_variance = float(np.var(list(regime_probs.values()))) if len(regime_probs) > 1 else 0.0
+
+    # 2. Parameter sensitivity (if perturbations provided)
+    param_sensitivity = 0.0
+    if param_perturbations and len(features) > 0:
+        base_preds = predict_trade_outcome(model, features)
+        base_prob = float(np.mean([p.probability_profitable for p in base_preds]))
+        deltas = []
+
+        for perturb in param_perturbations:
+            perturbed = features.copy()
+            for feat_idx, delta in perturb.items():
+                idx = int(feat_idx)
+                if idx < perturbed.shape[1]:
+                    perturbed[:, idx] += delta
+            perturbed_preds = predict_trade_outcome(model, perturbed)
+            perturbed_prob = float(np.mean([p.probability_profitable for p in perturbed_preds]))
+            deltas.append(abs(perturbed_prob - base_prob))
+
+        param_sensitivity = float(np.mean(deltas)) if deltas else 0.0
+
+    fragility_score = min(1.0, 0.6 * regime_variance + 0.4 * param_sensitivity)
+
+    return {
+        "fragility_score": fragility_score,
+        "regime_variance": regime_variance,
+        "param_sensitivity": param_sensitivity,
+        "regime_breakdown": regime_probs,
+    }
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -501,13 +606,52 @@ if __name__ == "__main__":
 
     elif args.mode == "predict":
         if not args.model_path:
-            print(json.dumps({"error": "Model path required for prediction"}))
-            sys.exit(1)
+            # No model available — return neutral predictions with zero fragility
+            n = len(config.get("daily_pnls", config.get("features", [])))
+            result = {
+                "probability": 0.5,
+                "confidence": 0.0,
+                "signal": "neutral",
+                "model_hash": "no_model",
+                "fragility_score": 0.0,
+                "regime_breakdown": {},
+            }
+
+            # Compute simple fragility from daily P&Ls if regime_labels provided
+            if config.get("compute_fragility") and "daily_pnls" in config and "regime_labels" in config:
+                pnls = np.array(config["daily_pnls"], dtype=float)
+                regime_labels = np.array(config["regime_labels"], dtype=int)
+                unique = np.unique(regime_labels)
+                regime_probs = {}
+                for r in unique:
+                    mask = regime_labels == r
+                    if mask.sum() >= 5:
+                        segment = pnls[mask]
+                        win_rate = float(np.mean(segment > 0))
+                        regime_probs[str(r)] = win_rate
+                if len(regime_probs) > 1:
+                    variance = float(np.var(list(regime_probs.values())))
+                    result["fragility_score"] = min(1.0, variance * 10)  # Scale variance to 0-1
+                    result["regime_breakdown"] = regime_probs
+
+            print(json.dumps(result, indent=2))
+            sys.exit(0)
 
         model = load_mps(args.model_path)
         features = np.array(config["features"], dtype=float)
         predictions = predict_trade_outcome(model, features)
-        print(json.dumps([p.model_dump() for p in predictions], indent=2))
+
+        output = [p.model_dump() for p in predictions]
+
+        # Add fragility if regime_labels provided
+        if config.get("compute_fragility") and "regime_labels" in config:
+            regime_labels = np.array(config["regime_labels"], dtype=int)
+            fragility = compute_fragility_score(model, features, regime_labels)
+            for pred in output:
+                pred["fragility_score"] = fragility["fragility_score"]
+                pred["regime_breakdown"] = fragility["regime_breakdown"]
+
+        print(json.dumps(output, indent=2))
 
     elif args.mode == "evaluate":
         if not args.model_path:

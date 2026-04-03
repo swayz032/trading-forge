@@ -1,11 +1,12 @@
 import { createHash } from "crypto";
 import { eq, and, gte, sql, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, systemJournal, auditLog } from "../db/schema.js";
+import { strategies, systemJournal, auditLog, backtests } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
 import { OllamaClient } from "./ollama-client.js";
 import { GraveyardGate } from "./graveyard-gate.js";
 import { logger } from "../index.js";
+import { callOpenAI } from "./model-router.js";
 
 const _SYMBOLS = ["MES", "MNQ", "MCL"] as const;
 type Symbol = (typeof _SYMBOLS)[number];
@@ -66,6 +67,42 @@ export class AgentService {
       };
     }
 
+    // 0b. Query graveyard for relevant past failures — inject warnings but don't block.
+    // Even if the candidate wasn't blocked by embedding similarity, there may be
+    // relevant failure patterns from strategies with the same archetype. These
+    // warnings flow into the return value and system journal for audit.
+    let graveyardWarnings: string[] = [];
+    try {
+      // Heuristic: derive archetype from the strategy description keywords
+      const descLower = `${input.strategy_name} ${input.one_sentence}`.toLowerCase();
+      const archetypeHints: Array<{ keyword: string; category: string }> = [
+        { keyword: "mean revert", category: "regime" },
+        { keyword: "trend", category: "regime" },
+        { keyword: "breakout", category: "robustness" },
+        { keyword: "scalp", category: "execution" },
+        { keyword: "orb", category: "robustness" },
+        { keyword: "vwap", category: "robustness" },
+        { keyword: "momentum", category: "regime" },
+        { keyword: "range", category: "regime" },
+      ];
+      const matchedCategory = archetypeHints.find((h) => descLower.includes(h.keyword))?.category;
+
+      if (matchedCategory) {
+        const failures = await this.graveyardGate.getRelevantFailures(matchedCategory, 5);
+        if (failures.length > 0) {
+          graveyardWarnings = failures.map(
+            (f) => `[${f.name}] ${f.deathReason ?? "unknown cause"}`
+          );
+          logger.info(
+            { strategyName: input.strategy_name, category: matchedCategory, warningCount: graveyardWarnings.length },
+            "Graveyard warnings attached — similar failure patterns found",
+          );
+        }
+      }
+    } catch (err) {
+      logger.warn({ err }, "Graveyard failure lookup failed (non-blocking)");
+    }
+
     // 1. Insert strategy into DB
     const [strategy] = await db
       .insert(strategies)
@@ -112,14 +149,17 @@ export class AgentService {
     const tier = "tier" in result ? result.tier : null;
     const forgeScore = "forge_score" in result ? result.forge_score : null;
 
-    // 4. Log to systemJournal
+    // 4. Log to systemJournal (include graveyard warnings if any)
     await db.insert(systemJournal).values({
       strategyId,
       backtestId: result.id,
       source: input.source,
       generationPrompt: input.one_sentence,
       strategyCode: input.python_code,
-      strategyParams: input.params,
+      strategyParams: {
+        ...input.params,
+        ...(graveyardWarnings.length > 0 ? { graveyardWarnings } : {}),
+      },
       forgeScore: forgeScore != null ? String(forgeScore) : null,
       tier: tier ?? null,
       status: result.status === "completed" ? "tested" : "failed",
@@ -136,11 +176,14 @@ export class AgentService {
         status: result.status,
         tier,
         forge_score: forgeScore,
+        graveyardWarnings: graveyardWarnings.length > 0 ? graveyardWarnings : undefined,
       },
       status: result.status === "completed" ? "success" : "failure",
+      decisionAuthority: "agent",
+      errorMessage: result.status !== "completed" ? (result as any).error ?? "backtest failed" : undefined,
     });
 
-    logger.info({ strategyId, backtestId: result.id, tier }, "Agent strategy run complete");
+    logger.info({ strategyId, backtestId: result.id, tier, graveyardWarnings: graveyardWarnings.length }, "Agent strategy run complete");
 
     return {
       strategyId,
@@ -148,6 +191,7 @@ export class AgentService {
       status: result.status,
       tier,
       forgeScore,
+      graveyardWarnings: graveyardWarnings.length > 0 ? graveyardWarnings : undefined,
     };
   }
 
@@ -230,6 +274,8 @@ export class AgentService {
         forge_score: forgeScore,
       },
       status: result.status === "completed" ? "success" : "failure",
+      decisionAuthority: "agent",
+      errorMessage: result.status !== "completed" ? (result as any).error ?? "backtest failed" : undefined,
     });
 
     logger.info({ strategyId, backtestId: result.id, tier, strategyClass: input.strategy_class }, "Class strategy run complete");
@@ -250,7 +296,19 @@ export class AgentService {
     if (input.results) {
       metricsText = JSON.stringify(input.results, null, 2);
     } else if (input.backtestId) {
-      throw new Error("backtestId lookup not yet implemented — pass results directly");
+      const [bt] = await db.select().from(backtests).where(eq(backtests.id, input.backtestId));
+      if (!bt) throw new Error(`Backtest ${input.backtestId} not found`);
+      metricsText = JSON.stringify({
+        sharpeRatio: bt.sharpeRatio,
+        profitFactor: bt.profitFactor,
+        winRate: bt.winRate,
+        maxDrawdown: bt.maxDrawdown,
+        avgDailyPnl: bt.avgDailyPnl,
+        totalTrades: bt.totalTrades,
+        totalReturn: bt.totalReturn,
+        tier: bt.tier,
+        forgeScore: bt.forgeScore,
+      }, null, 2);
     } else {
       throw new Error("Either backtestId or results must be provided");
     }
@@ -273,18 +331,33 @@ Respond in strict JSON:
   "overall_assessment": "string"
 }`;
 
-    const response = await this.ollama.generate(model, prompt, undefined, true);
-
     let critique: { strengths: string[]; weaknesses: string[]; suggestions: string[]; overall_assessment: string };
-    try {
-      critique = JSON.parse(response.response);
-    } catch {
-      critique = {
-        strengths: [],
-        weaknesses: [],
-        suggestions: [],
-        overall_assessment: response.response,
-      };
+
+    // Try cloud model first (GPT-5-mini for critic evaluation)
+    const cloudResult = await callOpenAI("critic_evaluator", [
+      { role: "user", content: prompt }
+    ]);
+
+    if (cloudResult) {
+      // Parse cloud response
+      try {
+        critique = JSON.parse(cloudResult);
+      } catch {
+        critique = { strengths: [], weaknesses: [], suggestions: [], overall_assessment: cloudResult };
+      }
+    } else {
+      // Fallback to Ollama
+      const response = await this.ollama.generate(model, prompt, undefined, true);
+      try {
+        critique = JSON.parse(response.response);
+      } catch {
+        critique = {
+          strengths: [],
+          weaknesses: [],
+          suggestions: [],
+          overall_assessment: response.response,
+        };
+      }
     }
 
     if (input.backtestId) {

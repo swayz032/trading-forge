@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { eq, desc, sql } from "drizzle-orm";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { monteCarloRuns, stressTestRuns, backtests, strategies } from "../db/schema.js";
 import { runMonteCarlo } from "../services/monte-carlo-service.js";
@@ -32,22 +33,17 @@ monteCarloRoutes.post("/", async (req, res) => {
 
   const { backtestId, ...options } = parsed.data;
 
+  // Generate the MC run ID upfront to avoid race condition
+  const mcId = randomUUID();
+
   // Fire and forget
-  runMonteCarlo(backtestId, options).catch((err) => {
+  runMonteCarlo(backtestId, options, mcId).catch((err) => {
     logger.error({ err, backtestId }, "Fire-and-forget Monte Carlo simulation failed");
   });
 
-  // Return immediately with 202
-  const [latest] = await db
-    .select({ id: monteCarloRuns.id })
-    .from(monteCarloRuns)
-    .where(eq(monteCarloRuns.backtestId, backtestId))
-    .orderBy(desc(monteCarloRuns.createdAt))
-    .limit(1);
-
   res.status(202).json({
     message: "Monte Carlo simulation started",
-    mcId: latest?.id,
+    mcId,
   });
 });
 

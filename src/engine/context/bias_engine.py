@@ -20,6 +20,7 @@ BIAS_WEIGHTS = {
     "vwap_state": 0.10,
     "event_risk": 0.10,
     "session_regime": 0.05,
+    "deepar_regime": 0.0,  # Starts at zero — no impact until auto-graduated
 }
 
 
@@ -35,6 +36,7 @@ class DailyBiasState:
     vwap_state_score: int = 0
     event_risk_score: int = 0
     session_regime_score: int = 0
+    deepar_regime_score: int = 0
     # Composite
     net_bias: int = 0
     bias_confidence: float = 0.0
@@ -157,6 +159,47 @@ def _score_session_regime(htf: HTFContext) -> int:
     return 10  # Moderate
 
 
+def _score_deepar_regime(deepar_forecast: dict | None) -> int:
+    """Score DeepAR regime forecast for directional bias.
+
+    Maps probabilistic regime predictions to a bias score:
+    - High P(high_vol) → caution signal, push toward 0 (reduce conviction)
+    - High P(trending) → directional signal, use quantile direction
+    - Returns -100 to +100, but only contributes when weight > 0.0
+    """
+    if not deepar_forecast:
+        return 0
+
+    p_high_vol = float(deepar_forecast.get("p_high_vol", 0) or 0)
+    p_trending = float(deepar_forecast.get("p_trending", 0) or 0)
+    p_mean_revert = float(deepar_forecast.get("p_mean_revert", 0) or 0)
+    quantile_p50 = float(deepar_forecast.get("quantile_p50", 0) or 0)
+
+    score = 0
+
+    # High volatility → caution → push bias toward zero
+    if p_high_vol > 0.7:
+        # Strong caution: dampen any directional conviction
+        score -= 40
+    elif p_high_vol > 0.5:
+        score -= 20
+
+    # Trending regime → directional signal based on quantile direction
+    if p_trending > 0.6:
+        # P50 quantile direction: positive = bullish forecast, negative = bearish
+        if quantile_p50 > 0:
+            score += int(min(60, p_trending * 80))
+        elif quantile_p50 < 0:
+            score -= int(min(60, p_trending * 80))
+
+    # Mean reversion regime → slight contrarian signal
+    if p_mean_revert > 0.6:
+        # Mean reversion suggests current move will reverse — reduce conviction
+        score = int(score * 0.5)
+
+    return max(-100, min(100, score))
+
+
 def compute_bias(
     htf: HTFContext,
     session: SessionContext,
@@ -164,6 +207,7 @@ def compute_bias(
     vwap: float = 0.0,
     event_active: bool = False,
     event_minutes: int = 999,
+    deepar_forecast: dict | None = None,
 ) -> DailyBiasState:
     """Compute the full daily bias state from all 7 components.
 
@@ -181,6 +225,7 @@ def compute_bias(
         "vwap_state": _score_vwap_state(current_price, vwap),
         "event_risk": _score_event_risk(event_active, event_minutes),
         "session_regime": _score_session_regime(htf),
+        "deepar_regime": _score_deepar_regime(deepar_forecast),
     }
 
     # Weighted sum
@@ -235,6 +280,7 @@ def compute_bias(
         vwap_state_score=scores["vwap_state"],
         event_risk_score=scores["event_risk"],
         session_regime_score=scores["session_regime"],
+        deepar_regime_score=scores["deepar_regime"],
         net_bias=net_bias,
         bias_confidence=bias_confidence,
         playbook=playbook,

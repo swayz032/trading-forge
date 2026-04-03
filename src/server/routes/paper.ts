@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, paperSignalLogs, strategies, backtests, monteCarloRuns } from "../db/schema.js";
+import { paperSessions, paperPositions, paperTrades, paperSignalLogs, strategies, backtests, monteCarloRuns, auditLog } from "../db/schema.js";
 import { eq, desc, and } from "drizzle-orm";
 import { logger } from "../index.js";
+import { broadcastSSE } from "./sse.js";
 import { openPosition, closePosition, updatePositionPrices, getExecutionQuality, getTcaReport, getRollingMetrics } from "../services/paper-execution-service.js";
 import { detectDrift } from "../services/drift-detection-service.js";
 import { calculateCorrelation, portfolioCorrelationMatrix } from "../services/correlation-service.js";
@@ -56,6 +57,18 @@ router.post("/start", async (req, res) => {
       logger.error(streamErr, "Failed to start paper stream — session created without live data");
     }
 
+    // Audit trail — paper session lifecycle
+    await db.insert(auditLog).values({
+      action: "paper.session_start",
+      entityType: "paper_session",
+      entityId: session.id,
+      input: { strategyId, mode, firmId: firmId ?? null },
+      result: { sessionId: session.id, startingCapital },
+      status: "success",
+      decisionAuthority: "human",
+    });
+
+    broadcastSSE("paper:session_start", { sessionId: session.id, strategyId });
     logger.info({ sessionId: session.id }, "Paper trading session started");
     res.status(201).json(session);
   } catch (err: any) {
@@ -94,6 +107,88 @@ router.post("/stop", async (req, res) => {
       .where(eq(paperSessions.id, sessionId))
       .returning();
     logger.info({ sessionId }, "Paper trading session stopped");
+
+    // Generate post-trade QuantStats analytics report (fire-and-forget).
+    // Primary: build per-trade returns series from paperTrades.pnl (trade-level
+    // granularity is more accurate than daily aggregation for short sessions).
+    // Fallback: use dailyPnlBreakdown if no completed trades exist.
+    // Persists Sharpe, Sortino, Calmar, max DD, win rate, profit factor, etc.
+    // to paper_sessions.metricsSnapshot for promotion-gate consumption.
+    try {
+      const { runPythonModule } = await import("../lib/python-runner.js");
+
+      // Query all completed trades for this session
+      const sessionTrades = await db
+        .select({ pnl: paperTrades.pnl })
+        .from(paperTrades)
+        .where(eq(paperTrades.sessionId, sessionId))
+        .orderBy(paperTrades.exitTime);
+
+      let returnsForAnalytics: number[] | null = null;
+      let returnsSource = "none";
+
+      if (sessionTrades.length >= 2) {
+        // Per-trade P&L series — preferred: directly reflects each closed trade
+        returnsForAnalytics = sessionTrades
+          .map((t) => parseFloat(t.pnl ?? "0"))
+          .filter((v) => isFinite(v));
+        returnsSource = "per_trade";
+      } else {
+        // Fall back to daily P&L breakdown (daily-aggregated returns)
+        const dailyPnl = session.dailyPnlBreakdown as Record<string, number> | null;
+        if (dailyPnl && Object.keys(dailyPnl).length >= 1) {
+          returnsForAnalytics = Object.values(dailyPnl).filter((v) => isFinite(v));
+          returnsSource = "daily_breakdown";
+        }
+      }
+
+      if (returnsForAnalytics && returnsForAnalytics.length >= 1) {
+        const analyticsResult = await runPythonModule({
+          module: "src.engine.paper_analytics",
+          config: {
+            daily_returns: returnsForAnalytics,
+            title: `Paper Session ${sessionId.slice(0, 8)}`,
+          },
+          timeoutMs: 15_000,
+          componentName: "paper-analytics",
+        });
+        // Augment the analytics result with metadata so the promotion gate knows
+        // what series type was used and how many data points fed the computation.
+        const snapshot = {
+          ...(analyticsResult as Record<string, unknown>),
+          returns_source: returnsSource,
+          n_trades: sessionTrades.length,
+        };
+        await db.update(paperSessions)
+          .set({ metricsSnapshot: snapshot as any })
+          .where(eq(paperSessions.id, sessionId));
+        logger.info(
+          { sessionId, returnsSource, n: returnsForAnalytics.length },
+          "Paper analytics report generated",
+        );
+      } else {
+        logger.info({ sessionId }, "Paper analytics skipped — insufficient trade data");
+      }
+    } catch (analyticsErr) {
+      logger.warn({ sessionId, err: analyticsErr }, "Paper analytics failed (non-blocking)");
+    }
+
+    // Audit trail — paper session lifecycle
+    await db.insert(auditLog).values({
+      action: "paper.session_stop",
+      entityType: "paper_session",
+      entityId: sessionId,
+      input: { sessionId },
+      result: {
+        stoppedAt: session.stoppedAt?.toISOString() ?? new Date().toISOString(),
+        totalTrades: session.totalTrades,
+        currentEquity: session.currentEquity,
+      },
+      status: "success",
+      decisionAuthority: "human",
+    });
+
+    broadcastSSE("paper:session_stop", { sessionId });
     res.json(session);
   } catch (err: any) {
     logger.error(err, "Failed to stop paper session");
@@ -173,9 +268,9 @@ router.post("/execute/open", async (req, res) => {
       contracts: Number(contracts),
     });
 
-    // BUG 3 fix: return 200 (not 201) for fill miss
+    // Fill probability miss — return 422 so callers know no position was opened
     if (!result.executionResult.filled) {
-      return res.status(200).json(result);
+      return res.status(422).json(result);
     }
 
     // Log shadow signal if session is in shadow mode

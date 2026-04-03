@@ -98,7 +98,11 @@
       "position": [
         880,
         400
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -169,7 +173,11 @@
           "id": "J84m12hyzSwSHo6S",
           "name": "Gateway Internal Key"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -211,7 +219,11 @@
       "position": [
         1540,
         400
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -253,7 +265,11 @@
       "position": [
         880,
         200
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -306,7 +322,11 @@
       "position": [
         660,
         560
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -555,7 +575,11 @@
         "position": [
           880,
           400
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -626,7 +650,11 @@
             "id": "J84m12hyzSwSHo6S",
             "name": "Gateway Internal Key"
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -668,7 +696,11 @@
         "position": [
           1540,
           400
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -710,7 +742,11 @@
         "position": [
           880,
           200
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {},
@@ -763,7 +799,11 @@
         "position": [
           660,
           560
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {

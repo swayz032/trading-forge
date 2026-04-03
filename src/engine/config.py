@@ -227,7 +227,7 @@ class DataQualityReport(BaseModel):
 class MonteCarloRequest(BaseModel):
     backtest_id: str
     num_simulations: int = 100_000
-    method: Literal["trade_resample", "return_bootstrap", "block_bootstrap", "both"] = "both"
+    method: Literal["trade_resample", "return_bootstrap", "block_bootstrap", "arch_stationary", "both"] = "both"
     confidence_levels: list[float] = [0.05, 0.25, 0.50, 0.75, 0.95]
     ruin_threshold: float = 0.0
     initial_capital: float = 50_000.0

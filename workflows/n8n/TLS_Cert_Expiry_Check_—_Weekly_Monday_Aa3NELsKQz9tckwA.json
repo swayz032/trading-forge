@@ -2,7 +2,7 @@
   "updatedAt": "2026-03-05T02:02:30.585Z",
   "createdAt": "2026-02-16T13:48:31.099Z",
   "id": "Aa3NELsKQz9tckwA",
-  "name": "TLS Cert Expiry Check \u2014 Weekly Monday",
+  "name": "TLS Cert Expiry Check — Weekly Monday",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -114,7 +114,11 @@
       "position": [
         1100,
         400
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -156,7 +160,11 @@
       "position": [
         880,
         200
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -209,7 +217,11 @@
       "position": [
         660,
         560
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -452,7 +464,11 @@
         "position": [
           1100,
           400
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -494,7 +510,11 @@
         "position": [
           880,
           200
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {},
@@ -547,7 +567,11 @@
         "position": [
           660,
           560
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {

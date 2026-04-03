@@ -2,7 +2,7 @@
   "updatedAt": "2026-03-13T05:43:59.281Z",
   "createdAt": "2026-02-20T21:35:45.526Z",
   "id": "uI4JbtvTA4Vo8Rg4",
-  "name": "Rotation Health Monitor \u2014 Daily 8am",
+  "name": "Rotation Health Monitor — Daily 8am",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -113,7 +113,10 @@
           "name": "Gateway Internal Key"
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -151,7 +154,7 @@
         }
       },
       "id": "query-rotation-status",
-      "name": "Query Rotation Status \u2192 Gateway",
+      "name": "Query Rotation Status → Gateway",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -159,7 +162,10 @@
         400
       ],
       "onError": "continueRegularOutput",
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -246,7 +252,11 @@
       "position": [
         1760,
         300
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -282,14 +292,17 @@
         }
       },
       "id": "alert-unhealthy",
-      "name": "Alert Unhealthy \u2192 Gateway",
+      "name": "Alert Unhealthy → Gateway",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
         1760,
         500
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -331,7 +344,11 @@
       "position": [
         1980,
         500
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -373,7 +390,11 @@
       "position": [
         880,
         200
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -426,7 +447,11 @@
       "position": [
         660,
         600
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -478,7 +503,11 @@
       "position": [
         1980,
         240
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -531,7 +560,10 @@
         1980,
         560
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -583,7 +615,11 @@
       "position": [
         880,
         680
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -631,14 +667,14 @@
       "main": [
         [
           {
-            "node": "Query Rotation Status \u2192 Gateway",
+            "node": "Query Rotation Status → Gateway",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Query Rotation Status \u2192 Gateway": {
+    "Query Rotation Status → Gateway": {
       "main": [
         [
           {
@@ -678,7 +714,7 @@
         ]
       ]
     },
-    "Alert Unhealthy \u2192 Gateway": {
+    "Alert Unhealthy → Gateway": {
       "main": [
         [
           {
@@ -737,7 +773,7 @@
       "main": [
         [
           {
-            "node": "Alert Unhealthy \u2192 Gateway",
+            "node": "Alert Unhealthy → Gateway",
             "type": "main",
             "index": 0
           }
@@ -946,7 +982,10 @@
             "name": "Gateway Internal Key"
           }
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -984,7 +1023,7 @@
           }
         },
         "id": "query-rotation-status",
-        "name": "Query Rotation Status \u2192 Gateway",
+        "name": "Query Rotation Status → Gateway",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -992,7 +1031,10 @@
           400
         ],
         "onError": "continueRegularOutput",
-        "alwaysOutputData": true
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1079,7 +1121,11 @@
         "position": [
           1760,
           300
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1115,14 +1161,17 @@
           }
         },
         "id": "alert-unhealthy",
-        "name": "Alert Unhealthy \u2192 Gateway",
+        "name": "Alert Unhealthy → Gateway",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
           1760,
           500
         ],
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1164,7 +1213,11 @@
         "position": [
           1980,
           500
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1206,7 +1259,11 @@
         "position": [
           880,
           200
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {},
@@ -1259,7 +1316,11 @@
         "position": [
           660,
           600
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1311,7 +1372,11 @@
         "position": [
           1980,
           240
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1364,7 +1429,10 @@
           1980,
           560
         ],
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1416,7 +1484,11 @@
         "position": [
           880,
           680
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {
@@ -1464,14 +1536,14 @@
         "main": [
           [
             {
-              "node": "Query Rotation Status \u2192 Gateway",
+              "node": "Query Rotation Status → Gateway",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "Query Rotation Status \u2192 Gateway": {
+      "Query Rotation Status → Gateway": {
         "main": [
           [
             {
@@ -1511,7 +1583,7 @@
           ]
         ]
       },
-      "Alert Unhealthy \u2192 Gateway": {
+      "Alert Unhealthy → Gateway": {
         "main": [
           [
             {
@@ -1570,7 +1642,7 @@
         "main": [
           [
             {
-              "node": "Alert Unhealthy \u2192 Gateway",
+              "node": "Alert Unhealthy → Gateway",
               "type": "main",
               "index": 0
             }

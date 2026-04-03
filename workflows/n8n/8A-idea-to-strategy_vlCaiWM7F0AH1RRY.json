@@ -31,7 +31,9 @@
       "parameters": {
         "method": "GET",
         "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=10",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "fetch-ideas",
       "name": "Fetch Scouted Ideas",
@@ -40,7 +42,11 @@
       "position": [
         220,
         0
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -61,7 +67,7 @@
         "url": "http://host.docker.internal:11434/api/generate",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: 'trading-quant', prompt: $json.prompt, format: 'json', stream: false }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: 'qwen3-coder:30b', prompt: $json.prompt, format: 'json', stream: false }) }}",
         "options": {
           "timeout": 120000
         }
@@ -73,7 +79,11 @@
       "position": [
         660,
         0
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -95,7 +105,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.strategy) }}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "compile-dsl",
       "name": "Compile DSL",
@@ -104,7 +116,11 @@
       "position": [
         1100,
         0
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -145,7 +161,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "run-strategy",
       "name": "Run Strategy",
@@ -154,7 +172,11 @@
       "position": [
         1540,
         -100
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -163,7 +185,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"status\": \"testing\"}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "update-journal",
       "name": "Update Journal",
@@ -172,7 +196,45 @@
       "position": [
         1760,
         -100
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
       ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"8A-idea-to-strategy\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -259,6 +321,17 @@
         [
           {
             "node": "Update Journal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
             "type": "main",
             "index": 0
           }
@@ -361,7 +434,9 @@
         "parameters": {
           "method": "GET",
           "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=10",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "fetch-ideas",
         "name": "Fetch Scouted Ideas",
@@ -370,7 +445,11 @@
         "position": [
           220,
           0
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -391,7 +470,7 @@
           "url": "http://host.docker.internal:11434/api/generate",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({ model: 'trading-quant', prompt: $json.prompt, format: 'json', stream: false }) }}",
+          "jsonBody": "={{ JSON.stringify({ model: 'qwen3-coder:30b', prompt: $json.prompt, format: 'json', stream: false }) }}",
           "options": {
             "timeout": 120000
           }
@@ -403,7 +482,11 @@
         "position": [
           660,
           0
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -425,7 +508,9 @@
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify($json.strategy) }}",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "compile-dsl",
         "name": "Compile DSL",
@@ -434,7 +519,11 @@
         "position": [
           1100,
           0
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -475,7 +564,9 @@
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify($json) }}",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "run-strategy",
         "name": "Run Strategy",
@@ -484,7 +575,11 @@
         "position": [
           1540,
           -100
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -493,7 +588,9 @@
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "{\"status\": \"testing\"}",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "update-journal",
         "name": "Update Journal",
@@ -502,7 +599,45 @@
         "position": [
           1760,
           -100
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
         ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"8A-idea-to-strategy\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
@@ -589,6 +724,17 @@
           [
             {
               "node": "Update Journal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
               "type": "main",
               "index": 0
             }

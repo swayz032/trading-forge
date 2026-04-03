@@ -29,7 +29,7 @@
     },
     {
       "parameters": {
-        "model": "trading-quant:latest",
+        "model": "qwen3-coder:30b",
         "options": {}
       },
       "id": "ollama-model-1",
@@ -99,7 +99,9 @@
             {}
           ]
         },
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-submit-batch",
       "name": "POST Batch to Backtest Agent",
@@ -112,7 +114,8 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -132,7 +135,9 @@
     {
       "parameters": {
         "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=9",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-get-results",
       "name": "GET Completed Backtests",
@@ -145,7 +150,8 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -196,7 +202,7 @@
     },
     {
       "parameters": {
-        "model": "llama3.1:8b",
+        "model": "deepseek-r1:14b",
         "options": {}
       },
       "id": "ollama-model-2",
@@ -239,7 +245,9 @@
             {}
           ]
         },
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-journal-success",
       "name": "POST Journal - Strategies Found",
@@ -252,7 +260,8 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -264,7 +273,9 @@
             {}
           ]
         },
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-journal-none",
       "name": "POST Journal - No Strategies",
@@ -277,7 +288,8 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -437,7 +449,7 @@
     },
     {
       "parameters": {
-        "model": "llama3.1:8b",
+        "model": "deepseek-r1:14b",
         "options": {}
       },
       "id": "b90f6b30-216a-46fd-9118-fe29b9a5cd90",
@@ -458,7 +470,7 @@
     },
     {
       "parameters": {
-        "model": "llama3.1:8b",
+        "model": "deepseek-r1:14b",
         "options": {}
       },
       "id": "5eb22c56-8707-413d-8e0d-96d57355300d",
@@ -508,7 +520,8 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "http-fetch-scouted-5c",
@@ -520,12 +533,16 @@
         576
       ],
       "parameters": {
-        "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20"
+        "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+        "options": {
+          "timeout": 15000
+        }
       },
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "continueOnFail": true
     },
     {
       "id": "code-format-scout-5c",
@@ -563,7 +580,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4100/alert/alerts",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Weekly Scout Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Weekly Strategy Hunt', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
@@ -579,7 +596,11 @@
         "options": {
           "timeout": 15000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -973,7 +994,7 @@
       },
       {
         "parameters": {
-          "model": "trading-quant:latest",
+          "model": "qwen3-coder:30b",
           "options": {}
         },
         "id": "ollama-model-1",
@@ -1043,7 +1064,9 @@
               {}
             ]
           },
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "http-submit-batch",
         "name": "POST Batch to Backtest Agent",
@@ -1056,7 +1079,8 @@
         "retryOnFail": true,
         "maxTries": 3,
         "waitBetweenTries": 5000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1076,7 +1100,9 @@
       {
         "parameters": {
           "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=9",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "http-get-results",
         "name": "GET Completed Backtests",
@@ -1089,7 +1115,8 @@
         "retryOnFail": true,
         "maxTries": 3,
         "waitBetweenTries": 5000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1140,7 +1167,7 @@
       },
       {
         "parameters": {
-          "model": "llama3.1:8b",
+          "model": "deepseek-r1:14b",
           "options": {}
         },
         "id": "ollama-model-2",
@@ -1183,7 +1210,9 @@
               {}
             ]
           },
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "http-journal-success",
         "name": "POST Journal - Strategies Found",
@@ -1196,7 +1225,8 @@
         "retryOnFail": true,
         "maxTries": 2,
         "waitBetweenTries": 3000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1208,7 +1238,9 @@
               {}
             ]
           },
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "http-journal-none",
         "name": "POST Journal - No Strategies",
@@ -1221,7 +1253,8 @@
         "retryOnFail": true,
         "maxTries": 2,
         "waitBetweenTries": 3000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1381,7 +1414,7 @@
       },
       {
         "parameters": {
-          "model": "llama3.1:8b",
+          "model": "deepseek-r1:14b",
           "options": {}
         },
         "id": "b90f6b30-216a-46fd-9118-fe29b9a5cd90",
@@ -1402,7 +1435,7 @@
       },
       {
         "parameters": {
-          "model": "llama3.1:8b",
+          "model": "deepseek-r1:14b",
           "options": {}
         },
         "id": "5eb22c56-8707-413d-8e0d-96d57355300d",
@@ -1452,7 +1485,8 @@
         "retryOnFail": true,
         "maxTries": 2,
         "waitBetweenTries": 3000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "http-fetch-scouted-5c",
@@ -1464,12 +1498,16 @@
           576
         ],
         "parameters": {
-          "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20"
+          "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+          "options": {
+            "timeout": 15000
+          }
         },
         "onError": "continueRegularOutput",
         "retryOnFail": true,
         "maxTries": 2,
-        "waitBetweenTries": 3000
+        "waitBetweenTries": 3000,
+        "continueOnFail": true
       },
       {
         "id": "code-format-scout-5c",
@@ -1507,7 +1545,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4100/alert/alerts",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Weekly Scout Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Weekly Strategy Hunt', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
@@ -1523,7 +1561,11 @@
           "options": {
             "timeout": 15000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {

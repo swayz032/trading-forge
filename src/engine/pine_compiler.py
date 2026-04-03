@@ -1,4 +1,4 @@
-"""Pine Script v6 Compiler — transpiles StrategyDSL to TradingView Pine Script.
+"""Pine Script v5 Compiler — transpiles StrategyDSL to TradingView Pine Script.
 
 Compiler stages:
   1. Normalize strategy from StrategyDSL
@@ -54,7 +54,7 @@ class CompilerResult(BaseModel):
     exportability: ExportabilityResult
     artifacts: list[PineArtifact] = Field(default_factory=list)
     strategy_name: str = ""
-    pine_version: str = "v6"
+    pine_version: str = "v5"
     content_hash: str = ""  # SHA-256 of all artifacts
 
 
@@ -69,7 +69,10 @@ def _build_pine_indicator_var(ind_type: str, params: dict, idx: int) -> tuple[st
     template = INDICATOR_MAP.get(base_type)
     if template is None:
         # Custom indicator — generate placeholder
-        return var_name, f"// TODO: Custom implementation for '{ind_type}'"
+        raise ValueError(
+            f"Unsupported Pine indicator type '{ind_type}'. "
+            "Add it to INDICATOR_MAP before exporting."
+        )
 
     if template == "ta.vwap":
         return var_name, f"{var_name} = ta.vwap"
@@ -209,6 +212,9 @@ var float max_drawdown_limit = 2000.0   // Default tightest
 var float daily_loss_limit = 1000.0     // Default tightest
 var int max_contracts = 15
 var float commission_per_side = 0.62
+
+// risk_lockout: always declared so state machine can reference it regardless of firm
+var bool risk_lockout = false
 """
 
     # Look up firm rules
@@ -344,14 +350,14 @@ alertcondition(risk_lockout and not risk_lockout[1], title="Risk Lockout", messa
 
     alerts_json = {
         "strategy": strategy_name,
-        "pine_version": "v6",
+        "pine_version": "v5",
         "alerts": [
-            {"name": "long_armed", "condition": "state transitions to watch_long", "type": "entry_setup"},
-            {"name": "short_armed", "condition": "state transitions to watch_short", "type": "entry_setup"},
-            {"name": "entry_confirmed", "condition": "state transitions to long/short confirmed", "type": "entry"},
-            {"name": "invalidated", "condition": "state transitions to invalidated", "type": "exit"},
-            {"name": "prop_risk_lockout", "condition": "risk_lockout fires", "type": "risk"},
-            {"name": "no_trade", "condition": "session filter blocks", "type": "filter"},
+            {"name": "Long Entry", "condition": "state transitions to long_confirmed (state == 2 and state[1] != 2)", "type": "entry"},
+            {"name": "Short Entry", "condition": "state transitions to short_confirmed (state == 4 and state[1] != 4)", "type": "entry"},
+            {"name": "Invalidated", "condition": "state transitions to invalidated (state == 5 and state[1] != 5)", "type": "exit"},
+            {"name": "Long Exit", "condition": "long position closed (state == 0 and state[1] == 2)", "type": "exit"},
+            {"name": "Short Exit", "condition": "short position closed (state == 0 and state[1] == 4)", "type": "exit"},
+            {"name": "Risk Lockout", "condition": "risk_lockout activates (risk_lockout and not risk_lockout[1])", "type": "risk"},
         ],
     }
 
@@ -472,6 +478,13 @@ def compile_strategy(strategy, firm_key: Optional[str] = None, risk_intelligence
     # Stage 8: Build alerts
     alert_pine, alerts_json = _build_alerts(strategy_name)
 
+    # Stage 8b: Resolve export type.
+    # Valid values: "pine_indicator" (default), "pine_strategy", "alert_only".
+    # "pine_indicator"  — indicator + alerts_json (+ strategy_shell when score >= 70)
+    # "pine_strategy"   — strategy_shell + alerts_json only (no indicator artifact)
+    # "alert_only"      — alerts_json only (skip all Pine scripts)
+    export_type = strategy.get("export_type", "pine_indicator")
+
     # Stage 9: Assemble indicator Pine script
     atr_period = 14
     for ind in indicators:
@@ -480,7 +493,7 @@ def compile_strategy(strategy, firm_key: Optional[str] = None, risk_intelligence
 
     use_target = strategy.get("take_profit_atr_multiple") is not None
 
-    pine_code = f"""//@version=6
+    pine_code = f"""//@version=5
 indicator("{strategy_name}", overlay=true, max_labels_count=500)
 
 // ─── Inputs ─────────────────────────────────────────────────────
@@ -530,33 +543,54 @@ target_distance = {tp_distance}
     pine_code += visualization
     pine_code += alert_pine
 
-    # Generate content hash
+    # Generate content hash (always based on the indicator Pine, even if not emitted)
     content_hash = hashlib.sha256(pine_code.encode()).hexdigest()
     result.content_hash = content_hash
 
-    # Build artifacts
+    # Build artifacts — governed by export_type
     safe_name = strategy_name.lower().replace(" ", "_").replace("-", "_")
 
-    result.artifacts.append(PineArtifact(
-        artifact_type="indicator",
-        file_name=f"{safe_name}_indicator.pine",
-        content=pine_code,
-        size_bytes=len(pine_code.encode()),
-    ))
-
-    result.artifacts.append(PineArtifact(
+    # alerts_json is always produced for every export type
+    alerts_json_artifact = PineArtifact(
         artifact_type="alerts_json",
         file_name=f"{safe_name}_alerts.json",
         content=json.dumps(alerts_json, indent=2),
         size_bytes=len(json.dumps(alerts_json).encode()),
-    ))
+    )
 
-    # Optional strategy shell (for TradingView strategy tester)
-    if exportability.score >= 70:
-        strategy_shell = f"""//@version=6
+    if export_type == "alert_only":
+        # Only emit the alert definitions — skip all Pine scripts
+        result.artifacts.append(alerts_json_artifact)
+        return result
+
+    if export_type != "pine_strategy":
+        # "pine_indicator" (default): emit indicator script
+        result.artifacts.append(PineArtifact(
+            artifact_type="indicator",
+            file_name=f"{safe_name}_indicator.pine",
+            content=pine_code,
+            size_bytes=len(pine_code.encode()),
+        ))
+
+    result.artifacts.append(alerts_json_artifact)
+
+    # Strategy shell: emit when score >= 70 AND export_type is not indicator-only.
+    # "pine_indicator" also gets the shell (existing behaviour); "pine_strategy" always
+    # emits the shell (that is its primary purpose).
+    emit_shell = (export_type == "pine_strategy") or (
+        export_type == "pine_indicator" and exportability.score >= 70
+    )
+    if emit_shell:
+        # Use firm-specific commission rate; fall back to 0.62 (industry default) if
+        # firm or symbol is not found in FIRM_COMMISSIONS.
+        shell_commission = 0.62
+        if firm_key:
+            shell_commission = FIRM_COMMISSIONS.get(firm_key, {}).get(symbol, 0.62)
+
+        strategy_shell = f"""//@version=5
 strategy("{strategy_name} [Backtest]", overlay=true, initial_capital=50000,
          default_qty_type=strategy.fixed, default_qty_value=1,
-         commission_type=strategy.commission.cash_per_contract, commission_value=0.62,
+         commission_type=strategy.commission.cash_per_contract, commission_value={shell_commission},
          slippage=1)
 
 // NOTE: This is a simplified strategy shell for TradingView's strategy tester.
@@ -596,7 +630,7 @@ if short_signal
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Compile StrategyDSL to Pine Script v6")
+    parser = argparse.ArgumentParser(description="Compile StrategyDSL to Pine Script v5")
     parser.add_argument("--input-json", required=True, help="Strategy JSON (inline or file path)")
     parser.add_argument("--firm-key", default=None, help="Firm key for prop overlay (e.g., topstep_50k)")
     args = parser.parse_args()

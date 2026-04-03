@@ -119,7 +119,10 @@
         400
       ],
       "credentials": {},
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -180,7 +183,10 @@
         400
       ],
       "credentials": {},
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -241,7 +247,10 @@
         400
       ],
       "credentials": {},
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -283,7 +292,11 @@
       "position": [
         1540,
         400
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -325,7 +338,11 @@
       "position": [
         880,
         200
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -378,7 +395,11 @@
       "position": [
         660,
         560
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -768,7 +789,10 @@
           400
         ],
         "credentials": {},
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -829,7 +853,10 @@
           400
         ],
         "credentials": {},
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -890,7 +917,10 @@
           400
         ],
         "credentials": {},
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -932,7 +962,11 @@
         "position": [
           1540,
           400
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -974,7 +1008,11 @@
         "position": [
           880,
           200
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {},
@@ -1027,7 +1065,11 @@
         "position": [
           660,
           560
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {

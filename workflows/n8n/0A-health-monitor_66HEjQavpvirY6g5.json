@@ -8,6 +8,17 @@
   "isArchived": false,
   "nodes": [
     {
+      "id": "execute-workflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -180
+      ],
+      "parameters": {}
+    },
+    {
       "id": "trigger",
       "name": "Every 5 Minutes",
       "type": "n8n-nodes-base.scheduleTrigger",
@@ -33,18 +44,20 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        250,
-        -150
+        240,
+        -220
       ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
-        "url": "http://host.docker.internal:4000/api/health",
         "method": "GET",
+        "url": "http://host.docker.internal:4000/api/health",
         "options": {
           "timeout": 10000
         }
       },
-      "continueOnFail": true,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "maxTries": 2
     },
     {
       "id": "check-openclaw",
@@ -52,18 +65,20 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        250,
-        0
+        240,
+        -70
       ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
-        "url": "http://host.docker.internal:18789/health",
         "method": "GET",
+        "url": "http://host.docker.internal:18789/health",
         "options": {
           "timeout": 10000
         }
       },
-      "continueOnFail": true,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "maxTries": 2
     },
     {
       "id": "check-ollama",
@@ -71,18 +86,20 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        250,
-        150
+        240,
+        80
       ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
-        "url": "http://host.docker.internal:11434/api/tags",
         "method": "GET",
+        "url": "http://host.docker.internal:11434/api/tags",
         "options": {
           "timeout": 10000
         }
       },
-      "continueOnFail": true,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "maxTries": 2
     },
     {
       "id": "check-discord",
@@ -90,18 +107,62 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        250,
-        300
+        240,
+        230
       ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
-        "url": "http://host.docker.internal:4100/health",
         "method": "GET",
+        "url": "http://host.docker.internal:4100/health",
         "options": {
           "timeout": 10000
         }
       },
-      "continueOnFail": true,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "merge-core",
+      "name": "Merge Core Health",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        500,
+        -150
+      ],
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2
+      }
+    },
+    {
+      "id": "merge-integrations",
+      "name": "Merge Integration Health",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        500,
+        150
+      ],
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2
+      }
+    },
+    {
+      "id": "merge-all",
+      "name": "Merge All Health Checks",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        730,
+        0
+      ],
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2
+      }
     },
     {
       "id": "evaluate",
@@ -109,11 +170,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        550,
-        75
+        950,
+        0
       ],
       "parameters": {
-        "jsCode": "const api = $('Check Trading Forge API').first();\nconst openclaw = $('Check OpenClaw Gateway').first();\nconst ollama = $('Check Ollama').first();\nconst discord = $('Check Discord Bot').first();\nconst services = [\n  { name: 'Trading Forge API', port: 4000, result: api },\n  { name: 'OpenClaw Gateway', port: 18789, result: openclaw },\n  { name: 'Ollama', port: 11434, result: ollama },\n  { name: 'Discord Bot', port: 4100, result: discord }\n];\nconst failures = [];\nfor (const svc of services) {\n  const json = svc.result?.json || {};\n  const hasError = json.error || json.code === 'ECONNREFUSED' || json.code === 'ETIMEDOUT';\n  const status = json.status;\n  if (hasError || (!status && !json.models && !json.connected)) {\n    failures.push(`${svc.name} (port ${svc.port}): ${json.error || json.code || 'no response'}`);\n  }\n}\nreturn [{ json: { allHealthy: failures.length === 0, failureCount: failures.length, failures, checkedAt: new Date().toISOString() } }];"
+        "jsCode": "const services = [\n  { name: 'Trading Forge API', port: 4000, critical: true, result: $('Check Trading Forge API').first() },\n  { name: 'OpenClaw Gateway', port: 18789, critical: false, result: $('Check OpenClaw Gateway').first() },\n  { name: 'Ollama', port: 11434, critical: false, result: $('Check Ollama').first() },\n  { name: 'Discord Bot', port: 4100, critical: false, result: $('Check Discord Bot').first() },\n];\n\nfunction inspectService(service) {\n  const json = service.result?.json ?? {};\n  const error = json.error || json.message || json.errorMessage || json.description || null;\n  const code = json.code || json.errorCode || json.statusCode || null;\n  const healthy = !error && (\n    json.status === 'ok'\n    || json.connected === true\n    || Array.isArray(json.models)\n  );\n\n  return {\n    name: service.name,\n    port: service.port,\n    critical: service.critical,\n    healthy,\n    status: json.status ?? (healthy ? 'ok' : 'error'),\n    error: error || (healthy ? null : code || 'no response'),\n  };\n}\n\nconst inspected = services.map(inspectService);\nconst failures = inspected.filter((service) => !service.healthy);\n\nreturn [{\n  json: {\n    allHealthy: failures.length === 0,\n    failureCount: failures.length,\n    failures: failures.map((service) => `${service.name} (port ${service.port}): ${service.error}`),\n    services: inspected,\n    checkedAt: new Date().toISOString(),\n  },\n}];"
       }
     },
     {
@@ -122,8 +183,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        800,
-        75
+        1170,
+        0
       ],
       "parameters": {
         "conditions": {
@@ -135,7 +196,6 @@
           "combinator": "and",
           "conditions": [
             {
-              "id": "1",
               "leftValue": "={{ $json.failureCount }}",
               "rightValue": 0,
               "operator": {
@@ -148,24 +208,65 @@
       }
     },
     {
-      "id": "alert-discord",
-      "name": "Alert Discord",
+      "id": "create-alert",
+      "name": "Create Health Alert",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1050,
+        1400,
         0
       ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
-        "url": "http://host.docker.internal:4100/alert/alerts",
         "method": "POST",
+        "url": "http://host.docker.internal:4000/api/alerts",
         "sendBody": true,
+        "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={\"title\": \"Service Down Alert\", \"message\": \"{{ $json.failures.join(' | ') }}\", \"severity\": \"critical\", \"data\": {\"failureCount\": {{ $json.failureCount }}, \"checkedAt\": \"{{ $json.checkedAt }}\"}}",
+        "jsonBody": "={{ JSON.stringify({\n  type: 'health_monitor',\n  severity: 'critical',\n  title: 'Trading Forge health monitor detected service degradation',\n  message: $json.failures.join(' | '),\n  metadata: {\n    checkedAt: $json.checkedAt,\n    failureCount: $json.failureCount,\n    services: $json.services,\n  },\n}) }}",
         "options": {
-          "timeout": 10000
+          "timeout": 15000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        420
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "err-alert",
+      "name": "Create Workflow Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        420
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/alerts",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_error',\n  severity: 'critical',\n  title: '0A-health-monitor failed',\n  message: $json.execution?.error?.message || $json.error?.message || 'Unknown workflow error',\n  metadata: {\n    workflow: '0A-health-monitor',\n    timestamp: new Date().toISOString(),\n  },\n}) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -199,7 +300,7 @@
       "main": [
         [
           {
-            "node": "Evaluate Health",
+            "node": "Merge Core Health",
             "type": "main",
             "index": 0
           }
@@ -210,9 +311,9 @@
       "main": [
         [
           {
-            "node": "Evaluate Health",
+            "node": "Merge Core Health",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -221,7 +322,7 @@
       "main": [
         [
           {
-            "node": "Evaluate Health",
+            "node": "Merge Integration Health",
             "type": "main",
             "index": 0
           }
@@ -229,6 +330,39 @@
       ]
     },
     "Check Discord Bot": {
+      "main": [
+        [
+          {
+            "node": "Merge Integration Health",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Core Health": {
+      "main": [
+        [
+          {
+            "node": "Merge All Health Checks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Integration Health": {
+      "main": [
+        [
+          {
+            "node": "Merge All Health Checks",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Health Checks": {
       "main": [
         [
           {
@@ -254,12 +388,49 @@
       "main": [
         [
           {
-            "node": "Alert Discord",
+            "node": "Create Health Alert",
             "type": "main",
             "index": 0
           }
         ],
         []
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Create Workflow Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check Trading Forge API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check OpenClaw Gateway",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Ollama",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Discord Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
@@ -336,6 +507,17 @@
     "workflowId": "66HEjQavpvirY6g5",
     "nodes": [
       {
+        "id": "execute-workflow-trigger",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          -180
+        ],
+        "parameters": {}
+      },
+      {
         "id": "trigger",
         "name": "Every 5 Minutes",
         "type": "n8n-nodes-base.scheduleTrigger",
@@ -361,18 +543,20 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          250,
-          -150
+          240,
+          -220
         ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
-          "url": "http://host.docker.internal:4000/api/health",
           "method": "GET",
+          "url": "http://host.docker.internal:4000/api/health",
           "options": {
             "timeout": 10000
           }
         },
-        "continueOnFail": true,
-        "onError": "continueRegularOutput"
+        "retryOnFail": true,
+        "maxTries": 2
       },
       {
         "id": "check-openclaw",
@@ -380,18 +564,20 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          250,
-          0
+          240,
+          -70
         ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
-          "url": "http://host.docker.internal:18789/health",
           "method": "GET",
+          "url": "http://host.docker.internal:18789/health",
           "options": {
             "timeout": 10000
           }
         },
-        "continueOnFail": true,
-        "onError": "continueRegularOutput"
+        "retryOnFail": true,
+        "maxTries": 2
       },
       {
         "id": "check-ollama",
@@ -399,18 +585,20 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          250,
-          150
+          240,
+          80
         ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
-          "url": "http://host.docker.internal:11434/api/tags",
           "method": "GET",
+          "url": "http://host.docker.internal:11434/api/tags",
           "options": {
             "timeout": 10000
           }
         },
-        "continueOnFail": true,
-        "onError": "continueRegularOutput"
+        "retryOnFail": true,
+        "maxTries": 2
       },
       {
         "id": "check-discord",
@@ -418,18 +606,62 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          250,
-          300
+          240,
+          230
         ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
-          "url": "http://host.docker.internal:4100/health",
           "method": "GET",
+          "url": "http://host.docker.internal:4100/health",
           "options": {
             "timeout": 10000
           }
         },
-        "continueOnFail": true,
-        "onError": "continueRegularOutput"
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "merge-core",
+        "name": "Merge Core Health",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          500,
+          -150
+        ],
+        "parameters": {
+          "mode": "append",
+          "numberInputs": 2
+        }
+      },
+      {
+        "id": "merge-integrations",
+        "name": "Merge Integration Health",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          500,
+          150
+        ],
+        "parameters": {
+          "mode": "append",
+          "numberInputs": 2
+        }
+      },
+      {
+        "id": "merge-all",
+        "name": "Merge All Health Checks",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          730,
+          0
+        ],
+        "parameters": {
+          "mode": "append",
+          "numberInputs": 2
+        }
       },
       {
         "id": "evaluate",
@@ -437,11 +669,11 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          550,
-          75
+          950,
+          0
         ],
         "parameters": {
-          "jsCode": "const api = $('Check Trading Forge API').first();\nconst openclaw = $('Check OpenClaw Gateway').first();\nconst ollama = $('Check Ollama').first();\nconst discord = $('Check Discord Bot').first();\nconst services = [\n  { name: 'Trading Forge API', port: 4000, result: api },\n  { name: 'OpenClaw Gateway', port: 18789, result: openclaw },\n  { name: 'Ollama', port: 11434, result: ollama },\n  { name: 'Discord Bot', port: 4100, result: discord }\n];\nconst failures = [];\nfor (const svc of services) {\n  const json = svc.result?.json || {};\n  const hasError = json.error || json.code === 'ECONNREFUSED' || json.code === 'ETIMEDOUT';\n  const status = json.status;\n  if (hasError || (!status && !json.models && !json.connected)) {\n    failures.push(`${svc.name} (port ${svc.port}): ${json.error || json.code || 'no response'}`);\n  }\n}\nreturn [{ json: { allHealthy: failures.length === 0, failureCount: failures.length, failures, checkedAt: new Date().toISOString() } }];"
+          "jsCode": "const services = [\n  { name: 'Trading Forge API', port: 4000, critical: true, result: $('Check Trading Forge API').first() },\n  { name: 'OpenClaw Gateway', port: 18789, critical: false, result: $('Check OpenClaw Gateway').first() },\n  { name: 'Ollama', port: 11434, critical: false, result: $('Check Ollama').first() },\n  { name: 'Discord Bot', port: 4100, critical: false, result: $('Check Discord Bot').first() },\n];\n\nfunction inspectService(service) {\n  const json = service.result?.json ?? {};\n  const error = json.error || json.message || json.errorMessage || json.description || null;\n  const code = json.code || json.errorCode || json.statusCode || null;\n  const healthy = !error && (\n    json.status === 'ok'\n    || json.connected === true\n    || Array.isArray(json.models)\n  );\n\n  return {\n    name: service.name,\n    port: service.port,\n    critical: service.critical,\n    healthy,\n    status: json.status ?? (healthy ? 'ok' : 'error'),\n    error: error || (healthy ? null : code || 'no response'),\n  };\n}\n\nconst inspected = services.map(inspectService);\nconst failures = inspected.filter((service) => !service.healthy);\n\nreturn [{\n  json: {\n    allHealthy: failures.length === 0,\n    failureCount: failures.length,\n    failures: failures.map((service) => `${service.name} (port ${service.port}): ${service.error}`),\n    services: inspected,\n    checkedAt: new Date().toISOString(),\n  },\n}];"
         }
       },
       {
@@ -450,8 +682,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          800,
-          75
+          1170,
+          0
         ],
         "parameters": {
           "conditions": {
@@ -463,7 +695,6 @@
             "combinator": "and",
             "conditions": [
               {
-                "id": "1",
                 "leftValue": "={{ $json.failureCount }}",
                 "rightValue": 0,
                 "operator": {
@@ -476,24 +707,65 @@
         }
       },
       {
-        "id": "alert-discord",
-        "name": "Alert Discord",
+        "id": "create-alert",
+        "name": "Create Health Alert",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          1050,
+          1400,
           0
         ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
-          "url": "http://host.docker.internal:4100/alert/alerts",
           "method": "POST",
+          "url": "http://host.docker.internal:4000/api/alerts",
           "sendBody": true,
+          "contentType": "json",
           "specifyBody": "json",
-          "jsonBody": "={\"title\": \"Service Down Alert\", \"message\": \"{{ $json.failures.join(' | ') }}\", \"severity\": \"critical\", \"data\": {\"failureCount\": {{ $json.failureCount }}, \"checkedAt\": \"{{ $json.checkedAt }}\"}}",
+          "jsonBody": "={{ JSON.stringify({\n  type: 'health_monitor',\n  severity: 'critical',\n  title: 'Trading Forge health monitor detected service degradation',\n  message: $json.failures.join(' | '),\n  metadata: {\n    checkedAt: $json.checkedAt,\n    failureCount: $json.failureCount,\n    services: $json.services,\n  },\n}) }}",
           "options": {
-            "timeout": 10000
+            "timeout": 15000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          420
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "err-alert",
+        "name": "Create Workflow Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          500,
+          420
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/alerts",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_error',\n  severity: 'critical',\n  title: '0A-health-monitor failed',\n  message: $json.execution?.error?.message || $json.error?.message || 'Unknown workflow error',\n  metadata: {\n    workflow: '0A-health-monitor',\n    timestamp: new Date().toISOString(),\n  },\n}) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
@@ -527,7 +799,7 @@
         "main": [
           [
             {
-              "node": "Evaluate Health",
+              "node": "Merge Core Health",
               "type": "main",
               "index": 0
             }
@@ -538,9 +810,9 @@
         "main": [
           [
             {
-              "node": "Evaluate Health",
+              "node": "Merge Core Health",
               "type": "main",
-              "index": 0
+              "index": 1
             }
           ]
         ]
@@ -549,7 +821,7 @@
         "main": [
           [
             {
-              "node": "Evaluate Health",
+              "node": "Merge Integration Health",
               "type": "main",
               "index": 0
             }
@@ -557,6 +829,39 @@
         ]
       },
       "Check Discord Bot": {
+        "main": [
+          [
+            {
+              "node": "Merge Integration Health",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Core Health": {
+        "main": [
+          [
+            {
+              "node": "Merge All Health Checks",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge Integration Health": {
+        "main": [
+          [
+            {
+              "node": "Merge All Health Checks",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge All Health Checks": {
         "main": [
           [
             {
@@ -582,12 +887,49 @@
         "main": [
           [
             {
-              "node": "Alert Discord",
+              "node": "Create Health Alert",
               "type": "main",
               "index": 0
             }
           ],
           []
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Create Workflow Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Check Trading Forge API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check OpenClaw Gateway",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check Ollama",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check Discord Bot",
+              "type": "main",
+              "index": 0
+            }
+          ]
         ]
       }
     },
@@ -604,6 +946,14 @@
         "event": "activated",
         "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
       }
-    ]
+    ],
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "America/New_York",
+      "saveDataErrorExecution": "all",
+      "saveDataSuccessExecution": "none",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    }
   }
 }

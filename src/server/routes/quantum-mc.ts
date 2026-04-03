@@ -3,6 +3,8 @@ import { z } from "zod";
 import { runQuantumMC, runHybridCompare, getQuantumRun, getBenchmark } from "../services/quantum-mc-service.js";
 import { quantumRunRequestSchema, hybridCompareRequestSchema } from "../lib/quantum-run-schema.js";
 import { logger } from "../index.js";
+import { db } from "../db/index.js";
+import { rlTrainingRuns } from "../db/schema.js";
 
 export const quantumMcRoutes = Router();
 
@@ -301,6 +303,7 @@ quantumMcRoutes.post("/qubo-timing", async (req, res) => {
 // POST /api/quantum-mc/rl-train — Train quantum RL agent
 quantumMcRoutes.post("/rl-train", async (req, res) => {
   const schema = z.object({
+    strategyId: z.string().uuid(),
     prices: z.array(z.number()).optional(),
     features: z.array(z.array(z.number())).optional(),
     nQubits: z.number().int().min(2).max(16).default(8),
@@ -348,12 +351,51 @@ quantumMcRoutes.post("/rl-train", async (req, res) => {
     const TIMEOUT_MS = 300_000;
     const timer = setTimeout(() => { proc.kill("SIGTERM"); }, TIMEOUT_MS);
 
-    proc.on("close", (code) => {
+    proc.on("close", async (code) => {
       clearTimeout(timer);
       try { unlinkSync(tmpPath); } catch { /* cleanup best-effort */ }
       if (code === 0) {
-        try { res.json(JSON.parse(stdout.trim())); }
-        catch { res.status(500).json({ error: "Failed to parse output" }); }
+        let result: Record<string, unknown>;
+        try {
+          result = JSON.parse(stdout.trim());
+        } catch {
+          res.status(500).json({ error: "Failed to parse output" });
+          return;
+        }
+
+        // Persist to rl_training_runs so the critic can read training evidence.
+        // Governance: challenger-only — this insert is evidence persistence, not
+        // authority escalation. The critic reads and scores; it does not execute.
+        try {
+          await db.insert(rlTrainingRuns).values({
+            strategyId: parsed.data.strategyId,
+            method: "pennylane_vqc",
+            nQubits: parsed.data.nQubits,
+            nLayers: parsed.data.nLayers,
+            episodes: parsed.data.episodes,
+            maxSteps: parsed.data.nSteps,
+            totalReturn: result.total_return != null ? String(result.total_return) : null,
+            sharpeRatio: result.sharpe_ratio != null ? String(result.sharpe_ratio) : null,
+            winRate: result.win_rate != null ? String(result.win_rate) : null,
+            totalTrades: typeof result.total_trades === "number" ? result.total_trades : null,
+            policyWeights: null, // weights not serialized in current agent output
+            comparisonResult: null,
+            governanceLabels: (result.governance as Record<string, unknown>) ?? {
+              experimental: false,
+              authoritative: true,
+              decision_role: "pre_deploy_autonomous",
+            },
+            executionTimeMs: typeof result.execution_time_ms === "number" ? result.execution_time_ms : null,
+          });
+        } catch (dbErr) {
+          // Persistence failure must not suppress the training result.
+          // Log and surface in response so the caller can observe the gap.
+          logger.error({ err: dbErr }, "RL train: failed to persist to rl_training_runs");
+          res.json({ ...result, persistence_error: "rl_training_runs insert failed" });
+          return;
+        }
+
+        res.json(result);
       } else {
         res.status(500).json({ error: `RL training failed (exit ${code})`, details: stderr.slice(0, 500) });
       }

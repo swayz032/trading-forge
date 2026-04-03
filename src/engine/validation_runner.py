@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import traceback
 
@@ -100,7 +101,11 @@ def main():
     args = parser.parse_args()
 
     try:
-        config = json.loads(args.config)
+        config_str = args.config
+        if os.path.isfile(config_str):
+            with open(config_str) as f:
+                config_str = f.read()
+        config = json.loads(config_str)
     except json.JSONDecodeError as e:
         print(json.dumps({"error": f"Invalid JSON config: {e}"}))
         sys.exit(1)

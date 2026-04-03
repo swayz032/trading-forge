@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   timestamp,
+  date,
   numeric,
   integer,
   jsonb,
@@ -19,7 +20,7 @@ export const strategies = pgTable("strategies", {
   symbol: text("symbol").notNull(),
   timeframe: text("timeframe").notNull(),
   config: jsonb("config").notNull(), // Full strategy definition JSON
-  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOYED | DECLINING | RETIRED
+  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOY_READY | DEPLOYED | DECLINING | RETIRED
   lifecycleChangedAt: timestamp("lifecycle_changed_at").defaultNow(),
   preferredRegime: text("preferred_regime"), // TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL
   rollingSharpe30d: numeric("rolling_sharpe_30d"),
@@ -69,6 +70,8 @@ export const backtests = pgTable(
     runReceipt: jsonb("run_receipt"),
     sanityChecks: jsonb("sanity_checks"),
     crossValidation: jsonb("cross_validation"),
+    gateResult: jsonb("gate_result"),
+    gateRejections: jsonb("gate_rejections"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -150,6 +153,7 @@ export const monteCarloRuns = pgTable("monte_carlo_runs", {
   backtestId: uuid("backtest_id")
     .references(() => backtests.id)
     .notNull(),
+  status: text("status").notNull().default("pending"), // pending | running | completed | failed
   numSimulations: integer("num_simulations").notNull(),
   maxDrawdownP5: numeric("max_drawdown_p5"),
   maxDrawdownP50: numeric("max_drawdown_p50"),
@@ -284,11 +288,14 @@ export const auditLog = pgTable(
     result: jsonb("result"), // What happened
     status: text("status").notNull(), // success | failure | pending
     durationMs: integer("duration_ms"),
+    errorMessage: text("error_message"),
+    decisionAuthority: text("decision_authority"), // "gate" | "human" | "agent" | "scheduler" | "n8n"
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     index("audit_action_idx").on(table.action),
     index("audit_entity_idx").on(table.entityType, table.entityId),
+    index("audit_decision_authority_idx").on(table.decisionAuthority),
   ]
 );
 
@@ -359,6 +366,8 @@ export const complianceReviews = pgTable(
     reasoningSummary: text("reasoning_summary"), // AI reasoning
     executionGate: text("execution_gate").notNull(), // APPROVED | BLOCKED | CONDITIONAL
     reviewedBy: text("reviewed_by").default("openclaw"), // openclaw | human
+    invalidatedAt: timestamp("invalidated_at"),
+    invalidationReason: text("invalidation_reason"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -406,6 +415,9 @@ export const skipDecisions = pgTable(
     overrideReason: text("override_reason"),
     actualOutcome: text("actual_outcome"), // WIN | LOSS | FLAT (filled post-session)
     actualPnl: numeric("actual_pnl"), // filled post-session
+    // Phase 2.4 — Regret scoring
+    regretScore: numeric("regret_score"),      // how much we regret this decision (>= 0)
+    opportunityCost: numeric("opportunity_cost"), // for SKIP: foregone PnL; for TRADE: 0
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -460,12 +472,16 @@ export const strategyGraveyard = pgTable(
     deathReason: text("death_reason"), // human-readable summary
     deathDate: timestamp("death_date").notNull(),
     source: text("source").default("auto"), // auto | manual | decay
+    failureCategory: text("failure_category"), // top-level category from MODE_TO_CATEGORY (robustness | regime | execution | compliance | performance | structural)
+    failureSeverity: numeric("failure_severity"), // 0.0–1.0 from MODE_TO_SEVERITY for the primary failure mode
+    searchableMetrics: jsonb("searchable_metrics"), // denormalised key metrics for graveyard search without parsing backtestSummary
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     index("graveyard_strategy_idx").on(table.strategyId),
     index("graveyard_death_date_idx").on(table.deathDate),
     index("graveyard_source_idx").on(table.source),
+    index("graveyard_failure_category_idx").on(table.failureCategory),
   ]
 );
 
@@ -537,6 +553,7 @@ export const paperSessions = pgTable(
     cooldownUntil: timestamp("cooldown_until"),        // Gap 3: cooldown persistence
     dailyPnlBreakdown: jsonb("daily_pnl_breakdown").default({}), // Gap 4: consistency tracking
     metricsSnapshot: jsonb("metrics_snapshot").default({}),       // Gap 5: rolling Sharpe
+    totalTrades: integer("total_trades").notNull().default(0),    // H3: trade counter for promotion inputs
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -564,6 +581,9 @@ export const paperPositions = pgTable(
     arrivalPrice: numeric("arrival_price"),                  // Gap 8: TCA — signal price before latency/slippage
     implementationShortfall: numeric("implementation_shortfall"), // Gap 8: TCA — cost of execution
     fillRatio: numeric("fill_ratio").default("1.0"),         // Gap 8: TCA — intended vs filled
+    trailHwm: numeric("trail_hwm"),                          // H2: trail stop high-water mark (persisted so restarts don't lose it)
+    barsHeld: integer("bars_held").notNull().default(0),     // H2: bars held counter (persisted so restarts don't lose it)
+    fillProbability: numeric("fill_probability"),            // Phase 1.1: fill probability used at entry (null for market orders that bypass the model)
   },
   (table) => [
     index("paper_positions_session_idx").on(table.sessionId),
@@ -582,11 +602,24 @@ export const paperTrades = pgTable(
     side: text("side").notNull(), // long | short
     entryPrice: numeric("entry_price").notNull(),
     exitPrice: numeric("exit_price").notNull(),
-    pnl: numeric("pnl").notNull(),
+    pnl: numeric("pnl").notNull(),           // NET P&L (after commission deduction)
+    grossPnl: numeric("gross_pnl"),          // Gross P&L before commission (reference / audit)
+    commission: numeric("commission", { precision: 12, scale: 4 }).default("0"), // Round-trip commission cost
     contracts: integer("contracts").notNull().default(1),
     entryTime: timestamp("entry_time").notNull(),
     exitTime: timestamp("exit_time").notNull(),
     slippage: numeric("slippage"),
+    // ─── Phase 1.1: Journal Enrichment ──────────────────────
+    mae: numeric("mae"),                              // Maximum Adverse Excursion — null until per-bar watermark tracking is implemented
+    mfe: numeric("mfe"),                              // Maximum Favorable Excursion — null until per-bar watermark tracking is implemented
+    holdDurationMs: integer("hold_duration_ms"),      // exitTime - entryTime in milliseconds
+    hourOfDay: integer("hour_of_day"),                // UTC hour of entryTime (0–23)
+    dayOfWeek: integer("day_of_week"),                // JS standard: 0=Sun, 1=Mon, ..., 6=Sat
+    sessionType: text("session_type"),                // ASIA | LONDON | NY_OPEN | NY_CORE | NY_CLOSE | OVERNIGHT
+    macroRegime: text("macro_regime"),                // Latest macroSnapshots.macroRegime at close time
+    eventActive: boolean("event_active"),             // True if entryTime fell within an economic event blackout window
+    skipSignal: text("skip_signal"),                  // Most recent skipDecisions.decision for the ET trading day (TRADE | REDUCE | SKIP)
+    fillProbability: numeric("fill_probability"),     // Fill probability used at entry (copied from paperPositions)
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -675,6 +708,7 @@ export const walkForwardWindows = pgTable(
 export const quantumMcRuns = pgTable("quantum_mc_runs", {
     id: uuid("id").primaryKey().defaultRandom(),
     backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+    status: text("status").notNull().default("pending"), // pending | running | completed | failed
     method: text("method").notNull(), // iae | sqa | tensor_mps | qubo_timing | quantum_rl
     backend: text("backend"), // aer_statevector | aer_gpu | cpu | dwave_neal | pennylane
     numQubits: integer("num_qubits"),
@@ -688,6 +722,12 @@ export const quantumMcRuns = pgTable("quantum_mc_runs", {
     governanceLabels: jsonb("governance_labels").notNull().default({}), // {experimental: true, authoritative: false, decision_role: "challenger_only"}
     rawResult: jsonb("raw_result"),
     reproducibilityHash: text("reproducibility_hash"), // SHA-256 of run config
+    cloudProvider: text("cloud_provider"),
+    cloudBackendName: text("cloud_backend_name"),
+    cloudJobId: text("cloud_job_id"),
+    cloudQpuTimeSeconds: numeric("cloud_qpu_time_seconds"),
+    cloudCostDollars: numeric("cloud_cost_dollars"),
+    cloudRegion: text("cloud_region"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
 },
 (table) => [
@@ -707,6 +747,7 @@ export const quantumMcBenchmarks = pgTable("quantum_mc_benchmarks", {
     toleranceThreshold: numeric("tolerance_threshold"),
     passes: boolean("passes"),
     notes: text("notes"),
+    backendType: text("backend_type"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
 },
 (table) => [
@@ -764,4 +805,292 @@ export const strategyExportArtifacts = pgTable("strategy_export_artifacts", {
 },
 (table) => [
     index("strat_export_artifacts_export_idx").on(table.exportId),
+]);
+
+// ─── Quantum Persistence: SQA Optimization Runs ─────────────────────
+
+export const sqaOptimizationRuns = pgTable("sqa_optimization_runs", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    status: text("status").notNull().default("pending"), // pending | running | completed | failed
+    paramRanges: jsonb("param_ranges"), // [{name, min_val, max_val, n_bits}]
+    bestParams: jsonb("best_params"),
+    bestEnergy: numeric("best_energy"),
+    robustPlateau: jsonb("robust_plateau"), // {center, width, stability_score}
+    allSolutions: jsonb("all_solutions"), // top 20 solutions with energies
+    numReads: integer("num_reads"),
+    numSweeps: integer("num_sweeps"),
+    executionTimeMs: integer("execution_time_ms"),
+    governanceLabels: jsonb("governance_labels").notNull().default({}),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("sqa_runs_backtest_idx").on(table.backtestId),
+    index("sqa_runs_strategy_idx").on(table.strategyId),
+]);
+
+// ─── Quantum Persistence: QUBO Timing Runs ──────────────────────────
+
+export const quboTimingRuns = pgTable("qubo_timing_runs", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    status: text("status").notNull().default("pending"), // pending | running | completed | failed
+    sessionType: text("session_type"), // rth | eth | full
+    windowSize: integer("window_size"), // minutes per block (default 30)
+    schedule: jsonb("schedule"), // [{block_index, start_time, end_time, trade: bool}]
+    expectedReturn: numeric("expected_return"),
+    costSavings: numeric("cost_savings"),
+    backtestImprovement: numeric("backtest_improvement"), // % improvement vs trade-all
+    governanceLabels: jsonb("governance_labels").notNull().default({}),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("qubo_timing_backtest_idx").on(table.backtestId),
+    index("qubo_timing_strategy_idx").on(table.strategyId),
+]);
+
+// ─── Quantum Persistence: Tensor Predictions ────────────────────────
+
+export const tensorPredictions = pgTable("tensor_predictions", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    status: text("status").notNull().default("pending"), // pending | running | completed | failed
+    modelVersion: text("model_version"), // hash of MPS model used
+    probability: numeric("probability"), // P(profitable)
+    confidence: numeric("confidence"),
+    signal: text("signal"), // bullish | bearish | neutral
+    featureSnapshot: jsonb("feature_snapshot"), // input features at prediction time
+    regimeAtPrediction: text("regime_at_prediction"),
+    fragilityScore: numeric("fragility_score"), // 0-1, regime variance + param sensitivity
+    regimeBreakdown: jsonb("regime_breakdown"), // {regime: P(profitable)}
+    governanceLabels: jsonb("governance_labels").notNull().default({}),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("tensor_pred_backtest_idx").on(table.backtestId),
+    index("tensor_pred_strategy_idx").on(table.strategyId),
+]);
+
+// ─── Quantum Persistence: RL Training Runs ──────────────────────────
+
+export const rlTrainingRuns = pgTable("rl_training_runs", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    status: text("status").notNull().default("pending"), // pending | running | completed | failed
+    method: text("method").notNull(), // pennylane_vqc | classical_dqn
+    nQubits: integer("n_qubits"),
+    nLayers: integer("n_layers"),
+    episodes: integer("episodes"),
+    maxSteps: integer("max_steps"),
+    totalReturn: numeric("total_return"),
+    sharpeRatio: numeric("sharpe_ratio"),
+    winRate: numeric("win_rate"),
+    totalTrades: integer("total_trades"),
+    policyWeights: jsonb("policy_weights"), // serialized weights for replay
+    comparisonResult: jsonb("comparison_result"), // quantum vs classical delta
+    governanceLabels: jsonb("governance_labels").notNull().default({}),
+    executionTimeMs: integer("execution_time_ms"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("rl_runs_strategy_idx").on(table.strategyId),
+    index("rl_runs_method_idx").on(table.method),
+]);
+
+// ─── Critic Optimization Runs ───────────────────────────────────────
+
+export const criticOptimizationRuns = pgTable("critic_optimization_runs", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+    status: text("status").notNull().default("pending"), // pending | collecting_evidence | analyzing | replaying | completed | failed
+    candidatesGenerated: integer("candidates_generated"),
+    survivorCandidateId: uuid("survivor_candidate_id"),
+    survivorBacktestId: uuid("survivor_backtest_id"),
+    parentCompositeScore: numeric("parent_composite_score"),
+    survivorCompositeScore: numeric("survivor_composite_score"),
+    evidenceSources: jsonb("evidence_sources"), // {sqa, mc, quantum_mc, tensor, qubo, pennylane, rl}
+    evidencePacket: jsonb("evidence_packet"), // full assembled packet for reproducibility
+    compositeWeights: jsonb("composite_weights"),
+    executionTimeMs: integer("execution_time_ms"),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("critic_runs_strategy_idx").on(table.strategyId),
+    index("critic_runs_backtest_idx").on(table.backtestId),
+    index("critic_runs_status_idx").on(table.status),
+]);
+
+// ─── Critic Candidates ──────────────────────────────────────────────
+
+export const criticCandidates = pgTable("critic_candidates", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runId: uuid("run_id").references(() => criticOptimizationRuns.id, { onDelete: "cascade" }).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    rank: integer("rank").notNull(),
+    changedParams: jsonb("changed_params").notNull(), // {param_name: new_value}
+    parentParams: jsonb("parent_params"), // {param_name: old_value}
+    sourceOfChange: text("source_of_change").notNull(), // sqa_plateau | optuna_consensus | pennylane_refined | timing_optimized | cuopt_selected | mixed
+    expectedUplift: numeric("expected_uplift"),
+    riskPenalty: numeric("risk_penalty"),
+    compositeScore: numeric("composite_score"), // predicted pre-replay
+    actualCompositeScore: numeric("actual_composite_score"), // after replay
+    confidence: text("confidence"), // high | medium | low
+    reasoning: text("reasoning"),
+    replayStatus: text("replay_status").notNull().default("pending"), // pending | running | completed | failed | skipped
+    replayBacktestId: uuid("replay_backtest_id").references(() => backtests.id),
+    replayTier: text("replay_tier"), // TIER_1 | TIER_2 | TIER_3 | REJECTED
+    replayForgeScore: numeric("replay_forge_score"),
+    selected: boolean("selected").default(false), // was this the survivor?
+    governanceLabels: jsonb("governance_labels").notNull().default({}),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("critic_cand_run_idx").on(table.runId),
+    index("critic_cand_strategy_idx").on(table.strategyId),
+    index("critic_cand_status_idx").on(table.replayStatus),
+    index("critic_cand_selected_idx").on(table.selected),
+]);
+
+// ─── DeepAR Forecasts (Regime Prediction) ────────────────────────────
+
+export const deeparForecasts = pgTable("deepar_forecasts", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    forecastDate: date("forecast_date").notNull(),
+    generatedAt: timestamp("generated_at").defaultNow(),
+    symbol: text("symbol").notNull(),
+    predictionHorizon: integer("prediction_horizon").default(5),
+    pHighVol: numeric("p_high_vol"),
+    pTrending: numeric("p_trending"),
+    pMeanRevert: numeric("p_mean_revert"),
+    pCorrelationStress: numeric("p_correlation_stress"),
+    forecastConfidence: numeric("forecast_confidence"),
+    quantileP10: numeric("quantile_p10"),
+    quantileP50: numeric("quantile_p50"),
+    quantileP90: numeric("quantile_p90"),
+    actualRegime: text("actual_regime"),
+    hitRate: numeric("hit_rate"),
+    modelVersion: text("model_version"),
+    // Phase 2.4 — Forecast quality tracking
+    regretScore: numeric("regret_score"),    // magnitude of regime mis-call cost
+    magnitudeError: numeric("magnitude_error"), // |predicted_prob - actual_prob| for top regime
+    governanceLabels: jsonb("governance_labels").notNull().default({ experimental: true, authoritative: false, decision_role: "challenger_only" }),
+},
+(table) => [
+    index("deepar_forecasts_symbol_idx").on(table.symbol),
+    index("deepar_forecasts_date_idx").on(table.forecastDate),
+]);
+
+// ─── DeepAR Training Runs ────────────────────────────────────────────
+
+export const deeparTrainingRuns = pgTable("deepar_training_runs", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    trainedAt: timestamp("trained_at").defaultNow(),
+    symbols: jsonb("symbols"),
+    dataRangeStart: date("data_range_start"),
+    dataRangeEnd: date("data_range_end"),
+    epochs: integer("epochs"),
+    trainingLoss: numeric("training_loss"),
+    validationLoss: numeric("validation_loss"),
+    modelPath: text("model_path"),
+    durationMs: integer("duration_ms"),
+    status: text("status").notNull().default("pending"),
+    governanceLabels: jsonb("governance_labels").notNull().default({ experimental: true, authoritative: false, decision_role: "challenger_only" }),
+},
+(table) => [
+    index("deepar_training_status_idx").on(table.status),
+]);
+
+// ─── Portfolio Snapshots (Correlation Learning) ─────────────────────
+
+export const portfolioSnapshots = pgTable("portfolio_snapshots", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  snapshotDate: date("snapshot_date").notNull(),
+  correlationMatrix: jsonb("correlation_matrix").notNull(),
+  activeStrategies: jsonb("active_strategies").notNull(),
+  totalHeat: numeric("total_heat"),
+  recommendations: jsonb("recommendations"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Agent Health Reports ───────────────────────────────────────────
+
+export const agentHealthReports = pgTable("agent_health_reports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  domain: text("domain").notNull(), // lifecycle | paper | compliance | critic | deepar | decay | scout | risk | scheduler
+  status: text("status").notNull().default("healthy"), // healthy | degraded | down | unknown
+  lastCheckedAt: timestamp("last_checked_at").defaultNow().notNull(),
+  latencyMs: integer("latency_ms"),
+  errorCount: integer("error_count").default(0),
+  details: jsonb("details"), // domain-specific health payload
+  recommendations: jsonb("recommendations"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("agent_health_domain_idx").on(table.domain),
+    index("agent_health_status_idx").on(table.status),
+]);
+
+// ─── System Parameters (Auto-Tuning) ───────────────────────────────
+
+export const systemParameters = pgTable("system_parameters", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  paramName: text("param_name").notNull().unique(),
+  currentValue: numeric("current_value").notNull(),
+  minValue: numeric("min_value"),
+  maxValue: numeric("max_value"),
+  description: text("description"),
+  domain: text("domain").notNull(), // lifecycle | paper | compliance | critic | risk | scheduler
+  autoTunable: boolean("auto_tunable").default(false),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    uniqueIndex("system_params_name_idx").on(table.paramName),
+    index("system_params_domain_idx").on(table.domain),
+]);
+
+export const systemParameterHistory = pgTable("system_parameter_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  paramId: uuid("param_id").references(() => systemParameters.id).notNull(),
+  previousValue: numeric("previous_value").notNull(),
+  newValue: numeric("new_value").notNull(),
+  reason: text("reason").notNull(),
+  source: text("source").notNull().default("meta-optimizer"), // meta-optimizer | manual | auto-tune
+  gateMetrics: jsonb("gate_metrics"), // snapshot of metrics that triggered the change
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+    index("param_history_param_idx").on(table.paramId),
+]);
+
+// ─── Mutation Outcomes (Phase 2.2 — Impact Tracking) ─────────────────
+// Records the observed impact of every parameter mutation that was backtested
+// during evolution. Used by the critic to learn which mutation types work in
+// which regimes, building an empirical mutation effectiveness database.
+
+export const mutationOutcomes = pgTable("mutation_outcomes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  strategyId: uuid("strategy_id").references(() => strategies.id),
+  parentArchetype: text("parent_archetype"),  // strategy tag / archetype label
+  mutationType: text("mutation_type"),         // param_shift | period_expand | period_contract | mixed
+  paramName: text("param_name"),               // e.g. ind_0_period
+  direction: text("direction"),                // increase | decrease
+  magnitude: numeric("magnitude"),             // absolute change applied
+  parentMetrics: jsonb("parent_metrics"),      // {sharpe, profitFactor, maxDrawdown}
+  childMetrics: jsonb("child_metrics"),        // {sharpe, profitFactor, maxDrawdown}
+  improvement: numeric("improvement"),         // childSharpe - parentSharpe (signed)
+  regime: text("regime"),                      // preferredRegime at time of mutation
+  success: boolean("success"),                 // improvement > 0
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("mutation_outcomes_strategy_idx").on(table.strategyId),
+  index("mutation_outcomes_type_idx").on(table.mutationType),
+  index("mutation_outcomes_success_idx").on(table.success),
+  index("mutation_outcomes_regime_idx").on(table.regime),
 ]);

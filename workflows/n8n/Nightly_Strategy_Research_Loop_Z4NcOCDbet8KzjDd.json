@@ -29,7 +29,7 @@
     },
     {
       "parameters": {
-        "model": "trading-quant:latest",
+        "model": "qwen3-coder:30b",
         "options": {}
       },
       "id": "ollama-gen-model",
@@ -96,7 +96,9 @@
             {}
           ]
         },
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-batch-submit",
       "name": "Submit Strategies for Backtest",
@@ -109,7 +111,8 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -137,7 +140,9 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-fetch-results",
       "name": "Fetch Completed Backtests",
@@ -150,11 +155,12 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "model": "llama3.1:8b",
+        "model": "deepseek-r1:14b",
         "options": {}
       },
       "id": "ollama-critique-model",
@@ -208,7 +214,9 @@
             {}
           ]
         },
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-post-critique",
       "name": "Post Critique to Agent",
@@ -221,7 +229,8 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -242,7 +251,9 @@
             {}
           ]
         },
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-log-journal",
       "name": "Log Cycle to Journal",
@@ -252,7 +263,10 @@
         3312,
         304
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -412,7 +426,7 @@
     },
     {
       "parameters": {
-        "model": "llama3.1:8b",
+        "model": "deepseek-r1:14b",
         "options": {}
       },
       "id": "b3c8f3d0-4dfc-4624-9977-c628277b7cb7",
@@ -433,7 +447,7 @@
     },
     {
       "parameters": {
-        "model": "llama3.1:8b",
+        "model": "deepseek-r1:14b",
         "options": {}
       },
       "id": "03a4ab1d-d1e8-4aea-a12a-3831b922414b",
@@ -483,11 +497,15 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20"
+        "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-fetch-scouted",
       "name": "Fetch Scouted Ideas",
@@ -500,7 +518,8 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -537,7 +556,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4100/alert/alerts",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Nightly Research Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Nightly Strategy Research', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
@@ -553,7 +572,11 @@
         "options": {
           "timeout": 15000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -917,7 +940,7 @@
       },
       {
         "parameters": {
-          "model": "trading-quant:latest",
+          "model": "qwen3-coder:30b",
           "options": {}
         },
         "id": "ollama-gen-model",
@@ -984,7 +1007,9 @@
               {}
             ]
           },
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "http-batch-submit",
         "name": "Submit Strategies for Backtest",
@@ -997,7 +1022,8 @@
         "retryOnFail": true,
         "maxTries": 3,
         "waitBetweenTries": 5000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1025,7 +1051,9 @@
               }
             ]
           },
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "http-fetch-results",
         "name": "Fetch Completed Backtests",
@@ -1038,11 +1066,12 @@
         "retryOnFail": true,
         "maxTries": 3,
         "waitBetweenTries": 5000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
-          "model": "llama3.1:8b",
+          "model": "deepseek-r1:14b",
           "options": {}
         },
         "id": "ollama-critique-model",
@@ -1096,7 +1125,9 @@
               {}
             ]
           },
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "http-post-critique",
         "name": "Post Critique to Agent",
@@ -1109,7 +1140,8 @@
         "retryOnFail": true,
         "maxTries": 3,
         "waitBetweenTries": 5000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1130,7 +1162,9 @@
               {}
             ]
           },
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "http-log-journal",
         "name": "Log Cycle to Journal",
@@ -1140,7 +1174,10 @@
           3312,
           304
         ],
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1300,7 +1337,7 @@
       },
       {
         "parameters": {
-          "model": "llama3.1:8b",
+          "model": "deepseek-r1:14b",
           "options": {}
         },
         "id": "b3c8f3d0-4dfc-4624-9977-c628277b7cb7",
@@ -1321,7 +1358,7 @@
       },
       {
         "parameters": {
-          "model": "llama3.1:8b",
+          "model": "deepseek-r1:14b",
           "options": {}
         },
         "id": "03a4ab1d-d1e8-4aea-a12a-3831b922414b",
@@ -1371,11 +1408,15 @@
         "retryOnFail": true,
         "maxTries": 3,
         "waitBetweenTries": 5000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
-          "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20"
+          "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "http-fetch-scouted",
         "name": "Fetch Scouted Ideas",
@@ -1388,7 +1429,8 @@
         "retryOnFail": true,
         "maxTries": 2,
         "waitBetweenTries": 3000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1425,7 +1467,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4100/alert/alerts",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Nightly Research Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Nightly Strategy Research', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
@@ -1441,7 +1483,11 @@
           "options": {
             "timeout": 15000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {

@@ -155,6 +155,69 @@
       "when": 1775200000000,
       "tag": "0021_add_performance_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1775300000000,
+      "tag": "0022_quantum_persistence_critic",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1775400000000,
+      "tag": "0023_paper_trades_commission",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1775500000000,
+      "tag": "0024_paper_position_state_persistence",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1775600000000,
+      "tag": "0025_backtest_gate_result_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1775700000000,
+      "tag": "0026_wave2_status_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1775800000000,
+      "tag": "0027_deepar_cloud_quantum",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1775900000000,
+      "tag": "0028_quantum_mc_cloud_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1775960000000,
+      "tag": "0029_paper_trades_journal_enrichment",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1775970000000,
+      "tag": "0030_graveyard_failure_taxonomy",
+      "breakpoints": true
     }
   ]
 }

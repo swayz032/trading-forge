@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-19T01:38:32.125Z",
+  "updatedAt": "2026-03-31T04:40:00.643Z",
   "createdAt": "2026-03-14T21:16:23.958Z",
   "id": "eaq72MwKwCjv7g7F",
   "name": "Pre-Session Skip Check",
@@ -38,14 +38,16 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "http://localhost:4000/api/skip/today",
+        "url": "http://host.docker.internal:4000/api/skip/today",
         "options": {
           "timeout": 10000
         }
       },
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "code-parse-decisions",
@@ -116,17 +118,18 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/skip",
+        "url": "http://host.docker.internal:4100/alert/skip",
         "sendBody": true,
-        "contentType": "json",
-        "body": "={{ JSON.stringify($json) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify(Object.assign({}, $json, { type: 'SKIP' })) }}",
         "options": {
           "timeout": 10000
-        },
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
+        }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "if-any-reduces",
@@ -184,17 +187,18 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/skip",
+        "url": "http://host.docker.internal:4100/alert/skip",
         "sendBody": true,
-        "contentType": "json",
-        "body": "={{ JSON.stringify($json) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify(Object.assign({}, $json, { type: 'REDUCE' })) }}",
         "options": {
           "timeout": 10000
-        },
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
+        }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "code-session-briefing",
@@ -220,17 +224,18 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/skip",
+        "url": "http://host.docker.internal:4100/alert/skip",
         "sendBody": true,
-        "contentType": "json",
-        "body": "={{ JSON.stringify($json) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'BRIEFING', title: 'Pre-Session Briefing', message: 'Trading: ' + ($json.summary ? $json.summary.tradingCount : 0) + ' | Reduce: ' + ($json.summary ? $json.summary.reduceCount : 0) + ' | Skip: ' + ($json.summary ? $json.summary.skipCount : 0) + ' (Total: ' + ($json.summary ? $json.summary.totalStrategies : 0) + ')', severity: 'info', data: { date: $json.date || '', tradingCount: String($json.summary ? $json.summary.tradingCount : 0), reduceCount: String($json.summary ? $json.summary.reduceCount : 0), skipCount: String($json.summary ? $json.summary.skipCount : 0), totalStrategies: String($json.summary ? $json.summary.totalStrategies : 0) } }) }}",
         "options": {
           "timeout": 10000
-        },
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ title: 'Pre-Session Briefing', message: 'Trading: ' + ($json.summary ? $json.summary.tradingCount : 0) + ' | Reduce: ' + ($json.summary ? $json.summary.reduceCount : 0) + ' | Skip: ' + ($json.summary ? $json.summary.skipCount : 0) + ' (Total: ' + ($json.summary ? $json.summary.totalStrategies : 0) + ')', severity: 'info', data: { date: $json.date || '', tradingCount: String($json.summary ? $json.summary.tradingCount : 0), reduceCount: String($json.summary ? $json.summary.reduceCount : 0), skipCount: String($json.summary ? $json.summary.skipCount : 0), totalStrategies: String($json.summary ? $json.summary.totalStrategies : 0) } }) }}"
+        }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "error-trigger",
@@ -265,7 +270,8 @@
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -411,7 +417,7 @@
     "saveDataSuccessExecution": "all",
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": true
   },
   "staticData": {
     "node:Weekday 9AM ET Trigger": {
@@ -420,9 +426,9 @@
   },
   "meta": null,
   "pinData": null,
-  "versionId": "c5d37a25-6906-4146-ba33-89abd7fde630",
-  "activeVersionId": "c5d37a25-6906-4146-ba33-89abd7fde630",
-  "versionCounter": 14,
+  "versionId": "1113a2a5-e56c-4b5d-874e-06140913962a",
+  "activeVersionId": "1113a2a5-e56c-4b5d-874e-06140913962a",
+  "versionCounter": 30,
   "triggerCount": 1,
   "shared": [
     {
@@ -447,7 +453,7 @@
             "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
             "projectId": "l9zgLNMKv7CjloiW",
             "user": {
-              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "updatedAt": "2026-04-03T05:29:30.601Z",
               "createdAt": "2026-02-12T09:44:05.126Z",
               "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
               "email": "tonioswayz32@gmail.com",
@@ -462,7 +468,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-03-20",
+              "lastActiveAt": "2026-04-03",
               "isPending": false
             }
           }
@@ -472,9 +478,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-19T01:38:32.126Z",
-    "createdAt": "2026-03-19T01:38:32.126Z",
-    "versionId": "c5d37a25-6906-4146-ba33-89abd7fde630",
+    "updatedAt": "2026-03-31T03:50:01.660Z",
+    "createdAt": "2026-03-28T00:25:42.810Z",
+    "versionId": "1113a2a5-e56c-4b5d-874e-06140913962a",
     "workflowId": "eaq72MwKwCjv7g7F",
     "nodes": [
       {
@@ -508,14 +514,16 @@
         ],
         "parameters": {
           "method": "GET",
-          "url": "http://localhost:4000/api/skip/today",
+          "url": "http://host.docker.internal:4000/api/skip/today",
           "options": {
             "timeout": 10000
           }
         },
         "retryOnFail": true,
         "maxTries": 2,
-        "waitBetweenTries": 5000
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "code-parse-decisions",
@@ -586,17 +594,18 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/skip",
+          "url": "http://host.docker.internal:4100/alert/skip",
           "sendBody": true,
-          "contentType": "json",
-          "body": "={{ JSON.stringify($json) }}",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify(Object.assign({}, $json, { type: 'SKIP' })) }}",
           "options": {
             "timeout": 10000
-          },
-          "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify($json) }}"
+          }
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "id": "if-any-reduces",
@@ -654,17 +663,18 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/skip",
+          "url": "http://host.docker.internal:4100/alert/skip",
           "sendBody": true,
-          "contentType": "json",
-          "body": "={{ JSON.stringify($json) }}",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify(Object.assign({}, $json, { type: 'REDUCE' })) }}",
           "options": {
             "timeout": 10000
-          },
-          "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify($json) }}"
+          }
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "id": "code-session-briefing",
@@ -690,17 +700,18 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/skip",
+          "url": "http://host.docker.internal:4100/alert/skip",
           "sendBody": true,
-          "contentType": "json",
-          "body": "={{ JSON.stringify($json) }}",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ type: 'BRIEFING', title: 'Pre-Session Briefing', message: 'Trading: ' + ($json.summary ? $json.summary.tradingCount : 0) + ' | Reduce: ' + ($json.summary ? $json.summary.reduceCount : 0) + ' | Skip: ' + ($json.summary ? $json.summary.skipCount : 0) + ' (Total: ' + ($json.summary ? $json.summary.totalStrategies : 0) + ')', severity: 'info', data: { date: $json.date || '', tradingCount: String($json.summary ? $json.summary.tradingCount : 0), reduceCount: String($json.summary ? $json.summary.reduceCount : 0), skipCount: String($json.summary ? $json.summary.skipCount : 0), totalStrategies: String($json.summary ? $json.summary.totalStrategies : 0) } }) }}",
           "options": {
             "timeout": 10000
-          },
-          "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({ title: 'Pre-Session Briefing', message: 'Trading: ' + ($json.summary ? $json.summary.tradingCount : 0) + ' | Reduce: ' + ($json.summary ? $json.summary.reduceCount : 0) + ' | Skip: ' + ($json.summary ? $json.summary.skipCount : 0) + ' (Total: ' + ($json.summary ? $json.summary.totalStrategies : 0) + ')', severity: 'info', data: { date: $json.date || '', tradingCount: String($json.summary ? $json.summary.tradingCount : 0), reduceCount: String($json.summary ? $json.summary.reduceCount : 0), skipCount: String($json.summary ? $json.summary.skipCount : 0), totalStrategies: String($json.summary ? $json.summary.totalStrategies : 0) } }) }}"
+          }
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "id": "error-trigger",
@@ -735,7 +746,8 @@
         "onError": "continueRegularOutput",
         "retryOnFail": true,
         "maxTries": 2,
-        "waitBetweenTries": 2000
+        "waitBetweenTries": 2000,
+        "continueOnFail": true
       }
     ],
     "connections": {
@@ -875,15 +887,23 @@
       }
     },
     "authors": "Tonio tonioswayz32@gmail.com",
-    "name": null,
-    "description": null,
+    "name": "Version 1113a2a5",
+    "description": "",
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-19T01:38:32.160Z",
-        "id": 1182,
+        "createdAt": "2026-03-31T03:50:01.658Z",
+        "id": 1364,
         "workflowId": "eaq72MwKwCjv7g7F",
-        "versionId": "c5d37a25-6906-4146-ba33-89abd7fde630",
+        "versionId": "1113a2a5-e56c-4b5d-874e-06140913962a",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-31T04:40:00.665Z",
+        "id": 1388,
+        "workflowId": "eaq72MwKwCjv7g7F",
+        "versionId": "1113a2a5-e56c-4b5d-874e-06140913962a",
         "event": "activated",
         "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
       }

@@ -1316,19 +1316,32 @@ def compute_portfolio_correlation(
     matrix = {}
     flagged = []
 
+    # Use robust covariance (LedoitWolf shrinkage) when available, fallback to Pearson
+    try:
+        from src.engine.robust_covariance import estimate_covariance
+        returns_matrix = np.column_stack([np.array(strategies_daily_pnl[name][:min_len]) for name in names])
+        robust_result = estimate_covariance(returns_matrix, method="ledoit_wolf")
+        robust_corr = np.array(robust_result["correlation"])
+    except Exception:
+        robust_corr = None
+
     for i in range(n):
         for j in range(i + 1, n):
-            a_arr = np.array(strategies_daily_pnl[names[i]][:min_len])
-            b_arr = np.array(strategies_daily_pnl[names[j]][:min_len])
-
-            # Pearson correlation
-            std_a, std_b = np.std(a_arr), np.std(b_arr)
-            if std_a == 0 or std_b == 0:
-                corr = 0.0
-            else:
-                corr = float(np.corrcoef(a_arr, b_arr)[0, 1])
+            if robust_corr is not None:
+                corr = float(robust_corr[i, j])
                 if np.isnan(corr):
                     corr = 0.0
+            else:
+                a_arr = np.array(strategies_daily_pnl[names[i]][:min_len])
+                b_arr = np.array(strategies_daily_pnl[names[j]][:min_len])
+                # Pearson fallback
+                std_a, std_b = np.std(a_arr), np.std(b_arr)
+                if std_a == 0 or std_b == 0:
+                    corr = 0.0
+                else:
+                    corr = float(np.corrcoef(a_arr, b_arr)[0, 1])
+                    if np.isnan(corr):
+                        corr = 0.0
 
             pair_key = f"{names[i]}|{names[j]}"
             matrix[pair_key] = round(corr, 4)

@@ -294,7 +294,11 @@ journalRoutes.patch("/:id", async (req, res) => {
 });
 
 // DELETE /api/journal — Purge all journal entries (clean slate)
-journalRoutes.delete("/", async (_req, res) => {
+journalRoutes.delete("/", async (req, res) => {
+  if (req.query.confirm !== "true") {
+    res.status(400).json({ error: "Add ?confirm=true to confirm purge" });
+    return;
+  }
   await db.delete(systemJournal);
   res.json({ deleted: true, message: "All journal entries purged" });
 });

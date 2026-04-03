@@ -1,9 +1,5 @@
 import { Router } from "express";
 import { z } from "zod";
-import { writeFileSync, unlinkSync } from "fs";
-import { join } from "path";
-import { tmpdir } from "os";
-import { randomUUID } from "crypto";
 import { AgentService } from "../services/agent-service.js";
 import { analyzeMarket } from "../services/regime-service.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
@@ -12,6 +8,7 @@ import { auditLog } from "../db/schema.js";
 import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { OllamaClient } from "../services/ollama-client.js";
 import { logger } from "../index.js";
+import { runPythonModule } from "../lib/python-runner.js";
 
 export const agentRoutes = Router();
 const agentService = new AgentService();
@@ -27,40 +24,34 @@ const KNOWN_ICT_CONCEPTS = [
 /**
  * Run Python static validation on strategy code against its concept spec.
  * Returns { passed: boolean, errors: string[], warnings: string[] }
+ * Uses runPythonModule (async spawn) instead of blocking execSync.
  */
 async function runPythonValidation(
   pythonCode: string,
   conceptName: string,
 ): Promise<{ passed: boolean; errors: string[]; warnings: string[] }> {
-  const { execSync } = await import("child_process");
-  // Write python code to a temp file to avoid string interpolation injection
-  const tmpFile = join(tmpdir(), `tf_validate_${randomUUID()}.py`);
-  const codeFile = join(tmpdir(), `tf_code_${randomUUID()}.py`);
   try {
-    writeFileSync(codeFile, pythonCode, "utf-8");
-    const script = `
-import json, sys
+    const result = await runPythonModule<{ passed: boolean; errors: string[]; warnings: string[] }>({
+      scriptCode: `
+import json, sys, os
 sys.path.insert(0, '.')
 from src.engine.validation import load_spec, validate_static_from_code
-spec = load_spec('${conceptName}')
-with open(r'${codeFile.replace(/\\/g, "\\\\")}', 'r') as f:
-    code = f.read()
-result = validate_static_from_code(code, spec)
+# Read config from --config temp file (avoids CLI length limits for python_code)
+config_path = sys.argv[sys.argv.index('--config') + 1]
+with open(config_path, 'r') as f:
+    cfg = json.load(f)
+spec = load_spec(cfg['concept_name'])
+result = validate_static_from_code(cfg['python_code'], spec)
 print(json.dumps({"passed": result.passed, "errors": result.errors, "warnings": result.warnings}))
-`;
-    writeFileSync(tmpFile, script, "utf-8");
-    const output = execSync(`python "${tmpFile}"`, {
-      cwd: process.cwd(),
-      timeout: 10000,
-      encoding: "utf-8",
+`,
+      config: { concept_name: conceptName, python_code: pythonCode },
+      timeoutMs: 10_000,
+      componentName: "strategy-validation",
     });
-    return JSON.parse(output.trim());
+    return result;
   } catch {
     // If validation can't run, let the strategy through (fail-open)
     return { passed: true, errors: [], warnings: ["Validation could not run"] };
-  } finally {
-    try { unlinkSync(tmpFile); } catch { /* ignore */ }
-    try { unlinkSync(codeFile); } catch { /* ignore */ }
   }
 }
 
@@ -169,14 +160,13 @@ agentRoutes.post("/run-strategy", async (req, res) => {
   }
 
   // ─── Cross-validation gate: unknown concepts ────────────
-  // If strategy claims to be an ICT concept but we don't have a spec → queue for research
+  // If strategy claims to be an ICT concept but we don't have a spec → reject
   const ictPatterns = /\b(ict|smc|order.?block|fvg|breaker|sweep|liquidity)\b/i;
   if (!KNOWN_ICT_CONCEPTS.includes(strategyName as any) && ictPatterns.test(parsed.data.one_sentence)) {
-    logger.info({ strategyName }, "Unknown ICT concept — queued for cross-validation");
-    res.status(202).json({
-      status: "queued_for_validation",
-      reason: `Concept '${strategyName}' not yet cross-validated. Strategy queued for research.`,
-      strategy_name: strategyName,
+    logger.info({ strategyName }, "Unknown ICT concept — rejected (no cross-validated spec)");
+    res.status(400).json({
+      error: "Unknown ICT concept",
+      concept: strategyName,
     });
     return;
   }
@@ -312,6 +302,7 @@ agentRoutes.post("/robustness", async (req, res) => {
     entityId: parsed.data.strategy_id,
     input: parsed.data as unknown as Record<string, unknown>,
     status: "pending",
+    decisionAuthority: "agent",
   }).returning();
 
   // Fire and forget
@@ -340,6 +331,7 @@ agentRoutes.post("/find-strategies", async (req, res) => {
     entityType: "strategy",
     input: parsed.data as unknown as Record<string, unknown>,
     status: "pending",
+    decisionAuthority: "agent",
   }).returning();
 
   const { symbol, timeframe, start_date, end_date, count } = parsed.data;
@@ -432,17 +424,24 @@ Output ONLY the DSL JSON object, nothing else.`;
     await db.update(auditLog).set({
       status: results.some((r) => r.status === "completed") ? "success" : "failure",
       result: { strategies: results } as unknown as Record<string, unknown>,
+      decisionAuthority: "agent",
     }).where(eq(auditLog.id, job.id));
 
     logger.info({ jobId: job.id, results }, "find-strategies completed");
   })().catch((err) => {
     logger.error({ err, jobId: job.id }, "find-strategies failed");
-    db.update(auditLog).set({
-      status: "failure",
-      result: { error: err instanceof Error ? err.message : String(err) } as unknown as Record<string, unknown>,
-    }).where(eq(auditLog.id, job.id)).catch((err) => {
-      logger.error({ err, jobId: job.id }, "Failed to update audit log after find-strategies failure");
-    });
+    try {
+      db.update(auditLog).set({
+        status: "failure",
+        result: { error: err instanceof Error ? err.message : String(err) } as unknown as Record<string, unknown>,
+        decisionAuthority: "agent",
+        errorMessage: err instanceof Error ? err.message : String(err),
+      }).where(eq(auditLog.id, job.id)).catch((dbErr) => {
+        logger.error({ err: dbErr, jobId: job.id }, "Failed to update job status after error");
+      });
+    } catch (dbErr) {
+      logger.error({ err: dbErr, jobId: job.id }, "Failed to update job status after error");
+    }
   });
 
   res.status(202).json({ job_id: job.id, message: "Strategy search submitted" });

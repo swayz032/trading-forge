@@ -4,7 +4,7 @@ import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 
 export type AlertSeverity = "info" | "warning" | "critical";
-export type AlertType = "trade_signal" | "drawdown" | "regime_change" | "degradation" | "drift" | "decay" | "system";
+export type AlertType = "trade_signal" | "drawdown" | "regime_change" | "degradation" | "drift" | "decay" | "system" | "lifecycle";
 
 export async function createAlert(params: {
   type: AlertType;
@@ -27,7 +27,16 @@ export async function createAlert(params: {
   // Log critical alerts
   if (params.severity === "critical") {
     logger.error({ alert: params }, `CRITICAL ALERT: ${params.title}`);
-    // TODO: Add SNS/email notification for critical alerts
+    try {
+      const discordPort = process.env.DISCORD_ALERT_PORT || "4100";
+      await fetch(`http://localhost:${discordPort}/alert/alerts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: params.title, message: params.message, severity: "critical" })
+      });
+    } catch (e) {
+      logger.warn({ err: e }, "Failed to send Discord alert");
+    }
   } else {
     logger.info({ alertId: alert.id, type: params.type }, `Alert: ${params.title}`);
   }
@@ -64,12 +73,57 @@ export const AlertFactory = {
       metadata: { strategyId, level },
     }),
 
-  systemError: (component: string, error: string) =>
+  systemError: (component: string, error: string | Error) =>
     createAlert({
       type: "system",
       severity: "critical",
       title: `System error: ${component}`,
-      message: error,
+      message: error instanceof Error ? error.message : error,
       metadata: { component },
+    }),
+
+  deployReady: (strategyId: string, message: string) =>
+    createAlert({
+      type: "lifecycle",
+      severity: "info",
+      title: "Strategy ready for deployment",
+      message,
+      metadata: { strategyId, action: "review_library" },
+    }),
+
+  circuitOpen: (endpoint: string) =>
+    createAlert({
+      type: "system",
+      severity: "critical",
+      title: `Circuit breaker OPEN: ${endpoint}`,
+      message: `Circuit breaker for "${endpoint}" has tripped open. Requests to this subsystem are being rejected until the cooldown elapses and a probe succeeds.`,
+      metadata: { endpoint, event: "circuit_open" },
+    }),
+
+  schedulerMissed: (jobName: string, overdueMs: number) =>
+    createAlert({
+      type: "system",
+      severity: "warning",
+      title: `Scheduler missed: ${jobName}`,
+      message: `Scheduled job "${jobName}" is ${Math.round(overdueMs / 1000)}s overdue.`,
+      metadata: { jobName, overdueMs },
+    }),
+
+  paperSessionStale: (sessionId: string, lastSignalAgeMs: number) =>
+    createAlert({
+      type: "system",
+      severity: "warning",
+      title: `Paper session stale: ${sessionId.slice(0, 8)}`,
+      message: `Paper session ${sessionId} has not received a signal in ${Math.round(lastSignalAgeMs / 1000)}s.`,
+      metadata: { sessionId, lastSignalAgeMs },
+    }),
+
+  complianceDrift: (firm: string, summary: string) =>
+    createAlert({
+      type: "system",
+      severity: "critical",
+      title: `Compliance drift detected: ${firm}`,
+      message: summary,
+      metadata: { firm },
     }),
 };

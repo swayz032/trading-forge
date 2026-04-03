@@ -4,7 +4,7 @@
   "id": "DOupmbBiM95a1kho",
   "name": "Strategy Deep Analysis Pipeline",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -60,7 +60,11 @@
         "options": {
           "timeout": 30000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "core-backtest",
@@ -80,7 +84,11 @@
         "options": {
           "timeout": 120000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "check-core-score",
@@ -142,7 +150,10 @@
           "timeout": 900000
         }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "journal-results",
@@ -158,8 +169,15 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id, source: 'n8n', tier: $json.tier || 'REJECTED', forgeScore: $json.forgeScore || 0 }) }}"
-      }
+        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id, source: 'n8n', tier: $json.tier || 'REJECTED', forgeScore: $json.forgeScore || 0 }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "ollama-critique",
@@ -175,12 +193,15 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: 'llama3:8b', prompt: 'Analyze this strategy backtest result. What are the strengths? Weaknesses? What patterns emerge? What should the next generation avoid? Results: ' + JSON.stringify({ forgeScore: $('Core Backtest').first().json.forgeScore, sharpe: $('Core Backtest').first().json.sharpeRatio, winRate: $('Core Backtest').first().json.winRate, profitFactor: $('Core Backtest').first().json.profitFactor }), stream: false }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: 'deepseek-r1:14b', prompt: 'Analyze this strategy backtest result. What are the strengths? Weaknesses? What patterns emerge? What should the next generation avoid? Results: ' + JSON.stringify({ forgeScore: $('Core Backtest').first().json.forgeScore, sharpe: $('Core Backtest').first().json.sharpeRatio, winRate: $('Core Backtest').first().json.winRate, profitFactor: $('Core Backtest').first().json.profitFactor }), stream: false }) }}",
         "options": {
           "timeout": 120000
         }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "check-promote",
@@ -255,8 +276,15 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id }) }}"
-      }
+        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "broadcast-results",
@@ -272,9 +300,15 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ type: 'strategy:analyzed', data: { strategyId: $('Validate Input').first().json.strategy_id, forgeScore: $('Core Backtest').first().json.forgeScore, tier: $('Core Backtest').first().json.tier } }) }}"
+        "jsonBody": "={{ JSON.stringify({ type: 'strategy:analyzed', data: { strategyId: $('Validate Input').first().json.strategy_id, forgeScore: $('Core Backtest').first().json.forgeScore, tier: $('Core Backtest').first().json.tier } }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "journal-failure",
@@ -290,8 +324,15 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id, source: 'n8n', tier: 'REJECTED', status: 'failed', analystNotes: 'Core backtest Forge Score below 30 \u2014 strategy rejected at gate' }) }}"
-      }
+        "jsonBody": "={{ JSON.stringify({ strategyId: $('Validate Input').first().json.strategy_id, source: 'n8n', tier: 'REJECTED', status: 'failed', analystNotes: 'Core backtest Forge Score below 30 — strategy rejected at gate' }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "6b9cab36-c44d-477b-a028-dc17906e4707",
@@ -311,7 +352,11 @@
         "options": {
           "timeout": 300000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "error-trigger",
@@ -338,9 +383,15 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ type: 'strategy:analysis-error', data: { error: ($json.execution && $json.execution.error && $json.execution.error.message) || 'Unknown error', workflowName: 'Strategy Deep Analysis Pipeline', timestamp: new Date().toISOString() } }) }}"
+        "jsonBody": "={{ JSON.stringify({ type: 'strategy:analysis-error', data: { error: ($json.execution && $json.execution.error && $json.execution.error.message) || 'Unknown error', workflowName: 'Strategy Deep Analysis Pipeline', timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "poll-backtest",

@@ -136,6 +136,7 @@ export async function runRobustnessTest(
       },
       status: "success",
       durationMs: Date.now() - startTime,
+      decisionAuthority: "agent",
     });
 
     return result;
@@ -150,6 +151,8 @@ export async function runRobustnessTest(
       result: { error: errorMsg },
       status: "failure",
       durationMs: Date.now() - startTime,
+      decisionAuthority: "agent",
+      errorMessage: errorMsg,
     });
 
     throw err;

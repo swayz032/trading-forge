@@ -11,15 +11,50 @@ const router = Router();
 
 // ─── Ruleset Freshness Constants ────────────────────────────
 const RULESET_MAX_AGE_HOURS = {
-  active_trading: 24,
-  research_only: 72,
+  active_trading: Number(process.env.RULESET_MAX_AGE_HOURS_ACTIVE) || 24,
+  research_only: Number(process.env.RULESET_MAX_AGE_HOURS_RESEARCH) || 72,
+};
+
+const stableComplianceRulesetSelect = {
+  id: complianceRulesets.id,
+  firm: complianceRulesets.firm,
+  accountType: complianceRulesets.accountType,
+  sourceUrl: complianceRulesets.sourceUrl,
+  contentHash: complianceRulesets.contentHash,
+  rawContent: complianceRulesets.rawContent,
+  parsedRules: complianceRulesets.parsedRules,
+  status: complianceRulesets.status,
+  driftDetected: complianceRulesets.driftDetected,
+  driftDiff: complianceRulesets.driftDiff,
+  verifiedBy: complianceRulesets.verifiedBy,
+  verifiedAt: complianceRulesets.verifiedAt,
+  retrievedAt: complianceRulesets.retrievedAt,
+  createdAt: complianceRulesets.createdAt,
+  updatedAt: complianceRulesets.updatedAt,
+};
+
+const stableComplianceReviewSelect = {
+  id: complianceReviews.id,
+  strategyId: complianceReviews.strategyId,
+  firm: complianceReviews.firm,
+  accountType: complianceReviews.accountType,
+  rulesetId: complianceReviews.rulesetId,
+  complianceResult: complianceReviews.complianceResult,
+  riskScore: complianceReviews.riskScore,
+  violations: complianceReviews.violations,
+  warnings: complianceReviews.warnings,
+  requiredChanges: complianceReviews.requiredChanges,
+  reasoningSummary: complianceReviews.reasoningSummary,
+  executionGate: complianceReviews.executionGate,
+  reviewedBy: complianceReviews.reviewedBy,
+  createdAt: complianceReviews.createdAt,
 };
 
 // ─── GET /api/compliance/rulesets ────────────────────────────
 // All firm rulesets + freshness status
 router.get("/rulesets", async (_req: Request, res: Response) => {
   const rulesets = await db
-    .select()
+    .select(stableComplianceRulesetSelect)
     .from(complianceRulesets)
     .orderBy(complianceRulesets.firm);
 
@@ -41,7 +76,7 @@ router.get("/rulesets", async (_req: Request, res: Response) => {
 // ─── GET /api/compliance/rulesets/freshness ──────────────────
 // Quick freshness check for all firms
 router.get("/rulesets/freshness", async (_req: Request, res: Response) => {
-  const rulesets = await db.select().from(complianceRulesets);
+  const rulesets = await db.select(stableComplianceRulesetSelect).from(complianceRulesets);
 
   const now = new Date();
   const freshness = rulesets.map((r) => {
@@ -73,7 +108,7 @@ router.get("/rulesets/freshness", async (_req: Request, res: Response) => {
 router.get("/rulesets/:firm", async (req: Request, res: Response) => {
   const { firm } = req.params;
   const rulesets = await db
-    .select()
+    .select(stableComplianceRulesetSelect)
     .from(complianceRulesets)
     .where(eq(complianceRulesets.firm, String(firm)));
 
@@ -161,7 +196,7 @@ router.get("/review/:strategyId", async (req: Request, res: Response) => {
   const { strategyId } = req.params;
 
   const reviews = await db
-    .select()
+    .select(stableComplianceReviewSelect)
     .from(complianceReviews)
     .where(eq(complianceReviews.strategyId, String(strategyId)))
     .orderBy(desc(complianceReviews.createdAt));
@@ -175,7 +210,7 @@ router.get("/review/:strategyId/:firm", async (req: Request, res: Response) => {
   const { strategyId, firm } = req.params;
 
   const reviews = await db
-    .select()
+    .select(stableComplianceReviewSelect)
     .from(complianceReviews)
     .where(
       and(
@@ -198,7 +233,7 @@ router.get("/review/:strategyId/:firm", async (req: Request, res: Response) => {
 // Today's per-strategy gate decisions
 router.get("/gate/today", async (_req: Request, res: Response) => {
   // Get all rulesets and check freshness
-  const rulesets = await db.select().from(complianceRulesets);
+  const rulesets = await db.select(stableComplianceRulesetSelect).from(complianceRulesets);
 
   const now = new Date();
   const staleRulesets = rulesets.filter((r) => {
@@ -209,7 +244,7 @@ router.get("/gate/today", async (_req: Request, res: Response) => {
 
   // Get latest compliance reviews
   const reviews = await db
-    .select()
+    .select(stableComplianceReviewSelect)
     .from(complianceReviews)
     .orderBy(desc(complianceReviews.createdAt));
 
@@ -262,6 +297,24 @@ router.get("/drift/unresolved", async (_req: Request, res: Response) => {
   res.json({ drifts });
 });
 
+// ─── POST /api/compliance/drift/:firm/cascade ──────────────
+// Trigger compliance cascade revalidation for a firm
+router.post("/drift/:firm/cascade", async (req: Request, res: Response) => {
+  const firm = req.params.firm as string;
+
+  try {
+    const { cascadeRevalidation } = await import("../services/drift-detection-service.js");
+    const result = await cascadeRevalidation(firm);
+    res.json({
+      firm,
+      ...result,
+      message: `Cascade revalidation complete: ${result.invalidatedReviews} reviews invalidated, ${result.pausedStrategies.length} strategies paused`,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Cascade revalidation failed", details: String(err) });
+  }
+});
+
 // ─── PATCH /api/compliance/drift/:id/resolve ────────────────
 router.patch("/drift/:id/resolve", async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -289,7 +342,7 @@ router.patch("/drift/:id/resolve", async (req: Request, res: Response) => {
 // ─── GET /api/compliance/status ─────────────────────────────
 // Overall compliance health dashboard
 router.get("/status", async (_req: Request, res: Response) => {
-  const rulesets = await db.select().from(complianceRulesets);
+  const rulesets = await db.select(stableComplianceRulesetSelect).from(complianceRulesets);
   const unresolvedDrifts = await db
     .select()
     .from(complianceDriftLog)

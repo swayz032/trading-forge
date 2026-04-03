@@ -227,6 +227,26 @@ export function getTightestDrawdown(): { firm: string; maxDrawdown: number } | n
   return tightest;
 }
 
+// ─── Commission Helpers ──────────────────────────────────────────────────────
+
+/** Default commission per side when firmId is null/unknown. $0.62 = MFFU/TPT/Apex/FFN/Earn2Trade default. */
+export const DEFAULT_COMMISSION_PER_SIDE = 0.62;
+
+/**
+ * Returns the per-side commission in dollars for a given firmId.
+ * Reads directly from FIRMS (the single source of truth).
+ * Falls back to DEFAULT_COMMISSION_PER_SIDE when firmId is null/unknown —
+ * conservative choice that avoids overstating net P&L.
+ */
+export function getCommissionPerSide(firmId: string | null | undefined): number {
+  if (!firmId) return DEFAULT_COMMISSION_PER_SIDE;
+  const firm = FIRMS[firmId.toLowerCase()];
+  if (!firm) return DEFAULT_COMMISSION_PER_SIDE;
+  const acct = firm.accountTypes["50k"];
+  if (!acct) return DEFAULT_COMMISSION_PER_SIDE;
+  return acct.commissionPerSide;
+}
+
 /** Buffer amount = maxDrawdown. After passing eval, trader must build this buffer before payouts. */
 export function getBufferAmount(firmName: string, _accountType: string = "50k"): number | null {
   const acct = getFirmAccount(firmName, "50k");

@@ -2,7 +2,7 @@
   "updatedAt": "2026-03-05T05:33:30.706Z",
   "createdAt": "2026-02-16T13:48:19.507Z",
   "id": "5zkLtqPi5Qn2pedH",
-  "name": "Teressa Books Sync \u2014 Daily Midnight",
+  "name": "Teressa Books Sync — Daily Midnight",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -104,7 +104,7 @@
         }
       },
       "id": "call-orchestrator",
-      "name": "POST Intent \u2192 Orchestrator",
+      "name": "POST Intent → Orchestrator",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -116,7 +116,11 @@
           "id": "J84m12hyzSwSHo6S",
           "name": "Gateway Internal Key"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -158,7 +162,11 @@
       "position": [
         1100,
         400
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -200,7 +208,11 @@
       "position": [
         880,
         200
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -253,7 +265,11 @@
       "position": [
         660,
         560
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -283,7 +299,7 @@
       "main": [
         [
           {
-            "node": "POST Intent \u2192 Orchestrator",
+            "node": "POST Intent → Orchestrator",
             "type": "main",
             "index": 0
           }
@@ -297,7 +313,7 @@
         ]
       ]
     },
-    "POST Intent \u2192 Orchestrator": {
+    "POST Intent → Orchestrator": {
       "main": [
         [
           {
@@ -486,7 +502,7 @@
           }
         },
         "id": "call-orchestrator",
-        "name": "POST Intent \u2192 Orchestrator",
+        "name": "POST Intent → Orchestrator",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -498,7 +514,11 @@
             "id": "J84m12hyzSwSHo6S",
             "name": "Gateway Internal Key"
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -540,7 +560,11 @@
         "position": [
           1100,
           400
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -582,7 +606,11 @@
         "position": [
           880,
           200
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {},
@@ -635,7 +663,11 @@
         "position": [
           660,
           560
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {
@@ -665,7 +697,7 @@
         "main": [
           [
             {
-              "node": "POST Intent \u2192 Orchestrator",
+              "node": "POST Intent → Orchestrator",
               "type": "main",
               "index": 0
             }
@@ -679,7 +711,7 @@
           ]
         ]
       },
-      "POST Intent \u2192 Orchestrator": {
+      "POST Intent → Orchestrator": {
         "main": [
           [
             {

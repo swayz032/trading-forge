@@ -14,3 +14,6 @@ __pycache__/
 .claude/
 .clawhub/
 data_cache/
+backups/
+logs/
+models/

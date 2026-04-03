@@ -28,18 +28,49 @@
       }
     },
     {
-      "id": "rt",
-      "name": "Run Tournament",
+      "id": "fc",
+      "name": "Fetch Candidates",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
         220,
         0
       ],
+      "continueOnFail": true,
       "parameters": {
+        "url": "http://host.docker.internal:4000/api/strategies?lifecycleState=TESTING,PAPER",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "rt",
+      "name": "Run Tournament",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
         "url": "http://host.docker.internal:4000/api/tournament/run",
-        "options": {}
-      }
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategies: .data ||  }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "fr",
@@ -47,7 +78,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        660,
         0
       ],
       "parameters": {
@@ -60,22 +91,72 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        660,
+        880,
         0
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4100/alert/tournament",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ title: 'Weekly Tournament Results', message: $json.message, severity: 'info', data: { winner: $json.winner, participants: $json.participants, rankings: $json.rankings } }) }}",
-        "options": {}
+        "jsonBody": "={{ JSON.stringify({ event: \"tournament:complete\", data: { winner: .winner, participants: .participants, rankings: .rankings, timestamp: .timestamp, message: .message } }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"5A-weekly-tournament\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
     "Weekly Sunday 7 PM ET": {
+      "main": [
+        [
+          {
+            "node": "Fetch Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Candidates": {
       "main": [
         [
           {
@@ -102,6 +183,17 @@
         [
           {
             "node": "Alert Tournament Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
             "type": "main",
             "index": 0
           }
@@ -201,18 +293,49 @@
         }
       },
       {
-        "id": "rt",
-        "name": "Run Tournament",
+        "id": "fc",
+        "name": "Fetch Candidates",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
           220,
           0
         ],
+        "continueOnFail": true,
         "parameters": {
+          "url": "http://host.docker.internal:4000/api/strategies?lifecycleState=TESTING,PAPER",
+          "method": "GET",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "rt",
+        "name": "Run Tournament",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
           "url": "http://host.docker.internal:4000/api/tournament/run",
-          "options": {}
-        }
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ strategies: .data ||  }) }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "fr",
@@ -220,7 +343,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          440,
+          660,
           0
         ],
         "parameters": {
@@ -233,22 +356,72 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          660,
+          880,
           0
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4100/alert/tournament",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({ title: 'Weekly Tournament Results', message: $json.message, severity: 'info', data: { winner: $json.winner, participants: $json.participants, rankings: $json.rankings } }) }}",
-          "options": {}
+          "jsonBody": "={{ JSON.stringify({ event: \"tournament:complete\", data: { winner: .winner, participants: .participants, rankings: .rankings, timestamp: .timestamp, message: .message } }) }}",
+          "options": {
+            "timeout": 15000
+          }
         },
-        "continueOnFail": true
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"5A-weekly-tournament\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
       "Weekly Sunday 7 PM ET": {
+        "main": [
+          [
+            {
+              "node": "Fetch Candidates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Candidates": {
         "main": [
           [
             {
@@ -275,6 +448,17 @@
           [
             {
               "node": "Alert Tournament Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
               "type": "main",
               "index": 0
             }

@@ -58,7 +58,10 @@
         "options": {
           "timeout": 30000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "build-payloads",
@@ -98,7 +101,10 @@
         "options": {
           "timeout": 60000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "summarise",
@@ -124,29 +130,52 @@
       ],
       "continueOnFail": true,
       "parameters": {
-        "url": "http://host.docker.internal:4100/alert/alerts",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "method": "POST",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "title",
-              "value": "={{ $json.title }}"
-            },
-            {
-              "name": "severity",
-              "value": "={{ $json.severity }}"
-            },
-            {
-              "name": "body",
-              "value": "={{ $json.body }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: $json.title, severity: $json.severity, message: $json.body, data: { body: $json.body } }) }}",
         "options": {
           "timeout": 15000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"9A-nightly-self-critique\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -199,6 +228,17 @@
         [
           {
             "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
             "type": "main",
             "index": 0
           }
@@ -328,7 +368,10 @@
           "options": {
             "timeout": 30000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "build-payloads",
@@ -368,7 +411,10 @@
           "options": {
             "timeout": 60000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "summarise",
@@ -394,7 +440,7 @@
         ],
         "continueOnFail": true,
         "parameters": {
-          "url": "http://host.docker.internal:4100/alert/alerts",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "method": "POST",
           "sendBody": true,
           "bodyParameters": {
@@ -416,7 +462,44 @@
           "options": {
             "timeout": 15000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"9A-nightly-self-critique\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
@@ -469,6 +552,17 @@
           [
             {
               "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
               "type": "main",
               "index": 0
             }

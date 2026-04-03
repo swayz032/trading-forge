@@ -30,7 +30,9 @@
     {
       "parameters": {
         "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "fetch-deployed",
       "name": "Fetch Deployed Strategies",
@@ -42,7 +44,9 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -110,7 +114,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"type\": \"robustness_alert\",\n  \"strategyId\": \"{{ $json.strategyId }}\",\n  \"strategyName\": \"{{ $json.strategyName }}\",\n  \"message\": \"Strategy degradation detected - flagged for review\",\n  \"sharpeDrop\": \"{{ $json.sharpeDrop }}\",\n  \"winRateDrop\": \"{{ $json.winRateDrop }}\",\n  \"currentSharpe\": {{ $json.currentSharpe }},\n  \"originalSharpe\": {{ $json.originalSharpe }},\n  \"currentWinRate\": {{ $json.currentWinRate }},\n  \"originalWinRate\": {{ $json.originalWinRate }},\n  \"flagForReview\": true,\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "log-degraded",
       "name": "Log Degradation to Journal",
@@ -122,7 +128,9 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -131,7 +139,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"type\": \"robustness_check\",\n  \"strategyId\": \"{{ $json.strategyId }}\",\n  \"strategyName\": \"{{ $json.strategyName }}\",\n  \"message\": \"Strategy still healthy\",\n  \"currentSharpe\": {{ $json.currentSharpe }},\n  \"originalSharpe\": {{ $json.originalSharpe }},\n  \"currentWinRate\": {{ $json.currentWinRate }},\n  \"originalWinRate\": {{ $json.originalWinRate }},\n  \"flagForReview\": false,\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "log-healthy",
       "name": "Log Healthy to Journal",
@@ -143,7 +153,9 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "submit-robustness",
@@ -160,12 +172,15 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"strategyId\": \"{{ $json.id }}\", \"config\": {{ JSON.stringify($json.config) }} }",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "continueOnFail": true
     },
     {
       "id": "wait-robustness",
@@ -192,12 +207,15 @@
       ],
       "parameters": {
         "url": "=http://localhost:3000/api/agents/jobs/{{ $('Submit Robustness Test').item.json.jobId }}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "continueOnFail": true
     },
     {
       "id": "check-job-complete",
@@ -247,12 +265,49 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"fromState\":\"DEPLOYED\",\"toState\":\"DECLINING\"}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "continueOnFail": true
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"Monthly Robustness Check\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -402,6 +457,17 @@
           }
         ]
       ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -500,7 +566,9 @@
       {
         "parameters": {
           "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "fetch-deployed",
         "name": "Fetch Deployed Strategies",
@@ -512,7 +580,9 @@
         ],
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 5000
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -580,7 +650,9 @@
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={\n  \"type\": \"robustness_alert\",\n  \"strategyId\": \"{{ $json.strategyId }}\",\n  \"strategyName\": \"{{ $json.strategyName }}\",\n  \"message\": \"Strategy degradation detected - flagged for review\",\n  \"sharpeDrop\": \"{{ $json.sharpeDrop }}\",\n  \"winRateDrop\": \"{{ $json.winRateDrop }}\",\n  \"currentSharpe\": {{ $json.currentSharpe }},\n  \"originalSharpe\": {{ $json.originalSharpe }},\n  \"currentWinRate\": {{ $json.currentWinRate }},\n  \"originalWinRate\": {{ $json.originalWinRate }},\n  \"flagForReview\": true,\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "log-degraded",
         "name": "Log Degradation to Journal",
@@ -592,7 +664,9 @@
         ],
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 5000
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -601,7 +675,9 @@
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={\n  \"type\": \"robustness_check\",\n  \"strategyId\": \"{{ $json.strategyId }}\",\n  \"strategyName\": \"{{ $json.strategyName }}\",\n  \"message\": \"Strategy still healthy\",\n  \"currentSharpe\": {{ $json.currentSharpe }},\n  \"originalSharpe\": {{ $json.originalSharpe }},\n  \"currentWinRate\": {{ $json.currentWinRate }},\n  \"originalWinRate\": {{ $json.originalWinRate }},\n  \"flagForReview\": false,\n  \"timestamp\": \"{{ $now.toISO() }}\"\n}",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "log-healthy",
         "name": "Log Healthy to Journal",
@@ -613,7 +689,9 @@
         ],
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 5000
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "submit-robustness",
@@ -630,12 +708,15 @@
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={ \"strategyId\": \"{{ $json.id }}\", \"config\": {{ JSON.stringify($json.config) }} }",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "onError": "continueRegularOutput",
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 5000
+        "waitBetweenTries": 5000,
+        "continueOnFail": true
       },
       {
         "id": "wait-robustness",
@@ -662,12 +743,15 @@
         ],
         "parameters": {
           "url": "=http://localhost:3000/api/agents/jobs/{{ $('Submit Robustness Test').item.json.jobId }}",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "onError": "continueRegularOutput",
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 5000
+        "waitBetweenTries": 5000,
+        "continueOnFail": true
       },
       {
         "id": "check-job-complete",
@@ -717,12 +801,49 @@
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "{\"fromState\":\"DEPLOYED\",\"toState\":\"DECLINING\"}",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "onError": "continueRegularOutput",
         "retryOnFail": true,
         "maxTries": 2,
-        "waitBetweenTries": 3000
+        "waitBetweenTries": 3000,
+        "continueOnFail": true
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"Monthly Robustness Check\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
@@ -867,6 +988,17 @@
           [
             {
               "node": "Loop Over Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
               "type": "main",
               "index": 0
             }

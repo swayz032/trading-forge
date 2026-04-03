@@ -623,6 +623,17 @@ def compute_all_risk_metrics(
     Returns:
         Combined dict for DB riskMetrics JSONB column
     """
+    # GPU fast-path for core metrics when CuPy available and large simulation
+    if paths.shape[0] >= 1000:
+        try:
+            from src.engine.gpu_pipeline import gpu_risk_metrics
+            gpu_result = gpu_risk_metrics(paths)
+            # GPU provides fast DD percentiles + survival — merge into full result
+        except Exception:
+            gpu_result = None
+    else:
+        gpu_result = None
+
     percentiles = [0.05, 0.25, 0.50, 0.75, 0.95]
 
     dd_dist = compute_max_drawdown_distribution(paths, initial_capital, percentiles)

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-19T01:38:31.329Z",
+  "updatedAt": "2026-03-31T04:39:00.726Z",
   "createdAt": "2026-03-14T21:05:47.562Z",
   "id": "WT9sVMzG83rg1L29",
   "name": "Daily Compliance Check",
@@ -38,14 +38,16 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "http://localhost:4000/api/compliance/rulesets/freshness",
+        "url": "http://host.docker.internal:4000/api/compliance/rulesets/freshness",
         "options": {
           "timeout": 10000
         }
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "code-check-stale",
@@ -119,7 +121,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/compliance",
+        "url": "http://host.docker.internal:4100/alert/compliance",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -129,7 +131,9 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "code-all-fresh",
@@ -178,7 +182,8 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 2000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -262,7 +267,7 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": true
   },
   "staticData": {
     "node:Daily 9AM ET Mon-Fri": {
@@ -271,9 +276,9 @@
   },
   "meta": null,
   "pinData": null,
-  "versionId": "4312a752-a05e-4cc9-98e3-0664d2c35581",
-  "activeVersionId": "4312a752-a05e-4cc9-98e3-0664d2c35581",
-  "versionCounter": 14,
+  "versionId": "9f6c7d60-060f-42ae-b539-272d54cf4668",
+  "activeVersionId": "9f6c7d60-060f-42ae-b539-272d54cf4668",
+  "versionCounter": 27,
   "triggerCount": 1,
   "shared": [
     {
@@ -298,7 +303,7 @@
             "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
             "projectId": "l9zgLNMKv7CjloiW",
             "user": {
-              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "updatedAt": "2026-04-03T05:29:30.601Z",
               "createdAt": "2026-02-12T09:44:05.126Z",
               "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
               "email": "tonioswayz32@gmail.com",
@@ -313,7 +318,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-03-20",
+              "lastActiveAt": "2026-04-03",
               "isPending": false
             }
           }
@@ -323,9 +328,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-19T01:38:31.330Z",
-    "createdAt": "2026-03-19T01:38:31.330Z",
-    "versionId": "4312a752-a05e-4cc9-98e3-0664d2c35581",
+    "updatedAt": "2026-03-31T03:51:52.153Z",
+    "createdAt": "2026-03-28T00:24:46.174Z",
+    "versionId": "9f6c7d60-060f-42ae-b539-272d54cf4668",
     "workflowId": "WT9sVMzG83rg1L29",
     "nodes": [
       {
@@ -359,14 +364,16 @@
         ],
         "parameters": {
           "method": "GET",
-          "url": "http://localhost:4000/api/compliance/rulesets/freshness",
+          "url": "http://host.docker.internal:4000/api/compliance/rulesets/freshness",
           "options": {
             "timeout": 10000
           }
         },
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 3000
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "code-check-stale",
@@ -440,7 +447,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/compliance",
+          "url": "http://host.docker.internal:4100/alert/compliance",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify($json) }}",
@@ -450,7 +457,9 @@
         },
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 2000
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "code-all-fresh",
@@ -499,7 +508,8 @@
         "retryOnFail": true,
         "maxTries": 2,
         "waitBetweenTries": 2000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {
@@ -578,15 +588,23 @@
       }
     },
     "authors": "Tonio tonioswayz32@gmail.com",
-    "name": null,
-    "description": null,
+    "name": "Version 9f6c7d60",
+    "description": "",
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-19T01:38:31.351Z",
-        "id": 1181,
+        "createdAt": "2026-03-31T03:51:52.152Z",
+        "id": 1370,
         "workflowId": "WT9sVMzG83rg1L29",
-        "versionId": "4312a752-a05e-4cc9-98e3-0664d2c35581",
+        "versionId": "9f6c7d60-060f-42ae-b539-272d54cf4668",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-31T04:39:00.749Z",
+        "id": 1379,
+        "workflowId": "WT9sVMzG83rg1L29",
+        "versionId": "9f6c7d60-060f-42ae-b539-272d54cf4668",
         "event": "activated",
         "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
       }

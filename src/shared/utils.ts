@@ -9,14 +9,14 @@ export function parsePythonJson<T = unknown>(stdout: string): T {
   // 1. Try strict parsing first (fastest, most common)
   try {
     return JSON.parse(trimmed);
-  } catch (e) {
+  } catch (strictError) {
     // 2. Fallback: Try to find the last line that looks like JSON
     // Useful when Python scripts emit logs/warnings before the final JSON output
     const lines = trimmed.split('\n');
     if (lines.length > 1) {
        try {
          return JSON.parse(lines[lines.length - 1]);
-       } catch (e2) {
+       } catch {
          // Fallback continued...
        }
     }
@@ -30,11 +30,14 @@ export function parsePythonJson<T = unknown>(stdout: string): T {
     if (lastOpen !== -1 && lastClose !== -1 && lastClose > lastOpen) {
       try {
         return JSON.parse(trimmed.slice(lastOpen, lastClose + 1));
-      } catch (e3) {
+      } catch {
          // ignore
       }
     }
     
-    throw new Error(`Failed to parse Python JSON output. \nError: ${e instanceof Error ? e.message : String(e)}\nOutput snippet: ${trimmed.slice(-200)}`);
+    throw new Error(
+      `Failed to parse Python JSON output. \nError: ${strictError instanceof Error ? strictError.message : String(strictError)}\nOutput snippet: ${trimmed.slice(-200)}`,
+      { cause: strictError },
+    );
   }
 }

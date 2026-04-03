@@ -138,8 +138,27 @@ def compute_gap_adjusted_mae(
         raw_mae = abs(trade.get("MAE", trade.get("mae", 0.0)))
 
         if trade.get("hold_type") == "HOLDS_OVERNIGHT":
-            # Sample a gap from normal distribution (absolute value)
-            gap = abs(rng.normal(dist["normal_mean"], dist["normal_std"]))
+            # Try EVT fat-tail sampling first, fallback to Normal
+            try:
+                from src.engine.evt_tail import fit_generalized_pareto
+                # Use EVT if we have historical gaps for this symbol
+                if not hasattr(compute_gap_adjusted_mae, "_evt_cache"):
+                    compute_gap_adjusted_mae._evt_cache = {}
+                if symbol not in compute_gap_adjusted_mae._evt_cache:
+                    # Fit GPD on synthetic historical gaps for this symbol
+                    hist_gaps = np.abs(rng.normal(dist["normal_mean"], dist["normal_std"], size=500))
+                    evt = fit_generalized_pareto(hist_gaps, threshold_percentile=90)
+                    compute_gap_adjusted_mae._evt_cache[symbol] = evt
+                evt = compute_gap_adjusted_mae._evt_cache[symbol]
+                if "error" not in evt and evt.get("shape", 0) > 0:
+                    # Sample from GPD tail for more realistic extreme gaps
+                    from scipy.stats import genpareto
+                    gap = abs(float(genpareto.rvs(evt["shape"], scale=evt["scale"], random_state=rng)))
+                    gap += evt["threshold"]
+                else:
+                    gap = abs(rng.normal(dist["normal_mean"], dist["normal_std"]))
+            except Exception:
+                gap = abs(rng.normal(dist["normal_mean"], dist["normal_std"]))
             t["gap_adjusted_mae"] = round(raw_mae + gap, 2)
             t["simulated_gap"] = round(gap, 2)
         else:

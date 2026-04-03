@@ -29,6 +29,13 @@ class HardwareProfile(BaseModel):
     recommended_backend: str = "aer_cpu"
     wsl2_detected: bool = False
     notes: list[str] = Field(default_factory=list)
+    # Cloud availability (populated when detect_cloud=True in get_hardware_profile)
+    cloud_ibm_available: bool = False
+    cloud_ibm_backends: list[str] = Field(default_factory=list)
+    cloud_braket_available: bool = False
+    cloud_braket_devices: list[str] = Field(default_factory=list)
+    ibm_budget_remaining_seconds: int = 0
+    braket_budget_remaining_dollars: float = 0.0
 
 
 def detect_gpu() -> tuple[bool, Optional[str], Optional[int]]:
@@ -107,20 +114,131 @@ def get_max_qubits_cpu(ram_mb: Optional[int] = None) -> int:
     return min(max_n, 34)  # Cap at 34
 
 
-def select_backend(problem_size: int, prefer_gpu: bool = True) -> str:
+def detect_cloud_backends() -> dict:
+    """Probe cloud availability for IBM Quantum and AWS Braket.
+
+    Each probe has a 5-second timeout.  All failures are non-fatal — cloud
+    detection errors must never block local simulation.
+
+    Returns a dict with keys:
+        ibm_available (bool), ibm_backends (list[str]),
+        braket_available (bool), braket_devices (list[str])
+    """
+    result: dict = {
+        "ibm_available": False,
+        "ibm_backends": [],
+        "braket_available": False,
+        "braket_devices": [],
+    }
+
+    # ── IBM ─────────────────────────────────────────────────────────────────
+    ibm_token = os.environ.get("IBM_QUANTUM_TOKEN", "")
+    if ibm_token:
+        try:
+            from qiskit_ibm_runtime import QiskitRuntimeService
+            import concurrent.futures
+
+            def _list_ibm() -> list[str]:
+                svc = QiskitRuntimeService(
+                    channel="ibm_quantum_platform", token=ibm_token
+                )
+                return [b.name for b in svc.backends()]
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(_list_ibm)
+                try:
+                    backends = future.result(timeout=5)
+                    result["ibm_available"] = True
+                    result["ibm_backends"] = backends
+                except concurrent.futures.TimeoutError:
+                    pass
+        except Exception:
+            pass
+
+    # ── Braket ──────────────────────────────────────────────────────────────
+    aws_key = os.environ.get("AWS_ACCESS_KEY_ID", "") or os.environ.get(
+        "AWS_DEFAULT_REGION", ""
+    )
+    if aws_key:
+        try:
+            import boto3
+            import concurrent.futures
+            from braket.aws import AwsDevice, AwsSession
+
+            def _list_braket() -> list[str]:
+                boto_session = boto3.Session(
+                    region_name=os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+                )
+                aws_session = AwsSession(boto_session=boto_session)
+                devices = AwsDevice.get_devices(aws_session=aws_session)
+                return [d.name for d in devices]
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(_list_braket)
+                try:
+                    devices = future.result(timeout=5)
+                    result["braket_available"] = True
+                    result["braket_devices"] = devices
+                except concurrent.futures.TimeoutError:
+                    pass
+        except Exception:
+            pass
+
+    return result
+
+
+def select_backend(
+    problem_size: int,
+    prefer_gpu: bool = True,
+    allow_cloud: bool = False,
+    cloud_config: Optional[object] = None,
+) -> str:
     """Auto-select best backend for given problem size.
 
     Args:
         problem_size: Number of qubits needed
         prefer_gpu: Try GPU first if available
+        allow_cloud: When True and cloud_config provided, may return a cloud
+            backend label if local capacity is exceeded.  Existing callers pass
+            no new args — behaviour is unchanged.
+        cloud_config: Optional CloudBackendConfig.  Ignored when allow_cloud=False.
 
     Returns:
         Backend string: "aer_gpu" | "aer_cpu" | "tensor_network" | "cpu_only"
+        When allow_cloud=True: may also return "ibm_qpu" | "braket_qpu" |
+        "braket_sv1" | "braket_tn1"
+
+    AUTHORITY NOTE: Returns a label only.  Calling code must not route this
+    label directly to any execution path without challenger isolation.
     """
     gpu_detected, _, vram_mb = detect_gpu()
     max_gpu = get_max_qubits_statevector(vram_mb) if gpu_detected else 0
     max_cpu = get_max_qubits_cpu()
 
+    # ── Cloud path (only when explicitly enabled) ────────────────────────────
+    if allow_cloud and cloud_config is not None:
+        # Cloud is only preferred when problem_size exceeds local capacity.
+        # If local can handle it, stay local — cheaper and faster.
+        local_max = max(max_gpu if gpu_detected else 0, max_cpu)
+        if problem_size > local_max:
+            try:
+                from src.engine.cloud_backend import (
+                    CloudBudgetTracker,
+                    resolve_backend,
+                )
+                _, _obj, cloud_label = resolve_backend(
+                    cloud_config, problem_size
+                )
+                # cloud_label comes back as e.g. "ibm_qpu:ibm_torino" —
+                # normalise to the short form callers can pattern-match
+                if cloud_label.startswith("ibm_qpu"):
+                    return "ibm_qpu"
+                if cloud_label.startswith("braket_"):
+                    return cloud_label  # "braket_sv1", "braket_tn1", etc.
+            except Exception:
+                pass  # Cloud resolution non-fatal — fall through to local
+
+    # ── Local path ───────────────────────────────────────────────────────────
     if prefer_gpu and gpu_detected and problem_size <= max_gpu:
         return "aer_gpu"
     elif problem_size <= max_cpu:
@@ -142,8 +260,14 @@ def detect_wsl2() -> bool:
         return False
 
 
-def get_hardware_profile() -> HardwareProfile:
-    """Full hardware detection."""
+def get_hardware_profile(detect_cloud: bool = False) -> HardwareProfile:
+    """Full hardware detection.
+
+    Args:
+        detect_cloud: When True, also probe IBM Quantum and AWS Braket
+            availability (adds up to ~10s on first call).  False by default to
+            keep startup time fast for all existing callers.
+    """
     profile = HardwareProfile(platform=platform.system())
 
     # GPU
@@ -188,6 +312,40 @@ def get_hardware_profile() -> HardwareProfile:
 
     if profile.wsl2_detected:
         profile.notes.append("WSL2 detected — GPU passthrough available")
+
+    # ── Cloud detection (opt-in, non-fatal) ──────────────────────────────────
+    if detect_cloud:
+        try:
+            cloud_info = detect_cloud_backends()
+            profile.cloud_ibm_available = cloud_info.get("ibm_available", False)
+            profile.cloud_ibm_backends = cloud_info.get("ibm_backends", [])
+            profile.cloud_braket_available = cloud_info.get("braket_available", False)
+            profile.cloud_braket_devices = cloud_info.get("braket_devices", [])
+
+            # Pull remaining budgets from persistent tracker
+            try:
+                from src.engine.cloud_backend import CloudBudgetTracker
+                tracker = CloudBudgetTracker()
+                remaining = tracker.get_remaining()
+                profile.ibm_budget_remaining_seconds = int(
+                    remaining.get("ibm_seconds_remaining", 0)
+                )
+                profile.braket_budget_remaining_dollars = float(
+                    remaining.get("braket_dollars_remaining", 0.0)
+                )
+            except Exception:
+                pass  # Budget file absence is non-fatal
+
+            if profile.cloud_ibm_available:
+                profile.notes.append(
+                    f"IBM Quantum available: {len(profile.cloud_ibm_backends)} backends"
+                )
+            if profile.cloud_braket_available:
+                profile.notes.append(
+                    f"AWS Braket available: {len(profile.cloud_braket_devices)} devices"
+                )
+        except Exception:
+            profile.notes.append("Cloud detection failed (non-fatal)")
 
     return profile
 

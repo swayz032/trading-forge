@@ -45,7 +45,9 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "code-extract-firms",
@@ -93,7 +95,9 @@
       },
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "code-check-firm",
@@ -134,7 +138,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/compliance",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Weekly Compliance Report', message: 'Report for ' + ($json.report_date || 'unknown date') + ': ' + ($json.summary ? ($json.summary.healthy + ' healthy, ' + $json.summary.unhealthy + ' unhealthy, ' + $json.summary.degraded + ' degraded') : 'No summary'), severity: ($json.summary && $json.summary.unhealthy > 0) ? 'warning' : 'info', data: { reportDate: $json.report_date || '', healthy: String($json.summary ? $json.summary.healthy : 0), unhealthy: String($json.summary ? $json.summary.unhealthy : 0), degraded: String($json.summary ? $json.summary.degraded : 0), total: String($json.summary ? $json.summary.total : 0) } }) }}",
@@ -144,7 +148,9 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "error-trigger",
@@ -168,7 +174,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/alerts",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Weekly Compliance Re-Parse', message: String($json.execution ? $json.execution.error ? $json.execution.error.message : 'Unknown error' : 'Unknown error'), severity: 'critical', data: { workflow: 'Weekly Compliance Re-Parse', executionId: String($json.execution ? $json.execution.id : 'N/A'), timestamp: new Date().toISOString() } }) }}",
@@ -178,7 +184,9 @@
       },
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -388,7 +396,9 @@
         },
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 3000
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "code-extract-firms",
@@ -436,7 +446,9 @@
         },
         "retryOnFail": true,
         "maxTries": 2,
-        "waitBetweenTries": 2000
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "code-check-firm",
@@ -477,7 +489,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/compliance",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Weekly Compliance Report', message: 'Report for ' + ($json.report_date || 'unknown date') + ': ' + ($json.summary ? ($json.summary.healthy + ' healthy, ' + $json.summary.unhealthy + ' unhealthy, ' + $json.summary.degraded + ' degraded') : 'No summary'), severity: ($json.summary && $json.summary.unhealthy > 0) ? 'warning' : 'info', data: { reportDate: $json.report_date || '', healthy: String($json.summary ? $json.summary.healthy : 0), unhealthy: String($json.summary ? $json.summary.unhealthy : 0), degraded: String($json.summary ? $json.summary.degraded : 0), total: String($json.summary ? $json.summary.total : 0) } }) }}",
@@ -487,7 +499,9 @@
         },
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 2000
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "error-trigger",
@@ -511,7 +525,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/alerts",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Weekly Compliance Re-Parse', message: String($json.execution ? $json.execution.error ? $json.execution.error.message : 'Unknown error' : 'Unknown error'), severity: 'critical', data: { workflow: 'Weekly Compliance Re-Parse', executionId: String($json.execution ? $json.execution.id : 'N/A'), timestamp: new Date().toISOString() } }) }}",
@@ -521,7 +535,9 @@
         },
         "retryOnFail": true,
         "maxTries": 2,
-        "waitBetweenTries": 2000
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {

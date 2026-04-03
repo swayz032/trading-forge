@@ -31,8 +31,14 @@ try:
     import pennylane as qml
     from pennylane import numpy as pnp
     PENNYLANE_AVAILABLE = True
+    try:
+        from braket.aws import AwsDevice  # noqa: F401 — presence check only
+        BRAKET_PENNYLANE_AVAILABLE = True
+    except ImportError:
+        BRAKET_PENNYLANE_AVAILABLE = False
 except ImportError:
     PENNYLANE_AVAILABLE = False
+    BRAKET_PENNYLANE_AVAILABLE = False
 
 
 # ─── Governance ──────────────────────────────────────────────────
@@ -51,7 +57,9 @@ class VQCConfig(BaseModel):
     feature_dim: int = 8  # Must match number of market features
     n_actions: int = 3    # buy, sell, hold
     learning_rate: float = 0.01
-    device: str = "default.qubit"  # default.qubit | lightning.qubit | lightning.gpu
+    device: str = "default.qubit"  # default.qubit | lightning.qubit | lightning.gpu | braket.aws.sv1 | braket.aws.ionq
+    cloud_config: Optional[dict] = None  # CloudBackendConfig as dict (opt-in only)
+    max_cloud_evaluations: int = 100     # Cost control: switch to local after this many cloud circuit evaluations
 
 
 class TrainConfig(BaseModel):
@@ -203,7 +211,35 @@ def build_vqc_policy(config: VQCConfig):
     if not PENNYLANE_AVAILABLE:
         return None, None
 
-    dev = qml.device(config.device, wires=config.n_qubits)
+    # Braket cloud device selection — opt-in, only when library is present
+    _BRAKET_DEVICE_ARNS = {
+        "braket.aws.sv1": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+        "braket.aws.ionq": "arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1",
+    }
+    if config.device.startswith("braket.aws") and BRAKET_PENNYLANE_AVAILABLE:
+        arn = _BRAKET_DEVICE_ARNS.get(config.device)
+        if arn:
+            dev = qml.device(
+                "braket.aws.qubit",
+                device_arn=arn,
+                wires=config.n_qubits,
+                shots=1000,
+                s3_destination_folder=("amazon-braket-trading-forge", "rl-jobs"),
+            )
+        else:
+            # Unknown Braket device string — fall back to local simulator
+            dev = qml.device("default.qubit", wires=config.n_qubits)
+    elif config.device.startswith("braket.aws") and not BRAKET_PENNYLANE_AVAILABLE:
+        # Braket requested but library unavailable — fall back to local simulator
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Braket PennyLane plugin not available (braket-pennylane not installed). "
+            "Falling back to default.qubit for VQC."
+        )
+        dev = qml.device("default.qubit", wires=config.n_qubits)
+    else:
+        dev = qml.device(config.device or "default.qubit", wires=config.n_qubits)
+
     n_params = config.n_layers * config.n_qubits * 2  # Ry + Rz per qubit per layer
 
     @qml.qnode(dev)
@@ -304,6 +340,13 @@ def train_quantum_agent(
     all_rewards = []
     all_actions = []
 
+    # Cloud evaluation counter — when a Braket/cloud device is configured, switch to
+    # local after max_cloud_evaluations circuit calls to control cost.  The counter is
+    # approximate: each select_action call that hits the circuit counts as one evaluation.
+    _cloud_evals: int = 0
+    _cloud_device_active: bool = config.device.startswith("braket.aws") and BRAKET_PENNYLANE_AVAILABLE
+    _max_cloud_evals: int = config.max_cloud_evaluations
+
     for episode in range(train_config.episodes):
         state = env.reset()
         episode_rewards = []
@@ -313,7 +356,20 @@ def train_quantum_agent(
         epsilon = max(0.01, 1.0 - episode / train_config.episodes)
 
         for step in range(train_config.max_steps_per_episode):
+            # Cloud evaluation budget guard — rebuild agent with local device when limit hit
+            if _cloud_device_active and _cloud_evals >= _max_cloud_evals:
+                import logging as _logging
+                _logging.getLogger(__name__).info(
+                    "Cloud evaluation limit (%d) reached — switching VQC to default.qubit for remainder of training.",
+                    _max_cloud_evals,
+                )
+                local_config = config.model_copy(update={"device": "default.qubit"})
+                agent.circuit, agent.n_params = build_vqc_policy(local_config)
+                _cloud_device_active = False  # prevent repeated rebuilds
+
             action = agent.select_action(state, epsilon)
+            if _cloud_device_active:
+                _cloud_evals += 1
             next_state, reward, done = env.step(action)
 
             episode_states.append(state)

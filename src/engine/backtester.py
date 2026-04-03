@@ -33,6 +33,7 @@ from src.engine.liquidity import get_session_multipliers
 from src.engine.signals import generate_signals
 from src.engine.sizing import compute_position_sizes
 from src.engine.slippage import compute_slippage
+from src.engine.nvtx_markers import range_push, range_pop
 from src.engine.analytics import compute_full_analytics
 from src.engine.prop_sim import simulate_all_firms
 from src.engine.strategy_base import BaseStrategy
@@ -802,12 +803,14 @@ def run_backtest(
     atr_period = _extract_atr_period(config)
 
     # ─── Load data ─────────────────────────────────────────────
+    range_push("forge/data_load")
     if data is None:
         print(f"Loading {config.symbol} {config.timeframe} data...", file=sys.stderr)
         data = load_ohlcv(
             config.symbol, config.timeframe,
             request.start_date, request.end_date,
         )
+    range_pop()
 
     # ─── Validate bar count ──────────────────────────────────
     _validate_bar_count(data, config.timeframe, request.start_date, request.end_date)
@@ -821,7 +824,9 @@ def run_backtest(
     if not any(ind.type == "atr" for ind in indicator_configs):
         indicator_configs.append(IndicatorConfig(type="atr", period=atr_period))
 
+    range_push("forge/indicators")
     df = compute_indicators(data, indicator_configs)
+    range_pop()
 
     # ─── Economic event mask (Task 3.8) ─────────────────────
     event_mask = None
@@ -836,7 +841,9 @@ def run_backtest(
         event_slippage_mult = get_event_slippage_multipliers(df["ts_event"], policies)
 
     # ─── Generate signals ─────────────────────────────────────
+    range_push("forge/signals")
     df = generate_signals(df, config, fill_rate=fill_rate, event_mask=event_mask)
+    range_pop()
 
     # ─── Suppress entries on rollover days (Task 7.1) ─────────
     if "is_rollover_day" in df.columns:

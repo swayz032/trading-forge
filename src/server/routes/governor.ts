@@ -12,10 +12,11 @@ import { spawn } from "child_process";
 import { resolve as pathResolve } from "path";
 import { z } from "zod";
 import { logger } from "../index.js";
+import { runPythonModule } from "../lib/python-runner.js";
 
 export const governorRoutes = Router();
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
+const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 const GOVERNOR_TIMEOUT_MS = 60_000;
 
 // ─── Python subprocess helper ──────────────────────────────────
@@ -120,8 +121,19 @@ const backtestSchema = z.object({
 
 // ─── GET /api/governor/status/:strategyId ───────────────────────
 // Current governor state for a strategy
-governorRoutes.get("/status/:strategyId", async (_req, res) => {
-  res.status(501).json({ error: "Not implemented — governor state persisted in backtest output only" });
+governorRoutes.get("/status/:strategyId", async (req, res) => {
+  // Return governor state from the latest backtest for this strategy
+  try {
+    const result = await runPythonModule({
+      module: "src.engine.governor.governor_backtest",
+      config: { action: "status", strategy_id: req.params.strategyId },
+      componentName: "governor-status",
+    });
+    res.json(result);
+  } catch (err) {
+    logger.error({ err }, "Governor status failed");
+    res.status(500).json({ error: "Failed to get governor status", details: String(err) });
+  }
 });
 
 // ─── POST /api/governor/trade ───────────────────────────────────

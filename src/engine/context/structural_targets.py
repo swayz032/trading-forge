@@ -45,6 +45,9 @@ def compute_targets(
     vwap_std: float = 0.0,
     # Regime
     regime: str = "normal",    # "trending" | "ranging" | "high_vol" | "pre_event"
+    # DeepAR forecast (optional — only used when weight > 0)
+    deepar_forecast: Optional[dict] = None,
+    deepar_weight: float = 0.0,
 ) -> TargetPlan:
     """Compute DOL-based targets with institutional thirds.
 
@@ -58,8 +61,15 @@ def compute_targets(
     if risk < 1e-9:
         risk = 1.0
 
-    regime_mult = {"normal": 1.0, "trending": 1.0, "ranging": 0.75, "high_vol": 1.25, "pre_event": 0.5}
-    adjustment = regime_mult.get(regime, 1.0)
+    # When DeepAR is active (weight > 0) and forecast provided, use continuous
+    # regime multiplier based on P(high_vol) instead of discrete buckets.
+    # P(hv)=0.3 → mult=0.9, P(hv)=0.5 → 1.0, P(hv)=0.8 → 1.15
+    if deepar_forecast and deepar_weight > 0.0:
+        p_hv = float(deepar_forecast.get("p_high_vol", 0.5) or 0.5)
+        adjustment = 1.0 + (p_hv - 0.5) * 0.5
+    else:
+        regime_mult = {"normal": 1.0, "trending": 1.0, "ranging": 0.75, "high_vol": 1.25, "pre_event": 0.5}
+        adjustment = regime_mult.get(regime, 1.0)
 
     # Collect all potential targets with priority
     targets = []

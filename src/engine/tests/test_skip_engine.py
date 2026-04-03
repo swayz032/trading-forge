@@ -14,7 +14,7 @@ Tests:
 """
 
 import pytest
-from datetime import date
+from datetime import date, datetime, timezone
 
 from src.engine.skip_engine.skip_classifier import (
     classify_session,
@@ -32,8 +32,10 @@ from src.engine.skip_engine.skip_classifier import (
 )
 from src.engine.skip_engine.calendar_filter import (
     calendar_check,
+    check_economic_event,
     US_HOLIDAYS_2026,
     TRIPLE_WITCHING_2026,
+    EVENT_BLACKOUT_MINUTES,
 )
 from src.engine.skip_engine.session_monitor import SessionMonitor
 from src.engine.skip_engine.historical_skip_stats import backtest_skip_engine
@@ -388,6 +390,144 @@ class TestCalendarFilter:
         """Non-quarter-end month shouldn't flag quarter end."""
         result = calendar_check(date(2026, 2, 28))
         assert result["is_quarter_end"] is False
+
+    def test_result_has_economic_event_fields(self):
+        """calendar_check result must always contain the three economic event keys."""
+        result = calendar_check(date(2026, 3, 10))  # regular day
+        assert "is_economic_event" in result
+        assert "economic_event_name" in result
+        assert "event_window_minutes" in result
+
+    def test_no_economic_event_on_regular_day(self):
+        """A day with no scheduled events should return is_economic_event=False."""
+        # 2026-03-10 is a Tuesday with no FOMC/CPI/NFP
+        result = calendar_check(date(2026, 3, 10))
+        assert result["is_economic_event"] is False
+        assert result["economic_event_name"] == ""
+
+    def test_economic_event_fomc_day_level(self):
+        """Day-level check: FOMC day (2026-03-18) should flag as economic event."""
+        result = calendar_check(date(2026, 3, 18))
+        assert result["is_economic_event"] is True
+        assert result["economic_event_name"] == "FOMC"
+
+    def test_economic_event_cpi_day_level(self):
+        """Day-level check: CPI day (2026-01-14) should flag as economic event."""
+        result = calendar_check(date(2026, 1, 14))
+        assert result["is_economic_event"] is True
+        assert result["economic_event_name"] == "CPI"
+
+    def test_economic_event_nfp_day_level(self):
+        """Day-level check: NFP day (2026-01-09) should flag as economic event."""
+        result = calendar_check(date(2026, 1, 9))
+        assert result["is_economic_event"] is True
+        assert result["economic_event_name"] == "NFP"
+
+    def test_economic_event_window_minutes_default(self):
+        """event_window_minutes should equal EVENT_BLACKOUT_MINUTES by default."""
+        result = calendar_check(date(2026, 3, 18))
+        assert result["event_window_minutes"] == EVENT_BLACKOUT_MINUTES
+
+
+# ─── Economic Event Window Tests ─────────────────────────────────────────────
+
+
+class TestCheckEconomicEvent:
+    """Unit tests for check_economic_event() — precise UTC datetime checks."""
+
+    # FOMC 2026-03-18 at 14:00 ET.
+    # During EDT (DST): 14:00 ET = 18:00 UTC.
+
+    def _fomc_utc(self, hour: int, minute: int) -> datetime:
+        """Build a UTC datetime for 2026-03-18 at the given HH:MM UTC."""
+        return datetime(2026, 3, 18, hour, minute, tzinfo=timezone.utc)
+
+    def test_fomc_inside_window_at_event_time(self):
+        """Exactly at FOMC time (18:00 UTC) should be inside window."""
+        dt = self._fomc_utc(18, 0)
+        is_event, name, window = check_economic_event(dt)
+        assert is_event is True
+        assert name == "FOMC"
+        assert window == EVENT_BLACKOUT_MINUTES
+
+    def test_fomc_inside_window_before(self):
+        """30 minutes before FOMC (17:30 UTC) should be inside window."""
+        dt = self._fomc_utc(17, 30)
+        is_event, name, _ = check_economic_event(dt)
+        assert is_event is True
+        assert name == "FOMC"
+
+    def test_fomc_inside_window_after(self):
+        """30 minutes after FOMC (18:30 UTC) should be inside window."""
+        dt = self._fomc_utc(18, 30)
+        is_event, name, _ = check_economic_event(dt)
+        assert is_event is True
+        assert name == "FOMC"
+
+    def test_fomc_outside_window_before(self):
+        """31 minutes before FOMC (17:29 UTC) should be outside window."""
+        dt = self._fomc_utc(17, 29)
+        is_event, name, _ = check_economic_event(dt)
+        assert is_event is False
+        assert name == ""
+
+    def test_fomc_outside_window_after(self):
+        """31 minutes after FOMC (18:31 UTC) should be outside window."""
+        dt = self._fomc_utc(18, 31)
+        is_event, name, _ = check_economic_event(dt)
+        assert is_event is False
+        assert name == ""
+
+    def test_nfp_inside_window(self):
+        """NFP 2026-01-09 08:30 ET = 13:30 UTC (EST, no DST in January)."""
+        # January → EST (UTC-5): 08:30 ET = 13:30 UTC
+        dt = datetime(2026, 1, 9, 13, 30, tzinfo=timezone.utc)
+        is_event, name, _ = check_economic_event(dt)
+        assert is_event is True
+        assert name == "NFP"
+
+    def test_cpi_inside_window(self):
+        """CPI 2026-01-14 08:30 ET = 13:30 UTC (EST)."""
+        dt = datetime(2026, 1, 14, 13, 30, tzinfo=timezone.utc)
+        is_event, name, _ = check_economic_event(dt)
+        assert is_event is True
+        assert name == "CPI"
+
+    def test_no_event_on_nondate(self):
+        """A random datetime with no event scheduled should return False."""
+        dt = datetime(2026, 3, 10, 15, 0, tzinfo=timezone.utc)  # random Tuesday
+        is_event, name, _ = check_economic_event(dt)
+        assert is_event is False
+        assert name == ""
+
+    def test_custom_blackout_window(self):
+        """A 10-minute custom window should exclude 31+ minutes from event."""
+        dt = self._fomc_utc(18, 15)  # 15 min after FOMC
+        is_event_30, _, _ = check_economic_event(dt, blackout_minutes=30)
+        is_event_10, _, _ = check_economic_event(dt, blackout_minutes=10)
+        assert is_event_30 is True   # within 30 min window
+        assert is_event_10 is False  # outside 10 min window
+
+    def test_2027_fomc_included(self):
+        """FOMC 2027-01-27 at 14:00 ET should be detected (2027 dates present)."""
+        # 2027-01-27 → EST (UTC-5): 14:00 ET = 19:00 UTC
+        dt = datetime(2027, 1, 27, 19, 0, tzinfo=timezone.utc)
+        is_event, name, _ = check_economic_event(dt)
+        assert is_event is True
+        assert name == "FOMC"
+
+    def test_calendar_check_datetime_precision(self):
+        """calendar_check with check_datetime at FOMC time should block."""
+        dt = self._fomc_utc(18, 0)
+        result = calendar_check(check_datetime=dt)
+        assert result["is_economic_event"] is True
+        assert result["economic_event_name"] == "FOMC"
+
+    def test_calendar_check_datetime_precision_clear(self):
+        """calendar_check with check_datetime far from any event should not block."""
+        dt = datetime(2026, 3, 10, 15, 0, tzinfo=timezone.utc)  # no event
+        result = calendar_check(check_datetime=dt)
+        assert result["is_economic_event"] is False
 
 
 # ─── Session Monitor Tests ────────────────────────────────────────

@@ -4,7 +4,7 @@
   "id": "rMaOIscmLjebn8jR",
   "name": "Nightly Self-Correction",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -51,7 +51,11 @@
         "options": {
           "timeout": 30000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "split-sessions",
@@ -82,11 +86,14 @@
           "timeout": 30000
         }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "check-drift",
-      "name": "IF Drift > 2\u03c3",
+      "name": "IF Drift > 2σ",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
@@ -139,12 +146,15 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: 'llama3:8b', prompt: 'This strategy is drifting from backtest expectations. Drift score: ' + $('Detect Drift').first().json.driftScore + '. MC percentile: ' + ($('Compare Paper to MC').first().json.mc_percentile || 'N/A') + '. Paper metrics vs backtest diverging. Check: regime shift? Execution quality? Slippage > assumptions? Recommendation: continue, reduce size, or stop?', stream: false }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: 'deepseek-r1:14b', prompt: 'This strategy is drifting from backtest expectations. Drift score: ' + $('Detect Drift').first().json.driftScore + '. MC percentile: ' + ($('Compare Paper to MC').first().json.mc_percentile || 'N/A') + '. Paper metrics vs backtest diverging. Check: regime shift? Execution quality? Slippage > assumptions? Recommendation: continue, reduce size, or stop?', stream: false }) }}",
         "options": {
           "timeout": 120000
         }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "lifecycle-check",
@@ -156,9 +166,15 @@
         200
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/strategies/lifecycle/check"
+        "url": "http://localhost:4000/api/strategies/lifecycle/check",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "journal-nightly",
@@ -174,9 +190,15 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ source: 'n8n', status: 'tested', analystNotes: 'Nightly review: ' + $('Fetch Active Paper Sessions').all().length + ' active sessions checked' }) }}"
+        "jsonBody": "={{ JSON.stringify({ source: 'n8n', status: 'tested', analystNotes: 'Nightly review: ' + $('Fetch Active Paper Sessions').all().length + ' active sessions checked' }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "broadcast-nightly",
@@ -192,9 +214,15 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ type: 'nightly:review-complete', data: { timestamp: new Date().toISOString() } }) }}"
+        "jsonBody": "={{ JSON.stringify({ type: 'nightly:review-complete', data: { timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "1142ff2e-0a35-49f5-9e2e-498ea320eb72",
@@ -211,7 +239,45 @@
         "options": {
           "timeout": 30000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"Nightly Self-Correction\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -266,7 +332,7 @@
         ]
       ]
     },
-    "IF Drift > 2\u03c3": {
+    "IF Drift > 2σ": {
       "main": [
         [
           {
@@ -321,7 +387,18 @@
       "main": [
         [
           {
-            "node": "IF Drift > 2\u03c3",
+            "node": "IF Drift > 2σ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
             "type": "main",
             "index": 0
           }

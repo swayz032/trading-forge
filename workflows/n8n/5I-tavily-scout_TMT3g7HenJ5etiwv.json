@@ -33,7 +33,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"api_key\": \"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\", \"query\": \"futures trading strategy backtesting profitable edge 2026\", \"search_depth\": \"advanced\", \"max_results\": 10}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "tavily-search",
       "name": "Tavily Search",
@@ -42,7 +44,11 @@
       "position": [
         220,
         0
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -63,8 +69,10 @@
         "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json.ideas) }}",
-        "options": {}
+        "jsonBody": "={{ JSON.stringify({ ideas: $json.ideas }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "post-ideas",
       "name": "Post Scout Ideas",
@@ -73,7 +81,45 @@
       "position": [
         660,
         0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
       ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"5I-tavily-scout\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -104,6 +150,17 @@
         [
           {
             "node": "Post Scout Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
             "type": "main",
             "index": 0
           }
@@ -208,7 +265,9 @@
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "{\"api_key\": \"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\", \"query\": \"futures trading strategy backtesting profitable edge 2026\", \"search_depth\": \"advanced\", \"max_results\": 10}",
-          "options": {}
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "tavily-search",
         "name": "Tavily Search",
@@ -217,7 +276,11 @@
         "position": [
           220,
           0
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -238,8 +301,10 @@
           "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify($json.ideas) }}",
-          "options": {}
+          "jsonBody": "={{ JSON.stringify({ ideas: $json.ideas }) }}",
+          "options": {
+            "timeout": 15000
+          }
         },
         "id": "post-ideas",
         "name": "Post Scout Ideas",
@@ -248,7 +313,45 @@
         "position": [
           660,
           0
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
         ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"5I-tavily-scout\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
@@ -279,6 +382,17 @@
           [
             {
               "node": "Post Scout Ideas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
               "type": "main",
               "index": 0
             }

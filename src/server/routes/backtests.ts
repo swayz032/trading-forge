@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { eq, desc, and, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { backtests, backtestTrades, backtestMatrix, monteCarloRuns, stressTestRuns, strategies, auditLog } from "../db/schema.js";
 import { runBacktest } from "../services/backtest-service.js";
@@ -114,27 +115,19 @@ backtestRoutes.post("/", async (req, res) => {
   // Reassemble config with the resolved strategy
   const fullConfig = { ...config, strategy: resolvedStrategy };
 
-  // Fire and forget — return 202 immediately
-  const backtestPromise = runBacktest(strategyId, fullConfig, strategyClass);
+  // Generate the backtest ID upfront to avoid race condition
+  const backtestId = randomUUID();
 
-  // Return the backtest ID immediately
-  backtestPromise.then((_result) => {
+  // Fire and forget — return 202 immediately
+  runBacktest(strategyId, fullConfig, strategyClass, backtestId).then((_result) => {
     // Logged internally
   }).catch((err) => {
     logger.error({ err, strategyId }, "Fire-and-forget backtest failed");
   });
 
-  // Quick insert to get the ID
-  const [row] = await db
-    .select({ id: backtests.id })
-    .from(backtests)
-    .where(eq(backtests.strategyId, strategyId))
-    .orderBy(desc(backtests.createdAt))
-    .limit(1);
-
   res.status(202).json({
     message: "Backtest started",
-    backtestId: row?.id,
+    backtestId,
   });
 });
 
@@ -433,6 +426,7 @@ backtestRoutes.delete("/:id", async (req, res) => {
     input: {},
     result: {},
     status: "success",
+    decisionAuthority: "human",
   });
 
   res.json({ deleted: true, id: backtestId });

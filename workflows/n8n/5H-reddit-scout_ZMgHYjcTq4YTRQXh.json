@@ -8,16 +8,17 @@
   "isArchived": false,
   "nodes": [
     {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 18,
-              "triggerAtMinute": 30
-            }
-          ]
-        }
-      },
+      "id": "execute-workflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -180
+      ],
+      "parameters": {}
+    },
+    {
       "id": "schedule-trigger",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
@@ -25,9 +26,31 @@
       "position": [
         0,
         0
-      ]
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 18,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      }
     },
     {
+      "id": "reddit-algotrading",
+      "name": "Reddit algotrading",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        230,
+        -220
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
         "url": "https://www.reddit.com/r/algotrading/top.json?t=day&limit=25",
@@ -35,16 +58,20 @@
           "timeout": 15000
         }
       },
-      "id": "reddit-algotrading",
-      "name": "Reddit algotrading",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "reddit-futurestrading",
+      "name": "Reddit futurestrading",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        220,
-        -200
-      ]
-    },
-    {
+        230,
+        -70
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
         "url": "https://www.reddit.com/r/futurestrading/top.json?t=day&limit=25",
@@ -52,16 +79,20 @@
           "timeout": 15000
         }
       },
-      "id": "reddit-futurestrading",
-      "name": "Reddit futurestrading",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "reddit-propfirms",
+      "name": "Reddit prop_firms",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        220,
-        0
-      ]
-    },
-    {
+        230,
+        80
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
         "method": "GET",
         "url": "https://www.reddit.com/r/prop_firms/top.json?t=day&limit=25",
@@ -69,60 +100,229 @@
           "timeout": 15000
         }
       },
-      "id": "reddit-propfirms",
-      "name": "Reddit prop_firms",
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "fetch-fingerprints",
+      "name": "Fetch Scout Fingerprints",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        220,
-        200
-      ]
+        230,
+        230
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "GET",
+        "url": "http://host.docker.internal:4000/api/journal/scout-fingerprints?days=30",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
     },
     {
-      "parameters": {
-        "mode": "combine",
-        "combinationMode": "multiplex",
-        "options": {}
-      },
-      "id": "merge-reddit",
-      "name": "Merge",
+      "id": "merge-reddit-a",
+      "name": "Merge Reddit A",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        440,
-        0
-      ]
+        470,
+        -140
+      ],
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2
+      }
     },
     {
+      "id": "merge-reddit-b",
+      "name": "Merge Reddit B",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        690,
+        -40
+      ],
       "parameters": {
-        "jsCode": "const allItems = $input.all();\nconst ideas = [];\nfor (const item of allItems) {\n  const data = item.json;\n  const posts = data?.data?.children || [];\n  for (const post of posts) {\n    const d = post.data;\n    if ((d.ups || 0) > 10) {\n      ideas.push({\n        source: 'reddit',\n        title: d.title || '',\n        description: (d.selftext || '').substring(0, 1000),\n        url: 'https://www.reddit.com' + (d.permalink || ''),\n        confidence_score: Math.min(1, (d.ups || 0) / 100)\n      });\n    }\n  }\n}\nreturn [{ json: { ideas } }];"
-      },
+        "mode": "append",
+        "numberInputs": 2
+      }
+    },
+    {
+      "id": "merge-context",
+      "name": "Merge Scout Context",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        910,
+        20
+      ],
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2
+      }
+    },
+    {
       "id": "parse-reddit",
       "name": "Parse Reddit",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        660,
-        0
-      ]
+        1130,
+        20
+      ],
+      "parameters": {
+        "jsCode": "const fingerprintPayload = $('Fetch Scout Fingerprints').first()?.json ?? {};\nconst fingerprints = Array.isArray(fingerprintPayload.fingerprints) ? fingerprintPayload.fingerprints : [];\nconst knownKeys = new Set();\nfor (const fingerprint of fingerprints) {\n  if (fingerprint.title_hash) knownKeys.add(String(fingerprint.title_hash));\n  if (fingerprint.url) knownKeys.add(String(fingerprint.url));\n}\n\nconst fetchFailures = [];\nconst ideas = [];\nconst normalizeTitle = (title) => title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().slice(0, 160);\n\nfor (const item of $input.all()) {\n  const payload = item.json ?? {};\n  const requestError = payload.error || payload.errorMessage || payload.message || null;\n  if (requestError) {\n    fetchFailures.push(String(requestError));\n    continue;\n  }\n\n  const posts = Array.isArray(payload?.data?.children) ? payload.data.children : [];\n  for (const post of posts) {\n    const data = post?.data ?? {};\n    const ups = Number(data.ups || 0);\n    const title = String(data.title || '').trim();\n    const url = 'https://www.reddit.com' + String(data.permalink || '');\n    const titleHash = normalizeTitle(title);\n    if (!title || ups <= 10) continue;\n    if (knownKeys.has(titleHash) || knownKeys.has(url)) continue;\n    knownKeys.add(titleHash);\n    knownKeys.add(url);\n\n    ideas.push({\n      source: 'reddit',\n      title,\n      description: String(data.selftext || '').substring(0, 1000),\n      url,\n      confidence_score: Math.min(1, ups / 100),\n    });\n  }\n}\n\nreturn [{\n  json: {\n    ideas,\n    ideaCount: ideas.length,\n    fetchFailures,\n    fetchedAt: new Date().toISOString(),\n  },\n}];"
+      }
     },
     {
+      "id": "any-feed-failures",
+      "name": "Any Feed Failures?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1350,
+        -80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.fetchFailures.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "create-warning-alert",
+      "name": "Create Scout Warning Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1580,
+        -80
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+        "url": "http://host.docker.internal:4000/api/alerts",
         "sendBody": true,
+        "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json.ideas) }}",
-        "options": {}
+        "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_warning',\n  severity: 'warning',\n  title: '5H-reddit-scout encountered upstream feed failures',\n  message: $json.fetchFailures.join(' | '),\n  metadata: {\n    workflow: '5H-reddit-scout',\n    fetchedAt: $json.fetchedAt,\n    ideaCount: $json.ideaCount,\n  },\n}) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "has-ideas",
+      "name": "Has Ideas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1350,
+        120
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ideaCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "post-ideas",
       "name": "Post Scout Ideas",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        880,
-        0
-      ]
+        1580,
+        120
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ideas: $json.ideas }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        220,
+        430
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "err-alert",
+      "name": "Create Workflow Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        470,
+        430
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/alerts",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_error',\n  severity: 'critical',\n  title: '5H-reddit-scout failed',\n  message: $json.execution?.error?.message || $json.error?.message || 'Unknown workflow error',\n  metadata: {\n    workflow: '5H-reddit-scout',\n    timestamp: new Date().toISOString(),\n  },\n}) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -143,6 +343,11 @@
             "node": "Reddit prop_firms",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Fetch Scout Fingerprints",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -151,7 +356,7 @@
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Merge Reddit A",
             "type": "main",
             "index": 0
           }
@@ -162,9 +367,20 @@
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Merge Reddit A",
             "type": "main",
             "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Reddit A": {
+      "main": [
+        [
+          {
+            "node": "Merge Reddit B",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -173,14 +389,36 @@
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Merge Reddit B",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Reddit B": {
+      "main": [
+        [
+          {
+            "node": "Merge Scout Context",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Merge": {
+    "Fetch Scout Fingerprints": {
+      "main": [
+        [
+          {
+            "node": "Merge Scout Context",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Scout Context": {
       "main": [
         [
           {
@@ -195,7 +433,75 @@
       "main": [
         [
           {
+            "node": "Any Feed Failures?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Has Ideas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Feed Failures?": {
+      "main": [
+        [
+          {
+            "node": "Create Scout Warning Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Has Ideas?": {
+      "main": [
+        [
+          {
             "node": "Post Scout Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Create Workflow Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Reddit algotrading",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit futurestrading",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit prop_firms",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Scout Fingerprints",
             "type": "main",
             "index": 0
           }
@@ -275,16 +581,17 @@
     "workflowId": "ZMgHYjcTq4YTRQXh",
     "nodes": [
       {
-        "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "triggerAtHour": 18,
-                "triggerAtMinute": 30
-              }
-            ]
-          }
-        },
+        "id": "execute-workflow-trigger",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          -180
+        ],
+        "parameters": {}
+      },
+      {
         "id": "schedule-trigger",
         "name": "Schedule Trigger",
         "type": "n8n-nodes-base.scheduleTrigger",
@@ -292,9 +599,31 @@
         "position": [
           0,
           0
-        ]
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "days",
+                "daysInterval": 1,
+                "triggerAtHour": 18,
+                "triggerAtMinute": 30
+              }
+            ]
+          }
+        }
       },
       {
+        "id": "reddit-algotrading",
+        "name": "Reddit algotrading",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          230,
+          -220
+        ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
           "method": "GET",
           "url": "https://www.reddit.com/r/algotrading/top.json?t=day&limit=25",
@@ -302,16 +631,20 @@
             "timeout": 15000
           }
         },
-        "id": "reddit-algotrading",
-        "name": "Reddit algotrading",
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "reddit-futurestrading",
+        "name": "Reddit futurestrading",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          220,
-          -200
-        ]
-      },
-      {
+          230,
+          -70
+        ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
           "method": "GET",
           "url": "https://www.reddit.com/r/futurestrading/top.json?t=day&limit=25",
@@ -319,16 +652,20 @@
             "timeout": 15000
           }
         },
-        "id": "reddit-futurestrading",
-        "name": "Reddit futurestrading",
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "reddit-propfirms",
+        "name": "Reddit prop_firms",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          220,
-          0
-        ]
-      },
-      {
+          230,
+          80
+        ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
           "method": "GET",
           "url": "https://www.reddit.com/r/prop_firms/top.json?t=day&limit=25",
@@ -336,60 +673,229 @@
             "timeout": 15000
           }
         },
-        "id": "reddit-propfirms",
-        "name": "Reddit prop_firms",
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "fetch-fingerprints",
+        "name": "Fetch Scout Fingerprints",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          220,
-          200
-        ]
+          230,
+          230
+        ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
+        "parameters": {
+          "method": "GET",
+          "url": "http://host.docker.internal:4000/api/journal/scout-fingerprints?days=30",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
       },
       {
-        "parameters": {
-          "mode": "combine",
-          "combinationMode": "multiplex",
-          "options": {}
-        },
-        "id": "merge-reddit",
-        "name": "Merge",
+        "id": "merge-reddit-a",
+        "name": "Merge Reddit A",
         "type": "n8n-nodes-base.merge",
         "typeVersion": 3,
         "position": [
-          440,
-          0
-        ]
+          470,
+          -140
+        ],
+        "parameters": {
+          "mode": "append",
+          "numberInputs": 2
+        }
       },
       {
+        "id": "merge-reddit-b",
+        "name": "Merge Reddit B",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          690,
+          -40
+        ],
         "parameters": {
-          "jsCode": "const allItems = $input.all();\nconst ideas = [];\nfor (const item of allItems) {\n  const data = item.json;\n  const posts = data?.data?.children || [];\n  for (const post of posts) {\n    const d = post.data;\n    if ((d.ups || 0) > 10) {\n      ideas.push({\n        source: 'reddit',\n        title: d.title || '',\n        description: (d.selftext || '').substring(0, 1000),\n        url: 'https://www.reddit.com' + (d.permalink || ''),\n        confidence_score: Math.min(1, (d.ups || 0) / 100)\n      });\n    }\n  }\n}\nreturn [{ json: { ideas } }];"
-        },
+          "mode": "append",
+          "numberInputs": 2
+        }
+      },
+      {
+        "id": "merge-context",
+        "name": "Merge Scout Context",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          910,
+          20
+        ],
+        "parameters": {
+          "mode": "append",
+          "numberInputs": 2
+        }
+      },
+      {
         "id": "parse-reddit",
         "name": "Parse Reddit",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          660,
-          0
-        ]
+          1130,
+          20
+        ],
+        "parameters": {
+          "jsCode": "const fingerprintPayload = $('Fetch Scout Fingerprints').first()?.json ?? {};\nconst fingerprints = Array.isArray(fingerprintPayload.fingerprints) ? fingerprintPayload.fingerprints : [];\nconst knownKeys = new Set();\nfor (const fingerprint of fingerprints) {\n  if (fingerprint.title_hash) knownKeys.add(String(fingerprint.title_hash));\n  if (fingerprint.url) knownKeys.add(String(fingerprint.url));\n}\n\nconst fetchFailures = [];\nconst ideas = [];\nconst normalizeTitle = (title) => title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().slice(0, 160);\n\nfor (const item of $input.all()) {\n  const payload = item.json ?? {};\n  const requestError = payload.error || payload.errorMessage || payload.message || null;\n  if (requestError) {\n    fetchFailures.push(String(requestError));\n    continue;\n  }\n\n  const posts = Array.isArray(payload?.data?.children) ? payload.data.children : [];\n  for (const post of posts) {\n    const data = post?.data ?? {};\n    const ups = Number(data.ups || 0);\n    const title = String(data.title || '').trim();\n    const url = 'https://www.reddit.com' + String(data.permalink || '');\n    const titleHash = normalizeTitle(title);\n    if (!title || ups <= 10) continue;\n    if (knownKeys.has(titleHash) || knownKeys.has(url)) continue;\n    knownKeys.add(titleHash);\n    knownKeys.add(url);\n\n    ideas.push({\n      source: 'reddit',\n      title,\n      description: String(data.selftext || '').substring(0, 1000),\n      url,\n      confidence_score: Math.min(1, ups / 100),\n    });\n  }\n}\n\nreturn [{\n  json: {\n    ideas,\n    ideaCount: ideas.length,\n    fetchFailures,\n    fetchedAt: new Date().toISOString(),\n  },\n}];"
+        }
       },
       {
+        "id": "any-feed-failures",
+        "name": "Any Feed Failures?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1350,
+          -80
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $json.fetchFailures.length }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "create-warning-alert",
+        "name": "Create Scout Warning Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1580,
+          -80
+        ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+          "url": "http://host.docker.internal:4000/api/alerts",
           "sendBody": true,
+          "contentType": "json",
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify($json.ideas) }}",
-          "options": {}
+          "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_warning',\n  severity: 'warning',\n  title: '5H-reddit-scout encountered upstream feed failures',\n  message: $json.fetchFailures.join(' | '),\n  metadata: {\n    workflow: '5H-reddit-scout',\n    fetchedAt: $json.fetchedAt,\n    ideaCount: $json.ideaCount,\n  },\n}) }}",
+          "options": {
+            "timeout": 15000
+          }
         },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "has-ideas",
+        "name": "Has Ideas?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1350,
+          120
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $json.ideaCount }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
         "id": "post-ideas",
         "name": "Post Scout Ideas",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          880,
-          0
-        ]
+          1580,
+          120
+        ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ ideas: $json.ideas }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          220,
+          430
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "err-alert",
+        "name": "Create Workflow Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          470,
+          430
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/alerts",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_error',\n  severity: 'critical',\n  title: '5H-reddit-scout failed',\n  message: $json.execution?.error?.message || $json.error?.message || 'Unknown workflow error',\n  metadata: {\n    workflow: '5H-reddit-scout',\n    timestamp: new Date().toISOString(),\n  },\n}) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
@@ -410,6 +916,11 @@
               "node": "Reddit prop_firms",
               "type": "main",
               "index": 0
+            },
+            {
+              "node": "Fetch Scout Fingerprints",
+              "type": "main",
+              "index": 0
             }
           ]
         ]
@@ -418,7 +929,7 @@
         "main": [
           [
             {
-              "node": "Merge",
+              "node": "Merge Reddit A",
               "type": "main",
               "index": 0
             }
@@ -429,9 +940,20 @@
         "main": [
           [
             {
-              "node": "Merge",
+              "node": "Merge Reddit A",
               "type": "main",
               "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Reddit A": {
+        "main": [
+          [
+            {
+              "node": "Merge Reddit B",
+              "type": "main",
+              "index": 0
             }
           ]
         ]
@@ -440,14 +962,36 @@
         "main": [
           [
             {
-              "node": "Merge",
+              "node": "Merge Reddit B",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Reddit B": {
+        "main": [
+          [
+            {
+              "node": "Merge Scout Context",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "Merge": {
+      "Fetch Scout Fingerprints": {
+        "main": [
+          [
+            {
+              "node": "Merge Scout Context",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge Scout Context": {
         "main": [
           [
             {
@@ -462,7 +1006,75 @@
         "main": [
           [
             {
+              "node": "Any Feed Failures?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Has Ideas?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Feed Failures?": {
+        "main": [
+          [
+            {
+              "node": "Create Scout Warning Alert",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Has Ideas?": {
+        "main": [
+          [
+            {
               "node": "Post Scout Ideas",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Create Workflow Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Reddit algotrading",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Reddit futurestrading",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Reddit prop_firms",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Fetch Scout Fingerprints",
               "type": "main",
               "index": 0
             }
@@ -483,6 +1095,13 @@
         "event": "activated",
         "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
       }
-    ]
+    ],
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "America/New_York",
+      "saveDataErrorExecution": "all",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    }
   }
 }

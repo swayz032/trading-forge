@@ -4,7 +4,7 @@
   "id": "EUc24C5flAMb5nno",
   "name": "Macro Data Sync",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -43,7 +43,10 @@
           "timeout": 60000
         }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "fetch-calendar",
@@ -70,7 +73,10 @@
           "timeout": 30000
         }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "run-skip-classifier",
@@ -88,7 +94,10 @@
           "timeout": 30000
         }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "check-sit-out",
@@ -134,9 +143,49 @@
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ type: 'macro:sit-out-alert', data: { message: 'Economic event today \u2014 strategies may be sitting out', timestamp: new Date().toISOString() } }) }}"
+        "jsonBody": "={{ JSON.stringify({ type: 'macro:sit-out-alert', data: { message: 'Economic event today — strategies may be sitting out', timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"Macro Data Sync\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -194,6 +243,17 @@
           }
         ],
         []
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-15T00:46:58.887Z",
+  "updatedAt": "2026-04-03T05:32:36.629Z",
   "createdAt": "2026-03-14T21:06:25.292Z",
   "id": "gFwNlA3eCHbSb7en",
   "name": "Pre-Session Compliance Gate",
@@ -38,14 +38,16 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "http://localhost:4000/api/compliance/gate/today",
+        "url": "http://host.docker.internal:4000/api/compliance/gate/today",
         "options": {
           "timeout": 10000
         }
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "code-parse-gate",
@@ -119,7 +121,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/compliance",
+        "url": "http://host.docker.internal:4100/alert/compliance",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -129,7 +131,9 @@
       },
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "code-output-summary",
@@ -167,7 +171,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/alerts",
+        "url": "http://host.docker.internal:4100/alert/alerts",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Pre-Session Compliance Gate', message: String($json.execution ? $json.execution.error ? $json.execution.error.message : 'Unknown error' : 'Unknown error'), severity: 'critical', data: { workflow: 'Pre-Session Compliance Gate', executionId: String($json.execution ? $json.execution.id : 'N/A'), timestamp: new Date().toISOString() } }) }}",
@@ -177,7 +181,9 @@
       },
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 2000
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -261,7 +267,7 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": true
   },
   "staticData": {
     "node:Daily 9:15AM ET Mon-Fri": {
@@ -270,9 +276,9 @@
   },
   "meta": null,
   "pinData": null,
-  "versionId": "fd0b9b49-34c9-47be-b79f-08c4ef1ae92f",
-  "activeVersionId": "fd0b9b49-34c9-47be-b79f-08c4ef1ae92f",
-  "versionCounter": 11,
+  "versionId": "a16e988e-4e20-4d50-9973-f2376083010d",
+  "activeVersionId": "a16e988e-4e20-4d50-9973-f2376083010d",
+  "versionCounter": 27,
   "triggerCount": 1,
   "shared": [
     {
@@ -297,7 +303,7 @@
             "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
             "projectId": "l9zgLNMKv7CjloiW",
             "user": {
-              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "updatedAt": "2026-04-03T05:29:30.601Z",
               "createdAt": "2026-02-12T09:44:05.126Z",
               "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
               "email": "tonioswayz32@gmail.com",
@@ -312,7 +318,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-03-20",
+              "lastActiveAt": "2026-04-03",
               "isPending": false
             }
           }
@@ -322,9 +328,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-14T23:19:52.460Z",
-    "createdAt": "2026-03-14T23:19:52.460Z",
-    "versionId": "fd0b9b49-34c9-47be-b79f-08c4ef1ae92f",
+    "updatedAt": "2026-03-31T03:51:10.024Z",
+    "createdAt": "2026-03-28T00:24:56.393Z",
+    "versionId": "a16e988e-4e20-4d50-9973-f2376083010d",
     "workflowId": "gFwNlA3eCHbSb7en",
     "nodes": [
       {
@@ -358,14 +364,16 @@
         ],
         "parameters": {
           "method": "GET",
-          "url": "http://localhost:4000/api/compliance/gate/today",
+          "url": "http://host.docker.internal:4000/api/compliance/gate/today",
           "options": {
             "timeout": 10000
           }
         },
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 3000
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "code-parse-gate",
@@ -439,7 +447,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/compliance",
+          "url": "http://host.docker.internal:4100/alert/compliance",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify($json) }}",
@@ -449,7 +457,9 @@
         },
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 2000
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "code-output-summary",
@@ -487,7 +497,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/alerts",
+          "url": "http://host.docker.internal:4100/alert/alerts",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Pre-Session Compliance Gate', message: String($json.execution ? $json.execution.error ? $json.execution.error.message : 'Unknown error' : 'Unknown error'), severity: 'critical', data: { workflow: 'Pre-Session Compliance Gate', executionId: String($json.execution ? $json.execution.id : 'N/A'), timestamp: new Date().toISOString() } }) }}",
@@ -497,7 +507,9 @@
         },
         "retryOnFail": true,
         "maxTries": 2,
-        "waitBetweenTries": 2000
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {
@@ -576,15 +588,31 @@
       }
     },
     "authors": "Tonio tonioswayz32@gmail.com",
-    "name": null,
-    "description": null,
+    "name": "Version a16e988e",
+    "description": "",
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-14T23:19:52.481Z",
-        "id": 1132,
+        "createdAt": "2026-03-31T03:51:10.023Z",
+        "id": 1368,
         "workflowId": "gFwNlA3eCHbSb7en",
-        "versionId": "fd0b9b49-34c9-47be-b79f-08c4ef1ae92f",
+        "versionId": "a16e988e-4e20-4d50-9973-f2376083010d",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-31T04:39:13.836Z",
+        "id": 1381,
+        "workflowId": "gFwNlA3eCHbSb7en",
+        "versionId": "a16e988e-4e20-4d50-9973-f2376083010d",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-04-03T05:32:36.709Z",
+        "id": 1397,
+        "workflowId": "gFwNlA3eCHbSb7en",
+        "versionId": "a16e988e-4e20-4d50-9973-f2376083010d",
         "event": "activated",
         "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
       }

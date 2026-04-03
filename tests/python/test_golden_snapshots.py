@@ -54,30 +54,20 @@ class TestGoldenSnapshots:
     def test_pine_compiler(self):
         from src.engine.pine_compiler import compile_strategy
 
+        # Uses the compiler's actual DSL keys: entry_indicator / entry_params,
+        # and flat indicator dicts (not nested "params" sub-dicts).
         strategy = {
             "name": "golden_test_sma_cross",
             "symbol": "MES",
             "timeframe": "5m",
+            "entry_indicator": "sma_crossover",
+            "entry_params": {"fast": 20, "slow": 50},
+            "stop_loss_atr_multiple": 2.0,
             "indicators": [
-                {"type": "sma", "params": {"period": 20}},
-                {"type": "sma", "params": {"period": 50}},
-                {"type": "atr", "params": {"period": 14}},
+                {"type": "sma", "period": 20},
+                {"type": "sma", "period": 50},
+                {"type": "atr", "period": 14},
             ],
-            "entry_rules": [
-                {"condition": "sma_20 > sma_50", "direction": "long"},
-                {"condition": "sma_20 < sma_50", "direction": "short"},
-            ],
-            "exit_rules": [
-                {"type": "atr_stop", "params": {"multiplier": 2.0}},
-                {"type": "atr_target", "params": {"multiplier": 3.0}},
-            ],
-            "parameters": {
-                "sma_fast": 20,
-                "sma_slow": 50,
-                "atr_period": 14,
-                "stop_atr_mult": 2.0,
-                "target_atr_mult": 3.0,
-            },
         }
 
         result = compile_strategy(strategy, firm_key="topstep_50k")

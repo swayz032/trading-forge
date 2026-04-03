@@ -13,8 +13,10 @@ import { queryOhlcv, type OhlcvBar } from "../../data/loaders/duckdb-service.js"
 import { logger } from "../index.js";
 import type { Bar } from "./paper-signal-service.js";
 import { parsePythonJson } from "../../shared/utils.js";
+import { tracer } from "../lib/tracing.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -122,7 +124,18 @@ function callContextEngine(config: Record<string, unknown>): Promise<Record<stri
           reject(new Error(`Parse error: ${stdout.slice(0, 200)}`));
         }
       } else {
-        reject(new Error(`Context engine exit ${code}: ${stderr.slice(0, 300)}`));
+        // Parse stderr for actionable diagnostics
+        const stderrSnippet = stderr.slice(0, 500);
+        let errorMsg = `Context engine exit ${code}`;
+        if (/ModuleNotFoundError|ImportError/.test(stderrSnippet)) {
+          const match = stderrSnippet.match(/No module named '([^']+)'/);
+          errorMsg = `Context engine missing Python dependency: ${match?.[1] ?? "unknown"}. Run: pip install ${match?.[1] ?? "<module>"}`;
+        } else if (/SyntaxError/.test(stderrSnippet)) {
+          errorMsg = `Context engine Python syntax error: ${stderrSnippet}`;
+        } else {
+          errorMsg += `: ${stderrSnippet}`;
+        }
+        reject(new Error(errorMsg));
       }
     });
 
@@ -214,7 +227,8 @@ async function evaluateTensorSignal(
  * Evaluate a signal through the full context pipeline.
  *
  * Returns TAKE/REDUCE/SKIP with position sizing adjustment.
- * If context engine fails or no daily data, returns TAKE (fail-open).
+ * If context engine fails or no daily data, defaults to SKIP (fail-closed),
+ * unless TF_FAIL_CLOSED_EXECUTION=0 explicitly enables fail-open.
  */
 export async function evaluateContextGate(
   symbol: string,
@@ -224,12 +238,21 @@ export async function evaluateContextGate(
   barBuffer: Bar[],
   indicators: Record<string, number>,
 ): Promise<ContextGateResult> {
-  // Default: fail-open (TAKE) so context gate doesn't block trading if data unavailable
+  const span = tracer.startSpan("paper.context_gate");
+  span.setAttribute("symbol", symbol);
+  span.setAttribute("direction", direction);
+
+  // Default behavior is fail-closed for execution safety.
+  // Set TF_FAIL_CLOSED_EXECUTION=0 to intentionally allow fail-open.
   const defaultResult: ContextGateResult = {
-    action: "TAKE",
+    action: FAIL_CLOSED_EXECUTION ? "SKIP" : "TAKE",
     confidence: 0,
-    reasoning: ["Context gate bypassed — no daily data or engine error"],
-    positionSizeAdjustment: 1.0,
+    reasoning: [
+      FAIL_CLOSED_EXECUTION
+        ? "Context gate failed closed — missing daily data or engine error"
+        : "Context gate bypassed — no daily data or engine error",
+    ],
+    positionSizeAdjustment: FAIL_CLOSED_EXECUTION ? 0 : 1.0,
     netBias: 0,
     playbook: "UNKNOWN",
     locationScore: 0,
@@ -240,6 +263,9 @@ export async function evaluateContextGate(
     const dailyBars = await getDailyBars(symbol);
     if (dailyBars.length < 20) {
       logger.debug({ symbol, barCount: dailyBars.length }, "Context gate: insufficient daily data, bypassing");
+      span.setAttribute("bypassed", true);
+      span.setAttribute("bypassReason", "insufficient_daily_bars");
+      span.setAttribute("defaultAction", defaultResult.action);
       return defaultResult;
     }
 
@@ -289,6 +315,9 @@ export async function evaluateContextGate(
 
     if (!eligibility) {
       logger.warn({ symbol }, "Context gate: no eligibility in result, bypassing");
+      span.setAttribute("bypassed", true);
+      span.setAttribute("bypassReason", "no_eligibility_result");
+      span.setAttribute("defaultAction", defaultResult.action);
       return defaultResult;
     }
 
@@ -321,10 +350,20 @@ export async function evaluateContextGate(
       `Context gate: ${gateResult.action} (bias=${gateResult.netBias}, location=${gateResult.locationScore})`,
     );
 
+    span.setAttribute("action", gateResult.action);
     return gateResult;
   } catch (err) {
-    logger.warn({ err, symbol }, "Context gate failed — fail-open (TAKE)");
+    logger.warn(
+      { err, symbol, failClosed: FAIL_CLOSED_EXECUTION },
+      FAIL_CLOSED_EXECUTION
+        ? "Context gate failed — fail-closed (SKIP)"
+        : "Context gate failed — fail-open (TAKE)",
+    );
+    span.setAttribute("error", err instanceof Error ? err.message : String(err));
+    span.setAttribute("defaultAction", defaultResult.action);
     return defaultResult;
+  } finally {
+    span.end();
   }
 }
 

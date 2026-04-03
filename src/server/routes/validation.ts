@@ -51,7 +51,7 @@ validationRoutes.post("/static", async (req, res) => {
       module: "src.engine.validation_runner",
       args: ["--mode", "static"],
       config: parsed.data as unknown as Record<string, unknown>,
-      timeoutMs: 15_000,
+      timeoutMs: 30_000,
       componentName: "validation-static",
     });
     res.json({ success: true, ...result });
@@ -75,7 +75,7 @@ validationRoutes.post("/runtime", async (req, res) => {
       module: "src.engine.validation_runner",
       args: ["--mode", "runtime"],
       config: parsed.data as unknown as Record<string, unknown>,
-      timeoutMs: 15_000,
+      timeoutMs: 30_000,
       componentName: "validation-runtime",
     });
     res.json({ success: true, ...result });
@@ -99,7 +99,7 @@ validationRoutes.post("/cross", async (req, res) => {
       module: "src.engine.validation_runner",
       args: ["--mode", "cross"],
       config: parsed.data as unknown as Record<string, unknown>,
-      timeoutMs: 15_000,
+      timeoutMs: 30_000,
       componentName: "validation-cross",
     });
     res.json({ success: true, ...result });
@@ -117,7 +117,7 @@ validationRoutes.get("/specs", async (_req, res) => {
       module: "src.engine.validation_runner",
       args: ["--mode", "list"],
       config: {},
-      timeoutMs: 15_000,
+      timeoutMs: 30_000,
       componentName: "validation-specs",
     });
     res.json({ success: true, ...result });

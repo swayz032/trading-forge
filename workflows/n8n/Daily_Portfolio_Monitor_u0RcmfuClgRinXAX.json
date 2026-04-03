@@ -32,7 +32,9 @@
       "maxTries": 3,
       "name": "Fetch DEPLOYED Strategies",
       "parameters": {
-        "options": {},
+        "options": {
+          "timeout": 15000
+        },
         "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED"
       },
       "position": [
@@ -42,7 +44,9 @@
       "retryOnFail": true,
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "check-any-deployed",
@@ -83,7 +87,9 @@
       "parameters": {
         "jsonBody": "={ \"type\": \"portfolio_monitor\", \"message\": \"No DEPLOYED strategies found - nothing to monitor\", \"timestamp\": \"{{ $now.toISO() }}\" }",
         "method": "POST",
-        "options": {},
+        "options": {
+          "timeout": 15000
+        },
         "sendBody": true,
         "specifyBody": "json",
         "url": "http://localhost:3000/api/journal"
@@ -93,7 +99,11 @@
         500
       ],
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4
+      "typeVersion": 4.4,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "split-strategies",
@@ -161,7 +171,9 @@
       "parameters": {
         "jsonBody": "={ \"fromState\": \"DEPLOYED\", \"toState\": \"DECLINING\" }",
         "method": "PATCH",
-        "options": {},
+        "options": {
+          "timeout": 15000
+        },
         "sendBody": true,
         "specifyBody": "json",
         "url": "=http://localhost:3000/api/strategies/{{ $json.strategyId }}/lifecycle"
@@ -173,7 +185,9 @@
       "retryOnFail": true,
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "log-healthy",
@@ -191,7 +205,9 @@
       "maxTries": 2,
       "name": "Fetch Pipeline Health",
       "parameters": {
-        "options": {},
+        "options": {
+          "timeout": 15000
+        },
         "url": "http://localhost:3000/api/strategies/pipeline"
       },
       "position": [
@@ -201,7 +217,9 @@
       "retryOnFail": true,
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "build-summary",
@@ -223,7 +241,9 @@
       "parameters": {
         "jsonBody": "={{ JSON.stringify($json) }}",
         "method": "POST",
-        "options": {},
+        "options": {
+          "timeout": 15000
+        },
         "sendBody": true,
         "specifyBody": "json",
         "url": "http://localhost:3000/api/journal"
@@ -235,7 +255,9 @@
       "retryOnFail": true,
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "waitBetweenTries": 3000
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "error-trigger-pm",
@@ -259,7 +281,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4100/alert/alerts",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Portfolio Monitor Error', message: $input.first().json.execution ? ($input.first().json.execution.error ? $input.first().json.execution.error.message : 'Unknown error') : ($input.first().json.error ? $input.first().json.error.message : JSON.stringify($input.first().json).substring(0, 500)), severity: 'critical', data: { workflow: 'Daily Portfolio Monitor', timestamp: new Date().toISOString() } }) }}",
@@ -270,7 +292,8 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 2000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -515,7 +538,9 @@
         "maxTries": 3,
         "name": "Fetch DEPLOYED Strategies",
         "parameters": {
-          "options": {},
+          "options": {
+            "timeout": 15000
+          },
           "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED"
         },
         "position": [
@@ -525,7 +550,9 @@
         "retryOnFail": true,
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
-        "waitBetweenTries": 5000
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "check-any-deployed",
@@ -566,7 +593,9 @@
         "parameters": {
           "jsonBody": "={ \"type\": \"portfolio_monitor\", \"message\": \"No DEPLOYED strategies found - nothing to monitor\", \"timestamp\": \"{{ $now.toISO() }}\" }",
           "method": "POST",
-          "options": {},
+          "options": {
+            "timeout": 15000
+          },
           "sendBody": true,
           "specifyBody": "json",
           "url": "http://localhost:3000/api/journal"
@@ -576,7 +605,11 @@
           500
         ],
         "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.4
+        "typeVersion": 4.4,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "split-strategies",
@@ -644,7 +677,9 @@
         "parameters": {
           "jsonBody": "={ \"fromState\": \"DEPLOYED\", \"toState\": \"DECLINING\" }",
           "method": "PATCH",
-          "options": {},
+          "options": {
+            "timeout": 15000
+          },
           "sendBody": true,
           "specifyBody": "json",
           "url": "=http://localhost:3000/api/strategies/{{ $json.strategyId }}/lifecycle"
@@ -656,7 +691,9 @@
         "retryOnFail": true,
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
-        "waitBetweenTries": 3000
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "log-healthy",
@@ -674,7 +711,9 @@
         "maxTries": 2,
         "name": "Fetch Pipeline Health",
         "parameters": {
-          "options": {},
+          "options": {
+            "timeout": 15000
+          },
           "url": "http://localhost:3000/api/strategies/pipeline"
         },
         "position": [
@@ -684,7 +723,9 @@
         "retryOnFail": true,
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
-        "waitBetweenTries": 3000
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "build-summary",
@@ -706,7 +747,9 @@
         "parameters": {
           "jsonBody": "={{ JSON.stringify($json) }}",
           "method": "POST",
-          "options": {},
+          "options": {
+            "timeout": 15000
+          },
           "sendBody": true,
           "specifyBody": "json",
           "url": "http://localhost:3000/api/journal"
@@ -718,7 +761,9 @@
         "retryOnFail": true,
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.4,
-        "waitBetweenTries": 3000
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "error-trigger-pm",
@@ -742,7 +787,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4100/alert/alerts",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Portfolio Monitor Error', message: $input.first().json.execution ? ($input.first().json.execution.error ? $input.first().json.execution.error.message : 'Unknown error') : ($input.first().json.error ? $input.first().json.error.message : JSON.stringify($input.first().json).substring(0, 500)), severity: 'critical', data: { workflow: 'Daily Portfolio Monitor', timestamp: new Date().toISOString() } }) }}",
@@ -753,7 +798,8 @@
         "retryOnFail": true,
         "maxTries": 2,
         "waitBetweenTries": 2000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {

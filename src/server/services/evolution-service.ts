@@ -17,11 +17,17 @@
 
 import { eq, and, gte, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, backtests, auditLog } from "../db/schema.js";
+import { strategies, backtests, auditLog, mutationOutcomes } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
+import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
+// Dynamic import to avoid circular dependency (lifecycle-service imports evolution-service)
+async function getLifecycleService() {
+  const { LifecycleService } = await import("./lifecycle-service.js");
+  return new LifecycleService();
+}
 
 const MAX_GENERATIONS = 3;
 const IMPROVEMENT_THRESHOLD = 0.10; // 10% improvement required
@@ -57,11 +63,11 @@ export async function evolveStrategy(strategyId: string): Promise<{
   // Guardrail: max generations
   if (strategy.generation >= MAX_GENERATIONS) {
     logger.info({ strategyId, generation: strategy.generation }, "Evolution: max generations reached, retiring");
-    await db.update(strategies).set({
-      lifecycleState: "RETIRED",
-      lifecycleChangedAt: new Date(),
-      updatedAt: new Date(),
-    }).where(eq(strategies.id, strategyId));
+    const lifecycle = await getLifecycleService();
+    const retireResult = await lifecycle.promoteStrategy(strategyId, strategy.lifecycleState as any, "RETIRED");
+    if (!retireResult.success) {
+      logger.error({ strategyId, error: retireResult.error }, "Evolution: failed to retire via lifecycle service (max generations)");
+    }
 
     return { status: "retired", error: "Max evolution generations reached" };
   }
@@ -132,6 +138,24 @@ export async function evolveStrategy(strategyId: string): Promise<{
     });
   }
 
+  // Load prior mutation outcomes for this strategy lineage to feed the LLM
+  // context. We use the root lineage ID so outcomes from parent generations
+  // inform child generation mutations.
+  const lineageRootId = strategy.parentStrategyId ?? strategyId;
+  const priorMutationOutcomes = await db
+    .select({
+      paramName: mutationOutcomes.paramName,
+      direction: mutationOutcomes.direction,
+      magnitude: mutationOutcomes.magnitude,
+      improvement: mutationOutcomes.improvement,
+      success: mutationOutcomes.success,
+      regime: mutationOutcomes.regime,
+    })
+    .from(mutationOutcomes)
+    .where(eq(mutationOutcomes.strategyId, lineageRootId))
+    .orderBy(desc(mutationOutcomes.createdAt))
+    .limit(50);
+
   // Build evolution config and call Python evolver
   const evolverConfig = {
     name: strategy.name,
@@ -144,28 +168,54 @@ export async function evolveStrategy(strategyId: string): Promise<{
     window_sharpes: wfResults?.windows
       ? (wfResults.windows as any[]).map((w: any) => w.oos_metrics?.sharpe_ratio ?? 0)
       : [],
+    mutation_history: priorMutationOutcomes.length > 0
+      ? priorMutationOutcomes.map((m) => ({
+          param_name: m.paramName,
+          direction: m.direction,
+          magnitude: m.magnitude !== null ? parseFloat(m.magnitude) : null,
+          improvement: m.improvement !== null ? parseFloat(m.improvement) : null,
+          success: m.success,
+          regime: m.regime,
+        }))
+      : null,
   };
 
   let evolverOutput: EvolverOutput;
   try {
-    evolverOutput = await runPythonModule<EvolverOutput>({
-      module: "src.engine.parameter_evolver",
-      config: evolverConfig as unknown as Record<string, unknown>,
-      timeoutMs: 300_000,
-      componentName: "evolution-engine",
-    });
+    evolverOutput = await CircuitBreakerRegistry.get("python-evolution").call(() =>
+      runPythonModule<EvolverOutput>({
+        module: "src.engine.parameter_evolver",
+        config: evolverConfig as unknown as Record<string, unknown>,
+        timeoutMs: 300_000,
+        componentName: "evolution-engine",
+      }),
+    );
   } catch (err) {
+    if (err instanceof CircuitOpenError) {
+      logger.warn({ strategyId, endpoint: err.endpoint, reopensAt: err.reopensAt.toISOString() }, "Evolution skipped — circuit open");
+      await db.insert(auditLog).values({
+        action: "strategy.evolution-skipped",
+        entityType: "strategy",
+        entityId: strategyId,
+        input: { reason: "circuit_open", endpoint: err.endpoint },
+        result: { reopensAt: err.reopensAt.toISOString() },
+        status: "failure",
+        decisionAuthority: "agent",
+        errorMessage: `circuit_open: ${err.endpoint}`,
+      });
+      return { status: "skipped", error: `Circuit open for ${err.endpoint}` };
+    }
     logger.error({ strategyId, err }, "Evolution engine failed");
     return { status: "failed", error: String(err) };
   }
 
   if (!evolverOutput.mutations || evolverOutput.mutations.length === 0) {
     logger.info({ strategyId }, "Evolution: no valid mutations generated, retiring");
-    await db.update(strategies).set({
-      lifecycleState: "RETIRED",
-      lifecycleChangedAt: new Date(),
-      updatedAt: new Date(),
-    }).where(eq(strategies.id, strategyId));
+    const lifecycle = await getLifecycleService();
+    const retireResult = await lifecycle.promoteStrategy(strategyId, strategy.lifecycleState as any, "RETIRED");
+    if (!retireResult.success) {
+      logger.error({ strategyId, error: retireResult.error }, "Evolution: failed to retire via lifecycle service (no mutations)");
+    }
 
     return { status: "exhausted", error: "No valid mutations generated" };
   }
@@ -204,6 +254,8 @@ export async function evolveStrategy(strategyId: string): Promise<{
 
       const result = await runBacktest(strategyId, backtestConfig as any) as any;
       const mutSharpe = result.sharpe_ratio ?? 0;
+      const mutPf = result.profit_factor ?? null;
+      const mutDd = result.max_drawdown ?? null;
       const improvement = parentSharpe > 0
         ? (mutSharpe - parentSharpe) / parentSharpe
         : mutSharpe > 0 ? 1 : 0;
@@ -213,6 +265,54 @@ export async function evolveStrategy(strategyId: string): Promise<{
         sharpe: mutSharpe,
         backtestId: result.id,
         improvement,
+      });
+
+      // ─── Phase 2.2: Record mutation impact ──────────────────────────
+      // Derive mutation metadata from the first changed param for type/direction.
+      const changedParamEntries = Object.entries(mutation.params);
+      const firstParam = changedParamEntries[0];
+      const firstParamName = firstParam?.[0] ?? "unknown";
+      const firstParamNewVal = Number(firstParam?.[1] ?? 0);
+      const firstParamOldVal = Number(
+        (evolverOutput.parent_params ?? {})[firstParamName] ?? 0,
+      );
+      const paramDelta = firstParamNewVal - firstParamOldVal;
+
+      // Classify mutation type based on whether a single param or multiple changed
+      const mutationType = changedParamEntries.length === 1
+        ? (paramDelta > 0 ? "period_expand" : "period_contract")
+        : "mixed";
+
+      const mutationDirection = paramDelta >= 0 ? "increase" : "decrease";
+      const mutationMagnitude = Math.abs(paramDelta);
+
+      // Parent metrics from the most recent completed backtest (already loaded above)
+      const parentMetrics = {
+        sharpe: parentSharpe,
+        profitFactor: parentBacktest?.profitFactor ? Number(parentBacktest.profitFactor) : null,
+        maxDrawdown: parentBacktest?.maxDrawdown ? Number(parentBacktest.maxDrawdown) : null,
+      };
+      const childMetrics = {
+        sharpe: mutSharpe,
+        profitFactor: mutPf !== null ? Number(mutPf) : null,
+        maxDrawdown: mutDd !== null ? Number(mutDd) : null,
+      };
+
+      await db.insert(mutationOutcomes).values({
+        strategyId,
+        parentArchetype: (strategy.tags ?? []).find((t) => t !== "evolved") ?? null,
+        mutationType,
+        paramName: firstParamName,
+        direction: mutationDirection,
+        magnitude: mutationMagnitude.toString(),
+        parentMetrics,
+        childMetrics,
+        improvement: (mutSharpe - parentSharpe).toFixed(4),
+        regime: strategy.preferredRegime ?? null,
+        success: mutSharpe > parentSharpe,
+      }).catch((err) => {
+        // Non-blocking — impact tracking must never abort an evolution run
+        logger.error({ err, strategyId }, "Evolution: failed to persist mutation outcome");
       });
 
       logger.info({
@@ -285,6 +385,7 @@ export async function evolveStrategy(strategyId: string): Promise<{
       },
       result: { evolvedId: evolved.id, generation: strategy.generation + 1 },
       status: "success",
+      decisionAuthority: "agent",
     });
 
     broadcastSSE("strategy:evolved", {
@@ -303,12 +404,12 @@ export async function evolveStrategy(strategyId: string): Promise<{
       improvement: `${(best.improvement * 100).toFixed(1)}%`,
     }, "Strategy evolved successfully");
   } else {
-    // No mutation beat the threshold — retire
-    await db.update(strategies).set({
-      lifecycleState: "RETIRED",
-      lifecycleChangedAt: new Date(),
-      updatedAt: new Date(),
-    }).where(eq(strategies.id, strategyId));
+    // No mutation beat the threshold — retire via lifecycle service
+    const lifecycle = await getLifecycleService();
+    const retireResult = await lifecycle.promoteStrategy(strategyId, strategy.lifecycleState as any, "RETIRED");
+    if (!retireResult.success) {
+      logger.error({ strategyId, error: retireResult.error }, "Evolution: failed to retire via lifecycle service (threshold not met)");
+    }
 
     await db.insert(auditLog).values({
       action: "strategy.evolution-exhausted",
@@ -324,6 +425,7 @@ export async function evolveStrategy(strategyId: string): Promise<{
       },
       result: { retired: true },
       status: "success",
+      decisionAuthority: "agent",
     });
 
     logger.info({ strategyId, mutations: results.length }, "Evolution exhausted — strategy retired");

@@ -21,7 +21,7 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 23 * * *"
+              "expression": "0 5 * * *"
             }
           ]
         }
@@ -34,7 +34,7 @@
       "typeVersion": 4.2,
       "position": [
         220,
-        0
+        -200
       ],
       "continueOnFail": true,
       "parameters": {
@@ -43,7 +43,10 @@
         "options": {
           "timeout": 30000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "format-summary",
@@ -51,11 +54,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        550,
         0
       ],
       "parameters": {
-        "jsCode": "const stats = $input.first().json;\nconst s = stats.data || stats;\nconst lines = [\n  `Ideas sourced: ${s.totalIdeas ?? s.ideas ?? 'N/A'}`,\n  `Strategies generated: ${s.totalStrategies ?? s.strategies ?? 'N/A'}`,\n  `Backtests run: ${s.totalBacktests ?? s.backtests ?? 'N/A'}`,\n  `Pass rate: ${s.passRate ?? 'N/A'}`,\n  `Active strategies: ${s.activeStrategies ?? s.active ?? 'N/A'}`,\n  `Declining: ${s.declining ?? 'N/A'}`,\n  `Paper trading: ${s.paper ?? s.paperTrading ?? 'N/A'}`\n];\nreturn [{ json: { title: 'Daily Pipeline Summary', severity: 'info', body: lines.join('\n') } }];"
+        "jsCode": "const health = $('Check System Health').first().json;\nconst stats = $('Fetch Pipeline Stats').first().json;\nconst strategies = $('Check Strategy Pipeline').first().json;\n\nconst s = stats.data || stats;\nconst strats = strategies.data || strategies;\nconst stratList = Array.isArray(strats) ? strats : [];\n\nconst healthStatus = health.status || health.error || 'unknown';\nconst activeCount = stratList.filter(s => s.lifecycleState === 'ACTIVE' || s.lifecycleState === 'PAPER').length;\nconst testingCount = stratList.filter(s => s.lifecycleState === 'TESTING').length;\nconst decayCount = stratList.filter(s => s.lifecycleState === 'DECLINING' || s.decaying).length;\n\nconst lines = [\n  'System Health: ' + healthStatus,\n  'Total Strategies: ' + stratList.length,\n  'Active/Paper: ' + activeCount,\n  'Testing: ' + testingCount,\n  'Declining: ' + decayCount,\n  'Ideas sourced: ' + (s.totalIdeas ?? s.ideas ?? 'N/A'),\n  'Backtests run: ' + (s.totalBacktests ?? s.backtests ?? 'N/A'),\n  'Pass rate: ' + (s.passRate ?? 'N/A')\n];\n\nconst severity = healthStatus !== 'ok' ? 'warning' : 'info';\nreturn [{ json: { event: 'orchestration:daily-summary', data: { title: 'Daily Pipeline Summary (5 AM ET)', severity, body: lines.join('\\n'), healthStatus, strategyCount: stratList.length, activeCount, testingCount, decayCount } } }];"
       }
     },
     {
@@ -64,34 +67,99 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        660,
+        770,
         0
       ],
       "continueOnFail": true,
       "parameters": {
-        "url": "http://host.docker.internal:4100/alert/alerts",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "method": "POST",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "title",
-              "value": "={{ $json.title }}"
-            },
-            {
-              "name": "severity",
-              "value": "={{ $json.severity }}"
-            },
-            {
-              "name": "body",
-              "value": "={{ $json.body }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
         "options": {
           "timeout": 15000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "ch",
+      "name": "Check System Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/health",
+        "method": "GET",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "cs",
+      "name": "Check Strategy Pipeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        200
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/strategies",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"10A-master-orchestration\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -100,6 +168,16 @@
         [
           {
             "node": "Fetch Pipeline Stats",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check System Health",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Strategy Pipeline",
             "type": "main",
             "index": 0
           }
@@ -117,11 +195,44 @@
         ]
       ]
     },
+    "Check System Health": {
+      "main": [
+        [
+          {
+            "node": "Format Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Strategy Pipeline": {
+      "main": [
+        [
+          {
+            "node": "Format Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Format Daily Summary": {
       "main": [
         [
           {
             "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
             "type": "main",
             "index": 0
           }
@@ -214,7 +325,7 @@
             "interval": [
               {
                 "field": "cronExpression",
-                "expression": "0 23 * * *"
+                "expression": "0 5 * * *"
               }
             ]
           }
@@ -227,7 +338,7 @@
         "typeVersion": 4.2,
         "position": [
           220,
-          0
+          -200
         ],
         "continueOnFail": true,
         "parameters": {
@@ -236,7 +347,10 @@
           "options": {
             "timeout": 30000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "format-summary",
@@ -244,11 +358,11 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          440,
+          550,
           0
         ],
         "parameters": {
-          "jsCode": "const stats = $input.first().json;\nconst s = stats.data || stats;\nconst lines = [\n  `Ideas sourced: ${s.totalIdeas ?? s.ideas ?? 'N/A'}`,\n  `Strategies generated: ${s.totalStrategies ?? s.strategies ?? 'N/A'}`,\n  `Backtests run: ${s.totalBacktests ?? s.backtests ?? 'N/A'}`,\n  `Pass rate: ${s.passRate ?? 'N/A'}`,\n  `Active strategies: ${s.activeStrategies ?? s.active ?? 'N/A'}`,\n  `Declining: ${s.declining ?? 'N/A'}`,\n  `Paper trading: ${s.paper ?? s.paperTrading ?? 'N/A'}`\n];\nreturn [{ json: { title: 'Daily Pipeline Summary', severity: 'info', body: lines.join('\n') } }];"
+          "jsCode": "const health = $('Check System Health').first().json;\nconst stats = $('Fetch Pipeline Stats').first().json;\nconst strategies = $('Check Strategy Pipeline').first().json;\n\nconst s = stats.data || stats;\nconst strats = strategies.data || strategies;\nconst stratList = Array.isArray(strats) ? strats : [];\n\nconst healthStatus = health.status || health.error || 'unknown';\nconst activeCount = stratList.filter(s => s.lifecycleState === 'ACTIVE' || s.lifecycleState === 'PAPER').length;\nconst testingCount = stratList.filter(s => s.lifecycleState === 'TESTING').length;\nconst decayCount = stratList.filter(s => s.lifecycleState === 'DECLINING' || s.decaying).length;\n\nconst lines = [\n  'System Health: ' + healthStatus,\n  'Total Strategies: ' + stratList.length,\n  'Active/Paper: ' + activeCount,\n  'Testing: ' + testingCount,\n  'Declining: ' + decayCount,\n  'Ideas sourced: ' + (s.totalIdeas ?? s.ideas ?? 'N/A'),\n  'Backtests run: ' + (s.totalBacktests ?? s.backtests ?? 'N/A'),\n  'Pass rate: ' + (s.passRate ?? 'N/A')\n];\n\nconst severity = healthStatus !== 'ok' ? 'warning' : 'info';\nreturn [{ json: { event: 'orchestration:daily-summary', data: { title: 'Daily Pipeline Summary (5 AM ET)', severity, body: lines.join('\\n'), healthStatus, strategyCount: stratList.length, activeCount, testingCount, decayCount } } }];"
         }
       },
       {
@@ -257,34 +371,99 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          660,
+          770,
           0
         ],
         "continueOnFail": true,
         "parameters": {
-          "url": "http://host.docker.internal:4100/alert/alerts",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "method": "POST",
           "sendBody": true,
-          "bodyParameters": {
-            "parameters": [
-              {
-                "name": "title",
-                "value": "={{ $json.title }}"
-              },
-              {
-                "name": "severity",
-                "value": "={{ $json.severity }}"
-              },
-              {
-                "name": "body",
-                "value": "={{ $json.body }}"
-              }
-            ]
-          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}",
           "options": {
             "timeout": 15000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "ch",
+        "name": "Check System Health",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/health",
+          "method": "GET",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "cs",
+        "name": "Check Strategy Pipeline",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          200
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/strategies",
+          "method": "GET",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"10A-master-orchestration\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
@@ -293,6 +472,16 @@
           [
             {
               "node": "Fetch Pipeline Stats",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check System Health",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check Strategy Pipeline",
               "type": "main",
               "index": 0
             }
@@ -310,11 +499,44 @@
           ]
         ]
       },
+      "Check System Health": {
+        "main": [
+          [
+            {
+              "node": "Format Daily Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Strategy Pipeline": {
+        "main": [
+          [
+            {
+              "node": "Format Daily Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
       "Format Daily Summary": {
         "main": [
           [
             {
               "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
               "type": "main",
               "index": 0
             }

@@ -2,11 +2,13 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import { spawn } from "child_process";
 import pino from "pino";
-import { sql } from "drizzle-orm";
+import { sql, and, eq, lt } from "drizzle-orm";
 import { db, client as dbClient } from "./db/index.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { standardRateLimit } from "./middleware/rate-limit.js";
+import { correlationMiddleware } from "./middleware/correlation.js";
 import { strategyRoutes } from "./routes/strategies.js";
 import { journalRoutes } from "./routes/journal.js";
 import { riskRoutes } from "./routes/risk.js";
@@ -37,9 +39,25 @@ import { validationRoutes } from "./routes/validation.js";
 import { pineExportRoutes } from "./routes/pine-export.js";
 import { quantumMcRoutes } from "./routes/quantum-mc.js";
 import { strategyNameRoutes } from "./routes/strategy-names.js";
+import { criticOptimizerRoutes } from "./routes/critic-optimizer.js";
+import { deeparRoutes } from "./routes/deepar.js";
+import { healthDashboardRoutes } from "./routes/health-dashboard.js";
 import { stopAllStreams } from "./services/paper-trading-stream.js";
+import { OTEL_AVAILABLE } from "./lib/tracing.js";
+import { CircuitBreakerRegistry } from "./lib/circuit-breaker.js";
+import { AlertFactory } from "./services/alert-service.js";
+
+// ─── Circuit breaker → alert wiring ─────────────────────────────
+// When any circuit breaker trips OPEN, fire a critical alert so the dashboard
+// and any future notification channels (SNS/email) are aware immediately.
+CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
+  if (to === "OPEN") {
+    AlertFactory.circuitOpen(name);
+  }
+});
 
 const app = express();
+export { app };
 const port = Number(process.env.PORT) || 4000;
 
 export const logger = pino({
@@ -50,8 +68,79 @@ export const logger = pino({
       : undefined,
 });
 
+type PythonDependencyHealth = {
+  status: "unknown" | "ok" | "error";
+  checkedAt: string | null;
+  missing: string[];
+  error?: string;
+};
+
+const REQUIRED_PYTHON_MODULES = ["polars", "numpy", "pandas"] as const;
+let pythonDependencyHealth: PythonDependencyHealth = {
+  status: "unknown",
+  checkedAt: null,
+  missing: [],
+};
+
+async function checkPythonDependencies(): Promise<void> {
+  pythonDependencyHealth = {
+    status: "unknown",
+    checkedAt: new Date().toISOString(),
+    missing: [],
+  };
+
+  try {
+    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    const script = [
+      "import importlib.util, json",
+      `mods = ${JSON.stringify([...REQUIRED_PYTHON_MODULES])}`,
+      "missing = [m for m in mods if importlib.util.find_spec(m) is None]",
+      "print(json.dumps({'missing': missing}))",
+    ].join(";");
+
+    const result = await new Promise<{ code: number | null; stdout: string; stderr: string }>((resolve) => {
+      const proc = spawn(pythonCmd, ["-c", script], { env: { ...process.env } });
+      let stdout = "";
+      let stderr = "";
+      proc.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
+      proc.stderr.on("data", (d: Buffer) => (stderr += d.toString()));
+      proc.on("close", (code) => resolve({ code, stdout, stderr }));
+      proc.on("error", (err) => resolve({ code: 1, stdout: "", stderr: err.message }));
+    });
+
+    if (result.code !== 0) {
+      pythonDependencyHealth = {
+        status: "error",
+        checkedAt: new Date().toISOString(),
+        missing: [],
+        error: result.stderr.trim() || `python exited with code ${result.code}`,
+      };
+      return;
+    }
+
+    const parsed = JSON.parse(result.stdout || "{}") as { missing?: string[] };
+    const missing = Array.isArray(parsed.missing) ? parsed.missing : [];
+    pythonDependencyHealth = {
+      status: missing.length === 0 ? "ok" : "error",
+      checkedAt: new Date().toISOString(),
+      missing,
+      error: missing.length > 0 ? `Missing Python modules: ${missing.join(", ")}` : undefined,
+    };
+  } catch (err) {
+    pythonDependencyHealth = {
+      status: "error",
+      checkedAt: new Date().toISOString(),
+      missing: [],
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
 // Middleware
 app.use(express.json({ limit: "10mb" }));
+
+// Correlation ID — must be first /api middleware so all subsequent handlers have req.log
+app.use("/api", correlationMiddleware);
 
 // Rate limiting (before auth gate)
 app.use("/api", standardRateLimit);
@@ -78,10 +167,61 @@ app.get("/api/health", async (_req, res) => {
     ollamaStatus = resp.ok ? "ok" : "error";
   } catch { ollamaStatus = "unreachable"; }
 
+  // Python runtime check — spawn python --version with 3s timeout
+  const pythonHealth: { status: string; version?: string; error?: string } = await new Promise((resolve) => {
+    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    const proc = spawn(pythonCmd, ["--version"], { env: { ...process.env } });
+    const TIMEOUT_MS = 3000;
+    let settled = false;
+    let stdout = "";
+    let stderr = "";
+
+    const timer = setTimeout(() => {
+      if (!settled) { settled = true; proc.kill("SIGTERM"); resolve({ status: "error", error: "timeout" }); }
+    }, TIMEOUT_MS);
+
+    proc.stdout.on("data", (d) => (stdout += d.toString()));
+    proc.stderr.on("data", (d) => (stderr += d.toString()));  // python --version writes to stderr on older Python
+
+    proc.on("close", (code) => {
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true;
+      const versionLine = (stdout + stderr).trim();
+      if (code === 0 && versionLine) {
+        resolve({ status: "ok", version: versionLine });
+      } else {
+        resolve({ status: "error", error: versionLine || `exit code ${code}` });
+      }
+    });
+
+    proc.on("error", (err) => {
+      clearTimeout(timer);
+      if (!settled) { settled = true; resolve({ status: "error", error: err.message }); }
+    });
+  });
+
+  // Top-level status: degraded if core dependencies are not fully operational.
+  const isHealthy = dbStatus === "ok"
+    && ollamaStatus === "ok"
+    && pythonDependencyHealth.status !== "error";
+  const topLevelStatus = isHealthy ? "ok" : "degraded";
+
   const memUsage = process.memoryUsage();
 
+  // Scheduler liveness: report last-fired timestamps for each job
+  // Returns {} if scheduler hasn't run yet (first startup before first cron tick)
+  let schedulerStatus: Record<string, string> = {};
+  try {
+    const { getSchedulerHealth } = await import("./scheduler.js");
+    const health = getSchedulerHealth();
+    schedulerStatus = Object.fromEntries(
+      Object.entries(health).map(([job, firedAt]) => [job, firedAt.toISOString()]),
+    );
+  } catch { /* scheduler not yet initialized */ }
+
   res.json({
-    status: dbStatus === "ok" ? "ok" : "degraded",
+    status: topLevelStatus,
     service: "trading-forge",
     timestamp: new Date().toISOString(),
     uptime: Math.round(process.uptime()),
@@ -93,6 +233,10 @@ app.get("/api/health", async (_req, res) => {
     ollama: {
       status: ollamaStatus,
     },
+    python: pythonHealth,
+    pythonDependencies: pythonDependencyHealth,
+    circuitBreakers: CircuitBreakerRegistry.statusAll(),
+    scheduler: schedulerStatus,
     memory: {
       heapUsedMb: Math.round(memUsage.heapUsed / 1024 / 1024),
       heapTotalMb: Math.round(memUsage.heapTotal / 1024 / 1024),
@@ -136,6 +280,9 @@ app.use("/api/validation", validationRoutes);
 app.use("/api/pine-export", pineExportRoutes);
 app.use("/api/quantum-mc", quantumMcRoutes);
 app.use("/api/strategy-names", strategyNameRoutes);
+app.use("/api/critic-optimizer", criticOptimizerRoutes);
+app.use("/api/deepar", deeparRoutes);
+app.use("/api/health", healthDashboardRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {
@@ -172,6 +319,56 @@ process.on("uncaughtException", (err) => {
 
 const server = app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);
+  if (OTEL_AVAILABLE) {
+    logger.info("OpenTelemetry tracing active");
+  } else {
+    logger.warn("OpenTelemetry tracing disabled — set OTEL_EXPORTER_OTLP_ENDPOINT to enable");
+  }
+
+  checkPythonDependencies().then(() => {
+    if (pythonDependencyHealth.status === "error") {
+      logger.error(
+        {
+          missing: pythonDependencyHealth.missing,
+          error: pythonDependencyHealth.error,
+        },
+        "Python dependency preflight failed",
+      );
+    } else {
+      logger.info({ modules: REQUIRED_PYTHON_MODULES }, "Python dependency preflight passed");
+    }
+  }).catch((err) => {
+    logger.error({ err }, "Python dependency preflight failed");
+  });
+
+  // ─── Orphaned backtest cleanup ────────────────────────────────
+  // On every restart, mark backtests that have been stuck in "running" for more
+  // than 10 minutes as failed. These are process-killed survivors from prior
+  // restarts — they will never complete and must not block subsequent runs.
+  import("./db/schema.js").then(async ({ backtests }) => {
+    try {
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const orphaned = await db
+        .update(backtests)
+        .set({ status: "failed", errorMessage: "Server restart — orphaned running backtest" })
+        .where(and(eq(backtests.status, "running"), lt(backtests.createdAt, tenMinutesAgo)))
+        .returning({ id: backtests.id });
+      if (orphaned.length > 0) {
+        logger.warn({ count: orphaned.length, ids: orphaned.map((r) => r.id) }, "Startup: cleaned up orphaned running backtests");
+      }
+    } catch (err) {
+      logger.error({ err }, "Startup: orphaned backtest cleanup failed (non-blocking)");
+    }
+  }).catch(() => {});
+
+  // ─── H2: Initialize paper position state maps from DB ────────
+  // Restores trail-stop HWM and bars-held counters for any positions that were
+  // open when the server last shut down.  Must run before the first bar arrives.
+  import("./services/paper-signal-service.js").then(({ initializePositionStateMaps }) => {
+    initializePositionStateMaps().catch((err) => {
+      logger.error({ err }, "Startup: position state map initialization failed (non-blocking)");
+    });
+  }).catch(() => {});
 
   // Start scheduled jobs (rolling Sharpe, pre-market prep, drift checks)
   import("./scheduler.js").then(({ initScheduler }) => {

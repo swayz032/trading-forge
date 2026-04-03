@@ -8,6 +8,17 @@
   "isArchived": false,
   "nodes": [
     {
+      "id": "execute-workflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -180
+      ],
+      "parameters": {}
+    },
+    {
       "id": "trigger",
       "name": "Cron Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
@@ -28,22 +39,25 @@
       }
     },
     {
-      "id": "fetch-stats",
-      "name": "Fetch Stats",
+      "id": "fetch-source-stats",
+      "name": "Fetch Source Stats",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        220,
+        240,
         0
       ],
-      "continueOnFail": true,
       "parameters": {
-        "url": "http://host.docker.internal:4000/api/journal/stats/summary",
+        "url": "http://host.docker.internal:4000/api/journal/source-stats?days=90",
         "method": "GET",
         "options": {
           "timeout": 30000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "calc-quality",
@@ -51,47 +65,73 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        480,
         0
       ],
       "parameters": {
-        "jsCode": "const stats = $input.first().json;\nconst s = stats.data || stats;\nconst sources = s.sources || s.bySource || {};\nconst lines = [];\nconst flagged = [];\nfor (const [name, data] of Object.entries(sources)) {\n  const total = data.total || data.count || 0;\n  const passed = data.passed || data.pass || 0;\n  const rate = total > 0 ? ((passed / total) * 100).toFixed(1) : 'N/A';\n  lines.push(`${name}: ${rate}% (${passed}/${total})`);\n  if (total > 0 && (passed / total) < 0.05) flagged.push(name);\n}\nconst severity = flagged.length > 0 ? 'warning' : 'info';\nconst body = lines.length > 0 ? lines.join('\n') + (flagged.length > 0 ? `\n\nFLAGGED (<5%): ${flagged.join(', ')}` : '') : 'No source data available yet.';\nreturn [{ json: { title: 'Weekly Source Quality Review', severity, body } }];"
+        "jsCode": "const payload = $input.first().json ?? {};\nconst sources = Array.isArray(payload.sources) ? payload.sources : [];\nconst ranked = sources.map((source) => ({\n  source: String(source.source || 'unknown'),\n  total: Number(source.total || 0),\n  scouted: Number(source.scouted || 0),\n  tested: Number(source.tested || 0),\n  promoted: Number(source.promoted || 0),\n  rejected: Number(source.rejected || 0),\n  promotionRate: Number(source.promotionRate || 0),\n})).sort((a, b) => b.promotionRate - a.promotionRate);\n\nconst lines = ranked.map((entry) =>\n  `${entry.source}: promotion=${entry.promotionRate.toFixed(2)}% | total=${entry.total} | scouted=${entry.scouted} | tested=${entry.tested} | promoted=${entry.promoted} | rejected=${entry.rejected}`\n);\n\nconst flagged = ranked.filter((entry) => entry.total >= 5 && entry.promotionRate < 5);\nconst tail = flagged.length > 0\n  ? ['', `Flagged sources (<5% promotion, min 5 observations): ${flagged.map((entry) => entry.source).join(', ')}`]\n  : [];\nconst body = ranked.length > 0\n  ? ['Weekly source quality review (90d):', ...lines, ...tail].join('\\n')\n  : 'No source data available yet.';\n\nreturn [{\n  json: {\n    severity: flagged.length > 0 ? 'warning' : 'info',\n    title: 'Weekly Source Quality Review',\n    message: body,\n    metadata: {\n      days: Number(payload.days || 90),\n      sourceCount: ranked.length,\n      flaggedSources: flagged.map((entry) => entry.source),\n      rankedSources: ranked,\n    },\n  },\n}];"
       }
     },
     {
-      "id": "send-alert",
-      "name": "Send Alert",
+      "id": "create-quality-alert",
+      "name": "Create Source Quality Alert",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        660,
+        720,
         0
       ],
       "continueOnFail": true,
+      "onError": "continueRegularOutput",
       "parameters": {
-        "url": "http://host.docker.internal:4100/alert/alerts",
         "method": "POST",
+        "url": "http://host.docker.internal:4000/api/alerts",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "title",
-              "value": "={{ $json.title }}"
-            },
-            {
-              "name": "severity",
-              "value": "={{ $json.severity }}"
-            },
-            {
-              "name": "body",
-              "value": "={{ $json.body }}"
-            }
-          ]
-        },
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  type: 'source_quality_review',\n  severity: $json.severity,\n  title: $json.title,\n  message: $json.message,\n  metadata: $json.metadata,\n}) }}",
         "options": {
           "timeout": 15000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        240
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "err-alert",
+      "name": "Create Workflow Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        240
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/alerts",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_error',\n  severity: 'critical',\n  title: '8B-source-quality-review failed',\n  message: $json.execution?.error?.message || $json.error?.message || 'Unknown workflow error',\n  metadata: {\n    workflow: '8B-source-quality-review',\n    timestamp: new Date().toISOString(),\n  },\n}) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -99,14 +139,14 @@
       "main": [
         [
           {
-            "node": "Fetch Stats",
+            "node": "Fetch Source Stats",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Fetch Stats": {
+    "Fetch Source Stats": {
       "main": [
         [
           {
@@ -121,7 +161,29 @@
       "main": [
         [
           {
-            "node": "Send Alert",
+            "node": "Create Source Quality Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Create Workflow Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Source Stats",
             "type": "main",
             "index": 0
           }
@@ -201,6 +263,17 @@
     "workflowId": "LQtqeWAcNOlkqROH",
     "nodes": [
       {
+        "id": "execute-workflow-trigger",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          -180
+        ],
+        "parameters": {}
+      },
+      {
         "id": "trigger",
         "name": "Cron Trigger",
         "type": "n8n-nodes-base.scheduleTrigger",
@@ -221,22 +294,25 @@
         }
       },
       {
-        "id": "fetch-stats",
-        "name": "Fetch Stats",
+        "id": "fetch-source-stats",
+        "name": "Fetch Source Stats",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          220,
+          240,
           0
         ],
-        "continueOnFail": true,
         "parameters": {
-          "url": "http://host.docker.internal:4000/api/journal/stats/summary",
+          "url": "http://host.docker.internal:4000/api/journal/source-stats?days=90",
           "method": "GET",
           "options": {
             "timeout": 30000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "calc-quality",
@@ -244,47 +320,73 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          440,
+          480,
           0
         ],
         "parameters": {
-          "jsCode": "const stats = $input.first().json;\nconst s = stats.data || stats;\nconst sources = s.sources || s.bySource || {};\nconst lines = [];\nconst flagged = [];\nfor (const [name, data] of Object.entries(sources)) {\n  const total = data.total || data.count || 0;\n  const passed = data.passed || data.pass || 0;\n  const rate = total > 0 ? ((passed / total) * 100).toFixed(1) : 'N/A';\n  lines.push(`${name}: ${rate}% (${passed}/${total})`);\n  if (total > 0 && (passed / total) < 0.05) flagged.push(name);\n}\nconst severity = flagged.length > 0 ? 'warning' : 'info';\nconst body = lines.length > 0 ? lines.join('\n') + (flagged.length > 0 ? `\n\nFLAGGED (<5%): ${flagged.join(', ')}` : '') : 'No source data available yet.';\nreturn [{ json: { title: 'Weekly Source Quality Review', severity, body } }];"
+          "jsCode": "const payload = $input.first().json ?? {};\nconst sources = Array.isArray(payload.sources) ? payload.sources : [];\nconst ranked = sources.map((source) => ({\n  source: String(source.source || 'unknown'),\n  total: Number(source.total || 0),\n  scouted: Number(source.scouted || 0),\n  tested: Number(source.tested || 0),\n  promoted: Number(source.promoted || 0),\n  rejected: Number(source.rejected || 0),\n  promotionRate: Number(source.promotionRate || 0),\n})).sort((a, b) => b.promotionRate - a.promotionRate);\n\nconst lines = ranked.map((entry) =>\n  `${entry.source}: promotion=${entry.promotionRate.toFixed(2)}% | total=${entry.total} | scouted=${entry.scouted} | tested=${entry.tested} | promoted=${entry.promoted} | rejected=${entry.rejected}`\n);\n\nconst flagged = ranked.filter((entry) => entry.total >= 5 && entry.promotionRate < 5);\nconst tail = flagged.length > 0\n  ? ['', `Flagged sources (<5% promotion, min 5 observations): ${flagged.map((entry) => entry.source).join(', ')}`]\n  : [];\nconst body = ranked.length > 0\n  ? ['Weekly source quality review (90d):', ...lines, ...tail].join('\\n')\n  : 'No source data available yet.';\n\nreturn [{\n  json: {\n    severity: flagged.length > 0 ? 'warning' : 'info',\n    title: 'Weekly Source Quality Review',\n    message: body,\n    metadata: {\n      days: Number(payload.days || 90),\n      sourceCount: ranked.length,\n      flaggedSources: flagged.map((entry) => entry.source),\n      rankedSources: ranked,\n    },\n  },\n}];"
         }
       },
       {
-        "id": "send-alert",
-        "name": "Send Alert",
+        "id": "create-quality-alert",
+        "name": "Create Source Quality Alert",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          660,
+          720,
           0
         ],
         "continueOnFail": true,
+        "onError": "continueRegularOutput",
         "parameters": {
-          "url": "http://host.docker.internal:4100/alert/alerts",
           "method": "POST",
+          "url": "http://host.docker.internal:4000/api/alerts",
           "sendBody": true,
-          "bodyParameters": {
-            "parameters": [
-              {
-                "name": "title",
-                "value": "={{ $json.title }}"
-              },
-              {
-                "name": "severity",
-                "value": "={{ $json.severity }}"
-              },
-              {
-                "name": "body",
-                "value": "={{ $json.body }}"
-              }
-            ]
-          },
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({\n  type: 'source_quality_review',\n  severity: $json.severity,\n  title: $json.title,\n  message: $json.message,\n  metadata: $json.metadata,\n}) }}",
           "options": {
             "timeout": 15000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          240
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "err-alert",
+        "name": "Create Workflow Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          480,
+          240
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/alerts",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_error',\n  severity: 'critical',\n  title: '8B-source-quality-review failed',\n  message: $json.execution?.error?.message || $json.error?.message || 'Unknown workflow error',\n  metadata: {\n    workflow: '8B-source-quality-review',\n    timestamp: new Date().toISOString(),\n  },\n}) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
@@ -292,14 +394,14 @@
         "main": [
           [
             {
-              "node": "Fetch Stats",
+              "node": "Fetch Source Stats",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "Fetch Stats": {
+      "Fetch Source Stats": {
         "main": [
           [
             {
@@ -314,7 +416,29 @@
         "main": [
           [
             {
-              "node": "Send Alert",
+              "node": "Create Source Quality Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Create Workflow Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Source Stats",
               "type": "main",
               "index": 0
             }
@@ -335,6 +459,13 @@
         "event": "activated",
         "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
       }
-    ]
+    ],
+    "settings": {
+      "executionOrder": "v1",
+      "timezone": "America/New_York",
+      "saveDataErrorExecution": "all",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    }
   }
 }

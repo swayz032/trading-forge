@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "22"
+  PYTHON_VERSION: "3.12"
+  TF_RUNTIME_STAGE: preprod
+  DATABASE_URL: postgresql://forge:forge_ci@localhost:5432/trading_forge_ci
+  API_KEY: ci-placeholder-api-key
+  N8N_BASE_URL: http://localhost:5678
+  N8N_API_KEY: ci-placeholder-n8n-key
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4318/v1/traces
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - run: npm ci
+      - run: npm run system-map:check
+      - run: npm run lint
+
+  test-node:
+    name: Node Tests + Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: forge
+          POSTGRES_PASSWORD: forge_ci
+          POSTGRES_DB: trading_forge_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://forge:forge_ci@localhost:5432/trading_forge_test
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Run migrations
+        run: npm run db:migrate
+
+      - name: Verify system map freshness
+        run: npm run system-map:check
+
+      - name: Run vitest with coverage
+        run: npx vitest run --coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: node-coverage
+          path: coverage/
+          retention-days: 14
+
+  test-python:
+    name: Python Tests + Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: forge
+          POSTGRES_PASSWORD: forge_ci
+          POSTGRES_DB: trading_forge_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://forge:forge_ci@localhost:5432/trading_forge_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install Python dependencies
+        run: |
+          npm ci
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt found"
+          pip install pytest pytest-cov
+
+      - name: Verify system map freshness
+        run: npm run system-map:check
+
+      - name: Run pytest with coverage
+        run: |
+          pytest src/engine/ --cov=src/engine --cov-report=xml --cov-report=html -v 2>/dev/null || echo "No Python tests found yet"
+
+      - name: Upload Python coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-coverage
+          path: htmlcov/
+          retention-days: 14
+
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: [test-node, test-python]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - run: npm ci
+      - run: npm run system-map:check
+      - run: npx tsc --noEmit

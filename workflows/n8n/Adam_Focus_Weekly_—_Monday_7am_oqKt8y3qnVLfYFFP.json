@@ -2,7 +2,7 @@
   "updatedAt": "2026-03-05T05:33:30.276Z",
   "createdAt": "2026-02-18T19:19:46.913Z",
   "id": "oqKt8y3qnVLfYFFP",
-  "name": "Adam Focus Weekly \u2014 Monday 7am",
+  "name": "Adam Focus Weekly — Monday 7am",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -98,7 +98,11 @@
       "position": [
         880,
         400
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -178,7 +182,7 @@
         }
       },
       "id": "call-orchestrator",
-      "name": "POST Intent \u2192 Orchestrator",
+      "name": "POST Intent → Orchestrator",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -190,7 +194,11 @@
           "id": "J84m12hyzSwSHo6S",
           "name": "Gateway Internal Key"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -232,7 +240,11 @@
       "position": [
         1760,
         500
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -274,7 +286,11 @@
       "position": [
         1540,
         300
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -316,7 +332,11 @@
       "position": [
         880,
         200
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -369,7 +389,11 @@
       "position": [
         660,
         560
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -439,7 +463,7 @@
       "main": [
         [
           {
-            "node": "POST Intent \u2192 Orchestrator",
+            "node": "POST Intent → Orchestrator",
             "type": "main",
             "index": 0
           }
@@ -453,7 +477,7 @@
         ]
       ]
     },
-    "POST Intent \u2192 Orchestrator": {
+    "POST Intent → Orchestrator": {
       "main": [
         [
           {
@@ -636,7 +660,11 @@
         "position": [
           880,
           400
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -716,7 +744,7 @@
           }
         },
         "id": "call-orchestrator",
-        "name": "POST Intent \u2192 Orchestrator",
+        "name": "POST Intent → Orchestrator",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -728,7 +756,11 @@
             "id": "J84m12hyzSwSHo6S",
             "name": "Gateway Internal Key"
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -770,7 +802,11 @@
         "position": [
           1760,
           500
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -812,7 +848,11 @@
         "position": [
           1540,
           300
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -854,7 +894,11 @@
         "position": [
           880,
           200
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {},
@@ -907,7 +951,11 @@
         "position": [
           660,
           560
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       }
     ],
     "connections": {
@@ -977,7 +1025,7 @@
         "main": [
           [
             {
-              "node": "POST Intent \u2192 Orchestrator",
+              "node": "POST Intent → Orchestrator",
               "type": "main",
               "index": 0
             }
@@ -991,7 +1039,7 @@
           ]
         ]
       },
-      "POST Intent \u2192 Orchestrator": {
+      "POST Intent → Orchestrator": {
         "main": [
           [
             {

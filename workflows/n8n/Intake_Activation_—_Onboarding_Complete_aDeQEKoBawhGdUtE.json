@@ -2,7 +2,7 @@
   "updatedAt": "2026-03-05T05:33:30.480Z",
   "createdAt": "2026-02-18T19:19:46.979Z",
   "id": "aDeQEKoBawhGdUtE",
-  "name": "Intake Activation \u2014 Onboarding Complete",
+  "name": "Intake Activation — Onboarding Complete",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -17,7 +17,7 @@
         "responseMode": "responseNode"
       },
       "id": "webhook-trigger",
-      "name": "Webhook \u2014 Onboarding Complete",
+      "name": "Webhook — Onboarding Complete",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
@@ -28,7 +28,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Kill switch check\nconst enabled = $env.N8N_WORKFLOW_INTAKE_ACTIVATION_ENABLED;\nif (enabled === 'false' || enabled === '0') {\n  return [{ json: { killed: 'true', reason: 'kill_switch_disabled' } }];\n}\n\n// --- HMAC signature validation (canonical JSON) ---\n// Both sender and receiver must use sorted-key, compact JSON.\n// Sender: json.dumps(payload, sort_keys=True, separators=(',', ':'))\n// Receiver: JSON.stringify with sorted keys (below)\nconst crypto = require('crypto');\nconst secret = $env.N8N_WEBHOOK_SECRET;\nconst signature = $input.first().json.headers['x-webhook-signature'] || '';\n\n// Recursively sort object keys for canonical JSON\nfunction sortKeys(obj) {\n  if (Array.isArray(obj)) return obj.map(sortKeys);\n  if (obj !== null && typeof obj === 'object') {\n    return Object.keys(obj).sort().reduce((acc, key) => {\n      acc[key] = sortKeys(obj[key]);\n      return acc;\n    }, {});\n  }\n  return obj;\n}\n\nconst body = $input.first().json.body;\nconst canonicalBody = JSON.stringify(sortKeys(body));\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(canonicalBody).digest('hex');\n\n// Pre-check buffer length to prevent timingSafeEqual RangeError\nconst sigBuf = Buffer.from(signature);\nconst expBuf = Buffer.from(expected);\nif (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {\n  return [{ json: { killed: 'true', reason: 'hmac_validation_failed' } }];\n}\n\n// Extract and validate payload\nif (!body.suiteId || !body.officeId) {\n  return [{ json: { killed: 'true', reason: 'missing_tenant_context' } }];\n}\n\nconst requestId = 'intake-activation-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);\nconst correlationId = body.correlationId || ($input.first().json.headers['x-correlation-id']) || ('n8n-intake-activation-' + body.suiteId.slice(0, 8) + '-' + new Date().toISOString().slice(0, 10));\nconst payloadHash = crypto.createHash('sha256').update(JSON.stringify(sortKeys({ suiteId: body.suiteId, industry: body.industry }))).digest('hex');\nconst idempotencyKey = crypto.createHash('sha256').update(requestId + 'intake.activation' + payloadHash).digest('hex');\n\n// Build setup tasks \u2014 all services auto-included (v3 onboarding)\nconst allServiceTasks = [\n  { title: 'Connect your Stripe account', agent: 'quinn', service: 'Invoicing & Payments' },\n  { title: 'Connect QuickBooks Online', agent: 'teressa', service: 'Bookkeeping' },\n  { title: 'Set up your business email domain', agent: 'eli', service: 'Email Management' },\n  { title: 'Connect Google Calendar', agent: 'nora', service: 'Scheduling & Calendar' },\n  { title: 'Upload contract templates', agent: 'clara', service: 'Contract Management' },\n  { title: 'Connect Gusto payroll', agent: 'milo', service: 'Payroll' },\n  { title: 'Upload your logo and letterhead', agent: 'tec', service: 'Document Generation' },\n  { title: 'Review your first industry brief', agent: 'adam', service: 'Research & Intelligence' },\n  { title: 'Set up your business phone line', agent: 'sarah', service: 'Front Desk & Calls' },\n  { title: 'Connect your bank accounts', agent: 'finn', service: 'Expense Tracking' },\n  { title: 'Set up tax year preferences', agent: 'teressa', service: 'Tax Preparation' }\n];\n\nconst tasks = allServiceTasks.map(t => ({\n  suite_id: body.suiteId,\n  office_id: body.officeId,\n  title: t.title,\n  assigned_agent: t.agent,\n  status: 'pending',\n  category: 'onboarding_setup',\n  source_service: t.service,\n  created_by: 'n8n-intake-activation',\n  created_at: new Date().toISOString()\n}));\n\nreturn [{ json: {\n  killed: 'false',\n  requestId,\n  correlationId,\n  idempotencyKey,\n  suiteId: body.suiteId,\n  officeId: body.officeId,\n  dateOfBirth: body.dateOfBirth || null,\n  gender: body.gender || null,\n  industry: body.industry || null,\n  industrySpecialty: body.industrySpecialty || null,\n  incomeRange: body.incomeRange || null,\n  referralSource: body.referralSource || null,\n  businessGoals: body.businessGoals || null,\n  painPoint: body.painPoint || null,\n  customerType: body.customerType || null,\n  salesChannel: body.salesChannel || null,\n  teamSize: body.teamSize || null,\n  tasks,\n  tasksCount: tasks.length,\n  timestamp: new Date().toISOString()\n} }];"
+        "jsCode": "// Kill switch check\nconst enabled = $env.N8N_WORKFLOW_INTAKE_ACTIVATION_ENABLED;\nif (enabled === 'false' || enabled === '0') {\n  return [{ json: { killed: 'true', reason: 'kill_switch_disabled' } }];\n}\n\n// --- HMAC signature validation (canonical JSON) ---\n// Both sender and receiver must use sorted-key, compact JSON.\n// Sender: json.dumps(payload, sort_keys=True, separators=(',', ':'))\n// Receiver: JSON.stringify with sorted keys (below)\nconst crypto = require('crypto');\nconst secret = $env.N8N_WEBHOOK_SECRET;\nconst signature = $input.first().json.headers['x-webhook-signature'] || '';\n\n// Recursively sort object keys for canonical JSON\nfunction sortKeys(obj) {\n  if (Array.isArray(obj)) return obj.map(sortKeys);\n  if (obj !== null && typeof obj === 'object') {\n    return Object.keys(obj).sort().reduce((acc, key) => {\n      acc[key] = sortKeys(obj[key]);\n      return acc;\n    }, {});\n  }\n  return obj;\n}\n\nconst body = $input.first().json.body;\nconst canonicalBody = JSON.stringify(sortKeys(body));\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(canonicalBody).digest('hex');\n\n// Pre-check buffer length to prevent timingSafeEqual RangeError\nconst sigBuf = Buffer.from(signature);\nconst expBuf = Buffer.from(expected);\nif (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {\n  return [{ json: { killed: 'true', reason: 'hmac_validation_failed' } }];\n}\n\n// Extract and validate payload\nif (!body.suiteId || !body.officeId) {\n  return [{ json: { killed: 'true', reason: 'missing_tenant_context' } }];\n}\n\nconst requestId = 'intake-activation-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);\nconst correlationId = body.correlationId || ($input.first().json.headers['x-correlation-id']) || ('n8n-intake-activation-' + body.suiteId.slice(0, 8) + '-' + new Date().toISOString().slice(0, 10));\nconst payloadHash = crypto.createHash('sha256').update(JSON.stringify(sortKeys({ suiteId: body.suiteId, industry: body.industry }))).digest('hex');\nconst idempotencyKey = crypto.createHash('sha256').update(requestId + 'intake.activation' + payloadHash).digest('hex');\n\n// Build setup tasks — all services auto-included (v3 onboarding)\nconst allServiceTasks = [\n  { title: 'Connect your Stripe account', agent: 'quinn', service: 'Invoicing & Payments' },\n  { title: 'Connect QuickBooks Online', agent: 'teressa', service: 'Bookkeeping' },\n  { title: 'Set up your business email domain', agent: 'eli', service: 'Email Management' },\n  { title: 'Connect Google Calendar', agent: 'nora', service: 'Scheduling & Calendar' },\n  { title: 'Upload contract templates', agent: 'clara', service: 'Contract Management' },\n  { title: 'Connect Gusto payroll', agent: 'milo', service: 'Payroll' },\n  { title: 'Upload your logo and letterhead', agent: 'tec', service: 'Document Generation' },\n  { title: 'Review your first industry brief', agent: 'adam', service: 'Research & Intelligence' },\n  { title: 'Set up your business phone line', agent: 'sarah', service: 'Front Desk & Calls' },\n  { title: 'Connect your bank accounts', agent: 'finn', service: 'Expense Tracking' },\n  { title: 'Set up tax year preferences', agent: 'teressa', service: 'Tax Preparation' }\n];\n\nconst tasks = allServiceTasks.map(t => ({\n  suite_id: body.suiteId,\n  office_id: body.officeId,\n  title: t.title,\n  assigned_agent: t.agent,\n  status: 'pending',\n  category: 'onboarding_setup',\n  source_service: t.service,\n  created_by: 'n8n-intake-activation',\n  created_at: new Date().toISOString()\n}));\n\nreturn [{ json: {\n  killed: 'false',\n  requestId,\n  correlationId,\n  idempotencyKey,\n  suiteId: body.suiteId,\n  officeId: body.officeId,\n  dateOfBirth: body.dateOfBirth || null,\n  gender: body.gender || null,\n  industry: body.industry || null,\n  industrySpecialty: body.industrySpecialty || null,\n  incomeRange: body.incomeRange || null,\n  referralSource: body.referralSource || null,\n  businessGoals: body.businessGoals || null,\n  painPoint: body.painPoint || null,\n  customerType: body.customerType || null,\n  salesChannel: body.salesChannel || null,\n  teamSize: body.teamSize || null,\n  tasks,\n  tasksCount: tasks.length,\n  timestamp: new Date().toISOString()\n} }];"
       },
       "id": "kill-switch-and-prep",
       "name": "Kill Switch + HMAC + Prep",
@@ -111,7 +111,7 @@
         }
       },
       "id": "insert-setup-tasks",
-      "name": "Create Setup Tasks \u2192 Gateway",
+      "name": "Create Setup Tasks → Gateway",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -119,7 +119,10 @@
         400
       ],
       "credentials": {},
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -180,7 +183,10 @@
         400
       ],
       "credentials": {},
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -241,7 +247,10 @@
         400
       ],
       "credentials": {},
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -283,7 +292,11 @@
       "position": [
         1540,
         400
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -325,7 +338,11 @@
       "position": [
         880,
         200
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -378,7 +395,11 @@
       "position": [
         660,
         560
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -466,7 +487,7 @@
     }
   ],
   "connections": {
-    "Webhook \u2014 Onboarding Complete": {
+    "Webhook — Onboarding Complete": {
       "main": [
         [
           {
@@ -492,7 +513,7 @@
       "main": [
         [
           {
-            "node": "Create Setup Tasks \u2192 Gateway",
+            "node": "Create Setup Tasks → Gateway",
             "type": "main",
             "index": 0
           }
@@ -506,7 +527,7 @@
         ]
       ]
     },
-    "Create Setup Tasks \u2192 Gateway": {
+    "Create Setup Tasks → Gateway": {
       "main": [
         [
           {
@@ -666,7 +687,7 @@
           "responseMode": "responseNode"
         },
         "id": "webhook-trigger",
-        "name": "Webhook \u2014 Onboarding Complete",
+        "name": "Webhook — Onboarding Complete",
         "type": "n8n-nodes-base.webhook",
         "typeVersion": 2,
         "position": [
@@ -677,7 +698,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// Kill switch check\nconst enabled = $env.N8N_WORKFLOW_INTAKE_ACTIVATION_ENABLED;\nif (enabled === 'false' || enabled === '0') {\n  return [{ json: { killed: 'true', reason: 'kill_switch_disabled' } }];\n}\n\n// --- HMAC signature validation (canonical JSON) ---\n// Both sender and receiver must use sorted-key, compact JSON.\n// Sender: json.dumps(payload, sort_keys=True, separators=(',', ':'))\n// Receiver: JSON.stringify with sorted keys (below)\nconst crypto = require('crypto');\nconst secret = $env.N8N_WEBHOOK_SECRET;\nconst signature = $input.first().json.headers['x-webhook-signature'] || '';\n\n// Recursively sort object keys for canonical JSON\nfunction sortKeys(obj) {\n  if (Array.isArray(obj)) return obj.map(sortKeys);\n  if (obj !== null && typeof obj === 'object') {\n    return Object.keys(obj).sort().reduce((acc, key) => {\n      acc[key] = sortKeys(obj[key]);\n      return acc;\n    }, {});\n  }\n  return obj;\n}\n\nconst body = $input.first().json.body;\nconst canonicalBody = JSON.stringify(sortKeys(body));\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(canonicalBody).digest('hex');\n\n// Pre-check buffer length to prevent timingSafeEqual RangeError\nconst sigBuf = Buffer.from(signature);\nconst expBuf = Buffer.from(expected);\nif (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {\n  return [{ json: { killed: 'true', reason: 'hmac_validation_failed' } }];\n}\n\n// Extract and validate payload\nif (!body.suiteId || !body.officeId) {\n  return [{ json: { killed: 'true', reason: 'missing_tenant_context' } }];\n}\n\nconst requestId = 'intake-activation-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);\nconst correlationId = body.correlationId || ($input.first().json.headers['x-correlation-id']) || ('n8n-intake-activation-' + body.suiteId.slice(0, 8) + '-' + new Date().toISOString().slice(0, 10));\nconst payloadHash = crypto.createHash('sha256').update(JSON.stringify(sortKeys({ suiteId: body.suiteId, industry: body.industry }))).digest('hex');\nconst idempotencyKey = crypto.createHash('sha256').update(requestId + 'intake.activation' + payloadHash).digest('hex');\n\n// Build setup tasks \u2014 all services auto-included (v3 onboarding)\nconst allServiceTasks = [\n  { title: 'Connect your Stripe account', agent: 'quinn', service: 'Invoicing & Payments' },\n  { title: 'Connect QuickBooks Online', agent: 'teressa', service: 'Bookkeeping' },\n  { title: 'Set up your business email domain', agent: 'eli', service: 'Email Management' },\n  { title: 'Connect Google Calendar', agent: 'nora', service: 'Scheduling & Calendar' },\n  { title: 'Upload contract templates', agent: 'clara', service: 'Contract Management' },\n  { title: 'Connect Gusto payroll', agent: 'milo', service: 'Payroll' },\n  { title: 'Upload your logo and letterhead', agent: 'tec', service: 'Document Generation' },\n  { title: 'Review your first industry brief', agent: 'adam', service: 'Research & Intelligence' },\n  { title: 'Set up your business phone line', agent: 'sarah', service: 'Front Desk & Calls' },\n  { title: 'Connect your bank accounts', agent: 'finn', service: 'Expense Tracking' },\n  { title: 'Set up tax year preferences', agent: 'teressa', service: 'Tax Preparation' }\n];\n\nconst tasks = allServiceTasks.map(t => ({\n  suite_id: body.suiteId,\n  office_id: body.officeId,\n  title: t.title,\n  assigned_agent: t.agent,\n  status: 'pending',\n  category: 'onboarding_setup',\n  source_service: t.service,\n  created_by: 'n8n-intake-activation',\n  created_at: new Date().toISOString()\n}));\n\nreturn [{ json: {\n  killed: 'false',\n  requestId,\n  correlationId,\n  idempotencyKey,\n  suiteId: body.suiteId,\n  officeId: body.officeId,\n  dateOfBirth: body.dateOfBirth || null,\n  gender: body.gender || null,\n  industry: body.industry || null,\n  industrySpecialty: body.industrySpecialty || null,\n  incomeRange: body.incomeRange || null,\n  referralSource: body.referralSource || null,\n  businessGoals: body.businessGoals || null,\n  painPoint: body.painPoint || null,\n  customerType: body.customerType || null,\n  salesChannel: body.salesChannel || null,\n  teamSize: body.teamSize || null,\n  tasks,\n  tasksCount: tasks.length,\n  timestamp: new Date().toISOString()\n} }];"
+          "jsCode": "// Kill switch check\nconst enabled = $env.N8N_WORKFLOW_INTAKE_ACTIVATION_ENABLED;\nif (enabled === 'false' || enabled === '0') {\n  return [{ json: { killed: 'true', reason: 'kill_switch_disabled' } }];\n}\n\n// --- HMAC signature validation (canonical JSON) ---\n// Both sender and receiver must use sorted-key, compact JSON.\n// Sender: json.dumps(payload, sort_keys=True, separators=(',', ':'))\n// Receiver: JSON.stringify with sorted keys (below)\nconst crypto = require('crypto');\nconst secret = $env.N8N_WEBHOOK_SECRET;\nconst signature = $input.first().json.headers['x-webhook-signature'] || '';\n\n// Recursively sort object keys for canonical JSON\nfunction sortKeys(obj) {\n  if (Array.isArray(obj)) return obj.map(sortKeys);\n  if (obj !== null && typeof obj === 'object') {\n    return Object.keys(obj).sort().reduce((acc, key) => {\n      acc[key] = sortKeys(obj[key]);\n      return acc;\n    }, {});\n  }\n  return obj;\n}\n\nconst body = $input.first().json.body;\nconst canonicalBody = JSON.stringify(sortKeys(body));\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret).update(canonicalBody).digest('hex');\n\n// Pre-check buffer length to prevent timingSafeEqual RangeError\nconst sigBuf = Buffer.from(signature);\nconst expBuf = Buffer.from(expected);\nif (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {\n  return [{ json: { killed: 'true', reason: 'hmac_validation_failed' } }];\n}\n\n// Extract and validate payload\nif (!body.suiteId || !body.officeId) {\n  return [{ json: { killed: 'true', reason: 'missing_tenant_context' } }];\n}\n\nconst requestId = 'intake-activation-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);\nconst correlationId = body.correlationId || ($input.first().json.headers['x-correlation-id']) || ('n8n-intake-activation-' + body.suiteId.slice(0, 8) + '-' + new Date().toISOString().slice(0, 10));\nconst payloadHash = crypto.createHash('sha256').update(JSON.stringify(sortKeys({ suiteId: body.suiteId, industry: body.industry }))).digest('hex');\nconst idempotencyKey = crypto.createHash('sha256').update(requestId + 'intake.activation' + payloadHash).digest('hex');\n\n// Build setup tasks — all services auto-included (v3 onboarding)\nconst allServiceTasks = [\n  { title: 'Connect your Stripe account', agent: 'quinn', service: 'Invoicing & Payments' },\n  { title: 'Connect QuickBooks Online', agent: 'teressa', service: 'Bookkeeping' },\n  { title: 'Set up your business email domain', agent: 'eli', service: 'Email Management' },\n  { title: 'Connect Google Calendar', agent: 'nora', service: 'Scheduling & Calendar' },\n  { title: 'Upload contract templates', agent: 'clara', service: 'Contract Management' },\n  { title: 'Connect Gusto payroll', agent: 'milo', service: 'Payroll' },\n  { title: 'Upload your logo and letterhead', agent: 'tec', service: 'Document Generation' },\n  { title: 'Review your first industry brief', agent: 'adam', service: 'Research & Intelligence' },\n  { title: 'Set up your business phone line', agent: 'sarah', service: 'Front Desk & Calls' },\n  { title: 'Connect your bank accounts', agent: 'finn', service: 'Expense Tracking' },\n  { title: 'Set up tax year preferences', agent: 'teressa', service: 'Tax Preparation' }\n];\n\nconst tasks = allServiceTasks.map(t => ({\n  suite_id: body.suiteId,\n  office_id: body.officeId,\n  title: t.title,\n  assigned_agent: t.agent,\n  status: 'pending',\n  category: 'onboarding_setup',\n  source_service: t.service,\n  created_by: 'n8n-intake-activation',\n  created_at: new Date().toISOString()\n}));\n\nreturn [{ json: {\n  killed: 'false',\n  requestId,\n  correlationId,\n  idempotencyKey,\n  suiteId: body.suiteId,\n  officeId: body.officeId,\n  dateOfBirth: body.dateOfBirth || null,\n  gender: body.gender || null,\n  industry: body.industry || null,\n  industrySpecialty: body.industrySpecialty || null,\n  incomeRange: body.incomeRange || null,\n  referralSource: body.referralSource || null,\n  businessGoals: body.businessGoals || null,\n  painPoint: body.painPoint || null,\n  customerType: body.customerType || null,\n  salesChannel: body.salesChannel || null,\n  teamSize: body.teamSize || null,\n  tasks,\n  tasksCount: tasks.length,\n  timestamp: new Date().toISOString()\n} }];"
         },
         "id": "kill-switch-and-prep",
         "name": "Kill Switch + HMAC + Prep",
@@ -760,7 +781,7 @@
           }
         },
         "id": "insert-setup-tasks",
-        "name": "Create Setup Tasks \u2192 Gateway",
+        "name": "Create Setup Tasks → Gateway",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -768,7 +789,10 @@
           400
         ],
         "credentials": {},
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -829,7 +853,10 @@
           400
         ],
         "credentials": {},
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -890,7 +917,10 @@
           400
         ],
         "credentials": {},
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -932,7 +962,11 @@
         "position": [
           1540,
           400
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -974,7 +1008,11 @@
         "position": [
           880,
           200
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {},
@@ -1027,7 +1065,11 @@
         "position": [
           660,
           560
-        ]
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1115,7 +1157,7 @@
       }
     ],
     "connections": {
-      "Webhook \u2014 Onboarding Complete": {
+      "Webhook — Onboarding Complete": {
         "main": [
           [
             {
@@ -1141,7 +1183,7 @@
         "main": [
           [
             {
-              "node": "Create Setup Tasks \u2192 Gateway",
+              "node": "Create Setup Tasks → Gateway",
               "type": "main",
               "index": 0
             }
@@ -1155,7 +1197,7 @@
           ]
         ]
       },
-      "Create Setup Tasks \u2192 Gateway": {
+      "Create Setup Tasks → Gateway": {
         "main": [
           [
             {

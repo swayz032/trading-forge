@@ -1,0 +1,1072 @@
+[
+  {
+    "id": "research_orchestration",
+    "domain": "research",
+    "owner_surface": "node-python-n8n",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "mixed",
+    "automation_scope": "Automates research intake, compilation, validation, and journal capture; promotion still routes through gates.",
+    "data_sources": [
+      "OpenClaw scout outputs",
+      "LLM prompts and responses",
+      "concept specs",
+      "backtest eligibility inputs"
+    ],
+    "reads_from": [
+      "system_journal",
+      "strategy_graveyard",
+      "backtests"
+    ],
+    "writes_to": [
+      "system_journal",
+      "tournament_results",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "system_journal"
+    ],
+    "audit_actions": [
+      "agent.run-strategy",
+      "agent.find-strategies",
+      "compiler.compile",
+      "compiler.validate"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard",
+      "/api/journal/stats/summary"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "/api/journal/stats/summary",
+      "agent:* SSE"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/agent",
+      "/api/compiler",
+      "/api/validation",
+      "/api/journal",
+      "/api/tournament"
+    ],
+    "engine_subsystems": [
+      "compiler",
+      "strategy_memory",
+      "validation",
+      "validation_runner"
+    ],
+    "database_tables": [
+      "audit_log",
+      "system_journal",
+      "tournament_results"
+    ],
+    "learning_from": [
+      "system_journal",
+      "strategy_graveyard",
+      "audit_log"
+    ],
+    "learning_assets": [
+      "system_journal",
+      "strategy_graveyard",
+      "audit_log"
+    ],
+    "learning_writes_to": [
+      "system_journal",
+      "tournament_results"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "circuit-breaker-and-fallback",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/journal/stats/summary",
+      "audit_log:agent.run-strategy",
+      "system_journal:recent-entry"
+    ],
+    "evidence_queries": [
+      "journal-summary",
+      "recent-agent-audit-events",
+      "research-topology-health"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "strategy_lifecycle",
+    "domain": "lifecycle",
+    "owner_surface": "node",
+    "automation_mode": "manual-gated",
+    "manual_gate": "tradingview_deploy",
+    "runtime_state": "active",
+    "decision_authority": "mixed",
+    "automation_scope": "Automates promotions, demotions, retirement, and graveyard handling; TradingView deployment stays human-approved.",
+    "data_sources": [
+      "qualification metrics",
+      "paper parity metrics",
+      "graveyard history"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests",
+      "monte_carlo_runs",
+      "paper_sessions",
+      "strategy_graveyard"
+    ],
+    "writes_to": [
+      "strategies",
+      "strategy_names",
+      "strategy_graveyard",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "strategy.lifecycle",
+      "strategy.graveyard_burial",
+      "strategy.deploy_approved"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "lifecycle:auto-check SSE",
+      "strategy:deploy-ready SSE"
+    ],
+    "scheduler_jobs": [
+      "lifecycle-auto-check",
+      "rolling-sharpe"
+    ],
+    "routes": [
+      "/api/strategies",
+      "/api/strategy-names",
+      "/api/graveyard"
+    ],
+    "engine_subsystems": [
+      "graveyard"
+    ],
+    "database_tables": [
+      "audit_log",
+      "strategies",
+      "strategy_graveyard",
+      "strategy_names"
+    ],
+    "learning_from": [
+      "strategy_graveyard",
+      "mutation_outcomes"
+    ],
+    "learning_assets": [
+      "strategy_graveyard",
+      "mutation_outcomes"
+    ],
+    "learning_writes_to": [
+      "strategies",
+      "strategy_graveyard",
+      "strategy_names"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/alerts",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "gate-and-human-approval",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "audit_log:strategy.lifecycle",
+      "paper_sessions:recent-update"
+    ],
+    "evidence_queries": [
+      "lifecycle-audit-events",
+      "paper-session-freshness",
+      "deploy-manual-gate"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "human_release",
+    "criticality": "critical"
+  },
+  {
+    "id": "backtest_qualification",
+    "domain": "qualification",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates compilation through qualification scoring, Monte Carlo, survival, and archetype output persistence.",
+    "data_sources": [
+      "compiled strategies",
+      "historical market data",
+      "walk-forward windows"
+    ],
+    "reads_from": [
+      "backtests",
+      "backtest_trades",
+      "market_data_meta"
+    ],
+    "writes_to": [
+      "backtests",
+      "backtest_trades",
+      "backtest_matrix",
+      "monte_carlo_runs",
+      "stress_test_runs",
+      "walk_forward_windows",
+      "day_archetypes",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "backtest.run",
+      "mc.run",
+      "compiler.compile",
+      "compiler.validate"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "backtest:* SSE",
+      "mc:* SSE"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/backtests",
+      "/api/monte-carlo",
+      "/api/survival",
+      "/api/archetypes",
+      "/api/anti-setups"
+    ],
+    "engine_subsystems": [
+      "anti_setups",
+      "archetypes",
+      "backtester",
+      "monte_carlo",
+      "survival",
+      "walk_forward"
+    ],
+    "database_tables": [
+      "audit_log",
+      "backtest_matrix",
+      "backtest_trades",
+      "backtests",
+      "day_archetypes",
+      "monte_carlo_runs",
+      "stress_test_runs",
+      "walk_forward_windows"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "transaction-and-retry",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "audit_log:backtest.run",
+      "backtests:recent-completion"
+    ],
+    "evidence_queries": [
+      "recent-backtest-audit-events",
+      "backtest-table-writes",
+      "qualification-route-coverage"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "context_execution",
+    "domain": "execution",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates context ingestion, paper execution, skip decisions, and portfolio snapshots.",
+    "data_sources": [
+      "live and historical market data",
+      "session context",
+      "macro snapshots",
+      "paper signal evaluations"
+    ],
+    "reads_from": [
+      "market_data_meta",
+      "macro_snapshots",
+      "paper_signal_logs",
+      "skip_decisions"
+    ],
+    "writes_to": [
+      "paper_sessions",
+      "paper_positions",
+      "paper_trades",
+      "paper_signal_logs",
+      "portfolio_snapshots",
+      "skip_decisions",
+      "shadow_signals",
+      "data_sync_jobs",
+      "watchlist",
+      "macro_snapshots",
+      "market_data_meta",
+      "audit_log",
+      "system_journal"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "system_journal"
+    ],
+    "audit_actions": [
+      "paper.session_start",
+      "paper.session_stop",
+      "paper.trade_open",
+      "paper.trade_close"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "metrics:snapshot SSE",
+      "paper:* SSE",
+      "portfolio:correlation_snapshot SSE"
+    ],
+    "scheduler_jobs": [
+      "paper-vs-backtest",
+      "portfolio-correlation",
+      "pre-market-prep",
+      "stale-session-check"
+    ],
+    "routes": [
+      "/api/context",
+      "/api/data",
+      "/api/indicators",
+      "/api/macro",
+      "/api/paper",
+      "/api/portfolio",
+      "/api/risk",
+      "/api/signals",
+      "/api/skip"
+    ],
+    "engine_subsystems": [
+      "context",
+      "skip_engine"
+    ],
+    "database_tables": [
+      "audit_log",
+      "data_sync_jobs",
+      "macro_snapshots",
+      "market_data_meta",
+      "paper_positions",
+      "paper_sessions",
+      "paper_signal_logs",
+      "paper_trades",
+      "portfolio_snapshots",
+      "shadow_signals",
+      "skip_decisions",
+      "system_journal",
+      "watchlist"
+    ],
+    "learning_from": [
+      "paper_trades",
+      "paper_signal_logs",
+      "portfolio_snapshots",
+      "skip_decisions",
+      "system_journal"
+    ],
+    "learning_assets": [
+      "paper_trades",
+      "paper_signal_logs",
+      "portfolio_snapshots",
+      "skip_decisions",
+      "system_journal"
+    ],
+    "learning_writes_to": [
+      "paper_signal_logs",
+      "portfolio_snapshots",
+      "skip_decisions",
+      "system_journal"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "/api/alerts",
+      "audit_log"
+    ],
+    "recovery_mode": "circuit-breaker-and-auto-stop",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "paper_sessions:recent-update",
+      "metrics:snapshot SSE"
+    ],
+    "evidence_queries": [
+      "paper-session-writes",
+      "paper-trade-audit-events",
+      "context-route-coverage"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "compliance_governance",
+    "domain": "governance",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates compliance evaluation, stale-rule blocking, and drift detection. Human review remains available for exceptions, but not as a normal lifecycle gate.",
+    "data_sources": [
+      "prop firm rule sources",
+      "strategy metadata",
+      "drift detection inputs"
+    ],
+    "reads_from": [
+      "compliance_rulesets",
+      "compliance_reviews"
+    ],
+    "writes_to": [
+      "compliance_rulesets",
+      "compliance_reviews",
+      "compliance_drift_log",
+      "alerts",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "compliance_drift_log"
+    ],
+    "audit_actions": [
+      "analyze",
+      "evaluate",
+      "on_trade",
+      "on_session_end"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "alert:new SSE",
+      "drift:alert SSE"
+    ],
+    "scheduler_jobs": [
+      "decay-monitor"
+    ],
+    "routes": [
+      "/api/compliance",
+      "/api/decay",
+      "/api/governor",
+      "/api/prop-firm"
+    ],
+    "engine_subsystems": [
+      "compliance",
+      "decay",
+      "governor"
+    ],
+    "database_tables": [
+      "alerts",
+      "audit_log",
+      "compliance_drift_log",
+      "compliance_reviews",
+      "compliance_rulesets"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/alerts",
+      "/api/sse",
+      "compliance_drift_log"
+    ],
+    "recovery_mode": "alert-and-human-review",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "compliance_rulesets:recent-retrieval",
+      "compliance_drift_log:recent-entry"
+    ],
+    "evidence_queries": [
+      "compliance-ruleset-freshness",
+      "drift-log-events",
+      "compliance-route-coverage"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "critic_evolution",
+    "domain": "optimization",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates critic replay, mutation review, and parameter optimization under gate-controlled thresholds.",
+    "data_sources": [
+      "critic evidence packets",
+      "mutation outcomes",
+      "journal critique history",
+      "system parameters"
+    ],
+    "reads_from": [
+      "critic_candidates",
+      "mutation_outcomes",
+      "system_parameters",
+      "system_journal",
+      "deepar_forecasts"
+    ],
+    "writes_to": [
+      "critic_candidates",
+      "critic_optimization_runs",
+      "mutation_outcomes",
+      "system_parameters",
+      "system_parameter_history",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "meta-optimizer.review",
+      "strategy.evolved",
+      "strategy.evolution-skipped",
+      "strategy.evolution-exhausted"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "critic:* SSE",
+      "meta:parameter_review SSE"
+    ],
+    "scheduler_jobs": [
+      "meta-parameter-review",
+      "regret-score-fill"
+    ],
+    "routes": [
+      "/api/critic-optimizer"
+    ],
+    "engine_subsystems": [
+      "critic_optimizer",
+      "parameter_evolver"
+    ],
+    "database_tables": [
+      "audit_log",
+      "critic_candidates",
+      "critic_optimization_runs",
+      "mutation_outcomes",
+      "system_parameter_history",
+      "system_parameters"
+    ],
+    "learning_from": [
+      "mutation_outcomes",
+      "system_journal",
+      "deepar_forecasts",
+      "backtests"
+    ],
+    "learning_assets": [
+      "mutation_outcomes",
+      "system_journal",
+      "deepar_forecasts",
+      "backtests"
+    ],
+    "learning_writes_to": [
+      "mutation_outcomes",
+      "system_parameters",
+      "system_parameter_history",
+      "critic_optimization_runs"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "circuit-breaker-and-quarantine",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "critic_optimization_runs:recent-run",
+      "mutation_outcomes:recent-write"
+    ],
+    "evidence_queries": [
+      "critic-run-persistence",
+      "mutation-outcome-history",
+      "meta-optimizer-scheduler"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "deepar_regime",
+    "domain": "forecasting",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates forecast training, scoring, bounded weight changes, and stale-model fallback inside the pre-deploy decision layer.",
+    "data_sources": [
+      "OHLCV history",
+      "VIX and volume features",
+      "forecast validation outcomes"
+    ],
+    "reads_from": [
+      "deepar_forecasts",
+      "deepar_training_runs"
+    ],
+    "writes_to": [
+      "deepar_forecasts",
+      "deepar_training_runs",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "deepar.train",
+      "deepar.weight_change"
+    ],
+    "metrics_surfaces": [
+      "/api/deepar/accuracy",
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/deepar/accuracy",
+      "/api/health/dashboard",
+      "deepar:* SSE"
+    ],
+    "scheduler_jobs": [
+      "deepar-predict",
+      "deepar-train",
+      "deepar-validate"
+    ],
+    "routes": [
+      "/api/deepar"
+    ],
+    "engine_subsystems": [
+      "deepar_forecaster",
+      "deepar_regime_classifier"
+    ],
+    "database_tables": [
+      "audit_log",
+      "deepar_forecasts",
+      "deepar_training_runs"
+    ],
+    "learning_from": [
+      "deepar_forecasts",
+      "deepar_training_runs",
+      "mutation_outcomes"
+    ],
+    "learning_assets": [
+      "deepar_forecasts",
+      "deepar_training_runs",
+      "mutation_outcomes"
+    ],
+    "learning_writes_to": [
+      "deepar_forecasts",
+      "deepar_training_runs"
+    ],
+    "failure_visibility": [
+      "/api/deepar/accuracy",
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "bounded-weight-fallback-and-demotion",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/deepar/accuracy",
+      "deepar_forecasts:recent-generation",
+      "deepar_training_runs:recent-run"
+    ],
+    "evidence_queries": [
+      "deepar-forecast-history",
+      "deepar-training-history",
+      "deepar-scheduler-jobs"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "quantum_experimental",
+    "domain": "experimental",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates quantum challenger analytics with automatic classical fallback and persists benchmark evidence inside the pre-deploy pipeline.",
+    "data_sources": [
+      "qualified backtest outputs",
+      "probability distributions",
+      "optimizer search spaces"
+    ],
+    "reads_from": [
+      "backtests",
+      "monte_carlo_runs"
+    ],
+    "writes_to": [
+      "quantum_mc_runs",
+      "quantum_mc_benchmarks",
+      "qubo_timing_runs",
+      "rl_training_runs",
+      "sqa_optimization_runs",
+      "tensor_predictions",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "quantum-mc.run"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "mc:* SSE"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/quantum-mc"
+    ],
+    "engine_subsystems": [
+      "quantum_mc"
+    ],
+    "database_tables": [
+      "audit_log",
+      "quantum_mc_benchmarks",
+      "quantum_mc_runs",
+      "qubo_timing_runs",
+      "rl_training_runs",
+      "sqa_optimization_runs",
+      "tensor_predictions"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "automatic-classical-fallback",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "quantum_mc_runs:recent-run",
+      "audit_log:quantum-mc.run"
+    ],
+    "evidence_queries": [
+      "quantum-run-persistence",
+      "quantum-route-coverage",
+      "quantum-fallback-boundary"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "advisory"
+  },
+  {
+    "id": "pine_export_preparation",
+    "domain": "deployment-prep",
+    "owner_surface": "python-node",
+    "automation_mode": "manual-gated",
+    "manual_gate": "tradingview_deploy",
+    "runtime_state": "active",
+    "decision_authority": "mixed",
+    "automation_scope": "Automates Pine artifact generation and export preparation after qualification or approved deployment.",
+    "data_sources": [
+      "qualified strategies",
+      "compiler outputs",
+      "export constraints"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests"
+    ],
+    "writes_to": [
+      "strategy_exports",
+      "strategy_export_artifacts",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "pine-export.compile",
+      "strategy.deploy_approved"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "pine:export_completed SSE",
+      "strategy:deployed SSE"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/pine-export"
+    ],
+    "engine_subsystems": [
+      "pine_compiler",
+      "pine_templates"
+    ],
+    "database_tables": [
+      "audit_log",
+      "strategy_export_artifacts",
+      "strategy_exports"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "human-approval-boundary",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "strategy_export_artifacts:recent-write",
+      "audit_log:pine-export.compile"
+    ],
+    "evidence_queries": [
+      "pine-export-artifacts",
+      "deploy-approval-audit-events",
+      "pine-route-coverage"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "human_release",
+    "criticality": "critical"
+  },
+  {
+    "id": "observability_reliability",
+    "domain": "observability",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates health checks, metrics emission, alerts, and circuit-breaker visibility.",
+    "data_sources": [
+      "scheduler health",
+      "circuit breaker state",
+      "agent health probes",
+      "alert events"
+    ],
+    "reads_from": [
+      "agent_health_reports",
+      "alerts",
+      "audit_log"
+    ],
+    "writes_to": [
+      "agent_health_reports",
+      "alerts",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "agent_health_reports"
+    ],
+    "audit_actions": [
+      "paper.session_auto_stop",
+      "regret.score-fill"
+    ],
+    "metrics_surfaces": [
+      "/api/health",
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health",
+      "/api/health/dashboard",
+      "metrics:snapshot SSE",
+      "scheduler:job-complete SSE",
+      "CircuitBreakerRegistry.statusAll"
+    ],
+    "scheduler_jobs": [
+      "agent-health-sweep",
+      "metrics-heartbeat"
+    ],
+    "routes": [
+      "/api/alerts",
+      "/api/health",
+      "/api/sse"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "agent_health_reports",
+      "alerts",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health",
+      "/api/health/dashboard",
+      "/api/alerts",
+      "/api/sse",
+      "agent_health_reports"
+    ],
+    "recovery_mode": "retry-and-alert",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "agent_health_reports:recent-entry",
+      "scheduler:job-complete SSE"
+    ],
+    "evidence_queries": [
+      "health-dashboard-runtime",
+      "agent-health-history",
+      "circuit-breaker-status"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "workflow_orchestration",
+    "domain": "orchestration",
+    "owner_surface": "n8n",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "mixed",
+    "automation_scope": "Core n8n workflows run as production-active pre-deploy orchestration with retries, handoffs, and audit evidence while release authority stays bounded upstream of TradingView deployment.",
+    "data_sources": [
+      "workflow exports",
+      "system journal",
+      "audit history"
+    ],
+    "reads_from": [
+      "system_journal",
+      "audit_log"
+    ],
+    "writes_to": [
+      "system_journal",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "system_journal"
+    ],
+    "audit_actions": [
+      "agent.run-strategy",
+      "meta-optimizer.review"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "n8n:/api/v1/workflows",
+      "docs/system-topology.generated.json"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [],
+    "learning_from": [
+      "system_journal",
+      "audit_log"
+    ],
+    "learning_assets": [
+      "system_journal",
+      "audit_log"
+    ],
+    "learning_writes_to": [
+      "system_journal",
+      "audit_log"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "n8n:/api/v1/workflows",
+      "docs/system-topology.generated.json",
+      "audit_log"
+    ],
+    "recovery_mode": "production-replay-and-disable",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "n8n:/api/v1/workflows:lastUpdated",
+      "docs/system-topology.generated.json"
+    ],
+    "evidence_queries": [
+      "n8n-workflow-activation-health",
+      "workflow-export-inventory",
+      "generated-topology-workflow-summary",
+      "production-workflow-activation-boundary"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  }
+]

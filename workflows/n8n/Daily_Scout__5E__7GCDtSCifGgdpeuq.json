@@ -115,8 +115,10 @@
         752,
         208
       ],
-      "retryOnFail": false,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -159,8 +161,10 @@
         752,
         400
       ],
-      "retryOnFail": false,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -203,8 +207,10 @@
         752,
         608
       ],
-      "retryOnFail": false,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -230,8 +236,10 @@
         752,
         864
       ],
-      "retryOnFail": false,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -257,8 +265,10 @@
         752,
         1056
       ],
-      "retryOnFail": false,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -284,8 +294,10 @@
         752,
         1264
       ],
-      "retryOnFail": false,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -359,7 +371,9 @@
     {
       "parameters": {
         "url": "http://host.docker.internal:4000/api/journal/scout-fingerprints?days=30",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-fingerprints",
       "name": "Fetch Scout Fingerprints (30d)",
@@ -372,7 +386,8 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -427,7 +442,7 @@
         "url": "http://host.docker.internal:11434/api/generate",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: \"llama3.1:8b\", prompt: \"You are a trading strategy scout for a futures prop-firm trader. Score each idea for how useful it is as a STARTING POINT for building a testable trading strategy (0-10).\\n\\nSCORING RUBRIC:\\n8-10: Describes a specific trading approach with clear logic. Can use indicators (RSI, VWAP, MA, ATR, Bollinger), price action (support/resistance, breakouts, candlestick patterns), session timing (open range, London/NY overlap), order flow, volume profile, or any other concrete method. Must have enough detail to attempt coding it.\\n5-7: Mentions a tradeable concept or strategy idea. May lack full details but describes a real edge or setup that could be researched further. Includes specific markets, timeframes, or conditions.\\n3-4: General trading discussion, education, or experience sharing. Not a strategy you could test.\\n1-2: Not about trading strategies at all, or pure opinion/news/memes.\\n\\nIMPORTANT: Score ANY kind of trading strategy highly, not just indicator-based ones. Price action strategies, session strategies, volatility strategies, and pattern-based strategies are all valid.\\n\\nReturn ONLY a JSON array with objects: {title, summary (2 sentences max), relevance_score}.\\n\\nIdeas:\\n\" + JSON.stringify($input.first().json.ideas, null, 2), stream: false, options: { num_predict: 4096 } }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: \"deepseek-r1:14b\", prompt: \"You are a trading strategy scout for a futures prop-firm trader. Score each idea for how useful it is as a STARTING POINT for building a testable trading strategy (0-10).\\n\\nSCORING RUBRIC:\\n8-10: Describes a specific trading approach with clear logic. Can use indicators (RSI, VWAP, MA, ATR, Bollinger), price action (support/resistance, breakouts, candlestick patterns), session timing (open range, London/NY overlap), order flow, volume profile, or any other concrete method. Must have enough detail to attempt coding it.\\n5-7: Mentions a tradeable concept or strategy idea. May lack full details but describes a real edge or setup that could be researched further. Includes specific markets, timeframes, or conditions.\\n3-4: General trading discussion, education, or experience sharing. Not a strategy you could test.\\n1-2: Not about trading strategies at all, or pure opinion/news/memes.\\n\\nIMPORTANT: Score ANY kind of trading strategy highly, not just indicator-based ones. Price action strategies, session strategies, volatility strategies, and pattern-based strategies are all valid.\\n\\nReturn ONLY a JSON array with objects: {title, summary (2 sentences max), relevance_score}.\\n\\nIdeas:\\n\" + JSON.stringify($input.first().json.ideas, null, 2), stream: false, options: { num_predict: 4096 } }) }}",
         "options": {
           "timeout": 120000
         }
@@ -440,8 +455,10 @@
         2512,
         512
       ],
-      "retryOnFail": false,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -497,7 +514,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ ideas: ($input.first().json.ideas || []).map(i => ({ source: i.source || \"brave\", title: i.title, description: i.description || i.summary || i.title || \"No description\", url: i.url, summary: i.summary, source_quality: i.source_quality || \"medium\", confidence_score: i.confidence_score || 0.5 })) }) }}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-post-ideas",
       "name": "POST Scout Ideas to Forge",
@@ -509,16 +528,20 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4100/alert/alerts",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({title: 'Daily Scout: ' + String(($input.first().json.new_count || $input.first().json.received || 0)) + ' New Strategy Ideas', message: ($('Parse LLM + Relevance Filter (>=6)').first().json.ideas || []).slice(0, 5).map(function(i) { return '- ' + i.title + ' (score: ' + i.relevance_score + ')' }).join('\n'), severity: 'success', data: { received: $input.first().json.received, new_count: $input.first().json.new_count }}) }}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-discord-alert",
       "name": "Discord: Top 3 Scout Ideas",
@@ -528,8 +551,10 @@
         3504,
         400
       ],
-      "retryOnFail": false,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -584,11 +609,13 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4100/alert/alerts",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: \"Daily Scout Error\", message: $input.first().json.error?.message || JSON.stringify($input.first().json).substring(0, 500), severity: \"critical\", data: { workflow: \"Daily Scout (5E)\", timestamp: new Date().toISOString() } }) }}",
-        "options": {}
+        "options": {
+          "timeout": 15000
+        }
       },
       "id": "http-error-alert",
       "name": "Discord: Scout Error Alert",
@@ -598,8 +625,10 @@
         256,
         1408
       ],
-      "retryOnFail": false,
-      "onError": "continueRegularOutput"
+      "retryOnFail": true,
+      "onError": "continueRegularOutput",
+      "maxTries": 2,
+      "continueOnFail": true
     }
   ],
   "connections": {

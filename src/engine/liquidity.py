@@ -131,6 +131,43 @@ def get_session_multipliers(timestamps: pl.Series) -> np.ndarray:
     return multipliers
 
 
+def compute_fill_probability_by_volume(
+    bar_volume: float,
+    median_volume: float,
+    order_size_contracts: int = 1,
+) -> float:
+    """Fill probability penalized when bar volume is below 20th percentile.
+
+    Called by both the Python backtester and the TS paper engine (via paper_bridge).
+    The paper engine uses a scalar bar volume and a rolling median over the bar buffer;
+    the backtester can pass vectorised values by calling this per-row.
+
+    Args:
+        bar_volume: Volume of the current bar.
+        median_volume: Rolling median volume (representative of normal liquidity).
+        order_size_contracts: Order size; reserved for future multi-contract scaling.
+
+    Returns:
+        Fill probability in [0.30, 1.0].  Higher = more likely to fill.
+    """
+    if bar_volume <= 0 or median_volume <= 0:
+        return 0.5  # conservative default
+
+    volume_ratio = bar_volume / median_volume
+
+    if volume_ratio >= 1.0:
+        return 1.0  # full liquidity
+    elif volume_ratio >= 0.5:
+        # 0.85 to 1.0 linearly across [0.5, 1.0)
+        return 0.85 + 0.15 * (volume_ratio - 0.5) / 0.5
+    elif volume_ratio >= 0.2:
+        # 0.60 to 0.85 linearly across [0.2, 0.5)
+        return 0.60 + 0.25 * (volume_ratio - 0.2) / 0.3
+    else:
+        # Severe penalty below 20th percentile: clamp at 0.30
+        return max(0.30, volume_ratio * 3)
+
+
 def get_event_adjusted_multipliers(
     timestamps: pl.Series,
     event_bars: np.ndarray | None = None,

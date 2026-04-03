@@ -42,7 +42,7 @@
       },
       {
         "parameters": {
-          "model": "trading-quant",
+          "model": "qwen3-coder:30b",
           "options": {}
         },
         "id": "ollama-model",
@@ -271,7 +271,7 @@
       },
       {
         "parameters": {
-          "model": "llama3.1:8b",
+          "model": "deepseek-r1:14b",
           "options": {}
         },
         "id": "ollama-critique-model",
@@ -503,7 +503,7 @@
       },
       {
         "parameters": {
-          "model": "llama3.1:8b",
+          "model": "deepseek-r1:14b",
           "options": {}
         },
         "id": "f0fcf175-15db-45d3-a6e8-d8889309245e",
@@ -524,7 +524,7 @@
       },
       {
         "parameters": {
-          "model": "llama3.1:8b",
+          "model": "deepseek-r1:14b",
           "options": {}
         },
         "id": "7fe46d0f-a97e-4c9c-91d0-b2ada8af482a",
@@ -678,7 +678,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4100/alert/alerts",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Strategy Gen Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Strategy Generation Loop', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
@@ -1254,7 +1254,7 @@
         },
         {
           "parameters": {
-            "model": "trading-quant",
+            "model": "qwen3-coder:30b",
             "options": {}
           },
           "id": "ollama-model",
@@ -1483,7 +1483,7 @@
         },
         {
           "parameters": {
-            "model": "llama3.1:8b",
+            "model": "deepseek-r1:14b",
             "options": {}
           },
           "id": "ollama-critique-model",
@@ -1715,7 +1715,7 @@
         },
         {
           "parameters": {
-            "model": "llama3.1:8b",
+            "model": "deepseek-r1:14b",
             "options": {}
           },
           "id": "f0fcf175-15db-45d3-a6e8-d8889309245e",
@@ -1736,7 +1736,7 @@
         },
         {
           "parameters": {
-            "model": "llama3.1:8b",
+            "model": "deepseek-r1:14b",
             "options": {}
           },
           "id": "7fe46d0f-a97e-4c9c-91d0-b2ada8af482a",
@@ -1890,7 +1890,7 @@
           ],
           "parameters": {
             "method": "POST",
-            "url": "http://host.docker.internal:4100/alert/alerts",
+            "url": "http://host.docker.internal:4000/api/sse/broadcast",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({ title: 'Strategy Gen Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Strategy Generation Loop', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",

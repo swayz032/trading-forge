@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-15T00:46:06.974Z",
+  "updatedAt": "2026-03-31T04:38:23.765Z",
   "createdAt": "2026-03-14T21:23:16.745Z",
   "id": "PHcD2tFZpzr7kQGF",
   "name": "Anti-Setup Refresh",
@@ -38,7 +38,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "http://localhost:4000/api/strategies?status=active",
+        "url": "http://host.docker.internal:4000/api/strategies?status=active",
         "options": {
           "timeout": 30000
         }
@@ -46,7 +46,8 @@
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 5000
+      "waitBetweenTries": 5000,
+      "continueOnFail": true
     },
     {
       "id": "extract-ids",
@@ -118,7 +119,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/anti-setups/mine",
+        "url": "http://host.docker.internal:4000/api/anti-setups/mine",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ strategy_id: $json.strategy_id, lookback_days: 90 }) }}",
@@ -129,7 +130,8 @@
       "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 10000
+      "waitBetweenTries": 10000,
+      "continueOnFail": true
     },
     {
       "id": "parse-mining-result",
@@ -141,7 +143,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\n// Get the strategy info from the loop item\nconst strategyName = $node['Loop Over Strategies'].json.strategy_name;\nconst strategyId = $node['Loop Over Strategies'].json.strategy_id;\n\n// Parse anti-setup count from response\nlet antiSetupCount = 0;\nlet estimatedPnlImpact = '$0';\n\nif (response.anti_setups && Array.isArray(response.anti_setups)) {\n  antiSetupCount = response.anti_setups.length;\n} else if (typeof response.count === 'number') {\n  antiSetupCount = response.count;\n} else if (response.results && Array.isArray(response.results)) {\n  antiSetupCount = response.results.length;\n}\n\nif (response.estimated_pnl_impact) {\n  estimatedPnlImpact = response.estimated_pnl_impact;\n} else if (response.pnl_impact) {\n  estimatedPnlImpact = response.pnl_impact;\n}\n\nreturn [{\n  json: {\n    strategy: strategyName,\n    strategy_id: strategyId,\n    anti_setups: antiSetupCount,\n    estimated_pnl_impact: estimatedPnlImpact,\n    raw_response: response\n  }\n}];"
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\n// Get the strategy info from the loop item (use modern syntax)\nconst strategyName = $('Loop Over Strategies').first().json.strategy_name;\nconst strategyId = $('Loop Over Strategies').first().json.strategy_id;\n\n// Parse anti-setup count from response\nlet antiSetupCount = 0;\nlet estimatedPnlImpact = '$0';\n\nif (response.anti_setups && Array.isArray(response.anti_setups)) {\n  antiSetupCount = response.anti_setups.length;\n} else if (typeof response.count === 'number') {\n  antiSetupCount = response.count;\n} else if (response.results && Array.isArray(response.results)) {\n  antiSetupCount = response.results.length;\n}\n\nif (response.estimated_pnl_impact) {\n  estimatedPnlImpact = response.estimated_pnl_impact;\n} else if (response.pnl_impact) {\n  estimatedPnlImpact = response.pnl_impact;\n}\n\nreturn [{\n  json: {\n    strategy: strategyName,\n    strategy_id: strategyId,\n    anti_setups: antiSetupCount,\n    estimated_pnl_impact: estimatedPnlImpact,\n    raw_response: response\n  }\n}];"
       }
     },
     {
@@ -168,7 +170,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/alerts",
+        "url": "http://host.docker.internal:4100/alert/alerts",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Anti-Setup Refresh Report', message: 'Analyzed ' + ($json.strategies_analyzed || 0) + ' strategies, found ' + ($json.total_anti_setups_found || 0) + ' anti-setups', severity: ($json.total_anti_setups_found > 0) ? 'warning' : 'info', data: { reportDate: $json.report_date || '', strategiesAnalyzed: String($json.strategies_analyzed || 0), totalAntiSetups: String($json.total_anti_setups_found || 0), generatedAt: $json.generated_at || new Date().toISOString() } }) }}",
@@ -176,7 +178,10 @@
           "timeout": 30000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "post-empty-report",
@@ -189,7 +194,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/alerts",
+        "url": "http://host.docker.internal:4100/alert/alerts",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Anti-Setup Refresh: No Strategies', message: $json.message || 'No active strategies found', severity: 'info', data: { reportDate: $json.report_date || new Date().toISOString().split('T')[0] } }) }}",
@@ -197,7 +202,10 @@
           "timeout": 30000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     },
     {
       "id": "error-trigger",
@@ -221,7 +229,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4100/alert/alerts",
+        "url": "http://host.docker.internal:4100/alert/alerts",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Anti-Setup Refresh', message: $json.execution ? (typeof $json.execution.error === 'object' ? $json.execution.error.message : String($json.execution.error)) : 'Unknown error', severity: 'critical', data: { workflow: 'Anti-Setup Refresh', executionId: $json.execution ? String($json.execution.id) : 'unknown', timestamp: new Date().toISOString() } }) }}",
@@ -229,7 +237,10 @@
           "timeout": 15000
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -354,7 +365,7 @@
     "saveDataSuccessExecution": "all",
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": true
   },
   "staticData": {
     "node:Monthly 1st 3AM ET Trigger": {
@@ -363,9 +374,9 @@
   },
   "meta": null,
   "pinData": null,
-  "versionId": "6898a3ab-a66a-4531-b48c-58cfc880a824",
-  "activeVersionId": "6898a3ab-a66a-4531-b48c-58cfc880a824",
-  "versionCounter": 10,
+  "versionId": "6cd75680-38ef-4398-82d2-6b1426e7a5fe",
+  "activeVersionId": "6cd75680-38ef-4398-82d2-6b1426e7a5fe",
+  "versionCounter": 25,
   "triggerCount": 1,
   "shared": [
     {
@@ -390,7 +401,7 @@
             "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
             "projectId": "l9zgLNMKv7CjloiW",
             "user": {
-              "updatedAt": "2026-03-20T05:10:41.391Z",
+              "updatedAt": "2026-04-03T05:29:30.601Z",
               "createdAt": "2026-02-12T09:44:05.126Z",
               "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
               "email": "tonioswayz32@gmail.com",
@@ -405,7 +416,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-03-20",
+              "lastActiveAt": "2026-04-03",
               "isPending": false
             }
           }
@@ -415,9 +426,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-14T23:20:43.442Z",
-    "createdAt": "2026-03-14T23:20:43.442Z",
-    "versionId": "6898a3ab-a66a-4531-b48c-58cfc880a824",
+    "updatedAt": "2026-03-31T03:47:55.590Z",
+    "createdAt": "2026-03-22T03:44:35.041Z",
+    "versionId": "6cd75680-38ef-4398-82d2-6b1426e7a5fe",
     "workflowId": "PHcD2tFZpzr7kQGF",
     "nodes": [
       {
@@ -451,7 +462,7 @@
         ],
         "parameters": {
           "method": "GET",
-          "url": "http://localhost:4000/api/strategies?status=active",
+          "url": "http://host.docker.internal:4000/api/strategies?status=active",
           "options": {
             "timeout": 30000
           }
@@ -459,7 +470,8 @@
         "onError": "continueRegularOutput",
         "retryOnFail": true,
         "maxTries": 3,
-        "waitBetweenTries": 5000
+        "waitBetweenTries": 5000,
+        "continueOnFail": true
       },
       {
         "id": "extract-ids",
@@ -531,7 +543,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/anti-setups/mine",
+          "url": "http://host.docker.internal:4000/api/anti-setups/mine",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ strategy_id: $json.strategy_id, lookback_days: 90 }) }}",
@@ -542,7 +554,8 @@
         "onError": "continueRegularOutput",
         "retryOnFail": true,
         "maxTries": 2,
-        "waitBetweenTries": 10000
+        "waitBetweenTries": 10000,
+        "continueOnFail": true
       },
       {
         "id": "parse-mining-result",
@@ -554,7 +567,7 @@
           300
         ],
         "parameters": {
-          "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\n// Get the strategy info from the loop item\nconst strategyName = $node['Loop Over Strategies'].json.strategy_name;\nconst strategyId = $node['Loop Over Strategies'].json.strategy_id;\n\n// Parse anti-setup count from response\nlet antiSetupCount = 0;\nlet estimatedPnlImpact = '$0';\n\nif (response.anti_setups && Array.isArray(response.anti_setups)) {\n  antiSetupCount = response.anti_setups.length;\n} else if (typeof response.count === 'number') {\n  antiSetupCount = response.count;\n} else if (response.results && Array.isArray(response.results)) {\n  antiSetupCount = response.results.length;\n}\n\nif (response.estimated_pnl_impact) {\n  estimatedPnlImpact = response.estimated_pnl_impact;\n} else if (response.pnl_impact) {\n  estimatedPnlImpact = response.pnl_impact;\n}\n\nreturn [{\n  json: {\n    strategy: strategyName,\n    strategy_id: strategyId,\n    anti_setups: antiSetupCount,\n    estimated_pnl_impact: estimatedPnlImpact,\n    raw_response: response\n  }\n}];"
+          "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\n// Get the strategy info from the loop item (use modern syntax)\nconst strategyName = $('Loop Over Strategies').first().json.strategy_name;\nconst strategyId = $('Loop Over Strategies').first().json.strategy_id;\n\n// Parse anti-setup count from response\nlet antiSetupCount = 0;\nlet estimatedPnlImpact = '$0';\n\nif (response.anti_setups && Array.isArray(response.anti_setups)) {\n  antiSetupCount = response.anti_setups.length;\n} else if (typeof response.count === 'number') {\n  antiSetupCount = response.count;\n} else if (response.results && Array.isArray(response.results)) {\n  antiSetupCount = response.results.length;\n}\n\nif (response.estimated_pnl_impact) {\n  estimatedPnlImpact = response.estimated_pnl_impact;\n} else if (response.pnl_impact) {\n  estimatedPnlImpact = response.pnl_impact;\n}\n\nreturn [{\n  json: {\n    strategy: strategyName,\n    strategy_id: strategyId,\n    anti_setups: antiSetupCount,\n    estimated_pnl_impact: estimatedPnlImpact,\n    raw_response: response\n  }\n}];"
         }
       },
       {
@@ -581,7 +594,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/alerts",
+          "url": "http://host.docker.internal:4100/alert/alerts",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Anti-Setup Refresh Report', message: 'Analyzed ' + ($json.strategies_analyzed || 0) + ' strategies, found ' + ($json.total_anti_setups_found || 0) + ' anti-setups', severity: ($json.total_anti_setups_found > 0) ? 'warning' : 'info', data: { reportDate: $json.report_date || '', strategiesAnalyzed: String($json.strategies_analyzed || 0), totalAntiSetups: String($json.total_anti_setups_found || 0), generatedAt: $json.generated_at || new Date().toISOString() } }) }}",
@@ -589,7 +602,10 @@
             "timeout": 30000
           }
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "id": "post-empty-report",
@@ -602,7 +618,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/alerts",
+          "url": "http://host.docker.internal:4100/alert/alerts",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Anti-Setup Refresh: No Strategies', message: $json.message || 'No active strategies found', severity: 'info', data: { reportDate: $json.report_date || new Date().toISOString().split('T')[0] } }) }}",
@@ -610,7 +626,10 @@
             "timeout": 30000
           }
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       },
       {
         "id": "error-trigger",
@@ -634,7 +653,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4100/alert/alerts",
+          "url": "http://host.docker.internal:4100/alert/alerts",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Anti-Setup Refresh', message: $json.execution ? (typeof $json.execution.error === 'object' ? $json.execution.error.message : String($json.execution.error)) : 'Unknown error', severity: 'critical', data: { workflow: 'Anti-Setup Refresh', executionId: $json.execution ? String($json.execution.id) : 'unknown', timestamp: new Date().toISOString() } }) }}",
@@ -642,7 +661,10 @@
             "timeout": 15000
           }
         },
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
       }
     ],
     "connections": {
@@ -761,15 +783,39 @@
       }
     },
     "authors": "Tonio tonioswayz32@gmail.com",
-    "name": null,
-    "description": null,
+    "name": "Version 6cd75680",
+    "description": "",
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-14T23:20:43.464Z",
-        "id": 1138,
+        "createdAt": "2026-03-22T03:44:35.069Z",
+        "id": 1264,
         "workflowId": "PHcD2tFZpzr7kQGF",
-        "versionId": "6898a3ab-a66a-4531-b48c-58cfc880a824",
+        "versionId": "6cd75680-38ef-4398-82d2-6b1426e7a5fe",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-27T21:56:06.928Z",
+        "id": 1324,
+        "workflowId": "PHcD2tFZpzr7kQGF",
+        "versionId": "6cd75680-38ef-4398-82d2-6b1426e7a5fe",
+        "event": "deactivated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-31T03:47:55.589Z",
+        "id": 1359,
+        "workflowId": "PHcD2tFZpzr7kQGF",
+        "versionId": "6cd75680-38ef-4398-82d2-6b1426e7a5fe",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-31T04:38:23.797Z",
+        "id": 1374,
+        "workflowId": "PHcD2tFZpzr7kQGF",
+        "versionId": "6cd75680-38ef-4398-82d2-6b1426e7a5fe",
         "event": "activated",
         "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
       }

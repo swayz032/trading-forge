@@ -1,7 +1,9 @@
 import { createMassiveFetcher } from "../../data/fetchers/massive.js";
 import { updatePositionPrices } from "./paper-execution-service.js";
 import { evaluateSignals, updateStateOnly } from "./paper-signal-service.js";
+import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 import { logger } from "../index.js";
+import { toEasternDateString } from "./paper-risk-gate.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -56,12 +58,28 @@ function getMassiveFetcher() {
   return createMassiveFetcher({ apiKey });
 }
 
+/** Track last bar date per symbol for session boundary detection */
+const lastBarDate = new Map<string, string>();
+
 function pushBar(symbol: string, bar: Bar) {
   let buf = barBuffer.get(symbol);
   if (!buf) {
     buf = [];
     barBuffer.set(symbol, buf);
   }
+
+  // Session boundary reset: detect ET date change → clear buffer for VWAP freshness.
+  // Futures sessions reset at 6 PM ET (Globex open), which aligns with the ET date
+  // boundary for evening-to-overnight trading.  Using UTC date change would cause
+  // the VWAP to reset at midnight UTC (7 PM ET in winter, 8 PM ET in summer) —
+  // mid-session for overnight traders.  ET date change matches actual session logic.
+  const barEtDate = toEasternDateString(new Date(bar.timestamp));
+  const prevEtDate = lastBarDate.get(symbol);
+  if (prevEtDate && barEtDate !== prevEtDate) {
+    buf.length = 0; // Reset buffer on new ET trading day (Globex session boundary)
+  }
+  lastBarDate.set(symbol, barEtDate);
+
   buf.push(bar);
   if (buf.length > BAR_BUFFER_SIZE) {
     buf.shift();
@@ -144,14 +162,17 @@ async function backfillBars(symbol: string, lastTimestamp: string) {
   try {
     const fetcher = getMassiveFetcher();
     const now = new Date().toISOString();
-    
-    // Fetch 1min bars to fill the gap
-    const bars = await fetcher.fetchBars({
-      symbol,
-      timeframe: "1min",
-      from: lastTimestamp,
-      to: now,
-    });
+
+    // Fetch 1min bars to fill the gap — protected by circuit breaker
+    // (WebSocket has its own reconnect logic, so only HTTP backfill is wrapped)
+    const bars = await CircuitBreakerRegistry.get("massive-api").call(() =>
+      fetcher.fetchBars({
+        symbol,
+        timeframe: "1min",
+        from: lastTimestamp,
+        to: now,
+      }),
+    );
 
     if (bars.length > 0) {
       logger.info({ symbol, count: bars.length }, "Backfilled bars fetched");

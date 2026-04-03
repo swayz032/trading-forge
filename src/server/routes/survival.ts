@@ -131,6 +131,10 @@ survivalRoutes.post("/monte-carlo", async (req, res) => {
 // ─── GET /api/survival/leaderboard ───────────────────────────────
 // Rank strategies by survival per firm
 // Query params: ?firm=MFFU&account_type=50K&limit=20
-survivalRoutes.get("/leaderboard", async (_req, res) => {
-  res.status(501).json({ error: "Not implemented — use POST /api/survival/compare instead" });
+survivalRoutes.get("/leaderboard", async (req, res) => {
+  // Proxy guidance — leaderboard requires running compare across strategies
+  res.status(303).json({
+    redirect: "POST /api/survival/compare",
+    message: "Use POST /api/survival/compare with multiple backtest IDs to generate a survival leaderboard",
+  });
 });

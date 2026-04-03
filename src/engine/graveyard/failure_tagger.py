@@ -1,5 +1,8 @@
 """Auto-tag failure modes for dead strategies."""
 
+from dataclasses import dataclass, field
+from typing import Any
+
 # 10 canonical failure modes
 FAILURE_MODES = {
     "OVERFIT": "Strategy only works on specific parameter values",
@@ -13,6 +16,88 @@ FAILURE_MODES = {
     "COMPLEXITY_EXCESS": "Too many parameters (>5), hard to maintain",
     "CORRELATION_DUPLICATE": "Too similar to an existing live strategy",
 }
+
+
+@dataclass
+class FailureTag:
+    """Enriched failure tag for a dead strategy.
+
+    Extends the raw {mode, confidence, evidence} dict with structured
+    category and severity fields so downstream consumers (graveyard gate,
+    critic, search) can filter and rank without parsing free-text evidence.
+    """
+    mode: str
+    confidence: float
+    evidence: str
+    category: str
+    severity: float
+    metrics: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "mode": self.mode,
+            "confidence": self.confidence,
+            "evidence": self.evidence,
+            "category": self.category,
+            "severity": self.severity,
+            "metrics": self.metrics,
+        }
+
+
+# Maps each failure mode to a structural category for graveyard querying.
+MODE_TO_CATEGORY: dict[str, str] = {
+    "OVERFIT": "robustness",
+    "REGIME_DEPENDENT": "regime",
+    "COMMISSION_DEATH": "execution",
+    "DRAWDOWN_EXCEEDED": "compliance",
+    "INCONSISTENT": "compliance",
+    "CURVE_FIT": "robustness",
+    "DECAY": "performance",
+    "LIQUIDITY_DEPENDENT": "execution",
+    "COMPLEXITY_EXCESS": "structural",
+    "CORRELATION_DUPLICATE": "structural",
+}
+
+# Base severity scores per failure mode (0.0–1.0).
+# Severity represents the absolute badness of the failure — independent of how
+# confident we are that the mode applies. Confidence is evidence strength;
+# severity is how bad it is when true.  _enrich_tag blends both: a high-severity
+# but low-confidence tag stays in the graveyard for pattern matching, but does
+# not automatically block a candidate strategy at the gate.
+MODE_TO_SEVERITY: dict[str, float] = {
+    "DRAWDOWN_EXCEEDED": 0.95,
+    "COMMISSION_DEATH": 0.85,
+    "OVERFIT": 0.80,
+    "CURVE_FIT": 0.80,
+    "INCONSISTENT": 0.70,
+    "DECAY": 0.65,
+    "REGIME_DEPENDENT": 0.60,
+    "LIQUIDITY_DEPENDENT": 0.55,
+    "COMPLEXITY_EXCESS": 0.40,
+    "CORRELATION_DUPLICATE": 0.35,
+}
+
+
+def _enrich_tag(raw: dict) -> dict:
+    """Convert a raw {mode, confidence, evidence} dict into an enriched tag dict.
+
+    Severity comes from MODE_TO_SEVERITY (static per-mode score) rather than
+    mirroring confidence.  Confidence reflects how strongly the evidence
+    supports the failure mode; severity reflects how bad that mode is when
+    present. They are orthogonal: a well-evidenced COMPLEXITY_EXCESS tag
+    (high confidence, low severity) should not block a candidate as aggressively
+    as a low-confidence DRAWDOWN_EXCEEDED tag.
+    """
+    mode = raw["mode"]
+    tag = FailureTag(
+        mode=mode,
+        confidence=raw["confidence"],
+        evidence=raw["evidence"],
+        category=MODE_TO_CATEGORY.get(mode, "unknown"),
+        severity=MODE_TO_SEVERITY.get(mode, raw["confidence"]),
+        metrics=raw.get("metrics", {}),
+    )
+    return tag.to_dict()
 
 
 def tag_failure(
@@ -167,6 +252,6 @@ def tag_failure(
             }
         )
 
-    # Sort by confidence descending
+    # Sort by confidence descending, then enrich each tag with category/severity
     tags.sort(key=lambda t: t["confidence"], reverse=True)
-    return tags
+    return [_enrich_tag(t) for t in tags]

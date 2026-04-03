@@ -1,0 +1,504 @@
+{
+  "updatedAt": "2026-03-31T04:40:35.978Z",
+  "createdAt": "2026-03-27T22:03:42.562Z",
+  "id": "pVT6svNTljjBoQbW",
+  "name": "11A-critic-optimization",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "cron-trigger",
+      "name": "Daily 3AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-backtests",
+      "name": "Fetch Recent Backtests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/backtests",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "completed"
+            },
+            {
+              "name": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "filter-tiers",
+      "name": "Filter TIER_1/2/3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst backtests = Array.isArray(data) ? data : (data.data || data.backtests || []);\nconst qualifying = backtests.filter(b => ['TIER_1','TIER_2','TIER_3'].includes(b.tier));\nreturn qualifying.map(b => ({ json: { strategy_id: b.strategyId, backtest_id: b.id, tier: b.tier } }));"
+      }
+    },
+    {
+      "id": "trigger-critic",
+      "name": "POST Critic Analyze",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/critic-optimizer/analyze",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": null,
+        "options": {
+          "timeout": 60000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategy_id: $json.strategy_id, backtest_id: $json.backtest_id }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "log-result",
+      "name": "Log to Journal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/journal",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": null,
+        "options": {
+          "timeout": 15000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: 'critic_optimization', status: 'logged', analystNotes: JSON.stringify($json) }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "log-error",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const error = $input.all();\nconsole.error('11A-critic-optimization error:', JSON.stringify(error, null, 2));\nreturn error;"
+      }
+    }
+  ],
+  "connections": {
+    "Daily 3AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recent Backtests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recent Backtests": {
+      "main": [
+        [
+          {
+            "node": "Filter TIER_1/2/3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter TIER_1/2/3": {
+      "main": [
+        [
+          {
+            "node": "POST Critic Analyze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Critic Analyze": {
+      "main": [
+        [
+          {
+            "node": "Log to Journal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": {
+    "node:Daily 3AM Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "d1d8c564-4665-4fb6-895e-f3e7978261a3",
+  "activeVersionId": "d1d8c564-4665-4fb6-895e-f3e7978261a3",
+  "versionCounter": 12,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-27T22:03:42.562Z",
+      "createdAt": "2026-03-27T22:03:42.562Z",
+      "role": "workflow:owner",
+      "workflowId": "pVT6svNTljjBoQbW",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-04-03T05:29:30.601Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-03",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-31T03:46:56.265Z",
+    "createdAt": "2026-03-28T23:49:28.895Z",
+    "versionId": "d1d8c564-4665-4fb6-895e-f3e7978261a3",
+    "workflowId": "pVT6svNTljjBoQbW",
+    "nodes": [
+      {
+        "id": "cron-trigger",
+        "name": "Daily 3AM Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 3 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-backtests",
+        "name": "Fetch Recent Backtests",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/backtests",
+          "method": "GET",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "status",
+                "value": "completed"
+              },
+              {
+                "name": "limit",
+                "value": "10"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "filter-tiers",
+        "name": "Filter TIER_1/2/3",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst backtests = Array.isArray(data) ? data : (data.data || data.backtests || []);\nconst qualifying = backtests.filter(b => ['TIER_1','TIER_2','TIER_3'].includes(b.tier));\nreturn qualifying.map(b => ({ json: { strategy_id: b.strategyId, backtest_id: b.id, tier: b.tier } }));"
+        }
+      },
+      {
+        "id": "trigger-critic",
+        "name": "POST Critic Analyze",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/critic-optimizer/analyze",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": null,
+          "options": {
+            "timeout": 60000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ strategy_id: $json.strategy_id, backtest_id: $json.backtest_id }) }}"
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "log-result",
+        "name": "Log to Journal",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/journal",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": null,
+          "options": {
+            "timeout": 15000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ source: 'critic_optimization', status: 'logged', analystNotes: JSON.stringify($json) }) }}"
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          200
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "log-error",
+        "name": "Log Error",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          420,
+          200
+        ],
+        "parameters": {
+          "jsCode": "const error = $input.all();\nconsole.error('11A-critic-optimization error:', JSON.stringify(error, null, 2));\nreturn error;"
+        }
+      }
+    ],
+    "connections": {
+      "Daily 3AM Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Recent Backtests",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Recent Backtests": {
+        "main": [
+          [
+            {
+              "node": "Filter TIER_1/2/3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter TIER_1/2/3": {
+        "main": [
+          [
+            {
+              "node": "POST Critic Analyze",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Critic Analyze": {
+        "main": [
+          [
+            {
+              "node": "Log to Journal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Log Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": "Version d1d8c564",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-31T03:46:56.262Z",
+        "id": 1357,
+        "workflowId": "pVT6svNTljjBoQbW",
+        "versionId": "d1d8c564-4665-4fb6-895e-f3e7978261a3",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      },
+      {
+        "createdAt": "2026-03-31T04:40:35.998Z",
+        "id": 1395,
+        "workflowId": "pVT6svNTljjBoQbW",
+        "versionId": "d1d8c564-4665-4fb6-895e-f3e7978261a3",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

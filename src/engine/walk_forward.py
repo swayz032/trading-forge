@@ -19,6 +19,7 @@ from src.engine.strategy_base import BaseStrategy
 from src.engine.optimizer import optimize_strategy, _apply_params, _build_search_space
 from src.engine.sanity_checks import run_sanity_checks
 from src.engine.cross_validation import run_cross_validation
+from src.engine.nvtx_markers import range_push, range_pop
 
 
 # ─── OOS Window Minimums ─────────────────────────────────────────
@@ -145,6 +146,7 @@ def run_walk_forward(
     all_oos_trades: list[dict] = []
 
     for i, (is_data, oos_data) in enumerate(windows):
+        range_push(f"forge/wf_window_{i}")
         print(f"  Window {i+1}/{len(windows)}: IS={len(is_data)} bars, OOS={len(oos_data)} bars", file=sys.stderr)
 
         # Optionally optimize on IS, then apply best params to OOS
@@ -197,6 +199,8 @@ def run_walk_forward(
                 "profit_factor": oos_result["profit_factor"],
                 "total_trades": oos_trade_count,
                 "total_trading_days": oos_trading_days,
+                "avg_trade_pnl": round(oos_result["total_return"] / max(oos_trade_count, 1), 2),
+                "avg_daily_pnl": round(float(sum(oos_result.get("daily_pnls", [])) / max(len(oos_result.get("daily_pnls", [])), 1)), 2),
             },
             "confidence": "OK",
         }
@@ -222,6 +226,7 @@ def run_walk_forward(
             window_detail["optimization"] = {
                 "best_params": opt_result["best_params"],
                 "best_sharpe": opt_result["best_score"],
+                "trials_used": opt_result.get("trials_used", opt_result.get("n_trials", 0)),
             }
 
         window_results.append(window_detail)
@@ -229,6 +234,7 @@ def run_walk_forward(
         all_oos_pnl_records.extend(oos_result.get("daily_pnl_records", []))
         all_oos_equity.extend(oos_result.get("equity_curve", []))
         all_oos_trades.extend(oos_result.get("trades", []))
+        range_pop()  # forge/wf_window_{i}
 
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates
     total_trades = len(all_oos_trades)
@@ -329,6 +335,7 @@ def run_walk_forward(
             "win_rate": round(agg_win_rate, 4),
             "profit_factor": round(agg_pf, 4),
             "total_trades": total_trades,
+            "avg_trade_pnl": round(total_return / max(total_trades, 1), 2),
             "avg_daily_pnl": round(avg_daily, 2),
             "winning_days": winning_days,
             "total_trading_days": total_days,
@@ -467,6 +474,8 @@ def run_walk_forward_class(
                 "profit_factor": oos_result.get("profit_factor", 0),
                 "total_trades": oos_trade_count,
                 "total_trading_days": oos_trading_days,
+                "avg_trade_pnl": round(oos_result.get("total_return", 0) / max(oos_trade_count, 1), 2),
+                "avg_daily_pnl": round(float(sum(oos_result.get("daily_pnls", [])) / max(len(oos_result.get("daily_pnls", [])), 1)), 2),
             },
             "avg_rr": oos_result.get("avg_rr", 0),
             "avg_winner_rr": oos_result.get("avg_winner_rr", 0),
@@ -575,6 +584,7 @@ def run_walk_forward_class(
             "win_rate": round(agg_win_rate, 4),
             "profit_factor": round(agg_pf, 4),
             "total_trades": total_trades,
+            "avg_trade_pnl": round(total_return / max(total_trades, 1), 2),
             "avg_daily_pnl": round(avg_daily, 2),
             "winning_days": winning_days,
             "total_trading_days": total_days,

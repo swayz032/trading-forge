@@ -17,6 +17,22 @@ import { runPythonModule } from "../lib/python-runner.js";
 
 export const skipRoutes = Router();
 
+const stableSkipDecisionSelect = {
+  id: skipDecisions.id,
+  strategyId: skipDecisions.strategyId,
+  decisionDate: skipDecisions.decisionDate,
+  decision: skipDecisions.decision,
+  score: skipDecisions.score,
+  signals: skipDecisions.signals,
+  triggeredSignals: skipDecisions.triggeredSignals,
+  reason: skipDecisions.reason,
+  override: skipDecisions.override,
+  overrideReason: skipDecisions.overrideReason,
+  actualOutcome: skipDecisions.actualOutcome,
+  actualPnl: skipDecisions.actualPnl,
+  createdAt: skipDecisions.createdAt,
+};
+
 // ─── Validation Schemas ──────────────────────────────────────────
 
 const classifySchema = z.object({
@@ -54,6 +70,14 @@ const backtestSchema = z.object({
   reduce_size_factor: z.number().min(0).max(1).default(0.5),
 });
 
+const SkipResult = z.object({
+  decision: z.enum(["TRADE", "REDUCE", "SKIP"]),
+  score: z.number(),
+  signals: z.array(z.object({ name: z.string(), score: z.number(), detail: z.string() })).optional(),
+  triggered_signals: z.array(z.string()).optional(),
+  reason: z.string().optional(),
+});
+
 const overrideSchema = z.object({
   override_reason: z.string().min(1),
 });
@@ -73,21 +97,29 @@ skipRoutes.post("/classify", async (req, res) => {
   }
 
   try {
-    const result = await runPythonModule({
+    const raw = await runPythonModule({
       module: "src.engine.skip_engine.skip_classifier",
       config: parsed.data as unknown as Record<string, unknown>,
       componentName: "skip-classifier",
     });
 
+    const skipParsed = SkipResult.safeParse(raw);
+    if (!skipParsed.success) {
+      logger.error({ issues: skipParsed.error.issues }, "Invalid skip classifier response");
+      res.status(502).json({ error: "Invalid skip classifier response", details: skipParsed.error.issues });
+      return;
+    }
+    const result = skipParsed.data;
+
     // Store decision in DB
     const [saved] = await db.insert(skipDecisions).values({
       strategyId: parsed.data.strategy_id || null,
       decisionDate: new Date(),
-      decision: String((result as any).decision),
-      score: String((result as any).score),
+      decision: result.decision,
+      score: String(result.score),
       signals: parsed.data.signals,
-      triggeredSignals: (result as any).triggered_signals as string[],
-      reason: String((result as any).reason || ""),
+      triggeredSignals: result.triggered_signals as string[],
+      reason: String(result.reason || ""),
     }).returning();
 
     res.json({ ...result, id: saved.id });
@@ -107,7 +139,7 @@ skipRoutes.get("/today", async (_req, res) => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const decisions = await db
-      .select()
+      .select(stableSkipDecisionSelect)
       .from(skipDecisions)
       .where(
         and(
@@ -161,7 +193,7 @@ skipRoutes.get("/history", async (req, res) => {
     }
 
     const query = db
-      .select()
+      .select(stableSkipDecisionSelect)
       .from(skipDecisions)
       .orderBy(desc(skipDecisions.decisionDate))
       .limit(Number(limit))

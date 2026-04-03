@@ -81,6 +81,8 @@ def collect_premarket_signals(
     premarket_volume_pct: float | None = None,
     vix: float | None = None,
     bad_days: list[str] | None = None,
+    deepar_forecast: dict | None = None,
+    deepar_weight: float = 0.0,
 ) -> dict[str, Any]:
     """
     Collect and package all pre-market signals for the skip classifier.
@@ -159,5 +161,34 @@ def collect_premarket_signals(
 
     if bad_days:
         signals["bad_days"] = bad_days
+
+    # Signal #11: DeepAR regime risk — only contributes when weight > 0.0
+    if deepar_forecast and deepar_weight > 0.0:
+        p_high_vol = float(deepar_forecast.get("p_high_vol", 0) or 0)
+        p_corr_stress = float(deepar_forecast.get("p_correlation_stress", 0) or 0)
+
+        deepar_risk_score = 0.0
+        deepar_risk_detail: dict[str, Any] = {
+            "weight": 1.5,
+            "p_high_vol": p_high_vol,
+            "p_correlation_stress": p_corr_stress,
+        }
+
+        if p_high_vol > 0.85:
+            deepar_risk_score += 3.0  # SKIP-level contribution
+            deepar_risk_detail["high_vol_action"] = "SKIP"
+        elif p_high_vol > 0.70:
+            deepar_risk_score += 1.5  # REDUCE contribution
+            deepar_risk_detail["high_vol_action"] = "REDUCE"
+
+        if p_corr_stress > 0.60:
+            deepar_risk_score += 1.0
+            deepar_risk_detail["correlation_stress_action"] = "additional_caution"
+
+        if deepar_risk_score > 0:
+            signals["deepar_regime_risk"] = {
+                "score": deepar_risk_score,
+                **deepar_risk_detail,
+            }
 
     return signals

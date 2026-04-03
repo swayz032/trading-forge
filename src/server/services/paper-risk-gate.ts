@@ -3,6 +3,7 @@ import { paperSessions, paperPositions } from "../db/schema.js";
 import { eq, and, isNull } from "drizzle-orm";
 import { logger } from "../index.js";
 import { getFirmAccount, getTightestDrawdown, type FirmAccountConfig } from "../../shared/firm-config.js";
+import { tracer } from "../lib/tracing.js";
 
 /**
  * Precise US DST detection: second Sunday of March through first Sunday of November.
@@ -64,6 +65,11 @@ export async function checkRiskGate(
   symbol: string,
   contracts: number,
 ): Promise<RiskGateResult> {
+  const span = tracer.startSpan("paper.risk_gate");
+  span.setAttribute("symbol", symbol);
+  span.setAttribute("contracts", contracts);
+
+  try {
   // ── Load session ───────────────────────────────────────────
   const [openPositions, session] = await Promise.all([
     db.select({ id: paperPositions.id })
@@ -207,4 +213,7 @@ export async function checkRiskGate(
   }
 
   return { allowed: true };
+  } finally {
+    span.end();
+  }
 }
