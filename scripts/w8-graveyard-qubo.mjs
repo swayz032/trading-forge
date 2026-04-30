@@ -14,8 +14,16 @@
  * This script ONLY verifies the precondition + flips the flag.
  * The actual code changes (extending build_parameter_qubo with graveyard_centroids)
  * must be implemented first via the quantum-challenger subagent before flipping the flag.
+ *
+ * Auto-loads DATABASE_URL from .env in project root if not set in shell.
  */
-import pg from "pg";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import dotenv from "dotenv";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, "..", ".env") });
+
+import pg from "./_pg-compat.mjs";
 
 const SHOULD_EXECUTE = process.argv.includes("--execute");
 

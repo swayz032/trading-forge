@@ -16,8 +16,16 @@
  *     - UPDATE governance_state SET grover_weight = 0.05
  *     - Modify lifecycle gate to enforce Grover block (worst_case_breach_prob > 0.5 AND breach_minimal_n_trades < 4)
  *   ELSE: stay at Phase 0
+ *
+ * Auto-loads DATABASE_URL from .env in project root if not set in shell.
  */
-import pg from "pg";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import dotenv from "dotenv";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, "..", ".env") });
+
+import pg from "./_pg-compat.mjs";
 
 const SHOULD_EXECUTE = process.argv.includes("--execute");
 

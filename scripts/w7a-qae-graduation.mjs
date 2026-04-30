@@ -17,8 +17,16 @@
  *     - Set QUANTUM_QAE_GATE_PHASE=1 (advisory disagreement alerts)
  *     - Audit log entry quantum.qae_graduation
  *   ELSE: stay at Phase 0
+ *
+ * Auto-loads DATABASE_URL from .env in project root if not set in shell.
  */
-import pg from "pg";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import dotenv from "dotenv";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, "..", ".env") });
+
+import pg from "./_pg-compat.mjs";
 
 const SHOULD_EXECUTE = process.argv.includes("--execute");
 
