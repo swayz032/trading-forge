@@ -9,6 +9,7 @@ import { logger } from "../lib/logger.js";
 import { eq, and, isNull, gte, lte, desc } from "drizzle-orm";
 import { tracer } from "../lib/tracing.js";
 import { isDSLStrategy, translateDSLToPaperConfig } from "./dsl-translator.js";
+import { getActiveLockout } from "./strategy-lockout-service.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
 import { CONTRACT_SPECS, CONTRACT_CAP_MIN, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
@@ -2096,8 +2097,53 @@ export async function evaluateSignals(
   } else if (entrySignal && !sessionFiltered && !cooldownActive && !isShadow && !skipBlocked && !ictBridgeBlocked) {
     // ─── No position: check for entry ───────────────��───────
 
+    // ─── Tier 5.3: 24-hour lockout gate ─────────────────────────────────
+    // Runs BEFORE anti-setup and risk gate. If a strategy lockout is active
+    // (written by writeLockoutFromKillEvent on daily_loss_kill), block all
+    // new entry signals until the lockout expires.
+    // Fail-OPEN: lockout query errors return null so trading is not blocked.
+    let lockoutBlocked = false;
+    try {
+      const activeLockout = await getActiveLockout(sessionConfig.strategyId);
+      if (activeLockout) {
+        lockoutBlocked = true;
+        span.setAttribute("lockout_blocked", true);
+        span.setAttribute("lockout_reason", activeLockout.reason);
+        span.setAttribute("lockout_until", activeLockout.lockedUntil.toISOString());
+        logger.info(
+          {
+            sessionId,
+            symbol,
+            strategyId: sessionConfig.strategyId,
+            lockoutId: activeLockout.id,
+            lockedUntil: activeLockout.lockedUntil.toISOString(),
+            reason: activeLockout.reason,
+          },
+          "Tier 5.3: entry blocked — active strategy lockout (24h compliance pause)",
+        );
+        db.insert(paperSignalLogs).values({
+          sessionId,
+          symbol,
+          direction: config.side,
+          signalType: "lockout_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: {
+            ...indicators,
+            _lockout_id: activeLockout.id,
+            _lockout_reason: activeLockout.reason,
+            _lockout_until: activeLockout.lockedUntil.toISOString(),
+          },
+          acted: false,
+          reason: `lockout_blocked: ${activeLockout.reason} (expires ${activeLockout.lockedUntil.toISOString()})`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist lockout block log"));
+      }
+    } catch (lockoutErr) {
+      logger.warn({ err: lockoutErr, sessionId, symbol }, "Tier 5.3: lockout gate error — fail-open, proceeding");
+    }
+
     // ─���─ Anti-setup gate: check if known bad pattern blocks entry ──
-    let antiSetupBlocked = false;
+    // Anti-setup gate short-circuits if lockout is already active
+    let antiSetupBlocked = lockoutBlocked;
     let antiSetupResult: AntiSetupGateResult | null = null;
     try {
       antiSetupResult = await checkAntiSetupGate(

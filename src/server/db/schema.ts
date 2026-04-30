@@ -1475,3 +1475,25 @@ export const adversarialStressRuns = pgTable("adversarial_stress_runs", {
   index("idx_adversarial_stress_backtest").on(table.backtestId, table.createdAt.desc()),
   index("idx_adversarial_stress_strategy").on(table.strategyId, table.createdAt.desc()),
 ]);
+
+// ─── Strategy Lockouts (Tier 5.3 — W5b 24h lockout layer) ───────────────────
+// Written by strategy-lockout-service.ts when a compliance.daily_loss_kill
+// audit event fires. Queried by paper-signal-service.ts before any new entry.
+// Multiple rows per strategy are allowed (history preserved).
+// Active lockout: locked_until > now().
+export const strategyLockouts = pgTable(
+  "strategy_lockouts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id")
+      .references(() => strategies.id)
+      .notNull(),
+    lockedUntil: timestamp("locked_until").notNull(),
+    reason: text("reason").notNull(), // daily_loss_kill | manual | etc
+    triggeredByKillId: uuid("triggered_by_kill_id"), // audit_log.id of the kill event (nullable)
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_strategy_lockouts_strategy_active").on(table.strategyId, table.lockedUntil.desc()),
+  ]
+);
