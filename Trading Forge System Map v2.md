@@ -1071,7 +1071,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-04-30T08:19:37.006Z`.
+Updated automatically from the repo on `2026-04-30T08:59:02.484Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1085,7 +1085,7 @@ Updated automatically from the repo on `2026-04-30T08:19:37.006Z`.
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `22`
-- Database tables tracked: `54`
+- Database tables tracked: `55`
 
 ### Subsystem Runtime States
 - `active`: `11`
@@ -1124,7 +1124,7 @@ Updated automatically from the repo on `2026-04-30T08:19:37.006Z`.
 - Route coverage: `45/45`
 - Scheduler coverage: `42/42`
 - Engine coverage: `22/22`
-- Database coverage: `54/54`
+- Database coverage: `55/55`
 - Autonomous subsystems with audit coverage: `14/14`
 - Autonomous subsystems with audit actions: `14/14`
 - Autonomous subsystems with telemetry evidence: `14/14`
@@ -1422,6 +1422,7 @@ Updated automatically from the repo on `2026-04-30T08:19:37.006Z`.
 - `strategy_export_artifacts`
 - `strategy_exports`
 - `strategy_graveyard`
+- `strategy_lockouts`
 - `strategy_names`
 - `stress_test_runs`
 - `subsystem_metrics`

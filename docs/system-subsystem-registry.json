@@ -413,6 +413,7 @@
       "portfolio_snapshots",
       "shadow_signals",
       "skip_decisions",
+      "strategy_lockouts",
       "system_journal",
       "watchlist"
     ],
