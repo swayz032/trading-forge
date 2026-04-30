@@ -47,6 +47,11 @@ import {
 } from "../db/schema.js";
 import { logger } from "../index.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import {
+  recordCost,
+  completeCost,
+  STALE_PENDING_SENTINEL_ID,
+} from "../lib/quantum-cost-tracker.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -263,6 +268,10 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
   const { strategyId, backtestId, classicalRuinProb, localIaeEstimate } = input;
   const correlationId = randomUUID();
 
+  // TDZ guard: hoist cost row ID and start time outside try so catch/finally can reference them
+  let cloudQmcCostRowId: string = STALE_PENDING_SENTINEL_ID;
+  const enqueueStartMs = Date.now();
+
   try {
     // Surface code params (d=3, 5 logical qubits)
     const nLogical = 5;
@@ -288,6 +297,17 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
       { runId, strategyId, backtestId, correlationId },
       "cloud-qmc: enqueued run (shadow-only, post-promotion, never blocks)",
     );
+
+    // 1a. Cost tracking — insert pending cloud_qmc cost row before IBM submission
+    const costResult = await recordCost({
+      moduleName: "cloud_qmc",
+      backtestId,
+      strategyId,
+      qpuSeconds: 0,
+      costDollars: 0,
+      cacheHit: false,
+    });
+    cloudQmcCostRowId = costResult.id;
 
     // 2. Audit log
     await db.insert(auditLog).values({
@@ -324,6 +344,13 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
         { runId, strategyId, reason: budget.reason, remainingSeconds: budget.remainingSeconds },
         "cloud-qmc: budget exhausted — row created as budget_exhausted, promotion unaffected",
       );
+
+      // Mark cost row as failed — budget gate prevents any QPU usage
+      await completeCost(cloudQmcCostRowId, {
+        wallClockMs: Date.now() - enqueueStartMs,
+        status: "failed",
+        errorMessage: `budget_exhausted: ${budget.reason}`,
+      });
       return;
     }
 
@@ -331,6 +358,7 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
     let submitSuccess = false;
     let lastError = "";
     let selectedBackend: IbmBackend = IBM_BACKENDS[0];
+    let submittedQpuSeconds: number | null = null;
 
     for (const backend of IBM_BACKENDS) {
       selectedBackend = backend;
@@ -370,6 +398,7 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
             })
             .where(eq(cloudQmcRuns.id, runId));
 
+          submittedQpuSeconds = pyResult.qpu_seconds_used ?? null;
           submitSuccess = true;
           logger.info(
             { runId, backend, ibmJobId: pyResult.ibm_job_id, strategyId },
@@ -381,6 +410,13 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
             .update(cloudQmcRuns)
             .set({ status: "budget_exhausted", errorMessage: pyResult.error_message })
             .where(eq(cloudQmcRuns.id, runId));
+
+          // Budget exhausted mid-rotation — mark cost row failed
+          await completeCost(cloudQmcCostRowId, {
+            wallClockMs: Date.now() - enqueueStartMs,
+            status: "failed",
+            errorMessage: `budget_exhausted: ${pyResult.error_message ?? "unknown"}`,
+          });
           return;
         } else {
           lastError = pyResult.error_message ?? `status=${pyResult.status}`;
@@ -402,10 +438,26 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
         })
         .where(eq(cloudQmcRuns.id, runId));
 
+      // All backends failed — mark cloud_qmc cost row as failed
+      await completeCost(cloudQmcCostRowId, {
+        wallClockMs: Date.now() - enqueueStartMs,
+        status: "failed",
+        errorMessage: `all_backends_failed: ${lastError}`,
+      });
+
       logger.warn(
         { runId, strategyId, lastError },
         "cloud-qmc: all IBM backends failed — row marked failed, promotion unaffected",
       );
+    } else {
+      // IBM job submitted successfully — mark cloud_qmc cost row as completed
+      // Note: qpu_seconds here is the submission-time estimate; actual QPU seconds
+      // are populated by the poll completion path (ising_decoder cost row).
+      await completeCost(cloudQmcCostRowId, {
+        wallClockMs: Date.now() - enqueueStartMs,
+        status: "completed",
+        qpuSeconds: submittedQpuSeconds,
+      });
     }
 
   } catch (outerErr) {
@@ -414,6 +466,12 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
       { strategyId, backtestId, err: outerErr, correlationId },
       "cloud-qmc: enqueueCloudQmcRun failed (non-blocking — classical promotion already complete)",
     );
+    // Best-effort cost row failure mark — safe because completeCost never throws
+    await completeCost(cloudQmcCostRowId, {
+      wallClockMs: Date.now() - enqueueStartMs,
+      status: "failed",
+      errorMessage: outerErr instanceof Error ? outerErr.message : String(outerErr),
+    });
   }
 }
 
@@ -491,6 +549,10 @@ export async function pollPendingJobs(): Promise<PollResult> {
       continue;
     }
 
+    // TDZ guard: hoist ising_decoder cost row ID and poll start time outside inner try
+    let isingCostRowId: string = STALE_PENDING_SENTINEL_ID;
+    const pollRowStartMs = Date.now();
+
     try {
       // Call Python to check job status and fetch syndromes if complete
       const configPath = `${tmpdir()}/cloud_qmc_poll_${randomUUID()}.json`;
@@ -508,6 +570,19 @@ export async function pollPendingJobs(): Promise<PollResult> {
       unlinkSync(configPath);
 
       if (pyResult.status === "completed") {
+        // Insert ising_decoder pending cost row before running the decoder path
+        // The decode happens inside Python (pyResult already carries decoded outputs),
+        // so we record the cost immediately and complete it right after.
+        const isingCostResult = await recordCost({
+          moduleName: "ising_decoder",
+          backtestId: row.backtestId,
+          strategyId: row.strategyId,
+          qpuSeconds: pyResult.qpu_seconds_used ?? 0,
+          costDollars: 0,
+          cacheHit: false,
+        });
+        isingCostRowId = isingCostResult.id;
+
         // Compute agreement metrics
         let agreementWithClassical: number | null = null;
         let agreementWithLocalIae: number | null = null;
@@ -566,6 +641,19 @@ export async function pollPendingJobs(): Promise<PollResult> {
           })
           .where(eq(cloudQmcRuns.id, row.id));
 
+        // Determine whether the Ising decoder produced a real estimate or fell back to PyMatching
+        const isingDecoderSucceeded = pyResult.ising_corrected_estimate != null;
+        const isingDecodeErrorMsg = isingDecoderSucceeded
+          ? null
+          : "ising_fallback_to_pymatching";
+
+        await completeCost(isingCostRowId, {
+          wallClockMs: Date.now() - pollRowStartMs,
+          status: isingDecoderSucceeded ? "completed" : "failed",
+          errorMessage: isingDecodeErrorMsg,
+          qpuSeconds: pyResult.qpu_seconds_used ?? 0,
+        });
+
         logger.info(
           {
             runId: row.id,
@@ -573,6 +661,7 @@ export async function pollPendingJobs(): Promise<PollResult> {
             isingEstimate: pyResult.ising_corrected_estimate,
             agreementWithClassical,
             qpuSeconds: pyResult.qpu_seconds_used,
+            isingDecoderSucceeded,
           },
           "cloud-qmc: job completed, evidence persisted (challenger-only, Phase 0 shadow)",
         );
@@ -587,7 +676,7 @@ export async function pollPendingJobs(): Promise<PollResult> {
         result.skipped++;
 
       } else {
-        // Failed or error
+        // Failed or error — no ising_decoder cost row (decoder never ran)
         await db
           .update(cloudQmcRuns)
           .set({
@@ -607,6 +696,14 @@ export async function pollPendingJobs(): Promise<PollResult> {
     } catch (pollErr) {
       // Non-fatal — log and continue to next row
       logger.warn({ runId: row.id, err: pollErr }, "cloud-qmc: poll error for row, continuing");
+
+      // If an ising_decoder cost row was created before the error, mark it failed
+      await completeCost(isingCostRowId, {
+        wallClockMs: Date.now() - pollRowStartMs,
+        status: "failed",
+        errorMessage: pollErr instanceof Error ? pollErr.message : String(pollErr),
+      });
+
       result.failed++;
     }
   }

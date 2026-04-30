@@ -214,17 +214,120 @@ class TestArchetypeCharacteristics:
             )
 
 
-# ─── Test: profit_scaling_tier annotation (Team A coordination) ─────────────
+# ─── Test: profit_scaling_tier wired into schema (Cleanup Team D) ───────────
 
-class TestProfitScalingTierAnnotation:
-    def test_profit_scaling_tier_documented_in_fixture_tags(self):
-        """profit_scaling_tier is not yet in the DSL schema (follow-up for Team A).
-        Fixtures must carry 'profit_scaling_tier_pending' in tags so downstream
-        systems know the field will be wired once Team A ships it."""
+class TestProfitScalingTierWired:
+    """ProfitScalingTier shipped via Pydantic schema (replaces former _pending tag).
+
+    See `src/engine/compiler/strategy_schema.py::ProfitScalingTier` and CLAUDE.md
+    'Profit-Based Position Scaling (W5a / Tier 5.4)'."""
+
+    def test_pending_tag_no_longer_present(self):
+        """The placeholder tag must be removed once the field exists."""
         for filename in FIXTURE_FILES:
             data = _load_fixture(filename)
             tags = data.get("tags", [])
-            assert "profit_scaling_tier_pending" in tags, (
-                f"{filename}: tags must include 'profit_scaling_tier_pending' to signal "
-                f"that profit_scaling_tier wiring is deferred to Team A schema extension"
+            assert "profit_scaling_tier_pending" not in tags, (
+                f"{filename}: 'profit_scaling_tier_pending' tag must be removed — the "
+                f"profit_scaling_tier field now exists in the DSL schema"
             )
+
+    def test_profit_scaling_tier_field_present(self):
+        """Every archetype fixture must now declare the actual field."""
+        for filename in FIXTURE_FILES:
+            data = _load_fixture(filename)
+            tier = data.get("profit_scaling_tier")
+            assert tier is not None, (
+                f"{filename}: profit_scaling_tier field is missing — fixtures must "
+                f"emit the wired schema field"
+            )
+            assert isinstance(tier, dict), f"{filename}: profit_scaling_tier must be an object"
+            assert tier.get("increment") == 2, (
+                f"{filename}: profit_scaling_tier.increment should be 2 per CLAUDE.md "
+                f"Gemini blueprint (every $3K -> +2 micro contracts)"
+            )
+            assert tier.get("threshold") == 3000, (
+                f"{filename}: profit_scaling_tier.threshold should be 3000 per blueprint"
+            )
+
+    def test_profit_scaling_tier_passes_dsl_validation(self):
+        """The wired schema must accept the fixture-declared field without error."""
+        for filename in FIXTURE_FILES:
+            data = _load_fixture(filename)
+            valid, model, errors = validate_dsl(data)
+            assert valid is True, (
+                f"{filename}: validation failed after profit_scaling_tier add. "
+                f"Errors: {errors}"
+            )
+            assert model is not None
+            assert model.profit_scaling_tier is not None, (
+                f"{filename}: parsed model.profit_scaling_tier should be set"
+            )
+            assert model.profit_scaling_tier.increment == 2
+            assert model.profit_scaling_tier.threshold == 3000.0
+
+
+class TestProfitScalingTierSchema:
+    """ProfitScalingTier Pydantic model contract — direct validation tests."""
+
+    def test_defaults_match_blueprint(self):
+        from src.engine.compiler.strategy_schema import ProfitScalingTier
+        tier = ProfitScalingTier()
+        assert tier.increment == 2
+        assert tier.threshold == 3000.0
+
+    def test_extra_fields_forbidden(self):
+        from pydantic import ValidationError
+        from src.engine.compiler.strategy_schema import ProfitScalingTier
+        with pytest.raises(ValidationError):
+            ProfitScalingTier(increment=2, threshold=3000, account_pnl_total=500)
+
+    def test_increment_must_be_positive(self):
+        from pydantic import ValidationError
+        from src.engine.compiler.strategy_schema import ProfitScalingTier
+        with pytest.raises(ValidationError):
+            ProfitScalingTier(increment=0, threshold=3000)
+        with pytest.raises(ValidationError):
+            ProfitScalingTier(increment=-1, threshold=3000)
+
+    def test_threshold_must_be_positive(self):
+        from pydantic import ValidationError
+        from src.engine.compiler.strategy_schema import ProfitScalingTier
+        with pytest.raises(ValidationError):
+            ProfitScalingTier(increment=2, threshold=0)
+        with pytest.raises(ValidationError):
+            ProfitScalingTier(increment=2, threshold=-100.0)
+
+    def test_increment_upper_bound(self):
+        from pydantic import ValidationError
+        from src.engine.compiler.strategy_schema import ProfitScalingTier
+        ProfitScalingTier(increment=10, threshold=3000)  # ok
+        with pytest.raises(ValidationError):
+            ProfitScalingTier(increment=11, threshold=3000)
+
+    def test_dsl_extra_forbid_still_blocks_unknown_root_keys(self):
+        """Adding profit_scaling_tier must not weaken extra='forbid' on StrategyDSL."""
+        from pydantic import ValidationError
+        from src.engine.compiler.strategy_schema import StrategyDSL
+        bad = _load_fixture("scalper_mes.json")
+        bad["totally_unknown_field"] = True
+        with pytest.raises(ValidationError):
+            StrategyDSL(**bad)
+
+    def test_daily_target_dollars_optional_and_non_negative(self):
+        from pydantic import ValidationError
+        from src.engine.compiler.strategy_schema import StrategyDSL
+        base = _load_fixture("scalper_mes.json")
+
+        # Optional → omission is valid (and remove existing field if any)
+        base.pop("daily_target_dollars", None)
+        StrategyDSL(**base)
+
+        # Setting it should validate
+        with_target = {**base, "daily_target_dollars": 250.0}
+        m = StrategyDSL(**with_target)
+        assert m.daily_target_dollars == 250.0
+
+        # Negative must be rejected
+        with pytest.raises(ValidationError):
+            StrategyDSL(**{**base, "daily_target_dollars": -1.0})

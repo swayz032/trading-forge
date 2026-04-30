@@ -28,7 +28,10 @@
     "mes",
     "range_bound",
     "atr_breakout",
-    "fast_scalp",
-    "profit_scaling_tier_pending"
-  ]
+    "fast_scalp"
+  ],
+  "profit_scaling_tier": {
+    "increment": 2,
+    "threshold": 3000
+  }
 }

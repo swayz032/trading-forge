@@ -41,6 +41,7 @@ import { validationRoutes } from "./routes/validation.js";
 import { pineExportRoutes } from "./routes/pine-export.js";
 import { quantumMcRoutes } from "./routes/quantum-mc.js";
 import { quantumPreFlightRoutes } from "./routes/quantum-pre-flight.js";
+import { quantumCostRoutes } from "./routes/quantum-cost.js";
 import { adversarialStressRoutes } from "./routes/adversarial-stress.js";
 import { cloudQmcRoutes } from "./routes/cloud-qmc.js";
 import { strategyNameRoutes } from "./routes/strategy-names.js";
@@ -375,6 +376,10 @@ app.use("/api/quantum-mc", strictRateLimit, quantumMcRoutes);
 // NOT rate-limited at strict tier because it is read-only and called per
 // generated strategy in burst from n8n; standardRateLimit at /api covers it.
 app.use("/api/quantum/pre-flight", quantumPreFlightRoutes);
+// Tier 3.1 W3a: Quantum cost telemetry sink for Python-side modules (entropy_filter).
+// Python calls this after collect_quantum_noise() to write quantum_run_costs rows.
+// No strict rate limit — Python only calls after an actual circuit run (~6ms each).
+app.use("/api/quantum/cost", quantumCostRoutes);
 app.use("/api/adversarial-stress", strictRateLimit, adversarialStressRoutes);
 app.use("/api/cloud-qmc", strictRateLimit, cloudQmcRoutes);
 app.use("/api/strategy-names", strategyNameRoutes);

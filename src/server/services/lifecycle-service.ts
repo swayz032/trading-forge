@@ -421,6 +421,11 @@ export class LifecycleService {
           quantumAdvantageDelta: null,
           quantumFallbackTriggered: false,
           quantumClassicalDisagreementPct: null,
+          // Adversarial stress fields default — populated below for TESTING->PAPER gate
+          adversarialWorstCaseBreachProb: null,
+          adversarialBreachMinimalNTrades: null,
+          adversarialPhase1BlockRecommended: false,
+          adversarialMethod: null,
         };
 
         // ── Tier 1.1 QAE shadow: read latest quantum_mc_runs row for this backtest ──

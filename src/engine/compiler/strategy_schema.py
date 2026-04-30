@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Timeframe(str, Enum):
@@ -62,6 +62,29 @@ _HEIKIN_FORBIDDEN_PATTERNS = (
     "haclose",
     "haopen",
 )
+
+
+class ProfitScalingTier(BaseModel):
+    """Profit-tier sizing config (W5a / Tier 5.4).
+
+    Pairs with `compute_profit_tier()` and `compute_position_sizes()` in
+    `src/engine/sizing.py`. Every `threshold` of cumulative single-account profit
+    adds `increment` extra micro contracts to the base ATR-derived size, capped by
+    the firm-specific cap and the global CONTRACT_CAP_MAX (20).
+
+    DSL fixtures emit `{"increment": 2, "threshold": 3000}` only —
+    `account_pnl_total` is injected at backtest-run time from live account PnL,
+    so it is intentionally absent from the schema.
+    """
+
+    increment: int = Field(2, ge=1, le=10, description="Contracts added per tier")
+    threshold: float = Field(
+        3000.0,
+        gt=0,
+        description="Cumulative single-account profit per tier ($)",
+    )
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class StrategyDSL(BaseModel):
@@ -140,6 +163,23 @@ class StrategyDSL(BaseModel):
         description="manual | ollama | openclaw | n8n",
     )
     tags: list[str] = Field(default_factory=list)
+
+    # Profit-tier sizing (W5a / Tier 5.4) — optional. None = no profit scaling
+    # (behavior identical to pre-Tier-5.4). When set, plumbed through to
+    # compute_position_sizes(profit_scaling_tier=...) at backtest-run time.
+    # Field name `profit_scaling_tier` MUST match Team A's compute_position_sizes()
+    # parameter — see CLAUDE.md "Profit-Based Position Scaling" section.
+    profit_scaling_tier: Optional[ProfitScalingTier] = Field(
+        None,
+        description="Optional profit-tier sizing config. When None, no scaling.",
+    )
+
+    # Optional archetype-level daily P&L target (used by paper automation telemetry).
+    daily_target_dollars: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Daily P&L target in dollars (informational). None = no target.",
+    )
 
     model_config = {"extra": "forbid"}
 

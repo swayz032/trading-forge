@@ -21,6 +21,7 @@
  */
 
 import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { aPlusMarketScans } from "../db/schema.js";
 import { runPythonModule } from "../lib/python-runner.js";
@@ -86,6 +87,81 @@ const DEFAULT_CORR_MATRIX: Record<string, Record<string, number>> = {
   MCL: { MES: 0.15, MNQ: 0.12, MCL: 1.0,  DXY:  0.05 },
   DXY: { MES: -0.30, MNQ: -0.28, MCL: 0.05, DXY: 1.0  },
 };
+
+// ─── Per-Market Noise Enrichment ─────────────────────────────────────────────
+
+/**
+ * Query skip_decisions for the most recent quantum_noise_score per market symbol.
+ *
+ * For each market in marketInputs:
+ *   - If noise_score is already provided by the caller, it is preserved (no DB query).
+ *   - Otherwise: query skip_decisions JOIN strategies WHERE symbol=market AND
+ *     created_at > NOW()-6h ORDER BY created_at DESC LIMIT 1.
+ *     Extract signals->>'quantum_noise_score'.
+ *   - Falls back to null if no recent decision exists or on DB error.
+ *
+ * Governance: advisory only. This enrichment injects challenger evidence into
+ * the Python auditor's per-market noise slot. It does NOT spawn quantum compute
+ * and does NOT modify lifecycle state.
+ *
+ * Never throws — returns original inputs with null noise_score on any failure.
+ */
+export async function enrichWithPerMarketNoise(
+  marketInputs: Record<string, MarketInput>,
+): Promise<Record<string, MarketInput>> {
+  const enriched: Record<string, MarketInput> = {};
+
+  for (const [symbol, mdata] of Object.entries(marketInputs)) {
+    // If caller already provided a noise_score, preserve it — no DB query needed.
+    if (mdata.noise_score != null) {
+      enriched[symbol] = mdata;
+      continue;
+    }
+
+    let noiseScore: number | null = null;
+    try {
+      // Query most recent skip_decisions row for this symbol in last 6 hours.
+      // Joins strategies to filter by symbol (skip_decisions.strategy_id is nullable
+      // for portfolio-wide rows; we only pick strategy-scoped rows here).
+      const rows = await db.execute(sql`
+        SELECT (sd.signals->>'quantum_noise_score')::text AS noise_score
+        FROM skip_decisions sd
+        JOIN strategies s ON s.id = sd.strategy_id
+        WHERE s.symbol = ${symbol}
+          AND sd.created_at > now() - interval '6 hours'
+          AND (sd.signals->>'quantum_noise_score') IS NOT NULL
+        ORDER BY sd.created_at DESC
+        LIMIT 1
+      `);
+
+      const row = Array.isArray(rows) ? rows[0] : (rows as { rows?: unknown[] }).rows?.[0];
+      if (row) {
+        const rawScore = (row as Record<string, unknown>).noise_score;
+        if (rawScore != null) {
+          const parsed = parseFloat(String(rawScore));
+          if (!isNaN(parsed) && parsed >= 0.0 && parsed <= 1.0) {
+            noiseScore = parsed;
+          }
+        }
+      }
+
+      logger.debug(
+        { symbol, noiseScore },
+        "a-plus-auditor: per-market noise enrichment from skip_decisions",
+      );
+    } catch (err) {
+      // Graceful fallback — log and continue with null
+      logger.warn(
+        { err, symbol },
+        "a-plus-auditor: noise enrichment DB query failed — falling back to null",
+      );
+    }
+
+    enriched[symbol] = { ...mdata, noise_score: noiseScore };
+  }
+
+  return enriched;
+}
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 
@@ -171,10 +247,16 @@ export async function runAuditScan(
     throw err;
   }
 
+  // ── Enrich market inputs with per-market noise scores from skip_decisions ──
+  // W3b deferred: query quantum_noise_score from skip_decisions per symbol so
+  // the Python auditor uses real per-market noise rather than neutral default.
+  // Falls back to null per market on DB error — auditor continues with neutral 0.5.
+  const enrichedMarketInputs = await enrichWithPerMarketNoise(input.marketInputs);
+
   // ── Build Python payload ─────────────────────────────────────────────────
   const pythonPayload = {
     market_inputs: Object.fromEntries(
-      Object.entries(input.marketInputs).map(([sym, mdata]) => [
+      Object.entries(enrichedMarketInputs).map(([sym, mdata]) => [
         sym,
         {
           atr_5m: mdata.atr_5m,

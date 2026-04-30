@@ -129,14 +129,22 @@ not Python modules.
 - Valid fields: `name`, `symbol`, `timeframe`, `direction`, `entry_type`, `entry_indicator`,
   `entry_params`, `entry_condition`, `exit_type`, `exit_params`, `stop_loss_atr_multiple`,
   `take_profit_atr_multiple`, `max_contracts`, `preferred_regime`, `session_filter`,
-  `chart_construction`, `source`, `tags`, `schema_version`, `description`
-- New archetype concept fields NOT yet in schema -- add to `strategy_schema.py` before use:
-  - `profit_scaling_tier` -- Team A (W5a) sizing integration, pending schema extension
-  - `daily_target_dollars` -- archetype-level daily P&L target, pending schema extension
-  - `hard_sl_points` / `trail_config` / `contracts` -- use `stop_loss_atr_multiple`,
-    `exit_params`, and `max_contracts` as the current schema equivalents
-- All fixtures carry `profit_scaling_tier_pending` in tags until Team A ships the
-  `profit_scaling_tier` schema field and `compute_position_sizes()` wiring
+  `chart_construction`, `source`, `tags`, `schema_version`, `description`,
+  `profit_scaling_tier`, `daily_target_dollars`
+- `profit_scaling_tier` -- W5a Team A sizing integration, **wired** as
+  `Optional[ProfitScalingTier]` in `strategy_schema.py`. Fixtures emit
+  `{"increment": 2, "threshold": 3000}`; `account_pnl_total` is injected at
+  backtest-run time, never in the fixture. The legacy
+  `profit_scaling_tier_pending` placeholder tag has been retired.
+- `daily_target_dollars` -- archetype-level daily P&L target (informational),
+  optional Optional[float] >= 0. Currently consumed by paper automation
+  telemetry only (no gate logic).
+- `hard_sl_points` / `trail_config` / `contracts` are not first-class DSL
+  fields -- use `stop_loss_atr_multiple`, `exit_params`, and `max_contracts`
+  as the schema equivalents. Trail-stop W5b extensions (`break_even_at_r`,
+  `time_decay_minutes`, `time_decay_multiplier`) belong inside `exit_params`
+  and are translated through to `paper-signal-service.ts:TrailStopConfig`
+  by `dsl-translator.ts`.
 
 ### Archetype Descriptions
 
@@ -165,18 +173,12 @@ MES (S&P micro), MNQ (Nasdaq micro), MCL (crude oil micro) chosen for correlatio
 on daily returns (equity vs energy). Aggregate max_contracts: 5+10+8 = 23, within 50K
 account composite ceiling. Safe to deploy all three simultaneously.
 
-### Schema Extension Follow-up (TODO -- coordinate with W5a Team A before merging)
-Add to `src/engine/compiler/strategy_schema.py`:
-```python
-class ProfitScalingTier(BaseModel):
-    increment: int = Field(..., ge=1, le=10)
-    threshold: float = Field(..., ge=500.0)
-
-# In StrategyDSL:
-profit_scaling_tier: Optional[ProfitScalingTier] = None
-daily_target_dollars: Optional[float] = Field(None, ge=100.0, le=10000.0)
-```
-Field name `profit_scaling_tier` MUST match Team A's `compute_position_sizes()` parameter.
+### Schema Extension (SHIPPED — Cleanup Team D)
+`ProfitScalingTier` and `daily_target_dollars` are now first-class fields on
+`StrategyDSL`. See `src/engine/compiler/strategy_schema.py`. Field name
+`profit_scaling_tier` matches Team A's `compute_position_sizes()` parameter.
+`account_pnl_total` is intentionally NOT a fixture field — it is injected at
+backtest-run time from live single-account PnL.
 
 ## Gemini Quantum Blueprint Feature Flags (W1 / Tier 0.3)
 All flags default OFF (shadow). They control phased rollout of quantum
@@ -195,8 +197,16 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
   PennyLane 0.44.1 required; classical fallback returns None (skip engine
   continues with score 0.0 via `_score_quantum_entropy`).
   Performance: ~6ms wall-clock on CPU (default.qubit).
+  **Cost telemetry (W3a deferred, SHIPPED):** Each `collect_quantum_noise()` call
+  POSTs to `POST /api/quantum/cost` (1s timeout, fire-and-forget, never raises).
+  This writes a `quantum_run_costs` row with `moduleName="entropy_filter"`, enabling
+  Tier 7 graduation queries. Route: `src/server/routes/quantum-cost.ts`.
+  The `requests` import is lazy (inside the helper) to preserve module isolation.
   W3b dependency: A+ Market Auditor reads `skip_decisions.signals.quantum_noise_score`
-  per market per day — confirm that JSONB path before W3b implementation.
+  per market per day — **WIRED (W3b deferred, SHIPPED):** `enrichWithPerMarketNoise()`
+  in `a-plus-auditor-service.ts` queries `skip_decisions JOIN strategies WHERE symbol=?
+  AND created_at > NOW()-6h` before each Python auditor call. Caller-provided
+  `noise_score` is preserved (no DB query). Falls back to null per market on DB error.
 
   **Tier 3.1 Threshold Calibration Plan:**
   Placeholder threshold: `QUANTUM_NOISE_THRESHOLD = 0.5` (in `quantum_entropy_filter.py`).
@@ -280,7 +290,8 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
   **W7b Grover graduation (Day 52, not Day 30):**
   Day 52 (not Day 30 like QAE) because adversarial stress runs are more expensive
   and the graduation evidence window must cover a full month of TESTING->PAPER
-  transitions. Query: see quantum_run_costs + adversarial_stress_runs join.
+  transitions. Canonical query and decision rule:
+  see "Tier 7 W7b Graduation Query Pattern" section below.
 
   **Worst-case vs average-case distinction:**
   QAE (Tier 1.1) answers average-case breach probability. Adversarial stress
@@ -432,6 +443,77 @@ Two new tables ship in W1 to unblock Tier 7 quantum graduation queries:
   Pruning: hourly cron `quantum-cost-prune` (registered in scheduler) +
   on-startup one-shot. Pending rows older than 1 hour are flipped to
   `status="failed"`, `errorMessage="stale_pending_pruned"`.
+
+## Tier 7 W7b Graduation Query Pattern
+
+The Phase 0 → Phase 1 graduation review for the Grover adversarial-stress gate
+(W7b Day 52) is **a query, not a code change**. The query joins
+`adversarial_stress_runs` (the shadow predictions) through `backtests`
+(the strategy/run linkage) into `lifecycle_transitions` (the actual
+TESTING→PAPER promotions), then left-joins `paper_sessions` to read the
+real-world outcome that followed each promotion.
+
+If the strategies the Phase 1 rule **would have blocked** show worse paper
+outcomes than the strategies it **would have passed**, the Grover prediction
+correlates with reality and we graduate. Graduation is mechanical: flip
+`governance_state.grover_weight` from 0.0 → 0.05 and let the lifecycle gate
+honor it.
+
+**Phase 1 block rule:** `worst_case_breach_prob > 0.5` AND
+`breach_minimal_n_trades < 4`. Background and rationale are in the
+`QUANTUM_ADVERSARIAL_STRESS_ENABLED` flag block above (Worst-case vs
+average-case distinction).
+
+```sql
+-- W7b Day 52: Grover Phase 0 → 1 graduation evaluation.
+-- Joins adversarial_stress_runs through backtests through lifecycle_transitions
+-- so we can compare each shadow prediction to the paper outcome that followed.
+SELECT
+  s.name AS strategy_name,
+  asr.worst_case_breach_prob,
+  asr.breach_minimal_n_trades,
+  lt.from_state,
+  lt.to_state,
+  lt.created_at AS promotion_date,
+  -- Phase 1 recommendation (would-have, never enforced in Phase 0)
+  CASE
+    WHEN asr.worst_case_breach_prob > 0.5
+     AND asr.breach_minimal_n_trades < 4 THEN 'WOULD_HAVE_BLOCKED'
+    ELSE 'WOULD_HAVE_PASSED'
+  END AS phase1_recommendation,
+  ps.outcome AS actual_paper_outcome
+FROM adversarial_stress_runs asr
+JOIN backtests bt              ON asr.backtest_id = bt.id
+JOIN lifecycle_transitions lt  ON lt.backtest_id = bt.id
+JOIN strategies s              ON lt.strategy_id = s.id
+LEFT JOIN paper_sessions ps    ON ps.strategy_id = s.id
+                              AND ps.created_at > lt.created_at
+WHERE lt.from_state = 'TESTING'
+  AND lt.to_state   = 'PAPER'
+  AND lt.created_at > NOW() - INTERVAL '30 days';
+```
+
+**Graduation decision:**
+- Compute `bad_outcome_rate(WOULD_HAVE_BLOCKED)` vs `bad_outcome_rate(WOULD_HAVE_PASSED)`.
+- "Bad outcome" = `paper_sessions.outcome IN ('killed', 'rule_breach', 'drawdown_breach')`.
+- If `bad_rate(BLOCKED) > bad_rate(PASSED) + 0.10` AND sample size ≥ 20
+  promotions per bucket → the gate would have improved outcomes → graduate.
+- Set `governance_state.grover_weight = 0.05` in the same transaction that
+  flips `QUANTUM_ADVERSARIAL_STRESS_ENABLED` Phase 0 → Phase 1.
+- If sample size is too small or the rate gap is < 0.10, leave the gate in
+  Phase 0 and re-run the query in 30 days.
+
+**Cost gate (read alongside this query, not in it):**
+Use the `quantum_run_costs` cost-benefit query (above, in this section) with
+`module_name = 'adversarial_stress'`. If average wall-clock >
+`adversarial_stress.timeout_ms` per run or budget burn-rate is unsustainable,
+graduation is **blocked regardless of predictive value** — the gate has to
+both work AND fit the cost envelope.
+
+**Why this is documentation, not a script:**
+Day 52 graduation is a deliberate, human-reviewed event. Encoding it as an
+auto-cron risks flipping the gate during a low-data window or under a
+regime shift. The query is canonical, the decision is not.
 
 ## Profit-Based Position Scaling (W5a / Tier 5.4)
 Gemini "Forge-Tested" 2026 Edition: every $3,000 of cumulative profit = +2 micro

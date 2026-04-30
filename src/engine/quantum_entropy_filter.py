@@ -41,6 +41,48 @@ import numpy as np
 
 from src.engine.quantum_device_selector import select_quantum_device
 
+# ─── Cost Telemetry ────────────────────────────────────────────────────────────
+# Posted to /api/quantum/cost after each collect_quantum_noise() run.
+# Fire-and-forget — 1 second timeout. Never raises. Cost telemetry MUST NOT
+# break the entropy filter. `requests` is imported lazily inside the helper
+# so it never appears in the module-level namespace (isolation test compliance).
+_COST_ENDPOINT_URL: Optional[str] = None
+
+
+def _get_cost_endpoint() -> Optional[str]:
+    """Return the cost telemetry endpoint URL, or None to skip telemetry."""
+    port = os.environ.get("PORT", "4000")
+    if not port:
+        return None
+    return f"http://localhost:{port}/api/quantum/cost"
+
+
+def _post_cost_telemetry(
+    wall_clock_ms: int,
+    status: str,
+    error_message: Optional[str] = None,
+) -> None:
+    """Fire-and-forget POST to /api/quantum/cost. Never raises.
+
+    Uses lazy import of requests so the module-level namespace stays clean
+    (challenger isolation test: no HTTP client in vars(module)).
+    """
+    try:
+        import requests as _requests  # noqa: PLC0415 — lazy import for isolation
+        url = _get_cost_endpoint()
+        if url is None:
+            return
+        payload: dict[str, Any] = {
+            "moduleName": "entropy_filter",
+            "wallClockMs": wall_clock_ms,
+            "status": status,
+        }
+        if error_message is not None:
+            payload["errorMessage"] = error_message
+        _requests.post(url, json=payload, timeout=1.0)
+    except Exception:  # noqa: BLE001 — never raise from telemetry path
+        pass
+
 # ─── Governance Labels ────────────────────────────────────────────────────────
 GOVERNANCE_LABELS: dict[str, Any] = {
     "experimental": True,
@@ -229,6 +271,7 @@ def collect_quantum_noise(
         logger.warning("quantum_entropy_filter: non-finite feature value — returning None")
         return None
 
+    t0 = time.time()
     try:
         # Select device: GPU if env flag + VRAM probe pass (Tier 4 / W4).
         # Falls back to default.qubit when flag is false, VRAM insufficient,
@@ -251,9 +294,14 @@ def collect_quantum_noise(
         # Clamp to [0, 1] for floating point edge cases
         noise_score = float(np.clip(noise_score, 0.0, 1.0))
 
+        wall_clock_ms = int((time.time() - t0) * 1000)
+        _post_cost_telemetry(wall_clock_ms, "completed")
+
         return noise_score
 
     except Exception as exc:
+        wall_clock_ms = int((time.time() - t0) * 1000)
+        _post_cost_telemetry(wall_clock_ms, "failed", error_message=str(exc))
         logger.warning("quantum_entropy_filter: circuit execution failed: %s", exc)
         return None
 

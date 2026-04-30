@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T09:15:20.725Z",
+  "generatedAt": "2026-04-30T10:24:52.638Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,7 +15,7 @@
     ]
   },
   "counts": {
-    "routes": 46,
+    "routes": 47,
     "schedulerJobs": 42,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
@@ -58,6 +58,7 @@
     "/api/prevalidate",
     "/api/prop-firm",
     "/api/quantum-mc",
+    "/api/quantum/cost",
     "/api/quantum/pre-flight",
     "/api/risk",
     "/api/search",
@@ -798,7 +799,7 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 46,
+      "routes": 47,
       "schedulerJobs": 42,
       "engineSubsystems": 22,
       "databaseTables": 55
@@ -2018,6 +2019,7 @@
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
           "/api/quantum-mc",
+          "/api/quantum/cost",
           "/api/quantum/pre-flight"
         ],
         "schedulerJobs": [
@@ -3737,6 +3739,7 @@
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
         "/api/quantum-mc",
+        "/api/quantum/cost",
         "/api/quantum/pre-flight"
       ],
       "schedulerJobs": [

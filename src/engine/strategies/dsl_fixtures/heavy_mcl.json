@@ -30,7 +30,10 @@
     "crude_oil",
     "keltner_squeeze",
     "expansion",
-    "high_vol",
-    "profit_scaling_tier_pending"
-  ]
+    "high_vol"
+  ],
+  "profit_scaling_tier": {
+    "increment": 2,
+    "threshold": 3000
+  }
 }

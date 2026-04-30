@@ -66,7 +66,7 @@ adversarialStressRoutes.post("/run", pipelinePauseGate, async (req, res) => {
     const result = await runAdversarialStress(backtestId, strategyId, {
       dailyLossLimit,
       seed,
-      correlationId: (req as Record<string, unknown>).id as string | undefined,
+      correlationId: (req as unknown as Record<string, unknown>).id as string | undefined,
     });
 
     if (!result) {

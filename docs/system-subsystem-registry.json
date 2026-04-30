@@ -810,6 +810,7 @@
     ],
     "routes": [
       "/api/quantum-mc",
+      "/api/quantum/cost",
       "/api/quantum/pre-flight"
     ],
     "engine_subsystems": [
@@ -860,7 +861,7 @@
     "automation_mode": "autonomous",
     "runtime_state": "experimental",
     "decision_authority": "advisory",
-    "automation_scope": "Daily 8:00 AM ET pre-market scan scoring MES/MNQ/MCL via volatility audit, quantum MC, entropy filter (W3a), and 4-qubit cross-market lead-lag VQC. Emits OBSERVATION_MODE when no market is A+. Challenger-only output — no execution authority.",
+    "automation_scope": "Daily 8:00 AM ET pre-market scan scoring MES/MNQ/MCL via volatility audit, quantum MC, entropy filter (W3a), and 4-qubit cross-market lead-lag VQC. Emits OBSERVATION_MODE when no market is A+. Challenger-only output \u00e2\u20ac\u201d no execution authority.",
     "data_sources": [
       "pre-market ATR data",
       "VIX",
@@ -936,28 +937,59 @@
     "runtime_state": "experimental",
     "decision_authority": "advisory",
     "automation_scope": "Grover worst-case sequencer: finds the worst possible trade ordering that could breach prop firm rules. Pre-PAPER promotion gate (TIER_1/TIER_2). Challenger-only advisory output.",
-    "data_sources": ["backtest trade ledger", "prop firm rule set"],
-    "reads_from": ["backtests"],
-    "writes_to": ["adversarial_stress_runs", "quantum_run_costs"],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["adversarial-stress.run-complete"],
-    "metrics_surfaces": ["/api/health/dashboard"],
-    "telemetry_sources": ["quantum_run_costs"],
+    "data_sources": [
+      "backtest trade ledger",
+      "prop firm rule set"
+    ],
+    "reads_from": [
+      "backtests"
+    ],
+    "writes_to": [
+      "adversarial_stress_runs",
+      "quantum_run_costs"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "adversarial-stress.run-complete"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "quantum_run_costs"
+    ],
     "scheduler_jobs": [],
-    "routes": ["/api/adversarial-stress"],
-    "engine_subsystems": ["quantum_adversarial_stress"],
-    "database_tables": ["adversarial_stress_runs", "quantum_run_costs"],
+    "routes": [
+      "/api/adversarial-stress"
+    ],
+    "engine_subsystems": [
+      "quantum_adversarial_stress"
+    ],
+    "database_tables": [
+      "adversarial_stress_runs",
+      "quantum_run_costs"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["/api/health/dashboard", "adversarial_stress_runs"],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "adversarial_stress_runs"
+    ],
     "recovery_mode": "automatic-classical-fallback",
     "health_check": "/api/health/dashboard",
     "status": "experimental",
     "self_evolving": false,
     "proof_mode": "experimental-runtime",
-    "freshness_signals": ["adversarial_stress_runs:recent-run"],
-    "evidence_queries": ["adversarial-stress-isolation", "adversarial-stress-pending-row"],
+    "freshness_signals": [
+      "adversarial_stress_runs:recent-run"
+    ],
+    "evidence_queries": [
+      "adversarial-stress-isolation",
+      "adversarial-stress-pending-row"
+    ],
     "ownership_boundary": "repo-runtime",
     "learning_boundary": "none",
     "deployment_authority": "autonomous_challenger",
@@ -970,29 +1002,66 @@
     "automation_mode": "autonomous",
     "runtime_state": "experimental",
     "decision_authority": "advisory",
-    "automation_scope": "Tier 4.5 W4: Ising-encoded IBM QPU enrichment. SHADOW ONLY — async best-effort enrichment after classical TESTING→PAPER promotion. Never a gate. d=3 rotated surface code encoder + Ising decoder + PyMatching baseline. Budget: 600s/month IBM QPU, all reserved for Ising runs.",
-    "data_sources": ["IBM Quantum Platform (ibm_fez, ibm_kingston, ibm_marrakesh)", "quantum_mc_runs"],
-    "reads_from": ["backtests", "quantum_mc_runs"],
-    "writes_to": ["cloud_qmc_runs"],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["cloud-qmc.enqueued", "cloud-qmc.budget_exhausted"],
-    "metrics_surfaces": ["/api/cloud-qmc/budget", "/api/health/dashboard"],
-    "telemetry_sources": ["cloud_qmc_runs"],
-    "scheduler_jobs": ["cloud-qmc-poll"],
-    "routes": ["/api/cloud-qmc"],
-    "engine_subsystems": ["surface_code_encoder", "ising_decoder_wrapper", "cloud_backend"],
-    "database_tables": ["cloud_qmc_runs"],
+    "automation_scope": "Tier 4.5 W4: Ising-encoded IBM QPU enrichment. SHADOW ONLY \u00e2\u20ac\u201d async best-effort enrichment after classical TESTING\u00e2\u2020\u2019PAPER promotion. Never a gate. d=3 rotated surface code encoder + Ising decoder + PyMatching baseline. Budget: 600s/month IBM QPU, all reserved for Ising runs.",
+    "data_sources": [
+      "IBM Quantum Platform (ibm_fez, ibm_kingston, ibm_marrakesh)",
+      "quantum_mc_runs"
+    ],
+    "reads_from": [
+      "backtests",
+      "quantum_mc_runs"
+    ],
+    "writes_to": [
+      "cloud_qmc_runs"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "cloud-qmc.enqueued",
+      "cloud-qmc.budget_exhausted"
+    ],
+    "metrics_surfaces": [
+      "/api/cloud-qmc/budget",
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "cloud_qmc_runs"
+    ],
+    "scheduler_jobs": [
+      "cloud-qmc-poll"
+    ],
+    "routes": [
+      "/api/cloud-qmc"
+    ],
+    "engine_subsystems": [
+      "surface_code_encoder",
+      "ising_decoder_wrapper",
+      "cloud_backend"
+    ],
+    "database_tables": [
+      "cloud_qmc_runs"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["/api/health/dashboard", "cloud_qmc_runs"],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "cloud_qmc_runs"
+    ],
     "recovery_mode": "automatic-classical-fallback",
     "health_check": "/api/cloud-qmc/budget",
     "status": "experimental",
     "self_evolving": false,
     "proof_mode": "experimental-runtime",
-    "freshness_signals": ["cloud_qmc_runs:recent-run"],
-    "evidence_queries": ["cloud-qmc-isolation", "cloud-qmc-pending-row", "cloud-qmc-budget-check"],
+    "freshness_signals": [
+      "cloud_qmc_runs:recent-run"
+    ],
+    "evidence_queries": [
+      "cloud-qmc-isolation",
+      "cloud-qmc-pending-row",
+      "cloud-qmc-budget-check"
+    ],
     "ownership_boundary": "repo-runtime",
     "learning_boundary": "none",
     "deployment_authority": "autonomous_challenger",

@@ -33,7 +33,10 @@
     "ema_crossover",
     "trailing_stop",
     "gemini_blueprint",
-    "workhorse",
-    "profit_scaling_tier_pending"
-  ]
+    "workhorse"
+  ],
+  "profit_scaling_tier": {
+    "increment": 2,
+    "threshold": 3000
+  }
 }

@@ -30,7 +30,6 @@ import {
   adversarialStressRuns,
   backtests,
   backtestTrades,
-  strategies,
 } from "../db/schema.js";
 import { logger } from "../index.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
@@ -182,37 +181,30 @@ export async function runAdversarialStress(
   // Phase 0 shadow: even when flag is false, we still run in shadow mode
   // (result is written but not gated). Flag=false means Phase 0 shadow only.
 
-  // ── Fetch strategy tier ───────────────────────────────────────────────────
-  const [strategy] = await db
-    .select({ tier: strategies.tier })
-    .from(strategies)
-    .where(eq(strategies.id, strategyId))
+  // ── Fetch backtest (includes tier — tier lives on backtests, not strategies) ──
+  const [bt] = await db
+    .select({ id: backtests.id, status: backtests.status, tier: backtests.tier })
+    .from(backtests)
+    .where(eq(backtests.id, backtestId))
     .limit(1);
 
-  if (!strategy) {
-    logger.warn({ strategyId }, "adversarial-stress: strategy not found — skip");
+  if (!bt) {
+    logger.warn({ backtestId, strategyId }, "adversarial-stress: backtest not found — skip");
     return null;
   }
 
-  if (!shouldRunForTier(strategy.tier)) {
+  if (!shouldRunForTier(bt.tier)) {
     logger.debug(
-      { strategyId, tier: strategy.tier },
+      { strategyId, backtestId, tier: bt.tier },
       "adversarial-stress: TIER_3 or unknown tier — skipping (too noisy)",
     );
     return null;
   }
 
-  // ── Fetch backtest ────────────────────────────────────────────────────────
-  const [bt] = await db
-    .select({ id: backtests.id, status: backtests.status })
-    .from(backtests)
-    .where(eq(backtests.id, backtestId))
-    .limit(1);
-
-  if (!bt || bt.status !== "completed") {
+  if (bt.status !== "completed") {
     logger.warn(
-      { backtestId, status: bt?.status },
-      "adversarial-stress: backtest not found or not completed — skip",
+      { backtestId, status: bt.status },
+      "adversarial-stress: backtest not completed — skip",
     );
     return null;
   }

@@ -23,6 +23,31 @@ interface DSLConfig {
   max_contracts?: number;
   preferred_regime?: string;
   session_filter?: string;
+  // W5b Tier 5.1 — optional explicit trail config block. When present,
+  // takes precedence over fields in `exit_params`. Schema-side this is
+  // not yet a first-class StrategyDSL field — current archetype fixtures
+  // place these fields inside `exit_params`. Translator honors both so
+  // future schema additions can move them into a dedicated block without
+  // changing the consumer contract.
+  trail_config?: {
+    atr_multiple?: number;
+    atr_period?: number;
+    break_even_at_r?: number;
+    time_decay_minutes?: number;
+    time_decay_multiplier?: number;
+  };
+}
+
+// W5b Tier 5.1 — TrailStopConfig in paper-signal-service.ts ships with three
+// optional fields beyond the classic { type, multiplier } pair. Mirror those
+// here so the translator no longer drops them silently.
+interface TrailStopOutput {
+  type: string;
+  multiplier: number;
+  atr_period?: number;
+  break_even_at_r?: number;
+  time_decay_minutes?: number;
+  time_decay_multiplier?: number;
 }
 
 interface PaperTradingConfig {
@@ -31,7 +56,7 @@ interface PaperTradingConfig {
   side: "long" | "short" | "both";
   contracts: number;
   stop_loss?: { type: string; multiplier: number };
-  trail_stop?: { type: string; multiplier: number };
+  trail_stop?: TrailStopOutput;
   max_hold_bars?: number;
   preferred_sessions?: string[];
   indicators?: Record<string, unknown>;
@@ -108,10 +133,44 @@ export function translateDSLToPaperConfig(dsl: DSLConfig): PaperTradingConfig {
     ? { type: "atr", multiplier: dsl.stop_loss_atr_multiple }
     : { type: "atr", multiplier: 2.0 };
 
-  // Build trail stop from take profit
-  const trail_stop = dsl.take_profit_atr_multiple
-    ? { type: "atr", multiplier: dsl.take_profit_atr_multiple }
-    : undefined;
+  // ── Build trail stop ────────────────────────────────────────────────────
+  // W5b Tier 5.1: trail_stop now carries break_even_at_r, time_decay_minutes,
+  // and time_decay_multiplier when supplied. Sources, in order of precedence:
+  //   1. dsl.trail_config (explicit block, future schema slot)
+  //   2. dsl.exit_params with trail-stop-shaped fields
+  //   3. dsl.take_profit_atr_multiple (legacy fallback path)
+  //
+  // Output shape mirrors paper-signal-service.ts TrailStopConfig so the
+  // downstream consumer can apply break-even and time-decay legs without
+  // additional transformation. When no source provides any field, trail_stop
+  // is undefined — IDENTICAL to pre-W5b behavior for backwards compat.
+  const trailConfig = dsl.trail_config ?? {};
+  const trailMultiplier =
+    trailConfig.atr_multiple ??
+    (typeof exitParams.trail_atr === "number" ? exitParams.trail_atr : undefined) ??
+    dsl.take_profit_atr_multiple;
+
+  let trail_stop: TrailStopOutput | undefined;
+  if (typeof trailMultiplier === "number") {
+    trail_stop = { type: "atr", multiplier: trailMultiplier };
+
+    const atrPeriod = trailConfig.atr_period ?? exitParams.atr_period;
+    if (typeof atrPeriod === "number") trail_stop.atr_period = atrPeriod;
+
+    const breakEvenAtR =
+      trailConfig.break_even_at_r ?? exitParams.break_even_at_r;
+    if (typeof breakEvenAtR === "number") trail_stop.break_even_at_r = breakEvenAtR;
+
+    const timeDecayMinutes =
+      trailConfig.time_decay_minutes ?? exitParams.time_decay_minutes;
+    if (typeof timeDecayMinutes === "number")
+      trail_stop.time_decay_minutes = timeDecayMinutes;
+
+    const timeDecayMultiplier =
+      trailConfig.time_decay_multiplier ?? exitParams.time_decay_multiplier;
+    if (typeof timeDecayMultiplier === "number")
+      trail_stop.time_decay_multiplier = timeDecayMultiplier;
+  }
 
   // Map sessions
   const preferred_sessions = dsl.session_filter
@@ -145,7 +204,22 @@ export function translateDSLToPaperConfig(dsl: DSLConfig): PaperTradingConfig {
     indicators,
   };
 
-  logger.info({ indicator, entryRules: entry_rules, exitRules: exit_rules }, "DSL translated to paper trading config");
+  logger.info(
+    {
+      indicator,
+      entryRules: entry_rules,
+      exitRules: exit_rules,
+      trailStop: trail_stop
+        ? {
+            multiplier: trail_stop.multiplier,
+            breakEvenAtR: trail_stop.break_even_at_r ?? null,
+            timeDecayMinutes: trail_stop.time_decay_minutes ?? null,
+            timeDecayMultiplier: trail_stop.time_decay_multiplier ?? null,
+          }
+        : null,
+    },
+    "DSL translated to paper trading config",
+  );
 
   return result;
 }
