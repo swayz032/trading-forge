@@ -19,6 +19,7 @@ import { WFWindowMetricsSchema } from "../../shared/walk-forward-schema.js";
 import { logger } from "../lib/logger.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
+import { sqaRegistry } from "../lib/sqa-promise-registry.js";
 import { captureToDLQ } from "../lib/dlq-service.js";
 import { db } from "../db/index.js";
 import { tracer } from "../lib/tracing.js";
@@ -595,7 +596,11 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // Fires for ALL qualifying backtests (non-REJECTED with walk-forward results),
     // not just those explicitly requesting the SQA optimizer.
     if (result.tier && result.tier !== "REJECTED" && wfResults && config.strategy?.indicators?.length) {
-      (async () => {
+      // Register the SQA promise in the session-local registry so the critic
+      // can await it with a bounded timeout instead of fire-and-forget polling.
+      // The IIFE itself is still fire-and-forget (non-blocking to the backtest
+      // response), but critic-optimizer-service can now observe its completion.
+      const sqaTask = (async () => {
         try {
           // Build param ranges from strategy indicator parameters
           const paramRanges: Array<{ name: string; min_val: number; max_val: number; n_bits: number }> = [];
@@ -683,9 +688,11 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           }).where(eq(sqaOptimizationRuns.id, sqaRow.id));
 
           logger.info({ backtestId, bestParams: sqaResult.best_params }, "SQA optimization completed");
+          sqaRegistry.markSettled(backtestId, "completed");
         } catch (sqaErr) {
           const sqaErrMsg = sqaErr instanceof Error ? sqaErr.message : String(sqaErr);
           logger.error({ backtestId, err: sqaErr }, "SQA optimization failed (non-blocking)");
+          sqaRegistry.markSettled(backtestId, "failed");
           // Mark any running SQA rows for this backtest as failed
           await db.update(sqaOptimizationRuns).set({ status: "failed" })
             .where(and(eq(sqaOptimizationRuns.backtestId, backtestId), eq(sqaOptimizationRuns.status, "running")));
@@ -698,6 +705,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           }).catch(() => {});
         }
       })();
+      // Register promise AFTER spawn so critic can await it with bounded timeout.
+      sqaRegistry.register(backtestId, sqaTask);
     }
 
     // ─── Auto Monte Carlo for non-tier-qualifying backtests (fire-and-forget) ───

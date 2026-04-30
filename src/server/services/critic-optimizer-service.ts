@@ -52,8 +52,24 @@ import { tracer } from "../lib/tracing.js";
 import { getDeepARWeight } from "./deepar-service.js";
 import { LifecycleService } from "./lifecycle-service.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { sqaRegistry } from "../lib/sqa-promise-registry.js";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
+
+// ─── SQA Registry audit writer (Tier 1.2) ────────────────────────────────────
+// Wire the registry's circuit-breaker audit writer once at module init.
+// Uses append-only audit_log — same pattern as all other service audit writes.
+sqaRegistry.setAuditWriter(async (entry) => {
+  await db.insert(auditLog).values({
+    action: entry.action,
+    entityType: entry.entityType ?? undefined,
+    entityId: entry.entityId ?? undefined,
+    input: entry.input,
+    result: entry.result,
+    status: entry.status,
+    decisionAuthority: entry.decisionAuthority,
+  });
+});
 
 // ─── Critic Evaluator System Prompt Cache (Fix 2) ────────────────────
 // Loaded once at module initialisation, reused for every Ollama fallback call.
@@ -1113,9 +1129,19 @@ async function collectEvidence(
     await new Promise((r) => setTimeout(r, EVIDENCE_POLL_INTERVAL_MS));
   }
 
-  // SQA is optional — do a single best-effort read after the MC wait completes.
-  // Pass null if not yet available; critic proceeds without it.
+  // SQA is optional — await in-flight SQA promise with a bounded 30 s timeout.
+  // If SQA completes in time, use its result as Optuna seed. Otherwise fall
+  // back to a single DB read (catches cases where SQA completed before critic
+  // started, e.g. server restart cleared the registry). Critic always proceeds
+  // even when SQA is unavailable — no Optuna seed, classical search continues.
   if (!sqaResult) {
+    // Tier 1.2: use session-local registry so we don't double-pay 30 s when
+    // SQA is already done, and don't wait if circuit breaker is open.
+    await sqaRegistry.awaitWithTimeout(backtestId);
+
+    // After await (whether resolved, timed out, or circuit open) do a single
+    // DB read — the SQA worker writes results to DB on completion, so if it
+    // finished within the window the row will now be present.
     const [sqa] = await db
       .select()
       .from(sqaOptimizationRuns)
