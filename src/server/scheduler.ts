@@ -948,6 +948,74 @@ export function initScheduler() {
     emitJobComplete("deepar-validate", Date.now() - t0dv);
   });
 
+  // ─── Tier 3.3: A+ Market Auditor — daily at 8:00 AM ET (DST-aware) ─────────
+  // Scores MES, MNQ, MCL via quantum MC + entropy filter + cross-market VQC.
+  // Picks today's highest-edge market; emits OBSERVATION_MODE if none qualifies.
+  // Gated by QUANTUM_AMARKET_AUDITOR_ENABLED (default false) — shadow mode.
+  // isActive() guard: early-exit when pipeline is not ACTIVE.
+  // Compliance: lead_market field is signal-only; Tier 5.3.1 (W5b) enforces
+  // correlated-position guard.
+  // Run at both 12:00 and 13:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
+  registerJob("a-plus-auditor-scan", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "a-plus-auditor-scan" }, "cron tick start");
+    if (!(await isPipelineActive())) {
+      logger.debug({ correlationId }, "a-plus-auditor-scan: pipeline not ACTIVE — skipping");
+      return;
+    }
+    const { runAuditScan } = await import("./services/a-plus-auditor-service.js");
+    const result = await runAuditScan(
+      {
+        // Production: these values should come from pre-market data snapshot
+        // (Databento ATR, VIX feed, etc.). For now, defaults are injected.
+        // TODO(W4+): wire Databento pre-market ATR fetch here.
+        marketInputs: {
+          MES: { atr_5m: 2.5, atr_8yr_avg: 2.5, vix: 18.0, gap_atr: 0.2, spread: 0.05 },
+          MNQ: { atr_5m: 4.0, atr_8yr_avg: 4.0, vix: 18.0, gap_atr: 0.3, spread: 0.04 },
+          MCL: { atr_5m: 0.3, atr_8yr_avg: 0.3, vix: 18.0, gap_atr: 0.1, spread: 0.10 },
+        },
+      },
+      correlationId,
+    );
+    if (!result.skipped) {
+      logger.info(
+        {
+          correlationId,
+          winnerMarket: result.winnerMarket,
+          observationMode: result.observationMode,
+          leadMarket: result.leadMarket,
+          entanglementStrength: result.entanglementStrength,
+          hardware: result.hardware,
+          scanDurationMs: result.scanDurationMs,
+        },
+        "a-plus-auditor-scan: completed",
+      );
+    }
+  });
+
+  cron.schedule("0 12,13 * * 1-5", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etHourStr, etMinStr] = etTimeStr.split(":");
+    const etHour = parseInt(etHourStr, 10);
+    const etMin = parseInt(etMinStr, 10);
+    if (etHour !== 8 || etMin !== 0) {
+      logger.debug({ etHour, etMin }, "Scheduler: A+ auditor cron fired but not 8:00 AM ET — skipping");
+      return;
+    }
+    if (!(await pipelineGate("a-plus-auditor-scan"))) return;
+    logger.info("Scheduler: A+ Market Auditor scan (8:00 AM ET)");
+    const t0audit = Date.now();
+    await withRetry("a-plus-auditor-scan", SCHEDULER_JOBS["a-plus-auditor-scan"].run);
+    markJobRun("a-plus-auditor-scan");
+    emitJobComplete("a-plus-auditor-scan", Date.now() - t0audit);
+  });
+
   // ─── Daily at 11:00 PM ET: Regret score fill ────────────────
   // Run at both 3:00 and 4:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // Fills regretScore / opportunityCost on skipDecisions rows that now have

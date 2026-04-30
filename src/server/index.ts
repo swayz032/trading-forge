@@ -59,6 +59,7 @@ import { OTEL_AVAILABLE } from "./lib/tracing.js";
 import { CircuitBreakerRegistry } from "./lib/circuit-breaker.js";
 import { AlertFactory } from "./services/alert-service.js";
 import { initAgentCoordination } from "./services/agent-coordinator-service.js";
+import { auditorRoutes } from "./routes/auditor.js";
 
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard
@@ -372,6 +373,8 @@ app.use("/api/adversarial-stress", strictRateLimit, adversarialStressRoutes);
 app.use("/api/strategy-names", strategyNameRoutes);
 app.use("/api/critic-optimizer", strictRateLimit, criticOptimizerRoutes);
 app.use("/api/deepar", deeparRoutes);
+// Tier 3.3: A+ Market Auditor — challenger_only, advisory output
+app.use("/api/auditor", strictRateLimit, auditorRoutes);
 app.use("/api/health", healthDashboardRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dlq", dlqRoutes);
