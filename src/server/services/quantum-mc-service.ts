@@ -139,6 +139,11 @@ export async function runQuantumMC(
     .returning();
   qmcSpan.setAttribute("qmcRunId", qmcRow.id);
 
+  // Hoist cost telemetry vars OUTSIDE try block so catch handler can reference
+  // them even if early failures throw before they would have been initialized
+  // inside the try (TDZ guard — same pattern as W2 audit fix in backtest-service.ts).
+  let qmcCostStart = Date.now();
+  let qmcCostRowId: string | null = null;
   try {
     // Build config for Python
     const config: Record<string, unknown> = {
@@ -184,13 +189,13 @@ export async function runQuantumMC(
     // ── Cost telemetry (Tier 1.4) ─────────────────────────────────────────────
     // Insert pending cost row before Python call. completeCost() is called in
     // both success and error branches. Helper never throws.
-    const qmcCostStart = Date.now();
-    const { id: qmcCostRowId } = await recordCost({
+    qmcCostStart = Date.now();
+    ({ id: qmcCostRowId } = await recordCost({
       moduleName: "quantum_mc",
       backtestId,
       strategyId: bt.strategyId ?? null,
       cacheHit: false,
-    });
+    }));
 
     let result: QuantumResult;
     try {
@@ -345,13 +350,15 @@ export async function runQuantumMC(
     }
 
     // ── Cost telemetry success branch (Tier 1.4) ──────────────────────────────
-    await completeCost(qmcCostRowId, {
-      wallClockMs: Date.now() - qmcCostStart,
-      status: "completed",
-      qpuSeconds: result.cloud_qpu_time_seconds ?? null,
-      costDollars: result.cloud_cost_dollars ?? null,
-      cacheHit: !!(result.raw_result?.cache_hit),
-    });
+    if (qmcCostRowId) {
+      await completeCost(qmcCostRowId, {
+        wallClockMs: Date.now() - qmcCostStart,
+        status: "completed",
+        qpuSeconds: result.cloud_qpu_time_seconds ?? null,
+        costDollars: result.cloud_cost_dollars ?? null,
+        cacheHit: !!(result.raw_result?.cache_hit),
+      });
+    }
 
     qmcSpan.setAttribute("status", "completed");
     qmcSpan.setAttribute("backend", result.backend_used);
@@ -377,11 +384,14 @@ export async function runQuantumMC(
     });
 
     // ── Cost telemetry failure branch (Tier 1.4) ──────────────────────────────
-    await completeCost(qmcCostRowId, {
-      wallClockMs: Date.now() - qmcCostStart,
-      status: "failed",
-      errorMessage: errorMsg,
-    });
+    // qmcCostRowId may be null if failure occurred before recordCost ran.
+    if (qmcCostRowId) {
+      await completeCost(qmcCostRowId, {
+        wallClockMs: Date.now() - qmcCostStart,
+        status: "failed",
+        errorMessage: errorMsg,
+      });
+    }
 
     qmcSpan.setAttribute("status", "failed");
     qmcSpan.end();

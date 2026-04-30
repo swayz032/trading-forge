@@ -1,5 +1,6 @@
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls } from "../db/schema.js";
+import { writeLockoutFromKillEvent } from "./strategy-lockout-service.js";
 import { eq, and, isNull, desc, sql } from "drizzle-orm";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
@@ -555,7 +556,7 @@ export async function openPosition(sessionId: string, params: {
               daily_pnl_pct: killResult.daily_pnl_pct,
               firm: firmKey,
             });
-            db.insert(auditLog).values({
+            const killAuditInsert = db.insert(auditLog).values({
               action: "kill_switch.tripped",
               entityType: "paper_session",
               entityId: sessionId,
@@ -564,7 +565,20 @@ export async function openPosition(sessionId: string, params: {
               result: { trip_time: new Date().toISOString() } as Record<string, unknown>,
               status: "success",
               correlationId,
-            }).catch((err) => logger.error({ err }, "kill_switch audit insert failed (non-blocking)"));
+            }).returning({ id: auditLog.id });
+            killAuditInsert
+              .then(async (rows) => {
+                // Tier 5.3 wire-up: write 24h strategy lockout so next session
+                // is gated by paper-signal-service.ts lockout check.
+                if (session.strategyId) {
+                  await writeLockoutFromKillEvent({
+                    strategyId: session.strategyId,
+                    killAuditId: rows[0]?.id ?? null,
+                    reason: killResult.reason ?? "daily_loss_kill",
+                  });
+                }
+              })
+              .catch((err) => logger.error({ err }, "kill_switch audit/lockout write failed (non-blocking)"));
             broadcastSSE("paper:kill-switch-tripped", {
               sessionId,
               symbol: params.symbol,
@@ -606,7 +620,7 @@ export async function openPosition(sessionId: string, params: {
           error: killErr instanceof Error ? killErr.message : String(killErr),
         });
         AlertFactory.systemError("kill-switch-down", killErr instanceof Error ? killErr : String(killErr));
-        db.insert(auditLog).values({
+        const killDownAuditInsert = db.insert(auditLog).values({
           action: "kill_switch.down",
           entityType: "paper_session",
           entityId: sessionId,
@@ -615,7 +629,20 @@ export async function openPosition(sessionId: string, params: {
           result: { trip_time: new Date().toISOString() } as Record<string, unknown>,
           status: "success",
           correlationId,
-        }).catch((err) => logger.error({ err }, "kill_switch audit insert failed (non-blocking)"));
+        }).returning({ id: auditLog.id });
+        killDownAuditInsert
+          .then(async (rows) => {
+            // Tier 5.3 wire-up: kill switch DOWN is fail-closed; treat as a
+            // lockout signal so next session is gated until ops clears the cache.
+            if (session.strategyId) {
+              await writeLockoutFromKillEvent({
+                strategyId: session.strategyId,
+                killAuditId: rows[0]?.id ?? null,
+                reason: "kill_switch_down",
+              });
+            }
+          })
+          .catch((err) => logger.error({ err }, "kill_switch_down audit/lockout write failed (non-blocking)"));
         openSpan.setAttribute("kill_switch_tripped", true);
         openSpan.setAttribute("kill_switch_reason", "subprocess_failure");
         openSpan.end();
