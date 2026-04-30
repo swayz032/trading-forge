@@ -477,6 +477,20 @@
       "when": 1776330000000,
       "tag": "0065_quantum_cost_telemetry",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1746000000001,
+      "tag": "0066_adversarial_stress_runs",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1746000000002,
+      "tag": "0067_a_plus_market_scans",
+      "breakpoints": true
     }
   ]
 }

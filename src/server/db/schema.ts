@@ -1350,6 +1350,38 @@ export const lifecycleTransitions = pgTable("lifecycle_transitions", {
   index("idx_lifecycle_transitions_quantum_agreement").on(table.quantumAgreementScore),
 ]);
 
+// ─── A+ Market Auditor Scans (Tier 3.3, migration 0066) ─────────────────────
+// One row per calendar day. Pending-row contract: status="pending" on insert;
+// updated to "completed"/"failed" on resolve by a-plus-auditor-service.ts.
+// Governance: challenger_only — advisory output, no execution authority.
+// Compliance handoff: lead_market field is consumed by Tier 5.3.1
+// (check_correlated_position_guard, W5b) to enforce sequential-only ordering.
+export const aPlusMarketScans = pgTable(
+  "a_plus_market_scans",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    scanDate: date("scan_date").notNull(),
+    winnerMarket: text("winner_market"),             // MES | MNQ | MCL | null (observation mode)
+    observationMode: boolean("observation_mode").notNull().default(false),
+    edgeScores: jsonb("edge_scores").notNull().default({}),
+    // {MES: {vol, p_target, noise, entangle, composite, passes_p_target_gate, passes_noise_gate}, ...}
+    leadMarket: text("lead_market"),                // MES | MNQ | MCL | DXY | null
+    lagWindowMinutes: integer("lag_window_minutes"),
+    entanglementStrength: numeric("entanglement_strength"),
+    status: text("status").notNull().default("pending"), // pending | completed | failed
+    errorMessage: text("error_message"),
+    scanDurationMs: integer("scan_duration_ms"),
+    hardware: text("hardware"),                     // default.qubit | fallback_classical | fallback_unavailable
+    seed: integer("seed"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("uq_a_plus_market_scans_scan_date").on(table.scanDate),
+    index("idx_a_plus_market_scans_date").on(table.scanDate.desc()),
+    index("idx_a_plus_market_scans_status").on(table.status),
+  ],
+);
+
 // ─── Quantum Run Costs Telemetry (Tier 0.2, migration 0065) ─────────────────
 // Per-run cost telemetry for every quantum module. Without this, "is quantum
 // worth the compute?" is unanswerable at graduation time (Tier 7 / W7a).

@@ -156,6 +156,36 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
   graveyard-aware penalty in `quantum_annealing_optimizer.build_parameter_qubo()`.
 - **`QUANTUM_AMARKET_AUDITOR_ENABLED`** -- default false. Enables Tier 3.3
   A+ Market Auditor cron + cross-market lead-lag entanglement.
+  **SHIPPED W3b.** Module: `src/engine/a_plus_market_auditor.py`.
+  Service: `src/server/services/a-plus-auditor-service.ts`.
+  Route: `POST /api/auditor/scan`, `GET /api/auditor/latest`.
+  Schedule: 8:00 AM ET daily (Mon-Fri), cron job `a-plus-auditor-scan`.
+  DB table: `a_plus_market_scans` (migration 0066). Pending-row contract.
+  Cost telemetry: `quantum_run_costs` with `moduleName="a_plus_auditor"`.
+  Architecture:
+    - Per-market: volatility audit (ATR ratio) + P(hit 1:2 reward) + noise score (W3a)
+    - Cross-market: 4-qubit VQC {MES=q0, MNQ=q1, MCL=q2, DXY=q3}
+      Encoding: 60-min rolling correlation matrix → RY + CNOT fan-out
+      CNOT topology: MES→MNQ (equity lead-lag), MNQ→DXY (tech-dollar), MES→MCL (risk)
+      Readout: PauliZ on each qubit → lead_market (highest Z), entanglement_strength
+    - Edge Score: 0.40*vol + 0.40*p_target + 0.10*(1-noise) + 0.10*entanglement
+    - Winner: highest edge_score AND p_target_hit > 0.75 AND noise_score < 0.50
+    - OBSERVATION_MODE: no winner → skip all strategies for the day
+    - Lead-lag bonus: if winner is lagging market AND entanglement_strength > 0.70,
+      publish lead_market field; strategies opt-in via DSL `require_lead_market_confirmation`
+  Fallbacks: PennyLane unavailable → entanglement falls back to classical correlation
+    proxy; noise unavailable → neutral 0.5; edge score always computes.
+  Performance: full 3-market scan ~8-15ms wall-clock on CPU (default.qubit).
+  **PROP FIRM COMPLIANCE HANDOFF (CRITICAL):**
+    Tier 3.3 produces the SIGNAL only. Cross-market lead-lag signal source ≠ traded
+    instrument. Prop firms BAN simultaneous correlated positions (MNQ + MES together
+    = position-limit-bypass violation). Enforcement lives in:
+    `Tier 5.3.1: check_correlated_position_guard()` (W5b — not yet shipped).
+    W5b MUST read `a_plus_market_scans.lead_market` and block concurrent positions
+    in the lead market until the lagging market has entered and fully closed.
+    The `complianceHandoff` key in POST /api/auditor/scan response always surfaces
+    this note for downstream consumers.
+  SSE event: `a-plus-auditor:scan-complete` on every completed scan.
 - **`QUANTUM_ADVERSARIAL_STRESS_ENABLED`** -- default false. Enables Tier 3.4
   Grover worst-case sequencer pre-PAPER promotion check.
 - **`QUANTUM_CUQUANTUM_GPU_ENABLED`** -- default false. Enables Tier 4 cuQuantum

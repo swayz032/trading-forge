@@ -852,6 +852,116 @@
     "criticality": "advisory"
   },
   {
+    "id": "a_plus_market_auditor",
+    "domain": "quantum-challenger",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "runtime_state": "experimental",
+    "decision_authority": "advisory",
+    "automation_scope": "Daily 8:00 AM ET pre-market scan scoring MES/MNQ/MCL via volatility audit, quantum MC, entropy filter (W3a), and 4-qubit cross-market lead-lag VQC. Emits OBSERVATION_MODE when no market is A+. Challenger-only output — no execution authority.",
+    "data_sources": [
+      "pre-market ATR data",
+      "VIX",
+      "rolling 60-min correlation matrix"
+    ],
+    "reads_from": [
+      "quantum_entropy_filter",
+      "quantum_mc"
+    ],
+    "writes_to": [
+      "a_plus_market_scans",
+      "quantum_run_costs",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "a-plus-auditor.scan-complete"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "a-plus-auditor:scan-complete SSE",
+      "quantum_run_costs"
+    ],
+    "scheduler_jobs": [
+      "a-plus-auditor-scan"
+    ],
+    "routes": [
+      "/api/auditor"
+    ],
+    "engine_subsystems": [
+      "a_plus_market_auditor"
+    ],
+    "database_tables": [
+      "a_plus_market_scans",
+      "quantum_run_costs"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "a_plus_market_scans"
+    ],
+    "recovery_mode": "automatic-classical-fallback",
+    "health_check": "/api/auditor/latest",
+    "status": "experimental",
+    "self_evolving": false,
+    "proof_mode": "experimental-runtime",
+    "freshness_signals": [
+      "a_plus_market_scans:recent-scan",
+      "a-plus-auditor:scan-complete SSE"
+    ],
+    "evidence_queries": [
+      "a-plus-auditor-isolation",
+      "a-plus-auditor-pending-row-contract",
+      "a-plus-auditor-compliance-handoff"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_challenger",
+    "criticality": "advisory"
+  },
+  {
+    "id": "quantum_adversarial_stress",
+    "domain": "quantum-challenger",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "runtime_state": "experimental",
+    "decision_authority": "advisory",
+    "automation_scope": "Grover worst-case sequencer: finds the worst possible trade ordering that could breach prop firm rules. Pre-PAPER promotion gate (TIER_1/TIER_2). Challenger-only advisory output.",
+    "data_sources": ["backtest trade ledger", "prop firm rule set"],
+    "reads_from": ["backtests"],
+    "writes_to": ["adversarial_stress_runs", "quantum_run_costs"],
+    "audit_tables": ["audit_log"],
+    "audit_actions": ["adversarial-stress.run-complete"],
+    "metrics_surfaces": ["/api/health/dashboard"],
+    "telemetry_sources": ["quantum_run_costs"],
+    "scheduler_jobs": [],
+    "routes": ["/api/adversarial-stress"],
+    "engine_subsystems": ["quantum_adversarial_stress"],
+    "database_tables": ["adversarial_stress_runs", "quantum_run_costs"],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": ["/api/health/dashboard", "adversarial_stress_runs"],
+    "recovery_mode": "automatic-classical-fallback",
+    "health_check": "/api/health/dashboard",
+    "status": "experimental",
+    "self_evolving": false,
+    "proof_mode": "experimental-runtime",
+    "freshness_signals": ["adversarial_stress_runs:recent-run"],
+    "evidence_queries": ["adversarial-stress-isolation", "adversarial-stress-pending-row"],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_challenger",
+    "criticality": "advisory"
+  },
+  {
     "id": "pine_export_preparation",
     "domain": "deployment-prep",
     "owner_surface": "python-node",
