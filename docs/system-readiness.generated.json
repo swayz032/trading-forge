@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T07:01:45.188Z",
+  "generatedAt": "2026-04-30T07:29:29.072Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -12,13 +12,36 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 11,
+    "total": 13,
     "ready": 9,
     "blocked": 0,
     "manualGated": 2,
-    "experimental": 0
+    "experimental": 2
   },
   "subsystems": [
+    {
+      "id": "a_plus_market_auditor",
+      "status": "experimental",
+      "productionTargetState": "production_experimental",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "shadow_experimental",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_challenger",
+      "blockers": [
+        "experimental_governance"
+      ],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "a_plus_market_scans:recent-scan",
+        "a-plus-auditor-compliance-handoff",
+        "a-plus-auditor-isolation",
+        "a-plus-auditor-pending-row-contract",
+        "a-plus-auditor:scan-complete SSE",
+        "a-plus-auditor.scan-complete",
+        "quantum_run_costs"
+      ]
+    },
     {
       "id": "backtest_qualification",
       "status": "ready",
@@ -187,6 +210,27 @@
         "strategy_export_artifacts:recent-write",
         "strategy:deployed SSE",
         "strategy.deploy_approved"
+      ]
+    },
+    {
+      "id": "quantum_adversarial_stress",
+      "status": "experimental",
+      "productionTargetState": "production_experimental",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "shadow_experimental",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_challenger",
+      "blockers": [
+        "experimental_governance"
+      ],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "adversarial_stress_runs:recent-run",
+        "adversarial-stress-isolation",
+        "adversarial-stress-pending-row",
+        "adversarial-stress.run-complete",
+        "quantum_run_costs"
       ]
     },
     {

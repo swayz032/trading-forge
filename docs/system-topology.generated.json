@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T07:01:45.188Z",
+  "generatedAt": "2026-04-30T07:29:29.072Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,16 +15,17 @@
     ]
   },
   "counts": {
-    "routes": 42,
+    "routes": 43,
     "schedulerJobs": 40,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 22,
-    "databaseTables": 51,
-    "registrySubsystems": 11
+    "databaseTables": 52,
+    "registrySubsystems": 13
   },
   "routes": [
     "/api/admin",
+    "/api/adversarial-stress",
     "/api/agent",
     "/api/alerts",
     "/api/anti-setups",
@@ -688,6 +689,7 @@
     "walk_forward"
   ],
   "databaseTables": [
+    "adversarial_stress_runs",
     "agent_health_reports",
     "alerts",
     "audit_log",
@@ -741,56 +743,57 @@
     "walk_forward_windows"
   ],
   "registryCoverage": {
-    "registryEntries": 11,
-    "autonomousSubsystems": 11,
+    "registryEntries": 13,
+    "autonomousSubsystems": 13,
     "selfEvolvingSubsystems": 6,
     "proofStatusCounts": {
       "runtime-proven": 11,
       "partially-proven": 0,
       "offline-by-design": 0,
-      "experimental": 0,
+      "experimental": 2,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 11
+      "active": 11,
+      "experimental": 2
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
       "active_preprod": 11,
-      "experimental_preprod": 0
+      "experimental_preprod": 2
     },
     "launchTargetCounts": {
       "runtime_proven_autonomous": 9,
       "runtime_proven_manual_gate": 2,
-      "experimental_challenger": 0
+      "experimental_challenger": 2
     },
     "closedLoopCounts": {
       "not_collecting": 5,
       "collecting_only": 0,
       "learning_active": 6,
       "learning_blocked": 0,
-      "shadow_experimental": 0
+      "shadow_experimental": 2
     },
     "learningModeCounts": {
       "active_learning": 5,
       "deterministic_instrumented": 4,
       "manual_gate_only": 2,
-      "shadow_experimental": 0
+      "shadow_experimental": 2
     },
     "operatingClassCounts": {
       "adaptive": 5,
-      "deterministic_instrumented": 4,
+      "deterministic_instrumented": 6,
       "manual_gated": 2
     },
     "manualGates": [
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 42,
+      "routes": 43,
       "schedulerJobs": 40,
       "engineSubsystems": 22,
-      "databaseTables": 51
+      "databaseTables": 52
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -816,10 +819,10 @@
     "preprodIntegrity": {
       "status": "complete",
       "automationComplete": 11,
-      "dataCollectionComplete": 11,
-      "auditabilityComplete": 11,
-      "failureVisibilityComplete": 11,
-      "authorityCorrect": 11,
+      "dataCollectionComplete": 13,
+      "auditabilityComplete": 13,
+      "failureVisibilityComplete": 13,
+      "authorityCorrect": 13,
       "learningActive": 6,
       "incompleteSubsystems": []
     },
@@ -828,7 +831,7 @@
       "targetStateCounts": {
         "production_autonomous": 9,
         "production_manual_gate": 2,
-        "production_experimental": 0,
+        "production_experimental": 2,
         "production_not_intended": 0
       },
       "readySubsystems": [
@@ -845,7 +848,10 @@
         "workflow_orchestration"
       ],
       "blockedSubsystems": [],
-      "experimentalSubsystems": [],
+      "experimentalSubsystems": [
+        "a_plus_market_auditor",
+        "quantum_adversarial_stress"
+      ],
       "shadowWorkflowCandidates": [],
       "inactiveWorkflowCandidates": [],
       "brokenWorkflowBlockers": [],
@@ -870,6 +876,8 @@
     "readiness": {
       "launchReady": false,
       "blockers": [
+        "a_plus_market_auditor:experimental_governance",
+        "quantum_adversarial_stress:experimental_governance",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -878,7 +886,10 @@
         "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
       ],
-      "launchBlockedSubsystems": [],
+      "launchBlockedSubsystems": [
+        "a_plus_market_auditor",
+        "quantum_adversarial_stress"
+      ],
       "inactiveByDesignSubsystems": [],
       "collectingOnlySubsystems": [],
       "learningBlockedSubsystems": [],
@@ -886,6 +897,102 @@
       "runtimeControlBlockers": []
     },
     "subsystems": [
+      {
+        "id": "a_plus_market_auditor",
+        "domain": "quantum-challenger",
+        "ownerSurface": "python-node",
+        "runtimeState": "experimental",
+        "automationMode": "autonomous",
+        "decisionAuthority": "advisory",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "experimental-runtime",
+        "proofStatus": "experimental",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "autonomous_challenger",
+        "criticality": "advisory",
+        "currentState": "experimental_preprod",
+        "launchTargetState": "experimental_challenger",
+        "productionTargetState": "production_experimental",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "experimental_governance"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "/api/health/dashboard",
+          "a_plus_market_scans:recent-scan",
+          "a-plus-auditor:scan-complete SSE",
+          "a-plus-auditor.scan-complete",
+          "quantum_run_costs"
+        ],
+        "dataCollectionCoverage": [
+          "a_plus_market_scans",
+          "audit_log",
+          "pre-market ATR data",
+          "quantum_entropy_filter",
+          "quantum_mc",
+          "quantum_run_costs",
+          "rolling 60-min correlation matrix",
+          "VIX"
+        ],
+        "closedLoopStatus": "shadow_experimental",
+        "learningMode": "shadow_experimental",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "experimental",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "experimental",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "experimental",
+        "productionBlockers": [
+          "experimental_governance"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "experimental governance remains isolated from release authority",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health/dashboard",
+          "a_plus_market_scans:recent-scan",
+          "a-plus-auditor-compliance-handoff",
+          "a-plus-auditor-isolation",
+          "a-plus-auditor-pending-row-contract",
+          "a-plus-auditor:scan-complete SSE",
+          "a-plus-auditor.scan-complete",
+          "quantum_run_costs"
+        ],
+        "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+        "routes": [
+          "/api/auditor"
+        ],
+        "schedulerJobs": [
+          "a-plus-auditor-scan"
+        ],
+        "healthCheck": "/api/auditor/latest",
+        "freshnessSignals": [
+          "a_plus_market_scans:recent-scan",
+          "a-plus-auditor:scan-complete SSE"
+        ],
+        "evidenceQueries": [
+          "a-plus-auditor-isolation",
+          "a-plus-auditor-pending-row-contract",
+          "a-plus-auditor-compliance-handoff"
+        ],
+        "coverageGaps": []
+      },
       {
         "id": "backtest_qualification",
         "domain": "qualification",
@@ -1642,6 +1749,91 @@
         "coverageGaps": []
       },
       {
+        "id": "quantum_adversarial_stress",
+        "domain": "quantum-challenger",
+        "ownerSurface": "python-node",
+        "runtimeState": "experimental",
+        "automationMode": "autonomous",
+        "decisionAuthority": "advisory",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "experimental-runtime",
+        "proofStatus": "experimental",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "autonomous_challenger",
+        "criticality": "advisory",
+        "currentState": "experimental_preprod",
+        "launchTargetState": "experimental_challenger",
+        "productionTargetState": "production_experimental",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "experimental_governance"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "/api/health/dashboard",
+          "adversarial_stress_runs:recent-run",
+          "adversarial-stress.run-complete",
+          "quantum_run_costs"
+        ],
+        "dataCollectionCoverage": [
+          "adversarial_stress_runs",
+          "backtest trade ledger",
+          "backtests",
+          "prop firm rule set",
+          "quantum_run_costs"
+        ],
+        "closedLoopStatus": "shadow_experimental",
+        "learningMode": "shadow_experimental",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "experimental",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "experimental",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "experimental",
+        "productionBlockers": [
+          "experimental_governance"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "experimental governance remains isolated from release authority",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health/dashboard",
+          "adversarial_stress_runs:recent-run",
+          "adversarial-stress-isolation",
+          "adversarial-stress-pending-row",
+          "adversarial-stress.run-complete",
+          "quantum_run_costs"
+        ],
+        "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+        "routes": [
+          "/api/adversarial-stress"
+        ],
+        "schedulerJobs": [],
+        "healthCheck": "/api/health/dashboard",
+        "freshnessSignals": [
+          "adversarial_stress_runs:recent-run"
+        ],
+        "evidenceQueries": [
+          "adversarial-stress-isolation",
+          "adversarial-stress-pending-row"
+        ],
+        "coverageGaps": []
+      },
+      {
         "id": "quantum_experimental",
         "domain": "experimental",
         "ownerSurface": "python-node",
@@ -2329,6 +2521,102 @@
     ]
   },
   "subsystemSummaries": [
+    {
+      "id": "a_plus_market_auditor",
+      "domain": "quantum-challenger",
+      "ownerSurface": "python-node",
+      "runtimeState": "experimental",
+      "automationMode": "autonomous",
+      "decisionAuthority": "advisory",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "experimental-runtime",
+      "proofStatus": "experimental",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "autonomous_challenger",
+      "criticality": "advisory",
+      "currentState": "experimental_preprod",
+      "launchTargetState": "experimental_challenger",
+      "productionTargetState": "production_experimental",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "experimental_governance"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "/api/health/dashboard",
+        "a_plus_market_scans:recent-scan",
+        "a-plus-auditor:scan-complete SSE",
+        "a-plus-auditor.scan-complete",
+        "quantum_run_costs"
+      ],
+      "dataCollectionCoverage": [
+        "a_plus_market_scans",
+        "audit_log",
+        "pre-market ATR data",
+        "quantum_entropy_filter",
+        "quantum_mc",
+        "quantum_run_costs",
+        "rolling 60-min correlation matrix",
+        "VIX"
+      ],
+      "closedLoopStatus": "shadow_experimental",
+      "learningMode": "shadow_experimental",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "experimental",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "experimental",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "experimental",
+      "productionBlockers": [
+        "experimental_governance"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "experimental governance remains isolated from release authority",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "a_plus_market_scans:recent-scan",
+        "a-plus-auditor-compliance-handoff",
+        "a-plus-auditor-isolation",
+        "a-plus-auditor-pending-row-contract",
+        "a-plus-auditor:scan-complete SSE",
+        "a-plus-auditor.scan-complete",
+        "quantum_run_costs"
+      ],
+      "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+      "routes": [
+        "/api/auditor"
+      ],
+      "schedulerJobs": [
+        "a-plus-auditor-scan"
+      ],
+      "healthCheck": "/api/auditor/latest",
+      "freshnessSignals": [
+        "a_plus_market_scans:recent-scan",
+        "a-plus-auditor:scan-complete SSE"
+      ],
+      "evidenceQueries": [
+        "a-plus-auditor-isolation",
+        "a-plus-auditor-pending-row-contract",
+        "a-plus-auditor-compliance-handoff"
+      ],
+      "coverageGaps": []
+    },
     {
       "id": "backtest_qualification",
       "domain": "qualification",
@@ -3081,6 +3369,91 @@
         "pine-export-artifacts",
         "deploy-approval-audit-events",
         "pine-route-coverage"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "quantum_adversarial_stress",
+      "domain": "quantum-challenger",
+      "ownerSurface": "python-node",
+      "runtimeState": "experimental",
+      "automationMode": "autonomous",
+      "decisionAuthority": "advisory",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "experimental-runtime",
+      "proofStatus": "experimental",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "autonomous_challenger",
+      "criticality": "advisory",
+      "currentState": "experimental_preprod",
+      "launchTargetState": "experimental_challenger",
+      "productionTargetState": "production_experimental",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "experimental_governance"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "/api/health/dashboard",
+        "adversarial_stress_runs:recent-run",
+        "adversarial-stress.run-complete",
+        "quantum_run_costs"
+      ],
+      "dataCollectionCoverage": [
+        "adversarial_stress_runs",
+        "backtest trade ledger",
+        "backtests",
+        "prop firm rule set",
+        "quantum_run_costs"
+      ],
+      "closedLoopStatus": "shadow_experimental",
+      "learningMode": "shadow_experimental",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "experimental",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "experimental",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "experimental",
+      "productionBlockers": [
+        "experimental_governance"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "experimental governance remains isolated from release authority",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "adversarial_stress_runs:recent-run",
+        "adversarial-stress-isolation",
+        "adversarial-stress-pending-row",
+        "adversarial-stress.run-complete",
+        "quantum_run_costs"
+      ],
+      "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+      "routes": [
+        "/api/adversarial-stress"
+      ],
+      "schedulerJobs": [],
+      "healthCheck": "/api/health/dashboard",
+      "freshnessSignals": [
+        "adversarial_stress_runs:recent-run"
+      ],
+      "evidenceQueries": [
+        "adversarial-stress-isolation",
+        "adversarial-stress-pending-row"
       ],
       "coverageGaps": []
     },

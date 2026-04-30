@@ -1375,3 +1375,36 @@ export const quantumRunCosts = pgTable("quantum_run_costs", {
 (table) => [
   index("idx_quantum_run_costs_module_created").on(table.moduleName, table.createdAt.desc()),
 ]);
+
+// ─── Adversarial Stress Runs (Tier 3.4, migration 0066) ──────────────────────
+// Grover worst-case sequencer evidence. Challenger-only.
+// Phase 0 shadow: lifecycle gate is 100% classical — this table is observation-only.
+// Phase 1 block (W7b Day 52): worst_case_breach_prob > 0.5 AND breach_minimal_n_trades < 4
+//   will block TESTING->PAPER promotion ONLY after W7b graduation.
+//
+// governance_labels always enforces:
+//   experimental:true, authoritative:false, decision_role:challenger_only
+export const adversarialStressRuns = pgTable("adversarial_stress_runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "cascade" }).notNull(),
+  strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
+  nQubits: integer("n_qubits").notNull().default(0),
+  nTrades: integer("n_trades").notNull().default(0),
+  dailyLossLimit: numeric("daily_loss_limit").notNull(),
+  worstCaseBreachProb: numeric("worst_case_breach_prob"),           // [0,1]; NULL when not completed
+  breachMinimalNTrades: integer("breach_minimal_n_trades"),         // Smallest consecutive window
+  worstSequenceExamples: jsonb("worst_sequence_examples"),          // top-K [{sequence, loss_sum}]
+  qpuSeconds: numeric("qpu_seconds").default("0"),                  // 0 for local; nonzero for cloud QPU
+  wallClockMs: integer("wall_clock_ms"),
+  method: text("method").notNull(),                                  // grover_quantum | brute_force_classical | random_sample_classical
+  status: text("status").notNull().default("pending"),               // pending | completed | failed | aborted
+  errorMessage: text("error_message"),
+  governanceLabels: jsonb("governance_labels").default(
+    '{"experimental":true,"authoritative":false,"decision_role":"challenger_only"}'
+  ),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("idx_adversarial_stress_backtest").on(table.backtestId, table.createdAt.desc()),
+  index("idx_adversarial_stress_strategy").on(table.strategyId, table.createdAt.desc()),
+]);

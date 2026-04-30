@@ -157,7 +157,43 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
 - **`QUANTUM_AMARKET_AUDITOR_ENABLED`** -- default false. Enables Tier 3.3
   A+ Market Auditor cron + cross-market lead-lag entanglement.
 - **`QUANTUM_ADVERSARIAL_STRESS_ENABLED`** -- default false. Enables Tier 3.4
-  Grover worst-case sequencer pre-PAPER promotion check.
+  Grover worst-case sequencer pre-PAPER promotion check. **SHIPPED W3b.**
+  Module: `src/engine/quantum_adversarial_stress.py`.
+  Algorithm: Grover search over N trade orderings (N qubits, 8-15 max).
+  Oracle: marks orderings where any rolling loss window exceeds daily_loss_limit.
+  Outputs: `worst_case_breach_prob ∈ [0,1]`, `breach_minimal_n_trades`,
+  `worst_sequence_examples` (top-K breach orderings).
+  Classical fallback: N <= 12 -> brute-force 2^N; N > 12 -> 10K random samples.
+  PennyLane 0.44.1 required; falls back to classical on import failure.
+  Cost ceiling: 30s hard wall-clock abort (ThreadPoolExecutor TimeoutError).
+  Scope: TIER_1 and TIER_2 strategies only (TIER_3 skipped — too noisy).
+  Table: `adversarial_stress_runs` (migration 0066).
+  Service: `src/server/services/adversarial-stress-service.ts`.
+  Route: POST /api/adversarial-stress/run (pipeline pause guard: 423 when paused).
+  Lifecycle: TESTING->PAPER gate reads adversarial stress evidence (Phase 0 shadow).
+
+  **Phase 0 (W3b, current):** Shadow only. Runs and persists results.
+  Lifecycle gate is 100% classical. Phase 1 block rule is evaluated and logged
+  but NEVER enforced. Disagreement always logged at WARN level.
+
+  **Phase 1 decision rule (W7b Day 52 — NOT NOW):**
+  If `worst_case_breach_prob > 0.5` AND `breach_minimal_n_trades < 4` ->
+  BLOCK TESTING->PAPER promotion. Meaning: strategy can be killed by 3 losses
+  in a row -> prop firm `maximum_consecutive_losers: 4` gate fires.
+  Graduation from Phase 0 -> Phase 1 requires 30+ days of shadow data and
+  explicit W7b graduation review.
+
+  **W7b Grover graduation (Day 52, not Day 30):**
+  Day 52 (not Day 30 like QAE) because adversarial stress runs are more expensive
+  and the graduation evidence window must cover a full month of TESTING->PAPER
+  transitions. Query: see quantum_run_costs + adversarial_stress_runs join.
+
+  **Worst-case vs average-case distinction:**
+  QAE (Tier 1.1) answers average-case breach probability. Adversarial stress
+  (Tier 3.4) answers worst-case: can an adversary with full ordering knowledge
+  engineer a breach? A strategy passing both is robust to both market noise
+  AND trade-sequence luck. Strategies that only pass QAE may still be vulnerable
+  to the prop firm failure mode of 5 losers in a row in the worst order.
 - **`QUANTUM_CUQUANTUM_GPU_ENABLED`** -- default false. Enables Tier 4 cuQuantum
   GPU acceleration. **Requires VRAM probe pass** -- if VRAM is insufficient,
   module falls back to CPU and logs once.

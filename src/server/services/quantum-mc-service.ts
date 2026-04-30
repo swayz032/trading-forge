@@ -5,7 +5,7 @@ import { tmpdir } from "os";
 import { randomUUID } from "crypto";
 import { eq, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { backtests, monteCarloRuns, quantumMcRuns, quantumMcBenchmarks, auditLog, strategies, strategyExports } from "../db/schema.js";
+import { backtests, monteCarloRuns, quantumMcRuns, quantumMcBenchmarks, auditLog, strategies, strategyExports, adversarialStressRuns } from "../db/schema.js";
 import { logger } from "../index.js";
 import { parsePythonJson } from "../../shared/utils.js";
 import { compilePineExport } from "./pine-export-service.js";
@@ -527,4 +527,56 @@ export async function getQuantumRuntimeStatus(): Promise<QuantumRuntimeStatus> {
     fallbackReady: true,
     authorityBoundary: "challenger_only",
   };
+}
+
+// ─── Adversarial stress query helpers (Tier 3.4) ─────────────────────────────
+
+/**
+ * Fetch summary of adversarial_stress_runs for a backtest.
+ * Used by lifecycle-service Phase 0 shadow read and Tier 7 graduation queries.
+ *
+ * Returns null when no completed run exists. Never throws.
+ */
+export async function getAdversarialStressRunsForBacktest(backtestId: string): Promise<{
+  worstCaseBreachProb: number | null;
+  breachMinimalNTrades: number | null;
+  method: string | null;
+  status: string | null;
+  wallClockMs: number | null;
+  runId: string | null;
+} | null> {
+  try {
+    const [row] = await db
+      .select({
+        id: adversarialStressRuns.id,
+        worstCaseBreachProb: adversarialStressRuns.worstCaseBreachProb,
+        breachMinimalNTrades: adversarialStressRuns.breachMinimalNTrades,
+        method: adversarialStressRuns.method,
+        status: adversarialStressRuns.status,
+        wallClockMs: adversarialStressRuns.wallClockMs,
+      })
+      .from(adversarialStressRuns)
+      .where(eq(adversarialStressRuns.backtestId, backtestId))
+      .orderBy(desc(adversarialStressRuns.createdAt))
+      .limit(1);
+
+    if (!row) return null;
+
+    return {
+      runId: row.id,
+      worstCaseBreachProb: row.worstCaseBreachProb != null
+        ? parseFloat(String(row.worstCaseBreachProb))
+        : null,
+      breachMinimalNTrades: row.breachMinimalNTrades ?? null,
+      method: row.method,
+      status: row.status,
+      wallClockMs: row.wallClockMs ?? null,
+    };
+  } catch (err) {
+    logger.warn(
+      { backtestId, err },
+      "quantum-mc-service: getAdversarialStressRunsForBacktest failed",
+    );
+    return null;
+  }
 }

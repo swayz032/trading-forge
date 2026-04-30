@@ -17,6 +17,7 @@ import { eq, and, desc, gte, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, complianceRulesets } from "../db/schema.js";
 import { computeAgreement } from "../lib/quantum-agreement.js";
+import { getLatestAdversarialStressRun } from "./adversarial-stress-service.js";
 import { logger } from "../index.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
@@ -362,6 +363,13 @@ export class LifecycleService {
       quantumAdvantageDelta: number | null;
       quantumFallbackTriggered: boolean;
       quantumClassicalDisagreementPct: number | null;
+      // Tier 3.4 adversarial stress shadow fields — populated when adversarial_stress_runs data exists.
+      // Phase 0 SHADOW ONLY: these are observed only. Gate behavior is 100% classical.
+      // Phase 1 (W7b Day 52): worstCaseBreachProb > 0.5 AND breachMinimalNTrades < 4 -> BLOCK.
+      adversarialWorstCaseBreachProb: number | null;
+      adversarialBreachMinimalNTrades: number | null;
+      adversarialPhase1BlockRecommended: boolean;
+      adversarialMethod: string | null;
     } = {
       backtestId: null,
       forgeScore: null,
@@ -370,6 +378,10 @@ export class LifecycleService {
       quantumAdvantageDelta: null,
       quantumFallbackTriggered: false,
       quantumClassicalDisagreementPct: null,
+      adversarialWorstCaseBreachProb: null,
+      adversarialBreachMinimalNTrades: null,
+      adversarialPhase1BlockRecommended: false,
+      adversarialMethod: null,
     };
 
     try {
@@ -484,6 +496,63 @@ export class LifecycleService {
             { strategyId: id, err: qmcErr },
             "QAE shadow: quantum_mc_runs read failed — fallback_triggered=true, classical decision unaffected",
           );
+        }
+
+        // ── Tier 3.4 adversarial stress shadow: read latest adversarial_stress_runs row ──
+        // Phase 0 = shadow only. This read is:
+        //   (a) non-blocking — any error falls through silently
+        //   (b) non-authoritative — classical decision is unaffected by this read
+        //   (c) TESTING->PAPER gate only — adversarial stress is irrelevant for other transitions
+        //
+        // AUTHORITY BOUNDARY: The result is stored in lifecycle_transitions.quantum_*
+        // for Tier 7 / W7b graduation analysis (Day 52). It MUST NOT influence the
+        // gate decision while QUANTUM_ADVERSARIAL_STRESS_ENABLED=false (Phase 0).
+        if (fromState === "TESTING" && toState === "PAPER" && latestBtEvidence) {
+          try {
+            const adversarialRun = await getLatestAdversarialStressRun(latestBtEvidence.id);
+            if (adversarialRun) {
+              promotionEvidence.adversarialWorstCaseBreachProb = adversarialRun.worstCaseBreachProb;
+              promotionEvidence.adversarialBreachMinimalNTrades = adversarialRun.breachMinimalNTrades;
+              promotionEvidence.adversarialPhase1BlockRecommended = adversarialRun.phase1BlockRecommended;
+              promotionEvidence.adversarialMethod = adversarialRun.method;
+
+              // Log Phase 1 block recommendation — never suppress, never act on it in Phase 0
+              if (adversarialRun.phase1BlockRecommended) {
+                logger.warn(
+                  {
+                    strategyId: id,
+                    fromState,
+                    toState,
+                    worstCaseBreachProb: adversarialRun.worstCaseBreachProb,
+                    breachMinimalNTrades: adversarialRun.breachMinimalNTrades,
+                    method: adversarialRun.method,
+                    phase: "0_shadow",
+                  },
+                  "Adversarial stress shadow: Phase 1 would BLOCK this promotion (worst_case_breach_prob > 0.5 AND breach_minimal_n_trades < 4) — Phase 0 shadow, gate unaffected",
+                );
+              } else {
+                logger.info(
+                  {
+                    strategyId: id,
+                    fromState,
+                    toState,
+                    worstCaseBreachProb: adversarialRun.worstCaseBreachProb,
+                    breachMinimalNTrades: adversarialRun.breachMinimalNTrades,
+                    method: adversarialRun.method,
+                    phase: "0_shadow",
+                  },
+                  "Adversarial stress shadow: evidence logged (Phase 0 — advisory only, gate unaffected)",
+                );
+              }
+            }
+            // No adversarial run for this backtest: normal — ramp-up phase, TIER_3, or no trades
+          } catch (adversarialErr) {
+            // Non-blocking — adversarial evidence read failure must never abort a promotion
+            logger.warn(
+              { strategyId: id, err: adversarialErr },
+              "Adversarial stress shadow: read failed — continuing without adversarial evidence, classical decision unaffected",
+            );
+          }
         }
       }
     } catch (evidenceErr) {
