@@ -1,0 +1,36 @@
+{
+  "schema_version": "v1",
+  "name": "Heavy Trend MCL RTH",
+  "description": "Heavier trend-follow on micro crude oil MCL using Keltner squeeze expansion with wider 2.5x ATR trail accommodating oil session noise",
+  "symbol": "MCL",
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_type": "trend_follow",
+  "entry_indicator": "keltner_squeeze",
+  "entry_params": {
+    "bb_period": 20,
+    "kc_period": 20,
+    "kc_multiplier": 1.5
+  },
+  "entry_condition": "Keltner squeeze fires on MCL after compression, entering in direction of momentum expansion during trending or high-volatility expansion",
+  "exit_type": "trailing_stop",
+  "exit_params": {
+    "trail_atr": 2.5
+  },
+  "stop_loss_atr_multiple": 2.2,
+  "take_profit_atr_multiple": 5.0,
+  "max_contracts": 8,
+  "preferred_regime": "TRENDING",
+  "session_filter": "RTH_ONLY",
+  "chart_construction": "candles",
+  "source": "manual",
+  "tags": [
+    "trend_follow",
+    "mcl",
+    "crude_oil",
+    "keltner_squeeze",
+    "expansion",
+    "high_vol",
+    "profit_scaling_tier_pending"
+  ]
+}

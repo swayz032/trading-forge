@@ -118,6 +118,66 @@ models/               # Trained ML models (DeepAR, gitignored)
 - **Governance:** Cloud doesn't change authority -- all quantum remains `challenger_only`
 - Auto-triggered backtest quantum runs stay LOCAL. Cloud is opt-in only.
 
+## DSL Archetype Fixtures (W5a / Tier 5.5)
+
+Three human-authored strategy archetypes expressed as JSON config consumed by the existing
+DSL compiler. Located at `src/engine/strategies/dsl_fixtures/`. These are config-as-data,
+not Python modules.
+
+### DSL Fixture Pattern
+- Fixtures must conform exactly to `StrategyDSL` (Pydantic, `extra="forbid"`)
+- Valid fields: `name`, `symbol`, `timeframe`, `direction`, `entry_type`, `entry_indicator`,
+  `entry_params`, `entry_condition`, `exit_type`, `exit_params`, `stop_loss_atr_multiple`,
+  `take_profit_atr_multiple`, `max_contracts`, `preferred_regime`, `session_filter`,
+  `chart_construction`, `source`, `tags`, `schema_version`, `description`
+- New archetype concept fields NOT yet in schema -- add to `strategy_schema.py` before use:
+  - `profit_scaling_tier` -- Team A (W5a) sizing integration, pending schema extension
+  - `daily_target_dollars` -- archetype-level daily P&L target, pending schema extension
+  - `hard_sl_points` / `trail_config` / `contracts` -- use `stop_loss_atr_multiple`,
+    `exit_params`, and `max_contracts` as the current schema equivalents
+- All fixtures carry `profit_scaling_tier_pending` in tags until Team A ships the
+  `profit_scaling_tier` schema field and `compute_position_sizes()` wiring
+
+### Archetype Descriptions
+
+**scalper_mes.json** -- Fast scalp, MES, 5m, both directions
+- Target regime: `RANGE_BOUND` (choppy, intraday oscillation)
+- Entry: `atr_breakout` (period=14, multiplier=1.5)
+- Exit: `atr_multiple` (1.8x), tight stop at 1.2x ATR
+- Max contracts: 5 | RTH only
+
+**trend_mnq.json** -- Trend-follow workhorse, MNQ, 15m, both directions
+- Target regime: `TRENDING` (directional momentum)
+- Entry: `ema_crossover` (fast=9, slow=21, confirmation=2 bars)
+- Exit: `trailing_stop` (2.0x ATR trail, break-even at 1:1R, 20-min time-decay to 0.75x)
+- Max contracts: 10 | RTH only
+- Gemini blueprint "outside predatory hunt zone" stop (1.8x ATR), 10-contract size per blueprint
+
+**heavy_mcl.json** -- Heavier trend-follow, MCL crude oil, 15m, both directions
+- Target regime: `TRENDING` (directional with expansion)
+- Entry: `keltner_squeeze` (bb_period=20, kc_period=20, kc_multiplier=1.5)
+- Exit: `trailing_stop` (2.5x ATR trail -- wider for oil session noise)
+- Max contracts: 8 | RTH only
+- Wider trail (2.5x) per Gemini ATR analysis for crude oil intraday noise
+
+### Market Correlation Note
+MES (S&P micro), MNQ (Nasdaq micro), MCL (crude oil micro) chosen for correlation < 0.3
+on daily returns (equity vs energy). Aggregate max_contracts: 5+10+8 = 23, within 50K
+account composite ceiling. Safe to deploy all three simultaneously.
+
+### Schema Extension Follow-up (TODO -- coordinate with W5a Team A before merging)
+Add to `src/engine/compiler/strategy_schema.py`:
+```python
+class ProfitScalingTier(BaseModel):
+    increment: int = Field(..., ge=1, le=10)
+    threshold: float = Field(..., ge=500.0)
+
+# In StrategyDSL:
+profit_scaling_tier: Optional[ProfitScalingTier] = None
+daily_target_dollars: Optional[float] = Field(None, ge=100.0, le=10000.0)
+```
+Field name `profit_scaling_tier` MUST match Team A's `compute_position_sizes()` parameter.
+
 ## Gemini Quantum Blueprint Feature Flags (W1 / Tier 0.3)
 All flags default OFF (shadow). They control phased rollout of quantum
 modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
@@ -368,6 +428,37 @@ Two new tables ship in W1 to unblock Tier 7 quantum graduation queries:
   Pruning: hourly cron `quantum-cost-prune` (registered in scheduler) +
   on-startup one-shot. Pending rows older than 1 hour are flipped to
   `status="failed"`, `errorMessage="stale_pending_pruned"`.
+
+## Profit-Based Position Scaling (W5a / Tier 5.4)
+Gemini "Forge-Tested" 2026 Edition: every $3,000 of cumulative profit = +2 micro
+contracts added to the position size. Single-account compounding only.
+
+**CLAUDE.md constraint:** ONE account must be profitable. `compute_profit_tier()`
+is single-account only — do NOT aggregate PnL across multiple accounts.
+
+**Module:** `src/engine/sizing.py`
+- `compute_profit_tier(account_pnl_total, base_contracts, increment=2, threshold=3000, firm_max=None) -> int`
+- Formula: `tier_count = floor(pnl / threshold); extra = tier_count * increment; final = min(base + extra, firm_max)`
+- Negative PnL -> tier_count=0 (no scaling). Zero PnL -> no scaling.
+- Result is always an int, always >= base_contracts, always <= CONTRACT_CAP_MAX (20).
+- `compute_position_sizes()` now accepts optional `profit_scaling_tier: dict | None = None`.
+  When None (default) -> behavior is 100% identical to pre-Tier-5.4 (backwards-compatible).
+  When provided: `{"increment": 2, "threshold": 3000, "account_pnl_total": <float>}`
+
+**Per-firm cap behavior:**
+- All 8 main production firms: base cap 15, scale up to max 20 (CONTRACT_CAP_MAX)
+- 3 conservative firms (top_one, yrm_prop, fundingpips): base cap 5, clamped min 10
+- Profit tier never pushes result above firm's `max_contracts` (clamped to CONTRACT_CAP_MAX=20)
+- Scaling applied after ATR base sizing, before return
+
+**Audit log:** `logger.debug("sizing.profit_tier_applied ...")` fires on every
+bar where extra_contracts > 0. Includes base, extra, final, firm_cap, pnl.
+
+**Tests:** `src/engine/tests/test_profit_tier.py` (27 tests: 18 unit + 2 constraint + 7 integration)
+
+**Team B coordination (DSL fixtures):** DSL JSON fixtures that include profit scaling
+should use: `"profit_scaling_tier": {"increment": 2, "threshold": 3000}` (without
+`account_pnl_total` — that is injected at backtest-run time from live account PnL).
 
 ## SQA Promise Registry (W2 / Tier 1.2)
 SQA fire-and-forget at `backtest-service.ts:598` is now observable to the

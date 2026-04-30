@@ -1,0 +1,39 @@
+{
+  "schema_version": "v1",
+  "name": "Trend Follow MNQ RTH",
+  "description": "Trend-following workhorse on MNQ using EMA crossover with 2.0x ATR trailing stop and break-even at 1:1R during RTH sessions",
+  "symbol": "MNQ",
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_type": "trend_follow",
+  "entry_indicator": "ema_crossover",
+  "entry_params": {
+    "fast_period": 9,
+    "slow_period": 21,
+    "confirmation_bars": 2
+  },
+  "entry_condition": "Fast EMA (9) crosses above or below slow EMA (21) confirmed by 2 bars in trending regime",
+  "exit_type": "trailing_stop",
+  "exit_params": {
+    "trail_atr": 2.0,
+    "break_even_at_r": 1.0,
+    "time_decay_minutes": 20,
+    "time_decay_multiplier": 0.75
+  },
+  "stop_loss_atr_multiple": 1.8,
+  "take_profit_atr_multiple": 4.0,
+  "max_contracts": 10,
+  "preferred_regime": "TRENDING",
+  "session_filter": "RTH_ONLY",
+  "chart_construction": "candles",
+  "source": "manual",
+  "tags": [
+    "trend_follow",
+    "mnq",
+    "ema_crossover",
+    "trailing_stop",
+    "gemini_blueprint",
+    "workhorse",
+    "profit_scaling_tier_pending"
+  ]
+}
