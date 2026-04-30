@@ -804,7 +804,9 @@
       "/api/health/dashboard",
       "mc:* SSE"
     ],
-    "scheduler_jobs": [],
+    "scheduler_jobs": [
+      "quantum-cost-prune"
+    ],
     "routes": [
       "/api/quantum-mc"
     ],

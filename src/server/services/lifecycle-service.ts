@@ -15,7 +15,8 @@
 
 import { eq, and, desc, gte, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, paperSessions, paperTrades, complianceRulesets } from "../db/schema.js";
+import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, complianceRulesets } from "../db/schema.js";
+import { computeAgreement } from "../lib/quantum-agreement.js";
 import { logger } from "../index.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
@@ -355,7 +356,21 @@ export class LifecycleService {
       backtestId: string | null;
       forgeScore: number | null;
       mcSurvivalRate: number | null;
-    } = { backtestId: null, forgeScore: null, mcSurvivalRate: null };
+      // Tier 1.1 QAE shadow fields — populated when quantum_mc_runs data exists.
+      // Phase 0: these are observed only. Gate behavior is 100% classical.
+      quantumAgreementScore: number | null;
+      quantumAdvantageDelta: number | null;
+      quantumFallbackTriggered: boolean;
+      quantumClassicalDisagreementPct: number | null;
+    } = {
+      backtestId: null,
+      forgeScore: null,
+      mcSurvivalRate: null,
+      quantumAgreementScore: null,
+      quantumAdvantageDelta: null,
+      quantumFallbackTriggered: false,
+      quantumClassicalDisagreementPct: null,
+    };
 
     try {
       const [latestBtEvidence] = await (tx ?? db)
@@ -389,7 +404,87 @@ export class LifecycleService {
           backtestId: latestBtEvidence.id,
           forgeScore: latestBtEvidence.forgeScore != null ? parseFloat(String(latestBtEvidence.forgeScore)) : null,
           mcSurvivalRate: ruinProb != null ? 1 - ruinProb : null,
+          // Quantum fields default — populated below after parallel QMC read
+          quantumAgreementScore: null,
+          quantumAdvantageDelta: null,
+          quantumFallbackTriggered: false,
+          quantumClassicalDisagreementPct: null,
         };
+
+        // ── Tier 1.1 QAE shadow: read latest quantum_mc_runs row for this backtest ──
+        // Phase 0 = shadow only. This read is:
+        //   (a) non-blocking — any error falls through to fallback
+        //   (b) non-authoritative — the classical decision is unaffected by this read
+        //   (c) gated on QUANTUM_QAE_GATE_PHASE >= 0 (which is always true in Phase 0)
+        //
+        // AUTHORITY BOUNDARY: The result is stored in lifecycle_transitions for
+        // Tier 7 graduation analysis. It MUST NOT influence the gate decision
+        // while QUANTUM_QAE_GATE_PHASE=0.
+        try {
+          const [qmcRun] = await (tx ?? db)
+            .select({
+              estimatedValue: quantumMcRuns.estimatedValue,
+              confidenceInterval: quantumMcRuns.confidenceInterval,
+            })
+            .from(quantumMcRuns)
+            .where(
+              and(
+                eq(quantumMcRuns.backtestId, latestBtEvidence.id),
+                eq(quantumMcRuns.status, "completed"),
+              ),
+            )
+            .orderBy(desc(quantumMcRuns.createdAt))
+            .limit(1);
+
+          if (qmcRun) {
+            const quantumEstimate = qmcRun.estimatedValue != null
+              ? parseFloat(String(qmcRun.estimatedValue))
+              : null;
+
+            // Parse CI from jsonb: {lower, upper, confidence_level}
+            const ciRaw = qmcRun.confidenceInterval as { lower?: number; upper?: number } | null;
+            const ci: [number, number] | undefined =
+              ciRaw?.lower != null && ciRaw?.upper != null
+                ? [ciRaw.lower, ciRaw.upper]
+                : undefined;
+
+            // classical comparison uses probabilityOfRuin (higher = more risk)
+            // quantum estimatedValue is also a probability (breach/ruin event)
+            const agreement = computeAgreement(ruinProb, quantumEstimate, ci);
+
+            promotionEvidence.quantumAgreementScore = agreement.score;
+            promotionEvidence.quantumAdvantageDelta = agreement.delta;
+            promotionEvidence.quantumFallbackTriggered = agreement.fallback;
+            promotionEvidence.quantumClassicalDisagreementPct = agreement.disagreementPct;
+
+            // Log disagreement for Tier 7 analysis — never suppress
+            if (!agreement.withinTolerance && !agreement.fallback) {
+              logger.warn(
+                {
+                  strategyId: id,
+                  fromState,
+                  toState,
+                  classicalRuin: ruinProb,
+                  quantumEstimate,
+                  delta: agreement.delta,
+                  disagreementPct: agreement.disagreementPct,
+                  phase: process.env.QUANTUM_QAE_GATE_PHASE ?? "0",
+                },
+                "QAE shadow: quantum-classical disagreement exceeds 5pp tolerance (Phase 0 — advisory only, gate unaffected)",
+              );
+            }
+          } else {
+            // No completed QMC run for this backtest — normal during Phase 0 ramp-up
+            promotionEvidence.quantumFallbackTriggered = true;
+          }
+        } catch (qmcErr) {
+          // Non-blocking — quantum evidence read failure must never abort a promotion
+          promotionEvidence.quantumFallbackTriggered = true;
+          logger.warn(
+            { strategyId: id, err: qmcErr },
+            "QAE shadow: quantum_mc_runs read failed — fallback_triggered=true, classical decision unaffected",
+          );
+        }
       }
     } catch (evidenceErr) {
       // Non-blocking — evidence enrichment must never abort a promotion
@@ -447,11 +542,11 @@ export class LifecycleService {
       // audit_log + lifecycle_transitions + strategy.lifecycle_state always
       // commit/roll back as a unit. Synchronous, no fire-and-forget.
       //
-      // Quantum challenger evidence columns (quantum_agreement_score, etc.)
-      // are intentionally null here — Tier 1.1 (QAE shadow) will populate
-      // them via a follow-up extension to promotionEvidence. Until then, the
-      // partial index idx_lifecycle_transitions_quantum_agreement is empty,
-      // which is correct (zero index maintenance cost during shadow phase).
+      // Tier 1.1 QAE shadow: quantum challenger evidence columns are now
+      // populated from promotionEvidence (computed above, outside the tx).
+      // Phase 0: gate behavior is 100% classical — quantum values are
+      // observation-only. The partial index idx_lifecycle_transitions_quantum_agreement
+      // begins filling as QMC runs accumulate for tested backtests.
       await txCtx.insert(lifecycleTransitions).values({
         strategyId: id,
         fromState,
@@ -461,11 +556,19 @@ export class LifecycleService {
         backtestId: promotionEvidence.backtestId,
         forgeScore: promotionEvidence.forgeScore != null ? String(promotionEvidence.forgeScore) : null,
         mcSurvivalRate: promotionEvidence.mcSurvivalRate != null ? String(promotionEvidence.mcSurvivalRate) : null,
-        // Quantum columns: reserved for Tier 1.1+ population
-        quantumAgreementScore: null,
-        quantumAdvantageDelta: null,
-        quantumFallbackTriggered: false,
-        quantumClassicalDisagreementPct: null,
+        // Tier 1.1 QAE shadow — populated when a completed quantum_mc_runs row exists
+        // for the latest backtest. Null when no QMC run has been performed yet (expected
+        // during Phase 0 ramp-up). AUTHORITY BOUNDARY: these values are advisory only.
+        quantumAgreementScore: promotionEvidence.quantumAgreementScore != null
+          ? String(promotionEvidence.quantumAgreementScore)
+          : null,
+        quantumAdvantageDelta: promotionEvidence.quantumAdvantageDelta != null
+          ? String(promotionEvidence.quantumAdvantageDelta)
+          : null,
+        quantumFallbackTriggered: promotionEvidence.quantumFallbackTriggered,
+        quantumClassicalDisagreementPct: promotionEvidence.quantumClassicalDisagreementPct != null
+          ? String(promotionEvidence.quantumClassicalDisagreementPct)
+          : null,
         cloudQmcRunId: null,
       });
 

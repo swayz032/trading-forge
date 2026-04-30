@@ -128,7 +128,10 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
   Wave 7 graduation flips the value after 30+ days of agreement data.
 - **`QUANTUM_ENTROPY_FILTER_ENABLED`** -- default false. Enables Tier 3.1 QCNN
   noise score in skip engine. When false, `noise_score` is None and skip
-  engine ignores the slot.
+  engine ignores the slot. The slot (`quantum_noise` in `SIGNAL_WEIGHTS`,
+  weight 1.5; scorer `_score_quantum_entropy` in `skip_classifier.py`;
+  optional `quantum_noise_score` field in `POST /api/skip/classify`) was
+  pre-wired by Tier 1.3 / W2-Team-C and is ready for W3a.
 - **`QUANTUM_COUNTERFACTUAL_ENABLED`** -- default false. Tier 3.2 deferred per
   architect review; flag reserved for future revival.
 - **`QUANTUM_GRAVEYARD_QUBO_ENABLED`** -- default false. Enables Tier 2 SQA
@@ -156,6 +159,43 @@ Two new tables ship in W1 to unblock Tier 7 quantum graduation queries:
   (quantum_mc, sqa, rl_agent, entropy_filter, adversarial_stress,
   cloud_qmc, ising_decoder). Pending-row contract: status starts "pending",
   updated to "completed"/"failed" on resolve.
+
+  Cost-benefit query for Tier 7 graduation:
+  ```sql
+  SELECT module_name,
+         count(*) AS runs,
+         avg(wall_clock_ms) AS avg_ms,
+         sum(cost_dollars::numeric) AS total_dollars,
+         sum(qpu_seconds::numeric) AS total_qpu_sec,
+         count(*) FILTER (WHERE status = 'completed') AS completed,
+         count(*) FILTER (WHERE status = 'failed') AS failed,
+         count(*) FILTER (WHERE cache_hit) AS cache_hits
+  FROM quantum_run_costs
+  WHERE created_at > now() - interval '30 days'
+  GROUP BY module_name
+  ORDER BY module_name;
+  ```
+
+  Pruning: hourly cron `quantum-cost-prune` (registered in scheduler) +
+  on-startup one-shot. Pending rows older than 1 hour are flipped to
+  `status="failed"`, `errorMessage="stale_pending_pruned"`.
+
+## SQA Promise Registry (W2 / Tier 1.2)
+SQA fire-and-forget at `backtest-service.ts:598` is now observable to the
+critic via `src/server/lib/sqa-promise-registry.ts`. Critic calls
+`sqaRegistry.awaitWithTimeout(backtestId, 30s)` instead of polling DB.
+
+- **Hard timeout:** 30s. Critic falls back to no-Optuna-seed if SQA
+  hasn't completed (classical search proceeds).
+- **Circuit breaker:** 3 timeouts in 10 min -> OPEN. Skips
+  `awaitWithTimeout` calls entirely. Auto-closes after 1 hour cooldown.
+  No HALF_OPEN probe (SQA is fire-and-forget; no probe call to send).
+- **Audit log:** state changes write `quantum.sqa_circuit_breaker_open`
+  and `quantum.sqa_circuit_breaker_closed` entries.
+- **Restart behavior:** session-local Map cleared on restart. Critic falls
+  through to existing DB single-read on registry miss. No correctness
+  regression -- only loses the "race-condition optimization" for runs
+  spawned before restart.
 
 ## Strategy Philosophy -- SIMPLE WINS, HIGH EARNERS
 - **Max 3-5 parameters per strategy.** More = overfitting. No exceptions.

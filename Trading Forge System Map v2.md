@@ -1071,7 +1071,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-04-30T06:35:06.967Z`.
+Updated automatically from the repo on `2026-04-30T07:01:45.188Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1080,7 +1080,7 @@ Updated automatically from the repo on `2026-04-30T06:35:06.967Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `tradingview_deploy`
 - API routes tracked: `42`
-- Scheduler jobs tracked: `39`
+- Scheduler jobs tracked: `40`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -1121,7 +1121,7 @@ Updated automatically from the repo on `2026-04-30T06:35:06.967Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `11`
 - Route coverage: `42/42`
-- Scheduler coverage: `39/39`
+- Scheduler coverage: `40/40`
 - Engine coverage: `22/22`
 - Database coverage: `51/51`
 - Autonomous subsystems with audit coverage: `11/11`
@@ -1303,6 +1303,7 @@ Updated automatically from the repo on `2026-04-30T06:35:06.967Z`.
 - `pre-market-prep`
 - `prompt-ab-resolution`
 - `python-pool-saturation-check`
+- `quantum-cost-prune`
 - `regret-score-fill`
 - `resource-snapshot`
 - `rolling-sharpe`

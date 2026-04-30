@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T06:35:06.967Z",
+  "generatedAt": "2026-04-30T07:01:45.188Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 42,
-    "schedulerJobs": 39,
+    "schedulerJobs": 40,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 22,
@@ -99,6 +99,7 @@
     "pre-market-prep",
     "prompt-ab-resolution",
     "python-pool-saturation-check",
+    "quantum-cost-prune",
     "regret-score-fill",
     "resource-snapshot",
     "rolling-sharpe",
@@ -787,7 +788,7 @@
     ],
     "coveredCounts": {
       "routes": 42,
-      "schedulerJobs": 39,
+      "schedulerJobs": 40,
       "engineSubsystems": 22,
       "databaseTables": 51
     },
@@ -1664,7 +1665,8 @@
           "failure visibility wired",
           "freshness signals available",
           "route contract reachable",
-          "runtime evidence persisted"
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
         ],
         "runtimeEvidence": [
           "/api/health/dashboard",
@@ -1720,7 +1722,9 @@
         "routes": [
           "/api/quantum-mc"
         ],
-        "schedulerJobs": [],
+        "schedulerJobs": [
+          "quantum-cost-prune"
+        ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
           "/api/health/dashboard",
@@ -3104,7 +3108,8 @@
         "failure visibility wired",
         "freshness signals available",
         "route contract reachable",
-        "runtime evidence persisted"
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
       ],
       "runtimeEvidence": [
         "/api/health/dashboard",
@@ -3160,7 +3165,9 @@
       "routes": [
         "/api/quantum-mc"
       ],
-      "schedulerJobs": [],
+      "schedulerJobs": [
+        "quantum-cost-prune"
+      ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
         "/api/health/dashboard",

@@ -1089,6 +1089,42 @@ export function initScheduler() {
     emitJobComplete("idempotency-cleanup", Date.now() - t0idem);
   });
 
+  // ─── Tier 1.4: Quantum cost row pruner — hourly ──────────────
+  // quantum_run_costs rows start with status="pending" before the Python call.
+  // If the process restarts between recordCost() and completeCost(), the row
+  // hangs pending forever. Prune any pending rows older than 1 hour.
+  // One-shot at startup (5s delay) covers orphans from the previous run.
+
+  // One-shot startup prune (deferred 5s to let server fully initialize)
+  setTimeout(() => {
+    import("./lib/quantum-cost-tracker.js").then(({ pruneStalePendingCosts }) => {
+      pruneStalePendingCosts().then((count) => {
+        if (count > 0) {
+          logger.info({ prunedCount: count }, "scheduler startup: stale quantum cost rows pruned");
+        }
+      }).catch((err: unknown) => {
+        logger.warn({ err }, "scheduler startup: quantum cost row prune failed");
+      });
+    }).catch((err: unknown) => {
+      logger.warn({ err }, "scheduler startup: quantum-cost-tracker import failed");
+    });
+  }, 5_000);
+
+  registerJob("quantum-cost-prune", 60 * 60 * 1000, async () => {
+    const { pruneStalePendingCosts } = await import("./lib/quantum-cost-tracker.js");
+    const pruned = await pruneStalePendingCosts();
+    if (pruned > 0) {
+      logger.info({ pruned }, "quantum-cost-prune: stale pending rows pruned");
+    }
+  });
+
+  cron.schedule("5 * * * *", async () => {
+    const t0qcp = Date.now();
+    await withRetry("quantum-cost-prune", SCHEDULER_JOBS["quantum-cost-prune"].run, 1);
+    markJobRun("quantum-cost-prune");
+    emitJobComplete("quantum-cost-prune", Date.now() - t0qcp);
+  });
+
   // ─── G3.2: Stale-pending-row sweeper — every 5 min ───────────
   // Fire-and-forget async runs (MC, SQA, QUBO, Tensor, RL, Quantum MC, DeepAR
   // train) write a pending row before the Python call and update on completion.

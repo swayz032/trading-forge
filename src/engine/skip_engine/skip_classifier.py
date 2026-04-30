@@ -32,6 +32,7 @@ SIGNAL_WEIGHTS: dict[str, float] = {
     "calendar_filter": 2.0,
     "qubo_timing": 1.5,
     "regime_bias": 1.5,           # DeepAR regime probabilities (C1)
+    "quantum_noise": 1.5,         # Tier 3.1 slot — Quantum Entropy Filter (W3a); 0.0 until shipped
 }
 
 # Thresholds
@@ -253,6 +254,31 @@ def _score_regime_bias(signals: dict[str, Any]) -> float:
     return raw_bias * eff
 
 
+def _score_quantum_entropy(noise_score: float | None) -> float:
+    """
+    Quantum entropy noise scorer — Tier 1.3 slot for Tier 3.1 Quantum Entropy Filter.
+
+    Pre-wires the seam for W3a.  When the entropy filter module is not yet built
+    or is disabled (QUANTUM_ENTROPY_FILTER_ENABLED=false), the caller passes None
+    and this scorer contributes 0.0 to the total skip score — existing decisions
+    are unaffected.
+
+    When the entropy filter IS active, noise_score is a normalized float in [0, 1]
+    representing the circuit-noise level from the QCNN, and is returned directly.
+    The SIGNAL_WEIGHTS["quantum_noise"] weight (1.5) describes the slot's authority
+    at full contribution relative to other signals.
+
+    Args:
+        noise_score: Normalized entropy noise score in [0, 1] from Tier 3.1, or None.
+
+    Returns:
+        noise_score if provided, else 0.0.
+    """
+    if noise_score is None:
+        return 0.0
+    return float(noise_score)
+
+
 # ─── Main Classifier ──────────────────────────────────────────────
 
 
@@ -332,6 +358,8 @@ def classify_session(
         "calendar_filter": _score_calendar_filter(signals),
         "qubo_timing": _score_qubo_timing(signals),
         "regime_bias": _score_regime_bias(signals),
+        # Tier 1.3 slot: quantum_noise_score is None when QUANTUM_ENTROPY_FILTER_ENABLED=false
+        "quantum_noise": _score_quantum_entropy(signals.get("quantum_noise_score")),
     }
 
     # Apply optional learned-weight scaling. qubo_timing is excluded by helper.
@@ -414,6 +442,10 @@ def classify_session(
         reason_parts.append(
             f"DeepAR regime risk-off (P(high_vol)={rp.get('high_vol', 0):.2f},"
             f" eff_w={rp.get('effective_weight', 0):.2f})"
+        )
+    if signal_scores["quantum_noise"] > 0:
+        reason_parts.append(
+            f"quantum entropy noise ({signals.get('quantum_noise_score', 0):.2f}, Tier 3.1 slot)"
         )
 
     reason = (

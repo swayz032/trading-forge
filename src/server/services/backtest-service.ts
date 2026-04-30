@@ -25,6 +25,7 @@ import { db } from "../db/index.js";
 import { tracer } from "../lib/tracing.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { backtestRuns } from "../lib/metrics-registry.js";
+import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
 
 /**
  * Normalize gate_result from Python into a stable JSONB shape.
@@ -601,6 +602,11 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       // The IIFE itself is still fire-and-forget (non-blocking to the backtest
       // response), but critic-optimizer-service can now observe its completion.
       const sqaTask = (async () => {
+        // Hoist cost telemetry vars OUTSIDE try block so catch handler can reference
+        // them even if early failures (paramRanges build, sqaOptimizationRuns insert)
+        // throw before they would have been initialized inside the try (TDZ guard).
+        let sqaCostStart = Date.now();
+        let sqaCostRowId: string | null = null;
         try {
           // Build param ranges from strategy indicator parameters
           const paramRanges: Array<{ name: string; min_val: number; max_val: number; n_bits: number }> = [];
@@ -648,6 +654,14 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
           }).returning();
 
+          // ── Cost telemetry (Tier 1.4) ─────────────────────────────────────────
+          sqaCostStart = Date.now();
+          ({ id: sqaCostRowId } = await recordCost({
+            moduleName: "sqa",
+            backtestId,
+            strategyId,
+          }));
+
           const sqaResult = await runPythonModule<SqaOptimizationResult>({
             module: "src.engine.quantum_annealing_optimizer",
             config: sqaConfig,
@@ -688,10 +702,25 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           }).where(eq(sqaOptimizationRuns.id, sqaRow.id));
 
           logger.info({ backtestId, bestParams: sqaResult.best_params }, "SQA optimization completed");
+          // ── Cost telemetry success (Tier 1.4) ────────────────────────────────
+          await completeCost(sqaCostRowId, {
+            wallClockMs: Date.now() - sqaCostStart,
+            status: "completed",
+          });
           sqaRegistry.markSettled(backtestId, "completed");
         } catch (sqaErr) {
           const sqaErrMsg = sqaErr instanceof Error ? sqaErr.message : String(sqaErr);
           logger.error({ backtestId, err: sqaErr }, "SQA optimization failed (non-blocking)");
+          // ── Cost telemetry failure (Tier 1.4) ────────────────────────────────
+          // sqaCostRowId may be null if failure occurred before recordCost ran.
+          // completeCost handles STALE_PENDING_SENTINEL_ID via no-op; null skipped here.
+          if (sqaCostRowId) {
+            await completeCost(sqaCostRowId, {
+              wallClockMs: Date.now() - sqaCostStart,
+              status: "failed",
+              errorMessage: sqaErrMsg,
+            });
+          }
           sqaRegistry.markSettled(backtestId, "failed");
           // Mark any running SQA rows for this backtest as failed
           await db.update(sqaOptimizationRuns).set({ status: "failed" })
@@ -904,6 +933,14 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
         }).returning();
 
+        // ── Cost telemetry (Tier 1.4) — hoisted so catch block can completeCost ─
+        const tensorCostStart = Date.now();
+        const { id: tensorCostRowId } = await recordCost({
+          moduleName: "rl_agent",   // tensor_signal uses the rl_agent module slot
+          backtestId,
+          strategyId,
+        });
+
         try {
           // Build regime labels from daily P&Ls (simple volatility-based bucketing)
           const pnls = result.daily_pnls as number[];
@@ -942,6 +979,11 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
               modelVersion: "no_model",
               signal: "no_model",
             }).where(eq(tensorPredictions.id, tensorRow.id));
+            // Cost telemetry: skipped counts as completed (Python ran, model just not trained)
+            await completeCost(tensorCostRowId, {
+              wallClockMs: Date.now() - tensorCostStart,
+              status: "completed",
+            });
             logger.info({ backtestId }, "Auto tensor evaluation skipped — model not trained");
           } else {
             await db.update(tensorPredictions).set({
@@ -955,12 +997,23 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
               fragilityScore: String(tensorResult.fragility_score ?? 0),
               regimeBreakdown: tensorResult.regime_breakdown ?? {},
             }).where(eq(tensorPredictions.id, tensorRow.id));
+            // ── Cost telemetry success (Tier 1.4) ────────────────────────────
+            await completeCost(tensorCostRowId, {
+              wallClockMs: Date.now() - tensorCostStart,
+              status: "completed",
+            });
             logger.info({ backtestId }, "Auto tensor evaluation completed");
           }
         } catch (tensorErr) {
           const tensorErrMsg = tensorErr instanceof Error ? tensorErr.message : String(tensorErr);
           logger.error({ backtestId, err: tensorErr }, "Auto tensor evaluation failed (non-blocking)");
           await db.update(tensorPredictions).set({ status: "failed" }).where(eq(tensorPredictions.id, tensorRow.id));
+          // ── Cost telemetry failure (Tier 1.4) ──────────────────────────────
+          await completeCost(tensorCostRowId, {
+            wallClockMs: Date.now() - tensorCostStart,
+            status: "failed",
+            errorMessage: tensorErrMsg,
+          });
           await captureToDLQ({
             operationType: "tensor_prediction:failure",
             entityType: "backtest",
@@ -985,6 +1038,14 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           sharpeRatio: "0",
           governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
         }).returning();
+
+        // ── Cost telemetry (Tier 1.4) — hoisted so catch block can completeCost ─
+        const rlCostStart = Date.now();
+        const { id: rlCostRowId } = await recordCost({
+          moduleName: "rl_agent",
+          backtestId,
+          strategyId,
+        });
 
         try {
           const rlConfig = {
@@ -1011,12 +1072,23 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
               policyWeights: rlResult.policy_weights ?? null,
               comparisonResult: rlResult.comparison_result ?? null,
             }).where(eq(rlTrainingRuns.id, rlRow.id));
+            // ── Cost telemetry success (Tier 1.4) ──────────────────────────────
+            await completeCost(rlCostRowId, {
+              wallClockMs: Date.now() - rlCostStart,
+              status: "completed",
+            });
             logger.info({ backtestId, strategyId }, "Auto RL training completed");
           }
         } catch (err) {
           const rlErrMsg = err instanceof Error ? err.message : String(err);
           logger.error({ err, strategyId }, "Auto RL training failed");
           await db.update(rlTrainingRuns).set({ status: "failed" }).where(eq(rlTrainingRuns.id, rlRow.id));
+          // ── Cost telemetry failure (Tier 1.4) ──────────────────────────────
+          await completeCost(rlCostRowId, {
+            wallClockMs: Date.now() - rlCostStart,
+            status: "failed",
+            errorMessage: rlErrMsg,
+          });
           await captureToDLQ({
             operationType: "rl_training:failure",
             entityType: "strategy",

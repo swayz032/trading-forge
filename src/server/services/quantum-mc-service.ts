@@ -10,6 +10,7 @@ import { logger } from "../index.js";
 import { parsePythonJson } from "../../shared/utils.js";
 import { compilePineExport } from "./pine-export-service.js";
 import { tracer } from "../lib/tracing.js";
+import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -180,6 +181,17 @@ export async function runQuantumMC(
     const tmpPath = pathResolve(tmpdir(), `qmc-config-${randomUUID()}.json`);
     writeFileSync(tmpPath, JSON.stringify(config));
 
+    // ── Cost telemetry (Tier 1.4) ─────────────────────────────────────────────
+    // Insert pending cost row before Python call. completeCost() is called in
+    // both success and error branches. Helper never throws.
+    const qmcCostStart = Date.now();
+    const { id: qmcCostRowId } = await recordCost({
+      moduleName: "quantum_mc",
+      backtestId,
+      strategyId: bt.strategyId ?? null,
+      cacheHit: false,
+    });
+
     let result: QuantumResult;
     try {
       result = await runPythonQuantumMC(tmpPath, timeoutMs);
@@ -332,6 +344,15 @@ export async function runQuantumMC(
       );
     }
 
+    // ── Cost telemetry success branch (Tier 1.4) ──────────────────────────────
+    await completeCost(qmcCostRowId, {
+      wallClockMs: Date.now() - qmcCostStart,
+      status: "completed",
+      qpuSeconds: result.cloud_qpu_time_seconds ?? null,
+      costDollars: result.cloud_cost_dollars ?? null,
+      cacheHit: !!(result.raw_result?.cache_hit),
+    });
+
     qmcSpan.setAttribute("status", "completed");
     qmcSpan.setAttribute("backend", result.backend_used);
     qmcSpan.end();
@@ -353,6 +374,13 @@ export async function runQuantumMC(
       decisionAuthority: "agent",
       errorMessage: errorMsg,
       correlationId,
+    });
+
+    // ── Cost telemetry failure branch (Tier 1.4) ──────────────────────────────
+    await completeCost(qmcCostRowId, {
+      wallClockMs: Date.now() - qmcCostStart,
+      status: "failed",
+      errorMessage: errorMsg,
     });
 
     qmcSpan.setAttribute("status", "failed");

@@ -73,6 +73,13 @@ const classifySchema = z.object({
       mean_revert: z.number(),
       effective_weight: z.number(),
     }).optional(),
+    /**
+     * Tier 1.3 slot — Quantum Entropy Filter (Tier 3.1 / W3a).
+     * When QUANTUM_ENTROPY_FILTER_ENABLED=false (default), callers omit this
+     * field or pass null; skip_classifier receives None and scores 0.0.
+     * When the entropy filter ships, callers pass a normalized [0,1] noise score.
+     */
+    quantum_noise_score: z.number().min(0).max(1).nullable().optional(),
   }),
 });
 

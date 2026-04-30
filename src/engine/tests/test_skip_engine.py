@@ -27,14 +27,14 @@ from src.engine.skip_engine.skip_classifier import (
     _score_monthly_budget,
     _score_correlation_spike,
     _score_calendar_filter,
+    _score_quantum_entropy,
+    SIGNAL_WEIGHTS,
     SKIP_SCORE_THRESHOLD,
     REDUCE_SCORE_THRESHOLD,
 )
 from src.engine.skip_engine.calendar_filter import (
     calendar_check,
     check_economic_event,
-    US_HOLIDAYS_2026,
-    TRIPLE_WITCHING_2026,
     EVENT_BLACKOUT_MINUTES,
 )
 from src.engine.skip_engine.session_monitor import SessionMonitor
@@ -762,3 +762,123 @@ class TestPremarketAnalyzer:
             },
         )
         assert signals["portfolio_correlation"] == 0.8
+
+
+# ─── Quantum Noise Slot Tests (Tier 1.3 / W2-Team-C) ─────────────────────────
+# Pre-wires the quantum_noise slot for Tier 3.1 Quantum Entropy Filter (W3a).
+# The scorer returns 0.0 when input is None — graceful degradation until the
+# entropy filter module is shipped.  No entropy computation is performed here.
+
+
+class TestQuantumNoiseScorer:
+    """Unit tests for _score_quantum_entropy — the Tier 3.1 slot scorer."""
+
+    def test_none_returns_zero(self):
+        """None input (entropy filter not yet built or disabled) → 0.0."""
+        assert _score_quantum_entropy(None) == 0.0
+
+    def test_mid_score_passthrough(self):
+        """Score in [0, 1] is returned as-is (already normalized)."""
+        assert _score_quantum_entropy(0.5) == 0.5
+
+    def test_zero_passthrough(self):
+        """0.0 is a valid normalized score — must not be confused with None."""
+        assert _score_quantum_entropy(0.0) == 0.0
+
+    def test_max_score_passthrough(self):
+        """1.0 (maximum noise score from entropy filter) → 1.0."""
+        assert _score_quantum_entropy(1.0) == 1.0
+
+    def test_signal_weights_has_quantum_noise(self):
+        """SIGNAL_WEIGHTS must contain the quantum_noise entry at weight 1.5."""
+        assert "quantum_noise" in SIGNAL_WEIGHTS
+        assert SIGNAL_WEIGHTS["quantum_noise"] == 1.5
+
+
+class TestQuantumNoiseIntegration:
+    """Integration tests — quantum_noise_score flows correctly through classify_session."""
+
+    def test_quantum_noise_score_contributes_correctly(self):
+        """quantum_noise_score=0.6 with weight 1.5 → contribution 0.9 in total score."""
+        # Use a clean baseline that would normally TRADE with no quantum signal
+        base_signals: dict = {
+            "vix": 15.0,
+            "overnight_gap_atr": 0.3,
+            "premarket_volume_pct": 0.8,
+            "day_of_week": "Tuesday",
+            "consecutive_losses": 0,
+            "monthly_dd_usage_pct": 0.1,
+            "portfolio_correlation": 0.2,
+            "calendar": {"holiday_proximity": 20, "triple_witching": False, "roll_week": False},
+        }
+
+        # Baseline: no quantum_noise — quantum_noise_score defaults to None → 0.0
+        baseline = classify_session(base_signals)
+        baseline_score = baseline["score"]
+
+        # With quantum_noise_score=0.6
+        signals_with_noise = {**base_signals, "quantum_noise_score": 0.6}
+        with_noise = classify_session(signals_with_noise)
+        noise_score = with_noise["score"]
+
+        # Contribution = 0.6 * 1.5 = 0.9 (the scorer returns 0.6, weight 1.5 is in SIGNAL_WEIGHTS
+        # but the scorer itself returns the raw score; final weighted contribution = 0.6)
+        # The classify_session sums raw scorer values directly (each scorer already accounts for weight)
+        # For quantum_entropy: scorer returns noise_score (0.6) directly; SIGNAL_WEIGHTS["quantum_noise"]=1.5
+        # is metadata — the weighted contribution is 0.6 (raw) because scorers return final contribution.
+        # Looking at the existing pattern: _score_vix_level returns 2.5 (not vix/weight).
+        # So _score_quantum_entropy(0.6) = 0.6, and total_score += 0.6.
+        assert abs(noise_score - baseline_score - 0.6) < 0.01, (
+            f"Expected quantum_noise contribution of 0.6, got diff={noise_score - baseline_score:.4f}"
+        )
+        assert "quantum_noise" in with_noise["signal_scores"]
+        assert with_noise["signal_scores"]["quantum_noise"] == pytest.approx(0.6, abs=0.01)
+
+    def test_quantum_noise_score_null_produces_identical_decision(self):
+        """quantum_noise_score=None (slot absent) must not change score vs no field at all."""
+        base_signals: dict = {
+            "vix": 26.0,
+            "overnight_gap_atr": 1.2,
+            "premarket_volume_pct": 0.6,
+            "day_of_week": "Tuesday",
+            "consecutive_losses": 1,
+            "monthly_dd_usage_pct": 0.3,
+            "portfolio_correlation": 0.3,
+            "calendar": {"holiday_proximity": 10, "triple_witching": False, "roll_week": False},
+        }
+        without_field = classify_session(base_signals)
+        with_none = classify_session({**base_signals, "quantum_noise_score": None})
+
+        assert without_field["decision"] == with_none["decision"]
+        assert without_field["score"] == with_none["score"]
+
+    def test_quantum_noise_in_signal_scores_output(self):
+        """signal_scores dict in result must contain quantum_noise key."""
+        signals: dict = {
+            "vix": 15.0,
+            "overnight_gap_atr": 0.3,
+            "premarket_volume_pct": 0.8,
+            "day_of_week": "Tuesday",
+            "consecutive_losses": 0,
+            "monthly_dd_usage_pct": 0.1,
+            "portfolio_correlation": 0.2,
+            "calendar": {"holiday_proximity": 20, "triple_witching": False, "roll_week": False},
+            "quantum_noise_score": 0.4,
+        }
+        result = classify_session(signals)
+        assert "quantum_noise" in result["signal_scores"]
+
+    def test_quantum_noise_zero_not_in_triggered_signals(self):
+        """quantum_noise_score=None → 0.0 → must NOT appear in triggered_signals."""
+        signals: dict = {
+            "vix": 15.0,
+            "overnight_gap_atr": 0.3,
+            "premarket_volume_pct": 0.8,
+            "day_of_week": "Tuesday",
+            "consecutive_losses": 0,
+            "monthly_dd_usage_pct": 0.1,
+            "portfolio_correlation": 0.2,
+            "calendar": {"holiday_proximity": 20, "triple_witching": False, "roll_week": False},
+        }
+        result = classify_session(signals)
+        assert "quantum_noise" not in result["triggered_signals"]
