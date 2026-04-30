@@ -1071,7 +1071,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-04-30T07:29:29.072Z`.
+Updated automatically from the repo on `2026-04-30T07:31:17.628Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1079,13 +1079,13 @@ Updated automatically from the repo on `2026-04-30T07:29:29.072Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `tradingview_deploy`
-- API routes tracked: `43`
-- Scheduler jobs tracked: `40`
+- API routes tracked: `44`
+- Scheduler jobs tracked: `41`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `22`
-- Database tables tracked: `52`
+- Database tables tracked: `53`
 
 ### Subsystem Runtime States
 - `active`: `11`
@@ -1121,10 +1121,10 @@ Updated automatically from the repo on `2026-04-30T07:29:29.072Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `13`
-- Route coverage: `43/43`
-- Scheduler coverage: `40/40`
+- Route coverage: `44/44`
+- Scheduler coverage: `41/41`
 - Engine coverage: `22/22`
-- Database coverage: `52/52`
+- Database coverage: `53/53`
 - Autonomous subsystems with audit coverage: `13/13`
 - Autonomous subsystems with audit actions: `13/13`
 - Autonomous subsystems with telemetry evidence: `13/13`
@@ -1237,6 +1237,7 @@ Updated automatically from the repo on `2026-04-30T07:29:29.072Z`.
 - `/api/alerts`
 - `/api/anti-setups`
 - `/api/archetypes`
+- `/api/auditor`
 - `/api/backtests`
 - `/api/compiler`
 - `/api/compliance`
@@ -1276,6 +1277,7 @@ Updated automatically from the repo on `2026-04-30T07:29:29.072Z`.
 - `/api/validation`
 
 ### Scheduler Jobs
+- `a-plus-auditor-scan`
 - `agent-health-sweep`
 - `anti-setup-effectiveness`
 - `anti-setup-mine`
@@ -1372,6 +1374,7 @@ Updated automatically from the repo on `2026-04-30T07:29:29.072Z`.
 - `Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy`
 
 ### Database Tables
+- `a_plus_market_scans`
 - `adversarial_stress_runs`
 - `agent_health_reports`
 - `alerts`

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T07:29:29.072Z",
+  "generatedAt": "2026-04-30T07:31:17.628Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,12 +15,12 @@
     ]
   },
   "counts": {
-    "routes": 43,
-    "schedulerJobs": 40,
+    "routes": 44,
+    "schedulerJobs": 41,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 22,
-    "databaseTables": 52,
+    "databaseTables": 53,
     "registrySubsystems": 13
   },
   "routes": [
@@ -30,6 +30,7 @@
     "/api/alerts",
     "/api/anti-setups",
     "/api/archetypes",
+    "/api/auditor",
     "/api/backtests",
     "/api/compiler",
     "/api/compliance",
@@ -69,6 +70,7 @@
     "/api/validation"
   ],
   "schedulerJobs": [
+    "a-plus-auditor-scan",
     "agent-health-sweep",
     "anti-setup-effectiveness",
     "anti-setup-mine",
@@ -689,6 +691,7 @@
     "walk_forward"
   ],
   "databaseTables": [
+    "a_plus_market_scans",
     "adversarial_stress_runs",
     "agent_health_reports",
     "alerts",
@@ -790,10 +793,10 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 43,
-      "schedulerJobs": 40,
+      "routes": 44,
+      "schedulerJobs": 41,
       "engineSubsystems": 22,
-      "databaseTables": 52
+      "databaseTables": 53
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
