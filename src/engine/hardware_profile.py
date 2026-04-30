@@ -350,6 +350,85 @@ def get_hardware_profile(detect_cloud: bool = False) -> HardwareProfile:
     return profile
 
 
+# ─── Tier 4 / W4 Team A — VRAM probe for cuQuantum device selection ──────────
+# Authority boundary: probe_vram is a pure boolean advisory helper.
+# It has no execution authority and makes no decisions.
+# Caller computes required_mb via plan formula: int(2 ** (n_qubits - 3) + 200).
+
+_SAFETY_MARGIN_MB = 500
+_NVIDIA_SMI_TIMEOUT_S = 5
+
+
+def _probe_via_pynvml(required_mb: int) -> bool | None:
+    """Try pynvml. Returns True/False on success, None if fallback needed."""
+    try:
+        import pynvml  # type: ignore[import-not-found]
+    except ImportError:
+        return None
+
+    nvml_err_cls = getattr(pynvml, "NVMLError", Exception)
+    try:
+        pynvml.nvmlInit()
+        handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+        mem_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        free_mb = mem_info.free // (1024 * 1024)
+        return free_mb >= required_mb + _SAFETY_MARGIN_MB
+    except nvml_err_cls:
+        return None  # signal fallback to nvidia-smi
+    except Exception:
+        return None  # any other error: try fallback
+
+
+def _probe_via_nvidia_smi(required_mb: int) -> bool:
+    """Subprocess fallback. Returns False on any failure (no GPU assumed)."""
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits"],
+            capture_output=True,
+            text=True,
+            timeout=_NVIDIA_SMI_TIMEOUT_S,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return False
+    except Exception:
+        return False
+
+    if result.returncode != 0:
+        return False
+
+    try:
+        first_line = result.stdout.strip().splitlines()[0].strip()
+        free_mb = int(first_line)
+    except (ValueError, IndexError):
+        return False
+
+    return free_mb >= required_mb + _SAFETY_MARGIN_MB
+
+
+def probe_vram(required_mb: int) -> bool:
+    """Return True if at least required_mb + 500 MB safety margin is free on GPU 0.
+
+    Never raises. Returns False on insufficient VRAM, missing GPU, or any error.
+
+    Args:
+        required_mb: Minimum MB the caller needs (excluding safety margin).
+            Caller computes per plan formula: int(2 ** (n_qubits - 3) + 200).
+
+    Returns:
+        bool: True only if probe succeeded AND free_mb >= required_mb + 500.
+
+    Authority: advisory only — does not gate lifecycle transitions.
+    """
+    try:
+        pynvml_result = _probe_via_pynvml(required_mb)
+        if pynvml_result is not None:
+            return pynvml_result
+        return _probe_via_nvidia_smi(required_mb)
+    except Exception:
+        return False  # strict no-raise contract
+
+
 if __name__ == "__main__":
     profile = get_hardware_profile()
     print(profile.model_dump_json(indent=2))
