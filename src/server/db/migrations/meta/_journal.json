@@ -491,6 +491,13 @@
       "when": 1746000000002,
       "tag": "0067_a_plus_market_scans",
       "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1746057600000,
+      "tag": "0068_cloud_qmc_runs",
+      "breakpoints": true
     }
   ]
 }

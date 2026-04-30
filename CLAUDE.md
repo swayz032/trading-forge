@@ -264,6 +264,75 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
     schema, GPU path, qubit cap, prefer_gpu override, VRAM fallback)
   - `src/engine/tests/test_hardware_profile.py` — 18 tests (probe_vram coverage)
 
+- **`QUANTUM_CLOUD_ENABLED`** -- default false. Master gate for all IBM QPU submissions.
+  Must be set to `"true"` to enable Tier 4.5 cloud_qmc enrichment. Without this flag,
+  all cloud submissions are silently skipped and lifecycle promotion is unaffected.
+  **SHIPPED W4 (Tier 4.5).** Kill switch: `unset QUANTUM_CLOUD_ENABLED && restart`.
+
+## IBM Quantum Cloud Integration (Tier 4.5 W4 — Ising Decoder)
+**Shadow-only. Never blocks promotion. Challenger evidence only.**
+
+Architecture:
+  - Strategy passes classical TESTING→PAPER gate → Lifecycle promotes to PAPER IMMEDIATELY
+  - AFTER promotion commits, async fire-and-forget: `enqueueCloudQmcRun()` writes
+    a `cloud_qmc_runs` row (status="queued") and submits to IBM Heron QPU
+  - Async cloud worker polls IBM job status every 5 min via `cloud-qmc-poll` cron
+  - On completion: Ising decoder decodes syndromes → persists to cloud_qmc_runs
+  - Tier 7 measurement loop reads cloud_qmc_runs over 90 days to evaluate predictive value
+
+**IBM Backend credentials (required to enable):**
+```bash
+export IBM_QUANTUM_TOKEN=<your-token>       # From https://quantum.ibm.com/account
+export QUANTUM_CLOUD_ENABLED=true           # Master gate — both must be set
+```
+Without these, all cloud submissions are skipped and promotion is unaffected.
+
+**Budget allocation:**
+- 600s/month total IBM QPU budget — ALL reserved for Ising-encoded IAE runs
+- Pessimism factor 2x: each 60s estimated run consumes 120s of budget capacity
+- Allows ~5 runs/month before budget_exhausted
+- `GET /api/cloud-qmc/budget` — check remaining budget
+
+**IBM backends (156-qubit Heron R2):**
+- ibm_fez (primary), ibm_kingston (fallback), ibm_marrakesh (fallback)
+- Backend rotation: fez → kingston → marrakesh on errors
+- 5-minute hard cap per job (prevents stuck queue from consuming budget)
+
+**Surface code:**
+- d=3 rotated surface code: 9 data + 8 ancilla = 17 physical qubits per logical
+- 5 logical qubits → 85 physical (fits 156-qubit Heron with margin)
+- Circuit: syndrome extraction only (tractable NISQ proxy — not full fault-tolerant simulation)
+
+**Ising decoder:**
+- Primary: `Ising-Decoder-SurfaceCode-1-Fast` (HuggingFace, ONNX → TensorRT FP8 on RTX 5060)
+- Fallback: PyMatching (classical MWPM, always available)
+- If model not downloaded: automatic PyMatching fallback, no error
+
+**Files (W4 Tier 4.5):**
+- `src/engine/surface_code_encoder.py` — d=3 rotated surface code circuit builder
+- `src/engine/ising_decoder_wrapper.py` — Ising ONNX + TensorRT + PyMatching fallback
+- `src/server/services/cloud-qmc-service.ts` — orchestrator (enqueue, poll, query helpers)
+- `src/server/routes/cloud-qmc.ts` — POST /api/cloud-qmc/trigger, GET /status/:id, GET /budget
+- `src/server/db/migrations/0068_cloud_qmc_runs.sql` — cloud_qmc_runs table + FK to lifecycle_transitions
+
+**Governance:**
+- cloud_qmc_runs.governance_labels.decision_role = "challenger_only" on ALL rows
+- Promotion is never held for IBM job completion
+- QUANTUM_CLOUD_ENABLED=false (default) → zero IBM submissions, classical promotion unchanged
+- Lifecycle transitions.cloud_qmc_run_id links enrichment rows to promotion events for Tier 7
+
+**Routes:**
+- `POST /api/cloud-qmc/trigger` — manual trigger (pipeline pause guard: 423 when paused)
+- `GET /api/cloud-qmc/status/:strategyId` — list recent cloud_qmc_runs
+- `GET /api/cloud-qmc/budget` — IBM QPU budget status
+- `POST /api/cloud-qmc/poll` — manual poll trigger (normally run by cloud-qmc-poll cron)
+
+**Tests:**
+- `src/engine/tests/test_surface_code_encoder.py` — isolation, geometry, reproducibility, failure
+- `src/engine/tests/test_ising_decoder_wrapper.py` — isolation, fallback, schema, edge cases
+- `src/server/__tests__/cloud-qmc-service.test.ts` — governance, budget guard, backend rotation,
+  lifecycle integration, pipeline guard, pending-row contract, golden-file regression
+
 ## Lifecycle Telemetry Tables (W1 / Tier 0)
 Two new tables ship in W1 to unblock Tier 7 quantum graduation queries:
 

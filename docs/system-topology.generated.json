@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T07:31:17.628Z",
+  "generatedAt": "2026-04-30T08:19:37.006Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,13 +15,13 @@
     ]
   },
   "counts": {
-    "routes": 44,
-    "schedulerJobs": 41,
+    "routes": 45,
+    "schedulerJobs": 42,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 22,
-    "databaseTables": 53,
-    "registrySubsystems": 13
+    "databaseTables": 54,
+    "registrySubsystems": 14
   },
   "routes": [
     "/api/admin",
@@ -32,6 +32,7 @@
     "/api/archetypes",
     "/api/auditor",
     "/api/backtests",
+    "/api/cloud-qmc",
     "/api/compiler",
     "/api/compliance",
     "/api/context",
@@ -75,6 +76,7 @@
     "anti-setup-effectiveness",
     "anti-setup-mine",
     "archetype-daily-classify",
+    "cloud-qmc-poll",
     "compliance-rule-drift",
     "contract-roll-sweep",
     "critic-feedback",
@@ -699,6 +701,7 @@
     "backtest_matrix",
     "backtest_trades",
     "backtests",
+    "cloud_qmc_runs",
     "compliance_drift_log",
     "compliance_reviews",
     "compliance_rulesets",
@@ -746,57 +749,57 @@
     "walk_forward_windows"
   ],
   "registryCoverage": {
-    "registryEntries": 13,
-    "autonomousSubsystems": 13,
+    "registryEntries": 14,
+    "autonomousSubsystems": 14,
     "selfEvolvingSubsystems": 6,
     "proofStatusCounts": {
       "runtime-proven": 11,
       "partially-proven": 0,
       "offline-by-design": 0,
-      "experimental": 2,
+      "experimental": 3,
       "drifted": 0
     },
     "runtimeStateCounts": {
       "active": 11,
-      "experimental": 2
+      "experimental": 3
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
       "active_preprod": 11,
-      "experimental_preprod": 2
+      "experimental_preprod": 3
     },
     "launchTargetCounts": {
       "runtime_proven_autonomous": 9,
       "runtime_proven_manual_gate": 2,
-      "experimental_challenger": 2
+      "experimental_challenger": 3
     },
     "closedLoopCounts": {
       "not_collecting": 5,
       "collecting_only": 0,
       "learning_active": 6,
       "learning_blocked": 0,
-      "shadow_experimental": 2
+      "shadow_experimental": 3
     },
     "learningModeCounts": {
       "active_learning": 5,
       "deterministic_instrumented": 4,
       "manual_gate_only": 2,
-      "shadow_experimental": 2
+      "shadow_experimental": 3
     },
     "operatingClassCounts": {
       "adaptive": 5,
-      "deterministic_instrumented": 6,
+      "deterministic_instrumented": 7,
       "manual_gated": 2
     },
     "manualGates": [
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 44,
-      "schedulerJobs": 41,
+      "routes": 45,
+      "schedulerJobs": 42,
       "engineSubsystems": 22,
-      "databaseTables": 53
+      "databaseTables": 54
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -822,10 +825,10 @@
     "preprodIntegrity": {
       "status": "complete",
       "automationComplete": 11,
-      "dataCollectionComplete": 13,
-      "auditabilityComplete": 13,
-      "failureVisibilityComplete": 13,
-      "authorityCorrect": 13,
+      "dataCollectionComplete": 14,
+      "auditabilityComplete": 14,
+      "failureVisibilityComplete": 14,
+      "authorityCorrect": 14,
       "learningActive": 6,
       "incompleteSubsystems": []
     },
@@ -834,7 +837,7 @@
       "targetStateCounts": {
         "production_autonomous": 9,
         "production_manual_gate": 2,
-        "production_experimental": 2,
+        "production_experimental": 3,
         "production_not_intended": 0
       },
       "readySubsystems": [
@@ -853,6 +856,7 @@
       "blockedSubsystems": [],
       "experimentalSubsystems": [
         "a_plus_market_auditor",
+        "cloud_qmc_ising",
         "quantum_adversarial_stress"
       ],
       "shadowWorkflowCandidates": [],
@@ -880,6 +884,7 @@
       "launchReady": false,
       "blockers": [
         "a_plus_market_auditor:experimental_governance",
+        "cloud_qmc_ising:experimental_governance",
         "quantum_adversarial_stress:experimental_governance",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
@@ -891,6 +896,7 @@
       ],
       "launchBlockedSubsystems": [
         "a_plus_market_auditor",
+        "cloud_qmc_ising",
         "quantum_adversarial_stress"
       ],
       "inactiveByDesignSubsystems": [],
@@ -1099,6 +1105,99 @@
           "recent-backtest-audit-events",
           "backtest-table-writes",
           "qualification-route-coverage"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "cloud_qmc_ising",
+        "domain": "quantum-challenger",
+        "ownerSurface": "python-node",
+        "runtimeState": "experimental",
+        "automationMode": "autonomous",
+        "decisionAuthority": "advisory",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "experimental-runtime",
+        "proofStatus": "experimental",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "autonomous_challenger",
+        "criticality": "advisory",
+        "currentState": "experimental_preprod",
+        "launchTargetState": "experimental_challenger",
+        "productionTargetState": "production_experimental",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "experimental_governance"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "/api/cloud-qmc/budget",
+          "/api/health/dashboard",
+          "cloud_qmc_runs",
+          "cloud_qmc_runs:recent-run",
+          "cloud-qmc.budget_exhausted",
+          "cloud-qmc.enqueued"
+        ],
+        "dataCollectionCoverage": [
+          "backtests",
+          "cloud_qmc_runs",
+          "IBM Quantum Platform (ibm_fez, ibm_kingston, ibm_marrakesh)",
+          "quantum_mc_runs"
+        ],
+        "closedLoopStatus": "shadow_experimental",
+        "learningMode": "shadow_experimental",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "experimental",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "experimental",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "experimental",
+        "productionBlockers": [
+          "experimental_governance"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "experimental governance remains isolated from release authority",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/cloud-qmc/budget",
+          "/api/health/dashboard",
+          "cloud_qmc_runs",
+          "cloud_qmc_runs:recent-run",
+          "cloud-qmc-budget-check",
+          "cloud-qmc-isolation",
+          "cloud-qmc-pending-row",
+          "cloud-qmc.budget_exhausted",
+          "cloud-qmc.enqueued"
+        ],
+        "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+        "routes": [
+          "/api/cloud-qmc"
+        ],
+        "schedulerJobs": [
+          "cloud-qmc-poll"
+        ],
+        "healthCheck": "/api/cloud-qmc/budget",
+        "freshnessSignals": [
+          "cloud_qmc_runs:recent-run"
+        ],
+        "evidenceQueries": [
+          "cloud-qmc-isolation",
+          "cloud-qmc-pending-row",
+          "cloud-qmc-budget-check"
         ],
         "coverageGaps": []
       },
@@ -2723,6 +2822,99 @@
         "recent-backtest-audit-events",
         "backtest-table-writes",
         "qualification-route-coverage"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "cloud_qmc_ising",
+      "domain": "quantum-challenger",
+      "ownerSurface": "python-node",
+      "runtimeState": "experimental",
+      "automationMode": "autonomous",
+      "decisionAuthority": "advisory",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "experimental-runtime",
+      "proofStatus": "experimental",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "autonomous_challenger",
+      "criticality": "advisory",
+      "currentState": "experimental_preprod",
+      "launchTargetState": "experimental_challenger",
+      "productionTargetState": "production_experimental",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "experimental_governance"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "/api/cloud-qmc/budget",
+        "/api/health/dashboard",
+        "cloud_qmc_runs",
+        "cloud_qmc_runs:recent-run",
+        "cloud-qmc.budget_exhausted",
+        "cloud-qmc.enqueued"
+      ],
+      "dataCollectionCoverage": [
+        "backtests",
+        "cloud_qmc_runs",
+        "IBM Quantum Platform (ibm_fez, ibm_kingston, ibm_marrakesh)",
+        "quantum_mc_runs"
+      ],
+      "closedLoopStatus": "shadow_experimental",
+      "learningMode": "shadow_experimental",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "experimental",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "experimental",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "experimental",
+      "productionBlockers": [
+        "experimental_governance"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "experimental governance remains isolated from release authority",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/cloud-qmc/budget",
+        "/api/health/dashboard",
+        "cloud_qmc_runs",
+        "cloud_qmc_runs:recent-run",
+        "cloud-qmc-budget-check",
+        "cloud-qmc-isolation",
+        "cloud-qmc-pending-row",
+        "cloud-qmc.budget_exhausted",
+        "cloud-qmc.enqueued"
+      ],
+      "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+      "routes": [
+        "/api/cloud-qmc"
+      ],
+      "schedulerJobs": [
+        "cloud-qmc-poll"
+      ],
+      "healthCheck": "/api/cloud-qmc/budget",
+      "freshnessSignals": [
+        "cloud_qmc_runs:recent-run"
+      ],
+      "evidenceQueries": [
+        "cloud-qmc-isolation",
+        "cloud-qmc-pending-row",
+        "cloud-qmc-budget-check"
       ],
       "coverageGaps": []
     },

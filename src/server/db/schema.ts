@@ -1416,6 +1416,41 @@ export const quantumRunCosts = pgTable("quantum_run_costs", {
 //
 // governance_labels always enforces:
 //   experimental:true, authoritative:false, decision_role:challenger_only
+// ─── Cloud QMC Runs (Tier 4.5 W4 — Ising-encoded IBM QPU enrichment) ─────────
+// Async best-effort enrichment rows created AFTER classical TESTING→PAPER
+// promotion completes. NEVER a promotion gate — shadow-only challenger evidence.
+// Governance: all rows carry decision_role: "challenger_only".
+// Status lifecycle: queued → running → completed | failed | budget_exhausted
+export const cloudQmcRuns = pgTable("cloud_qmc_runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+  strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+  backendName: text("backend_name").notNull(),           // ibm_fez | ibm_kingston | ibm_marrakesh
+  surfaceCodeDistance: integer("surface_code_distance").notNull(),  // always 3 in current impl
+  nLogicalQubits: integer("n_logical_qubits").notNull(), // default 5 for IAE
+  nPhysicalQubits: integer("n_physical_qubits").notNull(), // n_logical * 17 for d=3
+  ibmJobId: text("ibm_job_id"),
+  submittedAt: timestamp("submitted_at"),
+  completedAt: timestamp("completed_at"),
+  qpuSecondsUsed: numeric("qpu_seconds_used"),
+  rawSyndromeCount: integer("raw_syndrome_count"),
+  isingCorrectedEstimate: numeric("ising_corrected_estimate"),  // Ising decoder [0,1]
+  pymatchingEstimate: numeric("pymatching_estimate"),           // PyMatching baseline [0,1]
+  uncorrectedEstimate: numeric("uncorrected_estimate"),         // raw syndrome rate [0,1]
+  agreementWithClassical: numeric("agreement_with_classical"),  // |ising - classical_mc_ruin|
+  agreementWithLocalIae: numeric("agreement_with_local_iae"),   // |ising - local_iae_estimate|
+  status: text("status").notNull().default("queued"),   // queued|running|completed|failed|budget_exhausted
+  errorMessage: text("error_message"),
+  governanceLabels: jsonb("governance_labels").notNull().default(
+    '{"experimental":true,"authoritative":false,"decision_role":"challenger_only"}'
+  ),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("idx_cloud_qmc_runs_backtest").on(table.backtestId, table.createdAt.desc()),
+  index("idx_cloud_qmc_runs_strategy").on(table.strategyId, table.createdAt.desc()),
+]);
+
 export const adversarialStressRuns = pgTable("adversarial_stress_runs", {
   id: uuid("id").primaryKey().defaultRandom(),
   backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "cascade" }).notNull(),

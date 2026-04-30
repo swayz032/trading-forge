@@ -1016,6 +1016,33 @@ export function initScheduler() {
     emitJobComplete("a-plus-auditor-scan", Date.now() - t0audit);
   });
 
+  // ─── Tier 4.5: cloud-qmc-poll — every 5 min ─────────────────────────────────
+  // Polls IBM pending jobs and updates cloud_qmc_runs with decoded syndrome results.
+  // isActive() guard: early-exit when pipeline is paused.
+  // Default OFF: QUANTUM_CLOUD_ENABLED must be true for any IBM work to happen.
+  // SHADOW ONLY: results are challenger-only evidence, never gates promotion.
+  registerJob("cloud-qmc-poll", 5 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.debug({ correlationId, jobName: "cloud-qmc-poll" }, "cron tick start");
+    if (!(await isPipelineActive())) {
+      logger.debug({ correlationId }, "cloud-qmc-poll: pipeline not ACTIVE — skipping");
+      return;
+    }
+    const cloudEnabled = (process.env.QUANTUM_CLOUD_ENABLED ?? "").toLowerCase() === "true";
+    if (!cloudEnabled) {
+      logger.debug({ correlationId }, "cloud-qmc-poll: QUANTUM_CLOUD_ENABLED not set — skipping");
+      return;
+    }
+    const { pollPendingJobs } = await import("./services/cloud-qmc-service.js");
+    const result = await pollPendingJobs();
+    if (result.processed > 0) {
+      logger.info(
+        { correlationId, ...result, jobName: "cloud-qmc-poll" },
+        "cloud-qmc-poll: cycle complete (challenger-only evidence, Phase 0 shadow)",
+      );
+    }
+  });
+
   // ─── Daily at 11:00 PM ET: Regret score fill ────────────────
   // Run at both 3:00 and 4:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // Fills regretScore / opportunityCost on skipDecisions rows that now have

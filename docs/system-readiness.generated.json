@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T07:31:17.628Z",
+  "generatedAt": "2026-04-30T08:19:37.006Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -12,11 +12,11 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 13,
+    "total": 14,
     "ready": 9,
     "blocked": 0,
     "manualGated": 2,
-    "experimental": 2
+    "experimental": 3
   },
   "subsystems": [
     {
@@ -65,6 +65,30 @@
         "mc.run",
         "qualification-route-coverage",
         "recent-backtest-audit-events"
+      ]
+    },
+    {
+      "id": "cloud_qmc_ising",
+      "status": "experimental",
+      "productionTargetState": "production_experimental",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "shadow_experimental",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_challenger",
+      "blockers": [
+        "experimental_governance"
+      ],
+      "requiredEvidence": [
+        "/api/cloud-qmc/budget",
+        "/api/health/dashboard",
+        "cloud_qmc_runs",
+        "cloud_qmc_runs:recent-run",
+        "cloud-qmc-budget-check",
+        "cloud-qmc-isolation",
+        "cloud-qmc-pending-row",
+        "cloud-qmc.budget_exhausted",
+        "cloud-qmc.enqueued"
       ]
     },
     {

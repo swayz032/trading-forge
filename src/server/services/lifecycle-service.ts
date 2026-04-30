@@ -693,6 +693,55 @@ export class LifecycleService {
       });
     }
 
+    // ── Tier 4.5 cloud QMC enrichment: enqueue AFTER TESTING→PAPER promotion ──
+    // Phase 0 shadow: enqueue is ALWAYS async and NEVER blocks promotion.
+    // Classical promotion is already committed above. This fire-and-forget runs
+    // best-effort, 24h enrichment window. Promotion decision is UNCHANGED.
+    //
+    // AUTHORITY BOUNDARY:
+    //   - Classical promotion completes FIRST (already committed above).
+    //   - enqueueCloudQmcRun() is fire-and-forget: promotion NEVER waits.
+    //   - cloud_qmc_runs.governance_labels.decision_role = "challenger_only"
+    //   - Lifecycle gate is 100% classical. Cloud QMC is observation-only.
+    //   - Matches W3b Tier 3.4 Grover shadow pattern (same post-commit placement).
+    //
+    // Default OFF: QUANTUM_CLOUD_ENABLED env flag must be "true" to enable IBM
+    // submissions. Without the flag, enqueueCloudQmcRun logs and returns quietly.
+    if (fromState === "TESTING" && toState === "PAPER") {
+      const cloudQmcEnabled = (process.env.QUANTUM_CLOUD_ENABLED ?? "").toLowerCase() === "true";
+      if (cloudQmcEnabled) {
+        import("./cloud-qmc-service.js").then(({ enqueueCloudQmcRun }) => {
+          enqueueCloudQmcRun({
+            strategyId: id,
+            backtestId: promotionEvidence.backtestId ?? "",
+            classicalRuinProb: promotionEvidence.mcSurvivalRate != null
+              ? 1 - promotionEvidence.mcSurvivalRate
+              : null,
+            localIaeEstimate: promotionEvidence.quantumAgreementScore,
+          }).catch((cloudErr) => {
+            logger.warn(
+              { strategyId: id, err: cloudErr },
+              "cloud-qmc: enqueueCloudQmcRun failed (non-blocking — promotion unaffected, Phase 0 shadow)",
+            );
+          });
+        }).catch((importErr) => {
+          logger.warn(
+            { strategyId: id, err: importErr },
+            "cloud-qmc: service import failed (non-blocking — promotion unaffected)",
+          );
+        });
+        logger.info(
+          { strategyId: id, fromState, toState },
+          "cloud-qmc: async enrichment enqueued post-promotion (challenger-only, Phase 0 shadow, never blocks)",
+        );
+      } else {
+        logger.debug(
+          { strategyId: id, fromState, toState },
+          "cloud-qmc: QUANTUM_CLOUD_ENABLED=false — IBM enrichment skipped, promotion unaffected",
+        );
+      }
+    }
+
     strategyPromotions.labels({
       from_state: fromState,
       to_state: toState,
