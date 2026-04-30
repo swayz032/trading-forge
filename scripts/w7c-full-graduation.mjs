@@ -31,6 +31,13 @@ import pg from "./_pg-compat.mjs";
 
 const SHOULD_EXECUTE = process.argv.includes("--execute");
 
+// Paper outcome derivation (same as W7b):
+//   passed = ps.status IN ('stopped','completed') AND current_equity >= starting_capital
+//   failed = ps.status IN ('stopped','completed') AND current_equity <  starting_capital
+//   realized_pnl = current_equity - starting_capital
+//   max_drawdown = peak_equity - current_equity (lossy proxy; canonical max_drawdown
+//                  lives in paper_metrics_snapshot, but equity delta is sufficient
+//                  for correlation analysis)
 const QUERY = `
 WITH quantum_predictions AS (
   SELECT
@@ -40,9 +47,13 @@ WITH quantum_predictions AS (
     lt.created_at AS promotion_date,
     asr.worst_case_breach_prob,
     cqr.ising_corrected_estimate,
-    ps.outcome,
-    ps.realized_pnl,
-    ps.max_drawdown
+    CASE
+      WHEN ps.status IN ('stopped', 'completed') AND ps.current_equity >= ps.starting_capital THEN 'passed'
+      WHEN ps.status IN ('stopped', 'completed') AND ps.current_equity <  ps.starting_capital THEN 'failed'
+      ELSE NULL
+    END AS outcome,
+    (ps.current_equity - ps.starting_capital) AS realized_pnl,
+    GREATEST(ps.peak_equity - ps.current_equity, 0) AS max_drawdown
   FROM lifecycle_transitions lt
   LEFT JOIN adversarial_stress_runs asr ON asr.backtest_id = lt.backtest_id
   LEFT JOIN cloud_qmc_runs cqr ON cqr.backtest_id = lt.backtest_id

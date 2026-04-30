@@ -29,6 +29,11 @@ import pg from "./_pg-compat.mjs";
 
 const SHOULD_EXECUTE = process.argv.includes("--execute");
 
+// Paper outcome derivation:
+//   "settled"       = ps.status IN ('stopped', 'completed') — session finished
+//   "outcome_failed" = settled AND current_equity < starting_capital — strategy lost money
+//   "outcome_passed" = settled AND current_equity >= starting_capital — strategy held or grew
+// We don't have an explicit `outcome` column; equity delta is the canonical proxy.
 const QUERY = `
 SELECT
   COUNT(*) AS paired_runs,
@@ -36,14 +41,16 @@ SELECT
   COUNT(*) FILTER (
     WHERE asr.worst_case_breach_prob > 0.5
       AND asr.breach_minimal_n_trades < 4
-      AND ps.outcome = 'failed'
+      AND ps.status IN ('stopped', 'completed')
+      AND ps.current_equity < ps.starting_capital
   ) AS true_positives,
   COUNT(*) FILTER (
     WHERE asr.worst_case_breach_prob > 0.5
       AND asr.breach_minimal_n_trades < 4
-      AND ps.outcome = 'passed'
+      AND ps.status IN ('stopped', 'completed')
+      AND ps.current_equity >= ps.starting_capital
   ) AS false_positives,
-  COUNT(*) FILTER (WHERE ps.outcome IS NOT NULL) AS settled_paper_sessions
+  COUNT(*) FILTER (WHERE ps.status IN ('stopped', 'completed')) AS settled_paper_sessions
 FROM adversarial_stress_runs asr
 JOIN backtests bt ON asr.backtest_id = bt.id
 JOIN lifecycle_transitions lt ON lt.backtest_id = bt.id
