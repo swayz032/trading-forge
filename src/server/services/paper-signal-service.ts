@@ -229,9 +229,147 @@ interface StopLossConfig {
   atr_period?: number;    // default 14
 }
 
-interface TrailStopConfig {
+export interface TrailStopConfig {
   atr_multiple: number;   // e.g. 2.0 → trail distance = 2 × ATR
   atr_period?: number;    // ATR period, default 14
+  // W5b Tier 5.1 — break-even + time-decay extensions (all optional; null/undefined = no change to existing behavior)
+  break_even_at_r?: number;        // trigger at 1.0 = 1:1 profit (1R). null = disabled.
+  time_decay_minutes?: number;     // minutes after open at which trail tightens. null = disabled.
+  time_decay_multiplier?: number;  // factor to multiply atr_multiple after time_decay_minutes (e.g. 0.75 → 2x→1.5x). null = disabled.
+}
+
+// ─── Tick Sizes by Symbol ───────────────────────────────────────
+// Used by break-even leg to set SL at entry ± 1 tick.
+// Only micro futures listed here; unknown symbols default to 0.25.
+export const TICK_SIZES: Record<string, number> = {
+  MES:  0.25,  // S&P micro
+  MNQ:  0.25,  // Nasdaq micro
+  MCL:  0.01,  // Crude oil micro (0.01 per contract = $1)
+  M2K:  0.10,  // Russell 2000 micro
+  MYM:  1.00,  // Dow Jones micro
+  MGC:  0.10,  // Gold micro
+  M6E:  0.0001, // Euro micro FX
+  // Add additional symbols here as needed
+};
+
+export interface TrailStopExtendedInput {
+  positionId: string;
+  side: "long" | "short";
+  entryPrice: number;
+  initialRiskPoints: number;  // |entry - hard SL| in price points
+  atrValue: number;
+  currentHigh: number;        // bar.high
+  currentLow: number;         // bar.low
+  minutesOpen: number;        // minutes elapsed since position opened
+  currentHWM: number | null;  // existing HWM from trailStopHWM map (null if first bar)
+  symbol: string;
+}
+
+interface TrailStopExtendedResult {
+  hit: boolean;
+  stopPrice: number;
+  newHWM: number;
+  breakEvenActive: boolean;
+  timeDecayActive: boolean;
+  effectiveMultiple: number;
+}
+
+/**
+ * Extended trail stop evaluation (Tier 5.1).
+ *
+ * Evaluates break-even leg and time-decay tightening ON TOP of the existing
+ * ATR-based HWM trail.  When break_even_at_r and time_decay_minutes are both
+ * null/undefined, output is identical to the pre-W5b checkTrailStop() —
+ * backwards-compatible by design.
+ *
+ * Break-even leg:
+ *   If profit ≥ break_even_at_r × initial_risk_points → SL advances to
+ *   entry ± 1 tick (long: entry + tick, short: entry - tick), whichever is
+ *   more favourable than the current ATR trail.
+ *
+ * Time-decay tightening:
+ *   If minutes_open ≥ time_decay_minutes → effective atr_multiple is
+ *   multiplied by time_decay_multiplier before computing the ATR trail.
+ *   This makes the trail tighter after the position has been held "too long",
+ *   encouraging exit before the move fades.
+ *
+ * Priority: stop level = max(ATR trail, break-even SL) for longs;
+ *           min(ATR trail, break-even SL) for shorts.
+ */
+export function checkTrailStopExtended(
+  config: TrailStopConfig,
+  input: TrailStopExtendedInput,
+): TrailStopExtendedResult {
+  const {
+    positionId: _positionId, side, entryPrice, initialRiskPoints,
+    atrValue, currentHigh, currentLow, minutesOpen, currentHWM, symbol,
+  } = input;
+
+  // 1. Update HWM
+  let newHWM: number;
+  if (side === "long") {
+    newHWM = currentHWM === null ? currentHigh : Math.max(currentHWM, currentHigh);
+  } else {
+    newHWM = currentHWM === null ? currentLow : Math.min(currentHWM, currentLow);
+  }
+
+  // 2. Resolve effective ATR multiple (time-decay tightening)
+  const timeDecayActive =
+    config.time_decay_minutes != null &&
+    config.time_decay_multiplier != null &&
+    minutesOpen >= config.time_decay_minutes;
+
+  const effectiveMultiple = timeDecayActive
+    ? config.atr_multiple * config.time_decay_multiplier!
+    : config.atr_multiple;
+
+  // 3. Compute ATR-based trail level
+  let atrTrailLevel: number;
+  if (side === "long") {
+    atrTrailLevel = newHWM - effectiveMultiple * atrValue;
+  } else {
+    atrTrailLevel = newHWM + effectiveMultiple * atrValue;
+  }
+
+  // 4. Break-even leg
+  const tickSize = TICK_SIZES[symbol] ?? 0.25;
+  let breakEvenActive = false;
+  let breakEvenLevel: number | null = null;
+
+  if (config.break_even_at_r != null && initialRiskPoints > 0) {
+    const profitThreshold = config.break_even_at_r * initialRiskPoints;
+    let currentProfit: number;
+    if (side === "long") {
+      currentProfit = newHWM - entryPrice;
+    } else {
+      currentProfit = entryPrice - newHWM;
+    }
+
+    if (currentProfit >= profitThreshold) {
+      breakEvenActive = true;
+      if (side === "long") {
+        breakEvenLevel = entryPrice + tickSize;
+      } else {
+        breakEvenLevel = entryPrice - tickSize;
+      }
+    }
+  }
+
+  // 5. Final stop level = most favourable of ATR trail and break-even
+  let stopPrice: number;
+  if (side === "long") {
+    stopPrice = breakEvenLevel !== null
+      ? Math.max(atrTrailLevel, breakEvenLevel)
+      : atrTrailLevel;
+    const hit = currentLow <= stopPrice;
+    return { hit, stopPrice, newHWM, breakEvenActive, timeDecayActive, effectiveMultiple };
+  } else {
+    stopPrice = breakEvenLevel !== null
+      ? Math.min(atrTrailLevel, breakEvenLevel)
+      : atrTrailLevel;
+    const hit = currentHigh >= stopPrice;
+    return { hit, stopPrice, newHWM, breakEvenActive, timeDecayActive, effectiveMultiple };
+  }
 }
 
 interface CachedSession {
@@ -1142,10 +1280,11 @@ function checkStopLoss(
  *             Hit when bar.high >= trail level.
  */
 function checkTrailStop(
-  position: { id: string; side: string },
+  position: { id: string; side: string; entryPrice: string; entryTime: Date; symbol?: string },
   bar: Bar,
   trailConfig: TrailStopConfig,
   indicators: IndicatorValues,
+  stopLossConfig?: StopLossConfig,
 ): { hit: boolean; stopPrice: number; newHWM: number | null } {
   const atrPeriod = trailConfig.atr_period ?? 14;
   let atrVal = indicators[`atr_${atrPeriod}`];
@@ -1156,8 +1295,54 @@ function checkTrailStop(
     if (atrVal === undefined || isNaN(atrVal)) return { hit: false, stopPrice: 0, newHWM: null };
   }
 
-  const mult = trailConfig.atr_multiple;
   const posId = position.id;
+
+  // W5b Tier 5.1: delegate to extended function when break_even or time_decay fields are set
+  if (
+    trailConfig.break_even_at_r != null ||
+    trailConfig.time_decay_minutes != null
+  ) {
+    // Compute initial risk points from stopLossConfig if available, else fall back to 1x ATR
+    let initialRiskPoints: number;
+    const entryPrice = Number(position.entryPrice);
+    if (stopLossConfig) {
+      if (stopLossConfig.type === "fixed" && stopLossConfig.amount != null) {
+        initialRiskPoints = stopLossConfig.amount;
+      } else {
+        // ATR-based stop: risk = multiplier * ATR
+        initialRiskPoints = atrVal * (stopLossConfig.multiplier ?? 2);
+      }
+    } else {
+      // No stop config → use 1x ATR as fallback risk measure
+      initialRiskPoints = atrVal;
+    }
+
+    const minutesOpen = (bar.timestamp
+      ? (new Date(bar.timestamp).getTime() - position.entryTime.getTime()) / 60000
+      : 0);
+
+    const currentHWM = trailStopHWM.get(posId) ?? null;
+    const symbol = position.symbol ?? "MES";
+
+    const result = checkTrailStopExtended(trailConfig, {
+      positionId: posId,
+      side: position.side as "long" | "short",
+      entryPrice,
+      initialRiskPoints,
+      atrValue: atrVal,
+      currentHigh: bar.high,
+      currentLow: bar.low,
+      minutesOpen,
+      currentHWM,
+      symbol,
+    });
+
+    trailStopHWM.set(posId, result.newHWM);
+    return { hit: result.hit, stopPrice: result.stopPrice, newHWM: result.newHWM };
+  }
+
+  // ─── Legacy path (no W5b fields) — behavior identical to pre-W5b ─────────
+  const mult = trailConfig.atr_multiple;
 
   if (position.side === "long") {
     // Update HWM: track highest high seen
@@ -1846,7 +2031,7 @@ export async function evaluateSignals(
     // ─── 2.3: Trail stop check ───────────────────────────────
     let trailResult: { hit: boolean; stopPrice: number; newHWM: number | null } = { hit: false, stopPrice: 0, newHWM: null };
     if (config.trail_stop) {
-      trailResult = checkTrailStop(openPos, bar, config.trail_stop, indicators);
+      trailResult = checkTrailStop(openPos, bar, config.trail_stop, indicators, config.stop_loss);
       // H2: persist HWM to DB so restarts don't reset the trailing stop level.
       // Fire-and-forget — a missed write reverts to the last persisted HWM after
       // a restart (slightly less aggressive stop), not a hard failure.
@@ -2011,7 +2196,7 @@ export async function evaluateSignals(
         const spec = CONTRACT_SPECS[symbol];
         if (currentAtrForSizing && currentAtrForSizing > 0 && spec) {
           const targetRisk = positionSizeCfg.target_risk ?? 200;
-          const tickValue = spec.tickValue;
+          const _tickValue = spec.tickValue; // retained for reference; pointValue used below
           const atrInPoints = currentAtrForSizing; // ATR is already in price points
           // dollar risk per contract = atr_points * point_value = atr_ticks * tick_value
           // Using tick_value matches sizing.py: raw = target_risk / (atr * point_value)
