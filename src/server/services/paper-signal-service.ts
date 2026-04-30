@@ -10,6 +10,7 @@ import { eq, and, isNull, gte, lte, desc } from "drizzle-orm";
 import { tracer } from "../lib/tracing.js";
 import { isDSLStrategy, translateDSLToPaperConfig } from "./dsl-translator.js";
 import { getActiveLockout } from "./strategy-lockout-service.js";
+import { checkCorrelatedPositionGuard, KILL_REASON_CORRELATED_POSITION_OPEN } from "./correlated-position-guard.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
 import { CONTRACT_SPECS, CONTRACT_CAP_MIN, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
@@ -2141,9 +2142,62 @@ export async function evaluateSignals(
       logger.warn({ err: lockoutErr, sessionId, symbol }, "Tier 5.3: lockout gate error — fail-open, proceeding");
     }
 
+    // ─── Tier 5.3.1: Correlated Position Guard ──────────────
+    // Blocks new entry if any open position (cross-session) is correlated
+    // > threshold with the proposed symbol. Closes the Tier 3.3 lead-lag
+    // compliance gap: cross-market signals are legal; CONCURRENT correlated
+    // positions are a prop firm violation (position-limit bypass).
+    // Fail-OPEN: query errors do not block trading.
+    let correlatedBlocked = lockoutBlocked; // short-circuit if already blocked
+    if (!lockoutBlocked) {
+      try {
+        // Query ALL open positions across sessions for cross-symbol guard
+        const allOpenPositions = await db
+          .select({ symbol: paperPositions.symbol })
+          .from(paperPositions)
+          .where(isNull(paperPositions.closedAt));
+
+        const correlGuard = checkCorrelatedPositionGuard(symbol, allOpenPositions);
+        if (!correlGuard.allowed) {
+          correlatedBlocked = true;
+          span.setAttribute("correlated_position_blocked", true);
+          span.setAttribute("correlated_blocking_symbol", correlGuard.blockingSymbol ?? "");
+          span.setAttribute("correlated_correlation", correlGuard.blockingCorrelation ?? 0);
+          logger.info(
+            {
+              sessionId,
+              symbol,
+              blockingSymbol: correlGuard.blockingSymbol,
+              blockingCorrelation: correlGuard.blockingCorrelation,
+              threshold: correlGuard.threshold,
+              reason: KILL_REASON_CORRELATED_POSITION_OPEN,
+            },
+            "Tier 5.3.1: entry blocked — correlated position open (compliance.correlated_position_blocked)",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "correlated_position_blocked",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _blocking_symbol: correlGuard.blockingSymbol,
+              _blocking_correlation: correlGuard.blockingCorrelation,
+              _correlation_threshold: correlGuard.threshold,
+            },
+            acted: false,
+            reason: `correlated_position_blocked: open ${correlGuard.blockingSymbol} (corr=${correlGuard.blockingCorrelation?.toFixed(3)})`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist correlated position block log"));
+        }
+      } catch (correlErr) {
+        logger.warn({ err: correlErr, sessionId, symbol }, "Tier 5.3.1: guard query error — fail-open, proceeding");
+      }
+    }
+
     // ─���─ Anti-setup gate: check if known bad pattern blocks entry ──
-    // Anti-setup gate short-circuits if lockout is already active
-    let antiSetupBlocked = lockoutBlocked;
+    // Anti-setup gate short-circuits if lockout or correlated position guard is already active
+    let antiSetupBlocked = lockoutBlocked || correlatedBlocked;
     let antiSetupResult: AntiSetupGateResult | null = null;
     try {
       antiSetupResult = await checkAntiSetupGate(

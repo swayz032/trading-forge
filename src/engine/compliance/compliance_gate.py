@@ -607,6 +607,179 @@ def check_kill_switch(
     }
 
 
+# ─── Correlated Position Guard (Tier 5.3.1 — W5b) ──────────────
+
+import logging
+import os
+import pathlib
+
+# Constant for audit logging
+KILL_REASON_CORRELATED_POSITION_OPEN = "correlated_position_open"
+
+# Default correlation matrix path — resolved relative to this file
+_DEFAULT_MATRIX_PATH = pathlib.Path(__file__).parent / "correlation_matrix.yaml"
+
+_logger = logging.getLogger(__name__)
+
+
+def _load_correlation_matrix(matrix_path: str | None = None) -> dict[str, Any]:
+    """
+    Load the correlation matrix YAML.
+
+    Returns a dict with:
+      - "correlations": dict of "SYMBOL_SYMBOL" → float
+      - "threshold": float (default 0.70)
+
+    Falls back to {"correlations": {}, "threshold": 0.70} if YAML unavailable.
+    Failure to load emits a WARNING and never raises — the guard defaults to
+    pass-through (no pairs → no blocks) rather than fail-closed.
+    """
+    import yaml  # lazy import — yaml may not be installed in all envs
+
+    path = pathlib.Path(matrix_path) if matrix_path else _DEFAULT_MATRIX_PATH
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        return {
+            "correlations": data.get("correlations") or {},
+            "threshold": float(data.get("threshold", 0.70)),
+        }
+    except ImportError:
+        _logger.warning(
+            "PyYAML not installed — correlated position guard defaults to pass-through (no blocks)",
+        )
+    except FileNotFoundError:
+        _logger.warning(
+            "correlation_matrix.yaml not found at %s — guard defaults to pass-through", path
+        )
+    except Exception as exc:
+        _logger.warning(
+            "Failed to load correlation matrix from %s: %s — guard defaults to pass-through",
+            path, exc,
+        )
+    return {"correlations": {}, "threshold": 0.70}
+
+
+def _pair_key(symbol_a: str, symbol_b: str) -> str:
+    """Canonical key for a symbol pair — lexicographically sorted, joined with '_'."""
+    parts = sorted([symbol_a.upper(), symbol_b.upper()])
+    return f"{parts[0]}_{parts[1]}"
+
+
+def _get_correlation(
+    symbol_a: str,
+    symbol_b: str,
+    correlations: dict[str, float],
+) -> float:
+    """
+    Look up correlation between two symbols.
+    Symmetric: MNQ_MES == MES_MNQ.
+    Returns 0.0 for unknown pairs (with WARNING logged by caller).
+    """
+    key = _pair_key(symbol_a, symbol_b)
+    return float(correlations.get(key, 0.0))
+
+
+def check_correlated_position_guard(
+    symbol: str,
+    open_positions: list[dict[str, Any]],
+    correlation_matrix: dict[str, Any] | None = None,
+    matrix_path: str | None = None,
+) -> dict[str, Any]:
+    """
+    Block new entry if any open position is correlated > threshold with proposed symbol.
+
+    Tier 5.3.1 compliance gate — enforces sequential position logic for cross-market
+    lead-lag signals (Tier 3.3). Prop firms ban concurrent correlated positions as a
+    position-limit-bypass. This gate closes that gap.
+
+    Args:
+        symbol:             Proposed entry symbol (e.g. "MES").
+        open_positions:     List of currently open position dicts. Each must have
+                            a "symbol" key. Other keys are ignored.
+        correlation_matrix: Pre-loaded matrix dict (for tests). If None, loaded from
+                            correlation_matrix.yaml via matrix_path.
+        matrix_path:        Override path to correlation_matrix.yaml. Default = sibling file.
+
+    Returns:
+        {
+            "allowed": bool,
+            "reason": KILL_REASON_CORRELATED_POSITION_OPEN | None,
+            "blocking_symbol": str | None,          # symbol of the open position that blocked
+            "blocking_correlation": float | None,   # correlation value that triggered block
+            "threshold": float,
+            "symbol": str,
+        }
+
+    Fail-OPEN: if the matrix cannot be loaded (yaml missing, file not found),
+    the function returns allowed=True so trading is not blocked by infrastructure
+    failures. The failure is already logged inside _load_correlation_matrix.
+
+    Symmetry: MNQ→MES and MES→MNQ produce identical decisions.
+
+    Empty open_positions: always returns allowed=True (no false positives on
+    first trade of the day).
+
+    Missing pair in matrix: defaults to correlation 0.0 (ALLOWED) with WARNING.
+    """
+    if not open_positions:
+        return {
+            "allowed": True,
+            "reason": None,
+            "blocking_symbol": None,
+            "blocking_correlation": None,
+            "threshold": 0.70,
+            "symbol": symbol,
+        }
+
+    # Load matrix (use pre-loaded if provided, e.g. from tests)
+    if correlation_matrix is None:
+        correlation_matrix = _load_correlation_matrix(matrix_path)
+
+    correlations: dict[str, float] = correlation_matrix.get("correlations", {})
+    threshold: float = float(correlation_matrix.get("threshold", 0.70))
+
+    for pos in open_positions:
+        pos_symbol = str(pos.get("symbol", ""))
+        if not pos_symbol:
+            continue
+        if pos_symbol.upper() == symbol.upper():
+            # Same symbol — not a correlation block (handled by existing position guard)
+            continue
+
+        corr = _get_correlation(symbol, pos_symbol, correlations)
+        key = _pair_key(symbol, pos_symbol)
+
+        if key not in correlations:
+            _logger.warning(
+                "check_correlated_position_guard: unknown pair %s/%s — defaulting to 0.0 (ALLOWED)",
+                symbol, pos_symbol,
+            )
+
+        if corr > threshold:
+            _logger.info(
+                "compliance.correlated_position_blocked symbol=%s open=%s correlation=%.3f threshold=%.3f",
+                symbol, pos_symbol, corr, threshold,
+            )
+            return {
+                "allowed": False,
+                "reason": KILL_REASON_CORRELATED_POSITION_OPEN,
+                "blocking_symbol": pos_symbol,
+                "blocking_correlation": corr,
+                "threshold": threshold,
+                "symbol": symbol,
+            }
+
+    return {
+        "allowed": True,
+        "reason": None,
+        "blocking_symbol": None,
+        "blocking_correlation": None,
+        "threshold": threshold,
+        "symbol": symbol,
+    }
+
+
 # ─── CLI Entry Point (for Node python-runner bridge) ────────────
 
 

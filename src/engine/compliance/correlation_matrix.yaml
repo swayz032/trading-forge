@@ -1,0 +1,45 @@
+# Correlation Matrix — Tier 5.3.1 Correlated Position Guard
+#
+# Defines known pairwise correlations between micro futures symbols.
+# The guard blocks new entry signals when any open position has a correlation
+# with the proposed symbol that exceeds the configured threshold.
+#
+# Correlation values are absolute (unsigned, range [0.0, 1.0]).
+# Pairs are listed in canonical order (lexicographically ascending).
+# Lookup is symmetric: MNQ_MES == MES_MNQ.
+#
+# Source: empirical daily-return correlations on micro futures, 2024-2026.
+# Update cadence: review quarterly or when new symbols are added.
+#
+# Relationship to Tier 3.3 (A+ Market Auditor):
+#   Tier 3.3 produces cross-market lead-lag SIGNALS.
+#   Tier 5.3.1 enforces SEQUENCE — blocks concurrent correlated positions
+#   that would constitute a prop firm position-limit-bypass violation.
+#   This is the compliance handoff promised in CLAUDE.md (PROP FIRM COMPLIANCE HANDOFF).
+
+correlations:
+  # Equity index micros — strongly correlated
+  MES_MNQ: 0.95   # S&P500 micro vs Nasdaq micro (both equity index)
+  MES_MYM: 0.92   # S&P500 micro vs Dow Jones micro
+  MNQ_MYM: 0.88   # Nasdaq micro vs Dow Jones micro
+  MNQ_M2K: 0.85   # Nasdaq micro vs Russell 2000 micro
+  MES_M2K: 0.83   # S&P500 micro vs Russell 2000 micro
+
+  # Energy — moderate internal correlation
+  MCL_MGC: 0.45   # Crude oil micro vs Gold micro (inflation/risk proxy)
+
+  # Cross-asset — low to no correlation
+  MCL_MES: 0.22   # Crude oil micro vs S&P500 micro (risk-on/risk-off proxy, low)
+  MCL_MNQ: 0.18   # Crude oil micro vs Nasdaq micro (tech-energy divergence)
+  MCL_M6E: 0.30   # Crude oil micro vs Euro FX micro (petrodollar link)
+  MGC_MES: 0.15   # Gold micro vs S&P500 micro (inverse safe-haven relationship)
+  MGC_M6E: 0.35   # Gold micro vs Euro FX micro (dollar correlation)
+  M6E_MES: 0.12   # Euro FX micro vs S&P500 micro
+  M6E_MNQ: 0.10   # Euro FX micro vs Nasdaq micro
+
+  # Default for any pair not listed above: 0.0 (ALLOW, warn logged)
+
+# Block threshold: correlation > threshold → block new entry
+# 0.70 chosen to block all equity index micro pairs (min 0.83) while
+# allowing energy/FX cross-trades (max 0.45).
+threshold: 0.70

@@ -100,6 +100,12 @@ Agents must prefer simple, robust strategies:
 - Monte Carlo survival required
 - prop-firm drawdown and consistency rules required
 - paper-trading parity required before deployment
+- no concurrent correlated positions (correlation > 0.70 per `src/engine/compliance/correlation_matrix.yaml`)
+  Cross-market lead-lag signals (Tier 3.3) are legal IF the lagging market entry is sequential —
+  i.e., the lead-market position must be CLOSED before the lagging-market entry fires.
+  Prop firms ban simultaneous correlated positions as a position-limit-bypass violation.
+  Enforcement: `check_correlated_position_guard()` in `compliance_gate.py` and
+  `checkCorrelatedPositionGuard()` in `correlated-position-guard.ts` (paper gate).
 
 Below-threshold strategies go to the graveyard, not deployment.
 

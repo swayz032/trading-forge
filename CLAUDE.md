@@ -236,15 +236,19 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
   Fallbacks: PennyLane unavailable → entanglement falls back to classical correlation
     proxy; noise unavailable → neutral 0.5; edge score always computes.
   Performance: full 3-market scan ~8-15ms wall-clock on CPU (default.qubit).
-  **PROP FIRM COMPLIANCE HANDOFF (CRITICAL):**
+  **PROP FIRM COMPLIANCE HANDOFF (CLOSED — W5b Tier 5.3.1 SHIPPED):**
     Tier 3.3 produces the SIGNAL only. Cross-market lead-lag signal source ≠ traded
     instrument. Prop firms BAN simultaneous correlated positions (MNQ + MES together
-    = position-limit-bypass violation). Enforcement lives in:
-    `Tier 5.3.1: check_correlated_position_guard()` (W5b — not yet shipped).
-    W5b MUST read `a_plus_market_scans.lead_market` and block concurrent positions
-    in the lead market until the lagging market has entered and fully closed.
-    The `complianceHandoff` key in POST /api/auditor/scan response always surfaces
-    this note for downstream consumers.
+    = position-limit-bypass violation). Enforcement is now LIVE in:
+    - `src/engine/compliance/compliance_gate.py:check_correlated_position_guard()` (Python)
+    - `src/server/services/correlated-position-guard.ts:checkCorrelatedPositionGuard()` (TS)
+    - `src/engine/compliance/correlation_matrix.yaml` — threshold 0.70, pairs MES/MNQ/MCL/etc.
+    paper-signal-service.ts queries ALL open positions cross-session and calls the TS guard
+    BEFORE anti-setup gate on every new entry signal. Blocked signals are logged to
+    paper_signal_logs with signalType="correlated_position_blocked".
+    Sequential rule: lead-market position must be CLOSED before lagging-market entry fires.
+    The `complianceHandoff` key in POST /api/auditor/scan response surfaces this note.
+    Tests: 20 TS + 19 Python covering symmetry, sequential close, empty positions, unknown pairs.
   SSE event: `a-plus-auditor:scan-complete` on every completed scan.
 - **`QUANTUM_ADVERSARIAL_STRESS_ENABLED`** -- default false. Enables Tier 3.4
   Grover worst-case sequencer pre-PAPER promotion check. **SHIPPED W3b.**
