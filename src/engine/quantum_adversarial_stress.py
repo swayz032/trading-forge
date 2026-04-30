@@ -60,6 +60,8 @@ try:
 except ImportError:
     PENNYLANE_AVAILABLE = False
 
+from src.engine.quantum_device_selector import select_quantum_device
+
 
 # ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -342,13 +344,12 @@ def _run_grover(
     iterations = max(1, int(math.floor(math.pi / 4 * math.sqrt(2 ** n_qubits / m_estimate))))
     iterations = min(iterations, 180)  # Cap for cost ceiling
 
-    # Select PennyLane device
+    # Select PennyLane device via Tier 4 VRAM probe (W4).
+    # select_quantum_device returns "lightning.gpu" only when env flag is true,
+    # n_qubits <= 25, and VRAM probe passes. Falls back to "default.qubit".
     hardware = "local_simulator"
-    try:
-        dev = qml.device("lightning.gpu", wires=n_qubits)
-        hardware = "local_simulator"  # Still local even on GPU
-    except Exception:
-        dev = qml.device("default.qubit", wires=n_qubits)
+    device_name = select_quantum_device(n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
 
     loss_indices = list(range(min(len(loss_amounts), n_qubits)))
     probs = _grover_circuit(n_qubits, loss_indices, daily_loss_limit, loss_amounts, iterations, dev)

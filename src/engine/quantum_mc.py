@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import sys
 import time
 from typing import Optional
@@ -23,7 +24,7 @@ import numpy as np
 from pydantic import BaseModel, Field
 
 from src.engine.quantum_models import UncertaintyModel
-from src.engine.hardware_profile import select_backend, get_hardware_profile
+from src.engine.hardware_profile import select_backend, get_hardware_profile, probe_vram
 
 # Optional Qiskit imports
 try:
@@ -76,6 +77,13 @@ GOVERNANCE_LABELS = {
     "decision_role": "challenger_only",
     "description": "Quantum estimates are experimental — always compare with classical MC",
 }
+
+# ─── Tier 4: cuQuantum GPU flag ─────────────────────────────────
+# Default OFF. When true, AerSampler is configured to use GPU statevector
+# if VRAM probe passes. Fallback to CPU is mandatory and automatic.
+_QUANTUM_CUQUANTUM_GPU_ENABLED: bool = (
+    os.environ.get("QUANTUM_CUQUANTUM_GPU_ENABLED", "false").lower() == "true"
+)
 
 
 class QuantumRunConfig(BaseModel):
@@ -367,7 +375,22 @@ def _run_estimation(
             if cloud_sampler is not None:
                 sampler = cloud_sampler
             elif AER_SAMPLER_AVAILABLE:
-                sampler = AerSampler()
+                # Tier 4: GPU AerSampler when env flag + VRAM probe pass.
+                # Falls back to CPU AerSampler when flag is false or VRAM
+                # insufficient — identical output, different backend.
+                _required_mb = int(2 ** (n_qubits - 3) + 200)
+                if (
+                    _QUANTUM_CUQUANTUM_GPU_ENABLED
+                    and probe_vram(_required_mb)
+                ):
+                    sampler = AerSampler(
+                        backend_options={
+                            "device": "GPU",
+                            "method": "statevector_gpu",
+                        }
+                    )
+                else:
+                    sampler = AerSampler()
             else:
                 from qiskit.primitives import StatevectorSampler  # type: ignore[import]
                 sampler = StatevectorSampler()

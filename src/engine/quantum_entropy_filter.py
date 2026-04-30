@@ -39,6 +39,8 @@ from typing import Any, Optional
 
 import numpy as np
 
+from src.engine.quantum_device_selector import select_quantum_device
+
 # ─── Governance Labels ────────────────────────────────────────────────────────
 GOVERNANCE_LABELS: dict[str, Any] = {
     "experimental": True,
@@ -228,15 +230,10 @@ def collect_quantum_noise(
         return None
 
     try:
-        # Select device: GPU only if env flag + W4 VRAM probe (not yet wired)
-        # For W3a: always use default.qubit (CPU)
-        device_name = "default.qubit"
-        if os.getenv("QUANTUM_CUQUANTUM_GPU_ENABLED") == "true":
-            # W4 will add VRAM probe here. For now, log and stay on CPU.
-            logger.debug(
-                "quantum_entropy_filter: QUANTUM_CUQUANTUM_GPU_ENABLED=true but "
-                "VRAM probe not yet implemented (W4). Using default.qubit."
-            )
+        # Select device: GPU if env flag + VRAM probe pass (Tier 4 / W4).
+        # Falls back to default.qubit when flag is false, VRAM insufficient,
+        # or n_qubits > 25 (RTX 5060 cap). Advisory — no authority change.
+        device_name = select_quantum_device(N_QUBITS)
 
         dev = qml.device(device_name, wires=N_QUBITS, seed=seed)
 

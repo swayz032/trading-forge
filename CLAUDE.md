@@ -225,8 +225,44 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
   AND trade-sequence luck. Strategies that only pass QAE may still be vulnerable
   to the prop firm failure mode of 5 losers in a row in the worst order.
 - **`QUANTUM_CUQUANTUM_GPU_ENABLED`** -- default false. Enables Tier 4 cuQuantum
-  GPU acceleration. **Requires VRAM probe pass** -- if VRAM is insufficient,
-  module falls back to CPU and logs once.
+  GPU acceleration. **SHIPPED W4.** Default OFF — no behavior change unless
+  explicitly enabled. When true, modules use `select_quantum_device()` to
+  probe VRAM before selecting `lightning.gpu`; CPU fallback is mandatory and
+  automatic when VRAM is insufficient or the GPU is unavailable.
+
+  **Modules:**
+  - `src/engine/quantum_device_selector.py` — `select_quantum_device(n_qubits, prefer_gpu=True) -> str`
+    Returns `"lightning.gpu"` or `"default.qubit"`. Advisory only. No execution authority.
+  - `src/engine/hardware_profile.py` — `probe_vram(required_mb) -> bool`
+    Probes GPU 0 via pynvml (primary) or nvidia-smi (fallback). Never raises.
+
+  **VRAM formula (per plan):** `required_mb = int(2 ** (n_qubits - 3) + 200)`
+  Safety margin of +500 MB is applied inside `probe_vram`, not by callers.
+
+  **RTX 5060 cap:** n_qubits > 25 always falls back to CPU. State-vector for
+  25+ qubits requires ~4 GB+ and would OOM the 5060's 8 GB frame buffer.
+
+  **Fallback chain (in order):**
+  1. `prefer_gpu=False` → `"default.qubit"`
+  2. `QUANTUM_CUQUANTUM_GPU_ENABLED != true` → `"default.qubit"`
+  3. `n_qubits > 25` → `"default.qubit"` + WARNING log
+  4. `probe_vram(required_mb)` returns False → `"default.qubit"`
+  5. All checks pass → `"lightning.gpu"`
+
+  **Wired modules (W4):**
+  - `quantum_entropy_filter.py` (8 qubits) — replaces W3a CPU-only stub
+  - `quantum_adversarial_stress.py` (8-15 qubits) — replaces raw try/except
+  - `a_plus_market_auditor.py` (4 qubits VQC) — replaces hardcoded "default.qubit"
+  - `quantum_mc.py` (AerSampler) — GPU backend_options when probe passes
+
+  **Performance (env flag false):** output IDENTICAL to pre-W4. No behavior
+  change when flag is off — all quantum module outputs are deterministic and
+  reproducible on CPU as before.
+
+  **Tests:**
+  - `src/engine/tests/test_quantum_device_selector.py` — 26 tests (isolation,
+    schema, GPU path, qubit cap, prefer_gpu override, VRAM fallback)
+  - `src/engine/tests/test_hardware_profile.py` — 18 tests (probe_vram coverage)
 
 ## Lifecycle Telemetry Tables (W1 / Tier 0)
 Two new tables ship in W1 to unblock Tier 7 quantum graduation queries:

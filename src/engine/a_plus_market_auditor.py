@@ -47,6 +47,8 @@ from typing import Any, Optional
 
 import numpy as np
 
+from src.engine.quantum_device_selector import select_quantum_device
+
 # ─── Governance Labels ────────────────────────────────────────────────────────
 GOVERNANCE_LABELS: dict[str, Any] = {
     "experimental": True,
@@ -357,9 +359,12 @@ def run_cross_market_entanglement(
             return result
 
     try:
-        dev = qml.device("default.qubit", wires=_VQC_N_QUBITS, seed=seed)
+        # Select device via Tier 4 VRAM probe (W4). "lightning.gpu" only when
+        # env flag is true, n_qubits <= 25, and VRAM probe passes.
+        device_name = select_quantum_device(_VQC_N_QUBITS)
+        dev = qml.device(device_name, wires=_VQC_N_QUBITS, seed=seed)
         circuit_result = _build_entanglement_circuit(corr_matrix, dev, seed)
-        circuit_result["hardware"] = "default.qubit"
+        circuit_result["hardware"] = device_name
         return circuit_result
     except Exception as exc:
         logger.warning(
