@@ -128,10 +128,28 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
   Wave 7 graduation flips the value after 30+ days of agreement data.
 - **`QUANTUM_ENTROPY_FILTER_ENABLED`** -- default false. Enables Tier 3.1 QCNN
   noise score in skip engine. When false, `noise_score` is None and skip
-  engine ignores the slot. The slot (`quantum_noise` in `SIGNAL_WEIGHTS`,
-  weight 1.5; scorer `_score_quantum_entropy` in `skip_classifier.py`;
-  optional `quantum_noise_score` field in `POST /api/skip/classify`) was
-  pre-wired by Tier 1.3 / W2-Team-C and is ready for W3a.
+  engine ignores the slot. **SHIPPED W3a.** Module: `src/engine/quantum_entropy_filter.py`.
+  Architecture: 8-qubit QCNN (2 conv layers + 1 pooling layer, 37 gate ops).
+  Output: `noise_score ∈ [0,1]`. Integrated into `premarket_analyzer.py` —
+  adds `quantum_noise_score` to signals dict when flag is true.
+  PennyLane 0.44.1 required; classical fallback returns None (skip engine
+  continues with score 0.0 via `_score_quantum_entropy`).
+  Performance: ~6ms wall-clock on CPU (default.qubit).
+  W3b dependency: A+ Market Auditor reads `skip_decisions.signals.quantum_noise_score`
+  per market per day — confirm that JSONB path before W3b implementation.
+
+  **Tier 3.1 Threshold Calibration Plan:**
+  Placeholder threshold: `QUANTUM_NOISE_THRESHOLD = 0.5` (in `quantum_entropy_filter.py`).
+  TODO (calibrate after 30 days of skip_decisions data):
+    1. Query `skip_decisions.signals` for rows where `quantum_noise_score IS NOT NULL`.
+    2. Label each row as "wick-out day" (price spiked + reversed within 1 ATR that session)
+       by joining against intraday Parquet from S3.
+    3. Build precision/recall curve over threshold range [0.3, 0.7] in 0.05 steps.
+    4. Pick threshold that maximizes precision at >= 80% recall.
+    5. Update `QUANTUM_NOISE_THRESHOLD` in `quantum_entropy_filter.py` and rerun
+       `src/engine/tests/test_quantum_entropy_filter.py` to confirm no regressions.
+    6. Also refit `_FEATURE_STATS` normalization means/stds using the 30-day sample.
+  Target calibration date: ~2026-06-01 (30 days after entropy filter goes live).
 - **`QUANTUM_COUNTERFACTUAL_ENABLED`** -- default false. Tier 3.2 deferred per
   architect review; flag reserved for future revival.
 - **`QUANTUM_GRAVEYARD_QUBO_ENABLED`** -- default false. Enables Tier 2 SQA

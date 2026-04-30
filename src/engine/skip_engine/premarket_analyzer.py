@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+import os
 from datetime import date, datetime
 from typing import Any
 
 from src.engine.skip_engine.calendar_filter import calendar_check
+
+logger = logging.getLogger(__name__)
 
 
 def _get_event_proximity(check_date: date) -> dict[str, Any] | None:
@@ -161,6 +165,33 @@ def collect_premarket_signals(
 
     if bad_days:
         signals["bad_days"] = bad_days
+
+    # Signal #12: Quantum Entropy Filter — Tier 3.1 (W3a)
+    # Only runs when QUANTUM_ENTROPY_FILTER_ENABLED=true. Default OFF (shadow mode).
+    # Challenger-only: never blocks trading on its own. Feeds quantum_noise slot
+    # in skip_classifier SIGNAL_WEIGHTS. Returns None when flag is off.
+    quantum_noise_score: float | None = None
+    if os.getenv("QUANTUM_ENTROPY_FILTER_ENABLED") == "true":
+        try:
+            from src.engine.quantum_entropy_filter import collect_quantum_noise
+            # Build feature dict from signals collected so far
+            _quantum_features: dict[str, float] = {}
+            if vix is not None:
+                _quantum_features["vix"] = float(vix)
+            if overnight_gap_atr is not None:
+                _quantum_features["gap_atr"] = float(overnight_gap_atr)
+            if premarket_volume_pct is not None:
+                _quantum_features["premarket_volume_pct"] = float(premarket_volume_pct)
+            if consecutive_losses > 0:
+                _quantum_features["consecutive_losses"] = float(consecutive_losses)
+            if dd_usage is not None:
+                _quantum_features["monthly_dd_usage"] = float(dd_usage)
+            # atr_5m, order_flow_imbalance, spread come from Massive feed;
+            # not available in premarket_analyzer signature — left at default 0.0
+            quantum_noise_score = collect_quantum_noise(_quantum_features)
+        except Exception as e:
+            logger.warning("Quantum entropy filter failed: %s", e)
+    signals["quantum_noise_score"] = quantum_noise_score
 
     # Signal #11: DeepAR regime risk — only contributes when weight > 0.0
     if deepar_forecast and deepar_weight > 0.0:
