@@ -8,7 +8,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
-import { logger } from "../index.js";
+
 import { runPythonModule } from "../lib/python-runner.js";
 import { db } from "../db/index.js";
 import { dayArchetypes } from "../db/schema.js";
@@ -72,7 +72,7 @@ archetypeRoutes.post("/classify", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Archetype classification failed");
+    req.log.error({ err }, "Archetype classification failed");
     res.status(500).json({ error: "Classification failed", details: String(err) });
   }
 });
@@ -115,7 +115,7 @@ archetypeRoutes.get("/history/:symbol", async (req, res) => {
       data: rows,
     });
   } catch (err) {
-    logger.error({ err, symbol }, "Archetype history query failed");
+    req.log.error({ err, symbol }, "Archetype history query failed");
     res.status(500).json({ error: "Failed to load archetype history", details: String(err) });
   }
 });
@@ -152,7 +152,7 @@ archetypeRoutes.get("/distribution/:symbol", async (req, res) => {
       distribution,
     });
   } catch (err) {
-    logger.error({ err, symbol }, "Archetype distribution query failed");
+    req.log.error({ err, symbol }, "Archetype distribution query failed");
     res.status(500).json({ error: "Failed to load archetype distribution", details: String(err) });
   }
 });
@@ -174,14 +174,14 @@ archetypeRoutes.post("/strategy-fit", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Strategy-archetype mapping failed");
+    req.log.error({ err }, "Strategy-archetype mapping failed");
     res.status(500).json({ error: "Strategy mapping failed", details: String(err) });
   }
 });
 
 // ─── GET /api/archetypes/accuracy ────────────────────────────────
 // Prediction accuracy statistics
-archetypeRoutes.get("/accuracy", async (_req, res) => {
+archetypeRoutes.get("/accuracy", async (req, res) => {
   try {
     const rows = await db
       .select({
@@ -219,7 +219,7 @@ archetypeRoutes.get("/accuracy", async (_req, res) => {
       per_archetype: perArchetype,
     });
   } catch (err) {
-    logger.error({ err }, "Archetype accuracy query failed");
+    req.log.error({ err }, "Archetype accuracy query failed");
     res.status(500).json({ error: "Failed to load archetype accuracy", details: String(err) });
   }
 });

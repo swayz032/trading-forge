@@ -1,4 +1,36 @@
-// Mirrors src/server/db/schema.ts — Drizzle returns numeric as string
+// ─────────────────────────────────────────────────────────────────────────
+// FRONTEND DB TYPES — kept in sync with `src/shared/db-types.ts` on the server
+// ─────────────────────────────────────────────────────────────────────────
+// Source of truth: `<repo>/src/shared/db-types.ts`, which derives all row
+// shapes via Drizzle's `typeof <table>.$inferSelect` from
+// `<repo>/src/server/db/schema.ts`.
+//
+// The frontend lives in a separate workspace with its own tsconfig and
+// cannot import from the server's source tree directly. Until the workspace
+// is unified, this file is the canonical mirror — copy the inferred shapes
+// here, and never let column drift go uncorrected.
+//
+// # Drift policy
+// When you add or rename a column on the server:
+//   1. Update `<repo>/src/server/db/schema.ts` (the table definition).
+//   2. The shared `db-types.ts` updates automatically via $inferSelect.
+//   3. PATCH THE MATCHING INTERFACE BELOW in the same PR.
+// Silent drift here has caused real production bugs (e.g. the `source`
+// column from migration 0045 was missing for two months before audit).
+//
+// # JSON serialization quirks
+// - Drizzle returns `numeric` as `string` to preserve precision.
+// - Drizzle returns `timestamp` as `Date` server-side; JSON serializes
+//   to ISO 8601 string. The interfaces below use `string` for timestamps.
+// - `jsonb` columns are typed `any`/`Record<string, any>` here for
+//   pragmatism. Apply Zod or narrowing at the route boundary.
+//
+// # Mutation response shapes
+// For mutating-route response shapes (POST/PATCH endpoints), import the
+// `<RouteName>Response` interface from the route file directly. See
+// `src/server/lib/api-contracts.ts` for the contract pattern. Do NOT
+// redeclare response shapes here.
+// ─────────────────────────────────────────────────────────────────────────
 
 export interface Strategy {
   id: string;
@@ -13,6 +45,10 @@ export interface Strategy {
   rollingSharpe30d: string | null;
   forgeScore: string | null;
   tags: string[] | null;
+  searchBudgetUsed: number | null;
+  parentStrategyId: string | null;
+  generation: number;
+  source: string | null;                       // migration 0045 — origin: ollama|openclaw|manual|n8n|evolved
   createdAt: string;
   updatedAt: string;
 }
@@ -45,10 +81,16 @@ export interface Backtest {
     halfLifeDays: number | null;
     compositeScore: number;
     decaying: boolean;
-    trend: "improving" | "declining" | "stable";
+    trend: "improving" | "accelerating_decline" | "stable";
     decayDetected: boolean;
     signals: Record<string, any>;
   } | null;
+  runReceipt: any;
+  sanityChecks: any;
+  crossValidation: any;
+  gateResult: any;
+  gateRejections: any;
+  resultExtras: any | null;                    // migration 0053 — governor, analytics, bootstrap_ci_95, etc.
   errorMessage: string | null;
   executionTimeMs: number | null;
   createdAt: string;
@@ -100,6 +142,52 @@ export interface Alert {
   message: string;
   metadata: any;
   acknowledged: boolean;
+  createdAt: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  input: any;
+  result: any;
+  status: string;
+  durationMs: number | null;
+  errorMessage: string | null;
+  decisionAuthority: string | null;            // gate | human | agent | scheduler | n8n
+  correlationId: string | null;                // migration 0054 — HTTP req correlation id
+  createdAt: string;
+}
+
+export interface CriticOptimizationRun {
+  id: string;
+  strategyId: string;
+  backtestId: string;
+  status: string;
+  candidatesGenerated: number | null;
+  survivorCandidateId: string | null;
+  survivorBacktestId: string | null;
+  parentCompositeScore: string | null;
+  survivorCompositeScore: string | null;
+  evidenceSources: any;
+  evidencePacket: any;
+  compositeWeights: any;
+  executionTimeMs: number | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export interface StrategyExport {
+  id: string;
+  strategyId: string;
+  exportType: string;                          // pine_indicator | pine_strategy | alert_only
+  pineVersion: string | null;
+  exportabilityScore: string | null;
+  exportabilityDetails: any;
+  status: string;
+  errorMessage: string | null;
+  propOverlayFirm: string | null;
   createdAt: string;
 }
 
@@ -160,12 +248,21 @@ export interface AgentJob {
 export interface PaperSession {
   id: string;
   strategyId: string | null;
-  status: string;
+  status: string;                              // active | stopped | paused
+  mode: string;                                // paper | shadow
+  firmId: string | null;                       // firm key, null = tightest defaults
   startedAt: string;
   stoppedAt: string | null;
+  pausedAt: string | null;                     // pause/resume timestamp
   startingCapital: string;
   currentEquity: string;
+  peakEquity: string;                          // for drawdown floor enforcement
   config: any;
+  lastSignalTime: string | null;               // cooldown persistence
+  cooldownUntil: string | null;                // cooldown persistence
+  dailyPnlBreakdown: Record<string, any>;      // consistency tracking
+  metricsSnapshot: Record<string, any>;        // rolling Sharpe + post-trade analytics
+  totalTrades: number;                         // trade counter for promotion inputs
   createdAt: string;
 }
 
@@ -180,6 +277,15 @@ export interface PaperPosition {
   unrealizedPnl: string;
   entryTime: string;
   closedAt: string | null;
+  arrivalPrice: string | null;                 // TCA — signal price before slippage
+  implementationShortfall: string | null;      // TCA — cost of execution
+  fillRatio: string | null;                    // TCA — intended vs filled
+  trailHwm: string | null;                     // trail stop high-water mark
+  barsHeld: number;                            // bars held counter (persisted)
+  fillProbability: string | null;              // fill probability used at entry
+  mae: string | null;                          // migration 0034 — Maximum Adverse Excursion
+  mfe: string | null;                          // migration 0034 — Maximum Favorable Excursion
+  previousUnrealizedPnl: string | null;        // FIX 2 — last committed unrealized P&L
 }
 
 export interface PaperTrade {
@@ -189,11 +295,24 @@ export interface PaperTrade {
   side: string;
   entryPrice: string;
   exitPrice: string;
-  pnl: string;
+  pnl: string;                                 // NET P&L (after commission)
+  grossPnl: string | null;                     // pre-commission reference value
+  commission: string | null;                   // round-trip commission cost
   contracts: number;
   entryTime: string;
   exitTime: string;
   slippage: string | null;
+  mae: string | null;                          // maximum adverse excursion
+  mfe: string | null;                          // maximum favorable excursion
+  holdDurationMs: number | null;
+  hourOfDay: number | null;                    // UTC hour of entry (0-23)
+  dayOfWeek: number | null;                    // 0=Sun ... 6=Sat
+  sessionType: string | null;                  // ASIA | LONDON | NY_OPEN | ...
+  macroRegime: string | null;
+  eventActive: boolean | null;                 // entry inside event blackout
+  skipSignal: string | null;                   // TRADE | REDUCE | SKIP
+  fillProbability: string | null;
+  rollSpreadCost: string | null;               // migration 0056 — calendar spread cost across roll
   createdAt: string;
 }
 

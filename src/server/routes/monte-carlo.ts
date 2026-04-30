@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { monteCarloRuns, stressTestRuns, backtests, strategies } from "../db/schema.js";
 import { runMonteCarlo } from "../services/monte-carlo-service.js";
-import { logger } from "../index.js";
+import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
 
 export const monteCarloRoutes = Router();
 
@@ -25,6 +25,16 @@ const mcRequestSchema = z.object({
 
 // ─── POST /api/monte-carlo — Run MC on a backtest (async) ────────
 monteCarloRoutes.post("/", async (req, res) => {
+  // FIX 5 — pipeline pause gate. MC spawns a Python subprocess and writes a
+  // monte_carlo_runs row; both are pipeline-side-effects that must not run
+  // when the pipeline is PAUSED/VACATION. 423 (Locked) signals "the resource
+  // is intentionally unavailable" so callers (n8n, dashboard) can distinguish
+  // pause from real failure.
+  if (!(await isPipelineActive())) {
+    res.status(423).json({ error: "pipeline_paused" });
+    return;
+  }
+
   const parsed = mcRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -36,9 +46,9 @@ monteCarloRoutes.post("/", async (req, res) => {
   // Generate the MC run ID upfront to avoid race condition
   const mcId = randomUUID();
 
-  // Fire and forget
+  // Fire and forget — req.log carries the request correlation ID (typed in src/server/types/express.d.ts)
   runMonteCarlo(backtestId, options, mcId).catch((err) => {
-    logger.error({ err, backtestId }, "Fire-and-forget Monte Carlo simulation failed");
+    req.log.error({ err, backtestId, mcId }, "Fire-and-forget Monte Carlo simulation failed");
   });
 
   res.status(202).json({

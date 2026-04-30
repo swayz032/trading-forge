@@ -218,6 +218,265 @@
       "when": 1775970000000,
       "tag": "0030_graveyard_failure_taxonomy",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1775980000000,
+      "tag": "0031_mutation_outcomes_regret_scoring",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1775990000000,
+      "tag": "0032_audit_log_enrichment",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1776000000000,
+      "tag": "0033_artifact_content_hash",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1776010000000,
+      "tag": "0034_paper_positions_mae_mfe",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1776020000000,
+      "tag": "0035_sqa_qubo_seed",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1776030000000,
+      "tag": "0036_sqa_comparison_critic_regret",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1776040000000,
+      "tag": "0037_paper_session_feedback",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1776050000000,
+      "tag": "0038_export_config_hash",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1776060000000,
+      "tag": "0038a_referential_integrity_pine_version",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1776070000000,
+      "tag": "0039_wave1_enterprise_observability",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1776080000000,
+      "tag": "0040_wave2_self_evolution",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1776090000000,
+      "tag": "0041_wave3_observability",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1776100000000,
+      "tag": "0042_wave4_automation",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1776110000000,
+      "tag": "0043_wave5_resilience",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1776120000000,
+      "tag": "0044_wave6_self_learning",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1776200000000,
+      "tag": "0044a_system_parameters_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1776130000000,
+      "tag": "0045_strategy_cleanup_and_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1776140000000,
+      "tag": "0046_dlq_escalated",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1776150000000,
+      "tag": "0047_idempotency_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1776160000000,
+      "tag": "0048_subsystem_metrics",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1776170000000,
+      "tag": "0049_prompt_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1776180000000,
+      "tag": "0050_quantum_benchmark_graduation",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1776190000000,
+      "tag": "0051_contract_rolls",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1776200000000,
+      "tag": "0052_fk_cascade_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1776210000000,
+      "tag": "0053_backtest_result_extras",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1776220000000,
+      "tag": "0054_audit_log_correlation_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1776230000000,
+      "tag": "0055_drop_orphan_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1776240000000,
+      "tag": "0056_roll_spread_cost",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1776250000000,
+      "tag": "0057_critic_candidates_model_version",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1776260000000,
+      "tag": "0058_audit_log_append_only",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1776270000000,
+      "tag": "0059_paper_position_prev_unrealized",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1776280000000,
+      "tag": "0060_pine_export_content_hash",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1776290000000,
+      "tag": "0061_paper_session_governor_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1776300000000,
+      "tag": "0062_pine_version_default",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1776310000000,
+      "tag": "0063_critic_survivor_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1776320000000,
+      "tag": "0064_lifecycle_transitions_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1776330000000,
+      "tag": "0065_quantum_cost_telemetry",
+      "breakpoints": true
     }
   ]
 }

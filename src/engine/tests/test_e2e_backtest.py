@@ -116,7 +116,8 @@ class TestE2EBacktest:
 
         passed, rejections = check_performance_gate(stats)
         tier = classify_tier(stats)
-        score = compute_forge_score(stats)
+        forge_result = compute_forge_score(stats)
+        score = forge_result["score"]  # compute_forge_score returns a dict; score is the float
 
         # These should return valid results regardless of pass/fail
         assert isinstance(passed, bool)

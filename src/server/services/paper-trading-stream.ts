@@ -394,3 +394,19 @@ export function isStreaming(sessionId: string): boolean {
 export function getBarBuffer(symbol: string): Bar[] {
   return barBuffer.get(symbol) ?? [];
 }
+
+/**
+ * Health snapshot for a single session — used by the scheduler's auto-recovery
+ * loop to detect crashed WebSocket streams. Returns `connected: false` for
+ * unknown / closed sessions so callers fail closed.
+ */
+export function getStreamHealth(sessionId: string): { connected: boolean; symbols: string[] } {
+  const symbols = sessionSymbols.get(sessionId);
+  if (!symbols) return { connected: false, symbols: [] };
+  const arr = Array.from(symbols);
+  const connected = arr.every((s) => {
+    const shared = sharedSockets.get(s);
+    return shared?.ws.isConnected() ?? false;
+  });
+  return { connected, symbols: arr };
+}

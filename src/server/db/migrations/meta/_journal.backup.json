@@ -1,0 +1,377 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1773101512065,
+      "tag": "0000_previous_nuke",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773110707715,
+      "tag": "0001_flashy_hercules",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773377204973,
+      "tag": "0002_equal_nova",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773400000000,
+      "tag": "0003_tournament_expires_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773500000000,
+      "tag": "0004_paper_trading",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773600000000,
+      "tag": "0005_paper_signal_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773700000000,
+      "tag": "0006_deep_analysis_pipeline",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773800000000,
+      "tag": "0007_matrix_correlations",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773900000000,
+      "tag": "0008_decay_analysis_column",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1774000000000,
+      "tag": "0009_strategy_evolution",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1774100000000,
+      "tag": "0010_top1_engine_upgrade",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1774200000000,
+      "tag": "0011_paper_full_potential",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1774300000000,
+      "tag": "0012_paper_execution_realism",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1774400000000,
+      "tag": "0013_paper_pause_resume",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1774500000000,
+      "tag": "0014_paper_trailing_drawdown",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1774600000000,
+      "tag": "0015_schema_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1774700000000,
+      "tag": "0016_sanity_cross_validation",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1774800000000,
+      "tag": "0017_add_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774900000000,
+      "tag": "0018_quantum_pine_export",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1775000000000,
+      "tag": "0019_strategy_names",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1775100000000,
+      "tag": "0020_strategy_names_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1775200000000,
+      "tag": "0021_add_performance_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1775300000000,
+      "tag": "0022_quantum_persistence_critic",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1775400000000,
+      "tag": "0023_paper_trades_commission",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1775500000000,
+      "tag": "0024_paper_position_state_persistence",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1775600000000,
+      "tag": "0025_backtest_gate_result_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1775700000000,
+      "tag": "0026_wave2_status_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1775800000000,
+      "tag": "0027_deepar_cloud_quantum",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1775900000000,
+      "tag": "0028_quantum_mc_cloud_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1775960000000,
+      "tag": "0029_paper_trades_journal_enrichment",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1775970000000,
+      "tag": "0030_graveyard_failure_taxonomy",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1775980000000,
+      "tag": "0031_mutation_outcomes_regret_scoring",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1775990000000,
+      "tag": "0032_audit_log_enrichment",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1776000000000,
+      "tag": "0033_artifact_content_hash",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1776010000000,
+      "tag": "0034_paper_positions_mae_mfe",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1776020000000,
+      "tag": "0035_sqa_qubo_seed",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1776030000000,
+      "tag": "0036_sqa_comparison_critic_regret",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1776040000000,
+      "tag": "0037_paper_session_feedback",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1776050000000,
+      "tag": "0038_export_config_hash",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1776060000000,
+      "tag": "0038a_referential_integrity_pine_version",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1776070000000,
+      "tag": "0039_wave1_enterprise_observability",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1776080000000,
+      "tag": "0040_wave2_self_evolution",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1776090000000,
+      "tag": "0041_wave3_observability",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1776100000000,
+      "tag": "0042_wave4_automation",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1776110000000,
+      "tag": "0043_wave5_resilience",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1776120000000,
+      "tag": "0044_wave6_self_learning",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1776130000000,
+      "tag": "0045_strategy_cleanup_and_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1776140000000,
+      "tag": "0046_dlq_escalated",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1776150000000,
+      "tag": "0047_idempotency_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1776160000000,
+      "tag": "0048_subsystem_metrics",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1776170000000,
+      "tag": "0049_prompt_versions",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1776180000000,
+      "tag": "0050_quantum_benchmark_graduation",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1776190000000,
+      "tag": "0051_contract_rolls",
+      "breakpoints": true
+    }
+  ]
+}

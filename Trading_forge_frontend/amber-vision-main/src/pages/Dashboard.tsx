@@ -10,6 +10,7 @@ import { StrategySpotlight } from "@/components/forge/StrategySpotlight";
 import { useStrategies } from "@/hooks/useStrategies";
 import { useBacktests, useBacktestTrades } from "@/hooks/useBacktests";
 import { useMonteCarlo } from "@/hooks/useMonteCarlo";
+import { useSSE } from "@/hooks/useSSE";
 import type { LeaderboardRow } from "@/components/forge/StrategyLeaderboard";
 import { num, dollarsToPoints, fmtPoints } from "@/lib/utils";
 
@@ -31,6 +32,18 @@ function formatET() {
 }
 
 export default function Dashboard() {
+  // SSE: keep dashboard fresh on strategy/health/risk events
+  useSSE([
+    "alert:new",
+    "strategy:promoted",
+    "strategy:analyzed",
+    "strategy:drift-alert",
+    "backtest:completed",
+    "paper:kill-switch-tripped",
+    "paper:auto_stopped",
+    "paper:auto_recovered",
+  ]);
+
   const [etTime, setEtTime] = useState(formatET());
   const [session, setSession] = useState(getSession());
   useEffect(() => {

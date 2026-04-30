@@ -25,6 +25,11 @@ import numpy as np
 from pydantic import BaseModel, Field
 from src.engine.nvtx_markers import annotate
 
+try:
+    from src.engine.cloud_backend import quantum_result_cache as _sqa_cache
+except ImportError:
+    _sqa_cache = None  # type: ignore[assignment]
+
 # Optional dwave-samplers (preferred) or legacy dwave-neal
 try:
     from dwave.samplers import SimulatedAnnealingSampler
@@ -190,6 +195,22 @@ def run_sqa_optimization(
         num_sweeps: Annealing sweeps per run
         seed: Random seed
     """
+    # ── Result cache check ──────────────────────────────────────────────────
+    # SQA runs are deterministic (seeded) — safe to cache.
+    _sqa_cache_key: Optional[dict] = None
+    if _sqa_cache is not None:
+        _sqa_cache_key = {
+            "qubo": {str(k): v for k, v in qubo.items()},
+            "param_ranges": [pr.model_dump() for pr in param_ranges],
+            "num_reads": num_reads,
+            "num_sweeps": num_sweeps,
+            "seed": seed,
+        }
+        _cached = _sqa_cache.get(algorithm="sqa", params=_sqa_cache_key)
+        if _cached is not None:
+            _cached["cache_hit"] = True
+            return SQAResult(**{k: v for k, v in _cached.items() if k in SQAResult.model_fields})
+
     start_ms = int(time.time() * 1000)
     total_bits = sum(pr.n_bits for pr in param_ranges)
 
@@ -241,7 +262,7 @@ def run_sqa_optimization(
     # Find robust plateau
     robust = find_robust_plateau(all_solutions, top_k=10)
 
-    return SQAResult(
+    _sqa_result = SQAResult(
         best_params=best["params"],
         best_energy=best["energy"],
         best_objective_value=-best["energy"],  # Negate for maximization
@@ -252,6 +273,12 @@ def run_sqa_optimization(
         n_params=len(param_ranges),
         total_bits=total_bits,
     )
+    # Cache seeded SQA results (deterministic when NEAL_AVAILABLE and seed fixed)
+    if _sqa_cache is not None and _sqa_cache_key is not None:
+        _sqa_dict = _sqa_result.model_dump()
+        _sqa_dict["cache_hit"] = False
+        _sqa_cache.put(algorithm="sqa", params=_sqa_cache_key, result=_sqa_dict)
+    return _sqa_result
 
 
 def decode_solution(binary_solution: np.ndarray, param_ranges: list[ParamRange]) -> dict[str, float]:

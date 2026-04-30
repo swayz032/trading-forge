@@ -23,13 +23,22 @@ from src.engine.config import (
 # ─── Task 3.11: Per-Firm Commission Tests ────────────────────────
 
 class TestFirmCommissions:
-    def test_all_8_firms_present(self):
-        """All 8 prop firms have commission data."""
-        expected_firms = {
+    def test_all_production_firms_present(self):
+        """All production-verified prop firms have commission data.
+
+        The original 8 firms are the production-verified set with confirmed
+        commission rates. `top_one_50k`, `yrm_prop_50k`, and `fundingpips_50k`
+        are pending live-rule confirmation (see firm_config.py header comments)
+        and use conservative defaults until verified against docs/prop-firm-rules.md.
+        """
+        production_firms = {
             "topstep_50k", "mffu_50k", "tpt_50k", "apex_50k",
             "tradeify_50k", "alpha_50k", "ffn_50k", "earn2trade_50k",
         }
-        assert set(FIRM_COMMISSIONS.keys()) == expected_firms
+        pending_firms = {"top_one_50k", "yrm_prop_50k", "fundingpips_50k"}
+        actual = set(FIRM_COMMISSIONS.keys())
+        assert production_firms.issubset(actual), f"Missing production firms: {production_firms - actual}"
+        assert actual.issubset(production_firms | pending_firms), f"Unknown firms: {actual - (production_firms | pending_firms)}"
 
     def test_alpha_zero_commission(self):
         """Alpha Futures has zero commissions."""
@@ -85,11 +94,34 @@ class TestFirmCommissions:
 # ─── Task 3.12: Contract Cap Tests ──────────────────────────────
 
 class TestContractCaps:
-    def test_all_firms_default_15(self):
-        """All firms default to 15 contracts for all micro symbols."""
-        for firm_key in FIRM_CONTRACT_CAPS:
+    def test_production_firms_default_15(self):
+        """Production-verified firms default to 15 contracts for all micro symbols.
+
+        Pending firms (top_one_50k, yrm_prop_50k, fundingpips_50k) use a
+        conservative cap pending live-rule verification; covered separately.
+        """
+        production_firms = {
+            "topstep_50k", "mffu_50k", "tpt_50k", "apex_50k",
+            "tradeify_50k", "alpha_50k", "ffn_50k", "earn2trade_50k",
+        }
+        for firm_key in production_firms:
             for symbol in ["MES", "MNQ", "MCL"]:
-                assert get_contract_cap(firm_key, symbol) == 15
+                assert get_contract_cap(firm_key, symbol) == 15, (
+                    f"{firm_key} {symbol} cap is not 15"
+                )
+
+    def test_pending_firms_conservative_cap(self):
+        """Pending firms use conservative cap (clamped to CONTRACT_CAP_MIN)."""
+        from src.engine.firm_config import CONTRACT_CAP_MIN
+        pending_firms = {"top_one_50k", "yrm_prop_50k", "fundingpips_50k"}
+        for firm_key in pending_firms:
+            if firm_key not in FIRM_CONTRACT_CAPS:
+                continue
+            for symbol in ["MES", "MNQ", "MCL"]:
+                cap = get_contract_cap(firm_key, symbol)
+                assert cap == CONTRACT_CAP_MIN, (
+                    f"{firm_key} {symbol} cap should be conservative ({CONTRACT_CAP_MIN}), got {cap}"
+                )
 
     def test_cap_clamped_to_min_10(self):
         """get_contract_cap never returns below CONTRACT_CAP_MIN (10)."""

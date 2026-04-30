@@ -1071,7 +1071,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
+Updated automatically from the repo on `2026-04-30T06:35:06.967Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1079,13 +1079,13 @@ Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `tradingview_deploy`
-- API routes tracked: `33`
-- Scheduler jobs tracked: `14`
+- API routes tracked: `42`
+- Scheduler jobs tracked: `39`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
-- Engine subsystems tracked: `23`
-- Database tables tracked: `44`
+- Engine subsystems tracked: `22`
+- Database tables tracked: `51`
 
 ### Subsystem Runtime States
 - `active`: `11`
@@ -1120,10 +1120,10 @@ Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `11`
-- Route coverage: `33/33`
-- Scheduler coverage: `14/14`
-- Engine coverage: `23/23`
-- Database coverage: `44/44`
+- Route coverage: `42/42`
+- Scheduler coverage: `39/39`
+- Engine coverage: `22/22`
+- Database coverage: `51/51`
 - Autonomous subsystems with audit coverage: `11/11`
 - Autonomous subsystems with audit actions: `11/11`
 - Autonomous subsystems with telemetry evidence: `11/11`
@@ -1159,7 +1159,7 @@ Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
 - Inactive workflow candidates: `0`
 - Broken workflow blockers: `0`
 - Failing workflow blockers: `0`
-- Source-missing workflow blockers: `0`
+- Source-missing workflow blockers: `2`
 - Awaiting redeploy workflow blockers: `0`
 - Stale workflow blockers: `0`
 - Runtime control blockers: `0`
@@ -1219,7 +1219,6 @@ Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
 - `monte_carlo` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
 - `parameter_evolver` owner=`critic_evolution` status=`runtime-proven` state=`active` gaps=none
 - `pine_compiler` owner=`pine_export_preparation` status=`runtime-proven` state=`active` gaps=none
-- `pine_templates` owner=`pine_export_preparation` status=`runtime-proven` state=`active` gaps=none
 - `quantum_mc` owner=`quantum_experimental` status=`runtime-proven` state=`active` gaps=none
 - `skip_engine` owner=`context_execution` status=`runtime-proven` state=`active` gaps=none
 - `strategy_memory` owner=`research_orchestration` status=`runtime-proven` state=`active` gaps=none
@@ -1229,6 +1228,7 @@ Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
 - `walk_forward` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
 
 ### API Routes
+- `/api/admin`
 - `/api/agent`
 - `/api/alerts`
 - `/api/anti-setups`
@@ -1241,43 +1241,76 @@ Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
 - `/api/data`
 - `/api/decay`
 - `/api/deepar`
+- `/api/dlq`
 - `/api/governor`
 - `/api/graveyard`
 - `/api/health`
 - `/api/indicators`
 - `/api/journal`
 - `/api/macro`
+- `/api/metrics`
 - `/api/monte-carlo`
+- `/api/n8n`
+- `/api/openai-proxy`
+- `/api/openclaw/daily-report`
 - `/api/paper`
 - `/api/pine-export`
 - `/api/portfolio`
+- `/api/prevalidate`
 - `/api/prop-firm`
 - `/api/quantum-mc`
 - `/api/risk`
+- `/api/search`
 - `/api/signals`
 - `/api/skip`
 - `/api/sse`
 - `/api/strategies`
 - `/api/strategy-names`
+- `/api/supadata`
 - `/api/survival`
 - `/api/tournament`
 - `/api/validation`
 
 ### Scheduler Jobs
 - `agent-health-sweep`
+- `anti-setup-effectiveness`
+- `anti-setup-mine`
+- `archetype-daily-classify`
+- `compliance-rule-drift`
+- `contract-roll-sweep`
+- `critic-feedback`
 - `decay-monitor`
 - `deepar-predict`
 - `deepar-train`
 - `deepar-validate`
+- `disabled-job-probe`
+- `dlq-escalation`
+- `dlq-retry`
+- `drain-scouted-ideas-periodic`
+- `funnel-snapshot`
+- `graveyard-pattern-extraction`
+- `idempotency-cleanup`
 - `lifecycle-auto-check`
+- `macro-data-sync`
 - `meta-parameter-review`
+- `metrics-collector`
 - `metrics-heartbeat`
+- `n8n-health-check`
+- `n8n-workflow-sync`
 - `paper-vs-backtest`
+- `pipeline-resume-drain`
 - `portfolio-correlation`
 - `pre-market-prep`
+- `prompt-ab-resolution`
+- `python-pool-saturation-check`
 - `regret-score-fill`
+- `resource-snapshot`
 - `rolling-sharpe`
+- `session-analytics-rollup`
+- `stale-pending-sweeper`
 - `stale-session-check`
+- `system-map-drift`
+- `tournament-staleness-check`
 
 ### Engine Subsystems
 - `anti_setups`
@@ -1295,7 +1328,6 @@ Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
 - `monte_carlo`
 - `parameter_evolver`
 - `pine_compiler`
-- `pine_templates`
 - `quantum_mc`
 - `skip_engine`
 - `strategy_memory`
@@ -1344,23 +1376,30 @@ Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
 - `compliance_drift_log`
 - `compliance_reviews`
 - `compliance_rulesets`
+- `contract_rolls`
 - `critic_candidates`
 - `critic_optimization_runs`
 - `data_sync_jobs`
 - `day_archetypes`
+- `dead_letter_queue`
 - `deepar_forecasts`
 - `deepar_training_runs`
+- `idempotency_keys`
+- `lifecycle_transitions`
 - `macro_snapshots`
-- `market_data_meta`
 - `monte_carlo_runs`
 - `mutation_outcomes`
+- `n8n_execution_log`
 - `paper_positions`
+- `paper_session_feedback`
 - `paper_sessions`
 - `paper_signal_logs`
 - `paper_trades`
-- `portfolio_snapshots`
+- `prompt_ab_tests`
+- `prompt_versions`
 - `quantum_mc_benchmarks`
 - `quantum_mc_runs`
+- `quantum_run_costs`
 - `qubo_timing_runs`
 - `rl_training_runs`
 - `shadow_signals`
@@ -1372,11 +1411,11 @@ Updated automatically from the repo on `2026-04-03T11:35:13.678Z`.
 - `strategy_graveyard`
 - `strategy_names`
 - `stress_test_runs`
+- `subsystem_metrics`
 - `system_journal`
 - `system_parameter_history`
 - `system_parameters`
 - `tensor_predictions`
 - `tournament_results`
 - `walk_forward_windows`
-- `watchlist`
 <!-- END GENERATED: topology -->

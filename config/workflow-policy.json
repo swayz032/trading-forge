@@ -1,0 +1,33 @@
+{
+  "excludedWorkflows": [
+    "3A_workflow_backup_J0p8oYkONmN7pYn6",
+    "0A_health_monitor_66HEjQavpvirY6g5"
+  ],
+  "roleRoutedWorkflows": {
+    "8A_idea_to_strategy_vlCaiWM7F0AH1RRY": [
+      "strategy_proposer"
+    ],
+    "Strategy_Tournament_hPXhUaSC3ScznZE9": [
+      "strategy_proposer",
+      "critic_evaluator"
+    ],
+    "Strategy_Generation_Loop_eCr7cyb0aPArFCZc": [
+      "critic_evaluator"
+    ],
+    "Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd": [
+      "critic_evaluator"
+    ],
+    "Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy": [
+      "critic_evaluator"
+    ]
+  },
+  "strategyTitleGateWorkflows": [
+    "8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
+    "Strategy_Tournament_hPXhUaSC3ScznZE9"
+  ],
+  "strategyFormatGateWorkflows": [
+    "8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
+    "Strategy_Tournament_hPXhUaSC3ScznZE9",
+    "Strategy_Generation_Loop_eCr7cyb0aPArFCZc"
+  ]
+}

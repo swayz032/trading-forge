@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { systemJournal } from "../db/schema.js";
+import { systemJournal, auditLog } from "../db/schema.js";
+import { idempotencyMiddleware } from "../middleware/idempotency.js";
+import { logger } from "../lib/logger.js";
 
 export const journalRoutes = Router();
 
@@ -230,7 +232,13 @@ journalRoutes.get("/:id", async (req, res) => {
 });
 
 // Log a new journal entry (called by n8n after every backtest)
-journalRoutes.post("/", async (req, res) => {
+//
+// P1-3: wrapped in try/catch so DB write failures surface as a structured 500
+// instead of an unhandled rejection. Failures emit an `auditLog` row
+// (`journal.write_failed`) so n8n / dashboards can detect dropped writes.
+// idempotencyMiddleware protects against retried n8n requests creating
+// duplicate journal entries when the upstream pipeline times out and retries.
+journalRoutes.post("/", idempotencyMiddleware, async (req, res) => {
   const {
     strategyId,
     backtestId,
@@ -249,27 +257,66 @@ journalRoutes.post("/", async (req, res) => {
     status,
   } = req.body;
 
-  const [row] = await db
-    .insert(systemJournal)
-    .values({
-      strategyId,
-      backtestId,
-      source,
-      generationPrompt,
-      strategyCode,
-      strategyParams,
-      simulatedEquity,
-      dailyPnls,
-      forgeScore,
-      propComplianceResults,
-      performanceGateResult,
-      tier,
-      analystNotes,
-      parentJournalId,
-      status,
-    })
-    .returning();
-  res.status(201).json(row);
+  try {
+    const [row] = await db
+      .insert(systemJournal)
+      .values({
+        strategyId,
+        backtestId,
+        source,
+        generationPrompt,
+        strategyCode,
+        strategyParams,
+        simulatedEquity,
+        dailyPnls,
+        forgeScore,
+        propComplianceResults,
+        performanceGateResult,
+        tier,
+        analystNotes,
+        parentJournalId,
+        status,
+      })
+      .returning();
+    res.status(201).json(row);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      { err, strategyId, backtestId, source, status, tier },
+      "POST /api/journal: insert failed",
+    );
+    // Best-effort audit row — if audit_log itself is failing the surrounding
+    // .catch() prevents a crash, but we still attempt it so operators have a
+    // queryable record of dropped journal writes when the failure is local
+    // (e.g. unique constraint, check violation).
+    db.insert(auditLog)
+      .values({
+        action: "journal.write_failed",
+        entityType: "system_journal",
+        entityId: strategyId ?? null,
+        input: {
+          strategyId: strategyId ?? null,
+          backtestId: backtestId ?? null,
+          source: source ?? null,
+          tier: tier ?? null,
+          status: status ?? null,
+        } as Record<string, unknown>,
+        result: { error: errMsg } as Record<string, unknown>,
+        status: "failure",
+        decisionAuthority: "n8n",
+        correlationId: (req as unknown as { id?: string }).id ?? null,
+      })
+      .catch((auditErr) => {
+        logger.warn(
+          { err: auditErr, originalError: errMsg },
+          "journal.write_failed audit insert also failed (non-blocking)",
+        );
+      });
+    res.status(500).json({
+      error: "Failed to write journal entry",
+      details: errMsg,
+    });
+  }
 });
 
 // Update journal entry (e.g., Ollama Analyst adds self-critique notes)

@@ -8,6 +8,7 @@ import { FlaskConical, TrendingUp, Calendar, Clock } from "lucide-react";
 
 import { useBacktests } from "@/hooks/useBacktests";
 import { useStrategies } from "@/hooks/useStrategies";
+import { useSSE } from "@/hooks/useSSE";
 import { num, timeAgo } from "@/lib/utils";
 import type { Backtest, Strategy } from "@/types/api";
 
@@ -34,6 +35,8 @@ export default function Backtests() {
 
   const { data: backtests, isLoading } = useBacktests();
   const { data: strategies } = useStrategies();
+
+  useSSE(["backtest:completed", "backtest:complete"]);
 
   // Build strategy name lookup
   const strategyMap = new Map<string, string>();

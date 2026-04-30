@@ -35,7 +35,7 @@
         "options": {
           "timeout": 15000
         },
-        "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED"
+        "url": "http://host.docker.internal:4000/api/strategies?lifecycle_state=DEPLOYED"
       },
       "position": [
         224,
@@ -92,7 +92,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "url": "http://localhost:3000/api/journal"
+        "url": "http://host.docker.internal:4000/api/journal"
       },
       "position": [
         672,
@@ -176,7 +176,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "url": "=http://localhost:3000/api/strategies/{{ $json.strategyId }}/lifecycle"
+        "url": "=http://host.docker.internal:4000/api/strategies/{{ $json.strategyId }}/lifecycle"
       },
       "position": [
         1344,
@@ -208,7 +208,7 @@
         "options": {
           "timeout": 15000
         },
-        "url": "http://localhost:3000/api/strategies/pipeline"
+        "url": "http://host.docker.internal:4000/api/strategies/pipeline"
       },
       "position": [
         896,
@@ -246,7 +246,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "url": "http://localhost:3000/api/journal"
+        "url": "http://host.docker.internal:4000/api/journal"
       },
       "position": [
         1344,
@@ -447,7 +447,8 @@
     "saveDataSuccessExecution": "all",
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": {
     "node:5PM EST Weekday Trigger": {
@@ -541,7 +542,7 @@
           "options": {
             "timeout": 15000
           },
-          "url": "http://localhost:3000/api/strategies?lifecycle_state=DEPLOYED"
+          "url": "http://host.docker.internal:4000/api/strategies?lifecycle_state=DEPLOYED"
         },
         "position": [
           224,
@@ -598,7 +599,7 @@
           },
           "sendBody": true,
           "specifyBody": "json",
-          "url": "http://localhost:3000/api/journal"
+          "url": "http://host.docker.internal:4000/api/journal"
         },
         "position": [
           672,
@@ -682,7 +683,7 @@
           },
           "sendBody": true,
           "specifyBody": "json",
-          "url": "=http://localhost:3000/api/strategies/{{ $json.strategyId }}/lifecycle"
+          "url": "=http://host.docker.internal:4000/api/strategies/{{ $json.strategyId }}/lifecycle"
         },
         "position": [
           1344,
@@ -714,7 +715,7 @@
           "options": {
             "timeout": 15000
           },
-          "url": "http://localhost:3000/api/strategies/pipeline"
+          "url": "http://host.docker.internal:4000/api/strategies/pipeline"
         },
         "position": [
           896,
@@ -752,7 +753,7 @@
           },
           "sendBody": true,
           "specifyBody": "json",
-          "url": "http://localhost:3000/api/journal"
+          "url": "http://host.docker.internal:4000/api/journal"
         },
         "position": [
           1344,

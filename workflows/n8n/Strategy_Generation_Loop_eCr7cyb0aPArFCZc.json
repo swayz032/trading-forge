@@ -707,7 +707,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/validation/cross",
+          "url": "http://host.docker.internal:4000/api/validation/cross",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ concept: ($json.strategy && $json.strategy.entry_type) || $json.entry_type || 'unknown' }) }}",
@@ -1919,7 +1919,7 @@
           ],
           "parameters": {
             "method": "POST",
-            "url": "http://localhost:4000/api/validation/cross",
+            "url": "http://host.docker.internal:4000/api/validation/cross",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({ concept: ($json.strategy && $json.strategy.entry_type) || $json.entry_type || 'unknown' }) }}",
@@ -2379,5 +2379,8 @@
         }
       ]
     }
+  },
+  "settings": {
+    "errorWorkflow": "66HEjQavpvirY6g5"
   }
 }

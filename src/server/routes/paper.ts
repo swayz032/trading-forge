@@ -1,29 +1,41 @@
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, paperSignalLogs, strategies, backtests, monteCarloRuns, auditLog } from "../db/schema.js";
+import { paperSessions, paperPositions, paperTrades, paperSignalLogs, paperSessionFeedback, strategies, backtests, monteCarloRuns, auditLog } from "../db/schema.js";
 import { eq, desc, and } from "drizzle-orm";
-import { logger } from "../index.js";
 import { broadcastSSE } from "./sse.js";
 import { openPosition, closePosition, updatePositionPrices, getExecutionQuality, getTcaReport, getRollingMetrics } from "../services/paper-execution-service.js";
+import { computeAndPersistSessionFeedback } from "../services/paper-session-feedback-service.js";
 import { detectDrift } from "../services/drift-detection-service.js";
 import { calculateCorrelation, portfolioCorrelationMatrix } from "../services/correlation-service.js";
 import { startStream, stopStream, stopAllStreams, getActiveStreams, isStreaming, getBarBuffer } from "../services/paper-trading-stream.js";
 import { logShadowSignal } from "../services/shadow-service.js";
 import { cleanupSession } from "../services/paper-signal-service.js";
+import { idempotencyMiddleware } from "../middleware/idempotency.js";
 
 const router = Router();
+
+/**
+ * G7.1 contract — POST /api/paper/start response shape (201 Created).
+ * Returns the freshly inserted paperSessions row. Sourced from Drizzle's
+ * `$inferSelect` so any schema change auto-propagates here. Frontend imports
+ * this type instead of redeclaring PaperSession by hand. See
+ * `src/server/lib/api-contracts.ts` for the per-route contract pattern.
+ */
+export type PaperStartResponse = typeof paperSessions.$inferSelect;
 
 const paperStartSchema = z.object({
   strategyId: z.string().uuid(),
   startingCapital: z.coerce.number().min(1000).max(500000).default(50000).transform(String),
-  config: z.record(z.unknown()).optional(),
+  config: z.object({
+    daily_loss_limit: z.number().positive({ message: "daily_loss_limit required to engage kill switch" }),
+  }).passthrough().optional(),
   mode: z.enum(["paper", "shadow"]).default("paper"),
   firmId: z.string().optional().nullable(),
 });
 
 // POST /api/paper/start — start paper trading session + live stream
-router.post("/start", async (req, res) => {
+router.post("/start", idempotencyMiddleware, async (req, res) => {
   try {
     const parsed = paperStartSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -31,6 +43,42 @@ router.post("/start", async (req, res) => {
       return;
     }
     const { strategyId, startingCapital, config, mode, firmId } = parsed.data;
+
+    // P1-9: Require daily_loss_limit in config
+    const dailyLossLimit = (config as Record<string, unknown> | undefined)?.daily_loss_limit;
+    if (!dailyLossLimit || Number(dailyLossLimit) <= 0) {
+      res.status(400).json({ error: "daily_loss_limit required to engage kill switch" });
+      return;
+    }
+
+    // P1-1: Lifecycle guard — only allow paper trading for strategies in appropriate states
+    const ALLOWED_LIFECYCLE_STATES = ["TESTING", "PAPER", "DEPLOY_READY", "DEPLOYED"];
+    const [stratRow] = await db
+      .select({ lifecycleState: strategies.lifecycleState })
+      .from(strategies)
+      .where(eq(strategies.id, strategyId));
+
+    if (!stratRow) {
+      res.status(404).json({ error: "Strategy not found" });
+      return;
+    }
+
+    if (!ALLOWED_LIFECYCLE_STATES.includes(stratRow.lifecycleState)) {
+      const reason = `Strategy lifecycleState '${stratRow.lifecycleState}' is not eligible for paper trading (allowed: ${ALLOWED_LIFECYCLE_STATES.join(", ")})`;
+      await db.insert(auditLog).values({
+        action: "paper.session_start_blocked",
+        entityType: "strategy",
+        entityId: strategyId,
+        input: { strategyId, mode, lifecycleState: stratRow.lifecycleState },
+        result: { reason },
+        status: "blocked",
+        decisionAuthority: "system",
+        correlationId: req.id ?? null,
+      });
+      res.status(409).json({ error: reason });
+      return;
+    }
+
     const [session] = await db
       .insert(paperSessions)
       .values({ strategyId, startingCapital, currentEquity: startingCapital, config, mode, firmId: firmId ?? null })
@@ -48,13 +96,13 @@ router.post("/start", async (req, res) => {
       }
       if (symbols.length > 0) {
         startStream(session.id, symbols);
-        logger.info({ sessionId: session.id, symbols }, "Paper stream started for session");
+        req.log.info({ sessionId: session.id, symbols }, "Paper stream started for session");
       } else {
-        logger.warn({ sessionId: session.id, strategyId }, "No symbols found — stream not started");
+        req.log.warn({ sessionId: session.id, strategyId }, "No symbols found — stream not started");
       }
     } catch (streamErr) {
       // Non-fatal: session created even if stream fails (e.g. no MASSIVE_API_KEY)
-      logger.error(streamErr, "Failed to start paper stream — session created without live data");
+      req.log.error(streamErr, "Failed to start paper stream — session created without live data");
     }
 
     // Audit trail — paper session lifecycle
@@ -66,13 +114,15 @@ router.post("/start", async (req, res) => {
       result: { sessionId: session.id, startingCapital },
       status: "success",
       decisionAuthority: "human",
+      correlationId: req.id ?? null,
     });
 
     broadcastSSE("paper:session_start", { sessionId: session.id, strategyId });
-    logger.info({ sessionId: session.id }, "Paper trading session started");
-    res.status(201).json(session);
+    req.log.info({ sessionId: session.id }, "Paper trading session started");
+    const response: PaperStartResponse = session;
+    res.status(201).json(response);
   } catch (err: any) {
-    logger.error(err, "Failed to start paper session");
+    req.log.error(err, "Failed to start paper session");
     res.status(500).json({ error: err.message });
   }
 });
@@ -90,7 +140,7 @@ router.post("/stop", async (req, res) => {
     // Stop the live stream first
     if (isStreaming(sessionId)) {
       stopStream(sessionId);
-      logger.info({ sessionId }, "Paper stream stopped");
+      req.log.info({ sessionId }, "Paper stream stopped");
     }
 
     // Clean up in-memory caches (indicator history, session config)
@@ -106,7 +156,7 @@ router.post("/stop", async (req, res) => {
       .set({ status: "stopped", stoppedAt: new Date() })
       .where(eq(paperSessions.id, sessionId))
       .returning();
-    logger.info({ sessionId }, "Paper trading session stopped");
+    req.log.info({ sessionId }, "Paper trading session stopped");
 
     // Generate post-trade QuantStats analytics report (fire-and-forget).
     // Primary: build per-trade returns series from paperTrades.pnl (trade-level
@@ -162,15 +212,15 @@ router.post("/stop", async (req, res) => {
         await db.update(paperSessions)
           .set({ metricsSnapshot: snapshot as any })
           .where(eq(paperSessions.id, sessionId));
-        logger.info(
+        req.log.info(
           { sessionId, returnsSource, n: returnsForAnalytics.length },
           "Paper analytics report generated",
         );
       } else {
-        logger.info({ sessionId }, "Paper analytics skipped — insufficient trade data");
+        req.log.info({ sessionId }, "Paper analytics skipped — insufficient trade data");
       }
     } catch (analyticsErr) {
-      logger.warn({ sessionId, err: analyticsErr }, "Paper analytics failed (non-blocking)");
+      req.log.warn({ sessionId, err: analyticsErr }, "Paper analytics failed (non-blocking)");
     }
 
     // Audit trail — paper session lifecycle
@@ -186,12 +236,24 @@ router.post("/stop", async (req, res) => {
       },
       status: "success",
       decisionAuthority: "human",
+      correlationId: req.id ?? null,
     });
 
     broadcastSSE("paper:session_stop", { sessionId });
+
+    // Phase 4.6 — Compute and persist per-session feedback (non-blocking).
+    // Failure here must never block the stop response or roll back the status update.
+    computeAndPersistSessionFeedback(sessionId)
+      .then(() => {
+        broadcastSSE("paper:session-feedback-computed", { sessionId });
+      })
+      .catch((feedbackErr) => {
+        req.log.warn({ sessionId, err: feedbackErr }, "Failed to compute/persist session feedback (non-blocking)");
+      });
+
     res.json(session);
   } catch (err: any) {
-    logger.error(err, "Failed to stop paper session");
+    req.log.error(err, "Failed to stop paper session");
     res.status(500).json({ error: err.message });
   }
 });
@@ -293,7 +355,7 @@ router.post("/execute/open", async (req, res) => {
 
     res.status(201).json(result);
   } catch (err: any) {
-    logger.error(err, "Failed to open paper position");
+    req.log.error(err, "Failed to open paper position");
     res.status(500).json({ error: err.message });
   }
 });
@@ -308,7 +370,7 @@ router.post("/execute/close", async (req, res) => {
     const result = await closePosition(positionId, Number(exitSignalPrice));
     res.json(result);
   } catch (err: any) {
-    logger.error(err, "Failed to close paper position");
+    req.log.error(err, "Failed to close paper position");
     res.status(500).json({ error: err.message });
   }
 });
@@ -568,7 +630,7 @@ router.get("/mc-compare/:sessionId", async (req, res) => {
       warning,
     });
   } catch (err: any) {
-    logger.error(err, "MC compare failed");
+    req.log.error(err, "MC compare failed");
     res.status(500).json({ error: err.message });
   }
 });
@@ -585,21 +647,81 @@ router.post("/kill/:sessionId", async (req, res) => {
     // Stop the live stream if active
     if (isStreaming(sessionId)) {
       stopStream(sessionId);
-      logger.info({ sessionId }, "Paper stream killed");
+      req.log.info({ sessionId }, "Paper stream killed");
     }
 
     // Clean up in-memory caches
     cleanupSession(sessionId, symbols);
+
+    // Read before-status and strategyId for audit trail (P1-2)
+    const [sessionBefore] = await db
+      .select({ status: paperSessions.status, strategyId: paperSessions.strategyId })
+      .from(paperSessions)
+      .where(eq(paperSessions.id, sessionId));
 
     await db
       .update(paperSessions)
       .set({ status: "stopped", stoppedAt: new Date() })
       .where(eq(paperSessions.id, sessionId));
 
+    // Phase 4.6 — Compute and persist per-session feedback from the kill path so emergency
+    // stops also produce a feedback row. Non-blocking: must never delay the kill response.
+    computeAndPersistSessionFeedback(sessionId)
+      .then(() => {
+        broadcastSSE("paper:session-feedback-computed", { sessionId, source: "kill" });
+      })
+      .catch((feedbackErr) => {
+        req.log.warn({ sessionId, err: feedbackErr }, "Failed to compute/persist session feedback from kill path (non-blocking)");
+      });
+
+    // P1-2: Audit trail for kill
+    const killReason = req.body?.reason ?? "operator_kill";
+    await db.insert(auditLog).values({
+      action: "paper.session_kill",
+      entityType: "paper_session",
+      entityId: sessionId,
+      input: { sessionId, strategyId: sessionBefore?.strategyId ?? null, reason: killReason },
+      result: {
+        before: { status: sessionBefore?.status ?? "unknown" },
+        after: { status: "stopped" },
+      },
+      status: "success",
+      decisionAuthority: "human",
+      correlationId: req.id ?? null,
+    });
+
     res.json({ killed: true, session_id: sessionId });
   } catch (err) {
-    logger.error({ err }, "Kill switch failed");
+    req.log.error({ err }, "Kill switch failed");
     res.status(500).json({ error: "Kill switch failed", details: String(err) });
+  }
+});
+
+// GET /api/paper/sessions/:id/feedback — fetch the persisted session feedback row
+router.get("/sessions/:id/feedback", async (req, res) => {
+  try {
+    const [row] = await db
+      .select()
+      .from(paperSessionFeedback)
+      .where(eq(paperSessionFeedback.sessionId, req.params.id));
+    if (!row) return res.status(404).json({ error: "No feedback computed for this session yet" });
+    res.json(row);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/paper/strategies/:strategyId/feedback — list all session feedback for a strategy
+router.get("/strategies/:strategyId/feedback", async (req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(paperSessionFeedback)
+      .where(eq(paperSessionFeedback.strategyId, req.params.strategyId))
+      .orderBy(desc(paperSessionFeedback.computedAt));
+    res.json(rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -611,7 +733,7 @@ router.get("/shadow/:sessionId/report", async (req, res) => {
     const report = await getShadowReport(sessionId);
     res.json(report);
   } catch (err) {
-    logger.error({ err }, "Shadow report failed");
+    req.log.error({ err }, "Shadow report failed");
     res.status(500).json({ error: "Shadow report failed", details: String(err) });
   }
 });
@@ -651,7 +773,23 @@ router.post("/pause/:sessionId", async (req, res) => {
       .set({ status: "paused", pausedAt: new Date() })
       .where(eq(paperSessions.id, sessionId))
       .returning();
-    logger.info({ sessionId }, "Paper session paused");
+    req.log.info({ sessionId }, "Paper session paused");
+
+    // P1-3: Audit trail for pause
+    await db.insert(auditLog).values({
+      action: "paper.session_pause",
+      entityType: "paper_session",
+      entityId: sessionId,
+      input: { sessionId },
+      result: {
+        before: { status: current.status },
+        after: { status: "paused" },
+      },
+      status: "success",
+      decisionAuthority: "human",
+      correlationId: req.id ?? null,
+    });
+
     res.json(session);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -672,11 +810,38 @@ router.post("/resume/:sessionId", async (req, res) => {
       .set({ status: "active", pausedAt: null })
       .where(eq(paperSessions.id, sessionId))
       .returning();
-    logger.info({ sessionId }, "Paper session resumed");
+    req.log.info({ sessionId }, "Paper session resumed");
+
+    // P1-3: Audit trail for resume
+    await db.insert(auditLog).values({
+      action: "paper.session_resume",
+      entityType: "paper_session",
+      entityId: sessionId,
+      input: { sessionId },
+      result: {
+        before: { status: current.status },
+        after: { status: "active" },
+      },
+      status: "success",
+      decisionAuthority: "human",
+      correlationId: req.id ?? null,
+    });
+
     res.json(session);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// H8: GET /api/paper/parity-mode — expose skip/anti-setup gate modes for external inspection.
+// These env vars are read by Python gate modules; Node reads them directly here since
+// Node inherits the process environment (which Python subprocesses also inherit).
+// Returns one of: "off" | "shadow" | "enforce" for each mode.
+router.get("/parity-mode", (_req, res) => {
+  res.json({
+    skip_mode: process.env.TF_BACKTEST_SKIP_MODE ?? "off",
+    anti_setup_mode: process.env.TF_BACKTEST_ANTI_SETUP_MODE ?? "off",
+  });
 });
 
 export { router as paperRoutes };

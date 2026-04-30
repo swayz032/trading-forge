@@ -9,7 +9,6 @@
 
 import { Router } from "express";
 import { z } from "zod";
-import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 
 export const decayRoutes = Router();
@@ -44,7 +43,7 @@ decayRoutes.get("/status/:strategyId", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Decay status failed");
+    req.log.error({ err }, "Decay status failed");
     const status = String(err).includes("timed out") ? 504 : 500;
     res.status(status).json({ error: "Failed to get decay status", details: String(err) });
   }
@@ -67,7 +66,7 @@ decayRoutes.post("/analyze", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Decay analysis failed");
+    req.log.error({ err }, "Decay analysis failed");
     const status = String(err).includes("timed out") ? 504 : 500;
     res.status(status).json({ error: "Decay analysis failed", details: String(err) });
   }
@@ -86,7 +85,7 @@ decayRoutes.get("/signals/:strategyId", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Decay signals failed");
+    req.log.error({ err }, "Decay signals failed");
     const status = String(err).includes("timed out") ? 504 : 500;
     res.status(status).json({ error: "Failed to get decay signals", details: String(err) });
   }
@@ -109,7 +108,7 @@ decayRoutes.post("/quarantine/evaluate", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Quarantine evaluation failed");
+    req.log.error({ err }, "Quarantine evaluation failed");
     const status = String(err).includes("timed out") ? 504 : 500;
     res.status(status).json({ error: "Quarantine evaluation failed", details: String(err) });
   }
@@ -117,7 +116,7 @@ decayRoutes.post("/quarantine/evaluate", async (req, res) => {
 
 // ─── GET /api/decay/dashboard ───────────────────────────────────
 // All strategies with their decay status
-decayRoutes.get("/dashboard", async (_req, res) => {
+decayRoutes.get("/dashboard", async (req, res) => {
   try {
     const result = await runPythonModule({
       module: "src.engine.decay.half_life",
@@ -126,7 +125,7 @@ decayRoutes.get("/dashboard", async (_req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Decay dashboard failed");
+    req.log.error({ err }, "Decay dashboard failed");
     const status = String(err).includes("timed out") ? 504 : 500;
     res.status(status).json({ error: "Failed to get decay dashboard", details: String(err) });
   }

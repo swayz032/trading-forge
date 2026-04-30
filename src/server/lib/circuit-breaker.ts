@@ -16,7 +16,7 @@
  *   // throws CircuitOpenError if open, or propagates endpoint errors
  */
 
-import { logger } from "../index.js";
+import { logger } from "./logger.js";
 
 export type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
 

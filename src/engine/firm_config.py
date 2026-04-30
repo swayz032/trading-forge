@@ -36,6 +36,16 @@ FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
     "earn2trade_50k": {
         "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
     },
+    # P2-1: Added missing firms — conservative defaults pending doc verification
+    "top_one_50k": {
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
+    },
+    "yrm_prop_50k": {
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
+    },
+    "fundingpips_50k": {
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
+    },
 }
 
 
@@ -51,6 +61,10 @@ FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
     "alpha_50k":      {"MES": 15, "MNQ": 15, "MCL": 15},
     "ffn_50k":        {"MES": 15, "MNQ": 15, "MCL": 15},
     "earn2trade_50k": {"MES": 15, "MNQ": 15, "MCL": 15},
+    # P2-1: Added missing firms — conservative defaults (5 contracts)
+    "top_one_50k":    {"MES": 5, "MNQ": 5, "MCL": 5},
+    "yrm_prop_50k":   {"MES": 5, "MNQ": 5, "MCL": 5},
+    "fundingpips_50k": {"MES": 5, "MNQ": 5, "MCL": 5},
 }
 
 # Hard bounds: min 10, max 20. ATR sizing is clamped to this range.
@@ -64,6 +78,16 @@ CONTRACT_CAP_MAX = 20
 # on their original 50K account. All traders START at 50K.
 
 SCALING_PLANS: dict[str, list[dict]] = {
+    # P2-1: Added missing firms — conservative defaults
+    "top_one_50k": [
+        {"profit_threshold": 3000, "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
+    ],
+    "yrm_prop_50k": [
+        {"profit_threshold": 3000, "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
+    ],
+    "fundingpips_50k": [
+        {"profit_threshold": 3000, "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 10},
+    ],
     "topstep_50k": [
         {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 15},
         {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 4500, "max_contracts": 20},
@@ -109,6 +133,10 @@ INITIAL_CONTRACT_CAPS: dict[str, int] = {
     "alpha_50k": 15,
     "ffn_50k": 15,
     "earn2trade_50k": 15,
+    # P2-1: Added missing firms — conservative defaults (5 contracts)
+    "top_one_50k": 5,
+    "yrm_prop_50k": 5,
+    "fundingpips_50k": 5,
 }
 
 
@@ -261,6 +289,59 @@ FIRM_RULES: dict[str, dict] = {
         "min_trading_days": 10,
         "consistency_rule": "earn2trade_consistency",
         "daily_loss_limit": 1100,
+        "overnight_ok": False,
+        "weekend_ok": False,
+    },
+    # P2-1: Added missing firms — conservative defaults pending docs/prop-firm-rules.md verification.
+    # TODO: verify actual rules at docs/prop-firm-rules.md for top_one_50k, yrm_prop_50k, fundingpips_50k.
+    "top_one_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 0,         # TODO: verify
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,    # TODO: verify
+        "max_drawdown": 1500,     # conservative default
+        "max_contracts": 5,       # conservative default
+        "trailing": "eod",
+        "payout_split": 0.80,     # TODO: verify
+        "min_payout_days": 5,
+        "min_trading_days": 5,
+        "consistency_rule": None,
+        "daily_loss_limit": 750,  # conservative default
+        "overnight_ok": False,
+        "weekend_ok": False,
+    },
+    "yrm_prop_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 0,         # TODO: verify
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,    # TODO: verify
+        "max_drawdown": 1500,     # conservative default
+        "max_contracts": 5,       # conservative default
+        "trailing": "eod",
+        "payout_split": 0.80,     # TODO: verify
+        "min_payout_days": 5,
+        "min_trading_days": 5,
+        "consistency_rule": None,
+        "daily_loss_limit": 750,  # conservative default
+        "overnight_ok": False,
+        "weekend_ok": False,
+    },
+    "fundingpips_50k": {
+        "account_size": 50_000,
+        "monthly_fee": 0,         # TODO: verify — manual-approval firm, in MANUAL_APPROVAL_FIRMS
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,    # TODO: verify
+        "max_drawdown": 1500,     # conservative default
+        "max_contracts": 5,       # conservative default
+        "trailing": "eod",
+        "payout_split": 0.80,     # TODO: verify
+        "min_payout_days": 5,
+        "min_trading_days": 5,
+        "consistency_rule": None,
+        "daily_loss_limit": 750,  # conservative default
         "overnight_ok": False,
         "weekend_ok": False,
     },

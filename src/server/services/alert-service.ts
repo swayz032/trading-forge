@@ -32,10 +32,13 @@ export async function createAlert(params: {
       await fetch(`http://localhost:${discordPort}/alert/alerts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: params.title, message: params.message, severity: "critical" })
+        body: JSON.stringify({ title: params.title, message: params.message, severity: "critical" }),
+        signal: AbortSignal.timeout(4000),
       });
     } catch (e) {
-      logger.warn({ err: e }, "Failed to send Discord alert");
+      // Best-effort — a hung relay must never block critical alert delivery
+      const isAbort = e instanceof Error && (e.name === "AbortError" || e.name === "TimeoutError");
+      logger.warn({ err: e, timeout: isAbort }, "Failed to send Discord alert");
     }
   } else {
     logger.info({ alertId: alert.id, type: params.type }, `Alert: ${params.title}`);
@@ -125,5 +128,16 @@ export const AlertFactory = {
       title: `Compliance drift detected: ${firm}`,
       message: summary,
       metadata: { firm },
+    }),
+
+  // D6: Kill switch tripped — used when the automated kill switch halts trading
+  // to prevent prop firm daily loss breach or consecutive loss streaks.
+  criticalAlert: (component: string, metadata: Record<string, unknown>) =>
+    createAlert({
+      type: "system",
+      severity: "critical",
+      title: `Kill switch: ${component}`,
+      message: `Kill switch tripped for ${component}: ${JSON.stringify(metadata)}`,
+      metadata: { component, ...metadata },
     }),
 };

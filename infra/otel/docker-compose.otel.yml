@@ -1,0 +1,73 @@
+# G5.3 — Opt-in OpenTelemetry Collector + Grafana Tempo sidecar for Trading Forge.
+#
+# Usage:
+#   docker compose -f docker-compose.local-ai.yml -f infra/otel/docker-compose.otel.yml up -d
+#
+# Then set in your .env (or shell):
+#   OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+#
+# Trading Forge spans (backtest, monte-carlo, paper, critic, etc.) will then
+# flow through the collector → Grafana Tempo for persistent trace storage.
+# Tempo is included here so traces survive container restarts. The collector's
+# otlp/tempo exporter endpoint defaults to tempo:4317; override with
+#   TEMPO_OTLP_ENDPOINT=<host>:<port>
+# if Tempo runs outside this compose stack.
+
+services:
+  # Grafana Tempo — persistent trace backend. Uses local filesystem storage
+  # (sufficient for single-node dev/prod use). No external dependencies.
+  tempo:
+    image: grafana/tempo:latest
+    container_name: trading-forge-tempo
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./infra/otel/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"   # Tempo HTTP query API (Grafana datasource)
+      - "4319:4317"   # OTLP gRPC ingest (host-exposed on 4319 to avoid conflict with collector's 4317)
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+        reservations:
+          memory: 128m
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3200/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.106.1
+    container_name: trading-forge-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./infra/otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "13133:13133" # health_check extension (when enabled in collector config)
+    environment:
+      - TEMPO_OTLP_ENDPOINT=${TEMPO_OTLP_ENDPOINT:-tempo:4317}
+    depends_on:
+      tempo:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+        reservations:
+          memory: 128m
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  tempo-data:
+    driver: local

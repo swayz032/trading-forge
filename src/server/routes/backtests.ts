@@ -6,9 +6,20 @@ import { db } from "../db/index.js";
 import { backtests, backtestTrades, backtestMatrix, monteCarloRuns, stressTestRuns, strategies, auditLog } from "../db/schema.js";
 import { runBacktest } from "../services/backtest-service.js";
 import { runMatrix, getMatrixStatus } from "../services/matrix-backtest-service.js";
-import { logger } from "../index.js";
+import { idempotencyMiddleware } from "../middleware/idempotency.js";
 
 export const backtestRoutes = Router();
+
+/**
+ * G7.1 contract — POST /api/backtests response shape (202 Accepted, async).
+ * The backtest is fire-and-forget; the consumer polls `GET /api/backtests/:id`
+ * for completion status. Frontend imports this type from here, not from a
+ * hand-rolled DB shape. See `src/server/lib/api-contracts.ts`.
+ */
+export interface BacktestSubmitResponse {
+  message: string;
+  backtestId: string;
+}
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
@@ -61,7 +72,9 @@ const backtestRequestSchema = z.object({
 // ══════════════════════════════════════════════════════════════════
 
 // ─── POST /api/backtests — Run a new backtest (async) ────────────
-backtestRoutes.post("/", async (req, res) => {
+// G3.3: idempotencyMiddleware deduplicates identical POSTs by Idempotency-Key
+// header for 24h, preventing double-spawn of expensive Python backtests.
+backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
   const parsed = backtestRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -118,17 +131,20 @@ backtestRoutes.post("/", async (req, res) => {
   // Generate the backtest ID upfront to avoid race condition
   const backtestId = randomUUID();
 
-  // Fire and forget — return 202 immediately
-  runBacktest(strategyId, fullConfig, strategyClass, backtestId).then((_result) => {
-    // Logged internally
+  // Fire and forget — return 202 immediately.
+  // req.id and req.log are set by correlationMiddleware (typed in src/server/types/express.d.ts).
+  const correlationId = req.id;
+  runBacktest(strategyId, fullConfig, strategyClass, backtestId, correlationId).then((_result) => {
+    // Logged internally by runBacktest
   }).catch((err) => {
-    logger.error({ err, strategyId }, "Fire-and-forget backtest failed");
+    req.log.error({ err, strategyId, backtestId, correlationId }, "Fire-and-forget backtest failed");
   });
 
-  res.status(202).json({
+  const response: BacktestSubmitResponse = {
     message: "Backtest started",
     backtestId,
-  });
+  };
+  res.status(202).json(response);
 });
 
 // ─── GET /api/backtests — List backtests ─────────────────────────
@@ -276,7 +292,7 @@ backtestRoutes.post("/matrix", async (req, res) => {
 
   // Fire and forget — tiered execution takes ~11 min
   runMatrix(strategyId).catch((err) => {
-    logger.error({ err, strategyId }, "Fire-and-forget matrix backtest failed");
+    req.log.error({ err, strategyId }, "Fire-and-forget matrix backtest failed");
   });
 
   // Get the matrix ID
@@ -418,7 +434,7 @@ backtestRoutes.delete("/:id", async (req, res) => {
     return;
   }
 
-  // Audit log
+  // Audit log — include correlationId to link this human action to the originating HTTP request
   await db.insert(auditLog).values({
     action: "backtest.delete",
     entityType: "backtest",
@@ -427,6 +443,7 @@ backtestRoutes.delete("/:id", async (req, res) => {
     result: {},
     status: "success",
     decisionAuthority: "human",
+    correlationId: req.id ?? null,
   });
 
   res.json({ deleted: true, id: backtestId });

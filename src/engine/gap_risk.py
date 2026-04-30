@@ -117,20 +117,68 @@ def compute_gap_adjusted_mae(
 ) -> list[dict]:
     """Add simulated gap exposure to overnight trades' MAE.
 
-    For trades tagged HOLDS_OVERNIGHT, sample a gap from the symbol's
-    normal distribution and add to the trade's MAE (maximum adverse excursion).
+    For trades tagged HOLDS_OVERNIGHT, sample a gap from the historical gap
+    distribution and add to the trade's MAE (maximum adverse excursion).
+
+    EVT (Generalized Pareto) fit is attempted using real historical gap data
+    extracted from the `gaps` Series (non-zero session-open gaps from actual
+    price data). Falls back to Normal distribution sampling when:
+      - Fewer than 30 real gaps are available (insufficient for GPD fit)
+      - EVT shape parameter <= 0 (fit did not find a heavy tail)
+      - Any exception during EVT fitting/sampling
+    In the fallback, sampling uses the symbol's parameterized Normal distribution
+    (GAP_DISTRIBUTIONS table), NOT synthetic normally-generated data.
 
     Args:
         trades: Tagged trades (must have hold_type)
-        gaps: Overnight gap series from compute_overnight_gaps
+        gaps: Overnight gap series from compute_overnight_gaps — real session
+            open-to-prior-close deltas, with 0.0 on non-session-open bars.
         symbol: Contract symbol for gap distribution lookup
         seed: RNG seed for reproducibility
 
     Returns:
-        trades with added 'gap_adjusted_mae' field
+        trades with added 'gap_adjusted_mae' field and 'gap_source' audit field
+        ('evt_real', 'normal_insufficient_data', 'normal_evt_fallback')
     """
     rng = np.random.default_rng(seed)
     dist = GAP_DISTRIBUTIONS.get(symbol, GAP_DISTRIBUTIONS["MES"])
+
+    # Fix 5: Extract REAL historical gaps from the gaps Series (non-zero = actual session opens).
+    # Previous behavior: generated synthetic_gaps via rng.normal() and fit GPD to those.
+    # GPD on normal samples always yields shape ~0, making the EVT branch dead code in practice.
+    # New behavior: use actual price-data gaps. EVT only fires when real data is sufficient.
+    real_gaps = np.abs(gaps.to_numpy())
+    real_gaps = real_gaps[real_gaps > 0]  # Session-open bars only; 0 = intraday
+
+    # Cache EVT fit keyed on (symbol, gap_data_hash) so repeated calls in a backtest
+    # reuse the same fit. Cache is per-function-call-process (module-level attribute).
+    if not hasattr(compute_gap_adjusted_mae, "_evt_cache"):
+        compute_gap_adjusted_mae._evt_cache = {}
+
+    # Build a stable cache key: symbol + count + rounded p50/p95 of real gaps
+    if len(real_gaps) >= 30:
+        _cache_key = (
+            symbol,
+            len(real_gaps),
+            round(float(np.percentile(real_gaps, 50)), 2),
+            round(float(np.percentile(real_gaps, 95)), 2),
+        )
+    else:
+        _cache_key = (symbol, "__insufficient__")
+
+    if _cache_key not in compute_gap_adjusted_mae._evt_cache:
+        if len(real_gaps) >= 30:
+            try:
+                from src.engine.evt_tail import fit_generalized_pareto
+                evt = fit_generalized_pareto(real_gaps, threshold_percentile=90)
+                compute_gap_adjusted_mae._evt_cache[_cache_key] = evt
+            except Exception:
+                compute_gap_adjusted_mae._evt_cache[_cache_key] = {"error": "fit_failed"}
+        else:
+            # Insufficient real gap data — mark as such, will fall back to Normal below
+            compute_gap_adjusted_mae._evt_cache[_cache_key] = {"error": "insufficient_data"}
+
+    evt = compute_gap_adjusted_mae._evt_cache[_cache_key]
 
     adjusted = []
     for trade in trades:
@@ -138,32 +186,29 @@ def compute_gap_adjusted_mae(
         raw_mae = abs(trade.get("MAE", trade.get("mae", 0.0)))
 
         if trade.get("hold_type") == "HOLDS_OVERNIGHT":
-            # Try EVT fat-tail sampling first, fallback to Normal
+            gap_source = "normal_evt_fallback"
             try:
-                from src.engine.evt_tail import fit_generalized_pareto
-                # Use EVT if we have historical gaps for this symbol
-                if not hasattr(compute_gap_adjusted_mae, "_evt_cache"):
-                    compute_gap_adjusted_mae._evt_cache = {}
-                if symbol not in compute_gap_adjusted_mae._evt_cache:
-                    # Fit GPD on synthetic historical gaps for this symbol
-                    hist_gaps = np.abs(rng.normal(dist["normal_mean"], dist["normal_std"], size=500))
-                    evt = fit_generalized_pareto(hist_gaps, threshold_percentile=90)
-                    compute_gap_adjusted_mae._evt_cache[symbol] = evt
-                evt = compute_gap_adjusted_mae._evt_cache[symbol]
                 if "error" not in evt and evt.get("shape", 0) > 0:
-                    # Sample from GPD tail for more realistic extreme gaps
+                    # EVT path: GPD fitted on real historical gaps
                     from scipy.stats import genpareto
                     gap = abs(float(genpareto.rvs(evt["shape"], scale=evt["scale"], random_state=rng)))
                     gap += evt["threshold"]
+                    gap_source = "evt_real"
                 else:
+                    # Normal fallback: use parameterized dist (NOT synthetic rng.normal())
+                    if evt.get("error") == "insufficient_data":
+                        gap_source = "normal_insufficient_data"
                     gap = abs(rng.normal(dist["normal_mean"], dist["normal_std"]))
             except Exception:
                 gap = abs(rng.normal(dist["normal_mean"], dist["normal_std"]))
+                gap_source = "normal_evt_fallback"
             t["gap_adjusted_mae"] = round(raw_mae + gap, 2)
             t["simulated_gap"] = round(gap, 2)
+            t["gap_source"] = gap_source
         else:
             t["gap_adjusted_mae"] = round(raw_mae, 2)
             t["simulated_gap"] = 0.0
+            t["gap_source"] = "intraday"
 
         adjusted.append(t)
 

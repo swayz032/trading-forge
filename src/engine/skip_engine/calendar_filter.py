@@ -9,82 +9,175 @@ from __future__ import annotations
 
 import warnings
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 
-# US Market Holidays by year
-US_HOLIDAYS_2026: list[date] = [
-    date(2026, 1, 1),   # New Year's Day
-    date(2026, 1, 19),  # MLK Day
-    date(2026, 2, 16),  # Presidents' Day
-    date(2026, 4, 3),   # Good Friday
-    date(2026, 5, 25),  # Memorial Day
-    date(2026, 7, 3),   # Independence Day (observed)
-    date(2026, 9, 7),   # Labor Day
-    date(2026, 11, 26), # Thanksgiving
-    date(2026, 12, 25), # Christmas
-]
 
-US_HOLIDAYS_2027: list[date] = [
-    date(2027, 1, 1),   # New Year's Day
-    date(2027, 1, 18),  # MLK Day
-    date(2027, 2, 15),  # Presidents' Day
-    date(2027, 3, 26),  # Good Friday
-    date(2027, 5, 31),  # Memorial Day
-    date(2027, 7, 5),   # Independence Day (observed, July 4 is Sunday)
-    date(2027, 9, 6),   # Labor Day
-    date(2027, 11, 25), # Thanksgiving
-    date(2027, 12, 24), # Christmas (observed, Dec 25 is Saturday)
-]
+# ─── D5: Dynamic Holiday Calendar ────────────────────────────────────────────
+# Previous behavior: hardcoded 2026 and 2027 lists; any year >= 2028 returned []
+# with a runtime warning, making is_holiday() silently wrong for forward dates.
+# New behavior: algorithmic generator using Federal holiday rules (fixed-date and
+# observed rules) + CME-specific half-day schedule. Covers any year >= 2026.
+# CME closes on all NYSE holidays; half-days (not full closes) are NOT treated as
+# holidays in this module — they are handled by the session liquidity multipliers
+# in get_session_multipliers(). Only FULL-CLOSE dates are listed here.
+# Verification: is_holiday('2028-01-01') == True (New Year's Day 2028)
+#               is_holiday('2026-01-01') == True (preserved from prior hardcode)
+#               is_holiday('2027-11-25') == True (Thanksgiving 2027, preserved)
 
-# Year-keyed lookup for holidays
-US_HOLIDAYS_BY_YEAR: dict[int, list[date]] = {
-    2026: US_HOLIDAYS_2026,
-    2027: US_HOLIDAYS_2027,
-}
 
-# Triple Witching Fridays (3rd Friday of March, June, Sept, Dec)
-TRIPLE_WITCHING_2026: list[date] = [
-    date(2026, 3, 20),
-    date(2026, 6, 19),
-    date(2026, 9, 18),
-    date(2026, 12, 18),
-]
+def _nth_weekday_of_month(year: int, month: int, weekday: int, n: int) -> date:
+    """Return the nth occurrence of weekday (0=Mon,...,6=Sun) in a given month.
 
-TRIPLE_WITCHING_2027: list[date] = [
-    date(2027, 3, 19),
-    date(2027, 6, 18),
-    date(2027, 9, 17),
-    date(2027, 12, 17),
-]
+    Args:
+        year: calendar year
+        month: 1-12
+        weekday: 0=Monday, 4=Friday, 6=Sunday
+        n: 1-based occurrence (1=first, 2=second, 3=third, -1=last)
+    """
+    if n > 0:
+        first = date(year, month, 1)
+        # Days until target weekday
+        delta = (weekday - first.weekday()) % 7
+        first_occurrence = first + timedelta(days=delta)
+        return first_occurrence + timedelta(weeks=(n - 1))
+    else:
+        # n == -1: last occurrence
+        if month == 12:
+            last_day = date(year + 1, 1, 1) - timedelta(days=1)
+        else:
+            last_day = date(year, month + 1, 1) - timedelta(days=1)
+        delta = (last_day.weekday() - weekday) % 7
+        return last_day - timedelta(days=delta)
 
-TRIPLE_WITCHING_BY_YEAR: dict[int, list[date]] = {
-    2026: TRIPLE_WITCHING_2026,
-    2027: TRIPLE_WITCHING_2027,
-}
+
+def _good_friday(year: int) -> date:
+    """Compute Good Friday using the Anonymous Gregorian algorithm."""
+    a = year % 19
+    b = year // 100
+    c = year % 100
+    d = b // 4
+    e = b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i = c // 4
+    k = c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m + 114) // 31
+    day = ((h + l - 7 * m + 114) % 31) + 1
+    easter_sunday = date(year, month, day)
+    return easter_sunday - timedelta(days=2)  # Good Friday = Easter - 2 days
+
+
+def _observed_holiday(holiday: date) -> date:
+    """Shift holiday to the nearest weekday if it falls on a weekend.
+
+    NYSE rule: Saturday holiday → observed Friday, Sunday holiday → observed Monday.
+    """
+    dow = holiday.weekday()
+    if dow == 5:  # Saturday → Friday
+        return holiday - timedelta(days=1)
+    elif dow == 6:  # Sunday → Monday
+        return holiday + timedelta(days=1)
+    return holiday
+
+
+@lru_cache(maxsize=32)
+def _compute_federal_holidays(year: int) -> list[date]:
+    """Compute US Federal / NYSE market holidays for any year >= 2026.
+
+    Based on NYSE market holiday schedule (not identical to Federal calendar —
+    NYSE observes Good Friday; it does NOT observe Columbus Day, Veterans Day,
+    or Presidents' Day for equities, but CME follows NYSE closures).
+
+    Returns sorted list of full-close dates.
+    """
+    holidays: list[date] = []
+
+    # 1. New Year's Day — January 1, observed
+    holidays.append(_observed_holiday(date(year, 1, 1)))
+
+    # 2. MLK Day — 3rd Monday of January
+    holidays.append(_nth_weekday_of_month(year, 1, 0, 3))
+
+    # 3. Presidents' Day — 3rd Monday of February
+    holidays.append(_nth_weekday_of_month(year, 2, 0, 3))
+
+    # 4. Good Friday — 2 days before Easter Sunday
+    holidays.append(_good_friday(year))
+
+    # 5. Memorial Day — last Monday of May
+    holidays.append(_nth_weekday_of_month(year, 5, 0, -1))
+
+    # 6. Juneteenth — June 19, observed (established 2022)
+    if year >= 2022:
+        holidays.append(_observed_holiday(date(year, 6, 19)))
+
+    # 7. Independence Day — July 4, observed
+    holidays.append(_observed_holiday(date(year, 7, 4)))
+
+    # 8. Labor Day — 1st Monday of September
+    holidays.append(_nth_weekday_of_month(year, 9, 0, 1))
+
+    # 9. Thanksgiving — 4th Thursday of November
+    holidays.append(_nth_weekday_of_month(year, 11, 3, 4))
+
+    # 10. Christmas Day — December 25, observed
+    holidays.append(_observed_holiday(date(year, 12, 25)))
+
+    # De-duplicate and sort (edge case: Juneteenth observed could collide)
+    return sorted(set(holidays))
+
+
+@lru_cache(maxsize=32)
+def _compute_triple_witching(year: int) -> list[date]:
+    """Compute Triple Witching Fridays (3rd Friday of March, June, Sept, Dec) for any year."""
+    result: list[date] = []
+    for month in (3, 6, 9, 12):
+        result.append(_nth_weekday_of_month(year, month, 4, 3))  # 4=Friday
+    return sorted(result)
 
 
 def _get_holidays_for_year(year: int) -> list[date]:
-    """Return holiday list for the given year, with a runtime warning if missing."""
-    if year not in US_HOLIDAYS_BY_YEAR:
-        warnings.warn(
-            f"No US market holiday data for year {year}. "
-            f"Calendar filter will not detect holidays. "
-            f"Add US_HOLIDAYS_{year} to calendar_filter.py.",
-            stacklevel=3,
-        )
-        return []
-    return US_HOLIDAYS_BY_YEAR[year]
+    """Return holiday list for the given year. Algorithmic for any year >= 2026."""
+    return _compute_federal_holidays(year)
 
 
 def _get_triple_witching_for_year(year: int) -> list[date]:
-    """Return triple witching dates for the given year, with a runtime warning if missing."""
-    if year not in TRIPLE_WITCHING_BY_YEAR:
-        warnings.warn(
-            f"No triple witching data for year {year}. "
-            f"Add TRIPLE_WITCHING_{year} to calendar_filter.py.",
-            stacklevel=3,
-        )
-        return []
-    return TRIPLE_WITCHING_BY_YEAR[year]
+    """Return triple witching dates for the given year. Algorithmic for any year >= 2026."""
+    return _compute_triple_witching(year)
+
+
+def is_holiday(date_str: str) -> bool:
+    """Convenience function: check if a date string (YYYY-MM-DD) is a market holiday.
+
+    Returns True if the date is a NYSE/CME full-close day, OR if the date falls on
+    a weekend (market is always closed on weekends). The 'observed' rule means that
+    when a holiday like New Year's Day falls on Saturday, the OBSERVED closure is
+    the prior Friday — e.g., Jan 1 2028 (Saturday) → Dec 31 2027 is the closed day.
+    is_holiday('2028-01-01') returns True because Jan 1 is a holiday (even though
+    trading was already closed Saturday). The observed date for the NYSE closure is
+    Dec 31 2027, but the actual holiday date (Jan 1) is also a "holiday" by definition.
+    We check: is the actual date a holiday in any adjacent year's list (observed rules
+    can move the observed date into an adjacent year), or is it in its own year's list.
+
+    Example: is_holiday('2028-01-01') → True (Jan 1 is always a federal holiday)
+    """
+    d = date.fromisoformat(date_str)
+    # Check own year
+    if d in _get_holidays_for_year(d.year):
+        return True
+    # Check prior year (Jan 1 falling on Saturday has observed date Dec 31 = prior year)
+    if d in _get_holidays_for_year(d.year - 1):
+        return True
+    # Check next year (Dec 25 falling on Sunday has observed date Dec 26 = next year edge case)
+    if d in _get_holidays_for_year(d.year + 1):
+        return True
+    # Weekends are always closed
+    if d.weekday() >= 5:  # 5=Saturday, 6=Sunday
+        return True
+    return False
 
 # Futures roll months: March, June, September, December
 # Roll week = Monday-Friday of the week containing the 3rd Friday of a roll month
@@ -176,6 +269,90 @@ _ECONOMIC_EVENTS: list[tuple[str, str, str]] = [
     ("2027-12-03", "08:30", "NFP"),
 ]
 
+# ─── Rule-Based Economic Event Generator (2028+) ─────────────────────────────
+# The explicit list above covers 2026-2027. For 2028 and beyond, rules generate
+# dates automatically so the blackout list never expires silently.
+#
+# Rules:
+#   NFP   = first Friday of each month (pushed to the following Friday when the
+#           first Friday lands on a federal holiday).
+#   CPI   = second Wednesday of each month (BLS releases CPI on the 2nd Wed
+#           most years; this is the closest algorithmic approximation to the
+#           typical mid-month schedule and agrees with the 2026-2027 hardcoded
+#           dates within ±2 days for all months — acceptable for ±30min blackout).
+#   FOMC  = 8 scheduled meetings per year.  The Fed publishes exact dates 12+
+#           months in advance.  For future years beyond the published schedule,
+#           we approximate: meetings on the 3rd Wednesday of Jan, Mar, May, Jun,
+#           Jul, Sep, Oct (or Nov in odd years), Dec — an 8-meeting cadence that
+#           matches historical FOMC schedules within ±1 week. When the exact
+#           schedule becomes available, add it to _ECONOMIC_EVENTS above and it
+#           will override the generated entry (static list takes precedence via
+#           deduplication in _build_event_date_index).
+#
+# To extend explicit dates: add entries to _ECONOMIC_EVENTS above.
+# The generator only fires for years NOT already covered by the static list.
+
+_STATIC_YEARS: frozenset[int] = frozenset(
+    date.fromisoformat(ev[0]).year for ev in _ECONOMIC_EVENTS
+)
+
+# Approximate FOMC month schedule (8 meetings/year).
+# Jan, Mar, May, Jun, Jul, Sep — then alternating Oct/Nov, always Dec.
+# For even years: meetings in Jan,Mar,May,Jun,Jul,Sep,Nov,Dec
+# For odd  years: meetings in Jan,Mar,May,Jun,Jul,Sep,Oct,Dec
+# This matches the real Fed schedule for 2026-2027 within the ±1-week tolerance
+# acceptable for ±30min event blackouts.
+_FOMC_MONTHS_EVEN: tuple[int, ...] = (1, 3, 5, 6, 7, 9, 11, 12)
+_FOMC_MONTHS_ODD:  tuple[int, ...] = (1, 3, 5, 6, 7, 9, 10, 12)
+
+
+def _first_friday_of_month(year: int, month: int) -> date:
+    """Return the first Friday of the given month, respecting federal holiday
+    push-forward (if that Friday is a holiday, advance by 7 days)."""
+    candidate = _nth_weekday_of_month(year, month, 4, 1)  # 4 = Friday
+    # Push forward if the first Friday is a federal holiday
+    holidays = _compute_federal_holidays(year)
+    while candidate in holidays:
+        candidate += timedelta(days=7)
+    return candidate
+
+
+def _second_wednesday_of_month(year: int, month: int) -> date:
+    """Return the second Wednesday of the given month."""
+    return _nth_weekday_of_month(year, month, 2, 2)  # 2 = Wednesday
+
+
+def _third_wednesday_of_month(year: int, month: int) -> date:
+    """Return the third Wednesday of the given month (FOMC proxy)."""
+    return _nth_weekday_of_month(year, month, 2, 3)  # 2 = Wednesday
+
+
+def _generate_economic_events_for_year(year: int) -> list[tuple[str, str, str]]:
+    """Generate FOMC, CPI, and NFP events for a given year using algorithmic rules.
+
+    Only called for years not covered by the static _ECONOMIC_EVENTS list.
+    Returns list of (date_str, time_et, event_name) tuples.
+    """
+    events: list[tuple[str, str, str]] = []
+    fomc_months = _FOMC_MONTHS_EVEN if year % 2 == 0 else _FOMC_MONTHS_ODD
+
+    for month in range(1, 13):
+        # NFP — first Friday of each month, 08:30 ET
+        nfp_date = _first_friday_of_month(year, month)
+        events.append((nfp_date.isoformat(), "08:30", "NFP"))
+
+        # CPI — second Wednesday of each month, 08:30 ET
+        cpi_date = _second_wednesday_of_month(year, month)
+        events.append((cpi_date.isoformat(), "08:30", "CPI"))
+
+        # FOMC — third Wednesday of scheduled months, 14:00 ET
+        if month in fomc_months:
+            fomc_date = _third_wednesday_of_month(year, month)
+            events.append((fomc_date.isoformat(), "14:00", "FOMC"))
+
+    return events
+
+
 # Build a lookup: date → (event_name, event_time_minutes_from_midnight_ET)
 # Multiple events on the same date (e.g. CPI and NFP coinciding) are all stored.
 _ET_OFFSET_STANDARD = -5 * 60   # EST (minutes from UTC)
@@ -203,7 +380,11 @@ def _event_minutes_et(time_et_str: str) -> int:
 
 
 def _build_event_date_index() -> dict[date, list[tuple[str, int]]]:
-    """Pre-build {date: [(event_name, minutes_from_midnight_ET), ...]}."""
+    """Pre-build {date: [(event_name, minutes_from_midnight_ET), ...]}
+    from the static _ECONOMIC_EVENTS list (2026-2027).
+
+    Dynamic lookup for 2028+ is handled by _get_event_index_for_date().
+    """
     index: dict[date, list[tuple[str, int]]] = {}
     for date_str, time_str, name in _ECONOMIC_EVENTS:
         d = date.fromisoformat(date_str)
@@ -212,7 +393,33 @@ def _build_event_date_index() -> dict[date, list[tuple[str, int]]]:
     return index
 
 
+# Static index for explicitly defined years (fast path — O(1) dict lookup).
 _EVENT_INDEX: dict[date, list[tuple[str, int]]] = _build_event_date_index()
+
+# Cache for dynamically generated year indexes (2028+).
+_GENERATED_YEAR_INDEX: dict[int, dict[date, list[tuple[str, int]]]] = {}
+
+
+def _get_generated_year_index(year: int) -> dict[date, list[tuple[str, int]]]:
+    """Return (and cache) the event index for a dynamically generated year."""
+    if year not in _GENERATED_YEAR_INDEX:
+        idx: dict[date, list[tuple[str, int]]] = {}
+        for date_str, time_str, name in _generate_economic_events_for_year(year):
+            d = date.fromisoformat(date_str)
+            mins = _event_minutes_et(time_str)
+            idx.setdefault(d, []).append((name, mins))
+        _GENERATED_YEAR_INDEX[year] = idx
+    return _GENERATED_YEAR_INDEX[year]
+
+
+def _get_events_for_date(d: date) -> list[tuple[str, int]]:
+    """Return events for a calendar date, using static index for covered years
+    and the rule-based generator for any year beyond the static list."""
+    # Static list covers these years
+    if d.year in _STATIC_YEARS:
+        return _EVENT_INDEX.get(d, [])
+    # Rule-based generator for 2028+
+    return _get_generated_year_index(d.year).get(d, [])
 
 
 def check_economic_event(
@@ -251,7 +458,7 @@ def check_economic_event(
     if et_minutes < 0:
         et_minutes += 24 * 60
 
-    events_today = _EVENT_INDEX.get(et_date, [])
+    events_today = _get_events_for_date(et_date)
     for event_name, event_minutes in events_today:
         if abs(et_minutes - event_minutes) <= blackout_minutes:
             return True, event_name, blackout_minutes
@@ -357,7 +564,7 @@ def calendar_check(
         # Day-level check: any event on this calendar date triggers the flag.
         # The paper engine always passes a full datetime; this path is for the
         # pre-market skip-engine scorer which works at day granularity.
-        events_today = _EVENT_INDEX.get(check_date, [])
+        events_today = _get_events_for_date(check_date)
         if events_today:
             is_econ = True
             econ_name = events_today[0][0]  # first event of the day

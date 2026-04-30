@@ -12,7 +12,10 @@ import { Router } from "express";
 import { z } from "zod";
 import { eq, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { backtests } from "../db/schema.js";
+import { backtests, criticOptimizationRuns } from "../db/schema.js";
+import { idempotencyMiddleware } from "../middleware/idempotency.js";
+import { broadcastSSE } from "./sse.js";
+import { logger } from "../index.js";
 import {
   triggerCriticOptimizer,
   getCriticRun,
@@ -20,6 +23,7 @@ import {
   getCriticCandidates,
   manualReplayCandidates,
 } from "../services/critic-optimizer-service.js";
+import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
 
 export const criticOptimizerRoutes = Router();
 
@@ -31,7 +35,13 @@ const analyzeSchema = z.object({
   pennylane_enabled: z.boolean().default(true),
 });
 
-criticOptimizerRoutes.post("/analyze", async (req, res) => {
+criticOptimizerRoutes.post("/analyze", idempotencyMiddleware, async (req, res) => {
+  // FIX 5 — pipeline pause gate. triggerCriticOptimizer spawns Python critic
+  // analysis and writes critic_optimization_runs + critic_candidates rows.
+  // Block side-effects when pipeline is paused.
+  if (!(await isPipelineActive())) {
+    return res.status(423).json({ error: "pipeline_paused" });
+  }
   try {
     const body = analyzeSchema.parse(req.body);
 
@@ -100,7 +110,12 @@ const replaySchema = z.object({
   max_replays: z.number().int().min(1).max(5).default(3),
 });
 
-criticOptimizerRoutes.post("/replay", async (req, res) => {
+criticOptimizerRoutes.post("/replay", idempotencyMiddleware, async (req, res) => {
+  // FIX 5 — pipeline pause gate. manualReplayCandidates re-runs backtests as
+  // critic-replay backtests (Python spawns + DB writes). Block when paused.
+  if (!(await isPipelineActive())) {
+    return res.status(423).json({ error: "pipeline_paused" });
+  }
   try {
     const body = replaySchema.parse(req.body);
 
@@ -120,12 +135,22 @@ criticOptimizerRoutes.post("/replay", async (req, res) => {
     }
 
     // Fire and forget — return 202 immediately, replay runs async
+    const runId = body.run_id;
     manualReplayCandidates(
-      body.run_id,
+      runId,
       run.strategyId,
       candidateIds.slice(0, body.max_replays),
-    ).catch(() => {
-      // Logged inside the service; nothing to do here
+    ).catch(async (err) => {
+      logger.error({ err, runId }, "manualReplayCandidates failed");
+      try {
+        await db
+          .update(criticOptimizationRuns)
+          .set({ status: "failed", completedAt: new Date() })
+          .where(eq(criticOptimizationRuns.id, runId));
+        broadcastSSE("critic:completed", { runId, status: "failed" });
+      } catch (updateErr) {
+        logger.error({ updateErr }, "Failed to mark critic run as failed in catch");
+      }
     });
 
     return res.status(202).json({

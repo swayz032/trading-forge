@@ -29,6 +29,11 @@ from pathlib import Path
 import numpy as np
 from pydantic import BaseModel, Field
 
+try:
+    from src.engine.cloud_backend import quantum_result_cache as _tensor_cache
+except ImportError:
+    _tensor_cache = None  # type: ignore[assignment]
+
 # Optional GPU support
 try:
     import cupy as cp
@@ -325,6 +330,30 @@ def train_mps(
         learning_rate: SGD learning rate
         val_split: Validation split fraction
     """
+    # ── Result cache check ──────────────────────────────────────────────────
+    # Training is deterministic when seeded — safe to cache.
+    # Cache key includes data fingerprint so stale model weights are not reused.
+    _train_cache_key: Optional[dict] = None
+    if _tensor_cache is not None:
+        import hashlib as _hashlib
+        _feat_hash = _hashlib.sha256(features.tobytes()).hexdigest()[:16]
+        _lbl_hash = _hashlib.sha256(labels.tobytes()).hexdigest()[:16]
+        _train_cache_key = {
+            "n_features": model.n_features,
+            "bond_dim": model.bond_dim,
+            "n_bins": model.config.n_bins_per_feature,
+            "epochs": epochs,
+            "learning_rate": learning_rate,
+            "val_split": val_split,
+            "seed": seed,
+            "features_hash": _feat_hash,
+            "labels_hash": _lbl_hash,
+        }
+        _cached = _tensor_cache.get(algorithm="tensor_train", params=_train_cache_key)
+        if _cached is not None:
+            _cached["cache_hit"] = True
+            return TrainResult(**{k: v for k, v in _cached.items() if k in TrainResult.model_fields})
+
     start_ms = int(time.time() * 1000)
 
     if not model._initialized:
@@ -401,7 +430,7 @@ def train_mps(
     param_bytes = b"".join(t.tobytes() for t in model.tensors)
     model_hash = hashlib.sha256(param_bytes).hexdigest()[:16]
 
-    return TrainResult(
+    _train_result = TrainResult(
         train_accuracy=train_acc,
         val_accuracy=val_acc,
         train_loss_history=loss_history,
@@ -410,6 +439,11 @@ def train_mps(
         execution_time_ms=execution_time_ms,
         model_hash=model_hash,
     )
+    if _tensor_cache is not None and _train_cache_key is not None:
+        _tr_dict = _train_result.model_dump()
+        _tr_dict["cache_hit"] = False
+        _tensor_cache.put(algorithm="tensor_train", params=_train_cache_key, result=_tr_dict)
+    return _train_result
 
 
 @annotate("forge/tensor_predict")
@@ -425,6 +459,24 @@ def predict_trade_outcome(
     """
     if features.ndim == 1:
         features = features.reshape(1, -1)
+
+    # ── Result cache check ──────────────────────────────────────────────────
+    # Predictions are deterministic given fixed tensors and features.
+    _predict_cache_key: Optional[dict] = None
+    if _tensor_cache is not None and model._initialized and model.tensors:
+        import hashlib as _hashlib
+        _tensor_hash = _hashlib.sha256(
+            b"".join(t.tobytes() for t in model.tensors)
+        ).hexdigest()[:16]
+        _feat_hash = _hashlib.sha256(features.tobytes()).hexdigest()[:16]
+        _predict_cache_key = {
+            "tensor_hash": _tensor_hash,
+            "features_hash": _feat_hash,
+            "n_samples": features.shape[0],
+        }
+        _cached = _tensor_cache.get(algorithm="tensor_predict", params=_predict_cache_key)
+        if _cached is not None and isinstance(_cached.get("predictions"), list):
+            return [MPSPrediction(**p) for p in _cached["predictions"]]
 
     encoded = encode_features(features, model.config)
     probs = model.predict_probability(encoded)
@@ -445,6 +497,13 @@ def predict_trade_outcome(
             signal=signal,
         ))
 
+    # Cache deterministic predictions
+    if _tensor_cache is not None and _predict_cache_key is not None:
+        _tensor_cache.put(
+            algorithm="tensor_predict",
+            params=_predict_cache_key,
+            result={"predictions": [p.model_dump() for p in predictions], "cache_hit": False},
+        )
     return predictions
 
 
@@ -578,16 +637,31 @@ def compute_fragility_score(
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", required=True, choices=["train", "predict", "evaluate"])
-    parser.add_argument("--input-json", required=True)
+    # `--mode` and `--model-path` may be passed as flags (legacy raw spawn) or
+    # embedded in the config JSON (runPythonModule path). Make both optional and
+    # fall back to config keys below.
+    parser.add_argument("--mode", required=False, default=None,
+                        choices=["train", "predict", "evaluate"])
+    # Accept `--config` (runPythonModule) and `--input-json` (legacy) as the
+    # same destination — both point to a JSON file or inline JSON string.
+    parser.add_argument("--config", "--input-json", dest="config_path", required=True)
     parser.add_argument("--model-path", default=None)
     args = parser.parse_args()
 
-    raw = args.input_json
+    raw = args.config_path
     if os.path.isfile(raw):
         with open(raw) as f:
             raw = f.read()
     config = json.loads(raw)
+
+    # Allow mode/model_path to live inside the config JSON when not on argv.
+    mode = args.mode or config.get("mode")
+    if mode not in ("train", "predict", "evaluate"):
+        print(json.dumps({"error": f"Invalid or missing mode: {mode!r}"}))
+        sys.exit(1)
+    args.mode = mode
+    if args.model_path is None:
+        args.model_path = config.get("model_path")
 
     if args.mode == "train":
         features = np.array(config["features"], dtype=float)
@@ -606,15 +680,27 @@ if __name__ == "__main__":
 
     elif args.mode == "predict":
         if not args.model_path:
-            # No model available — return neutral predictions with zero fragility
-            n = len(config.get("daily_pnls", config.get("features", [])))
+            # No trained model available — return skippable no-op rather than a misleading
+            # neutral 0.5 signal.  probability=None tells the critic optimizer to omit this
+            # evidence entirely rather than treating it as "uncertain but informative".
+            import logging as _logging
+            _logging.getLogger(__name__).info(
+                "Tensor model not trained — returning no-op (probability=None, confidence=0.0). "
+                "Train the model first via --mode train to produce real challenger evidence."
+            )
             result = {
-                "probability": 0.5,
+                "probability": None,
                 "confidence": 0.0,
-                "signal": "neutral",
+                "signal": "no_model",
                 "model_hash": "no_model",
                 "fragility_score": 0.0,
                 "regime_breakdown": {},
+                "governance": {
+                    "experimental": True,
+                    "authoritative": False,
+                    "decision_role": "challenger_only",
+                    "skipped_reason": "model_not_trained",
+                },
             }
 
             # Compute simple fragility from daily P&Ls if regime_labels provided

@@ -25,6 +25,11 @@ from typing import Optional
 import numpy as np
 from pydantic import BaseModel, Field
 
+try:
+    from src.engine.cloud_backend import quantum_result_cache as _qubo_cache
+except ImportError:
+    _qubo_cache = None  # type: ignore[assignment]
+
 # Optional dwave-samplers (preferred) or legacy dwave-neal
 try:
     from dwave.samplers import SimulatedAnnealingSampler
@@ -210,6 +215,21 @@ def solve_timing(
 
     Returns: List of booleans — trade[i] or skip[i] for each block
     """
+    # ── Result cache check ──────────────────────────────────────────────────
+    # QUBO timing is seeded and deterministic — safe to cache.
+    _qubo_cache_key: Optional[dict] = None
+    if _qubo_cache is not None:
+        _qubo_cache_key = {
+            "qubo": {str(k): v for k, v in qubo.items()},
+            "n_blocks": n_blocks,
+            "num_reads": num_reads,
+            "num_sweeps": num_sweeps,
+            "seed": seed,
+        }
+        _cached = _qubo_cache.get(algorithm="qubo", params=_qubo_cache_key)
+        if _cached is not None and isinstance(_cached.get("solution"), list):
+            return _cached["solution"]
+
     if NEAL_AVAILABLE:
         sampler = SimulatedAnnealingSampler()
         response = sampler.sample_qubo(
@@ -221,14 +241,22 @@ def solve_timing(
 
         # Best solution
         best = response.first.sample
-        return [bool(best.get(i, 0)) for i in range(n_blocks)]
+        _solution = [bool(best.get(i, 0)) for i in range(n_blocks)]
     else:
         # Fallback: greedy selection based on linear terms
-        schedule = []
+        _solution = []
         for i in range(n_blocks):
             linear_weight = qubo.get((i, i), 0)
-            schedule.append(bool(linear_weight < 0))  # Trade if expected return is positive
-        return schedule
+            _solution.append(bool(linear_weight < 0))  # Trade if expected return is positive
+
+    # Persist to cache (seeded and deterministic)
+    if _qubo_cache is not None and _qubo_cache_key is not None:
+        _qubo_cache.put(
+            algorithm="qubo",
+            params=_qubo_cache_key,
+            result={"solution": _solution, "cache_hit": False},
+        )
+    return _solution
 
 
 def decode_timing_schedule(

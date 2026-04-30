@@ -10,7 +10,6 @@ import { eq, desc, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db/index.js";
 import { tournamentResults } from "../db/schema.js";
-import { logger } from "../index.js";
 
 export const tournamentRoutes = Router();
 
@@ -51,14 +50,14 @@ tournamentRoutes.get("/history", async (req, res) => {
 
     res.json({ total, limit: lim, offset: off, results: rows });
   } catch (err: any) {
-    logger.error({ err }, "Failed to fetch tournament history");
+    req.log.error({ err }, "Failed to fetch tournament history");
     res.status(500).json({ error: "Failed to fetch tournament history", details: err.message });
   }
 });
 
 // ─── GET /api/tournament/latest ──────────────────────────────────
 // Most recent tournament result
-tournamentRoutes.get("/latest", async (_req, res) => {
+tournamentRoutes.get("/latest", async (req, res) => {
   try {
     const [row] = await db
       .select()
@@ -72,14 +71,14 @@ tournamentRoutes.get("/latest", async (_req, res) => {
     }
     res.json(row);
   } catch (err: any) {
-    logger.error({ err }, "Failed to fetch latest tournament result");
+    req.log.error({ err }, "Failed to fetch latest tournament result");
     res.status(500).json({ error: "Failed to fetch latest tournament result", details: err.message });
   }
 });
 
 // ─── GET /api/tournament/stats ───────────────────────────────────
 // Win/loss/revision rates
-tournamentRoutes.get("/stats", async (_req, res) => {
+tournamentRoutes.get("/stats", async (req, res) => {
   try {
     const verdictRows = await db
       .select({
@@ -109,7 +108,7 @@ tournamentRoutes.get("/stats", async (_req, res) => {
       kill_rate: Math.round((killed / total) * 10000) / 100,
     });
   } catch (err: any) {
-    logger.error({ err }, "Failed to fetch tournament stats");
+    req.log.error({ err }, "Failed to fetch tournament stats");
     res.status(500).json({ error: "Failed to fetch tournament stats", details: err.message });
   }
 });
@@ -142,10 +141,10 @@ tournamentRoutes.post("/run", async (req, res) => {
       })
       .returning();
 
-    logger.info({ candidate: parsed.data.candidate_name, verdict: parsed.data.final_verdict }, "Tournament result stored");
+    req.log.info({ candidate: parsed.data.candidate_name, verdict: parsed.data.final_verdict }, "Tournament result stored");
     res.status(201).json(row);
   } catch (err: any) {
-    logger.error({ err }, "Failed to store tournament result");
+    req.log.error({ err }, "Failed to store tournament result");
     res.status(500).json({ error: "Failed to store tournament result", details: err.message });
   }
 });
@@ -176,7 +175,7 @@ tournamentRoutes.get("/leaderboard", async (req, res) => {
       })),
     });
   } catch (err: any) {
-    logger.error({ err }, "Failed to fetch tournament leaderboard");
+    req.log.error({ err }, "Failed to fetch tournament leaderboard");
     res.status(500).json({ error: "Failed to fetch tournament leaderboard", details: err.message });
   }
 });

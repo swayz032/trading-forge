@@ -810,7 +810,8 @@
     "saveDataSuccessExecution": "all",
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": {
     "node:Daily 8am UTC": {

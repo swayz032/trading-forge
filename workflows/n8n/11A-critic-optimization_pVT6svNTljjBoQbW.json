@@ -213,7 +213,8 @@
     "saveManualExecutions": true,
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": {
     "node:Daily 3AM Trigger": {

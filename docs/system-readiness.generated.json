@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-03T11:35:13.678Z",
+  "generatedAt": "2026-04-30T06:35:06.967Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -7,7 +7,9 @@
     "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
     "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
     "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-    "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
+    "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+    "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
+    "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
     "total": 11,

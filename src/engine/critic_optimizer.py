@@ -38,10 +38,13 @@ class CompositeObjective:
         "profit_factor": 0.15,
         "payout_feasibility": 0.10,
         "max_drawdown": -0.15,       # Penalty
-        "breach_probability": -0.10,  # Penalty (from quantum MC)
+        "breach_probability": -0.10,  # Penalty (from quantum MC or classical MC riskMetrics)
         "param_instability": -0.10,   # Penalty (from walk-forward)
         "regime_fragility": -0.05,    # Penalty (from tensor fragility)
         "timing_fragility": -0.05,    # Penalty (from QUBO instability)
+        "decay_penalty": -0.05,       # Penalty (from decay_analysis.status decline)
+        "drift_penalty": -0.05,       # Penalty (from recent drift/degradation alerts)
+        "live_sharpe_match": 0.05,    # Reward (live rolling Sharpe proximity to backtest)
     }
 
     def score(self, metrics: dict) -> float:
@@ -75,6 +78,10 @@ class CompositeObjective:
             "param_instability": float(raw.get("param_instability", 0) or 0),
             "regime_fragility": float(raw.get("fragility_score", 0) or 0),
             "timing_fragility": float(raw.get("timing_fragility", 0) or 0),
+            # FIX 1: decay/drift/live-sharpe signals wired in
+            "decay_penalty": float(raw.get("decay_penalty", 0) or 0),
+            "drift_penalty": float(raw.get("drift_penalty", 0) or 0),
+            "live_sharpe_match": float(raw.get("live_sharpe_match", 0) or 0),
         }
 
 
@@ -92,6 +99,10 @@ class EvidenceAggregator:
         self.fragility_score: float = 0.0
         self.timing_improvement: float = 0.0
         self.rl_scores: dict[str, float] = {}
+        # FIX 1: decay/drift/live-sharpe fields
+        self.decay_penalty: float = 0.0
+        self.drift_penalty: float = 0.0
+        self.live_sharpe_match: float = 0.5  # Neutral default
 
     def add_classical(
         self,
@@ -183,6 +194,76 @@ class EvidenceAggregator:
             "sharpe": float(rl_result.get("sharpe_ratio", 0) or 0),
         }
 
+    # FIX 1: New extraction methods for decay/drift/live-sharpe evidence
+
+    def add_decay_analysis(self, decay_analysis: dict | None) -> None:
+        """Extract decay penalty from TS decay_analysis blob.
+
+        decay_analysis.status values that indicate decline:
+          "declining", "degrading", "quarantine", "retire"
+        Any other value (including None, "stable", "healthy") → 0 penalty.
+        The penalty is normalized to [0.0, 1.0] so CompositeObjective can
+        apply its -0.05 weight directly.
+        """
+        if not decay_analysis:
+            self.decay_penalty = 0.0
+            return
+        status = str(decay_analysis.get("status", "") or "").lower()
+        DECLINE_STATUSES = {"declining", "degrading", "quarantine", "retire"}
+        self.decay_penalty = 1.0 if status in DECLINE_STATUSES else 0.0
+
+    def add_drift_alerts(self, drift_alerts: list | None, lookback_days: int = 30) -> None:
+        """Extract drift penalty from recent drift/decay/degradation alerts.
+
+        Counts recent alert entries (already pre-filtered by TS to last 30d).
+        Normalizes to [0, 1]: 0 alerts → 0.0, 3+ alerts → 1.0 (linear).
+        Only types that signal performance degradation are counted;
+        the list arrives pre-filtered from TS but we guard defensively.
+        """
+        if not drift_alerts:
+            self.drift_penalty = 0.0
+            return
+        SIGNAL_TYPES = {"drift", "decay", "degradation", "regime_change"}
+        count = sum(
+            1 for a in drift_alerts
+            if isinstance(a, dict) and str(a.get("type", "") or "").lower() in SIGNAL_TYPES
+        )
+        # Linear: 0→0.0, 1→0.33, 2→0.67, 3+→1.0
+        self.drift_penalty = min(count / 3.0, 1.0)
+
+    def add_live_sharpe(
+        self,
+        live_rolling_sharpe: float | None,
+        backtest_sharpe: float | None,
+    ) -> None:
+        """Compute live_sharpe_match: how close live Sharpe is to backtest Sharpe.
+
+        1.0 = within 0.5 std dev (use std as proxy = abs(backtest_sharpe * 0.25))
+        Decays linearly to 0.0 at >= 2.0 std dev distance.
+        If either value is None/zero → neutral (0.5).
+        """
+        if live_rolling_sharpe is None or backtest_sharpe is None:
+            self.live_sharpe_match = 0.5
+            return
+        live = float(live_rolling_sharpe)
+        bt = float(backtest_sharpe)
+        if bt == 0.0:
+            self.live_sharpe_match = 0.5
+            return
+        # Use 25% of backtest sharpe as 1-std proxy (conservative)
+        std_proxy = abs(bt) * 0.25
+        if std_proxy == 0.0:
+            std_proxy = 0.5
+        distance_in_std = abs(live - bt) / std_proxy
+        # 1.0 if within 0.5 std, linearly decays to 0 at 2.0 std
+        if distance_in_std <= 0.5:
+            self.live_sharpe_match = 1.0
+        elif distance_in_std >= 2.0:
+            self.live_sharpe_match = 0.0
+        else:
+            # Linear from 1.0 (at 0.5) to 0.0 (at 2.0) — window width = 1.5
+            self.live_sharpe_match = 1.0 - (distance_in_std - 0.5) / 1.5
+
     @annotate("forge/critic_consensus")
     def find_consensus_regions(self) -> dict[str, tuple[float, float]]:
         """Find parameter regions where Optuna + SQA agree.
@@ -224,6 +305,10 @@ class EvidenceAggregator:
             "fragility_score": self.fragility_score,
             "timing_improvement": self.timing_improvement,
             "rl_available": bool(self.rl_scores),
+            # FIX 1: observable in evidence_summary output
+            "decay_penalty": self.decay_penalty,
+            "drift_penalty": self.drift_penalty,
+            "live_sharpe_match": self.live_sharpe_match,
         }
 
 
@@ -480,6 +565,7 @@ class CandidateGenerator:
         pennylane_candidates: list[dict] | None = None,
         max_candidates: int = 5,
         memory_similar: list[dict] | None = None,
+        param_ranges: list[dict] | None = None,
     ) -> list[dict]:
         # RL modifier: compare RL sharpe to parent sharpe once, apply to every candidate.
         # +0.02 if RL confirms improvement; -0.02 if RL signals degradation.
@@ -516,7 +602,18 @@ class CandidateGenerator:
                     memory_boost += 0.03
                     memory_succeeded_params.update(changed.keys())
 
+        # P1-1: Build a {param_name: (min_val, max_val)} lookup from the TS-bounded
+        # param_ranges list. Used below to reject out-of-bound candidates.
+        bounds_map: dict[str, tuple[float, float]] = {}
+        if param_ranges:
+            for pr in param_ranges:
+                name = pr.get("name", "")
+                if name:
+                    bounds_map[name] = (float(pr.get("min_val", float("-inf"))),
+                                       float(pr.get("max_val", float("inf"))))
+
         candidates = []
+        self._last_rejected_out_of_bounds = 0  # P1-1: observable counter for caller
         mem_signals = (memory_penalty, memory_boost, memory_failed_params, memory_succeeded_params)
 
         # Classical candidates from consensus regions using QMC sampling
@@ -571,6 +668,25 @@ class CandidateGenerator:
                     rl_modifier=rl_composite_modifier,
                 ))
 
+        # P1-1: Drop candidates whose changed_params violate TS-bounded param_ranges.
+        # Truncation is intentionally avoided — dropping preserves the LLM/consensus
+        # intent better than silently clipping to a boundary value.
+        if bounds_map:
+            filtered = []
+            for c in candidates:
+                out_of_bounds = False
+                for param_name, val in c.get("changed_params", {}).items():
+                    if param_name in bounds_map:
+                        lo, hi = bounds_map[param_name]
+                        if float(val) < lo or float(val) > hi:
+                            out_of_bounds = True
+                            break
+                if out_of_bounds:
+                    self._last_rejected_out_of_bounds += 1
+                else:
+                    filtered.append(c)
+            candidates = filtered
+
         # Sort by composite score descending
         candidates.sort(key=lambda c: c["composite_score"], reverse=True)
 
@@ -604,6 +720,9 @@ class CandidateGenerator:
           without overriding classical evidence.
         """
         # Estimate uplift (heuristic: distance from parent weighted by sensitivity)
+        # Cap: max +0.15 / floor: -0.15 (3 params * 5% each = 0.15 upper bound).
+        # Without this cap, large parameter swings dominate the composite score
+        # and swamp the classical evidence terms.
         param_delta = {}
         uplift_estimate = 0.0
         for param, new_val in changed_params.items():
@@ -612,6 +731,8 @@ class CandidateGenerator:
             if old_val != 0:
                 pct_change = abs(new_val - old_val) / abs(old_val)
                 uplift_estimate += pct_change * 0.05  # 5% uplift per 100% param change
+        # Clamp uplift_estimate to [-0.15, +0.15]
+        uplift_estimate = max(-0.15, min(0.15, uplift_estimate))
 
         # Risk penalties from evidence
         risk_penalty = evidence.breach_penalty * 0.3 + evidence.fragility_score * 0.2
@@ -641,7 +762,11 @@ class CandidateGenerator:
                     f"succeeded_overlap={len(succeeded_overlap)})."
                 )
 
-        composite = parent_score + uplift_estimate - risk_penalty + memory_adjustment + rl_modifier
+        # Normalize parent_score to [0, 1] before combining with bounded uplift.
+        # CompositeObjective.score() returns values that are already in [0,1] for
+        # well-formed metrics, but guard against out-of-range values from edge cases.
+        parent_score_normalized = max(0.0, min(1.0, parent_score))
+        composite = parent_score_normalized + uplift_estimate - risk_penalty + memory_adjustment + rl_modifier
 
         # Confidence based on evidence agreement
         n_sources = sum([
@@ -741,6 +866,10 @@ def run_critic_optimizer(config: dict) -> dict:
     max_candidates = config.get("max_candidates", 5)
     pennylane_enabled = config.get("pennylane_enabled", True)
     historical_runs = config.get("historical_runs", [])
+    # FIX 1: extract new evidence fields from packet
+    decay_analysis = config.get("decay_analysis")
+    drift_alerts = config.get("drift_alerts")
+    live_rolling_sharpe = config.get("live_rolling_sharpe")
 
     # Build parent params from strategy config
     parent_params: dict[str, float] = {}
@@ -760,13 +889,31 @@ def run_critic_optimizer(config: dict) -> dict:
     evidence.add_tensor(tensor_prediction)
     evidence.add_qubo(qubo_timing)
     evidence.add_rl(rl_result)
+    # FIX 1: wire decay/drift/live-sharpe into evidence aggregator
+    evidence.add_decay_analysis(decay_analysis)
+    evidence.add_drift_alerts(drift_alerts)
+    backtest_sharpe = float(backtest_metrics.get("sharpe_ratio", 0) or 0)
+    evidence.add_live_sharpe(live_rolling_sharpe, backtest_sharpe if backtest_sharpe != 0 else None)
 
     # Add MC survival to metrics for scoring
     if mc_result:
         backtest_metrics["survival_rate"] = mc_result.get("survival_rate", 0)
-        backtest_metrics["breach_probability"] = evidence.breach_penalty
+        # FIX 3: use quantum MC breach_penalty if available; fall back to classical
+        # breach_probability from mc_result.riskMetrics forwarded by TS (FIX 3).
+        if evidence.breach_penalty > 0:
+            backtest_metrics["breach_probability"] = evidence.breach_penalty
+        else:
+            classical_bp = mc_result.get("breach_probability")
+            if classical_bp is not None:
+                backtest_metrics["breach_probability"] = float(classical_bp)
+            else:
+                backtest_metrics["breach_probability"] = 0.0
 
     backtest_metrics["fragility_score"] = evidence.fragility_score
+    # FIX 1: propagate decay/drift/live-sharpe signals into metrics for scoring
+    backtest_metrics["decay_penalty"] = evidence.decay_penalty
+    backtest_metrics["drift_penalty"] = evidence.drift_penalty
+    backtest_metrics["live_sharpe_match"] = evidence.live_sharpe_match
     # Derive param instability from walk-forward stability data
     param_instability = 0.0
     if walk_forward:
@@ -892,6 +1039,7 @@ def run_critic_optimizer(config: dict) -> dict:
 
     # ─── Stage C: Candidate Generation ────────────────────────
     generator = CandidateGenerator(objective)
+    # P1-1: pass param_ranges so generator can enforce TS-bounded bounds
     candidates = generator.generate(
         consensus_regions=consensus,
         parent_params=parent_params,
@@ -900,6 +1048,7 @@ def run_critic_optimizer(config: dict) -> dict:
         pennylane_candidates=pennylane_candidates,
         max_candidates=max_candidates + 2,  # Generate extra, cuOpt will filter
         memory_similar=memory_similar,
+        param_ranges=param_ranges if param_ranges else None,
     )
 
     # ─── Stage D: Constrained Selection (cuOpt or greedy) ────
@@ -953,6 +1102,7 @@ def run_critic_optimizer(config: dict) -> dict:
         },
         "kill_signal": kill_signal,
         "execution_time_ms": elapsed,
+        "candidates_rejected_out_of_bounds": getattr(generator, "_last_rejected_out_of_bounds", 0),
         "governance": {
             "experimental": True,
             "authoritative": False,

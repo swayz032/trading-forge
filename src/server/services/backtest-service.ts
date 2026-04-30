@@ -8,7 +8,7 @@
  */
 
 import { eq, and, sql } from "drizzle-orm";
-import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns } from "../db/schema.js";
+import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns, monteCarloRuns } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { startStream } from "./paper-trading-stream.js";
 import { runMonteCarlo } from "./monte-carlo-service.js";
@@ -16,19 +16,114 @@ import { runQuantumMC } from "./quantum-mc-service.js";
 import { queryInfo } from "../../data/loaders/duckdb-service.js";
 import { getFirmLimit } from "../../shared/firm-config.js";
 import { WFWindowMetricsSchema } from "../../shared/walk-forward-schema.js";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
+import { captureToDLQ } from "../lib/dlq-service.js";
 import { db } from "../db/index.js";
 import { tracer } from "../lib/tracing.js";
+import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { backtestRuns } from "../lib/metrics-registry.js";
+
+/**
+ * Normalize gate_result from Python into a stable JSONB shape.
+ *
+ * Python backtester.py returns gate_result with the following top-level keys:
+ *   score, passed, components: { survival_score, ... }, crisis_veto, ...
+ *
+ * CONTRACT (with architect agent): lifecycle-service.ts reads
+ *   latestBt.gateResult.components.survival_score
+ * so that path MUST exist in the persisted object.
+ *
+ * If Python omits gate_result entirely, returns null (no partial write).
+ * If Python returns a gate_result that lacks components, we preserve whatever
+ * Python sent — we do NOT manufacture a fake structure.
+ */
+function normalizeGateResult(raw: Record<string, unknown> | undefined | null): Record<string, unknown> | null {
+  if (!raw) return null;
+  // Pass through the full object as-is — Python owns the structure.
+  // This function exists to make the contract explicit and to be a single
+  // interception point if the key name ever changes in Python.
+  return raw as Record<string, unknown>;
+}
+
+/**
+ * Collect unpersisted top-level Python result fields into result_extras JSONB.
+ * Fields already persisted in dedicated columns are excluded to avoid duplication.
+ */
+function buildResultExtras(result: BacktestResult): Record<string, unknown> | null {
+  const extras: Record<string, unknown> = {};
+  // Fields emitted by backtester.py that have no dedicated column
+  const extraKeys = [
+    "governor",
+    "analytics",
+    "long_short_split",
+    "bootstrap_ci_95",
+    "deflated_sharpe",
+    "recency_analysis",
+    "statistical_warnings",
+    "confidence_intervals",
+  ] as const;
+  let hasAny = false;
+  for (const key of extraKeys) {
+    const value = (result as unknown as Record<string, unknown>)[key];
+    if (value !== undefined && value !== null) {
+      extras[key] = value;
+      hasAny = true;
+    }
+  }
+  return hasAny ? extras : null;
+}
+
+/**
+ * Equity curve size guard.
+ *
+ * Long backtest periods (years of intraday data) can produce equity curves with
+ * 10K+ points. Persisting them as JSONB on every backtest row blows up DB size
+ * and makes /api/backtests responses multi-MB.
+ *
+ * Strategy: index-stride downsample. Element-type-agnostic (works whether the
+ * curve is number[] or Array<{time, value}>). Always preserves the final point
+ * so the displayed terminal equity matches reality.
+ */
+const EQUITY_CURVE_MAX_POINTS = 5000;
+
+function downsampleEquityCurve<T>(curve: T[] | null | undefined): {
+  downsampled: T[] | null;
+  originalLength: number;
+  stride: number;
+} {
+  if (!Array.isArray(curve) || curve.length === 0) {
+    return { downsampled: (curve ?? null) as T[] | null, originalLength: 0, stride: 1 };
+  }
+  if (curve.length <= EQUITY_CURVE_MAX_POINTS) {
+    return { downsampled: curve, originalLength: curve.length, stride: 1 };
+  }
+  const stride = Math.ceil(curve.length / EQUITY_CURVE_MAX_POINTS);
+  const downsampled: T[] = [];
+  for (let i = 0; i < curve.length; i += stride) {
+    downsampled.push(curve[i]);
+  }
+  // Always include the final point (terminal equity)
+  const last = curve[curve.length - 1];
+  if (downsampled[downsampled.length - 1] !== last) {
+    downsampled.push(last);
+  }
+  return { downsampled, originalLength: curve.length, stride };
+}
 
 /** Convert decay_analysis from Python snake_case to frontend camelCase. */
-function normalizeDecayAnalysis(raw: Record<string, unknown> | undefined): Record<string, unknown> | null {
+export function normalizeDecayAnalysis(raw: Record<string, unknown> | undefined): Record<string, unknown> | null {
   if (!raw) return null;
+  // FIX 3 — canonicalize on Python's `accelerating_decline` (more specific than
+  // the generic "declining"). Frontend types in Trading_forge_frontend/amber-vision-main
+  // have been updated to accept the canonical value. We pass through unchanged
+  // so the downstream contract is "Python's trend keyword == DB trend keyword
+  // == frontend trend keyword" (no translator drift).
   return {
     halfLifeDays: raw.half_life_days ?? null,
     decayDetected: raw.decay_detected ?? false,
-    trend: raw.trend === "accelerating_decline" ? "declining" : (raw.trend ?? "stable"),
+    trend: raw.trend ?? "stable",
     compositeScore: raw.composite_score ?? 0,
     decaying: raw.decaying ?? false,
     signals: raw.signals ?? {},
@@ -73,6 +168,9 @@ interface BacktestConfig {
   refinement_stage?: number;  // 1=param refinement, 2=logic variant, 3=concept pivot
   refinement_iteration?: number;  // 0-8 iteration counter
   suppressAutoPromote?: boolean;  // When true, skip auto-promote (e.g. critic replay backtests)
+  overnight_hold?: boolean;       // True = swing strategy; gates overnight margin checks in prop sim
+  fill_rate?: number;             // Fraction of orders that fill (0.0–1.0); default 1.0
+  spread_multiplier?: number;     // Multiplier on bid-ask spread for slippage model; default 1.0
 }
 
 /**
@@ -175,7 +273,27 @@ interface RlTrainingResult {
 // 10 minutes max per backtest — prevents matrix from hanging on slow strategies
 const BACKTEST_TIMEOUT_MS = 10 * 60 * 1000;
 
-export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string) {
+export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string) {
+  // ─── Pipeline pause guard ─────────────────────────────────────
+  // Block new backtests when pipeline is PAUSED/VACATION. Defence-in-depth:
+  // upstream callers (runStrategy, route handlers) already gate, but any
+  // direct caller (tests, future code) hits this guard. We log + return
+  // before writing a backtests row so the DB doesn't accumulate orphaned
+  // pending entries while paused.
+  // The id is `null` — callers MUST check status before writing it as a FK
+  // (systemJournal.backtestId references backtests.id). The runStrategy
+  // path already gates upstream so this branch is rare-race-only.
+  if (!(await isPipelineActive())) {
+    logger.info(
+      { fn: "runBacktest", strategyId, symbol: config.strategy.symbol },
+      "Skipped: pipeline paused",
+    );
+    // Cast to the success shape with id=null. The TypeScript widening here is
+    // acceptable: callers that ignore status="skipped" will see a null id which
+    // is allowed by the schema (backtestId is nullable in systemJournal).
+    return { id: null as unknown as string, status: "skipped", error: "pipeline_paused" };
+  }
+
   const backtestSpan = tracer.startSpan("backtest.run");
   backtestSpan.setAttribute("strategyId", strategyId);
   backtestSpan.setAttribute("symbol", config.strategy.symbol);
@@ -188,7 +306,9 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     if (!config.end_date) config.end_date = resolved.end_date;
   }
 
-  // Insert pending row (use pre-generated ID if provided to avoid race conditions)
+  // Insert directly as "running" — single atomic write eliminates the
+  // window where a restart could leave the row stuck in "pending" forever.
+  // NOTE: pending status removed; if reintroduced, add to scheduler.ts:874 sweeper.
   const [row] = await db
     .insert(backtests)
     .values({
@@ -198,19 +318,13 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       timeframe: config.strategy.timeframe,
       startDate: new Date(config.start_date),
       endDate: new Date(config.end_date),
-      status: "pending",
+      status: "running",
       config: config as unknown as Record<string, unknown>,
     })
     .returning();
 
   const backtestId = row.id;
   backtestSpan.setAttribute("backtestId", backtestId);
-
-  // Update to running
-  await db
-    .update(backtests)
-    .set({ status: "running" })
-    .where(eq(backtests.id, backtestId));
 
   try {
     const mode = config.mode ?? "single";
@@ -225,6 +339,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         config: config as unknown as Record<string, unknown>,
         timeoutMs: BACKTEST_TIMEOUT_MS,
         componentName: "backtest-engine",
+        correlationId,
       }),
     );
 
@@ -241,6 +356,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       backtestSpan.setAttribute("status", "failed");
       backtestSpan.setAttribute("errorFromPython", true);
       backtestSpan.end();
+      backtestRuns.labels({ status: "failed", mode, tier: "none" }).inc();
       broadcastSSE("backtest:failed", { backtestId, strategyId, error: result.error });
       return { id: backtestId, status: "failed", error: result.error };
     }
@@ -309,6 +425,14 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // All core persistence for a completed backtest runs in one transaction.
     // If the process crashes mid-write, the backtest row stays in "running"
     // and the incomplete partial writes are rolled back — no inconsistent state.
+    //
+    // Equity curve size guard: downsample before persisting. Long backtests
+    // (years of intraday) can produce 10K+ point curves = many MB per row.
+    // We keep originalLength + stride alongside so charts can show "showing
+    // 5000 of 73,481 points (sampled every 15)".
+    const rawEquityCurve = result.equity_curve ?? metrics.equity_curve ?? null;
+    const equityCurveGuard = downsampleEquityCurve(rawEquityCurve as unknown[] | null);
+
     await db.transaction(async (tx) => {
       // 1. Update backtest row with full results
       await tx
@@ -325,7 +449,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           avgDailyPnl: metrics.avg_daily_pnl != null ? String(metrics.avg_daily_pnl) : null,
           tier: result.tier ?? null,
           forgeScore: result.forge_score != null ? String(result.forge_score) : null,
-          equityCurve: result.equity_curve ?? metrics.equity_curve ?? null,
+          equityCurve: equityCurveGuard.downsampled,
           monthlyReturns: result.monthly_returns ?? null,
           dailyPnls: result.daily_pnls ?? metrics.daily_pnls ?? null,
           walkForwardResults: wfResults,
@@ -334,8 +458,21 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           runReceipt: result.run_receipt ?? null,
           sanityChecks: result.sanity_checks ?? null,
           crossValidation: result.cross_validation ?? null,
-          gateResult: result.gate_result ?? null,
+          // Fix 3: persist full gate_result — normalizeGateResult is a passthrough
+          // that makes the Python→DB contract explicit. The architect agent reads
+          // gateResult.components.survival_score from this column.
+          gateResult: normalizeGateResult(result.gate_result as Record<string, unknown> | undefined | null),
           gateRejections: result.gate_rejections ?? null,
+          // Fix 4: persist additional Python engine outputs (migration 0053)
+          // Equity curve guard: append downsample metadata so charts know the original length.
+          resultExtras: (() => {
+            const base = buildResultExtras(result) ?? {};
+            if (equityCurveGuard.originalLength > 0) {
+              base.equity_curve_original_length = equityCurveGuard.originalLength;
+              base.equity_curve_stride = equityCurveGuard.stride;
+            }
+            return Object.keys(base).length > 0 ? base : null;
+          })(),
           executionTimeMs: result.execution_time_ms,
         })
         .where(eq(backtests.id, backtestId));
@@ -440,6 +577,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         },
         status: "success",
         durationMs: result.execution_time_ms,
+        correlationId: correlationId ?? null,
       });
     });
 
@@ -450,6 +588,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       tier: result.tier ?? null,
       forgeScore: result.forge_score ?? null,
     });
+
+    backtestRuns.labels({ status: "completed", mode, tier: result.tier ?? "none" }).inc();
 
     // ─── Optional SQA parameter optimization (fire-and-forget) ───
     // Fires for ALL qualifying backtests (non-REJECTED with walk-forward results),
@@ -500,13 +640,14 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             numReads: sqaConfig.num_reads,
             numSweeps: sqaConfig.num_sweeps,
             executionTimeMs: 0,
-            governanceLabels: { experimental: false, authoritative: true, decision_role: "pre_deploy_autonomous" },
+            governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
           }).returning();
 
           const sqaResult = await runPythonModule<SqaOptimizationResult>({
             module: "src.engine.quantum_annealing_optimizer",
             config: sqaConfig,
             componentName: "sqa-optimizer",
+            correlationId,
           });
 
           // Store SQA results on the backtest record.
@@ -526,7 +667,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
                 best_energy: sqaResult.best_energy,
                 robust_plateau: sqaResult.robust_plateau,
                 method: "sqa",
-                governance: { experimental: false, authoritative: true, decision_role: "pre_deploy_autonomous" },
+                governance: { experimental: true, authoritative: false, decision_role: "challenger_only" },
               },
             },
           }).where(eq(backtests.id, backtestId));
@@ -543,26 +684,140 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
 
           logger.info({ backtestId, bestParams: sqaResult.best_params }, "SQA optimization completed");
         } catch (sqaErr) {
+          const sqaErrMsg = sqaErr instanceof Error ? sqaErr.message : String(sqaErr);
           logger.error({ backtestId, err: sqaErr }, "SQA optimization failed (non-blocking)");
           // Mark any running SQA rows for this backtest as failed
           await db.update(sqaOptimizationRuns).set({ status: "failed" })
             .where(and(eq(sqaOptimizationRuns.backtestId, backtestId), eq(sqaOptimizationRuns.status, "running")));
+          await captureToDLQ({
+            operationType: "sqa_optimization:failure",
+            entityType: "backtest",
+            entityId: backtestId,
+            errorMessage: sqaErrMsg,
+            metadata: { backtestId, strategyId, correlationId: correlationId ?? null },
+          }).catch(() => {});
         }
       })();
     }
 
-    // ─── Auto Monte Carlo for all completed backtests (fire-and-forget) ───
-    // MC data is needed to evaluate ANY strategy properly — don't gate behind tier
-    if (result.daily_pnls?.length > 0) {
-      runMonteCarlo(backtestId, {
-        numSimulations: 50_000,
-        method: "both",
-        firms: ["topstep_50k", "mffu_50k", "tpt_50k", "apex_50k", "ffn_50k", "alpha_50k", "tradeify_50k", "earn2trade_50k"],
-      }).then((mcResult) => {
-        logger.info({ backtestId, mcId: mcResult.id, status: mcResult.status }, "Auto MC completed");
-      }).catch((mcErr) => {
-        logger.error({ backtestId, err: mcErr }, "Auto MC failed (non-blocking)");
-      });
+    // ─── Auto Monte Carlo for non-tier-qualifying backtests (fire-and-forget) ───
+    // MC data is needed to evaluate ANY strategy. For tier-qualifying backtests
+    // (TIER_1/2/3), MC is run synchronously inside the auto-promote gate below
+    // so survival-rate is part of the promotion decision and atomicity is preserved.
+    // For REJECTED / no-tier results, fire-and-forget MC for analytics only.
+    //
+    // FIX 1 — critic replay MC: when suppressAutoPromote=true (set during critic
+    // replay), the blocking MC gate is intentionally skipped (replay shouldn't
+    // gate the critic flow), but the fire-and-forget MC must STILL fire so the
+    // lifecycle gate at TESTING→PAPER has MC data later. Without this, the child
+    // strategy gets no MC record and the lifecycle gate silently blocks promotion
+    // forever (it reads monteCarloRuns.probabilityOfRuin and finds nothing).
+    // The condition !isTierQualifying already evaluates to true when suppressAutoPromote
+    // is true (because the !config.suppressAutoPromote conjunct is false), so this
+    // branch fires for critic replays — but we make the intent explicit and add an
+    // audit row so the replay→MC linkage is queryable. We also write the audit row
+    // synchronously BEFORE the fire-and-forget so the linkage survives even if MC
+    // crashes or the process restarts.
+    const isTierQualifying =
+      !config.suppressAutoPromote &&
+      result.tier &&
+      ["TIER_1", "TIER_2", "TIER_3"].includes(result.tier);
+
+    const isCriticReplay = config.suppressAutoPromote === true;
+
+    if (result.daily_pnls?.length > 0 && (!isTierQualifying || isCriticReplay)) {
+      // Critic-replay MC: write an explicit audit row marking this as a
+      // critic-replay-triggered MC so the replay→MC link is queryable later.
+      if (isCriticReplay) {
+        try {
+          await db.insert(auditLog).values({
+            action: "strategy.critic-replay-mc-triggered",
+            entityType: "strategy",
+            entityId: strategyId,
+            input: { backtestId, tier: result.tier ?? null },
+            result: {
+              note: "fire-and-forget MC triggered for critic-replay child so TESTING→PAPER lifecycle gate has MC data",
+            },
+            status: "success",
+            decisionAuthority: "gate",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditErr) {
+          logger.warn({ backtestId, strategyId, err: auditErr }, "critic-replay-mc-triggered audit insert failed (non-blocking)");
+        }
+      }
+
+      // P1-5: Pre-insert pending MC row BEFORE the fire-and-forget Python call.
+      // Without this row, a Node crash between `runMonteCarlo()`'s entry and
+      // its internal `.insert(monteCarloRuns)` leaves no pending record. The
+      // stale-pending sweeper (scheduler.ts:1072 — 90 min cutoff for
+      // monte_carlo_runs) cannot mark a run as failed if no row exists.
+      // Result: the TESTING→PAPER lifecycle gate either waits forever
+      // (looking for an MC row that never gets written) or, on critic-replay,
+      // misses the survivor's MC evidence entirely.
+      //
+      // We pre-insert with a generated UUID and pass it as `externalId`.
+      // monte-carlo-service.ts uses .onConflictDoNothing() and re-fetches the
+      // row when externalId is provided, so the eventual `runMonteCarlo` call
+      // is idempotent: it either uses our pre-inserted row, or (on retry from
+      // a crash that did insert before failing) reuses the one already there.
+      // The success/failure update at the end of `runMonteCarlo` then
+      // transitions the row to "completed"/"failed".
+      (async () => {
+        const { randomUUID } = await import("crypto");
+        const preInsertedMcId = randomUUID();
+        try {
+          await db.insert(monteCarloRuns).values({
+            id: preInsertedMcId,
+            backtestId,
+            status: "running",
+            numSimulations: 50_000,
+            gpuAccelerated: true,
+          });
+        } catch (preInsertErr) {
+          logger.warn(
+            { backtestId, err: preInsertErr, isCriticReplay },
+            "Auto MC: pre-insert pending row failed (proceeding — runMonteCarlo will create its own row)",
+          );
+          // Fall through with a fresh ID so runMonteCarlo can still self-insert.
+        }
+
+        runMonteCarlo(
+          backtestId,
+          {
+            numSimulations: 50_000,
+            method: "both",
+            firms: ["topstep_50k", "mffu_50k", "tpt_50k", "apex_50k", "ffn_50k", "alpha_50k", "tradeify_50k", "earn2trade_50k"],
+          },
+          preInsertedMcId,
+        )
+          .then((mcResult) => {
+            logger.info({ backtestId, mcId: mcResult.id, status: mcResult.status, isCriticReplay }, "Auto MC completed");
+          })
+          .catch((mcErr) => {
+            logger.error({ backtestId, err: mcErr, isCriticReplay }, "Auto MC failed (non-blocking)");
+          });
+      })();
+    } else if (isCriticReplay && (!result.daily_pnls || result.daily_pnls.length === 0)) {
+      // Defensive: critic-replay with no daily_pnls — MC cannot run, but the
+      // lifecycle gate at TESTING→PAPER will still look for an MC row. Record
+      // the skip explicitly so the gate's lookup-failure is replayable.
+      try {
+        await db.insert(auditLog).values({
+          action: "strategy.critic-replay-mc-skipped",
+          entityType: "strategy",
+          entityId: strategyId,
+          input: { backtestId, tier: result.tier ?? null },
+          result: {
+            reason: "no daily_pnls — MC cannot be run on a replay backtest with empty daily_pnls",
+          },
+          status: "failure",
+          decisionAuthority: "gate",
+          correlationId: correlationId ?? null,
+        });
+      } catch (auditErr) {
+        logger.warn({ backtestId, strategyId, err: auditErr }, "critic-replay-mc-skipped audit insert failed (non-blocking)");
+      }
     }
 
     // ─── Auto QUBO timing optimization (fire-and-forget) ───
@@ -579,7 +834,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           expectedReturn: "0",
           costSavings: "0",
           backtestImprovement: "0",
-          governanceLabels: { experimental: false, authoritative: true, decision_role: "pre_deploy_autonomous" },
+          governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
         }).returning();
 
         try {
@@ -594,6 +849,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             module: "src.engine.qubo_trade_timing",
             config: quboConfig,
             componentName: "qubo-timing",
+            correlationId,
           });
 
           await db.update(quboTimingRuns).set({
@@ -606,8 +862,16 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
 
           logger.info({ backtestId }, "Auto QUBO timing completed");
         } catch (quboErr) {
+          const quboErrMsg = quboErr instanceof Error ? quboErr.message : String(quboErr);
           logger.error({ backtestId, err: quboErr }, "Auto QUBO timing failed (non-blocking)");
           await db.update(quboTimingRuns).set({ status: "failed" }).where(eq(quboTimingRuns.id, quboRow.id));
+          await captureToDLQ({
+            operationType: "qubo_timing:failure",
+            entityType: "backtest",
+            entityId: backtestId,
+            errorMessage: quboErrMsg,
+            metadata: { backtestId, strategyId, quboRowId: quboRow.id, correlationId: correlationId ?? null },
+          }).catch(() => {});
         }
       })();
     }
@@ -628,7 +892,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           regimeAtPrediction: null,
           fragilityScore: "0",
           regimeBreakdown: {},
-          governanceLabels: { experimental: false, authoritative: true, decision_role: "pre_deploy_autonomous" },
+          governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
         }).returning();
 
         try {
@@ -657,24 +921,44 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             module: "src.engine.tensor_signal_model",
             config: { ...tensorConfig, mode: "predict" },
             componentName: "tensor-predict",
+            correlationId,
           });
 
-          await db.update(tensorPredictions).set({
-            status: "completed",
-            modelVersion: tensorResult.model_hash ?? "unknown",
-            probability: String(tensorResult.probability ?? 0),
-            confidence: String(tensorResult.confidence ?? 0),
-            signal: tensorResult.signal ?? "neutral",
-            featureSnapshot: tensorResult.features ?? {},
-            regimeAtPrediction: tensorResult.regime ?? null,
-            fragilityScore: String(tensorResult.fragility_score ?? 0),
-            regimeBreakdown: tensorResult.regime_breakdown ?? {},
-          }).where(eq(tensorPredictions.id, tensorRow.id));
-
-          logger.info({ backtestId }, "Auto tensor evaluation completed");
+          // probability===null means model not trained — mark skipped, not completed,
+          // so the critic evidence query omits this row rather than reading a fake 0.5.
+          const tensorProbability = tensorResult.probability;
+          if (tensorProbability === null || tensorProbability === undefined) {
+            await db.update(tensorPredictions).set({
+              status: "skipped_no_model",
+              modelVersion: "no_model",
+              signal: "no_model",
+            }).where(eq(tensorPredictions.id, tensorRow.id));
+            logger.info({ backtestId }, "Auto tensor evaluation skipped — model not trained");
+          } else {
+            await db.update(tensorPredictions).set({
+              status: "completed",
+              modelVersion: tensorResult.model_hash ?? "unknown",
+              probability: String(tensorProbability),
+              confidence: String(tensorResult.confidence ?? 0),
+              signal: tensorResult.signal ?? "neutral",
+              featureSnapshot: tensorResult.features ?? {},
+              regimeAtPrediction: tensorResult.regime ?? null,
+              fragilityScore: String(tensorResult.fragility_score ?? 0),
+              regimeBreakdown: tensorResult.regime_breakdown ?? {},
+            }).where(eq(tensorPredictions.id, tensorRow.id));
+            logger.info({ backtestId }, "Auto tensor evaluation completed");
+          }
         } catch (tensorErr) {
+          const tensorErrMsg = tensorErr instanceof Error ? tensorErr.message : String(tensorErr);
           logger.error({ backtestId, err: tensorErr }, "Auto tensor evaluation failed (non-blocking)");
           await db.update(tensorPredictions).set({ status: "failed" }).where(eq(tensorPredictions.id, tensorRow.id));
+          await captureToDLQ({
+            operationType: "tensor_prediction:failure",
+            entityType: "backtest",
+            entityId: backtestId,
+            errorMessage: tensorErrMsg,
+            metadata: { backtestId, strategyId, tensorRowId: tensorRow.id, correlationId: correlationId ?? null },
+          }).catch(() => {});
         }
       })();
     }
@@ -690,7 +974,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           method: "pennylane_vqc",
           totalReturn: "0",
           sharpeRatio: "0",
-          governanceLabels: { experimental: false, authoritative: true, decision_role: "pre_deploy_autonomous" },
+          governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
         }).returning();
 
         try {
@@ -704,6 +988,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             module: "src.engine.quantum_rl_agent",
             config: rlConfig,
             componentName: "rl-agent",
+            correlationId,
           });
           if (rlResult) {
             await db.update(rlTrainingRuns).set({
@@ -720,8 +1005,16 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             logger.info({ backtestId, strategyId }, "Auto RL training completed");
           }
         } catch (err) {
+          const rlErrMsg = err instanceof Error ? err.message : String(err);
           logger.error({ err, strategyId }, "Auto RL training failed");
           await db.update(rlTrainingRuns).set({ status: "failed" }).where(eq(rlTrainingRuns.id, rlRow.id));
+          await captureToDLQ({
+            operationType: "rl_training:failure",
+            entityType: "strategy",
+            entityId: strategyId,
+            errorMessage: rlErrMsg,
+            metadata: { backtestId, strategyId, rlRowId: rlRow.id, correlationId: correlationId ?? null },
+          }).catch(() => {});
         }
       })();
     }
@@ -729,13 +1022,19 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // ─── Auto Quantum Monte Carlo (fire-and-forget) ───
     // Quantum-enhanced breach probability estimation for qualifying backtests.
     // Same guard pattern as QUBO/Tensor/RL: non-REJECTED tier with daily P&Ls.
+    // CB key: "python-quantum-mc" — shared with any future direct QMC call sites.
+    // runQuantumMC already inserts a "running" quantumMcRuns row before calling Python
+    // (confirmed: quantum-mc-service.ts:125-136), so no pre-insert is needed here.
     if (result.tier && result.tier !== "REJECTED" && result.daily_pnls?.length > 0) {
       (async () => {
         try {
           const firmKey = config.firm_key ?? "topstep_50k";
-          const qmcResult = await runQuantumMC(backtestId, "breach", firmKey);
+          const qmcResult = await CircuitBreakerRegistry.get("python-quantum-mc", { failureThreshold: 3, cooldownMs: 30_000 }).call(
+            () => runQuantumMC(backtestId, "breach", firmKey),
+          );
           logger.info({ backtestId, qmcId: qmcResult.id, status: qmcResult.status }, "Auto quantum MC completed");
         } catch (qmcErr) {
+          // Circuit open or Python failure — log and swallow (non-blocking)
           logger.error({ backtestId, err: qmcErr }, "Auto quantum MC failed (non-blocking)");
         }
       })();
@@ -745,7 +1044,10 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // Guard: critic needs walk-forward data for param stability analysis.
     // Trigger for any qualifying backtest that has walk-forward results,
     // regardless of optimizer type (covers n8n walk-forward runs too).
-    if (result.tier && result.tier !== "REJECTED" && wfResults) {
+    // P2-3: suppress critic auto-trigger for replay backtests (suppressAutoPromote=true).
+    // Replays are already inside a critic cycle — firing critic again would create an
+    // uncontrolled recursive loop.
+    if (!config.suppressAutoPromote && result.tier && result.tier !== "REJECTED" && wfResults) {
       import("./critic-optimizer-service.js")
         .then(({ triggerCriticOptimizer }) =>
           triggerCriticOptimizer(backtestId, strategyId, config as unknown as Record<string, unknown>),
@@ -776,6 +1078,284 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           logger.warn({ err }, "Graveyard check failed, proceeding anyway");
         }
 
+        // ─── FIX 2 — CANDIDATE→PAPER fast-track must enforce the same three
+        // gates that lifecycle-service.checkAutoPromotions enforces on the
+        // standard TESTING→PAPER path. Without them, a strategy with high
+        // tier+forgeScore but poor survivability/exportability/compliance
+        // bypasses the safety net and lands in PAPER.
+        //
+        // Gate order (fail fast on cheap checks, expensive MC last):
+        //   2a. raw_survival_score >= 60 (cheap; reads gateResult JSONB on `result`)
+        //   2b. compliance ruleset drift gate (cheap; per-firm DB read)
+        //   2c. Pine exportability ok (medium; pine-export-service)
+        //   --- existing MC survival gate (expensive; Python subprocess) ---
+
+        // ── 2a. Survival score gate (raw_survival_score >= 60) ───────────
+        // gate_result.components.raw_survival_score is the unscaled 0-100 score
+        // from survival_scorer.py. Score < 60 means the strategy is likely to
+        // hit daily loss limits or DD limits in live trading.
+        try {
+          const gateResultRaw = (result as unknown as Record<string, unknown>).gate_result;
+          if (gateResultRaw && typeof gateResultRaw === "object") {
+            const components = (gateResultRaw as Record<string, unknown>).components as
+              | Record<string, number>
+              | undefined;
+            const rawSurvivalScore =
+              components?.raw_survival_score ?? components?.survival_score ?? null;
+            if (rawSurvivalScore !== null && rawSurvivalScore < 60) {
+              logger.warn(
+                { strategyId, backtestId, rawSurvivalScore },
+                "CANDIDATE→PAPER fast-track blocked: survival-score-below-threshold",
+              );
+              await db.insert(auditLog).values({
+                action: "strategy.fast-track.survival-score-blocked",
+                entityType: "strategy",
+                entityId: strategyId,
+                input: { backtestId, fromState: "CANDIDATE", toState: "PAPER" },
+                result: {
+                  reason: "survival-score-below-threshold",
+                  survival_score: rawSurvivalScore,
+                  minimum_required: 60,
+                },
+                status: "failure",
+                decisionAuthority: "gate",
+                correlationId: correlationId ?? null,
+              });
+              return { id: backtestId, status: "completed", ...result };
+            }
+          }
+          // No gateResult on the result is permissive — same fallback behavior as lifecycle-service.
+        } catch (gateErr) {
+          // Gate read failure is informational, not a strategy failure
+          logger.warn(
+            { strategyId, err: gateErr },
+            "CANDIDATE→PAPER fast-track: survival-score gate read failed (proceeding)",
+          );
+        }
+
+        // ── 2b. Compliance ruleset drift gate ─────────────────────────────
+        // If the latest ruleset row for any qualifying firm has driftDetected=true,
+        // the prop compliance result on this backtest is no longer trustworthy.
+        try {
+          const propComplianceRaw = (result as unknown as Record<string, unknown>).prop_compliance;
+          const { passingFirmNamesFromCompliance, findFirmsWithComplianceDrift } = await import("./lifecycle-service.js");
+          const passingFirmNames = passingFirmNamesFromCompliance(propComplianceRaw);
+          if (passingFirmNames.length > 0) {
+            const driftFirms = await findFirmsWithComplianceDrift(passingFirmNames);
+            if (driftFirms.length > 0) {
+              logger.warn(
+                { strategyId, backtestId, driftFirms },
+                "CANDIDATE→PAPER fast-track blocked: compliance ruleset drift detected",
+              );
+              await db.insert(auditLog).values({
+                action: "strategy.fast-track.compliance-drift-blocked",
+                entityType: "strategy",
+                entityId: strategyId,
+                input: { backtestId, fromState: "CANDIDATE", toState: "PAPER" },
+                result: {
+                  firms_with_drift: driftFirms,
+                  qualifying_firms: passingFirmNames,
+                  reason:
+                    "compliance ruleset drift_detected — promotion held until human revalidation",
+                },
+                status: "failure",
+                decisionAuthority: "gate",
+                correlationId: correlationId ?? null,
+              });
+              return { id: backtestId, status: "completed", ...result };
+            }
+          }
+        } catch (driftErr) {
+          // Drift gate infra failure is informational — do not block promotion on infra errors
+          logger.warn(
+            { strategyId, err: driftErr },
+            "CANDIDATE→PAPER fast-track: compliance drift gate read failed (proceeding)",
+          );
+        }
+
+        // ── 2b'. Compliance gate (P0-2 part 2) ─────────────────────────────
+        // Mirrors the TESTING→PAPER promotion-time gate in lifecycle-service.
+        // The drift gate above only catches firms with driftDetected=true on
+        // their latest ruleset. The compliance gate also blocks on stale
+        // (>24h) rulesets and "no_ruleset" firms. Same fail-closed posture
+        // as paper-execution-service: subprocess failure → block promotion.
+        try {
+          const propComplianceRaw = (result as unknown as Record<string, unknown>).prop_compliance;
+          const { passingFirmNamesFromCompliance, runComplianceGateForFirms } = await import("./lifecycle-service.js");
+          const passingFirmNames = passingFirmNamesFromCompliance(propComplianceRaw);
+          if (passingFirmNames.length > 0) {
+            const { firmsFailing, details } = await runComplianceGateForFirms(passingFirmNames);
+            if (firmsFailing.length > 0) {
+              logger.warn(
+                { strategyId, backtestId, firmsFailing, details },
+                "CANDIDATE→PAPER fast-track blocked: compliance gate (freshness) failed",
+              );
+              await db.insert(auditLog).values({
+                action: "strategy.fast-track.compliance_blocked",
+                entityType: "strategy",
+                entityId: strategyId,
+                input: { backtestId, fromState: "CANDIDATE", toState: "PAPER" },
+                result: {
+                  firms_failing: firmsFailing,
+                  qualifying_firms: passingFirmNames,
+                  details,
+                  reason: "compliance_gate.check_freshness failed — fast-track promotion held",
+                },
+                status: "failure",
+                decisionAuthority: "gate",
+                correlationId: correlationId ?? null,
+              });
+              broadcastSSE("strategy:compliance_blocked", {
+                strategyId,
+                fromState: "CANDIDATE",
+                toState: "PAPER",
+                firmsFailing,
+                details,
+              });
+              return { id: backtestId, status: "completed", ...result };
+            }
+          }
+        } catch (complianceGateErr) {
+          // Wrapper-level error (not a per-firm fail). Same posture as the
+          // drift gate above: log and proceed. The per-firm fail-closed path
+          // is inside runComplianceGateForFirms itself; reaching here means
+          // something at the dynamic-import or aggregation layer broke.
+          logger.warn(
+            { strategyId, err: complianceGateErr },
+            "CANDIDATE→PAPER fast-track: compliance gate wrapper threw (proceeding — per-firm fail-closed still applies inside the helper)",
+          );
+        }
+
+        // ── 2c. Pine exportability pre-check ──────────────────────────────
+        // A strategy that cannot be exported to Pine cannot be deployed to TradingView,
+        // so promoting it to PAPER would create a stuck DEPLOY_READY downstream.
+        try {
+          const { checkExportability } = await import("./pine-export-service.js");
+          const exportCheck = await checkExportability(strategyId);
+          if (!exportCheck.ok) {
+            logger.warn(
+              {
+                strategyId,
+                backtestId,
+                score: exportCheck.score,
+                band: exportCheck.band,
+                deductions: exportCheck.deductions,
+              },
+              "CANDIDATE→PAPER fast-track blocked: Pine exportability issues",
+            );
+            await db.insert(auditLog).values({
+              action: "strategy.fast-track.exportability-blocked",
+              entityType: "strategy",
+              entityId: strategyId,
+              input: { backtestId, fromState: "CANDIDATE", toState: "PAPER" },
+              result: {
+                reasons: (exportCheck as Record<string, unknown>).reasons ?? null,
+                score: exportCheck.score,
+                band: exportCheck.band,
+                deductions: exportCheck.deductions,
+              },
+              status: "failure",
+              decisionAuthority: "gate",
+              correlationId: correlationId ?? null,
+            });
+            broadcastSSE("strategy:exportability_blocked", {
+              strategyId,
+              fromState: "CANDIDATE",
+              toState: "PAPER",
+              score: exportCheck.score,
+              band: exportCheck.band,
+              reasons: (exportCheck as Record<string, unknown>).reasons ?? null,
+            });
+            return { id: backtestId, status: "completed", ...result };
+          }
+        } catch (exportErr) {
+          // checkExportability infra failure is informational — do not block on infra errors
+          logger.warn(
+            { strategyId, err: exportErr },
+            "CANDIDATE→PAPER fast-track: exportability check failed (proceeding)",
+          );
+        }
+
+        // ─── MC survival gate (BLOCKING) ────────────────────────────
+        // MC must pass before auto-promote to PAPER. Latency tradeoff: MC can take
+        // 30-90s for 50k simulations, which extends the backtest response time.
+        // This is acceptable because the alternative (fire-and-forget MC) creates
+        // the dual-promotion bypass that lets strategies into PAPER without ever
+        // being evaluated for ruin probability — the very bug this gate fixes.
+        // If MC is unavailable (Python subprocess fails), strategy stays CANDIDATE
+        // and a "mc-unavailable-promotion-blocked" audit row is written.
+        let mcSurvivalRate: number | null = null;
+        let mcPassed = false;
+        let mcUnavailable = false;
+        if (result.daily_pnls?.length > 0) {
+          try {
+            // Wrap MC call with circuit breaker — "python-mc" is shared with any other
+            // direct call site to monte-carlo-service. If the circuit is OPEN (3 failures
+            // within the cooldown window), this throws CircuitOpenError immediately and
+            // we fall through to the mcUnavailable block below. On success the semantics
+            // of runMonteCarlo are completely unchanged.
+            const mcResult = await CircuitBreakerRegistry.get("python-mc", { failureThreshold: 3, cooldownMs: 30_000 }).call(
+              () => runMonteCarlo(backtestId, {
+                numSimulations: 50_000,
+                method: "both",
+                firms: ["topstep_50k", "mffu_50k", "tpt_50k", "apex_50k", "ffn_50k", "alpha_50k", "tradeify_50k", "earn2trade_50k"],
+              }),
+            );
+            if (mcResult.status === "completed") {
+              // Narrowed: completed branch carries the full MCResult including risk_metrics
+              const mcCompleted = mcResult as { id: string; status: "completed"; risk_metrics?: Record<string, unknown> };
+              const ruinRaw = mcCompleted.risk_metrics?.probability_of_ruin;
+              if (ruinRaw != null) {
+                const ruin = Number(ruinRaw);
+                mcSurvivalRate = 1 - ruin;
+                mcPassed = mcSurvivalRate >= 0.70;
+                logger.info(
+                  { backtestId, strategyId, mcId: mcCompleted.id, survivalRate: mcSurvivalRate.toFixed(4), passed: mcPassed },
+                  "Auto-promote MC gate evaluated",
+                );
+              } else {
+                mcUnavailable = true;
+                logger.warn({ backtestId, mcId: mcCompleted.id }, "Auto-promote MC gate: completed but probability_of_ruin missing, blocking promotion");
+              }
+            } else {
+              // MC failed → block promotion
+              mcUnavailable = true;
+              logger.warn({ backtestId, mcStatus: mcResult.status }, "Auto-promote MC gate: MC did not complete, blocking promotion");
+            }
+          } catch (mcErr) {
+            mcUnavailable = true;
+            logger.error({ backtestId, err: mcErr }, "Auto-promote MC gate: MC threw, blocking promotion");
+          }
+        } else {
+          // No daily_pnls → can't run MC → block promotion (strategy can't be evaluated for ruin)
+          mcUnavailable = true;
+          logger.warn({ backtestId, strategyId }, "Auto-promote MC gate: no daily_pnls, blocking promotion");
+        }
+
+        // If MC didn't pass, log a blocked audit row and skip promotion (strategy stays CANDIDATE)
+        if (!mcPassed) {
+          const blockedAction = mcUnavailable ? "mc-unavailable-promotion-blocked" : "mc-survival-promotion-blocked";
+          await db.insert(auditLog).values({
+            action: blockedAction,
+            entityType: "strategy",
+            entityId: strategyId,
+            input: { backtestId, tier: result.tier },
+            result: {
+              survivalRate: mcSurvivalRate,
+              threshold: 0.70,
+              mcUnavailable,
+            },
+            status: "failure",
+            decisionAuthority: "gate",
+            correlationId: correlationId ?? null,
+          });
+          logger.warn(
+            { strategyId, backtestId, tier: result.tier, survivalRate: mcSurvivalRate, mcUnavailable },
+            "Auto-promote blocked at MC gate — strategy stays CANDIDATE",
+          );
+          return { id: backtestId, status: "completed", ...result };
+        }
+
         // Determine paper session config before entering the transaction
         const dailyLossLimit = (() => {
           const firmKey = config.firm_key;
@@ -790,9 +1370,16 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         })();
 
         let paperSessionId: string;
+        let promotionSucceeded = false;
+        let promotionError: string | undefined;
 
         // All promotion writes are transactional: lifecycle state + paper session + audit log.
         // If any write fails, none persist — strategy stays in its prior state.
+        // Lifecycle write goes through LifecycleService.promoteStrategy() so there is
+        // ONE path to lifecycle state changes — closes the dual-promotion bypass.
+        const { LifecycleService } = await import("./lifecycle-service.js");
+        const lifecycle = new LifecycleService();
+
         await db.transaction(async (tx) => {
           // Auto-name assignment for TIER_1 strategies
           if (result.tier === "TIER_1") {
@@ -842,6 +1429,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
                   input: { codename: claimedName.codename },
                   result: { fullName: claimedName.fullName },
                   status: "success",
+                  correlationId: correlationId ?? null,
                 });
               } else {
                 // Fallback: generate unique name with crypto random suffix
@@ -855,12 +1443,32 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             }
           }
 
-          // Update strategy lifecycle to PAPER
-          await tx.update(strategies).set({
-            lifecycleState: "PAPER",
-            lifecycleChangedAt: new Date(),
-            forgeScore: result.forge_score != null ? String(result.forge_score) : null,
-          }).where(eq(strategies.id, strategyId));
+          // Update forgeScore separately — promoteStrategy doesn't touch it
+          if (result.forge_score != null) {
+            await tx.update(strategies).set({
+              forgeScore: String(result.forge_score),
+            }).where(eq(strategies.id, strategyId));
+          }
+
+          // ── Single path lifecycle write: CANDIDATE → PAPER via LifecycleService ──
+          // Passes the existing tx so the lifecycle update + audit row stay atomic
+          // with the paper session creation and Forge name claim above.
+          // Cast tx to typeof db — Drizzle's PgTransaction is structurally compatible
+          // with the db handle for query/insert/update/select but lacks `$client`.
+          // This matches the pattern used in src/server/lib/db-locks.ts.
+          const promoteResult = await lifecycle.promoteStrategy(
+            strategyId,
+            "CANDIDATE",
+            "PAPER",
+            { actor: "system", reason: "tier-qualified-auto-promote" },
+            tx as unknown as typeof db,
+          );
+          if (!promoteResult.success) {
+            promotionError = promoteResult.error;
+            // Throwing inside tx triggers rollback — paper session insert + Forge name claim
+            // both revert so we don't end up with a paper session for a non-PAPER strategy.
+            throw new Error(`Lifecycle promotion failed: ${promoteResult.error}`);
+          }
 
           // Create paper trading session
           const [paperSession] = await tx.insert(paperSessions).values({
@@ -880,15 +1488,36 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
 
           paperSessionId = paperSession.id;
 
+          // Auto-promote context audit row — captures backtest+MC+tier metadata so
+          // observers can join lifecycle audit row to its triggering backtest. The
+          // canonical "strategy.lifecycle" audit row is written by promoteStrategy()
+          // above; this is the supplementary context, NOT the lifecycle event itself.
           await tx.insert(auditLog).values({
-            action: "strategy.auto-promote",
+            action: "strategy.auto-promote-context",
             entityType: "strategy",
             entityId: strategyId,
             input: { backtestId, tier: result.tier },
-            result: { paperSessionId: paperSession.id },
+            result: {
+              paperSessionId: paperSession.id,
+              mcSurvivalRate,
+              forgeScore: result.forge_score,
+            },
             status: "success",
+            decisionAuthority: "gate",
+            correlationId: correlationId ?? null,
           });
+
+          promotionSucceeded = true;
         });
+
+        // If the tx rolled back, surface the error and bail before stream/SSE
+        if (!promotionSucceeded) {
+          logger.warn(
+            { strategyId, backtestId, error: promotionError },
+            "Auto-promote transaction rolled back — strategy not promoted",
+          );
+          return { id: backtestId, status: "completed", ...result };
+        }
 
         // Start live stream outside the transaction (I/O side-effect, not DB)
         try {
@@ -935,6 +1564,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       status: "failure",
       decisionAuthority: "agent",
       errorMessage: errorMsg,
+      correlationId: correlationId ?? null,
     });
 
     backtestSpan.setAttribute("status", "failed");

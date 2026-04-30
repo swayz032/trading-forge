@@ -292,7 +292,8 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": {
     "node:Sunday 8PM ET Weekly": {

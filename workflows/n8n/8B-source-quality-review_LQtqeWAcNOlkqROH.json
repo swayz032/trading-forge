@@ -196,7 +196,8 @@
     "timezone": "America/New_York",
     "saveDataErrorExecution": "all",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": {
     "node:Cron Trigger": {

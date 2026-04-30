@@ -1,8 +1,10 @@
 # Prop Firm Rules Reference
 
 > This document is consumed by Trading Forge AI agents for strategy simulation,
-> evaluation feasibility scoring, and payout projections. All numbers are exact
-> as of March 2026. Agents MUST use these constraints when simulating strategies.
+> evaluation feasibility scoring, and payout projections. All numbers are current
+> as of April 2026 (the **## 2026 Updates** section reflects the latest rule
+> changes; the per-firm blocks below contain the full historical detail).
+> Agents MUST use these constraints when simulating strategies.
 
 ---
 
@@ -13,6 +15,171 @@
 3. **Scoring output:** Report whether a strategy PASSES or FAILS each firm's evaluation
 4. **Payout projection:** Calculate expected net profit after splits and fees
 5. **Firm ranking:** Given a strategy profile, rank firms by expected ROI
+
+---
+
+## 2026 Updates
+
+> Source-of-truth overlay on top of the per-firm blocks below. When a value
+> here conflicts with a per-firm block, **this section wins** — the per-firm
+> blocks are kept for historical context and detailed payout/platform info.
+
+### Per-Firm Routing Matrix
+
+| Firm | Path | Reason |
+|---|---|---|
+| **Topstep** | ATS via TopstepX API, **local-only** (Skytech tower) | Most algo-permissive; no-VPS rule = local execution required |
+| **MFFU** | ATS via TradersPost / PickMyTrade | Permissive |
+| **Top One Futures, YRM Prop** | ATS, fully automated | Most automation-friendly per March 2026 |
+| **Apex 4.0** | INDICATOR + manual TradersPost approval | Semi-auto allowed, fully auto banned |
+| **Tradeify** | INDICATOR only | Bans bot trading |
+| **TPT, Earn2Trade, Alpha Futures** | ATS allowed | Permissive |
+| **FundingPips** | INDICATOR only | Bans bots |
+
+> **Routing implication for Trading Forge:** strategies tagged `automation=full`
+> can only be deployed against Topstep (local), MFFU, Top One, YRM, TPT,
+> Earn2Trade, and Alpha Futures. Apex/Tradeify/FundingPips routes must
+> emit signals to the indicator/alert layer with a human-approval step in
+> TradersPost — never auto-fire orders.
+
+### Apex 4.0 — Effective Mar 1, 2026
+
+```yaml
+firm: apex_trader_funding
+plan_version: "4.0"
+effective_date: "2026-03-01"
+consistency_rule:
+  evaluation: 0.50           # Was 0.30 — relaxed to 50% single-day cap
+  funded: 0.50
+qualifying_days: 5            # Was 7 — reduced
+profit_split_tiers:
+  - tier: first_25k
+    split: 1.00               # 100% to trader on first $25K (no split)
+  - tier: after_25k
+    split: 0.90               # Then 90/10
+removed_rules:
+  - mae_rule                  # MAE rule REMOVED in 4.0
+  - rr_5_to_1_requirement     # 5:1 R:R requirement REMOVED in 4.0
+automation_policy:
+  pa_live_accounts: prohibited  # AI/autobots/algorithms/HFT BANNED on PA/Live
+  evaluation_accounts: allowed  # Algos still allowed during eval
+  semi_auto: allowed            # Permitted: TradersPost webhook + manual approval
+household_max_pa_accounts: 20   # Cap of 20 PA accounts per household
+```
+
+> **Trading Forge implication:** Apex strategies must route through the
+> indicator layer with explicit human approval in TradersPost. Setting
+> `automated: true` on a strategy tagged for an Apex PA account triggers
+> an automatic compliance violation in `compliance_gate.check_violation()`.
+
+### Topstep — Effective Apr 14, 2026
+
+```yaml
+firm: topstep
+effective_date: "2026-04-14"
+daily_loss_limit:
+  status: opt_in_at_checkout    # No longer always-on; selected at purchase
+  enforcement: auto_liquidation  # If breached, account auto-liquidates
+trailing_drawdown_type: EOD
+trailing_drawdown_locks: true   # Locks once HWM reaches starting balance
+  # 50K example: starts at $48K floor, trails up to $50K, locks there
+api_policy:
+  topstepx_api: allowed
+  webhooks: allowed
+  bots: allowed
+  vps: prohibited                # No VPS allowed
+  vpn: prohibited                # No VPN allowed
+  remote_access: prohibited      # Must run from personal device
+  # → Trading Forge requirement: Topstep deployment is LOCAL ONLY (Skytech tower)
+```
+
+> **Trading Forge implication:** Topstep is the only fully-automated route
+> that requires local execution. The bias engine and paper executor must
+> validate `host=skytech-tower` before sending any TopstepX webhook.
+> The compliance gate must reject any Topstep order originating from a
+> VPS/VPN/cloud host.
+
+### MFFU — 2026 Plan Restructure
+
+The old Starter/Expert/Milestone plans have been retired. New 2026 plans:
+
+```yaml
+firm: my_funded_futures
+plans:
+  Core:                          # Replaces Starter
+    sizes: ["50K"]               # 50K only
+    profit_split: 0.80           # 80/20
+    drawdown_type: EOD
+    monthly_fee: 77
+    profit_cycle_cap: 5000       # $5K cycle cap
+    min_winning_days: 5
+  Rapid:                         # Replaces Expert
+    profit_split: 0.90           # 90/10 effective Jan 12, 2026
+    drawdown_type: intraday_trailing
+    monthly_fee_min: 129
+  Pro:                           # Replaces Milestone
+    profit_split: 0.80           # 80/20
+    drawdown_type: EOD
+    consistency_rule_funded: null  # No consistency rule once funded
+    monthly_fee_min: 229
+    total_payout_cap: 100000     # $100K total cap
+```
+
+### ProjectX Exit — Effective Feb 28, 2026
+
+```yaml
+event: projectx_third_party_discontinued
+date: "2026-02-28"
+status: exited_third_party_prop_firm_support
+exclusive_partner: topstep
+affected_firms:
+  - top_one_futures
+  - tradify
+  - blue_guardian
+  - tick_tick_trader
+```
+
+> **Trading Forge implication:** any strategy previously routed via ProjectX
+> infrastructure for Top One / Tradify / Blue Guardian / Tick Tick Trader
+> must be re-routed. Trading Forge tracks Top One/YRM as ATS-direct (per the
+> routing matrix above). The `compliance_rulesets` table must mark
+> ProjectX-derived rulesets as stale and force re-fetch from each firm's
+> direct platform.
+
+### Buffer Phase Math (All Firms — $0 Activation Fee)
+
+The "buffer" is the additional profit beyond the eval target needed before the
+first payout, equal to the trailing drawdown amount on most firms (so the
+account is fully clear of the drawdown floor by the time you withdraw).
+
+```python
+def buffer_required(profit_target: float, max_drawdown: float) -> float:
+    """Total profit needed before first payout = target + drawdown buffer."""
+    return profit_target + max_drawdown
+```
+
+| Firm (50K) | Profit Target | Buffer (= maxDD) | Total Before 1st Payout | Notes |
+|---|---|---|---|---|
+| **Topstep 50K** | $3,000 | $2,000 | **$5,000** | 90% split from dollar one |
+| **MFFU 50K Core** | $3,000 | $2,500 | **$5,500** | 80% split (Core), 90% (Rapid) |
+| **Apex 50K** | $3,000 | $2,500 | **$5,500** | 100% to trader on first $25K, then 90/10 |
+| **TPT 50K** | $3,000 | $2,000 | **$5,000** | 80% split (PRO), 90% (PRO+ after $5K) |
+| **Tradeify 50K** | $2,500 | $2,000 | **$4,500** | 100% to trader on first $15K |
+| **Alpha 50K Std** | $3,000 | $2,000 | **$5,000** | 70% → 80% → 90% scaling split |
+| **Earn2Trade 50K** | $3,000 | $2,000 | **$5,000** | $4K lifetime withdrawal cap |
+
+```yaml
+days_to_first_payout:
+  at_500_per_day:  "10–12 trading days"   # ~$5,000–$6,000 buffer ÷ $500/day
+  at_1000_per_day: "5–6 trading days"     # Same buffer ÷ $1,000/day
+target_monthly_income: 10000               # $10K/month
+```
+
+> **Trading Forge implication:** the strategy ranker (`rank_firms_for_strategy`
+> in the **Strategy-to-Firm Matching** block below) must use these total
+> buffer values, not the bare profit_target, when projecting time-to-funded.
+> Apex's first-$25K-100% rule changes the ROI math — for Apex specifically,
+> the first-payout cycle is materially better than splits suggest.
 
 ---
 

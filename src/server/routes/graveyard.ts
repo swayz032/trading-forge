@@ -9,7 +9,6 @@
 
 import { Router } from "express";
 import { z } from "zod";
-import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 
 export const graveyardRoutes = Router();
@@ -55,7 +54,7 @@ graveyardRoutes.post("/check", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Corpse check failed");
+    req.log.error({ err }, "Corpse check failed");
     res.status(500).json({ error: "Corpse check failed", details: String(err) });
   }
 });
@@ -77,7 +76,7 @@ graveyardRoutes.post("/bury", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Bury strategy failed");
+    req.log.error({ err }, "Bury strategy failed");
     res.status(500).json({ error: "Failed to bury strategy", details: String(err) });
   }
 });
@@ -103,7 +102,7 @@ graveyardRoutes.get("/search", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Graveyard search failed");
+    req.log.error({ err }, "Graveyard search failed");
     res.status(500).json({ error: "Graveyard search failed", details: String(err) });
   }
 });
@@ -122,14 +121,14 @@ graveyardRoutes.get("/failures", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Graveyard failures list failed");
+    req.log.error({ err }, "Graveyard failures list failed");
     res.status(500).json({ error: "Failed to list failures", details: String(err) });
   }
 });
 
 // ─── GET /api/graveyard/stats ───────────────────────────────────
 // Graveyard statistics
-graveyardRoutes.get("/stats", async (_req, res) => {
+graveyardRoutes.get("/stats", async (req, res) => {
   try {
     const result = await runPythonModule({
       module: "src.engine.graveyard.failure_tagger",
@@ -138,14 +137,14 @@ graveyardRoutes.get("/stats", async (_req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Graveyard stats failed");
+    req.log.error({ err }, "Graveyard stats failed");
     res.status(500).json({ error: "Failed to get graveyard stats", details: String(err) });
   }
 });
 
 // ─── GET /api/graveyard/discoveries ─────────────────────────────
 // Pattern discoveries — aggregated failure mode insights from graveyard analysis
-graveyardRoutes.get("/discoveries", async (_req, res) => {
+graveyardRoutes.get("/discoveries", async (req, res) => {
   try {
     const result = await runPythonModule({
       module: "src.engine.graveyard.failure_tagger",
@@ -154,7 +153,7 @@ graveyardRoutes.get("/discoveries", async (_req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Graveyard discoveries failed");
+    req.log.error({ err }, "Graveyard discoveries failed");
     res.status(500).json({ error: "Failed to get graveyard discoveries", details: String(err) });
   }
 });
@@ -172,7 +171,7 @@ graveyardRoutes.get("/:id", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Graveyard get failed");
+    req.log.error({ err }, "Graveyard get failed");
     res.status(500).json({ error: "Failed to get graveyard entry", details: String(err) });
   }
 });

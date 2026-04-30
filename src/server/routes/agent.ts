@@ -9,6 +9,8 @@ import { eq, desc, and, sql, inArray } from "drizzle-orm";
 import { OllamaClient } from "../services/ollama-client.js";
 import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
+import { idempotencyMiddleware } from "../middleware/idempotency.js";
+import { requireLiveN8n } from "../middleware/require-live-n8n.js";
 
 export const agentRoutes = Router();
 const agentService = new AgentService();
@@ -124,9 +126,31 @@ const scoutSchema = z.object({
   ideas: z.array(scoutIdeaSchema).min(1),
 });
 
+// Strict scout schema — every field required. Used by the search-router
+// pipeline (POST /api/agent/scout-ideas/strict). Off-schema submissions get
+// 400'd, which is what stops OpenClaw's free-form chatter from leaking into
+// the journal and downstream Discord channels.
+const strictScoutIdeaSchema = z.object({
+  thesis: z.string().min(20).max(2000),
+  market: z.string().min(1),               // ES | NQ | CL | etc.
+  timeframe: z.string().min(1),            // 5m | 15m | 1h | etc.
+  entry_rules: z.string().min(20).max(2000),
+  exit_rules: z.string().min(20).max(2000),
+  risk_rules: z.string().min(10).max(1000),
+  source_url: z.string().url(),
+  regime: z.string().min(1),               // TRENDING_UP | RANGE_BOUND | etc.
+  concept_name: z.string().min(1),         // canonical concept (e.g. "trend_follow_breakout")
+  source_provider: z.enum(["brave", "tavily", "exa", "parallel", "reddit", "manual"]),
+  confidence_score: z.number().min(0).max(1).optional(),
+});
+
+const strictScoutSchema = z.object({
+  ideas: z.array(strictScoutIdeaSchema).min(1).max(50),
+});
+
 // ─── POST /api/agent/run-strategy ────────────────────────────────
 
-agentRoutes.post("/run-strategy", async (req, res) => {
+agentRoutes.post("/run-strategy", idempotencyMiddleware, async (req, res) => {
   const parsed = runStrategySchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -199,7 +223,7 @@ agentRoutes.post("/critique", async (req, res) => {
 
 // ─── POST /api/agent/batch ───────────────────────────────────────
 
-agentRoutes.post("/batch", async (req, res) => {
+agentRoutes.post("/batch", idempotencyMiddleware, async (req, res) => {
   const parsed = batchSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -212,6 +236,46 @@ agentRoutes.post("/batch", async (req, res) => {
   });
 
   res.status(202).json({ count: parsed.data.strategies.length, message: "Batch submitted" });
+});
+
+// ─── POST /api/agent/run-from-dsl ────────────────────────────────
+// M1+M3 fix — single-call endpoint that compiles a full StrategyDSL,
+// persists the strategy, and runs the backtest. n8n's Strategy_Generation_Loop
+// "Submit Backtest" node should call THIS instead of /api/backtests (which
+// requires a pre-existing strategyId and was the M1 blocker).
+
+const runFromDslSchema = z.object({
+  dsl: z.record(z.unknown()),
+  source: z.enum(["ollama", "openclaw", "manual"]).default("openclaw"),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
+agentRoutes.post("/run-from-dsl", idempotencyMiddleware, async (req, res) => {
+  const parsed = runFromDslSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+  try {
+    const result = await agentService.runStrategyFromDSL(
+      parsed.data.dsl,
+      { source: parsed.data.source, start_date: parsed.data.start_date, end_date: parsed.data.end_date },
+    );
+    if (result.status === "compile_failed") {
+      res.status(422).json({ ...result, error: "DSL did not compile" });
+      return;
+    }
+    if (result.skipped) {
+      res.status(202).json(result);
+      return;
+    }
+    res.status(201).json(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    req.log.error({ err }, "run-from-dsl failed");
+    res.status(500).json({ error: msg });
+  }
 });
 
 // ─── POST /api/agent/run-class-strategy ──────────────────────────
@@ -229,7 +293,7 @@ const runClassStrategySchema = z.object({
   params: z.record(z.unknown()).default({}),
 });
 
-agentRoutes.post("/run-class-strategy", async (req, res) => {
+agentRoutes.post("/run-class-strategy", idempotencyMiddleware, async (req, res) => {
   const parsed = runClassStrategySchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -245,8 +309,10 @@ agentRoutes.post("/run-class-strategy", async (req, res) => {
 });
 
 // ─── POST /api/agent/scout-ideas ─────────────────────────────────
+// LEGACY: loose schema, retained for the existing 5G/5H/5I scout workflows.
+// New pipelines (Wave C4 search-router) MUST use /scout-ideas/strict.
 
-agentRoutes.post("/scout-ideas", async (req, res) => {
+agentRoutes.post("/scout-ideas", idempotencyMiddleware, async (req, res) => {
   const parsed = scoutSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -256,6 +322,53 @@ agentRoutes.post("/scout-ideas", async (req, res) => {
   try {
     const result = await agentService.scoutIdeas(parsed.data.ideas);
     res.status(201).json(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err }, "scout-ideas failed");
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── POST /api/agent/scout-ideas/strict ──────────────────────────
+// Enforces the full structured contract — anything off-schema gets 400'd.
+// This is what stops OpenClaw's free-form chatter from leaking into the
+// journal and downstream Discord channels.
+
+agentRoutes.post("/scout-ideas/strict", requireLiveN8n({ soft: true }), async (req, res) => {
+  const parsed = strictScoutSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid request — strict scout schema not satisfied",
+      details: parsed.error.issues,
+      hint: "Required fields: thesis, market, timeframe, entry_rules, exit_rules, risk_rules, source_url, regime, concept_name, source_provider",
+    });
+    return;
+  }
+
+  // M5 fix — collapse provider sources into the legacy enum so downstream
+  // runStrategyFromDSL doesn't choke on brave/tavily/exa/parallel/reddit.
+  // Original provider stays in `tags` for traceability.
+  const legacyShaped = parsed.data.ideas.map((i) => ({
+    source: "openclaw" as const,
+    title: i.thesis.slice(0, 200),
+    description: `${i.thesis}\n\nEntry: ${i.entry_rules}\nExit: ${i.exit_rules}\nRisk: ${i.risk_rules}\nRegime: ${i.regime}`,
+    url: i.source_url,
+    source_quality: "high" as const,
+    confidence_score: i.confidence_score,
+    instruments: [i.market],
+    indicators_mentioned: [i.concept_name, `provider:${i.source_provider}`],
+  }));
+
+  try {
+    const result = await agentService.scoutIdeas(legacyShaped);
+
+    // M4 fix — fire-and-forget drain so strict scouts don't dead-end in journal.
+    // drainScoutedIdeas internally checks pipeline pause; safe to call always.
+    agentService
+      .drainScoutedIdeas(parsed.data.ideas.length)
+      .catch((err) => req.log.warn({ err }, "scout-ideas/strict: post-scout drain failed"));
+
+    res.status(201).json({ ...result, schema: "strict", drainTriggered: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     res.status(500).json({ error: msg });
@@ -305,11 +418,37 @@ agentRoutes.post("/robustness", async (req, res) => {
     decisionAuthority: "agent",
   }).returning();
 
-  // Fire and forget
+  // Fire and forget — update the pending audit row when the run finishes so
+  // the job tracker doesn't sit on "pending" forever (P1-9). The robustness
+  // service writes its own audit rows for the actual run; this update closes
+  // out the route's job-tracker row.
   const configJson = JSON.stringify(parsed.data.config);
-  runRobustnessTest(parsed.data.strategy_id, configJson).catch((err) => {
-    logger.error({ err, strategyId: parsed.data.strategy_id }, "Fire-and-forget robustness test failed");
-  });
+  runRobustnessTest(parsed.data.strategy_id, configJson)
+    .then(async (result) => {
+      await db.update(auditLog).set({
+        status: "success",
+        result: {
+          is_robust: result.robustness?.is_robust ?? null,
+          best_score: result.best_score ?? null,
+          n_trials: result.n_trials ?? null,
+        } as unknown as Record<string, unknown>,
+        decisionAuthority: "agent",
+      }).where(eq(auditLog.id, job.id)).catch((dbErr) => {
+        logger.error({ err: dbErr, jobId: job.id }, "Failed to update robustness job row on success");
+      });
+    })
+    .catch(async (err) => {
+      logger.error({ err, strategyId: parsed.data.strategy_id, jobId: job.id }, "Fire-and-forget robustness test failed");
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      await db.update(auditLog).set({
+        status: "failure",
+        result: { error: errorMsg } as unknown as Record<string, unknown>,
+        decisionAuthority: "agent",
+        errorMessage: errorMsg,
+      }).where(eq(auditLog.id, job.id)).catch((dbErr) => {
+        logger.error({ err: dbErr, jobId: job.id }, "Failed to update robustness job row on failure");
+      });
+    });
 
   res.status(202).json({ job_id: job.id, message: "Robustness test submitted" });
 });
@@ -420,9 +559,16 @@ Output ONLY the DSL JSON object, nothing else.`;
       }
     }
 
-    // Update audit log with results
+    // Update audit log with results.
+    // If the pipeline is paused, runStrategy returns status "skipped" for every
+    // strategy. Treating that as "failure" produces a false alarm in the job
+    // tracker — surface it as "skipped" instead so operators can distinguish a
+    // paused-pipeline outcome from genuine generation failures.
+    const hasCompleted = results.some((r) => r.status === "completed");
+    const allSkipped = results.length > 0 && results.every((r) => r.status === "skipped");
+    const aggregatedStatus = hasCompleted ? "success" : (allSkipped ? "skipped" : "failure");
     await db.update(auditLog).set({
-      status: results.some((r) => r.status === "completed") ? "success" : "failure",
+      status: aggregatedStatus,
       result: { strategies: results } as unknown as Record<string, unknown>,
       decisionAuthority: "agent",
     }).where(eq(auditLog.id, job.id));

@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import hashlib
@@ -25,6 +26,11 @@ from typing import Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
+
+try:
+    from src.engine.cloud_backend import quantum_result_cache as _rl_cache
+except ImportError:
+    _rl_cache = None  # type: ignore[assignment]
 
 # Optional PennyLane
 try:
@@ -60,6 +66,7 @@ class VQCConfig(BaseModel):
     device: str = "default.qubit"  # default.qubit | lightning.qubit | lightning.gpu | braket.aws.sv1 | braket.aws.ionq
     cloud_config: Optional[dict] = None  # CloudBackendConfig as dict (opt-in only)
     max_cloud_evaluations: int = 100     # Cost control: switch to local after this many cloud circuit evaluations
+    opt_in_cloud: bool = False           # Second gate: must be True AND QUANTUM_CLOUD_ENABLED=true to use cloud QPU
 
 
 class TrainConfig(BaseModel):
@@ -211,32 +218,94 @@ def build_vqc_policy(config: VQCConfig):
     if not PENNYLANE_AVAILABLE:
         return None, None
 
-    # Braket cloud device selection — opt-in, only when library is present
-    _BRAKET_DEVICE_ARNS = {
-        "braket.aws.sv1": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        "braket.aws.ionq": "arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1",
-    }
-    if config.device.startswith("braket.aws") and BRAKET_PENNYLANE_AVAILABLE:
-        arn = _BRAKET_DEVICE_ARNS.get(config.device)
-        if arn:
-            dev = qml.device(
-                "braket.aws.qubit",
-                device_arn=arn,
-                wires=config.n_qubits,
-                shots=1000,
-                s3_destination_folder=("amazon-braket-trading-forge", "rl-jobs"),
+    # ── Cloud device selection — routed through resolve_backend() ────────────
+    # Both gates must pass before any cloud QPU is used:
+    #   Gate 1: config.opt_in_cloud must be True  (per-request opt-in)
+    #   Gate 2: QUANTUM_CLOUD_ENABLED env var must not be "false"  (kill-switch)
+    # If either gate is closed, resolve_backend returns ("local", None, label)
+    # and we fall through to default.qubit below.
+    #
+    # We do NOT inspect config.device.startswith("braket.aws") directly to pick
+    # the device — that bypassed the two-gate safety layer (P1-1 fix).
+
+    if config.device.startswith("braket.aws"):
+        # Route through resolve_backend so both safety gates are enforced.
+        try:
+            from src.engine.cloud_backend import (
+                CloudBackendConfig,
+                resolve_backend as _resolve_backend,
             )
+            # Map the PennyLane device string to the Braket backend_name key
+            _device_key_map = {
+                "braket.aws.sv1": "sv1",
+                "braket.aws.ionq": "ionq_forte1",
+            }
+            backend_key = _device_key_map.get(config.device, "sv1")
+
+            # Merge any caller-supplied cloud_config dict over the defaults
+            cloud_cfg_dict = config.cloud_config or {}
+            cloud_cfg_dict = {
+                "provider": "braket",
+                "backend_name": backend_key,
+                **cloud_cfg_dict,
+                # opt_in_cloud on VQCConfig is authoritative — always honour it
+                "opt_in_cloud": config.opt_in_cloud,
+            }
+            cloud_cfg = CloudBackendConfig(**cloud_cfg_dict)
+
+            provider_name, _backend_obj, backend_label = _resolve_backend(
+                cloud_cfg, problem_size=config.n_qubits
+            )
+        except Exception as _exc:
+            import logging as _logging
+            _logging.getLogger(__name__).warning(
+                "build_vqc_policy: resolve_backend failed (%s) — falling back to default.qubit",
+                _exc,
+            )
+            provider_name = "local"
+            backend_label = "default.qubit"
+
+        if provider_name == "braket" and BRAKET_PENNYLANE_AVAILABLE:
+            # resolve_backend approved cloud — look up the ARN for PennyLane
+            _BRAKET_DEVICE_ARNS = {
+                "sv1": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+                "ionq_forte1": "arn:aws:braket:us-east-1::device/qpu/ionq/Forte-1",
+            }
+            arn = _BRAKET_DEVICE_ARNS.get(backend_key)
+            if arn:
+                dev = qml.device(
+                    "braket.aws.qubit",
+                    device_arn=arn,
+                    wires=config.n_qubits,
+                    shots=1000,
+                    s3_destination_folder=("amazon-braket-trading-forge", "rl-jobs"),
+                )
+                import logging as _logging
+                _logging.getLogger(__name__).info(
+                    "build_vqc_policy: using Braket cloud device label=%s arn=%s",
+                    backend_label,
+                    arn,
+                )
+            else:
+                # ARN unknown for this key — local fallback
+                import logging as _logging
+                _logging.getLogger(__name__).warning(
+                    "build_vqc_policy: no ARN for backend_key=%s — falling back to default.qubit",
+                    backend_key,
+                )
+                dev = qml.device("default.qubit", wires=config.n_qubits)
         else:
-            # Unknown Braket device string — fall back to local simulator
+            # Either gate was closed (opt_in_cloud=False, env kill-switch, budget
+            # exhausted, or Braket plugin unavailable) — use local simulator.
+            import logging as _logging
+            _logging.getLogger(__name__).info(
+                "build_vqc_policy: cloud gate closed (provider=%s, braket_plugin=%s,"
+                " opt_in_cloud=%s) — using default.qubit",
+                provider_name,
+                BRAKET_PENNYLANE_AVAILABLE,
+                config.opt_in_cloud,
+            )
             dev = qml.device("default.qubit", wires=config.n_qubits)
-    elif config.device.startswith("braket.aws") and not BRAKET_PENNYLANE_AVAILABLE:
-        # Braket requested but library unavailable — fall back to local simulator
-        import logging as _logging
-        _logging.getLogger(__name__).warning(
-            "Braket PennyLane plugin not available (braket-pennylane not installed). "
-            "Falling back to default.qubit for VQC."
-        )
-        dev = qml.device("default.qubit", wires=config.n_qubits)
     else:
         dev = qml.device(config.device or "default.qubit", wires=config.n_qubits)
 
@@ -334,6 +403,44 @@ def train_quantum_agent(
     train_config: TrainConfig,
 ) -> tuple[QuantumAgent, AgentResult]:
     """Train quantum RL agent via policy gradient."""
+    # ── Result cache check ──────────────────────────────────────────────────
+    # Cache only local simulation runs — cloud Braket/IBM runs must re-execute.
+    _rl_is_cloud = (
+        config.opt_in_cloud
+        and os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() != "false"
+        and config.device.startswith("braket.aws")
+    )
+    _rl_cache_key: Optional[dict] = None
+    if not _rl_is_cloud and _rl_cache is not None:
+        import hashlib as _hashlib
+        _prices_hash = _hashlib.sha256(env.prices.tobytes()).hexdigest()[:16]
+        _features_hash = _hashlib.sha256(env.features.tobytes()).hexdigest()[:16]
+        _rl_cache_key = {
+            "device": config.device,
+            "n_qubits": config.n_qubits,
+            "n_layers": config.n_layers,
+            "n_actions": config.n_actions,
+            "learning_rate": config.learning_rate,
+            "episodes": train_config.episodes,
+            "max_steps": train_config.max_steps_per_episode,
+            "gamma": train_config.gamma,
+            "seed": train_config.seed,
+            "prices_hash": _prices_hash,
+            "features_hash": _features_hash,
+        }
+        _cached = _rl_cache.get(algorithm="rl", params=_rl_cache_key)
+        if _cached is not None:
+            _cached["cache_hit"] = True
+            # Return a new untrained agent (cannot reconstruct trained params from cache)
+            # alongside the cached AgentResult. Callers using cached results should
+            # treat the agent as a fresh instance — use the result for evidence only.
+            _cached_result = AgentResult(**{
+                k: v for k, v in _cached.items()
+                if k in AgentResult.model_fields
+            })
+            _fresh_agent = QuantumAgent(config, seed=train_config.seed)
+            return _fresh_agent, _cached_result
+
     start_ms = int(time.time() * 1000)
     agent = QuantumAgent(config, seed=train_config.seed)
 
@@ -343,8 +450,16 @@ def train_quantum_agent(
     # Cloud evaluation counter — when a Braket/cloud device is configured, switch to
     # local after max_cloud_evaluations circuit calls to control cost.  The counter is
     # approximate: each select_action call that hits the circuit counts as one evaluation.
+    # Both gates must be open for cloud to actually be active:
+    #   Gate 1: config.opt_in_cloud=True, Gate 2: QUANTUM_CLOUD_ENABLED != "false"
     _cloud_evals: int = 0
-    _cloud_device_active: bool = config.device.startswith("braket.aws") and BRAKET_PENNYLANE_AVAILABLE
+    _env_cloud_enabled = os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() != "false"
+    _cloud_device_active: bool = (
+        config.device.startswith("braket.aws")
+        and BRAKET_PENNYLANE_AVAILABLE
+        and config.opt_in_cloud
+        and _env_cloud_enabled
+    )
     _max_cloud_evals: int = config.max_cloud_evaluations
 
     for episode in range(train_config.episodes):
@@ -397,7 +512,7 @@ def train_quantum_agent(
 
     win_rate = sum(1 for r in all_rewards if r > 0) / max(len(all_rewards), 1)
 
-    return agent, AgentResult(
+    _rl_agent_result = AgentResult(
         total_return=float(total_return),
         sharpe_ratio=sharpe,
         win_rate=float(win_rate),
@@ -406,6 +521,12 @@ def train_quantum_agent(
         rewards=all_rewards[-100:],
         execution_time_ms=execution_time_ms,
     )
+    # Cache local simulation results (not cloud runs)
+    if not _rl_is_cloud and _rl_cache is not None and _rl_cache_key is not None:
+        _rl_dict = _rl_agent_result.model_dump()
+        _rl_dict["cache_hit"] = False
+        _rl_cache.put(algorithm="rl", params=_rl_cache_key, result=_rl_dict)
+    return agent, _rl_agent_result
 
 
 def evaluate_agent(

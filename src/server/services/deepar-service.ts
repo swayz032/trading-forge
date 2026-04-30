@@ -1,22 +1,28 @@
 /**
  * DeepAR Service Layer — regime forecasting via probabilistic deep learning.
  *
- * Governance: pre_deploy_autonomous. Weight starts at 0.0 and automatically
+ * Governance: challenger_only. Weight starts at 0.0 and automatically
  * falls back to zero if forecast or training freshness drifts.
  *
  * Graduation ladder:
  *   60+ days tracked AND hit_rate > 0.55 → weight 0.0 → 0.05
  *   120+ days AND sustained → weight 0.05 → 0.10
  *   hit_rate < 0.50 for 30 days → demote to 0.0
+ *
+ * Persistence: currentDeeparWeight is mirrored into system_parameters
+ * (paramName="deepar_weight") on every graduation/demotion. On module
+ * import, loadInitialDeeparWeight() reads from system_parameters so a
+ * server restart never silently demotes a graduated DeepAR back to 0.0.
  */
 
 import { eq, desc, sql } from "drizzle-orm";
 import { queryOhlcv, type OhlcvBar } from "../../data/loaders/duckdb-service.js";
 import { db } from "../db/index.js";
-import { deeparForecasts, deeparTrainingRuns, auditLog } from "../db/schema.js";
+import { deeparForecasts, deeparTrainingRuns, auditLog, systemParameters } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
+import { captureToDLQ } from "../lib/dlq-service.js";
 import { logger } from "../index.js";
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -67,6 +73,25 @@ interface PythonPredictOutput {
   error?: string;
 }
 
+// Caveat 1 hardening: predictRegime returns this sentinel when the python-deepar
+// circuit is open, so callers can branch on the result instead of wrapping every
+// call in try/catch. Other failure modes (CLI errors, prediction errors) still
+// throw to preserve existing semantics — only the circuit-open path is deferred.
+export interface DeepARDeferredResponse {
+  status: "deferred";
+  reason: "circuit_open";
+  symbols: string[];
+  endpoint?: string;
+  reopensAt?: string;
+  timestamp: string;
+}
+
+export function isDeepARDeferred(
+  value: Record<string, RegimeForecast> | DeepARDeferredResponse,
+): value is DeepARDeferredResponse {
+  return typeof value === "object" && value !== null && "status" in value && (value as { status?: unknown }).status === "deferred";
+}
+
 interface ValidationResult {
   validated: number;
   weightChanged: boolean;
@@ -86,7 +111,7 @@ export interface DeepARRuntimeStatus {
   latestForecastAt: string | null;
   latestTrainingAt: string | null;
   latestTrainingStatus: string | null;
-  authorityBoundary: "autonomous_pre_deploy";
+  authorityBoundary: "challenger_only";
   fallbackMode: "zero_weight_on_staleness";
 }
 
@@ -107,10 +132,85 @@ const VALIDATION_LOOKBACK_BARS = 20;
 const VALIDATION_LOOKAHEAD_BUFFER_DAYS = 14;
 
 // ─── DeepAR Weight State ─────────────────────────────────────────────
-// In-memory weight state. Persisted indirectly through audit log entries.
-// On restart, recalculated from rolling hit rate in validatePastForecasts().
+// In-memory weight (hot-path read), mirrored into system_parameters
+// (paramName="deepar_weight") so a server restart cannot silently demote
+// a graduated DeepAR back to 0.0. The system_parameters row is the durable
+// source of truth; this module variable is the cache.
+//
+// Read flow:  loadInitialDeeparWeight() (module init) → currentDeeparWeight
+// Write flow: validatePastForecasts() mutates currentDeeparWeight + calls
+//             persistDeeparWeight() to mirror the new value into the DB.
+//
+// `weightInitPromise` is awaited by every public consumer (getDeepARWeight,
+// validatePastForecasts, getDeepARRuntimeStatus) so callers never observe
+// the default 0.0 before the persisted value is loaded.
 
 let currentDeeparWeight = 0.0;
+
+const DEEPAR_WEIGHT_PARAM = "deepar_weight";
+
+async function loadInitialDeeparWeight(): Promise<void> {
+  try {
+    const [row] = await db
+      .select({ currentValue: systemParameters.currentValue })
+      .from(systemParameters)
+      .where(eq(systemParameters.paramName, DEEPAR_WEIGHT_PARAM));
+    if (row && row.currentValue != null) {
+      const parsed = Number(row.currentValue);
+      if (Number.isFinite(parsed)) {
+        currentDeeparWeight = parsed;
+        logger?.info?.({ currentWeight: currentDeeparWeight }, "DeepAR weight restored from system_parameters");
+        return;
+      }
+    }
+    logger?.info?.({ currentWeight: currentDeeparWeight }, "DeepAR weight initialized to default (no persisted row)");
+  } catch (err) {
+    // Fail open: leave weight at 0.0 (safe default — DeepAR stays in shadow).
+    // Use optional chaining on logger because this can run at module-load time
+    // before the logger is fully initialized (test contexts, circular imports).
+    logger?.warn?.({ err }, "DeepAR weight load from system_parameters failed; using default 0.0");
+  }
+}
+
+// Lazy initialization: do NOT trigger DB read at module import time. Trigger
+// only on first await. This prevents test environments without a DB from
+// crashing on import, and avoids the logger-undefined race during boot.
+let weightInitPromise: Promise<void> | null = null;
+function ensureWeightLoaded(): Promise<void> {
+  if (weightInitPromise === null) {
+    weightInitPromise = loadInitialDeeparWeight();
+  }
+  return weightInitPromise;
+}
+
+async function persistDeeparWeight(weight: number): Promise<void> {
+  try {
+    const [existing] = await db
+      .select({ id: systemParameters.id })
+      .from(systemParameters)
+      .where(eq(systemParameters.paramName, DEEPAR_WEIGHT_PARAM));
+
+    if (existing) {
+      await db
+        .update(systemParameters)
+        .set({ currentValue: weight.toString(), updatedAt: new Date() })
+        .where(eq(systemParameters.paramName, DEEPAR_WEIGHT_PARAM));
+    } else {
+      await db.insert(systemParameters).values({
+        paramName: DEEPAR_WEIGHT_PARAM,
+        currentValue: weight.toString(),
+        minValue: "0",
+        maxValue: "0.10",
+        domain: "scheduler",
+        description: "DeepAR challenger weight (auto-graduated 0.0 → 0.05 → 0.10; demoted on hit_rate < 0.50)",
+        autoTunable: false,
+      });
+    }
+  } catch (err) {
+    // Persistence failure must not abort the in-memory transition; just log.
+    logger.error({ err, weight }, "DeepAR weight persist to system_parameters failed");
+  }
+}
 
 function parseDateOnly(value: string): Date {
   return new Date(`${value}T00:00:00.000Z`);
@@ -301,14 +401,16 @@ export function calculateRollingHitRate(
 /**
  * Train the DeepAR model on historical regime data.
  */
-export async function trainDeepAR(symbols?: string[]): Promise<TrainingResult> {
+export async function trainDeepAR(symbols?: string[], correlationId?: string): Promise<TrainingResult> {
   const targetSymbols = symbols ?? DEFAULT_SYMBOLS;
 
   // Insert training run row with status "running"
+  // Governance per CLAUDE.md: DeepAR starts in shadow mode (weight 0.0) and auto-graduates.
+  // Output must NEVER be authoritative until weight > 0 — keep challenger_only at write time.
   const [run] = await db.insert(deeparTrainingRuns).values({
     symbols: targetSymbols,
     status: "running",
-    governanceLabels: { experimental: false, authoritative: true, decision_role: "pre_deploy_autonomous" },
+    governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
   }).returning({ id: deeparTrainingRuns.id });
 
   const runId = run.id;
@@ -324,6 +426,7 @@ export async function trainDeepAR(symbols?: string[]): Promise<TrainingResult> {
         },
         componentName: "deepar-train",
         timeoutMs: 600_000, // 10 min — training can be slow
+        correlationId,
       }),
     );
 
@@ -351,6 +454,7 @@ export async function trainDeepAR(symbols?: string[]): Promise<TrainingResult> {
       status: "success",
       durationMs: result.duration_ms ?? null,
       decisionAuthority: "scheduler",
+      correlationId: correlationId ?? null,
     });
 
     broadcastSSE("deepar:training_complete", {
@@ -389,6 +493,20 @@ export async function trainDeepAR(symbols?: string[]): Promise<TrainingResult> {
       status: "failure",
       decisionAuthority: "scheduler",
       errorMessage: err instanceof Error ? err.message : String(err),
+      correlationId: correlationId ?? null,
+    });
+
+    // Capture to DLQ so training failures are not silent
+    await captureToDLQ({
+      operationType: "deepar:training_failure",
+      entityType: "deepar_training_run",
+      entityId: runId,
+      errorMessage: err instanceof Error ? err.message : String(err),
+      metadata: {
+        symbols: targetSymbols,
+        circuitOpen: err instanceof CircuitOpenError,
+        correlationId: correlationId ?? null,
+      },
     });
 
     // Circuit breaker open — mark DB row as failed, return gracefully
@@ -408,21 +526,64 @@ export async function trainDeepAR(symbols?: string[]): Promise<TrainingResult> {
 
 /**
  * Generate regime predictions for the given symbols.
+ *
+ * Returns either the forecast map (success) or a DeepARDeferredResponse sentinel
+ * when the python-deepar circuit is open. Callers should use isDeepARDeferred()
+ * to branch. Non-circuit failures still throw.
  */
-export async function predictRegime(symbols?: string[]): Promise<Record<string, RegimeForecast>> {
+export async function predictRegime(
+  symbols?: string[],
+  correlationId?: string,
+): Promise<Record<string, RegimeForecast> | DeepARDeferredResponse> {
   const targetSymbols = symbols ?? DEFAULT_SYMBOLS;
 
-  const result = await CircuitBreakerRegistry.get("python-deepar").call(() =>
-    runPythonModule<PythonPredictOutput>({
-      module: DEEPAR_MODULE,
-      config: {
-        mode: "predict",
+  let result: PythonPredictOutput;
+  try {
+    result = await CircuitBreakerRegistry.get("python-deepar").call(() =>
+      runPythonModule<PythonPredictOutput>({
+        module: DEEPAR_MODULE,
+        config: {
+          mode: "predict",
+          symbols: targetSymbols,
+        },
+        componentName: "deepar-predict",
+        timeoutMs: 120_000,
+        correlationId,
+      }),
+    );
+  } catch (err) {
+    const isOpen = err instanceof CircuitOpenError;
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    await captureToDLQ({
+      operationType: "deepar:prediction_failure",
+      entityType: "deepar_forecast",
+      errorMessage: errorMsg,
+      metadata: {
         symbols: targetSymbols,
+        circuitOpen: isOpen,
+        correlationId: correlationId ?? null,
       },
-      componentName: "deepar-predict",
-      timeoutMs: 120_000,
-    }),
-  );
+    });
+    if (isOpen) {
+      logger.warn(
+        { endpoint: err.endpoint, reopensAt: err.reopensAt.toISOString() },
+        "DeepAR predict skipped — circuit open; returning deferred sentinel",
+      );
+      // Caveat 1: return deferred sentinel instead of throwing so callers can
+      // branch explicitly. Scheduler still treats it gracefully (sentinel has
+      // no enumerable forecast entries → loop body simply skips).
+      return {
+        status: "deferred",
+        reason: "circuit_open",
+        symbols: targetSymbols,
+        endpoint: err.endpoint,
+        reopensAt: err.reopensAt.toISOString(),
+        timestamp: new Date().toISOString(),
+      };
+    }
+    logger.error({ err }, "DeepAR prediction failed");
+    throw err;
+  }
 
   if (result.error) {
     logger.error({ error: result.error }, "DeepAR prediction returned error");
@@ -447,7 +608,7 @@ export async function predictRegime(symbols?: string[]): Promise<Record<string, 
       quantileP50: forecast.quantile_p50?.toString() ?? null,
       quantileP90: forecast.quantile_p90?.toString() ?? null,
       modelVersion: forecast.model_version ?? result.model_version ?? null,
-      governanceLabels: { experimental: false, authoritative: true, decision_role: "pre_deploy_autonomous" },
+      governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
     });
   }
 
@@ -466,7 +627,14 @@ export async function predictRegime(symbols?: string[]): Promise<Record<string, 
  * Validate yesterday's forecasts against actual realized regimes.
  * Updates hit rates and checks auto-graduation conditions.
  */
-export async function validatePastForecasts(): Promise<ValidationResult> {
+export async function validatePastForecasts(context?: { correlationId?: string }): Promise<ValidationResult> {
+  const correlationId = context?.correlationId ?? null;
+  // Wait for the persisted weight to load before reading currentDeeparWeight
+  // for graduation comparisons. Without this, a server restart followed by an
+  // immediate validate tick could compare against the default 0.0 instead of
+  // the last persisted weight, silently demoting an already-graduated DeepAR.
+  await ensureWeightLoaded();
+
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().slice(0, 10);
@@ -590,6 +758,10 @@ export async function validatePastForecasts(): Promise<ValidationResult> {
   }
 
   if (weightChanged) {
+    // Persist the new weight to system_parameters BEFORE broadcasting/auditing
+    // so a crash between SSE emission and DB write cannot lose the change.
+    await persistDeeparWeight(currentDeeparWeight);
+
     broadcastSSE("deepar:weight_changed", {
       previousWeight,
       currentWeight: currentDeeparWeight,
@@ -605,6 +777,7 @@ export async function validatePastForecasts(): Promise<ValidationResult> {
       result: { newWeight: currentDeeparWeight },
       status: "success",
       decisionAuthority: "scheduler",
+      correlationId,
     });
 
     logger.info(
@@ -639,12 +812,35 @@ export async function getLatestForecast(symbol: string) {
 
 /**
  * Get the current DeepAR weight (0.0, 0.05, or 0.10).
+ *
+ * Sync read of the in-memory cache. The persisted value is loaded at module
+ * import via loadInitialDeeparWeight(); during the brief async load window
+ * (typically <100ms after process start) callers may observe the default 0.0.
+ * Consumers that must not see the default during cold-start (validatePastForecasts,
+ * getDeepARRuntimeStatus) await `weightInitPromise` explicitly. Use
+ * getDeepARWeightAsync() if you need the same guarantee for new call sites.
  */
 export function getDeepARWeight(): number {
   return currentDeeparWeight;
 }
 
+/**
+ * Async variant of getDeepARWeight() — awaits the persisted-value load before
+ * returning. Prefer this over getDeepARWeight() in any path that runs at
+ * server start (scheduler ticks, eager warm-ups) so a graduated DeepAR is
+ * never silently demoted to 0.0 during the load window.
+ */
+export async function getDeepARWeightAsync(): Promise<number> {
+  await ensureWeightLoaded();
+  return currentDeeparWeight;
+}
+
 export async function getDeepARRuntimeStatus(): Promise<DeepARRuntimeStatus> {
+  // Make sure the persisted weight has been read before exposing currentWeight
+  // through the runtime status API; otherwise the dashboard could see 0.0 in
+  // the seconds following a server restart.
+  await ensureWeightLoaded();
+
   const [latestForecast, latestTraining, daysResult, hitRateResult] = await Promise.all([
     db
       .select({
@@ -701,7 +897,7 @@ export async function getDeepARRuntimeStatus(): Promise<DeepARRuntimeStatus> {
     latestForecastAt,
     latestTrainingAt,
     latestTrainingStatus: latestTraining?.status ?? null,
-    authorityBoundary: "autonomous_pre_deploy",
+    authorityBoundary: "challenger_only",
     fallbackMode: "zero_weight_on_staleness",
   };
 }

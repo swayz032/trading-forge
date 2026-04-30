@@ -11,7 +11,6 @@ import { Router } from "express";
 import { readFileSync } from "fs";
 import { resolve as pathResolve } from "path";
 import { randomUUID } from "crypto";
-import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
@@ -26,6 +25,18 @@ async function persistCompilerAuditOrThrow(values: typeof auditLog.$inferInsert)
 
 // ─── POST /api/compiler/validate — Validate a strategy DSL ─────────
 
+// M9 helpers — standardize the response envelope so every consumer can
+// treat compiler endpoints as { valid: bool, errors: string[], data?: ... }
+function normalizeErrors(errs: unknown): string[] {
+  if (!errs) return [];
+  if (Array.isArray(errs)) {
+    return errs.map((e) => (typeof e === "string" ? e : JSON.stringify(e)));
+  }
+  if (typeof errs === "string") return [errs];
+  if (typeof errs === "object") return [JSON.stringify(errs)];
+  return [String(errs)];
+}
+
 compilerRoutes.post("/validate", async (req, res) => {
   try {
     const result = await runPythonModule({
@@ -33,7 +44,7 @@ compilerRoutes.post("/validate", async (req, res) => {
       args: ["--action", "validate"],
       config: req.body,
       componentName: "compiler-validate",
-    });
+    }) as Record<string, unknown>;
 
     // Persist validation result to audit_log
     await persistCompilerAuditOrThrow({
@@ -42,13 +53,20 @@ compilerRoutes.post("/validate", async (req, res) => {
       entityType: "strategy",
       entityId: req.body.strategy_id || null,
       input: { dsl: req.body },
-      result: result as Record<string, unknown>,
+      result,
       status: "success",
       decisionAuthority: "human",
+      correlationId: req.id ?? null,
       createdAt: new Date(),
     });
 
-    res.json(result);
+    // M9: standard envelope { valid, errors, data }
+    const valid = result.valid !== false && !result.errors;
+    res.json({
+      valid,
+      errors: normalizeErrors(result.errors),
+      data: result,
+    });
   } catch (err: any) {
     if (err.errors) {
       try {
@@ -58,23 +76,23 @@ compilerRoutes.post("/validate", async (req, res) => {
           entityType: "strategy",
           entityId: req.body.strategy_id || null,
           input: { dsl: req.body },
-          result: { passed: false, errors: err.errors },
+          result: { valid: false, errors: normalizeErrors(err.errors) },
           status: "failure",
           decisionAuthority: "human",
           errorMessage: err instanceof Error ? err.message : String(err),
           createdAt: new Date(),
         });
       } catch (auditErr) {
-        logger.error({ err: auditErr }, "Compiler validate audit persistence failed");
-        res.status(500).json({ error: "Compiler audit persistence failed", details: String(auditErr) });
+        req.log.error({ err: auditErr }, "Compiler validate audit persistence failed");
+        res.status(500).json({ valid: false, errors: ["Compiler audit persistence failed: " + String(auditErr)] });
         return;
       }
 
-      res.status(400).json({ valid: false, errors: err.errors });
+      res.status(400).json({ valid: false, errors: normalizeErrors(err.errors) });
       return;
     }
-    logger.error({ err }, "Compiler validate error");
-    res.status(500).json({ error: "Compiler error", details: err.message });
+    req.log.error({ err }, "Compiler validate error");
+    res.status(500).json({ valid: false, errors: ["Compiler error: " + (err.message ?? String(err))] });
   }
 });
 
@@ -87,7 +105,7 @@ compilerRoutes.post("/compile", async (req, res) => {
       args: ["--action", "compile"],
       config: req.body,
       componentName: "compiler-compile",
-    });
+    }) as Record<string, unknown>;
 
     // Persist compile result to audit_log
     await persistCompilerAuditOrThrow({
@@ -96,13 +114,20 @@ compilerRoutes.post("/compile", async (req, res) => {
       entityType: "strategy",
       entityId: req.body.strategy_id || null,
       input: { dsl: req.body },
-      result: result as Record<string, unknown>,
+      result,
       status: "success",
       decisionAuthority: "human",
+      correlationId: req.id ?? null,
       createdAt: new Date(),
     });
 
-    res.json(result);
+    // M9: standard envelope — same shape as /validate
+    const valid = result.valid !== false && !result.errors;
+    res.json({
+      valid,
+      errors: normalizeErrors(result.errors),
+      data: result,
+    });
   } catch (err: any) {
     if (err.errors) {
       try {
@@ -112,22 +137,22 @@ compilerRoutes.post("/compile", async (req, res) => {
           entityType: "strategy",
           entityId: req.body.strategy_id || null,
           input: { dsl: req.body },
-          result: { passed: false, errors: err.errors },
+          result: { valid: false, errors: normalizeErrors(err.errors) },
           status: "failure",
           decisionAuthority: "human",
           errorMessage: err instanceof Error ? err.message : String(err),
           createdAt: new Date(),
         });
       } catch (auditErr) {
-        logger.error({ err: auditErr }, "Compiler compile audit persistence failed");
-        res.status(500).json({ error: "Compiler audit persistence failed", details: String(auditErr) });
+        req.log.error({ err: auditErr }, "Compiler compile audit persistence failed");
+        res.status(500).json({ valid: false, errors: ["Compiler audit persistence failed: " + String(auditErr)] });
         return;
       }
-      res.status(400).json({ error: "Validation failed", errors: err.errors });
+      res.status(400).json({ valid: false, errors: normalizeErrors(err.errors) });
       return;
     }
-    logger.error({ err }, "Compiler compile error");
-    res.status(500).json({ error: "Compiler error", details: err.message });
+    req.log.error({ err }, "Compiler compile error");
+    res.status(500).json({ valid: false, errors: ["Compiler error: " + (err.message ?? String(err))] });
   }
 });
 
@@ -147,7 +172,7 @@ compilerRoutes.get("/schema", (req, res) => {
     const schema = JSON.parse(readFileSync(schemaPath, "utf-8"));
     res.json(schema);
   } catch (err: any) {
-    logger.error({ err }, "Failed to read schema");
+    req.log.error({ err }, "Failed to read schema");
     res.status(500).json({ error: "Failed to read schema", details: err.message });
   }
 });
@@ -169,7 +194,7 @@ compilerRoutes.post("/diff", async (req, res) => {
     });
     res.json(result);
   } catch (err: any) {
-    logger.error({ err }, "Compiler diff error");
+    req.log.error({ err }, "Compiler diff error");
     res.status(500).json({ error: "Compiler error", details: err.message });
   }
 });

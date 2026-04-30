@@ -9,8 +9,21 @@
  * 5. Select survivor (must pass classical gates)
  * 6. Create new strategy version if survivor beats parent
  * 7. Audit log + SSE broadcast
+ *
+ * G3.1 — Replay lineage:
+ * The full lineage chain is FK-enforced and traceable today:
+ *   originating backtest (criticOptimizationRuns.backtestId)
+ *     → critic run        (criticOptimizationRuns.id)
+ *       → candidates       (criticCandidates.runId)
+ *         → replay backtest (criticCandidates.replayBacktestId)
+ * No separate `replay_queue` table is needed — that audit finding was based on a
+ * stale snapshot. Provenance, replay status, replay tier, and replay forge score
+ * all persist on criticCandidates. Survivor selection writes
+ * criticOptimizationRuns.survivorBacktestId / survivorCandidateId.
  */
 
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { eq, and, desc, gt, sql, inArray, isNotNull } from "drizzle-orm";
 import {
   criticOptimizationRuns,
@@ -25,13 +38,42 @@ import {
   rlTrainingRuns,
   auditLog,
   deeparForecasts,
+  alerts,
+  walkForwardWindows,
 } from "../db/schema.js";
 import { db } from "../db/index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
+import { captureToDLQ } from "../lib/dlq-service.js";
 import { callOpenAI } from "./model-router.js";
+import { OllamaClient } from "./ollama-client.js";
 import { tracer } from "../lib/tracing.js";
+import { getDeepARWeight } from "./deepar-service.js";
+import { LifecycleService } from "./lifecycle-service.js";
+import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+
+const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
+
+// ─── Critic Evaluator System Prompt Cache (Fix 2) ────────────────────
+// Loaded once at module initialisation, reused for every Ollama fallback call.
+let _criticSystemPromptCache: string | null = null;
+function loadCriticSystemPrompt(): string {
+  if (_criticSystemPromptCache !== null) return _criticSystemPromptCache;
+  try {
+    _criticSystemPromptCache = readFileSync(
+      resolve(PROJECT_ROOT, "src/agents/critic-evaluator.md"),
+      "utf-8",
+    );
+  } catch {
+    logger.warn("critic-optimizer: could not load critic-evaluator.md — Ollama fallback will run without system prompt");
+    _criticSystemPromptCache = "";
+  }
+  return _criticSystemPromptCache;
+}
+
+// P2-2: critic model version stored on each candidate for audit provenance.
+const CRITIC_MODEL_VERSION = process.env.CRITIC_MODEL_VERSION ?? "deepseek-r1:14b";
 
 const MAX_REPLAY_CANDIDATES = 3;
 const EVIDENCE_WAIT_MS = 5 * 60 * 1000; // 5 minutes
@@ -99,6 +141,21 @@ interface EvidencePacket {
       forecast_confidence: number;
     } | null;
   } | null;
+  /** Fix 3a: Decay sub-signals from backtests.decayAnalysis JSONB. */
+  decay_analysis: Record<string, unknown> | null;
+  /** Fix 3b: Recent drift alerts for this strategy in the last 30 days. */
+  drift_alerts: Array<{ id: string; type: string; severity: string; title: string; message: string; createdAt: string }>;
+  /** Fix 3c: Live rolling 30-day Sharpe from strategies table. */
+  live_rolling_sharpe: number | null;
+  /** P2-2: Evidence run IDs for candidate provenance — keyed by subsystem. */
+  _evidence_run_ids?: {
+    mc?: string[];
+    sqa?: string[];
+    wf?: string[];
+    qmc?: string[];
+    tensor?: string[];
+    rl?: string[];
+  };
 }
 
 interface CriticResult {
@@ -132,12 +189,90 @@ interface CriticEvaluation {
   }>;
 }
 
+// ─── Generic param application (Fix 1) ──────────────────────────────
+
+/**
+ * Apply a single changed parameter to a cloned strategy config.
+ *
+ * Resolution order:
+ *   1. *_period suffix → indicator array match by type name (existing convention, preserved)
+ *   2. "stop_loss_multiplier" → replayConfig.stop_loss.multiplier (existing convention, preserved)
+ *   3. Direct top-level key match
+ *   4. Dotted path: "a.b.c" → config.a.b.c
+ *   5. Not found → returns false (caller must skip the entire candidate)
+ *
+ * Returns true if the param was applied, false if no match was found.
+ */
+function applyParamChange(config: Record<string, any>, paramName: string, newValue: any): boolean {
+  // Convention 1: *_period → indicators array match
+  if (paramName.endsWith("_period") && Array.isArray(config.indicators)) {
+    const indType = paramName.replace("_period", "");
+    const ind = config.indicators.find((i: any) => i.type === indType);
+    if (ind) {
+      ind.period = Math.round(Number(newValue));
+      return true;
+    }
+    // Fall through to other paths — the config might have the period at top-level too
+  }
+
+  // Convention 2: stop_loss_multiplier
+  if (paramName === "stop_loss_multiplier" && config.stop_loss) {
+    (config.stop_loss as any).multiplier = Number(newValue);
+    return true;
+  }
+
+  // Direct top-level key
+  if (paramName in config) {
+    config[paramName] = newValue;
+    return true;
+  }
+
+  // Dotted path: "stop_loss.multiplier" → config.stop_loss.multiplier
+  if (paramName.includes(".")) {
+    const parts = paramName.split(".");
+    let cursor: any = config;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (cursor[parts[i]] === undefined || cursor[parts[i]] === null || typeof cursor[parts[i]] !== "object") {
+        return false;
+      }
+      cursor = cursor[parts[i]];
+    }
+    const lastKey = parts[parts.length - 1];
+    if (lastKey in cursor) {
+      cursor[lastKey] = newValue;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Apply all changedParams to a cloned config. Returns the set of keys that
+ * could NOT be applied. If any key fails, the caller must skip the candidate.
+ */
+function applyAllParamChanges(
+  replayConfig: Record<string, any>,
+  changedParams: Record<string, number>,
+): Set<string> {
+  const unapplied = new Set<string>();
+  for (const [paramName, newValue] of Object.entries(changedParams)) {
+    const applied = applyParamChange(replayConfig, paramName, newValue);
+    if (!applied) unapplied.add(paramName);
+  }
+  return unapplied;
+}
+
 // ─── Evidence Collector (Async, Event-Driven) ──────────────────────
 
 type EvidenceSource = "sqa" | "mc" | "quantum_mc" | "qubo" | "tensor" | "rl" | "deepar";
 
 const ALL_EVIDENCE_SOURCES: EvidenceSource[] = ["sqa", "mc", "quantum_mc", "qubo", "tensor", "rl", "deepar"];
-const REQUIRED_SOURCES: EvidenceSource[] = ["sqa", "mc"];
+// P2-1: MC is the only required source. SQA, QUBO, tensor, RL, quantum_mc are
+// optional — the critic can proceed without them and will pass null for any
+// optional source that hasn't arrived when MC completes.
+const REQUIRED_SOURCES: EvidenceSource[] = ["mc"];
+const OPTIONAL_SOURCES: EvidenceSource[] = ["sqa", "qubo", "tensor", "rl", "quantum_mc"];
 
 /**
  * EvidenceCollector replaces synchronous polling with event-driven collection.
@@ -288,8 +423,10 @@ function unregisterCollector(runId: string): void {
 export async function triggerCriticOptimizerAsync(
   backtestId: string,
   strategyId: string,
-  _config: Record<string, unknown>,
+  config: Record<string, unknown>,
+  context?: { correlationId?: string },
 ): Promise<{ runId: string; status: string }> {
+  const correlationId = context?.correlationId;
   // Rate limit check
   const recentRun = await db
     .select({ id: criticOptimizationRuns.id })
@@ -318,15 +455,14 @@ export async function triggerCriticOptimizerAsync(
   const collector = new EvidenceCollector(run.id);
   registerCollector(run.id, collector);
 
-  // Background: wait for evidence, then proceed
+  // Background: wait for evidence then run the full optimizer pipeline.
+  // NOTE: stale-pending sweeper for critic tables is owned by scheduler.ts.
+  // The finally guard in replayCandidatesAsync covers runs stuck in "replaying".
+  // Runs stuck in "collecting_evidence" or "analyzing" after a crash are swept
+  // by the scheduler sweeper in addition to "replaying" (all three are covered).
   (async () => {
     try {
       const evidenceMap = await collector.waitForCompletion();
-
-      await db
-        .update(criticOptimizationRuns)
-        .set({ status: "analyzing", evidencePacket: Object.fromEntries(evidenceMap) as any })
-        .where(eq(criticOptimizationRuns.id, run.id));
 
       broadcastSSE("critic:evidence_collected_async", {
         runId: run.id,
@@ -338,12 +474,152 @@ export async function triggerCriticOptimizerAsync(
         "Async critic optimizer: evidence collected, proceeding to analysis",
       );
 
-      // Continue with the existing optimization pipeline
-      // (callCriticEvaluator, Python optimizer, replay, etc.)
-      // The full pipeline is handled by triggerCriticOptimizer which
-      // can be called with the collected evidence already in DB.
+      // Build full EvidencePacket from DB (same path as sync flow).
+      // collectEvidence re-reads backtest + strategy rows and polls for SQA/MC.
+      // Evidence already in the DB from the subsystems that called addEvidence(),
+      // so the poll loop will resolve quickly.
+      const evidence = await collectEvidence(backtestId, strategyId, config);
+
+      await db
+        .update(criticOptimizationRuns)
+        .set({ status: "analyzing", evidencePacket: evidence as any })
+        .where(eq(criticOptimizationRuns.id, run.id));
+
+      broadcastSSE("critic:evidence_collected", { runId: run.id });
+
+      // GPT-5-mini critic evaluator pre-screening
+      const criticEvaluation = await callCriticEvaluator(evidence, correlationId);
+      broadcastSSE("critic:evaluation_complete", {
+        runId: run.id,
+        evaluation: criticEvaluation.evaluation,
+        confidence: criticEvaluation.confidence,
+        riskFlags: criticEvaluation.risk_flags,
+      });
+
+      if (criticEvaluation.evaluation === "fail" && criticEvaluation.confidence >= 0.6) {
+        const killReason = `critic_evaluator_fail: ${criticEvaluation.reasoning}`;
+        await db
+          .update(criticOptimizationRuns)
+          .set({
+            status: "completed",
+            candidatesGenerated: 0,
+            evidenceSources: { critic_evaluation: criticEvaluation } as any,
+            completedAt: new Date(),
+          })
+          .where(eq(criticOptimizationRuns.id, run.id));
+        broadcastSSE("critic:completed", { runId: run.id, killSignal: killReason });
+        await logAudit("critic-optimizer.run", "critic_optimization", run.id, evidence, {
+          kill_signal: killReason,
+          critic_evaluation: criticEvaluation,
+        }, correlationId);
+        return;
+      }
+
+      const enrichedEvidence = {
+        ...evidence,
+        critic_evaluation: criticEvaluation,
+      } as unknown as Record<string, unknown>;
+
+      // Call Python critic optimizer
+      const criticResult = await runPythonModule<CriticResult>({
+        module: "src.engine.critic_optimizer",
+        config: enrichedEvidence,
+        timeoutMs: CRITIC_TIMEOUT_MS,
+        componentName: "critic-optimizer",
+        correlationId,
+      });
+
+      if (criticResult.kill_signal) {
+        await db
+          .update(criticOptimizationRuns)
+          .set({
+            status: "completed",
+            candidatesGenerated: 0,
+            parentCompositeScore: String(criticResult.parent_composite_score),
+            evidenceSources: criticResult.evidence_summary as any,
+            executionTimeMs: criticResult.execution_time_ms,
+            completedAt: new Date(),
+          })
+          .where(eq(criticOptimizationRuns.id, run.id));
+        broadcastSSE("critic:completed", { runId: run.id, killSignal: criticResult.kill_signal });
+        await logAudit("critic-optimizer.run", "critic_optimization", run.id, evidence, {
+          kill_signal: criticResult.kill_signal,
+          parent_score: criticResult.parent_composite_score,
+          critic_evaluation: criticEvaluation,
+        }, correlationId);
+        return;
+      }
+
+      // Persist candidates
+      // P1-drift-2 defense-in-depth: even after slicing paramRanges to 5
+      // (above), reject any candidate that returns >5 changed params. Belt-
+      // and-suspenders so a stray combinatoric explosion or cross-source
+      // merge in the Python optimizer can never persist a strategy proposal
+      // that violates CLAUDE.md.
+      for (const candidate of criticResult.candidates) {
+        const changedKeys = Object.keys(candidate.changed_params ?? {});
+        if (changedKeys.length > 5) {
+          logger.warn(
+            { runId: run.id, strategyId, rank: candidate.rank, changedParamCount: changedKeys.length, keys: changedKeys },
+            "critic-optimizer (async): rejecting candidate — changed_params exceeds 5 (CLAUDE.md max-5-params rule)",
+          );
+          continue;
+        }
+        await db.insert(criticCandidates).values({
+          runId: run.id,
+          strategyId,
+          rank: candidate.rank,
+          changedParams: candidate.changed_params as any,
+          parentParams: candidate.parent_params as any,
+          sourceOfChange: candidate.source_of_change,
+          expectedUplift: String(candidate.expected_uplift),
+          riskPenalty: String(candidate.risk_penalty),
+          compositeScore: String(candidate.composite_score),
+          confidence: candidate.confidence,
+          reasoning: candidate.reasoning,
+          replayStatus: "pending",
+          governanceLabels: criticResult.governance as any,
+          // P2-2: audit provenance
+          criticModelVersion: CRITIC_MODEL_VERSION,
+          evidenceRunIds: evidence._evidence_run_ids as any,
+        });
+      }
+
+      await db
+        .update(criticOptimizationRuns)
+        .set({
+          status: "replaying",
+          candidatesGenerated: criticResult.candidates.length,
+          parentCompositeScore: String(criticResult.parent_composite_score),
+          evidenceSources: {
+            ...criticResult.evidence_summary,
+            critic_evaluation: criticEvaluation,
+          } as any,
+          compositeWeights: COMPOSITE_WEIGHTS as any,
+          // P1-9: persist executionTimeMs on success path. Previously only
+          // recorded on the kill-signal branch — leaving normal completions
+          // missing latency data and breaking duration-based observability.
+          executionTimeMs: criticResult.execution_time_ms,
+        })
+        .where(eq(criticOptimizationRuns.id, run.id));
+
+      broadcastSSE("critic:candidates_ready", { runId: run.id, count: criticResult.candidates.length });
+
+      // Replay candidates — outer catch covers pre-try throws in replayCandidatesAsync
+      replayCandidatesAsync(run.id, strategyId, config, correlationId).catch(async (err) => {
+        logger.error({ runId: run.id, err }, "Async critic replay failed (outer catch)");
+        try {
+          await db
+            .update(criticOptimizationRuns)
+            .set({ status: "failed", completedAt: new Date() })
+            .where(eq(criticOptimizationRuns.id, run.id));
+          broadcastSSE("critic:completed", { runId: run.id, status: "failed", error: String(err) });
+        } catch (updateErr) {
+          logger.error({ runId: run.id, err: updateErr }, "Async critic replay: failed to update run status after outer catch");
+        }
+      });
     } catch (err) {
-      logger.error({ runId: run.id, err }, "Async critic optimizer: evidence collection failed");
+      logger.error({ runId: run.id, err }, "Async critic optimizer: pipeline failed");
       await db
         .update(criticOptimizationRuns)
         .set({ status: "failed", completedAt: new Date() })
@@ -366,67 +642,157 @@ const DEFAULT_CRITIC_EVALUATION: CriticEvaluation = {
 };
 
 /**
- * Call GPT-5-mini critic evaluator to pre-screen evidence before candidate generation.
- * Returns structured evaluation with pass/warn/fail, risk flags, and recommended adjustments.
- * Falls back gracefully if the model is unavailable (non-blocking).
+ * Parse a raw LLM string response into a CriticEvaluation, normalising any
+ * fields that don't conform to the expected schema.
  */
-async function callCriticEvaluator(evidence: EvidencePacket): Promise<CriticEvaluation> {
-  try {
-    const userMessage = JSON.stringify({
-      backtest_metrics: evidence.backtest_metrics,
-      walk_forward: evidence.walk_forward,
-      sqa_result: evidence.sqa_result,
-      mc_result: evidence.mc_result,
-      quantum_mc_result: evidence.quantum_mc_result,
-      tensor_prediction: evidence.tensor_prediction,
-      qubo_timing: evidence.qubo_timing,
-      rl_result: evidence.rl_result,
-      strategy_config: evidence.strategy_config,
-      param_ranges: evidence.param_ranges,
-      daily_pnls: evidence.daily_pnls,
-    }, null, 2);
+function parseCriticEvaluationResponse(raw: string): CriticEvaluation {
+  const parsed = JSON.parse(raw) as CriticEvaluation;
+  if (!parsed.evaluation || !["pass", "warn", "fail"].includes(parsed.evaluation)) {
+    parsed.evaluation = "warn";
+  }
+  if (typeof parsed.confidence !== "number" || parsed.confidence < 0 || parsed.confidence > 1) {
+    parsed.confidence = 0.5;
+  }
+  if (!Array.isArray(parsed.risk_flags)) {
+    parsed.risk_flags = [];
+  }
+  if (!Array.isArray(parsed.recommended_adjustments)) {
+    parsed.recommended_adjustments = [];
+  }
+  if (typeof parsed.reasoning !== "string") {
+    parsed.reasoning = "";
+  }
+  return parsed;
+}
 
+/**
+ * Call Ollama (deepseek-r1:14b) as fallback critic evaluator.
+ * Returns null on any error so the caller can fall through to DEFAULT_CRITIC_EVALUATION.
+ */
+async function callOllamaCriticFallback(userMessage: string): Promise<CriticEvaluation | null> {
+  try {
+    const systemPrompt = loadCriticSystemPrompt();
+    const ollama = new OllamaClient();
+    const chatResponse = await ollama.chat(
+      "deepseek-r1:14b",
+      [
+        ...(systemPrompt ? [{ role: "system" as const, content: systemPrompt }] : []),
+        { role: "user" as const, content: userMessage },
+      ],
+      { temperature: 0.2 },
+      true, // request JSON format
+    );
+
+    const raw = chatResponse.message?.content ?? "";
+    if (!raw) {
+      logger.warn("Critic evaluator Ollama fallback: empty response");
+      return null;
+    }
+
+    // Ollama responses are more variable — extract JSON substring defensively.
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      logger.warn({ rawExcerpt: raw.slice(0, 200) }, "Critic evaluator Ollama fallback: no JSON object found in response");
+      return null;
+    }
+
+    const evaluation = parseCriticEvaluationResponse(jsonMatch[0]);
+    logger.info(
+      { evaluation: evaluation.evaluation, confidence: evaluation.confidence, source: "ollama" },
+      "Critic evaluator: Ollama fallback completed",
+    );
+    return evaluation;
+  } catch (err) {
+    logger.warn({ err }, "Critic evaluator Ollama fallback failed");
+    return null;
+  }
+}
+
+/**
+ * Call GPT-5-mini critic evaluator to pre-screen evidence before candidate generation.
+ * Fix 2: On OpenAI null/failure, tries Ollama (deepseek-r1:14b) before falling back to
+ * DEFAULT_CRITIC_EVALUATION. Cloud failure no longer silently disables the gate.
+ */
+async function callCriticEvaluator(evidence: EvidencePacket, correlationId?: string): Promise<CriticEvaluation> {
+  const userMessage = JSON.stringify({
+    backtest_metrics: evidence.backtest_metrics,
+    walk_forward: evidence.walk_forward,
+    sqa_result: evidence.sqa_result,
+    mc_result: evidence.mc_result,
+    quantum_mc_result: evidence.quantum_mc_result,
+    tensor_prediction: evidence.tensor_prediction,
+    qubo_timing: evidence.qubo_timing,
+    rl_result: evidence.rl_result,
+    strategy_config: evidence.strategy_config,
+    param_ranges: evidence.param_ranges,
+    daily_pnls: evidence.daily_pnls,
+  }, null, 2);
+
+  // ── Path 1: OpenAI (primary) ─────────────────────────────────────────
+  try {
     const response = await callOpenAI("critic_evaluator", [
       { role: "user", content: userMessage },
     ]);
 
-    if (!response) {
-      logger.warn("Critic evaluator: OpenAI returned null, using default evaluation");
-      return DEFAULT_CRITIC_EVALUATION;
+    if (response) {
+      const parsed = parseCriticEvaluationResponse(response);
+
+      logger.info({
+        evaluation: parsed.evaluation,
+        confidence: parsed.confidence,
+        riskFlagCount: parsed.risk_flags.length,
+        adjustmentCount: parsed.recommended_adjustments.length,
+        source: "openai",
+      }, "Critic evaluator completed");
+
+      // F5: token spend tracking via audit_log (no new table needed)
+      try {
+        await db.insert(auditLog).values({
+          action: "critic.llm_call",
+          entityType: "critic_evaluation",
+          entityId: null,
+          input: { provider: "openai", model: "gpt-5-mini", tokens_input_approx: Math.ceil(userMessage.length / 4) },
+          result: { tokens_output_approx: Math.ceil(response.length / 4) },
+          status: "success",
+          decisionAuthority: "agent",
+          correlationId: correlationId ?? null,
+        });
+      } catch (auditErr) {
+        logger.warn({ auditErr }, "Failed to write LLM token spend audit entry");
+      }
+
+      return parsed;
     }
 
-    const parsed = JSON.parse(response) as CriticEvaluation;
-
-    // Validate required fields
-    if (!parsed.evaluation || !["pass", "warn", "fail"].includes(parsed.evaluation)) {
-      logger.warn({ parsed }, "Critic evaluator: invalid evaluation value, defaulting to warn");
-      parsed.evaluation = "warn";
-    }
-    if (typeof parsed.confidence !== "number" || parsed.confidence < 0 || parsed.confidence > 1) {
-      parsed.confidence = 0.5;
-    }
-    if (!Array.isArray(parsed.risk_flags)) {
-      parsed.risk_flags = [];
-    }
-    if (!Array.isArray(parsed.recommended_adjustments)) {
-      parsed.recommended_adjustments = [];
-    }
-    if (typeof parsed.reasoning !== "string") {
-      parsed.reasoning = "";
-    }
-
-    logger.info({
-      evaluation: parsed.evaluation,
-      confidence: parsed.confidence,
-      riskFlagCount: parsed.risk_flags.length,
-      adjustmentCount: parsed.recommended_adjustments.length,
-    }, "Critic evaluator completed");
-
-    return parsed;
+    // callOpenAI returned null (missing API key, circuit open, empty response)
+    logger.warn("Critic evaluator: OpenAI returned null — trying Ollama fallback");
   } catch (err) {
-    logger.error({ err }, "Critic evaluator call failed, using default evaluation");
-    return DEFAULT_CRITIC_EVALUATION;
+    logger.warn({ err }, "Critic evaluator: OpenAI call threw — trying Ollama fallback");
   }
+
+  // ── Path 2: Ollama fallback (deepseek-r1:14b) ───────────────────────
+  const ollamaResult = await callOllamaCriticFallback(userMessage);
+  if (ollamaResult) {
+    try {
+      await db.insert(auditLog).values({
+        action: "critic.llm_call",
+        entityType: "critic_evaluation",
+        entityId: null,
+        input: { provider: "ollama", model: "deepseek-r1:14b", tokens_input_approx: Math.ceil(userMessage.length / 4) },
+        result: { evaluation: ollamaResult.evaluation, confidence: ollamaResult.confidence },
+        status: "success",
+        decisionAuthority: "agent",
+        correlationId: correlationId ?? null,
+      });
+    } catch (auditErr) {
+      logger.warn({ auditErr }, "Failed to write Ollama fallback token spend audit entry");
+    }
+    return ollamaResult;
+  }
+
+  // ── Path 3: Both failed — return DEFAULT ────────────────────────────
+  logger.error("Critic evaluator: both OpenAI and Ollama failed — pre-screening gate disabled for this run");
+  return DEFAULT_CRITIC_EVALUATION;
 }
 
 /**
@@ -437,7 +803,16 @@ export async function triggerCriticOptimizer(
   backtestId: string,
   strategyId: string,
   config: Record<string, unknown>,
+  context?: { correlationId?: string },
 ): Promise<{ runId: string; status: string }> {
+  const correlationId = context?.correlationId;
+
+  // P1-2: Pipeline pause gate — do not deduct rate-limit tokens when paused.
+  if (!(await isPipelineActive())) {
+    logger.info({ strategyId, backtestId }, "Critic optimizer skipped — pipeline paused");
+    return { runId: "", status: "skipped:pipeline_paused" };
+  }
+
   const criticSpan = tracer.startSpan("critic.analyze");
   criticSpan.setAttribute("backtestId", backtestId);
   criticSpan.setAttribute("strategyId", strategyId);
@@ -489,7 +864,7 @@ export async function triggerCriticOptimizer(
     broadcastSSE("critic:evidence_collected", { runId: run.id });
 
     // 3b. GPT-5-mini critic evaluator pre-screening
-    const criticEvaluation = await callCriticEvaluator(evidence);
+    const criticEvaluation = await callCriticEvaluator(evidence, correlationId);
     broadcastSSE("critic:evaluation_complete", {
       runId: run.id,
       evaluation: criticEvaluation.evaluation,
@@ -516,7 +891,7 @@ export async function triggerCriticOptimizer(
       await logAudit("critic-optimizer.run", "critic_optimization", run.id, evidence, {
         kill_signal: killReason,
         critic_evaluation: criticEvaluation,
-      });
+      }, correlationId);
 
       return { runId: run.id, status: `killed:critic_evaluator` };
     }
@@ -533,6 +908,7 @@ export async function triggerCriticOptimizer(
       config: enrichedEvidence,
       timeoutMs: CRITIC_TIMEOUT_MS,
       componentName: "critic-optimizer",
+      correlationId,
     });
 
     // 5. Handle kill signal
@@ -556,13 +932,23 @@ export async function triggerCriticOptimizer(
         kill_signal: criticResult.kill_signal,
         parent_score: criticResult.parent_composite_score,
         critic_evaluation: criticEvaluation,
-      });
+      }, correlationId);
 
       return { runId: run.id, status: `killed:${criticResult.kill_signal}` };
     }
 
     // 6. Persist candidates
+    // P1-drift-2 defense-in-depth: reject any candidate with >5 changed params.
+    // See async path above for full rationale (CLAUDE.md max-5-params rule).
     for (const candidate of criticResult.candidates) {
+      const changedKeys = Object.keys(candidate.changed_params ?? {});
+      if (changedKeys.length > 5) {
+        logger.warn(
+          { runId: run.id, strategyId, rank: candidate.rank, changedParamCount: changedKeys.length, keys: changedKeys },
+          "critic-optimizer (sync): rejecting candidate — changed_params exceeds 5 (CLAUDE.md max-5-params rule)",
+        );
+        continue;
+      }
       await db.insert(criticCandidates).values({
         runId: run.id,
         strategyId,
@@ -577,6 +963,9 @@ export async function triggerCriticOptimizer(
         reasoning: candidate.reasoning,
         replayStatus: "pending",
         governanceLabels: criticResult.governance as any,
+        // P2-2: audit provenance
+        criticModelVersion: CRITIC_MODEL_VERSION,
+        evidenceRunIds: evidence._evidence_run_ids as any,
       });
     }
 
@@ -592,6 +981,10 @@ export async function triggerCriticOptimizer(
           critic_evaluation: criticEvaluation,
         } as any,
         compositeWeights: COMPOSITE_WEIGHTS as any,
+        // P1-9: persist executionTimeMs on sync success path (mirrors async
+        // path above). Previously only the kill-signal branch recorded duration,
+        // leaving normal completions invisible to latency dashboards.
+        executionTimeMs: criticResult.execution_time_ms,
       })
       .where(eq(criticOptimizationRuns.id, run.id));
 
@@ -603,7 +996,7 @@ export async function triggerCriticOptimizer(
     // before its internal try block runs (e.g. dynamic import failure, pre-try
     // DB fetch throws). In that scenario the finally guard never executes and
     // the run would be permanently stuck in "replaying" without this handler.
-    replayCandidatesAsync(run.id, strategyId, config).catch(async (err) => {
+    replayCandidatesAsync(run.id, strategyId, config, correlationId).catch(async (err) => {
       logger.error({ runId: run.id, err }, "Critic replay failed (outer catch)");
       try {
         await db
@@ -628,6 +1021,28 @@ export async function triggerCriticOptimizer(
     criticSpan.setAttribute("status", "failed");
     criticSpan.end();
     logger.error({ runId: run.id, err }, "Critic optimizer failed");
+
+    // DLQ capture (C4): persist failure for inspection and optional retry
+    try {
+      await captureToDLQ({
+        operationType: "critic:failure",
+        entityType: "critic_optimization_run",
+        entityId: run.id,
+        errorMessage: String(err),
+        metadata: { strategyId, backtestId },
+      });
+    } catch (dlqErr) {
+      logger.error({ dlqErr }, "Failed to capture critic failure to DLQ");
+    }
+
+    broadcastSSE("critic:run-failed", {
+      runId: run.id,
+      strategyId,
+      errorCode: "pipeline_failed",
+      message: String(err),
+      durationMs: Date.now() - run.createdAt.getTime(),
+    });
+
     return { runId: run.id, status: "failed" };
   }
 }
@@ -656,29 +1071,16 @@ async function collectEvidence(
     .where(eq(strategies.id, strategyId))
     .limit(1);
 
-  // Poll for SQA + MC (required), others optional
+  // P2-1: Poll only for MC (required). SQA is optional — collected after MC
+  // arrives or when the deadline is hit, whichever comes first.
   const deadline = Date.now() + EVIDENCE_WAIT_MS;
   let sqaResult: Record<string, unknown> | null = null;
   let mcResult: Record<string, unknown> | null = null;
+  // P2-2: capture run IDs for evidence provenance
+  let mcRunId: string | null = null;
+  let sqaRunId: string | null = null;
 
   while (Date.now() < deadline) {
-    if (!sqaResult) {
-      const [sqa] = await db
-        .select()
-        .from(sqaOptimizationRuns)
-        .where(eq(sqaOptimizationRuns.backtestId, backtestId))
-        .orderBy(desc(sqaOptimizationRuns.createdAt))
-        .limit(1);
-      if (sqa) {
-        sqaResult = {
-          best_params: sqa.bestParams,
-          best_energy: sqa.bestEnergy,
-          robust_plateau: sqa.robustPlateau,
-          all_solutions: sqa.allSolutions,
-        };
-      }
-    }
-
     if (!mcResult) {
       const [mc] = await db
         .select()
@@ -687,20 +1089,52 @@ async function collectEvidence(
         .orderBy(desc(monteCarloRuns.createdAt))
         .limit(1);
       if (mc) {
+        mcRunId = mc.id;
+        // FIX 3 (B2/S4): extract breach_probability from riskMetrics JSONB if present.
+        // Provides classical evidence for the Python breach_probability scoring path,
+        // decoupling it from quantum MC which may not always be available.
+        const mcRiskMetrics = (mc.riskMetrics as Record<string, unknown> | null) ?? null;
+        const classicalBreachProb: number | null =
+          mcRiskMetrics != null && typeof mcRiskMetrics.breach_probability === "number"
+            ? (mcRiskMetrics.breach_probability as number)
+            : null;
         mcResult = {
           survival_rate: mc.probabilityOfRuin ? 1 - Number(mc.probabilityOfRuin) : null,
           maxDrawdownP5: mc.maxDrawdownP5,
           maxDrawdownP50: mc.maxDrawdownP50,
           probabilityOfRuin: mc.probabilityOfRuin,
+          breach_probability: classicalBreachProb,
         };
       }
     }
 
-    if (sqaResult && mcResult) break;
+    // MC is the only required source — break as soon as it's present.
+    if (mcResult) break;
     await new Promise((r) => setTimeout(r, EVIDENCE_POLL_INTERVAL_MS));
   }
 
-  // Optional evidence (don't wait)
+  // SQA is optional — do a single best-effort read after the MC wait completes.
+  // Pass null if not yet available; critic proceeds without it.
+  if (!sqaResult) {
+    const [sqa] = await db
+      .select()
+      .from(sqaOptimizationRuns)
+      .where(eq(sqaOptimizationRuns.backtestId, backtestId))
+      .orderBy(desc(sqaOptimizationRuns.createdAt))
+      .limit(1)
+      .catch(() => [null as any]);
+    if (sqa) {
+      sqaRunId = sqa.id;
+      sqaResult = {
+        best_params: sqa.bestParams,
+        best_energy: sqa.bestEnergy,
+        robust_plateau: sqa.robustPlateau,
+        all_solutions: sqa.allSolutions,
+      };
+    }
+  }
+
+  // Optional evidence (don't wait) — capture row IDs for P2-2 provenance
   const [qmc] = await db
     .select()
     .from(quantumMcRuns)
@@ -753,7 +1187,7 @@ async function collectEvidence(
       deeparEvidence = {
         hit_rate: Math.round(avgHitRate * 1000) / 1000,
         days_tracked: recentForecasts.length,
-        current_weight: 0.0, // Will be read from deepar-service once available
+        current_weight: getDeepARWeight(),
         latest_forecast: recentForecasts[0]
           ? {
               p_high_vol: parseFloat(recentForecasts[0].pHighVol ?? "0"),
@@ -794,6 +1228,29 @@ async function collectEvidence(
       max_val: stratConfig.stop_loss.multiplier * 2.0,
       n_bits: 4,
     });
+  }
+
+  // FIX 4 (B3/R1): iterate all top-level numeric keys in stratConfig.
+  // Handles strategies that don't use indicators[].period or stop_loss.multiplier
+  // (e.g., strategies with threshold, lookback, profit_target at the root).
+  // Uses symmetric ±50% bounds as a safe default floor — Python can tighten
+  // these once walk-forward or SQA data is available.
+  // Skips keys already covered above (indicators is an array, stop_loss is an object).
+  const ALREADY_COVERED = new Set(["indicators", "stop_loss"]);
+  for (const [key, val] of Object.entries(stratConfig)) {
+    if (ALREADY_COVERED.has(key)) continue;
+    if (typeof val === "number" && isFinite(val) && val !== 0) {
+      // Only add if not already present from indicators loop
+      const alreadyPresent = paramRanges.some((p) => p.name === key);
+      if (!alreadyPresent) {
+        paramRanges.push({
+          name: key,
+          min_val: val * 0.5,
+          max_val: val * 1.5,
+          n_bits: 4,
+        });
+      }
+    }
   }
 
   // ─── Historical runs for strategy memory index ──────────────
@@ -902,6 +1359,166 @@ async function collectEvidence(
     logger.warn({ err }, "collectEvidence: failed to load historical runs — memory index will be empty");
   }
 
+  // ─── Fix 3a: Decay sub-signals from backtests.decayAnalysis ──────────
+  const decayAnalysis = (bt.decayAnalysis as Record<string, unknown> | null) ?? null;
+
+  // ─── Fix 3b: Drift alerts for this strategy in last 30 days ──────────
+  // The alerts table has no FK to strategies — correlate via metadata.strategyId.
+  // Fail-safe: empty array on any DB error.
+  type DriftAlertRow = {
+    id: string;
+    type: string;
+    severity: string;
+    title: string;
+    message: string;
+    createdAt: string;
+  };
+  let driftAlerts: DriftAlertRow[] = [];
+  try {
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const rawAlerts = await db
+      .select({
+        id: alerts.id,
+        type: alerts.type,
+        severity: alerts.severity,
+        title: alerts.title,
+        message: alerts.message,
+        metadata: alerts.metadata,
+        createdAt: alerts.createdAt,
+      })
+      .from(alerts)
+      .where(
+        and(
+          // FIX 2 (B1): canonical types written by alert-service.ts AlertFactory.
+          // drift = live metric deviation; decay = alpha decay level change.
+          // regime_change/degradation are also written by lifecycle/drift services.
+          // drawdown excluded: different metadata shape, not performance-decay evidence.
+          sql`${alerts.type} IN ('drift', 'decay', 'regime_change', 'degradation')`,
+          gt(alerts.createdAt, cutoff),
+        ),
+      )
+      .orderBy(desc(alerts.createdAt))
+      .limit(30);
+
+    driftAlerts = rawAlerts
+      .filter((a) => {
+        const meta = a.metadata as Record<string, unknown> | null;
+        if (!meta) return true;
+        if (meta.strategyId === strategyId) return true;
+        if (meta.strategyId && meta.strategyId !== strategyId) return false;
+        return true;
+      })
+      .map((a) => ({
+        id: a.id,
+        type: a.type,
+        severity: a.severity,
+        title: a.title,
+        message: a.message,
+        createdAt: a.createdAt.toISOString(),
+      }));
+  } catch (err) {
+    logger.warn({ err, strategyId }, "collectEvidence: failed to load drift alerts — continuing with empty array");
+  }
+
+  // ─── Fix 3c: Live rolling 30-day Sharpe from strategies table ────────
+  const liveRollingSharpe: number | null = strat?.rollingSharpe30d != null
+    ? Number(strat.rollingSharpe30d)
+    : null;
+
+  // ─── Fix 4: Walk-forward blob / windows-table fallback ───────────────
+  // Primary: blob on backtests.walkForwardResults.
+  // Fallback: reconstruct param_stability from walkForwardWindows rows.
+  let walkForwardEvidence: Record<string, unknown> | null =
+    (bt.walkForwardResults as Record<string, unknown> | null) ?? null;
+
+  const blobMissingParamStability =
+    !walkForwardEvidence || !("param_stability" in walkForwardEvidence);
+
+  if (blobMissingParamStability) {
+    try {
+      const wfWindows = await db
+        .select({
+          windowIndex: walkForwardWindows.windowIndex,
+          bestParams: walkForwardWindows.bestParams,
+          oosMetrics: walkForwardWindows.oosMetrics,
+          paramStability: walkForwardWindows.paramStability,
+          confidence: walkForwardWindows.confidence,
+        })
+        .from(walkForwardWindows)
+        .where(eq(walkForwardWindows.backtestId, backtestId))
+        .orderBy(walkForwardWindows.windowIndex);
+
+      if (wfWindows.length > 0) {
+        // Reconstruct param_stability: for each parameter seen across windows,
+        // compute mean, std, and range from the values in bestParams.
+        const paramValues: Record<string, number[]> = {};
+        for (const w of wfWindows) {
+          const params = (w.bestParams as Record<string, number> | null) ?? {};
+          for (const [k, v] of Object.entries(params)) {
+            if (typeof v === "number") {
+              if (!paramValues[k]) paramValues[k] = [];
+              paramValues[k].push(v);
+            }
+          }
+        }
+
+        const reconstructedStability: Record<string, {
+          mean: number;
+          std: number;
+          range: number;
+          n_windows: number;
+          robust_min: number;
+          robust_max: number;
+        }> = {};
+        for (const [paramName, values] of Object.entries(paramValues)) {
+          if (values.length === 0) continue;
+          const mean = values.reduce((a, b) => a + b, 0) / values.length;
+          const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
+          const std = Math.sqrt(variance);
+          const range = Math.max(...values) - Math.min(...values);
+          // FIX 5 (B5): add robust_min/robust_max so Python EvidenceAggregator.add_classical()
+          // can build optuna_ranges. Without these, optuna_ranges stays empty and candidate
+          // generation collapses. Use mean±std as a conservative robust interval when
+          // actual per-window min/max aren't individually tracked.
+          reconstructedStability[paramName] = {
+            mean,
+            std,
+            range,
+            n_windows: values.length,
+            robust_min: mean - std,
+            robust_max: mean + std,
+          };
+        }
+
+        const windowSummary = wfWindows.map((w) => {
+          const oos = (w.oosMetrics as Record<string, unknown> | null) ?? {};
+          return {
+            window_index: w.windowIndex,
+            oos_sharpe: (oos.sharpe_ratio as number | undefined) ?? null,
+            oos_win_rate: (oos.win_rate as number | undefined) ?? null,
+            confidence: w.confidence ?? null,
+          };
+        });
+
+        walkForwardEvidence = {
+          ...(walkForwardEvidence ?? {}),
+          param_stability: reconstructedStability,
+          windows: windowSummary,
+          _source: "reconstructed_from_wf_windows",
+        };
+
+        logger.info(
+          { backtestId, windowCount: wfWindows.length, paramCount: Object.keys(reconstructedStability).length },
+          "collectEvidence: walk-forward param_stability reconstructed from wf_windows table",
+        );
+      } else {
+        logger.warn({ backtestId }, "collectEvidence: walkForwardWindows has no rows — walk_forward evidence is incomplete");
+      }
+    } catch (err) {
+      logger.warn({ err, backtestId }, "collectEvidence: failed to query walkForwardWindows — walk_forward evidence may be incomplete");
+    }
+  }
+
   return {
     strategy_config: stratConfig,
     backtest_metrics: {
@@ -917,7 +1534,7 @@ async function collectEvidence(
     },
     daily_pnls: (bt.dailyPnls as number[]) ?? [],
     trades: [], // Trades loaded separately if needed
-    walk_forward: (bt.walkForwardResults as Record<string, unknown>) ?? null,
+    walk_forward: walkForwardEvidence, // Fix 4: blob or reconstructed from wf_windows
     sqa_result: sqaResult,
     mc_result: mcResult,
     quantum_mc_result: qmc
@@ -926,7 +1543,10 @@ async function collectEvidence(
     qubo_timing: qubo
       ? { schedule: qubo.schedule, backtest_improvement: qubo.backtestImprovement }
       : null,
-    tensor_prediction: tensor
+    // Omit tensor evidence when the model was never trained (status=skipped_no_model or
+    // probability is null/undefined).  A missing tensor row is preferable to a synthetic
+    // 0.5 "neutral" that the LLM critic would misread as genuine uncertainty evidence.
+    tensor_prediction: (tensor && tensor.status !== "skipped_no_model" && tensor.probability != null)
       ? {
           probability: tensor.probability,
           fragility_score: tensor.fragilityScore,
@@ -936,11 +1556,40 @@ async function collectEvidence(
     rl_result: rl
       ? { total_return: rl.totalReturn, sharpe_ratio: rl.sharpeRatio }
       : null,
-    param_ranges: paramRanges,
+    // P1-drift-2 (max-5-params enforcement at output time):
+    // CLAUDE.md "Strategy Philosophy" mandates max 3-5 parameters per strategy.
+    // The strategy schema enforces this at creation, but the critic optimizer
+    // can synthesize candidates that change >5 params (e.g. when the strategy
+    // already has 5 and the critic tweaks several at once). Slice the param
+    // ranges to 5 BEFORE handing to Python so the optimizer can never propose
+    // a candidate that violates the rule. Logged when truncation occurs so
+    // we can spot strategies that systematically push past the cap.
+    param_ranges: (() => {
+      if (paramRanges.length > 5) {
+        logger.warn(
+          { strategyId, paramRangeCount: paramRanges.length, kept: 5, dropped: paramRanges.length - 5 },
+          "critic-optimizer: param_ranges truncated to 5 (CLAUDE.md max-5-params rule)",
+        );
+        return paramRanges.slice(0, 5);
+      }
+      return paramRanges;
+    })(),
     max_candidates: MAX_REPLAY_CANDIDATES,
     pennylane_enabled: true,
     historical_runs: historicalRuns,
     deepar_evidence: deeparEvidence,
+    decay_analysis: decayAnalysis,          // Fix 3a
+    drift_alerts: driftAlerts,              // Fix 3b
+    live_rolling_sharpe: liveRollingSharpe, // Fix 3c
+    // P2-2: evidence run IDs for candidate provenance
+    _evidence_run_ids: {
+      mc: mcRunId ? [mcRunId] : undefined,
+      sqa: sqaRunId ? [sqaRunId] : undefined,
+      qmc: qmc?.id ? [qmc.id] : undefined,
+      tensor: tensor?.id ? [tensor.id] : undefined,
+      rl: rl?.id ? [rl.id] : undefined,
+      wf: undefined, // walk-forward windows are identified by backtestId
+    },
   };
 }
 
@@ -996,12 +1645,17 @@ async function createChildStrategy(
     return null;
   }
 
-  // R2 fix: Merge parent config with survivor's changed params so the child
-  // carries a complete config, not a diff-only blob.
-  const mergedConfig = {
-    ...(parentStrategy.config ?? {}),
-    ...(survivorCandidate.changedParams as Record<string, unknown>),
-  };
+  // P0-1 fix: Use applyAllParamChanges so changed params are applied into the
+  // correct nested locations (indicators[].period, stop_loss.multiplier, etc.)
+  // rather than being flat-spread as top-level orphan keys.
+  const mergedConfig = structuredClone(parentStrategy.config ?? {}) as Record<string, any>;
+  const unapplied = applyAllParamChanges(mergedConfig, survivorCandidate.changedParams as Record<string, number>);
+  if (unapplied.size > 0) {
+    logger.warn(
+      { runId, parentStrategyId: parentStrategy.id, unapplied: [...unapplied] },
+      "createChildStrategy: some changed params could not be applied to child config — child may be incomplete",
+    );
+  }
 
   const childId = crypto.randomUUID();
   const [child] = await db
@@ -1013,7 +1667,7 @@ async function createChildStrategy(
       symbol: parentStrategy.symbol,
       timeframe: parentStrategy.timeframe,
       config: mergedConfig,
-      lifecycleState: "TESTING", // Critic survivors already passed backtest gates during replay — skip CANDIDATE
+      lifecycleState: "CANDIDATE", // Will be promoted to TESTING via lifecycle service below
       parentStrategyId: parentStrategy.id,
       generation: parentGen + 1,
       forgeScore: replayResult.forgeScore ?? undefined,
@@ -1021,6 +1675,22 @@ async function createChildStrategy(
       tags: parentStrategy.tags ?? undefined,
     })
     .returning({ id: strategies.id });
+
+  // Route through canonical lifecycle path to get audit + SSE broadcast.
+  // CANDIDATE → TESTING is a valid transition (lifecycle-service.ts VALID_TRANSITIONS line 44).
+  const lifecycle = new LifecycleService();
+  const promoteResult = await lifecycle.promoteStrategy(
+    child.id,
+    "CANDIDATE",
+    "TESTING",
+    { actor: "system", reason: "critic-replay-survivor" },
+  );
+  if (!promoteResult.success) {
+    logger.warn(
+      { runId, childId: child.id, error: promoteResult.error },
+      "Critic optimizer: lifecycle promotion CANDIDATE→TESTING failed (child remains CANDIDATE)",
+    );
+  }
 
   logger.info(
     {
@@ -1051,8 +1721,10 @@ async function replayCandidatesAsync(
   runId: string,
   strategyId: string,
   originalConfig: Record<string, unknown>,
+  correlationId?: string,
 ): Promise<void> {
   const { runBacktest } = await import("./backtest-service.js");
+  const replayStartedAt = Date.now();
 
   // Fetch parent strategy up-front — needed for lineage and gates.
   const [strat] = await db
@@ -1067,6 +1739,13 @@ async function replayCandidatesAsync(
       .update(criticOptimizationRuns)
       .set({ status: "failed", completedAt: new Date() })
       .where(eq(criticOptimizationRuns.id, runId));
+    broadcastSSE("critic:run-failed", {
+      runId,
+      strategyId,
+      errorCode: "strategy_not_found",
+      message: "Strategy not found for replay — run marked failed",
+      durationMs: Date.now() - replayStartedAt,
+    });
     return;
   }
 
@@ -1094,46 +1773,34 @@ async function replayCandidatesAsync(
           .where(eq(criticCandidates.id, candidate.id));
         broadcastSSE("critic:replay_started", { runId, candidateId: candidate.id, rank: candidate.rank });
 
-        // Clone strategy config and apply changed params
+        // Clone strategy config and apply changed params using generic deep-merge (Fix 1).
         const replayConfig = JSON.parse(JSON.stringify(baseConfig));
         const changedParams = candidate.changedParams as Record<string, number>;
 
-        // Apply param changes to indicators and stop_loss.
-        // Track which keys were applied so we can warn on any that were silently ignored.
-        const appliedParamKeys = new Set<string>();
-        for (const [paramName, newValue] of Object.entries(changedParams)) {
-          if (paramName.endsWith("_period") && Array.isArray(replayConfig.indicators)) {
-            const indType = paramName.replace("_period", "");
-            const ind = replayConfig.indicators.find((i: any) => i.type === indType);
-            if (ind) {
-              ind.period = Math.round(Number(newValue));
-              appliedParamKeys.add(paramName);
-            }
-          } else if (paramName === "stop_loss_multiplier" && replayConfig.stop_loss) {
-            (replayConfig.stop_loss as any).multiplier = Number(newValue);
-            appliedParamKeys.add(paramName);
-          }
-        }
+        const unappliedParamKeys = applyAllParamChanges(replayConfig, changedParams);
 
-        // Fix 4.7c: warn on any changedParams keys that did not match a known pattern
-        // and were therefore not applied to the replay config. Replay still runs — this
-        // is a visibility/audit concern, not a hard failure.
-        const unappliedParamKeys = Object.keys(changedParams).filter((k) => !appliedParamKeys.has(k));
-        if (unappliedParamKeys.length > 0) {
+        if (unappliedParamKeys.size > 0) {
+          // Fix 1: Hard-block — cannot replay a candidate whose params could not be applied.
+          // Running with original values would produce results attributed to wrong params,
+          // corrupting the replay evidence and the lineage record.
+          const unappliedArray = [...unappliedParamKeys];
           logger.warn(
-            { runId, candidateId: candidate.id, unappliedParamKeys },
-            "Critic replay: changedParams keys not applied — no matching config pattern (replay ran with original values)",
+            { runId, candidateId: candidate.id, unappliedParamKeys: unappliedArray },
+            "Critic replay: changedParams keys not applied — skipping candidate (param_application_failed)",
           );
-          // Persist unapplied keys into candidate metadata for audit trail visibility.
           await db
             .update(criticCandidates)
             .set({
+              replayStatus: "skipped_param_application_failed",
               governanceLabels: {
                 ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
-                unapplied_param_keys: unappliedParamKeys,
+                unapplied_param_keys: unappliedArray,
+                skip_reason: "param_application_failed",
               } as any,
             })
             .where(eq(criticCandidates.id, candidate.id));
+          broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_param_application_failed" });
+          continue;
         }
 
         // Run walk-forward backtest with modified params.
@@ -1145,7 +1812,7 @@ async function replayCandidatesAsync(
           mode: "walkforward",
           optimizer: undefined, // Don't re-trigger SQA/critic on replay
           suppressAutoPromote: true,
-        } as any);
+        } as any, undefined, undefined, correlationId);
 
         // Update candidate with replay results
         const rr = replayResult as any;
@@ -1192,30 +1859,31 @@ async function replayCandidatesAsync(
     // Poll for up to MC_GATE_WAIT_MS. If data is unavailable the candidate is
     // vetoed — missing MC evidence is not safe to treat as a pass.
     let mcGatePassed = true;
+    let mcSurvivalRate: number | null = null;
 
     if (bestCandidate) {
-      const survivalRate = await waitForMcSurvivalRate(bestCandidate.backtestId);
+      mcSurvivalRate = await waitForMcSurvivalRate(bestCandidate.backtestId);
 
-      if (survivalRate === null) {
+      if (mcSurvivalRate === null) {
         // Fix 4.7b: MC data unavailable after full wait — veto the candidate.
         // We must NOT promote a candidate without any MC evidence.
-        // mc_gate_passed=false is persisted via the audit log at the end of the try block.
+        // mc_gate_passed=false and mc_survival_rate=null are persisted in the audit log below.
         logger.warn(
           { runId, candidateId: bestCandidate.id },
           "MC survival data unavailable — no candidate promoted",
         );
         mcGatePassed = false;
         bestCandidate = null;
-      } else if (survivalRate < MC_SURVIVAL_THRESHOLD) {
+      } else if (mcSurvivalRate < MC_SURVIVAL_THRESHOLD) {
         logger.info(
-          { runId, candidateId: bestCandidate.id, survivalRate, threshold: MC_SURVIVAL_THRESHOLD },
+          { runId, candidateId: bestCandidate.id, survivalRate: mcSurvivalRate, threshold: MC_SURVIVAL_THRESHOLD },
           "Critic optimizer: best candidate failed MC survival gate — no survivor promoted",
         );
         mcGatePassed = false;
         bestCandidate = null;
       } else {
         logger.info(
-          { runId, candidateId: bestCandidate.id, survivalRate },
+          { runId, candidateId: bestCandidate.id, survivalRate: mcSurvivalRate },
           "Critic optimizer: MC survival gate passed",
         );
       }
@@ -1259,6 +1927,13 @@ async function replayCandidatesAsync(
         .where(eq(criticOptimizationRuns.id, runId));
 
       broadcastSSE("critic:completed", { runId, survivor: bestCandidate.id });
+      broadcastSSE("critic:run-completed", {
+        runId,
+        strategyId,
+        candidatesGenerated: candidates.length,
+        survivorCandidateId: bestCandidate.id,
+        durationMs: Date.now() - replayStartedAt,
+      });
       logger.info({ runId, survivor: bestCandidate.id }, "Critic optimizer: survivor selected");
 
       // ─── Create child strategy version ─────────────────────────────
@@ -1303,23 +1978,24 @@ async function replayCandidatesAsync(
               generation: (strat.generation ?? 0) + 1,
               tier: replayBt?.tier ?? null,
             },
+            correlationId,
           );
 
           // C1: auto-trigger walk-forward backtest for child to restart the loop.
           // suppressAutoPromote: true — child must earn promotion through full critic cycle,
           // not from a single replay result.
           // Fire-and-forget — does not block critic completion.
-          const childMergedConfig = {
-            ...(strat.config ?? {}),
-            ...(survivorRow.changedParams as Record<string, unknown>),
-          };
+          // P0-1 fix: apply changed params into nested config structure via applyAllParamChanges
+          // rather than flat spread which would write orphan top-level keys.
+          const childMergedConfig = structuredClone(strat.config ?? {}) as Record<string, any>;
+          applyAllParamChanges(childMergedConfig, survivorRow.changedParams as Record<string, number>);
           runBacktest(childId, {
             ...originalConfig,
             strategy: childMergedConfig,
             mode: "walkforward",
             optimizer: undefined,
             suppressAutoPromote: true,
-          } as any).catch((err: unknown) =>
+          } as any, undefined, undefined, correlationId).catch((err: unknown) =>
             logger.error({ err, childId }, "Auto-backtest for critic child failed"),
           );
         }
@@ -1334,6 +2010,13 @@ async function replayCandidatesAsync(
         .where(eq(criticOptimizationRuns.id, runId));
 
       broadcastSSE("critic:completed", { runId, survivor: null });
+      broadcastSSE("critic:run-completed", {
+        runId,
+        strategyId,
+        candidatesGenerated: candidates.length,
+        survivorCandidateId: null,
+        durationMs: Date.now() - replayStartedAt,
+      });
       logger.info({ runId, mcGatePassed }, "Critic optimizer: no survivor (parent survives)");
     }
 
@@ -1381,7 +2064,16 @@ async function replayCandidatesAsync(
       survivor: bestCandidate?.id ?? null,
       status: bestCandidate ? "survivor_selected" : "parent_survives",
       mc_gate_passed: mcGatePassed,
+      mc_survival_rate: mcSurvivalRate,
       stuck_candidates_recovered: stuckCandidates.length,
+    }, correlationId);
+
+    // Broadcast replay-level completion summary for frontend observability.
+    // survivorCount is 0 or 1 — critic loop produces at most one survivor per cycle.
+    broadcastSSE("critic:replay-completed", {
+      runId,
+      replayedCount: candidates.length,
+      survivorCount: bestCandidate ? 1 : 0,
     });
   } finally {
     // Safety net: if the run is still in "replaying" after the try block,
@@ -1398,6 +2090,13 @@ async function replayCandidatesAsync(
         .update(criticOptimizationRuns)
         .set({ status: "failed", completedAt: new Date() })
         .where(eq(criticOptimizationRuns.id, runId));
+      broadcastSSE("critic:run-failed", {
+        runId,
+        strategyId,
+        errorCode: "replaying_stuck",
+        message: "Run left in 'replaying' state after try block — marked failed by finally guard",
+        durationMs: Date.now() - replayStartedAt,
+      });
       logger.error({ runId }, "Critic optimizer: run left in 'replaying' — marked failed by finally guard");
     }
   }
@@ -1412,6 +2111,7 @@ async function logAudit(
   entityId: string,
   input: unknown,
   result: unknown,
+  correlationId?: string | null,
 ): Promise<void> {
   try {
     await db.insert(auditLog).values({
@@ -1422,6 +2122,7 @@ async function logAudit(
       result: result as any,
       status: "success",
       decisionAuthority: "agent",
+      correlationId: correlationId ?? null,
     });
   } catch (err) {
     logger.error({ action, entityId, err }, "Audit log write failed");
@@ -1439,7 +2140,9 @@ export async function manualReplayCandidates(
   runId: string,
   strategyId: string,
   candidateIds: string[],
+  context?: { correlationId?: string },
 ): Promise<void> {
+  const correlationId = context?.correlationId;
   const { runBacktest } = await import("./backtest-service.js");
 
   // Mark the run as replaying
@@ -1499,46 +2202,32 @@ export async function manualReplayCandidates(
           .where(eq(criticCandidates.id, candidate.id));
         broadcastSSE("critic:replay_started", { runId, candidateId: candidate.id, rank: candidate.rank });
 
-        // Clone config and apply changed params
+        // Clone config and apply changed params using generic deep-merge (Fix 1).
         const replayConfig = JSON.parse(JSON.stringify(baseConfig));
         const changedParams = candidate.changedParams as Record<string, number>;
 
-        // Apply param changes to indicators and stop_loss.
-        // Track which keys were applied so we can warn on any that were silently ignored.
-        const appliedParamKeys = new Set<string>();
-        for (const [paramName, newValue] of Object.entries(changedParams)) {
-          if (paramName.endsWith("_period") && Array.isArray(replayConfig.indicators)) {
-            const indType = paramName.replace("_period", "");
-            const ind = replayConfig.indicators.find((i: any) => i.type === indType);
-            if (ind) {
-              ind.period = Math.round(Number(newValue));
-              appliedParamKeys.add(paramName);
-            }
-          } else if (paramName === "stop_loss_multiplier" && replayConfig.stop_loss) {
-            (replayConfig.stop_loss as any).multiplier = Number(newValue);
-            appliedParamKeys.add(paramName);
-          }
-        }
+        const unappliedParamKeys = applyAllParamChanges(replayConfig, changedParams);
 
-        // Fix 4.7c: warn on any changedParams keys that did not match a known pattern
-        // and were therefore not applied to the replay config. Replay still runs — this
-        // is a visibility/audit concern, not a hard failure.
-        const unappliedParamKeys = Object.keys(changedParams).filter((k) => !appliedParamKeys.has(k));
-        if (unappliedParamKeys.length > 0) {
+        if (unappliedParamKeys.size > 0) {
+          // Fix 1: Hard-block — cannot replay a candidate whose params could not be applied.
+          const unappliedArray = [...unappliedParamKeys];
           logger.warn(
-            { runId, candidateId: candidate.id, unappliedParamKeys },
-            "Manual replay: changedParams keys not applied — no matching config pattern (replay ran with original values)",
+            { runId, candidateId: candidate.id, unappliedParamKeys: unappliedArray },
+            "Manual replay: changedParams keys not applied — skipping candidate (param_application_failed)",
           );
-          // Persist unapplied keys into candidate metadata for audit trail visibility.
           await db
             .update(criticCandidates)
             .set({
+              replayStatus: "skipped_param_application_failed",
               governanceLabels: {
                 ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
-                unapplied_param_keys: unappliedParamKeys,
+                unapplied_param_keys: unappliedArray,
+                skip_reason: "param_application_failed",
               } as any,
             })
             .where(eq(criticCandidates.id, candidate.id));
+          broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_param_application_failed" });
+          continue;
         }
 
         // Run walk-forward backtest.
@@ -1549,7 +2238,7 @@ export async function manualReplayCandidates(
           mode: "walkforward",
           optimizer: undefined,
           suppressAutoPromote: true,
-        } as any);
+        } as any, undefined, undefined, correlationId);
 
         const rr = replayResult as any;
         const replayTier = rr?.tier ?? "REJECTED";
@@ -1655,67 +2344,104 @@ export async function manualReplayCandidates(
       broadcastSSE("critic:completed", { runId, survivor: bestCandidate.id, manual: true });
       logger.info({ runId, survivor: bestCandidate.id }, "Manual replay: survivor selected");
 
-      // Create child strategy version
+      // Create child strategy version (Fix 5: idempotency guard)
       if (survivorRow) {
-        const childId = await createChildStrategy(
-          {
-            id: strat.id,
-            name: strat.name,
-            symbol: strat.symbol,
-            timeframe: strat.timeframe,
-            description: strat.description,
-            preferredRegime: strat.preferredRegime,
-            tags: strat.tags,
-            generation: strat.generation ?? 0,
-            config: (strat.config ?? {}) as Record<string, unknown>,
-          },
-          { changedParams: survivorRow.changedParams },
-          { tier: replayBt?.tier ?? null, forgeScore: replayBt?.forgeScore ?? null },
-          runId,
-        );
+        // Fix 5: Check if a child was already created from this exact candidate via audit_log.
+        // Idempotency key: audit rows with action="critic-optimizer.child_created" and
+        // input.survivorCandidateId = bestCandidate.id. If one exists, re-use it rather
+        // than creating a duplicate child.
+        // Rationale: manualReplayCandidates can be triggered multiple times for the same run
+        // (e.g. user retries, network timeout before response). Without this guard every retry
+        // would insert a new child strategy, creating duplicates that inflate generation count
+        // and corrupt the parent/child lineage chain.
+        const existingChildAudit = await db
+          .select({ entityId: auditLog.entityId, result: auditLog.result })
+          .from(auditLog)
+          .where(
+            and(
+              eq(auditLog.action, "critic-optimizer.child_created"),
+              sql`${auditLog.input}->>'survivorCandidateId' = ${bestCandidate.id}`,
+            ),
+          )
+          .limit(1)
+          .catch(() => [] as { entityId: string | null; result: unknown }[]);
 
-        if (childId) {
+        if (existingChildAudit.length > 0) {
+          const existingChildId = existingChildAudit[0].entityId;
+          logger.info(
+            { runId, existingChildId, candidateId: bestCandidate.id },
+            "Manual replay: child already created for this candidate (idempotency guard) — skipping duplicate creation",
+          );
           broadcastSSE("critic:child_created", {
             runId,
             parentStrategyId: strategyId,
-            childStrategyId: childId,
+            childStrategyId: existingChildId,
             generation: (strat.generation ?? 0) + 1,
             manual: true,
+            idempotent: true,
           });
-
-          await logAudit(
-            "critic-optimizer.child_created",
-            "strategy",
-            childId,
+        } else {
+          const childId = await createChildStrategy(
             {
+              id: strat.id,
+              name: strat.name,
+              symbol: strat.symbol,
+              timeframe: strat.timeframe,
+              description: strat.description,
+              preferredRegime: strat.preferredRegime,
+              tags: strat.tags,
+              generation: strat.generation ?? 0,
+              config: (strat.config ?? {}) as Record<string, unknown>,
+            },
+            { changedParams: survivorRow.changedParams },
+            { tier: replayBt?.tier ?? null, forgeScore: replayBt?.forgeScore ?? null },
+            runId,
+          );
+
+          if (childId) {
+            broadcastSSE("critic:child_created", {
               runId,
               parentStrategyId: strategyId,
-              survivorCandidateId: bestCandidate.id,
-              changedParams: survivorRow.changedParams,
-              manual: true,
-            },
-            {
               childStrategyId: childId,
               generation: (strat.generation ?? 0) + 1,
-              tier: replayBt?.tier ?? null,
-            },
-          );
+              manual: true,
+            });
 
-          // C1: auto-trigger walk-forward backtest for child to restart the loop.
-          // suppressAutoPromote: true — child earns promotion through its own critic cycle.
-          // Fire-and-forget — does not block manual replay completion.
-          const childMergedConfig = {
-            ...(strat.config ?? {}),
-            ...(survivorRow.changedParams as Record<string, unknown>),
-          };
-          runBacktest(childId, {
-            strategy: childMergedConfig,
-            mode: "walkforward",
-            optimizer: undefined,
-            suppressAutoPromote: true,
-          } as any).catch((err: unknown) =>
-            logger.error({ err, childId }, "Auto-backtest for critic child (manual replay) failed"),
-          );
+            await logAudit(
+              "critic-optimizer.child_created",
+              "strategy",
+              childId,
+              {
+                runId,
+                parentStrategyId: strategyId,
+                survivorCandidateId: bestCandidate.id,
+                changedParams: survivorRow.changedParams,
+                manual: true,
+              },
+              {
+                childStrategyId: childId,
+                generation: (strat.generation ?? 0) + 1,
+                tier: replayBt?.tier ?? null,
+              },
+              correlationId,
+            );
+
+            // C1: auto-trigger walk-forward backtest for child to restart the loop.
+            // suppressAutoPromote: true — child earns promotion through its own critic cycle.
+            // Fire-and-forget — does not block manual replay completion.
+            const childMergedConfig = {
+              ...(strat.config ?? {}),
+              ...(survivorRow.changedParams as Record<string, unknown>),
+            };
+            runBacktest(childId, {
+              strategy: childMergedConfig,
+              mode: "walkforward",
+              optimizer: undefined,
+              suppressAutoPromote: true,
+            } as any, undefined, undefined, correlationId).catch((err: unknown) =>
+              logger.error({ err, childId }, "Auto-backtest for critic child (manual replay) failed"),
+            );
+          }
         }
       }
     } else {
@@ -1736,7 +2462,7 @@ export async function manualReplayCandidates(
       survivor: bestCandidate?.id ?? null,
       status: bestCandidate ? "survivor_selected" : "parent_survives",
       mc_gate_passed: mcGatePassed,
-    });
+    }, correlationId);
   } finally {
     // Safety net: prevent permanent "replaying" stuck state
     const [current] = await db

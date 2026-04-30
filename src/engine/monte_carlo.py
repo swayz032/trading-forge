@@ -133,7 +133,14 @@ def return_bootstrap(
         xp = np
 
     returns_xp = xp.asarray(daily_returns)
-    rng = xp.random.default_rng(seed)
+    # Fix 3: was xp.random.default_rng(seed) unconditionally, which on CPU produces an
+    # SFC64-backed generator — inconsistent with trade_resample() which uses PCG64DXSM.
+    # In "both" mode this caused inter-method RNG family inconsistency.
+    # Now: CPU path uses create_authoritative_rng() (PCG64DXSM), GPU path keeps xp.random.
+    if xp is np:
+        rng = create_authoritative_rng(seed)[0]
+    else:
+        rng = xp.random.default_rng(seed)
     indices = rng.integers(0, len(daily_returns), size=(n_sims, n_days))
     sampled = returns_xp[indices]
     paths = xp.cumsum(sampled, axis=1)
@@ -425,6 +432,7 @@ def simulate_firm_survival(
     daily_trades_per_day: int = 3,
     granularity: str = "day",
     symbol: str = "MES",
+    backtest_commission_rt: float | None = None,
 ) -> dict:
     """Per-firm Monte Carlo survival simulation.
 
@@ -440,6 +448,10 @@ def simulate_firm_survival(
         granularity: "day" or "trade". When "trade", daily loss limit
             enforcement is skipped (each row is a trade, not a day).
         symbol: Contract symbol for commission lookup
+        backtest_commission_rt: Actual per-round-trip commission used in the
+            backtest (both sides, in $). If None, falls back to $1.24 default
+            with a warning. Pass the real value from the backtest run to get
+            correct commission delta adjustment (Fix 4 — GAP 14).
 
     Returns:
         Dict with eval_pass_rate, funded_survival_6mo, breach_reasons,
@@ -502,7 +514,19 @@ def simulate_firm_survival(
     intraday_substeps = daily_trades_per_day if (is_realtime and granularity == "day") else 1
 
     # Compute commission delta ONCE (constant across all sims/steps)
-    backtest_comm_rt = 0.62 * 2  # Default backtest commission per round trip
+    # Fix 4: was hardcoded 0.62*2=$1.24. Now accepts actual backtest commission from caller.
+    # If None (caller didn't propagate it), fall back to $1.24 but warn — the delta may be wrong
+    # for firms where the backtest used a different commission (e.g. Alpha Futures = $0.00).
+    if backtest_commission_rt is None:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "simulate_firm_survival: backtest_commission_rt not provided — "
+            "falling back to $1.24 default. Commission delta may be wrong if "
+            "backtest used a different commission (e.g. Alpha Futures $0.00)."
+        )
+        backtest_comm_rt = 0.62 * 2  # Legacy fallback — $1.24 round trip
+    else:
+        backtest_comm_rt = float(backtest_commission_rt)
     firm_comm_rt = comm_per_side * 2
     comm_delta = firm_comm_rt - backtest_comm_rt
     comm_adj_day = comm_delta * daily_trades_per_day
@@ -1003,12 +1027,17 @@ def run_monte_carlo(
     firm_survival: Optional[dict[str, dict]] = None
     if request.firms:
         granularity = "trade" if request.method == "trade_resample" else "day"
+        # Fix 4: propagate actual backtest commission (round-trip) to survival sim.
+        # MonteCarloRequest.backtest_commission_rt is optional — getattr with None fallback
+        # ensures backward compat if callers haven't updated to pass the new field yet.
+        _bt_comm_rt = getattr(request, "backtest_commission_rt", None)
         firm_survival = {}
         for firm_key in request.firms:
             firm_survival[firm_key] = simulate_firm_survival(
                 paths, firm_key,
                 account_size=request.initial_capital,
                 granularity=granularity,
+                backtest_commission_rt=_bt_comm_rt,
             )
 
     elapsed_ms = int((time.perf_counter() - start_time) * 1000)

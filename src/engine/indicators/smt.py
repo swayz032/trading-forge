@@ -194,3 +194,39 @@ def dxy_eurusd_smt(df_dxy: pl.DataFrame, df_eur: pl.DataFrame, lookback: int = 2
 def nq_es_smt(df_nq: pl.DataFrame, df_es: pl.DataFrame, lookback: int = 20) -> pl.DataFrame:
     """NQ vs ES SMT divergence (positive correlation)."""
     return smt_divergence(df_nq, df_es, lookback)
+
+
+def gc_dxy_smt(df_gc: pl.DataFrame, df_dxy: pl.DataFrame, lookback: int = 20) -> pl.DataFrame:
+    """Gold (GC) vs Dollar Index (DXY) SMT divergence (negative correlation).
+
+    Gold typically inverse to USD strength. Divergence = both move same
+    direction (both up or both down), signaling potential reversal.
+    """
+    return custom_smt(df_gc, df_dxy, correlation_type="negative", lookback=lookback)
+
+
+def ym_es_smt(df_ym: pl.DataFrame, df_es: pl.DataFrame, lookback: int = 20) -> pl.DataFrame:
+    """Dow (YM) vs S&P (ES) SMT divergence (positive correlation).
+
+    YM and ES are highly correlated equity index futures. Divergence on
+    new highs/lows signals sector rotation or potential reversal.
+    """
+    return smt_divergence(df_ym, df_es, lookback)
+
+
+def indices_bonds_smt(
+    df_index: pl.DataFrame,
+    df_bonds: pl.DataFrame,
+    lookback: int = 20,
+) -> pl.DataFrame:
+    """Equity index vs Treasury bonds SMT divergence (typically negative correlation).
+
+    Equity-bond inverse relationship breaks during regime shifts (e.g.,
+    inflation regime). Divergence (both moving same direction) flags
+    correlation breakdown.
+
+    Args:
+        df_index: Equity index futures (ES, NQ, YM, RTY)
+        df_bonds: Treasury bond futures (ZB, ZN, ZF)
+    """
+    return custom_smt(df_index, df_bonds, correlation_type="negative", lookback=lookback)

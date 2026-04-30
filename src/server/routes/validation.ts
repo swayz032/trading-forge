@@ -14,7 +14,7 @@
 
 import { Router } from "express";
 import { z } from "zod";
-import { logger } from "../index.js";
+
 import { runPythonModule } from "../lib/python-runner.js";
 
 export const validationRoutes = Router();
@@ -56,7 +56,7 @@ validationRoutes.post("/static", async (req, res) => {
     });
     res.json({ success: true, ...result });
   } catch (err: any) {
-    logger.error({ err, component: "validation" }, "Static validation failed");
+    req.log.error({ err, component: "validation" }, "Static validation failed");
     res.status(500).json({ error: "Static validation failed", details: err.message });
   }
 });
@@ -80,7 +80,7 @@ validationRoutes.post("/runtime", async (req, res) => {
     });
     res.json({ success: true, ...result });
   } catch (err: any) {
-    logger.error({ err, component: "validation" }, "Runtime validation failed");
+    req.log.error({ err, component: "validation" }, "Runtime validation failed");
     res.status(500).json({ error: "Runtime validation failed", details: err.message });
   }
 });
@@ -104,14 +104,14 @@ validationRoutes.post("/cross", async (req, res) => {
     });
     res.json({ success: true, ...result });
   } catch (err: any) {
-    logger.error({ err, component: "validation" }, "Cross validation failed");
+    req.log.error({ err, component: "validation" }, "Cross validation failed");
     res.status(500).json({ error: "Cross validation failed", details: err.message });
   }
 });
 
 // ─── GET /api/validation/specs ───────────────────────────────
 
-validationRoutes.get("/specs", async (_req, res) => {
+validationRoutes.get("/specs", async (req, res) => {
   try {
     const result = await runPythonModule({
       module: "src.engine.validation_runner",
@@ -122,7 +122,7 @@ validationRoutes.get("/specs", async (_req, res) => {
     });
     res.json({ success: true, ...result });
   } catch (err: any) {
-    logger.error({ err, component: "validation" }, "List specs failed");
+    req.log.error({ err, component: "validation" }, "List specs failed");
     res.status(500).json({ error: "List specs failed", details: err.message });
   }
 });

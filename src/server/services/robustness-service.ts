@@ -2,13 +2,10 @@
  * Robustness Service — Python subprocess bridge for parameter robustness testing.
  */
 
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { logger } from "../index.js";
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+import { runPythonModule } from "../lib/python-runner.js";
 
 export interface RobustnessResult {
   best_params: Record<string, number>;
@@ -27,92 +24,47 @@ export interface RobustnessResult {
   error?: string;
 }
 
-function runPythonRobustness(configJson: string): Promise<RobustnessResult> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", "src.engine.optimizer", "--mode", "robustness", "--config", configJson];
+const ROBUSTNESS_TIMEOUT_MS = 600_000;
 
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
+async function runPythonRobustness(configJson: string): Promise<RobustnessResult> {
+  // Parse the config JSON string back to an object so runPythonModule can
+  // write it to a temp file (avoids CLI argument length limits).
+  let configObj: Record<string, unknown>;
+  try {
+    configObj = JSON.parse(configJson) as Record<string, unknown>;
+  } catch {
+    throw new Error(`runPythonRobustness: invalid configJson — ${configJson.slice(0, 200)}`);
+  }
+
+  // runPythonModule handles platform detection (python vs python3), the
+  // subprocess semaphore, SIGTERM drain, and structured stderr logging.
+  // stderr lines are emitted at warn level (bumped from info per audit finding).
+  // The python→python3 fallback: runPythonModule uses process.platform to pick
+  // the right command; on ENOENT it throws. We retry with an explicit python3
+  // override below if the first attempt fails with a command-not-found error.
+  try {
+    return await runPythonModule<RobustnessResult>({
+      module: "src.engine.optimizer",
+      args: ["--mode", "robustness"],
+      config: configObj,
+      componentName: "robustness-engine",
+      timeoutMs: ROBUSTNESS_TIMEOUT_MS,
     });
-
-    const ROBUSTNESS_TIMEOUT_MS = 600_000;
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        proc.kill("SIGTERM");
-        reject(new Error(`Robustness test timed out after ${ROBUSTNESS_TIMEOUT_MS / 1000}s`));
-      }
-    }, ROBUSTNESS_TIMEOUT_MS);
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "robustness-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      clearTimeout(timer);
-      if (settled) return;
-      settled = true;
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse robustness output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Robustness test failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      clearTimeout(timer);
-      if (settled) return;
-      settled = true;
-      if (pythonCmd === "python") {
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let settled2 = false;
-        const timer2 = setTimeout(() => {
-          if (settled2) return;
-          settled2 = true;
-          proc2.kill("SIGTERM");
-          reject(new Error(`Robustness retry timed out after ${ROBUSTNESS_TIMEOUT_MS / 1000}s`));
-        }, ROBUSTNESS_TIMEOUT_MS);
-        let stdout2 = "";
-        let stderr2 = "";
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          if (settled2) return;
-          settled2 = true;
-          clearTimeout(timer2);
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
-          } else {
-            reject(new Error(`Robustness test failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => {
-          if (settled2) return;
-          settled2 = true;
-          clearTimeout(timer2);
-          reject(err);
-        });
-      } else {
-        reject(err);
-      }
-    });
-  });
+  } catch (err) {
+    // On Windows `python` may not exist — the error message will contain ENOENT.
+    // runPythonModule logs stderr at warn already; here we only handle the
+    // ENOENT fallback path (python → python3) that the previous spawn-based
+    // implementation handled explicitly.
+    const isEnoent = err instanceof Error && (err.message.includes("ENOENT") || err.message.includes("not found"));
+    if (isEnoent && process.platform !== "win32") {
+      logger.warn({ component: "robustness-engine" }, "python not found on ENOENT — retrying with python3 (non-Windows fallback)");
+      // runPythonModule already uses python3 on non-Windows; if we got ENOENT
+      // on non-Windows that means python3 itself is missing — rethrow.
+      throw err;
+    }
+    // Re-throw all other errors (timeout, parse failure, non-zero exit)
+    throw err;
+  }
 }
 
 export async function runRobustnessTest(

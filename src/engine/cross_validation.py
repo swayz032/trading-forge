@@ -14,6 +14,7 @@ import hashlib
 import json
 import numpy as np
 from scipy import stats as scipy_stats
+from src.engine.monte_carlo import create_authoritative_rng
 
 
 def compute_wfe(is_sharpe: float, oos_sharpe: float) -> dict:
@@ -62,7 +63,8 @@ def bootstrap_ci(
             "detail": "insufficient data (<10 daily P&Ls)",
         }
 
-    rng = np.random.default_rng(seed)
+    # Fix 3: use authoritative PCG64DXSM RNG matching monte_carlo.py for replay determinism.
+    rng = create_authoritative_rng(seed)[0]
     arr = np.array(daily_pnls)
     means = np.array([
         rng.choice(arr, size=len(arr), replace=True).mean()

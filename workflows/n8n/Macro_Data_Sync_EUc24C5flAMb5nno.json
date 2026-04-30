@@ -2,7 +2,7 @@
   "updatedAt": "2026-03-19T06:26:31.449Z",
   "createdAt": "2026-03-17T23:59:21.292Z",
   "id": "EUc24C5flAMb5nno",
-  "name": "Macro Data Sync",
+  "name": "Macro Data Sync - Morning (7am Skip Classifier)",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -262,7 +262,8 @@
     "timezone": "America/New_York",
     "saveDataErrorExecution": "all",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": null,
   "meta": null,

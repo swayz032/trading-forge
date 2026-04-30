@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { compilePineExport, getExport, getExportArtifacts, getArtifact } from "../services/pine-export-service.js";
+import { compilePineExport, compileDualPineExport, getExport, getExportArtifacts, getArtifact } from "../services/pine-export-service.js";
 import { pineCompileRequestSchema } from "../lib/pine-artifact-schema.js";
-import { logger } from "../index.js";
 
 export const pineExportRoutes = Router();
 
@@ -13,15 +12,21 @@ pineExportRoutes.post("/compile", async (req, res) => {
     return;
   }
 
+  // Use req.log (child logger with requestId) so errors link back to the HTTP request
   try {
-    const result = await compilePineExport(
-      parsed.data.strategyId,
-      parsed.data.firmKey,
-      parsed.data.exportType,
-    );
+    let result;
+    if (parsed.data.exportType === "pine_dual") {
+      result = await compileDualPineExport(parsed.data.strategyId, parsed.data.firmKey);
+    } else {
+      result = await compilePineExport(
+        parsed.data.strategyId,
+        parsed.data.firmKey,
+        parsed.data.exportType,
+      );
+    }
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Pine export compile failed");
+    req.log.error({ err, strategyId: parsed.data.strategyId, correlationId: req.id }, "Pine export compile failed");
     res.status(500).json({ error: "Compilation failed" });
   }
 });

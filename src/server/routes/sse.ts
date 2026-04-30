@@ -48,6 +48,12 @@ setInterval(() => {
 
 // ─── GET /api/sse/events — SSE stream ────────────────────────
 router.get("/events", (req: Request, res: Response) => {
+  // SSE connections are intentionally long-lived — disable the socket-level
+  // timeout that server.timeout would otherwise apply. Without this, the 5-minute
+  // server timeout (set in index.ts production hardening) would kill every SSE
+  // client after 5 minutes of inactivity, disrupting the dashboard.
+  req.setTimeout(0);
+
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
@@ -92,17 +98,36 @@ router.get("/events", (req: Request, res: Response) => {
 // ─── broadcastSSE ─────────────────────────────────────────────
 // Exported for use throughout the server. Assigns a sequence number to every
 // event, writes it to the ring buffer, then fans out to all live clients.
+//
+// Each client.write() is wrapped in try/catch. A socket can transition from
+// writable to closed between the writableEnded check and the actual write —
+// this is a real race condition on high-frequency broadcast paths (e.g., after
+// a lifecycle transition that calls broadcastSSE immediately post-commit).
+// A throw here would propagate to the caller and can abort the post-commit
+// broadcast entirely, leaving other clients without the event.
 export function broadcastSSE(event: string, data: unknown): void {
   const seq = ++eventSeq;
   pushToRingBuffer({ seq, event, data });
 
   const message = `id: ${seq}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  const deadClients = new Set<Response>();
+
   for (const client of clients) {
     if (client.writableEnded || client.destroyed) {
-      clients.delete(client);
+      deadClients.add(client);
       continue;
     }
-    client.write(message);
+    try {
+      client.write(message);
+    } catch (err) {
+      logger.warn({ err: String(err), event }, "sse client write failed — removing dead client");
+      deadClients.add(client);
+    }
+  }
+
+  // Purge dead clients from the live set
+  for (const dead of deadClients) {
+    clients.delete(dead);
   }
 }
 
@@ -136,5 +161,23 @@ router.post("/broadcast", (req: Request, res: Response) => {
   logger.info({ type, clientCount: clients.size }, "SSE broadcast sent");
   res.json({ ok: true, clientCount: clients.size });
 });
+
+/**
+ * closeAllSseClients — used during graceful shutdown to drain SSE connections
+ * before server.close() so that connected clients don't have to wait for the
+ * 10-second force-kill. Each client gets a `system:shutdown` event followed by
+ * an explicit end() call.
+ */
+export function closeAllSseClients(): void {
+  for (const client of clients) {
+    try {
+      client.write(`event: system:shutdown\ndata: {"reason":"server_shutdown"}\n\n`);
+      client.end();
+    } catch {
+      // Client may already be gone — ignore
+    }
+  }
+  clients.clear();
+}
 
 export { router as sseRoutes };

@@ -90,7 +90,10 @@ def run_bias(config: dict) -> dict:
             prev_day_low=htf.prev_day_low,
         )
 
-    # Layer 1: Bias Engine
+    # Layer 1: Bias Engine — pass intraday OHLCV for synthetic order flow signals
+    # when available. compute_bias() defaults bars=None, so callers without
+    # intraday data still get neutral order-flow output (no behavior change).
+    of_bars = intraday_df if len(intraday_df) > 0 and "high" in intraday_df.columns else None
     bias = compute_bias(
         htf=htf,
         session=session,
@@ -98,6 +101,7 @@ def run_bias(config: dict) -> dict:
         vwap=vwap,
         event_active=event_active,
         event_minutes=event_minutes,
+        bars=of_bars,
     )
 
     # Layer 2: Playbook Router
@@ -122,6 +126,12 @@ def run_bias(config: dict) -> dict:
             "vwap_state_score": bias.vwap_state_score,
             "event_risk_score": bias.event_risk_score,
             "session_regime_score": bias.session_regime_score,
+            # Synthetic order flow features (Wave F2)
+            "cvd_zscore": bias.cvd_zscore,
+            "absorption_active": bias.absorption_active,
+            "exhaustion_active": bias.exhaustion_active,
+            "sweep_delta_confirmed": bias.sweep_delta_confirmed,
+            "order_flow_score": bias.order_flow_score,
         },
         "playbook": {
             "playbook": playbook.playbook,
@@ -173,12 +183,14 @@ def run_evaluate(config: dict) -> dict:
         bar_idx = config.get("bar_idx", len(intraday_df) - 1)
         session = compute_session_context(intraday_df, bar_idx, htf.prev_day_high, htf.prev_day_low)
 
+    of_bars = intraday_df if len(intraday_df) > 0 and "high" in intraday_df.columns else None
     bias = compute_bias(
         htf=htf, session=session,
         current_price=current_price,
         vwap=config.get("vwap", 0.0),
         event_active=config.get("event_active", False),
         event_minutes=config.get("event_minutes", 999),
+        bars=of_bars,
     )
 
     playbook = route_playbook(

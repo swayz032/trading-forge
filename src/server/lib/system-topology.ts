@@ -374,7 +374,6 @@ const GENERATED_END = "<!-- END GENERATED: topology -->";
 const REGISTRY_PATH = "docs/system-subsystem-registry.json";
 
 const BROKEN_WORKFLOW_TITLES = new Set<string>();
-const WORKFLOW_STALE_THRESHOLD_MS = 6 * 60 * 60 * 1000;
 const STRICT_PRODUCTION_READINESS_ENV = "TF_STRICT_PRODUCTION_READINESS";
 const RUNTIME_STAGE_ENV = "TF_RUNTIME_STAGE";
 

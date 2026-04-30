@@ -53,9 +53,33 @@ vi.mock("../index.js", () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
+// Pipeline control: tests assume ACTIVE so guards in runStrategy/batchSubmit
+// don't short-circuit before the test setup can run.
+vi.mock("./pipeline-control-service.js", () => ({
+  isActive: vi.fn().mockResolvedValue(true),
+  getMode: vi.fn().mockResolvedValue("ACTIVE"),
+}));
+
+// FIX 4 — strategy-prevalidator default mock returns "passed" so existing
+// tests are unaffected. Specific tests override this mock to assert that
+// the prevalidator is invoked AND that rejection short-circuits runStrategy.
+vi.mock("./strategy-prevalidator.js", () => ({
+  prevalidateCandidate: vi.fn().mockResolvedValue({
+    passed: true,
+    fingerprint: "test-fingerprint",
+    reasons: [],
+    checks: {
+      graveyard: { passed: true, existingCount: 0 },
+      correlation: { passed: true, deployedCount: 0 },
+      regime: { passed: true },
+    },
+  }),
+}));
+
 import { AgentService } from "./agent-service.js";
 import { runBacktest } from "./backtest-service.js";
 import { db } from "../db/index.js";
+import { prevalidateCandidate } from "./strategy-prevalidator.js";
 
 describe("AgentService", () => {
   let service: AgentService;
@@ -90,7 +114,9 @@ describe("AgentService", () => {
       expect(db.insert).toHaveBeenCalled();
       expect(mockValues).toHaveBeenCalled();
 
-      // Verify backtest was called with strategy ID
+      // Verify backtest was called with strategy ID and the new optional
+      // parameters (strategyClass, externalId, correlationId) — added when
+      // runBacktest gained service-layer correlationId threading.
       expect(runBacktest).toHaveBeenCalledWith(
         "strategy-uuid-1",
         expect.objectContaining({
@@ -99,12 +125,91 @@ describe("AgentService", () => {
             symbol: "MES",
             python_code: "import vectorbt as vbt\n# strategy code here",
           }),
-        })
+        }),
+        undefined,
+        undefined,
+        undefined,
       );
 
       // Verify result shape
       expect(result).toHaveProperty("strategyId", "strategy-uuid-1");
       expect(result).toHaveProperty("status", "completed");
+    });
+
+    // ─── FIX 4: prevalidator is wired into runStrategy ──────────────────
+    it("calls prevalidateCandidate before backtest (wires the prevalidator)", async () => {
+      const mockReturning = vi.fn().mockResolvedValue([{ id: "strategy-uuid-1" }]);
+      const mockValues = vi.fn().mockReturnValue({ returning: mockReturning });
+      (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values: mockValues });
+
+      const input = {
+        strategy_name: "Trend Follow MA",
+        one_sentence: "Trend follow on 15min MES with simple moving average crossover",
+        python_code: "pass",
+        params: {},
+        symbol: "MES" as const,
+        timeframe: "15min",
+        source: "ollama" as const,
+      };
+
+      await service.runStrategy(input);
+
+      // Prevalidator must be called — this closes the orphan-in-process gap
+      // where direct API hits via POST /api/agent/run-strategy bypassed it.
+      expect(prevalidateCandidate).toHaveBeenCalled();
+      const callArg = (prevalidateCandidate as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(callArg).toHaveProperty("market", "MES");
+      expect(callArg).toHaveProperty("timeframe", "15min");
+      // Concept name should be derived from "trend follow" archetype keyword
+      expect(callArg.conceptName).toBe("trend_follow");
+    });
+
+    it("short-circuits with status=blocked_prevalidator when prevalidator rejects (no backtest run)", async () => {
+      // Override the default passed=true mock to return rejection
+      (prevalidateCandidate as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        passed: false,
+        fingerprint: "f-test",
+        reasons: ["graveyard-match: 3 prior journal entries"],
+        checks: {
+          graveyard: { passed: false, existingCount: 3 },
+          correlation: { passed: true, deployedCount: 0 },
+          regime: { passed: true },
+        },
+      });
+
+      // Mock the audit-log insert chain
+      const mockAuditValues = vi.fn().mockResolvedValue(undefined);
+      (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({
+        values: mockAuditValues,
+      });
+
+      const input = {
+        strategy_name: "Bad Mean Reversion Strategy",
+        one_sentence: "Mean revert on 5min ES bollinger bands",
+        python_code: "pass",
+        params: {},
+        symbol: "MES" as const,
+        timeframe: "5min",
+        source: "ollama" as const,
+      };
+
+      const result = await service.runStrategy(input);
+
+      // The runStrategy must short-circuit BEFORE running the backtest —
+      // this is the contract that closes the silent-bypass gap.
+      expect(runBacktest).not.toHaveBeenCalled();
+      expect(result).toMatchObject({
+        strategyId: null,
+        backtestId: null,
+        status: "blocked_prevalidator",
+      });
+
+      // Audit row must be written so the rejection is queryable
+      expect(db.insert).toHaveBeenCalled();
+      const auditCall = mockAuditValues.mock.calls.find(
+        (c) => (c[0] as Record<string, unknown>).action === "strategy.prevalidator-rejected",
+      );
+      expect(auditCall).toBeDefined();
     });
   });
 

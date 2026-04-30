@@ -131,7 +131,7 @@ governorRoutes.get("/status/:strategyId", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Governor status failed");
+    req.log.error({ err }, "Governor status failed");
     res.status(500).json({ error: "Failed to get governor status", details: String(err) });
   }
 });
@@ -152,7 +152,7 @@ governorRoutes.post("/trade", async (req, res) => {
     );
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Governor trade processing failed");
+    req.log.error({ err }, "Governor trade processing failed");
     res.status(500).json({ error: "Governor trade processing failed", details: String(err) });
   }
 });
@@ -173,7 +173,7 @@ governorRoutes.post("/session-end", async (req, res) => {
     );
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Governor session end failed");
+    req.log.error({ err }, "Governor session end failed");
     res.status(500).json({ error: "Governor session end failed", details: String(err) });
   }
 });
@@ -194,7 +194,7 @@ governorRoutes.post("/backtest", async (req, res) => {
     );
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Governor backtest failed");
+    req.log.error({ err }, "Governor backtest failed");
     res.status(500).json({ error: "Governor backtest failed", details: String(err) });
   }
 });

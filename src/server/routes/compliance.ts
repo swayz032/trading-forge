@@ -4,10 +4,33 @@ import {
   complianceRulesets,
   complianceReviews,
   complianceDriftLog,
+  auditLog,
 } from "../db/schema.js";
 import { eq, and, desc } from "drizzle-orm";
+import { idempotencyMiddleware } from "../middleware/idempotency.js";
+import { logger } from "../lib/logger.js";
 
 const router = Router();
+
+/**
+ * G7.1 contracts — compliance human-approval surfaces.
+ * NOTE: there is no `POST /api/compliance/approve` endpoint in this router.
+ * Human approval is split across two existing routes:
+ *   - `PATCH /api/compliance/rulesets/:id/verify` — human verifies an updated
+ *     firm ruleset (clears drift, marks as verified).
+ *   - `POST  /api/compliance/review`              — stores a per-strategy
+ *     compliance review record (used as the execution gate signal).
+ * Frontends must import these types instead of redeclaring shapes by hand.
+ * See `src/server/lib/api-contracts.ts` for the per-route contract pattern.
+ */
+export interface ComplianceVerifyResponse {
+  ruleset: typeof complianceRulesets.$inferSelect;
+  message: string;
+}
+
+export interface ComplianceReviewSubmitResponse {
+  review: typeof complianceReviews.$inferSelect;
+}
 
 // ─── Ruleset Freshness Constants ────────────────────────────
 const RULESET_MAX_AGE_HOURS = {
@@ -143,12 +166,21 @@ router.patch("/rulesets/:id/verify", async (req: Request, res: Response) => {
     return;
   }
 
-  res.json({ ruleset: updated[0], message: "Ruleset verified by human operator." });
+  const response: ComplianceVerifyResponse = {
+    ruleset: updated[0],
+    message: "Ruleset verified by human operator.",
+  };
+  res.json(response);
 });
 
 // ─── POST /api/compliance/review ────────────────────────────
 // Store a compliance review result (produced by OpenClaw)
-router.post("/review", async (req: Request, res: Response) => {
+//
+// P1-drift-2: every review submission writes an `auditLog` row so the trail
+// of execution-gate decisions is queryable. Successful inserts log
+// `compliance.review_submitted`; failures log `compliance.review_failed` and
+// surface the error to the caller as a 500.
+router.post("/review", idempotencyMiddleware, async (req: Request, res: Response) => {
   const {
     strategyId,
     firm,
@@ -169,25 +201,98 @@ router.post("/review", async (req: Request, res: Response) => {
     return;
   }
 
-  const review = await db
-    .insert(complianceReviews)
-    .values({
-      strategyId,
-      firm,
-      accountType: accountType || "default",
-      rulesetId,
-      complianceResult,
-      riskScore: riskScore || 0,
-      violations: violations || [],
-      warnings: warnings || [],
-      requiredChanges: requiredChanges || [],
-      reasoningSummary,
-      executionGate,
-      reviewedBy: reviewedBy || "openclaw",
-    })
-    .returning();
+  const correlationId = (req as unknown as { id?: string }).id ?? null;
 
-  res.status(201).json({ review: review[0] });
+  try {
+    const review = await db
+      .insert(complianceReviews)
+      .values({
+        strategyId,
+        firm,
+        accountType: accountType || "default",
+        rulesetId,
+        complianceResult,
+        riskScore: riskScore || 0,
+        violations: violations || [],
+        warnings: warnings || [],
+        requiredChanges: requiredChanges || [],
+        reasoningSummary,
+        executionGate,
+        reviewedBy: reviewedBy || "openclaw",
+      })
+      .returning();
+
+    // Audit row on success — captures the gate decision so OpenClaw / human
+    // reviewer activity is queryable from the audit trail without joining
+    // through compliance_reviews.
+    db.insert(auditLog)
+      .values({
+        action: "compliance.review_submitted",
+        entityType: "compliance_review",
+        entityId: review[0].id,
+        input: {
+          strategyId,
+          firm,
+          accountType: accountType || "default",
+          rulesetId: rulesetId ?? null,
+        } as Record<string, unknown>,
+        result: {
+          reviewId: review[0].id,
+          complianceResult,
+          executionGate,
+          riskScore: riskScore || 0,
+          violationCount: Array.isArray(violations) ? violations.length : 0,
+          warningCount: Array.isArray(warnings) ? warnings.length : 0,
+          reviewedBy: reviewedBy || "openclaw",
+        } as Record<string, unknown>,
+        status: "success",
+        decisionAuthority: reviewedBy === "human" ? "human" : "agent",
+        correlationId,
+      })
+      .catch((auditErr) => {
+        logger.warn(
+          { err: auditErr, reviewId: review[0].id },
+          "compliance.review_submitted audit insert failed (non-blocking)",
+        );
+      });
+
+    const response: ComplianceReviewSubmitResponse = { review: review[0] };
+    res.status(201).json(response);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      { err, strategyId, firm, complianceResult, executionGate },
+      "POST /api/compliance/review: insert failed",
+    );
+    db.insert(auditLog)
+      .values({
+        action: "compliance.review_failed",
+        entityType: "compliance_review",
+        entityId: null,
+        input: {
+          strategyId,
+          firm,
+          accountType: accountType || "default",
+          rulesetId: rulesetId ?? null,
+          complianceResult,
+          executionGate,
+        } as Record<string, unknown>,
+        result: { error: errMsg } as Record<string, unknown>,
+        status: "failure",
+        decisionAuthority: reviewedBy === "human" ? "human" : "agent",
+        correlationId,
+      })
+      .catch((auditErr) => {
+        logger.warn(
+          { err: auditErr, originalError: errMsg },
+          "compliance.review_failed audit insert also failed (non-blocking)",
+        );
+      });
+    res.status(500).json({
+      error: "Failed to write compliance review",
+      details: errMsg,
+    });
+  }
 });
 
 // ─── GET /api/compliance/review/:strategyId ─────────────────
@@ -299,7 +404,7 @@ router.get("/drift/unresolved", async (_req: Request, res: Response) => {
 
 // ─── POST /api/compliance/drift/:firm/cascade ──────────────
 // Trigger compliance cascade revalidation for a firm
-router.post("/drift/:firm/cascade", async (req: Request, res: Response) => {
+router.post("/drift/:firm/cascade", idempotencyMiddleware, async (req: Request, res: Response) => {
   const firm = req.params.firm as string;
 
   try {

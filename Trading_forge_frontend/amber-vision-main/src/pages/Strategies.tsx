@@ -7,6 +7,7 @@ import { Pagination } from "@/components/forge/Pagination";
 import { TrendingUp, TrendingDown, Calendar } from "lucide-react";
 import { useStrategies } from "@/hooks/useStrategies";
 import { useBacktests } from "@/hooks/useBacktests";
+import { useSSE } from "@/hooks/useSSE";
 import { num, fmtCurrency, timeAgo } from "@/lib/utils";
 
 type UIStatus = "active" | "paused" | "testing" | "retired";
@@ -34,6 +35,15 @@ const statusVariant = (s: string) =>
 const PAGE_SIZE = 20;
 
 export default function Strategies() {
+  // SSE: refresh strategy list on lifecycle/promotion/drift/scout events
+  useSSE([
+    "strategy:promoted",
+    "strategy:analyzed",
+    "strategy:analysis-error",
+    "strategy:drift-alert",
+    "scheduler:sharpe-updated",
+  ]);
+
   const navigate = useNavigate();
   const [filter, setFilter] = useState("All");
   const [symbolFilter, setSymbolFilter] = useState("All");

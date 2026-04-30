@@ -166,7 +166,11 @@ export async function callOpenAI(
   try {
     const result = await cb.call(async () => {
       const { default: OpenAI } = await import("openai");
-      const client = new OpenAI({ apiKey });
+      // Route through proxy so backend services share the same daily budget
+      // and telemetry as n8n workflows. Falls back to direct OpenAI if proxy
+      // is down (proxy URL is reachable from same host).
+      const proxyBase = process.env.OPENAI_PROXY_BASE_URL ?? `http://localhost:${process.env.PORT ?? 4000}/api/openai-proxy/v1`;
+      const client = new OpenAI({ apiKey, baseURL: proxyBase });
 
       // Load system prompt from file
       const systemPrompt = loadSystemPrompt(role);
@@ -174,11 +178,13 @@ export async function callOpenAI(
         ? [{ role: "system" as const, content: systemPrompt }, ...messages]
         : messages;
 
+      const isGpt5 = config.model.startsWith("gpt-5");
       const response = await client.chat.completions.create({
         model: config.model,
         messages: allMessages,
-        temperature: config.temperature,
-        max_tokens: config.maxTokens,
+        ...(isGpt5
+          ? { max_completion_tokens: config.maxTokens }
+          : { max_tokens: config.maxTokens, temperature: config.temperature }),
         ...(config.responseFormat === "json" ? { response_format: { type: "json_object" } } : {}),
       });
 

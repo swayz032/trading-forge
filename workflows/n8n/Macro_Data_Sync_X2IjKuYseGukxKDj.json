@@ -2,7 +2,7 @@
   "updatedAt": "2026-03-15T00:46:41.255Z",
   "createdAt": "2026-03-14T21:15:54.390Z",
   "id": "X2IjKuYseGukxKDj",
-  "name": "Macro Data Sync",
+  "name": "Macro Data Sync - Evening (7pm Regime Summary)",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -369,7 +369,8 @@
     "saveDataSuccessExecution": "all",
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": {
     "node:Daily 7PM ET Trigger": {

@@ -184,8 +184,13 @@ class TestSpreadEstimation:
 
 
 class TestFillV2:
-    def test_stop_market_guaranteed_fill(self):
-        """Stop-market orders should always have 1.0 fill probability."""
+    def test_stop_market_prohibited(self):
+        """Stop-market orders must raise ValueError per CLAUDE.md.
+
+        P1-E: stop-market orders cause catastrophic slippage in live futures —
+        they are prohibited at the fill model level. Use 'stop_limit' instead.
+        """
+        import pytest as _pytest
         df = pl.DataFrame({
             "ts_event": pd.date_range("2024-01-01", periods=10, freq="h"),
             "open": [100.0] * 10,
@@ -197,8 +202,10 @@ class TestFillV2:
         })
         entries = np.array([True] * 10)
         config = {"order_type": "stop", "limit_at_current": 0.95}
-        probs = compute_fill_probabilities_v2(df, config, entries, order_type="stop_market")
-        assert np.all(probs == 1.0)
+        with _pytest.raises(ValueError, match="stop_market.*prohibited|prohibited.*stop_market"):
+            compute_fill_probabilities_v2(df, config, entries, order_type="stop_market")
+        with _pytest.raises(ValueError, match="prohibited"):
+            compute_fill_probabilities_v2(df, config, entries, order_type="stop")
 
     def test_stop_limit_reduced_probability(self):
         """Stop-limit should have lower fill probability than limit."""

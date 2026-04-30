@@ -12,7 +12,6 @@ import { z } from "zod";
 import { and, desc, eq, gte } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { backtests, backtestTrades } from "../db/schema.js";
-import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 
 export const antiSetupRoutes = Router();
@@ -152,7 +151,7 @@ antiSetupRoutes.post("/mine", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Anti-setup mining failed");
+    req.log.error({ err }, "Anti-setup mining failed");
     res.status(500).json({ error: "Anti-setup mining failed", details: String(err) });
   }
 });
@@ -174,7 +173,7 @@ antiSetupRoutes.post("/check", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Anti-setup check failed");
+    req.log.error({ err }, "Anti-setup check failed");
     res.status(500).json({ error: "Anti-setup check failed", details: String(err) });
   }
 });
@@ -191,7 +190,7 @@ antiSetupRoutes.get("/active/:strategyId", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Anti-setup active check failed");
+    req.log.error({ err }, "Anti-setup active check failed");
     res.status(500).json({ error: "Failed to get active anti-setups", details: String(err) });
   }
 });
@@ -213,7 +212,7 @@ antiSetupRoutes.post("/backtest", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Anti-setup backtest failed");
+    req.log.error({ err }, "Anti-setup backtest failed");
     res.status(500).json({ error: "Anti-setup backtest failed", details: String(err) });
   }
 });

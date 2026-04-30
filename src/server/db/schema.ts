@@ -1,3 +1,27 @@
+// ─── Drizzle snapshot drift notice (Pass 9, 2026-04-29) ─────────────────────
+// Trading Forge uses HAND-WRITTEN SQL migrations as the canonical pattern.
+// Migrations 0003–0060 were authored as raw SQL (drizzle-kit was not used for
+// generation). The journal `meta/_journal.json` has 63 entries through tag
+// `0060_pine_export_content_hash`. The schema snapshots in `meta/*.snapshot.json`
+// stop at `0002_snapshot.json` — this is intentional drift and is non-blocking.
+//
+// `npm run db:generate` is interactive (TTY-only) and asks for resolution on
+// every column added since 0002. Because the team has standardized on hand-written
+// SQL migrations, db:generate is not part of the deploy pipeline. Schema changes
+// are made by:
+//   1. Editing schema.ts (this file) for type-system source of truth
+//   2. Writing a hand-rolled SQL migration in `migrations/` with the next index
+//   3. Adding an entry to `meta/_journal.json`
+//   4. Running `npm run db:migrate` (non-interactive) to apply
+//
+// drizzle-kit does NOT model PostgreSQL triggers (e.g. audit_log append-only
+// trigger from migration 0058) or trigger functions. Any future db:generate flush
+// must preserve the 0058 trigger and the audit_log index from migration 0058.
+//
+// Do NOT run `drizzle-kit push --force` against the live DB — it could clobber
+// columns added by raw SQL migrations 0003–0060 and silently drop the audit_log
+// mutation guard.
+// ────────────────────────────────────────────────────────────────────────────
 import {
   pgTable,
   uuid,
@@ -29,11 +53,13 @@ export const strategies = pgTable("strategies", {
   searchBudgetUsed: integer("search_budget_used"),  // Cumulative Optuna trials across all WF windows
   parentStrategyId: uuid("parent_strategy_id"), // Self-evolution: links to parent strategy
   generation: integer("generation").notNull().default(0), // Evolution generation (0 = original)
+  source: text("source"), // Origin of the strategy: 'ollama' | 'openclaw' | 'manual' | 'n8n' | 'evolved' (added by migration 0045)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 },
   (table) => [
     index("strategies_lifecycle_state_idx").on(table.lifecycleState),
+    index("strategies_source_idx").on(table.source),
   ]
 );
 
@@ -43,7 +69,7 @@ export const backtests = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     strategyId: uuid("strategy_id")
-      .references(() => strategies.id)
+      .references(() => strategies.id, { onDelete: "cascade" })
       .notNull(),
     symbol: text("symbol").notNull(),
     timeframe: text("timeframe").notNull(),
@@ -72,6 +98,7 @@ export const backtests = pgTable(
     crossValidation: jsonb("cross_validation"),
     gateResult: jsonb("gate_result"),
     gateRejections: jsonb("gate_rejections"),
+    resultExtras: jsonb("result_extras"),   // Governor, analytics, long_short_split, bootstrap_ci_95, deflated_sharpe, recency_analysis, statistical_warnings, confidence_intervals (migration 0053)
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -90,7 +117,7 @@ export const backtestMatrix = pgTable(
   "backtest_matrix",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
     status: text("status").notNull().default("running"), // running | tier1 | tier2 | tier3 | completed | failed
     totalCombos: integer("total_combos").notNull(),
     completedCombos: integer("completed_combos").notNull().default(0),
@@ -151,7 +178,7 @@ export const backtestTrades = pgTable(
 export const monteCarloRuns = pgTable("monte_carlo_runs", {
   id: uuid("id").primaryKey().defaultRandom(),
   backtestId: uuid("backtest_id")
-    .references(() => backtests.id)
+    .references(() => backtests.id, { onDelete: "cascade" })
     .notNull(),
   status: text("status").notNull().default("pending"), // pending | running | completed | failed
   numSimulations: integer("num_simulations").notNull(),
@@ -180,7 +207,7 @@ export const monteCarloRuns = pgTable("monte_carlo_runs", {
 export const stressTestRuns = pgTable("stress_test_runs", {
   id: uuid("id").primaryKey().defaultRandom(),
   backtestId: uuid("backtest_id")
-    .references(() => backtests.id)
+    .references(() => backtests.id, { onDelete: "cascade" })
     .notNull(),
   passed: boolean("passed").notNull(),
   scenarios: jsonb("scenarios").notNull(), // Array of per-scenario results
@@ -193,38 +220,10 @@ export const stressTestRuns = pgTable("stress_test_runs", {
   ]
 );
 
-// ─── Market Data Metadata ────────────────────────────────────
-export const marketDataMeta = pgTable(
-  "market_data_meta",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    symbol: text("symbol").notNull(),
-    timeframe: text("timeframe").notNull(),
-    earliestDate: timestamp("earliest_date").notNull(),
-    latestDate: timestamp("latest_date").notNull(),
-    totalBars: integer("total_bars").notNull(),
-    s3Path: text("s3_path"),
-    lastSyncAt: timestamp("last_sync_at"),
-  },
-  (table) => [
-    uniqueIndex("market_data_symbol_tf_idx").on(table.symbol, table.timeframe),
-  ]
-);
-
-// ─── Watchlist ───────────────────────────────────────────────
-export const watchlist = pgTable("watchlist", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  symbol: text("symbol").notNull().unique(),
-  name: text("name"),
-  exchange: text("exchange"),
-  active: boolean("active").default(true),
-  notes: text("notes"),
-  addedAt: timestamp("added_at").defaultNow().notNull(),
-},
-  (table) => [
-    index("watchlist_active_idx").on(table.active),
-  ]
-);
+// NOTE: marketDataMeta and watchlist tables were dropped in migration 0055
+// (2026-04 audit: zero readers/writers). Data range resolution uses DuckDB
+// queryInfo() against S3 directly; symbol selection uses strategy.symbol +
+// firm-config, not a watchlist table.
 
 // ─── Alerts ──────────────────────────────────────────────────
 export const alerts = pgTable("alerts", {
@@ -251,8 +250,8 @@ export const systemJournal = pgTable(
   "system_journal",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    strategyId: uuid("strategy_id").references(() => strategies.id),
-    backtestId: uuid("backtest_id").references(() => backtests.id),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "set null" }),
+    backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "set null" }),
     source: text("source").notNull(), // ollama | openclaw | manual | n8n
     generationPrompt: text("generation_prompt"), // What Ollama was asked
     strategyCode: text("strategy_code"), // The Python code Ollama generated
@@ -290,16 +289,33 @@ export const auditLog = pgTable(
     durationMs: integer("duration_ms"),
     errorMessage: text("error_message"),
     decisionAuthority: text("decision_authority"), // "gate" | "human" | "agent" | "scheduler" | "n8n"
+    correlationId: text("correlation_id"), // HTTP request correlation ID (req.id) — nullable for backward compat
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     index("audit_action_idx").on(table.action),
     index("audit_entity_idx").on(table.entityType, table.entityId),
     index("audit_decision_authority_idx").on(table.decisionAuthority),
+    index("audit_correlation_id_idx").on(table.correlationId),
+    // Recency index for dashboard queries (ORDER BY created_at DESC LIMIT N).
+    // Added by migration 0058 alongside the append-only trigger.
+    index("idx_audit_log_created_at_desc").on(table.createdAt.desc()),
   ]
 );
 
+// NOTE: audit_log is append-only at the database level. Migration 0058 installs
+// a BEFORE UPDATE OR DELETE trigger (`prevent_audit_log_mutation`) that raises
+// `EXCEPTION 'audit_log is append-only'` on any mutation attempt. Drizzle does
+// not model triggers in TypeScript; the constraint lives in the migration and
+// is verified by `src/server/__tests__/audit-log-append-only.test.ts`.
+
 // ─── Data Sync Jobs ──────────────────────────────────────────────
+// NOTE: reader-only table as of 2026-04 audit — cost-tracker.ts reads via raw SQL
+// (FROM data_sync_jobs) for the cost dashboard, but no TypeScript writer exists.
+// Likely populated by an external process (n8n workflow or Python data sync script)
+// that we did not catch in the audit. If never populated, the cost dashboard will
+// show $0 for Databento spend. Verify whether n8n/Python writes to this table
+// before assuming the cost number is accurate.
 export const dataSyncJobs = pgTable(
   "data_sync_jobs",
   {
@@ -354,7 +370,7 @@ export const complianceReviews = pgTable(
   "compliance_reviews",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    strategyId: uuid("strategy_id").references(() => strategies.id),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "set null" }),
     firm: text("firm").notNull(),
     accountType: text("account_type").notNull().default("default"),
     rulesetId: uuid("ruleset_id").references(() => complianceRulesets.id),
@@ -404,7 +420,7 @@ export const skipDecisions = pgTable(
   "skip_decisions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    strategyId: uuid("strategy_id").references(() => strategies.id), // nullable — can be portfolio-wide
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "set null" }), // nullable — can be portfolio-wide
     decisionDate: timestamp("decision_date").notNull(),
     decision: text("decision").notNull(), // TRADE | REDUCE | SKIP
     score: numeric("score").notNull(),
@@ -462,7 +478,7 @@ export const strategyGraveyard = pgTable(
   "strategy_graveyard",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    strategyId: uuid("strategy_id").references(() => strategies.id), // nullable — might not have been saved
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "set null" }), // nullable — might not have been saved
     name: text("name").notNull(),
     dslSnapshot: jsonb("dsl_snapshot").notNull(), // full strategy DSL at time of death
     failureModes: text("failure_modes").array().notNull(), // array of failure mode tags
@@ -522,7 +538,7 @@ export const tournamentResults = pgTable(
     promoterOutput: jsonb("promoter_output"), // qwen3 final decision
     finalVerdict: text("final_verdict").notNull(), // PROMOTE | REVISE | KILL
     revisionNotes: text("revision_notes"),
-    backtestId: uuid("backtest_id").references(() => backtests.id),
+    backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "set null" }),
     expiresAt: timestamp("expires_at"), // TTL — null means no expiry
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -538,7 +554,7 @@ export const paperSessions = pgTable(
   "paper_sessions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    strategyId: uuid("strategy_id").references(() => strategies.id),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "set null" }),
     status: text("status").notNull().default("active"), // active | stopped | paused
     mode: text("mode").notNull().default("paper"), // paper | shadow
     firmId: text("firm_id"),                          // e.g. "mffu", "topstep" — null = tightest defaults
@@ -554,6 +570,7 @@ export const paperSessions = pgTable(
     dailyPnlBreakdown: jsonb("daily_pnl_breakdown").default({}), // Gap 4: consistency tracking
     metricsSnapshot: jsonb("metrics_snapshot").default({}),       // Gap 5: rolling Sharpe
     totalTrades: integer("total_trades").notNull().default(0),    // H3: trade counter for promotion inputs
+    governorState: jsonb("governor_state"),                        // P0-4: persisted governor state — { state, consecutiveLosses, sessionLossPct, lastUpdatedAt }
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -584,6 +601,9 @@ export const paperPositions = pgTable(
     trailHwm: numeric("trail_hwm"),                          // H2: trail stop high-water mark (persisted so restarts don't lose it)
     barsHeld: integer("bars_held").notNull().default(0),     // H2: bars held counter (persisted so restarts don't lose it)
     fillProbability: numeric("fill_probability"),            // Phase 1.1: fill probability used at entry (null for market orders that bypass the model)
+    mae: numeric("mae"),                                     // Maximum Adverse Excursion ($) — per-bar watermark, accumulated by updatePositionPrices (migration 0034)
+    mfe: numeric("mfe"),                                     // Maximum Favorable Excursion ($) — per-bar watermark, accumulated by updatePositionPrices (migration 0034)
+    previousUnrealizedPnl: numeric("previous_unrealized_pnl").default("0"), // FIX 2 (B1): last committed unrealized P&L — enables delta-only SQL-atomic equity update
   },
   (table) => [
     index("paper_positions_session_idx").on(table.sessionId),
@@ -620,6 +640,7 @@ export const paperTrades = pgTable(
     eventActive: boolean("event_active"),             // True if entryTime fell within an economic event blackout window
     skipSignal: text("skip_signal"),                  // Most recent skipDecisions.decision for the ET trading day (TRADE | REDUCE | SKIP)
     fillProbability: numeric("fill_probability"),     // Fill probability used at entry (copied from paperPositions)
+    rollSpreadCost: numeric("roll_spread_cost"),      // Estimated calendar spread cost when position held across a CME roll date (null = pre-migration or no roll crossed)
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -707,7 +728,7 @@ export const walkForwardWindows = pgTable(
 
 export const quantumMcRuns = pgTable("quantum_mc_runs", {
     id: uuid("id").primaryKey().defaultRandom(),
-    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+    backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "cascade" }).notNull(),
     status: text("status").notNull().default("pending"), // pending | running | completed | failed
     method: text("method").notNull(), // iae | sqa | tensor_mps | qubo_timing | quantum_rl
     backend: text("backend"), // aer_statevector | aer_gpu | cpu | dwave_neal | pennylane
@@ -760,7 +781,7 @@ export const strategyNames = pgTable("strategy_names", {
     id: uuid("id").primaryKey().defaultRandom(),
     codename: text("codename").notNull().unique(),
     fullName: text("full_name").notNull().unique(),
-    strategyId: uuid("strategy_id").references(() => strategies.id),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "set null" }),
     claimed: boolean("claimed").default(false),
     claimedAt: timestamp("claimed_at"),
     retired: boolean("retired").default(false),
@@ -778,14 +799,25 @@ export const strategyNames = pgTable("strategy_names", {
 
 export const strategyExports = pgTable("strategy_exports", {
     id: uuid("id").primaryKey().defaultRandom(),
-    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
-    exportType: text("export_type").notNull(), // pine_indicator | pine_strategy | alert_only
-    pineVersion: text("pine_version").default("v6"),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
+    // FIX 3: backtestId links the export to the backtest that produced it (for reproducibility).
+    // ON DELETE SET NULL so exports survive backtest row deletion.
+    backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "set null" }),
+    exportType: text("export_type").notNull(), // pine_indicator | pine_strategy | alert_only | pine_dual
+    // P1-4: Pine v5 is what the compiler actually emits. Default was historically
+    // v6 (an aspirational target) but no v6-only feature is used. Aligning the
+    // schema default with the runtime emission removes drift between the column
+    // value and the artifact text.
+    pineVersion: text("pine_version").default("v5"),
     exportabilityScore: numeric("exportability_score"), // 0-100
     exportabilityDetails: jsonb("exportability_details"),
     status: text("status").notNull().default("pending"), // pending | compiling | completed | failed
     errorMessage: text("error_message"),
     propOverlayFirm: text("prop_overlay_firm"),
+    // FIX 3: contentHash — SHA-256 of all artifact texts concatenated. Used to detect re-export drift.
+    contentHash: text("content_hash"),
+    // FIX 3: configSnapshot — snapshot of the strategy config at export time for reproducibility.
+    configSnapshot: jsonb("config_snapshot"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
 },
 (table) => [
@@ -796,11 +828,14 @@ export const strategyExports = pgTable("strategy_exports", {
 export const strategyExportArtifacts = pgTable("strategy_export_artifacts", {
     id: uuid("id").primaryKey().defaultRandom(),
     exportId: uuid("export_id").references(() => strategyExports.id, { onDelete: "cascade" }).notNull(),
-    artifactType: text("artifact_type").notNull(), // indicator | strategy_shell | prop_overlay | alerts_json
+    artifactType: text("artifact_type").notNull(), // indicator | strategy_shell | prop_overlay | alerts_json | dual_indicator | dual_strategy
     fileName: text("file_name").notNull(),
     content: text("content").notNull(),
     sizeBytes: integer("size_bytes"),
-    pineVersion: text("pine_version").default("v6"),
+    // P1-4: matches strategy_exports.pine_version default (compiler emits v5).
+    pineVersion: text("pine_version").default("v5"),
+    // FIX 3: contentHash — SHA-256 of this artifact's content text. Used to detect per-artifact drift.
+    contentHash: text("content_hash"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
 },
 (table) => [
@@ -811,8 +846,8 @@ export const strategyExportArtifacts = pgTable("strategy_export_artifacts", {
 
 export const sqaOptimizationRuns = pgTable("sqa_optimization_runs", {
     id: uuid("id").primaryKey().defaultRandom(),
-    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
-    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "cascade" }).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
     status: text("status").notNull().default("pending"), // pending | running | completed | failed
     paramRanges: jsonb("param_ranges"), // [{name, min_val, max_val, n_bits}]
     bestParams: jsonb("best_params"),
@@ -834,8 +869,8 @@ export const sqaOptimizationRuns = pgTable("sqa_optimization_runs", {
 
 export const quboTimingRuns = pgTable("qubo_timing_runs", {
     id: uuid("id").primaryKey().defaultRandom(),
-    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
-    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "cascade" }).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
     status: text("status").notNull().default("pending"), // pending | running | completed | failed
     sessionType: text("session_type"), // rth | eth | full
     windowSize: integer("window_size"), // minutes per block (default 30)
@@ -855,8 +890,8 @@ export const quboTimingRuns = pgTable("qubo_timing_runs", {
 
 export const tensorPredictions = pgTable("tensor_predictions", {
     id: uuid("id").primaryKey().defaultRandom(),
-    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
-    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "cascade" }).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
     status: text("status").notNull().default("pending"), // pending | running | completed | failed
     modelVersion: text("model_version"), // hash of MPS model used
     probability: numeric("probability"), // P(profitable)
@@ -878,7 +913,7 @@ export const tensorPredictions = pgTable("tensor_predictions", {
 
 export const rlTrainingRuns = pgTable("rl_training_runs", {
     id: uuid("id").primaryKey().defaultRandom(),
-    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
     status: text("status").notNull().default("pending"), // pending | running | completed | failed
     method: text("method").notNull(), // pennylane_vqc | classical_dqn
     nQubits: integer("n_qubits"),
@@ -904,12 +939,19 @@ export const rlTrainingRuns = pgTable("rl_training_runs", {
 
 export const criticOptimizationRuns = pgTable("critic_optimization_runs", {
     id: uuid("id").primaryKey().defaultRandom(),
-    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
-    backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
+    backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "cascade" }).notNull(),
     status: text("status").notNull().default("pending"), // pending | collecting_evidence | analyzing | replaying | completed | failed
     candidatesGenerated: integer("candidates_generated"),
-    survivorCandidateId: uuid("survivor_candidate_id"),
-    survivorBacktestId: uuid("survivor_backtest_id"),
+    // P1-8: FK constraints — survivor pointers must reference live rows or be NULL.
+    // SET NULL on cascade so deleting a candidate/backtest doesn't blow away the
+    // critic run record (we want the run history preserved even if its survivor
+    // is later cleaned up). criticCandidates is declared below this table, but
+    // Drizzle's references() callback is lazy so the forward reference resolves
+    // at table-build time without a TDZ issue. The matching FK constraint is
+    // installed by migration 0063.
+    survivorCandidateId: uuid("survivor_candidate_id").references((): any => criticCandidates.id, { onDelete: "set null" }),
+    survivorBacktestId: uuid("survivor_backtest_id").references(() => backtests.id, { onDelete: "set null" }),
     parentCompositeScore: numeric("parent_composite_score"),
     survivorCompositeScore: numeric("survivor_composite_score"),
     evidenceSources: jsonb("evidence_sources"), // {sqa, mc, quantum_mc, tensor, qubo, pennylane, rl}
@@ -930,7 +972,7 @@ export const criticOptimizationRuns = pgTable("critic_optimization_runs", {
 export const criticCandidates = pgTable("critic_candidates", {
     id: uuid("id").primaryKey().defaultRandom(),
     runId: uuid("run_id").references(() => criticOptimizationRuns.id, { onDelete: "cascade" }).notNull(),
-    strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
+    strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
     rank: integer("rank").notNull(),
     changedParams: jsonb("changed_params").notNull(), // {param_name: new_value}
     parentParams: jsonb("parent_params"), // {param_name: old_value}
@@ -942,11 +984,21 @@ export const criticCandidates = pgTable("critic_candidates", {
     confidence: text("confidence"), // high | medium | low
     reasoning: text("reasoning"),
     replayStatus: text("replay_status").notNull().default("pending"), // pending | running | completed | failed | skipped
-    replayBacktestId: uuid("replay_backtest_id").references(() => backtests.id),
+    replayBacktestId: uuid("replay_backtest_id").references(() => backtests.id, { onDelete: "set null" }),
     replayTier: text("replay_tier"), // TIER_1 | TIER_2 | TIER_3 | REJECTED
     replayForgeScore: numeric("replay_forge_score"),
     selected: boolean("selected").default(false), // was this the survivor?
     governanceLabels: jsonb("governance_labels").notNull().default({}),
+    // P2-2: critic model version and run IDs for full audit provenance
+    criticModelVersion: text("critic_model_version"), // e.g. "deepseek-r1:14b@2026-04"
+    evidenceRunIds: jsonb("evidence_run_ids").$type<{
+      mc?: string[];
+      sqa?: string[];
+      wf?: string[];
+      qmc?: string[];
+      tensor?: string[];
+      rl?: string[];
+    }>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
 },
 (table) => [
@@ -1005,17 +1057,11 @@ export const deeparTrainingRuns = pgTable("deepar_training_runs", {
     index("deepar_training_status_idx").on(table.status),
 ]);
 
-// ─── Portfolio Snapshots (Correlation Learning) ─────────────────────
-
-export const portfolioSnapshots = pgTable("portfolio_snapshots", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  snapshotDate: date("snapshot_date").notNull(),
-  correlationMatrix: jsonb("correlation_matrix").notNull(),
-  activeStrategies: jsonb("active_strategies").notNull(),
-  totalHeat: numeric("total_heat"),
-  recommendations: jsonb("recommendations"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+// NOTE: portfolioSnapshots table was dropped in migration 0055 (2026-04 audit:
+// writer-only, zero readers). The correlation snapshot continues to be computed
+// by portfolio-optimizer-service.runPortfolioCorrelationCheck() and broadcast
+// via SSE ("portfolio:correlation_snapshot"); historical persistence was
+// removed because no consumer queried it.
 
 // ─── Agent Health Reports ───────────────────────────────────────────
 
@@ -1068,6 +1114,44 @@ export const systemParameterHistory = pgTable("system_parameter_history", {
     index("param_history_param_idx").on(table.paramId),
 ]);
 
+// ─── Paper Session Feedback (Phase 4.6 — Critic Evidence) ───────────
+// Per-session learning evidence computed when a paper session closes.
+// Critic queries this to use empirical paper evidence in optimization.
+// Created by migration 0037_paper_session_feedback.
+
+export const paperSessionFeedback = pgTable("paper_session_feedback", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").notNull().references(() => paperSessions.id, { onDelete: "cascade" }),
+  strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "set null" }),
+  totalTrades: integer("total_trades").notNull().default(0),
+  totalPnl: numeric("total_pnl"),
+  winRate: numeric("win_rate"),
+  avgRrRealized: numeric("avg_rr_realized"),
+  profitFactor: numeric("profit_factor"),
+  medianMae: numeric("median_mae"),
+  avgLoss: numeric("avg_loss"),
+  stopTightnessRatio: numeric("stop_tightness_ratio"),
+  winRateBySession: jsonb("win_rate_by_session"),
+  pnlBySession: jsonb("pnl_by_session"),
+  tradeCountBySession: jsonb("trade_count_by_session"),
+  bestSessionWindow: text("best_session_window"),
+  worstSessionWindow: text("worst_session_window"),
+  winRateBySide: jsonb("win_rate_by_side"),
+  medianMfe: numeric("median_mfe"),
+  avgMfeOnWinners: numeric("avg_mfe_on_winners"),
+  mfeCaptureRate: numeric("mfe_capture_rate"),
+  computedAt: timestamp("computed_at").notNull().defaultNow(),
+  sessionStart: timestamp("session_start"),
+  sessionEnd: timestamp("session_end"),
+  hasMaeData: boolean("has_mae_data").notNull().default(false),
+  notes: text("notes"),
+},
+(table) => [
+    index("paper_session_feedback_session_idx").on(table.sessionId),
+    index("paper_session_feedback_strategy_idx").on(table.strategyId),
+    index("paper_session_feedback_computed_idx").on(table.computedAt),
+]);
+
 // ─── Mutation Outcomes (Phase 2.2 — Impact Tracking) ─────────────────
 // Records the observed impact of every parameter mutation that was backtested
 // during evolution. Used by the critic to learn which mutation types work in
@@ -1075,7 +1159,7 @@ export const systemParameterHistory = pgTable("system_parameter_history", {
 
 export const mutationOutcomes = pgTable("mutation_outcomes", {
   id: uuid("id").primaryKey().defaultRandom(),
-  strategyId: uuid("strategy_id").references(() => strategies.id),
+  strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "set null" }),
   parentArchetype: text("parent_archetype"),  // strategy tag / archetype label
   mutationType: text("mutation_type"),         // param_shift | period_expand | period_contract | mixed
   paramName: text("param_name"),               // e.g. ind_0_period
@@ -1093,4 +1177,201 @@ export const mutationOutcomes = pgTable("mutation_outcomes", {
   index("mutation_outcomes_type_idx").on(table.mutationType),
   index("mutation_outcomes_success_idx").on(table.success),
   index("mutation_outcomes_regime_idx").on(table.regime),
+]);
+
+// ─── Contract Roll Events (Wave D3) ─────────────────────────────────────────
+// Logs every flatten/warn action triggered by the roll calendar handler.
+// pre_roll_pnl captures unrealized P&L at the moment of flattening — used to
+// quantify the P&L impact of per-roll discontinuities vs held-to-expiry.
+export const contractRolls = pgTable("contract_rolls", {
+  id:             uuid("id").primaryKey().defaultRandom(),
+  positionId:     uuid("position_id").notNull(),       // soft FK to paper_positions
+  sessionId:      uuid("session_id").notNull(),
+  symbol:         text("symbol").notNull(),
+  action:         text("action").notNull(),             // 'flatten' | 'warn'
+  rollDate:       date("roll_date").notNull(),          // CME roll date
+  flattenDate:    date("flatten_date").notNull(),       // day action was taken (roll - 1 biz day)
+  contracts:      integer("contracts").notNull(),
+  preRollPnl:     numeric("pre_roll_pnl"),              // unrealized P&L at flatten time
+  activeContract: text("active_contract"),              // e.g. 'MESH26'
+  reason:         text("reason").notNull().default("contract_rollover"),
+  createdAt:      timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("contract_rolls_session_idx").on(table.sessionId),
+  index("contract_rolls_symbol_idx").on(table.symbol),
+  index("contract_rolls_created_idx").on(table.createdAt),
+]);
+
+// ─── Dead Letter Queue (0039 / 0046) ────────────────────────────────
+// Failed async ops that exhausted retries; consumed by health-monitor + alerts.
+
+export const deadLetterQueue = pgTable("dead_letter_queue", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  operationType: text("operation_type").notNull(),
+  entityType: text("entity_type"),
+  entityId: text("entity_id"),
+  errorMessage: text("error_message").notNull(),
+  retryCount: integer("retry_count").default(0).notNull(),
+  maxRetries: integer("max_retries").default(3).notNull(),
+  firstFailedAt: timestamp("first_failed_at").notNull(),
+  lastFailedAt: timestamp("last_failed_at").notNull(),
+  resolved: boolean("resolved").default(false).notNull(),
+  resolvedAt: timestamp("resolved_at"),
+  metadata: jsonb("metadata"),
+  escalated: boolean("escalated").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("dlq_operation_type_idx").on(table.operationType),
+  index("dlq_resolved_idx").on(table.resolved),
+  index("dlq_escalated_idx").on(table.escalated),
+]);
+
+// ─── n8n Execution Log (0042) ───────────────────────────────────────
+
+export const n8nExecutionLog = pgTable("n8n_execution_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workflowId: text("workflow_id").notNull(),
+  workflowName: text("workflow_name").notNull(),
+  executionId: text("execution_id"),
+  status: text("status").notNull(),
+  startedAt: timestamp("started_at"),
+  finishedAt: timestamp("finished_at"),
+  durationMs: integer("duration_ms"),
+  errorMessage: text("error_message"),
+  triggerType: text("trigger_type"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("n8n_exec_workflow_idx").on(table.workflowId),
+  index("n8n_exec_status_idx").on(table.status),
+]);
+
+// ─── Idempotency Keys (0047) ────────────────────────────────────────
+
+export const idempotencyKeys = pgTable("idempotency_keys", {
+  key: text("key").primaryKey().notNull(),
+  responseStatus: integer("response_status").notNull(),
+  responseBody: jsonb("response_body"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Subsystem Metrics (0048) ───────────────────────────────────────
+
+export const subsystemMetrics = pgTable("subsystem_metrics", {
+  id: uuid("id").primaryKey().defaultRandom().notNull(),
+  subsystem: text("subsystem").notNull(),
+  metricName: text("metric_name").notNull(),
+  metricValue: numeric("metric_value").notNull(),
+  tags: jsonb("tags"),
+  measuredAt: timestamp("measured_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("subsystem_metrics_subsystem_idx").on(table.subsystem),
+  index("subsystem_metrics_name_idx").on(table.metricName),
+  index("subsystem_metrics_measured_at_idx").on(table.measuredAt),
+  index("subsystem_metrics_subsystem_name_idx").on(table.subsystem, table.metricName),
+]);
+
+// ─── Prompt Versions + A/B Tests (0049) ─────────────────────────────
+
+export const promptVersions = pgTable("prompt_versions", {
+  id: uuid("id").primaryKey().defaultRandom().notNull(),
+  promptType: text("prompt_type").notNull(),
+  version: integer("version").notNull(),
+  content: text("content").notNull(),
+  isActive: boolean("is_active").default(false).notNull(),
+  metrics: jsonb("metrics"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("prompt_versions_type_idx").on(table.promptType),
+  index("prompt_versions_active_idx").on(table.isActive),
+]);
+
+export const promptAbTests = pgTable("prompt_ab_tests", {
+  id: uuid("id").primaryKey().defaultRandom().notNull(),
+  promptType: text("prompt_type").notNull(),
+  versionAId: uuid("version_a_id").references(() => promptVersions.id),
+  versionBId: uuid("version_b_id").references(() => promptVersions.id),
+  startedAt: timestamp("started_at").notNull(),
+  endedAt: timestamp("ended_at"),
+  metricsA: jsonb("metrics_a"),
+  metricsB: jsonb("metrics_b"),
+  winner: text("winner"),
+  status: text("status").default("running").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("prompt_ab_tests_status_idx").on(table.status),
+  index("prompt_ab_tests_type_idx").on(table.promptType),
+]);
+
+// ─── Lifecycle Transitions (Tier 0.1, migration 0064) ───────────────────────
+// First-class typed table for lifecycle state transitions. Mirrors the
+// existing audit_log.action="strategy.lifecycle" rows but with first-class
+// quantum challenger evidence columns so Tier 7 graduation queries become
+// indexable single-table SQL instead of JSONB blob scans.
+//
+// Dual-write contract: lifecycle-service.ts writes to BOTH audit_log
+// (existing, preserved) AND lifecycle_transitions (new) on every successful
+// transition, inside the same db.transaction(). Synchronous, no fire-and-forget.
+//
+// cloud_qmc_run_id is intentionally unconstrained at the column level; the FK
+// to cloud_qmc_runs(id) is added in W4 (Tier 4.5) once that table lands.
+export const lifecycleTransitions = pgTable("lifecycle_transitions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  strategyId: uuid("strategy_id")
+    .references(() => strategies.id, { onDelete: "cascade" })
+    .notNull(),
+  fromState: text("from_state").notNull(),
+  toState: text("to_state").notNull(),
+  decisionAuthority: text("decision_authority").notNull(), // gate | human | scheduler | n8n | quantum_challenger
+  reason: text("reason"),
+  backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "set null" }),
+  forgeScore: numeric("forge_score"),
+  mcSurvivalRate: numeric("mc_survival_rate"),
+  // Quantum challenger evidence (Tier 1.1+, populated as modules land)
+  quantumAgreementScore: numeric("quantum_agreement_score"),         // 0-1, classical/quantum agreement
+  quantumAdvantageDelta: numeric("quantum_advantage_delta"),         // signed delta (quantum - classical)
+  quantumFallbackTriggered: boolean("quantum_fallback_triggered").default(false),
+  quantumClassicalDisagreementPct: numeric("quantum_classical_disagreement_pct"),
+  cloudQmcRunId: uuid("cloud_qmc_run_id"), // Reserved for W4 cloud_qmc_runs FK
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("idx_lifecycle_transitions_strategy_created").on(table.strategyId, table.createdAt.desc()),
+  // Partial index condition (WHERE quantum_agreement_score IS NOT NULL) lives
+  // in the SQL migration. Drizzle-kit doesn't model partial-index predicates
+  // in TypeScript; the constraint is enforced by migration 0064.
+  index("idx_lifecycle_transitions_quantum_agreement").on(table.quantumAgreementScore),
+]);
+
+// ─── Quantum Run Costs Telemetry (Tier 0.2, migration 0065) ─────────────────
+// Per-run cost telemetry for every quantum module. Without this, "is quantum
+// worth the compute?" is unanswerable at graduation time (Tier 7 / W7a).
+//
+// Pending-row contract: status starts "pending" on insert (before Python
+// subprocess spawn), updated to "completed"/"failed" on resolve.
+//
+// FK posture: SET NULL on delete — cost rows MUST outlive the backtests/
+// strategies they reference (they ARE the audit trail for graduation).
+export const quantumRunCosts = pgTable("quantum_run_costs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  moduleName: text("module_name").notNull(),  // quantum_mc | sqa | rl_agent | entropy_filter | adversarial_stress | cloud_qmc | ising_decoder
+  backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "set null" }),
+  strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "set null" }),
+  wallClockMs: integer("wall_clock_ms").notNull(),
+  qpuSeconds: numeric("qpu_seconds").default("0"),       // only nonzero for cloud QPU runs
+  costDollars: numeric("cost_dollars").default("0"),     // only nonzero for paid cloud
+  cacheHit: boolean("cache_hit").default(false),
+  status: text("status").notNull(),                      // pending | completed | failed
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+},
+(table) => [
+  index("idx_quantum_run_costs_module_created").on(table.moduleName, table.createdAt.desc()),
 ]);

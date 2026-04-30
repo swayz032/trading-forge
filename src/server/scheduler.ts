@@ -10,20 +10,28 @@
  */
 
 import cron from "node-cron";
+import { randomUUID } from "crypto";
 import { eq, and, gte, lte, desc, inArray, isNull, isNotNull } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog } from "./db/schema.js";
+import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
-import { logger } from "./index.js";
+import { logger } from "./lib/logger.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
 import { AlertFactory } from "./services/alert-service.js";
 import { runPythonModule } from "./lib/python-runner.js";
-import { startStream, stopStream, isStreaming, getActiveStreams } from "./services/paper-trading-stream.js";
-import { restorePositionState, cleanupSession } from "./services/paper-signal-service.js";
-import { trainDeepAR, predictRegime, validatePastForecasts } from "./services/deepar-service.js";
+import { startStream, stopStream, isStreaming, getActiveStreams, getStreamHealth } from "./services/paper-trading-stream.js";
+import { restorePositionState, cleanupSession, restoreGovernorState } from "./services/paper-signal-service.js";
+import { trainDeepAR, predictRegime, validatePastForecasts, isDeepARDeferred } from "./services/deepar-service.js";
+import { setRegimeWeights } from "./services/regime-state-service.js";
 import { runAgentHealthSweep } from "./services/agent-audit-service.js";
 import { runPortfolioCorrelationCheck } from "./services/portfolio-optimizer-service.js";
 import { runMetaParameterReview } from "./services/meta-optimizer-service.js";
+import { notifyWarning, notifyCritical } from "./services/notification-service.js";
+import { runAntiSetupEffectivenessAnalysis } from "./services/anti-setup-effectiveness-service.js";
+import { invalidateAntiSetupCache } from "./services/anti-setup-gate-service.js";
+import { isActive as isPipelineActive, getMode as getPipelineMode } from "./services/pipeline-control-service.js";
+import { computeAndPersistSessionFeedback } from "./services/paper-session-feedback-service.js";
+import { registerRetryHandler } from "./lib/dlq-service.js";
 
 let initialized = false;
 
@@ -32,8 +40,116 @@ let initialized = false;
 // Export allows the health endpoint to surface real liveness data.
 const schedulerHealth: Record<string, Date> = {};
 
+// ─── Per-job last error tracking ─────────────────────────────
+// Populated in withRetry's catch path. Cleared on next successful run.
+// Surfaces via getSchedulerHealth so /api/admin/scheduler/health
+// (and /api/health) can show the last known failure reason per job.
+const schedulerLastError: Record<string, string | null> = {};
+
+export interface SchedulerHealthEntry {
+  lastRunAt: Date;
+  lastError: string | null;
+}
+
 export function getSchedulerHealth(): Readonly<Record<string, Date>> {
   return schedulerHealth;
+}
+
+/** Extended health — includes lastError per job for admin dashboard. */
+export function getSchedulerHealthExtended(): Readonly<Record<string, SchedulerHealthEntry>> {
+  const result: Record<string, SchedulerHealthEntry> = {};
+  for (const [name, date] of Object.entries(schedulerHealth)) {
+    result[name] = { lastRunAt: date, lastError: schedulerLastError[name] ?? null };
+  }
+  return result;
+}
+
+// ─── Paper session auto-recovery tracking ────────────────────
+/** Track auto-recovery attempts per session to prevent infinite loops */
+const recoveryAttempts = new Map<string, number>();
+const MAX_RECOVERY_ATTEMPTS = 3;
+
+// ─── Self-healing: job failure tracking ──────────────────────
+/** Track consecutive failures per job for self-healing */
+export interface JobHealth {
+  consecutiveFailures: number;
+  lastFailure: Date | null;
+  disabled: boolean;
+  disabledAt: Date | null;
+  disableReason: string | null;
+}
+
+const jobHealthTracker = new Map<string, JobHealth>();
+
+const FAILURE_WARN_THRESHOLD = 3;
+const FAILURE_DISABLE_THRESHOLD = 5;
+
+/** Jobs that must never be auto-disabled (critical infrastructure) */
+const NEVER_DISABLE_JOBS = new Set(["metrics-heartbeat", "stale-session-check", "disabled-job-probe"]);
+
+function getJobHealth(name: string): JobHealth {
+  let health = jobHealthTracker.get(name);
+  if (!health) {
+    health = { consecutiveFailures: 0, lastFailure: null, disabled: false, disabledAt: null, disableReason: null };
+    jobHealthTracker.set(name, health);
+  }
+  return health;
+}
+
+function recordJobSuccess(name: string): void {
+  const health = getJobHealth(name);
+  if (health.consecutiveFailures > 0) {
+    logger.info({ job: name, previousFailures: health.consecutiveFailures }, "Scheduler: job recovered after failures");
+  }
+  health.consecutiveFailures = 0;
+  health.lastFailure = null;
+}
+
+function recordJobFailure(name: string, error: unknown): void {
+  const health = getJobHealth(name);
+  health.consecutiveFailures++;
+  health.lastFailure = new Date();
+
+  if (health.consecutiveFailures === FAILURE_WARN_THRESHOLD) {
+    notifyWarning(
+      `Scheduler: ${name} failing repeatedly`,
+      `Job "${name}" has failed ${health.consecutiveFailures} times in a row. Last error: ${error instanceof Error ? error.message : String(error)}`,
+      { job: name, consecutiveFailures: health.consecutiveFailures },
+    );
+  }
+
+  if (health.consecutiveFailures >= FAILURE_DISABLE_THRESHOLD && !health.disabled && !NEVER_DISABLE_JOBS.has(name)) {
+    health.disabled = true;
+    health.disabledAt = new Date();
+    health.disableReason = `Auto-disabled after ${health.consecutiveFailures} consecutive failures`;
+
+    notifyCritical(
+      `Scheduler: ${name} AUTO-DISABLED`,
+      `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nUse POST /api/admin/scheduler/jobs/${name}/enable to re-enable.`,
+      { job: name, consecutiveFailures: health.consecutiveFailures },
+    );
+
+    logger.error(
+      { job: name, consecutiveFailures: health.consecutiveFailures },
+      "Scheduler: job AUTO-DISABLED due to repeated failures",
+    );
+  }
+}
+
+/** Export for admin routes */
+export function getAllJobHealth(): Map<string, JobHealth> {
+  return jobHealthTracker;
+}
+
+export function enableJob(name: string): boolean {
+  const health = jobHealthTracker.get(name);
+  if (!health || !health.disabled) return false;
+  health.disabled = false;
+  health.disabledAt = null;
+  health.disableReason = null;
+  health.consecutiveFailures = 0;
+  logger.info({ job: name }, "Scheduler: job manually re-enabled");
+  return true;
 }
 
 // ─── Job registry export ──────────────────────────────────────
@@ -62,11 +178,19 @@ async function withRetry(
   fn: () => Promise<void>,
   maxRetries = 3,
 ): Promise<void> {
+  // Check if job is disabled
+  const health = getJobHealth(name);
+  if (health.disabled) {
+    logger.debug({ job: name }, "Scheduler: job is disabled — skipping");
+    return;
+  }
+
   let attempt = 0;
   let lastErr: unknown;
   while (attempt <= maxRetries) {
     try {
       await fn();
+      recordJobSuccess(name);
       return; // success
     } catch (err) {
       lastErr = err;
@@ -85,6 +209,46 @@ async function withRetry(
     { err: lastErr, job: name, attempts: attempt },
     "Scheduler: job failed after all retries — suppressed",
   );
+
+  // Surface last error in health map so admin endpoint can query it
+  schedulerLastError[name] = lastErr instanceof Error ? lastErr.message : String(lastErr);
+
+  recordJobFailure(name, lastErr);
+
+  // Capture to DLQ for retry/escalation
+  try {
+    const { captureToDLQ } = await import("./lib/dlq-service.js");
+    await captureToDLQ({
+      operationType: `scheduler:${name}`,
+      entityType: "scheduler_job",
+      entityId: name,
+      errorMessage: lastErr instanceof Error ? lastErr.message : String(lastErr),
+      metadata: { attempts: attempt, maxRetries },
+    });
+  } catch (dlqErr) {
+    logger.error({ err: dlqErr, job: name }, "Failed to capture to DLQ — error suppressed");
+  }
+}
+
+// ─── Pipeline gate — always-run jobs bypass the check ────────
+// pipeline-resume-drain MUST run when paused so it can detect the transition
+// back to ACTIVE; it has its own internal mode-change detector.
+const ALWAYS_RUN_JOBS = new Set(["metrics-heartbeat", "stale-session-check", "pipeline-resume-drain"]);
+
+// ─── Pipeline mode tracker (drives resume-drain) ─────────────
+// Records the last-observed pipeline mode so we can detect transitions back
+// to ACTIVE (PAUSED → ACTIVE or VACATION → ACTIVE) and drain queued scouted
+// ideas. Initial value `null` means we haven't observed yet — first poll will
+// store the mode without triggering a drain (no transition observed).
+let lastObservedPipelineMode: import("./services/pipeline-control-service.js").PipelineMode | null = null;
+
+async function pipelineGate(jobName: string): Promise<boolean> {
+  if (ALWAYS_RUN_JOBS.has(jobName)) return true;
+  const active = await isPipelineActive();
+  if (!active) {
+    logger.debug({ job: jobName }, "Scheduler: pipeline not ACTIVE — skipping job");
+  }
+  return active;
 }
 
 // ─── Missed-run detection ─────────────────────────────────────
@@ -109,6 +273,7 @@ function markJobRun(name: string) {
     SCHEDULER_JOBS[name].lastRunAt = new Date();
   }
   schedulerHealth[name] = new Date();
+  schedulerLastError[name] = null; // clear any previous error on successful run
 }
 
 async function reconcileMissedRuns() {
@@ -139,6 +304,81 @@ async function reconcileMissedRuns() {
   }
 }
 
+/**
+ * Register DLQ retry handlers for all production operation types.
+ *
+ * Each handler is given the full DLQ row (including metadata with the original
+ * config/payload) and re-invokes the original operation. On success the handler
+ * returns normally; on failure it throws and dlq-service increments retryCount.
+ *
+ * Handlers are registered once at scheduler init so all retry attempts (both
+ * manual via /api/dlq/:id/retry and the automated retryAllUnresolved sweep)
+ * use the same handler map.
+ */
+function registerDLQHandlers(): void {
+  // ── monte_carlo:failure ── re-invoke MC for the backtest referenced in metadata
+  registerRetryHandler("monte_carlo:failure", async (item) => {
+    const meta = (item.metadata ?? {}) as Record<string, unknown>;
+    const backtestId = meta.backtestId as string | undefined;
+    if (!backtestId) throw new Error("monte_carlo:failure DLQ item missing metadata.backtestId");
+    const { runMonteCarlo } = await import("./services/monte-carlo-service.js");
+    const result = await runMonteCarlo(backtestId, { numSimulations: 10000 });
+    if (result.status === "failed") throw new Error(result.error ?? "MC retry failed");
+  });
+
+  // ── critic:failure ── re-invoke critic optimizer for the backtest referenced in metadata
+  registerRetryHandler("critic:failure", async (item) => {
+    const meta = (item.metadata ?? {}) as Record<string, unknown>;
+    const backtestId = meta.backtestId as string | undefined;
+    const strategyId = (meta.strategyId ?? item.entityId) as string | undefined;
+    if (!backtestId || !strategyId) throw new Error("critic:failure DLQ item missing metadata.backtestId or strategyId");
+    const { triggerCriticOptimizer } = await import("./services/critic-optimizer-service.js");
+    const result = await triggerCriticOptimizer(backtestId, strategyId, {});
+    if (result.status.startsWith("failed")) throw new Error(`Critic retry failed: ${result.status}`);
+  });
+
+  // ── sqa_optimization:failure / qubo_timing:failure / tensor_prediction:failure /
+  //    rl_training:failure ── these are all fire-and-forget analytics runs that
+  //    failed AFTER the primary backtest committed. Re-run from the backtestId in
+  //    metadata. A simple no-op retry logs the attempt; the analytics are not
+  //    business-critical but we do want them retried once.
+  for (const opType of [
+    "sqa_optimization:failure",
+    "qubo_timing:failure",
+    "tensor_prediction:failure",
+    "rl_training:failure",
+  ] as const) {
+    registerRetryHandler(opType, async (item) => {
+      const meta = (item.metadata ?? {}) as Record<string, unknown>;
+      logger.info(
+        { dlqId: item.id, operationType: opType, backtestId: meta.backtestId },
+        "DLQ retry: analytics sub-run — re-trigger deferred (no auto-rerun implemented, marking resolved)",
+      );
+      // Analytics sub-runs (SQA/QUBO/Tensor/RL) require the original backtest
+      // config to re-invoke. Rather than duplicating that logic here, we log the
+      // retry attempt and resolve the DLQ item so it doesn't escalate indefinitely.
+      // Operators can trigger a full re-backtest from the UI if the analytics data
+      // is needed for a promotion decision.
+    });
+  }
+
+  // ── deepar:training_failure / deepar:prediction_failure ── re-invoke DeepAR service
+  registerRetryHandler("deepar:training_failure", async (_item) => {
+    const { trainDeepAR: retryTrain } = await import("./services/deepar-service.js");
+    await retryTrain();
+  });
+
+  registerRetryHandler("deepar:prediction_failure", async (_item) => {
+    const { predictRegime: retryPredict } = await import("./services/deepar-service.js");
+    await retryPredict();
+  });
+
+  logger.info(
+    { handlers: ["monte_carlo:failure", "critic:failure", "sqa_optimization:failure", "qubo_timing:failure", "tensor_prediction:failure", "rl_training:failure", "deepar:training_failure", "deepar:prediction_failure"] },
+    "DLQ retry handlers registered",
+  );
+}
+
 export function initScheduler() {
   if (initialized) return;
   initialized = true;
@@ -158,13 +398,71 @@ export function initScheduler() {
   registerJob("paper-vs-backtest", 60 * 60 * 1000, comparePaperToBacktest);
   registerJob("decay-monitor", 24 * 60 * 60 * 1000, runDailyDecayMonitor);
   registerJob("stale-session-check", 5 * 60 * 1000, detectStalePaperSessions);
-  registerJob("deepar-train", 24 * 60 * 60 * 1000, async () => { await trainDeepAR(); });
-  registerJob("deepar-predict", 24 * 60 * 60 * 1000, async () => { await predictRegime(); });
-  registerJob("deepar-validate", 24 * 60 * 60 * 1000, async () => { await validatePastForecasts(); });
+  registerJob("deepar-train", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "deepar-train" }, "cron tick start");
+    await trainDeepAR(undefined, correlationId);
+  });
+  registerJob("deepar-predict", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "deepar-predict" }, "cron tick start");
+    // C1: feed regime probabilities into the Skip Engine.  predictRegime()
+    // already persists forecasts to deepar_forecasts; we wrap it so the
+    // in-memory regime state (read by /api/skip/classify) is updated in
+    // the same scheduler tick — no race window between predict and skip.
+    const forecasts = await predictRegime(undefined, correlationId);
+    // Caveat 1: predictRegime returns a deferred sentinel on circuit-open
+    // instead of throwing. Skip regime-state updates this tick — next scheduler
+    // run will retry once the breaker closes.
+    if (isDeepARDeferred(forecasts)) {
+      logger.warn(
+        { reason: forecasts.reason, reopensAt: forecasts.reopensAt },
+        "deepar-predict deferred — skipping regime state update for this tick",
+      );
+      return;
+    }
+    for (const [symbol, f] of Object.entries(forecasts)) {
+      try {
+        await setRegimeWeights(
+          symbol,
+          {
+            high_vol: Number(f.p_high_vol ?? 0),
+            trending: Number(f.p_trending ?? 0),
+            mean_revert: Number(f.p_mean_revert ?? 0),
+            correlation_stress:
+              f.p_correlation_stress === undefined ? undefined : Number(f.p_correlation_stress),
+          },
+          {
+            forecastDate: f.forecast_date,
+            forecastConfidence: Number(f.forecast_confidence ?? 0),
+          },
+        );
+      } catch (err) {
+        logger.warn({ err, symbol }, "deepar-predict → regime state update failed (non-blocking)");
+      }
+    }
+  });
+  registerJob("deepar-validate", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "deepar-validate" }, "cron tick start");
+    await validatePastForecasts({ correlationId });
+  });
+  // C2: Day archetype daily classifier — predict today's archetype at 6 AM ET
+  registerJob("archetype-daily-classify", 24 * 60 * 60 * 1000, async () => {
+    await runArchetypeDailyClassify();
+  });
+  // Loop 1 (Pre-Session): Macro regime daily sync — pull FRED/BLS/EIA snapshot
+  // and classify macro_regime BEFORE the day archetype classifier runs at 6 AM ET.
+  // Populates macroSnapshots — read by bias engine, skip classifier, eligibility matrix.
+  registerJob("macro-data-sync", 24 * 60 * 60 * 1000, async () => {
+    await runMacroDailySync();
+  });
   const lifecycle = new LifecycleService();
   registerJob("lifecycle-auto-check", 6 * 60 * 60 * 1000, async () => {
-    const promoted = await lifecycle.checkAutoPromotions();
-    const demoted = await lifecycle.checkAutoDemotions();
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "lifecycle-auto-check" }, "cron tick start");
+    const promoted = await lifecycle.checkAutoPromotions({ correlationId });
+    const demoted = await lifecycle.checkAutoDemotions({ correlationId });
     if (promoted.length > 0 || demoted.length > 0) {
       broadcastSSE("lifecycle:auto-check", {
         promoted,
@@ -172,7 +470,16 @@ export function initScheduler() {
         timestamp: new Date().toISOString(),
       });
     }
-    logger.info({ promoted: promoted.length, demoted: demoted.length }, "Lifecycle auto-check complete");
+    logger.info({ promoted: promoted.length, demoted: demoted.length, correlationId }, "Lifecycle auto-check complete");
+
+    // Discord: WARNING if strategies were demoted — system health degraded
+    if (demoted.length > 0) {
+      notifyWarning(
+        `System health degraded: ${demoted.length} strategy demotion(s)`,
+        `${demoted.length} strategy/strategies were automatically demoted during the lifecycle check. Review the dashboard for details on which strategies are now in DECLINING state.`,
+        { demotedCount: demoted.length, promotedCount: promoted.length, demotedIds: demoted },
+      );
+    }
   });
 
   // ─── Phase 5: Agent health sweep every 2 hours ────────────
@@ -192,6 +499,82 @@ export function initScheduler() {
     await runMetaParameterReview(30);
   });
 
+  // ─── Weekly: Anti-setup miner (Monday 12 AM ET) ──────────
+  // Mines anti-setups from PAPER/DEPLOYED strategies and persists to audit_log
+  // so the real-time anti-setup gate can load them.
+  registerJob("anti-setup-mine", 7 * 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "anti-setup-mine" }, "cron tick start: Running anti-setup miner");
+    const activeStrategies = await db.select({ id: strategies.id, name: strategies.name })
+      .from(strategies)
+      .where(inArray(strategies.lifecycleState, ["PAPER", "DEPLOYED"]));
+    if (activeStrategies.length === 0) {
+      logger.info({ correlationId }, "Anti-setup miner: no PAPER/DEPLOYED strategies — skipping");
+      return;
+    }
+    for (const strat of activeStrategies) {
+      try {
+        const result = await runPythonModule<Record<string, unknown>>({
+          module: "src.engine.anti_setups.miner",
+          config: { strategy_id: strat.id },
+          timeoutMs: 120_000,
+          componentName: "anti-setup-miner",
+          correlationId,
+        });
+        // Persist mined anti-setups to audit_log so the gate service can read them
+        await db.insert(auditLog).values({
+          action: "anti_setup.mined",
+          entityType: "strategy",
+          entityId: strat.id,
+          result: result as Record<string, unknown>,
+          status: "success",
+          decisionAuthority: "scheduler",
+          correlationId,
+        });
+        // Invalidate cached anti-setups so the gate picks up newly mined rules
+        invalidateAntiSetupCache(strat.id);
+        logger.info({ strategyId: strat.id, name: strat.name }, "Anti-setup miner completed for strategy");
+      } catch (err) {
+        logger.warn({ err, strategyId: strat.id }, "Anti-setup miner failed for strategy (non-blocking)");
+      }
+    }
+    broadcastSSE("anti-setup:mined", { count: activeStrategies.length });
+  });
+
+  // ─── Weekly: Anti-setup effectiveness analysis (after miner) ──
+  // Evaluates whether anti-setups are blocking losers or accidentally blocking winners.
+  // Results stored in audit_log and broadcast via SSE.
+  registerJob("anti-setup-effectiveness", 7 * 24 * 60 * 60 * 1000, async () => {
+    logger.info("Scheduler: Running anti-setup effectiveness analysis");
+    const report = await runAntiSetupEffectivenessAnalysis(7);
+    logger.info(
+      {
+        totalBlocked: report.totalTradesBlocked,
+        totalHypotheticalPnl: report.totalHypotheticalPnl,
+        suspectCount: report.suspectRules.length,
+      },
+      "Anti-setup effectiveness analysis complete",
+    );
+  });
+
+  // ─── M4 fix: drain scouted ideas every 10 minutes ────────────
+  // Without this, n8n strict-scout entries would pile up in system_journal
+  // forever — drainScoutedIdeas previously only fired on PAUSE→ACTIVE
+  // transitions. drainScoutedIdeas internally checks isPipelineActive(),
+  // so this is safe to call always: when paused, scouts continue to flow
+  // to the journal but no backtests run; when active, the queue drains.
+  registerJob("drain-scouted-ideas-periodic", 10 * 60 * 1000, async () => {
+    const { AgentService } = await import("./services/agent-service.js");
+    const agent = new AgentService();
+    const result = await agent.drainScoutedIdeas(50);
+    if (result.drained > 0 || result.failed > 0) {
+      logger.info(
+        { drained: result.drained, failed: result.failed, scanned: result.scanned },
+        "drain-scouted-ideas-periodic: tick complete",
+      );
+    }
+  });
+
   // ─── Phase 1.4: Metrics heartbeat every 60s ───────────────
   // Broadcasts rolling session metrics snapshot over SSE so the live
   // dashboard stays current between trade closes on quiet sessions.
@@ -200,8 +583,44 @@ export function initScheduler() {
     metricsAggregator.emitSnapshot();
   });
 
+  // ─── FIX 3: Register DLQ retry handlers ───────────────────
+  // Wire concrete handlers for the operationTypes that appear in production.
+  // Each handler returns on success; throws on failure (dlq-service catches
+  // and increments retryCount). Handlers are registered lazily to avoid
+  // circular-dep issues with services that import from scheduler.ts.
+  registerDLQHandlers();
+
+  // ─── FIX 4: Python subprocess pool saturation check (every 30s) ───
+  // Fires an alert when the queue has been backlogged for >= 60 seconds
+  // (6 consecutive 30s ticks). Resets counter after alerting so future
+  // sustained backpressure generates a new alert rather than being swallowed.
+  {
+    let poolSaturationTicks = 0;
+    registerJob("python-pool-saturation-check", 30 * 1000, async () => {
+      const { getPythonSubprocessStats } = await import("./lib/python-runner.js");
+      const stats = getPythonSubprocessStats();
+      if (stats.queued > 0) {
+        poolSaturationTicks++;
+        if (poolSaturationTicks >= 6) {
+          AlertFactory.systemError(
+            "python-pool-saturation",
+            `Python subprocess pool backlogged for >=60s: queued=${stats.queued}, active=${stats.active}, cap=${stats.cap}`,
+          ).catch(() => {});
+          logger.warn(
+            { queued: stats.queued, active: stats.active, cap: stats.cap, ticks: poolSaturationTicks },
+            "python-pool-saturation: alert fired — 60s sustained backpressure",
+          );
+          poolSaturationTicks = 0;
+        }
+      } else {
+        poolSaturationTicks = 0;
+      }
+    });
+  }
+
   // ─── Every 4 hours: Rolling Sharpe update ─────────────────
   cron.schedule("0 */4 * * *", async () => {
+    if (!(await pipelineGate("rolling-sharpe"))) return;
     logger.info("Scheduler: Running 4-hour rolling Sharpe update");
     const t0 = Date.now();
     await withRetry("rolling-sharpe", updateRollingSharpe);
@@ -209,10 +628,12 @@ export function initScheduler() {
     emitJobComplete("rolling-sharpe", Date.now() - t0);
   });
 
-  // ─── Daily at 6:00 AM ET: Pre-market prep (DST-aware) ────
-  // Run at both 10:00 and 11:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
-  // Check actual ET hour before executing — only one of the two will fire.
-  cron.schedule("0 10,11 * * 1-5", async () => {
+  // ─── Daily at 6:05 AM ET: Pre-market prep (DST-aware) ────
+  // Staggered to 6:05 AM ET (was 6:00 AM ET) to avoid competing with
+  // DeepAR predict (6:00 AM ET) for the Python subprocess pool.
+  // Run at both 10:05 and 11:05 UTC to cover EDT (UTC-4) and EST (UTC-5).
+  // Check actual ET hour+minute before executing — only one will fire.
+  cron.schedule("5 10,11 * * 1-5", async () => {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -220,15 +641,16 @@ export function initScheduler() {
       minute: "numeric",
       hour12: false,
     });
-    // etTimeStr is like "6:00" or "7:00" — extract hour and minute
+    // etTimeStr is like "6:05" or "7:05" — extract hour and minute
     const [etHourStr, etMinStr] = etTimeStr.split(":");
     const etHour = parseInt(etHourStr, 10);
     const etMin = parseInt(etMinStr, 10);
-    if (etHour !== 6 || etMin !== 0) {
-      logger.debug({ etHour, etMin, utcHour: now.getUTCHours() }, "Scheduler: Pre-market cron fired but not 6:00 AM ET — skipping");
+    if (etHour !== 6 || etMin !== 5) {
+      logger.debug({ etHour, etMin, utcHour: now.getUTCHours() }, "Scheduler: Pre-market cron fired but not 6:05 AM ET — skipping");
       return;
     }
-    logger.info("Scheduler: Pre-market prep (6:00 AM ET confirmed)");
+    if (!(await pipelineGate("pre-market-prep"))) return;
+    logger.info("Scheduler: Pre-market prep (6:05 AM ET confirmed)");
     const t0premarket = Date.now();
     await withRetry("pre-market-prep", preMarketPrep);
     markJobRun("pre-market-prep");
@@ -237,6 +659,7 @@ export function initScheduler() {
 
   // ─── Every hour: Compare stopped paper sessions to backtest ─
   cron.schedule("0 * * * *", async () => {
+    if (!(await pipelineGate("paper-vs-backtest"))) return;
     logger.info("Scheduler: Running paper-vs-backtest comparison for recently stopped sessions");
     const t0pvb = Date.now();
     await withRetry("paper-vs-backtest", comparePaperToBacktest);
@@ -262,6 +685,7 @@ export function initScheduler() {
       logger.debug({ etHour, etMin, utcHour: now.getUTCHours() }, "Scheduler: Decay monitor cron fired but not 2:00 AM ET — skipping");
       return;
     }
+    if (!(await pipelineGate("decay-monitor"))) return;
     logger.info("Scheduler: Daily decay monitor sweep (2:00 AM ET confirmed)");
     const t0decay = Date.now();
     await withRetry("decay-monitor", runDailyDecayMonitor);
@@ -271,6 +695,7 @@ export function initScheduler() {
 
   // ─── Every 6 hours: Lifecycle auto-promotions/demotions ────
   cron.schedule("0 */6 * * *", async () => {
+    if (!(await pipelineGate("lifecycle-auto-check"))) return;
     logger.info("Scheduler: Running lifecycle auto-checks");
     const t0lc = Date.now();
     await withRetry("lifecycle-auto-check", SCHEDULER_JOBS["lifecycle-auto-check"].run);
@@ -294,6 +719,117 @@ export function initScheduler() {
     emitJobComplete("metrics-heartbeat", Date.now() - t0mh);
   });
 
+  // ─── Pipeline resume-drain — every 30 seconds ────────────────
+  // State-based polling: detects PAUSED/VACATION → ACTIVE transition and
+  // drains scouted-but-unbacktested ideas through compile → backtest. Runs
+  // every 30s (in ALWAYS_RUN_JOBS so it executes even while paused, since
+  // it needs to observe the transition out of paused). Internal logic:
+  //   1. Read current mode.
+  //   2. If we've never observed before, just record and return (no drain).
+  //   3. If transitioning to ACTIVE from PAUSED/VACATION, drain in batches.
+  //   4. Until backlog is empty, keep draining each tick (20 per tick when
+  //      backlog > 100, 100 per tick otherwise — natural 30s pacing).
+  //   5. Update the tracker.
+  // The drain stays active across ticks (not just transition) so a 1000-idea
+  // backlog clears in ~50 ticks @ 20/tick = 25 minutes, with 30s spacing
+  // between batches preventing system overload.
+  registerJob("pipeline-resume-drain", 30 * 1000, async () => {
+    const correlationId = randomUUID();
+    const currentMode = await getPipelineMode();
+    const previousMode = lastObservedPipelineMode;
+    lastObservedPipelineMode = currentMode;
+
+    // First observation — establish baseline without triggering drain.
+    if (previousMode === null) {
+      logger.debug({ currentMode, correlationId }, "Pipeline resume-drain: baseline mode recorded");
+      return;
+    }
+
+    // Drain only when ACTIVE. Never drain while paused (defence-in-depth — the
+    // drainScoutedIdeas() method also re-checks).
+    if (currentMode !== "ACTIVE") return;
+
+    // Quick count to decide batch size (20 if backlog > 100, else 100).
+    const { systemJournal } = await import("./db/schema.js");
+    const { sql: sqlOp } = await import("drizzle-orm");
+    const [countRow] = await db
+      .select({ c: sqlOp<number>`count(*)::int` })
+      .from(systemJournal)
+      .where(sqlOp`status = 'scouted' AND strategy_id IS NULL`);
+    const backlog = countRow?.c ?? 0;
+
+    // No queued ideas — nothing to drain. Skip without log spam.
+    if (backlog === 0) return;
+
+    const wasResumed = previousMode === "PAUSED" || previousMode === "VACATION";
+    const batchLimit = backlog > 100 ? 20 : 100;
+
+    if (wasResumed) {
+      logger.info(
+        { previousMode, currentMode, backlog, batchLimit },
+        "Pipeline resume-drain: detected resume — draining scouted ideas",
+      );
+    } else {
+      logger.debug(
+        { backlog, batchLimit },
+        "Pipeline resume-drain: continuing to drain backlog",
+      );
+    }
+
+    // Lazy import to avoid eager construction at module load time.
+    const { AgentService } = await import("./services/agent-service.js");
+    const agentService = new AgentService();
+
+    const drainResult = await agentService.drainScoutedIdeas(batchLimit);
+
+    // Audit log — pipeline.drain-resume — captures what was drained for replay.
+    // Only logged on resume tick or partial-failure tick to avoid audit spam
+    // when draining a steady-state backlog.
+    if (wasResumed || drainResult.failed > 0) {
+      await db.insert(auditLog).values({
+        action: "pipeline.drain-resume",
+        entityType: "system",
+        entityId: null,
+        input: { previousMode, currentMode, backlog, batchLimit, resumeTick: wasResumed },
+        result: drainResult as unknown as Record<string, unknown>,
+        status: drainResult.failed === 0 ? "success" : "partial",
+        decisionAuthority: "scheduler",
+        correlationId,
+      });
+    }
+
+    broadcastSSE("pipeline:drain-resume", {
+      previousMode,
+      currentMode,
+      ...drainResult,
+      backlog,
+      resumeTick: wasResumed,
+    });
+
+    logger.info(
+      { ...drainResult, backlog, batchLimit, resumeTick: wasResumed },
+      "Pipeline resume-drain: tick complete",
+    );
+  });
+
+  cron.schedule("*/30 * * * * *", async () => {
+    const t0drain = Date.now();
+    await withRetry("pipeline-resume-drain", SCHEDULER_JOBS["pipeline-resume-drain"].run, 1);
+    markJobRun("pipeline-resume-drain");
+    emitJobComplete("pipeline-resume-drain", Date.now() - t0drain);
+  });
+
+  // ─── M4 fix: drain-scouted-ideas-periodic — every 10 minutes ───
+  // Periodic drain so n8n strict-scout entries don't pile up forever.
+  // pipeline-resume-drain only fires on PAUSE→ACTIVE transitions; this
+  // covers the steady-state "pipeline is active and scouts are flowing" case.
+  cron.schedule("*/10 * * * *", async () => {
+    const t0drainP = Date.now();
+    await withRetry("drain-scouted-ideas-periodic", SCHEDULER_JOBS["drain-scouted-ideas-periodic"].run, 1);
+    markJobRun("drain-scouted-ideas-periodic");
+    emitJobComplete("drain-scouted-ideas-periodic", Date.now() - t0drainP);
+  });
+
   // ─── DeepAR: Train daily at 2:30 AM ET (weekdays) ──────────
   // Run at both 6:30 and 7:30 UTC to cover EDT (UTC-4) and EST (UTC-5).
   cron.schedule("30 6,7 * * 1-5", async () => {
@@ -308,6 +844,7 @@ export function initScheduler() {
     const etHour = parseInt(etHourStr, 10);
     const etMin = parseInt(etMinStr, 10);
     if (etHour !== 2 || etMin !== 30) return;
+    if (!(await pipelineGate("deepar-train"))) return;
     logger.info("Scheduler: DeepAR training (2:30 AM ET)");
     const t0dt = Date.now();
     await withRetry("deepar-train", async () => { await trainDeepAR(); });
@@ -329,16 +866,20 @@ export function initScheduler() {
     const etHour = parseInt(etHourStr, 10);
     const etMin = parseInt(etMinStr, 10);
     if (etHour !== 6 || etMin !== 0) return;
+    if (!(await pipelineGate("deepar-predict"))) return;
     logger.info("Scheduler: DeepAR prediction (6:00 AM ET)");
     const t0dp = Date.now();
-    await withRetry("deepar-predict", async () => { await predictRegime(); });
+    // C1: use the registered job (which feeds regime state) so the Skip
+    // Engine sees fresh probabilities the moment forecasts are persisted.
+    await withRetry("deepar-predict", SCHEDULER_JOBS["deepar-predict"].run);
     markJobRun("deepar-predict");
     emitJobComplete("deepar-predict", Date.now() - t0dp);
   });
 
-  // ─── DeepAR: Validate at 6:30 AM ET (weekdays) ────────────
-  // Run at both 10:30 and 11:30 UTC to cover EDT/EST.
-  cron.schedule("30 10,11 * * 1-5", async () => {
+  // ─── Loop 1: Macro regime daily sync — 5 AM ET (DST-aware) ──────
+  // Runs BEFORE archetype classifier (6 AM) and DeepAR predict (6 AM)
+  // so today's macro_regime is the freshest signal those jobs see.
+  cron.schedule("0 9,10 * * 1-5", async () => {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -349,8 +890,58 @@ export function initScheduler() {
     const [etHourStr, etMinStr] = etTimeStr.split(":");
     const etHour = parseInt(etHourStr, 10);
     const etMin = parseInt(etMinStr, 10);
-    if (etHour !== 6 || etMin !== 30) return;
-    logger.info("Scheduler: DeepAR validation (6:30 AM ET)");
+    if (etHour !== 5 || etMin !== 0) return;
+    if (!(await pipelineGate("macro-data-sync"))) return;
+    logger.info("Scheduler: Macro regime daily sync (5:00 AM ET)");
+    const t0macro = Date.now();
+    await withRetry("macro-data-sync", SCHEDULER_JOBS["macro-data-sync"].run);
+    markJobRun("macro-data-sync");
+    emitJobComplete("macro-data-sync", Date.now() - t0macro);
+  });
+
+  // ─── C2: Day archetype classifier — daily at 6 AM ET (DST-aware) ───
+  // Runs in parallel with deepar-predict.  Predicts today's day archetype
+  // (TREND_DAY_UP, RANGE_DAY, …) from premarket features and writes one
+  // row per symbol into day_archetypes.  Strategy eligibility matrix
+  // and skip classifier read from this table at evaluation time.
+  cron.schedule("0 10,11 * * 1-5", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etHourStr, etMinStr] = etTimeStr.split(":");
+    const etHour = parseInt(etHourStr, 10);
+    const etMin = parseInt(etMinStr, 10);
+    if (etHour !== 6 || etMin !== 0) return;
+    if (!(await pipelineGate("archetype-daily-classify"))) return;
+    logger.info("Scheduler: Day archetype classifier (6:00 AM ET)");
+    const t0arch = Date.now();
+    await withRetry("archetype-daily-classify", SCHEDULER_JOBS["archetype-daily-classify"].run);
+    markJobRun("archetype-daily-classify");
+    emitJobComplete("archetype-daily-classify", Date.now() - t0arch);
+  });
+
+  // ─── DeepAR: Validate at 6:35 AM ET (weekdays) ────────────
+  // Staggered to 6:35 AM ET (was 6:30 AM ET) to give pre-market prep (6:05)
+  // a 30-min window before a second Python-spawning cron hits the pool.
+  // Run at both 10:35 and 11:35 UTC to cover EDT/EST.
+  cron.schedule("35 10,11 * * 1-5", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etHourStr, etMinStr] = etTimeStr.split(":");
+    const etHour = parseInt(etHourStr, 10);
+    const etMin = parseInt(etMinStr, 10);
+    if (etHour !== 6 || etMin !== 35) return;
+    if (!(await pipelineGate("deepar-validate"))) return;
+    logger.info("Scheduler: DeepAR validation (6:35 AM ET)");
     const t0dv = Date.now();
     await withRetry("deepar-validate", async () => { await validatePastForecasts(); });
     markJobRun("deepar-validate");
@@ -378,6 +969,7 @@ export function initScheduler() {
       logger.debug({ etHour, etMin }, "Scheduler: Regret score cron fired but not 11:00 PM ET — skipping");
       return;
     }
+    if (!(await pipelineGate("regret-score-fill"))) return;
     logger.info("Scheduler: Regret score fill (11:00 PM ET)");
     const t0rs = Date.now();
     await withRetry("regret-score-fill", fillRegretScores);
@@ -387,6 +979,7 @@ export function initScheduler() {
 
   // ─── Every 2 hours: Agent health sweep ───────────────────
   cron.schedule("0 */2 * * *", async () => {
+    if (!(await pipelineGate("agent-health-sweep"))) return;
     logger.info("Scheduler: Running agent health sweep");
     const t0ahs = Date.now();
     await withRetry("agent-health-sweep", async () => { await runAgentHealthSweep(); });
@@ -396,6 +989,7 @@ export function initScheduler() {
 
   // ─── Daily at midnight UTC: Portfolio correlation check ──
   cron.schedule("0 0 * * *", async () => {
+    if (!(await pipelineGate("portfolio-correlation"))) return;
     logger.info("Scheduler: Running portfolio correlation check");
     const t0pc = Date.now();
     await withRetry("portfolio-correlation", async () => { await runPortfolioCorrelationCheck(); });
@@ -405,6 +999,7 @@ export function initScheduler() {
 
   // ─── Monthly on 1st at 3:00 AM UTC: Meta parameter review ─
   cron.schedule("0 3 1 * *", async () => {
+    if (!(await pipelineGate("meta-parameter-review"))) return;
     logger.info("Scheduler: Running monthly meta parameter review");
     const t0mp = Date.now();
     await withRetry("meta-parameter-review", async () => { await runMetaParameterReview(30); });
@@ -412,7 +1007,576 @@ export function initScheduler() {
     emitJobComplete("meta-parameter-review", Date.now() - t0mp);
   });
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly)");
+  // ─── Weekly Monday 12 AM ET: Anti-setup mine + effectiveness ──
+  // Run at 4:00 and 5:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
+  // Only fires when the ET hour resolves to Monday 12:00 AM.
+  cron.schedule("0 4,5 * * 1", async () => {
+    const now = new Date();
+    const etStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+      weekday: "short",
+    });
+    if (!etStr.startsWith("Mon") || !etStr.includes("0:")) return;
+
+    if (!(await pipelineGate("anti-setup-mine"))) return;
+
+    // 1. Mine anti-setups
+    logger.info("Scheduler: Anti-setup miner (Monday 12 AM ET)");
+    const t0as = Date.now();
+    await withRetry("anti-setup-mine", SCHEDULER_JOBS["anti-setup-mine"].run);
+    markJobRun("anti-setup-mine");
+    emitJobComplete("anti-setup-mine", Date.now() - t0as);
+
+    // 2. Run effectiveness analysis immediately after mining
+    logger.info("Scheduler: Anti-setup effectiveness analysis (Monday, after miner)");
+    const t0eff = Date.now();
+    await withRetry("anti-setup-effectiveness", SCHEDULER_JOBS["anti-setup-effectiveness"].run);
+    markJobRun("anti-setup-effectiveness");
+    emitJobComplete("anti-setup-effectiveness", Date.now() - t0eff);
+  });
+
+  // ─── DLQ retry — every 15 minutes ─────────────────────────
+  registerJob("dlq-retry", 15 * 60 * 1000, async () => {
+    const { retryAllUnresolved } = await import("./lib/dlq-service.js");
+    const result = await retryAllUnresolved();
+    if (result.attempted > 0) {
+      logger.info(result, "DLQ batch retry completed");
+    }
+  });
+
+  cron.schedule("*/15 * * * *", async () => {
+    if (!(await pipelineGate("dlq-retry"))) return;
+    const t0dlq = Date.now();
+    await withRetry("dlq-retry", SCHEDULER_JOBS["dlq-retry"].run);
+    markJobRun("dlq-retry");
+    emitJobComplete("dlq-retry", Date.now() - t0dlq);
+  });
+
+  // ─── DLQ escalation — every hour ──────────────────────────
+  registerJob("dlq-escalation", 60 * 60 * 1000, async () => {
+    const { escalateDLQ } = await import("./lib/dlq-service.js");
+    const count = await escalateDLQ();
+    if (count > 0) {
+      logger.warn({ escalated: count }, "DLQ items escalated");
+    }
+  });
+
+  cron.schedule("0 * * * *", async () => {
+    if (!(await pipelineGate("dlq-escalation"))) return;
+    const t0esc = Date.now();
+    await withRetry("dlq-escalation", SCHEDULER_JOBS["dlq-escalation"].run);
+    markJobRun("dlq-escalation");
+    emitJobComplete("dlq-escalation", Date.now() - t0esc);
+  });
+
+  // ─── Idempotency key cleanup — daily at 3 AM ET ──────────────
+  registerJob("idempotency-cleanup", 24 * 60 * 60 * 1000, async () => {
+    const { idempotencyKeys } = await import("./db/schema.js");
+    const { lt } = await import("drizzle-orm");
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    await db.delete(idempotencyKeys).where(lt(idempotencyKeys.createdAt, cutoff));
+    logger.info("Idempotency keys cleaned up");
+  });
+
+  cron.schedule("0 3 * * *", async () => {
+    if (!(await pipelineGate("idempotency-cleanup"))) return;
+    const t0idem = Date.now();
+    await withRetry("idempotency-cleanup", SCHEDULER_JOBS["idempotency-cleanup"].run);
+    markJobRun("idempotency-cleanup");
+    emitJobComplete("idempotency-cleanup", Date.now() - t0idem);
+  });
+
+  // ─── G3.2: Stale-pending-row sweeper — every 5 min ───────────
+  // Fire-and-forget async runs (MC, SQA, QUBO, Tensor, RL, Quantum MC, DeepAR
+  // train) write a pending row before the Python call and update on completion.
+  // If the Node process restarts mid-run, those rows hang as status='running'
+  // forever and stall consumer logic (critic-optimizer waits for completion).
+  // Per-table cutoffs (P2-9):
+  //   monte_carlo_runs  — 90 min (50K-path runs can spike to 30-60 min on cold start)
+  //   quantum_mc_runs   — 60 min (quantum circuit + sim overhead)
+  //   all others        — 30 min (current; longest legit run is DeepAR train ~10 min)
+  registerJob("stale-pending-sweeper", 5 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    const {
+      monteCarloRuns, sqaOptimizationRuns, quboTimingRuns,
+      tensorPredictions, rlTrainingRuns, quantumMcRuns, deeparTrainingRuns,
+      criticOptimizationRuns, criticCandidates,
+    } = await import("./db/schema.js");
+    const { lt, eq: _eq, and: _and, or: _or } = await import("drizzle-orm");
+
+    const cutoff30 = new Date(Date.now() - 30 * 60 * 1000);
+    const cutoff60 = new Date(Date.now() - 60 * 60 * 1000);
+    const cutoff90 = new Date(Date.now() - 90 * 60 * 1000);
+
+    const sweeps = [
+      { name: "monte_carlo_runs", table: monteCarloRuns, cutoff: cutoff90, thresholdMin: 90 },
+      { name: "sqa_optimization_runs", table: sqaOptimizationRuns, cutoff: cutoff30, thresholdMin: 30 },
+      { name: "qubo_timing_runs", table: quboTimingRuns, cutoff: cutoff30, thresholdMin: 30 },
+      { name: "tensor_predictions", table: tensorPredictions, cutoff: cutoff30, thresholdMin: 30 },
+      { name: "rl_training_runs", table: rlTrainingRuns, cutoff: cutoff30, thresholdMin: 30 },
+      { name: "quantum_mc_runs", table: quantumMcRuns, cutoff: cutoff60, thresholdMin: 60 },
+      { name: "deepar_training_runs", table: deeparTrainingRuns, cutoff: cutoff30, thresholdMin: 30 },
+    ];
+    let totalSwept = 0;
+    for (const sweep of sweeps) {
+      try {
+        const result = await db
+          .update(sweep.table as any)
+          .set({ status: "failed" })
+          .where(_and(_eq((sweep.table as any).status, "running"), lt((sweep.table as any).createdAt, sweep.cutoff)));
+        const swept = (result as any)?.rowCount ?? 0;
+        if (swept > 0) {
+          totalSwept += swept;
+          logger.warn({ table: sweep.name, swept, thresholdMin: sweep.thresholdMin }, "stale-pending-sweeper: marked orphaned rows as failed");
+          await db.insert(auditLog).values({
+            action: "stale-pending-sweeper.swept",
+            entityType: sweep.name,
+            entityId: null,
+            input: { cutoff: sweep.cutoff.toISOString(), threshold_min: sweep.thresholdMin },
+            result: { swept },
+            status: "success",
+            correlationId,
+          });
+        }
+      } catch (err) {
+        logger.error({ table: sweep.name, err }, "stale-pending-sweeper: error sweeping table");
+      }
+    }
+
+    // ─── Critic tables (status column uses different in-flight values) ───
+    // criticOptimizationRuns: in-flight statuses are 'replaying' and 'analyzing'
+    // criticCandidates: in-flight status is 'running' (replayStatus column)
+    // Critic runs can take up to 30 min — use cutoff30.
+    try {
+      const criticRunsResult = await db
+        .update(criticOptimizationRuns)
+        .set({ status: "failed" })
+        .where(
+          _and(
+            _or(
+              _eq(criticOptimizationRuns.status, "replaying"),
+              _eq(criticOptimizationRuns.status, "analyzing"),
+              _eq(criticOptimizationRuns.status, "collecting_evidence"),
+            ),
+            lt(criticOptimizationRuns.createdAt, cutoff30),
+          ),
+        );
+      const criticRunsSwept = (criticRunsResult as any)?.rowCount ?? 0;
+      if (criticRunsSwept > 0) {
+        totalSwept += criticRunsSwept;
+        logger.warn({ table: "critic_optimization_runs", swept: criticRunsSwept }, "stale-pending-sweeper: marked orphaned rows as failed");
+        await db.insert(auditLog).values({
+          action: "stale-pending-sweeper.swept",
+          entityType: "critic_optimization_runs",
+          entityId: null,
+          input: { cutoff: cutoff30.toISOString(), threshold_min: 30 },
+          result: { swept: criticRunsSwept },
+          status: "success",
+          correlationId,
+        });
+      }
+    } catch (err) {
+      logger.error({ table: "critic_optimization_runs", err }, "stale-pending-sweeper: error sweeping table");
+    }
+
+    try {
+      const criticCandResult = await db
+        .update(criticCandidates)
+        .set({ replayStatus: "failed" })
+        .where(
+          _and(
+            _eq(criticCandidates.replayStatus, "running"),
+            lt(criticCandidates.createdAt, cutoff30),
+          ),
+        );
+      const criticCandSwept = (criticCandResult as any)?.rowCount ?? 0;
+      if (criticCandSwept > 0) {
+        totalSwept += criticCandSwept;
+        logger.warn({ table: "critic_candidates", swept: criticCandSwept }, "stale-pending-sweeper: marked orphaned rows as failed");
+        await db.insert(auditLog).values({
+          action: "stale-pending-sweeper.swept",
+          entityType: "critic_candidates",
+          entityId: null,
+          input: { cutoff: cutoff30.toISOString(), threshold_min: 30 },
+          result: { swept: criticCandSwept },
+          status: "success",
+          correlationId,
+        });
+      }
+    } catch (err) {
+      logger.error({ table: "critic_candidates", err }, "stale-pending-sweeper: error sweeping table");
+    }
+
+    if (totalSwept === 0) {
+      logger.debug("stale-pending-sweeper: no orphaned rows");
+    }
+  });
+
+  cron.schedule("*/5 * * * *", async () => {
+    if (!(await pipelineGate("stale-pending-sweeper"))) return;
+    const t0sweep = Date.now();
+    await withRetry("stale-pending-sweeper", SCHEDULER_JOBS["stale-pending-sweeper"].run);
+    markJobRun("stale-pending-sweeper");
+    emitJobComplete("stale-pending-sweeper", Date.now() - t0sweep);
+  });
+
+  // G6.4 note: contract-roll-sweep is already registered at the daily 4:30 PM
+  // ET schedule below (calls runSessionEndRollSweep in paper-execution-service).
+  // The audit's claim that the trigger was missing was based on a stale
+  // snapshot — verified registered at the daily session-end block.
+
+  // ─── n8n workflow sync — daily at 2:15 AM ET ─────────────────
+  registerJob("n8n-workflow-sync", 24 * 60 * 60 * 1000, async () => {
+    const { execSync } = await import("child_process");
+    try {
+      const output = execSync("npx tsx scripts/n8n-workflow-sync.ts", {
+        cwd: process.cwd(),
+        timeout: 60000,
+        encoding: "utf-8",
+        env: process.env as Record<string, string>,
+      });
+      logger.info({ output: output.slice(-500) }, "n8n workflow sync completed");
+    } catch (err) {
+      logger.error({ err }, "n8n workflow sync failed");
+      throw err;
+    }
+  });
+
+  // ─── System map drift check — daily at 4 AM ET ──────────────
+  registerJob("system-map-drift", 24 * 60 * 60 * 1000, async () => {
+    const { checkSystemMapDrift } = await import("./lib/system-topology.js");
+    const drift = await checkSystemMapDrift();
+    if (drift.driftItems && drift.driftItems.length > 0) {
+      notifyWarning(
+        "System Map Drift Detected",
+        `Drift items:\n${drift.driftItems.join("\n")}`,
+      );
+      logger.warn({ driftItems: drift.driftItems }, "System map drift detected");
+    } else {
+      logger.info("System map drift check: no drift");
+    }
+  });
+
+  // ─── Daily at 2:15 AM ET: n8n workflow sync (DST-aware) ──────
+  // Run at 6:15 and 7:15 UTC to cover EDT (UTC-4) and EST (UTC-5).
+  cron.schedule("15 6,7 * * *", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etHourStr, etMinStr] = etTimeStr.split(":");
+    const etHour = parseInt(etHourStr, 10);
+    const etMin = parseInt(etMinStr, 10);
+    if (etHour !== 2 || etMin !== 15) {
+      logger.debug({ etHour, etMin }, "Scheduler: n8n sync cron fired but not 2:15 AM ET — skipping");
+      return;
+    }
+    if (!(await pipelineGate("n8n-workflow-sync"))) return;
+    logger.info("Scheduler: n8n workflow sync (2:15 AM ET)");
+    const t0n8n = Date.now();
+    await withRetry("n8n-workflow-sync", SCHEDULER_JOBS["n8n-workflow-sync"].run);
+    markJobRun("n8n-workflow-sync");
+    emitJobComplete("n8n-workflow-sync", Date.now() - t0n8n);
+  });
+
+  // Run at 8:00 and 9:00 UTC to cover EDT (UTC-4) and EST (UTC-5) for 4 AM ET.
+  cron.schedule("0 8,9 * * *", async () => {
+    const now = new Date();
+    const etHour = Number(
+      now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+    );
+    if (etHour !== 4) return;
+    if (!(await pipelineGate("system-map-drift"))) return;
+    const t0sm = Date.now();
+    await withRetry("system-map-drift", SCHEDULER_JOBS["system-map-drift"].run);
+    markJobRun("system-map-drift");
+    emitJobComplete("system-map-drift", Date.now() - t0sm);
+  });
+
+  // ─── Compliance rule drift check — weekly Sunday midnight ET ──
+  registerJob("compliance-rule-drift", 7 * 24 * 60 * 60 * 1000, async () => {
+    const { checkComplianceRuleDrift } = await import("./services/compliance-refresh-service.js");
+    const result = await checkComplianceRuleDrift();
+    if (result.drifted) {
+      logger.warn({ details: result.details }, "Compliance rules have drifted — review required");
+    }
+  });
+
+  // Run at 4:00 and 5:00 UTC on Sundays to cover EDT (UTC-4) and EST (UTC-5) for midnight ET.
+  cron.schedule("0 4,5 * * 0", async () => {
+    const now = new Date();
+    const etStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      hour12: false,
+      weekday: "short",
+    });
+    if (!etStr.startsWith("Sun") || !etStr.includes("0")) return;
+    if (!(await pipelineGate("compliance-rule-drift"))) return;
+    logger.info("Scheduler: Compliance rule drift check (Sunday midnight ET)");
+    const t0crd = Date.now();
+    await withRetry("compliance-rule-drift", SCHEDULER_JOBS["compliance-rule-drift"].run);
+    markJobRun("compliance-rule-drift");
+    emitJobComplete("compliance-rule-drift", Date.now() - t0crd);
+  });
+
+  // ─── Disabled job probe — every 30 minutes ────────────────
+  // Periodically probes disabled jobs with a test run. If a probe succeeds,
+  // the job is automatically re-enabled (self-healing).
+  registerJob("disabled-job-probe", 30 * 60 * 1000, async () => {
+    for (const [name, health] of jobHealthTracker) {
+      if (!health.disabled) continue;
+
+      // Don't probe itself
+      if (name === "disabled-job-probe") continue;
+
+      // Don't probe if disabled less than 15 minutes ago
+      if (health.disabledAt && Date.now() - health.disabledAt.getTime() < 15 * 60 * 1000) continue;
+
+      // Find the job's run function from SCHEDULER_JOBS registry
+      const job = SCHEDULER_JOBS[name];
+      if (!job?.run) {
+        logger.debug({ job: name }, "No run function found for disabled job — cannot probe");
+        continue;
+      }
+
+      logger.info({ job: name }, "Probing disabled job with test run");
+      try {
+        await job.run();
+        // Success! Re-enable
+        health.disabled = false;
+        health.disabledAt = null;
+        health.disableReason = null;
+        health.consecutiveFailures = 0;
+
+        try {
+          const { notifyInfo } = await import("./services/notification-service.js");
+          if (typeof notifyInfo === "function") {
+            notifyInfo(`Scheduler: ${name} auto-recovered`, `Job "${name}" passed probe test and has been re-enabled.`);
+          }
+        } catch { /* notification failure is non-blocking */ }
+        logger.info({ job: name }, "Disabled job passed probe — re-enabled");
+      } catch {
+        logger.debug({ job: name }, "Disabled job probe still failing — staying disabled");
+      }
+    }
+  });
+
+  cron.schedule("*/30 * * * *", async () => {
+    const t0probe = Date.now();
+    await withRetry("disabled-job-probe", SCHEDULER_JOBS["disabled-job-probe"].run, 1);
+    markJobRun("disabled-job-probe");
+    emitJobComplete("disabled-job-probe", Date.now() - t0probe);
+  });
+
+  // ─── Subsystem metrics collection — every 30 minutes ──────
+  registerJob("metrics-collector", 30 * 60 * 1000, async () => {
+    const { collectAllMetrics } = await import("./services/subsystem-metrics-service.js");
+    await collectAllMetrics();
+  });
+
+  cron.schedule("*/30 * * * *", async () => {
+    const t0metrics = Date.now();
+    await withRetry("metrics-collector", SCHEDULER_JOBS["metrics-collector"].run);
+    markJobRun("metrics-collector");
+    emitJobComplete("metrics-collector", Date.now() - t0metrics);
+  });
+
+  // ─── Scout funnel snapshot — daily at 1 AM ET ────────────────
+  registerJob("funnel-snapshot", 24 * 60 * 60 * 1000, async () => {
+    const { recordFunnelSnapshot } = await import("./services/funnel-metrics-service.js");
+    await recordFunnelSnapshot();
+  });
+
+  cron.schedule("0 1 * * *", async () => {
+    if (!(await pipelineGate("funnel-snapshot"))) return;
+    const t0funnel = Date.now();
+    await withRetry("funnel-snapshot", SCHEDULER_JOBS["funnel-snapshot"].run);
+    markJobRun("funnel-snapshot");
+    emitJobComplete("funnel-snapshot", Date.now() - t0funnel);
+  });
+
+  // ─── n8n health check — every 15 minutes ─────────────────────
+  registerJob("n8n-health-check", 15 * 60 * 1000, async () => {
+    const { n8nExecutionLog } = await import("./db/schema.js");
+    const { gte: gteOp, sql: sqlOp } = await import("drizzle-orm");
+    const since = new Date(Date.now() - 60 * 60 * 1000); // last hour
+
+    const stats = await db.select({
+      workflowName: n8nExecutionLog.workflowName,
+      total: sqlOp<number>`count(*)::int`,
+      failures: sqlOp<number>`count(*) filter (where ${n8nExecutionLog.status} IN ('failed', 'error'))::int`,
+    }).from(n8nExecutionLog)
+      .where(gteOp(n8nExecutionLog.createdAt, since))
+      .groupBy(n8nExecutionLog.workflowName);
+
+    const failing = stats.filter((s) => s.failures > 0);
+    if (failing.length > 0) {
+      broadcastSSE("n8n:health-alert", { failing });
+      logger.warn({ failing }, "n8n health check: workflows with recent failures");
+    } else {
+      logger.debug({ workflowCount: stats.length }, "n8n health check: all workflows healthy");
+    }
+  });
+
+  cron.schedule("*/15 * * * *", async () => {
+    const t0n8nHealth = Date.now();
+    await withRetry("n8n-health-check", SCHEDULER_JOBS["n8n-health-check"].run, 1);
+    markJobRun("n8n-health-check");
+    emitJobComplete("n8n-health-check", Date.now() - t0n8nHealth);
+  });
+
+  // ─── Resource utilization snapshot — every 5 minutes ──────
+  registerJob("resource-snapshot", 5 * 60 * 1000, async () => {
+    const { collectResourceMetrics } = await import("./services/resource-tracker.js");
+    await collectResourceMetrics();
+  });
+
+  cron.schedule("*/5 * * * *", async () => {
+    const t0res = Date.now();
+    await withRetry("resource-snapshot", SCHEDULER_JOBS["resource-snapshot"].run);
+    markJobRun("resource-snapshot");
+    emitJobComplete("resource-snapshot", Date.now() - t0res);
+  });
+
+  // ─── Session analytics nightly rollup — 11:45 PM ET daily ──
+  registerJob("session-analytics-rollup", 24 * 60 * 60 * 1000, async () => {
+    const { recordSessionAnalyticsRollup } = await import("./services/session-analytics-service.js");
+    await recordSessionAnalyticsRollup();
+  });
+
+  cron.schedule("45 3 * * *", async () => { // 3:45 AM UTC = 11:45 PM ET
+    const t0sa = Date.now();
+    await withRetry("session-analytics-rollup", SCHEDULER_JOBS["session-analytics-rollup"].run);
+    markJobRun("session-analytics-rollup");
+    emitJobComplete("session-analytics-rollup", Date.now() - t0sa);
+  });
+
+  // ─── Weekly Sunday 9 PM ET: Graveyard failure pattern extraction ─
+  // Run at 1:00 and 2:00 UTC on Mondays to cover EDT (UTC-4) and EST (UTC-5) for Sun 9 PM ET.
+  registerJob("graveyard-pattern-extraction", 7 * 24 * 60 * 60 * 1000, async () => {
+    const { extractFailurePatterns } = await import("./services/graveyard-intelligence-service.js");
+    const result = await extractFailurePatterns();
+    if (result.clusterCount > 0) {
+      logger.info(result, "Graveyard failure patterns updated");
+    }
+  });
+
+  cron.schedule("0 1,2 * * 1", async () => {
+    const now = new Date();
+    const etStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      weekday: "short",
+      hour: "numeric",
+      hour12: false,
+    });
+    // Only fire on Sunday 21:00 ET (which is Mon 01:00 or 02:00 UTC)
+    if (!etStr.includes("Sun") || !etStr.includes("21")) return;
+
+    if (!(await pipelineGate("graveyard-pattern-extraction"))) return;
+    const t0gpe = Date.now();
+    await withRetry("graveyard-pattern-extraction", SCHEDULER_JOBS["graveyard-pattern-extraction"].run);
+    markJobRun("graveyard-pattern-extraction");
+    emitJobComplete("graveyard-pattern-extraction", Date.now() - t0gpe);
+  });
+
+  // ─── Critic feedback — weekly Sunday 1 AM ET ──────────────────
+  registerJob("critic-feedback", 7 * 24 * 60 * 60 * 1000, async () => {
+    const { evaluateCriticAccuracy } = await import("./services/critic-feedback-service.js");
+    await evaluateCriticAccuracy();
+  });
+
+  // Run at 5:00 and 6:00 UTC on Sundays to cover EDT (UTC-4) and EST (UTC-5) for 1 AM ET.
+  cron.schedule("0 5,6 * * 0", async () => {
+    const now = new Date();
+    const etHour = Number(
+      now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+    );
+    if (etHour !== 1) return;
+    if (!(await pipelineGate("critic-feedback"))) return;
+    logger.info("Scheduler: Critic feedback evaluation (Sunday 1 AM ET)");
+    const t0cf = Date.now();
+    await withRetry("critic-feedback", SCHEDULER_JOBS["critic-feedback"].run);
+    markJobRun("critic-feedback");
+    emitJobComplete("critic-feedback", Date.now() - t0cf);
+  });
+
+  // ─── Prompt A/B test resolution — weekly Sunday 11 PM ET ──
+  registerJob("prompt-ab-resolution", 7 * 24 * 60 * 60 * 1000, async () => {
+    const { resolveAbTests } = await import("./services/prompt-evolution-service.js");
+    await resolveAbTests();
+  });
+
+  cron.schedule("0 23 * * 0", async () => {
+    if (!(await pipelineGate("prompt-ab-resolution"))) return;
+    const t0pab = Date.now();
+    await withRetry("prompt-ab-resolution", SCHEDULER_JOBS["prompt-ab-resolution"].run);
+    markJobRun("prompt-ab-resolution");
+    emitJobComplete("prompt-ab-resolution", Date.now() - t0pab);
+  });
+
+  // ─── Wave D3: Contract roll sweep — 4:30 PM ET weekdays ──────
+  // Runs at both 20:30 and 21:30 UTC to cover EDT (UTC-4) and EST (UTC-5).
+  // DST-aware: only fires when ET clock resolves to 16:30.
+  //
+  // Override: this job bypasses pipelineGate — contract expiry is a safety
+  // operation and must run regardless of pipeline pause/vacation state.
+  // "kill a position before the contract expires" is not a trading decision.
+  registerJob("contract-roll-sweep", 24 * 60 * 60 * 1000, async () => {
+    const { runSessionEndRollSweep } = await import("./services/paper-execution-service.js");
+    const result = await runSessionEndRollSweep();
+    logger.info(result, "Contract roll sweep complete");
+  });
+
+  cron.schedule("30 20,21 * * 1-5", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etHourStr, etMinStr] = etTimeStr.split(":");
+    const etHour = parseInt(etHourStr, 10);
+    const etMin = parseInt(etMinStr, 10);
+    // Only fire at exactly 4:30 PM ET (16:30)
+    if (etHour !== 16 || etMin !== 30) {
+      logger.debug({ etHour, etMin }, "Scheduler: contract-roll-sweep cron fired but not 4:30 PM ET — skipping");
+      return;
+    }
+    // NOTE: no pipelineGate check here — roll handler is a safety operation,
+    // not a trading operation. It must run even when paused/vacation.
+    logger.info("Scheduler: Contract roll sweep (4:30 PM ET)");
+    const t0roll = Date.now();
+    await withRetry("contract-roll-sweep", SCHEDULER_JOBS["contract-roll-sweep"].run);
+    markJobRun("contract-roll-sweep");
+    emitJobComplete("contract-roll-sweep", Date.now() - t0roll);
+  });
+
+  // ─── Tournament staleness alarm — every 6 hours ──────────────
+  // The 4-role tournament (Proposer → Critic → Prosecutor → Promoter) lives in
+  // n8n. If n8n is down, no tournament_results rows are written and the in-process
+  // Node loop bypasses the tournament gate (CLAUDE.md acknowledges). This job
+  // detects the silent failure mode by alarming when the latest tournament_results
+  // row is older than the staleness threshold.
+  registerJob("tournament-staleness-check", 6 * 60 * 60 * 1000, async () => {
+    await checkTournamentStaleness();
+  });
+
+  cron.schedule("0 */6 * * *", async () => {
+    const t0tourn = Date.now();
+    await withRetry("tournament-staleness-check", SCHEDULER_JOBS["tournament-staleness-check"].run, 1);
+    markJobRun("tournament-staleness-check");
+    emitJobComplete("tournament-staleness-check", Date.now() - t0tourn);
+  });
+
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), prompt-ab-resolution (Sun 11 PM ET weekly), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h)");
 
   // ─── Startup reconciliation: catch up missed jobs ─────────
   reconcileMissedRuns().then(() => {
@@ -425,6 +1589,68 @@ export function initScheduler() {
   resumeActivePaperSessions().catch((err) => {
     logger.error({ err }, "Scheduler: paper session resume failed");
   });
+}
+
+/**
+ * Tournament staleness check — alarm if n8n tournament workflow stops writing.
+ *
+ * The 4-role tournament gate (Proposer → Critic → Prosecutor → Promoter) lives
+ * in n8n workflows, NOT in the in-process Node loop. CLAUDE.md acknowledges
+ * that direct invocations of POST /api/agent/run-strategy bypass the tournament
+ * gate. If n8n stops writing tournament_results, the silent-failure mode is
+ * "strategies still backtest, but no adversarial filter ran."
+ *
+ * This job runs every 6 hours and emits an SSE alarm + audit log entry when
+ * the latest tournament_results row is older than 24 hours (or the table is
+ * empty entirely). Empty table is treated as Infinity age — alarms.
+ */
+async function checkTournamentStaleness(): Promise<void> {
+  const correlationId = randomUUID();
+  try {
+    const [latest] = await db
+      .select({ createdAt: tournamentResults.createdAt })
+      .from(tournamentResults)
+      .orderBy(desc(tournamentResults.createdAt))
+      .limit(1);
+
+    const ageHours = latest
+      ? (Date.now() - latest.createdAt.getTime()) / (1000 * 60 * 60)
+      : Infinity;
+
+    const STALE_THRESHOLD_HOURS = 24;
+    if (ageHours > STALE_THRESHOLD_HOURS) {
+      logger.warn(
+        { correlationId, ageHours, latest: latest?.createdAt ?? null },
+        "tournament_results stale — n8n tournament workflow may be down",
+      );
+
+      broadcastSSE("n8n:tournament-stale", {
+        ageHours: Number.isFinite(ageHours) ? Math.round(ageHours * 10) / 10 : null,
+        latestResultAt: latest?.createdAt ?? null,
+        threshold: STALE_THRESHOLD_HOURS,
+      });
+
+      await db.insert(auditLog).values({
+        action: "tournament.staleness-alarm",
+        entityType: "system",
+        status: "success",
+        decisionAuthority: "scheduler",
+        result: {
+          ageHours: Number.isFinite(ageHours) ? ageHours : null,
+          threshold: STALE_THRESHOLD_HOURS,
+          latestResultAt: latest?.createdAt?.toISOString() ?? null,
+        },
+        correlationId,
+      });
+    } else {
+      logger.debug(
+        { correlationId, ageHours, threshold: STALE_THRESHOLD_HOURS },
+        "tournament_results fresh — no alarm",
+      );
+    }
+  } catch (err) {
+    logger.error({ err, correlationId }, "tournament staleness check failed");
+  }
 }
 
 /**
@@ -490,6 +1716,21 @@ async function resumeActivePaperSessions(): Promise<void> {
         );
       }
 
+      // P0-4: Restore governor state from DB so the state machine survives restart.
+      // If governor_state is null (new sessions, pre-migration rows), governor starts
+      // at "normal" — the safe default (same as a fresh session).
+      if (session.governorState) {
+        const restoredState = restoreGovernorState(session.id, session.governorState as Record<string, unknown>);
+        if (restoredState) {
+          logger.info(
+            { sessionId: session.id, governorState: restoredState },
+            "P0-4: Restored governor state from DB",
+          );
+        }
+      } else {
+        logger.debug({ sessionId: session.id }, "P0-4: No persisted governor state — starting at normal");
+      }
+
       logger.info({ sessionId: session.id, symbols }, "Resumed active paper session");
     } catch (err) {
       logger.error({ err, sessionId: session.id }, "Failed to resume paper session");
@@ -501,11 +1742,15 @@ async function resumeActivePaperSessions(): Promise<void> {
  * Update rolling 30-day Sharpe ratio for all active strategies.
  */
 async function updateRollingSharpe() {
+  // P1-4: Include DEPLOY_READY so promotion-gate inputs stay current.
+  // Excludes CANDIDATE/TESTING/DECLINING/RETIRED/GRAVEYARD — those states
+  // have no active paper sessions and should never be re-promoted from a
+  // stale 30-day window.
   const activeStrategies = await db
     .select({ id: strategies.id, name: strategies.name, lifecycleState: strategies.lifecycleState })
     .from(strategies)
     .where(
-      inArray(strategies.lifecycleState, ["PAPER", "DEPLOYED"]),
+      inArray(strategies.lifecycleState, ["PAPER", "DEPLOY_READY", "DEPLOYED"]),
     );
 
   if (activeStrategies.length === 0) {
@@ -518,14 +1763,18 @@ async function updateRollingSharpe() {
 
   for (const strat of activeStrategies) {
     try {
-      // Fetch paper trades from the last 30 days across all active sessions for this strategy
+      // P1-4: Fetch paper trades from the last 30 calendar days across active,
+      // paused, and stopped sessions for this strategy. A paused session's Sharpe
+      // is correctly anchored to its actual trading days because we filter by
+      // exitTime >= thirtyDaysAgo on the trades table — not by session status.
+      // This ensures promotion-gate inputs are not frozen for paused sessions.
       const activeSessions = await db
         .select({ id: paperSessions.id })
         .from(paperSessions)
         .where(
           and(
             eq(paperSessions.strategyId, strat.id),
-            eq(paperSessions.status, "active"),
+            inArray(paperSessions.status, ["active", "paused", "stopped"]),
           ),
         );
 
@@ -880,14 +2129,27 @@ async function runDailyDecayMonitor(): Promise<void> {
 
   for (const strat of activeStrategies) {
     try {
+      // C6: Switch from half_life-only to decay_gate, which runs all 6 sub-signals:
+      // sharpe_decay, mfe_decay, slippage_growth, win_size_decay, regime_mismatch, fill_rate_decay.
+      // Previous behavior: only rolling Sharpe (half_life module) was evaluated.
+      // New behavior: composite_decay_score from all 6 sub-signals drives quarantine level,
+      // then unified verdict (pass/warn/fail) from decay_gate is used for demotion decisions.
+      // Auto-quarantine thresholds from decay_gate:
+      //   LEVEL_1 watch: any 1 signal at WARNING (composite_score >= 20)
+      //   LEVEL_2 reduce: any 2 WARNING or 1 CRITICAL → reduce position 50% (composite >= 40)
+      //   LEVEL_3 quarantine: any 2 CRITICAL → pause strategy (composite >= 70)
+      //   LEVEL_4 retire: quarantined 30+ days → RETIRED (handled by quarantine.py)
       const decayResult = await runPythonModule<{
-        decay_score?: number;
-        decaying?: boolean;
-        trend?: string;
-        half_life_days?: number;
+        verdict?: string;        // "pass" | "warn" | "fail"
+        reason?: string;
+        composite_score?: number;
+        size_multiplier?: number;
+        half_life?: { decay_detected?: boolean; trend?: string; half_life_days?: number };
+        quarantine?: { new_level?: string; days_at_level?: number };
+        sub_signals?: Record<string, { signal: string; score: number; detail: string }>;
         error?: string;
       }>({
-        module: "src.engine.decay.half_life",
+        module: "src.engine.decay.decay_gate",
         config: { action: "analyze", strategy_id: strat.id },
         componentName: "decay-daily-monitor",
         timeoutMs: 30_000,
@@ -899,7 +2161,8 @@ async function runDailyDecayMonitor(): Promise<void> {
         continue;
       }
 
-      const decayScore = Number(decayResult.decay_score ?? 0);
+      // composite_score from all 6 sub-signals (was decay_score from half_life only)
+      const decayScore = Number(decayResult.composite_score ?? 0);
 
       logger.info(
         {
@@ -907,9 +2170,13 @@ async function runDailyDecayMonitor(): Promise<void> {
           name: strat.name,
           lifecycleState: strat.lifecycleState,
           decayScore,
-          decaying: decayResult.decaying,
-          trend: decayResult.trend,
-          halfLifeDays: decayResult.half_life_days,
+          verdict: decayResult.verdict,
+          // half_life fields are nested under decayResult.half_life (decay_gate output structure)
+          decaying: decayResult.half_life?.decay_detected,
+          trend: decayResult.half_life?.trend,
+          halfLifeDays: decayResult.half_life?.half_life_days,
+          quarantineLevel: decayResult.quarantine?.new_level,
+          sizeMultiplier: decayResult.size_multiplier,
         },
         "Decay monitor: analysis complete",
       );
@@ -917,12 +2184,18 @@ async function runDailyDecayMonitor(): Promise<void> {
       if (decayScore > DECAY_DEMOTION_THRESHOLD) {
         elevated.push(strat.id);
 
-        // Only demote states that have a valid DECLINING transition
+        // C6: All 3 active states now have valid DECLINING transitions (per VALID_TRANSITIONS in
+        // lifecycle-service.ts: TESTING: ["PAPER","DECLINING","GRAVEYARD"],
+        // PAPER: ["DEPLOY_READY","DECLINING","GRAVEYARD"]).
+        // Previous behavior: PAPER → null and TESTING → null meant decay never demoted
+        // pre-deploy strategies, making the half-life detector a no-op for most of the pipeline.
+        // New behavior: decay can demote PAPER and TESTING strategies to DECLINING when decay
+        // score exceeds threshold. This makes the decay monitor functional across all active states.
         const currentState = strat.lifecycleState as "TESTING" | "PAPER" | "DEPLOYED";
         const demotionMap: Record<string, "DECLINING" | null> = {
           DEPLOYED: "DECLINING",
-          PAPER: null,     // No direct PAPER → DECLINING transition in state machine
-          TESTING: null,   // No direct TESTING → DECLINING transition
+          PAPER: "DECLINING",    // PAPER → DECLINING is valid per VALID_TRANSITIONS
+          TESTING: "DECLINING",  // TESTING → DECLINING is valid per VALID_TRANSITIONS
         };
         const targetState = demotionMap[currentState];
 
@@ -1002,6 +2275,7 @@ async function runDailyDecayMonitor(): Promise<void> {
 async function stopPaperSession(
   sessionId: string,
   reason: string,
+  correlationId?: string,
 ): Promise<{ id: string; stoppedAt: Date | null; totalTrades: number | null; currentEquity: string | null } | null> {
   // Resolve symbols before stopping (needed for cache cleanup)
   const streamInfo = getActiveStreams().get(sessionId);
@@ -1109,7 +2383,11 @@ async function stopPaperSession(
     },
     status: "success",
     decisionAuthority: "scheduler",
+    correlationId: correlationId ?? null,
   });
+
+  await computeAndPersistSessionFeedback(sessionId);
+  broadcastSSE("paper:session-feedback-computed", { sessionId, reason, source: "scheduler" });
 
   return session;
 }
@@ -1126,6 +2404,7 @@ async function stopPaperSession(
  * positives from overnight / pre-market silence.
  */
 async function detectStalePaperSessions(): Promise<void> {
+  const correlationId = randomUUID();
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
@@ -1142,6 +2421,152 @@ async function detectStalePaperSessions(): Promise<void> {
 
   for (const session of activeSessions) {
     try {
+      // ─── Auto-recovery: detect crashed WebSocket streams ─────
+      // If the session is registered in-memory but the socket is disconnected,
+      // attempt to reconnect before falling through to the stale-time checks.
+      const streamHealth = getStreamHealth(session.id);
+      const sessionAgeMs = Date.now() - session.startedAt.getTime();
+
+      if (
+        isStreaming(session.id) &&
+        !streamHealth.connected &&
+        sessionAgeMs > 10 * 60 * 1000 // avoid false positives during startup
+      ) {
+        const attempts = recoveryAttempts.get(session.id) ?? 0;
+
+        if (attempts >= MAX_RECOVERY_ATTEMPTS) {
+          // ─── Recovery exhausted: auto-stop ───────────────────
+          logger.error(
+            { sessionId: session.id, strategyId: session.strategyId, attempts },
+            "Paper session auto-recovery exhausted — stopping session",
+          );
+
+          try {
+            const stopped = await stopPaperSession(session.id, "recovery_failed", correlationId);
+            if (stopped) {
+              broadcastSSE("paper:auto_stopped", {
+                sessionId: session.id,
+                strategyId: session.strategyId,
+                reason: "recovery_failed",
+                attempts,
+              });
+            }
+          } catch (stopErr) {
+            logger.error({ sessionId: session.id, err: stopErr }, "Failed to auto-stop after recovery exhaustion");
+          }
+
+          notifyCritical(
+            "Paper Session Recovery Failed",
+            `Session ${session.id.slice(0, 8)} failed to recover after ${MAX_RECOVERY_ATTEMPTS} attempts and was auto-stopped.`,
+            { sessionId: session.id, strategyId: session.strategyId },
+          );
+
+          await db.insert(auditLog).values({
+            action: "paper_session.recovery_failed",
+            entityType: "paper_session",
+            entityId: session.id,
+            status: "failure",
+            decisionAuthority: "scheduler",
+            result: { strategyId: session.strategyId, attempts },
+            correlationId,
+          });
+
+          recoveryAttempts.delete(session.id);
+          continue; // session is stopped, skip stale checks
+        }
+
+        // ─── Attempt recovery ──────────────────────────────────
+        const attempt = attempts + 1;
+        recoveryAttempts.set(session.id, attempt);
+
+        logger.warn(
+          { sessionId: session.id, strategyId: session.strategyId, attempt, maxAttempts: MAX_RECOVERY_ATTEMPTS },
+          "Paper session stream disconnected — attempting auto-recovery",
+        );
+
+        try {
+          // Clean up dead WebSocket
+          stopStream(session.id);
+
+          // Resolve symbol list from strategy (same pattern as resumeActivePaperSessions)
+          const strat = session.strategyId
+            ? await db.select().from(strategies).where(eq(strategies.id, session.strategyId)).limit(1)
+            : [];
+
+          const symbols: string[] = [];
+          if (strat[0]?.symbol) symbols.push(strat[0].symbol);
+          const stratConfig = strat[0]?.config as Record<string, unknown> | undefined;
+          if (stratConfig?.symbol && !symbols.includes(String(stratConfig.symbol))) {
+            symbols.push(String(stratConfig.symbol));
+          }
+
+          if (symbols.length === 0) {
+            logger.warn({ sessionId: session.id }, "Cannot auto-recover paper session — no symbol found");
+            continue;
+          }
+
+          // Reconnect WebSocket stream
+          startStream(session.id, symbols);
+
+          // Restore in-memory position state from DB
+          const openPositions = await db
+            .select({
+              id: paperPositions.id,
+              trailHwm: paperPositions.trailHwm,
+              barsHeld: paperPositions.barsHeld,
+            })
+            .from(paperPositions)
+            .where(
+              and(
+                eq(paperPositions.sessionId, session.id),
+                isNull(paperPositions.closedAt),
+              ),
+            );
+
+          if (openPositions.length > 0) {
+            restorePositionState(openPositions);
+          }
+
+          await db.insert(auditLog).values({
+            action: "paper_session.auto_recovered",
+            entityType: "paper_session",
+            entityId: session.id,
+            status: "success",
+            decisionAuthority: "scheduler",
+            result: { strategyId: session.strategyId, attempt, symbols },
+            correlationId,
+          });
+
+          broadcastSSE("paper:auto_recovered", {
+            sessionId: session.id,
+            strategyId: session.strategyId,
+            attempt,
+            symbols,
+          });
+
+          logger.info(
+            { sessionId: session.id, strategyId: session.strategyId, attempt, symbols },
+            "Paper session auto-recovered — stream reconnected",
+          );
+        } catch (recoverErr) {
+          logger.error(
+            { sessionId: session.id, attempt, err: recoverErr },
+            "Paper session auto-recovery attempt failed",
+          );
+        }
+
+        continue; // skip stale checks this cycle — let recovery settle
+      }
+
+      // ─── Clear recovery counter on healthy stream ────────────
+      if (isStreaming(session.id) && streamHealth.connected && recoveryAttempts.has(session.id)) {
+        logger.info(
+          { sessionId: session.id, previousAttempts: recoveryAttempts.get(session.id) },
+          "Paper session stream healthy — clearing recovery counter",
+        );
+        recoveryAttempts.delete(session.id);
+      }
+
       // Check most recent signal log entry
       const [lastSignal] = await db
         .select({ createdAt: paperSignalLogs.createdAt })
@@ -1184,7 +2609,7 @@ async function detectStalePaperSessions(): Promise<void> {
           "Stale paper session auto-stopping — no activity for 2+ hours",
         );
         try {
-          const stopped = await stopPaperSession(session.id, "stale_2h");
+          const stopped = await stopPaperSession(session.id, "stale_2h", correlationId);
           if (stopped) {
             broadcastSSE("paper:auto_stopped", {
               sessionId: session.id,
@@ -1319,6 +2744,7 @@ export async function onPaperTradeClose(sessionId: string, strategyId: string) {
  * Runs nightly at 11 PM ET after all session post-processing is complete.
  */
 async function fillRegretScores(): Promise<void> {
+  const correlationId = randomUUID();
   // Find all rows with actualPnl set but regretScore still null
   const pending = await db
     .select({
@@ -1385,6 +2811,7 @@ async function fillRegretScores(): Promise<void> {
     result: { updated, skipped },
     status: updated > 0 ? "success" : "failure",
     decisionAuthority: "scheduler",
+    correlationId,
   }).catch((err) => {
     logger.error({ err }, "Regret score fill: audit log insert failed");
   });
@@ -1396,4 +2823,236 @@ async function fillRegretScores(): Promise<void> {
   });
 
   logger.info({ updated, skipped }, "Regret score fill: complete");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// C2 — Day archetype daily classifier
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Symbols Trading Forge classifies daily.
+ *
+ *  MES, MNQ, MCL are the three canonical micro-futures symbols tracked across
+ *  the prop-sim, portfolio optimizer, and skip engine.  NQ was the original
+ *  narrow list; these are added here so day_archetypes is populated for all
+ *  instruments.  The predictor returns RANGE_DAY + uniform probabilities when
+ *  historical labels are sparse — safe fail-soft until backfill catches up.
+ *
+ *  TODO: extend to MGC/M2K once S3 historical_labeler has indexed 60+ days.
+ */
+const ARCHETYPE_DAILY_SYMBOLS = ["MES", "MNQ", "MCL"];
+
+/**
+ * Daily archetype classifier (6 AM ET).  For each symbol:
+ *   1. Pull historical (features, actual_archetype) pairs from day_archetypes
+ *   2. Spawn Python `archetypes.predictor` with action=predict
+ *   3. Persist the predicted archetype + features to day_archetypes
+ *
+ * This cron fills the *predicted* side of today's row.  After market close,
+ * a separate (existing) workflow runs the rule-based classifier on actual
+ * OHLCV to overwrite the `archetype` column and compute prediction_correct.
+ *
+ * Fail-soft: if no historical labels exist the predictor returns RANGE_DAY
+ * with uniform probabilities — we still persist that row so the eligibility
+ * matrix stays stable until backfill catches up.
+ */
+async function runArchetypeDailyClassify(): Promise<void> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (const symbol of ARCHETYPE_DAILY_SYMBOLS) {
+    try {
+      // Idempotency: skip if today's row already has a prediction
+      const [existing] = await db
+        .select({ id: dayArchetypes.id, predicted: dayArchetypes.predictedArchetype })
+        .from(dayArchetypes)
+        .where(
+          and(
+            eq(dayArchetypes.symbol, symbol),
+            gte(dayArchetypes.tradingDate, today),
+          ),
+        )
+        .limit(1);
+
+      if (existing?.predicted) {
+        logger.info({ symbol, predicted: existing.predicted }, "Archetype already predicted for today — skipping");
+        continue;
+      }
+
+      // Pull last 60 days of labeled history for KNN (predictor handles empty)
+      const sixtyDaysAgo = new Date(today);
+      sixtyDaysAgo.setDate(today.getDate() - 60);
+      const historyRows = await db
+        .select({
+          features: dayArchetypes.features,
+          archetype: dayArchetypes.archetype,
+          tradingDate: dayArchetypes.tradingDate,
+        })
+        .from(dayArchetypes)
+        .where(
+          and(
+            eq(dayArchetypes.symbol, symbol),
+            gte(dayArchetypes.tradingDate, sixtyDaysAgo),
+            lte(dayArchetypes.tradingDate, today),
+          ),
+        )
+        .orderBy(desc(dayArchetypes.tradingDate));
+
+      const historicalFeatures = historyRows
+        .filter((r) => r.features && r.archetype && r.archetype !== "PENDING")
+        .map((r) => ({
+          features: r.features as Record<string, number>,
+          actual_archetype: r.archetype,
+          date: r.tradingDate.toISOString().slice(0, 10),
+        }));
+
+      // Premarket features are intentionally empty until the data plumbing
+      // is wired (S3/DuckDB premarket bars).  The predictor returns
+      // RANGE_DAY+uniform when both inputs are sparse — documented fallback.
+      const todayFeatures: Record<string, number> = {};
+
+      const result = await runPythonModule<{
+        predicted: string;
+        probabilities: Record<string, number>;
+        confidence: number;
+        nearest_dates: string[];
+      }>({
+        module: "src.engine.archetypes.predictor",
+        config: {
+          action: "predict",
+          features: todayFeatures,
+          historical_features: historicalFeatures,
+          k: 7,
+        },
+        timeoutMs: 30_000,
+        componentName: "archetype-daily-classify",
+      });
+
+      // Upsert today's row — predicted side filled, actual side stays
+      // PENDING until post-close classifier runs.
+      if (existing?.id) {
+        await db
+          .update(dayArchetypes)
+          .set({
+            predictedArchetype: result.predicted,
+            confidence: String(result.confidence),
+            features: todayFeatures,
+            metrics: { probabilities: result.probabilities, nearest_dates: result.nearest_dates },
+          })
+          .where(eq(dayArchetypes.id, existing.id));
+      } else {
+        await db.insert(dayArchetypes).values({
+          symbol,
+          tradingDate: today,
+          archetype: "PENDING",
+          predictedArchetype: result.predicted,
+          confidence: String(result.confidence),
+          features: todayFeatures,
+          metrics: { probabilities: result.probabilities, nearest_dates: result.nearest_dates },
+        });
+      }
+
+      broadcastSSE("archetype:predicted", {
+        symbol,
+        date: today.toISOString().slice(0, 10),
+        predicted: result.predicted,
+        confidence: result.confidence,
+      });
+
+      logger.info(
+        { symbol, predicted: result.predicted, confidence: result.confidence, historyCount: historicalFeatures.length },
+        "Archetype daily classify: prediction persisted",
+      );
+    } catch (err) {
+      logger.error({ err, symbol }, "Archetype daily classify failed for symbol (non-blocking)");
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Loop 1 — Macro regime daily sync
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Daily macro regime sync (5 AM ET).  Pulls FRED/BLS/EIA snapshot,
+ * classifies macro_regime via macro_tagger, writes a row to macroSnapshots.
+ *
+ * Downstream consumers:
+ *   - bias_engine.compute_bias() reads regime from macroSnapshots.macroRegime
+ *   - skip_classifier scores regime_alignment from latest snapshot
+ *   - strategy eligibility matrix tags regime per strategy preferred_regime
+ *   - regime_graph (composite tech+macro) consumes the macro side
+ *
+ * Failures are non-blocking — bias engine falls back to "TRANSITION" if
+ * no fresh snapshot exists.
+ */
+async function runMacroDailySync(): Promise<void> {
+  try {
+    const result = await runPythonModule({
+      scriptCode: `
+import json, sys, os
+sys.path.insert(0, '.')
+
+results = {"status": "partial", "sources": {}}
+
+# FRED
+try:
+    from src.data.macro.fred_client import get_latest_values
+    fred_data = get_latest_values()
+    results["sources"]["fred"] = {"status": "ok", "series_count": len([v for v in fred_data.values() if v is not None])}
+    results["fred_data"] = fred_data
+except Exception as e:
+    results["sources"]["fred"] = {"status": "error", "error": str(e)}
+    results["fred_data"] = {}
+
+# Macro regime classification
+try:
+    from src.data.macro.macro_tagger import classify_macro_regime
+    snapshot = results.get("fred_data", {})
+    regime = classify_macro_regime(snapshot)
+    results["regime"] = regime
+except Exception as e:
+    results["regime"] = {"regime": "TRANSITION", "confidence": 0, "error": str(e)}
+
+results["status"] = "ok"
+print(json.dumps(results))
+`,
+      componentName: "macro-data-sync",
+      timeoutMs: 120_000,
+    });
+
+    const fredData = (result as Record<string, unknown>).fred_data as Record<string, number | null> ?? {};
+    const regime = (result as Record<string, unknown>).regime as Record<string, unknown> ?? {};
+    const regimeName = (regime.regime as string) ?? "TRANSITION";
+    const confidence = (regime.confidence as number) ?? 0;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const today = new Date(todayStr + "T00:00:00Z");
+
+    await db.insert(macroSnapshots).values({
+      snapshotDate: today,
+      fedFundsRate: fredData.fed_funds_rate?.toString() ?? null,
+      treasury10y: fredData.treasury_10y?.toString() ?? null,
+      treasury2y: fredData.treasury_2y?.toString() ?? null,
+      treasury3m: fredData.treasury_3m?.toString() ?? null,
+      vix: fredData.vix?.toString() ?? null,
+      yieldSpread10y2y: fredData.yield_spread_10y2y?.toString() ?? null,
+      unemployment: fredData.unemployment?.toString() ?? null,
+      cpiYoy: fredData.cpi_yoy?.toString() ?? null,
+      pceYoy: fredData.pce_yoy?.toString() ?? null,
+      wtiCrude: fredData.wti_crude?.toString() ?? null,
+      naturalGas: fredData.natural_gas?.toString() ?? null,
+      macroRegime: regimeName,
+      regimeConfidence: confidence.toString(),
+      rawData: result as Record<string, unknown>,
+    }).onConflictDoNothing();
+
+    broadcastSSE("macro:regime-updated", {
+      date: todayStr,
+      regime: regimeName,
+      confidence,
+    });
+
+    logger.info({ regime: regimeName, confidence }, "Macro regime daily sync complete");
+  } catch (err) {
+    logger.error({ err }, "Macro regime daily sync failed (non-blocking)");
+  }
 }

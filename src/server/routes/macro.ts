@@ -12,14 +12,14 @@ import { Router } from "express";
 import { db } from "../db/index.js";
 import { macroSnapshots, backtests, backtestTrades } from "../db/schema.js";
 import { desc, sql, inArray } from "drizzle-orm";
-import { logger } from "../index.js";
+
 import { runPythonModule } from "../lib/python-runner.js";
 
 export const macroRoutes = Router();
 
 // ─── GET /api/macro/current ────────────────────────────────────
 // Returns the latest macro snapshot + regime classification
-macroRoutes.get("/current", async (_req, res) => {
+macroRoutes.get("/current", async (req, res) => {
   try {
     const [latest] = await db
       .select()
@@ -58,7 +58,7 @@ macroRoutes.get("/current", async (_req, res) => {
       created_at: latest.createdAt,
     });
   } catch (err) {
-    logger.error({ err }, "Failed to fetch current macro regime");
+    req.log.error({ err }, "Failed to fetch current macro regime");
     res.status(500).json({ error: "Failed to fetch current macro regime", details: String(err) });
   }
 });
@@ -102,14 +102,14 @@ macroRoutes.get("/history", async (req, res) => {
       },
     });
   } catch (err) {
-    logger.error({ err }, "Failed to fetch macro history");
+    req.log.error({ err }, "Failed to fetch macro history");
     res.status(500).json({ error: "Failed to fetch macro history", details: String(err) });
   }
 });
 
 // ─── POST /api/macro/sync ──────────────────────────────────────
 // Trigger manual data sync from FRED/BLS/EIA
-macroRoutes.post("/sync", async (_req, res) => {
+macroRoutes.post("/sync", async (req, res) => {
   try {
     const result = await runPythonModule({
       scriptCode: `
@@ -174,7 +174,7 @@ print(json.dumps(results))
       snapshot_date: new Date().toISOString(),
     });
   } catch (err) {
-    logger.error({ err }, "Macro sync failed");
+    req.log.error({ err }, "Macro sync failed");
     res.status(500).json({ error: "Macro sync failed", details: String(err) });
   }
 });
@@ -205,7 +205,7 @@ print(json.dumps({
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Calendar fetch failed");
+    req.log.error({ err }, "Calendar fetch failed");
     res.status(500).json({ error: "Calendar fetch failed", details: String(err) });
   }
 });
@@ -349,7 +349,7 @@ macroRoutes.get("/strategy-fit/:id", async (req, res) => {
       recommendation,
     });
   } catch (err) {
-    logger.error({ err }, "Strategy-fit analysis failed");
+    req.log.error({ err }, "Strategy-fit analysis failed");
     res.status(500).json({ error: "Strategy-fit analysis failed", details: String(err) });
   }
 });

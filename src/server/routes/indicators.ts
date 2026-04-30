@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { createAlphaVantageFetcher } from "../../data/fetchers/alphavantage.js";
-import { logger } from "../index.js";
+
 
 export const indicatorRoutes = Router();
 
@@ -26,7 +26,7 @@ function getFetcher() {
 // ─── GET /api/indicators/supported ───────────────────────────────
 // MUST be registered before /:symbol/:indicator to avoid shadowing
 
-indicatorRoutes.get("/supported", (_req, res) => {
+indicatorRoutes.get("/supported", (req, res) => {
   res.json({
     indicators: SUPPORTED_INDICATORS,
     intervals: INTERVALS,
@@ -72,7 +72,7 @@ indicatorRoutes.get("/:symbol/:indicator", async (req, res) => {
       data,
     });
   } catch (err) {
-    logger.error({ err, symbol, indicator }, "Indicator fetch failed");
+    req.log.error({ err, symbol, indicator }, "Indicator fetch failed");
     res.status(500).json({ error: "Failed to fetch indicator data" });
   }
 });

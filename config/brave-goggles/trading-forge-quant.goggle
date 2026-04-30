@@ -1,0 +1,41 @@
+! name: Trading Forge — Quant Research Bias
+! description: Boosts academic + quant trading sources, downranks content farms. Apply via Brave goggles parameter.
+! public: false
+! author: Tonio (Trading Forge)
+
+! ─── BOOST academic + quant research ────────────────────
+$boost=10,site=arxiv.org
+$boost=10,site=ssrn.com
+$boost=8,site=quantpedia.com
+$boost=8,site=quantitativo.com
+$boost=8,site=robotwealth.com
+$boost=7,site=quant.stackexchange.com
+$boost=7,site=quantstart.com
+$boost=6,site=quantocracy.com
+$boost=6,site=quantifiedstrategies.com
+$boost=6,site=alphaarchitect.com
+$boost=6,site=papers.nber.org
+$boost=5,site=reddit.com/r/algotrading
+$boost=5,site=quantconnect.com
+$boost=4,site=tradingview.com/script
+$boost=4,site=cmegroup.com/education
+
+! ─── DOWNRANK content farms + sponsored ─────────────────
+$downrank=10,site=investopedia.com
+$downrank=10,site=youtube.com/shorts
+$downrank=8,site=medium.com
+$downrank=8,site=benzinga.com
+$downrank=7,site=marketbeat.com
+$downrank=7,site=fool.com
+$downrank=6,site=seekingalpha.com
+$downrank=6,site=towardsdatascience.com
+
+! ─── DISCARD social + scam ──────────────────────────────
+$discard,site=pinterest.com
+$discard,site=tiktok.com
+$discard,site=facebook.com
+$discard,site=instagram.com
+$discard,site=reddit.com/r/wallstreetbets
+$discard,inurl=binary-options
+$discard,inurl=forex-signals
+$discard,inurl=get-rich

@@ -31,6 +31,7 @@ SIGNAL_WEIGHTS: dict[str, float] = {
     "correlation_spike": 1.5,
     "calendar_filter": 2.0,
     "qubo_timing": 1.5,
+    "regime_bias": 1.5,           # DeepAR regime probabilities (C1)
 }
 
 # Thresholds
@@ -216,12 +217,73 @@ def _score_qubo_timing(signals: dict[str, Any]) -> float:
     return 0.0
 
 
+def _score_regime_bias(signals: dict[str, Any]) -> float:
+    """
+    Regime bias scorer (C1) — uses DeepAR regime probabilities to nudge
+    the skip score.  DeepAR is challenger_only — its 'effective_weight'
+    multiplies the contribution so a stale or shadow forecast contributes 0.
+
+    Heuristic:
+      - high_vol regime probability is risk-off — adds to skip score
+      - trending regime is risk-on — subtracts (clamped at 0)
+      - mean_revert is neutral
+
+    Expects:
+      signals["regime_probs"] = {
+          "high_vol": 0..1, "trending": 0..1, "mean_revert": 0..1,
+          "effective_weight": 0..1,   # DeepAR's authority multiplier
+      }
+    """
+    rp = signals.get("regime_probs")
+    if not rp or not isinstance(rp, dict):
+        return 0.0
+
+    eff = float(rp.get("effective_weight", 0.0))
+    if eff <= 0:
+        return 0.0
+
+    p_high_vol = float(rp.get("high_vol", 0.0))
+    p_trending = float(rp.get("trending", 0.0))
+
+    # Bias = how risk-off the forecast is, scaled to 0..1
+    # high_vol > 0.5 starts to bite; trending > 0.5 cancels some of that
+    raw_bias = max(0.0, p_high_vol - 0.5) * 2.0 - max(0.0, p_trending - 0.5) * 1.0
+    raw_bias = max(0.0, min(1.0, raw_bias))
+
+    return raw_bias * eff
+
+
 # ─── Main Classifier ──────────────────────────────────────────────
+
+
+def _scale_signal_score(
+    name: str,
+    raw_score: float,
+    learned_weights: dict[str, float] | None,
+) -> float:
+    """
+    Apply optional learned-weight scaling to a single signal score.
+
+    qubo_timing is always excluded from learned-weight scaling — its raw signal
+    logic stands. When learned_weights is None, the score is unchanged. Otherwise
+    the score is multiplied by (learned_weight / base_weight) so that passing
+    learned_weights == BASE_WEIGHTS reduces to identity (ratio = 1.0).
+    """
+    if name == "qubo_timing":
+        return raw_score
+    if learned_weights is None:
+        return raw_score
+    base_w = SIGNAL_WEIGHTS.get(name)
+    learned_w = learned_weights.get(name)
+    if base_w is None or learned_w is None or base_w == 0:
+        return raw_score
+    return raw_score * (learned_w / base_w)
 
 
 def classify_session(
     signals: dict[str, Any],
     strategy_id: str | None = None,
+    learned_weights: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     """
     Main classification function. Takes pre-collected signals, returns decision.
@@ -239,6 +301,11 @@ def classify_session(
             "calendar": {"holiday_proximity": 0, "triple_witching": False, "roll_week": False},
         }
         strategy_id: Optional strategy identifier for strategy-specific rules.
+        learned_weights: Optional per-signal weight overrides from the weight
+            trainer. When provided, each signal's raw score is multiplied by
+            (learned_weights[name] / SIGNAL_WEIGHTS[name]) so that passing
+            SIGNAL_WEIGHTS-equivalent values reduces to identity. qubo_timing
+            is always excluded from this scaling.
 
     Returns:
         {
@@ -249,10 +316,11 @@ def classify_session(
             "reason": str,  # Human-readable explanation
             "confidence": float,  # 0-1
             "override_allowed": bool,  # True for REDUCE, False for SKIP on FOMC day
+            "weights_source": "base" | "learned",
         }
     """
-    # Score each signal
-    signal_scores: dict[str, float] = {
+    # Score each signal (raw scores from individual scorers).
+    raw_signal_scores: dict[str, float] = {
         "event_proximity": _score_event_proximity(signals),
         "vix_level": _score_vix_level(signals),
         "overnight_gap": _score_overnight_gap(signals),
@@ -263,6 +331,13 @@ def classify_session(
         "correlation_spike": _score_correlation_spike(signals),
         "calendar_filter": _score_calendar_filter(signals),
         "qubo_timing": _score_qubo_timing(signals),
+        "regime_bias": _score_regime_bias(signals),
+    }
+
+    # Apply optional learned-weight scaling. qubo_timing is excluded by helper.
+    signal_scores: dict[str, float] = {
+        name: _scale_signal_score(name, raw, learned_weights)
+        for name, raw in raw_signal_scores.items()
     }
 
     # Total weighted score
@@ -334,6 +409,12 @@ def classify_session(
         reason_parts.append("calendar filter (holiday/witching/roll)")
     if signal_scores["qubo_timing"] > 0:
         reason_parts.append("QUBO timing (skip block)")
+    if signal_scores["regime_bias"] > 0:
+        rp = signals.get("regime_probs", {}) or {}
+        reason_parts.append(
+            f"DeepAR regime risk-off (P(high_vol)={rp.get('high_vol', 0):.2f},"
+            f" eff_w={rp.get('effective_weight', 0):.2f})"
+        )
 
     reason = (
         f"{decision}: " + ", ".join(reason_parts)
@@ -349,4 +430,39 @@ def classify_session(
         "reason": reason,
         "confidence": round(confidence, 3),
         "override_allowed": override_allowed,
+        "weights_source": "learned" if learned_weights is not None else "base",
     }
+
+
+# ─── CLI Entry Point ─────────────────────────────────────────────
+# Called by python-runner.ts via: python -m src.engine.skip_engine.skip_classifier --config <tmpfile>
+# Config JSON:
+#   { "signals": {...}, "strategy_id": str | null, "learned_weights": {...} | null }
+
+if __name__ == "__main__":
+    import json
+    import sys
+    import os
+
+    # Accept config via --config file path or stdin (mirrors calendar_filter.py pattern)
+    config_path = None
+    for i, arg in enumerate(sys.argv[1:], 1):
+        if arg == "--config" and i < len(sys.argv):
+            config_path = sys.argv[i + 1]
+            break
+        elif os.path.isfile(arg):
+            config_path = arg
+            break
+
+    if config_path:
+        with open(config_path) as f:
+            config = json.load(f)
+    else:
+        config = json.load(sys.stdin)
+
+    signals: dict = config.get("signals", {})
+    strategy_id: str | None = config.get("strategy_id")
+    learned_weights: dict | None = config.get("learned_weights")
+
+    result = classify_session(signals, strategy_id=strategy_id, learned_weights=learned_weights)
+    print(json.dumps(result))

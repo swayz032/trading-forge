@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-03T11:35:13.678Z",
+  "generatedAt": "2026-04-30T06:35:06.967Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,15 +15,16 @@
     ]
   },
   "counts": {
-    "routes": 33,
-    "schedulerJobs": 14,
+    "routes": 42,
+    "schedulerJobs": 39,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
-    "engineSubsystems": 23,
-    "databaseTables": 44,
+    "engineSubsystems": 22,
+    "databaseTables": 51,
     "registrySubsystems": 11
   },
   "routes": [
+    "/api/admin",
     "/api/agent",
     "/api/alerts",
     "/api/anti-setups",
@@ -36,43 +37,76 @@
     "/api/data",
     "/api/decay",
     "/api/deepar",
+    "/api/dlq",
     "/api/governor",
     "/api/graveyard",
     "/api/health",
     "/api/indicators",
     "/api/journal",
     "/api/macro",
+    "/api/metrics",
     "/api/monte-carlo",
+    "/api/n8n",
+    "/api/openai-proxy",
+    "/api/openclaw/daily-report",
     "/api/paper",
     "/api/pine-export",
     "/api/portfolio",
+    "/api/prevalidate",
     "/api/prop-firm",
     "/api/quantum-mc",
     "/api/risk",
+    "/api/search",
     "/api/signals",
     "/api/skip",
     "/api/sse",
     "/api/strategies",
     "/api/strategy-names",
+    "/api/supadata",
     "/api/survival",
     "/api/tournament",
     "/api/validation"
   ],
   "schedulerJobs": [
     "agent-health-sweep",
+    "anti-setup-effectiveness",
+    "anti-setup-mine",
+    "archetype-daily-classify",
+    "compliance-rule-drift",
+    "contract-roll-sweep",
+    "critic-feedback",
     "decay-monitor",
     "deepar-predict",
     "deepar-train",
     "deepar-validate",
+    "disabled-job-probe",
+    "dlq-escalation",
+    "dlq-retry",
+    "drain-scouted-ideas-periodic",
+    "funnel-snapshot",
+    "graveyard-pattern-extraction",
+    "idempotency-cleanup",
     "lifecycle-auto-check",
+    "macro-data-sync",
     "meta-parameter-review",
+    "metrics-collector",
     "metrics-heartbeat",
+    "n8n-health-check",
+    "n8n-workflow-sync",
     "paper-vs-backtest",
+    "pipeline-resume-drain",
     "portfolio-correlation",
     "pre-market-prep",
+    "prompt-ab-resolution",
+    "python-pool-saturation-check",
     "regret-score-fill",
+    "resource-snapshot",
     "rolling-sharpe",
-    "stale-session-check"
+    "session-analytics-rollup",
+    "stale-pending-sweeper",
+    "stale-session-check",
+    "system-map-drift",
+    "tournament-staleness-check"
   ],
   "workflows": [
     "0A_health_monitor_66HEjQavpvirY6g5",
@@ -415,12 +449,13 @@
         "failureCount": 0,
         "lastSuccessAt": null,
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
           "Restored from repository canonical workflow set.",
-          "No live success timestamp is available for this active workflow."
+          "No live success timestamp is available for this active workflow.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -598,12 +633,13 @@
         "failureCount": 0,
         "lastSuccessAt": null,
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
           "Restored from repository canonical workflow set.",
-          "No live success timestamp is available for this active workflow."
+          "No live success timestamp is available for this active workflow.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -642,7 +678,6 @@
     "monte_carlo",
     "parameter_evolver",
     "pine_compiler",
-    "pine_templates",
     "quantum_mc",
     "skip_engine",
     "strategy_memory",
@@ -661,23 +696,30 @@
     "compliance_drift_log",
     "compliance_reviews",
     "compliance_rulesets",
+    "contract_rolls",
     "critic_candidates",
     "critic_optimization_runs",
     "data_sync_jobs",
     "day_archetypes",
+    "dead_letter_queue",
     "deepar_forecasts",
     "deepar_training_runs",
+    "idempotency_keys",
+    "lifecycle_transitions",
     "macro_snapshots",
-    "market_data_meta",
     "monte_carlo_runs",
     "mutation_outcomes",
+    "n8n_execution_log",
     "paper_positions",
+    "paper_session_feedback",
     "paper_sessions",
     "paper_signal_logs",
     "paper_trades",
-    "portfolio_snapshots",
+    "prompt_ab_tests",
+    "prompt_versions",
     "quantum_mc_benchmarks",
     "quantum_mc_runs",
+    "quantum_run_costs",
     "qubo_timing_runs",
     "rl_training_runs",
     "shadow_signals",
@@ -689,13 +731,13 @@
     "strategy_graveyard",
     "strategy_names",
     "stress_test_runs",
+    "subsystem_metrics",
     "system_journal",
     "system_parameter_history",
     "system_parameters",
     "tensor_predictions",
     "tournament_results",
-    "walk_forward_windows",
-    "watchlist"
+    "walk_forward_windows"
   ],
   "registryCoverage": {
     "registryEntries": 11,
@@ -744,10 +786,10 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 33,
-      "schedulerJobs": 14,
-      "engineSubsystems": 23,
-      "databaseTables": 44
+      "routes": 42,
+      "schedulerJobs": 39,
+      "engineSubsystems": 22,
+      "databaseTables": 51
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -807,7 +849,10 @@
       "inactiveWorkflowCandidates": [],
       "brokenWorkflowBlockers": [],
       "failingWorkflowBlockers": [],
-      "sourceMissingWorkflowBlockers": [],
+      "sourceMissingWorkflowBlockers": [
+        "Daily_Scout_5E_7GCDtSCifGgdpeuq",
+        "Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
+      ],
       "redeployWorkflowBlockers": [],
       "staleWorkflowBlockers": [],
       "runtimeControlBlockers": [],
@@ -816,7 +861,9 @@
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
         "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-        "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
+        "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+        "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
+        "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
       ]
     },
     "readiness": {
@@ -826,7 +873,9 @@
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
         "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-        "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
+        "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+        "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
+        "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
       ],
       "launchBlockedSubsystems": [],
       "inactiveByDesignSubsystems": [],
@@ -921,11 +970,12 @@
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
+          "/api/anti-setups",
+          "/api/archetypes",
           "/api/backtests",
           "/api/monte-carlo",
-          "/api/survival",
-          "/api/archetypes",
-          "/api/anti-setups"
+          "/api/prevalidate",
+          "/api/survival"
         ],
         "schedulerJobs": [],
         "healthCheck": "/api/health/dashboard",
@@ -1029,6 +1079,7 @@
           "/api/prop-firm"
         ],
         "schedulerJobs": [
+          "compliance-rule-drift",
           "decay-monitor"
         ],
         "healthCheck": "/api/health/dashboard",
@@ -1085,6 +1136,7 @@
         ],
         "dataCollectionCoverage": [
           "audit_log",
+          "contract_rolls",
           "data_sync_jobs",
           "live and historical market data",
           "macro snapshots",
@@ -1092,6 +1144,7 @@
           "market_data_meta",
           "paper signal evaluations",
           "paper_positions",
+          "paper_session_feedback",
           "paper_sessions",
           "paper_signal_logs",
           "paper_trades",
@@ -1148,9 +1201,14 @@
           "/api/skip"
         ],
         "schedulerJobs": [
+          "anti-setup-mine",
+          "archetype-daily-classify",
+          "contract-roll-sweep",
+          "macro-data-sync",
           "paper-vs-backtest",
           "portfolio-correlation",
           "pre-market-prep",
+          "session-analytics-rollup",
           "stale-session-check"
         ],
         "healthCheck": "/api/health/dashboard",
@@ -1257,6 +1315,8 @@
           "/api/critic-optimizer"
         ],
         "schedulerJobs": [
+          "anti-setup-effectiveness",
+          "critic-feedback",
           "meta-parameter-review",
           "regret-score-fill"
         ],
@@ -1415,7 +1475,10 @@
           "alerts",
           "audit_log",
           "circuit breaker state",
-          "scheduler health"
+          "dead_letter_queue",
+          "idempotency_keys",
+          "scheduler health",
+          "subsystem_metrics"
         ],
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
@@ -1450,13 +1513,25 @@
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
+          "/api/admin",
           "/api/alerts",
+          "/api/dlq",
           "/api/health",
+          "/api/metrics",
           "/api/sse"
         ],
         "schedulerJobs": [
           "agent-health-sweep",
-          "metrics-heartbeat"
+          "disabled-job-probe",
+          "dlq-escalation",
+          "dlq-retry",
+          "idempotency-cleanup",
+          "metrics-collector",
+          "metrics-heartbeat",
+          "python-pool-saturation-check",
+          "resource-snapshot",
+          "stale-pending-sweeper",
+          "system-map-drift"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -1607,6 +1682,7 @@
           "qualified backtest outputs",
           "quantum_mc_benchmarks",
           "quantum_mc_runs",
+          "quantum_run_costs",
           "qubo_timing_runs",
           "rl_training_runs",
           "sqa_optimization_runs",
@@ -1683,7 +1759,8 @@
           "freshness signals available",
           "learning loop affects downstream behavior",
           "route contract reachable",
-          "runtime evidence persisted"
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
         ],
         "runtimeEvidence": [
           "/api/health/dashboard",
@@ -1703,6 +1780,8 @@
           "concept specs",
           "LLM prompts and responses",
           "OpenClaw scout outputs",
+          "prompt_ab_tests",
+          "prompt_versions",
           "strategy_graveyard",
           "system_journal",
           "tournament_results"
@@ -1744,11 +1823,21 @@
         "routes": [
           "/api/agent",
           "/api/compiler",
-          "/api/validation",
           "/api/journal",
-          "/api/tournament"
+          "/api/openai-proxy",
+          "/api/openclaw/daily-report",
+          "/api/search",
+          "/api/supadata",
+          "/api/tournament",
+          "/api/validation"
         ],
-        "schedulerJobs": [],
+        "schedulerJobs": [
+          "drain-scouted-ideas-periodic",
+          "graveyard-pattern-extraction",
+          "pipeline-resume-drain",
+          "prompt-ab-resolution",
+          "tournament-staleness-check"
+        ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
           "/api/journal/stats/summary",
@@ -1804,6 +1893,7 @@
           "audit_log",
           "backtests",
           "graveyard history",
+          "lifecycle_transitions",
           "monte_carlo_runs",
           "paper parity metrics",
           "paper_sessions",
@@ -1847,11 +1937,12 @@
         ],
         "productionAuthorityBoundary": "Autonomous through DEPLOY_READY; TradingView release remains human-controlled.",
         "routes": [
+          "/api/graveyard",
           "/api/strategies",
-          "/api/strategy-names",
-          "/api/graveyard"
+          "/api/strategy-names"
         ],
         "schedulerJobs": [
+          "funnel-snapshot",
           "lifecycle-auto-check",
           "rolling-sharpe"
         ],
@@ -1892,7 +1983,9 @@
           "failure visibility wired",
           "freshness signals available",
           "learning loop affects downstream behavior",
-          "runtime evidence persisted"
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
         ],
         "runtimeEvidence": [
           "/api/health/dashboard",
@@ -1905,6 +1998,7 @@
         "dataCollectionCoverage": [
           "audit history",
           "audit_log",
+          "n8n_execution_log",
           "system journal",
           "system_journal",
           "workflow exports"
@@ -1941,8 +2035,13 @@
           "workflow-export-inventory"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-        "routes": [],
-        "schedulerJobs": [],
+        "routes": [
+          "/api/n8n"
+        ],
+        "schedulerJobs": [
+          "n8n-health-check",
+          "n8n-workflow-sync"
+        ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
           "/api/health/dashboard",
@@ -2140,18 +2239,6 @@
         "coverageGaps": []
       },
       {
-        "id": "pine_templates",
-        "ownerSubsystemId": "pine_export_preparation",
-        "ownerDomain": "deployment-prep",
-        "runtimeState": "active",
-        "proofStatus": "runtime-proven",
-        "manualGate": "tradingview_deploy",
-        "learningMode": "manual_gate_only",
-        "operatingClass": "manual_gated",
-        "criticality": "critical",
-        "coverageGaps": []
-      },
-      {
         "id": "quantum_mc",
         "ownerSubsystemId": "quantum_experimental",
         "ownerDomain": "experimental",
@@ -2323,11 +2410,12 @@
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
+        "/api/anti-setups",
+        "/api/archetypes",
         "/api/backtests",
         "/api/monte-carlo",
-        "/api/survival",
-        "/api/archetypes",
-        "/api/anti-setups"
+        "/api/prevalidate",
+        "/api/survival"
       ],
       "schedulerJobs": [],
       "healthCheck": "/api/health/dashboard",
@@ -2431,6 +2519,7 @@
         "/api/prop-firm"
       ],
       "schedulerJobs": [
+        "compliance-rule-drift",
         "decay-monitor"
       ],
       "healthCheck": "/api/health/dashboard",
@@ -2487,6 +2576,7 @@
       ],
       "dataCollectionCoverage": [
         "audit_log",
+        "contract_rolls",
         "data_sync_jobs",
         "live and historical market data",
         "macro snapshots",
@@ -2494,6 +2584,7 @@
         "market_data_meta",
         "paper signal evaluations",
         "paper_positions",
+        "paper_session_feedback",
         "paper_sessions",
         "paper_signal_logs",
         "paper_trades",
@@ -2550,9 +2641,14 @@
         "/api/skip"
       ],
       "schedulerJobs": [
+        "anti-setup-mine",
+        "archetype-daily-classify",
+        "contract-roll-sweep",
+        "macro-data-sync",
         "paper-vs-backtest",
         "portfolio-correlation",
         "pre-market-prep",
+        "session-analytics-rollup",
         "stale-session-check"
       ],
       "healthCheck": "/api/health/dashboard",
@@ -2659,6 +2755,8 @@
         "/api/critic-optimizer"
       ],
       "schedulerJobs": [
+        "anti-setup-effectiveness",
+        "critic-feedback",
         "meta-parameter-review",
         "regret-score-fill"
       ],
@@ -2817,7 +2915,10 @@
         "alerts",
         "audit_log",
         "circuit breaker state",
-        "scheduler health"
+        "dead_letter_queue",
+        "idempotency_keys",
+        "scheduler health",
+        "subsystem_metrics"
       ],
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
@@ -2852,13 +2953,25 @@
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
+        "/api/admin",
         "/api/alerts",
+        "/api/dlq",
         "/api/health",
+        "/api/metrics",
         "/api/sse"
       ],
       "schedulerJobs": [
         "agent-health-sweep",
-        "metrics-heartbeat"
+        "disabled-job-probe",
+        "dlq-escalation",
+        "dlq-retry",
+        "idempotency-cleanup",
+        "metrics-collector",
+        "metrics-heartbeat",
+        "python-pool-saturation-check",
+        "resource-snapshot",
+        "stale-pending-sweeper",
+        "system-map-drift"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
@@ -3009,6 +3122,7 @@
         "qualified backtest outputs",
         "quantum_mc_benchmarks",
         "quantum_mc_runs",
+        "quantum_run_costs",
         "qubo_timing_runs",
         "rl_training_runs",
         "sqa_optimization_runs",
@@ -3085,7 +3199,8 @@
         "freshness signals available",
         "learning loop affects downstream behavior",
         "route contract reachable",
-        "runtime evidence persisted"
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
       ],
       "runtimeEvidence": [
         "/api/health/dashboard",
@@ -3105,6 +3220,8 @@
         "concept specs",
         "LLM prompts and responses",
         "OpenClaw scout outputs",
+        "prompt_ab_tests",
+        "prompt_versions",
         "strategy_graveyard",
         "system_journal",
         "tournament_results"
@@ -3146,11 +3263,21 @@
       "routes": [
         "/api/agent",
         "/api/compiler",
-        "/api/validation",
         "/api/journal",
-        "/api/tournament"
+        "/api/openai-proxy",
+        "/api/openclaw/daily-report",
+        "/api/search",
+        "/api/supadata",
+        "/api/tournament",
+        "/api/validation"
       ],
-      "schedulerJobs": [],
+      "schedulerJobs": [
+        "drain-scouted-ideas-periodic",
+        "graveyard-pattern-extraction",
+        "pipeline-resume-drain",
+        "prompt-ab-resolution",
+        "tournament-staleness-check"
+      ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
         "/api/journal/stats/summary",
@@ -3206,6 +3333,7 @@
         "audit_log",
         "backtests",
         "graveyard history",
+        "lifecycle_transitions",
         "monte_carlo_runs",
         "paper parity metrics",
         "paper_sessions",
@@ -3249,11 +3377,12 @@
       ],
       "productionAuthorityBoundary": "Autonomous through DEPLOY_READY; TradingView release remains human-controlled.",
       "routes": [
+        "/api/graveyard",
         "/api/strategies",
-        "/api/strategy-names",
-        "/api/graveyard"
+        "/api/strategy-names"
       ],
       "schedulerJobs": [
+        "funnel-snapshot",
         "lifecycle-auto-check",
         "rolling-sharpe"
       ],
@@ -3294,7 +3423,9 @@
         "failure visibility wired",
         "freshness signals available",
         "learning loop affects downstream behavior",
-        "runtime evidence persisted"
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
       ],
       "runtimeEvidence": [
         "/api/health/dashboard",
@@ -3307,6 +3438,7 @@
       "dataCollectionCoverage": [
         "audit history",
         "audit_log",
+        "n8n_execution_log",
         "system journal",
         "system_journal",
         "workflow exports"
@@ -3343,8 +3475,13 @@
         "workflow-export-inventory"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-      "routes": [],
-      "schedulerJobs": [],
+      "routes": [
+        "/api/n8n"
+      ],
+      "schedulerJobs": [
+        "n8n-health-check",
+        "n8n-workflow-sync"
+      ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
         "/api/health/dashboard",
@@ -3531,18 +3668,6 @@
     },
     {
       "id": "pine_compiler",
-      "ownerSubsystemId": "pine_export_preparation",
-      "ownerDomain": "deployment-prep",
-      "runtimeState": "active",
-      "proofStatus": "runtime-proven",
-      "manualGate": "tradingview_deploy",
-      "learningMode": "manual_gate_only",
-      "operatingClass": "manual_gated",
-      "criticality": "critical",
-      "coverageGaps": []
-    },
-    {
-      "id": "pine_templates",
       "ownerSubsystemId": "pine_export_preparation",
       "ownerDomain": "deployment-prep",
       "runtimeState": "active",

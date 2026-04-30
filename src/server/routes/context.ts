@@ -189,14 +189,14 @@ contextRoutes.post("/bias", async (req, res) => {
     const result = await runContextEngine("bias", parsed.data);
     const durationMs = Date.now() - startMs;
 
-    logger.info(
+    req.log.info(
       { component: "context", mode: "bias", durationMs },
       `Bias computed in ${durationMs}ms`,
     );
 
     res.json({ success: true, durationMs, ...result });
   } catch (err: any) {
-    logger.error({ err, component: "context" }, "Bias computation failed");
+    req.log.error({ err, component: "context" }, "Bias computation failed");
     res.status(500).json({ error: "Bias computation failed", details: err.message });
   }
 });
@@ -215,14 +215,14 @@ contextRoutes.post("/evaluate", async (req, res) => {
     const result = await runContextEngine("evaluate", parsed.data);
     const durationMs = Date.now() - startMs;
 
-    logger.info(
+    req.log.info(
       { component: "context", mode: "evaluate", durationMs, action: (result as any).eligibility?.action },
       `Signal evaluated in ${durationMs}ms → ${(result as any).eligibility?.action}`,
     );
 
     res.json({ success: true, durationMs, ...result });
   } catch (err: any) {
-    logger.error({ err, component: "context" }, "Signal evaluation failed");
+    req.log.error({ err, component: "context" }, "Signal evaluation failed");
     res.status(500).json({ error: "Signal evaluation failed", details: err.message });
   }
 });

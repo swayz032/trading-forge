@@ -25,11 +25,36 @@ CONTRACT_SPECS: dict[str, ContractSpec] = {
     "MES": ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=2659),
     "MNQ": ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=4044),
     "MCL": ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=1120),
-    # S3 data path labels — map to micro specs (ES→MES, NQ→MNQ, CL→MCL)
+    # S3 data path labels — intentionally map to MICRO specs (ES→MES, NQ→MNQ, CL→MCL).
+    # WARNING: point_value here is MICRO (NQ=$2, ES=$5, CL=$100), NOT full-size ($20/$50/$1000).
+    # Any caller passing these symbols receives micro P&L. This is the documented design
+    # for this system. Use get_contract_spec() to surface a runtime warning when accessed.
     "ES":  ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=2659),
     "NQ":  ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=4044),
     "CL":  ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=1120),
 }
+
+# Symbols that use MICRO point values despite carrying full-size ticker names.
+# Accessing these via get_contract_spec() emits a UserWarning so operators know
+# micro math is in effect. Full-size callers must NOT use CONTRACT_SPECS directly.
+_MICRO_ALIAS_SYMBOLS = frozenset({"ES", "NQ", "CL"})
+
+
+def get_contract_spec(symbol: str) -> ContractSpec:
+    """Return contract spec for symbol; warns when a micro-alias full-size ticker is used."""
+    if symbol in _MICRO_ALIAS_SYMBOLS:
+        import warnings
+        warnings.warn(
+            f"Symbol '{symbol}' resolves to MICRO contract specs "
+            f"(point_value={CONTRACT_SPECS[symbol].point_value}). "
+            f"Full-size {symbol} is 10x larger. This system trades micro only — "
+            f"if you are a full-size caller, do not use this spec.",
+            UserWarning,
+            stacklevel=2,
+        )
+    if symbol not in CONTRACT_SPECS:
+        raise KeyError(f"Unknown symbol: '{symbol}'. Add to CONTRACT_SPECS in config.py.")
+    return CONTRACT_SPECS[symbol]
 
 MARGIN_EXPANSION_MULTIPLIER = 2.0  # Applied when VIX > 30 or ATR > 90th percentile
 
@@ -91,6 +116,12 @@ class StrategyConfig(BaseModel):
     position_size: PositionSizeConfig
     overnight_hold: bool = False
     preferred_regime: Optional[str] = None
+    # Optional execution-realism fields mirrored from TS BacktestConfig.
+    # overnight_hold is consumed by simulate_all_firms() (line ~2676 in backtester.py).
+    # fill_rate/spread_multiplier are consumed as positional args to run_backtest()
+    # but not yet wired through from StrategyConfig — see backtester.py TODO.
+    fill_rate: Optional[float] = 1.0
+    spread_multiplier: Optional[float] = 1.0
 
     @field_validator("overnight_hold")
     @classmethod
@@ -136,6 +167,10 @@ class EventCalendarConfig(BaseModel):
 # ─── Fill Probability Config ────────────────────────────────────
 
 class FillProbabilityConfig(BaseModel):
+    # P1-E: "stop" and "stop_market" are prohibited per CLAUDE.md —
+    # stop-market orders cause catastrophic slippage in live futures.
+    # Valid values: "market", "limit", "stop_limit".
+    # "stop" is kept in the Literal for parse compatibility but rejected by validator.
     order_type: Literal["market", "limit", "stop", "stop_limit"] = "market"
     limit_at_current: float = 0.95
     limit_1_tick: float = 0.80
@@ -143,6 +178,22 @@ class FillProbabilityConfig(BaseModel):
     limit_at_extreme: float = 0.50
     partial_fill_threshold: float = 0.70
     latency_ms: int = 50  # Simulated order latency
+
+    @field_validator("order_type")
+    @classmethod
+    def reject_stop_market(cls, v: str) -> str:
+        """Reject stop-market order types (CLAUDE.md mandate).
+
+        Stop-market orders are prohibited because they cause catastrophic slippage
+        in live futures trading, especially around news events and overnight gaps.
+        Use 'stop_limit' instead: the price limit bounds worst-case slippage.
+        """
+        if v in ("stop", "stop_market"):
+            raise ValueError(
+                f"order_type='{v}' is prohibited (CLAUDE.md: stop-market orders "
+                "cause catastrophic slippage in live futures). Use 'stop_limit' instead."
+            )
+        return v
 
 
 # ─── Backtest Request ─────────────────────────────────────────────

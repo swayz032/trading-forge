@@ -4,26 +4,10 @@ import { eq, and, isNull } from "drizzle-orm";
 import { logger } from "../index.js";
 import { getFirmAccount, getTightestDrawdown, type FirmAccountConfig } from "../../shared/firm-config.js";
 import { tracer } from "../lib/tracing.js";
-
-/**
- * Precise US DST detection: second Sunday of March through first Sunday of November.
- */
-function isUsDst(date: Date): boolean {
-  const year = date.getUTCFullYear();
-  // Second Sunday of March: find first Sunday in March, add 7 days
-  const mar1 = new Date(Date.UTC(year, 2, 1)); // March 1
-  const mar1Day = mar1.getUTCDay(); // 0=Sun
-  const secondSunMar = 1 + (7 - mar1Day) % 7 + 7; // day of month
-  const dstStart = new Date(Date.UTC(year, 2, secondSunMar, 7, 0)); // 2AM ET = 7AM UTC (still EST)
-
-  // First Sunday of November
-  const nov1 = new Date(Date.UTC(year, 10, 1)); // Nov 1
-  const nov1Day = nov1.getUTCDay();
-  const firstSunNov = 1 + (7 - nov1Day) % 7;
-  const dstEnd = new Date(Date.UTC(year, 10, firstSunNov, 6, 0)); // 2AM ET = 6AM UTC (still EDT)
-
-  return date >= dstStart && date < dstEnd;
-}
+import { isUsDst } from "../lib/dst-utils.js";
+// isUsDst is imported from the shared dst-utils utility.
+// The inline implementation has been removed; the canonical version
+// lives in src/server/lib/dst-utils.ts and is the same algorithm.
 
 /**
  * Get today's date string in Eastern Time (for daily P&L tracking).
@@ -34,6 +18,64 @@ export function toEasternDateString(date: Date = new Date()): string {
   const etOffsetMs = isUsDst(date) ? -4 * 3600_000 : -5 * 3600_000;
   const etDate = new Date(utcMs + etOffsetMs);
   return etDate.toISOString().split("T")[0];
+}
+
+// ─── Fix 3: Global daily loss aggregate cache ────────────────────────────────
+//
+// Problem: the global-daily-loss check fetches ALL active sessions and reduces
+// their dailyPnlBreakdown JSONB in JS on EVERY entry signal.  At 5+ sessions
+// this is a full-table scan per signal firing.
+//
+// Strategy: cache the aggregate (sum of today's losses across all active
+// sessions) keyed by ET date.  Cache is invalidated (cleared) whenever any
+// paper position closes — the primary update mechanism.  A 30-second TTL
+// acts as a safety net for any cache-warming that might slip past the
+// invalidation call (e.g. manual DB edits, test isolation).
+//
+// NOTE: This is an AGGREGATE cache (total across all sessions), not per-session,
+// because the check sums across all active sessions.  A per-session approach
+// would require fetching and summing every other session on each miss anyway.
+// Aggregate is simpler and correct.
+
+const globalDailyLossCache = new Map<string, { value: number; updatedAt: number }>();
+const GLOBAL_DAILY_LOSS_CACHE_TTL_MS = 30_000;
+
+function getCachedGlobalDailyLoss(etDate: string): number | null {
+  const cached = globalDailyLossCache.get(etDate);
+  if (cached === undefined) return null;
+  if (Date.now() - cached.updatedAt > GLOBAL_DAILY_LOSS_CACHE_TTL_MS) {
+    globalDailyLossCache.delete(etDate);
+    return null;
+  }
+  return cached.value;
+}
+
+function setCachedGlobalDailyLoss(etDate: string, value: number): void {
+  globalDailyLossCache.set(etDate, { value, updatedAt: Date.now() });
+}
+
+/**
+ * Evict the global daily loss aggregate cache for any date keyed to the given
+ * session. Called by closePosition() after a trade commits — at that point
+ * the session's dailyPnlBreakdown has changed and the cached aggregate is stale.
+ *
+ * The sessionId argument is accepted (but unused) to keep the call-site
+ * semantically clear ("invalidate for this session") and to allow a
+ * per-session strategy in future without changing callers.
+ */
+export function invalidateDailyLossCache(_sessionId: string): void {
+  // We cache by etDate only. A close might affect today's or (rarely) yesterday's
+  // date if called right at midnight ET. Clearing all entries is safe and cheap
+  // (at most 1–2 entries in practice — one per trading day).
+  globalDailyLossCache.clear();
+}
+
+/**
+ * Test-only: clear the global daily loss cache between unit tests.
+ * Production code must never call this.
+ */
+export function __resetDailyLossCacheForTests(): void {
+  globalDailyLossCache.clear();
 }
 
 export interface RiskGateResult {
@@ -190,18 +232,27 @@ export async function checkRiskGate(
   // Use today's loss from dailyPnlBreakdown (not cumulative lifetime loss)
   // Must use Eastern Time date to match dailyPnlBreakdown keys (futures trading day = ET)
   const today = toEasternDateString();
-  const activeSessions = await db
-    .select({
-      dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
-    })
-    .from(paperSessions)
-    .where(eq(paperSessions.status, "active"));
 
-  const totalTodayLoss = activeSessions.reduce((sum, s) => {
-    const breakdown = (s.dailyPnlBreakdown as Record<string, number> | null) ?? {};
-    const todayPnl = breakdown[today] ?? 0;
-    return sum + (todayPnl < 0 ? Math.abs(todayPnl) : 0);
-  }, 0);
+  // Fix 3: try aggregate cache before issuing the full-table DB query.
+  // Cache is invalidated by invalidateDailyLossCache() on every trade close.
+  // 30-second TTL is a safety net only.
+  let totalTodayLoss = getCachedGlobalDailyLoss(today);
+  if (totalTodayLoss === null) {
+    const activeSessions = await db
+      .select({
+        dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
+      })
+      .from(paperSessions)
+      .where(eq(paperSessions.status, "active"));
+
+    totalTodayLoss = activeSessions.reduce((sum, s) => {
+      const breakdown = (s.dailyPnlBreakdown as Record<string, number> | null) ?? {};
+      const todayPnl = breakdown[today] ?? 0;
+      return sum + (todayPnl < 0 ? Math.abs(todayPnl) : 0);
+    }, 0);
+
+    setCachedGlobalDailyLoss(today, totalTodayLoss);
+  }
 
   if (totalTodayLoss >= DEFAULT_GLOBAL_LOSS_LIMIT) {
     logger.warn({ totalTodayLoss, limit: DEFAULT_GLOBAL_LOSS_LIMIT }, "Risk gate: global daily loss limit hit");

@@ -31,12 +31,12 @@ import { Router, Request, Response } from "express";
 import { spawn } from "child_process";
 import { sql, eq, lt, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { paperSessions } from "../db/schema.js";
+import { paperSessions, deadLetterQueue } from "../db/schema.js";
 import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 import { checkSystemMapDrift, type RegistrySubsystemSummary } from "../lib/system-topology.js";
-import { logger } from "../index.js";
 import { getDeepARRuntimeStatus } from "../services/deepar-service.js";
 import { getQuantumRuntimeStatus } from "../services/quantum-mc-service.js";
+import { getPythonSubprocessStats } from "../lib/python-runner.js";
 
 const router = Router();
 
@@ -332,9 +332,50 @@ function buildOperationalReadiness(params: {
   };
 }
 
+// ─── DLQ health ───────────────────────────────────────────────
+
+interface DLQHealth {
+  unresolvedCount: number;
+  escalatedCount: number;
+  oldestUnresolvedAgeMs: number | null;
+  byCategory: Record<string, number>;
+}
+
+async function getDLQHealth(): Promise<DLQHealth> {
+  const [summary] = await db.select({
+    unresolved: sql<number>`count(*) filter (where resolved = false)::int`,
+    escalated: sql<number>`count(*) filter (where escalated = true and resolved = false)::int`,
+    oldestUnresolved: sql<string>`min(first_failed_at) filter (where resolved = false)`,
+  }).from(deadLetterQueue);
+
+  const byOpType = await db.select({
+    operationType: deadLetterQueue.operationType,
+    count: sql<number>`count(*)::int`,
+  })
+    .from(deadLetterQueue)
+    .where(eq(deadLetterQueue.resolved, false))
+    .groupBy(deadLetterQueue.operationType);
+
+  const byCategory: Record<string, number> = {};
+  for (const row of byOpType) {
+    byCategory[row.operationType] = row.count;
+  }
+
+  const oldestUnresolvedAgeMs = summary?.oldestUnresolved
+    ? Date.now() - new Date(summary.oldestUnresolved).getTime()
+    : null;
+
+  return {
+    unresolvedCount: summary?.unresolved ?? 0,
+    escalatedCount: summary?.escalated ?? 0,
+    oldestUnresolvedAgeMs,
+    byCategory,
+  };
+}
+
 // ─── Route handler ─────────────────────────────────────────────
 
-router.get("/dashboard", async (_req: Request, res: Response) => {
+router.get("/dashboard", async (req: Request, res: Response) => {
   const startMs = Date.now();
 
   // Fire all slow checks concurrently, each capped at 2s
@@ -348,6 +389,7 @@ router.get("/dashboard", async (_req: Request, res: Response) => {
     topologyResult,
     deeparResult,
     quantumResult,
+    dlqResult,
   ] = await Promise.allSettled([
     withTimeout(checkPostgres()),
     withTimeout(checkOllama()),
@@ -358,6 +400,7 @@ router.get("/dashboard", async (_req: Request, res: Response) => {
     withTimeout(checkSystemMapDrift()),
     withTimeout(getDeepARRuntimeStatus()),
     withTimeout(getQuantumRuntimeStatus()),
+    withTimeout(getDLQHealth()),
   ]);
 
   // Metrics — synchronous, no I/O
@@ -366,7 +409,7 @@ router.get("/dashboard", async (_req: Request, res: Response) => {
     const { metricsAggregator } = await import("../services/metrics-aggregator.js");
     metrics = metricsAggregator.getAllMetrics();
   } catch (metricsErr) {
-    logger.warn({ err: metricsErr }, "health/dashboard: metricsAggregator unavailable");
+    req.log.warn({ err: metricsErr }, "health/dashboard: metricsAggregator unavailable");
   }
 
   // Circuit breakers — synchronous
@@ -374,7 +417,7 @@ router.get("/dashboard", async (_req: Request, res: Response) => {
   try {
     circuitBreakers = CircuitBreakerRegistry.statusAll();
   } catch (cbErr) {
-    logger.warn({ err: cbErr }, "health/dashboard: CircuitBreakerRegistry.statusAll failed");
+    req.log.warn({ err: cbErr }, "health/dashboard: CircuitBreakerRegistry.statusAll failed");
   }
 
   const mem = process.memoryUsage();
@@ -450,7 +493,7 @@ router.get("/dashboard", async (_req: Request, res: Response) => {
     subsystems: {
       postgres: settledToStatus(postgresResult),
       ollama: settledToStatus(ollamaResult),
-      python: settledToStatus(pythonResult),
+      python: { ...settledToStatus(pythonResult), pool: getPythonSubprocessStats() },
       n8n: settledToStatus(n8nResult),
     },
     scheduler: {
@@ -469,6 +512,15 @@ router.get("/dashboard", async (_req: Request, res: Response) => {
           : { status: "error", error: quantumResult.reason instanceof Error ? quantumResult.reason.message : String(quantumResult.reason) },
     },
     paperSessions: paperCounts,
+    dlqHealth: dlqResult.status === "fulfilled"
+      ? dlqResult.value
+      : {
+          unresolvedCount: null,
+          escalatedCount: null,
+          oldestUnresolvedAgeMs: null,
+          byCategory: null,
+          error: dlqResult.reason instanceof Error ? dlqResult.reason.message : String(dlqResult.reason),
+        },
     metrics,
     memory: {
       heapUsedMb: Math.round(mem.heapUsed / 1024 / 1024),

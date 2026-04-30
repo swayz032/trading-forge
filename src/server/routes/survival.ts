@@ -9,7 +9,6 @@
 
 import { Router } from "express";
 import { z } from "zod";
-import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 
 export const survivalRoutes = Router();
@@ -59,7 +58,7 @@ survivalRoutes.post("/score", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Survival score failed");
+    req.log.error({ err }, "Survival score failed");
     res.status(500).json({ error: "Survival score calculation failed", details: String(err) });
   }
 });
@@ -81,7 +80,7 @@ survivalRoutes.post("/compare", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Survival compare failed");
+    req.log.error({ err }, "Survival compare failed");
     res.status(500).json({ error: "Survival comparison failed", details: String(err) });
   }
 });
@@ -123,7 +122,7 @@ survivalRoutes.post("/monte-carlo", async (req, res) => {
     });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Survival MC failed");
+    req.log.error({ err }, "Survival MC failed");
     res.status(500).json({ error: "Monte Carlo simulation failed", details: String(err) });
   }
 });

@@ -118,6 +118,45 @@ models/               # Trained ML models (DeepAR, gitignored)
 - **Governance:** Cloud doesn't change authority -- all quantum remains `challenger_only`
 - Auto-triggered backtest quantum runs stay LOCAL. Cloud is opt-in only.
 
+## Gemini Quantum Blueprint Feature Flags (W1 / Tier 0.3)
+All flags default OFF (shadow). They control phased rollout of quantum
+modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
+
+- **`QUANTUM_QAE_GATE_PHASE`** -- 0/1/2 (default 0). Phase 0 = shadow (read both
+  classical + quantum, log agreement, gate is 100% classical). Phase 1 =
+  advisory disagreement alerts. Phase 2 = quantum participates in the gate.
+  Wave 7 graduation flips the value after 30+ days of agreement data.
+- **`QUANTUM_ENTROPY_FILTER_ENABLED`** -- default false. Enables Tier 3.1 QCNN
+  noise score in skip engine. When false, `noise_score` is None and skip
+  engine ignores the slot.
+- **`QUANTUM_COUNTERFACTUAL_ENABLED`** -- default false. Tier 3.2 deferred per
+  architect review; flag reserved for future revival.
+- **`QUANTUM_GRAVEYARD_QUBO_ENABLED`** -- default false. Enables Tier 2 SQA
+  graveyard-aware penalty in `quantum_annealing_optimizer.build_parameter_qubo()`.
+- **`QUANTUM_AMARKET_AUDITOR_ENABLED`** -- default false. Enables Tier 3.3
+  A+ Market Auditor cron + cross-market lead-lag entanglement.
+- **`QUANTUM_ADVERSARIAL_STRESS_ENABLED`** -- default false. Enables Tier 3.4
+  Grover worst-case sequencer pre-PAPER promotion check.
+- **`QUANTUM_CUQUANTUM_GPU_ENABLED`** -- default false. Enables Tier 4 cuQuantum
+  GPU acceleration. **Requires VRAM probe pass** -- if VRAM is insufficient,
+  module falls back to CPU and logs once.
+
+## Lifecycle Telemetry Tables (W1 / Tier 0)
+Two new tables ship in W1 to unblock Tier 7 quantum graduation queries:
+
+- **`lifecycle_transitions`** (migration 0064) -- typed lifecycle history with
+  first-class quantum challenger evidence columns
+  (`quantum_agreement_score`, `quantum_advantage_delta`,
+  `quantum_classical_disagreement_pct`, `quantum_fallback_triggered`,
+  `cloud_qmc_run_id`). Dual-written alongside `audit_log` rows by
+  `lifecycle-service.ts` inside the same transaction. Indexed for
+  high-volume "low-agreement strategies over 30 days" queries.
+- **`quantum_run_costs`** (migration 0065) -- per-run wall-clock + (if cloud)
+  QPU-seconds + dollars for every quantum module
+  (quantum_mc, sqa, rl_agent, entropy_filter, adversarial_stress,
+  cloud_qmc, ising_decoder). Pending-row contract: status starts "pending",
+  updated to "completed"/"failed" on resolve.
+
 ## Strategy Philosophy -- SIMPLE WINS, HIGH EARNERS
 - **Max 3-5 parameters per strategy.** More = overfitting. No exceptions.
 - **One-sentence rule:** If you can't describe the strategy in one sentence, it's too complex. Reject it.
@@ -291,6 +330,18 @@ Rules:
 - **ALWAYS use ratio-adjusted continuous contracts for backtesting** -- never raw Databento prices. Roll gaps create fake signals.
 - Raw prices stored in S3 for reference, but all backtests run on `ratio_adj/` data.
 - **Optuna for parameter robustness testing** -- Bayesian search (TPE) to map stable plateaus, not find "best" params. ~800 trials vs 100K+ grid search.
+
+## Tournament Gating (n8n-canonical)
+
+The 4-role tournament gate (Proposer → Critic → Prosecutor → Promoter) lives in n8n workflows, NOT in the in-process Node loop. This is intentional.
+
+- `src/server/routes/tournament.ts` is a read-only metrics API — it does not gate anything.
+- `agent-service.runStrategy()` does NOT call tournament checks before backtest. It calls the graveyard gate (cosine similarity) and proceeds directly to backtest.
+- The 4-role tournament evaluation runs as part of the n8n Strategy_Generation_Loop workflow which orchestrates: scout → tournament gate → POST /api/agent/run-strategy → backtest.
+
+**Implication for non-n8n deployments:** if the in-process Node loop is run without n8n (e.g., dev environments invoking POST /api/agent/run-strategy directly), the tournament gate is BYPASSED. Strategies will reach the backtest without the 4-role adversarial filter.
+
+**Decision history:** This was deliberately scoped to n8n during Phase 4 to avoid duplicating LLM orchestration logic in Node. If we ever decommission n8n or want a tournament gate inside the Node loop, port the workflow to a Node service (not a top priority — graveyard + backtest gates are doing most of the filtering work).
 
 ## Don't
 - Don't add Supabase or complex auth -- it's just one user

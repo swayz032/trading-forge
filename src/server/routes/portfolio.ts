@@ -13,11 +13,11 @@ import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, strategies, backtests } from "../db/schema.js";
 import { eq, and, isNull, inArray, desc } from "drizzle-orm";
 import { runPythonModule } from "../lib/python-runner.js";
-import { logger } from "../index.js";
+
 
 export const portfolioRoutes = Router();
 
-portfolioRoutes.get("/heat", async (_req, res) => {
+portfolioRoutes.get("/heat", async (req, res) => {
   try {
     // 1. Get active paper sessions
     const activeSessions = await db
@@ -172,7 +172,7 @@ portfolioRoutes.get("/heat", async (_req, res) => {
       })),
     });
   } catch (err) {
-    logger.error({ err }, "Portfolio heat failed");
+    req.log.error({ err }, "Portfolio heat failed");
     res
       .status(500)
       .json({ error: "Portfolio heat failed", details: String(err) });
@@ -182,7 +182,7 @@ portfolioRoutes.get("/heat", async (_req, res) => {
 // ─── GET /api/portfolio/correlation ─────────────────────────────
 // Robust covariance matrix + Euler risk decomposition via LedoitWolf
 
-portfolioRoutes.get("/correlation", async (_req, res) => {
+portfolioRoutes.get("/correlation", async (req, res) => {
   try {
     // 1. Get active paper sessions with their strategy links
     const activeSessions = await db
@@ -378,7 +378,7 @@ print(json.dumps({
         : null,
     });
   } catch (err) {
-    logger.error({ err }, "Portfolio correlation failed");
+    req.log.error({ err }, "Portfolio correlation failed");
     res.status(500).json({ error: "Portfolio correlation failed", details: String(err) });
   }
 });
@@ -386,7 +386,7 @@ print(json.dumps({
 // ─── GET /api/portfolio/decomposition ─────────────────────────────
 // Euler risk decomposition per strategy via Python robust_covariance
 
-portfolioRoutes.get("/decomposition", async (_req, res) => {
+portfolioRoutes.get("/decomposition", async (req, res) => {
   try {
     // 1. Get strategies with DEPLOYED or PAPER lifecycle state
     const deployedStrategies = await db
@@ -555,7 +555,7 @@ print(json.dumps({
       condition_number: result.condition_number,
     });
   } catch (err) {
-    logger.error({ err }, "Portfolio decomposition failed");
+    req.log.error({ err }, "Portfolio decomposition failed");
     const status = String(err).includes("timed out") || String(err).includes("failed") ? 503 : 500;
     res.status(status).json({ error: "Portfolio decomposition failed", details: String(err) });
   }
@@ -564,7 +564,7 @@ print(json.dumps({
 // ─── GET /api/portfolio/equity-curve ─────────────────────────────
 // Combined portfolio equity curve across deployed/paper strategies
 
-portfolioRoutes.get("/equity-curve", async (_req, res) => {
+portfolioRoutes.get("/equity-curve", async (req, res) => {
   try {
     // 1. Get strategies with DEPLOYED or PAPER lifecycle state
     const deployedStrategies = await db
@@ -688,7 +688,7 @@ portfolioRoutes.get("/equity-curve", async (_req, res) => {
       equity_curve: equityCurve,
     });
   } catch (err) {
-    logger.error({ err }, "Portfolio equity curve failed");
+    req.log.error({ err }, "Portfolio equity curve failed");
     res.status(500).json({ error: "Portfolio equity curve failed", details: String(err) });
   }
 });
@@ -696,7 +696,7 @@ portfolioRoutes.get("/equity-curve", async (_req, res) => {
 // ─── GET /api/portfolio/diversification ─────────────────────────────
 // Diversification score: correlation matrix, diversification ratio, Herfindahl index
 
-portfolioRoutes.get("/diversification", async (_req, res) => {
+portfolioRoutes.get("/diversification", async (req, res) => {
   try {
     // 1. Get strategies with DEPLOYED or PAPER lifecycle state
     const deployedStrategies = await db
@@ -917,7 +917,7 @@ print(json.dumps({
       ],
     });
   } catch (err) {
-    logger.error({ err }, "Portfolio diversification failed");
+    req.log.error({ err }, "Portfolio diversification failed");
     const status = String(err).includes("timed out") || String(err).includes("failed") ? 503 : 500;
     res.status(status).json({ error: "Portfolio diversification failed", details: String(err) });
   }

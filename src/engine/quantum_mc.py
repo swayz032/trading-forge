@@ -56,10 +56,17 @@ except ImportError:
     AER_AVAILABLE = False
 
 try:
-    from src.engine.cloud_backend import CloudBackendConfig, CloudBudgetTracker, resolve_backend, build_cloud_run_metadata
+    from src.engine.cloud_backend import (
+        CloudBackendConfig,
+        CloudBudgetTracker,
+        resolve_backend,
+        build_cloud_run_metadata,
+        quantum_result_cache,
+    )
     CLOUD_BACKEND_AVAILABLE = True
 except ImportError:
     CLOUD_BACKEND_AVAILABLE = False
+    quantum_result_cache = None  # type: ignore[assignment]
 
 
 # ─── Governance Labels ──────────────────────────────────────────
@@ -221,6 +228,31 @@ def _run_estimation(
     cloud_config: Optional[dict] = None,
 ) -> QuantumRunResult:
     """Core estimation logic."""
+    # ── Result cache check (skip for real cloud runs) ───────────────────────
+    # Cloud jobs are NOT cached — they must always re-run for fresh shots.
+    # Cache is only consulted/populated for local simulation runs.
+    _is_cloud_run = bool(cloud_config and cloud_config.get("opt_in_cloud"))
+    _cache_key: Optional[dict] = None
+    if not _is_cloud_run and quantum_result_cache is not None:
+        _cache_key = {
+            "model_type": model.model_type,
+            "n_samples": model.n_samples,
+            "bins": model.bins,
+            "probabilities": model.probabilities,
+            "threshold": threshold,
+            "event_type": event_type,
+            "epsilon": epsilon,
+            "alpha": alpha,
+            "seed": seed,
+        }
+        _cached = quantum_result_cache.get(algorithm="qmc", params=_cache_key)
+        if _cached is not None:
+            _cached["cache_hit"] = True
+            return QuantumRunResult(**{
+                k: v for k, v in _cached.items()
+                if k in QuantumRunResult.model_fields
+            })
+
     start_ms = int(time.time() * 1000)
 
     bins = model.bins or []
@@ -372,7 +404,7 @@ def _run_estimation(
                     except Exception as exc:
                         cloud_metadata_warnings.append(f"job_id_unavailable:{exc}")
 
-            return QuantumRunResult(
+            _qmc_result = QuantumRunResult(
                 estimated_value=quantum_estimate,
                 confidence_interval={
                     "lower": max(0, quantum_estimate - epsilon),
@@ -401,6 +433,12 @@ def _run_estimation(
                 cloud_job_id=cloud_job_id,
                 cloud_qpu_time_seconds=cloud_qpu_time,
             )
+            # Cache local simulation results only (never cache real cloud runs)
+            if not _is_cloud_run and _cache_key is not None and quantum_result_cache is not None:
+                _result_dict = _qmc_result.model_dump()
+                _result_dict["cache_hit"] = False
+                quantum_result_cache.put(algorithm="qmc", params=_cache_key, result=_result_dict)
+            return _qmc_result
         except Exception as exc:
             # IAE failed (circuit too deep, version mismatch, hardware unavailable).
             # Fall through to classical fallback and surface the reason.
@@ -415,7 +453,7 @@ def _run_estimation(
     else:
         fallback_reason = _iae_failure_reason
 
-    return QuantumRunResult(
+    _fallback_result = QuantumRunResult(
         estimated_value=classical_prob,
         confidence_interval={
             "lower": max(0, classical_prob - epsilon),
@@ -432,6 +470,12 @@ def _run_estimation(
             "reason": fallback_reason,
         },
     )
+    # Cache classical fallback results (deterministic, safe to cache)
+    if not _is_cloud_run and _cache_key is not None and quantum_result_cache is not None:
+        _fb_dict = _fallback_result.model_dump()
+        _fb_dict["cache_hit"] = False
+        quantum_result_cache.put(algorithm="qmc", params=_cache_key, result=_fb_dict)
+    return _fallback_result
 
 
 def run_hybrid_compare(

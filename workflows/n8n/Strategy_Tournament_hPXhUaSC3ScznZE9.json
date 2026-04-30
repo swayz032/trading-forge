@@ -38,7 +38,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:11434/api/chat",
+        "url": "http://host.docker.internal:11434/api/chat",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={ \"model\": \"qwen3\", \"messages\": [ { \"role\": \"system\", \"content\": \"You are a quantitative trading strategy proposer. Generate a new strategy idea in strict JSON DSL format. The strategy must have max 5 parameters, use proven technical indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD), target futures (MES, MNQ, MCL), and be describable in one sentence. Output ONLY valid JSON matching the StrategyDSL schema.\" }, { \"role\": \"user\", \"content\": \"Propose a new trading strategy. Consider recent market conditions and avoid strategies similar to recent failures. Focus on simplicity and robustness.\" } ], \"stream\": false, \"options\": { \"temperature\": 0.8, \"num_predict\": 2048 } }",
@@ -108,7 +108,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/compiler/validate",
+        "url": "http://host.docker.internal:4000/api/compiler/validate",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.strategyDSL) }}",
@@ -179,7 +179,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/graveyard/check",
+        "url": "http://host.docker.internal:4000/api/graveyard/check",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($node['Parse Proposer Output'].json.strategyDSL) }}",
@@ -259,7 +259,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:11434/api/chat",
+        "url": "http://host.docker.internal:11434/api/chat",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ model: 'deepseek-r1:14b', messages: [ { role: 'system', content: 'You are a critical analyst reviewing trading strategies. Your job is to find weaknesses, overfitting risks, regime dependencies, and practical problems. Be specific and quantitative. Rate the strategy 1-10 on robustness, simplicity, and edge quality.' }, { role: 'user', content: 'Review this strategy proposal:\\n\\nStrategy DSL:\\n' + JSON.stringify($node['Parse Proposer Output'].json.strategyDSL, null, 2) + '\\n\\nCompiler validation passed successfully.' } ], stream: false, options: { temperature: 0.3, num_predict: 2048 } }) }}",
@@ -297,7 +297,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:11434/api/chat",
+        "url": "http://host.docker.internal:11434/api/chat",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ model: 'deepseek-r1:14b', messages: [ { role: 'system', content: 'You are a hostile prosecutor of trading strategies. Your job is to find fatal flaws. Search for: curve fitting risk, regime dependency, commission death, liquidity problems, parameter sensitivity. If you find a fatal flaw, recommend KILL. If fixable, recommend REVISE with specific changes. Only pass strategies that could survive 6 months of live trading.' }, { role: 'user', content: 'Prosecute this strategy:\\n\\nStrategy DSL:\\n' + JSON.stringify($json.strategyDSL, null, 2) + '\\n\\nCritic Analysis:\\n' + $json.criticAnalysis } ], stream: false, options: { temperature: 0.3, num_predict: 2048 } }) }}",
@@ -335,7 +335,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:11434/api/chat",
+        "url": "http://host.docker.internal:11434/api/chat",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ model: 'qwen3', messages: [ { role: 'system', content: 'You are the final decision maker. Given the strategy proposal, critic analysis, and prosecutor findings, make a FINAL decision: PROMOTE (send to backtest), REVISE (send back with specific fixes), or KILL (reject permanently). Provide clear reasoning. Your response MUST start with one of: PROMOTE, REVISE, or KILL followed by your reasoning.' }, { role: 'user', content: 'Make your final decision on this strategy:\\n\\nStrategy DSL:\\n' + JSON.stringify($json.strategyDSL, null, 2) + '\\n\\nCritic Analysis:\\n' + $json.criticAnalysis + '\\n\\nProsecutor Findings:\\n' + $json.prosecutorFindings } ], stream: false, options: { temperature: 0.2, num_predict: 2048 } }) }}",
@@ -373,7 +373,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/tournament/run",
+        "url": "http://host.docker.internal:4000/api/tournament/run",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, proposerOutput: $json.rawProposerOutput, criticAnalysis: $json.criticAnalysis, prosecutorFindings: $json.prosecutorFindings, promoterDecision: $json.promoterOutput, finalVerdict: $json.verdict, timestamp: $json.timestamp }) }}",
@@ -430,7 +430,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/compiler/compile",
+        "url": "http://host.docker.internal:4000/api/compiler/compile",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($node['Parse Promoter Verdict'].json.strategyDSL) }}",
@@ -455,7 +455,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/backtests",
+        "url": "http://host.docker.internal:4000/api/backtests",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ strategyDSL: $node['Parse Promoter Verdict'].json.strategyDSL, compiledStrategy: $json, source: 'tournament', tournamentTimestamp: $node['Parse Promoter Verdict'].json.timestamp }) }}",
@@ -480,7 +480,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/tournament/run",
+        "url": "http://host.docker.internal:4000/api/tournament/run",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, finalVerdict: 'KILL', reason: $json.reason, compilerErrors: $json.compilerErrors, timestamp: $json.timestamp }) }}",
@@ -504,7 +504,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/tournament/run",
+        "url": "http://host.docker.internal:4000/api/tournament/run",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, finalVerdict: 'KILL', reason: $json.reason, similarity: $json.similarity, matchedStrategy: $json.matchedStrategy, timestamp: $json.timestamp }) }}",
@@ -541,7 +541,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/tournament/run",
+        "url": "http://host.docker.internal:4000/api/tournament/run",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ candidateDSL: null, finalVerdict: 'KILL', reason: $json.reason, parseError: $json.parseError, timestamp: $json.timestamp }) }}",
@@ -869,7 +869,8 @@
     "saveDataSuccessExecution": "all",
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": {
     "node:Daily 6AM ET Trigger": {
@@ -966,7 +967,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:11434/api/chat",
+          "url": "http://host.docker.internal:11434/api/chat",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={ \"model\": \"qwen3\", \"messages\": [ { \"role\": \"system\", \"content\": \"You are a quantitative trading strategy proposer. Generate a new strategy idea in strict JSON DSL format. The strategy must have max 5 parameters, use proven technical indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD), target futures (MES, MNQ, MCL), and be describable in one sentence. Output ONLY valid JSON matching the StrategyDSL schema.\" }, { \"role\": \"user\", \"content\": \"Propose a new trading strategy. Consider recent market conditions and avoid strategies similar to recent failures. Focus on simplicity and robustness.\" } ], \"stream\": false, \"options\": { \"temperature\": 0.8, \"num_predict\": 2048 } }",
@@ -1036,7 +1037,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/compiler/validate",
+          "url": "http://host.docker.internal:4000/api/compiler/validate",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify($json.strategyDSL) }}",
@@ -1107,7 +1108,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/graveyard/check",
+          "url": "http://host.docker.internal:4000/api/graveyard/check",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify($node['Parse Proposer Output'].json.strategyDSL) }}",
@@ -1187,7 +1188,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:11434/api/chat",
+          "url": "http://host.docker.internal:11434/api/chat",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ model: 'deepseek-r1:14b', messages: [ { role: 'system', content: 'You are a critical analyst reviewing trading strategies. Your job is to find weaknesses, overfitting risks, regime dependencies, and practical problems. Be specific and quantitative. Rate the strategy 1-10 on robustness, simplicity, and edge quality.' }, { role: 'user', content: 'Review this strategy proposal:\\n\\nStrategy DSL:\\n' + JSON.stringify($node['Parse Proposer Output'].json.strategyDSL, null, 2) + '\\n\\nCompiler validation passed successfully.' } ], stream: false, options: { temperature: 0.3, num_predict: 2048 } }) }}",
@@ -1225,7 +1226,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:11434/api/chat",
+          "url": "http://host.docker.internal:11434/api/chat",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ model: 'deepseek-r1:14b', messages: [ { role: 'system', content: 'You are a hostile prosecutor of trading strategies. Your job is to find fatal flaws. Search for: curve fitting risk, regime dependency, commission death, liquidity problems, parameter sensitivity. If you find a fatal flaw, recommend KILL. If fixable, recommend REVISE with specific changes. Only pass strategies that could survive 6 months of live trading.' }, { role: 'user', content: 'Prosecute this strategy:\\n\\nStrategy DSL:\\n' + JSON.stringify($json.strategyDSL, null, 2) + '\\n\\nCritic Analysis:\\n' + $json.criticAnalysis } ], stream: false, options: { temperature: 0.3, num_predict: 2048 } }) }}",
@@ -1263,7 +1264,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:11434/api/chat",
+          "url": "http://host.docker.internal:11434/api/chat",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ model: 'qwen3', messages: [ { role: 'system', content: 'You are the final decision maker. Given the strategy proposal, critic analysis, and prosecutor findings, make a FINAL decision: PROMOTE (send to backtest), REVISE (send back with specific fixes), or KILL (reject permanently). Provide clear reasoning. Your response MUST start with one of: PROMOTE, REVISE, or KILL followed by your reasoning.' }, { role: 'user', content: 'Make your final decision on this strategy:\\n\\nStrategy DSL:\\n' + JSON.stringify($json.strategyDSL, null, 2) + '\\n\\nCritic Analysis:\\n' + $json.criticAnalysis + '\\n\\nProsecutor Findings:\\n' + $json.prosecutorFindings } ], stream: false, options: { temperature: 0.2, num_predict: 2048 } }) }}",
@@ -1301,7 +1302,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/tournament/run",
+          "url": "http://host.docker.internal:4000/api/tournament/run",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, proposerOutput: $json.rawProposerOutput, criticAnalysis: $json.criticAnalysis, prosecutorFindings: $json.prosecutorFindings, promoterDecision: $json.promoterOutput, finalVerdict: $json.verdict, timestamp: $json.timestamp }) }}",
@@ -1358,7 +1359,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/compiler/compile",
+          "url": "http://host.docker.internal:4000/api/compiler/compile",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify($node['Parse Promoter Verdict'].json.strategyDSL) }}",
@@ -1383,7 +1384,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/backtests",
+          "url": "http://host.docker.internal:4000/api/backtests",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ strategyDSL: $node['Parse Promoter Verdict'].json.strategyDSL, compiledStrategy: $json, source: 'tournament', tournamentTimestamp: $node['Parse Promoter Verdict'].json.timestamp }) }}",
@@ -1408,7 +1409,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/tournament/run",
+          "url": "http://host.docker.internal:4000/api/tournament/run",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, finalVerdict: 'KILL', reason: $json.reason, compilerErrors: $json.compilerErrors, timestamp: $json.timestamp }) }}",
@@ -1432,7 +1433,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/tournament/run",
+          "url": "http://host.docker.internal:4000/api/tournament/run",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ candidateDSL: $json.strategyDSL, finalVerdict: 'KILL', reason: $json.reason, similarity: $json.similarity, matchedStrategy: $json.matchedStrategy, timestamp: $json.timestamp }) }}",
@@ -1469,7 +1470,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://localhost:4000/api/tournament/run",
+          "url": "http://host.docker.internal:4000/api/tournament/run",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ candidateDSL: null, finalVerdict: 'KILL', reason: $json.reason, parseError: $json.parseError, timestamp: $json.timestamp }) }}",

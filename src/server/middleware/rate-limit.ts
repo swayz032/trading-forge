@@ -21,8 +21,12 @@ export function rateLimit(config: RateLimitConfig = { windowMs: 60_000, maxReque
 
     record.count++;
     if (record.count > config.maxRequests) {
-      logger.warn({ ip: key, count: record.count }, "Rate limit exceeded");
-      res.status(429).json({ error: "Too many requests. Try again later." });
+      logger.warn({ ip: key, count: record.count, maxRequests: config.maxRequests }, "Rate limit exceeded");
+      // Retry-After: seconds until the window resets — required by RFC 6585 §4
+      // and consumed by automated callers (n8n, agent loops) to back off correctly.
+      const retryAfterSec = Math.ceil((record.resetAt - now) / 1000);
+      res.setHeader("Retry-After", retryAfterSec);
+      res.status(429).json({ error: "Too many requests. Try again later.", retryAfterSec });
       return;
     }
 

@@ -242,10 +242,10 @@ export function StrategySpotlight({ row, backtest, trades }: Props) {
               {decayAnalysis.trend && (
                 <span className={`text-xs ${
                   decayAnalysis.trend === "improving" ? "text-profit" :
-                  decayAnalysis.trend === "declining" ? "text-loss" : "text-text-muted"
+                  decayAnalysis.trend === "accelerating_decline" ? "text-loss" : "text-text-muted"
                 }`}>
                   {decayAnalysis.trend === "improving" ? "Getting better" :
-                   decayAnalysis.trend === "declining" ? "Getting worse" : "Steady"}
+                   decayAnalysis.trend === "accelerating_decline" ? "Getting worse" : "Steady"}
                 </span>
               )}
             </div>

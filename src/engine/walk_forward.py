@@ -143,6 +143,8 @@ def run_walk_forward(
     all_oos_pnls: list[float] = []
     all_oos_pnl_records: list[dict] = []
     all_oos_equity: list[float] = []
+    # WF Fix 1: bar-level equity accumulator for intraday max DD computation.
+    all_oos_equity_bars: list[float] = []
     all_oos_trades: list[dict] = []
 
     for i, (is_data, oos_data) in enumerate(windows):
@@ -171,17 +173,30 @@ def run_walk_forward(
             event_calendar=request.event_calendar,
             fill_model=request.fill_model,
         )
-        oos_result = run_backtest(oos_request, data=oos_data)
+        # E7.2: pass IS data as warmup_data so adaptive indicators (rolling quantiles,
+        # regime detection) are computed on IS+OOS concatenated, then OOS-only is
+        # used for trade execution. Prevents lookahead leakage at window boundaries.
+        oos_result = run_backtest(oos_request, data=oos_data, warmup_data=is_data)
 
         # OOS window minimum validation
         oos_trade_count = oos_result["total_trades"]
         oos_trading_days = oos_result.get("total_trading_days", 0)
 
-        # Extract date boundaries for persistence (guard against empty slices)
-        is_start_dt = str(is_data["ts_event"][0])[:10] if len(is_data) > 0 else ""
-        is_end_dt = str(is_data["ts_event"][-1])[:10] if len(is_data) > 0 else ""
-        oos_start_dt = str(oos_data["ts_event"][0])[:10] if len(oos_data) > 0 else ""
-        oos_end_dt = str(oos_data["ts_event"][-1])[:10] if len(oos_data) > 0 else ""
+        # Extract date boundaries for persistence.
+        # Guard: ts_event column may be absent on synthetic test data — use ts_et as
+        # a fallback, then fall back to "" rather than raising KeyError.
+        def _ts_col(df: pl.DataFrame) -> str:
+            for col in ("ts_event", "ts_et"):
+                if col in df.columns:
+                    return col
+            return ""
+
+        _is_ts = _ts_col(is_data)
+        _oos_ts = _ts_col(oos_data)
+        is_start_dt = str(is_data[_is_ts][0])[:10] if (len(is_data) > 0 and _is_ts) else ""
+        is_end_dt = str(is_data[_is_ts][-1])[:10] if (len(is_data) > 0 and _is_ts) else ""
+        oos_start_dt = str(oos_data[_oos_ts][0])[:10] if (len(oos_data) > 0 and _oos_ts) else ""
+        oos_end_dt = str(oos_data[_oos_ts][-1])[:10] if (len(oos_data) > 0 and _oos_ts) else ""
 
         window_detail = {
             "window": i + 1,
@@ -199,7 +214,12 @@ def run_walk_forward(
                 "profit_factor": oos_result["profit_factor"],
                 "total_trades": oos_trade_count,
                 "total_trading_days": oos_trading_days,
-                "avg_trade_pnl": round(oos_result["total_return"] / max(oos_trade_count, 1), 2),
+                # P2-H fix: prefer the actual computed mean from the engine if present,
+                # fall back to total_return/trades only when avg_trade_pnl is absent.
+                "avg_trade_pnl": round(
+                    oos_result.get("avg_trade_pnl", oos_result["total_return"] / max(oos_trade_count, 1)),
+                    2,
+                ),
                 "avg_daily_pnl": round(float(sum(oos_result.get("daily_pnls", [])) / max(len(oos_result.get("daily_pnls", [])), 1)), 2),
             },
             "confidence": "OK",
@@ -230,9 +250,28 @@ def run_walk_forward(
             }
 
         window_results.append(window_detail)
-        all_oos_pnls.extend(oos_result.get("daily_pnls", []))
-        all_oos_pnl_records.extend(oos_result.get("daily_pnl_records", []))
+        # P2-I fix: adjacent windows with embargo=0 can share a boundary trading date.
+        # Deduplicate daily_pnl_records by date before extending to avoid double-counting.
+        # daily_pnl_records are dicts with a "date" key (str "YYYY-MM-DD").
+        _new_records = oos_result.get("daily_pnl_records", [])
+        _existing_dates = {r.get("date") for r in all_oos_pnl_records if r.get("date")}
+        _deduped_records = [r for r in _new_records if r.get("date") not in _existing_dates]
+        _dupes = len(_new_records) - len(_deduped_records)
+        if _dupes > 0:
+            print(
+                f"    Walk-forward dedup: dropped {_dupes} duplicate boundary-day P&L record(s) "
+                f"at window {i+1} boundary (embargo=0 overlap).",
+                file=sys.stderr,
+            )
+        all_oos_pnl_records.extend(_deduped_records)
+
+        # For daily_pnls (scalar list), rebuild from deduplicated records to stay consistent
+        _deduped_pnls = [r.get("pnl", 0.0) for r in _deduped_records]
+        all_oos_pnls.extend(_deduped_pnls if _deduped_records else oos_result.get("daily_pnls", []))
         all_oos_equity.extend(oos_result.get("equity_curve", []))
+        # WF Fix 1: collect raw bar-level equity for accurate intraday max DD.
+        # equity_bars is a list[float] of bar-level equity values from the backtest result.
+        all_oos_equity_bars.extend(oos_result.get("equity_bars", []))
         all_oos_trades.extend(oos_result.get("trades", []))
         range_pop()  # forge/wf_window_{i}
 
@@ -240,8 +279,14 @@ def run_walk_forward(
     total_trades = len(all_oos_trades)
     total_return = float(sum(w["oos_metrics"]["total_return"] for w in window_results))  # Sum dollar P&L
 
-    # Continuous max DD: compute from concatenated OOS daily P&Ls (not per-window max)
-    if all_oos_pnls:
+    # Continuous max DD: prefer bar-level equity (captures intraday peaks), fall back to daily P&Ls.
+    # Bar-level is critical for prop firm risk: a strategy with -$1800 close-to-close DD may have
+    # -$2200 intraday, which breaches Topstep's $2,000 trailing limit live.
+    if all_oos_equity_bars:
+        eq_arr = np.array(all_oos_equity_bars, dtype=float)
+        running_peak = np.maximum.accumulate(eq_arr)
+        max_dd = float(np.max(running_peak - eq_arr))
+    elif all_oos_pnls:
         cum_pnl = np.cumsum(all_oos_pnls)
         running_peak = np.maximum.accumulate(cum_pnl)
         max_dd = float(np.max(running_peak - cum_pnl))
@@ -319,10 +364,11 @@ def run_walk_forward(
     if all_oos_pnl_records and all_oos_trades:
         from src.engine.prop_sim import simulate_all_firms
         symbol = request.strategy.symbol if hasattr(request.strategy, "symbol") else request.strategy.get("symbol", "MES")
+        _overnight_hold = getattr(getattr(request, "strategy", None), "overnight_hold", False)
         prop_compliance = simulate_all_firms(
             all_oos_pnl_records, all_oos_trades,
             symbol=symbol, account_size=50_000,
-            overnight_hold=False,
+            overnight_hold=_overnight_hold,
         )
 
     return {
@@ -430,7 +476,11 @@ def run_walk_forward_class(
     for i, (is_data, oos_data) in enumerate(windows):
         print(f"  Window {i+1}/{len(windows)}: IS={len(is_data)} bars, OOS={len(oos_data)} bars", file=sys.stderr)
 
-        # Run class-based backtest on OOS data
+        # Run class-based backtest on OOS data.
+        # P1-A fix: pass is_data as warmup_data so strategy.compute() runs on IS+OOS
+        # context — indicators are correctly initialized at the OOS boundary.
+        # IS rows are stripped inside run_class_backtest() after compute(), before
+        # signal execution. This mirrors the run_backtest() E7.2 warmup fix.
         # Eligibility gate OFF for backtesting — test the STRATEGY, not the gate.
         # The gate is a live-trading filter (kill zones, bias, sweeps). Applying it
         # in backtests kills 90%+ of signals, producing statistically meaningless
@@ -447,16 +497,27 @@ def run_walk_forward_class(
             htf_cache=htf_cache,
             daily_data=daily_data,
             skip_eligibility_gate=True,
+            warmup_data=is_data,
         )
 
         oos_trade_count = oos_result.get("total_trades", 0)
         oos_trading_days = oos_result.get("total_trading_days", 0)
 
-        # Extract date boundaries for persistence (guard against empty slices)
-        is_start_dt = str(is_data["ts_event"][0])[:10] if len(is_data) > 0 else ""
-        is_end_dt = str(is_data["ts_event"][-1])[:10] if len(is_data) > 0 else ""
-        oos_start_dt = str(oos_data["ts_event"][0])[:10] if len(oos_data) > 0 else ""
-        oos_end_dt = str(oos_data["ts_event"][-1])[:10] if len(oos_data) > 0 else ""
+        # Extract date boundaries for persistence.
+        # Guard: ts_event column may be absent on synthetic test data — use ts_et as
+        # a fallback, then fall back to "" rather than raising KeyError.
+        def _ts_col_cls(df: pl.DataFrame) -> str:
+            for col in ("ts_event", "ts_et"):
+                if col in df.columns:
+                    return col
+            return ""
+
+        _is_ts_cls = _ts_col_cls(is_data)
+        _oos_ts_cls = _ts_col_cls(oos_data)
+        is_start_dt = str(is_data[_is_ts_cls][0])[:10] if (len(is_data) > 0 and _is_ts_cls) else ""
+        is_end_dt = str(is_data[_is_ts_cls][-1])[:10] if (len(is_data) > 0 and _is_ts_cls) else ""
+        oos_start_dt = str(oos_data[_oos_ts_cls][0])[:10] if (len(oos_data) > 0 and _oos_ts_cls) else ""
+        oos_end_dt = str(oos_data[_oos_ts_cls][-1])[:10] if (len(oos_data) > 0 and _oos_ts_cls) else ""
 
         window_detail = {
             "window": i + 1,
@@ -474,7 +535,11 @@ def run_walk_forward_class(
                 "profit_factor": oos_result.get("profit_factor", 0),
                 "total_trades": oos_trade_count,
                 "total_trading_days": oos_trading_days,
-                "avg_trade_pnl": round(oos_result.get("total_return", 0) / max(oos_trade_count, 1), 2),
+                # P2-H fix: prefer actual computed mean from the engine if present.
+                "avg_trade_pnl": round(
+                    oos_result.get("avg_trade_pnl", oos_result.get("total_return", 0) / max(oos_trade_count, 1)),
+                    2,
+                ),
                 "avg_daily_pnl": round(float(sum(oos_result.get("daily_pnls", [])) / max(len(oos_result.get("daily_pnls", [])), 1)), 2),
             },
             "avg_rr": oos_result.get("avg_rr", 0),
@@ -494,8 +559,13 @@ def run_walk_forward_class(
             window_detail["warning"] = "; ".join(warnings)
 
         window_results.append(window_detail)
-        all_oos_pnls.extend(oos_result.get("daily_pnls", []))
-        all_oos_pnl_records.extend(oos_result.get("daily_pnl_records", []))
+        # P2-I fix (class WF): deduplicate boundary-day P&L records across adjacent windows.
+        _new_records_cls = oos_result.get("daily_pnl_records", [])
+        _existing_dates_cls = {r.get("date") for r in all_oos_pnl_records if r.get("date")}
+        _deduped_cls = [r for r in _new_records_cls if r.get("date") not in _existing_dates_cls]
+        all_oos_pnl_records.extend(_deduped_cls)
+        _deduped_pnls_cls = [r.get("pnl", 0.0) for r in _deduped_cls]
+        all_oos_pnls.extend(_deduped_pnls_cls if _deduped_cls else oos_result.get("daily_pnls", []))
         all_oos_trades.extend(oos_result.get("trades", []))
 
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates
@@ -568,10 +638,11 @@ def run_walk_forward_class(
     prop_compliance = None
     if all_oos_pnl_records and all_oos_trades:
         from src.engine.prop_sim import simulate_all_firms
+        _overnight_hold = getattr(strategy, "overnight_hold", False)
         prop_compliance = simulate_all_firms(
             all_oos_pnl_records, all_oos_trades,
             symbol=symbol, account_size=50_000,
-            overnight_hold=False,
+            overnight_hold=_overnight_hold,
         )
 
     return {

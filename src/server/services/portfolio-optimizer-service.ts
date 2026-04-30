@@ -14,7 +14,6 @@ import {
   strategies,
   paperSessions,
   paperTrades,
-  portfolioSnapshots,
 } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
@@ -253,14 +252,10 @@ export async function runPortfolioCorrelationCheck(): Promise<PortfolioSnapshot 
       return null;
     }
 
-    // Persist
-    await db.insert(portfolioSnapshots).values({
-      snapshotDate: new Date().toISOString().split("T")[0],
-      correlationMatrix: snapshot.matrix,
-      activeStrategies: snapshot.activeStrategies,
-      totalHeat: String(snapshot.totalHeat),
-      recommendations: snapshot.recommendations,
-    });
+    // NOTE: portfolioSnapshots table was dropped in migration 0055 (writer-only,
+    // no readers). Snapshot is now broadcast-only — consumers use SSE.
+    // If historical correlation analysis is wanted later, re-introduce a table
+    // with an explicit reader endpoint at the same time.
 
     // Broadcast
     broadcastSSE("portfolio:correlation_snapshot", {

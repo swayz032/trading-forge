@@ -37,7 +37,7 @@
         300
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/paper/sessions",
+        "url": "http://host.docker.internal:4000/api/paper/sessions",
         "method": "GET",
         "sendQuery": true,
         "queryParameters": {
@@ -80,7 +80,7 @@
         300
       ],
       "parameters": {
-        "url": "=http://localhost:4000/api/paper/drift/{{ $json.id }}?strategyId={{ $json.strategyId }}",
+        "url": "=http://host.docker.internal:4000/api/paper/drift/{{ $json.id }}?strategyId={{ $json.strategyId }}",
         "method": "GET",
         "options": {
           "timeout": 30000
@@ -142,7 +142,7 @@
         200
       ],
       "parameters": {
-        "url": "http://localhost:11434/api/generate",
+        "url": "http://host.docker.internal:11434/api/generate",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -166,7 +166,7 @@
         200
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/strategies/lifecycle/check",
+        "url": "http://host.docker.internal:4000/api/strategies/lifecycle/check",
         "options": {
           "timeout": 15000
         }
@@ -186,7 +186,7 @@
         300
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/journal",
+        "url": "http://host.docker.internal:4000/api/journal",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -210,7 +210,7 @@
         300
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/sse/broadcast",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -235,7 +235,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "=http://localhost:4000/api/paper/mc-compare/{{ $json.id }}",
+        "url": "=http://host.docker.internal:4000/api/paper/mc-compare/{{ $json.id }}",
         "options": {
           "timeout": 30000
         }
@@ -411,7 +411,8 @@
     "timezone": "America/New_York",
     "saveDataErrorExecution": "all",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": null,
   "meta": null,

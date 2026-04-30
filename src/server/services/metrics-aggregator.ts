@@ -91,6 +91,75 @@ class MetricsAggregator {
     this.windows.delete(sessionId);
   }
 
+  /**
+   * Warm up rolling metrics from DB on server boot.
+   *
+   * For each active paper session, reads the most recent MAX_WINDOW (50) closed
+   * trades and replays them through recordTrade() so rolling Sharpe / win rate /
+   * drawdown reflect real history immediately — not just trades from after the
+   * most recent restart.
+   *
+   * Emits a `metrics:warmed-up` SSE event so the dashboard can surface recovery.
+   * Called from server boot AFTER DB is ready and BEFORE the first scheduler tick.
+   */
+  async warmUp(): Promise<{ sessionsRecovered: number; tradesReplayed: number }> {
+    let sessionsRecovered = 0;
+    let tradesReplayed = 0;
+
+    try {
+      // Lazy DB imports so this module can be loaded without DATABASE_URL (tests)
+      const { db } = await import("../db/index.js");
+      const { paperSessions, paperTrades: paperTradesTable } = await import("../db/schema.js");
+      const { eq, desc } = await import("drizzle-orm");
+
+      // Find all active paper sessions
+      const activeSessions = await db
+        .select({ id: paperSessions.id })
+        .from(paperSessions)
+        .where(eq(paperSessions.status, "active"));
+
+      for (const session of activeSessions) {
+        try {
+          // Fetch the most recent MAX_WINDOW closed trades (exitTime non-null)
+          const recentTrades = await db
+            .select({
+              pnl: paperTradesTable.pnl,
+              exitTime: paperTradesTable.exitTime,
+            })
+            .from(paperTradesTable)
+            .where(eq(paperTradesTable.sessionId, session.id))
+            .orderBy(desc(paperTradesTable.exitTime))
+            .limit(MetricsAggregator.MAX_WINDOW);
+
+          if (recentTrades.length === 0) continue;
+
+          // Replay in ascending time order (oldest first) so the window state matches
+          // what would have been produced by real-time recording.
+          const ordered = recentTrades.reverse();
+          for (const t of ordered) {
+            if (t.pnl == null || t.exitTime == null) continue;
+            this.recordTrade(session.id, {
+              pnl: parseFloat(String(t.pnl)),
+              closedAt: t.exitTime instanceof Date ? t.exitTime : new Date(t.exitTime),
+            });
+            tradesReplayed++;
+          }
+
+          sessionsRecovered++;
+        } catch (sessionErr) {
+          // Per-session failure must not abort the whole warm-up
+          void sessionErr;
+        }
+      }
+    } catch (_err) {
+      // DB unavailability during warm-up is non-fatal — aggregator starts empty
+      void _err;
+    }
+
+    broadcastSSE("metrics:warmed-up", { sessionsRecovered, tradesReplayed });
+    return { sessionsRecovered, tradesReplayed };
+  }
+
   // ─── Private ────────────────────────────────────────────────
 
   private computeMetrics(sessionId: string, trades: TradeRecord[]): SessionMetrics {

@@ -10,6 +10,7 @@ import numpy as np
 import polars as pl
 
 from src.engine.config import CONTRACT_SPECS
+from src.engine.monte_carlo import create_authoritative_rng
 
 
 # ─── Default Fill Probabilities ──────────────────────────────────
@@ -94,7 +95,10 @@ def apply_fill_model(
     Returns:
         (filtered_entries, adjusted_sizes) — modified copies
     """
-    rng = np.random.default_rng(seed)
+    # Fix 3: use authoritative PCG64DXSM RNG for replay-deterministic fill simulation.
+    # np.random.default_rng() uses SFC64 which differs from the PCG64DXSM used by monte_carlo.py,
+    # causing RNG family mismatch and non-reproducible cross-module replay.
+    rng = create_authoritative_rng(seed)[0]
     n = len(entries)
 
     filtered_entries = entries.copy()
@@ -170,8 +174,14 @@ def compute_fill_probabilities_v2(
         return np.ones(n, dtype=np.float64)
 
     if order_type in ("stop", "stop_market"):
-        # Stop-market always fills, but with higher slippage (handled in slippage.py)
-        return np.ones(n, dtype=np.float64)
+        # P1-E fix: stop-market orders are prohibited per CLAUDE.md.
+        # Raise here so no live or backtest path silently uses stop-market semantics.
+        # This guard covers callers that bypass FillProbabilityConfig validation
+        # and call compute_fill_probabilities_v2() directly with order_type="stop".
+        raise ValueError(
+            f"order_type='{order_type}' is prohibited (CLAUDE.md: stop-market orders "
+            "cause catastrophic slippage in live futures). Use 'stop_limit' instead."
+        )
 
     # Base probabilities (same as v1 for limit orders)
     fill_probs = np.full(n, config.get("limit_at_current", 0.95), dtype=np.float64)

@@ -18,6 +18,8 @@ import { runQuantumMC } from "./quantum-mc-service.js";
 import { compilePineExport } from "./pine-export-service.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { tracer } from "../lib/tracing.js";
+import { captureToDLQ } from "../lib/dlq-service.js";
+import { notifyCritical } from "./notification-service.js";
 
 interface MCOptions {
   numSimulations?: number;
@@ -31,6 +33,7 @@ interface MCOptions {
   runPermutationTest?: boolean;
   permutationN?: number;
   nVariants?: number;
+  correlationId?: string;
 }
 
 interface MCResult {
@@ -79,19 +82,55 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
     throw new Error(`Backtest ${backtestId} is not completed (status: ${bt.status})`);
   }
 
-  // Insert pending MC row (use pre-generated ID if provided to avoid race conditions)
-  const [mcRow] = await db
-    .insert(monteCarloRuns)
-    .values({
-      ...(externalId ? { id: externalId } : {}),
-      backtestId,
-      status: "running",
-      numSimulations: options.numSimulations ?? 10_000,
-      gpuAccelerated: options.useGpu ?? true,
-    })
-    .returning();
+  // Insert pending MC row (use pre-generated ID if provided to avoid race conditions).
+  //
+  // P1-5 (idempotency): when callers pre-insert a pending row to guarantee the
+  // stale-pending sweeper can catch crashes between row-insert and Python call,
+  // they pass the pre-insert UUID as `externalId`. We .onConflictDoNothing()
+  // and re-fetch the existing row so a second .insert() with the same id is
+  // safe and the function reuses the caller's row instead of creating a
+  // duplicate. Without externalId the legacy behavior is unchanged.
+  let mcId: string;
+  if (externalId) {
+    const inserted = await db
+      .insert(monteCarloRuns)
+      .values({
+        id: externalId,
+        backtestId,
+        status: "running",
+        numSimulations: options.numSimulations ?? 10_000,
+        gpuAccelerated: options.useGpu ?? true,
+      })
+      .onConflictDoNothing()
+      .returning();
 
-  const mcId = mcRow.id;
+    if (inserted.length > 0) {
+      mcId = inserted[0].id;
+    } else {
+      // Row was pre-inserted by the caller — reuse it.
+      const [existing] = await db
+        .select({ id: monteCarloRuns.id })
+        .from(monteCarloRuns)
+        .where(eq(monteCarloRuns.id, externalId))
+        .limit(1);
+      if (!existing) {
+        throw new Error(`runMonteCarlo: externalId ${externalId} did not insert and no existing row found`);
+      }
+      mcId = existing.id;
+    }
+  } else {
+    const [mcRow] = await db
+      .insert(monteCarloRuns)
+      .values({
+        backtestId,
+        status: "running",
+        numSimulations: options.numSimulations ?? 10_000,
+        gpuAccelerated: options.useGpu ?? true,
+      })
+      .returning();
+    mcId = mcRow.id;
+  }
+
   mcSpan.setAttribute("mcId", mcId);
 
   try {
@@ -122,6 +161,7 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
       config: config as unknown as Record<string, unknown>,
       timeoutMs: 600_000, // 10m
       componentName: "monte-carlo-engine",
+      correlationId: options.correlationId,
     });
 
     // Update MC row with results
@@ -163,6 +203,7 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
       status: "success",
       durationMs: result.execution_time_ms,
       decisionAuthority: "agent",
+      correlationId: options.correlationId ?? null,
     });
 
     // ─── Broadcast MC completion SSE ──────────────────────────────
@@ -339,7 +380,30 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
       status: "failure",
       decisionAuthority: "agent",
       errorMessage: errorMsg,
+      correlationId: options.correlationId ?? null,
     });
+
+    // Capture to DLQ so the failure is not silent
+    await captureToDLQ({
+      operationType: "monte_carlo:failure",
+      entityType: "monte_carlo",
+      entityId: mcId,
+      errorMessage: errorMsg,
+      metadata: {
+        backtestId,
+        strategyId: bt.strategyId ?? null,
+        numSimulations: options.numSimulations ?? 10_000,
+        correlationId: options.correlationId ?? null,
+      },
+    });
+
+    // MC failure blocks the TESTING→PAPER promotion gate (MC survival > 70% required)
+    notifyCritical(
+      "MC failed — promotion gate blocked",
+      `Monte Carlo run ${mcId} failed for strategy ${bt.strategyId ?? "unknown"} (backtest ${backtestId}). ` +
+      `The TESTING→PAPER promotion gate is now blocked until MC re-runs successfully. Error: ${errorMsg}`,
+      { mcId, backtestId, strategyId: bt.strategyId ?? null },
+    );
 
     mcSpan.setAttribute("status", "failed");
     mcSpan.end();

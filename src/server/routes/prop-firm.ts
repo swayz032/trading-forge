@@ -9,7 +9,6 @@ import {
   getTotalHurdle,
   getAllFirms,
 } from "../../shared/firm-config.js";
-import { logger } from "../index.js";
 
 export const propFirmRoutes = Router();
 
@@ -48,7 +47,7 @@ propFirmRoutes.get("/firms/:firm/:accountType", (req, res) => {
   const requestedType = (req.params.accountType ?? ACCOUNT_TYPE).toLowerCase();
   if (requestedType !== ACCOUNT_TYPE) {
     // Warn but still return 50K config
-    logger.warn(`Requested account type "${requestedType}" — only 50K accounts exist. Returning 50K config.`);
+    req.log.warn(`Requested account type "${requestedType}" — only 50K accounts exist. Returning 50K config.`);
   }
 
   const acct = firmConfig.accountTypes[ACCOUNT_TYPE];

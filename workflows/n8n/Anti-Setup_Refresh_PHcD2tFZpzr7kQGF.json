@@ -365,7 +365,8 @@
     "saveDataSuccessExecution": "all",
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": {
     "node:Monthly 1st 3AM ET Trigger": {

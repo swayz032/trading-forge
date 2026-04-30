@@ -125,8 +125,8 @@ describe("classifySessionType — DST active (summer, UTC-4)", () => {
     expect(classifySessionType(utcFromEt(15, 59, dst))).toBe("NY_CLOSE");
   });
 
-  it("16:00 ET → OVERNIGHT", () => {
-    expect(classifySessionType(utcFromEt(16, 0, dst))).toBe("OVERNIGHT");
+  it("16:00 ET → CME_HALT (settlement halt 16:00–17:00 ET)", () => {
+    expect(classifySessionType(utcFromEt(16, 0, dst))).toBe("CME_HALT");
   });
 
   it("20:00 ET → OVERNIGHT", () => {
@@ -161,8 +161,8 @@ describe("classifySessionType — standard time (winter, UTC-5)", () => {
     expect(classifySessionType(utcFromEt(14, 30, dst))).toBe("NY_CLOSE");
   });
 
-  it("16:00 ET → OVERNIGHT", () => {
-    expect(classifySessionType(utcFromEt(16, 0, dst))).toBe("OVERNIGHT");
+  it("16:00 ET → CME_HALT (settlement halt 16:00–17:00 ET)", () => {
+    expect(classifySessionType(utcFromEt(16, 0, dst))).toBe("CME_HALT");
   });
 });
 

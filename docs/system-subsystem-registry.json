@@ -43,13 +43,23 @@
       "/api/journal/stats/summary",
       "agent:* SSE"
     ],
-    "scheduler_jobs": [],
+    "scheduler_jobs": [
+      "drain-scouted-ideas-periodic",
+      "graveyard-pattern-extraction",
+      "pipeline-resume-drain",
+      "prompt-ab-resolution",
+      "tournament-staleness-check"
+    ],
     "routes": [
       "/api/agent",
       "/api/compiler",
-      "/api/validation",
       "/api/journal",
-      "/api/tournament"
+      "/api/openai-proxy",
+      "/api/openclaw/daily-report",
+      "/api/search",
+      "/api/supadata",
+      "/api/tournament",
+      "/api/validation"
     ],
     "engine_subsystems": [
       "compiler",
@@ -59,6 +69,8 @@
     ],
     "database_tables": [
       "audit_log",
+      "prompt_ab_tests",
+      "prompt_versions",
       "system_journal",
       "tournament_results"
     ],
@@ -126,10 +138,12 @@
       "strategies",
       "strategy_names",
       "strategy_graveyard",
-      "audit_log"
+      "audit_log",
+      "lifecycle_transitions"
     ],
     "audit_tables": [
-      "audit_log"
+      "audit_log",
+      "lifecycle_transitions"
     ],
     "audit_actions": [
       "strategy.lifecycle",
@@ -145,19 +159,21 @@
       "strategy:deploy-ready SSE"
     ],
     "scheduler_jobs": [
+      "funnel-snapshot",
       "lifecycle-auto-check",
       "rolling-sharpe"
     ],
     "routes": [
+      "/api/graveyard",
       "/api/strategies",
-      "/api/strategy-names",
-      "/api/graveyard"
+      "/api/strategy-names"
     ],
     "engine_subsystems": [
       "graveyard"
     ],
     "database_tables": [
       "audit_log",
+      "lifecycle_transitions",
       "strategies",
       "strategy_graveyard",
       "strategy_names"
@@ -249,11 +265,12 @@
     ],
     "scheduler_jobs": [],
     "routes": [
+      "/api/anti-setups",
+      "/api/archetypes",
       "/api/backtests",
       "/api/monte-carlo",
-      "/api/survival",
-      "/api/archetypes",
-      "/api/anti-setups"
+      "/api/prevalidate",
+      "/api/survival"
     ],
     "engine_subsystems": [
       "anti_setups",
@@ -357,9 +374,14 @@
       "portfolio:correlation_snapshot SSE"
     ],
     "scheduler_jobs": [
+      "anti-setup-mine",
+      "archetype-daily-classify",
+      "contract-roll-sweep",
+      "macro-data-sync",
       "paper-vs-backtest",
       "portfolio-correlation",
       "pre-market-prep",
+      "session-analytics-rollup",
       "stale-session-check"
     ],
     "routes": [
@@ -379,10 +401,12 @@
     ],
     "database_tables": [
       "audit_log",
+      "contract_rolls",
       "data_sync_jobs",
       "macro_snapshots",
       "market_data_meta",
       "paper_positions",
+      "paper_session_feedback",
       "paper_sessions",
       "paper_signal_logs",
       "paper_trades",
@@ -482,6 +506,7 @@
       "drift:alert SSE"
     ],
     "scheduler_jobs": [
+      "compliance-rule-drift",
       "decay-monitor"
     ],
     "routes": [
@@ -579,6 +604,8 @@
       "meta:parameter_review SSE"
     ],
     "scheduler_jobs": [
+      "anti-setup-effectiveness",
+      "critic-feedback",
       "meta-parameter-review",
       "regret-score-fill"
     ],
@@ -761,6 +788,7 @@
       "rl_training_runs",
       "sqa_optimization_runs",
       "tensor_predictions",
+      "quantum_run_costs",
       "audit_log"
     ],
     "audit_tables": [
@@ -787,6 +815,7 @@
       "audit_log",
       "quantum_mc_benchmarks",
       "quantum_mc_runs",
+      "quantum_run_costs",
       "qubo_timing_runs",
       "rl_training_runs",
       "sqa_optimization_runs",
@@ -945,18 +974,33 @@
     ],
     "scheduler_jobs": [
       "agent-health-sweep",
-      "metrics-heartbeat"
+      "disabled-job-probe",
+      "dlq-escalation",
+      "dlq-retry",
+      "idempotency-cleanup",
+      "metrics-collector",
+      "metrics-heartbeat",
+      "python-pool-saturation-check",
+      "resource-snapshot",
+      "stale-pending-sweeper",
+      "system-map-drift"
     ],
     "routes": [
+      "/api/admin",
       "/api/alerts",
+      "/api/dlq",
       "/api/health",
+      "/api/metrics",
       "/api/sse"
     ],
     "engine_subsystems": [],
     "database_tables": [
       "agent_health_reports",
       "alerts",
-      "audit_log"
+      "audit_log",
+      "dead_letter_queue",
+      "idempotency_keys",
+      "subsystem_metrics"
     ],
     "learning_from": [],
     "learning_assets": [],
@@ -1026,10 +1070,17 @@
       "n8n:/api/v1/workflows",
       "docs/system-topology.generated.json"
     ],
-    "scheduler_jobs": [],
-    "routes": [],
+    "scheduler_jobs": [
+      "n8n-health-check",
+      "n8n-workflow-sync"
+    ],
+    "routes": [
+      "/api/n8n"
+    ],
     "engine_subsystems": [],
-    "database_tables": [],
+    "database_tables": [
+      "n8n_execution_log"
+    ],
     "learning_from": [
       "system_journal",
       "audit_log"

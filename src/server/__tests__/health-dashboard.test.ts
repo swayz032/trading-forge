@@ -57,6 +57,7 @@ describe("GET /api/health/dashboard", () => {
     expect(body).toHaveProperty("topology");
     expect(body).toHaveProperty("advancedModels");
     expect(body).toHaveProperty("paperSessions");
+    expect(body).toHaveProperty("dlqHealth");
     expect(body).toHaveProperty("metrics");
     expect(body).toHaveProperty("memory");
     expect(body).toHaveProperty("responseMs");
@@ -258,6 +259,23 @@ describe("GET /api/health/dashboard", () => {
     });
     const body = await res.json() as { metrics: unknown[] };
     expect(Array.isArray(body.metrics)).toBe(true);
+  }, 15_000);
+
+  it("dlqHealth block has unresolvedCount, escalatedCount, oldestUnresolvedAgeMs, byCategory (or error)", async () => {
+    const res = await fetch(`${baseUrl}/api/health/dashboard`, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    const body = await res.json() as { dlqHealth: Record<string, unknown> };
+    expect(body.dlqHealth).toBeDefined();
+    const dlq = body.dlqHealth;
+    // Either DB is reachable (fields present) or it errored — both are valid
+    const hasFields = "unresolvedCount" in dlq && "escalatedCount" in dlq && "byCategory" in dlq;
+    const hasError = "error" in dlq;
+    expect(hasFields || hasError).toBe(true);
+    if (hasFields) {
+      expect(typeof (dlq.unresolvedCount === null ? 0 : dlq.unresolvedCount)).toBe("number");
+      expect(typeof (dlq.escalatedCount === null ? 0 : dlq.escalatedCount)).toBe("number");
+    }
   }, 15_000);
 
   it("responseMs is a non-negative number under 10 seconds", async () => {

@@ -46,7 +46,7 @@
         300
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/data/query-info",
+        "url": "http://host.docker.internal:4000/api/data/query-info",
         "method": "GET",
         "sendQuery": true,
         "queryParameters": {
@@ -76,7 +76,7 @@
         300
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/backtests",
+        "url": "http://host.docker.internal:4000/api/backtests",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -141,7 +141,7 @@
         200
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/backtests/matrix",
+        "url": "http://host.docker.internal:4000/api/backtests/matrix",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -165,7 +165,7 @@
         200
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/journal",
+        "url": "http://host.docker.internal:4000/api/journal",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -189,7 +189,7 @@
         200
       ],
       "parameters": {
-        "url": "http://localhost:11434/api/generate",
+        "url": "http://host.docker.internal:11434/api/generate",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -272,7 +272,7 @@
         100
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/paper/start",
+        "url": "http://host.docker.internal:4000/api/paper/start",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -296,7 +296,7 @@
         300
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/sse/broadcast",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -320,7 +320,7 @@
         400
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/journal",
+        "url": "http://host.docker.internal:4000/api/journal",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -345,7 +345,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4000/api/monte-carlo",
+        "url": "http://host.docker.internal:4000/api/monte-carlo",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ backtestId: $('Core Backtest').first().json.backtestId || $json.id, numSimulations: 100000, method: 'block_bootstrap', firms: ['topstep_50k','mffu_50k','tpt_50k','apex_50k','tradeify_50k','alpha_50k','ffn_50k','earn2trade_50k'], isOosTrades: true }) }}",
@@ -379,7 +379,7 @@
         550
       ],
       "parameters": {
-        "url": "http://localhost:4000/api/sse/broadcast",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
         "method": "POST",
         "sendBody": true,
         "specifyBody": "json",
@@ -403,7 +403,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Poll backtest until complete\nconst backtestId = $input.first().json.backtestId;\nconst maxAttempts = 20; // 20 x 15s = 5 min\nconst interval = 15000;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  const response = await fetch(`http://localhost:4000/api/backtests/${backtestId}`);\n  const data = await response.json();\n\n  if (data.status === 'completed') {\n    return [{ json: data }];\n  }\n  if (data.status === 'failed') {\n    throw new Error(`Backtest failed: ${data.error || 'unknown'}`);\n  }\n\n  await new Promise(resolve => setTimeout(resolve, interval));\n}\n\nthrow new Error('Backtest timed out after 5 minutes');"
+        "jsCode": "// Poll backtest until complete\nconst backtestId = $input.first().json.backtestId;\nconst maxAttempts = 20; // 20 x 15s = 5 min\nconst interval = 15000;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  const response = await fetch(`http://host.docker.internal:4000/api/backtests/${backtestId}`);\n  const data = await response.json();\n\n  if (data.status === 'completed') {\n    return [{ json: data }];\n  }\n  if (data.status === 'failed') {\n    throw new Error(`Backtest failed: ${data.error || 'unknown'}`);\n  }\n\n  await new Promise(resolve => setTimeout(resolve, interval));\n}\n\nthrow new Error('Backtest timed out after 5 minutes');"
       }
     },
     {
@@ -416,7 +416,7 @@
         100
       ],
       "parameters": {
-        "jsCode": "// Poll matrix until complete\nconst matrixId = $input.first().json.id || $input.first().json.matrixId;\nconst maxAttempts = 30; // 30 x 30s = 15 min\nconst interval = 30000;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  const response = await fetch(`http://localhost:4000/api/backtests/matrix/${matrixId}`);\n  const data = await response.json();\n\n  if (data.status === 'completed') {\n    return [{ json: data }];\n  }\n  if (data.status === 'failed') {\n    throw new Error(`Matrix failed: ${data.error || 'unknown'}`);\n  }\n\n  await new Promise(resolve => setTimeout(resolve, interval));\n}\n\nthrow new Error('Matrix timed out after 15 minutes');"
+        "jsCode": "// Poll matrix until complete\nconst matrixId = $input.first().json.id || $input.first().json.matrixId;\nconst maxAttempts = 30; // 30 x 30s = 15 min\nconst interval = 30000;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  const response = await fetch(`http://host.docker.internal:4000/api/backtests/matrix/${matrixId}`);\n  const data = await response.json();\n\n  if (data.status === 'completed') {\n    return [{ json: data }];\n  }\n  if (data.status === 'failed') {\n    throw new Error(`Matrix failed: ${data.error || 'unknown'}`);\n  }\n\n  await new Promise(resolve => setTimeout(resolve, interval));\n}\n\nthrow new Error('Matrix timed out after 15 minutes');"
       }
     },
     {
@@ -429,7 +429,7 @@
         100
       ],
       "parameters": {
-        "jsCode": "// Poll Monte Carlo until complete\nconst mcId = $input.first().json.id || $input.first().json.mcId;\nconst maxAttempts = 20; // 20 x 15s = 5 min\nconst interval = 15000;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  const response = await fetch(`http://localhost:4000/api/monte-carlo/${mcId}`);\n  const data = await response.json();\n\n  if (data.status === 'completed') {\n    return [{ json: data }];\n  }\n  if (data.status === 'failed') {\n    throw new Error(`Monte Carlo failed: ${data.error || 'unknown'}`);\n  }\n\n  await new Promise(resolve => setTimeout(resolve, interval));\n}\n\nthrow new Error('Monte Carlo timed out after 5 minutes');"
+        "jsCode": "// Poll Monte Carlo until complete\nconst mcId = $input.first().json.id || $input.first().json.mcId;\nconst maxAttempts = 20; // 20 x 15s = 5 min\nconst interval = 15000;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  const response = await fetch(`http://host.docker.internal:4000/api/monte-carlo/${mcId}`);\n  const data = await response.json();\n\n  if (data.status === 'completed') {\n    return [{ json: data }];\n  }\n  if (data.status === 'failed') {\n    throw new Error(`Monte Carlo failed: ${data.error || 'unknown'}`);\n  }\n\n  await new Promise(resolve => setTimeout(resolve, interval));\n}\n\nthrow new Error('Monte Carlo timed out after 5 minutes');"
       }
     }
   ],
@@ -620,7 +620,8 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "errorWorkflow": "66HEjQavpvirY6g5"
   },
   "staticData": null,
   "meta": null,

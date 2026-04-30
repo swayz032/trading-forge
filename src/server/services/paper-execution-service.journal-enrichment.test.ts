@@ -150,13 +150,14 @@ vi.mock("../scheduler.js", () => ({ onPaperTradeClose: vi.fn() }));
 
 vi.mock("./paper-risk-gate.js", () => ({
   toEasternDateString: vi.fn().mockReturnValue("2026-03-27"),
+  invalidateDailyLossCache: vi.fn(),
 }));
 
 vi.mock("../lib/python-runner.js", () => ({
   runPythonModule: vi.fn().mockResolvedValue({ is_economic_event: false }),
 }));
 
-import { closePosition } from "./paper-execution-service.js";
+import { closePosition, __resetCalendarCacheForTests } from "./paper-execution-service.js";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 // entryTime = 2026-01-15T15:00:00Z (January, standard time EST = UTC-5)
@@ -185,6 +186,11 @@ function buildMockPosition(overrides: Record<string, unknown> = {}) {
     trailHwm: null,
     barsHeld: 0,
     fillProbability: "0.85",
+    // mae/mfe explicitly null — they're populated only when updatePositionPrices()
+    // runs per bar (see paper-trading-stream.ts). This unit test stubs that path,
+    // so the watermark fields must be present with null so the INSERT carries them.
+    mae: null,
+    mfe: null,
     ...overrides,
   };
 }
@@ -205,17 +211,21 @@ const MOCK_SESSION = {
 };
 
 /**
- * Standard select queue for a successful close:
- *   0 — paperPositions
- *   1 — paperSessions.firmId
- *   2 — macroSnapshots
- *   3 — skipDecisions
- *   4 — paperSessions re-read
- *   5 — paperTrades rolling Sharpe (empty → skips)
+ * Standard select queue for a successful close.
+ *
+ * closePosition() makes select() calls in this exact order:
+ *   0 — paperPositions (posForLock — outside withSessionLock — only sessionId)
+ *   1 — paperPositions (re-read inside lock — full row, including symbol)
+ *   2 — paperSessions.firmId (commission lookup)
+ *   3 — macroSnapshots (macroRegime enrichment)
+ *   4 — skipDecisions (skipSignal enrichment)
+ *   5 — paperSessions re-read after tx (downstream logic)
+ *   6 — paperTrades rolling Sharpe (returns [] to short-circuit at < 5 trades)
  */
 function makeDefaultQueue(position = buildMockPosition()): Array<unknown[]> {
   return [
-    [position],
+    [{ sessionId: position.sessionId }],   // posForLock
+    [position],                             // pos (full row inside lock)
     [{ firmId: "topstep" }],
     [{ macroRegime: "TRENDING_UP" }],
     [{ decision: "REDUCE" }],
@@ -231,6 +241,7 @@ beforeEach(() => {
   selectCallIndex = 0;
   selectQueue = [];
   vi.clearAllMocks();
+  __resetCalendarCacheForTests();
 });
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -303,7 +314,8 @@ describe("closePosition() — Phase 1.1 journal enrichment", () => {
     expect(capturedTradeValues!.fillProbability).toBe("0.85");
   });
 
-  it("mae is null — known gap: per-bar watermark tracking not yet implemented", async () => {
+  // mae/mfe per-bar tracking IS implemented (paper-execution-service.ts:1256 updatePositionPrices called from paper-trading-stream.ts:108). The test fixture below uses a simplified mock that doesn't trigger per-bar updates — assertion of null is acceptable for this unit test scope.
+  it("mae is null in this fixture (mock skips per-bar updatePositionPrices path)", async () => {
     selectQueue = makeDefaultQueue();
     await closePosition("pos-uuid-001", 5010);
 
@@ -311,7 +323,7 @@ describe("closePosition() — Phase 1.1 journal enrichment", () => {
     expect(capturedTradeValues!.mae).toBeNull();
   });
 
-  it("mfe is null — known gap: per-bar watermark tracking not yet implemented", async () => {
+  it("mfe is null in this fixture (mock skips per-bar updatePositionPrices path)", async () => {
     selectQueue = makeDefaultQueue();
     await closePosition("pos-uuid-001", 5010);
 
@@ -339,9 +351,11 @@ describe("closePosition() — Phase 1.1 journal enrichment", () => {
   });
 
   it("macroRegime is null when macroSnapshots query returns no rows", async () => {
-    // Replace macroSnapshots entry (index 2) with empty array
+    // Mirror queue order documented on makeDefaultQueue (posForLock → pos → ... ).
+    const pos = buildMockPosition();
     selectQueue = [
-      [buildMockPosition()],
+      [{ sessionId: pos.sessionId }],   // posForLock
+      [pos],                             // pos
       [{ firmId: "topstep" }],
       [],   // macroSnapshots: no rows
       [],   // skipDecisions: no rows
@@ -356,9 +370,11 @@ describe("closePosition() — Phase 1.1 journal enrichment", () => {
   });
 
   it("macroRegime is null when macroSnapshots query throws — close still succeeds (non-blocking)", async () => {
-    // Replace macroSnapshots entry (index 2) with an Error to simulate DB failure
+    // Replace macroSnapshots queue entry (now index 3) with an Error to simulate DB failure.
+    const pos = buildMockPosition();
     selectQueue = [
-      [buildMockPosition()],
+      [{ sessionId: pos.sessionId }],   // posForLock
+      [pos],                             // pos
       [{ firmId: "topstep" }],
       new Error("DB timeout") as unknown as unknown[],
       [{ decision: "TRADE" }],
@@ -374,7 +390,8 @@ describe("closePosition() — Phase 1.1 journal enrichment", () => {
   it("fillProbability is null when position row has no fillProbability (market order bypass)", async () => {
     const pos = buildMockPosition({ fillProbability: null });
     selectQueue = [
-      [pos],
+      [{ sessionId: pos.sessionId }],   // posForLock
+      [pos],                             // pos
       [{ firmId: "mffu" }],
       [{ macroRegime: "RANGE_BOUND" }],
       [{ decision: "TRADE" }],

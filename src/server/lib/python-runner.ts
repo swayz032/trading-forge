@@ -1,4 +1,4 @@
-import { spawn } from "child_process";
+import { spawn, type ChildProcess } from "child_process";
 import { logger } from "../index.js";
 import { parsePythonJson } from "../../shared/utils.js";
 import { resolve as pathResolve } from "path";
@@ -7,6 +7,101 @@ import { tmpdir } from "os";
 import { randomUUID } from "crypto";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+
+// G5.1: Python subprocess concurrency cap.
+// Without a cap, agent batch + matrix backtest + auto fire-and-forget runs can
+// spawn 50+ Python processes on a busy day → OOM. The semaphore queues calls
+// once `MAX_PYTHON_SUBPROCESSES` are active. Set the env var to tune for the
+// host (default 6 — conservative for an 8-core dev box).
+const MAX_PYTHON_SUBPROCESSES = Math.max(
+  1,
+  parseInt(process.env.MAX_PYTHON_SUBPROCESSES ?? "6", 10) || 6,
+);
+let _pythonActiveCount = 0;
+let _pythonQueueDepth = 0;
+const _pythonWaitQueue: Array<() => void> = [];
+
+function _acquirePythonSlot(): Promise<void> {
+  if (_pythonActiveCount < MAX_PYTHON_SUBPROCESSES) {
+    _pythonActiveCount++;
+    return Promise.resolve();
+  }
+  _pythonQueueDepth++;
+  return new Promise<void>((resolve) => {
+    _pythonWaitQueue.push(() => {
+      _pythonQueueDepth--;
+      _pythonActiveCount++;
+      resolve();
+    });
+  });
+}
+
+function _releasePythonSlot(): void {
+  _pythonActiveCount = Math.max(0, _pythonActiveCount - 1);
+  const next = _pythonWaitQueue.shift();
+  if (next) next();
+}
+
+// ─── Subprocess registry (SIGTERM drain support) ──────────────────────────────
+// Tracks every live ChildProcess so gracefullyShutdownPythonSubprocesses() can
+// signal them all on server shutdown. Entries are added after spawn() and removed
+// automatically on the "exit" event, so the set always reflects truly live procs.
+const _activeSubprocesses = new Set<ChildProcess>();
+
+function _registerSubprocess(child: ChildProcess): void {
+  _activeSubprocesses.add(child);
+  child.once("exit", () => _activeSubprocesses.delete(child));
+}
+
+/**
+ * Signal every live Python subprocess and wait for graceful exit.
+ * Called during SIGTERM/SIGINT shutdown in index.ts.
+ *
+ * Sequence:
+ *   1. SIGTERM to all — gives Python a chance to flush / clean up temp files.
+ *   2. Poll until all have exited or timeoutMs elapses.
+ *   3. SIGKILL any survivors.
+ *
+ * @param timeoutMs — grace period before hard-kill (default 5 s).
+ */
+export async function gracefullyShutdownPythonSubprocesses(timeoutMs = 5_000): Promise<void> {
+  if (_activeSubprocesses.size === 0) return;
+
+  logger.info(
+    { count: _activeSubprocesses.size },
+    "Shutdown: sending SIGTERM to active Python subprocesses",
+  );
+
+  for (const child of _activeSubprocesses) {
+    try { child.kill("SIGTERM"); } catch { /* already dead — ignore */ }
+  }
+
+  const deadline = Date.now() + timeoutMs;
+  while (_activeSubprocesses.size > 0 && Date.now() < deadline) {
+    await new Promise<void>((r) => setTimeout(r, 100));
+  }
+
+  if (_activeSubprocesses.size > 0) {
+    logger.warn(
+      { remaining: _activeSubprocesses.size },
+      "Shutdown: Python subprocesses did not exit within grace period — sending SIGKILL",
+    );
+    for (const child of _activeSubprocesses) {
+      try { child.kill("SIGKILL"); } catch { /* dead */ }
+    }
+  } else {
+    logger.info("Shutdown: all Python subprocesses exited cleanly");
+  }
+}
+
+/** Observability hook — used by /api/health and metrics endpoints. */
+export function getPythonSubprocessStats(): { active: number; queued: number; cap: number } {
+  return {
+    active: _pythonActiveCount,
+    queued: _pythonQueueDepth,
+    cap: MAX_PYTHON_SUBPROCESSES,
+  };
+}
 
 export interface PythonRunnerOptions {
   module?: string;
@@ -41,6 +136,9 @@ export async function runPythonModule<T = Record<string, unknown>>(
 
   let configTmpPath: string | null = null;
   let scriptTmpPath: string | null = null;
+
+  // G5.1: acquire a subprocess slot before doing any work. Released in finally.
+  await _acquirePythonSlot();
 
   try {
     const pythonCmd = process.platform === "win32" ? "python" : "python3";
@@ -80,6 +178,10 @@ export async function runPythonModule<T = Record<string, unknown>>(
         env: { ...process.env },
         cwd: PROJECT_ROOT,
       });
+      // Register in the active set so gracefullyShutdownPythonSubprocesses()
+      // can signal this process during SIGTERM. The "exit" listener inside
+      // _registerSubprocess removes it automatically when it terminates.
+      _registerSubprocess(proc);
 
       let settled = false;
       let stdout = "";
@@ -102,8 +204,12 @@ export async function runPythonModule<T = Record<string, unknown>>(
         const msg = data.toString().trim();
         if (msg) {
           stderr += msg + "\n";
-          // Log at warn so Python tracebacks are always visible in production (LOG_LEVEL=info)
-          logger.warn({ component: componentName, module }, msg);
+          // Log at warn so Python tracebacks are always visible in production (LOG_LEVEL=info).
+          // correlationId is included here so Python stderr lines are linkable to the HTTP request
+          // that spawned this subprocess. Python already emits the correlationId in its own prints
+          // (via _metadata.correlationId injected into the config), so this makes the Node side
+          // consistent with the Python side.
+          logger.warn({ component: componentName, module, correlationId }, msg);
         }
       });
 
@@ -136,5 +242,7 @@ export async function runPythonModule<T = Record<string, unknown>>(
     // Cleanup temp files
     if (configTmpPath) { try { unlinkSync(configTmpPath); } catch { /* ignore */ } }
     if (scriptTmpPath) { try { unlinkSync(scriptTmpPath); } catch { /* ignore */ } }
+    // G5.1: always release the slot, even on throw / timeout.
+    _releasePythonSlot();
   }
 }

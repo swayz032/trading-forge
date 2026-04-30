@@ -1,6 +1,5 @@
 import { randomUUID } from "crypto";
 import type { Request, Response, NextFunction } from "express";
-import type { Logger } from "pino";
 import { logger as rootLogger } from "../index.js";
 
 /**
@@ -24,11 +23,15 @@ export function correlationMiddleware(
     (req.headers["x-request-id"] as string | undefined)?.trim() ||
     randomUUID();
 
-  // Make requestId accessible on req for any code that needs the raw string
-  (req as Request & { id: string }).id = requestId;
+  // Make requestId accessible on req for any code that needs the raw string.
+  // Set both req.id (canonical) and req.requestId (legacy alias) so all consumers
+  // find the correlation ID regardless of which field they reference.
+  // Types are declared in src/server/types/express.d.ts — no cast needed.
+  req.id = requestId;
+  req.requestId = requestId;
 
   // Attach a child logger so every log line from this request carries requestId
-  (req as Request & { log: Logger }).log = rootLogger.child({ requestId });
+  req.log = rootLogger.child({ requestId });
 
   // Echo the ID back so clients can correlate their own logs
   res.setHeader("X-Request-ID", requestId);

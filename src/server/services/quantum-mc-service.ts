@@ -41,7 +41,7 @@ export interface QuantumRuntimeStatus {
   recentRunCount: number;
   recentFallbackCount: number;
   fallbackReady: boolean;
-  authorityBoundary: "autonomous_pre_deploy";
+  authorityBoundary: "challenger_only";
 }
 
 function runPythonQuantumMC(configPath: string, timeoutMs: number = 300_000): Promise<QuantumResult> {
@@ -110,8 +110,10 @@ export async function runQuantumMC(
     optInCloud?: boolean;
     cloudProvider?: string;
     cloudBackend?: string;
+    correlationId?: string;
   } = {},
 ) {
+  const correlationId = options.correlationId ?? null;
   const qmcSpan = tracer.startSpan("quantum_mc.run");
   qmcSpan.setAttribute("backtestId", backtestId);
   qmcSpan.setAttribute("eventType", eventType);
@@ -131,7 +133,7 @@ export async function runQuantumMC(
       backtestId,
       status: "running",
       method: "iae",  // provisional — overwritten below once result is available
-      governanceLabels: { experimental: false, authoritative: true, decision_role: "pre_deploy_autonomous" },
+      governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
     })
     .returning();
   qmcSpan.setAttribute("qmcRunId", qmcRow.id);
@@ -217,6 +219,7 @@ export async function runQuantumMC(
       status: "success",
       durationMs: result.execution_time_ms,
       decisionAuthority: "agent",
+      correlationId,
     });
 
     // ─── Auto-persist benchmark comparison (challenger evidence) ───
@@ -285,7 +288,7 @@ export async function runQuantumMC(
             const quantumRiskIntelligence: Record<string, number | string | null> = {
               quantum_estimate: result.estimated_value,
               // governance label so the Pine overlay knows this is a challenger estimate
-              governance_label: "pre_deploy_autonomous",
+              governance_label: "challenger_only",
             };
 
             logger.info(
@@ -349,6 +352,7 @@ export async function runQuantumMC(
       status: "failure",
       decisionAuthority: "agent",
       errorMessage: errorMsg,
+      correlationId,
     });
 
     qmcSpan.setAttribute("status", "failed");
@@ -362,9 +366,11 @@ export async function runHybridCompare(
   eventType: string = "breach",
   firmKey: string = "topstep_50k",
   threshold?: number,
+  context?: { correlationId?: string },
 ) {
+  const correlationId = context?.correlationId;
   // Run quantum estimation
-  const quantumResult = await runQuantumMC(backtestId, eventType, firmKey, { threshold });
+  const quantumResult = await runQuantumMC(backtestId, eventType, firmKey, { threshold, correlationId });
 
   // Get latest classical MC run for comparison
   const [classicalRun] = await db
@@ -491,6 +497,6 @@ export async function getQuantumRuntimeStatus(): Promise<QuantumRuntimeStatus> {
     recentRunCount,
     recentFallbackCount,
     fallbackReady: true,
-    authorityBoundary: "autonomous_pre_deploy",
+    authorityBoundary: "challenger_only",
   };
 }
