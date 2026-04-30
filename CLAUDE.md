@@ -160,7 +160,7 @@ modules built in W2-W4. Kill switch: `unset $VAR && systemctl restart`.
   Service: `src/server/services/a-plus-auditor-service.ts`.
   Route: `POST /api/auditor/scan`, `GET /api/auditor/latest`.
   Schedule: 8:00 AM ET daily (Mon-Fri), cron job `a-plus-auditor-scan`.
-  DB table: `a_plus_market_scans` (migration 0066). Pending-row contract.
+  DB table: `a_plus_market_scans` (migration 0067). Pending-row contract.
   Cost telemetry: `quantum_run_costs` with `moduleName="a_plus_auditor"`.
   Architecture:
     - Per-market: volatility audit (ATR ratio) + P(hit 1:2 reward) + noise score (W3a)
