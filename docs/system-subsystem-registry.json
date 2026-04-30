@@ -809,7 +809,8 @@
       "quantum-cost-prune"
     ],
     "routes": [
-      "/api/quantum-mc"
+      "/api/quantum-mc",
+      "/api/quantum/pre-flight"
     ],
     "engine_subsystems": [
       "quantum_mc"

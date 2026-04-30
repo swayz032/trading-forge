@@ -1071,7 +1071,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-04-30T08:59:02.484Z`.
+Updated automatically from the repo on `2026-04-30T09:15:20.725Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1079,7 +1079,7 @@ Updated automatically from the repo on `2026-04-30T08:59:02.484Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `tradingview_deploy`
-- API routes tracked: `45`
+- API routes tracked: `46`
 - Scheduler jobs tracked: `42`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
@@ -1121,7 +1121,7 @@ Updated automatically from the repo on `2026-04-30T08:59:02.484Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `14`
-- Route coverage: `45/45`
+- Route coverage: `46/46`
 - Scheduler coverage: `42/42`
 - Engine coverage: `22/22`
 - Database coverage: `55/55`
@@ -1266,6 +1266,7 @@ Updated automatically from the repo on `2026-04-30T08:59:02.484Z`.
 - `/api/prevalidate`
 - `/api/prop-firm`
 - `/api/quantum-mc`
+- `/api/quantum/pre-flight`
 - `/api/risk`
 - `/api/search`
 - `/api/signals`

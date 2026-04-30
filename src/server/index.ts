@@ -40,6 +40,7 @@ import { contextRoutes } from "./routes/context.js";
 import { validationRoutes } from "./routes/validation.js";
 import { pineExportRoutes } from "./routes/pine-export.js";
 import { quantumMcRoutes } from "./routes/quantum-mc.js";
+import { quantumPreFlightRoutes } from "./routes/quantum-pre-flight.js";
 import { adversarialStressRoutes } from "./routes/adversarial-stress.js";
 import { cloudQmcRoutes } from "./routes/cloud-qmc.js";
 import { strategyNameRoutes } from "./routes/strategy-names.js";
@@ -370,6 +371,10 @@ app.use("/api/context", contextRoutes);
 app.use("/api/validation", validationRoutes);
 app.use("/api/pine-export", pineExportRoutes);
 app.use("/api/quantum-mc", strictRateLimit, quantumMcRoutes);
+// Tier 6: Quantum pre-flight — cache-READ-ONLY lookup for n8n workflows.
+// NOT rate-limited at strict tier because it is read-only and called per
+// generated strategy in burst from n8n; standardRateLimit at /api covers it.
+app.use("/api/quantum/pre-flight", quantumPreFlightRoutes);
 app.use("/api/adversarial-stress", strictRateLimit, adversarialStressRoutes);
 app.use("/api/cloud-qmc", strictRateLimit, cloudQmcRoutes);
 app.use("/api/strategy-names", strategyNameRoutes);

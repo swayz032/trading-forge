@@ -464,6 +464,88 @@ bar where extra_contracts > 0. Includes base, extra, final, firm_cap, pnl.
 should use: `"profit_scaling_tier": {"increment": 2, "threshold": 3000}` (without
 `account_pnl_total` — that is injected at backtest-run time from live account PnL).
 
+## Quantum Pre-Flight Cache for n8n (Tier 6 / W6)
+
+n8n workflows call this CACHE-READ-ONLY endpoint between "Parse Output" and
+"Submit Backtest" to short-circuit strategies whose DSL hash already failed a
+prop-firm UCI test in a prior `quantum_mc_runs` row.
+
+- **Route:** `POST /api/quantum/pre-flight` (mounted in `src/server/index.ts`).
+  Standard rate-limited only (NOT strict) because n8n submits per generated
+  strategy in burst.
+- **Module:** `src/server/routes/quantum-pre-flight.ts` (also exports
+  `computeStrategyHash` for tests).
+- **Tests:** `src/server/__tests__/quantum-pre-flight.test.ts` (14 tests).
+
+**CRITICAL CONSTRAINTS — do not violate:**
+1. This route MUST NEVER spawn quantum compute. The backtest auto-fire path at
+   `backtest-service.ts:1022-1041` remains the SOLE quantum-compute trigger.
+   Spawning here would cause double quantum work per logical strategy event.
+2. Cache MISS returns `{cached: false, passed: true}` — proceed without
+   blocking. Do NOT auto-fire QMC from this path.
+3. Pipeline pause guard MANDATORY — `isActive() === false` returns
+   `{cached: false, passed: true, reason: "pipeline_paused"}` so paused
+   pipelines never appear as "blocked by stale cache".
+4. NEVER import `runQuantumMC`, `runQuantumBreachEstimation`,
+   `enqueueCloudQmcRun`, or any compute helper from this route file. The test
+   suite asserts these mocks are never invoked across all code paths.
+
+**Strategy hash:**
+- `sha256(canonicalJson(dsl))` → 64-char hex
+- Canonical JSON sorts object keys recursively so n8n payload-shape variations
+  do NOT fragment the cache.
+
+**UCI formula:** `UCI = estimated_value + confidence_interval.upper`
+**Threshold:** env `QUANTUM_PROP_FIRM_UCI_THRESHOLD` default 0.01 (1% breach
+probability ceiling).
+
+**Cache lookup query:**
+```sql
+SELECT q.id, q.backtest_id, q.estimated_value, q.confidence_interval
+FROM quantum_mc_runs q
+JOIN backtests b ON b.id = q.backtest_id
+WHERE q.status = 'completed'
+  AND b.config->>'strategy_hash' = $1
+ORDER BY q.created_at DESC
+LIMIT 1
+```
+
+Backtests written before backtest-service starts embedding `strategy_hash`
+into config produce cache misses — that's correct behavior (proceed without
+blocking, do not spawn).
+
+**Response shapes:**
+```json
+{ "cached": false, "passed": true,  "score": null,    "reason": "pipeline_paused" }
+{ "cached": false, "passed": true,  "score": null,    "reason": "no_prior_quantum_run" }
+{ "cached": false, "passed": true,  "score": null,    "reason": "cache_lookup_error" }
+{ "cached": true,  "passed": true,  "score": 0.0073, "qmcRunId": "...", "reason": "uci_within_threshold" }
+{ "cached": true,  "passed": false, "score": 0.0234, "qmcRunId": "...", "reason": "uci_above_threshold" }
+```
+
+**n8n workflows touched (W6):**
+- `eCr7cyb0aPArFCZc` (Strategy Generation Loop) — inserted between
+  "Concept Validated?" and "Submit Backtest". Block path returns to
+  "Check Iteration Limit" so the AI can refine.
+- `Z4NcOCDbet8KzjDd` (Nightly Strategy Research Loop) — inserted between
+  "Parse Ollama Strategy Output" and "Submit Strategies for Backtest".
+  Block path emits a no-op record for journaling.
+- HTTP node config: `onError: continueRegularOutput`, `retryOnFail: true`,
+  `maxTries: 2`, `waitBetweenTries: 1000`, `timeout: 5000`. n8n must NEVER
+  hard-fail the workflow when pre-flight is unavailable — proceed to backtest.
+- IF node gate: `{{ $json.cached === true && $json.passed === false }}` —
+  output[0] (TRUE) = blocked, output[1] (FALSE) = proceed to Submit Backtest.
+
+**Performance budget:**
+- Cache hit p95: <200ms (single indexed JOIN query).
+- Cache miss p95: <5s (same query, empty result).
+
+**Backtest-service backlink (FUTURE — not required for Tier 6):**
+For pre-flight cache HITS to start populating, `backtest-service.ts` should
+embed `strategy_hash` into `backtests.config` JSONB when persisting a new
+backtest. Until then, every pre-flight call returns `cached: false` and the
+n8n workflow always proceeds to backtest — this is the SAFE default.
+
 ## SQA Promise Registry (W2 / Tier 1.2)
 SQA fire-and-forget at `backtest-service.ts:598` is now observable to the
 critic via `src/server/lib/sqa-promise-registry.ts`. Critic calls
