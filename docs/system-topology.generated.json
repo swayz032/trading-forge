@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T04:15:00.332Z",
+  "generatedAt": "2026-05-03T05:43:52.718Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,12 +15,12 @@
     ]
   },
   "counts": {
-    "routes": 50,
-    "schedulerJobs": 45,
+    "routes": 51,
+    "schedulerJobs": 54,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
-    "engineSubsystems": 23,
-    "databaseTables": 62,
+    "engineSubsystems": 24,
+    "databaseTables": 68,
     "registrySubsystems": 16
   },
   "routes": [
@@ -73,7 +73,8 @@
     "/api/supadata",
     "/api/survival",
     "/api/tournament",
-    "/api/validation"
+    "/api/validation",
+    "/api/validation-cadence"
   ],
   "schedulerJobs": [
     "a-plus-auditor-scan",
@@ -81,7 +82,12 @@
     "anti-setup-effectiveness",
     "anti-setup-mine",
     "archetype-daily-classify",
+    "c11-bls-release",
+    "c11-fred-daily",
+    "c11-h41-weekly",
+    "c11-treasury-auctions",
     "cloud-qmc-poll",
+    "cme-status-poll",
     "compliance-rule-drift",
     "contract-roll-sweep",
     "critic-feedback",
@@ -109,7 +115,10 @@
     "pipeline-resume-drain",
     "portfolio-correlation",
     "pre-market-prep",
+    "pre-trading-day-health-check",
     "prompt-ab-resolution",
+    "prop-firm-dashboard-snapshot",
+    "prop-firm-health-check",
     "python-pool-saturation-check",
     "quantum-cost-prune",
     "regen-declining-sweep",
@@ -120,7 +129,8 @@
     "stale-pending-sweeper",
     "stale-session-check",
     "system-map-drift",
-    "tournament-staleness-check"
+    "tournament-staleness-check",
+    "validation-cadence-monthly"
   ],
   "workflows": [
     "0A_health_monitor_66HEjQavpvirY6g5",
@@ -689,6 +699,7 @@
     "deepar_regime_classifier",
     "governor",
     "graveyard",
+    "macro_data",
     "monte_carlo",
     "parameter_evolver",
     "parity_engine",
@@ -724,9 +735,13 @@
     "dead_letter_queue",
     "deepar_forecasts",
     "deepar_training_runs",
+    "exchange_outages",
     "frankenstein_test_runs",
     "idempotency_keys",
     "lifecycle_transitions",
+    "llm_injection_attempts",
+    "macro_features",
+    "macro_regime_states",
     "macro_snapshots",
     "monte_carlo_runs",
     "mutation_outcomes",
@@ -739,6 +754,7 @@
     "pilot_sessions",
     "prompt_ab_tests",
     "prompt_versions",
+    "prop_firm_health_checks",
     "quantum_mc_benchmarks",
     "quantum_mc_runs",
     "quantum_run_costs",
@@ -749,6 +765,7 @@
     "skip_decisions",
     "sqa_optimization_runs",
     "strategies",
+    "strategy_dsl_features",
     "strategy_export_artifacts",
     "strategy_exports",
     "strategy_firm_eligibility",
@@ -813,10 +830,10 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 50,
-      "schedulerJobs": 45,
-      "engineSubsystems": 23,
-      "databaseTables": 62
+      "routes": 51,
+      "schedulerJobs": 54,
+      "engineSubsystems": 24,
+      "databaseTables": 68
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -1370,8 +1387,11 @@
           "audit_log",
           "contract_rolls",
           "data_sync_jobs",
+          "exchange_outages",
           "live and historical market data",
           "macro snapshots",
+          "macro_features",
+          "macro_regime_states",
           "macro_snapshots",
           "market_data_meta",
           "paper signal evaluations",
@@ -1381,6 +1401,7 @@
           "paper_signal_logs",
           "paper_trades",
           "portfolio_snapshots",
+          "prop_firm_health_checks",
           "session context",
           "shadow_signals",
           "skip_decisions",
@@ -1436,12 +1457,19 @@
         "schedulerJobs": [
           "anti-setup-mine",
           "archetype-daily-classify",
+          "c11-bls-release",
+          "c11-fred-daily",
+          "c11-h41-weekly",
+          "c11-treasury-auctions",
+          "cme-status-poll",
           "contract-roll-sweep",
           "databento-weekly-refresh",
           "macro-data-sync",
           "paper-vs-backtest",
           "portfolio-correlation",
           "pre-market-prep",
+          "prop-firm-dashboard-snapshot",
+          "prop-firm-health-check",
           "session-analytics-rollup",
           "stale-session-check"
         ],
@@ -1837,7 +1865,8 @@
           "/api/dlq",
           "/api/health",
           "/api/metrics",
-          "/api/sse"
+          "/api/sse",
+          "/api/validation-cadence"
         ],
         "schedulerJobs": [
           "agent-health-sweep",
@@ -1848,10 +1877,12 @@
           "idempotency-cleanup",
           "metrics-collector",
           "metrics-heartbeat",
+          "pre-trading-day-health-check",
           "python-pool-saturation-check",
           "resource-snapshot",
           "stale-pending-sweeper",
-          "system-map-drift"
+          "system-map-drift",
+          "validation-cadence-monthly"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -2189,9 +2220,11 @@
           "backtests",
           "concept specs",
           "LLM prompts and responses",
+          "llm_injection_attempts",
           "OpenClaw scout outputs",
           "prompt_ab_tests",
           "prompt_versions",
+          "strategy_dsl_features",
           "strategy_graveyard",
           "system_journal",
           "tournament_results"
@@ -2695,6 +2728,18 @@
         "manualGate": "tradingview_deploy",
         "learningMode": "manual_gate_only",
         "operatingClass": "manual_gated",
+        "criticality": "critical",
+        "coverageGaps": []
+      },
+      {
+        "id": "macro_data",
+        "ownerSubsystemId": "context_execution",
+        "ownerDomain": "execution",
+        "runtimeState": "active",
+        "proofStatus": "runtime-proven",
+        "manualGate": "none",
+        "learningMode": "active_learning",
+        "operatingClass": "adaptive",
         "criticality": "critical",
         "coverageGaps": []
       },
@@ -3278,8 +3323,11 @@
         "audit_log",
         "contract_rolls",
         "data_sync_jobs",
+        "exchange_outages",
         "live and historical market data",
         "macro snapshots",
+        "macro_features",
+        "macro_regime_states",
         "macro_snapshots",
         "market_data_meta",
         "paper signal evaluations",
@@ -3289,6 +3337,7 @@
         "paper_signal_logs",
         "paper_trades",
         "portfolio_snapshots",
+        "prop_firm_health_checks",
         "session context",
         "shadow_signals",
         "skip_decisions",
@@ -3344,12 +3393,19 @@
       "schedulerJobs": [
         "anti-setup-mine",
         "archetype-daily-classify",
+        "c11-bls-release",
+        "c11-fred-daily",
+        "c11-h41-weekly",
+        "c11-treasury-auctions",
+        "cme-status-poll",
         "contract-roll-sweep",
         "databento-weekly-refresh",
         "macro-data-sync",
         "paper-vs-backtest",
         "portfolio-correlation",
         "pre-market-prep",
+        "prop-firm-dashboard-snapshot",
+        "prop-firm-health-check",
         "session-analytics-rollup",
         "stale-session-check"
       ],
@@ -3745,7 +3801,8 @@
         "/api/dlq",
         "/api/health",
         "/api/metrics",
-        "/api/sse"
+        "/api/sse",
+        "/api/validation-cadence"
       ],
       "schedulerJobs": [
         "agent-health-sweep",
@@ -3756,10 +3813,12 @@
         "idempotency-cleanup",
         "metrics-collector",
         "metrics-heartbeat",
+        "pre-trading-day-health-check",
         "python-pool-saturation-check",
         "resource-snapshot",
         "stale-pending-sweeper",
-        "system-map-drift"
+        "system-map-drift",
+        "validation-cadence-monthly"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
@@ -4097,9 +4156,11 @@
         "backtests",
         "concept specs",
         "LLM prompts and responses",
+        "llm_injection_attempts",
         "OpenClaw scout outputs",
         "prompt_ab_tests",
         "prompt_versions",
+        "strategy_dsl_features",
         "strategy_graveyard",
         "system_journal",
         "tournament_results"
@@ -4603,6 +4664,18 @@
       "manualGate": "tradingview_deploy",
       "learningMode": "manual_gate_only",
       "operatingClass": "manual_gated",
+      "criticality": "critical",
+      "coverageGaps": []
+    },
+    {
+      "id": "macro_data",
+      "ownerSubsystemId": "context_execution",
+      "ownerDomain": "execution",
+      "runtimeState": "active",
+      "proofStatus": "runtime-proven",
+      "manualGate": "none",
+      "learningMode": "active_learning",
+      "operatingClass": "adaptive",
       "criticality": "critical",
       "coverageGaps": []
     },

@@ -1071,7 +1071,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
+Updated automatically from the repo on `2026-05-03T05:43:52.718Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1079,13 +1079,13 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `tradingview_deploy`
-- API routes tracked: `50`
-- Scheduler jobs tracked: `45`
+- API routes tracked: `51`
+- Scheduler jobs tracked: `54`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
-- Engine subsystems tracked: `23`
-- Database tables tracked: `62`
+- Engine subsystems tracked: `24`
+- Database tables tracked: `68`
 
 ### Subsystem Runtime States
 - `active`: `13`
@@ -1121,10 +1121,10 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `16`
-- Route coverage: `50/50`
-- Scheduler coverage: `45/45`
-- Engine coverage: `23/23`
-- Database coverage: `62/62`
+- Route coverage: `51/51`
+- Scheduler coverage: `54/54`
+- Engine coverage: `24/24`
+- Database coverage: `68/68`
 - Autonomous subsystems with audit coverage: `16/16`
 - Autonomous subsystems with audit actions: `16/16`
 - Autonomous subsystems with telemetry evidence: `16/16`
@@ -1222,6 +1222,7 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 - `deepar_regime_classifier` owner=`deepar_regime` status=`runtime-proven` state=`active` gaps=none
 - `governor` owner=`compliance_governance` status=`runtime-proven` state=`active` gaps=none
 - `graveyard` owner=`strategy_lifecycle` status=`runtime-proven` state=`active` gaps=none
+- `macro_data` owner=`context_execution` status=`runtime-proven` state=`active` gaps=none
 - `monte_carlo` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
 - `parameter_evolver` owner=`critic_evolution` status=`runtime-proven` state=`active` gaps=none
 - `parity_engine` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
@@ -1285,6 +1286,7 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 - `/api/survival`
 - `/api/tournament`
 - `/api/validation`
+- `/api/validation-cadence`
 
 ### Scheduler Jobs
 - `a-plus-auditor-scan`
@@ -1292,7 +1294,12 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 - `anti-setup-effectiveness`
 - `anti-setup-mine`
 - `archetype-daily-classify`
+- `c11-bls-release`
+- `c11-fred-daily`
+- `c11-h41-weekly`
+- `c11-treasury-auctions`
 - `cloud-qmc-poll`
+- `cme-status-poll`
 - `compliance-rule-drift`
 - `contract-roll-sweep`
 - `critic-feedback`
@@ -1320,7 +1327,10 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 - `pipeline-resume-drain`
 - `portfolio-correlation`
 - `pre-market-prep`
+- `pre-trading-day-health-check`
 - `prompt-ab-resolution`
+- `prop-firm-dashboard-snapshot`
+- `prop-firm-health-check`
 - `python-pool-saturation-check`
 - `quantum-cost-prune`
 - `regen-declining-sweep`
@@ -1332,6 +1342,7 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 - `stale-session-check`
 - `system-map-drift`
 - `tournament-staleness-check`
+- `validation-cadence-monthly`
 
 ### Engine Subsystems
 - `anti_setups`
@@ -1346,6 +1357,7 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 - `deepar_regime_classifier`
 - `governor`
 - `graveyard`
+- `macro_data`
 - `monte_carlo`
 - `parameter_evolver`
 - `parity_engine`
@@ -1411,9 +1423,13 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 - `dead_letter_queue`
 - `deepar_forecasts`
 - `deepar_training_runs`
+- `exchange_outages`
 - `frankenstein_test_runs`
 - `idempotency_keys`
 - `lifecycle_transitions`
+- `llm_injection_attempts`
+- `macro_features`
+- `macro_regime_states`
 - `macro_snapshots`
 - `monte_carlo_runs`
 - `mutation_outcomes`
@@ -1426,6 +1442,7 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 - `pilot_sessions`
 - `prompt_ab_tests`
 - `prompt_versions`
+- `prop_firm_health_checks`
 - `quantum_mc_benchmarks`
 - `quantum_mc_runs`
 - `quantum_run_costs`
@@ -1436,6 +1453,7 @@ Updated automatically from the repo on `2026-05-03T04:15:00.332Z`.
 - `skip_decisions`
 - `sqa_optimization_runs`
 - `strategies`
+- `strategy_dsl_features`
 - `strategy_export_artifacts`
 - `strategy_exports`
 - `strategy_firm_eligibility`

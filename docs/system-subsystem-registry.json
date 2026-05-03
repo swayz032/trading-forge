@@ -69,8 +69,10 @@
     ],
     "database_tables": [
       "audit_log",
+      "llm_injection_attempts",
       "prompt_ab_tests",
       "prompt_versions",
+      "strategy_dsl_features",
       "system_journal",
       "tournament_results"
     ],
@@ -525,12 +527,19 @@
     "scheduler_jobs": [
       "anti-setup-mine",
       "archetype-daily-classify",
+      "c11-bls-release",
+      "c11-fred-daily",
+      "c11-h41-weekly",
+      "c11-treasury-auctions",
+      "cme-status-poll",
       "contract-roll-sweep",
       "databento-weekly-refresh",
       "macro-data-sync",
       "paper-vs-backtest",
       "portfolio-correlation",
       "pre-market-prep",
+      "prop-firm-dashboard-snapshot",
+      "prop-firm-health-check",
       "session-analytics-rollup",
       "stale-session-check"
     ],
@@ -547,12 +556,16 @@
     ],
     "engine_subsystems": [
       "context",
+      "macro_data",
       "skip_engine"
     ],
     "database_tables": [
       "audit_log",
       "contract_rolls",
       "data_sync_jobs",
+      "exchange_outages",
+      "macro_features",
+      "macro_regime_states",
       "macro_snapshots",
       "market_data_meta",
       "paper_positions",
@@ -561,6 +574,7 @@
       "paper_signal_logs",
       "paper_trades",
       "portfolio_snapshots",
+      "prop_firm_health_checks",
       "shadow_signals",
       "skip_decisions",
       "strategy_lockouts",
@@ -1355,10 +1369,12 @@
       "idempotency-cleanup",
       "metrics-collector",
       "metrics-heartbeat",
+      "pre-trading-day-health-check",
       "python-pool-saturation-check",
       "resource-snapshot",
       "stale-pending-sweeper",
-      "system-map-drift"
+      "system-map-drift",
+      "validation-cadence-monthly"
     ],
     "routes": [
       "/api/admin",
@@ -1366,7 +1382,8 @@
       "/api/dlq",
       "/api/health",
       "/api/metrics",
-      "/api/sse"
+      "/api/sse",
+      "/api/validation-cadence"
     ],
     "engine_subsystems": [],
     "database_tables": [

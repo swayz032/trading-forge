@@ -1,6 +1,6 @@
 # A12 — 12-Category Code Audit Report
 
-**Generated:** 2026-05-03 04:11:44 UTC  
+**Generated:** 2026-05-03 05:44:25 UTC  
 **Auditor:** W12 Team B (trading-forge-architect)  
 **Plan:** PART A §A12 of `C:\Users\tonio\.claude\plans\reflective-dancing-moth.md`  
 **Scope:** Read-only static + numerical audit of existing Trading Forge code.  
@@ -245,7 +245,7 @@
 
 **Evidence:**
 
-- Sharpe computations: backtester=3, risk_metrics=2, monte_carlo=1
+- Sharpe computations: backtester=3, risk_metrics=3, monte_carlo=1
   - backtester Sharpe annualization (252 daily): OK
   - risk_metrics annualization param: OK
   - monte_carlo trade vs daily branches: OK

@@ -108,6 +108,423 @@ The system NEVER auto-deploys without a human first promoting to DEPLOY_READY �
   (SIT_OUT ±30 min) applies — matches the CLAUDE.md "Don't trade through
   FOMC/CPI/NFP without explicit event handling" rule.
 
+### CME Venue Outage Handling (W15 / C1)
+
+- **Schema:** `exchange_outages` table (migration 0079) — one row per detected
+  outage event (`exchange`, `started_at`, `ended_at`, `affected_symbols`,
+  `response_taken`). Active outage = `ended_at IS NULL` (partial index for
+  fast lookup).
+- **Service:** `exchange-status-service.ts` polls a CME GLOBEX status endpoint
+  every 60 s. State machine: probe-OK + no-active → no-op; probe-FAIL +
+  no-active → open outage row, notify paper engine, fire critical alert;
+  probe-OK + active → close outage row, lift entry block; probe-FAIL +
+  active → no-op (already recorded). Fails CLOSED on fetch error.
+- **Engine integration:** `paper-execution-service.ts` registers an
+  `OutageNotifyFn` callback at module init. On outage start:
+  `isExchangeHalted("CME")` gate in `openPosition()` blocks NEW entries; open
+  positions are HELD (NOT closed — fills unreliable during halt). On resume:
+  block lifted, **NO auto-reissue of queued orders** — manual review required
+  (lesson from Nov 28 2025 CME 10-hour halt where auto-reissue caused severe
+  slippage).
+- **Pipeline pause guard:** intentionally NOT applied — outage detection is
+  a SAFETY signal, not a trading signal. Cron continues to run even when
+  pipeline is paused.
+- **Startup reconciliation:** deferred 3 s after init, re-hydrates active
+  outage state from DB so the engine block survives process restart.
+- **SSE events:** `exchange:outage-detected`, `exchange:outage-resolved`,
+  `paper:order-blocked-outage`.
+- **Test/admin hooks:** `simulateOutage()` / `resolveOutage()` for verification
+  without touching the real probe.
+
+### Prop Firm Suspension Detection (W15 / C2)
+
+- **Schema:** `prop_firm_health_checks` table (migration 0080) — one row per
+  15-min poll of each firm (`firm_id`, `status`, `response_code`,
+  `response_body_snippet`, `alert_fired`). Status enum:
+  `healthy | degraded | suspended | auth_failure | unreachable | skipped`.
+- **Service:** `prop-firm-health-service.ts` probes 8 firm APIs (apex,
+  topstep, mffu, tpt, ffn, alpha, tradeify, earn2trade) every 15 min.
+  Detection rule: HTTP 401/403/423 OR body keywords
+  (`suspended | banned | terminated | closed | inactive | frozen`) →
+  classify as `suspended` / `auth_failure`. Network errors → `unreachable`
+  (not alerted; transient).
+- **Engine integration:** `paper-execution-service.ts` registers a
+  `SuspensionNotifyFn` callback at module init. On suspension event,
+  `isFirmSuspended(firmId)` gate in `openPosition()` blocks NEW entries for
+  the affected firm only (per-firm independence).
+- **Evidence layer:** `dashboard-snapshot-service.ts` captures hourly
+  Playwright screenshots of each firm's dashboard to
+  `data/firm-snapshots/<firmId>/` (30-day retention). Provides timestamped
+  evidence for payout disputes (Apex banned profitable traders May 2025;
+  MyForexFunds froze funds 2023-2025; "VPN-detected" payout denials
+  unresolved 6+ months).
+- **Pipeline pause guard:** NOT applied — suspension is a risk event that
+  must surface regardless of trading state. Same rationale as C1.
+- **Startup reconciliation:** at +4 s, reads latest `prop_firm_health_checks`
+  row per firm and re-hydrates `suspendedFirms` Set so the engine block
+  survives restart.
+- **API key requirements:** firms without configured API keys are skipped
+  silently (debug log). Configure via `<FIRM>_API_KEY`,
+  `<FIRM>_PROBE_URL` env vars; dashboard cookies via
+  `<FIRM>_SESSION_COOKIES`.
+- **SSE events:** `prop-firm:suspension-detected`,
+  `prop-firm:suspension-cleared`, `prop-firm:snapshot-captured`,
+  `paper:order-blocked-suspension`.
+
+### Prompt Injection Defense (W15 / C3)
+
+- **Schema:** `llm_injection_attempts` table (migration 0081) — one row per
+  detected injection (`source`, `source_url`, `content_snippet`,
+  `injection_type` — comma-separated, `severity`,
+  `blocked` boolean default true). 3 indexes: source+time, severity+time
+  (filtered to `blocked = false` for high-priority alerts), detected_at.
+- **Services:**
+  - `llm-input-sanitizer.ts` — 30+ regex patterns covering OWASP LLM01-A
+    through LLM01-F (override instructions, role hijacking, system-prompt
+    leakage, delimiter tokens, encoded payloads, HTML/script). Returns
+    sanitized text + injection-attempt log entry. Persistence is
+    fire-and-forget (never blocks pipeline, never throws).
+  - `llm-output-validator.ts` — validates LLM response before any DB write
+    or compiler call: out-of-band content scan (file paths, tool calls,
+    network exec, credential exfil), DSL schema conformance check, Python
+    compiler round-trip. Rejects suspicious responses.
+  - `llm-sandbox-service.ts` — Python AST pre-scan of LLM-generated strategy
+    code via subprocess. Blocks 20+ forbidden modules
+    (`os | subprocess | socket | urllib | requests | exec | eval | open`),
+    256 KB code size limit, 50 KB stdout cap, 15 s wall-clock timeout,
+    stripped env (no API keys, DB URL, credentials).
+- **Wiring:**
+  - `agent-service.ts` — calls `sanitizeExternalContent()` in `scoutIdeas`,
+    `validateRawLLMResponse` + `validateDSLOutput` in `drainScoutedIdeas`,
+    `sandboxCheckCode` in `runStrategy`.
+  - `search-router.ts` — calls `sanitizeBatch` over all merged search
+    results before returning to caller (defense at the scout source layer).
+- **Pipeline pause guard:** services themselves are pure utilities — guards
+  live at upstream entry points (`agent-service` already has 7
+  `isPipelineActive()` gates; route paths covered there).
+- **OWASP LLM01 coverage:** verified via 12 attack-scenario tests
+  (38 tests total; all pass). Background: hedge fund lost $47M March 2025,
+  JPMorgan $12M Aug 2025, OWASP #1 LLM vulnerability 3 years running.
+
+### Network Failover Monitor (W16 / C4)
+
+- **No new migration.** State is in-memory + reflected through `/api/health`
+  and SSE events; persistent record of outage events lives in `audit_log`.
+- **Service:** `src/server/lib/network-failover.ts` runs an internal state
+  machine (`PRIMARY_HEALTHY → DEGRADED → FAILOVER_ALERT → TETHERING_ACTIVE
+  → RECOVERED`). Probes broker connectivity (Tradovate API) + DNS fallback
+  every 30 s; classifies ISP-side vs broker-side outage; fires CRITICAL
+  alert on 3 consecutive failures.
+- **Free-tier posture:** $0 added cost. Primary defense is server-side
+  order placement (positions held in Railway PostgreSQL survive local
+  connectivity loss). Secondary is phone USB tethering (uses existing phone
+  plan). Cloud failover (B6) is third layer.
+- **Engine integration:** `paper-execution-service.ts` annotates new
+  positions with current connectivity state — annotation is informational
+  only; never blocks orders, never distorts the promotion gate.
+- **Pipeline pause guard:** intentionally NOT applied — connectivity
+  monitoring is a SAFETY signal that must run regardless of trading state.
+- **Health surface:** `GET /api/health` includes `networkFailover` block
+  (state, last probe time, isp/broker classification).
+- **Operator runbook:** `infra/network-redundancy.md` covers tethering
+  setup, manual phone-based kill switch (call broker to flatten), env vars.
+- **Future upgrade path (NOT in plan):** dedicated mobile hotspot ($30/mo)
+  if revenue justifies fully-redundant connectivity.
+
+### Bitwarden Credential Vault (W16 / C6)
+
+- **No new migration.** Vault state is external (Bitwarden CLI). Process
+  surface is environment-variable mutation at startup + `/api/health`
+  reflection (`vault.mode`, `vault.loaded` count — never values).
+- **Service:** `src/server/lib/credential-loader.ts` loads secrets from
+  Bitwarden CLI at startup. Two modes: `env` (default — no-op passthrough
+  for backwards compatibility), `bitwarden` (loads from vault, fails CLOSED
+  via `process.exit(1)` if vault unreachable, locked, missing required
+  credentials, or `BW_SESSION` absent).
+- **Free-tier posture:** $0 added cost. Bitwarden Personal tier permanently
+  free; CLI is MIT-licensed. TOTP via Bitwarden built-in or free
+  authenticator apps. Hardware key (YubiKey ~$35) is a future upgrade option,
+  not required per NIST 800-63B for this threat model.
+- **Wiring:** `src/server/index.ts` calls `loadCredentials()` at process
+  start (before any service that reads env vars). Each required credential
+  is mapped to a Bitwarden Secure Note field via `.env.example`
+  annotations.
+- **Security contracts:** credential VALUES are never logged. `BW_SESSION`
+  is redacted from all error messages. Vault failure in `bitwarden` mode
+  exits cleanly — no silent degrade to `.env` fallback.
+- **Operator runbook:** `infra/credential-vault-setup.md` covers Bitwarden
+  CLI install, vault init, per-secret population, TOTP setup, IP
+  whitelisting, GPG-encrypted quarterly backup, 90-day rotation,
+  fail-closed troubleshooting.
+- **Bootstrap env vars:** `TF_VAULT_MODE` (`env` | `bitwarden`),
+  `BW_SESSION`, `TF_VAULT_FOLDER_ID`. Documented in `.env.example`.
+
+### Validation Cadence Forcing Function (W16 / C7)
+
+- **No new migration.** Reads `lifecycle_transitions` and `backtests`;
+  writes summary rows to `audit_log` + `alerts` for replayability.
+- **Service:** `src/server/services/validation-cadence-service.ts` exposes
+  three live metrics — Days Since Last Live Backtest, Strategies Tested
+  End-to-End This Month, Reality Check Score (composite 0–100).
+  `runMonthlyRealityCheckReport()` compares backtested vs paper performance
+  for all PAPER+ strategies, persists an audit row, fires alert at the
+  right severity.
+- **Routes:** `GET /api/validation-cadence/dashboard`,
+  `POST /api/validation-cadence/reality-check`. Routes intentionally
+  bypass the pipeline pause gate — operators must see cadence regardless
+  of pipeline state, otherwise the panel becomes a vector for the failure
+  mode it exists to prevent.
+- **Cron:** `validation-cadence-monthly` (1st of month, 3:30 AM UTC).
+  Bypasses pause gate (same rationale as routes).
+- **Dashboard component:** `Trading_forge_frontend/amber-vision-main/src/components/forge/ValidationCadencePanel.tsx`
+  rendered RED when days-idle > threshold, throughput below threshold, or
+  composite score < 50. Wired into Dashboard ROW 1.5 (top-of-page
+  visibility).
+- **Hard rule (in `AGENTS.md`):** no new infrastructure work, refactor, or
+  subsystem proposal is approved while the panel is RED. Tunable via
+  `VALIDATION_CADENCE_RED_THRESHOLD_DAYS` (default 7) and
+  `VALIDATION_CADENCE_MIN_STRATEGIES_PER_MONTH` (default 1). Operators may
+  raise the threshold for documented reasons; they may NOT silently
+  bypass the panel.
+- **Why this is the most important W16 component:** Most common failure
+  mode for sophisticated solo operators is building elaborate
+  infrastructure for months and never validating live. The dashboard panel
+  + AGENTS.md rule together make that failure mode visible and unavoidable.
+
+### Windows Update Reboot Protection (W17 / C8)
+
+- **No new migration.** State surfaces through the
+  `pre-trading-day-health-check` scheduler job, `pipeline-control-service`
+  PAUSED mode (when a check fails), `notifyCritical` alerts, and the
+  `windows:health-check-failed` SSE event.
+- **PowerShell script:** `scripts/pre-trading-day-health-check.ps1` runs
+  five checks: (1) pending Windows reboot via 4 registry signals + CCM,
+  (2) failed updates via `WindowsUpdateClient` event log IDs 20/25 in last
+  24h, (3) Node + Python process liveness, (4) `>= 10GB` free on `C:`,
+  (5) RAM utilization `< 80%`. Exit codes: `0` healthy, `1` pending reboot,
+  `2` failed updates, `3` degraded, `99` script error. Emits structured
+  JSON to stdout for the Node cron to parse.
+- **Service:** `src/server/services/windows-health-check-service.ts`
+  spawns the script with `-NonInteractive -ExecutionPolicy Bypass`,
+  parses JSON, classifies the exit code, and on any non-zero result calls
+  `setMode("PAUSED", reason)` via pipeline-control-service (fail-CLOSED) +
+  `notifyCritical` + `broadcastSSE`. Spawn-level errors and `setMode`
+  failures also fail closed. Non-Windows hosts return healthy (no-op).
+- **Cron:** `pre-trading-day-health-check` registered in
+  `src/server/scheduler.ts`. Cron schedule `0 12,13 * * 1-5` covers EDT
+  (UTC-4) and EST (UTC-5); ET-hour filter pins to 8:00 AM ET. Runs ahead
+  of the 9:30 ET cash open with margin to manually intervene.
+  **Intentionally NOT pipelineGated** — the cron must run regardless of
+  pause state so the operator can observe successful runs in the
+  job-health dashboard after a self-imposed pause. Same pattern as C1
+  (CME outage) and C2 (prop firm health) — safety signals run while
+  trading does not.
+- **Pause is sticky.** A healthy follow-up run does NOT auto-resume the
+  pipeline. The operator must explicitly resume via the dashboard after
+  reviewing the runbook (`infra/windows-update-policy.md`).
+- **Bypass:** `BYPASS_PRE_MARKET_HEALTH_CHECK=true` env var skips the
+  check (testing only — never set in production).
+- **Operator runbook:** `infra/windows-update-policy.md` covers Group
+  Policy disabling automatic restart, full-week active hours, weekend-only
+  manual update window, and the automated 8:00 AM ET forcing function.
+- **Free-tier posture:** $0 added cost. Pure PowerShell + TypeScript +
+  built-in registry/event-log/CIM probes. No third-party agents.
+- **Why:** April 2026 KB5082063 (and the same April pattern in 2024 and
+  2025) triggered forced reboots that would kill open futures positions
+  during cash session. This is a forcing function so a queued reboot
+  cannot ambush the trader.
+
+### LLM Mode Collapse / DSL Diversity Check (W17 / C9)
+
+- **Schema:** `strategy_dsl_features` table (migration 0082) — one row per
+  accepted strategy: `feature_vector_compressed` (gzip of float32[]),
+  `feature_dim`, `dsl_fingerprint` (sha256 of canonical DSL JSON),
+  `created_at`. `UNIQUE(strategy_id)` enforces one vector per strategy.
+  Indexes: `idx_dsl_features_created` (recency scan),
+  `idx_dsl_features_fingerprint` (exact-match fast path),
+  `idx_dsl_features_strategy` (UNIQUE upsert).
+- **Service:** `src/server/services/dsl-diversity-service.ts` extracts a
+  13-dimension float32 feature vector from DSL fields (entry indicator,
+  exit type, direction, symbol, timeframe, regime, SL/TP ATR multiples,
+  up to 5 entry-param values, padded), gzip-compresses (same pattern as
+  A7 signal-correlation-service), and gates new candidates by cosine
+  similarity. Threshold: `STRATEGY_DSL_SIMILARITY_THRESHOLD` (default
+  `0.85`). Lookback: `STRATEGY_DSL_LOOKBACK` (default 50, max 200).
+  Exact-fingerprint match short-circuits to immediate reject.
+- **Wiring:**
+  - `agent-service.ts` `runStrategyFromDSL()` — HARD GATE for
+    `source === "ollama" | "openclaw"`, runs AFTER graveyard gate, BEFORE
+    strategy DB insert. Rejection writes a candidate-contract audit_log
+    row (`acceptance_rejection_result: "rejected"`, `expected_uplift: 0`,
+    `replay_priority: 0`). Status: `"blocked_dsl_diversity"`.
+  - `agent-service.ts` `runStrategyFromDSL()` (post-insert) —
+    `persistDslFeatureVector()` fire-and-forget after strategy DB insert
+    so the feature table only contains accepted candidates.
+  - `strategy-prevalidator.ts` — ADVISORY only. Surfaces
+    `dslDiversity: { passed, maxSimilarity, mostSimilarStrategyId, ... }`
+    in `PrevalidationResult.checks`. Reasons array gets a
+    `dsl-diversity-advisory:` warning if the score exceeds the threshold,
+    but `passed=false` is NOT flipped from this layer (hard gate is in
+    agent-service).
+- **Pipeline pause guard:** `checkDslDiversity()` returns `passed:true`
+  (pass-through) when `isPipelineActive() === false` so the gate cannot
+  silently drop candidates while the operator pauses for unrelated
+  reasons. Fail-open on DB error too — never blocks the main flow.
+- **Defense-in-depth with A7 (W11):** A7 (`signal-correlation-service.ts`)
+  catches POST-backtest signal duplication (different code that produces
+  identical signals — Two Sigma failure mode). C9 catches PRE-backtest
+  DSL template repetition (LLM mode-collapse: same template, new name)
+  before backtest compute is spent. Different stages, different failure
+  modes, intentional defense-in-depth — NOT duplication.
+- **Free-tier posture:** $0 added cost. Pure TypeScript + SQL + Node
+  built-in `zlib` for compression. No external embedding service, no
+  paid similarity API.
+- **Verification gate (confirmed 2026-05-03):** identical DSL → rejected
+  (similarity > 0.85); two genuinely different DSLs → accepted. 31 tests
+  cover feature extraction, fingerprinting, compression round-trip,
+  cosine math, pipeline-pause pass-through, fail-open on DB error, and
+  audit-log shape compliance with the candidate contract.
+- **Why:** "I asked an LLM to generate 20 strategies. 14 were the same
+  thing." StockBench 2025 documented LLM agents failing to outperform
+  passive benchmarks without explicit diversity enforcement. Without
+  this gate, mode-collapsed strategies waste backtest compute and create
+  false portfolio diversity at the lifecycle layer.
+
+### Information Ratio (W18 / A13)
+
+- **Schema:** `information_ratio` numeric column on `backtests` table
+  (migration 0083). Null when benchmark unavailable or fewer than 2 bars.
+  Pre-A13 backtests are not retroactively populated.
+- **Module:** `src/engine/risk_metrics.py:compute_information_ratio()`
+  computes `IR = E[R_p - R_b] / σ_diff * sqrt(252)`. Benchmark series:
+  SPX close-to-close for ES/NQ/MES/MNQ; crude price for MCL. When
+  benchmark series is all-zeros, IR degenerates to standard Sharpe
+  (intended property — verified in `test_information_ratio.py`).
+- **Wiring:** `src/engine/backtester.py` loads benchmark series aligned to
+  strategy trading dates and computes IR after backtest completes
+  (lines 1864-1914 strategy path, 3241-3273 class-based path). Result
+  rounded to 4dp and persisted via `backtests.information_ratio`.
+- **Authority:** OBSERVATION ONLY — additive metric for ranking and
+  research. Does NOT gate any lifecycle decision.
+- **Tests:** 12 tests in `src/engine/tests/test_information_ratio.py`
+  (formula correctness, degenerate inputs, length mismatch alignment,
+  benchmark-zero → Sharpe equivalence property, NaN handling).
+- **Why:** Per Bailey-López-de-Prado, Sharpe alone over-rewards passive
+  beta; IR isolates true alpha vs the relevant benchmark. Critical for
+  ranking ES/NQ strategies that may simply ride SPX drift rather than
+  generate active edge.
+
+### Macro Regime Overlay (W18 / C11)
+
+- **Schema:** Two tables (migration 0084):
+  - `macro_features` — every macro observation with look-ahead-safe
+    `publication_timestamp` (when FRED/BLS/Treasury actually published it,
+    NOT `series_date` the value applies to). Backtests must filter on
+    `publication_timestamp <= simulated_now`. UNIQUE on
+    `(series_id, series_date, revision_number)` so revisions are tracked.
+  - `macro_regime_states` — daily HMM classification output. Columns:
+    `prob_growth | prob_inflation | prob_crisis | prob_easing` (sum to 1.0),
+    `dominant_state`, `crisis_gate_triggered` (boolean,
+    `prob_crisis > 0.60`), `fomc_day_proximity` (signed int days),
+    `macro_release_day` (boolean). UNIQUE on `state_date`.
+- **Series ingested (10 total):** T10Y2Y_vol, DFF_change, USEPUINDXD,
+  VIXCLS, RRPONTSYD, WTREGEN, ISM_PMI, DTWEXBGS, TAIL_BPS, INDIRECT.
+  Sources: FRED daily (4 PM ET), H.4.1 weekly (Thu 4:30 PM ET), BLS
+  release-day, TreasuryDirect auctions.
+- **Classifier:** `src/engine/macro_regime_classifier.py` — 4-state
+  Gaussian HMM (`hmmlearn`, `n_iter=200`, `random_state=42`,
+  `covariance_type="diag"`). Backward-only rolling features (no centred
+  windows). States: 0=Growth, 1=Inflation, 2=Crisis, 3=Easing. Validated
+  against known regime labels (Mar 2020 Crisis, 2022 Inflation, late 2024
+  Easing).
+- **Fusion:** `src/engine/macro_regime_fusion.py` — combines HMM macro
+  probs with DeepAR microstructure regimes. **Hard cap
+  `MACRO_WEIGHT_CAP = 0.30`** (DeepAR drives ≥70% of fused signal). Dec
+  2025 lesson: strategies weighting macro >40% got whipsawed because
+  macro lags intraday by 5-7 days. Macro is a FILTER, not a predictor.
+- **Hard gates** (`src/server/services/macro-gate-service.ts`):
+  1. `prob_crisis > 0.60` → block new ES/NQ/MES/MNQ longs > 2hr horizon
+  2. `ISM < 49 AND RRP < $20B` → block new ES/NQ longs (Dec 2025 trigger)
+  3. FOMC day ±1 → 50% position size reduction (NOT a block)
+  4. Macro release day → block new entries (1hr before to 3hr after)
+- **Engine integration:**
+  - `paper-signal-service.ts` calls `evaluateMacroGates()` BEFORE the
+    risk gate on every entry signal. Fail-OPEN: missing macro data /
+    classifier failure proceeds without blocking. Blocked signals are
+    persisted to `paper_signal_logs` with
+    `signalType="macro_gate_blocked"`.
+  - `sizing.py:compute_position_sizes()` accepts `fomc_proximity: int |
+    None`. When `abs(fomc_proximity) <= 1`, all sizes halved (floor,
+    minimum 1). Applied AFTER all other sizing modulations.
+- **Crons** (4 new, all `pipelineGate()` early-exit):
+  - `c11-fred-daily` — 4 PM ET weekdays — pulls 10 series, runs HMM
+    classifier, persists `macro_regime_states` row
+  - `c11-h41-weekly` — Thu 4:30 PM ET — H.4.1 RRPONTSYD + WTREGEN
+  - `c11-bls-release` — daily release check — CPI/NFP/PPI when published
+  - `c11-treasury-auctions` — daily — TreasuryDirect tail/indirect bps
+- **Pipeline pause posture:** Ingestion crons HONOUR pipeline pause
+  (data freshness is research, not safety). Macro gate evaluation in
+  `paper-signal-service.ts` runs whenever signals are generated — but the
+  signal-generation path is itself pipeline-gated upstream, so the gate
+  effectively pauses with the pipeline.
+- **Look-ahead bias prevention:** `publication_timestamp` is the barrier
+  for backtest filters — never `series_date`. Indexes on both columns.
+  Verified in `test_macro.py` (32 tests).
+- **Tests:** 61 total — 29 in `test_c11_macro_regime.py` (HMM,
+  fusion, hard gates, fallback) + 32 in `test_macro.py` (ingestion
+  schema, look-ahead safety, revision handling, combined-stress
+  detection). Includes Dec 2025 regression test
+  (`TestDec2025Regression::test_nov28_2025_es_long_block`) confirming
+  ISM<49 + RRP<$20B + crisis_prob=0.68 would have correctly blocked ES
+  longs on Nov 28 2025.
+- **Free-tier posture:** $0 added cost. fredapi (MIT), hmmlearn (BSD),
+  TreasuryDirect public XML, BLS public API. No paid macro feed.
+- **Authority:** Hard gates BLOCK new entries (per-instrument). Existing
+  positions are HELD (NOT auto-closed) — same posture as C1 CME outage.
+  Sizing modulation modifies size only, never blocks.
+- **Why:** Per Goldman Sachs / Marcos López de Prado regime literature,
+  most "alpha" failures during regime rotations come from strategies
+  blind to the underlying macro state. C11 adds a regime-aware filter
+  without polluting the microstructure-driven trade signal. Dec 2025
+  Powell-pivot whipsaw + Nov 28 ISM-RRP-crisis combo are the canonical
+  cases this gate exists to catch.
+
+## 47-Day Blueprint Status: COMPLETE (W9-W18)
+
+The 47-day production-hardening blueprint shipped from W9 (2026-04-22) through
+W18 (2026-04-30). All 10 waves complete. The end-to-end pipeline is now:
+
+1. **Generation** — LLM scout → C9 DSL diversity check → C3 prompt-injection
+   defense → DSL compiler → CANDIDATE
+2. **Validation** — backtest with A1 determinism + A2 provenance + A13 IR +
+   B10 MRP → walk-forward → MC → quantum (W1-W6 prior) → A4 Frankenstein
+   gate → TESTING
+3. **Paper** — TESTING→PAPER through Frankenstein hard gate, classical MC,
+   Grover stress
+4. **Promotion** — PAPER→DEPLOY_READY through A7 signal-correlation gate
+   (cosine vs DEPLOYED) + B5 multi-firm eligibility (8 firms, fire-and-forget
+   AFTER promotion) + B10 MRP soft gate
+5. **Canary** — DEPLOY_READY→PILOT (B8/B8b: 5 sessions, 1 contract clamp,
+   automatic post-promotion to DEPLOYED on rolling Sharpe ≥ 1.0)
+6. **Live** — DEPLOYED with C1 CME outage detection + C2 prop firm health +
+   C4 network failover + C8 Windows update protection + C11 macro hard gates
+7. **Decline** — DEPLOYED→DECLINING (rolling Sharpe < 1.0) → B4 regen
+   auto-trigger → new CANDIDATE (closed loop)
+
+Background continuous loops:
+- A6 Hypothesis property tests (CI on every PR)
+- A8 data integrity service (nightly reconciliation + drift detection)
+- A9 snapshot CI (3-tier regression)
+- A11 shadow re-run (PAPER+ strategies)
+- A12 audit (12-category code audit)
+- B12 closed feedback loops (paper outcome → strategy memory)
+- C6 Bitwarden vault (credential rotation)
+- C7 validation cadence forcing function (RED dashboard panel + AGENTS.md
+  rule blocks new infra work when validation lapses)
+
+Migrations 0070-0084 applied. System map drift cleared. Production hardening
+phase is the steady-state going forward.
+
 ## Tech Stack
 - **API Server**: Express.js 5 + TypeScript (src/server/)
 - **Database**: PostgreSQL + Drizzle ORM
