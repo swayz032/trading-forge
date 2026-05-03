@@ -1841,26 +1841,54 @@ export async function evaluateSignals(
   // Fix 3: results are cached per ET hour — at most 24 Python spawns/day instead of
   // one per bar (~390 bars/day for 1m bars). Hour granularity is safe given ±30min
   // blackout windows: at most one stale hit at the hour boundary, then corrects.
+  //
+  // B11: bypass_news_blackout opt-in — event-driven strategies (e.g., news_fade_mcl)
+  // that MUST trade during macro release windows can set bypass_news_blackout=true
+  // in their DSL fixture. This bypasses the is_economic_event check ONLY (holidays
+  // still block — no strategy should trade on CME-closed holidays). The bypass is
+  // explicit opt-in; default is the full blackout (fail-safe for all other strategies).
+  //
+  // Authority: CLAUDE.md "Don't trade through FOMC/CPI/NFP without explicit event handling
+  // — default is SIT_OUT ±30 min". bypass_news_blackout IS the explicit event handling.
+  const bypassNewsBlackout =
+    (sessionConfig.config as unknown as Record<string, unknown>).bypass_news_blackout === true;
+
   let calendarBlocked = false;
   let calendarBlockReason = "";
   try {
     const calResult = await getCachedSignalCalendarStatus(bar.timestamp);
 
     if (calResult.is_holiday === true) {
+      // Holidays always block — even bypass_news_blackout strategies cannot trade
+      // when CME is closed. This is not an override path.
       calendarBlocked = true;
       calendarBlockReason = "holiday";
       logger.info({ sessionId, symbol, date: bar.timestamp }, "Calendar filter: holiday — skipping signals");
     } else if (calResult.is_economic_event === true) {
-      calendarBlocked = true;
-      calendarBlockReason = calResult.economic_event_name;
-      logger.info(
-        {
-          sessionId, symbol, event: calResult.economic_event_name,
-          windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
-        },
-        `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — skipping signals`,
-      );
-      span.setAttribute("calendar_block_event", calResult.economic_event_name);
+      if (bypassNewsBlackout) {
+        // Event-driven strategy with explicit bypass — log the decision and allow through
+        logger.info(
+          {
+            sessionId, symbol, event: calResult.economic_event_name,
+            windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
+            bypass: true,
+          },
+          `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — BYPASSED (bypass_news_blackout=true, event-driven strategy)`,
+        );
+        span.setAttribute("calendar_news_bypass", true);
+        span.setAttribute("calendar_block_event", calResult.economic_event_name);
+      } else {
+        calendarBlocked = true;
+        calendarBlockReason = calResult.economic_event_name;
+        logger.info(
+          {
+            sessionId, symbol, event: calResult.economic_event_name,
+            windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
+          },
+          `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — skipping signals`,
+        );
+        span.setAttribute("calendar_block_event", calResult.economic_event_name);
+      }
     }
   } catch (calErr) {
     // Calendar check is non-blocking — trading continues (fail-open).

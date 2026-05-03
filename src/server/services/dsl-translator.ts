@@ -36,6 +36,11 @@ interface DSLConfig {
     time_decay_minutes?: number;
     time_decay_multiplier?: number;
   };
+  // B11: bypass_news_blackout — W13 B3 explicit opt-in for event-driven strategies
+  // that must trade DURING macro release windows (e.g., news_fade_mcl EIA fades).
+  // When true, the calendar_filter blackout check in paper-signal-service is skipped
+  // for this strategy. Default: false/undefined = normal blackout applies.
+  bypass_news_blackout?: boolean;
 }
 
 // W5b Tier 5.1 — TrailStopConfig in paper-signal-service.ts ships with three
@@ -60,6 +65,9 @@ interface PaperTradingConfig {
   max_hold_bars?: number;
   preferred_sessions?: string[];
   indicators?: Record<string, unknown>;
+  // B11: explicit opt-in to bypass the macro blackout filter (event-driven strategies).
+  // When true, paper-signal-service skips the calendar_filter blackout check.
+  bypass_news_blackout?: boolean;
 }
 
 // Map DSL entry_indicator to rule strings
@@ -202,6 +210,9 @@ export function translateDSLToPaperConfig(dsl: DSLConfig): PaperTradingConfig {
     ...(trail_stop && { trail_stop }),
     ...(preferred_sessions.length && { preferred_sessions }),
     indicators,
+    // B11: propagate bypass_news_blackout from DSL fixture to paper config.
+    // Only set when explicitly true — undefined means "apply normal blackout".
+    ...(dsl.bypass_news_blackout === true && { bypass_news_blackout: true }),
   };
 
   logger.info(
