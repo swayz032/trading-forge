@@ -539,38 +539,6 @@ export async function compileDualPineExport(
           message: `Pine dual export has degradation notes: ${result.degradation_notes.join("; ")}`,
         });
       }
-
-      // 10. B9 (W14): Fire-and-forget marketplace package generation.
-      //
-      // DESIGN: We call generateMarketplacePackage() after the dual export
-      // completes (persist=true path only). This is intentionally fire-and-forget:
-      //   - Marketplace package is an additive output; it never gates export
-      //   - Pine compiler already ran — marketplace call reuses the persisted artifact
-      //   - Errors are logged at WARN but never surface to the caller
-      //
-      // We use a dynamic import to avoid a circular-dependency risk:
-      //   pine-export-service → pine-marketplace-service → pine-export-service
-      // Dynamic import defers resolution until call time (post-compile).
-      setImmediate(async () => {
-        try {
-          const { generateMarketplacePackage } = await import("./pine-marketplace-service.js");
-          const pkg = await generateMarketplacePackage(strategyId, { firmKey });
-          if (pkg) {
-            broadcastSSE("pine:marketplace-package-ready", {
-              strategyId,
-              exportId,
-              strategyName: pkg.strategyName,
-              pricingTier: pkg.pricingTier,
-              exportScore: pkg.exportabilityScore,
-              marketplaceReady: pkg.marketplaceReady,
-            });
-          } else {
-            logger.warn({ strategyId, exportId }, "pine-export: marketplace package generation returned null (not blocking)");
-          }
-        } catch (mpErr) {
-          logger.warn({ strategyId, exportId, err: mpErr }, "pine-export: marketplace package generation failed (non-blocking)");
-        }
-      });
     }
 
     return {
