@@ -8,7 +8,10 @@
  */
 
 import { Router } from "express";
+import { desc, eq, and } from "drizzle-orm";
 import { getMode, setMode } from "../services/pipeline-control-service.js";
+import { db } from "../db/index.js";
+import { agentHealthReports, dataIntegrityFindings } from "../db/schema.js";
 
 export const adminRoutes = Router();
 
@@ -128,5 +131,59 @@ adminRoutes.post("/scheduler/jobs/:name/disable", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Admin: failed to disable scheduler job");
     res.status(500).json({ error: "Failed to disable scheduler job" });
+  }
+});
+
+// ─── GET /admin/agent-health-reports ────────────────────────────
+// Surfaces the most-recent rows from agent_health_reports for the operator
+// dashboard. The agent-audit-service writes here every 2 h (agent-health-sweep
+// cron) but until the 2026-04-30 integration audit, no consumer existed.
+// Optional ?limit (default 50, max 200).
+adminRoutes.get("/agent-health-reports", async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    const rows = await db
+      .select()
+      .from(agentHealthReports)
+      .orderBy(desc(agentHealthReports.createdAt))
+      .limit(limit);
+    res.json({ data: rows, count: rows.length });
+  } catch (err) {
+    req.log.error({ err }, "Admin: failed to fetch agent health reports");
+    res.status(500).json({ error: "Failed to fetch agent health reports" });
+  }
+});
+
+// ─── GET /admin/data-integrity-findings ─────────────────────────
+// Surfaces unresolved (default) or all rows from data_integrity_findings (A8).
+// data-integrity-service writes here nightly at 4:00 AM ET but until the
+// 2026-04-30 integration audit, no consumer existed — the consolidated
+// reconciliation + drift-detection rows were a write-only sink.
+// Query params:
+//   ?resolved=true     — include resolved findings (default false)
+//   ?severity=critical|warning|info — filter by severity
+//   ?limit=50          — max 500
+adminRoutes.get("/data-integrity-findings", async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 50, 500);
+    const includeResolved = req.query.resolved === "true";
+    const severity = req.query.severity as string | undefined;
+
+    const conditions = [];
+    if (!includeResolved) conditions.push(eq(dataIntegrityFindings.resolved, false));
+    if (severity && ["critical", "warning", "info"].includes(severity)) {
+      conditions.push(eq(dataIntegrityFindings.severity, severity));
+    }
+
+    const rows = await db
+      .select()
+      .from(dataIntegrityFindings)
+      .where(conditions.length === 0 ? undefined : (conditions.length === 1 ? conditions[0] : and(...conditions)))
+      .orderBy(desc(dataIntegrityFindings.runAt))
+      .limit(limit);
+    res.json({ data: rows, count: rows.length, filters: { includeResolved, severity: severity ?? null } });
+  } catch (err) {
+    req.log.error({ err }, "Admin: failed to fetch data integrity findings");
+    res.status(500).json({ error: "Failed to fetch data integrity findings" });
   }
 });

@@ -1926,6 +1926,36 @@ export function initScheduler() {
     emitJobComplete("graveyard-pattern-extraction", Date.now() - t0gpe);
   });
 
+  // ─── Nightly critique — daily 11:30 PM ET ─────────────────────
+  // Closes the AI self-learning loop: reads system_journal entries from the past
+  // 24 h, asks the LLM to extract failure patterns, writes per-entry analyst
+  // notes and a lesson summary into system_parameters (consumed by the next
+  // generation cycle).  n8n workflow `9A-nightly-self-critique` runs the
+  // *generation-side* learning loop; this in-process job keeps the journal-side
+  // critique alive so n8n outage does not silently drop the daily review.
+  // Documented in scheduler header (line 6) but never registered until
+  // 2026-04-30 integration audit.
+  // Pipeline gate: HONOURS pause (research, not safety).
+  registerJob("nightly-critique", 24 * 60 * 60 * 1000, async () => {
+    const { runNightlyCritique } = await import("./services/nightly-critique-service.js");
+    await runNightlyCritique();
+  });
+
+  // 03:30 + 04:30 UTC covers 11:30 PM ET in both EDT (UTC-4) and EST (UTC-5).
+  cron.schedule("30 3,4 * * *", async () => {
+    const now = new Date();
+    const etHour = Number(
+      now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+    );
+    if (etHour !== 23) return;
+    if (!(await pipelineGate("nightly-critique"))) return;
+    logger.info("Scheduler: Nightly critique (11:30 PM ET daily)");
+    const t0nc = Date.now();
+    await withRetry("nightly-critique", SCHEDULER_JOBS["nightly-critique"].run);
+    markJobRun("nightly-critique");
+    emitJobComplete("nightly-critique", Date.now() - t0nc);
+  });
+
   // ─── Critic feedback — weekly Sunday 1 AM ET ──────────────────
   registerJob("critic-feedback", 7 * 24 * 60 * 60 * 1000, async () => {
     const { evaluateCriticAccuracy } = await import("./services/critic-feedback-service.js");

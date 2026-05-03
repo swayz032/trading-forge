@@ -2304,6 +2304,46 @@ export async function evaluateSignals(
       // Shadow signal is already persisted for effectiveness analysis.
       riskGatePassed = false;
     } else {
+      // ─── W19: OI liquidity soft-gate check (ADVISORY) ─────────────
+      // checkOiLiquidity() inspects 5-day open-interest trend on the contract
+      // and flags rolls/expiry where liquidity is drying up. Authority is
+      // ADVISORY — we never block on this signal, we just persist a paper
+      // signal log row (signalType="oi_decline_advisory") so the operator can
+      // see that an entry fired into a thinning book. Fail-open on any error.
+      // Wired 2026-04-30 in the integration audit (file existed but was an
+      // orphan — its own header doc claimed it was wired here).
+      try {
+        const { checkOiLiquidity } = await import("./oi-liquidity-filter.js");
+        const oiResult = await checkOiLiquidity(symbol.toUpperCase());
+        if (oiResult.shouldBlock) {
+          span.setAttribute("oi_decline_advisory", true);
+          span.setAttribute("oi_decline_pct", oiResult.declinePct ?? 0);
+          logger.warn(
+            { sessionId, symbol, declinePct: oiResult.declinePct, latestOi: oiResult.latestOi, earliestOi: oiResult.earliestOi },
+            "W19 OI liquidity advisory: declining open interest detected (entry NOT blocked — advisory only)",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "oi_decline_advisory",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _oi_decline_pct: oiResult.declinePct,
+              _oi_latest: oiResult.latestOi,
+              _oi_earliest: oiResult.earliestOi,
+              _oi_data_points: oiResult.dataPoints,
+              _oi_threshold: oiResult.threshold,
+            },
+            acted: true, // entry WILL fire — this is advisory only
+            reason: `oi_decline_advisory: ${oiResult.reason}`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist OI advisory log"));
+        }
+      } catch (oiErr) {
+        logger.debug({ err: oiErr, sessionId, symbol }, "W19 OI liquidity check failed — fail-open, proceeding");
+      }
+
       // ─── C11: Macro hard gate check (BEFORE risk gate) ─────────────
       // Fail-open: if evaluateMacroGates throws or macro data unavailable,
       // trading continues unblocked. Same fail-open pattern as calendar_filter.

@@ -364,6 +364,11 @@ app.use("/api/indicators", indicatorRoutes);
 // first and then the 30/min cap on these paths.
 app.use("/api/backtests", strictRateLimit, backtestRoutes);
 app.use("/api/agent", strictRateLimit, agentRoutes);
+// Backward-compat alias: live n8n `Monthly_Robustness_Check` workflow uses
+// `/api/agents/robustness` and `/api/agents/jobs/:id` (plural). The canonical
+// mount is `/api/agent/...` (singular). Aliasing here avoids editing live n8n
+// workflows out-of-band. Fixed 2026-04-30 in the integration audit.
+app.use("/api/agents", strictRateLimit, agentRoutes);
 app.use("/api/monte-carlo", strictRateLimit, monteCarloRoutes);
 app.use("/api/compliance", complianceRoutes);
 app.use("/api/compiler", compilerRoutes);
