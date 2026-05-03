@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T05:43:52.718Z",
+  "generatedAt": "2026-05-03T08:12:51.982Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,11 +16,11 @@
   },
   "counts": {
     "routes": 51,
-    "schedulerJobs": 54,
+    "schedulerJobs": 57,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 24,
-    "databaseTables": 68,
+    "databaseTables": 71,
     "registrySubsystems": 16
   },
   "routes": [
@@ -130,7 +130,10 @@
     "stale-session-check",
     "system-map-drift",
     "tournament-staleness-check",
-    "validation-cadence-monthly"
+    "validation-cadence-monthly",
+    "w19-definition-pull",
+    "w19-imbalance-pull",
+    "w19-statistics-pull"
   ],
   "workflows": [
     "0A_health_monitor_66HEjQavpvirY6g5",
@@ -727,8 +730,10 @@
     "compliance_reviews",
     "compliance_rulesets",
     "contract_rolls",
+    "contract_specs_authoritative",
     "critic_candidates",
     "critic_optimization_runs",
+    "daily_statistics",
     "data_integrity_findings",
     "data_sync_jobs",
     "day_archetypes",
@@ -746,6 +751,7 @@
     "monte_carlo_runs",
     "mutation_outcomes",
     "n8n_execution_log",
+    "opening_auction_imbalance",
     "paper_positions",
     "paper_session_feedback",
     "paper_sessions",
@@ -831,9 +837,9 @@
     ],
     "coveredCounts": {
       "routes": 51,
-      "schedulerJobs": 54,
+      "schedulerJobs": 57,
       "engineSubsystems": 24,
-      "databaseTables": 68
+      "databaseTables": 71
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -1386,6 +1392,8 @@
         "dataCollectionCoverage": [
           "audit_log",
           "contract_rolls",
+          "contract_specs_authoritative",
+          "daily_statistics",
           "data_sync_jobs",
           "exchange_outages",
           "live and historical market data",
@@ -1394,6 +1402,7 @@
           "macro_regime_states",
           "macro_snapshots",
           "market_data_meta",
+          "opening_auction_imbalance",
           "paper signal evaluations",
           "paper_positions",
           "paper_session_feedback",
@@ -1471,7 +1480,10 @@
           "prop-firm-dashboard-snapshot",
           "prop-firm-health-check",
           "session-analytics-rollup",
-          "stale-session-check"
+          "stale-session-check",
+          "w19-definition-pull",
+          "w19-imbalance-pull",
+          "w19-statistics-pull"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -3322,6 +3334,8 @@
       "dataCollectionCoverage": [
         "audit_log",
         "contract_rolls",
+        "contract_specs_authoritative",
+        "daily_statistics",
         "data_sync_jobs",
         "exchange_outages",
         "live and historical market data",
@@ -3330,6 +3344,7 @@
         "macro_regime_states",
         "macro_snapshots",
         "market_data_meta",
+        "opening_auction_imbalance",
         "paper signal evaluations",
         "paper_positions",
         "paper_session_feedback",
@@ -3407,7 +3422,10 @@
         "prop-firm-dashboard-snapshot",
         "prop-firm-health-check",
         "session-analytics-rollup",
-        "stale-session-check"
+        "stale-session-check",
+        "w19-definition-pull",
+        "w19-imbalance-pull",
+        "w19-statistics-pull"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [

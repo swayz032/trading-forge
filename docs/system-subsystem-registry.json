@@ -541,7 +541,10 @@
       "prop-firm-dashboard-snapshot",
       "prop-firm-health-check",
       "session-analytics-rollup",
-      "stale-session-check"
+      "stale-session-check",
+      "w19-definition-pull",
+      "w19-imbalance-pull",
+      "w19-statistics-pull"
     ],
     "routes": [
       "/api/context",
@@ -562,12 +565,15 @@
     "database_tables": [
       "audit_log",
       "contract_rolls",
+      "contract_specs_authoritative",
+      "daily_statistics",
       "data_sync_jobs",
       "exchange_outages",
       "macro_features",
       "macro_regime_states",
       "macro_snapshots",
       "market_data_meta",
+      "opening_auction_imbalance",
       "paper_positions",
       "paper_session_feedback",
       "paper_sessions",

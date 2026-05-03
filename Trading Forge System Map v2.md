@@ -1068,10 +1068,189 @@
 
 ===============================================================================
 
+  24. PRODUCTION HARDENING WAVES W9–W19 (47-DAY BLUEPRINT, COMPLETE)
+
+  The 47-day production-hardening blueprint shipped from W9 (2026-04-22)
+  through W19 (2026-04-30). All waves complete. Migrations 0070–0084 applied.
+  Detailed contracts, gate behavior, and authority for each subsystem live in
+  CLAUDE.md (canonical operational doc). This section is the System Map index.
+
+  24a. New Tables (migrations 0070–0084)
+
+    backtest_provenance              W10 A2  — result-hash drift detection
+    frankenstein_test_runs           W10 A4  — randomization gate, HARD GATE
+                                              TESTING→PAPER
+    strategy_signal_vectors          W11 A7  — empirical signal cosine,
+                                              HARD GATE PAPER→DEPLOY_READY
+    data_integrity_findings          W11 A8  — nightly reconciliation +
+                                              drift detection (consolidated)
+    shadow_rerun_findings            W12 A11 — PAPER+ shadow re-run results
+    strategy_firm_eligibility        W13 B5  — per-firm eligibility,
+                                              fire-and-forget AFTER promotion
+    pilot_sessions                   W14 B8  — 5-session canary track,
+                                              1-contract clamp
+    backtests.mrp_sharpe             W14 B10 — Min Regime Performance, soft gate
+    backtests.mrp_regime_breakdown   W14 B10 — per-regime Sharpe map
+    exchange_outages                 W15 C1  — CME GLOBEX outage state
+    prop_firm_health_checks          W15 C2  — 15-min firm probe history
+    llm_injection_attempts           W15 C3  — OWASP LLM01 detection log
+    strategy_dsl_features            W17 C9  — pre-backtest DSL diversity
+                                              gate (cosine on 13-d feature
+                                              vector)
+    backtests.information_ratio      W18 A13 — IR vs SPX/CL benchmark
+    macro_features                   W18 C11 — 10 macro series with
+                                              publication_timestamp barrier
+    macro_regime_states              W18 C11 — daily HMM regime probabilities
+    contract_specs_authoritative     W19     — Databento Definition snapshot
+    daily_statistics                 W19     — settlement, OI, volume
+    opening_auction_imbalance        W19     — pre-cash auction imbalance
+
+  24b. New Services (Node)
+
+    Backtest gates / lifecycle:
+      frankenstein-service.ts                A4   randomization HARD GATE
+      signal-correlation-service.ts          A7   cosine HARD GATE
+      shadow-rerun-service.ts                A11  re-run on git-sha drift
+      multi-firm-promotion-service.ts        B5   8-firm eligibility writer
+      validation-cadence-service.ts          C7   forcing-function metrics
+      dsl-diversity-service.ts               C9   pre-backtest mode-collapse
+
+    Macro overlay (C11):
+      macro-regime-service.ts                C11  ingest + HMM classify
+      macro-gate-service.ts                  C11  hard gates (4 rules)
+
+    Safety / venue / firm:
+      exchange-status-service.ts             C1   CME outage detection
+      prop-firm-health-service.ts            C2   firm suspension probe
+      dashboard-snapshot-service.ts          C2   payout-evidence snapshots
+      windows-health-check-service.ts        C8   pre-market reboot check
+      llm-input-sanitizer.ts                 C3   prompt-injection scrub
+      llm-output-validator.ts                C3   LLM response validation
+      llm-sandbox-service.ts                 C3   AST pre-scan + subprocess
+
+    Data layer (W19):
+      contract-specs-service.ts              W19  Definition pull
+      settlement-reconciliation-service.ts   W19  Statistics reconciliation
+      oi-liquidity-filter.ts                 W19  OI/volume gates
+      opening-auction-service.ts             W19  imbalance ingest
+
+    Lib / infrastructure:
+      src/server/lib/compute-failover.ts     B6   Skytech→Railway state machine
+      src/server/lib/network-failover.ts     C4   ISP/broker classification
+      src/server/lib/credential-loader.ts    C6   Bitwarden CLI vault loader
+
+  24c. New Engine Modules (Python)
+
+    src/engine/determinism.py                A1   reproducibility primitives
+    src/engine/parity_engine/                A3   backtest/paper parity ledger
+    src/engine/frankenstein_test.py          A4   N-shuffle randomization
+    src/engine/risk_parity.py                B7   inverse-vol allocation
+    src/engine/macro_data/                   C11  fred/h41/bls/treasury
+    src/engine/macro_regime_classifier.py    C11  4-state Gaussian HMM
+    src/engine/macro_regime_fusion.py        C11  HMM × DeepAR (cap 0.30)
+
+  24d. New Routes
+
+    /api/frankenstein                        A4   trigger + result
+    /api/signal-correlation/matrix           A7   visual review of cosine
+    /api/shadow-rerun/trigger                A11  manual re-run
+    /api/validation-cadence/dashboard        C7   live cadence panel
+    /api/validation-cadence/reality-check    C7   monthly synthesis report
+    /api/macro/regime/current                C11  current regime probs
+    /api/macro/series/:id                    C11  series history
+
+  24e. New Scheduler Crons (15 added W9–W19)
+
+    databento-weekly-refresh         W9  B1   Sun 9 PM ET
+    data-integrity-suite             W11 A8   4 AM ET daily (pause-honored)
+    regen-declining-sweep            W13 B4   2 AM ET daily
+    cme-status-poll                  W15 C1   60 s (NOT pause-gated, safety)
+    prop-firm-health-check           W15 C2   15 min (NOT pause-gated, safety)
+    prop-firm-dashboard-snapshot     W15 C2   1 h (Playwright capture)
+    pre-trading-day-health-check     W17 C8   8 AM ET weekdays (NOT pause-
+                                              gated; fail-CLOSED to PAUSED)
+    validation-cadence-monthly       W16 C7   1st of month (bypass pause)
+    c11-fred-daily                   W18 C11  4 PM ET weekdays
+    c11-h41-weekly                   W18 C11  Thu 4:30 PM ET
+    c11-bls-release                  W18 C11  daily release check
+    c11-treasury-auctions            W18 C11  daily auction tail/indirect
+    w19-definition-pull              W19      Sun 8 PM ET
+    w19-statistics-pull              W19      daily 6 PM ET
+    w19-imbalance-pull               W19      weekdays 8:25 AM ET
+
+    Crons NOT pipeline-gated by design (safety signals must run during pause):
+      cme-status-poll, prop-firm-health-check, prop-firm-dashboard-snapshot,
+      pre-trading-day-health-check, validation-cadence-monthly.
+
+  24f. New DSL Fixtures (W13 B3 — regime coverage 7 total)
+
+    range_fade_mnq.json              RANGE_BOUND        full_shuffle
+    opening_range_breakout_mes.json  OPENING_RANGE      calendar_preserving
+    news_fade_mcl.json               NEWS_DRIVEN        calendar_preserving
+                                     (sets bypass_news_blackout=true)
+    overnight_drift_mes.json         OVERNIGHT_DRIFT    calendar_preserving
+
+  24g. End-to-End Pipeline After W9–W19
+
+    1. Generation
+       LLM scout → C9 DSL diversity check → C3 prompt-injection defense
+       → DSL compiler → CANDIDATE
+    2. Validation
+       backtest with A1 determinism + A2 provenance + A13 IR + B10 MRP
+       → walk-forward → MC → quantum (W1-W6 prior) → A4 Frankenstein gate
+       → TESTING
+    3. Promotion (TESTING → PAPER)
+       A4 Frankenstein HARD GATE
+    4. Promotion (PAPER → DEPLOY_READY)
+       A7 signal-correlation HARD GATE → B5 multi-firm fire-and-forget
+       → B10 MRP soft gate
+    5. Canary (DEPLOY_READY → PILOT, B8/B8b)
+       5 sessions, 1 contract, automatic post-promotion
+    6. Live (DEPLOYED)
+       C1 CME outage + C2 prop firm health + C4 network failover
+       + C8 Windows update protection + C11 macro hard gates
+    7. Decline (DEPLOYED → DECLINING → CANDIDATE)
+       Rolling Sharpe < 1.0 → B4 regen auto-trigger (loop closes)
+
+    Background continuous loops:
+      A6 Hypothesis property tests (CI on every PR)
+      A8 data integrity service (nightly reconciliation + drift detection)
+      A9 snapshot CI (3-tier regression)
+      A11 shadow re-run (PAPER+ strategies)
+      A12 audit (12-category code audit)
+      B12 closed feedback loops (paper outcome → strategy memory)
+      C6 Bitwarden vault (credential rotation)
+      C7 validation cadence forcing function
+
+  24h. Removed / Constraints
+
+    B9 Pine Marketplace (REMOVED 2026-05-03, commit 6740db2)
+      Trading Forge is PRIVATE — no SaaS, no marketplace, no monetization.
+      Pine export remains available for personal TradingView indicator use.
+      Reject any feature framed around selling or licensing strategy artifacts.
+
+    Hosting / Cost Posture
+      Railway is the PAID $20/month plan (NOT free tier). Plenty of usage-
+      based compute headroom for backtests, async paper signal generation,
+      and B6 cloud failover. Skytech is primary compute. Railway is
+      emergency failover (B6 state machine in compute-failover.ts).
+      Other free tiers (Fly.io, Cloudflare Workers, IBM Quantum) remain in
+      use as secondary fallbacks; cost discipline still applies elsewhere.
+      Free-tier dependencies kept by design: Bitwarden CLI (vault),
+      phone USB tethering (network-failover backup), free govt APIs
+      (FRED / BLS / TreasuryDirect for C11 macro overlay).
+
+  Detailed contracts, gate behavior, schemas, and authority for every
+  W9–W19 subsystem are documented in CLAUDE.md. This section is the
+  System Map index. The auto-generated section below provides the
+  authoritative live registry coverage and drift status.
+
+===============================================================================
+
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-03T05:43:52.718Z`.
+Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1080,12 +1259,12 @@ Updated automatically from the repo on `2026-05-03T05:43:52.718Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `tradingview_deploy`
 - API routes tracked: `51`
-- Scheduler jobs tracked: `54`
+- Scheduler jobs tracked: `57`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `24`
-- Database tables tracked: `68`
+- Database tables tracked: `71`
 
 ### Subsystem Runtime States
 - `active`: `13`
@@ -1122,9 +1301,9 @@ Updated automatically from the repo on `2026-05-03T05:43:52.718Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `16`
 - Route coverage: `51/51`
-- Scheduler coverage: `54/54`
+- Scheduler coverage: `57/57`
 - Engine coverage: `24/24`
-- Database coverage: `68/68`
+- Database coverage: `71/71`
 - Autonomous subsystems with audit coverage: `16/16`
 - Autonomous subsystems with audit actions: `16/16`
 - Autonomous subsystems with telemetry evidence: `16/16`
@@ -1343,6 +1522,9 @@ Updated automatically from the repo on `2026-05-03T05:43:52.718Z`.
 - `system-map-drift`
 - `tournament-staleness-check`
 - `validation-cadence-monthly`
+- `w19-definition-pull`
+- `w19-imbalance-pull`
+- `w19-statistics-pull`
 
 ### Engine Subsystems
 - `anti_setups`
@@ -1415,8 +1597,10 @@ Updated automatically from the repo on `2026-05-03T05:43:52.718Z`.
 - `compliance_reviews`
 - `compliance_rulesets`
 - `contract_rolls`
+- `contract_specs_authoritative`
 - `critic_candidates`
 - `critic_optimization_runs`
+- `daily_statistics`
 - `data_integrity_findings`
 - `data_sync_jobs`
 - `day_archetypes`
@@ -1434,6 +1618,7 @@ Updated automatically from the repo on `2026-05-03T05:43:52.718Z`.
 - `monte_carlo_runs`
 - `mutation_outcomes`
 - `n8n_execution_log`
+- `opening_auction_imbalance`
 - `paper_positions`
 - `paper_session_feedback`
 - `paper_sessions`

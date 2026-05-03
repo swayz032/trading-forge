@@ -150,6 +150,72 @@ Agents must prefer simple, robust strategies:
 
 Below-threshold strategies go to the graveyard, not deployment.
 
+## Lifecycle Hard Gates (W9–W19)
+
+Agents must NOT propose bypasses for any of these gates. They are defense-
+in-depth — different stages catch different failure modes. Full contract
+documentation lives in CLAUDE.md.
+
+- **C9 DSL Diversity (pre-backtest):** mode-collapsed LLM strategies are
+  rejected before backtest compute is spent. Cosine similarity > 0.85 vs
+  any of the last 50 accepted strategies → reject. Catches LLM "same
+  template, new name" duplication.
+- **A4 Frankenstein (TESTING → PAPER):** randomization gate. Strategies
+  whose Sharpe survives N-shuffle randomization are rejected (no edge,
+  just curve-fit luck). `passed=true` REQUIRED to advance to PAPER.
+- **A7 Signal Correlation (PAPER → DEPLOY_READY):** empirical signal
+  cosine vs DEPLOYED strategies. > 0.85 → reject. Catches "different code,
+  same signal" — the Two Sigma duplicate-signal failure mode. Pairs with
+  C9 (different stage, different failure mode).
+- **C11 Macro Hard Gates (paper signal):** `prob_crisis > 0.60` blocks new
+  ES/NQ longs > 2hr. ISM<49 + RRP<$20B blocks new ES/NQ longs. FOMC ±1
+  day halves position size. Macro release windows block new entries
+  (1hr before to 3hr after). Existing positions HELD, never auto-closed.
+- **B10 MRP soft gate (PAPER → DEPLOY_READY):** `mrp_sharpe < 0.5` logs
+  advisory; hard-gates after 30 days of MRP data. Strategies fragile
+  under regime rotation get flagged here.
+- **C1 / C2 Safety blocks (live execution):** CME outage detection blocks
+  new entries during halts; positions HELD. Per-firm suspension detection
+  blocks new entries on the affected firm only.
+- **C8 Windows pre-market check (8 AM ET):** any non-zero exit code
+  flips pipeline-control to PAUSED (fail-CLOSED). Operator must explicitly
+  resume after reviewing `infra/windows-update-policy.md`.
+
+## PILOT Canary State (W14 / B8)
+
+Agents must NOT promote DEPLOY_READY → DEPLOYED directly when a PILOT
+canary makes sense. The canonical promotion path is:
+
+  DEPLOY_READY → PILOT (human only, 5 sessions, 1 contract clamp)
+  PILOT → DEPLOYED (AUTOMATIC on rolling Sharpe ≥ 1.0 + all 5 sessions
+                    compliance-passed)
+  PILOT → GRAVEYARD (AUTOMATIC if any kill switch fires OR criteria fail
+                     at session 5)
+
+Direct DEPLOY_READY → DEPLOYED remains supported for legacy migrations,
+but new strategies should go through PILOT.
+
+## Constraint: Trading Forge Is PRIVATE
+
+Trading Forge is a single-operator system — no SaaS, no marketplace, no
+monetization. Reject any feature suggestion framed around selling,
+licensing, or distributing strategy artifacts. The B9 Pine Marketplace
+component was REMOVED 2026-05-03 (commit `6740db2`) for this reason. Pine
+export remains available strictly for the operator's personal TradingView
+indicator use.
+
+## Hosting / Cost Posture
+
+- Railway is the PAID $20/month plan. Do not assume "free-tier $5 credit
+  window" constraints — those are obsolete.
+- Skytech is primary compute. Railway is emergency failover (B6 in
+  `src/server/lib/compute-failover.ts`).
+- Free-tier dependencies kept by design: Bitwarden CLI (C6 vault), phone
+  USB tethering (C4 network failover backup), free govt APIs (C11 macro
+  overlay: FRED / BLS / TreasuryDirect).
+- Other free tiers (Fly.io, Cloudflare Workers, IBM Quantum) remain in use
+  as secondary fallbacks; cost discipline still applies elsewhere.
+
 ## Backtest / Data Truth
 
 Backtests are only meaningful if:
