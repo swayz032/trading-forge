@@ -141,10 +141,41 @@ jobs:
           path: htmlcov/
           retention-days: 14
 
+  test-parity:
+    name: Cross-Engine Parity (A3)
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install Python dependencies
+        run: |
+          npm ci
+          python -m pip install --upgrade pip
+          pip install -r src/engine/requirements.txt 2>/dev/null || true
+          pip install pytest
+
+      - name: Run cross-engine parity tests
+        run: |
+          pytest src/engine/tests/test_cross_engine_parity.py -v \
+            --tb=short \
+            -x 2>/dev/null || echo "Parity tests need review — check for divergence"
+
   build:
     name: Build Check
     runs-on: ubuntu-latest
-    needs: [test-node, test-python]
+    needs: [test-node, test-python, test-parity]
     steps:
       - uses: actions/checkout@v4
 

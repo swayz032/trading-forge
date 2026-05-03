@@ -28,6 +28,11 @@ psutil>=5.9.0             # Hardware profiling
 # Determinism enforcement (A1 — W9)
 threadpoolctl>=3.0.0      # Runtime BLAS/OpenMP thread-count limiter (BSD-3-Clause, free)
 
+# Cross-engine parity testing (A3 — W10) — TEST-ONLY dependency.
+# NEVER import backtrader from any production path (backtester.py, paper engine, etc.).
+# GPL-3 license; personal/non-commercial use only (matches Trading Forge usage).
+backtrader==1.9.78.123
+
 # Quantum (optional — graceful fallback to classical when unavailable)
 # pip install qiskit qiskit-aer qiskit-algorithms dwave-samplers dwave-neal quimb pennylane
 qiskit>=2.3.0
