@@ -610,6 +610,27 @@
       "when": 1746963600000,
       "tag": "0084_macro_features",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1746967200000,
+      "tag": "0085_contract_specs_authoritative",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1746970800000,
+      "tag": "0086_daily_statistics",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1746974400000,
+      "tag": "0087_opening_auction_imbalance",
+      "breakpoints": true
     }
   ]
 }

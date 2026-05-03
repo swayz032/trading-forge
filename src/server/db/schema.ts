@@ -1944,3 +1944,77 @@ export const propFirmHealthChecks = pgTable(
     index("idx_prop_firm_health_firm_time").on(table.firmId, table.checkedAt.desc()),
   ]
 );
+
+// ─── W19 Schema 1: contract_specs_authoritative (migration 0085) ──────────────
+// Authoritative CME contract specifications pulled weekly from Databento Definition schema.
+// Falls back to hardcoded firm-config.ts values if empty.
+// Populated by: w19-definition-pull cron (Sunday 8 PM ET).
+// Consumers: contract-specs-service.ts, backtest engine (via service).
+export const contractSpecsAuthoritative = pgTable(
+  "contract_specs_authoritative",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    symbol: text("symbol").notNull(),              // ES | NQ | MES | MNQ | MCL
+    multiplier: numeric("multiplier").notNull(),   // dollar value per point (ES=$50)
+    tickSize: numeric("tick_size").notNull(),       // min price increment (ES=0.25)
+    pointValue: numeric("point_value").notNull(),  // dollar value per full point
+    expiryDate: date("expiry_date"),               // front-month expiry from definition record
+    pulledAt: timestamp("pulled_at").notNull().defaultNow(),
+    source: text("source").notNull().default("databento_definition"),
+    rawDefinition: jsonb("raw_definition"),        // full Databento definition record for audit
+  },
+  (table) => [
+    index("idx_contract_specs_symbol_pulled").on(table.symbol, table.pulledAt.desc()),
+  ]
+);
+
+// ─── W19 Schema 2: daily_statistics (migration 0086) ─────────────────────────
+// CME daily settlement prices and open interest from Databento Statistics schema.
+// Populated by: w19-statistics-pull cron (daily 6 PM ET after CME settlement).
+// Consumers:
+//   - settlement-reconciliation-service.ts (backtest PnL vs settlement)
+//   - oi-liquidity-filter.ts (block entries on declining OI contracts)
+export const dailyStatistics = pgTable(
+  "daily_statistics",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    symbol: text("symbol").notNull(),              // ES | NQ | MES | MNQ | MCL
+    tradeDate: date("trade_date").notNull(),        // the trading day this settlement applies to
+    settlementPrice: numeric("settlement_price"),  // CME official daily settlement price
+    openInterest: integer("open_interest"),        // open interest at settlement (int fits up to 2.1B)
+    sessionHigh: numeric("session_high"),          // intraday session high
+    sessionLow: numeric("session_low"),            // intraday session low
+    volume: integer("volume"),                     // total session volume
+    pulledAt: timestamp("pulled_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_daily_stats_unique").on(table.symbol, table.tradeDate),
+    index("idx_daily_stats_symbol_date").on(table.symbol, table.tradeDate.desc()),
+  ]
+);
+
+// ─── W19 Schema 3: opening_auction_imbalance (migration 0087) ────────────────
+// CME opening auction imbalance from Databento Imbalance schema (ES + NQ only).
+// Cost: ~$5/month at per-message pricing (2 symbols x 250 days x 1 msg).
+// Populated by: w19-imbalance-pull cron (weekdays 8:25 AM ET).
+// Consumers:
+//   - opening-auction-service.ts (surfaces openingAuctionBias to ORB strategies)
+//   - regime-state-service.ts (exposes openingAuctionBias per symbol)
+export const openingAuctionImbalance = pgTable(
+  "opening_auction_imbalance",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    symbol: text("symbol").notNull(),                  // ES | NQ
+    auctionDate: date("auction_date").notNull(),        // trading day of the auction
+    imbalanceQuantity: integer("imbalance_quantity").notNull(), // net imbalance in contracts
+    imbalanceSide: text("imbalance_side").notNull(),   // 'buy' | 'sell' | 'none'
+    pairedQuantity: integer("paired_quantity"),         // contracts matched at indicative price
+    indicativePrice: numeric("indicative_price"),      // CME indicative opening price
+    auctionTime: timestamp("auction_time").notNull(),   // exact timestamp (~8:29:59 ET)
+    pulledAt: timestamp("pulled_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_auction_imbalance_unique").on(table.symbol, table.auctionDate),
+    index("idx_auction_imbalance_symbol_date").on(table.symbol, table.auctionDate.desc()),
+  ]
+);

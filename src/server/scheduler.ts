@@ -42,6 +42,10 @@ import {
   runMacroRegimeClassification,
   invalidateMacroRegimeCache,
 } from "./services/macro-regime-service.js";
+// W19: Databento expanded schema — Definition, Statistics, Imbalance
+import { runDefinitionPull } from "./services/contract-specs-service.js";
+import { runStatisticsPull, runSettlementReconciliation } from "./services/settlement-reconciliation-service.js";
+import { runAuctionImbalancePull } from "./services/opening-auction-service.js";
 
 let initialized = false;
 
@@ -1079,6 +1083,114 @@ export function initScheduler() {
     await withRetry("c11-treasury-auctions", SCHEDULER_JOBS["c11-treasury-auctions"].run);
     markJobRun("c11-treasury-auctions");
     emitJobComplete("c11-treasury-auctions", Date.now() - t0);
+  });
+
+  // ─── W19 Schema 1: Definition pull — weekly Sunday 8 PM ET ─────────────────
+  // Fetches CME contract specs from Databento Definition schema (FREE).
+  // Alerts if multiplier/tick_size changed vs hardcoded firm-config.ts reference.
+  // Runs BEFORE the weekly databento-weekly-refresh (Sunday 8 PM ET offset).
+  // Pipeline-gated: Definition pull is research data, not a safety signal.
+  registerJob("w19-definition-pull", 7 * 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "w19-definition-pull" }, "cron tick start");
+    const result = await runDefinitionPull(correlationId);
+    logger.info(
+      { status: result.status, specChanged: result.specChanged, changedSymbols: result.changedSymbols, correlationId },
+      "W19 Definition pull complete",
+    );
+  });
+
+  // Sunday 8 PM ET = Monday 00:00 UTC (EDT) or 01:00 UTC (EST)
+  // Fire at both 00:00 and 01:00 UTC on Sundays/Mondays and filter by ET hour
+  cron.schedule("0 0,1 * * 0,1", async () => {
+    const now = new Date();
+    const etHour = parseInt(
+      now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+      10,
+    );
+    // 8 PM ET on Sunday
+    const etDow = now.toLocaleString("en-US", { timeZone: "America/New_York", weekday: "short" });
+    if (etHour !== 20 || etDow !== "Sun") return;
+    if (!(await pipelineGate("w19-definition-pull"))) return;
+    const t0 = Date.now();
+    await withRetry("w19-definition-pull", SCHEDULER_JOBS["w19-definition-pull"].run);
+    markJobRun("w19-definition-pull");
+    emitJobComplete("w19-definition-pull", Date.now() - t0);
+  });
+
+  // ─── W19 Schema 2: Statistics pull — daily 6 PM ET (weekdays) ──────────────
+  // Fetches CME daily settlement price + open interest (FREE).
+  // Runs AFTER CME settlement (4:15 PM ET for futures) to capture settled prices.
+  // Followed immediately by settlement reconciliation job.
+  // Pipeline-gated.
+  registerJob("w19-statistics-pull", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "w19-statistics-pull" }, "cron tick start");
+    const pullResult = await runStatisticsPull(5, correlationId);
+    logger.info({ rowsPersisted: pullResult.rowsPersisted, correlationId }, "W19 Statistics pull complete");
+    // Run settlement reconciliation immediately after pull has fresh data
+    if (pullResult.status === "ok" && pullResult.rowsPersisted > 0) {
+      const reconResult = await runSettlementReconciliation(correlationId);
+      logger.info(
+        { strategiesChecked: reconResult.strategiesChecked, alertsFired: reconResult.alertsFired, correlationId },
+        "W19 Settlement reconciliation complete",
+      );
+    }
+  });
+
+  // 6 PM ET = 22:00 UTC (EDT) or 23:00 UTC (EST)
+  cron.schedule("0 22,23 * * 1-5", async () => {
+    const now = new Date();
+    const etHour = parseInt(
+      now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+      10,
+    );
+    if (etHour !== 18) return;
+    if (!(await pipelineGate("w19-statistics-pull"))) return;
+    const t0 = Date.now();
+    await withRetry("w19-statistics-pull", SCHEDULER_JOBS["w19-statistics-pull"].run);
+    markJobRun("w19-statistics-pull");
+    emitJobComplete("w19-statistics-pull", Date.now() - t0);
+  });
+
+  // ─── W19 Schema 3: Imbalance pull — weekdays 8:25 AM ET ─────────────────────
+  // Fetches CME opening auction imbalance for ES + NQ (~$5/month).
+  // Published ~1s before 8:30 AM ET open; captured at 8:25 AM ET pull time.
+  // Surfaces openingAuctionBias to opening_range_breakout strategies.
+  // Pipeline-gated.
+  registerJob("w19-imbalance-pull", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "w19-imbalance-pull" }, "cron tick start");
+    const result = await runAuctionImbalancePull(1, correlationId);
+    logger.info(
+      { rowsPersisted: result.rowsPersisted, status: result.status, correlationId },
+      "W19 Imbalance pull complete",
+    );
+    if (result.rowsPersisted > 0) {
+      broadcastSSE("auction:imbalance-updated", {
+        rowsPersisted: result.rowsPersisted,
+        results: result.results,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
+  // 8:25 AM ET = 12:25 UTC (EDT) or 13:25 UTC (EST)
+  cron.schedule("25 12,13 * * 1-5", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etH, etM] = etTimeStr.split(":");
+    if (parseInt(etH, 10) !== 8 || parseInt(etM, 10) !== 25) return;
+    if (!(await pipelineGate("w19-imbalance-pull"))) return;
+    const t0 = Date.now();
+    await withRetry("w19-imbalance-pull", SCHEDULER_JOBS["w19-imbalance-pull"].run);
+    markJobRun("w19-imbalance-pull");
+    emitJobComplete("w19-imbalance-pull", Date.now() - t0);
   });
 
   // ─── C2: Day archetype classifier — daily at 6 AM ET (DST-aware) ───

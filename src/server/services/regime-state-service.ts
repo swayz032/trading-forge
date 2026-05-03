@@ -324,3 +324,37 @@ export async function getMacroFusedRegimeState(symbol: string): Promise<MacroFus
     return { ...deeparState, macroFused: false };
   }
 }
+
+// ─── W19 Schema 3: Opening Auction Bias ───────────────────────────────────────
+//
+// Exposes the CME opening auction imbalance bias per symbol.
+// Consumed by opening_range_breakout strategies when use_opening_auction_bias=true.
+//
+// This is ADDITIVE to the existing regime pipeline — it does NOT modify
+// DeepAR weights or macro regime probabilities.
+//
+// Fail-open: if no imbalance data is available, returns 'neutral'.
+// Never blocks entries; only provides directional context for ORB strategies.
+
+import type { AuctionBias } from "./opening-auction-service.js";
+
+/**
+ * Get the opening auction bias for a symbol today.
+ * Returns 'neutral' if no Databento imbalance data available.
+ *
+ * Lazy import to avoid circular dependencies — opening-auction-service
+ * does not import from regime-state-service.
+ */
+export async function getOpeningAuctionBias(
+  symbol: string,
+  date?: string,
+): Promise<AuctionBias> {
+  try {
+    const { getOpeningAuctionBias: fetchBias } = await import("./opening-auction-service.js");
+    const { bias } = await fetchBias(symbol, date);
+    return bias;
+  } catch (err) {
+    logger.debug({ err, symbol }, "regime-state-service: opening auction bias unavailable — neutral");
+    return "neutral";
+  }
+}

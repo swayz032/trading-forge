@@ -33,5 +33,6 @@
   "daily_target_dollars": 350.0,
   "source": "manual",
   "sizing_method": "kelly",
-  "tags": ["opening_range", "breakout", "calendar_effect", "mes", "rth", "orb"]
+  "use_opening_auction_bias": true,
+  "tags": ["opening_range", "breakout", "calendar_effect", "mes", "rth", "orb", "auction_bias"]
 }
