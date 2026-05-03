@@ -1,0 +1,11 @@
+{
+  "_fixture": "fixture_losing",
+  "gross_pf": 0.375,
+  "n_losers": 160.0,
+  "n_trades": 200.0,
+  "n_winners": 40.0,
+  "net_pf": 0.3673449229553536,
+  "net_pnl": -10248.0,
+  "total_commission": 248.0,
+  "win_rate": 0.2
+}

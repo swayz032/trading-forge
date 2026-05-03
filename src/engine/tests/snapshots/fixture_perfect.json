@@ -1,0 +1,13 @@
+{
+  "_fixture": "fixture_perfect",
+  "gross_pf": 3.4998250087495624,
+  "max_dd": 2037.2999999999956,
+  "n_losers": 30.0,
+  "n_trades": 100.0,
+  "n_winners": 70.0,
+  "net_pf": 3.3933146811957005,
+  "net_pnl": 4875.900000000001,
+  "sharpe": 10.083367015631408,
+  "total_commission": 124.0,
+  "win_rate": 0.7
+}

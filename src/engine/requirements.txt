@@ -38,6 +38,12 @@ hypothesis>=6.100
 # GPL-3 license; personal/non-commercial use only (matches Trading Forge usage).
 backtrader==1.9.78.123
 
+# Snapshot regression testing (A9 — W11) — TEST-ONLY dependencies.
+# pytest-snapshot: stores/diffs JSON metric snapshots; MIT license; free.
+# ruff: fast Python linter used in pre-commit hook; MIT license; free.
+pytest-snapshot>=0.9.0
+ruff>=0.4.0
+
 # Quantum (optional — graceful fallback to classical when unavailable)
 # pip install qiskit qiskit-aer qiskit-algorithms dwave-samplers dwave-neal quimb pennylane
 qiskit>=2.3.0

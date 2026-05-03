@@ -1,0 +1,12 @@
+{
+  "_fixture": "fixture_regime_shift",
+  "combined_gross_pf": 1.9130434782608696,
+  "degradation_ratio": 16.200000000000003,
+  "early_epoch_net_pnl": 7750.0,
+  "early_epoch_pf": 7.2,
+  "late_epoch_net_pnl": -2500.0,
+  "late_epoch_pf": 0.4444444444444444,
+  "n_trades_early": 100.0,
+  "n_trades_late": 100.0,
+  "n_trades_total": 200.0
+}
