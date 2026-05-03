@@ -218,6 +218,24 @@ class StrategyDSL(BaseModel):
         ),
     )
 
+    # Position sizing method (W13 B7 — Kelly Criterion sizing).
+    # None (default) = use existing fixed/profit_scaling logic (100% backward-compatible).
+    # "kelly" = use kelly_optimal_contracts() from src/engine/sizing.py.
+    # "fixed" = explicit fixed sizing (same as None but self-documenting).
+    # "atr_based" = dynamic ATR sizing (same as None but self-documenting).
+    # Kelly sizing is ADDITIVE with profit_scaling_tier:
+    #   Kelly determines the base contract count; profit tier scales it up.
+    # Kelly sizing NEVER exceeds the firm's contract cap.
+    sizing_method: Optional[Literal["fixed", "kelly", "atr_based"]] = Field(
+        None,
+        description=(
+            "Position sizing method. None = existing fixed/ATR logic (backward-compatible). "
+            "'kelly' = Kelly Criterion optimal sizing (quarter-Kelly by default). "
+            "'fixed' = fixed contracts (same as None, explicit). "
+            "'atr_based' = dynamic ATR sizing (same as None, explicit)."
+        ),
+    )
+
     model_config = {"extra": "forbid"}
 
     @model_validator(mode="after")

@@ -32,5 +32,6 @@
   },
   "daily_target_dollars": 300.0,
   "source": "manual",
+  "sizing_method": "kelly",
   "tags": ["overnight", "asia", "europe", "drift", "session_pattern", "mes", "eth"]
 }

@@ -34,5 +34,6 @@
   },
   "daily_target_dollars": 300.0,
   "source": "manual",
+  "sizing_method": "kelly",
   "tags": ["news", "eia", "crude", "fade", "event_driven", "mcl", "wednesday", "bypass_news_blackout"]
 }

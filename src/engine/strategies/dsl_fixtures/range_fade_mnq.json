@@ -32,5 +32,6 @@
   },
   "daily_target_dollars": 400.0,
   "source": "manual",
+  "sizing_method": "kelly",
   "tags": ["range", "vwap", "fade", "mean_reversion", "mnq", "rth"]
 }

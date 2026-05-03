@@ -35,5 +35,6 @@
   "profit_scaling_tier": {
     "increment": 2,
     "threshold": 3000
-  }
+  },
+  "sizing_method": "kelly"
 }
