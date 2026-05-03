@@ -105,6 +105,11 @@ export const backtests = pgTable(
     gateResult: jsonb("gate_result"),
     gateRejections: jsonb("gate_rejections"),
     resultExtras: jsonb("result_extras"),   // Governor, analytics, long_short_split, bootstrap_ci_95, deflated_sharpe, recency_analysis, statistical_warnings, confidence_intervals (migration 0053)
+    // B10: Minimum Regime Performance — worst per-regime Sharpe across macro regimes.
+    // Computed post-backtest from backtestTrades.macroRegime groupings.
+    // Soft gate: MRP > 0.5 advisory at PAPER → DEPLOY_READY; hard gate after 30 days data.
+    mrpSharpe: numeric("mrp_sharpe"),                    // min Sharpe across all regime groups (null until computed)
+    mrpRegimeBreakdown: jsonb("mrp_regime_breakdown"),   // {regime: sharpe} dict for audit
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),

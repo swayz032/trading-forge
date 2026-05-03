@@ -693,6 +693,91 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       }
     })();
 
+    // ─── B10: MRP (Minimum Regime Performance) computation (fire-and-forget) ──
+    // Computes per-regime Sharpe from backtestTrades.macroRegime groupings and
+    // stores the minimum (worst-regime Sharpe) as mrp_sharpe on the backtest row.
+    //
+    // Reuses backtestTrades already written in the main tx above. Non-blocking.
+    // Null macroRegime trades are bucketed into a synthetic "UNKNOWN" regime group
+    // and excluded from the MRP minimum (only named regimes count for the gate).
+    //
+    // Sharpe per regime: (mean_pnl / std_pnl) * sqrt(252) — annualized.
+    // Requires >= 3 trades in a regime group to compute Sharpe (fewer → ignored).
+    //
+    // mrp_sharpe = min(regime_sharpes.values()) — worst-regime Sharpe.
+    // Soft gate: MRP > 0.5 advisory at PAPER → DEPLOY_READY; hard gate after 30 days.
+    (async () => {
+      try {
+        const trades = await db
+          .select({ pnl: backtestTrades.pnl, macroRegime: backtestTrades.macroRegime })
+          .from(backtestTrades)
+          .where(eq(backtestTrades.backtestId, backtestId));
+
+        if (trades.length === 0) {
+          logger.debug({ backtestId }, "B10 MRP: no trades — skipping MRP computation");
+          return;
+        }
+
+        // Group trades by macroRegime
+        const byRegime: Record<string, number[]> = {};
+        for (const t of trades) {
+          const regime = t.macroRegime ?? "UNKNOWN";
+          if (!byRegime[regime]) byRegime[regime] = [];
+          byRegime[regime].push(parseFloat(String(t.pnl ?? 0)));
+        }
+
+        // Compute per-regime Sharpe (annualized, min 3 trades required)
+        const ANNUALIZE = Math.sqrt(252);
+        const MIN_TRADES_PER_REGIME = 3;
+        const regimeSharpes: Record<string, number> = {};
+
+        for (const [regime, pnls] of Object.entries(byRegime)) {
+          if (regime === "UNKNOWN" || pnls.length < MIN_TRADES_PER_REGIME) continue;
+          const mean = pnls.reduce((s, v) => s + v, 0) / pnls.length;
+          const variance = pnls.reduce((s, v) => s + (v - mean) ** 2, 0) / pnls.length;
+          const std = Math.sqrt(variance);
+          if (std === 0) continue;  // Constant PnL — can't compute meaningful Sharpe
+          regimeSharpes[regime] = (mean / std) * ANNUALIZE;
+        }
+
+        if (Object.keys(regimeSharpes).length === 0) {
+          logger.debug(
+            { backtestId, regimeGroups: Object.keys(byRegime) },
+            "B10 MRP: no regime groups with >= 3 trades — MRP not computed",
+          );
+          return;
+        }
+
+        const mrpSharpeValue = Math.min(...Object.values(regimeSharpes));
+
+        // Update the backtest row with MRP results (best-effort, non-blocking)
+        await db
+          .update(backtests)
+          .set({
+            mrpSharpe: String(mrpSharpeValue),
+            mrpRegimeBreakdown: regimeSharpes as unknown as Record<string, unknown>,
+          })
+          .where(eq(backtests.id, backtestId));
+
+        logger.info(
+          { backtestId, strategyId, mrpSharpe: mrpSharpeValue.toFixed(3), regimeSharpes },
+          "B10 MRP: computed and persisted",
+        );
+
+        if (mrpSharpeValue < 0.5) {
+          logger.warn(
+            { backtestId, strategyId, mrpSharpe: mrpSharpeValue.toFixed(3) },
+            "B10 MRP: mrp_sharpe < 0.5 — strategy has regime-conditional fragility (soft advisory, not a gate yet)",
+          );
+        }
+      } catch (mrpErr) {
+        logger.warn(
+          { backtestId, strategyId, err: mrpErr },
+          "B10 MRP: computation failed (non-blocking — backtest is still completed)",
+        );
+      }
+    })();
+
     // ─── Optional SQA parameter optimization (fire-and-forget) ───
     // Fires for ALL qualifying backtests (non-REJECTED with walk-forward results),
     // not just those explicitly requesting the SQA optimizer.

@@ -561,6 +561,13 @@
       "when": 1746835200000,
       "tag": "0077_lifecycle_pilot_state",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1746921600000,
+      "tag": "0078_mrp_sharpe_column",
+      "breakpoints": true
     }
   ]
 }

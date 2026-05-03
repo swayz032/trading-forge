@@ -1479,6 +1479,80 @@ export class LifecycleService {
           );
         }
 
+        // ── B10: MRP Soft Gate: PAPER → DEPLOY_READY advisory ────────────────
+        // SOFT gate: MRP > 0.5 is advisory for now. Hard gate activates after
+        // 30 days of MRP data accumulates. Log at WARN if violated; never block.
+        //
+        // mrp_sharpe is computed post-backtest (fire-and-forget). If null (pre-B10
+        // backtest or no regime data), log advisory and continue — never block.
+        try {
+          const [mrpBacktest] = await db
+            .select({ mrpSharpe: backtests.mrpSharpe, mrpRegimeBreakdown: backtests.mrpRegimeBreakdown })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          if (mrpBacktest?.mrpSharpe != null) {
+            const mrpValue = parseFloat(String(mrpBacktest.mrpSharpe));
+            const MRP_SOFT_THRESHOLD = 0.5;
+
+            if (mrpValue < MRP_SOFT_THRESHOLD) {
+              logger.warn(
+                {
+                  strategyId: s.id,
+                  mrpSharpe: mrpValue.toFixed(3),
+                  threshold: MRP_SOFT_THRESHOLD,
+                  regimeBreakdown: mrpBacktest.mrpRegimeBreakdown,
+                  transition: "PAPER→DEPLOY_READY",
+                },
+                "B10 MRP soft gate: mrp_sharpe < 0.5 — strategy has regime-conditional fragility (advisory only, promotion continues)",
+              );
+              // Log advisory audit row so analysts can track MRP violations over time
+              await db.insert(auditLog).values({
+                action: "lifecycle.mrp_soft_gate_advisory",
+                entityId: s.id,
+                entityType: "strategy",
+                status: "success",  // advisory — not a block
+                decisionAuthority: "gate",
+                input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                result: {
+                  mrp_sharpe: mrpValue,
+                  threshold: MRP_SOFT_THRESHOLD,
+                  regime_breakdown: mrpBacktest.mrpRegimeBreakdown,
+                  gate_phase: "soft_advisory",
+                  note: "Hard gate activates after 30 days of MRP data",
+                },
+                correlationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "B10 MRP advisory audit insert failed (non-blocking)");
+              });
+            } else {
+              logger.info(
+                { strategyId: s.id, mrpSharpe: mrpValue.toFixed(3), transition: "PAPER→DEPLOY_READY" },
+                "B10 MRP soft gate: mrp_sharpe >= 0.5 — PASSED",
+              );
+            }
+          } else {
+            // No MRP data yet — pre-B10 backtest or strategy with no regime data
+            logger.info(
+              { strategyId: s.id, transition: "PAPER→DEPLOY_READY" },
+              "B10 MRP soft gate: no mrp_sharpe data — advisory skipped (pre-B10 backtest)",
+            );
+          }
+        } catch (mrpGateErr) {
+          // Non-blocking — MRP gate read failure must never abort promotion
+          logger.warn(
+            { strategyId: s.id, err: mrpGateErr },
+            "B10 MRP soft gate: read failed (non-blocking — promotion continues)",
+          );
+        }
+
         // ── A7: Signal Correlation Gate: PAPER → DEPLOY_READY hard block ──────
         // Fail-closed: block promotion if the candidate strategy's signal vector
         // has cosine similarity > 0.85 with ANY DEPLOYED strategy.
