@@ -7,6 +7,20 @@ Output: JSON to stdout, progress/errors to stderr (matches databento.ts bridge p
 
 from __future__ import annotations
 
+# A1 Determinism: import FIRST, before any numpy/polars/vectorbt import.
+# Sets MKL_CBWR=COMPATIBLE, OPENBLAS_NUM_THREADS=1, BLIS_NUM_THREADS=1,
+# OMP_NUM_THREADS=1 at module-load time and applies threadpoolctl limits.
+# enable_determinism() is called when DETERMINISM_MODE=true or in CI
+# (conftest autouse fixture handles the CI case automatically).
+import os as _os
+if _os.environ.get("DETERMINISM_MODE", "").lower() == "true":
+    from src.engine.determinism import enable_determinism as _enable_det
+    _enable_det()
+else:
+    # Still apply env vars at module load (the determinism module does this
+    # at import time even when enable_determinism() is not called explicitly).
+    import src.engine.determinism  # noqa: F401 — side-effect: sets env vars
+
 import json
 import os
 import sys

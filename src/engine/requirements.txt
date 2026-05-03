@@ -25,6 +25,9 @@ scikit-learn>=1.4.0       # LedoitWolf, MinCovDet, GraphicalLassoCV, KMeans
 quantstats>=0.0.62        # QuantStats performance analytics
 psutil>=5.9.0             # Hardware profiling
 
+# Determinism enforcement (A1 — W9)
+threadpoolctl>=3.0.0      # Runtime BLAS/OpenMP thread-count limiter (BSD-3-Clause, free)
+
 # Quantum (optional — graceful fallback to classical when unavailable)
 # pip install qiskit qiskit-aer qiskit-algorithms dwave-samplers dwave-neal quimb pennylane
 qiskit>=2.3.0

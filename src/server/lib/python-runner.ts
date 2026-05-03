@@ -75,9 +75,21 @@ export async function runPythonModule<T = Record<string, unknown>>(
     // 3. Append extra args
     finalArgs.push(...args);
 
+    // A1 Determinism: always inject BLAS/OMP thread-count env vars into every
+    // Python subprocess so MKL/OpenBLAS see them at import time regardless of
+    // whether the parent Node process has them set. These never hurt performance
+    // in backtest/MC/WF subprocesses (they are single-threaded by design) and
+    // eliminate the #1 source of nondeterminism in Python financial code.
+    // DETERMINISM_MODE=true additionally triggers enable_determinism() inside Python.
+    const deterministicEnv: Record<string, string> = {
+      MKL_CBWR: "COMPATIBLE",
+      OPENBLAS_NUM_THREADS: "1",
+      BLIS_NUM_THREADS: "1",
+      OMP_NUM_THREADS: "1",
+    };
     return await new Promise((resolve, reject) => {
       const proc = spawn(pythonCmd, finalArgs, {
-        env: { ...process.env },
+        env: { ...process.env, ...deterministicEnv },
         cwd: PROJECT_ROOT,
       });
 
