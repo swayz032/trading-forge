@@ -13,7 +13,7 @@ import cron from "node-cron";
 import { randomUUID } from "crypto";
 import { eq, and, gte, lte, desc, inArray, isNull, isNotNull } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots } from "./db/schema.js";
+import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
@@ -33,6 +33,15 @@ import { isActive as isPipelineActive, getMode as getPipelineMode } from "./serv
 import { computeAndPersistSessionFeedback } from "./services/paper-session-feedback-service.js";
 import { runMonthlyRealityCheckReport } from "./services/validation-cadence-service.js";
 import { registerRetryHandler } from "./lib/dlq-service.js";
+// C11: Macro regime overlay ingestion + classification
+import {
+  runFredDailyIngestion,
+  runH41Ingestion,
+  runBlsIngestion,
+  runTreasuryAuctionIngestion,
+  runMacroRegimeClassification,
+  invalidateMacroRegimeCache,
+} from "./services/macro-regime-service.js";
 
 let initialized = false;
 
@@ -968,6 +977,108 @@ export function initScheduler() {
     await withRetry("macro-data-sync", SCHEDULER_JOBS["macro-data-sync"].run);
     markJobRun("macro-data-sync");
     emitJobComplete("macro-data-sync", Date.now() - t0macro);
+  });
+
+  // ─── C11: FRED daily macro ingestion — 4 PM ET (weekdays) ────────
+  // Pulls T10Y2Y, DFF, USEPUINDXD, VIXCLS, DTWEXBGS, RRPONTSYD from FRED.
+  // Runs after US market close so daily values are settled.
+  // After ingestion, runs HMM classifier to update macro_regime_states.
+  // Pipeline-gated: C11 ingestion respects pause state (not a safety signal).
+  registerJob("c11-fred-daily", 24 * 60 * 60 * 1000, async () => {
+    const persisted = await runFredDailyIngestion();
+    if (persisted > 0) {
+      // Run HMM classifier immediately after successful ingestion
+      invalidateMacroRegimeCache();
+      await runMacroRegimeClassification();
+    }
+    logger.info({ persisted }, "C11 FRED daily ingestion + classification complete");
+  });
+
+  cron.schedule("0 20,21 * * 1-5", async () => {
+    const now = new Date();
+    const etHour = parseInt(
+      now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+      10,
+    );
+    if (etHour !== 16) return;
+    if (!(await pipelineGate("c11-fred-daily"))) return;
+    const t0 = Date.now();
+    await withRetry("c11-fred-daily", SCHEDULER_JOBS["c11-fred-daily"].run);
+    markJobRun("c11-fred-daily");
+    emitJobComplete("c11-fred-daily", Date.now() - t0);
+  });
+
+  // ─── C11: H.4.1 RRP/TGA ingestion — Friday 9 AM ET ─────────────
+  // H.4.1 is published Thursday 4:30 PM ET; we pull Friday morning
+  // after it's available on FRED. Critical for RRP/TGA stress detection.
+  registerJob("c11-h41-weekly", 7 * 24 * 60 * 60 * 1000, async () => {
+    const persisted = await runH41Ingestion();
+    logger.info({ persisted }, "C11 H.4.1 RRP/TGA ingestion complete");
+  });
+
+  cron.schedule("0 13,14 * * 5", async () => {
+    // Friday only (day 5), 9 AM ET
+    const now = new Date();
+    const etHour = parseInt(
+      now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+      10,
+    );
+    if (etHour !== 9) return;
+    if (!(await pipelineGate("c11-h41-weekly"))) return;
+    const t0 = Date.now();
+    await withRetry("c11-h41-weekly", SCHEDULER_JOBS["c11-h41-weekly"].run);
+    markJobRun("c11-h41-weekly");
+    emitJobComplete("c11-h41-weekly", Date.now() - t0);
+  });
+
+  // ─── C11: BLS release ingestion — 8:35 AM ET on release days ─────
+  // NFP/CPI/PPI/JOLTS are published at 8:30 AM ET; we pull at 8:35 AM
+  // to capture the release. The cron fires daily Mon-Fri at 8:35 AM ET
+  // but only runs ingestion if the economic calendar flags a release day.
+  registerJob("c11-bls-release", 24 * 60 * 60 * 1000, async () => {
+    const persisted = await runBlsIngestion();
+    logger.info({ persisted }, "C11 BLS release ingestion complete");
+  });
+
+  cron.schedule("35 12,13 * * 1-5", async () => {
+    // 8:35 AM ET (UTC 12:35/13:35 for EDT/EST)
+    const now = new Date();
+    const etHourStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etH, etM] = etHourStr.split(":");
+    if (parseInt(etH, 10) !== 8 || parseInt(etM, 10) !== 35) return;
+    if (!(await pipelineGate("c11-bls-release"))) return;
+    const t0 = Date.now();
+    await withRetry("c11-bls-release", SCHEDULER_JOBS["c11-bls-release"].run);
+    markJobRun("c11-bls-release");
+    emitJobComplete("c11-bls-release", Date.now() - t0);
+  });
+
+  // ─── C11: Treasury auction ingestion — daily 3 PM ET ─────────────
+  // TreasuryDirect publishes auction results same-day. We poll daily at
+  // 3 PM ET to capture any results published during the trading day.
+  registerJob("c11-treasury-auctions", 24 * 60 * 60 * 1000, async () => {
+    const persisted = await runTreasuryAuctionIngestion();
+    logger.info({ persisted }, "C11 Treasury auction ingestion complete");
+  });
+
+  cron.schedule("0 19,20 * * 1-5", async () => {
+    // 3 PM ET (UTC 19:00/20:00 for EDT/EST)
+    const now = new Date();
+    const etHour = parseInt(
+      now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+      10,
+    );
+    if (etHour !== 15) return;
+    if (!(await pipelineGate("c11-treasury-auctions"))) return;
+    const t0 = Date.now();
+    await withRetry("c11-treasury-auctions", SCHEDULER_JOBS["c11-treasury-auctions"].run);
+    markJobRun("c11-treasury-auctions");
+    emitJobComplete("c11-treasury-auctions", Date.now() - t0);
   });
 
   // ─── C2: Day archetype classifier — daily at 6 AM ET (DST-aware) ───

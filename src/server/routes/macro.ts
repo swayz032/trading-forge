@@ -1,19 +1,37 @@
 /**
  * Macro Routes — FRED/BLS/EIA macro data overlay + regime classification.
  *
+ * Existing routes (pre-C11):
  * GET   /api/macro/current            — Current macro regime (latest snapshot + classification)
  * GET   /api/macro/history            — Historical snapshots (with pagination ?limit=&offset=)
  * POST  /api/macro/sync               — Trigger manual data sync from FRED/BLS/EIA
  * GET   /api/macro/calendar           — Upcoming FOMC/CPI/NFP events
  * GET   /api/macro/strategy-fit/:id   — Strategy performance across macro regimes
+ *
+ * C11 HMM routes (4-state macro regime overlay):
+ * GET   /api/macro/regime/current     — Current 4-state HMM regime + hard gate status
+ * GET   /api/macro/regime/history     — Last N days of HMM regime states
+ * GET   /api/macro/series/:id         — Recent observations for a C11 macro series
+ * POST  /api/macro/ingest/fred        — Manual trigger: FRED daily pull (admin)
+ * POST  /api/macro/ingest/h41         — Manual trigger: H.4.1 pull (admin)
+ * POST  /api/macro/classify           — Manual trigger: run HMM classifier (admin)
  */
 
 import { Router } from "express";
 import { db } from "../db/index.js";
-import { macroSnapshots, backtests, backtestTrades } from "../db/schema.js";
-import { desc, sql, inArray } from "drizzle-orm";
+import { macroSnapshots, macroRegimeStates, backtests, backtestTrades } from "../db/schema.js";
+import { desc, sql, inArray, and, gte } from "drizzle-orm";
 
 import { runPythonModule } from "../lib/python-runner.js";
+import { authMiddleware } from "../middleware/auth.js";
+import {
+  getLatestMacroRegimeState,
+  getMacroSeriesHistory,
+  runFredDailyIngestion,
+  runH41Ingestion,
+  runMacroRegimeClassification,
+} from "../services/macro-regime-service.js";
+import { evaluateMacroGates } from "../services/macro-gate-service.js";
 
 export const macroRoutes = Router();
 
@@ -351,5 +369,131 @@ macroRoutes.get("/strategy-fit/:id", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Strategy-fit analysis failed");
     res.status(500).json({ error: "Strategy-fit analysis failed", details: String(err) });
+  }
+});
+
+// ─── C11: GET /api/macro/regime/current ───────────────────────────
+// Current 4-state HMM macro regime state + hard gate evaluation
+macroRoutes.get("/regime/current", async (req, res) => {
+  try {
+    const state = await getLatestMacroRegimeState();
+
+    if (!state) {
+      return res.status(200).json({
+        available: false,
+        message: "No C11 macro regime state — FRED ingestion cron may not have run yet.",
+        regime: null,
+      });
+    }
+
+    const gateES = await evaluateMacroGates("ES", "long");
+    const gateMCL = await evaluateMacroGates("MCL", "long");
+
+    return res.json({
+      available: true,
+      regime: state,
+      gates: {
+        ES_long: { allowed: gateES.allowed, reason: gateES.gateReason, severity: gateES.severity },
+        MCL_long: { allowed: gateMCL.allowed, reason: gateMCL.gateReason, severity: gateMCL.severity },
+        fomc_size_reduction: gateES.fomcSizeReduction,
+      },
+    });
+  } catch (err) {
+    req.log.error({ err }, "C11 GET /api/macro/regime/current failed");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── C11: GET /api/macro/regime/history ──────────────────────────
+macroRoutes.get("/regime/history", async (req, res) => {
+  try {
+    const limitDays = Math.min(parseInt(String(req.query.days ?? "30"), 10), 365);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - limitDays);
+
+    const rows = await db
+      .select()
+      .from(macroRegimeStates)
+      .where(gte(macroRegimeStates.stateDate, cutoff.toISOString().slice(0, 10)))
+      .orderBy(desc(macroRegimeStates.stateDate))
+      .limit(limitDays);
+
+    return res.json({
+      days: limitDays,
+      count: rows.length,
+      history: rows.map((r) => ({
+        date: String(r.stateDate),
+        dominant_state: r.dominantState,
+        prob_growth: parseFloat(r.probGrowth ?? "0"),
+        prob_inflation: parseFloat(r.probInflation ?? "0"),
+        prob_crisis: parseFloat(r.probCrisis ?? "0"),
+        prob_easing: parseFloat(r.probEasing ?? "0"),
+        crisis_gate_triggered: r.crisisGateTriggered,
+        fomc_day_proximity: r.fomcDayProximity,
+        macro_release_day: r.macroReleaseDay,
+      })),
+    });
+  } catch (err) {
+    req.log.error({ err }, "C11 GET /api/macro/regime/history failed");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── C11: GET /api/macro/series/:id ─────────────────────────────
+macroRoutes.get("/series/:id", async (req, res) => {
+  try {
+    const seriesId = req.params.id;
+    if (!seriesId) return res.status(400).json({ error: "series id required" });
+
+    const limitDays = Math.min(parseInt(String(req.query.days ?? "90"), 10), 365);
+    const data = await getMacroSeriesHistory(seriesId, limitDays);
+
+    return res.json({
+      series_id: seriesId,
+      days: limitDays,
+      count: data.length,
+      observations: data,
+    });
+  } catch (err) {
+    req.log.error({ err }, "C11 GET /api/macro/series/:id failed");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── C11: POST /api/macro/ingest/fred (admin) ────────────────────
+macroRoutes.post("/ingest/fred", authMiddleware, async (req, res) => {
+  try {
+    const count = await runFredDailyIngestion();
+    return res.json({ status: "ok", persisted: count });
+  } catch (err) {
+    req.log.error({ err }, "C11 POST /api/macro/ingest/fred failed");
+    return res.status(500).json({ error: "FRED ingestion failed" });
+  }
+});
+
+// ─── C11: POST /api/macro/ingest/h41 (admin) ─────────────────────
+macroRoutes.post("/ingest/h41", authMiddleware, async (req, res) => {
+  try {
+    const count = await runH41Ingestion();
+    return res.json({ status: "ok", persisted: count });
+  } catch (err) {
+    req.log.error({ err }, "C11 POST /api/macro/ingest/h41 failed");
+    return res.status(500).json({ error: "H.4.1 ingestion failed" });
+  }
+});
+
+// ─── C11: POST /api/macro/classify (admin) ───────────────────────
+macroRoutes.post("/classify", authMiddleware, async (req, res) => {
+  try {
+    const state = await runMacroRegimeClassification();
+    if (!state) {
+      return res.status(422).json({
+        error: "HMM classification failed or insufficient macro_features data (need 30+ rows)",
+      });
+    }
+    return res.json({ status: "ok", state });
+  } catch (err) {
+    req.log.error({ err }, "C11 POST /api/macro/classify failed");
+    return res.status(500).json({ error: "Classification failed" });
   }
 });

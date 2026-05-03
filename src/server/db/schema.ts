@@ -486,6 +486,55 @@ export const macroSnapshots = pgTable(
   ]
 );
 
+// ─── C11: Macro Features (ingestion store) ────────────────────
+// Look-ahead-safe provenance for all macro data observations.
+// publication_timestamp is the look-ahead barrier — backtests must
+// filter on this field, NOT series_date.
+// Applied migration: 0084_macro_features.sql
+export const macroFeatures = pgTable(
+  "macro_features",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    seriesId: text("series_id").notNull(),        // T10Y2Y, DFF, VIXCLS, RRPONTSYD, NFP, CPI, etc.
+    seriesDate: date("series_date").notNull(),      // date the value applies to
+    publicationTimestamp: timestamp("publication_timestamp").notNull(), // look-ahead barrier
+    value: numeric("value").notNull(),
+    revisionNumber: integer("revision_number").notNull().default(1), // 1=initial release
+    source: text("source").notNull(),               // "fred" | "bls" | "treasury_direct"
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_macro_features_series_time").on(table.seriesId, table.seriesDate),
+    index("idx_macro_features_publication").on(table.publicationTimestamp),
+    uniqueIndex("idx_macro_features_unique").on(table.seriesId, table.seriesDate, table.revisionNumber),
+  ]
+);
+
+// ─── C11: Macro Regime States (HMM classifier output) ─────────
+// Daily 4-state HMM classification: Growth/Inflation/Crisis/Easing.
+// Read by macro-gate-service.ts, regime-state-service.ts, paper-signal-service.ts.
+// Applied migration: 0084_macro_features.sql
+export const macroRegimeStates = pgTable(
+  "macro_regime_states",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    stateDate: date("state_date").notNull().unique(),
+    probGrowth: numeric("prob_growth").notNull(),
+    probInflation: numeric("prob_inflation").notNull(),
+    probCrisis: numeric("prob_crisis").notNull(),
+    probEasing: numeric("prob_easing").notNull(),
+    dominantState: text("dominant_state").notNull(),  // "Growth" | "Inflation" | "Crisis" | "Easing"
+    crisisGateTriggered: boolean("crisis_gate_triggered").notNull().default(false),
+    fomcDayProximity: integer("fomc_day_proximity"),   // days to (+) or since (-) FOMC; null=unknown
+    macroReleaseDay: boolean("macro_release_day").notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_macro_regime_states_date").on(table.stateDate),
+    index("idx_macro_regime_states_crisis").on(table.crisisGateTriggered, table.stateDate),
+  ]
+);
+
 // ─── Strategy Graveyard ───────────────────────────────────────
 // Vector-searchable archive of every failed strategy.
 // New candidates checked before wasting backtest compute.

@@ -177,6 +177,7 @@ def compute_position_sizes(
     max_contracts: int | None = None,
     profit_scaling_tier: dict | None = None,
     kelly_params: dict | None = None,
+    fomc_proximity: int | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute position sizes for each bar.
 
@@ -201,6 +202,10 @@ def compute_position_sizes(
             Only applies to dynamic_atr mode; fixed mode ignores this parameter.
         kelly_params: Optional dict for W13 B7 Kelly Criterion sizing.
             When None (default), falls through to existing ATR/fixed logic (backward-compatible).
+            When provided, must contain:
+        fomc_proximity: C11 FOMC day proximity in days. When abs(fomc_proximity) <= 1,
+            all computed sizes are halved (floor, minimum 1). None = no reduction.
+            Applied LAST, after all other sizing (Kelly, tier, cap).
             When provided, must contain:
                 {
                     "edge": float,            # win rate probability (0 < p < 1)
@@ -339,5 +344,19 @@ def compute_position_sizes(
             return float(scaled)
 
         sizes = np.array([_scale_size(s) for s in sizes], dtype=np.float64)
+
+    # C11: FOMC proximity reduction (applied last, after all other sizing).
+    # When within ±1 day of FOMC: halve all positions (floor, minimum 1).
+    # Determinism: pure arithmetic on existing sizes array, no randomness.
+    if fomc_proximity is not None and abs(fomc_proximity) <= 1:
+        fomc_sizes = np.where(
+            np.isnan(sizes),
+            np.nan,
+            np.maximum(1.0, np.floor(sizes / 2.0)),
+        )
+        sizes = fomc_sizes
+        logger.debug(
+            "C11 FOMC ±1 day: all position sizes halved (proximity=%d)", fomc_proximity
+        )
 
     return sizes, over_risk

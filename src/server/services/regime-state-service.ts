@@ -225,3 +225,102 @@ export function getAllRegimeState(): Record<string, RegimeState> {
   for (const [sym, state] of regimeStateBySymbol) snapshot[sym] = state;
   return snapshot;
 }
+
+// ─── C11: Macro-fused regime state ────────────────────────────────
+//
+// Combines DeepAR microstructure regime with HMM macro regime probabilities
+// via macro_regime_fusion.ts (macro weight CAPPED at 25-30%).
+//
+// Downstream consumers can call getMacroFusedRegimeState() instead of
+// getRegimeState() to get a macro-aware regime probability vector.
+// The fusion is additive — DeepAR remains the authority (70-75% weight).
+
+export interface MacroFusedRegimeState extends RegimeState {
+  /** Whether macro data was available and fused */
+  macroFused: boolean;
+  /** Macro-fused trending probability */
+  fusedTrending?: number;
+  /** Macro-fused vol expansion probability */
+  fusedVolExpansion?: number;
+  /** Macro-fused range-bound probability */
+  fusedRangeBound?: number;
+  /** Raw macro crisis probability (for gate evaluation) */
+  macroCrisisProb?: number;
+  /** Dominant HMM macro state */
+  dominantMacroState?: string;
+}
+
+/**
+ * Get macro-fused regime state for a symbol.
+ * Wraps getRegimeState() + macro regime fusion (25-30% macro weight cap).
+ * Falls back to raw DeepAR state when macro regime unavailable.
+ */
+export async function getMacroFusedRegimeState(symbol: string): Promise<MacroFusedRegimeState> {
+  const deeparState = await getRegimeState(symbol);
+
+  try {
+    // Import lazily to avoid circular dependency
+    const { getLatestMacroRegimeState } = await import("./macro-regime-service.js");
+    const macroState = await getLatestMacroRegimeState();
+
+    if (!macroState) {
+      return { ...deeparState, macroFused: false };
+    }
+
+    // Run fusion via Python to keep math in the engine layer
+    // For performance: use a lightweight in-process implementation
+    const macroProbs = {
+      prob_growth: macroState.probGrowth,
+      prob_inflation: macroState.probInflation,
+      prob_crisis: macroState.probCrisis,
+      prob_easing: macroState.probEasing,
+    };
+
+    const deeparWeights = {
+      trending: deeparState.weights.trending,
+      high_vol: deeparState.weights.high_vol,
+      mean_revert: deeparState.weights.mean_revert,
+    };
+
+    // Inline fusion (mirrors macro_regime_fusion.py logic for TS layer)
+    // macro_weight = 0.25 (capped at 0.30 per C11 spec)
+    const macroWeight = Math.min(0.25, 0.30);
+    const priceWeight = 1.0 - macroWeight;
+
+    const { prob_growth: pG, prob_inflation: pI, prob_crisis: pC, prob_easing: pE } = macroProbs;
+
+    // Macro → microstructure mapping (same as Python fusion)
+    let macroTrending = pG * 0.7 + pE * 0.4;
+    let macroVol = pI * 0.5 + pC * 0.6;
+    let macroRange = pC * 0.4 + pE * 0.6 + pI * 0.3;
+    const macroTotal = macroTrending + macroVol + macroRange;
+    if (macroTotal > 1e-6) {
+      macroTrending /= macroTotal;
+      macroVol /= macroTotal;
+      macroRange /= macroTotal;
+    }
+
+    let fusedTrending = deeparWeights.trending * priceWeight + macroTrending * macroWeight;
+    let fusedVol = deeparWeights.high_vol * priceWeight + macroVol * macroWeight;
+    let fusedRange = deeparWeights.mean_revert * priceWeight + macroRange * macroWeight;
+    const fusedTotal = fusedTrending + fusedVol + fusedRange;
+    if (fusedTotal > 0) {
+      fusedTrending /= fusedTotal;
+      fusedVol /= fusedTotal;
+      fusedRange /= fusedTotal;
+    }
+
+    return {
+      ...deeparState,
+      macroFused: true,
+      fusedTrending: Math.round(fusedTrending * 1e6) / 1e6,
+      fusedVolExpansion: Math.round(fusedVol * 1e6) / 1e6,
+      fusedRangeBound: Math.round(fusedRange * 1e6) / 1e6,
+      macroCrisisProb: macroState.probCrisis,
+      dominantMacroState: macroState.dominantState,
+    };
+  } catch (err) {
+    logger.warn({ err, symbol }, "C11 macro fusion failed — falling back to DeepAR-only state");
+    return { ...deeparState, macroFused: false };
+  }
+}

@@ -2304,15 +2304,74 @@ export async function evaluateSignals(
       // Shadow signal is already persisted for effectiveness analysis.
       riskGatePassed = false;
     } else {
+      // ─── C11: Macro hard gate check (BEFORE risk gate) ─────────────
+      // Fail-open: if evaluateMacroGates throws or macro data unavailable,
+      // trading continues unblocked. Same fail-open pattern as calendar_filter.
+      let macroGateBlocked = false;
       try {
-        const gateResult = await checkRiskGate(sessionId, symbol, config.contracts);
-        riskGatePassed = gateResult.allowed;
-        if (!riskGatePassed) {
-          logger.info({ sessionId, symbol, reason: gateResult.reason }, "Risk gate rejected entry");
+        const { evaluateMacroGates } = await import("./macro-gate-service.js");
+        const macroGate = await evaluateMacroGates(
+          symbol.toUpperCase(),
+          config.side as "long" | "short",
+          sessionConfig.strategyId,
+        );
+        if (!macroGate.allowed) {
+          macroGateBlocked = true;
+          span.setAttribute("macro_gate_blocked", true);
+          span.setAttribute("macro_gate_reason", macroGate.gateReason);
+          logger.info(
+            { sessionId, symbol, direction: config.side, reason: macroGate.gateReason, severity: macroGate.severity },
+            "C11 macro gate BLOCKED entry signal",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "macro_gate_blocked",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _macro_gate_reason: macroGate.gateReason,
+              _macro_crisis_prob: macroGate.macroContext.probCrisis,
+              _macro_dominant_state: macroGate.macroContext.dominantState,
+              _macro_severity: macroGate.severity,
+            },
+            acted: false,
+            reason: `macro_gate_blocked: ${macroGate.gateReason}`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist macro gate block log"));
         }
-      } catch (err) {
-        logger.error({ err, sessionId }, "Risk gate check failed — skipping entry");
+        // C11: FOMC proximity → halve contracts (advisory, not a block)
+        // The halved contract count is stored in fomcReducedContracts and applied
+        // at position open time below.
+        if (macroGate.fomcSizeReduction && !macroGateBlocked) {
+          const fomcReducedContracts = Math.max(1, Math.floor((config.contracts ?? 1) / 2));
+          span.setAttribute("fomc_size_reduction", true);
+          span.setAttribute("fomc_reduced_contracts", fomcReducedContracts);
+          logger.info(
+            { sessionId, symbol, originalContracts: config.contracts, fomcReducedContracts },
+            "C11 FOMC ±1 day: contract size advisory halved (applied at entry)",
+          );
+          // Store in span attributes for downstream position open (best-effort signal)
+          span.setAttribute("c11_fomc_contracts", fomcReducedContracts);
+        }
+      } catch (macroGateErr) {
+        logger.warn({ err: macroGateErr, sessionId, symbol }, "C11 macro gate check error — fail-open, proceeding");
+        span.setAttribute("macro_gate_error", true);
+      }
+
+      if (macroGateBlocked) {
         riskGatePassed = false;
+      } else {
+        try {
+          const gateResult = await checkRiskGate(sessionId, symbol, config.contracts);
+          riskGatePassed = gateResult.allowed;
+          if (!riskGatePassed) {
+            logger.info({ sessionId, symbol, reason: gateResult.reason }, "Risk gate rejected entry");
+          }
+        } catch (err) {
+          logger.error({ err, sessionId }, "Risk gate check failed — skipping entry");
+          riskGatePassed = false;
+        }
       }
     }
 

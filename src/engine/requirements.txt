@@ -28,6 +28,13 @@ psutil>=5.9.0             # Hardware profiling
 # Determinism enforcement (A1 — W9)
 threadpoolctl>=3.0.0      # Runtime BLAS/OpenMP thread-count limiter (BSD-3-Clause, free)
 
+# C11 Macro Regime Overlay (W18) — free government APIs
+# fredapi: MIT-licensed Python wrapper for FRED API (free tier: 120 req/min).
+# NOTE: The existing src/data/macro/fred_client.py uses stdlib urllib (no fredapi dep).
+# fredapi is included as an alternative / convenience wrapper if needed in future.
+# Current C11 implementation uses fred_client.py directly (zero new deps).
+fredapi>=0.5.2
+
 # Property-based testing (A6 — W11) — TEST-ONLY dependency.
 # MIT-licensed, free. Hypothesis fuzzes inputs to catch edge cases human tests miss.
 # Uses fixed seed by default (settings.deriving_via = ...) for CI reproducibility.
