@@ -27,6 +27,7 @@ import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
 import { strategyPromotions } from "../lib/metrics-registry.js";
+import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -1572,6 +1573,17 @@ export class LifecycleService {
               "Pine compile failed after DEPLOY_READY promotion (non-blocking)",
             );
           });
+
+          // B5: Fire-and-forget multi-firm eligibility check.
+          // Runs AFTER the promotion commits — does NOT block DEPLOY_READY.
+          // Iterates all 8 configured firms, stores one row per firm in
+          // strategy_firm_eligibility for human review and B7 Kelly sizing.
+          this.triggerMultiFirmEligibility(s.id, correlationId ?? undefined).catch((mfErr) => {
+            logger.warn(
+              { strategyId: s.id, err: mfErr },
+              "B5 multi-firm eligibility check failed after DEPLOY_READY promotion (non-blocking)",
+            );
+          });
         }
       } else if (tradingDays >= 30 && rollingSharpe < 1.5) {
         logger.warn({ id: s.id, rollingSharpe, tradingDays }, "DEPLOY_READY blocked: rolling Sharpe < 1.5");
@@ -1667,6 +1679,38 @@ export class LifecycleService {
   }
 
   /**
+   * B5: Fire-and-forget multi-firm eligibility check.
+   *
+   * Called after PAPER → DEPLOY_READY promotion. Fetches the latest completed
+   * backtest ID and delegates to evaluateMultiFirmEligibility() which runs
+   * compliance_gate.py for each of the 8 configured firms and persists one
+   * strategy_firm_eligibility row per firm.
+   *
+   * Does NOT gate or reverse the promotion — purely additive.
+   */
+  private async triggerMultiFirmEligibility(
+    strategyId: string,
+    correlationId?: string,
+  ): Promise<void> {
+    // Resolve the latest completed backtest ID for compliance input
+    const [latestBt] = await db
+      .select({ id: backtests.id })
+      .from(backtests)
+      .where(
+        and(
+          eq(backtests.strategyId, strategyId),
+          eq(backtests.status, "completed"),
+        ),
+      )
+      .orderBy(desc(backtests.createdAt))
+      .limit(1);
+
+    const backtestId = latestBt?.id ?? null;
+
+    await evaluateMultiFirmEligibility(strategyId, backtestId, correlationId);
+  }
+
+  /**
    * Check for auto-demotions: DEPLOYED → DECLINING if rolling Sharpe < 1.0.
    */
   async checkAutoDemotions(context?: { correlationId?: string }): Promise<string[]> {
@@ -1686,7 +1730,36 @@ export class LifecycleService {
         if (result.success) {
           demoted.push(s.id);
 
-          // Fire-and-forget: trigger self-evolution for declining strategy
+          // Emit regen.auto_triggered audit row — intent record before the fire-and-forget call.
+          // This serves as the idempotency marker for the critic-feedback daily sweep
+          // (checkDeclingAndTriggerRegen), ensuring it won't re-fire on the same strategy
+          // within the 7-day cooldown window. Written fire-and-forget (non-blocking).
+          const declineReason = `rolling_sharpe_${sharpe.toFixed(3)}_below_1.0`;
+          db.insert(auditLog).values({
+            action: "regen.auto_triggered",
+            entityType: "strategy",
+            entityId: s.id,
+            input: {
+              strategyName: s.name,
+              generation: s.generation,
+              triggerPath: "checkAutoDemotions",
+              declineReason,
+              rollingSharpe30d: sharpe,
+            },
+            result: {
+              note: "evolution auto-spawn fired (fire-and-forget; check strategy.evolved audit row for outcome)",
+            },
+            status: "pending",
+            decisionAuthority: "scheduler",
+            correlationId: correlationId ?? null,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "regen.auto_triggered audit insert failed (non-blocking)");
+          });
+
+          // Fire-and-forget: trigger self-evolution for declining strategy.
+          // evolveStrategy() internally guards: pipeline pause, max generations, 7-day
+          // cooldown, circuit breaker. Errors are non-blocking — lifecycle demotion already
+          // committed above and the daily sweep (checkDeclingAndTriggerRegen) will retry.
           evolveStrategy(s.id, { correlationId }).then((evoResult) => {
             logger.info({ strategyId: s.id, ...evoResult }, "Auto-evolution completed for declining strategy");
           }).catch((evoErr) => {

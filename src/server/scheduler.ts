@@ -1638,6 +1638,35 @@ export function initScheduler() {
     emitJobComplete("critic-feedback", Date.now() - t0cf);
   });
 
+  // ─── B4 W13: Regen auto-trigger daily sweep — 2 AM ET daily ─────────────
+  // Sweeps all DECLINING strategies that have not had a regen attempt in the
+  // last 7 days and auto-spawns evolveStrategy() for each.
+  // Covers ALL DECLINING entry paths: checkAutoDemotions (DEPLOYED→DECLINING),
+  // manual lifecycle PATCH, PAPER→DECLINING drift, TESTING→DECLINING failure.
+  // checkAutoDemotions already fires evolveStrategy() immediately on demotion;
+  // this sweep is the safety net for strategies that arrived via other paths
+  // or where the initial fire-and-forget was lost (e.g. crash, circuit open).
+  // Guards: pipeline pause, 7-day cooldown, max-generation, per-strategy error isolation.
+  registerJob("regen-declining-sweep", 24 * 60 * 60 * 1000, async () => {
+    const { checkDeclingAndTriggerRegen } = await import("./services/critic-feedback-service.js");
+    await checkDeclingAndTriggerRegen({ correlationId: randomUUID() });
+  });
+
+  // Run at 6:00 and 7:00 UTC daily to cover EDT (UTC-4) and EST (UTC-5) for 2 AM ET.
+  cron.schedule("0 6,7 * * *", async () => {
+    const now = new Date();
+    const etHour = Number(
+      now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+    );
+    if (etHour !== 2) return;
+    if (!(await pipelineGate("regen-declining-sweep"))) return;
+    logger.info("Scheduler: Regen declining sweep (2 AM ET daily)");
+    const t0regen = Date.now();
+    await withRetry("regen-declining-sweep", SCHEDULER_JOBS["regen-declining-sweep"].run);
+    markJobRun("regen-declining-sweep");
+    emitJobComplete("regen-declining-sweep", Date.now() - t0regen);
+  });
+
   // ─── Prompt A/B test resolution — weekly Sunday 11 PM ET ──
   registerJob("prompt-ab-resolution", 7 * 24 * 60 * 60 * 1000, async () => {
     const { resolveAbTests } = await import("./services/prompt-evolution-service.js");
@@ -1831,7 +1860,7 @@ export function initScheduler() {
     emitJobComplete("tournament-staleness-check", Date.now() - t0tourn);
   });
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h)");
 
   // ─── Startup reconciliation: catch up missed jobs ─────────
   reconcileMissedRuns().then(() => {

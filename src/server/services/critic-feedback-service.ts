@@ -1,17 +1,33 @@
 /**
- * Critic Feedback Service — Evaluates critic accuracy over time.
+ * Critic Feedback Service — Evaluates critic accuracy over time, and auto-triggers
+ * strategy regeneration when strategies enter DECLINING state.
  *
- * Compares strategies the critic approved (passed into PAPER or beyond)
- * against their actual lifecycle outcomes. Tracks false positive rate
- * and auto-tightens thresholds when too many approved strategies fail.
+ * Two responsibilities:
+ * 1. evaluateCriticAccuracy() — weekly: compare approved strategies' paper
+ *    performance against lifecycle outcomes, auto-tighten thresholds on high FPR.
+ * 2. checkDeclingAndTriggerRegen() — daily sweep: find all strategies in DECLINING
+ *    state that have not had a regen attempt in the last 7 days and auto-spawn
+ *    evolution via evolveStrategy(). Catches DECLINING entries from ALL paths:
+ *    - checkAutoDemotions() (DEPLOYED → DECLINING via Sharpe < 1.0)
+ *    - Manual lifecycle PATCH (any state → DECLINING)
+ *    - PAPER → DECLINING (drift demotion)
+ *    - TESTING → DECLINING (catastrophic failure)
  *
- * Runs weekly via scheduler.
+ * Throttling / idempotency / recursion guards:
+ * - 7-day cooldown per strategy (enforced by evolveStrategy() internally; also
+ *   checked here via audit_log to prevent even calling evolveStrategy() on cooldown)
+ * - Max 3 generations per lineage (enforced by evolveStrategy()'s MAX_GENERATIONS)
+ * - Pipeline pause guard: isActive() check at sweep entry — skip entire sweep
+ * - Graceful failure: per-strategy errors are caught and logged; sweep continues
+ * - Every auto-trigger emits a regen.auto_triggered audit_log row for observability
  */
 
 import { db } from "../db/index.js";
-import { strategies, subsystemMetrics, systemParameters, systemParameterHistory } from "../db/schema.js";
-import { sql, eq } from "drizzle-orm";
+import { strategies, subsystemMetrics, systemParameters, systemParameterHistory, auditLog } from "../db/schema.js";
+import { sql, eq, and, gte, or } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
+import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { evolveStrategy } from "./evolution-service.js";
 
 /**
  * Evaluate critic accuracy by comparing approved strategies' paper performance
@@ -133,4 +149,240 @@ export async function evaluateCriticAccuracy(): Promise<{
   );
 
   return { totalEvaluated: total, maintained, demoted, accuracy, falsePositiveRate };
+}
+
+// ─── Regen auto-trigger constants ─────────────────────────────────────────────
+/** Matches MAX_GENERATIONS in evolution-service.ts — variants from any lineage root
+ *  that has already reached generation 3 are silently skipped (evolveStrategy()
+ *  would retire them instead of spawning more variants). */
+const REGEN_MAX_GENERATION = 3;
+
+/** Must match COOLDOWN_DAYS in evolution-service.ts. */
+const REGEN_COOLDOWN_DAYS = 7;
+
+/** audit_log action emitted when this sweep fires evolution for a strategy. */
+const REGEN_AUDIT_ACTION = "regen.auto_triggered";
+
+/**
+ * Daily sweep: find all DECLINING strategies that have not had a regen attempt
+ * in the last 7 days and auto-spawn evolution.
+ *
+ * Design:
+ * - Queries strategies in DECLINING state.
+ * - For each, checks audit_log for a recent regen.auto_triggered row (idempotency).
+ * - Skips strategies at or beyond MAX_GENERATIONS (evolveStrategy() would retire
+ *   them; this check avoids an unnecessary DB round-trip to the Python evolver).
+ * - Skips the entire sweep when the pipeline is paused.
+ * - Emits regen.auto_triggered audit row BEFORE calling evolveStrategy() so that
+ *   the intent is durable even if the evolution call crashes.
+ * - Errors per strategy are caught and logged; the sweep continues to the next.
+ *
+ * Returns a summary of what happened for each DECLINING strategy.
+ */
+export async function checkDeclingAndTriggerRegen(context?: {
+  correlationId?: string;
+}): Promise<{
+  sweepRan: boolean;
+  skippedPipelinePaused: boolean;
+  total: number;
+  triggered: number;
+  skippedCooldown: number;
+  skippedMaxGeneration: number;
+  errors: number;
+  triggeredStrategyIds: string[];
+}> {
+  const correlationId = context?.correlationId;
+
+  // ── Pipeline pause guard ─────────────────────────────────────────────────
+  if (!(await isPipelineActive())) {
+    logger.info({ fn: "checkDeclingAndTriggerRegen" }, "Regen sweep skipped: pipeline paused");
+    return {
+      sweepRan: false,
+      skippedPipelinePaused: true,
+      total: 0,
+      triggered: 0,
+      skippedCooldown: 0,
+      skippedMaxGeneration: 0,
+      errors: 0,
+      triggeredStrategyIds: [],
+    };
+  }
+
+  // ── Find all DECLINING strategies ────────────────────────────────────────
+  const decliningStrategies = await db
+    .select({
+      id: strategies.id,
+      name: strategies.name,
+      generation: strategies.generation,
+      parentStrategyId: strategies.parentStrategyId,
+      lifecycleState: strategies.lifecycleState,
+      lifecycleChangedAt: strategies.lifecycleChangedAt,
+      rollingSharpe30d: strategies.rollingSharpe30d,
+    })
+    .from(strategies)
+    .where(eq(strategies.lifecycleState, "DECLINING"));
+
+  const total = decliningStrategies.length;
+
+  if (total === 0) {
+    logger.info({ fn: "checkDeclingAndTriggerRegen" }, "Regen sweep: no DECLINING strategies found");
+    return {
+      sweepRan: true,
+      skippedPipelinePaused: false,
+      total: 0,
+      triggered: 0,
+      skippedCooldown: 0,
+      skippedMaxGeneration: 0,
+      errors: 0,
+      triggeredStrategyIds: [],
+    };
+  }
+
+  logger.info({ fn: "checkDeclingAndTriggerRegen", total, correlationId }, "Regen sweep started");
+
+  const cooldownCutoff = new Date(Date.now() - REGEN_COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
+  let triggered = 0;
+  let skippedCooldown = 0;
+  let skippedMaxGeneration = 0;
+  let errors = 0;
+  const triggeredStrategyIds: string[] = [];
+
+  for (const s of decliningStrategies) {
+    try {
+      // ── Recursion / max-generation guard ──────────────────────────────────
+      // Strategies at or beyond MAX_GENERATIONS will be retired by evolveStrategy(),
+      // not evolved. Skip the trigger entirely — no audit row needed, no Python call.
+      if (s.generation >= REGEN_MAX_GENERATION) {
+        logger.info(
+          { fn: "checkDeclingAndTriggerRegen", strategyId: s.id, generation: s.generation },
+          "Regen sweep: skipping (max generation reached)",
+        );
+        skippedMaxGeneration++;
+        continue;
+      }
+
+      // ── Idempotency guard: 7-day cooldown per strategy ────────────────────
+      // Check audit_log for a recent regen.auto_triggered row for this strategy.
+      // This prevents re-triggering on strategies where evolution is already in
+      // progress or was attempted recently (evolveStrategy() also has this guard
+      // internally, but the outer check avoids a wasted Python LLM call).
+      const [recentRegenRow] = await db
+        .select({ id: auditLog.id, createdAt: auditLog.createdAt })
+        .from(auditLog)
+        .where(
+          and(
+            eq(auditLog.action, REGEN_AUDIT_ACTION),
+            eq(auditLog.entityType, "strategy"),
+            eq(auditLog.entityId, s.id),
+            gte(auditLog.createdAt, cooldownCutoff),
+          ),
+        )
+        .limit(1);
+
+      if (recentRegenRow) {
+        logger.info(
+          {
+            fn: "checkDeclingAndTriggerRegen",
+            strategyId: s.id,
+            lastTriggeredAt: recentRegenRow.createdAt.toISOString(),
+          },
+          "Regen sweep: skipping (cooldown active)",
+        );
+        skippedCooldown++;
+        continue;
+      }
+
+      // ── Emit audit row BEFORE calling evolveStrategy() ──────────────────
+      // The intent must be durable even if the evolution call fails. The audit row
+      // also serves as the idempotency marker for the next sweep run.
+      const declineReason = s.rollingSharpe30d !== null
+        ? `rolling_sharpe_${parseFloat(s.rollingSharpe30d ?? "0").toFixed(3)}`
+        : "unknown";
+
+      await db.insert(auditLog).values({
+        action: REGEN_AUDIT_ACTION,
+        entityType: "strategy",
+        entityId: s.id,
+        input: {
+          strategyName: s.name,
+          generation: s.generation,
+          parentStrategyId: s.parentStrategyId ?? null,
+          lifecycleState: s.lifecycleState,
+          declineReason,
+          cooldownCutoff: cooldownCutoff.toISOString(),
+        },
+        result: {
+          note: "evolution auto-spawn fired (fire-and-forget; check strategy.evolved audit row for outcome)",
+        },
+        status: "pending",
+        decisionAuthority: "scheduler",
+        correlationId: correlationId ?? null,
+      });
+
+      // ── Fire-and-forget evolveStrategy() ────────────────────────────────
+      // Non-blocking: lifecycle transitions are not held for evolution to complete.
+      // Graceful failure: errors are caught, logged, and the sweep continues.
+      // evolveStrategy() internally handles:
+      //   - pipeline pause guard (returns { status: "skipped" })
+      //   - max generations (retires the strategy)
+      //   - 7-day cooldown (returns { status: "cooldown" })
+      //   - circuit breaker (returns { status: "deferred" })
+      evolveStrategy(s.id, { correlationId }).then((evoResult) => {
+        logger.info(
+          { strategyId: s.id, evoStatus: evoResult.status, evolved: evoResult.evolved },
+          "Regen auto-trigger: evolveStrategy completed",
+        );
+      }).catch((evoErr) => {
+        logger.error(
+          { strategyId: s.id, err: evoErr },
+          "Regen auto-trigger: evolveStrategy threw unexpectedly (non-blocking)",
+        );
+      });
+
+      triggeredStrategyIds.push(s.id);
+      triggered++;
+
+      logger.info(
+        {
+          fn: "checkDeclingAndTriggerRegen",
+          strategyId: s.id,
+          strategyName: s.name,
+          generation: s.generation,
+          declineReason,
+          correlationId,
+        },
+        "Regen auto-trigger: evolution spawned",
+      );
+    } catch (err) {
+      logger.error(
+        { fn: "checkDeclingAndTriggerRegen", strategyId: s.id, err },
+        "Regen sweep: per-strategy error (non-blocking — sweep continues)",
+      );
+      errors++;
+    }
+  }
+
+  logger.info(
+    {
+      fn: "checkDeclingAndTriggerRegen",
+      total,
+      triggered,
+      skippedCooldown,
+      skippedMaxGeneration,
+      errors,
+      correlationId,
+    },
+    "Regen sweep complete",
+  );
+
+  return {
+    sweepRan: true,
+    skippedPipelinePaused: false,
+    total,
+    triggered,
+    skippedCooldown,
+    skippedMaxGeneration,
+    errors,
+    triggeredStrategyIds,
+  };
 }

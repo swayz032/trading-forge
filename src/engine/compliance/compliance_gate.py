@@ -10,7 +10,6 @@ import hashlib
 from datetime import datetime, timezone
 from typing import Any
 
-
 # ─── Freshness Thresholds ────────────────────────────────────────
 
 RULESET_MAX_AGE_HOURS = {
@@ -609,9 +608,9 @@ def check_kill_switch(
 
 # ─── Correlated Position Guard (Tier 5.3.1 — W5b) ──────────────
 
-import logging
-import os
-import pathlib
+import logging  # noqa: E402
+import os  # noqa: E402
+import pathlib  # noqa: E402
 
 # Constant for audit logging
 KILL_REASON_CORRELATED_POSITION_OPEN = "correlated_position_open"
@@ -857,6 +856,13 @@ if __name__ == "__main__":
             consecutive_losses=int(config.get("consecutiveLosses", 0)),
             consecutive_loss_limit=int(config.get("consecutiveLossLimit", DEFAULT_CONSECUTIVE_LOSS_LIMIT)),
         )
+    elif action == "check_strategy_compliance":
+        # B5 — multi-firm promotion: per-firm eligibility check.
+        # strategy dict + firm_rules dict passed directly from TS caller,
+        # which builds firm_rules from shared/firm-config.ts FIRMS.
+        strategy_dict = config.get("strategy") or {}
+        firm_rules_dict = config.get("firm_rules") or {}
+        result = check_strategy_compliance(strategy_dict, firm_rules_dict)
     else:
         result = {
             "error": f"Unknown action: {action}",
@@ -866,6 +872,7 @@ if __name__ == "__main__":
                 "pre_session_gate",
                 "detect_drift",
                 "check_kill_switch",
+                "check_strategy_compliance",
             ],
         }
 

@@ -1728,3 +1728,29 @@ export const dataIntegrityFindings = pgTable(
     index("idx_data_integrity_entity").on(table.affectedEntityType, table.affectedEntityId),
   ]
 );
+
+// ─── B5: strategy_firm_eligibility (W13 — Multi-firm promotion pipeline) ─────
+// One row per (strategy_id, firm_id) pair, written fire-and-forget after every
+// PAPER → DEPLOY_READY promotion. NOT a gate — records results for human review.
+// Promotion-gate inputs: shows which firms a strategy can be deployed to
+// simultaneously, enabling 3-5x income from a single validated edge.
+export const strategyFirmEligibility = pgTable(
+  "strategy_firm_eligibility",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").notNull().references(() => strategies.id),
+    firmId: text("firm_id").notNull(),           // topstep | apex | mffu | tpt | ffn | alpha | tradeify | earn2trade
+    eligible: boolean("eligible").notNull(),
+    eligibilityReason: text("eligibility_reason"),  // human-readable pass/fail reason
+    complianceCheckResult: jsonb("compliance_check_result"), // full per-firm gate output for audit
+    checkedAt: timestamp("checked_at").defaultNow().notNull(),
+  },
+  (table) => [
+    // Lookup: "which firms is this strategy eligible for?"
+    index("idx_sfe_strategy_firm").on(table.strategyId, table.firmId),
+    // Dashboard: all eligible/ineligible rows per strategy
+    index("idx_sfe_strategy_eligible").on(table.strategyId, table.eligible),
+    // Recency: latest check per strategy
+    index("idx_sfe_checked_at").on(table.strategyId, table.checkedAt.desc()),
+  ]
+);
