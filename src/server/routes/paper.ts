@@ -164,6 +164,9 @@ router.post("/stop", async (req, res) => {
     // Fallback: use dailyPnlBreakdown if no completed trades exist.
     // Persists Sharpe, Sortino, Calmar, max DD, win rate, profit factor, etc.
     // to paper_sessions.metricsSnapshot for promotion-gate consumption.
+    //
+    // B8b: analyticsSnapshot is captured for use in the PILOT session recorder below.
+    let analyticsSnapshot: Record<string, unknown> | null = null;
     try {
       const { runPythonModule } = await import("../lib/python-runner.js");
 
@@ -209,6 +212,7 @@ router.post("/stop", async (req, res) => {
           returns_source: returnsSource,
           n_trades: sessionTrades.length,
         };
+        analyticsSnapshot = snapshot;
         await db.update(paperSessions)
           .set({ metricsSnapshot: snapshot as any })
           .where(eq(paperSessions.id, sessionId));
@@ -250,6 +254,57 @@ router.post("/stop", async (req, res) => {
       .catch((feedbackErr) => {
         req.log.warn({ sessionId, err: feedbackErr }, "Failed to compute/persist session feedback (non-blocking)");
       });
+
+    // B8b: PILOT canary — record completed pilot session.
+    // Fire-and-forget: session close is never blocked by pilot_sessions write.
+    //
+    // Condition: strategy must currently be in PILOT state.
+    // Outcome: "passed" for normal manual stop (kill-switch stops close a position,
+    //   not the session directly; kill events record "killed" via the kill-switch path
+    //   which is handled by the scheduler's checkPilotAutoPromotions sweep).
+    // rollingSharpeFinal: extracted from analytics snapshot (may be null if analytics
+    //   failed or insufficient data — sweep evaluates null Sharpe as criteria-not-met).
+    // compliancePassed: true for a normal manual stop (compliance violations block
+    //   signal emission earlier in the stack; a session that completes normally has
+    //   not triggered a compliance kill).
+    //
+    // Idempotency: recordPilotSession inserts a new row each time; duplicate calls
+    //   would over-count sessions. The stop route is idempotent at the HTTP level
+    //   (409 on re-stop) so this fires at most once per session lifecycle.
+    if (session.strategyId) {
+      (async () => {
+        try {
+          const [strategyForPilot] = await db
+            .select({ lifecycleState: strategies.lifecycleState })
+            .from(strategies)
+            .where(eq(strategies.id, session.strategyId!));
+
+          if (strategyForPilot?.lifecycleState === "PILOT") {
+            // Extract rolling Sharpe from the analytics snapshot (may be null).
+            // paper_analytics module returns a "sharpe" key (annualized Sharpe ratio).
+            const sharpeRaw = analyticsSnapshot?.sharpe;
+            const rollingSharpeFinal =
+              typeof sharpeRaw === "number" && isFinite(sharpeRaw) ? sharpeRaw : null;
+
+            const { LifecycleService } = await import("../services/lifecycle-service.js");
+            const lifecycleService = new LifecycleService();
+            await lifecycleService.recordPilotSession({
+              strategyId: session.strategyId!,
+              paperSessionId: sessionId,
+              rollingSharpeFinal,
+              compliancePassed: true,  // normal stop = no compliance kill; violation kills are handled by kill-switch path
+              outcome: "passed",
+            });
+            req.log.info(
+              { sessionId, strategyId: session.strategyId, rollingSharpeFinal },
+              "PILOT canary: pilot session recorded (normal stop)",
+            );
+          }
+        } catch (pilotErr) {
+          req.log.warn({ sessionId, err: pilotErr }, "PILOT canary: recordPilotSession failed (non-blocking)");
+        }
+      })();
+    }
 
     res.json(session);
   } catch (err: any) {

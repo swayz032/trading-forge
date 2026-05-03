@@ -380,6 +380,9 @@ interface CachedSession {
   symbol: string;
   timeframe: string;             // e.g. "1m", "5m", "15m", "1h"
   cooldownRemaining: number;     // bars remaining in cooldown
+  // B8b: PILOT canary state — read from strategy.lifecycleState at session cache load.
+  // Used to enforce the 1-contract ceiling during PILOT canary window.
+  lifecycleState: string;
 }
 
 // ─── B4.3: In-memory Governor State (per session) ──────────────
@@ -727,6 +730,11 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
     symbol: strategy.symbol,
     timeframe: strategy.timeframe ?? "1m",
     cooldownRemaining: 0,
+    // B8b: capture lifecycle state at cache-load time for PILOT contract clamp.
+    // Cache miss on state change is acceptable — the 6h cron ensures PILOT strategies
+    // are only in PILOT during the narrow canary window. Callers that need the
+    // latest state will see it on the next cache miss (session restart or invalidation).
+    lifecycleState: strategy.lifecycleState,
   };
 
   sessionCache.set(sessionId, entry);
@@ -2467,6 +2475,28 @@ export async function evaluateSignals(
             reason: govResult.reason,
           }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist governor reduce log"));
         }
+      }
+
+      // ─── B8b: PILOT canary — hard 1-contract ceiling ──────────────────────
+      // This clamp runs AFTER all other sizing logic (ATR sizing, firm cap,
+      // context gate REDUCE, Kelly/profit-tier, governor REDUCE) so no earlier
+      // gate can inadvertently bypass it.
+      //
+      // PILOT strategies must run exactly 1 contract per the canary contract:
+      //   "Exactly 1 contract is enforced by paper-signal-service during PILOT"
+      //   (see checkPilotAutoPromotions() comment in lifecycle-service.ts).
+      //
+      // The clamp is HARD — no config, no env var, no override.  If the strategy
+      // is in PILOT, it trades 1 contract.  Always.
+      if (sessionConfig.lifecycleState === "PILOT" && riskGatePassed && contextContracts !== 1) {
+        const dslMax = contextContracts;
+        contextContracts = 1;
+        logger.info(
+          { sessionId, symbol, dslMax, pilotContracts: 1 },
+          "PILOT canary: contracts clamped to 1 (DSL max=" + dslMax + ")",
+        );
+        span.setAttribute("pilot_canary_clamp", true);
+        span.setAttribute("pilot_contracts_before_clamp", dslMax);
       }
 
       if (riskGatePassed) {
