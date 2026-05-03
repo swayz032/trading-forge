@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -30,6 +30,7 @@ class EntryType(str, Enum):
     TREND_FOLLOW = "trend_follow"
     VOLATILITY_EXPANSION = "volatility_expansion"
     SESSION_PATTERN = "session_pattern"
+    EVENT_DRIVEN = "event_driven"
 
 
 class ExitType(str, Enum):
@@ -38,6 +39,15 @@ class ExitType(str, Enum):
     TIME_EXIT = "time_exit"
     INDICATOR_SIGNAL = "indicator_signal"
     ATR_MULTIPLE = "atr_multiple"
+
+
+class ProfitScalingTier(BaseModel):
+    """Profit-based position scaling config (W5a). account_pnl_total injected at run time."""
+
+    increment: int = Field(..., ge=1, description="Extra contracts per threshold crossed")
+    threshold: float = Field(..., gt=0, description="PnL threshold per tier step in dollars")
+
+    model_config = {"extra": "forbid"}
 
 
 class StrategyDSL(BaseModel):
@@ -90,13 +100,52 @@ class StrategyDSL(BaseModel):
     # Regime filter
     preferred_regime: Optional[str] = Field(
         None,
-        description="TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL",
+        description=(
+            "TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL | "
+            "OPENING_RANGE | NEWS_DRIVEN | OVERNIGHT_DRIFT"
+        ),
     )
 
     # Session filter
     session_filter: Optional[str] = Field(
         None,
         description="RTH_ONLY | ETH_ONLY | ALL_SESSIONS | LONDON | ASIA",
+    )
+
+    # Sizing / profit scaling (W5a)
+    profit_scaling_tier: Optional[ProfitScalingTier] = Field(
+        None,
+        description="Profit-based position scaling config. account_pnl_total injected at run time.",
+    )
+    daily_target_dollars: Optional[float] = Field(
+        None,
+        ge=0,
+        description="Archetype-level daily P&L target (informational, consumed by paper telemetry only).",
+    )
+
+    # Validation / testing metadata
+    frankenstein_test_mode: Optional[str] = Field(
+        None,
+        description=(
+            "Frankenstein randomization test mode: full_shuffle | calendar_preserving | label_only. "
+            "Use full_shuffle for market-neutral archetypes; calendar_preserving for session/event-driven ones."
+        ),
+    )
+
+    # News handling
+    bypass_news_blackout: Optional[bool] = Field(
+        None,
+        description=(
+            "When True, strategy explicitly opts into trading during news windows. "
+            "Required for event-driven strategies like news_fade_mcl. "
+            "Must be explicitly set — no default opt-in."
+        ),
+    )
+
+    # Chart / construction metadata
+    chart_construction: Optional[dict[str, Any]] = Field(
+        None,
+        description="Optional chart construction hints (e.g. session_start_hour, range_minutes).",
     )
 
     # Metadata
