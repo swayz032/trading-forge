@@ -1,10 +1,18 @@
 # Trading Forge — Project Conventions
 
 ## Mission
-Trading Forge is a fully autonomous strategy research lab. The System Map
-(`Trading Forge System Map v2.md`) is the source of truth for all subsystems.
 
-The mission:
+Trading Forge is an autonomous futures strategy research, validation, paper-trading, and ATS-export pipeline for prop-firm trading.
+
+The business target is concrete and non-negotiable: **find one strategy that clears $10,000/month net on a single 50K prop-firm account** after fees, commissions, slippage, firm rules, buffer phase, and payout splits. A strategy that requires multi-account scaling is rejected. Agents must never fake profitability. The gates decide.
+
+The System Map (`Trading Forge System Map v2.md`) is the source of truth for all subsystems. Agents: reference the System Map for architecture details. CLAUDE.md covers conventions, constraints, and patterns.
+
+### Current Phase: Production Hardening Only
+
+All build phases are done. No new subsystems, no greenfield features. The only remaining work is hardening, integration, organization, and deletion. Agents must reject feature-add suggestions and reframe work as production hardening.
+
+### Operating Principles
 1. Enterprise-grade automation — every step collects data, every handoff is tracked
 2. Self-evolving — the system gets smarter as data accumulates (DeepAR auto-graduates,
    critic loop improves strategies, strategy memory learns from failures)
@@ -17,13 +25,8 @@ The mission:
    live n8n are first-class automation components, not external/non-core.
    Archived Trading Forge workflows are excluded from the active inventory.
 
-Agents: reference the System Map for architecture details. CLAUDE.md covers
-conventions, constraints, and patterns.
-
 ## What This Is
-Autonomous futures/derivatives strategy research lab. Single user (swayz032).
-Fully automated research -> validation -> paper trading pipeline.
-Human controls TradingView deployment only. Not a SaaS product.
+Autonomous futures/derivatives strategy research lab. Single user (swayz032), single 50K prop-firm account, $10K/month net target. Fully automated research -> validation -> paper trading -> ATS-export pipeline. Human controls TradingView deployment only. Not a SaaS product.
 
 ## Strategy Lifecycle (Automated)
 CANDIDATE -> TESTING -> PAPER -> DEPLOY_READY -> DEPLOYED -> DECLINING -> RETIRED -> GRAVEYARD
