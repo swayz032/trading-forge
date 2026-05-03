@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T01:05:13.619Z",
+  "generatedAt": "2026-05-03T01:38:53.058Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -12,8 +12,8 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 14,
-    "ready": 9,
+    "total": 15,
+    "ready": 10,
     "blocked": 0,
     "manualGated": 2,
     "experimental": 3
@@ -187,6 +187,26 @@
         "deepar:* SSE",
         "deepar.train",
         "deepar.weight_change"
+      ]
+    },
+    {
+      "id": "frankenstein_randomization_gate",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "frankenstein_test_runs:recent-completion",
+        "frankenstein-pass-rate",
+        "frankenstein-pending-row",
+        "frankenstein:* SSE",
+        "frankenstein.run-complete",
+        "lifecycle.gate-blocked-frankenstein"
       ]
     },
     {

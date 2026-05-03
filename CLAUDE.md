@@ -447,6 +447,30 @@ Two new tables ship in W1 to unblock Tier 7 quantum graduation queries:
   on-startup one-shot. Pending rows older than 1 hour are flipped to
   `status="failed"`, `errorMessage="stale_pending_pruned"`.
 
+## Backtest Integrity Tables (W10 / A2 + A4)
+Two new tables ship in W10 to harden the backtester against drift and
+lookahead bugs:
+
+- **`backtest_provenance`** (migration 0070) -- A2 result-hash tracking. Records
+  the `(data_hash, code_git_sha, strategy_hash, result_hash)` tuple for every
+  completed backtest. Enables drift detection: identical inputs MUST produce
+  identical `result_hash` values when `DETERMINISM_MODE=true`. Written by
+  `backtest-service.ts` fire-and-forget (non-blocking). No status column —
+  synchronous write only on `completed` backtests. **Authority:** read-only
+  observation layer. Does NOT gate any lifecycle decision.
+  Drift query (canonical): `SELECT data_hash, code_git_sha, strategy_hash,
+  count(DISTINCT result_hash) FROM backtest_provenance GROUP BY 1,2,3
+  HAVING count(DISTINCT result_hash) > 1;`
+- **`frankenstein_test_runs`** (migration 0071) -- A4 randomization detection
+  test results. Stores `p95_sharpe`, `median_pf`, and `passed` (gate criterion:
+  p95_sharpe < 0.3 AND median_pf in [0.85, 1.15]) for every Frankenstein run.
+  Pending-row contract: status starts `"pending"`, updated to
+  `"completed"`/`"failed"` on resolve. **Authority:** HARD GATE on TESTING→PAPER
+  lifecycle promotion. `lifecycle-service.ts` blocks promotion (fail-closed) when
+  no completed Frankenstein run exists OR when `passed=false`. Operators must
+  call `POST /api/frankenstein/run` for any in-flight CANDIDATE strategies before
+  TESTING→PAPER will succeed. Pipeline pause guard on `/api/frankenstein/run`.
+
 ## Tier 7 W7b Graduation Query Pattern
 
 The Phase 0 → Phase 1 graduation review for the Grover adversarial-stress gate

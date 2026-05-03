@@ -277,12 +277,14 @@
       "archetypes",
       "backtester",
       "monte_carlo",
+      "parity_engine",
       "survival",
       "walk_forward"
     ],
     "database_tables": [
       "audit_log",
       "backtest_matrix",
+      "backtest_provenance",
       "backtest_trades",
       "backtests",
       "day_archetypes",
@@ -312,6 +314,77 @@
       "recent-backtest-audit-events",
       "backtest-table-writes",
       "qualification-route-coverage"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "frankenstein_randomization_gate",
+    "domain": "qualification",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Randomization detection test (A4 W10): runs 100 shuffles plus 50 GBM synthetic runs against shuffled bars. If a strategy still shows edge on shuffled/GBM data the backtester likely has a lookahead/future-data leak. Hard gate on TESTING->PAPER lifecycle promotion (fail-closed).",
+    "data_sources": [
+      "backtest trade ledger",
+      "strategy DSL config"
+    ],
+    "reads_from": [
+      "backtests",
+      "backtest_trades"
+    ],
+    "writes_to": [
+      "frankenstein_test_runs",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "frankenstein_test_runs"
+    ],
+    "audit_actions": [
+      "frankenstein.run-complete",
+      "lifecycle.gate-blocked-frankenstein"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "frankenstein:* SSE"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/frankenstein"
+    ],
+    "engine_subsystems": [
+      "frankenstein_test"
+    ],
+    "database_tables": [
+      "frankenstein_test_runs"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "frankenstein_test_runs",
+      "audit_log"
+    ],
+    "recovery_mode": "fail-closed-block-promotion",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "frankenstein_test_runs:recent-completion"
+    ],
+    "evidence_queries": [
+      "frankenstein-pending-row",
+      "frankenstein-pass-rate"
     ],
     "ownership_boundary": "repo-runtime",
     "learning_boundary": "none",
@@ -377,6 +450,7 @@
       "anti-setup-mine",
       "archetype-daily-classify",
       "contract-roll-sweep",
+      "databento-weekly-refresh",
       "macro-data-sync",
       "paper-vs-backtest",
       "portfolio-correlation",
