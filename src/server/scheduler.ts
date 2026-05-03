@@ -1652,6 +1652,65 @@ export function initScheduler() {
     emitJobComplete("prompt-ab-resolution", Date.now() - t0pab);
   });
 
+  // ─── B1 (W9): Databento weekly refresh — Sunday 9 PM ET ─────────────────
+  // Incremental update of data_cache/<SYMBOL>/<timeframe>.parquet files.
+  // Fetches only the date range from (last cached bar + 1 day) → today.
+  // Atomic writes; never leaves half-written parquet files.
+  //
+  // isActive() guard: data refresh is a research-pipeline operation.
+  // It can safely skip if the pipeline is paused or in vacation mode.
+  //
+  // Run at 1:00 and 2:00 UTC on Mondays to cover EDT (UTC-4) and EST (UTC-5)
+  // for Sunday 9 PM ET (21:00). Mirrors the graveyard-pattern-extraction pattern.
+  registerJob("databento-weekly-refresh", 7 * 24 * 60 * 60 * 1000, async () => {
+    const { spawn } = await import("child_process");
+    const { resolve: pathResolve } = await import("path");
+    const { fileURLToPath: fturl } = await import("url");
+    const scriptPath = pathResolve(
+      pathResolve(fturl(import.meta.url), "../../.."),
+      "scripts/refresh-databento.mjs"
+    );
+    await new Promise<void>((res, rej) => {
+      const proc = spawn(process.execPath, [scriptPath, "--execute"], {
+        env: { ...process.env },
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let stdout = "";
+      let stderr = "";
+      proc.stdout?.on("data", (d: Buffer) => (stdout += d.toString()));
+      proc.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
+      proc.on("close", (code: number | null) => {
+        if (stderr.trim()) logger.debug({ job: "databento-weekly-refresh" }, stderr.slice(0, 2000));
+        if (code === 0) {
+          logger.info({ job: "databento-weekly-refresh", output: stdout.slice(0, 1000) }, "Databento refresh complete");
+          res();
+        } else {
+          rej(new Error(`refresh-databento.mjs exited ${code}: ${stderr.slice(0, 500)}`));
+        }
+      });
+      proc.on("error", rej);
+    });
+  });
+
+  // Run at 1:00 and 2:00 UTC on Mondays to cover EDT/EST for Sunday 9 PM ET.
+  cron.schedule("0 1,2 * * 1", async () => {
+    const now = new Date();
+    const etStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      weekday: "short",
+      hour: "numeric",
+      hour12: false,
+    });
+    // Only fire on Sunday 21:00 ET (which is Mon 01:00 or 02:00 UTC)
+    if (!etStr.includes("Sun") || !etStr.includes("21")) return;
+    if (!(await pipelineGate("databento-weekly-refresh"))) return;
+    logger.info("Scheduler: Databento weekly refresh (Sunday 9 PM ET)");
+    const t0dbr = Date.now();
+    await withRetry("databento-weekly-refresh", SCHEDULER_JOBS["databento-weekly-refresh"].run);
+    markJobRun("databento-weekly-refresh");
+    emitJobComplete("databento-weekly-refresh", Date.now() - t0dbr);
+  });
+
   // ─── Wave D3: Contract roll sweep — 4:30 PM ET weekdays ──────
   // Runs at both 20:30 and 21:30 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // DST-aware: only fires when ET clock resolves to 16:30.
@@ -1707,7 +1766,7 @@ export function initScheduler() {
     emitJobComplete("tournament-staleness-check", Date.now() - t0tourn);
   });
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), prompt-ab-resolution (Sun 11 PM ET weekly), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h)");
 
   // ─── Startup reconciliation: catch up missed jobs ─────────
   reconcileMissedRuns().then(() => {
