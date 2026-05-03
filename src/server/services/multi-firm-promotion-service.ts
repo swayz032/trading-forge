@@ -38,7 +38,6 @@ import {
   strategies,
   backtests,
   paperSessions,
-  paperTrades,
   auditLog,
   strategyFirmEligibility,
 } from "../db/schema.js";

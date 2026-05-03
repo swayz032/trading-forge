@@ -175,6 +175,7 @@
       "audit_log",
       "lifecycle_transitions",
       "strategies",
+      "strategy_firm_eligibility",
       "strategy_graveyard",
       "strategy_names"
     ],
@@ -270,6 +271,7 @@
       "/api/backtests",
       "/api/monte-carlo",
       "/api/prevalidate",
+      "/api/shadow-rerun",
       "/api/survival"
     ],
     "engine_subsystems": [
@@ -289,6 +291,7 @@
       "backtests",
       "day_archetypes",
       "monte_carlo_runs",
+      "shadow_rerun_findings",
       "stress_test_runs",
       "walk_forward_windows"
     ],
@@ -754,6 +757,7 @@
       "anti-setup-effectiveness",
       "critic-feedback",
       "meta-parameter-review",
+      "regen-declining-sweep",
       "regret-score-fill"
     ],
     "routes": [

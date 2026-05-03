@@ -127,6 +127,11 @@ Three human-authored strategy archetypes expressed as JSON config consumed by th
 DSL compiler. Located at `src/engine/strategies/dsl_fixtures/`. These are config-as-data,
 not Python modules.
 
+> **W13 B3 update:** 4 additional regime-coverage archetypes (range_fade_mnq,
+> opening_range_breakout_mes, news_fade_mcl, overnight_drift_mes) extend the
+> fixture set to 7 total. See "DSL Archetype Coverage (W13 / B3)" below for the
+> regime mapping and Frankenstein modes.
+
 ### DSL Fixture Pattern
 - Fixtures must conform exactly to `StrategyDSL` (Pydantic, `extra="forbid"`)
 - Valid fields: `name`, `symbol`, `timeframe`, `direction`, `entry_type`, `entry_indicator`,
@@ -507,6 +512,100 @@ mode and to consolidate nightly data-integrity checks:
   `paper_sessions`. Drift checks: PSI on Sharpe / PF / MaxDD distributions
   computed across `backtest_provenance` groups with divergent `result_hash`.
   PSI > 0.2 = warning; > 0.5 = critical (industry-standard thresholds).
+
+## Multi-Firm Promotion Eligibility (W13 / B5)
+
+One new table ships in W13 to record per-firm deployment eligibility for every
+strategy that reaches DEPLOY_READY:
+
+- **`strategy_firm_eligibility`** (migration 0076) — B5 multi-firm promotion
+  pipeline. One row per `(strategy_id, firm_id)` tuple, written fire-and-forget
+  AFTER successful PAPER → DEPLOY_READY promotion (does NOT block promotion).
+  Iterates all 8 configured firms (Topstep, Apex, MFFU, TPT, FFN, Alpha,
+  Tradeify, Earn2Trade), runs `compliance_gate.py check_strategy_compliance`
+  per firm with the firm's own contract caps, drawdown limits, consistency
+  rules, commission, and overnight policy from `firm-config.ts`, and persists
+  eligibility plus the full `compliance_check_result` JSONB for audit.
+  **Authority:** OBSERVATION ONLY — additive to existing PAPER → DEPLOY_READY
+  flow. Does NOT gate or override the A7 signal-correlation gate (W11), which
+  runs BEFORE `promoteStrategy()` returns. B5 runs AFTER the promotion commits.
+  **Service:** `src/server/services/multi-firm-promotion-service.ts`.
+  **Pipeline pause guard:** `isPipelineActive()` early-exit returns empty
+  result when paused (no firm checks are run, no rows are written).
+  **Per-firm independence:** one firm's compliance_gate failure does not
+  cascade — each firm gets its own pass/fail row. Subprocess errors fail
+  closed (`eligible=false`, `result="error"`) for the affected firm only.
+  **Why:** one validated edge → 3-5 simultaneous prop accounts → 3-5x income
+  same day. The dashboard reads `strategy_firm_eligibility` to surface which
+  firms a strategy can be deployed to without re-running compliance checks.
+
+## DSL Archetype Coverage (W13 / B3)
+
+W13 expands DSL fixtures from 3 to 7 archetypes covering 4 additional regimes:
+
+- **`range_fade_mnq.json`** — VWAP-anchor fade on MNQ, 5m, RANGE_BOUND regime,
+  RTH only. Frankenstein mode: `full_shuffle` (no calendar effect — pure
+  intra-session mean-reversion behavior).
+- **`opening_range_breakout_mes.json`** — first 30-min ORB on MES, 5m,
+  OPENING_RANGE regime, RTH only. Frankenstein mode: `calendar_preserving`
+  (calendar effect — first 30 min is structurally different from rest of RTH).
+- **`news_fade_mcl.json`** — fade extreme moves around EIA Wednesday 10:30 ET
+  inventory release on MCL, 5m, NEWS_DRIVEN regime, RTH only. Frankenstein
+  mode: `calendar_preserving`. Sets `bypass_news_blackout: true` (event-driven
+  strategies must explicitly opt into trading during the news window the
+  default skip-engine guard would otherwise filter out).
+- **`overnight_drift_mes.json`** — Asia → Europe directional drift on MES,
+  15m, OVERNIGHT_DRIFT regime, ETH only. Frankenstein mode:
+  `calendar_preserving` (session boundary effect).
+
+**New EntryType:** `EVENT_DRIVEN` (added to `EntryType` enum) — covers
+news/inventory release reactions. **New `bypass_news_blackout` field** on
+`StrategyDSL`: explicit opt-in for strategies that must trade during macro
+release blackouts. **New pattern_library entries:** `vwap_fade`,
+`event_driven_fade`, `overnight_drift`, `session_open_breakout` with
+required/optional params and validation ranges.
+
+The 4 new fixtures bring the per-archetype `frankenstein_test_mode` choice
+to 4 of 7 fixtures (the 3 W5a originals omit it and use the default
+`full_shuffle`). Operators should set `calendar_preserving` for any strategy
+that legitimately exploits a calendar effect so the A4 Frankenstein gate
+does not incorrectly reject a valid edge.
+
+## Kelly Sizing Convention (W13 / B7)
+
+Kelly Criterion sizing ships behind a declarative DSL field. Backtest service
+must build `kelly_params` from realized metrics before invoking
+`compute_position_sizes()`:
+
+- **`sizing_method` field** on `StrategyDSL` — Optional Literal: `"fixed"` |
+  `"kelly"` | `"atr_based"` | None (default = backward-compatible existing
+  ATR/fixed logic). Set on all 7 production fixtures as `"kelly"`. The DSL
+  field is DECLARATIVE — it tells `backtest-service.ts` to compute realized
+  win rate (edge) and avg_winner/avg_loser ratio (odds) from prior backtest
+  trades, then pass `kelly_params={edge, odds, bankroll, risk_per_trade,
+  kelly_fraction}` into `compute_position_sizes()`.
+- **`kelly_optimal_contracts(edge, odds, bankroll, risk_per_trade,
+  kelly_fraction=0.25, firm_max=None)`** in `src/engine/sizing.py` —
+  Quarter-Kelly (industry safety standard) by default. Formula:
+  `f* = (b*p - q) / b` where `b=odds`, `p=edge`, `q=1-p`. Contracts =
+  `floor((f* * kelly_fraction) * (bankroll / risk_per_trade))`. NEVER exceeds
+  `firm_max` (capped via `min(max_contracts, CONTRACT_CAP_MAX=20)`).
+  Returns 0 when `f* <= 0` (no edge). Kelly produces a CONSTANT base size
+  for all bars (strategy-level, not bar-level like ATR).
+- **Profit-tier composition:** Kelly is ADDITIVE with `profit_scaling_tier`.
+  Kelly determines the base contract count; profit tier scales it up. Result
+  always capped at `firm_max`.
+- **Risk parity (`src/engine/risk_parity.py`):** when N strategies run
+  simultaneously, allocates contracts inversely proportional to per-strategy
+  volatility so each strategy contributes approximately equal dollar risk.
+  Floor + remainder distribution to lowest-vol strategies first; firm caps
+  always honored.
+- **Determinism preserved:** Kelly inputs (edge, odds, bankroll,
+  risk_per_trade) come from realized backtest metrics — same backtest run →
+  same kelly_params → same contract count. Compatible with A1 determinism.
+- **Golden fixture parity:** Kelly affects sizing math; existing W10 A5
+  golden fixtures pre-compute trade-ledger results without invoking the
+  sizing pipeline, so the 5 hand-computed fixtures remain unaffected.
 
 ## Tier 7 W7b Graduation Query Pattern
 

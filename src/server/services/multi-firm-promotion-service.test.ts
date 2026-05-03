@@ -51,7 +51,7 @@ let insertCallCount = 0;
 
 vi.mock("../db/index.js", () => {
   const buildInsertChain = () => {
-    let isFirstCall = false;
+    const isFirstCall = false;
     const chain = {
       values: vi.fn((rows: unknown) => {
         if (Array.isArray(rows)) {

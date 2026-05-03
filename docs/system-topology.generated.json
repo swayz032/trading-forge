@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T02:16:41.772Z",
+  "generatedAt": "2026-05-03T03:39:10.343Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,12 +15,12 @@
     ]
   },
   "counts": {
-    "routes": 49,
-    "schedulerJobs": 44,
+    "routes": 50,
+    "schedulerJobs": 45,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 23,
-    "databaseTables": 59,
+    "databaseTables": 61,
     "registrySubsystems": 16
   },
   "routes": [
@@ -63,6 +63,7 @@
     "/api/quantum/pre-flight",
     "/api/risk",
     "/api/search",
+    "/api/shadow-rerun",
     "/api/signal-correlation",
     "/api/signals",
     "/api/skip",
@@ -111,6 +112,7 @@
     "prompt-ab-resolution",
     "python-pool-saturation-check",
     "quantum-cost-prune",
+    "regen-declining-sweep",
     "regret-score-fill",
     "resource-snapshot",
     "rolling-sharpe",
@@ -741,12 +743,14 @@
     "quantum_run_costs",
     "qubo_timing_runs",
     "rl_training_runs",
+    "shadow_rerun_findings",
     "shadow_signals",
     "skip_decisions",
     "sqa_optimization_runs",
     "strategies",
     "strategy_export_artifacts",
     "strategy_exports",
+    "strategy_firm_eligibility",
     "strategy_graveyard",
     "strategy_lockouts",
     "strategy_names",
@@ -808,10 +812,10 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 49,
-      "schedulerJobs": 44,
+      "routes": 50,
+      "schedulerJobs": 45,
       "engineSubsystems": 23,
-      "databaseTables": 59
+      "databaseTables": 61
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -1064,6 +1068,7 @@
           "historical market data",
           "market_data_meta",
           "monte_carlo_runs",
+          "shadow_rerun_findings",
           "stress_test_runs",
           "walk_forward_windows",
           "walk-forward windows"
@@ -1107,6 +1112,7 @@
           "/api/backtests",
           "/api/monte-carlo",
           "/api/prevalidate",
+          "/api/shadow-rerun",
           "/api/survival"
         ],
         "schedulerJobs": [],
@@ -1545,6 +1551,7 @@
           "anti-setup-effectiveness",
           "critic-feedback",
           "meta-parameter-review",
+          "regen-declining-sweep",
           "regret-score-fill"
         ],
         "healthCheck": "/api/health/dashboard",
@@ -2385,6 +2392,7 @@
           "paper_sessions",
           "qualification metrics",
           "strategies",
+          "strategy_firm_eligibility",
           "strategy_graveyard",
           "strategy_names"
         ],
@@ -2967,6 +2975,7 @@
         "historical market data",
         "market_data_meta",
         "monte_carlo_runs",
+        "shadow_rerun_findings",
         "stress_test_runs",
         "walk_forward_windows",
         "walk-forward windows"
@@ -3010,6 +3019,7 @@
         "/api/backtests",
         "/api/monte-carlo",
         "/api/prevalidate",
+        "/api/shadow-rerun",
         "/api/survival"
       ],
       "schedulerJobs": [],
@@ -3448,6 +3458,7 @@
         "anti-setup-effectiveness",
         "critic-feedback",
         "meta-parameter-review",
+        "regen-declining-sweep",
         "regret-score-fill"
       ],
       "healthCheck": "/api/health/dashboard",
@@ -4288,6 +4299,7 @@
         "paper_sessions",
         "qualification metrics",
         "strategies",
+        "strategy_firm_eligibility",
         "strategy_graveyard",
         "strategy_names"
       ],

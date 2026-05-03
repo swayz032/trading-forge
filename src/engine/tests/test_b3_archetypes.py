@@ -13,11 +13,10 @@ from __future__ import annotations
 
 import json
 import os
-import pytest
 
 from src.engine.compiler.compiler import compile_to_backtest, validate_dsl
 from src.engine.compiler.pattern_library import validate_entry_params
-from src.engine.compiler.strategy_schema import EntryType, StrategyDSL
+from src.engine.compiler.strategy_schema import EntryType
 from src.engine.regime import should_strategy_trade
 
 # ─── Fixture file paths ─────────────────────────────────────────────────────
@@ -239,12 +238,23 @@ class TestB3NewSchemaFields:
         assert model.daily_target_dollars == 400.0
 
     def test_chart_construction_field(self):
+        # Merge resolution (W13 Team A): chart_construction is a typed enum
+        # (CANDLES/RENKO) per HEAD's schema, not a free-form dict. The 4 B3
+        # fixtures use the default CANDLES (omit the field). This test asserts
+        # the enum is intact and that dict-shaped values are rejected.
+        from src.engine.compiler.strategy_schema import ChartConstruction
+
         data = _valid_base_dict()
-        data["chart_construction"] = {"session_start_hour": 9, "range_window_minutes": 30}
+        # Default (omitted) → CANDLES
         valid, model, errors = validate_dsl(data)
         assert valid is True
-        assert model.chart_construction is not None
-        assert model.chart_construction["session_start_hour"] == 9
+        assert model.chart_construction == ChartConstruction.CANDLES
+        # Dict form must be rejected (regression guard for the merged-out shape)
+        data_bad = _valid_base_dict()
+        data_bad["chart_construction"] = {"session_start_hour": 9, "range_window_minutes": 30}
+        valid_bad, _, errors_bad = validate_dsl(data_bad)
+        assert valid_bad is False
+        assert errors_bad, "Expected validation error for dict-shaped chart_construction"
 
     def test_extended_regime_opening_range_accepted(self):
         data = _valid_base_dict()

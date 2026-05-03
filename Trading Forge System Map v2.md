@@ -1071,7 +1071,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-03T02:16:41.772Z`.
+Updated automatically from the repo on `2026-05-03T03:39:10.343Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1079,13 +1079,13 @@ Updated automatically from the repo on `2026-05-03T02:16:41.772Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `tradingview_deploy`
-- API routes tracked: `49`
-- Scheduler jobs tracked: `44`
+- API routes tracked: `50`
+- Scheduler jobs tracked: `45`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `23`
-- Database tables tracked: `59`
+- Database tables tracked: `61`
 
 ### Subsystem Runtime States
 - `active`: `13`
@@ -1121,10 +1121,10 @@ Updated automatically from the repo on `2026-05-03T02:16:41.772Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `16`
-- Route coverage: `49/49`
-- Scheduler coverage: `44/44`
+- Route coverage: `50/50`
+- Scheduler coverage: `45/45`
 - Engine coverage: `23/23`
-- Database coverage: `59/59`
+- Database coverage: `61/61`
 - Autonomous subsystems with audit coverage: `16/16`
 - Autonomous subsystems with audit actions: `16/16`
 - Autonomous subsystems with telemetry evidence: `16/16`
@@ -1274,6 +1274,7 @@ Updated automatically from the repo on `2026-05-03T02:16:41.772Z`.
 - `/api/quantum/pre-flight`
 - `/api/risk`
 - `/api/search`
+- `/api/shadow-rerun`
 - `/api/signal-correlation`
 - `/api/signals`
 - `/api/skip`
@@ -1322,6 +1323,7 @@ Updated automatically from the repo on `2026-05-03T02:16:41.772Z`.
 - `prompt-ab-resolution`
 - `python-pool-saturation-check`
 - `quantum-cost-prune`
+- `regen-declining-sweep`
 - `regret-score-fill`
 - `resource-snapshot`
 - `rolling-sharpe`
@@ -1428,12 +1430,14 @@ Updated automatically from the repo on `2026-05-03T02:16:41.772Z`.
 - `quantum_run_costs`
 - `qubo_timing_runs`
 - `rl_training_runs`
+- `shadow_rerun_findings`
 - `shadow_signals`
 - `skip_decisions`
 - `sqa_optimization_runs`
 - `strategies`
 - `strategy_export_artifacts`
 - `strategy_exports`
+- `strategy_firm_eligibility`
 - `strategy_graveyard`
 - `strategy_lockouts`
 - `strategy_names`
