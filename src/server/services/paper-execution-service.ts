@@ -14,7 +14,119 @@ import { paperTrades as paperTradesCounter } from "../lib/metrics-registry.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { AlertFactory } from "./alert-service.js";
 import { computeRollSpreadCost } from "../lib/roll-calendar-loader.js";
+import {
+  isExchangeHalted,
+  registerOutageChangeCallback,
+} from "./exchange-status-service.js";
+// C2: prop-firm suspension gate
+import { isFirmSuspended, registerSuspensionChangeCallback } from "./prop-firm-health-service.js";
 export { CONTRACT_SPECS };
+
+// ─── C1: Register CME outage callback on module init ─────────────────────────
+// The exchange-status-service notifies us when CME halts or resumes.
+// On halt: cancel pending orders, block new entries, log open positions.
+// On resume: lift the block — do NOT auto-reissue queued orders (manual review).
+registerOutageChangeCallback(async (exchange: string, isActive: boolean, affectedSymbols: string[]) => {
+  if (isActive) {
+    // Outage started — log all open positions for auditing
+    try {
+      const openPositions = await db
+        .select({
+          id: paperPositions.id,
+          sessionId: paperPositions.sessionId,
+          symbol: paperPositions.symbol,
+          side: paperPositions.side,
+          contracts: paperPositions.contracts,
+          entryPrice: paperPositions.entryPrice,
+        })
+        .from(paperPositions)
+        .where(and(isNull(paperPositions.closedAt), sql`${paperPositions.symbol} = ANY(${affectedSymbols})`));
+
+      logger.error(
+        {
+          exchange,
+          affectedSymbols,
+          openPositionCount: openPositions.length,
+          openPositions: openPositions.map(p => ({
+            id: p.id, sessionId: p.sessionId, symbol: p.symbol,
+            side: p.side, contracts: p.contracts,
+          })),
+        },
+        "C1 CME outage: open positions held (NOT closed). New entries BLOCKED. Manual review required on resume.",
+      );
+
+      // Write audit log for traceability
+      await db.insert(auditLog).values({
+        action: "exchange.outage_positions_logged",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { exchange, affectedSymbols } as Record<string, unknown>,
+        result: {
+          openPositionCount: openPositions.length,
+          openPositionIds: openPositions.map(p => p.id),
+          action: "held_no_close",
+          entriesBlocked: true,
+          autoReissue: false,
+        } as Record<string, unknown>,
+        status: "success",
+        correlationId: null,
+      });
+    } catch (err) {
+      logger.error({ err, exchange }, "C1 outage callback: failed to log open positions");
+    }
+  } else {
+    // Outage resolved — lift block, but do NOT auto-reissue orders
+    logger.info(
+      { exchange, affectedSymbols },
+      "C1 CME outage resolved: entry block lifted. Orders NOT auto-reissued — manual review required.",
+    );
+    await db.insert(auditLog).values({
+      action: "exchange.outage_resolved_positions_held",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { exchange, affectedSymbols } as Record<string, unknown>,
+      result: { action: "entry_block_lifted", autoReissue: false } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    }).catch((err) => logger.error({ err }, "C1 outage resolved audit log failed (non-blocking)"));
+  }
+});
+
+// ─── C2: Register prop firm suspension callback on module init ────────────────
+registerSuspensionChangeCallback(async (firmId: string, suspended: boolean) => {
+  if (suspended) {
+    logger.error(
+      { firmId },
+      "C2 prop firm suspension: new orders BLOCKED for this firm. Alert fired. Open positions logged.",
+    );
+    // Log open positions for the affected firm
+    try {
+      const firmSessions = await db
+        .select({ id: paperSessions.id, firmId: paperSessions.firmId })
+        .from(paperSessions)
+        .where(and(eq(paperSessions.firmId, firmId), eq(paperSessions.status, "active")));
+
+      if (firmSessions.length > 0) {
+        const sessionIds = firmSessions.map(s => s.id);
+        const openPositions = await db
+          .select({ id: paperPositions.id, sessionId: paperPositions.sessionId, symbol: paperPositions.symbol })
+          .from(paperPositions)
+          .where(and(isNull(paperPositions.closedAt), sql`${paperPositions.sessionId} = ANY(${sessionIds})`));
+
+        logger.error(
+          { firmId, activeSessions: firmSessions.length, openPositions: openPositions.length },
+          "C2 suspension: open positions logged for suspended firm",
+        );
+      }
+    } catch (err) {
+      logger.error({ err, firmId }, "C2 suspension callback: failed to log open positions");
+    }
+  } else {
+    logger.info({ firmId }, "C2 prop firm suspension lifted: entry block cleared for firm");
+  }
+});
 
 // ─── Kill Switch cache (D6) ─────────────────────────────────────
 // Cached per session for 5s. Same session cannot trip kill repeatedly in rapid
@@ -419,6 +531,80 @@ export async function openPosition(sessionId: string, params: {
         filled: false,
       } satisfies ExecutionResult,
     };
+  }
+
+  // ─── C1: CME exchange outage gate ────────────────────────────
+  // Block new entries during a detected exchange outage.
+  // Positions held open are NOT closed by this gate — that would lock in a
+  // price during a halt when fills are unreliable. Operators review on resume.
+  // The CME symbol → exchange mapping: all GLOBEX symbols (MES, MNQ, MCL…) → "CME".
+  if (isExchangeHalted("CME")) {
+    logger.warn(
+      { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side, exchange: "CME" },
+      "C1 CME outage gate: blocking new entry — exchange is halted",
+    );
+    broadcastSSE("paper:order-blocked-outage", {
+      sessionId,
+      symbol: params.symbol,
+      side: params.side,
+      exchange: "CME",
+      reason: "exchange_halted",
+    });
+    return {
+      position: null,
+      executionResult: {
+        positionId: "",
+        entryPrice: 0,
+        contracts: params.contracts,
+        slippage: 0,
+        expectedPrice: params.signalPrice,
+        actualPrice: 0,
+        arrivalPrice: params.signalPrice,
+        implementationShortfall: 0,
+        fillRatio: 0,
+        filled: false,
+      } satisfies ExecutionResult,
+    };
+  }
+
+  // ─── C2: Prop firm suspension gate ───────────────────────────
+  // Block new entries if this session's firm is suspended.
+  // Checked here (last-line defence) as well as upstream in paper-signal-service.
+  // We need session firmId — read it outside the lock for early exit.
+  {
+    const [sessionForFirmCheck] = await db
+      .select({ firmId: paperSessions.firmId })
+      .from(paperSessions)
+      .where(eq(paperSessions.id, sessionId));
+    const firmIdForCheck = sessionForFirmCheck?.firmId;
+    if (firmIdForCheck && isFirmSuspended(firmIdForCheck)) {
+      logger.warn(
+        { fn: "openPosition", sessionId, firmId: firmIdForCheck, symbol: params.symbol },
+        "C2 prop firm suspension gate: blocking new entry — firm is suspended",
+      );
+      broadcastSSE("paper:order-blocked-suspension", {
+        sessionId,
+        firmId: firmIdForCheck,
+        symbol: params.symbol,
+        side: params.side,
+        reason: "firm_suspended",
+      });
+      return {
+        position: null,
+        executionResult: {
+          positionId: "",
+          entryPrice: 0,
+          contracts: params.contracts,
+          slippage: 0,
+          expectedPrice: params.signalPrice,
+          actualPrice: 0,
+          arrivalPrice: params.signalPrice,
+          implementationShortfall: 0,
+          fillRatio: 0,
+          filled: false,
+        } satisfies ExecutionResult,
+      };
+    }
   }
 
   const openSpan = tracer.startSpan("paper.position_open");

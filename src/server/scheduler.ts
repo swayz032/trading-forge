@@ -1864,7 +1864,70 @@ export function initScheduler() {
     emitJobComplete("tournament-staleness-check", Date.now() - t0tourn);
   });
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h)");
+  // ─── C1 (W15): CME exchange status poll — every 60 seconds ─────────────────
+  // Probes CME status endpoint every 60s. On outage: blocks new entries,
+  // logs open positions (not closed), fires critical alert.
+  // On resume: lifts block; does NOT auto-reissue queued orders (manual review).
+  // Pipeline pause guard: NOT applied — outage is a safety signal, not a trading signal.
+  // Startup reconciliation: called once on init (deferred 3s) to re-hydrate state.
+  registerJob("cme-status-poll", 60 * 1000, async () => {
+    const { pollCmeStatus } = await import("./services/exchange-status-service.js");
+    await pollCmeStatus();
+  });
+
+  cron.schedule("* * * * *", async () => {
+    const t0cme = Date.now();
+    await withRetry("cme-status-poll", SCHEDULER_JOBS["cme-status-poll"].run, 1);
+    markJobRun("cme-status-poll");
+    emitJobComplete("cme-status-poll", Date.now() - t0cme);
+  });
+
+  // Startup: reconcile any outages that were active before restart
+  setTimeout(() => {
+    import("./services/exchange-status-service.js").then(({ reconcileOutageState }) => {
+      reconcileOutageState().catch((err: unknown) => logger.warn({ err }, "scheduler startup: exchange outage reconciliation failed"));
+    }).catch((err: unknown) => logger.warn({ err }, "scheduler startup: exchange-status-service import failed"));
+  }, 3_000);
+
+  // ─── C2 (W15): Prop firm health check — every 15 minutes ────────────────────
+  // Pings each configured prop firm API. On auth failure or "suspended" response:
+  // fires high-severity alert, blocks new orders for that firm via paper engine.
+  // Startup reconciliation: re-hydrates suspension state from last DB check.
+  registerJob("prop-firm-health-check", 15 * 60 * 1000, async () => {
+    const { pollPropFirmHealth } = await import("./services/prop-firm-health-service.js");
+    await pollPropFirmHealth();
+  });
+
+  cron.schedule("*/15 * * * *", async () => {
+    const t0pfh = Date.now();
+    await withRetry("prop-firm-health-check", SCHEDULER_JOBS["prop-firm-health-check"].run, 1);
+    markJobRun("prop-firm-health-check");
+    emitJobComplete("prop-firm-health-check", Date.now() - t0pfh);
+  });
+
+  // Startup: reconcile suspension state from DB
+  setTimeout(() => {
+    import("./services/prop-firm-health-service.js").then(({ reconcileSuspensionState }) => {
+      reconcileSuspensionState().catch((err: unknown) => logger.warn({ err }, "scheduler startup: prop firm suspension reconciliation failed"));
+    }).catch((err: unknown) => logger.warn({ err }, "scheduler startup: prop-firm-health-service import failed"));
+  }, 4_000);
+
+  // ─── C2 (W15): Dashboard snapshot — every hour ───────────────────────────────
+  // Captures Playwright screenshots of prop firm dashboards for payout dispute evidence.
+  // Skips gracefully when Playwright is not installed or no session cookies configured.
+  registerJob("prop-firm-dashboard-snapshot", 60 * 60 * 1000, async () => {
+    const { runDashboardSnapshots } = await import("./services/dashboard-snapshot-service.js");
+    await runDashboardSnapshots();
+  });
+
+  cron.schedule("5 * * * *", async () => { // 5 min past each hour to stagger from other hourly jobs
+    const t0snap = Date.now();
+    await withRetry("prop-firm-dashboard-snapshot", SCHEDULER_JOBS["prop-firm-dashboard-snapshot"].run, 1);
+    markJobRun("prop-firm-dashboard-snapshot");
+    emitJobComplete("prop-firm-dashboard-snapshot", Date.now() - t0snap);
+  });
+
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15)");
 
   // ─── Startup reconciliation: catch up missed jobs ─────────
   reconcileMissedRuns().then(() => {
