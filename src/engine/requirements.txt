@@ -28,6 +28,11 @@ psutil>=5.9.0             # Hardware profiling
 # Determinism enforcement (A1 — W9)
 threadpoolctl>=3.0.0      # Runtime BLAS/OpenMP thread-count limiter (BSD-3-Clause, free)
 
+# Property-based testing (A6 — W11) — TEST-ONLY dependency.
+# MIT-licensed, free. Hypothesis fuzzes inputs to catch edge cases human tests miss.
+# Uses fixed seed by default (settings.deriving_via = ...) for CI reproducibility.
+hypothesis>=6.100
+
 # Cross-engine parity testing (A3 — W10) — TEST-ONLY dependency.
 # NEVER import backtrader from any production path (backtester.py, paper engine, etc.).
 # GPL-3 license; personal/non-commercial use only (matches Trading Forge usage).
