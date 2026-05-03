@@ -19,6 +19,47 @@ All build phases are done. No new subsystems, no Phase 4.16, no greenfield featu
 
 Agents must reject feature-add suggestions and reframe work as hardening, integration, organization, or deletion.
 
+## Validation Cadence — Forcing Function (HARD RULE, C7 / W16)
+
+**No new infrastructure work, refactor, or subsystem proposal is approved while
+the Validation Cadence panel is RED.**
+
+The panel turns RED when ANY of these conditions hold:
+
+- Days Since Last Live Backtest > `VALIDATION_CADENCE_RED_THRESHOLD_DAYS` (default 7)
+- Strategies Tested End-to-End This Month < `VALIDATION_CADENCE_MIN_STRATEGIES_PER_MONTH` (default 1)
+- Reality Check Score < 50 / 100
+
+**"Tested end-to-end this month" means the strategy crossed at least into PAPER
+state (PAPER, DEPLOY_READY, PILOT, or DEPLOYED) via `lifecycle_transitions` in
+the current calendar month.** A strategy that bounces TESTING ↔ TESTING does NOT
+count. Backtest-only does NOT count. The pipeline must complete end-to-end.
+
+**Why this rule exists:** Most common failure mode for sophisticated solo
+operators. Reddit/Medium documents traders who built elaborate infrastructure
+for 3-6 months and never deployed live. December 2025: 100+ elaborate
+backtested systems all hit Sharpe 0.0 on regime change — built over months,
+all worthless because never validated live. This rule exists to prevent that
+exact failure mode in Trading Forge.
+
+**Operator override path:** the threshold is tunable via env vars
+(`VALIDATION_CADENCE_RED_THRESHOLD_DAYS`, `VALIDATION_CADENCE_MIN_STRATEGIES_PER_MONTH`).
+Operators may raise the threshold for documented reasons (e.g. deliberate
+research period). They MAY NOT silently bypass the panel.
+
+**Inspection commands:**
+- Live state: `GET /api/validation-cadence/dashboard`
+- Manual report: `POST /api/validation-cadence/reality-check`
+- Dashboard component: `Trading_forge_frontend/amber-vision-main/src/components/forge/ValidationCadencePanel.tsx`
+- Service: `src/server/services/validation-cadence-service.ts`
+- Monthly cron: `validation-cadence-monthly` (1st of each month, 3:30 AM UTC,
+  bypasses pipeline-pause gate)
+
+**When the panel is RED:** stop all infrastructure work and run a strategy
+through the full pipeline (CANDIDATE → TESTING → PAPER → …). Once the
+lifecycle transition lands, the counter resets and infrastructure work
+resumes. The system is engineered to make this the path of least resistance.
+
 ## Operating Model
 
 n8n and OpenClaw are always on. They are the intake layer and eyes of the system.

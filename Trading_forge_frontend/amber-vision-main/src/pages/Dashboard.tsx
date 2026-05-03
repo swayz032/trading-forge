@@ -7,6 +7,7 @@ import {
 import { TradingViewWidget } from "@/components/forge/TradingViewWidget";
 import { StrategyLeaderboard } from "@/components/forge/StrategyLeaderboard";
 import { StrategySpotlight } from "@/components/forge/StrategySpotlight";
+import { ValidationCadencePanel } from "@/components/forge/ValidationCadencePanel";
 import { useStrategies } from "@/hooks/useStrategies";
 import { useBacktests, useBacktestTrades } from "@/hooks/useBacktests";
 import { useMonteCarlo } from "@/hooks/useMonteCarlo";
@@ -245,6 +246,9 @@ export default function Dashboard() {
           <TradingViewWidget type="ticker-tape" />
         </div>
       </motion.div>
+
+      {/* ROW 1.5: C7 Validation Cadence — forcing function (RED at >7 days idle) */}
+      <ValidationCadencePanel />
 
       {/* ROW 2: Strategy Scoreboard */}
       <motion.div
