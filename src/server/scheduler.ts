@@ -463,14 +463,18 @@ export function initScheduler() {
     logger.info({ correlationId, jobName: "lifecycle-auto-check" }, "cron tick start");
     const promoted = await lifecycle.checkAutoPromotions({ correlationId });
     const demoted = await lifecycle.checkAutoDemotions({ correlationId });
-    if (promoted.length > 0 || demoted.length > 0) {
+    // B8: PILOT canary sweep — runs alongside regular auto-promotion check
+    const pilotResult = await lifecycle.checkPilotAutoPromotions({ correlationId });
+    if (promoted.length > 0 || demoted.length > 0 || pilotResult.promoted > 0 || pilotResult.killed > 0) {
       broadcastSSE("lifecycle:auto-check", {
         promoted,
         demoted,
+        pilotPromoted: pilotResult.promoted,
+        pilotKilled: pilotResult.killed,
         timestamp: new Date().toISOString(),
       });
     }
-    logger.info({ promoted: promoted.length, demoted: demoted.length, correlationId }, "Lifecycle auto-check complete");
+    logger.info({ promoted: promoted.length, demoted: demoted.length, pilotSwept: pilotResult.swept, pilotPromoted: pilotResult.promoted, pilotKilled: pilotResult.killed, correlationId }, "Lifecycle auto-check complete");
 
     // Discord: WARNING if strategies were demoted — system health degraded
     if (demoted.length > 0) {

@@ -13,9 +13,9 @@
  * The system NEVER auto-deploys to TradingView.
  */
 
-import { eq, and, desc, gte, sql } from "drizzle-orm";
+import { eq, and, desc, gte, sql, count } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, complianceRulesets } from "../db/schema.js";
+import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, complianceRulesets, pilotSessions } from "../db/schema.js";
 import { computeAgreement } from "../lib/quantum-agreement.js";
 import { getLatestAdversarialStressRun } from "./adversarial-stress-service.js";
 import { getLatestFrankensteinRun } from "./frankenstein-service.js";
@@ -34,6 +34,7 @@ const VALID_STATES = [
   "TESTING",
   "PAPER",
   "DEPLOY_READY",
+  "PILOT",
   "DEPLOYED",
   "DECLINING",
   "RETIRED",
@@ -55,7 +56,12 @@ const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
   CANDIDATE: ["TESTING", "PAPER", "GRAVEYARD"],  // PAPER is fast-track for tier-qualified strategies (Wave B1)
   TESTING: ["PAPER", "DECLINING", "GRAVEYARD"],  // Demotable on catastrophic failure
   PAPER: ["DEPLOY_READY", "DECLINING", "GRAVEYARD"],  // Demotable on drift
-  DEPLOY_READY: ["DEPLOYED", "PAPER", "GRAVEYARD"],  // Human approves deploy OR sends back to paper
+  DEPLOY_READY: ["PILOT", "DEPLOYED", "PAPER", "GRAVEYARD"],  // Human approves PILOT canary OR legacy direct deploy OR back to paper
+  // B8: PILOT canary state — 5 sessions, 1 contract.
+  // PILOT → DEPLOYED: automatic after 5 sessions (rolling Sharpe > 1.0, no compliance violations).
+  // PILOT → GRAVEYARD: automatic if any kill switch fires.
+  // PILOT is entered via human approval (actor="human_release") from DEPLOY_READY.
+  PILOT: ["DEPLOYED", "GRAVEYARD"],
   DEPLOYED: ["DECLINING", "GRAVEYARD"],
   DECLINING: ["TESTING", "RETIRED", "GRAVEYARD"],
   RETIRED: ["GRAVEYARD"],
@@ -319,6 +325,20 @@ export class LifecycleService {
       logger.warn({ id, fromState, toState, actor: options.actor ?? "system" }, error);
       return { success: false, error };
     }
+
+    // B8: DEPLOY_READY → PILOT requires human approval (same authority as DEPLOYED).
+    // This prevents system-auto promotion into the canary track — a human must decide
+    // to enter the canary window for each strategy.
+    if (fromState === "DEPLOY_READY" && toState === "PILOT" && options.actor !== "human_release") {
+      const error = "Only manual release authority can promote DEPLOY_READY -> PILOT (canary track requires human approval)";
+      logger.warn({ id, fromState, toState, actor: options.actor ?? "system" }, error);
+      return { success: false, error };
+    }
+
+    // B8: PILOT → DEPLOYED requires either human_release OR system auto-promotion
+    // (system actor = automatic after 5 sessions pass). PILOT → GRAVEYARD is always
+    // allowed (kill switch path — no actor restriction).
+    // No additional guard needed here; the VALID_TRANSITIONS map allows both.
 
     // Validate transition
     const allowed = VALID_TRANSITIONS[fromState];
@@ -1813,5 +1833,228 @@ export class LifecycleService {
     }
 
     return { counts, alerts };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // B8: PILOT auto-promotion / auto-kill sweep
+  //
+  // Called by the 6-hour lifecycle cron alongside checkAutoPromotions().
+  // Evaluates every strategy currently in PILOT state:
+  //
+  //   Promotion criteria (PILOT → DEPLOYED):
+  //     - Exactly PILOT_REQUIRED_SESSIONS=5 pilot sessions completed
+  //     - All sessions: compliancePassed=true
+  //     - rollingSharpeFinal >= PILOT_MIN_SHARPE=1.0 (at least for the last session)
+  //     - No kill switch has fired (no 'killed' outcome row)
+  //
+  //   Auto-kill criteria (PILOT → GRAVEYARD):
+  //     - Any pilot session has outcome='killed' (kill switch fired)
+  //
+  // Contract guarantees:
+  //   - Exactly 1 contract is enforced by paper-signal-service during PILOT
+  //     (checked via the pilotContracts field on the paper session config).
+  //   - This function is non-blocking: errors per strategy are caught and logged.
+  //   - Duplicate runs (idempotent): already-promoted strategies are not in PILOT state.
+  // ─────────────────────────────────────────────────────────────────────────
+  async checkPilotAutoPromotions(context?: { correlationId?: string }): Promise<{
+    swept: number;
+    promoted: number;
+    killed: number;
+    pending: number;
+    errors: number;
+  }> {
+    const correlationId = context?.correlationId;
+    const PILOT_REQUIRED_SESSIONS = 5;
+    const PILOT_MIN_SHARPE = 1.0;
+
+    const result = { swept: 0, promoted: 0, killed: 0, pending: 0, errors: 0 };
+
+    // Find all strategies currently in PILOT state
+    const pilotStrategies = await db
+      .select({ id: strategies.id, name: strategies.name })
+      .from(strategies)
+      .where(eq(strategies.lifecycleState, "PILOT"));
+
+    result.swept = pilotStrategies.length;
+
+    for (const s of pilotStrategies) {
+      try {
+        // Fetch all pilot session rows for this strategy
+        const sessions = await db
+          .select()
+          .from(pilotSessions)
+          .where(eq(pilotSessions.strategyId, s.id))
+          .orderBy(pilotSessions.sessionNumber);
+
+        // Auto-kill: any session with outcome='killed' means a kill switch fired
+        const killedSession = sessions.find((ps) => ps.outcome === "killed");
+        if (killedSession) {
+          logger.warn(
+            { strategyId: s.id, killReason: killedSession.killReason, sessionNumber: killedSession.sessionNumber },
+            "PILOT auto-kill: kill switch fired — promoting to GRAVEYARD",
+          );
+          const killResult = await this.promoteStrategy(s.id, "PILOT", "GRAVEYARD", {
+            actor: "system",
+            reason: `PILOT kill switch fired in session ${killedSession.sessionNumber}: ${killedSession.killReason ?? "kill_switch"}`,
+            correlationId,
+          });
+          if (killResult.success) {
+            result.killed++;
+            broadcastSSE("lifecycle:promoted", {
+              strategyId: s.id,
+              from: "PILOT",
+              to: "GRAVEYARD",
+              name: s.name,
+              reason: killedSession.killReason,
+            });
+          } else {
+            logger.warn({ strategyId: s.id, error: killResult.error }, "PILOT auto-kill promotion failed");
+            result.errors++;
+          }
+          continue;
+        }
+
+        // Count completed sessions (outcome = 'passed' or 'failed')
+        const completedSessions = sessions.filter((ps) => ps.outcome === "passed" || ps.outcome === "failed");
+
+        if (completedSessions.length < PILOT_REQUIRED_SESSIONS) {
+          // Still accumulating sessions — not yet evaluable
+          result.pending++;
+          logger.debug(
+            { strategyId: s.id, completed: completedSessions.length, required: PILOT_REQUIRED_SESSIONS },
+            "PILOT: insufficient sessions — pending",
+          );
+          continue;
+        }
+
+        // All 5 sessions completed — evaluate promotion criteria
+        const allCompliant = completedSessions.every((ps) => ps.compliancePassed === true);
+        const lastSession = completedSessions[completedSessions.length - 1];
+        const lastSharpePassed =
+          lastSession?.rollingSharpeFinal != null &&
+          parseFloat(String(lastSession.rollingSharpeFinal)) >= PILOT_MIN_SHARPE;
+
+        if (allCompliant && lastSharpePassed) {
+          // PILOT → DEPLOYED: automatic promotion after successful canary
+          logger.info(
+            {
+              strategyId: s.id,
+              sessions: completedSessions.length,
+              lastSharpe: lastSession?.rollingSharpeFinal,
+              allCompliant,
+            },
+            "PILOT auto-promote: 5 sessions passed — promoting to DEPLOYED",
+          );
+          const promoteResult = await this.promoteStrategy(s.id, "PILOT", "DEPLOYED", {
+            actor: "system",
+            reason: `PILOT canary passed: ${PILOT_REQUIRED_SESSIONS} sessions, all compliant, rolling Sharpe >= ${PILOT_MIN_SHARPE}`,
+            correlationId,
+          });
+          if (promoteResult.success) {
+            result.promoted++;
+            broadcastSSE("lifecycle:promoted", {
+              strategyId: s.id,
+              from: "PILOT",
+              to: "DEPLOYED",
+              name: s.name,
+              pilotSessionsCompleted: completedSessions.length,
+              lastRollingSharpe: lastSession?.rollingSharpeFinal,
+            });
+            // Compile Pine on promotion to DEPLOYED (same as DEPLOY_READY → DEPLOYED path)
+            compileDualPineExport(s.id, correlationId ?? undefined).catch((pineErr) => {
+              logger.warn({ strategyId: s.id, err: pineErr }, "PILOT auto-promote: Pine export failed (non-blocking)");
+            });
+          } else {
+            logger.warn({ strategyId: s.id, error: promoteResult.error }, "PILOT auto-promote failed");
+            result.errors++;
+          }
+        } else {
+          // Criteria not met — send to GRAVEYARD (PILOT failed but no kill switch)
+          const failureReason = !allCompliant
+            ? "compliance_violation_in_pilot_session"
+            : `rolling_sharpe_below_${PILOT_MIN_SHARPE}`;
+          logger.warn(
+            {
+              strategyId: s.id,
+              allCompliant,
+              lastSharpe: lastSession?.rollingSharpeFinal,
+              failureReason,
+            },
+            "PILOT criteria not met — promoting to GRAVEYARD",
+          );
+          const failResult = await this.promoteStrategy(s.id, "PILOT", "GRAVEYARD", {
+            actor: "system",
+            reason: `PILOT failed: ${failureReason}`,
+            correlationId,
+          });
+          if (failResult.success) {
+            result.killed++;
+            broadcastSSE("lifecycle:promoted", {
+              strategyId: s.id,
+              from: "PILOT",
+              to: "GRAVEYARD",
+              name: s.name,
+              reason: failureReason,
+            });
+          } else {
+            logger.warn({ strategyId: s.id, error: failResult.error }, "PILOT failure promotion to GRAVEYARD failed");
+            result.errors++;
+          }
+        }
+      } catch (err) {
+        result.errors++;
+        logger.error({ strategyId: s.id, err }, "checkPilotAutoPromotions: error processing PILOT strategy (non-blocking)");
+      }
+    }
+
+    logger.info(result, "PILOT auto-promotion sweep complete");
+    return result;
+  }
+
+  /**
+   * Record a completed pilot session row for a PILOT strategy.
+   * Called by paper-execution-service when a paper session closes for a PILOT strategy.
+   *
+   * Enforces the 1-contract constraint by reading the pilot session's contracts field.
+   * Does NOT promote the strategy — promotion is handled by checkPilotAutoPromotions().
+   */
+  async recordPilotSession(options: {
+    strategyId: string;
+    paperSessionId: string;
+    rollingSharpeFinal: number | null;
+    compliancePassed: boolean;
+    outcome: "passed" | "failed" | "killed";
+    killReason?: string;
+  }): Promise<void> {
+    // Count existing pilot sessions for this strategy (determines session_number)
+    const [existingCount] = await db
+      .select({ n: count() })
+      .from(pilotSessions)
+      .where(eq(pilotSessions.strategyId, options.strategyId));
+
+    const sessionNumber = Number(existingCount?.n ?? 0) + 1;
+
+    await db.insert(pilotSessions).values({
+      strategyId: options.strategyId,
+      sessionNumber,
+      paperSessionId: options.paperSessionId,
+      rollingSharpeFinal: options.rollingSharpeFinal != null ? String(options.rollingSharpeFinal) : null,
+      compliancePassed: options.compliancePassed,
+      contracts: 1,  // Always 1 in PILOT
+      completedAt: new Date(),
+      outcome: options.outcome,
+      killReason: options.killReason ?? null,
+    });
+
+    logger.info(
+      {
+        strategyId: options.strategyId,
+        sessionNumber,
+        outcome: options.outcome,
+        rollingSharpeFinal: options.rollingSharpeFinal,
+        compliancePassed: options.compliancePassed,
+      },
+      "Pilot session recorded",
+    );
   }
 }

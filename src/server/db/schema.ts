@@ -50,7 +50,7 @@ export const strategies = pgTable("strategies", {
   symbol: text("symbol").notNull(),
   timeframe: text("timeframe").notNull(),
   config: jsonb("config").notNull(), // Full strategy definition JSON
-  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOY_READY | DEPLOYED | DECLINING | RETIRED
+  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOY_READY | PILOT | DEPLOYED | DECLINING | RETIRED | GRAVEYARD
   lifecycleChangedAt: timestamp("lifecycle_changed_at").defaultNow(),
   preferredRegime: text("preferred_regime"), // TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL
   rollingSharpe30d: numeric("rolling_sharpe_30d"),
@@ -1752,5 +1752,39 @@ export const strategyFirmEligibility = pgTable(
     index("idx_sfe_strategy_eligible").on(table.strategyId, table.eligible),
     // Recency: latest check per strategy
     index("idx_sfe_checked_at").on(table.strategyId, table.checkedAt.desc()),
+  ]
+);
+
+// ─── B8: pilot_sessions (W14 — PILOT canary state) ─────────────────────────
+// Tracks individual sessions within the PILOT canary window (5 sessions, 1 contract).
+// One row per session slot within a PILOT promotion attempt for a strategy.
+//
+// Lifecycle:
+//   DEPLOY_READY → PILOT (human approval, actor="human_release")
+//   PILOT → DEPLOYED (automatic after 5 sessions with rolling Sharpe > 1.0 AND no compliance violations)
+//   PILOT → GRAVEYARD (automatic if any kill switch fires)
+//
+// Exactly 1 contract is enforced for the entire PILOT window regardless of
+// the strategy's normal sizing configuration (Kelly, profit tier, etc.).
+// This isolates canary risk and prevents oversizing during the unknown period.
+export const pilotSessions = pgTable(
+  "pilot_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").notNull().references(() => strategies.id, { onDelete: "cascade" }),
+    sessionNumber: integer("session_number").notNull(),       // 1-5 (out of PILOT_REQUIRED_SESSIONS=5)
+    paperSessionId: uuid("paper_session_id").references(() => paperSessions.id),
+    rollingSharpeFinal: numeric("rolling_sharpe_final"),     // rolling Sharpe at session close
+    compliancePassed: boolean("compliance_passed"),           // no violations this session
+    contracts: integer("contracts").notNull().default(1),     // forced to 1 during PILOT
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    completedAt: timestamp("completed_at"),
+    outcome: text("outcome").notNull().default("pending"),    // pending | passed | failed | killed
+    killReason: text("kill_reason"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_pilot_sessions_strategy").on(table.strategyId),
+    index("idx_pilot_sessions_outcome").on(table.strategyId, table.outcome),
   ]
 );
