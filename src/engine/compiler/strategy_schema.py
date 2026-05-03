@@ -181,6 +181,29 @@ class StrategyDSL(BaseModel):
         description="Daily P&L target in dollars (informational). None = no target.",
     )
 
+    # Frankenstein test mode (A4 — W10 Team C).
+    # Controls how the randomization detection test shuffles data when this strategy
+    # is tested via frankenstein_test.py before TESTING→PAPER promotion.
+    #
+    # Modes:
+    #   full_shuffle        — bars shuffled uniformly (default; destroys all temporal structure)
+    #   benchmark_relative  — excess returns above benchmark shuffled (long-only strategies)
+    #   calendar_preserving — shuffle within day-of-week buckets (calendar-effect strategies)
+    #   synthetic_gbm       — replace data with GBM random walk at matched mean/vol
+    #
+    # None (default) → full_shuffle is used. Operators may override for strategies
+    # that legitimately exploit calendar effects (use calendar_preserving instead of
+    # full_shuffle so the test doesn't incorrectly reject a valid edge).
+    frankenstein_test_mode: Optional[Literal[
+        "full_shuffle",
+        "benchmark_relative",
+        "calendar_preserving",
+        "synthetic_gbm",
+    ]] = Field(
+        None,
+        description="Shuffle mode for A4 Frankenstein randomization test. None = full_shuffle.",
+    )
+
     model_config = {"extra": "forbid"}
 
     @model_validator(mode="after")

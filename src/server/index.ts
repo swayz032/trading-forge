@@ -43,6 +43,7 @@ import { quantumMcRoutes } from "./routes/quantum-mc.js";
 import { quantumPreFlightRoutes } from "./routes/quantum-pre-flight.js";
 import { quantumCostRoutes } from "./routes/quantum-cost.js";
 import { adversarialStressRoutes } from "./routes/adversarial-stress.js";
+import { frankensteinRoutes } from "./routes/frankenstein.js";
 import { cloudQmcRoutes } from "./routes/cloud-qmc.js";
 import { strategyNameRoutes } from "./routes/strategy-names.js";
 import { criticOptimizerRoutes } from "./routes/critic-optimizer.js";
@@ -381,6 +382,8 @@ app.use("/api/quantum/pre-flight", quantumPreFlightRoutes);
 // No strict rate limit — Python only calls after an actual circuit run (~6ms each).
 app.use("/api/quantum/cost", quantumCostRoutes);
 app.use("/api/adversarial-stress", strictRateLimit, adversarialStressRoutes);
+// A4 Frankenstein: hard TESTING→PAPER gate — blocks promotion if strategy shows edge on random data
+app.use("/api/frankenstein", strictRateLimit, frankensteinRoutes);
 app.use("/api/cloud-qmc", strictRateLimit, cloudQmcRoutes);
 app.use("/api/strategy-names", strategyNameRoutes);
 app.use("/api/critic-optimizer", strictRateLimit, criticOptimizerRoutes);

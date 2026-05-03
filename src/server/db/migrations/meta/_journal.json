@@ -512,6 +512,13 @@
       "when": 1746230400000,
       "tag": "0070_backtest_provenance",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1746316800000,
+      "tag": "0071_frankenstein_test_runs",
+      "breakpoints": true
     }
   ]
 }

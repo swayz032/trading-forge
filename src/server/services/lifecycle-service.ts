@@ -18,6 +18,7 @@ import { db } from "../db/index.js";
 import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, complianceRulesets } from "../db/schema.js";
 import { computeAgreement } from "../lib/quantum-agreement.js";
 import { getLatestAdversarialStressRun } from "./adversarial-stress-service.js";
+import { getLatestFrankensteinRun } from "./frankenstein-service.js";
 import { logger } from "../index.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
@@ -563,6 +564,94 @@ export class LifecycleService {
     } catch (evidenceErr) {
       // Non-blocking — evidence enrichment must never abort a promotion
       logger.warn({ strategyId: id, err: evidenceErr }, "promoteStrategy: evidence lookup failed (audit row will lack backtestId/forgeScore/mcSurvivalRate)");
+    }
+
+    // ── A4 Frankenstein Gate: TESTING → PAPER hard block ────────────────────
+    // The Frankenstein test detects lookahead / future-data bugs by checking
+    // whether the strategy shows edge on shuffled/GBM data. If it does, the
+    // backtester has a structural bug that invalidates all metrics.
+    //
+    // This is a HARD gate — not Phase 0 shadow. A failed Frankenstein test
+    // blocks promotion immediately with a clear reason. No graduation required.
+    //
+    // Pass criteria (locked from plan):
+    //   95th pct of |Sharpe| < 0.3 AND median PF in [0.85, 1.15]
+    //
+    // If no Frankenstein run exists yet: promotion is BLOCKED with a clear
+    // message asking the operator to run the Frankenstein test first.
+    // This forces the test to be run before any strategy can enter paper trading.
+    if (fromState === "TESTING" && toState === "PAPER") {
+      if (promotionEvidence.backtestId) {
+        try {
+          const frankResult = await getLatestFrankensteinRun(promotionEvidence.backtestId);
+
+          if (!frankResult) {
+            // No Frankenstein run exists — block promotion and require the test
+            const error =
+              "Frankenstein gate: no completed Frankenstein test run found for this backtest. " +
+              "Run POST /api/frankenstein/run before promoting to PAPER.";
+            logger.warn(
+              { strategyId: id, backtestId: promotionEvidence.backtestId, fromState, toState },
+              error,
+            );
+            return { success: false, error };
+          }
+
+          if (!frankResult.passed) {
+            // Frankenstein test FAILED — hard block
+            const error =
+              `Frankenstein gate: FAILED. Strategy shows edge on randomized data — backtester likely has a lookahead bug. ` +
+              `p95_sharpe=${frankResult.p95Sharpe?.toFixed(3) ?? "null"} (threshold: <0.3), ` +
+              `median_pf=${frankResult.medianPf?.toFixed(3) ?? "null"} (threshold: [0.85, 1.15]). ` +
+              `Run ID: ${frankResult.runId}`;
+            logger.warn(
+              {
+                strategyId: id,
+                backtestId: promotionEvidence.backtestId,
+                frankRunId: frankResult.runId,
+                p95Sharpe: frankResult.p95Sharpe,
+                medianPf: frankResult.medianPf,
+                fromState,
+                toState,
+              },
+              "Frankenstein gate: BLOCKED promotion — strategy failed randomization detection test",
+            );
+            return { success: false, error };
+          }
+
+          // Frankenstein passed — log confirmation and proceed
+          logger.info(
+            {
+              strategyId: id,
+              backtestId: promotionEvidence.backtestId,
+              frankRunId: frankResult.runId,
+              p95Sharpe: frankResult.p95Sharpe,
+              medianPf: frankResult.medianPf,
+              fromState,
+              toState,
+            },
+            "Frankenstein gate: PASSED — promotion allowed",
+          );
+        } catch (frankErr) {
+          // Gate failure should fail-closed: if we can't read the result, block promotion.
+          // A broken Frankenstein check is safer treated as a failed gate than an open one.
+          const msg = frankErr instanceof Error ? frankErr.message : String(frankErr);
+          const error = `Frankenstein gate: read failed (fail-closed). Error: ${msg}`;
+          logger.warn(
+            { strategyId: id, backtestId: promotionEvidence.backtestId, err: frankErr },
+            "Frankenstein gate: read error — blocking promotion (fail-closed)",
+          );
+          return { success: false, error };
+        }
+      } else {
+        // No backtestId in evidence — can't look up Frankenstein result.
+        // Fail-closed: require a backtest before promotion.
+        const error =
+          "Frankenstein gate: no backtest ID found in evidence — cannot verify Frankenstein test. " +
+          "Run a backtest and Frankenstein test before promoting to PAPER.";
+        logger.warn({ strategyId: id, fromState, toState }, error);
+        return { success: false, error };
+      }
     }
 
     // Atomic write block: state update + (optional) name retire + audit rows.
