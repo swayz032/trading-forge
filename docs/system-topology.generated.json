@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T10:24:52.638Z",
+  "generatedAt": "2026-05-03T01:05:13.619Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 47,
-    "schedulerJobs": 42,
+    "schedulerJobs": 43,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 22,
@@ -82,6 +82,7 @@
     "compliance-rule-drift",
     "contract-roll-sweep",
     "critic-feedback",
+    "databento-weekly-refresh",
     "decay-monitor",
     "deepar-predict",
     "deepar-train",
@@ -805,7 +806,9 @@
       "databaseTables": 55
     },
     "missingRoutes": [],
-    "missingSchedulerJobs": [],
+    "missingSchedulerJobs": [
+      "databento-weekly-refresh"
+    ],
     "missingEngineSubsystems": [],
     "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],

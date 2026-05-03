@@ -1071,7 +1071,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-04-30T10:24:52.638Z`.
+Updated automatically from the repo on `2026-05-03T01:05:13.619Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1080,7 +1080,7 @@ Updated automatically from the repo on `2026-04-30T10:24:52.638Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `tradingview_deploy`
 - API routes tracked: `47`
-- Scheduler jobs tracked: `42`
+- Scheduler jobs tracked: `43`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -1122,7 +1122,7 @@ Updated automatically from the repo on `2026-04-30T10:24:52.638Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `14`
 - Route coverage: `47/47`
-- Scheduler coverage: `42/42`
+- Scheduler coverage: `42/43`
 - Engine coverage: `22/22`
 - Database coverage: `55/55`
 - Autonomous subsystems with audit coverage: `14/14`
@@ -1290,6 +1290,7 @@ Updated automatically from the repo on `2026-04-30T10:24:52.638Z`.
 - `compliance-rule-drift`
 - `contract-roll-sweep`
 - `critic-feedback`
+- `databento-weekly-refresh`
 - `decay-monitor`
 - `deepar-predict`
 - `deepar-train`
