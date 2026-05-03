@@ -91,6 +91,27 @@ export async function isActive(): Promise<boolean> {
   return (await getMode()) === "ACTIVE";
 }
 
+/**
+ * B6 — Extended status payload that includes compute mode alongside pipeline mode.
+ * Use this in health endpoints and dashboard payloads where the operator needs to
+ * know both whether the pipeline is active AND where compute is being routed.
+ *
+ * isActive() is preserved as-is (boolean fast path) so hot-path guards are unaffected.
+ */
+export async function getPipelineStatus(): Promise<{
+  mode: PipelineMode;
+  active: boolean;
+  computeMode: import("../lib/compute-failover.js").ComputeFailoverStatus;
+}> {
+  const { getComputeFailoverStatus } = await import("../lib/compute-failover.js");
+  const mode = await getMode();
+  return {
+    mode,
+    active: mode === "ACTIVE",
+    computeMode: getComputeFailoverStatus(),
+  };
+}
+
 export async function setMode(
   mode: PipelineMode,
   reason: string,
