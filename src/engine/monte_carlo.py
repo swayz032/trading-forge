@@ -15,6 +15,14 @@ Usage:
 
 from __future__ import annotations
 
+# A1 Determinism: import FIRST, before numpy. Sets BLAS env vars at load time.
+import os as _os
+if _os.environ.get("DETERMINISM_MODE", "").lower() == "true":
+    from src.engine.determinism import enable_determinism as _enable_det
+    _enable_det()
+else:
+    import src.engine.determinism  # noqa: F401 — side-effect: sets env vars
+
 import json
 import sys
 import time
