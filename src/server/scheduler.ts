@@ -513,6 +513,29 @@ export function initScheduler() {
     await runMonthlyRealityCheckReport();
   });
 
+  // ─── C8 (W17): Pre-Trading-Day Health Check (Windows reboot guard) ─
+  // Fires at 8:00 AM ET (DST-aware double-fire) on weekdays. Runs the
+  // PowerShell script scripts/pre-trading-day-health-check.ps1 which
+  // verifies (1) no pending Windows reboot, (2) no failed updates in
+  // last 24h, (3) Node + Python services running, (4) >= 10GB free on
+  // C:, (5) RAM utilization < 80%. On any non-zero exit, the cron pauses
+  // the pipeline (fail-CLOSED) and fires a critical alert.
+  //
+  // Bypass: BYPASS_PRE_MARKET_HEALTH_CHECK=true (testing only).
+  registerJob("pre-trading-day-health-check", 24 * 60 * 60 * 1000, async () => {
+    const { runPreTradingDayHealthCheck } = await import("./services/windows-health-check-service.js");
+    const result = await runPreTradingDayHealthCheck();
+    logger.info(
+      {
+        status: result.status,
+        exitCode: result.exitCode,
+        durationMs: result.durationMs,
+        pipelinePaused: result.pipelinePaused,
+      },
+      "Pre-trading-day health check complete",
+    );
+  });
+
   // ─── Weekly: Anti-setup miner (Monday 12 AM ET) ──────────
   // Mines anti-setups from PAPER/DEPLOYED strategies and persists to audit_log
   // so the real-time anti-setup gate can load them.
@@ -669,6 +692,40 @@ export function initScheduler() {
     await withRetry("pre-market-prep", preMarketPrep);
     markJobRun("pre-market-prep");
     emitJobComplete("pre-market-prep", Date.now() - t0premarket);
+  });
+
+  // ─── C8 (W17): Pre-Trading-Day Health Check at 8:00 AM ET, weekdays ─
+  // Run at 12:00 and 13:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
+  // Filter on actual ET hour so only the correct one fires per day.
+  //
+  // INTENTIONALLY NOT pipelineGated. If the pipeline is already PAUSED
+  // (operator-initiated or from a prior failed run), we still need the
+  // check to run so subsequent successful runs can be observed in the
+  // job-health dashboard. The service itself short-circuits when there
+  // is nothing to do (no pause-state mutation on healthy outcomes).
+  cron.schedule("0 12,13 * * 1-5", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etHourStr, etMinStr] = etTimeStr.split(":");
+    const etHour = parseInt(etHourStr, 10);
+    const etMin = parseInt(etMinStr, 10);
+    if (etHour !== 8 || etMin !== 0) {
+      logger.debug(
+        { etHour, etMin, utcHour: now.getUTCHours() },
+        "Scheduler: pre-trading-day-health-check cron fired but not 8:00 AM ET — skipping",
+      );
+      return;
+    }
+    logger.info("Scheduler: Pre-trading-day health check (8:00 AM ET confirmed)");
+    const t0hc = Date.now();
+    await withRetry("pre-trading-day-health-check", SCHEDULER_JOBS["pre-trading-day-health-check"].run, 1);
+    markJobRun("pre-trading-day-health-check");
+    emitJobComplete("pre-trading-day-health-check", Date.now() - t0hc);
   });
 
   // ─── Every hour: Compare stopped paper sessions to backtest ─
