@@ -65,6 +65,7 @@ import { CircuitBreakerRegistry } from "./lib/circuit-breaker.js";
 import { AlertFactory } from "./services/alert-service.js";
 import { initAgentCoordination } from "./services/agent-coordinator-service.js";
 import { auditorRoutes } from "./routes/auditor.js";
+import { shadowRerunRoutes } from "./routes/shadow-rerun.js";
 
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard
@@ -402,6 +403,8 @@ app.use("/api/search", searchRouterRoutes);
 app.use("/api/prevalidate", prevalidatorRoutes);
 app.use("/api/openclaw/daily-report", openclawDailyReportRoutes);
 app.use("/api/supadata", supadataRoutes);
+// A11: Shadow Re-Run Pattern — observation only, no lifecycle gate authority
+app.use("/api/shadow-rerun", strictRateLimit, shadowRerunRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {

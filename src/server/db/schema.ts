@@ -1628,6 +1628,63 @@ export const strategySignalVectors = pgTable(
   ]
 );
 
+// ─── Shadow Re-Run Findings (A11 — W12 Team A, migration 0074) ───────────────
+// When math changes (bug fix), re-runs PAPER+ strategies' historical backtests
+// with new code and diffs result_hash vs backtest_provenance. Findings here
+// surface strategies whose promotion gate decision would have flipped.
+//
+// PAPER+ scope: PAPER, DEPLOY_READY, DEPLOYED, DECLINING, RETIRED, GRAVEYARD
+// These strategies produced real evidence. A math fix that changes their outcome
+// retroactively is high-impact — operators must know.
+//
+// severity values:
+//   info     — same result_hash, code change had no effect on this strategy
+//   warning  — different hash, different metrics, but gate decision unchanged
+//   critical — different hash AND status_flipped=true (promotion was wrong)
+//
+// Authority: observation/alert layer only. Does NOT gate any lifecycle decision.
+// UNIQUE on (strategy_id, backtest_id, new_code_git_sha) for idempotency.
+export const shadowRerunFindings = pgTable(
+  "shadow_rerun_findings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runAt: timestamp("run_at").defaultNow().notNull(),
+    runReason: text("run_reason").notNull(),            // why this shadow re-run was triggered
+    strategyId: uuid("strategy_id")
+      .references(() => strategies.id)
+      .notNull(),
+    backtestId: uuid("backtest_id")
+      .references(() => backtests.id)
+      .notNull(),
+    oldCodeGitSha: text("old_code_git_sha").notNull(), // git SHA from original provenance row
+    newCodeGitSha: text("new_code_git_sha").notNull(), // git SHA of shadow re-run code
+    oldResultHash: text("old_result_hash").notNull(),  // from backtest_provenance
+    newResultHash: text("new_result_hash").notNull(),  // from shadow re-run
+    oldPf: numeric("old_pf"),                          // original profit_factor
+    newPf: numeric("new_pf"),                          // shadow re-run profit_factor
+    oldSharpe: numeric("old_sharpe"),                  // original sharpe_ratio
+    newSharpe: numeric("new_sharpe"),                  // shadow re-run sharpe_ratio
+    oldMaxDd: numeric("old_max_dd"),                   // original max_drawdown
+    newMaxDd: numeric("new_max_dd"),                   // shadow re-run max_drawdown
+    statusFlipped: boolean("status_flipped").notNull(),// did gate decision change?
+    severity: text("severity").notNull().default("info"), // info | warning | critical
+  },
+  (table) => [
+    // Recency index for "show latest shadow re-run findings" dashboard queries
+    index("idx_shadow_rerun_run_at").on(table.runAt.desc()),
+    // Strategy-level lookup
+    index("idx_shadow_rerun_strategy").on(table.strategyId, table.runAt.desc()),
+    // Critical-first dashboard view
+    index("idx_shadow_rerun_severity").on(table.severity, table.statusFlipped),
+    // Idempotency: one finding per (strategy, backtest, new code version)
+    uniqueIndex("idx_shadow_rerun_unique_finding").on(
+      table.strategyId,
+      table.backtestId,
+      table.newCodeGitSha,
+    ),
+  ]
+);
+
 // ─── Data Integrity Findings (A8 — W11 Team C, migration 0073) ───────────────
 // Single findings table for the consolidated reconciliation + drift detection
 // service. Both check categories write here, distinguished by check_type.
