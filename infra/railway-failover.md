@@ -1,9 +1,10 @@
 # Railway Cloud Failover Runbook — B6
 
 **Purpose:** When Skytech (primary compute) goes down, route backtest and paper
-signal jobs to Railway free-tier compute as an emergency fallback. Zero added
-monthly cost during idle periods; $5/mo credit covers ~100 emergency backtest
-hours/month.
+signal jobs to Railway compute as an emergency fallback. Trading Forge runs on
+Railway's **paid $20/month plan** — plenty of usage-based compute headroom. No
+artificial "$5 credit window" constraint applies; can run multi-hour backtests,
+async paper signal generation, and emergency failover freely.
 
 ---
 

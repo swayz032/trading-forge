@@ -1,6 +1,6 @@
 # A12 — 12-Category Code Audit Report
 
-**Generated:** 2026-05-03 03:35:27 UTC  
+**Generated:** 2026-05-03 04:11:44 UTC  
 **Auditor:** W12 Team B (trading-forge-architect)  
 **Plan:** PART A §A12 of `C:\Users\tonio\.claude\plans\reflective-dancing-moth.md`  
 **Scope:** Read-only static + numerical audit of existing Trading Forge code.  
@@ -229,7 +229,7 @@
 **Evidence:**
 
 - critical PnL fields using numeric(): 19/19 OK
-  - schema.ts jsonb() usages: 111
+  - schema.ts jsonb() usages: 112
   - db-locks.ts uses pg_advisory_xact_lock: OK
   - paper-execution-service uses withSessionLock >=2 times: OK
   - migrations using float8/double precision: none

@@ -28,19 +28,85 @@ All build phases are done. No new subsystems, no greenfield features. The only r
 ## What This Is
 Autonomous futures/derivatives strategy research lab. Single user (swayz032), single 50K prop-firm account, $10K/month net target. Fully automated research -> validation -> paper trading -> ATS-export pipeline. Human controls TradingView deployment only. Not a SaaS product.
 
+**Trading Forge is PRIVATE — no SaaS, no marketplace, no monetization channels.**
+Pine export remains available for personal TradingView indicator use only.
+Reject any feature suggestion framed around selling, licensing, or distributing
+strategy artifacts. The B9 Pine marketplace component was REMOVED 2026-05-03
+(reverted at commit `6740db2`) because it conflicted with this constraint.
+
+## Hosting / Cost Posture
+
+- **Railway is the PAID $20/month plan** (not free tier). Plenty of usage-based
+  compute headroom for backtests, async paper signal generation, and B6 cloud
+  failover. Do not assume "free-tier $5 credit window" constraints — those are
+  obsolete.
+- Skytech is primary compute. Railway is emergency failover (B6 state machine
+  in `src/server/lib/compute-failover.ts`).
+- Other free tiers (Fly.io, Cloudflare Workers, IBM Quantum) remain in use as
+  secondary fallbacks; cost discipline still applies elsewhere.
+
 ## Strategy Lifecycle (Automated)
-CANDIDATE -> TESTING -> PAPER -> DEPLOY_READY -> DEPLOYED -> DECLINING -> RETIRED -> GRAVEYARD
+CANDIDATE -> TESTING -> PAPER -> DEPLOY_READY -> [PILOT ->] DEPLOYED -> DECLINING -> RETIRED -> GRAVEYARD
 
 Automated transitions (every 6h scheduler check):
 - CANDIDATE -> TESTING: forgeScore >= 50, tier 1/2/3, backtest + WF complete
 - TESTING -> PAPER: MC survival > 70%, prop compliance >= 1 firm
 - PAPER -> DEPLOY_READY: 30+ days paper, rolling Sharpe >= 1.5
-- DEPLOY_READY -> DEPLOYED: **HUMAN ONLY** (POST /api/strategies/:id/deploy)
+- DEPLOY_READY -> PILOT: **HUMAN ONLY** (canary track — 5 sessions, 1 contract)
+- DEPLOY_READY -> DEPLOYED: **HUMAN ONLY** (legacy direct deploy)
+- PILOT -> DEPLOYED: AUTOMATIC after 5 paper sessions when rolling Sharpe >= 1.0 AND all sessions compliance-passed
+- PILOT -> GRAVEYARD: AUTOMATIC if any kill switch fires OR criteria fail at session 5
 - DEPLOYED -> DECLINING: Rolling Sharpe < 1.0 (inline check every 4h)
 - DECLINING -> RETIRED: Evolution fails or max attempts
 - Any -> GRAVEYARD: Catastrophic failure, compliance violation, kill signal
 
-The system NEVER auto-deploys. You choose what goes to TradingView.
+The system NEVER auto-deploys without a human first promoting to DEPLOY_READY → PILOT (or DEPLOY_READY → DEPLOYED for legacy direct deploys). PILOT → DEPLOYED auto-promotion happens only after the 5-session canary window passes its gates. You choose what enters PILOT; the system finishes the canary check.
+
+### PILOT Canary State (W14 / B8)
+
+- **Schema:** `pilot_sessions` table (migration 0077) tracks one row per session
+  slot (`sessionNumber` 1-5) with `rollingSharpeFinal`, `compliancePassed`,
+  `outcome`, `killReason`, `contracts` (forced to 1).
+- **Service:** `LifecycleService.checkPilotAutoPromotions()` runs in the
+  6-hour `lifecycle-auto-check` cron alongside the regular auto-promotion sweep.
+  Pipeline pause guard via the scheduler `pipelineGate()` wrapper.
+- **Authority:** PILOT auto-promotion / auto-kill is SYSTEM-driven. PILOT entry
+  requires `actor="human_release"` (matches DEPLOYED authority).
+- **Why:** Industry canary pattern between DEPLOY_READY and DEPLOYED — catches
+  "passed paper but live trading exposes new failure modes" without committing
+  full size to a single strategy.
+
+### Minimum Regime Performance (W14 / B10)
+
+- **Schema:** `mrp_sharpe` (numeric) + `mrp_regime_breakdown` (jsonb) columns
+  on the `backtests` table (migration 0078). Null for pre-B10 backtests or
+  backtests with insufficient regime data.
+- **Computation:** Fire-and-forget after backtest completes. Groups
+  `backtest_trades` by `macroRegime`, computes annualized Sharpe per regime
+  (>= 3 trades required, UNKNOWN regime excluded), stores the minimum value.
+  Runs INSIDE `runBacktest()` after the entry-point `isPipelineActive()` guard,
+  so it inherits the pause gate.
+- **Authority:** SOFT gate at PAPER -> DEPLOY_READY. `mrp_sharpe < 0.5` logs
+  an advisory `audit_log` row + WARN-level log line; never blocks promotion.
+  Hard gate activates after 30 days of MRP data.
+- **Why:** Per Alexander-Fabozzi (2026), MRP is the best single metric for
+  regime-conditional fragility. A strategy with mrp_sharpe < 0.5 will fail
+  when the dominant macro regime rotates.
+
+### Macro News Blackout Opt-In (W14 / B11)
+
+- **`bypass_news_blackout: true`** in DSL (per W13 B3 spec) lets event-driven
+  strategies (e.g., `news_fade_mcl`) trade during FOMC/CPI/NFP ±30 min macro
+  blackouts. Default is the full blackout (fail-safe for all other strategies).
+- **Holidays still block.** No strategy can trade on CME-closed holidays —
+  `bypass_news_blackout` does NOT override the holiday check.
+- **Wired:** `paper-signal-service.ts` reads the opt-in from `sessionConfig.config`
+  before evaluating any entry signal; `dsl-translator.ts` propagates it from
+  fixture into the paper config; `calendar_filter.py` defines the FOMC/CPI/NFP
+  blackout windows for 2026-2027.
+- **Authority:** explicit opt-in only. Without the field, default behavior
+  (SIT_OUT ±30 min) applies — matches the CLAUDE.md "Don't trade through
+  FOMC/CPI/NFP without explicit event handling" rule.
 
 ## Tech Stack
 - **API Server**: Express.js 5 + TypeScript (src/server/)

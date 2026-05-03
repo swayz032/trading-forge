@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T03:39:10.343Z",
+  "generatedAt": "2026-05-03T04:15:00.332Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -20,7 +20,7 @@
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 23,
-    "databaseTables": 61,
+    "databaseTables": 62,
     "registrySubsystems": 16
   },
   "routes": [
@@ -736,6 +736,7 @@
     "paper_sessions",
     "paper_signal_logs",
     "paper_trades",
+    "pilot_sessions",
     "prompt_ab_tests",
     "prompt_versions",
     "quantum_mc_benchmarks",
@@ -815,7 +816,7 @@
       "routes": 50,
       "schedulerJobs": 45,
       "engineSubsystems": 23,
-      "databaseTables": 61
+      "databaseTables": 62
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -2390,6 +2391,7 @@
           "monte_carlo_runs",
           "paper parity metrics",
           "paper_sessions",
+          "pilot_sessions",
           "qualification metrics",
           "strategies",
           "strategy_firm_eligibility",
@@ -4297,6 +4299,7 @@
         "monte_carlo_runs",
         "paper parity metrics",
         "paper_sessions",
+        "pilot_sessions",
         "qualification metrics",
         "strategies",
         "strategy_firm_eligibility",
