@@ -14,6 +14,8 @@ import { runPythonModule } from "../lib/python-runner.js";
 import { sanitizeExternalContent } from "./llm-input-sanitizer.js";
 import { validateRawLLMResponse, validateDSLOutput } from "./llm-output-validator.js";
 import { sandboxCheckCode } from "./llm-sandbox-service.js";
+// C9: DSL diversity check (W17 Team B) — pre-backtest template similarity gate
+import { checkDslDiversity, persistDslFeatureVector, auditDslDiversityRejection } from "./dsl-diversity-service.js";
 
 const _SYMBOLS = ["MES", "MNQ", "MCL"] as const;
 type Symbol = (typeof _SYMBOLS)[number];
@@ -419,6 +421,7 @@ export class AgentService {
     skipped?: boolean;
     reason?: string;
     compileErrors?: string[];
+    dslDiversityCheck?: import("./dsl-diversity-service.js").DslDiversityCheckResult;
   }> {
     const correlationId = context?.correlationId;
 
@@ -456,6 +459,53 @@ export class AgentService {
       return { strategyId: null, backtestId: null, status: "blocked", tier: null, forgeScore: null };
     }
 
+    // 2a. C9: DSL diversity gate — pre-backtest template similarity check.
+    // Catches LLM mode-collapse before it wastes backtest compute.
+    // Defense-in-depth with A7 (post-backtest signal correlation):
+    //   C9 catches identical DSL templates (pre-backtest).
+    //   A7 catches different code that produces identical signals (post-backtest).
+    // Fail-open on pipeline pause and DB errors (non-blocking to main flow).
+    if (options.source === "ollama" || options.source === "openclaw") {
+      try {
+        const diversityCheck = await checkDslDiversity(dsl);
+        if (!diversityCheck.passed) {
+          logger.warn(
+            {
+              dslName,
+              source: options.source,
+              maxSimilarity: diversityCheck.maxSimilarity,
+              mostSimilarStrategyId: diversityCheck.mostSimilarStrategyId,
+              strategiesChecked: diversityCheck.strategiesChecked,
+              reason: diversityCheck.reason,
+            },
+            "runStrategyFromDSL: DSL rejected by C9 diversity gate",
+          );
+          // Audit log for the candidate contract (fire-and-forget)
+          auditDslDiversityRejection({
+            dsl,
+            checkResult: diversityCheck,
+            source: options.source,
+            correlationId: correlationId ?? null,
+          }).catch(() => {});
+          return {
+            strategyId: null,
+            backtestId: null,
+            status: "blocked_dsl_diversity",
+            tier: null,
+            forgeScore: null,
+            dslDiversityCheck: diversityCheck,
+          };
+        }
+        logger.debug(
+          { dslName, maxSimilarity: diversityCheck.maxSimilarity, strategiesChecked: diversityCheck.strategiesChecked },
+          "C9: DSL diversity gate passed",
+        );
+      } catch (diversityErr) {
+        // Fail-open: gate error never blocks the pipeline
+        logger.warn({ err: diversityErr, dslName }, "C9: diversity gate threw — proceeding (fail-open)");
+      }
+    }
+
     // 3. Persist strategy with the COMPILED config (not python_code)
     const symbol = String(dsl.symbol);
     const timeframe = String(dsl.timeframe);
@@ -472,6 +522,11 @@ export class AgentService {
       })
       .returning();
     const strategyId = strategy.id;
+
+    // 3a. C9: Persist DSL feature vector for future diversity checks (fire-and-forget).
+    // Written AFTER strategy DB insert so the feature table only contains accepted candidates.
+    // Failures are non-blocking — the strategy was already accepted and will be backtested.
+    persistDslFeatureVector(strategyId, dsl).catch(() => {});
 
     // 4. Run backtest with the compiled config
     const backtestConfig = {

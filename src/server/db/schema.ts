@@ -1839,6 +1839,39 @@ export const llmInjectionAttempts = pgTable(
   ]
 );
 
+// ─── C9: strategy_dsl_features (W17 Team B — DSL Diversity Check) ───────────
+// Pre-backtest DSL template similarity detection. Stores compressed float32
+// feature vectors derived from DSL JSON fields. Defense-in-depth with A7:
+//   A7 (signal-correlation-service.ts) catches POST-backtest signal duplication.
+//   C9 catches PRE-backtest DSL template repetition (same code shape, new name).
+//
+// Feature vector: 13 float32 dimensions (indicator, exit, direction, symbol,
+// timeframe, regime, sl_atr, tp_atr, + up to 5 entry_param values, padded).
+// Threshold: 0.85 cosine similarity → reject candidate pre-backtest.
+// Lookback: last 50 strategies (ordered by created_at DESC).
+// Exact-match fast path: sha256(canonical DSL) → immediate reject on dupe fingerprint.
+export const strategyDslFeatures = pgTable(
+  "strategy_dsl_features",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id")
+      .references(() => strategies.id)
+      .notNull(),
+    featureVectorCompressed: bytea("feature_vector_compressed").notNull(), // gzip(float32[])
+    featureDim: integer("feature_dim").notNull(),                          // uncompressed vector length
+    dslFingerprint: text("dsl_fingerprint").notNull(),                     // sha256(canonical DSL JSON)
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    // Fast similarity scan: load last N feature vectors ordered by recency
+    index("idx_dsl_features_created").on(table.createdAt.desc()),
+    // Fast exact-match skip: fingerprint check before vector load
+    index("idx_dsl_features_fingerprint").on(table.dslFingerprint),
+    // One vector per strategy (upsert safe)
+    uniqueIndex("idx_dsl_features_strategy").on(table.strategyId),
+  ]
+);
+
 // ─── C2: prop_firm_health_checks (W15 — Prop Firm Suspension Detection) ──────
 // Stores health check results for each prop firm API poll (every 15 min).
 // alert_fired = true rows are the actionable record for the dashboard.

@@ -1,13 +1,17 @@
 /**
  * Strategy Pre-Validator — gate that runs BEFORE backtest queue insert.
  *
- * Three checks:
+ * Four checks:
  *   1. Graveyard hash    — has this concept (market+tf+conceptName) been
  *                          journaled by openclaw in the last 90 days?
  *   2. Correlation guard — is there already a DEPLOYED strategy on the same
  *                          (market, timeframe, conceptName)?  ρ proxy.
  *   3. Regime fit        — does the strategy's preferredRegime align with the
  *                          current/intended regime?
+ *   4. DSL diversity     — (C9, advisory) cosine similarity against recent DSL
+ *                          feature vectors. Surfaces the score in the validation
+ *                          report. Hard gate is enforced upstream in agent-service
+ *                          runStrategyFromDSL(); this check is advisory here.
  *
  * Returns { passed, reasons }.  Soft-blocks (warnings) bubble through reasons
  * but do not flip passed=false unless explicitly hard.  Caller decides.
@@ -18,6 +22,8 @@ import { db } from "../db/index.js";
 import { systemJournal, strategies } from "../db/schema.js";
 import { sql, and, eq } from "drizzle-orm";
 import { logger } from "../index.js";
+// C9: DSL diversity advisory report (hard gate is in agent-service.runStrategyFromDSL)
+import { getDslDiversityReport } from "./dsl-diversity-service.js";
 
 export interface CandidateInput {
   conceptName: string;       // e.g. "trend_follow_breakout", "mean_revert_vwap"
@@ -27,6 +33,8 @@ export interface CandidateInput {
   intendedRegime?: string;   // current regime the candidate would deploy into
   entryRules?: string;       // textual rules (used for fingerprinting)
   exitRules?: string;
+  /** Optional DSL JSON for C9 diversity advisory check. Omitted for non-DSL candidates. */
+  dsl?: Record<string, unknown>;
 }
 
 export interface PrevalidationResult {
@@ -37,6 +45,16 @@ export interface PrevalidationResult {
     graveyard: { passed: boolean; existingCount: number };
     correlation: { passed: boolean; deployedCount: number };
     regime: { passed: boolean; reason?: string };
+    /** C9 DSL diversity advisory (always present if dsl was provided, null otherwise). */
+    dslDiversity: {
+      checked: boolean;
+      passed: boolean;
+      maxSimilarity: number | null;
+      mostSimilarStrategyId: string | null;
+      threshold: number;
+      strategiesChecked: number;
+      summary: string;
+    } | null;
   };
 }
 
@@ -137,7 +155,31 @@ export async function prevalidateCandidate(c: CandidateInput): Promise<Prevalida
     reasons.push(`regime-mismatch: ${regime.reason}`);
   }
 
+  // C9: DSL diversity advisory check — surfaces similarity score in validation report.
+  // This check is ADVISORY here (does not flip passed=false). The hard gate is enforced
+  // upstream in agent-service.runStrategyFromDSL() before this prevalidator is called.
+  // The prevalidator surfaces the score so callers can log/display it alongside other checks.
+  let dslDiversity: PrevalidationResult["checks"]["dslDiversity"] = null;
+  if (c.dsl) {
+    try {
+      const report = await getDslDiversityReport(c.dsl);
+      dslDiversity = report;
+      if (!report.passed) {
+        // Advisory warning in reasons — not a hard block here
+        reasons.push(
+          `dsl-diversity-advisory: C9 similarity ${report.maxSimilarity?.toFixed(3) ?? "?"} ` +
+          `exceeds threshold ${report.threshold} with strategy ${report.mostSimilarStrategyId}. ` +
+          `Hard gate enforced by agent-service.`,
+        );
+      }
+    } catch (err) {
+      logger.warn({ err }, "strategy-prevalidator: DSL diversity check failed (non-blocking)");
+      dslDiversity = null;
+    }
+  }
+
   // Hard block on graveyard or regime mismatch; correlation is a soft warn (still passes).
+  // DSL diversity is advisory in prevalidator — hard gate is in agent-service.
   const passed = graveyard.passed && regime.passed;
 
   logger.info(
@@ -148,6 +190,7 @@ export async function prevalidateCandidate(c: CandidateInput): Promise<Prevalida
       timeframe: c.timeframe,
       conceptName: c.conceptName,
       reasons,
+      dslDiversityMaxSim: dslDiversity?.maxSimilarity ?? null,
     },
     "strategy-prevalidator: candidate evaluated",
   );
@@ -156,6 +199,6 @@ export async function prevalidateCandidate(c: CandidateInput): Promise<Prevalida
     passed,
     fingerprint,
     reasons,
-    checks: { graveyard, correlation, regime },
+    checks: { graveyard, correlation, regime, dslDiversity },
   };
 }
