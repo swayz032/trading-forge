@@ -8,7 +8,7 @@
  */
 
 import { eq, and, sql } from "drizzle-orm";
-import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns, monteCarloRuns } from "../db/schema.js";
+import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns, monteCarloRuns, backtestProvenance } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { startStream } from "./paper-trading-stream.js";
 import { runMonteCarlo } from "./monte-carlo-service.js";
@@ -26,6 +26,7 @@ import { tracer } from "../lib/tracing.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { backtestRuns } from "../lib/metrics-registry.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
+import { computeResultHash, computeDataHash, computeStrategyHash } from "../lib/result-hasher.js";
 
 /**
  * Normalize gate_result from Python into a stable JSONB shape.
@@ -592,6 +593,65 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     });
 
     backtestRuns.labels({ status: "completed", mode, tier: result.tier ?? "none" }).inc();
+
+    // ─── A2: Backtest Provenance Tracking (fire-and-forget) ──────────────────
+    // Write a provenance row for every completed backtest. Non-blocking — a
+    // provenance write failure MUST NOT abort the backtest flow.
+    //
+    // result_hash: SHA-256 of the canonical result JSON. With DETERMINISM_MODE=true,
+    //   identical inputs produce identical result_hash values. Divergent hashes for
+    //   the same (data_hash, code_git_sha, strategy_hash) triple signal nondeterminism.
+    //
+    // result.provenance_meta is optionally emitted by backtester.py when
+    //   DETERMINISM_MODE=true. Fields: python_version, numpy_version,
+    //   determinism_env_set. When absent (older engine, test fixtures), we store null.
+    (async () => {
+      try {
+        const resultRecord = result as unknown as Record<string, unknown>;
+        const provenanceMeta = resultRecord.provenance_meta as
+          | { python_version?: string; numpy_version?: string; determinism_env_set?: boolean }
+          | undefined;
+
+        const dataHash = computeDataHash(
+          String(config.strategy?.symbol ?? "unknown"),
+          String(config.strategy?.timeframe ?? "unknown"),
+          String(config.start_date ?? ""),
+          String(config.end_date ?? ""),
+        );
+
+        const strategyHash = computeStrategyHash(config.strategy ?? config);
+
+        // Code git SHA: prefer explicit FORGE_GIT_SHA env var (injected by deploy
+        // pipeline), fall back to "unknown" (no git available in this process).
+        const codeGitSha = process.env.FORGE_GIT_SHA ?? "unknown";
+
+        // Compute result hash from the raw Python result dict. We hash the full
+        // result including provenance_meta so that environment changes are visible.
+        const resultHash = computeResultHash(resultRecord);
+
+        await db.insert(backtestProvenance).values({
+          backtestId,
+          dataHash,
+          codeGitSha,
+          strategyHash,
+          resultHash,
+          pythonVersion: provenanceMeta?.python_version ?? null,
+          numpyVersion: provenanceMeta?.numpy_version ?? null,
+          determinismEnvSet: provenanceMeta?.determinism_env_set ?? null,
+        });
+
+        logger.debug(
+          { backtestId, strategyId, dataHash, codeGitSha: codeGitSha.slice(0, 8), resultHash: resultHash.slice(0, 8) },
+          "A2 provenance: row written",
+        );
+      } catch (provenanceErr) {
+        // Non-blocking — provenance write failure must never abort the backtest flow.
+        logger.warn(
+          { backtestId, strategyId, err: provenanceErr },
+          "A2 provenance: write failed (non-blocking — backtest is still completed)",
+        );
+      }
+    })();
 
     // ─── Optional SQA parameter optimization (fire-and-forget) ───
     // Fires for ALL qualifying backtests (non-REJECTED with walk-forward results),

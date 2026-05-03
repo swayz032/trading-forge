@@ -1497,3 +1497,87 @@ export const strategyLockouts = pgTable(
     index("idx_strategy_lockouts_strategy_active").on(table.strategyId, table.lockedUntil.desc()),
   ]
 );
+
+// ─── Backtest Provenance (A2 — W10 Team C, migration 0070) ───────────────────
+// Records the input fingerprints that produced every completed backtest result.
+// Enables drift detection: same (data_hash, code_git_sha, strategy_hash) triple
+// MUST produce the same result_hash when DETERMINISM_MODE=true.
+//
+// Drift detection query (run in Drizzle Studio to find nondeterminism):
+//   SELECT data_hash, code_git_sha, strategy_hash,
+//          count(DISTINCT result_hash) AS distinct_hashes,
+//          array_agg(backtest_id ORDER BY created_at) AS backtest_ids
+//   FROM backtest_provenance
+//   GROUP BY data_hash, code_git_sha, strategy_hash
+//   HAVING count(DISTINCT result_hash) > 1;
+//
+// Authority: read-only observation layer. Does NOT gate any lifecycle decision.
+// Written by backtest-service.ts on every completed backtest, fire-and-forget.
+export const backtestProvenance = pgTable(
+  "backtest_provenance",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    backtestId: uuid("backtest_id")
+      .references(() => backtests.id)
+      .notNull(),
+    dataHash: text("data_hash").notNull(),           // SHA-256 of symbol+timeframe+date-range descriptor
+    codeGitSha: text("code_git_sha").notNull(),      // git HEAD SHA at backtest run time
+    strategyHash: text("strategy_hash").notNull(),   // SHA-256 of canonical strategy DSL JSON
+    resultHash: text("result_hash").notNull(),        // SHA-256 of canonicalize_result() output
+    pythonVersion: text("python_version"),            // e.g. "3.11.8"
+    numpyVersion: text("numpy_version"),              // e.g. "1.26.4"
+    determinismEnvSet: boolean("determinism_env_set"), // true when DETERMINISM_MODE=true was active
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    // Composite index for the drift detection query and duplicate-check on insert.
+    index("idx_backtest_provenance_lookup").on(
+      table.dataHash,
+      table.codeGitSha,
+      table.strategyHash,
+    ),
+    index("idx_backtest_provenance_backtest_id").on(table.backtestId),
+  ]
+);
+
+// ─── Frankenstein Test Runs (A4 — W10 Team C, migration 0071) ─────────────────
+// Records randomization detection test results for each backtest.
+// If a strategy shows edge on shuffled/GBM data, the backtester has a lookahead bug.
+//
+// Pass criteria (locked from plan):
+//   p95_sharpe < 0.3 AND median_pf IN [0.85, 1.15]
+//
+// Gate: TESTING→PAPER lifecycle transition reads passed=true before promoting.
+// Phase: Hard gate — not shadow-only. A false (failed) blocks promotion immediately.
+//
+// Status lifecycle: pending → completed | failed
+// Pending-row contract: row is inserted before the Python subprocess runs.
+export const frankensteinTestRuns = pgTable(
+  "frankenstein_test_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    backtestId: uuid("backtest_id")
+      .references(() => backtests.id)
+      .notNull(),
+    strategyId: uuid("strategy_id")
+      .references(() => strategies.id)
+      .notNull(),
+    testMode: text("test_mode").notNull(), // full_shuffle | benchmark_relative | calendar_preserving | synthetic_gbm
+    nShuffles: integer("n_shuffles").notNull(),
+    p95Sharpe: numeric("p95_sharpe").notNull(),       // 95th pct of |Sharpe| across shuffles
+    medianPf: numeric("median_pf").notNull(),          // median profit factor across shuffles
+    passed: boolean("passed").notNull(),               // p95_sharpe < 0.3 AND median_pf IN [0.85, 1.15]
+    sharpeDistribution: jsonb("sharpe_distribution"), // array of Sharpe values from all shuffles
+    pfDistribution: jsonb("pf_distribution"),          // array of PF values from all shuffles
+    failureExamples: jsonb("failure_examples"),        // shuffles that showed anomalous edge
+    status: text("status").notNull().default("pending"), // pending | completed | failed
+    errorMessage: text("error_message"),
+    wallClockMs: integer("wall_clock_ms"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_frankenstein_backtest").on(table.backtestId, table.createdAt.desc()),
+    index("idx_frankenstein_strategy").on(table.strategyId, table.createdAt.desc()),
+    index("idx_frankenstein_passed").on(table.passed, table.status),
+  ]
+);
