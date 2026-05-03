@@ -50,6 +50,7 @@ import { strategyNameRoutes } from "./routes/strategy-names.js";
 import { criticOptimizerRoutes } from "./routes/critic-optimizer.js";
 import { deeparRoutes } from "./routes/deepar.js";
 import { healthDashboardRoutes } from "./routes/health-dashboard.js";
+import { validationCadenceRoutes } from "./routes/validation-cadence.js";
 import { adminRoutes } from "./routes/admin.js";
 import { dlqRoutes } from "./routes/dlq.js";
 import { metricsRoutes } from "./routes/metrics.js";
@@ -307,6 +308,14 @@ app.get("/api/health", async (_req, res) => {
     }
   }
 
+  // C4: Network failover status — included in health payload so operator knows
+  // ISP connectivity state without a separate API call.
+  let networkFailoverStatus: import("./lib/network-failover.js").NetworkFailoverStatus | null = null;
+  try {
+    const { getNetworkFailoverStatus } = await import("./lib/network-failover.js");
+    networkFailoverStatus = getNetworkFailoverStatus();
+  } catch { /* monitor not yet started — omit from response */ }
+
   res.json({
     status: topLevelStatus,
     service: "trading-forge",
@@ -325,6 +334,8 @@ app.get("/api/health", async (_req, res) => {
     pythonPool,
     massive,
     n8n,
+    // C4: Network failover — ISP/broker connectivity state (null if monitor not started)
+    networkFailover: networkFailoverStatus,
     circuitBreakers: CircuitBreakerRegistry.statusAll(),
     scheduler: schedulerStatus,
     memory: {
@@ -394,6 +405,7 @@ app.use("/api/deepar", deeparRoutes);
 // Tier 3.3: A+ Market Auditor — challenger_only, advisory output
 app.use("/api/auditor", strictRateLimit, auditorRoutes);
 app.use("/api/health", healthDashboardRoutes);
+app.use("/api/validation-cadence", validationCadenceRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dlq", dlqRoutes);
 app.use("/api/metrics", metricsRoutes);

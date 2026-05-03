@@ -20,6 +20,8 @@ import {
 } from "./exchange-status-service.js";
 // C2: prop-firm suspension gate
 import { isFirmSuspended, registerSuspensionChangeCallback } from "./prop-firm-health-service.js";
+// C4: network failover connectivity annotation (annotation-only, does not block orders)
+import { isConnectivityDegraded } from "../lib/network-failover.js";
 export { CONTRACT_SPECS };
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
@@ -607,10 +609,36 @@ export async function openPosition(sessionId: string, params: {
     }
   }
 
+  // ─── C4: Network connectivity annotation ─────────────────────
+  // When ISP connectivity is degraded (FAILOVER_ALERT or DEGRADED),
+  // emit a structured warning. Orders are NOT blocked — blocking orders
+  // during network degradation would distort paper session P&L and corrupt
+  // promotion-gate inputs. The log annotation enables post-hoc filtering.
+  //
+  // Server-side order placement (primary C4 defense): paper positions are
+  // held in Railway PostgreSQL which remains reachable even when Skytech's
+  // ISP is down. Sessions remain active; position management resumes when
+  // connectivity restores. Do NOT auto-close on network degradation.
+  const connectivityDegraded = isConnectivityDegraded();
+  if (connectivityDegraded) {
+    logger.warn(
+      {
+        fn: "openPosition",
+        sessionId,
+        symbol: params.symbol,
+        side: params.side,
+        connectivityDegraded: true,
+        c4: "network_failover_active",
+      },
+      "C4 network: connectivity degraded — order proceeding (positions held server-side). Enable USB tethering if not active. See infra/network-redundancy.md.",
+    );
+  }
+
   const openSpan = tracer.startSpan("paper.position_open");
   openSpan.setAttribute("symbol", params.symbol);
   openSpan.setAttribute("side", params.side);
   openSpan.setAttribute("contracts", params.contracts);
+  openSpan.setAttribute("connectivity_degraded", connectivityDegraded);
 
   try {
     return await withSessionLock(sessionId, async (dbConn) => {

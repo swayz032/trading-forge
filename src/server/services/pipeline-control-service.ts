@@ -96,6 +96,9 @@ export async function isActive(): Promise<boolean> {
  * Use this in health endpoints and dashboard payloads where the operator needs to
  * know both whether the pipeline is active AND where compute is being routed.
  *
+ * C4 network failover status is exposed separately via getNetworkFailoverStatus()
+ * from network-failover.ts, surfaced via GET /api/health body.networkFailover.
+ *
  * isActive() is preserved as-is (boolean fast path) so hot-path guards are unaffected.
  */
 export async function getPipelineStatus(): Promise<{

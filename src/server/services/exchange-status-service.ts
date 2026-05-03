@@ -1,7 +1,8 @@
 /**
  * C1 — CME Exchange Status Service (W15 Team B)
+ * C4 — Broker API Connectivity Monitoring export (W16 Team A)
  *
- * Polls the CME status feed every 60 seconds. On detecting an outage:
+ * C1: Polls the CME status feed every 60 seconds. On detecting an outage:
  *   1. Writes an exchange_outages row.
  *   2. Emits SSE event "exchange:outage-detected".
  *   3. Calls paper-execution-service to cancel pending orders and block entries.
@@ -13,6 +14,10 @@
  *   3. Calls paper-execution-service to lift the entry block.
  *   4. Does NOT auto-reissue queued orders — manual review required.
  *      Lesson from Nov 28 2025: bots that auto-reissued caused severe slippage on resume.
+ *
+ * C4: Also exports checkBrokerConnectivity() which probes Tradovate API reachability.
+ * Called by network-failover.ts to distinguish "ISP down" from "broker-side outage".
+ * Read-only: does not affect order routing or paper execution.
  *
  * CME official status: https://www.cmegroup.com/technical/messaging-status.html
  * Fall-back: if the HTTP fetch fails, the service fails CLOSED — outage state is
@@ -44,6 +49,56 @@ let _onOutageChange: OutageNotifyFn | null = null;
  */
 export function registerOutageChangeCallback(fn: OutageNotifyFn): void {
   _onOutageChange = fn;
+}
+
+// ─── C4: Broker API connectivity check ───────────────────────────────────────
+// Probes Tradovate (primary broker) to determine whether broker APIs are reachable.
+// This is distinct from CME venue status (C1): broker API reachability and
+// exchange venue availability are independent signals.
+// network-failover.ts calls this to distinguish "ISP down" from "broker-side incident".
+
+const TRADOVATE_PROBE_URL =
+  process.env.TRADOVATE_STATUS_URL ??
+  "https://live.tradovateapi.com/v1/auth/accesstokenrequest";
+const BROKER_PROBE_TIMEOUT_MS = 8_000;
+
+export interface BrokerConnectivityResult {
+  tradovate: { reachable: boolean; reason?: string };
+  overallReachable: boolean;
+  classification: "healthy" | "broker_unreachable";
+  reason?: string;
+}
+
+/**
+ * C4: Probe Tradovate API reachability.
+ * HEAD request only — no auth required, no account side effects.
+ * Returns overallReachable=true if Tradovate responds (any HTTP status).
+ * Returns overallReachable=false on network error or timeout.
+ */
+export async function checkBrokerConnectivity(): Promise<BrokerConnectivityResult> {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), BROKER_PROBE_TIMEOUT_MS);
+  try {
+    await fetch(TRADOVATE_PROBE_URL, { method: "HEAD", signal: ctrl.signal });
+    clearTimeout(tid);
+    return {
+      tradovate: { reachable: true },
+      overallReachable: true,
+      classification: "healthy",
+    };
+  } catch (err) {
+    clearTimeout(tid);
+    const isAbort = err instanceof Error && err.name === "AbortError";
+    const reason = isAbort
+      ? `probe timed out (${BROKER_PROBE_TIMEOUT_MS}ms)`
+      : (err instanceof Error ? err.message : String(err));
+    return {
+      tradovate: { reachable: false, reason },
+      overallReachable: false,
+      classification: "broker_unreachable",
+      reason: `Tradovate probe failed: ${reason}`,
+    };
+  }
 }
 
 // ─── CME status fetch ─────────────────────────────────────────────────────────
