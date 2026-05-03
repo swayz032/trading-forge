@@ -66,6 +66,7 @@ import { AlertFactory } from "./services/alert-service.js";
 import { initAgentCoordination } from "./services/agent-coordinator-service.js";
 import { auditorRoutes } from "./routes/auditor.js";
 import { shadowRerunRoutes } from "./routes/shadow-rerun.js";
+import { pineMarketplaceRoutes } from "./routes/pine-marketplace.js";
 
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard
@@ -374,6 +375,10 @@ app.use("/api/portfolio", portfolioRoutes);
 app.use("/api/context", contextRoutes);
 app.use("/api/validation", validationRoutes);
 app.use("/api/pine-export", pineExportRoutes);
+// B9 (W14): Pine marketplace package generation + admin routes.
+// Not strict-rate-limited — operator-only, never called by automation in burst.
+// Pipeline pause guard is on the POST route internally.
+app.use("/api/pine-marketplace", pineMarketplaceRoutes);
 app.use("/api/quantum-mc", strictRateLimit, quantumMcRoutes);
 // Tier 6: Quantum pre-flight — cache-READ-ONLY lookup for n8n workflows.
 // NOT rate-limited at strict tier because it is read-only and called per
