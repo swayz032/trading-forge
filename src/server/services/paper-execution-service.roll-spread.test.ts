@@ -57,8 +57,9 @@ vi.mock("../lib/tracing.js",  () => ({
 }));
 vi.mock("../scheduler.js",    () => ({ onPaperTradeClose: vi.fn() }));
 vi.mock("./paper-risk-gate.js", () => ({
-  toEasternDateString:     vi.fn().mockReturnValue("2026-03-15"),
-  invalidateDailyLossCache: vi.fn(),
+  toEasternDateString:          vi.fn().mockReturnValue("2026-03-15"),
+  toFuturesTradingDayString:    vi.fn().mockReturnValue("2026-03-15"),
+  invalidateDailyLossCache:     vi.fn(),
 }));
 vi.mock("./pipeline-control-service.js", () => ({ isActive: vi.fn().mockResolvedValue(true) }));
 vi.mock("../lib/db-locks.js", () => ({

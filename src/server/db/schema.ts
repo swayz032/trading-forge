@@ -570,6 +570,10 @@ export const paperSessions = pgTable(
     startingCapital: numeric("starting_capital").notNull().default("50000"),
     currentEquity: numeric("current_equity").notNull().default("50000"),
     peakEquity: numeric("peak_equity").notNull().default("50000"),
+    // W12 Bug #2: realizedPeakEquity is the authoritative trailing-DD HWM (closed equity only).
+    // peakEquity above is kept as a UI display column (MTM HWM updated every price tick).
+    // Trailing-DD compliance checks must use realizedPeakEquity, not peakEquity.
+    realizedPeakEquity: numeric("realized_peak_equity").notNull().default("50000"),
     config: jsonb("config"),
     lastSignalTime: timestamp("last_signal_time"),    // Gap 3: cooldown persistence
     cooldownUntil: timestamp("cooldown_until"),        // Gap 3: cooldown persistence

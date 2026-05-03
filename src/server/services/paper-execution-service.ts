@@ -6,7 +6,7 @@ import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 import { onPaperTradeClose } from "../scheduler.js";
 import { getFirmAccount, CONTRACT_SPECS, getCommissionPerSide } from "../../shared/firm-config.js";
-import { toEasternDateString, invalidateDailyLossCache } from "./paper-risk-gate.js";
+import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCache } from "./paper-risk-gate.js";
 import { getEtOffsetMinutes } from "../lib/dst-utils.js";
 import { tracer } from "../lib/tracing.js";
 import { withSessionLock } from "../lib/db-locks.js";
@@ -468,9 +468,11 @@ export async function openPosition(sessionId: string, params: {
 
     if (!killCached) {
       try {
-        // Read today's daily P&L from dailyPnlBreakdown JSONB
-        const { toEasternDateString } = await import("./paper-risk-gate.js");
-        const today = toEasternDateString();
+        // Read today's daily P&L from dailyPnlBreakdown JSONB.
+        // Use CME futures trading-day key (5pm ET cutoff) so this matches the
+        // key written by checkConsistencyRule / the dailyPnlBreakdown update.
+        const { toFuturesTradingDayString } = await import("./paper-risk-gate.js");
+        const today = toFuturesTradingDayString();
         const todayPnl = ((session.dailyPnlBreakdown ?? {}) as Record<string, number>)[today] ?? 0;
 
         // Read daily loss limit from session config (set when session created)
@@ -498,13 +500,15 @@ export async function openPosition(sessionId: string, params: {
 
         // Trades taken today — separate COUNT query so sessions with >10 trades are not undercounted.
         // recentTrades (limit 10) is only used for consecutive-loss detection above.
-        const todayEtDateStr = toEasternDateString();
+        // Use CME futures trading-day key so max_trades_per_day aligns with dailyPnlBreakdown keys.
+        // Trades closed 17:00–23:59 ET count toward NEXT day's per-day trade limit.
+        const todayEtDateStr = toFuturesTradingDayString();
         const [tradesTodayRow] = await dbConn
           .select({ count: sql<number>`count(*)::int` })
           .from(paperTrades)
           .where(and(
             eq(paperTrades.sessionId, sessionId),
-            sql`to_char(${paperTrades.exitTime} AT TIME ZONE 'America/New_York', 'YYYY-MM-DD') = ${todayEtDateStr}`,
+            sql`to_char(${paperTrades.exitTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${todayEtDateStr}`,
           ));
         const tradesToday = tradesTodayRow?.count ?? 0;
 
@@ -1268,11 +1272,16 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
     }).where(eq(paperPositions.id, positionId));
 
     // 3. Update session equity atomically using NET P&L — prevents read-modify-write race on
-    //    concurrent closes.  Also update peak equity (high-water mark) for trailing drawdown.
-    //    totalTrades is incremented here so it always matches the number of trade rows.
+    //    concurrent closes. totalTrades is incremented here so it always matches trade rows.
+    //
+    // W12 Bug #2 fix: realizedPeakEquity is the authoritative trailing-DD HWM per
+    // Topstep/Apex EOD spec — updated from CLOSED equity only (never from MTM).
+    // peakEquity is retained as a UI display column (MTM HWM for the dashboard).
+    // Trailing-DD compliance reads realizedPeakEquity, not peakEquity.
     await tx.update(paperSessions).set({
       currentEquity: sql`${paperSessions.currentEquity}::numeric + ${netPnl}`,
       peakEquity: sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
+      realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
       totalTrades: sql`COALESCE(${paperSessions.totalTrades}, 0) + 1`,
     }).where(eq(paperSessions.id, pos.sessionId));
 
@@ -1424,9 +1433,10 @@ async function checkConsistencyRule(
   const firmConfig = getFirmAccount(session.firmId);
   if (!firmConfig?.consistencyRule) return;
 
-  // Update daily P&L breakdown atomically — increment today's value in SQL
-  // Use Eastern Time date (futures trading day is ET-based)
-  const today = toEasternDateString();
+  // Update daily P&L breakdown atomically — increment today's value in SQL.
+  // Use CME futures trading-day key (5pm ET cutoff): trades closed 17:00–23:59 ET
+  // belong to the NEXT trading day. This key must match the kill-switch lookup key.
+  const today = toFuturesTradingDayString();
 
   const jsonPath = `{${today}}`;
   await db.update(paperSessions).set({
@@ -1616,10 +1626,15 @@ export async function updatePositionPrices(
   // closePosition uses `currentEquity + netPnl` (atomic).
   // updatePositionPrices uses `currentEquity + unrealizedDelta` (atomic, no scan).
   // Both are now additive-atomic — no race is possible.
+  //
+  // W12 Bug #2 fix: peakEquity is intentionally NOT updated here from unrealized P&L.
+  // Per Topstep/Apex EOD trailing-DD spec, the high-water-mark must update from
+  // CLOSED equity only. Updating HWM from MTM over-tightens the trailing floor
+  // and triggers false breaches. realizedPeakEquity (updated in closePosition) is
+  // the authoritative trailing-DD HWM. peakEquity is a UI-only display column.
   if (positionsUpdated > 0 && totalUnrealizedDelta !== 0) {
     await db.update(paperSessions).set({
       currentEquity: sql`${paperSessions.currentEquity}::numeric + ${totalUnrealizedDelta}`,
-      peakEquity: sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${totalUnrealizedDelta})`,
     }).where(eq(paperSessions.id, sessionId));
   }
 

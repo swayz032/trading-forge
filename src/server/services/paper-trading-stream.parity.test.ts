@@ -42,7 +42,7 @@ vi.mock("../../shared/firm-config.js", () => ({
   getTightestDrawdown: vi.fn(),
 }));
 
-import { toEasternDateString } from "./paper-risk-gate.js";
+import { toEasternDateString, toFuturesTradingDayString } from "./paper-risk-gate.js";
 
 // ─── Gap 3.10: ET date boundary tests ────────────────────────────────────────
 //
@@ -114,5 +114,90 @@ describe("toEasternDateString — ET date conversion correctness", () => {
     const utcDate = afterEtMidnight.toISOString().split("T")[0];
     const etDate = toEasternDateString(afterEtMidnight);
     expect(etDate).toBe(utcDate); // Both "2026-01-15" — they agree here
+  });
+});
+
+// ─── W12 Bug #1 fix: CME 5pm ET trading-day boundary ─────────────────────────
+//
+// toFuturesTradingDayString applies a +7h shift before ET date conversion.
+// This aligns the 17:00 ET CME cutoff with the ET calendar midnight so that:
+//   - Trades closed before 17:00 ET → attributed to the CURRENT trading day.
+//   - Trades closed at or after 17:00 ET → attributed to the NEXT trading day.
+//
+// Parity invariant: the key written to dailyPnlBreakdown JSONB by
+// checkConsistencyRule must match the key read by the kill-switch and
+// global-daily-loss gate. All three now call toFuturesTradingDayString.
+
+describe("toFuturesTradingDayString — CME 5pm ET trading-day boundary", () => {
+  it("trade at 16:59 ET (winter) stays on same trading day", () => {
+    // 2026-05-02 16:59 ET (EDT, UTC-4) = 20:59 UTC
+    // 20:59 UTC + 7h = 03:59 UTC 2026-05-03 = 23:59 ET 2026-05-02 → "2026-05-02"
+    // DST in effect (EDT), so 20:59 UTC = 16:59 ET
+    const date = new Date("2026-05-02T20:59:00.000Z");
+    expect(toFuturesTradingDayString(date)).toBe("2026-05-02");
+  });
+
+  it("trade at exactly 17:00 ET (summer/EDT) rolls to next trading day", () => {
+    // 2026-05-02 17:00 ET (EDT, UTC-4) = 21:00 UTC
+    // 21:00 UTC + 7h = 04:00 UTC 2026-05-03 = 00:00 ET 2026-05-03 → "2026-05-03"
+    const date = new Date("2026-05-02T21:00:00.000Z");
+    expect(toFuturesTradingDayString(date)).toBe("2026-05-03");
+  });
+
+  it("trade at 17:00:01 ET (summer) attributes to next CME day", () => {
+    // This is the W12 bug case: a trade closed at 17:00:01 ET on 2026-05-02
+    // must attribute to the 2026-05-03 trading day (per CME convention).
+    const date = new Date("2026-05-02T21:00:01.000Z"); // 17:00:01 EDT
+    expect(toFuturesTradingDayString(date)).toBe("2026-05-03");
+  });
+
+  it("trade at 23:59 ET (summer) still attributes to next CME day", () => {
+    // 2026-05-02 23:59 ET (EDT) = 03:59 UTC 2026-05-03
+    // 03:59 UTC + 7h = 10:59 UTC 2026-05-03 = 06:59 ET 2026-05-03 → "2026-05-03"
+    const date = new Date("2026-05-03T03:59:00.000Z");
+    expect(toFuturesTradingDayString(date)).toBe("2026-05-03");
+  });
+
+  it("trade at 09:00 ET (RTH core) stays on same calendar day", () => {
+    // 2026-05-02 09:00 ET (EDT) = 13:00 UTC
+    // 13:00 UTC + 7h = 20:00 UTC = 16:00 ET → "2026-05-02"
+    const date = new Date("2026-05-02T13:00:00.000Z");
+    expect(toFuturesTradingDayString(date)).toBe("2026-05-02");
+  });
+
+  it("trade at 16:59 ET (winter/EST) stays on same trading day", () => {
+    // 2026-01-15 16:59 ET (EST, UTC-5) = 21:59 UTC
+    // 21:59 UTC + 7h = 04:59 UTC 2026-01-16 = 23:59 ET 2026-01-15 → "2026-01-15"
+    const date = new Date("2026-01-15T21:59:00.000Z");
+    expect(toFuturesTradingDayString(date)).toBe("2026-01-15");
+  });
+
+  it("trade at 17:00 ET (winter/EST) rolls to next trading day", () => {
+    // 2026-01-15 17:00 ET (EST, UTC-5) = 22:00 UTC
+    // 22:00 UTC + 7h = 05:00 UTC 2026-01-16 = 00:00 ET 2026-01-16 → "2026-01-16"
+    const date = new Date("2026-01-15T22:00:00.000Z");
+    expect(toFuturesTradingDayString(date)).toBe("2026-01-16");
+  });
+
+  it("Sunday 18:00 ET Globex reopen still maps to Monday trading day", () => {
+    // CME Globex reopens Sunday 18:00 ET. A trade at 18:30 ET Sunday
+    // should attribute to Monday's trading day.
+    // 2026-05-03 (Sun) 18:30 ET (EDT) = 22:30 UTC 2026-05-03
+    // 22:30 UTC + 7h = 05:30 UTC 2026-05-04 = 01:30 ET 2026-05-04 (Mon) → "2026-05-04"
+    const date = new Date("2026-05-03T22:30:00.000Z"); // Sun 18:30 EDT
+    expect(toFuturesTradingDayString(date)).toBe("2026-05-04");
+  });
+
+  it("toFuturesTradingDayString differs from toEasternDateString only in 17:00-23:59 ET window", () => {
+    // At 10:00 ET (well before 17:00), both functions return the same date
+    const date = new Date("2026-05-02T14:00:00.000Z"); // 10:00 EDT
+    expect(toFuturesTradingDayString(date)).toBe(toEasternDateString(date));
+  });
+
+  it("at 17:00 ET boundary, futures day is AHEAD of calendar ET date", () => {
+    // At exactly 17:00 ET, toFuturesTradingDayString returns tomorrow, toEasternDateString returns today
+    const date = new Date("2026-05-02T21:00:00.000Z"); // 17:00 EDT
+    expect(toFuturesTradingDayString(date)).toBe("2026-05-03");
+    expect(toEasternDateString(date)).toBe("2026-05-02");
   });
 });

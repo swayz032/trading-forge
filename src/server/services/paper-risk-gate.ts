@@ -9,15 +9,48 @@ import { isUsDst } from "../lib/dst-utils.js";
 // The inline implementation has been removed; the canonical version
 // lives in src/server/lib/dst-utils.ts and is the same algorithm.
 
+// ─── ET date helpers ─────────────────────────────────────────────────────────
+//
+// Two distinct date-string functions serve different purposes:
+//
+//   toEasternDateString — ET calendar midnight boundary.
+//     Used for VWAP buffer resets, skipDecisions lookups, and any query
+//     that should align with the calendar ET date (Globex reopen at ~18:00 ET).
+//
+//   toFuturesTradingDayString — CME 5:00 PM ET trading-day boundary.
+//     Used for ALL daily P&L aggregation: dailyPnlBreakdown keys, kill-switch
+//     day-loss reads, and the global daily-loss cache.
+//     CME futures day N starts 18:00 ET on day N-1 and ends 17:00 ET on day N.
+//     Formula: shift timestamp +7h before ET date conversion so that
+//     17:00 ET maps to midnight-ET of the NEXT calendar day (= correct CME day).
+//     Example: 17:05 ET Mon → +7h → 00:05 ET Tue → "Tue" trading day.
+//              16:55 ET Mon → +7h → 23:55 ET Mon → "Mon" trading day.
+
+const _ET_FORMATTER = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
+
 /**
- * Get today's date string in Eastern Time (for daily P&L tracking).
- * Futures trading day is defined in ET, not UTC.
+ * Get the calendar ET date string (YYYY-MM-DD) for a UTC timestamp.
+ * Uses ET midnight as the day boundary. Correct for VWAP resets, skipDecisions,
+ * and any query whose day boundary is ET calendar midnight.
+ * NOT correct for CME daily P&L attribution — use toFuturesTradingDayString.
  */
 export function toEasternDateString(date: Date = new Date()): string {
-  const utcMs = date.getTime();
-  const etOffsetMs = isUsDst(date) ? -4 * 3600_000 : -5 * 3600_000;
-  const etDate = new Date(utcMs + etOffsetMs);
-  return etDate.toISOString().split("T")[0];
+  return _ET_FORMATTER.format(date);
+}
+
+/**
+ * Get the CME futures trading day string (YYYY-MM-DD) for a UTC timestamp.
+ * CME futures day rolls at 17:00 ET: trades closed 17:00–23:59 ET belong
+ * to the NEXT calendar day's trading session.
+ * Use this for ALL daily P&L aggregation, kill-switch day-loss reads,
+ * and dailyPnlBreakdown JSONB keys.
+ */
+export function toFuturesTradingDayString(date: Date = new Date()): string {
+  // Shifting +7 hours aligns the 17:00 ET CME cutoff with ET calendar midnight:
+  //   17:00 ET + 7h = 00:00 ET next day  → correct next-day attribution.
+  //   16:59 ET + 7h = 23:59 ET same day  → correct same-day attribution.
+  const shifted = new Date(date.getTime() + 7 * 3600_000);
+  return _ET_FORMATTER.format(shifted);
 }
 
 // ─── Fix 3: Global daily loss aggregate cache ────────────────────────────────
@@ -152,7 +185,14 @@ export async function checkRiskGate(
   }
 
   // ── b) Session drawdown limit (trailing peak-to-trough, firm-specific or default) ───
-  const peakEquity = Number(session.peakEquity ?? session.startingCapital);
+  // W12 Bug #2: use realizedPeakEquity (closed-equity HWM) for trailing-DD compliance.
+  // peakEquity is the MTM HWM (updated every tick) — over-tightens the floor.
+  // realizedPeakEquity is updated only on trade close, matching Topstep/Apex EOD spec.
+  // Fall back to peakEquity for sessions that predate migration 0075 (column = 50000).
+  const rawRealizedPeak = Number((session as Record<string, unknown>).realizedPeakEquity ?? 0);
+  const peakEquity = rawRealizedPeak > 0
+    ? rawRealizedPeak
+    : Number(session.peakEquity ?? session.startingCapital);
   const currentEquity = Number(session.currentEquity);
   const drawdownLimit = firmConfig?.maxDrawdown
     ?? (config.daily_loss_limit as number)
@@ -189,8 +229,9 @@ export async function checkRiskGate(
 
   // ── d) Daily loss limit (firm-specific) ────────────────────
   if (firmConfig?.dailyLossLimit) {
-    // Use today's loss from dailyPnlBreakdown (tracks actual daily P&L, not session cumulative)
-    const today = toEasternDateString();
+    // Use CME futures trading-day key to match dailyPnlBreakdown entries.
+    // Trades closed 17:00–23:59 ET belong to the NEXT trading day (5pm ET cutoff).
+    const today = toFuturesTradingDayString();
     const breakdown = (session.dailyPnlBreakdown as Record<string, number> | null) ?? {};
     const todayPnl = breakdown[today] ?? 0;
     const todayLoss = todayPnl < 0 ? Math.abs(todayPnl) : 0;
@@ -229,9 +270,9 @@ export async function checkRiskGate(
   }
 
   // ── f) Global daily loss limit across all active sessions ──
-  // Use today's loss from dailyPnlBreakdown (not cumulative lifetime loss)
-  // Must use Eastern Time date to match dailyPnlBreakdown keys (futures trading day = ET)
-  const today = toEasternDateString();
+  // Use CME futures trading-day key so the aggregate matches dailyPnlBreakdown entries.
+  // Trades closed 17:00–23:59 ET are attributed to the NEXT trading day (5pm ET cutoff).
+  const today = toFuturesTradingDayString();
 
   // Fix 3: try aggregate cache before issuing the full-table DB query.
   // Cache is invalidated by invalidateDailyLossCache() on every trade close.

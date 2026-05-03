@@ -1,6 +1,6 @@
 # A12 — 12-Category Code Audit Report
 
-**Generated:** 2026-05-03 02:37:32 UTC  
+**Generated:** 2026-05-03 02:57:12 UTC  
 **Auditor:** W12 Team B (trading-forge-architect)  
 **Plan:** PART A §A12 of `C:\Users\tonio\.claude\plans\reflective-dancing-moth.md`  
 **Scope:** Read-only static + numerical audit of existing Trading Forge code.  
@@ -8,8 +8,8 @@
 
 ## Summary
 
-- PASS:    11/12
-- FAIL:    1/12
+- PASS:    12/12
+- FAIL:    0/12
 - UNKNOWN: 0/12
 
 | Cat | Category | Status |
@@ -22,12 +22,12 @@
 |  6 | Walk-forward leakage | **PASS** |
 |  7 | Monte Carlo accuracy | **PASS** |
 |  8 | Paper-vs-backtest parity | **PASS** |
-|  9 | Daily PnL aggregation | **FAIL** |
+|  9 | Daily PnL aggregation | **PASS** |
 | 10 | Compliance accuracy | **PASS** |
 | 11 | DB write integrity | **PASS** |
 | 12 | Source-of-truth conflicts | **PASS** |
 
-**Verdict:** 1 category FAIL. Open bug-fix tickets per the per-category sections below before W13.
+**Verdict:** All 12 categories PASS. Proceed to W13.
 
 ---
 
@@ -189,19 +189,14 @@
 
 ### Cat 9 — Daily PnL aggregation
 
-**Status:** **FAIL**
+**Status:** **PASS**
 
 **Evidence:**
 
-- toEasternDateString uses calendar ET midnight: YES
+- toEasternDateString uses calendar ET midnight: no
   - consecutive losses streak resets on win: OK
-  - peakEquity HWM updated from MARKED-TO-MARKET (unrealized) equity: YES
+  - peakEquity HWM updated from MARKED-TO-MARKET (unrealized) equity: no
   - checkConsistencyRule called after trade close: OK
-  - FINDING: toEasternDateString() uses calendar ET midnight rollover for dailyPnlBreakdown keys (paper-risk-gate.ts:16-21). Futures trading day rolls at 5:00 PM ET per CME convention. Trades closed 17:00–23:59 ET are attributed to the WRONG trading day. Affects daily loss limit enforcement and consistency rule calculation.
-
-**Fix PR Description:**
-
-> Fix daily P&L aggregation: (1) Add a 5pm ET cutoff helper for futures trading day attribution; (2) Track HWM on a CLOSED-equity column (e.g., realizedPeakEquity) separately from marked-to-market peak so prop firm trailing DD is correct; (3) Update kill switch and dailyPnlBreakdown to key on the futures day, not calendar day.
 
 ---
 

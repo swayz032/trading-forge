@@ -45,6 +45,8 @@ vi.mock("../lib/tracing.js", () => ({
 vi.mock("../scheduler.js", () => ({ onPaperTradeClose: vi.fn() }));
 vi.mock("./paper-risk-gate.js", () => ({
   toEasternDateString: vi.fn().mockReturnValue("2026-03-27"),
+  toFuturesTradingDayString: vi.fn().mockReturnValue("2026-03-27"),
+  invalidateDailyLossCache: vi.fn(),
 }));
 
 import { classifySessionType } from "./paper-execution-service.js";

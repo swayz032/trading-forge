@@ -41,7 +41,7 @@ vi.mock("../lib/tracing.js", () => ({
   tracer: { startSpan: vi.fn().mockReturnValue({ setAttribute: vi.fn(), end: vi.fn() }) },
 }));
 vi.mock("../scheduler.js", () => ({ onPaperTradeClose: vi.fn() }));
-vi.mock("./paper-risk-gate.js", () => ({ toEasternDateString: vi.fn().mockReturnValue("2026-01-15") }));
+vi.mock("./paper-risk-gate.js", () => ({ toEasternDateString: vi.fn().mockReturnValue("2026-01-15"), toFuturesTradingDayString: vi.fn().mockReturnValue("2026-01-15"), invalidateDailyLossCache: vi.fn() }));
 vi.mock("../lib/python-runner.js", () => ({
   runPythonModule: vi.fn().mockResolvedValue({ is_economic_event: false }),
 }));

@@ -103,6 +103,7 @@ vi.mock("../lib/tracing.js", () => ({
 vi.mock("../scheduler.js", () => ({ onPaperTradeClose: vi.fn() }));
 vi.mock("./paper-risk-gate.js", () => ({
   toEasternDateString: vi.fn().mockReturnValue("2026-04-28"),
+  toFuturesTradingDayString: vi.fn().mockReturnValue("2026-04-28"),
   invalidateDailyLossCache: vi.fn(),
 }));
 vi.mock("../lib/roll-calendar-loader.js", () => ({
