@@ -28,6 +28,24 @@ import sys
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
+# Tracking import is fire-and-forget: if the module or DB is unavailable the
+# script still runs.  All tracker calls are wrapped in try/except internally.
+try:
+    import sys as _sys
+    import os as _os
+    _sys.path.insert(0, _os.path.dirname(__file__))
+    from _data_sync_tracking import (
+        start_sync_job,
+        complete_sync_job,
+        fail_sync_job,
+        COST_PER_MSG_IMBALANCE,
+    )
+except Exception:  # noqa: BLE001
+    COST_PER_MSG_IMBALANCE = 0.01
+    def start_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def complete_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def fail_sync_job(*a, **kw): return None  # type: ignore[misc]
+
 DATASET = "GLBX.MDP3"
 
 # Only ES and NQ — large contracts where opening auction imbalance is meaningful
@@ -256,8 +274,31 @@ def main() -> None:
     for symbol in symbols:
         for date_str in dates:
             try:
+                _pull_date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            except Exception:
+                _pull_date = datetime.now(timezone.utc)
+
+            _job_id = start_sync_job(
+                symbol=symbol,
+                source="databento",
+                start_date=_pull_date,
+                end_date=_pull_date,
+                metadata={
+                    "schema": "imbalance",
+                    "dataset": DATASET,
+                    "auction_date": date_str,
+                },
+            )
+            try:
                 record = pull_imbalance_for_date(client, symbol, date_str)
                 if record is None:
+                    # Non-trading day / holiday — mark completed with 0 rows and $0 cost
+                    complete_sync_job(
+                        job_id=_job_id,
+                        rows_downloaded=0,
+                        cost_usd=0.0,
+                        metadata={"schema": "imbalance", "reason": "no_data_holiday"},
+                    )
                     results.append({
                         "status": "no_data",
                         "symbol": symbol,
@@ -265,9 +306,24 @@ def main() -> None:
                         "message": "No imbalance records in auction window (non-trading day or holiday)",
                     })
                 else:
+                    # Cost: $0.01 per message in the auction window
+                    _msgs = record.get("records_in_window", 1)
+                    _cost = round(_msgs * COST_PER_MSG_IMBALANCE, 4)
+                    complete_sync_job(
+                        job_id=_job_id,
+                        rows_downloaded=_msgs,
+                        cost_usd=_cost,
+                        metadata={
+                            "schema": "imbalance",
+                            "imbalance_side": record.get("imbalance_side"),
+                            "imbalance_quantity": record.get("imbalance_quantity"),
+                            "auction_time": record.get("auction_time"),
+                        },
+                    )
                     results.append({"status": "ok", **record})
             except Exception as e:
                 any_error = True
+                fail_sync_job(job_id=_job_id, error_message=str(e))
                 results.append({
                     "status": "error",
                     "symbol": symbol,

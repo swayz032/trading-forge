@@ -26,6 +26,24 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 
+# Tracking import is fire-and-forget: if the module or DB is unavailable the
+# script still runs.  All tracker calls are wrapped in try/except internally.
+try:
+    import sys as _sys
+    import os as _os
+    _sys.path.insert(0, _os.path.dirname(__file__))
+    from _data_sync_tracking import (
+        start_sync_job,
+        complete_sync_job,
+        fail_sync_job,
+        COST_STATISTICS_FREE,
+    )
+except Exception:  # noqa: BLE001
+    COST_STATISTICS_FREE = 0.0
+    def start_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def complete_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def fail_sync_job(*a, **kw): return None  # type: ignore[misc]
+
 DATASET = "GLBX.MDP3"
 
 # Continuous front-month contracts
@@ -240,9 +258,25 @@ def main() -> None:
     results = []
     any_error = False
 
+    _start_dt = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    _end_dt = datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+
     for symbol in symbols:
+        _job_id = start_sync_job(
+            symbol=symbol,
+            source="databento",
+            start_date=_start_dt,
+            end_date=_end_dt,
+            metadata={"schema": "statistics", "dataset": DATASET},
+        )
         try:
             rows = pull_statistics(client, symbol, start_date, end_date)
+            complete_sync_job(
+                job_id=_job_id,
+                rows_downloaded=len(rows),
+                cost_usd=COST_STATISTICS_FREE,
+                metadata={"schema": "statistics", "trading_days": len(rows)},
+            )
             results.append({
                 "status": "ok",
                 "symbol": symbol,
@@ -253,6 +287,7 @@ def main() -> None:
             })
         except Exception as e:
             any_error = True
+            fail_sync_job(job_id=_job_id, error_message=str(e))
             results.append({
                 "status": "error",
                 "symbol": symbol,

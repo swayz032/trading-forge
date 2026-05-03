@@ -13,9 +13,26 @@ import argparse
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import databento as db
+
+# Tracking import is fire-and-forget: if the module or DB is unavailable the
+# script still runs.  All tracker calls are wrapped in try/except internally.
+try:
+    import sys as _sys
+    import os as _os
+    _sys.path.insert(0, _os.path.dirname(__file__))
+    from _data_sync_tracking import (
+        start_sync_job,
+        complete_sync_job,
+        fail_sync_job,
+    )
+except Exception:  # noqa: BLE001
+    def start_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def complete_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def fail_sync_job(*a, **kw): return None  # type: ignore[misc]
 
 # Symbol → Databento continuous front-month contract mapping
 # stype_in="continuous" with .c.0 = front month continuous
@@ -106,7 +123,24 @@ def main():
 
     client = get_client()
 
+    # Parse dates for tracking row
+    try:
+        _start_dt = datetime.strptime(args.start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        _end_dt = datetime.strptime(args.end, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    except Exception:
+        _start_dt = datetime.now(timezone.utc)
+        _end_dt = datetime.now(timezone.utc)
+
     if args.dry_run:
+        # Dry-run: cost-check only — no download.  Track as a minimal job so the
+        # cost estimate is visible in the dashboard.
+        _job_id = start_sync_job(
+            symbol=args.symbol,
+            source="databento",
+            start_date=_start_dt,
+            end_date=_end_dt,
+            metadata={"mode": "dry_run", "schema": "ohlcv-1m", "dataset": DATASET},
+        )
         try:
             cost = check_cost(client, args.symbol, args.start, args.end)
             result = {
@@ -117,13 +151,40 @@ def main():
                 "end": args.end,
                 "cost_usd": cost,
             }
+            complete_sync_job(
+                job_id=_job_id,
+                rows_downloaded=0,
+                cost_usd=float(cost),
+                metadata={"mode": "dry_run", "schema": "ohlcv-1m"},
+            )
         except Exception as e:
             result = {"status": "error", "message": str(e)}
+            fail_sync_job(job_id=_job_id, error_message=str(e))
     else:
+        _job_id = start_sync_job(
+            symbol=args.symbol,
+            source="databento",
+            start_date=_start_dt,
+            end_date=_end_dt,
+            metadata={"schema": "ohlcv-1m", "dataset": DATASET, "output_dir": args.output_dir},
+        )
         try:
             result = download(client, args.symbol, args.start, args.end, args.output_dir)
+            _rows = result.get("rows", 0)
+            # Use Databento billing API to get exact cost for bulk downloads
+            try:
+                _exact_cost = check_cost(client, args.symbol, args.start, args.end)
+            except Exception:
+                _exact_cost = None
+            complete_sync_job(
+                job_id=_job_id,
+                rows_downloaded=int(_rows),
+                cost_usd=float(_exact_cost) if _exact_cost is not None else 0.0,
+                metadata={"schema": "ohlcv-1m", "path": result.get("path", "")},
+            )
         except Exception as e:
             result = {"status": "error", "message": str(e)}
+            fail_sync_job(job_id=_job_id, error_message=str(e))
 
     print(json.dumps(result, indent=2))
 

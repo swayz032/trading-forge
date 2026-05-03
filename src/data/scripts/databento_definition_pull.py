@@ -30,6 +30,24 @@ from typing import Any
 
 import databento as db
 
+# Tracking import is fire-and-forget: if the module or DB is unavailable the
+# script still runs.  All tracker calls are wrapped in try/except internally.
+try:
+    import sys as _sys
+    import os as _os
+    _sys.path.insert(0, _os.path.dirname(__file__))
+    from _data_sync_tracking import (
+        start_sync_job,
+        complete_sync_job,
+        fail_sync_job,
+        COST_DEFINITION_FREE,
+    )
+except Exception:  # noqa: BLE001
+    COST_DEFINITION_FREE = 0.0
+    def start_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def complete_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def fail_sync_job(*a, **kw): return None  # type: ignore[misc]
+
 DATASET = "GLBX.MDP3"
 
 # Continuous front-month contracts for Definition pulls
@@ -281,7 +299,17 @@ def main() -> None:
     any_error = False
     any_spec_changed = False
 
+    _start_dt = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    _end_dt = datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+
     for symbol in symbols:
+        _job_id = start_sync_job(
+            symbol=symbol,
+            source="databento",
+            start_date=_start_dt,
+            end_date=_end_dt,
+            metadata={"schema": "definition", "dataset": DATASET},
+        )
         try:
             spec = pull_definition(client, symbol, start_date, end_date)
             alert = check_against_expected(symbol, spec)
@@ -290,6 +318,17 @@ def main() -> None:
             if alert["spec_changed"]:
                 any_spec_changed = True
 
+            complete_sync_job(
+                job_id=_job_id,
+                rows_downloaded=spec.get("records_returned", 0),
+                cost_usd=COST_DEFINITION_FREE,
+                metadata={
+                    "schema": "definition",
+                    "spec_changed": alert.get("spec_changed", False),
+                    "multiplier": spec.get("multiplier"),
+                    "tick_size": spec.get("tick_size"),
+                },
+            )
             results.append({
                 "status": "ok",
                 "symbol": symbol,
@@ -299,6 +338,7 @@ def main() -> None:
             })
         except Exception as e:
             any_error = True
+            fail_sync_job(job_id=_job_id, error_message=str(e))
             results.append({
                 "status": "error",
                 "symbol": symbol,

@@ -42,6 +42,24 @@ from typing import Any
 
 import polars as pl
 
+# Tracking import is fire-and-forget: if the module or DB is unavailable the
+# script still runs.  All tracker calls are wrapped in try/except internally.
+try:
+    import sys as _sys
+    import os as _os
+    _sys.path.insert(0, _os.path.dirname(__file__))
+    from _data_sync_tracking import (
+        start_sync_job,
+        complete_sync_job,
+        fail_sync_job,
+        COST_PER_BAR_OHLCV,
+    )
+except Exception:  # noqa: BLE001
+    COST_PER_BAR_OHLCV = 0.001 / 1_000_000
+    def start_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def complete_sync_job(*a, **kw): return None  # type: ignore[misc]
+    def fail_sync_job(*a, **kw): return None  # type: ignore[misc]
+
 # ---------------------------------------------------------------------------
 # Symbol map — continuous front-month contracts on GLBX.MDP3
 # MES and MNQ are micro versions of ES and NQ. They share the same dataset
@@ -285,9 +303,25 @@ def refresh_symbol_timeframe(
         }
 
     # --- Execute: download 1-min bars ---
+    # Insert a pending tracking row before the API call.
+    _track_start_dt = datetime.strptime(start_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    _track_end_dt = datetime.strptime(end_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    _job_id = start_sync_job(
+        symbol=symbol,
+        source="databento",
+        start_date=_track_start_dt,
+        end_date=_track_end_dt,
+        metadata={
+            "schema": "ohlcv-1m",
+            "timeframe": timeframe,
+            "dataset": DATASET,
+            "dbn_symbol": dbn_symbol,
+        },
+    )
     try:
         df_1m = fetch_1m_bars(api_key, dbn_symbol, start_date_str, end_date_str)
     except Exception as e:
+        fail_sync_job(job_id=_job_id, error_message=f"Databento fetch failed: {e}")
         return {
             "symbol": symbol,
             "timeframe": timeframe,
@@ -296,6 +330,12 @@ def refresh_symbol_timeframe(
         }
 
     if df_1m.is_empty():
+        complete_sync_job(
+            job_id=_job_id,
+            rows_downloaded=0,
+            cost_usd=0.0,
+            metadata={"schema": "ohlcv-1m", "timeframe": timeframe, "reason": "no_bars_returned"},
+        )
         return {
             "symbol": symbol,
             "timeframe": timeframe,
@@ -308,6 +348,7 @@ def refresh_symbol_timeframe(
     try:
         df_new = resample_1m_to_tf(df_1m, every)
     except Exception as e:
+        fail_sync_job(job_id=_job_id, error_message=f"Resample failed: {e}")
         return {
             "symbol": symbol,
             "timeframe": timeframe,
@@ -316,6 +357,12 @@ def refresh_symbol_timeframe(
         }
 
     if df_new.is_empty():
+        complete_sync_job(
+            job_id=_job_id,
+            rows_downloaded=0,
+            cost_usd=0.0,
+            metadata={"schema": "ohlcv-1m", "timeframe": timeframe, "reason": "resampled_empty"},
+        )
         return {
             "symbol": symbol,
             "timeframe": timeframe,
@@ -343,6 +390,12 @@ def refresh_symbol_timeframe(
 
             if df_new_filtered.is_empty():
                 latest_ts_str = latest_ts.isoformat() if latest_ts else "none"
+                complete_sync_job(
+                    job_id=_job_id,
+                    rows_downloaded=0,
+                    cost_usd=0.0,
+                    metadata={"schema": "ohlcv-1m", "timeframe": timeframe, "reason": "all_bars_deduped"},
+                )
                 return {
                     "symbol": symbol,
                     "timeframe": timeframe,
@@ -364,6 +417,7 @@ def refresh_symbol_timeframe(
 
             df_merged = pl.concat([df_existing, df_new_filtered]).sort("ts_event")
         except Exception as e:
+            fail_sync_job(job_id=_job_id, error_message=f"Merge with existing parquet failed: {e}")
             return {
                 "symbol": symbol,
                 "timeframe": timeframe,
@@ -384,6 +438,7 @@ def refresh_symbol_timeframe(
     try:
         atomic_write_parquet(df_merged, parquet_path)
     except Exception as e:
+        fail_sync_job(job_id=_job_id, error_message=f"Write failed: {e}")
         return {
             "symbol": symbol,
             "timeframe": timeframe,
@@ -402,6 +457,21 @@ def refresh_symbol_timeframe(
     else:
         validation_passed = False
         age_hours = None
+
+    # Record cost using the 1m-bar rate: $0.001 / million 1-minute bars fetched.
+    _raw_1m_rows = len(df_1m)
+    _cost_usd = round(_raw_1m_rows * COST_PER_BAR_OHLCV, 8)
+    complete_sync_job(
+        job_id=_job_id,
+        rows_downloaded=new_row_count,
+        cost_usd=_cost_usd,
+        metadata={
+            "schema": "ohlcv-1m",
+            "timeframe": timeframe,
+            "raw_1m_bars": _raw_1m_rows,
+            "validation_passed": validation_passed,
+        },
+    )
 
     return {
         "symbol": symbol,
