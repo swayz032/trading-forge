@@ -110,6 +110,10 @@ export const backtests = pgTable(
     // Soft gate: MRP > 0.5 advisory at PAPER → DEPLOY_READY; hard gate after 30 days data.
     mrpSharpe: numeric("mrp_sharpe"),                    // min Sharpe across all regime groups (null until computed)
     mrpRegimeBreakdown: jsonb("mrp_regime_breakdown"),   // {regime: sharpe} dict for audit
+    // A13: Information Ratio — alpha vs market benchmark (SPX for index futures, crude for MCL).
+    // IR = E[R_p - R_b] / σ_diff * sqrt(252). Null when benchmark unavailable or < 2 bars.
+    // Applied migration: 0083_information_ratio.sql
+    informationRatio: numeric("information_ratio"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),

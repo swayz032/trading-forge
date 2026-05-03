@@ -477,6 +477,9 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             return Object.keys(base).length > 0 ? base : null;
           })(),
           executionTimeMs: result.execution_time_ms,
+          // A13: Information Ratio — written once on backtest completion.
+          // Null when engine returned null (insufficient benchmark data or < 2 bars).
+          informationRatio: result.information_ratio != null ? String(result.information_ratio) : null,
         })
         .where(eq(backtests.id, backtestId));
 

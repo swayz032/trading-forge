@@ -498,8 +498,9 @@ def compute_deflated_sharpe_ratio(
     Lopez de Prado (2014): adjusts for (1) selection bias from testing N strategies,
     (2) non-normal returns (skew/kurtosis), (3) short track records.
     """
-    from scipy import stats as sp_stats
     import math
+
+    from scipy import stats as sp_stats
 
     gamma = 0.5772156649  # Euler-Mascheroni constant
 
@@ -546,6 +547,61 @@ def compute_deflated_sharpe_ratio(
         "n_trials": n_trials,
         "interpretation": interpretation,
     }
+
+
+def compute_information_ratio(
+    strategy_returns: np.ndarray,
+    benchmark_returns: np.ndarray,
+    periods_per_year: float = 252.0,
+) -> float:
+    """Compute the Information Ratio (IR) of a strategy vs a market benchmark.
+
+    IR = E[R_p - R_b] / σ_{diff}
+
+    Where:
+        R_p  = strategy daily P&L returns (dollar or %)
+        R_b  = benchmark daily returns (same units as R_p)
+        σ_diff = std dev of the active return series (R_p - R_b)
+
+    Annualised by multiplying by sqrt(periods_per_year).
+
+    Design notes:
+    - Benchmark should be aligned to the strategy's trading dates only.
+      When strategy is not in the market, the benchmark return is 0 for
+      that bar (passive exposure = benchmark drift; inactive = no alpha).
+    - When benchmark_returns is all-zeros (or None replaced by zeros),
+      IR degenerates to the standard Sharpe ratio — this is the intended
+      property test (see test_information_ratio.py).
+    - Returns 0.0 when σ_diff ≤ 0 (all returns identical or fewer than
+      2 observations).
+
+    Args:
+        strategy_returns: 1D array of per-period strategy P&L (dollars).
+        benchmark_returns: 1D array of per-period benchmark returns
+            (same length as strategy_returns).
+        periods_per_year: Annualisation factor. Use 252 for daily.
+
+    Returns:
+        Annualised Information Ratio as a float. Returns 0.0 on
+        degenerate inputs (empty, length < 2, or zero variance).
+    """
+    if len(strategy_returns) < 2 or len(benchmark_returns) < 2:
+        return 0.0
+
+    # Align lengths defensively — take minimum if mismatched
+    n = min(len(strategy_returns), len(benchmark_returns))
+    r_p = np.asarray(strategy_returns[:n], dtype=np.float64)
+    r_b = np.asarray(benchmark_returns[:n], dtype=np.float64)
+
+    active_returns = r_p - r_b
+    mean_active = np.mean(active_returns)
+    std_active = np.std(active_returns, ddof=1)
+
+    if std_active <= 0:
+        return 0.0
+
+    ir = (mean_active / std_active) * np.sqrt(periods_per_year)
+    return float(ir)
 
 
 def compute_pbo(
@@ -624,15 +680,16 @@ def compute_all_risk_metrics(
         Combined dict for DB riskMetrics JSONB column
     """
     # GPU fast-path for core metrics when CuPy available and large simulation
+    # _gpu_result reserved for future merge into full result (not yet implemented).
     if paths.shape[0] >= 1000:
         try:
             from src.engine.gpu_pipeline import gpu_risk_metrics
-            gpu_result = gpu_risk_metrics(paths)
+            _gpu_result = gpu_risk_metrics(paths)
             # GPU provides fast DD percentiles + survival — merge into full result
         except Exception:
-            gpu_result = None
+            _gpu_result = None
     else:
-        gpu_result = None
+        _gpu_result = None
 
     percentiles = [0.05, 0.25, 0.50, 0.75, 0.95]
 

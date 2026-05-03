@@ -1845,6 +1845,75 @@ def run_backtest(
     else:
         sharpe = 0.0
 
+    # ─── A13: Information Ratio vs market benchmark ───────────────
+    # Benchmark selection:
+    #   ES, NQ, MES, MNQ → SPX (S&P 500 index daily price changes)
+    #   MCL              → USO-proxy (crude oil spot daily price changes)
+    # Both benchmark series are derived from the same OHLCV price data we
+    # already have loaded (df).  We compute daily close-to-close returns
+    # from the underlying price data for the same dates as our strategy's
+    # daily P&L records.  This gives a buy-and-hold benchmark in the same
+    # price space so IR is meaningful.
+    #
+    # Dollar-return scaling: benchmark daily $ move = price_change × 1 unit
+    # Strategy daily P&L is already in dollars. To make them comparable we
+    # convert benchmark to a dollar-normalised series with the same scale as
+    # the strategy's per-day P&L so the active-return difference is in dollars
+    # (same units → σ_diff is a $ std-dev, IR is dimensionless ratio).
+    #
+    # When the price data does not span enough dates, information_ratio = None.
+    information_ratio: Optional[float] = None
+    try:
+        from src.engine.risk_metrics import compute_information_ratio as _compute_ir
+
+        _BENCHMARK_SYMBOLS = {"ES", "NQ", "MES", "MNQ"}  # SPX proxy
+        # For both SPX-proxy and USO-proxy we use the loaded futures close prices
+        # as the benchmark: the underlying futures price series IS the index
+        # (MES/MNQ track S&P 500 / Nasdaq 100 directly).
+        # Close-to-close daily returns in price-point space:
+        if "ts_event" in df.columns and len(daily_pnl_records) > 1:
+            # Build a date-keyed lookup of daily close prices
+            _close_np = df["close"].to_numpy()
+            _ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+            _dates_series = df[_ts_col]
+
+            # Map each daily P&L record date to first bar's close in that day
+            _date_to_close: dict[str, float] = {}
+            for _i in range(len(df)):
+                _day = str(_dates_series[_i])[:10]
+                if _day not in _date_to_close:
+                    _date_to_close[_day] = float(_close_np[_i])
+
+            # Daily benchmark returns (close-to-close price change on trading days)
+            _pnl_dates = [r["date"] for r in daily_pnl_records]
+            _sorted_dates = sorted(_date_to_close.keys())
+            _bench_by_date: dict[str, float] = {}
+            for _di in range(1, len(_sorted_dates)):
+                _d_curr = _sorted_dates[_di]
+                _d_prev = _sorted_dates[_di - 1]
+                if _d_prev in _date_to_close and _d_curr in _date_to_close:
+                    _bench_by_date[_d_curr] = _date_to_close[_d_curr] - _date_to_close[_d_prev]
+
+            # Align benchmark to the exact strategy trading dates
+            # Strategy daily P&L is in dollars; benchmark is in price-point units.
+            # Multiply benchmark point-move by spec.point_value so both series are
+            # in dollars (1 contract buy-and-hold as the dollar benchmark).
+            _bm_returns = np.array([
+                _bench_by_date.get(r["date"], 0.0) * spec.point_value
+                for r in daily_pnl_records
+            ], dtype=np.float64)
+
+            _strat_returns = np.array(daily_pnl_values, dtype=np.float64)
+
+            if len(_strat_returns) > 1 and len(_bm_returns) > 1:
+                information_ratio = round(
+                    _compute_ir(_strat_returns, _bm_returns, periods_per_year=252.0), 4
+                )
+    except Exception as _ir_exc:
+        print(f"WARNING: information_ratio computation failed: {_ir_exc}", file=sys.stderr)
+        information_ratio = None
+    # ─────────────────────────────────────────────────────────────
+
     # Cap infinite values for JSON
     if profit_factor == float("inf"):
         profit_factor = 999.99
@@ -2067,6 +2136,10 @@ def run_backtest(
         # not forge_score itself.
         "forge_score_components": _full_forge_result,
         "sanity_checks": sanity,
+        # A13: Information Ratio (Sharpe vs market benchmark).
+        # None when price data insufficient; downstream TS bridge writes to
+        # backtests.information_ratio (migration 0083).
+        "information_ratio": information_ratio,
         "cross_validation": cross_val,
         "sortino_ratio": cross_val.get("sortino_ratio", 0.0),
         "bootstrap_ci_95": cross_val.get("bootstrap_ci_95", [0, 0]),
@@ -3164,6 +3237,42 @@ def run_class_backtest(
 
     sample_confidence = "HIGH" if total_trades >= 500 else "MEDIUM" if total_trades >= 200 else "LOW"
 
+    # ─── A13: Information Ratio (run_class_backtest path) ────────
+    information_ratio_class: Optional[float] = None
+    try:
+        from src.engine.risk_metrics import (
+            compute_information_ratio as _compute_ir_class,  # noqa: PLC0415
+        )
+        if "ts_event" in df.columns and len(daily_pnl_records) > 1:
+            _close_np_c = df["close"].to_numpy()
+            _ts_col_c = "ts_et" if "ts_et" in df.columns else "ts_event"
+            _dates_series_c = df[_ts_col_c]
+            _date_to_close_c: dict[str, float] = {}
+            for _ic in range(len(df)):
+                _day_c = str(_dates_series_c[_ic])[:10]
+                if _day_c not in _date_to_close_c:
+                    _date_to_close_c[_day_c] = float(_close_np_c[_ic])
+            _sorted_dates_c = sorted(_date_to_close_c.keys())
+            _bench_by_date_c: dict[str, float] = {}
+            for _dic in range(1, len(_sorted_dates_c)):
+                _dc_curr = _sorted_dates_c[_dic]
+                _dc_prev = _sorted_dates_c[_dic - 1]
+                if _dc_prev in _date_to_close_c and _dc_curr in _date_to_close_c:
+                    _bench_by_date_c[_dc_curr] = (_date_to_close_c[_dc_curr] - _date_to_close_c[_dc_prev]) * spec.point_value
+            _bm_returns_c = np.array(
+                [_bench_by_date_c.get(r["date"], 0.0) for r in daily_pnl_records],
+                dtype=np.float64,
+            )
+            _strat_returns_c = np.array(daily_pnl_values, dtype=np.float64)
+            if len(_strat_returns_c) > 1:
+                information_ratio_class = round(
+                    _compute_ir_class(_strat_returns_c, _bm_returns_c, periods_per_year=252.0), 4
+                )
+    except Exception as _ir_exc_c:
+        print(f"WARNING: information_ratio computation failed (class): {_ir_exc_c}", file=sys.stderr)
+        information_ratio_class = None
+    # ─────────────────────────────────────────────────────────────
+
     return {
         "total_return": round(total_return, 6),
         "sharpe_ratio": round(sharpe, 4),
@@ -3200,6 +3309,8 @@ def run_class_backtest(
         "tier": tier,
         "forge_score": forge_score,
         "sanity_checks": sanity,
+        # A13: Information Ratio
+        "information_ratio": information_ratio_class,
         "cross_validation": cross_val,
         "sortino_ratio": cross_val.get("sortino_ratio", 0.0),
         "bootstrap_ci_95": cross_val.get("bootstrap_ci_95", [0, 0]),
