@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T01:38:53.058Z",
+  "generatedAt": "2026-05-03T02:16:41.772Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,13 +15,13 @@
     ]
   },
   "counts": {
-    "routes": 48,
-    "schedulerJobs": 43,
+    "routes": 49,
+    "schedulerJobs": 44,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 23,
-    "databaseTables": 57,
-    "registrySubsystems": 15
+    "databaseTables": 59,
+    "registrySubsystems": 16
   },
   "routes": [
     "/api/admin",
@@ -63,6 +63,7 @@
     "/api/quantum/pre-flight",
     "/api/risk",
     "/api/search",
+    "/api/signal-correlation",
     "/api/signals",
     "/api/skip",
     "/api/sse",
@@ -83,6 +84,7 @@
     "compliance-rule-drift",
     "contract-roll-sweep",
     "critic-feedback",
+    "data-integrity-suite",
     "databento-weekly-refresh",
     "decay-monitor",
     "deepar-predict",
@@ -714,6 +716,7 @@
     "contract_rolls",
     "critic_candidates",
     "critic_optimization_runs",
+    "data_integrity_findings",
     "data_sync_jobs",
     "day_archetypes",
     "dead_letter_queue",
@@ -747,6 +750,7 @@
     "strategy_graveyard",
     "strategy_lockouts",
     "strategy_names",
+    "strategy_signal_vectors",
     "stress_test_runs",
     "subsystem_metrics",
     "system_journal",
@@ -757,33 +761,33 @@
     "walk_forward_windows"
   ],
   "registryCoverage": {
-    "registryEntries": 15,
-    "autonomousSubsystems": 15,
+    "registryEntries": 16,
+    "autonomousSubsystems": 16,
     "selfEvolvingSubsystems": 6,
     "proofStatusCounts": {
-      "runtime-proven": 12,
+      "runtime-proven": 13,
       "partially-proven": 0,
       "offline-by-design": 0,
       "experimental": 3,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 12,
+      "active": 13,
       "experimental": 3
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 12,
+      "active_preprod": 13,
       "experimental_preprod": 3
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 10,
+      "runtime_proven_autonomous": 11,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 3
     },
     "closedLoopCounts": {
-      "not_collecting": 6,
+      "not_collecting": 7,
       "collecting_only": 0,
       "learning_active": 6,
       "learning_blocked": 0,
@@ -791,23 +795,23 @@
     },
     "learningModeCounts": {
       "active_learning": 5,
-      "deterministic_instrumented": 5,
+      "deterministic_instrumented": 6,
       "manual_gate_only": 2,
       "shadow_experimental": 3
     },
     "operatingClassCounts": {
       "adaptive": 5,
-      "deterministic_instrumented": 8,
+      "deterministic_instrumented": 9,
       "manual_gated": 2
     },
     "manualGates": [
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 48,
-      "schedulerJobs": 43,
+      "routes": 49,
+      "schedulerJobs": 44,
       "engineSubsystems": 23,
-      "databaseTables": 57
+      "databaseTables": 59
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -832,18 +836,18 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "complete",
-      "automationComplete": 12,
-      "dataCollectionComplete": 15,
-      "auditabilityComplete": 15,
-      "failureVisibilityComplete": 15,
-      "authorityCorrect": 15,
+      "automationComplete": 13,
+      "dataCollectionComplete": 16,
+      "auditabilityComplete": 16,
+      "failureVisibilityComplete": 16,
+      "authorityCorrect": 16,
       "learningActive": 6,
       "incompleteSubsystems": []
     },
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 10,
+        "production_autonomous": 11,
         "production_manual_gate": 2,
         "production_experimental": 3,
         "production_not_intended": 0
@@ -859,6 +863,7 @@
         "pine_export_preparation",
         "quantum_experimental",
         "research_orchestration",
+        "signal_correlation_gate",
         "strategy_lifecycle",
         "workflow_orchestration"
       ],
@@ -1780,6 +1785,7 @@
           "alerts",
           "audit_log",
           "circuit breaker state",
+          "data_integrity_findings",
           "dead_letter_queue",
           "idempotency_keys",
           "scheduler health",
@@ -1827,6 +1833,7 @@
         ],
         "schedulerJobs": [
           "agent-health-sweep",
+          "data-integrity-suite",
           "disabled-job-probe",
           "dlq-escalation",
           "dlq-retry",
@@ -2243,6 +2250,90 @@
           "journal-summary",
           "recent-agent-audit-events",
           "research-topology-health"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "signal_correlation_gate",
+        "domain": "qualification",
+        "ownerSurface": "python-node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "gate",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "critical",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "/api/health/dashboard",
+          "/api/signal-correlation",
+          "alert.signal_correlation_threshold",
+          "lifecycle.promotion_blocked_signal_correlation",
+          "strategy_signal_vectors:recent-write"
+        ],
+        "dataCollectionCoverage": [
+          "alerts",
+          "audit_log",
+          "backtester signal_vector output",
+          "backtests",
+          "strategies",
+          "strategies.lifecycle_state",
+          "strategy_signal_vectors"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health/dashboard",
+          "/api/signal-correlation",
+          "alert.signal_correlation_threshold",
+          "lifecycle.promotion_blocked_signal_correlation",
+          "signal-correlation-matrix",
+          "signal-vector-coverage",
+          "strategy_signal_vectors:recent-write"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/signal-correlation"
+        ],
+        "schedulerJobs": [],
+        "healthCheck": "/api/health/dashboard",
+        "freshnessSignals": [
+          "strategy_signal_vectors:recent-write"
+        ],
+        "evidenceQueries": [
+          "signal-correlation-matrix",
+          "signal-vector-coverage"
         ],
         "coverageGaps": []
       },
@@ -3597,6 +3688,7 @@
         "alerts",
         "audit_log",
         "circuit breaker state",
+        "data_integrity_findings",
         "dead_letter_queue",
         "idempotency_keys",
         "scheduler health",
@@ -3644,6 +3736,7 @@
       ],
       "schedulerJobs": [
         "agent-health-sweep",
+        "data-integrity-suite",
         "disabled-job-probe",
         "dlq-escalation",
         "dlq-retry",
@@ -4060,6 +4153,90 @@
         "journal-summary",
         "recent-agent-audit-events",
         "research-topology-health"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "signal_correlation_gate",
+      "domain": "qualification",
+      "ownerSurface": "python-node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "gate",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "critical",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "/api/health/dashboard",
+        "/api/signal-correlation",
+        "alert.signal_correlation_threshold",
+        "lifecycle.promotion_blocked_signal_correlation",
+        "strategy_signal_vectors:recent-write"
+      ],
+      "dataCollectionCoverage": [
+        "alerts",
+        "audit_log",
+        "backtester signal_vector output",
+        "backtests",
+        "strategies",
+        "strategies.lifecycle_state",
+        "strategy_signal_vectors"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "/api/signal-correlation",
+        "alert.signal_correlation_threshold",
+        "lifecycle.promotion_blocked_signal_correlation",
+        "signal-correlation-matrix",
+        "signal-vector-coverage",
+        "strategy_signal_vectors:recent-write"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/signal-correlation"
+      ],
+      "schedulerJobs": [],
+      "healthCheck": "/api/health/dashboard",
+      "freshnessSignals": [
+        "strategy_signal_vectors:recent-write"
+      ],
+      "evidenceQueries": [
+        "signal-correlation-matrix",
+        "signal-vector-coverage"
       ],
       "coverageGaps": []
     },

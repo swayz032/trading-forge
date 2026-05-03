@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T01:38:53.058Z",
+  "generatedAt": "2026-05-03T02:16:41.772Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -12,8 +12,8 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 15,
-    "ready": 10,
+    "total": 16,
+    "ready": 11,
     "blocked": 0,
     "manualGated": 2,
     "experimental": 3
@@ -321,6 +321,26 @@
         "recent-agent-audit-events",
         "research-topology-health",
         "system_journal:recent-entry"
+      ]
+    },
+    {
+      "id": "signal_correlation_gate",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "/api/signal-correlation",
+        "alert.signal_correlation_threshold",
+        "lifecycle.promotion_blocked_signal_correlation",
+        "signal-correlation-matrix",
+        "signal-vector-coverage",
+        "strategy_signal_vectors:recent-write"
       ]
     },
     {

@@ -471,6 +471,43 @@ lookahead bugs:
   call `POST /api/frankenstein/run` for any in-flight CANDIDATE strategies before
   TESTING→PAPER will succeed. Pipeline pause guard on `/api/frankenstein/run`.
 
+## Defensive Testing Tables (W11 / A7 + A8)
+Two new tables ship in W11 to close the Two Sigma duplicate-signal failure
+mode and to consolidate nightly data-integrity checks:
+
+- **`strategy_signal_vectors`** (migration 0072) -- A7 empirical signal
+  correlation. Stores per-bar int8 signal vectors (1=long, -1=short, 0=none)
+  emitted by `backtester.py` after all filters (eligibility, parity, fill
+  model, max_trades). Persistence layer gzip-compresses to `bytea` and writes
+  one row per `(strategy_id, backtest_id)` pair (UNIQUE constraint enforced).
+  Written by `backtest-service.ts` fire-and-forget (non-blocking). No status
+  column — synchronous write only on `completed` backtests. **Authority:**
+  HARD GATE on PAPER→DEPLOY_READY lifecycle promotion. `lifecycle-service.ts`
+  blocks promotion (fail-closed) when no signal vector exists OR when cosine
+  similarity > 0.85 with any DEPLOYED strategy (env override:
+  `SIGNAL_CORRELATION_THRESHOLD`, default 0.85). Ramp-up rule: if no DEPLOYED
+  strategy has a signal vector yet (pre-A7 backtests), gate passes with a
+  warning so the gate does not permanently block all promotions during
+  initial rollout. Defense-in-depth complement to W17 C9 (DSL diversity,
+  pre-backtest). Routes: `GET /api/signal-correlation/matrix` for visual
+  matrix review (pipeline-pause guarded).
+- **`data_integrity_findings`** (migration 0073) -- A8 consolidated
+  reconciliation + drift detection. Single `check_type` discriminator
+  (`reconciliation` | `drift_detection`) with `check_name` subtype. Severity
+  tiers: `info` | `warning` | `critical`. `affected_entity_type`/`_id`
+  nullable for system-wide findings. `resolved` boolean (write-once row;
+  operator flips `resolved=true` after investigation — not a pending-row
+  contract). Indexed for unresolved-findings dashboard queries.
+  **Authority:** observation/alert layer. Does NOT gate any lifecycle
+  decision. Cron: `data-integrity-suite` runs nightly at 4:00 AM ET (UTC
+  8:00 + 9:00 with ET filter for DST). Pipeline pause guard via
+  `isPipelineActive()` early-exit. Reconciliation checks (4): `audit_log`
+  vs `lifecycle_transitions` gaps, `paper_trades` vs `paper_positions`
+  gaps, lifecycle backtest FK integrity, PAPER strategies missing
+  `paper_sessions`. Drift checks: PSI on Sharpe / PF / MaxDD distributions
+  computed across `backtest_provenance` groups with divergent `result_hash`.
+  PSI > 0.2 = warning; > 0.5 = critical (industry-standard thresholds).
+
 ## Tier 7 W7b Graduation Query Pattern
 
 The Phase 0 → Phase 1 graduation review for the Grover adversarial-stress gate

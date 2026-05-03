@@ -392,6 +392,78 @@
     "criticality": "critical"
   },
   {
+    "id": "signal_correlation_gate",
+    "domain": "qualification",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Empirical signal-correlation check (A7 W11) on PAPER->DEPLOY_READY promotion. Backtester emits per-bar int8 signal vector (1=long, -1=short, 0=none); persistence layer gzip-compresses to bytea in strategy_signal_vectors. Hard gate fails closed when a candidate strategy lacks a signal vector OR has cosine similarity > 0.85 with any DEPLOYED strategy. Closes the Two Sigma 2025 failure mode (different code, identical signals). Defense-in-depth complement to C9 DSL diversity (W17, pre-backtest).",
+    "data_sources": [
+      "backtester signal_vector output",
+      "strategies.lifecycle_state"
+    ],
+    "reads_from": [
+      "strategies",
+      "strategy_signal_vectors",
+      "backtests"
+    ],
+    "writes_to": [
+      "strategy_signal_vectors",
+      "audit_log",
+      "alerts"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "strategy_signal_vectors"
+    ],
+    "audit_actions": [
+      "lifecycle.promotion_blocked_signal_correlation",
+      "alert.signal_correlation_threshold"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard",
+      "/api/signal-correlation"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "/api/signal-correlation"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/signal-correlation"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "strategy_signal_vectors"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "strategy_signal_vectors",
+      "audit_log"
+    ],
+    "recovery_mode": "fail-closed-block-promotion",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "strategy_signal_vectors:recent-write"
+    ],
+    "evidence_queries": [
+      "signal-correlation-matrix",
+      "signal-vector-coverage"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
     "id": "context_execution",
     "domain": "execution",
     "owner_surface": "python-node",
@@ -1271,6 +1343,7 @@
     ],
     "scheduler_jobs": [
       "agent-health-sweep",
+      "data-integrity-suite",
       "disabled-job-probe",
       "dlq-escalation",
       "dlq-retry",
@@ -1295,6 +1368,7 @@
       "agent_health_reports",
       "alerts",
       "audit_log",
+      "data_integrity_findings",
       "dead_letter_queue",
       "idempotency_keys",
       "subsystem_metrics"

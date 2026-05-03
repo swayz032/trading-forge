@@ -1711,6 +1711,71 @@ export function initScheduler() {
     emitJobComplete("databento-weekly-refresh", Date.now() - t0dbr);
   });
 
+  // ─── A8 (W11): Data Integrity Suite — 4:00 AM ET nightly ────────────────────
+  // Runs two complementary check categories:
+  //   1. Reconciliation — independent sources should agree (audit_log vs
+  //      lifecycle_transitions, paper_trades vs paper_positions, FK integrity,
+  //      PAPER strategy session existence)
+  //   2. Drift Detection — same inputs should produce same outputs (PSI on
+  //      Sharpe / PF / MaxDD distributions via backtest_provenance)
+  //
+  // isActive() guard: early-exit when pipeline is not ACTIVE (reconciliation
+  // against production data only makes sense when the system is running normally).
+  //
+  // Run at 8:00 and 9:00 UTC to cover EDT (UTC-4) and EST (UTC-5) for 4:00 AM ET.
+  // Wrapped in try/catch with logger.error fallback — a suite failure must never
+  // crash the scheduler. Findings are written atomically per category.
+  registerJob("data-integrity-suite", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "data-integrity-suite" }, "cron tick start");
+    if (!(await isPipelineActive())) {
+      logger.debug({ correlationId }, "data-integrity-suite: pipeline not ACTIVE — skipping");
+      return;
+    }
+    try {
+      const { runFullDataIntegritySuite } = await import("./services/data-integrity-service.js");
+      const result = await runFullDataIntegritySuite();
+      logger.info(
+        {
+          correlationId,
+          totalFindings: result.totalFindings,
+          criticalCount: result.criticalCount,
+          warningCount: result.warningCount,
+          reconciliationCount: result.reconciliationFindings.length,
+          driftCount: result.driftFindings.length,
+          durationMs: result.durationMs,
+        },
+        "data-integrity-suite: completed",
+      );
+    } catch (err: unknown) {
+      logger.error({ err, correlationId }, "data-integrity-suite: suite threw unexpected error");
+    }
+  });
+
+  cron.schedule("0 8,9 * * *", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etHourStr, etMinStr] = etTimeStr.split(":");
+    const etHour = parseInt(etHourStr, 10);
+    const etMin = parseInt(etMinStr, 10);
+    // Only fire at exactly 4:00 AM ET
+    if (etHour !== 4 || etMin !== 0) {
+      logger.debug({ etHour, etMin }, "Scheduler: data-integrity-suite cron fired but not 4:00 AM ET — skipping");
+      return;
+    }
+    if (!(await pipelineGate("data-integrity-suite"))) return;
+    logger.info("Scheduler: Data Integrity Suite (4:00 AM ET)");
+    const t0di = Date.now();
+    await withRetry("data-integrity-suite", SCHEDULER_JOBS["data-integrity-suite"].run);
+    markJobRun("data-integrity-suite");
+    emitJobComplete("data-integrity-suite", Date.now() - t0di);
+  });
+
   // ─── Wave D3: Contract roll sweep — 4:30 PM ET weekdays ──────
   // Runs at both 20:30 and 21:30 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // DST-aware: only fires when ET clock resolves to 16:30.
@@ -1766,7 +1831,7 @@ export function initScheduler() {
     emitJobComplete("tournament-staleness-check", Date.now() - t0tourn);
   });
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h)");
 
   // ─── Startup reconciliation: catch up missed jobs ─────────
   reconcileMissedRuns().then(() => {
