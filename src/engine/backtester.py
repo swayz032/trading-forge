@@ -13,6 +13,7 @@ from __future__ import annotations
 # enable_determinism() is called when DETERMINISM_MODE=true or in CI
 # (conftest autouse fixture handles the CI case automatically).
 import os as _os
+
 if _os.environ.get("DETERMINISM_MODE", "").lower() == "true":
     from src.engine.determinism import enable_determinism as _enable_det
     _enable_det()
@@ -34,28 +35,32 @@ import pandas as pd
 import polars as pl
 import vectorbt as vbt
 
+from src.engine.analytics import compute_full_analytics
 from src.engine.config import (
-    BacktestRequest,
     CONTRACT_SPECS,
+    BacktestRequest,
     IndicatorConfig,
     StrategyConfig,
 )
-from src.engine.data_loader import load_ohlcv, flag_rollover_days, compute_dataset_hash
-from src.engine.firm_config import get_commission_per_side, get_contract_cap, FIRM_CONTRACT_CAPS, FIRM_COMMISSIONS
-from src.engine.indicators.core import compute_indicators, compute_atr
+from src.engine.cross_validation import run_cross_validation
+from src.engine.data_loader import compute_dataset_hash, flag_rollover_days, load_ohlcv
+from src.engine.decay.half_life import fit_decay
+from src.engine.decay.sub_signals import composite_decay_score
+from src.engine.firm_config import (
+    FIRM_COMMISSIONS,
+    FIRM_CONTRACT_CAPS,
+    get_commission_per_side,
+    get_contract_cap,
+)
+from src.engine.indicators.core import compute_atr, compute_indicators
 from src.engine.liquidity import get_session_multipliers
+from src.engine.nvtx_markers import range_pop, range_push
+from src.engine.prop_sim import simulate_all_firms
+from src.engine.sanity_checks import run_sanity_checks
 from src.engine.signals import generate_signals
 from src.engine.sizing import compute_position_sizes
 from src.engine.slippage import compute_slippage
-from src.engine.nvtx_markers import range_push, range_pop
-from src.engine.analytics import compute_full_analytics
-from src.engine.prop_sim import simulate_all_firms
 from src.engine.strategy_base import BaseStrategy
-from src.engine.decay.half_life import fit_decay
-from src.engine.decay.sub_signals import composite_decay_score
-from src.engine.sanity_checks import run_sanity_checks
-from src.engine.cross_validation import run_cross_validation
-
 
 # ─── Signal Fill Convention ──────────────────────────────────────────
 # PRODUCTION STANDARD: "next-bar fill" — signal on bar N, fill on bar N+1.
@@ -116,14 +121,13 @@ def apply_eligibility_gate(
     Returns:
         Tuple of (filtered_entries, filtered_exits, gate_stats)
     """
-    from src.engine.context.htf_context import HTFContext
-    from src.engine.context.session_context import compute_session_context
     from src.engine.context.bias_engine import compute_bias
-    from src.engine.context.playbook_router import route_playbook
+    from src.engine.context.eligibility_gate import evaluate_signal
     from src.engine.context.location_score import compute_location_score
+    from src.engine.context.playbook_router import route_playbook
+    from src.engine.context.session_context import compute_session_context
     from src.engine.context.structural_stops import compute_structural_stop
     from src.engine.context.structural_targets import compute_targets
-    from src.engine.context.eligibility_gate import evaluate_signal
 
     gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}}
 
@@ -149,8 +153,8 @@ def apply_eligibility_gate(
 
     # Pre-extract numpy arrays for speed
     close_np = df["close"].to_numpy()
-    high_np = df["high"].to_numpy() if "high" in df.columns else close_np
-    low_np = df["low"].to_numpy() if "low" in df.columns else close_np
+    df["high"].to_numpy() if "high" in df.columns else close_np
+    df["low"].to_numpy() if "low" in df.columns else close_np
     ts_col = "ts_event"
     has_ts = ts_col in df.columns
 
@@ -262,7 +266,7 @@ def apply_eligibility_gate(
             else:
                 gate_stats["take"] += 1
 
-        except Exception as e:
+        except Exception:
             # Context computation failed for this bar — skip conservatively
             filtered[idx] = False
             gate_stats["skip"] += 1
@@ -301,7 +305,7 @@ def _backtest_skip_signals_for_day(df, day_idx_start: int, day_idx_end: int) -> 
         if "ts_et" in df.columns:
             try:
                 ts = df["ts_et"][day_idx_start]
-                dow_idx = (str(ts)[:10],)
+                (str(ts)[:10],)
                 # Polars dt accessor unavailable for scalar — fall back to datetime parse
                 from datetime import datetime as _dt
                 dow_str = _dt.fromisoformat(str(ts)[:19]).strftime("%A")
@@ -1452,7 +1456,10 @@ def run_backtest(
     # ─── Fill probability model (Task 3.10) ───────────────────
     entries_np = df["entry_long"].to_numpy()
     if request.fill_model:
-        from src.engine.fill_model import compute_fill_probabilities_v2, apply_fill_model
+        from src.engine.fill_model import (
+            apply_fill_model,
+            compute_fill_probabilities_v2,
+        )
         fill_config = request.fill_model.model_dump()
         fill_probs = compute_fill_probabilities_v2(
             df, fill_config, entries_np,
@@ -1463,9 +1470,25 @@ def run_backtest(
         entries_np, sizes = apply_fill_model(entries_np, fill_probs, sizes, seed=42)
         long_adjusted_sizes = sizes.copy()  # Save before rolling for re-alignment
 
+    # ─── A7: Capture pre-roll signal vector ──────────────────────
+    # Capture the final filtered signal vector BEFORE the next-bar roll.
+    # Vector convention: 1 = long entry, -1 = short entry, 0 = no signal.
+    # Only entry signals are captured (not exits) — we want "when did the
+    # strategy decide to enter?" not "when did it exit?".
+    # Captured AFTER all gates (eligibility, parity, fill model, max_trades)
+    # so it reflects the actual decisions the strategy would have made.
+    # A7 determinism: signal arrays at this point are fully determined by
+    # the same inputs as the rest of the backtest (no new randomness).
+    _pre_roll_long_np = entries_np.copy()
+    _pre_roll_short_np = (
+        df["entry_short"].to_numpy().copy() if "entry_short" in df.columns
+        else np.zeros(len(entries_np), dtype=bool)
+    )
+
     # ─── Shift entry signals by 1 bar (next-bar fill) ──────────
     # Signal on bar N → fill on bar N+1. Eliminates lookahead bias.
-    entries_np = np.roll(entries_np, 1); entries_np[0] = False
+    entries_np = np.roll(entries_np, 1)
+    entries_np[0] = False
 
     # Re-align long-side fill model sizes with rolled entries
     if request.fill_model:
@@ -1496,7 +1519,10 @@ def run_backtest(
         short_entries_np = df["entry_short"].to_numpy()
         # Apply fill model to short entries too
         if request.fill_model:
-            from src.engine.fill_model import compute_fill_probabilities_v2, apply_fill_model
+            from src.engine.fill_model import (
+                apply_fill_model,
+                compute_fill_probabilities_v2,
+            )
             fill_config = request.fill_model.model_dump()
             short_fill_probs = compute_fill_probabilities_v2(
                 df, fill_config, short_entries_np,
@@ -1513,7 +1539,8 @@ def run_backtest(
         # Also shift the short-side sizes to match — sizes[N] was set for a signal
         # on bar N, but after the roll the signal is at bar N+1. We need to shift
         # the short-adjusted sizes to bar N+1 as well.
-        short_entries_np = np.roll(short_entries_np, 1); short_entries_np[0] = False
+        short_entries_np = np.roll(short_entries_np, 1)
+        short_entries_np[0] = False
         if request.fill_model:
             # Re-align: for bars where short entry is now True (post-shift),
             # pull the adjusted size from the previous bar (pre-shift index)
@@ -1828,10 +1855,10 @@ def run_backtest(
     gap_adjusted_dd = None
     if config.overnight_hold and "ts_event" in df.columns and trades_list:
         from src.engine.gap_risk import (
+            compute_gap_adjusted_drawdown,
+            compute_gap_adjusted_mae,
             compute_overnight_gaps,
             tag_trades_overnight,
-            compute_gap_adjusted_mae,
-            compute_gap_adjusted_drawdown,
         )
         gaps = compute_overnight_gaps(df)
         trades_list = tag_trades_overnight(trades_list, df["ts_event"])
@@ -1852,7 +1879,8 @@ def run_backtest(
                          max_dd, profit_factor, sharpe, winner_loser_ratio=winner_loser_ratio)
 
     # ─── Performance gate (B-3) ───────────────────────────────
-    from src.engine.performance_gate import check_performance_gate, classify_tier, compute_forge_score as _pgate_forge_score
+    from src.engine.performance_gate import check_performance_gate, classify_tier
+    from src.engine.performance_gate import compute_forge_score as _pgate_forge_score
     _gate_stats = {
         "avg_daily_pnl": avg_daily_pnl,
         "winning_days": winning_days,
@@ -1973,6 +2001,20 @@ def run_backtest(
 
     sample_confidence = "HIGH" if total_trades >= 500 else "MEDIUM" if total_trades >= 200 else "LOW"
 
+    # ─── A7: Build signal vector for correlation check ───────────
+    # Combine pre-roll long/short entries into int8 signal vector:
+    #   1 = long entry, -1 = short entry, 0 = no signal.
+    # Where both long and short fire on the same bar (shouldn't happen in
+    # practice but possible in rare edge cases), long takes priority.
+    # Stored as Python list[int] for JSON serialization — TS side compresses
+    # to gzip int8 bytes before DB storage (zlib.gzipSync).
+    _signal_vector_np = np.zeros(len(_pre_roll_long_np), dtype=np.int8)
+    _signal_vector_np[_pre_roll_long_np.astype(bool)] = 1
+    # Apply short entries where not already long (long takes priority)
+    _short_only_mask = _pre_roll_short_np.astype(bool) & (~_pre_roll_long_np.astype(bool))
+    _signal_vector_np[_short_only_mask] = -1
+    signal_vector = _signal_vector_np.tolist()
+
     # P1-B fix: assign to local variable FIRST, run determinism check, THEN return.
     # Previously `return {...}` at this point made the verification block (below) dead
     # code — the function exited before reaching it. Now `result` exists for the
@@ -2067,6 +2109,16 @@ def run_backtest(
             "dd_reduction_pct": governor_result["improvement"]["dd_reduction_pct"],
             "lockout_events": governor_result["lockout_events"],
         },
+        # A7: Empirical signal vector for cross-correlation checks.
+        # Array of int8 per bar: 1=long entry, -1=short entry, 0=no signal.
+        # Captured AFTER all gates (eligibility, parity, fill model, max_trades)
+        # but BEFORE the next-bar roll — represents "when the strategy decided to enter".
+        # TS bridge: backtest-service.ts reads this field, gzips it, and persists
+        # to strategy_signal_vectors (migration 0072). Non-empty only for completed
+        # backtests. Empty list fallback if n_bars == 0.
+        # Determinism: fully determined by the same input data + config as all other
+        # result fields. DETERMINISM_MODE=true produces bit-identical vectors.
+        "signal_vector": signal_vector,
     }
 
     # E7.3 / P1-B: TF_VERIFY_DETERMINISM second-run check.
@@ -2081,7 +2133,8 @@ def run_backtest(
 
             def _hash_result(r: dict) -> str:
                 """Hash backtest result excluding wall-clock timestamp."""
-                import hashlib, copy
+                import copy
+                import hashlib
                 r_copy = copy.deepcopy(r)
                 receipt = r_copy.get("run_receipt", {})
                 receipt.pop("timestamp_utc", None)
@@ -2441,7 +2494,7 @@ def run_class_backtest(
     _validate_bar_count(data, timeframe, start_date, end_date)
 
     # ─── Strategy validation gate (static) ───────────────────
-    from src.engine.validation import validate_static, load_spec, STRATEGY_CONCEPT_MAP
+    from src.engine.validation import STRATEGY_CONCEPT_MAP, load_spec, validate_static
     concept = STRATEGY_CONCEPT_MAP.get(strategy.name)
     validation_warnings = []
     val_spec = None
@@ -2615,8 +2668,10 @@ def run_class_backtest(
 
     # ─── Shift entry signals by 1 bar (next-bar fill) ──────────
     # Signal on bar N → fill on bar N+1. Eliminates lookahead bias.
-    long_entries_np = np.roll(long_entries_np, 1); long_entries_np[0] = False
-    short_entries_np = np.roll(short_entries_np, 1); short_entries_np[0] = False
+    long_entries_np = np.roll(long_entries_np, 1)
+    long_entries_np[0] = False
+    short_entries_np = np.roll(short_entries_np, 1)
+    short_entries_np[0] = False
 
     # ─── Max trades per day filter ──────────────────────────────
     # run_class_backtest doesn't have a BacktestRequest, so we accept max_trades_per_day
@@ -2736,7 +2791,7 @@ def run_class_backtest(
             trades_records, high_np, low_np, close_np, atr_np,
             spec, htf_cache, df,
         )
-        mgmt_exits = {m["exit_reason"] for m in managed_trades}
+        {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
         sl_count = sum(1 for m in managed_trades if m["exit_reason"] == "stop_loss")
         trail_count = sum(1 for m in managed_trades if m["exit_reason"] == "trailing_stop")
@@ -2960,10 +3015,10 @@ def run_class_backtest(
     if "ts_event" in df.columns and trades_list:
         try:
             from src.engine.gap_risk import (
+                compute_gap_adjusted_drawdown,
+                compute_gap_adjusted_mae,
                 compute_overnight_gaps,
                 tag_trades_overnight,
-                compute_gap_adjusted_mae,
-                compute_gap_adjusted_drawdown,
             )
             gaps = compute_overnight_gaps(df)
             trades_list = tag_trades_overnight(trades_list, df["ts_event"])
@@ -2992,7 +3047,10 @@ def run_class_backtest(
     governor_result = None
     _full_forge_result_class: dict = {}
     if use_performance_gate and total_trading_days > 0:
-        from src.engine.performance_gate import check_performance_gate, classify_tier, compute_forge_score as _pgate_forge_score_class
+        from src.engine.performance_gate import check_performance_gate, classify_tier
+        from src.engine.performance_gate import (
+            compute_forge_score as _pgate_forge_score_class,
+        )
         _gate_stats = {
             "avg_daily_pnl": avg_daily_pnl,
             "winning_days": winning_days,
@@ -3296,7 +3354,6 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
             )
             print(f"Walk-forward OOS: tier={result['tier']}, forge_score={result['forge_score']:.1f}", file=sys.stderr)
             # Attach run receipt for walk-forward (single backtests attach it themselves)
-            from src.engine.data_loader import compute_dataset_hash
             result["run_receipt"] = _build_run_receipt(config, dataset_hash="wf-aggregate")
         else:
             result = run_class_backtest(
@@ -3325,8 +3382,8 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
     # ─── Chain stress testing (all modes, not just walk-forward) ────
     if "error" not in result:
         try:
+            from src.engine.config import StrategyConfig, StressTestRequest
             from src.engine.stress_test import run_stress_test
-            from src.engine.config import StressTestRequest, StrategyConfig
             strategy_cfg = config.get("strategy", {})
             if strategy_class and hasattr(strategy, 'symbol'):
                 # Class-based: build minimal StrategyConfig from the strategy instance
@@ -3347,7 +3404,9 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
             crisis = run_stress_test(stress_req)
             result["crisis_results"] = crisis
             # Recalculate Forge Score with crisis bonus using full formula
-            from src.engine.performance_gate import compute_forge_score as full_forge_score
+            from src.engine.performance_gate import (
+                compute_forge_score as full_forge_score,
+            )
             oos = result.get("oos_metrics", result)
             mc = result.get("mc_results") or result.get("monte_carlo")
             # P0-1 fix: full_forge_score returns a DICT. Storing it directly in
@@ -3386,14 +3445,14 @@ if __name__ == "__main__":
     # Verify all 7 context layers are importable and callable.
     # Run with: python -m src.engine.backtester --help
     try:
-        from src.engine.context.htf_context import compute_htf_context
-        from src.engine.context.session_context import compute_session_context
         from src.engine.context.bias_engine import compute_bias
-        from src.engine.context.playbook_router import route_playbook
+        from src.engine.context.eligibility_gate import evaluate_signal
+        from src.engine.context.htf_context import compute_htf_context
         from src.engine.context.location_score import compute_location_score
+        from src.engine.context.playbook_router import route_playbook
+        from src.engine.context.session_context import compute_session_context
         from src.engine.context.structural_stops import compute_structural_stop
         from src.engine.context.structural_targets import compute_targets
-        from src.engine.context.eligibility_gate import evaluate_signal
 
         assert callable(compute_htf_context), "compute_htf_context not callable"
         assert callable(compute_session_context), "compute_session_context not callable"

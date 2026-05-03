@@ -34,7 +34,13 @@ import {
   boolean,
   index,
   uniqueIndex,
+  customType,
 } from "drizzle-orm/pg-core";
+
+// bytea type for compressed signal vectors
+const bytea = customType<{ data: Buffer; notNull: false; default: false }>({
+  dataType() { return "bytea"; },
+});
 
 // ─── Strategies ──────────────────────────────────────────────
 export const strategies = pgTable("strategies", {
@@ -1579,5 +1585,85 @@ export const frankensteinTestRuns = pgTable(
     index("idx_frankenstein_backtest").on(table.backtestId, table.createdAt.desc()),
     index("idx_frankenstein_strategy").on(table.strategyId, table.createdAt.desc()),
     index("idx_frankenstein_passed").on(table.passed, table.status),
+  ]
+);
+
+// ─── Strategy Signal Vectors (A7 — W11 Team B, migration 0072) ────────────────
+// Stores compressed per-bar signal vectors (1=long entry, -1=short entry, 0=none)
+// for every completed backtest. Enables empirical cross-correlation to catch the
+// Two Sigma failure mode: different code, identical signals.
+//
+// Compression: gzip via Node's built-in zlib.gzipSync. Typical 8yr/5min vector
+// (~150K int8 bytes) compresses to ~10-30KB.
+//
+// Gate authority: PAPER→DEPLOY_READY is fail-closed — promotion is BLOCKED if
+// signal vector is missing (fail-closed means we enforce uniqueness strictly).
+//
+// Cosine similarity threshold: 0.85 (configurable via SIGNAL_CORRELATION_THRESHOLD env).
+// Pairs exceeding the threshold trigger AlertFactory alerts and are queryable via
+// GET /api/signal-correlation/matrix.
+//
+// UNIQUE(strategy_id, backtest_id): one vector per (strategy, backtest) pair.
+export const strategySignalVectors = pgTable(
+  "strategy_signal_vectors",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id")
+      .references(() => strategies.id)
+      .notNull(),
+    backtestId: uuid("backtest_id")
+      .references(() => backtests.id)
+      .notNull(),
+    signalVectorCompressed: bytea("signal_vector_compressed").notNull(), // gzip(int8[])
+    nBars: integer("n_bars").notNull(),                                   // uncompressed length
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    // Fast gate check: "does this strategy have a signal vector?"
+    index("idx_signal_vectors_strategy").on(table.strategyId, table.createdAt.desc()),
+    // Fast join for latest backtest signal vector
+    index("idx_signal_vectors_backtest").on(table.backtestId),
+    // Enforce one vector per (strategy, backtest) pair
+    uniqueIndex("idx_signal_vectors_unique").on(table.strategyId, table.backtestId),
+  ]
+);
+
+// ─── Data Integrity Findings (A8 — W11 Team C, migration 0073) ───────────────
+// Single findings table for the consolidated reconciliation + drift detection
+// service. Both check categories write here, distinguished by check_type.
+//
+// check_type values:
+//   reconciliation   — independent sources should agree (audit_log/lifecycle_transitions,
+//                      paper_trades/paper_positions, backtest FK integrity, PAPER sessions)
+//   drift_detection  — same inputs should produce same outputs (PSI on metric distributions
+//                      queried from backtest_provenance)
+//
+// severity values:
+//   info     — healthy: 0 issues found; routine observation
+//   warning  — minor drift (PSI 0.1–0.2), minor reconciliation gaps
+//   critical — serious issue (PSI > 0.5, orphaned lifecycle rows, phantom PAPER states)
+//
+// resolved: operator flips to true after investigating. Unresolved findings
+// surface in the admin dashboard and alert path.
+export const dataIntegrityFindings = pgTable(
+  "data_integrity_findings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runAt: timestamp("run_at").defaultNow().notNull(),
+    checkType: text("check_type").notNull(),          // reconciliation | drift_detection
+    checkName: text("check_name").notNull(),          // specific subtype
+    severity: text("severity").notNull(),             // info | warning | critical
+    affectedEntityType: text("affected_entity_type"), // strategy | backtest | paper_session | null
+    affectedEntityId: uuid("affected_entity_id"),     // nullable — null for system-wide checks
+    details: jsonb("details"),                        // structured finding detail (counts, PSI values, etc.)
+    resolved: boolean("resolved").notNull().default(false),
+  },
+  (table) => [
+    // Primary operational query: unresolved findings needing attention
+    index("idx_data_integrity_unresolved").on(table.checkType, table.severity),
+    // Recency index for "show latest run findings" dashboard queries
+    index("idx_data_integrity_run_at").on(table.runAt.desc()),
+    // Entity lookup: "all findings for this strategy/backtest"
+    index("idx_data_integrity_entity").on(table.affectedEntityType, table.affectedEntityId),
   ]
 );

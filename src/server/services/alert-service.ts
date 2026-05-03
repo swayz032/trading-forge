@@ -140,4 +140,23 @@ export const AlertFactory = {
       message: `Kill switch tripped for ${component}: ${JSON.stringify(metadata)}`,
       metadata: { component, ...metadata },
     }),
+
+  // A7: Signal correlation alert — Two Sigma failure mode detection.
+  // Fires when two strategies have cosine(signal_a, signal_b) > threshold.
+  signalCorrelation: (
+    strategyIdA: string,
+    strategyIdB: string,
+    similarity: number,
+    threshold: number,
+  ) =>
+    createAlert({
+      type: "drift",
+      severity: "critical",
+      title: `Signal correlation ALERT: ${similarity.toFixed(3)} > ${threshold}`,
+      message:
+        `Strategies ${strategyIdA.slice(0, 8)} and ${strategyIdB.slice(0, 8)} have cosine similarity ` +
+        `${similarity.toFixed(3)} (threshold: ${threshold}). Two Sigma failure mode: ` +
+        `different code, identical signals. Review before allowing deployment.`,
+      metadata: { strategyIdA, strategyIdB, similarity, threshold },
+    }),
 };

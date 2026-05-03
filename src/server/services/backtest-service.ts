@@ -653,6 +653,46 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       }
     })();
 
+    // ─── A7: Signal Vector Persistence (fire-and-forget) ─────────────────────
+    // Persist the signal vector emitted by backtester.py for cross-correlation checks.
+    // Non-blocking — a signal vector write failure MUST NOT abort the backtest flow.
+    //
+    // signal_vector: Python list of int8 per bar (1=long, -1=short, 0=none).
+    // Compressed with gzip (Node built-in zlib) before DB storage.
+    // Used by PAPER→DEPLOY_READY gate (fail-closed) and /api/signal-correlation/matrix.
+    //
+    // Fire-and-forget pattern matches A2 provenance block immediately above.
+    (async () => {
+      try {
+        const resultRecord = result as unknown as Record<string, unknown>;
+        const signalVector = resultRecord.signal_vector;
+
+        if (!Array.isArray(signalVector) || signalVector.length === 0) {
+          logger.debug(
+            { backtestId, strategyId },
+            "A7: no signal_vector in result (old engine or empty run) — skipping persistence",
+          );
+          return;
+        }
+
+        const { persistSignalVector } = await import("./signal-correlation-service.js");
+        const persisted = await persistSignalVector(strategyId, backtestId, signalVector as number[]);
+
+        if (persisted) {
+          logger.debug(
+            { backtestId, strategyId, nBars: signalVector.length },
+            "A7: signal vector persisted",
+          );
+        }
+      } catch (sigVecErr) {
+        // Non-blocking — signal vector write failure must never abort the backtest flow.
+        logger.warn(
+          { backtestId, strategyId, err: sigVecErr },
+          "A7: signal vector persistence failed (non-blocking — backtest is still completed)",
+        );
+      }
+    })();
+
     // ─── Optional SQA parameter optimization (fire-and-forget) ───
     // Fires for ALL qualifying backtests (non-REJECTED with walk-forward results),
     // not just those explicitly requesting the SQA optimizer.

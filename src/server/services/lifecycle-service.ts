@@ -1458,6 +1458,89 @@ export class LifecycleService {
           );
         }
 
+        // ── A7: Signal Correlation Gate: PAPER → DEPLOY_READY hard block ──────
+        // Fail-closed: block promotion if the candidate strategy's signal vector
+        // has cosine similarity > 0.85 with ANY DEPLOYED strategy.
+        // Also blocks if no signal vector exists (strategy must have completed
+        // a backtest that emitted signal_vector via backtester.py A7 changes).
+        //
+        // Ramp-up mode: if no DEPLOYED strategies have signal vectors yet (pre-A7
+        // backtests), the gate passes with a warning. This prevents A7 from
+        // permanently blocking all promotions during initial deployment.
+        //
+        // Authority: HARD GATE (fail-closed). Does NOT override classical gates.
+        // Additive to existing Frankenstein, compliance-drift, and Sharpe gates.
+        try {
+          const { checkSignalCorrelationGate } = await import("./signal-correlation-service.js");
+          const sigCorrelationResult = await checkSignalCorrelationGate(s.id);
+
+          if (!sigCorrelationResult.allowed) {
+            logger.warn(
+              {
+                strategyId: s.id,
+                reason: sigCorrelationResult.reason,
+                maxSimilarity: sigCorrelationResult.maxSimilarity,
+                blockingStrategyId: sigCorrelationResult.blockingStrategyId,
+                transition: "PAPER→DEPLOY_READY",
+              },
+              "A7 signal correlation gate: BLOCKED PAPER→DEPLOY_READY promotion",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.promotion_blocked_signal_correlation",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: {
+                reason: sigCorrelationResult.reason,
+                max_similarity: sigCorrelationResult.maxSimilarity,
+                blocking_strategy_id: sigCorrelationResult.blockingStrategyId,
+                threshold: 0.85,
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "A7 audit insert failed (non-blocking)");
+            });
+            continue;
+          }
+
+          logger.info(
+            {
+              strategyId: s.id,
+              reason: sigCorrelationResult.reason,
+              maxSimilarity: sigCorrelationResult.maxSimilarity,
+              transition: "PAPER→DEPLOY_READY",
+            },
+            "A7 signal correlation gate: PASSED",
+          );
+        } catch (sigCorrelationErr) {
+          // Fail-closed on infrastructure error — same policy as Frankenstein gate.
+          // A broken correlation check is safer treated as a failed gate than an
+          // open one (a strategy promoted on a broken gate could be a signal duplicate).
+          const msg = sigCorrelationErr instanceof Error ? sigCorrelationErr.message : String(sigCorrelationErr);
+          logger.warn(
+            { strategyId: s.id, err: sigCorrelationErr },
+            "A7 signal correlation gate: infrastructure error — blocking promotion (fail-closed)",
+          );
+          await db.insert(auditLog).values({
+            action: "lifecycle.promotion_blocked_signal_correlation",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: {
+              reason: `A7 gate infrastructure error (fail-closed): ${msg}`,
+              max_similarity: null,
+              blocking_strategy_id: null,
+              threshold: 0.85,
+            },
+            correlationId,
+          }).catch(() => {});
+          continue;
+        }
+
         const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined });
         if (result.success) {
           promoted.push(s.id);

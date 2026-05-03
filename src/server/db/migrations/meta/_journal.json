@@ -519,6 +519,20 @@
       "when": 1746316800000,
       "tag": "0071_frankenstein_test_runs",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1746403200000,
+      "tag": "0072_strategy_signal_vectors",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1746489600000,
+      "tag": "0073_data_integrity_findings",
+      "breakpoints": true
     }
   ]
 }

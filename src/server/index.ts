@@ -45,6 +45,7 @@ import { quantumCostRoutes } from "./routes/quantum-cost.js";
 import { adversarialStressRoutes } from "./routes/adversarial-stress.js";
 import { frankensteinRoutes } from "./routes/frankenstein.js";
 import { cloudQmcRoutes } from "./routes/cloud-qmc.js";
+import { signalCorrelationRoutes } from "./routes/signal-correlation.js";
 import { strategyNameRoutes } from "./routes/strategy-names.js";
 import { criticOptimizerRoutes } from "./routes/critic-optimizer.js";
 import { deeparRoutes } from "./routes/deepar.js";
@@ -385,6 +386,7 @@ app.use("/api/adversarial-stress", strictRateLimit, adversarialStressRoutes);
 // A4 Frankenstein: hard TESTING→PAPER gate — blocks promotion if strategy shows edge on random data
 app.use("/api/frankenstein", strictRateLimit, frankensteinRoutes);
 app.use("/api/cloud-qmc", strictRateLimit, cloudQmcRoutes);
+app.use("/api/signal-correlation", signalCorrelationRoutes);
 app.use("/api/strategy-names", strategyNameRoutes);
 app.use("/api/critic-optimizer", strictRateLimit, criticOptimizerRoutes);
 app.use("/api/deepar", deeparRoutes);
