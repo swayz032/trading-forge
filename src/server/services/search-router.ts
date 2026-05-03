@@ -31,6 +31,8 @@ import { sql } from "drizzle-orm";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 import { readFileSync, existsSync } from "fs";
 import { resolve as pathResolve } from "path";
+// C3: Prompt injection defense — sanitize snippets before they reach LLM prompts
+import { sanitizeBatch } from "./llm-input-sanitizer.js";
 
 export interface SearchOptions {
   intent: string;            // e.g. "trend-following", "mean-reversion"
@@ -466,6 +468,46 @@ export async function strategyHunt(opts: SearchOptions): Promise<{
   const fused = fuseResults(lists);
   const filtered = await applyGraveyardFilter(fused);
 
+  // C3: Sanitize snippets from external sources before returning to callers.
+  // The snippet text will be concatenated into LLM prompts by n8n and the
+  // agent drain loop — any injected content in a Brave/Tavily/Exa result
+  // would propagate directly into the LLM context without this step.
+  let sanitizedResults = filtered;
+  if (filtered.length > 0) {
+    try {
+      const batchResult = await sanitizeBatch(
+        filtered.map((r) => ({ content: r.snippet, sourceUrl: r.url })),
+        { source: "search-router" },
+      );
+      sanitizedResults = filtered
+        .map((r, i) => {
+          const sr = batchResult.items[i];
+          if (!sr) return r;
+          if (sr.blocked) {
+            // Mark snippet as blocked — callers should skip this result
+            return { ...r, snippet: "[BLOCKED: injection detected]", _injectionBlocked: true } as SearchResult;
+          }
+          return { ...r, snippet: sr.sanitized };
+        });
+
+      if (batchResult.totalDetections > 0) {
+        logger.warn(
+          {
+            query: queryString,
+            totalDetections: batchResult.totalDetections,
+            totalBlocked: batchResult.totalBlocked,
+          },
+          "search-router: injection attempts detected in search results",
+        );
+      }
+    } catch (sanitizeErr) {
+      // Non-blocking — if sanitizer fails, continue with unsanitized results and log
+      logger.warn({ err: sanitizeErr }, "search-router: sanitization pass failed (non-blocking)");
+    }
+  }
+
+  const totalAfterSanitize = sanitizedResults.filter((r) => !(r as any)._injectionBlocked).length;
+
   logger.info(
     {
       query: queryString,
@@ -473,6 +515,7 @@ export async function strategyHunt(opts: SearchOptions): Promise<{
       totalRaw,
       totalFused: fused.length,
       totalAfterGraveyard: filtered.length,
+      totalAfterSanitize,
       perProvider,
     },
     "search-router: strategyHunt complete",
@@ -485,6 +528,6 @@ export async function strategyHunt(opts: SearchOptions): Promise<{
     totalFused: fused.length,
     totalAfterGraveyard: filtered.length,
     perProvider,
-    results: filtered,
+    results: sanitizedResults.filter((r) => !(r as any)._injectionBlocked),
   };
 }

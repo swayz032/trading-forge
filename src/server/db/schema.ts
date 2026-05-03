@@ -1793,3 +1793,68 @@ export const pilotSessions = pgTable(
     index("idx_pilot_sessions_outcome").on(table.strategyId, table.outcome),
   ]
 );
+
+// ─── C1: exchange_outages (W15 — CME Venue Outage Handling) ─────────────────
+// Records exchange outage events detected by exchange-status-service.ts.
+// Indexed for fast active-outage lookup (ended_at IS NULL).
+// On outage: pending orders cancelled, new entries blocked, positions held.
+// On resume: NO auto-reissue — manual review required (Nov 28 2025 CME lesson).
+export const exchangeOutages = pgTable(
+  "exchange_outages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    exchange: text("exchange").notNull(),          // "CME" | "ICE" | etc.
+    startedAt: timestamp("started_at").notNull(),
+    endedAt: timestamp("ended_at"),                // null while active
+    reason: text("reason"),
+    affectedSymbols: text("affected_symbols").array(),
+    responseTaken: text("response_taken"),          // audit of what action paper engine took
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("idx_exchange_outages_exchange_time").on(table.exchange, table.startedAt.desc()),
+  ]
+);
+
+// ─── C3: llm_injection_attempts (W15 — Prompt Injection Defense) ────────────
+// Records all detected prompt injection attempts from scout-fetched content.
+// Written fire-and-forget by llm-input-sanitizer.ts (never blocks pipeline).
+// blocked=false rows are the high-priority alert: injection reached the LLM.
+export const llmInjectionAttempts = pgTable(
+  "llm_injection_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    detectedAt: timestamp("detected_at").defaultNow().notNull(),
+    source: text("source").notNull(),            // brave | reddit | tavily | youtube | exa | parallel
+    sourceUrl: text("source_url"),
+    contentSnippet: text("content_snippet"),     // first 200 chars around match
+    injectionType: text("injection_type"),       // comma-separated detected types
+    severity: text("severity").notNull(),        // critical | high | medium | low
+    blocked: boolean("blocked").default(true).notNull(),
+  },
+  (table) => [
+    index("idx_llm_injection_source_time").on(table.source, table.detectedAt.desc()),
+    index("idx_llm_injection_severity_time").on(table.severity, table.detectedAt.desc()),
+    index("idx_llm_injection_detected_at").on(table.detectedAt.desc()),
+  ]
+);
+
+// ─── C2: prop_firm_health_checks (W15 — Prop Firm Suspension Detection) ──────
+// Stores health check results for each prop firm API poll (every 15 min).
+// alert_fired = true rows are the actionable record for the dashboard.
+// Per-firm suspension → paper engine blocks new orders for that firm.
+export const propFirmHealthChecks = pgTable(
+  "prop_firm_health_checks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    firmId: text("firm_id").notNull(),             // topstep | apex | mffu | tpt | ffn | alpha | tradeify | earn2trade
+    checkedAt: timestamp("checked_at").defaultNow().notNull(),
+    status: text("status").notNull(),              // healthy | degraded | suspended | auth_failure | unreachable
+    responseCode: integer("response_code"),        // HTTP status from the firm's API
+    responseBodySnippet: text("response_body_snippet"), // first 500 chars for diagnosis
+    alertFired: boolean("alert_fired").notNull().default(false),
+  },
+  (table) => [
+    index("idx_prop_firm_health_firm_time").on(table.firmId, table.checkedAt.desc()),
+  ]
+);

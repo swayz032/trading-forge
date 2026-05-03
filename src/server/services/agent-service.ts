@@ -10,6 +10,10 @@ import { callOpenAI } from "./model-router.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { captureToDLQ } from "../lib/dlq-service.js";
 import { runPythonModule } from "../lib/python-runner.js";
+// C3: Prompt injection defense imports
+import { sanitizeExternalContent } from "./llm-input-sanitizer.js";
+import { validateRawLLMResponse, validateDSLOutput } from "./llm-output-validator.js";
+import { sandboxCheckCode } from "./llm-sandbox-service.js";
 
 const _SYMBOLS = ["MES", "MNQ", "MCL"] as const;
 type Symbol = (typeof _SYMBOLS)[number];
@@ -225,6 +229,36 @@ export class AgentService {
       }
     } catch (err) {
       logger.warn({ err }, "Graveyard failure lookup failed (non-blocking)");
+    }
+
+    // 0c. C3: Sandbox check — AST scan LLM-generated python_code before executing
+    // Only applied to AI-generated sources (ollama/openclaw) — manual code is
+    // trusted (the single human operator wrote it). AST scan catches forbidden
+    // imports and dangerous calls without executing the code.
+    if (input.source === "ollama" || input.source === "openclaw") {
+      const sandboxResult = await sandboxCheckCode(input.python_code, {
+        runCode: false,  // AST scan only — no execution
+        strategyName: input.strategy_name,
+      });
+      if (!sandboxResult.passed) {
+        logger.warn(
+          {
+            strategyName: input.strategy_name,
+            source: input.source,
+            violations: sandboxResult.violations,
+            syntaxError: sandboxResult.syntaxError,
+          },
+          "runStrategy: python_code blocked by sandbox AST scan",
+        );
+        return {
+          strategyId: null,
+          backtestId: null,
+          status: "blocked_sandbox",
+          tier: null,
+          forgeScore: null,
+          sandboxViolations: sandboxResult.violations,
+        };
+      }
     }
 
     // 1. Deduplicate strategy name — auto-version if name already exists
@@ -743,6 +777,58 @@ Respond in strict JSON:
   async scoutIdeas(ideas: ScoutIdea[]) {
     const receivedCount = ideas.length;
 
+    // C3: Phase -1: Prompt injection sanitization on all incoming external content
+    // Each idea arrives from an untrusted source (Reddit, Brave, Tavily, YouTube, etc.)
+    // Sanitize title+description before they touch any LLM prompt.
+    const sanitizedIdeas: ScoutIdea[] = [];
+    let totalInjectionBlocks = 0;
+    for (const idea of ideas) {
+      const combined = `${idea.title ?? ""} ${idea.description ?? ""} ${idea.summary ?? ""}`;
+      const sanitizeResult = await sanitizeExternalContent(combined, {
+        source: idea.source ?? "unknown",
+        sourceUrl: idea.url,
+      });
+
+      if (sanitizeResult.blocked) {
+        // High/critical injection detected — log and skip this idea entirely
+        totalInjectionBlocks++;
+        logger.warn(
+          {
+            source: idea.source,
+            url: idea.url,
+            detectionCount: sanitizeResult.detections.length,
+            types: sanitizeResult.detections.map((d) => d.type),
+          },
+          "scoutIdeas: idea blocked by injection sanitizer",
+        );
+        continue;
+      }
+
+      // Replace description with sanitized version if content was modified
+      if (sanitizeResult.wasModified) {
+        // Re-split the sanitized combined back into description (we lose the split
+        // boundary, so use the sanitized combined as the description — the title
+        // is re-derived by preprocessing below). This is safe because the
+        // preprocessing step below re-strips and re-derives the clean title.
+        sanitizedIdeas.push({
+          ...idea,
+          description: sanitizeResult.sanitized,
+        });
+      } else {
+        sanitizedIdeas.push(idea);
+      }
+    }
+
+    if (totalInjectionBlocks > 0) {
+      logger.info(
+        { receivedCount, blocked: totalInjectionBlocks, remaining: sanitizedIdeas.length },
+        "scoutIdeas: injection sanitization complete",
+      );
+    }
+
+    // Replace ideas with sanitized set for all downstream processing
+    ideas = sanitizedIdeas;
+
     // Phase 0: Preprocessing — filter, clean, extract metadata
     const htmlEntityMap: Record<string, string> = {
       "&amp;": "&", "&lt;": "<", "&gt;": ">",
@@ -1071,6 +1157,21 @@ Rules:
 - Output ONLY the JSON object`;
 
         const response = await this.ollama.generate("trading-quant", prompt, undefined, true);
+
+        // C3: Output validation — check raw LLM response for out-of-band content
+        // before parsing. A compromised Ollama response might echo injected instructions.
+        const rawValidation = validateRawLLMResponse(response.response);
+        if (!rawValidation.passed) {
+          failed++;
+          const detectionTypes = rawValidation.detections.map((d) => d.name).join(",");
+          errors.push(`${entry.id}: LLM output failed out-of-band check (${detectionTypes})`);
+          logger.warn(
+            { entryId: entry.id, detections: rawValidation.detections.length, detectionTypes },
+            "drainScoutedIdeas: Ollama response rejected by output validator",
+          );
+          continue;
+        }
+
         let dsl: Record<string, unknown>;
         try {
           dsl = JSON.parse(response.response);
@@ -1080,7 +1181,19 @@ Rules:
           continue;
         }
 
-        // Validate canonical DSL required fields before sending to compiler
+        // C3: DSL output validation — schema + field-level injection scan
+        // skipCompile=true here (compiler round-trip happens inside runStrategyFromDSL)
+        const dslValidation = await validateDSLOutput(dsl, {
+          skipCompile: true,
+          source: `drain:${entry.source ?? "unknown"}`,
+        });
+        if (!dslValidation.passed) {
+          failed++;
+          errors.push(`${entry.id}: DSL validation failed: ${dslValidation.reasons.slice(0, 3).join("; ")}`);
+          continue;
+        }
+
+        // Legacy field check (kept for compatibility — validateDSLOutput already covers this)
         const required = [
           "name", "description", "symbol", "timeframe", "direction",
           "entry_type", "entry_indicator", "entry_params", "entry_condition",
