@@ -1,0 +1,36 @@
+{
+  "schema_version": "v1",
+  "name": "Overnight Drift MES",
+  "description": "Detect directional drift in S&P futures during Asia session (18:00-03:00 ET) and enter at Europe open (03:00 ET), exiting before NY pre-open at 08:30 ET.",
+  "symbol": "MES",
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_type": "session_pattern",
+  "entry_indicator": "overnight_drift",
+  "entry_params": {
+    "drift_atr_threshold": 0.75,
+    "asia_lookback_bars": 12,
+    "min_drift_bars": 4
+  },
+  "entry_condition": "Detect directional drift of at least 0.75 ATR sustained over 4 of the last 12 Asia session bars, then enter at Europe open (03:00 ET) in the drift direction.",
+  "exit_type": "time_exit",
+  "exit_params": {
+    "trail_atr": 1.2,
+    "break_even_at_r": 1.0,
+    "hard_exit_time_et": "08:30",
+    "bars": 22
+  },
+  "stop_loss_atr_multiple": 1.2,
+  "take_profit_atr_multiple": 2.5,
+  "max_contracts": 6,
+  "preferred_regime": "OVERNIGHT_DRIFT",
+  "session_filter": "ETH_ONLY",
+  "frankenstein_test_mode": "calendar_preserving",
+  "profit_scaling_tier": {
+    "increment": 2,
+    "threshold": 3000
+  },
+  "daily_target_dollars": 300.0,
+  "source": "manual",
+  "tags": ["overnight", "asia", "europe", "drift", "session_pattern", "mes", "eth"]
+}

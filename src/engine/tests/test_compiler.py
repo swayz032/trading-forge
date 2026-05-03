@@ -168,10 +168,15 @@ class TestPatternLibrary:
 
     def test_list_patterns_returns_all(self):
         patterns = list_patterns()
-        assert len(patterns) == 10
+        # 10 original + 3 new (vwap_fade, event_driven_fade, overnight_drift)
+        assert len(patterns) == 13
         assert "sma_crossover" in patterns
         assert "rsi_reversal" in patterns
         assert "macd_crossover" in patterns
+        # B3 archetype patterns
+        assert "vwap_fade" in patterns
+        assert "event_driven_fade" in patterns
+        assert "overnight_drift" in patterns
 
     def test_validate_entry_params_directly(self):
         valid, errors = validate_entry_params("bollinger_breakout", {"period": 20, "std_dev": 2.0})

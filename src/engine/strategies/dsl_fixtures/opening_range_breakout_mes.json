@@ -1,0 +1,36 @@
+{
+  "schema_version": "v1",
+  "name": "Opening Range Breakout MES",
+  "description": "Break above or below the first 30-minute opening range on MES with volume confirmation, targeting the first 90 minutes of RTH only.",
+  "symbol": "MES",
+  "timeframe": "5m",
+  "direction": "both",
+  "entry_type": "breakout",
+  "entry_indicator": "session_open_breakout",
+  "entry_params": {
+    "range_minutes": 30,
+    "buffer_ticks": 2
+  },
+  "entry_condition": "Break above opening range high or below opening range low with volume above 20-bar average during the first 90 minutes of RTH.",
+  "exit_type": "trailing_stop",
+  "exit_params": {
+    "trail_atr": 1.5,
+    "break_even_at_r": 1.0,
+    "time_decay_minutes": 20,
+    "time_decay_multiplier": 0.75,
+    "session_exit_minutes": 90
+  },
+  "stop_loss_atr_multiple": 1.2,
+  "take_profit_atr_multiple": 3.0,
+  "max_contracts": 6,
+  "preferred_regime": "OPENING_RANGE",
+  "session_filter": "RTH_ONLY",
+  "frankenstein_test_mode": "calendar_preserving",
+  "profit_scaling_tier": {
+    "increment": 2,
+    "threshold": 3000
+  },
+  "daily_target_dollars": 350.0,
+  "source": "manual",
+  "tags": ["opening_range", "breakout", "calendar_effect", "mes", "rth", "orb"]
+}

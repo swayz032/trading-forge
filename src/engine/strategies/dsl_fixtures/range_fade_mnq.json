@@ -1,0 +1,36 @@
+{
+  "schema_version": "v1",
+  "name": "Range Fade MNQ",
+  "description": "Fade price back toward session VWAP when it extends beyond 1.5 ATR in either direction during range-bound RTH conditions.",
+  "symbol": "MNQ",
+  "timeframe": "5m",
+  "direction": "both",
+  "entry_type": "mean_reversion",
+  "entry_indicator": "vwap_fade",
+  "entry_params": {
+    "atr_extension_threshold": 1.5,
+    "confirmation_bars": 2
+  },
+  "entry_condition": "When price extends more than 1.5 ATR from session VWAP, fade back toward VWAP with 2-bar confirmation.",
+  "exit_type": "trailing_stop",
+  "exit_params": {
+    "trail_atr": 1.0,
+    "break_even_at_r": 1.0,
+    "time_decay_minutes": 20,
+    "time_decay_multiplier": 0.75,
+    "vwap_touch_exit": true
+  },
+  "stop_loss_atr_multiple": 1.5,
+  "take_profit_atr_multiple": 3.0,
+  "max_contracts": 8,
+  "preferred_regime": "RANGE_BOUND",
+  "session_filter": "RTH_ONLY",
+  "frankenstein_test_mode": "full_shuffle",
+  "profit_scaling_tier": {
+    "increment": 2,
+    "threshold": 3000
+  },
+  "daily_target_dollars": 400.0,
+  "source": "manual",
+  "tags": ["range", "vwap", "fade", "mean_reversion", "mnq", "rth"]
+}

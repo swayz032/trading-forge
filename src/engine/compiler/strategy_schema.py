@@ -30,6 +30,7 @@ class EntryType(str, Enum):
     TREND_FOLLOW = "trend_follow"
     VOLATILITY_EXPANSION = "volatility_expansion"
     SESSION_PATTERN = "session_pattern"
+    EVENT_DRIVEN = "event_driven"  # W13 B3 — news/inventory release reactions
 
 
 class ExitType(str, Enum):
@@ -202,6 +203,19 @@ class StrategyDSL(BaseModel):
     ]] = Field(
         None,
         description="Shuffle mode for A4 Frankenstein randomization test. None = full_shuffle.",
+    )
+
+    # News-blackout opt-out (W13 B3 — event-driven archetypes).
+    # Default: skip entries during macro release blackouts (CPI/NFP/FOMC/EIA).
+    # Setting True must be conscious — required for news_fade_mcl which trades
+    # INTO EIA inventory volatility intentionally.
+    bypass_news_blackout: Optional[bool] = Field(
+        None,
+        description=(
+            "When True, strategy explicitly opts into trading during news windows. "
+            "Required for event-driven strategies like news_fade_mcl. "
+            "Must be explicitly set — no default opt-in."
+        ),
     )
 
     model_config = {"extra": "forbid"}

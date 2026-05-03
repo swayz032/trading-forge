@@ -30,6 +30,16 @@ VALID_REGIMES = {
     "HIGH_VOL", "LOW_VOL", "TRANSITIONAL",
 }
 
+# Extended regime labels used by specialised archetypes.
+# These are NOT produced by classify_regime() — they come from external
+# classifiers (calendar/session detection, event calendar checks).
+# should_strategy_trade() handles them gracefully via exact-match fallback.
+EXTENDED_REGIMES = {
+    "OPENING_RANGE",   # First 30 min of RTH — ORB breakout window
+    "NEWS_DRIVEN",     # Event-driven window (EIA, FOMC, CPI, NFP)
+    "OVERNIGHT_DRIFT", # Asia → Europe directional drift session
+}
+
 
 def classify_regime(
     df: pl.DataFrame,
@@ -149,6 +159,12 @@ def should_strategy_trade(regime: str, preferred_regime: Optional[str]) -> bool:
         "HIGH_VOL": {"HIGH_VOL", "TRANSITIONAL"},
         "LOW_VOL": {"LOW_VOL", "RANGE_BOUND"},
         "TRANSITIONAL": VALID_REGIMES,  # trade in any regime
+        # Extended regime labels — gated by external classifiers, not classify_regime().
+        # When classify_regime() is the source, current regime will never match these,
+        # so the strategy sits out (correct — the external classifier must confirm).
+        "OPENING_RANGE": {"OPENING_RANGE"},
+        "NEWS_DRIVEN": {"NEWS_DRIVEN"},
+        "OVERNIGHT_DRIFT": {"OVERNIGHT_DRIFT"},
     }
 
     allowed = compatible.get(preferred_regime, {preferred_regime})
