@@ -426,11 +426,21 @@ export function scoreVideoTitle(title: string): { score: number; positiveHit: bo
   if (positiveHit) score += 2;
   if (numericHit) score += 3;       // Wave 11 — strongest signal for parametric extractability
   if (indicatorHit) score += 3;     // W23F.S — explicit indicator names = high parametric yield
-  // Negative scoring dominates positive — critique/clickbait can't be "saved" by indicator bonus.
+  // W23F.X (2026-05-19): critique/podcast/vlog still dominates (those genuinely have no rules).
+  // BUT clickbait titles often wrap real parametric content (futures creators use '$X/day' for
+  // engagement). Operator caught this — Novo Legacy '4hr candle $500/day' has real 4hr continuation
+  // rules; was filtered by score=-2 → operator forced re-evaluation. Clickbait now -3 (was -5,
+  // hard floor -2) so a positive+indicator hit (+5) can offset clickbait (-3) to reach +2.
   if (negativeHit) score = Math.min(score - 5, -2);
-  if (clickbaitHit) score = Math.min(score - 5, -2);
+  if (clickbaitHit) score -= 3;
   return { score, positiveHit, negativeHit, numericHit, clickbaitHit, indicatorHit };
 }
+
+// W23F.X — eligibility threshold for autonomous-scout-runner. Was 3 (too strict);
+// lowered to 0 so clickbait-titled-but-parametric content (long-form $X/day videos
+// with real rules) enters the pipeline. Critique/podcast videos still excluded
+// (their score forced to <= -2 by the negativeHit branch).
+export const TITLE_SCORE_ELIGIBILITY_THRESHOLD = 0;
 
 interface BraveResult { title: string; url: string; description?: string }
 interface ConceptCandidate {
