@@ -4415,6 +4415,63 @@ Test fixes:
 
 ---
 
+### Session Log — 2026-05-19 wave23-recovery PHASE 1 — Wave 21 + 23.D engine reconstruction (backtest-core subagent)
+
+**Mission:** Reconstruct Wave 21 engine guardrails and Wave 23.D promotion gates after null-byte disk corruption at 02:57 rolled back working tree to pre-Wave-21 state. Recovery commit 410b75c had restored most files from prior Wave 22/23 commits but two implementation gaps remained.
+
+**Work completed:**
+
+**Gap 1 — `src/engine/tests/test_performance_gate.py`: TestExpectancyRGate class absent.**
+- Added `TestExpectancyRGate` class (8 tests) verifying W23-D.1 expectancy_R gate behaviour.
+- Tests cover: 0.5R blocked, 2.5R passes, exact 2.0R boundary inclusive, missing avg_trade_risk warns not blocks, zero avg_trade_risk warns not blocks, audit message format (actual_R + threshold + sample_size), scale-invariance at 1c vs 6c, sample gate interaction.
+- Updated `_tier1_stats()` and `_tier3_stats()` helper fixtures to include `avg_trade_pnl` + `avg_trade_risk` so pre-existing `TestPerformanceGate` tests pass the new R-gate without false failures.
+
+**Gap 2 — `src/server/services/lifecycle-service.ts`: W23-D.1 and W23-D.2 gate blocks absent.**
+- Added W23-D.1 expectancy_R HARD gate at CANDIDATE → TESTING (lines ~1014-1088):
+  - Reads `backtests.gateResult.expectancy_r`, blocks at < 2.0R threshold.
+  - Permissive fallback when gateResult absent or expectancy_r key absent (pre-W23 backtest).
+  - Emits `lifecycle.gate_eval` audit row per gate with severity=hard.
+  - Emits `lifecycle:gate_evaluated` SSE on block.
+- Added W23-D.2 harsh-regime SOFT advisory at TESTING → PAPER (lines ~1431-1508):
+  - Calls `engine.regime_survival` via `runPythonModule` ({module, config, componentName, timeoutMs}).
+  - Emits `lifecycle.harsh_regime_advisory` audit row on advisory failure.
+  - Emits `lifecycle:gate_evaluated` SSE with gate/severity/regimes_failed evidence.
+  - Fail-open on infra error (catch block, promotion continues).
+  - Phase 0 — soft advisory; only blocks when `regimeResult.would_block === true` (requires REGIME_SURVIVAL_PHASE=hard).
+
+**Pre-existing restoration verified (already in 410b75c commit):**
+- `vitest.config.ts` — null-byte restored (match commit 8493a0a).
+- `src/engine/config.py` — TRACK3_CONFIG + PositionSizeConfig risk_derived_pyramid fields already present.
+- `src/engine/backtester.py` — _get_stop_ceiling_for_symbol, _apply_dsl_stop_loss_and_time_stop, _apply_dll_halt_to_entries all present.
+- `src/engine/performance_gate.py` — W23-D.1 expectancy_R gate logic present; warnings list initialised early.
+- `src/engine/regime_survival.py` — fully intact from prior recovery.
+- All test files (test_wave21_stop_dll.py, test_regime_survival.py) — intact.
+
+**Verification (evidence not assertions):**
+- `npx vitest run src/server/__tests__/wave23-promotion-gates.test.ts` → **17/17 pass**
+- `.venv/Scripts/pytest.exe src/engine/tests/test_performance_gate.py::TestExpectancyRGate` → **8/8 pass**
+- `.venv/Scripts/pytest.exe src/engine/tests/test_regime_survival.py` → **18/18 pass**
+- `.venv/Scripts/pytest.exe src/engine/tests/test_wave21_stop_dll.py` → **13/13 pass**
+- Combined Python suite (all 3 test files) → **75/75 pass**
+- `npm run check:production-isolation` → **CLEAN (4 files, 0 violations)**
+- `npm run system-map:check` → **status:ok, driftItems:[]**
+- Hit-rate-agnostic grep on W23-D new code → **0 new hit-rate thresholds introduced**
+- `npx tsc --noEmit --skipLibCheck` → **0 errors in lifecycle-service.ts** (pre-existing test-mock errors unchanged)
+- Commit: `aa2bd6e` on branch `feature/deep-analysis-pipeline`
+- Pushed to: `origin/feature/deep-analysis-pipeline`
+
+**Known-facts updates:**
+- **Wave 21 functions (_get_stop_ceiling_for_symbol, _apply_dsl_stop_loss_and_time_stop, _apply_dll_halt_to_entries) were NOT in the corruption — they were restored by recovery commit 410b75c.** The actual gap was in tests + lifecycle wiring.
+- **`runPythonModule` in lifecycle-service.ts is imported dynamically inside `runComplianceGateForFirms` (line 179), NOT inside `runLifecycleChecks`.** W23-D.2 uses a local `const { runPythonModule: runRegimeSurvival } = await import(...)` to get the runner in scope for the TESTING→PAPER block. Do not remove this second dynamic import.
+- **`_tier1_stats()` and `_tier3_stats()` in `test_performance_gate.py` now include `avg_trade_pnl` + `avg_trade_risk`.** These fields are required by the W23-D.1 gate; without them, the permissive fallback fires and adds a warning to the result list, breaking the zero-rejection assertion. Future agents: always include these fields in benchmark stat fixtures.
+
+**Carry-forward:**
+- E.6 config snapshot in `src/server/routes/backtests.ts` (deep-clone at submission time) was listed in AGENT-LOGS Wave 21 but already present in restored code — verify in next session if deep-clone is intact.
+- W23-D.2 soft→hard upgrade path: set `REGIME_SURVIVAL_PHASE=hard` in env after 90 days of activation data. W24 cron should automate this.
+- `avg_trade_risk` absent in pre-W23 backtests: expectancy_R gate proceeds permissively. Once all strategies re-run post-W23, remove the permissive branch in W25 cleanup.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Hit rate is OUTPUT, not target (pinned 2026-05-19)
