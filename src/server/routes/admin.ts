@@ -48,6 +48,25 @@ adminRoutes.post("/pipeline/start", async (req, res) => {
   }
 });
 
+// ─── POST /scout/run-autonomous-cycle ────────────────────────────
+// Pass 21 — manual trigger for the layered scout cycle. Runs in-process,
+// returns immediately; cycle completes async over 3-10 min.
+// Restored W23F.N (2026-05-19) after route was dropped during 86-file corruption recovery.
+adminRoutes.post("/scout/run-autonomous-cycle", async (req, res) => {
+  try {
+    const { runAutonomousScoutCycle } = await import("../services/autonomous-scout-runner.js");
+    res.setHeader("Content-Type", "application/json");
+    res.write('{"status":"started","note":"running async, may take 3-10 min"}');
+    res.end();
+    runAutonomousScoutCycle()
+      .then((result) => req.log.info({ result }, "autonomous-scout: manual cycle complete"))
+      .catch((err) => req.log.error({ err }, "autonomous-scout: manual cycle failed"));
+  } catch (err) {
+    req.log.error({ err }, "Admin: failed to start autonomous scout cycle");
+    res.status(500).json({ error: "Failed to start autonomous scout cycle" });
+  }
+});
+
 // ─── POST /pipeline/pause ────────────────────────────────────────
 adminRoutes.post("/pipeline/pause", async (req, res) => {
   try {
