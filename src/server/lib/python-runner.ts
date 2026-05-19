@@ -141,18 +141,16 @@ export async function runPythonModule<T = Record<string, unknown>>(
   await _acquirePythonSlot();
 
   try {
-    // Resolve Python: prefer project .venv (deterministic packages), fall back to system python.
-    // The schtasks-launched server runs with a non-interactive PATH that may not include
-    // user-site packages — relying on system `python` causes intermittent ModuleNotFoundError
-    // for packages installed via `pip install --user`. The .venv has every dependency the
-    // backtester needs, locked to known versions.
-    const venvPython = process.platform === "win32"
-      ? pathResolve(process.cwd(), ".venv", "Scripts", "python.exe")
-      : pathResolve(process.cwd(), ".venv", "bin", "python");
-    const venvExists = existsSync(venvPython);
-    const pythonCmd = venvExists
-      ? venvPython
-      : (process.platform === "win32" ? "python" : "python3");
+    // Python interpreter selection (Phase 15 revised):
+    // - Prefer absolute path to system Python (avoids PATH issues under schtasks/service envs)
+    // - Phase 15 .venv pin reverted: the .venv on this host is a WindowsApps stub that fails
+    //   "Unable to create process" when spawned from non-interactive contexts.
+    // - We also force PYTHONUSERSITE=1 + PYTHONPATH (below) so user-site packages installed
+    //   via `pip install --user` are visible to subprocesses regardless of parent env.
+    const systemPythonWin = "C:\\Program Files\\Python313\\python.exe";
+    const pythonCmd = process.platform === "win32"
+      ? (existsSync(systemPythonWin) ? systemPythonWin : "python")
+      : "python3";
     const finalArgs: string[] = [];
 
     // 1. Handle Script vs Module
@@ -206,6 +204,11 @@ export async function runPythonModule<T = Record<string, unknown>>(
       // Phase 12: default pipeline mode for all Python backtests
       TF_STRESS_TEST_MODE: process.env.TF_STRESS_TEST_MODE ?? "pipeline",
       WF_PARALLEL: process.env.WF_PARALLEL ?? "1",
+      // Phase 15: force user-site visibility so subprocess sees `pip install --user`
+      // packages (e.g. click) even when launched from non-interactive schtasks env.
+      // Without PYTHONUSERSITE=1, the schtasks-launched server's subprocesses ignore
+      // ~/AppData/Roaming/Python/.../site-packages and fail with ModuleNotFoundError.
+      PYTHONUSERSITE: "1",
     };
     return await new Promise((resolve, reject) => {
       const proc = spawn(pythonCmd, finalArgs, {
