@@ -126,29 +126,34 @@ def simulate_prop_firm(
                     # Account cannot safely cover overnight margin
                     overnight_margin_warning = True
 
-        # Daily loss limit enforcement
+        # Daily loss limit enforcement.
+        #
+        # PHASE21-PART3 FIX: do NOT cap net_pnl. The previous behavior capped
+        # the day's loss at the firm DLL to simulate "the firm halted you" —
+        # but daily_pnl_records comes from EOD equity diffs (_compute_daily_pnls
+        # in backtester.py), which captures MARK-TO-MARKET swings on
+        # overnight-held positions, not just realized trade P&L. So the cap
+        # was firing on days with no trades at all (held-position drift) and
+        # accumulating tens of thousands in fake "saved losses" — making
+        # Topstep ending_balance LOOK profitable on losing strategies.
+        #
+        # Real Topstep monitors live tick-by-tick equity, not EOD MTM diffs.
+        # Until per-firm-resize lands (Wave 24 carry-forward) and we have
+        # tick-level equity, the honest behavior is: report TRUE strategy
+        # P&L in ending_balance, and surface daily_loss_limit_breaches as
+        # an INFORMATIONAL risk indicator (days where EOD MTM swung past
+        # the firm DLL — real-firm halt likely on at least these days).
         day_halted = False
         gap_breached = False
-        original_net_pnl = net_pnl  # Preserve uncapped loss for intraday low estimate
+        original_net_pnl = net_pnl  # Preserved for downstream realtime-DD heuristic
         if daily_loss_limit is not None and net_pnl < -daily_loss_limit:
-            # Task 7.11: Distinguish gap breach from intraday breach.
-            # If holding overnight and the day opens with a loss already
-            # exceeding the daily limit, it's a gap breach — the firm couldn't
-            # have halted trading because the loss occurred at the open.
+            # Record the breach for operator awareness — do NOT cap the P&L.
+            daily_loss_breaches.append(date_str)
+            day_halted = True
             if date_str in overnight_days:
-                # Gap breach: loss materialised at open, couldn't be stopped.
-                # The full loss applies (no cap) because the gap happened
-                # before trading could be halted.
                 gap_breached = True
                 gap_breaches.append(date_str)
-                day_halted = True
-                daily_loss_breaches.append(date_str)
-                # net_pnl is NOT capped — the gap loss is unavoidable
-            else:
-                # Normal intraday breach: firm halts trading, cap at limit
-                net_pnl = -daily_loss_limit
-                day_halted = True
-                daily_loss_breaches.append(date_str)
+            # NO net_pnl mutation — true loss flows through to balance.
 
         # Compute intraday low BEFORE updating balance (for realtime DD)
         # Use original_net_pnl (uncapped) for intraday low estimate — the actual
