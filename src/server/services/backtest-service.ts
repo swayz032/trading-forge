@@ -1133,7 +1133,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           {
             numSimulations: 50_000,
             method: "both",
-            firms: ["topstep_50k", "mffu_50k", "tpt_50k", "apex_50k", "ffn_50k", "alpha_50k", "tradeify_50k", "earn2trade_50k"],
+            firms: ["topstep_50k", "mffu_50k"],
           },
           preInsertedMcId,
         )
@@ -1687,7 +1687,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
               () => runMonteCarlo(backtestId, {
                 numSimulations: 50_000,
                 method: "both",
-                firms: ["topstep_50k", "mffu_50k", "tpt_50k", "apex_50k", "ffn_50k", "alpha_50k", "tradeify_50k", "earn2trade_50k"],
+                firms: ["topstep_50k", "mffu_50k"],
               }),
             );
             if (mcResult.status === "completed") {

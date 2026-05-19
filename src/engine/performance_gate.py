@@ -42,27 +42,11 @@ _SURVIVAL_IN_FORGE_SCORE = os.environ.get("TF_SURVIVAL_IN_FORGE_SCORE", "false")
 # so a strategy at $250 gross on Alpha actually clears $262.40 net. Tradeify at $1.29 = $25.80,
 # so $250 gross only clears $224.20 net — we relax by $25 to compensate for higher drag.
 _FIRM_DAILY_PNL_ADJUSTMENT: dict[str, float] = {
-    # Alpha Futures: $0.00/side — no commission drag, so $250 gross = $262/net. No relaxation needed.
-    "alpha_50k": 0,
-    "alpha_25k": 0,
     # Topstep: $0.37/side — very low drag. Treat as baseline.
     "topstep_50k": 0,
     "topstep_25k": 0,
     # MFFU: $0.62/side — baseline. No adjustment.
     "mffu_50k": 0,
-    # Earn2Trade: $0.62/side — baseline.
-    "earn2trade_50k": 0,
-    # Apex: $0.62/side — baseline.
-    "apex_50k": 0,
-    "apex_25k": 0,
-    # TPT: $0.62/side — baseline.
-    "tpt_50k": 0,
-    # FFN: $0.62/side — baseline.
-    "ffn_50k": 0,
-    # Tradeify: $1.29/side — $6.70 extra drag vs baseline at 10 trades/day.
-    # Relax threshold by $20 to account for higher commission environment.
-    "tradeify_50k": +20,
-    "tradeify_25k": +20,
 }
 
 

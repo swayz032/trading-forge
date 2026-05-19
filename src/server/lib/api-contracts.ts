@@ -48,10 +48,9 @@ export const API_VERSION_HEADER = "x-api-version" as const;
 export const Shapes = {
   StrategyId: z.string().uuid(),
   BacktestId: z.string().uuid(),
-  FirmKey: z.enum([
-    "topstep_50k", "mffu_50k", "tpt_50k", "apex_50k",
-    "ffn_50k", "alpha_50k", "tradeify_50k", "earn2trade_50k",
-  ]),
+  // Only Topstep (PRIMARY) and MFFU (secondary) per CLAUDE.md §6.
+  // Legacy firms removed 2026-05-19.
+  FirmKey: z.enum(["topstep_50k", "mffu_50k"]),
   Symbol: z.enum(["MES", "MNQ", "MCL", "ES", "NQ", "CL"]),
   ApiVersion: z.enum(API_VERSIONS),
 };

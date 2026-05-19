@@ -32,24 +32,13 @@ const VP_SHAPE_SCORE_THRESHOLD = 50;
 // All firms allow the same per-symbol caps (10 min, 15 default, 20 max).
 // getFirmContractCap() is a pure lookup — no Python subprocess needed.
 
+// Only Topstep + MFFU per CLAUDE.md §6 (legacy firms removed 2026-05-19).
 const FIRM_CONTRACT_CAPS_TS: Record<string, Record<string, number>> = {
-  topstep_50k:    { MES: 15, MNQ: 15, MCL: 15 },
-  mffu_50k:       { MES: 15, MNQ: 15, MCL: 15 },
-  tpt_50k:        { MES: 15, MNQ: 15, MCL: 15 },
-  apex_50k:       { MES: 15, MNQ: 15, MCL: 15 },
-  tradeify_50k:   { MES: 15, MNQ: 15, MCL: 15 },
-  alpha_50k:      { MES: 15, MNQ: 15, MCL: 15 },
-  ffn_50k:        { MES: 15, MNQ: 15, MCL: 15 },
-  earn2trade_50k: { MES: 15, MNQ: 15, MCL: 15 },
+  topstep_50k: { MES: 15, MNQ: 15, MCL: 15 },
+  mffu_50k:    { MES: 15, MNQ: 15, MCL: 15 },
   // Aliases for firmIds without _50k suffix (matches session.firmId values)
-  topstep:    { MES: 15, MNQ: 15, MCL: 15 },
-  mffu:       { MES: 15, MNQ: 15, MCL: 15 },
-  tpt:        { MES: 15, MNQ: 15, MCL: 15 },
-  apex:       { MES: 15, MNQ: 15, MCL: 15 },
-  tradeify:   { MES: 15, MNQ: 15, MCL: 15 },
-  alpha:      { MES: 15, MNQ: 15, MCL: 15 },
-  ffn:        { MES: 15, MNQ: 15, MCL: 15 },
-  earn2trade: { MES: 15, MNQ: 15, MCL: 15 },
+  topstep:     { MES: 15, MNQ: 15, MCL: 15 },
+  mffu:        { MES: 15, MNQ: 15, MCL: 15 },
 };
 
 /**

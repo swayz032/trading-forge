@@ -78,15 +78,10 @@ const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
  * writes into compliance_rulesets.firm (see compliance-refresh-service.ts:20
  * for the canonical FIRMS list).
  */
+// Only Topstep (PRIMARY) + MFFU (secondary) per CLAUDE.md §6.
 const FIRM_KEY_TO_FIRM_NAME: Record<string, string> = {
   topstep_50k: "Topstep",
   mffu_50k: "MFFU",
-  tpt_50k: "TPT",
-  apex_50k: "Apex",
-  ffn_50k: "FFN",
-  alpha_50k: "Alpha",
-  tradeify_50k: "Tradeify",
-  earn2trade_50k: "Earn2Trade",
 };
 
 /**

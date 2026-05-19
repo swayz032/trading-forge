@@ -263,8 +263,9 @@ def simulate_prop_firm(
     best_single_day = max((s["net_pnl"] for s in daily_statements), default=0)
     consistency_ratio = best_single_day / total_profit if total_profit > 0 else 0.0
 
-    # Consistency check
-    _KNOWN_CONSISTENCY_RULES = {"tpt_50pct", "alpha_50pct", "ffn_40pct", "mffu_50pct", "apex_50pct_funded", "tradeify_40pct", "earn2trade_consistency"}
+    # Consistency check — only MFFU 50% rule remains. Topstep has no
+    # consistency rule. Legacy firms removed 2026-05-19 per CLAUDE.md §6.
+    _KNOWN_CONSISTENCY_RULES = {"mffu_50pct"}
     rule = firm.get("consistency_rule")
     if rule and rule not in _KNOWN_CONSISTENCY_RULES:
         import warnings
@@ -272,26 +273,9 @@ def simulate_prop_firm(
 
     consistency_passed = True
     consistency_failure = None
-    if firm.get("consistency_rule") == "tpt_50pct" and consistency_ratio > 0.50:
-        consistency_passed = False
-        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (limit: 50%)"
-    elif firm.get("consistency_rule") == "alpha_50pct" and consistency_ratio > 0.50:
-        consistency_passed = False
-        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (limit: 50%)"
-    elif firm.get("consistency_rule") == "mffu_50pct" and consistency_ratio > 0.50:
+    if firm.get("consistency_rule") == "mffu_50pct" and consistency_ratio > 0.50:
         consistency_passed = False
         consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (MFFU limit: 50%)"
-    elif firm.get("consistency_rule") == "ffn_40pct" and consistency_ratio > 0.40:
-        consistency_passed = False
-        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (FFN limit: 40%)"
-    elif firm.get("consistency_rule") == "tradeify_40pct" and consistency_ratio > 0.40:
-        consistency_passed = False
-        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (Tradeify limit: 40%)"
-    elif firm.get("consistency_rule") == "apex_50pct_funded":
-        pass  # Apex 50% applies only to funded payouts, not eval — skip in eval sim
-    elif firm.get("consistency_rule") == "earn2trade_consistency" and consistency_ratio > 0.50:
-        consistency_passed = False
-        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (Earn2Trade limit: 50%)"
 
     # Max drawdown in dollars (EOD and intraday tracked separately)
     max_dd_dollars = max((s["drawdown_from_peak"] for s in daily_statements), default=0)

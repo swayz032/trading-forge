@@ -916,46 +916,21 @@ if short_signal and entry_allowed
 
 
 # ─── ATS Firm Classification ─────────────────────────────────────────
-# ATS classification — source of truth: docs/prop-firm-rules.md, April 2026 routing matrix
-# (lines 28-43 of that document).
+# Only Topstep (PRIMARY) and MFFU (secondary) are in scope per CLAUDE.md §6.
+# Legacy firms (TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade, Top One, YRM Prop,
+# FundingPips) were removed from production scope on 2026-05-10 (DB migration
+# 0097) and stripped from runtime config on 2026-05-19.
 #
-# ATS-ALLOWED (full automation via TradersPost / TopstepX webhook):
+# ATS-ALLOWED (full automation):
 #   topstep_50k    — ATS via TopstepX API, local-only (Skytech tower)
 #   mffu_50k       — ATS via TradersPost / PickMyTrade
-#   tpt_50k        — ATS allowed (permissive)
-#   top_one_50k    — ATS, fully automated (most automation-friendly per March 2026)
-#   yrm_prop_50k   — ATS, fully automated (most automation-friendly per March 2026)
-#   earn2trade_50k — ATS allowed (permissive, per docs line 36)
-#   alpha_50k      — ATS allowed (permissive, per docs line 36)
-#
-# INDICATOR-ONLY / MANUAL APPROVAL:
-#   apex_50k       — INDICATOR + manual TradersPost approval (semi-auto allowed, fully auto banned on PA)
-#   tradeify_50k   — INDICATOR only (bans bot trading)
-#   fundingpips_50k — INDICATOR only (bans bots)
-#   ffn_50k        — MANUAL APPROVAL (Quantower/MotiveWave platforms only — no TradingView path;
-#                    even the indicator path may not work because Pine/TradingView is not
-#                    supported on Quantower or MotiveWave. Do NOT deploy FFN strategies
-#                    through Pine until a Quantower export pipeline exists.)
 ATS_FIRMS: frozenset[str] = frozenset({
     "topstep_50k",
     "mffu_50k",
-    "tpt_50k",
-    "top_one_50k",
-    "yrm_prop_50k",
-    "earn2trade_50k",
-    "alpha_50k",
 })
 
-# Firms that require manual approval — INDICATOR artifact only.
-MANUAL_APPROVAL_FIRMS: frozenset[str] = frozenset({
-    "apex_50k",
-    "tradeify_50k",
-    "fundingpips_50k",
-    # FFN: Quantower/MotiveWave only — no TradingView/Pine support.
-    # Indicator path may require manual translation to Quantower's native scripting.
-    # Recommend: do not deploy FFN strategies through Pine until Quantower export pipeline exists.
-    "ffn_50k",
-})
+# No active firm requires INDICATOR-only / manual-approval routing.
+MANUAL_APPROVAL_FIRMS: frozenset[str] = frozenset()
 
 # TradingView continuous contract symbols for each DSL symbol
 _TV_SYMBOL_MAP: dict[str, str] = {
