@@ -748,6 +748,39 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       logger.info({ sourceUrl, chunked: true, found: merged.length }, "scout-extract chunked fallback");
     }
 
+    // W23F.S (2026-05-19) — missing_params recovery branch.
+    // When LLM returns empty with `missing_params` BUT the transcript clearly
+    // references a known indicator/concept, synthesize a stub idea with
+    // empty entry_params={} + provenance=params_inferred. The graduator's
+    // CANONICAL_DEFAULT_PARAMS table will fill defaults at graduation time.
+    // This unlocks SMC/ICT/Wyckoff/concept-named strategies that don't state
+    // numeric params explicitly.
+    if (
+      (!Array.isArray(strategiesIn) || (strategiesIn as unknown[]).length === 0) &&
+      lastEmptyReason === "missing_params"
+    ) {
+      const INDICATOR_REGEX = /\b(rsi|macd|adx|atr|bollinger|keltner|donchian|stochastic|vwap|cci|williams|supertrend|ichimoku|cumulative.delta|order.flow|volume.profile|orb|opening.range|9.{0,4}21.{0,4}ema|ema|sma|hma|dema|liquidity.sweep|order.block|fair.value.gap|fvg|smt|smc|ict|wyckoff|spring|breaker|silver.bullet|judas|optimal.trade.entry|ote|displacement|imbalance|mean.reversion|chandelier|fibonacci|pivot)\b/i;
+      const m = markdown.match(INDICATOR_REGEX) ?? title?.match(INDICATOR_REGEX);
+      if (m) {
+        const detected = m[0].toLowerCase().replace(/\s+/g, "_");
+        const conceptName = (title || sourceUrl).toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 80) || `${detected}_${Date.now()}`;
+        const stubStrategy = {
+          name: `${conceptName.slice(0, 40)}_recovered`,
+          symbol: "MES",
+          timeframe: "5m",
+          entry_indicator: detected,
+          entry_params: {},
+          direction: "long",
+          concept_name: conceptName,
+          entry_condition: `Concept identified from transcript: ${detected} (canonical defaults will be applied at graduation)`,
+          extraction_provenance_note: "W23F.S missing_params recovery — concept detected, params will use canonical defaults",
+        };
+        strategiesIn = [stubStrategy];
+        lastEmptyReason = null;
+        logger.info({ sourceUrl, detected, conceptName }, "scout-extract W23F.S: missing_params recovery synthesized stub");
+      }
+    }
+
     if (!Array.isArray(strategiesIn) || (strategiesIn as unknown[]).length === 0) {
       // Wave 11 — audit the empty result with the LLM-captured category so future
       // extractor-tuning can see WHICH content class is being dropped (most-common

@@ -390,7 +390,9 @@ const NEGATIVE_TITLE = /(why .* lose|why .* fail|don.t work|doesn.t work|warning
 //   - CLICKBAIT_TITLE: -5 for money-promise titles (low parametric yield)
 //   - INDICATOR_NAME_TITLE: +3 for titles naming specific indicators / archetypes
 const CLICKBAIT_TITLE = /\b(make \$|made \$|earn(?:ed)? \$|\$\d+ ?(?:a|per) ?day|profit \$|easy money|prints? money|secret strategy|secret method|get rich|millionaire|6.figure|7.figure|life.changing|too easy|magic indicator|holy grail)\b/i;
-const INDICATOR_NAME_TITLE = /\b(ema|sma|hma|dema|wma|rsi|macd|adx|atr|bollinger|bb |keltner|donchian|stochastic|stoch |vwap|cci|williams|supertrend|ichimoku|cumulative delta|cvd\b|order flow|volume profile|orb|opening range|liquidity sweep|order block|fvg|fair value gap|smt |smc |ict |wyckoff|spring|breaker|silver bullet|judas|optimal trade entry|ote |poc |vah |val |displacement|imbalance|mean reversion|chandelier|fibonacci|fib retrace|pivot point)\b/i;
+const INDICATOR_NAME_TITLE = /\b(ema|sma|hma|dema|wma|rsi|macd|adx|atr|bollinger|bb |keltner|donchian|stochastic|stoch |vwap|cci|williams|supertrend|ichimoku|cumulative delta|cvd\b|order flow|volume profile|opening range|liquidity sweeps?|order block|fvg|fair value gap|smt |smc |ict |wyckoff|spring|breaker|silver bullet|judas|optimal trade entry|ote |poc |vah |val |displacement|imbalance|mean reversion|chandelier|fibonacci|fib retrace|pivot point)\b/i;
+// Note: ORB is intentionally NOT in INDICATOR_NAME_TITLE — it's covered by NUMERIC_TITLE_PATTERNS
+// when accompanied by a number ("15-minute ORB"). Bare "ORB" too generic for indicator bonus.
 
 // Wave 11 (2026-05-17) — title-scoring numeric bonus. Videos with explicit numeric
 // indicator patterns in title statistically have far higher parametric-extraction
@@ -480,10 +482,11 @@ export function scoreVideoTitle(title: string): { score: number; positiveHit: bo
   const clickbaitHit = CLICKBAIT_TITLE.test(title);
   const indicatorHit = INDICATOR_NAME_TITLE.test(title);
   if (positiveHit) score += 2;
-  if (negativeHit) score -= 3;
   if (numericHit) score += 3;       // Wave 11 — strongest signal for parametric extractability
-  if (clickbaitHit) score -= 5;     // W23F.S — money-promise titles have ~0% parametric yield
   if (indicatorHit) score += 3;     // W23F.S — explicit indicator names = high parametric yield
+  // Negative scoring dominates positive — critique/clickbait can't be "saved" by indicator bonus.
+  if (negativeHit) score = Math.min(score - 5, -2);
+  if (clickbaitHit) score = Math.min(score - 5, -2);
   return { score, positiveHit, negativeHit, numericHit, clickbaitHit, indicatorHit };
 }
 
