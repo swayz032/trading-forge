@@ -720,7 +720,13 @@ async function fetchYouTubeTopVideos(conceptName: string): Promise<Array<{ url: 
   const human = conceptName.replace(/_/g, " ");
   const query = `${human} futures strategy rules`;
   try {
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoDuration=medium&maxResults=10&order=relevance&key=${YOUTUBE_API_KEY}`;
+    // W23F.T (2026-05-19) — YouTube-side filters to pre-filter the 50% transcript-disabled
+    // and Shorts that previously wasted scoring + transcript-fetch attempts:
+    //   videoCaption=closedCaption — only videos WITH captions (transcript fetch will succeed)
+    //   videoDuration=medium — 4-20 min only (excludes Shorts and excessively long content)
+    //   relevanceLanguage=en — skip foreign-language strategy videos
+    //   maxResults=20 — increased from 10 since YT pre-filter eliminates most noise
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCaption=closedCaption&videoDuration=medium&relevanceLanguage=en&maxResults=20&order=relevance&key=${YOUTUBE_API_KEY}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
     if (!res.ok) {
       logger.warn({ status: res.status, query }, "autonomous-scout: YouTube API failed");
