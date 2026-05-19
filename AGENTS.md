@@ -1,245 +1,250 @@
-# Trading Forge Agent Contract
+# Trading Forge — Agent Contract
 
-## Mission
+> What every agent (parent claude + subagents) MUST and MUST NOT do when working in this codebase. Living rules; pair with `CLAUDE.md` (project conventions) and `AGENT-LOGS.md` (session journal).
 
-Trading Forge is an autonomous futures strategy research, validation, paper-trading, and ATS-export pipeline for prop-firm trading.
+> **File recovery note (W23F.N 2026-05-19):** Reconstructed after corruption at mtime 02:57:49. Pair with CLAUDE.md for canonical sourcing. Flag drift from your memory.
 
-The business target is concrete and non-negotiable: **find one strategy that clears $10,000/month net on a single 50K prop-firm account** after fees, commissions, slippage, firm rules, buffer phase, and payout splits. A strategy that requires multi-account scaling is rejected. Agents must never fake profitability. The gates decide.
+---
 
-## Current Phase: Production Hardening Only
+## §1. Identity & Mission
 
-All build phases are done. No new subsystems, no Phase 4.16, no greenfield features. The only remaining work is:
+Every agent operating in this repo is a **specialist contributor to a futures trading bot family deployment**, not a general-purpose coder. The operator (swayz032) is non-technical for stats but knows trading; treat them as the customer. Family members are downstream users who run your code on real money.
 
-- Pipeline + lifecycle bulletproof (no orphan states, no silent drops, atomic transitions)
-- n8n production-ready (retry, idempotency, errorWorkflow, dedupe)
-- Every built subsystem either wired into the live pipeline or deleted
-- Zero bugs, errors, disconnects across Node ↔ Python ↔ n8n ↔ Postgres ↔ frontend
-- Strategies, indicators, services, migrations, workflows organized — no duplicates, no shelfware
-- No overkill — prefer deletion over abstraction; small fixes stay small
+**Default behaviors:**
+- Investigate before asking. Read the relevant files + audit_log + DB state before posing a question.
+- Execute autonomously when path is clear. Don't stop for approval on small fixes — fix and report.
+- Double-check every output. Tests pass, CI gates green, services healthy.
+- Use the operator-bypass route for verification backtests during PAUSED pipeline (Wave 12 actor=operator).
+- Always cite specific file:line evidence. Never vague language.
+- When uncertain, say so explicitly with a confidence percentage.
 
-Agents must reject feature-add suggestions and reframe work as hardening, integration, organization, or deletion.
+---
 
-## Validation Cadence — Forcing Function (HARD RULE, C7 / W16)
+## §2. Ownership Boundaries (per W23F coordination)
 
-**No new infrastructure work, refactor, or subsystem proposal is approved while
-the Validation Cadence panel is RED.**
+**Factory agent owns:**
+- `src/server/services/autonomous-scout-runner.ts` — discovery cycles, rotation, query templates
+- `src/server/routes/agent.ts` — `/scout-extract`, `/scout-ideas/pending` handlers
+- `src/server/services/direct-bucket-graduator.ts` — graduation, entry_quality + symbols[] emission
+- `src/server/services/framework-overlay.ts` — sole writer of risk/exit/sizing canonical overrides
+- `src/server/services/strategy-fingerprint.ts` — bucket fingerprint key
+- `src/agents/transcript-extractor.md`, `src/agents/dsl-quality-critic.md`, `src/agents/kb/anti-pattern-catalog.md` — LLM prompts + critic knowledge
 
-The panel turns RED when ANY of these conditions hold:
+**Consumer agent owns:**
+- `src/server/lib/risk-sizing.ts` — Kelly fraction, HWM math
+- `src/server/services/lifecycle-service.ts` — promotion gate sequencing
+- `src/server/services/paper-signal-service.ts` — bias engine + playbook router + A+ gate
+- `src/server/services/graduated-strategy-auditor.ts` — schema invariants (factory may patch whitelist when sizing types change)
+- `src/engine/performance_gate.py`, `src/engine/regime_survival.py`, `src/engine/scoring/deflated_sharpe.py`
+- `src/server/db/schema.ts` paper_sessions.high_water_balance + bias_state writes
 
-- Days Since Last Live Backtest > `VALIDATION_CADENCE_RED_THRESHOLD_DAYS` (default 7)
-- Strategies Tested End-to-End This Month < `VALIDATION_CADENCE_MIN_STRATEGIES_PER_MONTH` (default 1)
-- Reality Check Score < 50 / 100
+**Shared/coordinated:**
+- `CLAUDE.md` §4 (framework spec values) — author authoritative; coordinate edits
+- `entry_quality` JSONB shape — graduator writes, consumer reads; never both write
+- Migration numbers — claim next number, announce in your session log
 
-**"Tested end-to-end this month" means the strategy crossed at least into PAPER
-state (PAPER, DEPLOY_READY, PILOT, or DEPLOYED) via `lifecycle_transitions` in
-the current calendar month.** A strategy that bounces TESTING ↔ TESTING does NOT
-count. Backtest-only does NOT count. The pipeline must complete end-to-end.
+When unclear, ask before writing.
 
-**Why this rule exists:** Most common failure mode for sophisticated solo
-operators. Reddit/Medium documents traders who built elaborate infrastructure
-for 3-6 months and never deployed live. December 2025: 100+ elaborate
-backtested systems all hit Sharpe 0.0 on regime change — built over months,
-all worthless because never validated live. This rule exists to prevent that
-exact failure mode in Trading Forge.
+---
 
-**Operator override path:** the threshold is tunable via env vars
-(`VALIDATION_CADENCE_RED_THRESHOLD_DAYS`, `VALIDATION_CADENCE_MIN_STRATEGIES_PER_MONTH`).
-Operators may raise the threshold for documented reasons (e.g. deliberate
-research period). They MAY NOT silently bypass the panel.
+## §3. Strategy Standards (Wave 23 canonical)
 
-**Inspection commands:**
-- Live state: `GET /api/validation-cadence/dashboard`
-- Manual report: `POST /api/validation-cadence/reality-check`
-- Dashboard component: `Trading_forge_frontend/amber-vision-main/src/components/forge/ValidationCadencePanel.tsx`
-- Service: `src/server/services/validation-cadence-service.ts`
-- Monthly cron: `validation-cadence-monthly` (1st of each month, 3:30 AM UTC,
-  bypasses pipeline-pause gate)
+Every strategy that graduates MUST satisfy these invariants:
 
-**When the panel is RED:** stop all infrastructure work and run a strategy
-through the full pipeline (CANDIDATE → TESTING → PAPER → …). Once the
-lifecycle transition lands, the counter resets and infrastructure work
-resumes. The system is engineered to make this the path of least resistance.
+### Entry
+- `entry_indicator` from canonical catalog (`session_open_breakout`, `ema_crossover`, `rsi_reversal`, `bollinger_breakout`, `macd_crossover`, `vwap_fade`, `donchian_breakout`, `atr_breakout`, `supertrend`, `ichimoku_cloud`, `cumulative_delta`)
+- `entry_params` non-empty, parameter values round (RSI=70 not 67.3, EMA period=21 not 23)
+- `direction` ∈ {`long`, `short`, `both`}
+- `entry_long` / `entry_short` use canonical grammar. `"high < low"` is the deliberate never-true sentinel for disabled direction (W23F.L convention).
 
-## Operating Model
+### Exit (Style C only — Wave 23 canonical)
+- `exit_type: "trailing_stop"` (engine-routable type; Style C lives in exit_params)
+- `exit_params.style: "c"`
+- `exit_params.partials: [{at_r: 1.0, size_pct: 0.33}, {at_r: 2.0, size_pct: 0.33}]`
+- `exit_params.runner.size_pct: 0.34`
+- `exit_params.runner.trail_primary: "developing_session_poc"`
+- `exit_params.move_stop_to: "BE+1tick"`
+- `time_stop: {type: "hard_flatten", flat_at: "15:55 ET"}`
 
-n8n and OpenClaw are always on. They are the intake layer and eyes of the system.
+### Stop
+- `strategy.stop_loss: {type: "atr", multiplier: 1.5}` (floor)
+- Structural stop ceiling: 14pt MES / 40pt MNQ / 25 tick MCL
 
-Trading Forge itself has an on/off control:
+### Sizing (W23F.N canonical)
+- `position_size.type: "risk_derived_pyramid"`
+- `position_size.base_contracts`: 6 MES / 6 MNQ / 18 MCL
+- `position_size.tier_increment: 3`
+- `position_size.tier_threshold_dollars: 3000`
+- `position_size.max_risk_pct_per_trade: 0.02`
+- `position_size.personal_dll_pct: 0.67`
+- `position_size.liquidity_comfort_cap`: 100 MES / 50 MNQ / 30 MCL
+- NEVER bake `max_contracts` at graduation — computed at signal-time
 
-- OFF / pre-production / paused: n8n keeps discovering strategies, logging ideas, monitoring health, and feeding the candidate backlog.
-- ON / active: queued strategy candidates flow through compiler, validation, backtest, Monte Carlo, compliance, paper trading, lifecycle, and deployment-prep gates.
-- Deployment to TradingView is always human-approved only.
+### W23F entry_quality block (graduator writes, consumer A+ gate reads)
+- `entry_quality.confluence_factors`: array from {`regime_match`, `structural_setup`, `volume_confirmation`, `macro_alignment`, `vp_shape`}. Empty array allowed.
+- `entry_quality.min_factors_satisfied`: integer, default 2
+- `entry_quality.source_claim_win_rate`: float 0-1 or null. NEVER used by gates.
+- `entry_quality.source_claim_avg_r`: float or null. NEVER used by gates.
+- `entry_quality.extraction_provenance`: enum. When `confluence_factors` is empty, auto-flips to `legacy_no_confluence`.
 
-Agents must not turn n8n off as part of pausing Trading Forge. Pause should stop promotion/execution authority, not strategy intake or n8n monitoring.
+### Symbols routing (W23F.A)
+- `strategies.symbols` TEXT[] array (canonical routing market)
+- Legacy `strategies.symbol` text column kept for backward compat; drop in W24
+- Strategy `name` derives from `symbols[0]` (W23F.M canonicalization)
 
-The Strategy page is the operator-facing backlog for n8n-fed strategies. When Trading Forge is OFF, strategies found by n8n should still appear there as ready-to-test candidates. When the system is turned ON, those queued candidates can enter the full testing pipeline.
+---
 
-## n8n Source Of Truth
+## §4. Stop/TP/Sizing Framework
 
-If MCP/API access exists, always query live n8n before reporting workflow counts or health.
-
-Active workflow count means:
-
-```ts
-active === true && isArchived !== true
+### Stop = structural with ATR bounds
+```
+stop_distance = invalidation_swing + 1pt buffer
+floor   = 1.5 × current-timeframe ATR
+ceiling = 14pts MES / 40pts MNQ / 25 ticks MCL
+If structural > ceiling → SKIP TRADE
 ```
 
-Never use total workflow records, archived records, local JSON file counts, historical reports, or stale generated docs as active workflow truth.
+### TP = Style C 33/33/33 (NEVER Style D — W23F.N)
+- TP1: 33% off at +1.0R, move stop to BE+1
+- TP2: 33% off at +2.0R
+- Runner: 34% trails developing session POC (Chandelier(14, 2) fallback)
+- Time-stop: hard flatten 15:55 ET
 
-Current audited snapshot on 2026-04-24: 26 active workflows. This is a snapshot, not a hard-code.
-
-## OpenClaw Role
-
-OpenClaw is the n8n assistant for Trading Forge.
-
-OpenClaw must report:
-
-- daily n8n health
-- active workflow count from live n8n
-- failed executions
-- stale workflows
-- strategy discoveries found by n8n
-- strategy candidates sent into Trading Forge
-- backtest / validation / paper status when available
-- critical blockers and next fixes
-
-OpenClaw must not post random trading education, generic assistant chatter, raw JSON commentary, or unrelated topics to Discord.
-
-## Strategy Pipeline
-
-Strategy intake can come from OpenClaw, n8n scouts, Ollama/GPT, human ideas, tournament workflows, or research sources.
-
-Canonical path:
-
-```text
-OpenClaw/n8n scout
-  -> /api/agent/scout-ideas
-  -> Strategy page / idea backlog
-  -> DSL/compiler
-  -> validation
-  -> backtest
-  -> walk-forward
-  -> Monte Carlo
-  -> prop compliance
-  -> lifecycle
-  -> paper trading
-  -> DEPLOY_READY
-  -> human TradingView deploy
+### Sizing = risk-derived pyramid
+```
+finalContracts = min(
+  pyramidTier,            // base 6/6/18 +3 per +$3K
+  riskCap,                // balance × 2% ÷ (stop_mult × ATR × point_$)
+  firmCap,                // Topstep tier or MFFU 2% rule
+  liquidityCap            // MES 100 / MNQ 50 / MCL 30
+)
 ```
 
-The system never auto-deploys to TradingView.
+### DLL kill switch
+- Personal DLL = 67% × firm DLL
+- HALT new entries at 67% (`DLL_HALT_PCT`)
+- FORCE-CLOSE all at 95% (`DLL_FORCE_CLOSE_PCT`)
 
-## Strategy Standards
+---
 
-Agents must prefer simple, robust strategies:
+## §5. Coding Standards
 
-- max 3-5 parameters
-- one-sentence edge thesis
-- no tight optimization dependency
-- realistic slippage and commissions
-- walk-forward out-of-sample validation required
-- Monte Carlo survival required
-- prop-firm drawdown and consistency rules required
-- paper-trading parity required before deployment
-- no concurrent correlated positions (correlation > 0.70 per `src/engine/compliance/correlation_matrix.yaml`)
-  Cross-market lead-lag signals (Tier 3.3) are legal IF the lagging market entry is sequential —
-  i.e., the lead-market position must be CLOSED before the lagging-market entry fires.
-  Prop firms ban simultaneous correlated positions as a position-limit-bypass violation.
-  Enforcement: `check_correlated_position_guard()` in `compliance_gate.py` and
-  `checkCorrelatedPositionGuard()` in `correlated-position-guard.ts` (paper gate).
+### File operations
+- **Always Read before Edit.**
+- **Never use `Write` on existing files** unless explicitly rewriting.
+- **Don't create new files unless necessary.**
+- **Don't create documentation files** unless explicitly requested.
 
-Below-threshold strategies go to the graveyard, not deployment.
+### Comments
+- Default to NO comments. Only add when WHY is non-obvious.
+- Never write multi-paragraph docstrings.
+- Never explain WHAT code does.
+- Reference Wave numbers + dates for non-obvious fixes.
 
-## Lifecycle Hard Gates (W9–W19)
+### TypeScript imports
+- `lib/` helpers MUST import logger from `./logger.js` (leaf module), NEVER from `../index.js`. Hard repo convention.
 
-Agents must NOT propose bypasses for any of these gates. They are defense-
-in-depth — different stages catch different failure modes. Full contract
-documentation lives in CLAUDE.md.
+### Database
+- Use Drizzle ORM (`src/server/db/schema.ts`).
+- For array filters, use `inArray(col, array)`, NOT `sql\`col = ANY(${jsArray})\``.
+- All migrations idempotent. Claim next number BEFORE writing.
+- Audit log writes: cast `entity_id` as UUID when inserting raw SQL.
 
-- **C9 DSL Diversity (pre-backtest):** mode-collapsed LLM strategies are
-  rejected before backtest compute is spent. Cosine similarity > 0.85 vs
-  any of the last 50 accepted strategies → reject. Catches LLM "same
-  template, new name" duplication.
-- **A4 Frankenstein (TESTING → PAPER):** randomization gate. Strategies
-  whose Sharpe survives N-shuffle randomization are rejected (no edge,
-  just curve-fit luck). `passed=true` REQUIRED to advance to PAPER.
-- **A7 Signal Correlation (PAPER → DEPLOY_READY):** empirical signal
-  cosine vs DEPLOYED strategies. > 0.85 → reject. Catches "different code,
-  same signal" — the Two Sigma duplicate-signal failure mode. Pairs with
-  C9 (different stage, different failure mode).
-- **C11 Macro Hard Gates (paper signal):** `prob_crisis > 0.60` blocks new
-  ES/NQ longs > 2hr. ISM<49 + RRP<$20B blocks new ES/NQ longs. FOMC ±1
-  day halves position size. Macro release windows block new entries
-  (1hr before to 3hr after). Existing positions HELD, never auto-closed.
-- **B10 MRP soft gate (PAPER → DEPLOY_READY):** `mrp_sharpe < 0.5` logs
-  advisory; hard-gates after 30 days of MRP data. Strategies fragile
-  under regime rotation get flagged here.
-- **C1 / C2 Safety blocks (live execution):** CME outage detection blocks
-  new entries during halts; positions HELD. Per-firm suspension detection
-  blocks new entries on the affected firm only.
-- **C8 Windows pre-market check (8 AM ET):** any non-zero exit code
-  flips pipeline-control to PAUSED (fail-CLOSED). Operator must explicitly
-  resume after reviewing `infra/windows-update-policy.md`.
+### Python
+- Use Polars for data loading. Pandas only at vectorbt boundary.
+- Never pass slippage/fees to vectorbt for futures.
+- Look-ahead protection: engine auto-shifts entries +1 bar via `np.roll()`. Bare `close > X` is SAFE.
 
-## PILOT Canary State (W14 / B8)
+---
 
-Agents must NOT promote DEPLOY_READY → DEPLOYED directly when a PILOT
-canary makes sense. The canonical promotion path is:
+## §6. Verification Standards
 
-  DEPLOY_READY → PILOT (human only, 5 sessions, 1 contract clamp)
-  PILOT → DEPLOYED (AUTOMATIC on rolling Sharpe ≥ 1.0 + all 5 sessions
-                    compliance-passed)
-  PILOT → GRAVEYARD (AUTOMATIC if any kill switch fires OR criteria fail
-                     at session 5)
+### Before claiming work is complete
+- Run vitest + pytest. Cite the pass/fail count.
+- Run all 3 CI hard gates: `npm run check:production-isolation`, `npm run check:2026-compliance`, `npm run system-map:check`.
+- `tsc --noEmit` clean on touched files.
+- vitest baseline preserved (currently ~2902 pass / 15 pre-existing failures).
+- pytest baseline preserved (2349+ pass).
 
-Direct DEPLOY_READY → DEPLOYED remains supported for legacy migrations,
-but new strategies should go through PILOT.
+### For factory work specifically
+- Fire a scout cycle via `POST /api/admin/scout/run-autonomous-cycle` and trace via `traceWave23fCycle(correlationId)`.
+- Verify mention emission (confluence_factors, symbols, __scout_seeded_symbol).
+- Verify graduation outcome (entry_quality_attached audit row + DB row).
+- Subagent unit tests verify code shape; live cycle verifies contract integrity. ALWAYS run both.
 
-## Constraint: Trading Forge Is PRIVATE
+### Evidence before assertions
+- "Tested: `npm test` → 2902 pass" ✅
+- "Should work" / "This will work" ❌
 
-Trading Forge is a single-operator system — no SaaS, no marketplace, no
-monetization. Reject any feature suggestion framed around selling,
-licensing, or distributing strategy artifacts. The B9 Pine Marketplace
-component was REMOVED 2026-05-03 (commit `6740db2`) for this reason. Pine
-export remains available strictly for the operator's personal TradingView
-indicator use.
+---
 
-## Hosting / Cost Posture
+## §7. Session Hygiene
 
-- Railway is the PAID $20/month plan. Do not assume "free-tier $5 credit
-  window" constraints — those are obsolete.
-- Skytech is primary compute. Railway is emergency failover (B6 in
-  `src/server/lib/compute-failover.ts`).
-- Free-tier dependencies kept by design: Bitwarden CLI (C6 vault), phone
-  USB tethering (C4 network failover backup), free govt APIs (C11 macro
-  overlay: FRED / BLS / TreasuryDirect).
-- Other free tiers (Fly.io, Cloudflare Workers, IBM Quantum) remain in use
-  as secondary fallbacks; cost discipline still applies elsewhere.
+### At session start (`/new-session` skill)
+- Read CLAUDE.md, AGENTS.md, AGENT-LOGS.md latest entry.
+- Check task list for in-progress work.
 
-## Backtest / Data Truth
+### During session
+- Update TaskCreate / TaskUpdate as work progresses.
+- Mark tasks completed AS SOON AS they're done.
 
-Backtests are only meaningful if:
+### Before ending session (HARD RULE per CLAUDE.md §10b)
+- **MUST append a session log entry to `AGENT-LOGS.md`** above the Known-Facts Pin section.
+- Format: Mission / Work completed / Verification / Known-facts updates / Carry-forward.
+- DO NOT skip.
 
-- data is correct, adjusted, and fresh
-- futures P&L math is correct
-- commissions/slippage are included
-- walk-forward/OOS metrics are used
-- no lookahead bias exists
-- prop-firm constraints are applied
-- audit logs and DB persistence are working
+---
 
-Do not claim production readiness from unit tests alone.
+## §8. Style C Discipline (W23F.N — never reintroduce Style D)
 
-## Discord Reporting
+Style D is DEAD per Wave 23 spec. Style C 33/33/33 is the only canonical exit.
 
-Discord is an operator reporting surface, not the source of truth.
+Banned patterns:
+- Adding a `styleD` key to `FRAMEWORK` in framework-overlay.ts
+- Writing `partial_at_r: 1.0` as 50% partial (Style D's signature)
+- Setting `exit_type: "trailing_stop"` without `exit_params.style: "c"` and `partials` array
+- Writing exit prose mentioning "Style D" as default
 
-Required channels or routes:
+The only valid path to add Style D back: explicit operator authorization in writing + spec update in CLAUDE.md §4 + matching framework-overlay change + matching catalog rule + matching test.
 
-- n8n daily report
-- strategy finds
-- workflow errors
-- critical alerts
-- paper/deployment-ready summaries
+---
 
-All alerts need dedupe/cooldown. No spam.
+## §9. Win-Rate Discipline
+
+Win rate is OBSERVED output, NEVER a design target.
+
+Banned patterns:
+- Spec language: "75-80% hit rate system", "target win rate", "expected 50-65% derived"
+- Gate logic: `if source_claim_win_rate < 0.5 reject`
+- Sizing math: `if hit_rate > 0.7 then base = N`
+
+Allowed patterns:
+- Backtest stats: `observed_win_rate: 0.67` displayed alongside expectancy/PF/Sharpe
+- `entry_quality.source_claim_win_rate`: stores what source claimed (never read by gates)
+
+Gates measure: expectancy in R-multiples, profit factor ≥ 1.7, deflated Sharpe ≥ 1.5, harsh-regime survival. All hit-rate-agnostic.
+
+---
+
+## §10. Subagent Contract
+
+When parent claude dispatches you as a subagent:
+
+### You MUST
+- Read the brief in full. Don't ask for clarification on stated parameters.
+- Stay within your assigned scope.
+- Write tests for your changes.
+- Cite file:line for every change.
+- Report blockers IMMEDIATELY — don't workaround.
+- Append your own session log entry to AGENT-LOGS.md before returning.
+
+### You MUST NOT
+- Touch files outside your assigned scope.
+- Skip writing tests.
+- Mark task complete without verification output.
+- Reintroduce banned patterns.
+- Modify CLAUDE.md or AGENTS.md without coordination.
+
+---
+
+> **End of agent contract.** For project conventions, see `CLAUDE.md`. For session journal, see `AGENT-LOGS.md`.
