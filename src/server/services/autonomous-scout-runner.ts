@@ -221,6 +221,93 @@ export const MCL_QUERY_TEMPLATES: string[] = [
   "MFFU funded MCL micro crude consistency rules",
 ];
 
+// ─── W23F.P (2026-05-19) — Concept-targeted diversity queries ─────────────────
+// Discovery was 70%+ ORB-saturated because the symbol-vocabulary queries above
+// surface mainly opening-range content. These concept-targeted queries seek
+// SMC/ICT, Wyckoff, volume profile, order flow, indicator-specific, and
+// mean-reversion strategies that the LLM extractor can pull parametric DSL
+// from. Each group ROTATES across all 3 symbols (futures-generic), so a single
+// SMC strategy can graduate as MES, MNQ, or MCL depending on source content.
+// Production grade: all output still passes framework-overlay → Style C
+// 33/33/33 + sizing 6/6/18 + per-symbol liquidity caps. Format invariants
+// preserved.
+
+const SMC_ICT_QUERY_TEMPLATES: string[] = [
+  "ICT order block strategy futures day trading",
+  "smart money concepts liquidity sweep entry futures",
+  "ICT fair value gap FVG strategy ES NQ",
+  "breaker block ICT confirmation entry rules",
+  "buy side sell side liquidity BSL SSL futures",
+  "ICT optimal trade entry OTE fibonacci 62 79",
+  "smart money concepts break of structure BOS futures",
+  "ICT silver bullet 10am 11am strategy",
+  "ICT judas swing London session reversal",
+  "market structure shift MSS ICT confirmation",
+];
+
+const WYCKOFF_QUERY_TEMPLATES: string[] = [
+  "Wyckoff spring pattern futures entry rules",
+  "Wyckoff accumulation distribution method day trading",
+  "Wyckoff upthrust after distribution UTAD short setup",
+  "Wyckoff Schematic phase B phase C entry",
+  "Wyckoff secondary test futures strategy",
+];
+
+const VOLUME_PROFILE_QUERY_TEMPLATES: string[] = [
+  "volume profile POC fade futures strategy",
+  "volume profile VAH VAL rejection entry rules",
+  "developing POC pullback futures continuation",
+  "high volume node low volume node HVN LVN trading",
+  "naked POC fill strategy day trading",
+  "volume profile composite weekly profile setup",
+];
+
+const ORDER_FLOW_QUERY_TEMPLATES: string[] = [
+  "cumulative delta divergence futures entry",
+  "footprint chart imbalance reversal strategy",
+  "order flow absorption rejection day trading",
+  "delta divergence vs price futures scalping",
+];
+
+const INDICATOR_SPECIFIC_QUERY_TEMPLATES: string[] = [
+  "MACD divergence futures day trading setup",
+  "RSI overbought oversold reversal scalping rules",
+  "Bollinger Bands squeeze breakout futures",
+  "Keltner Channel pullback entry strategy",
+  "Stochastic RSI oversold reversal futures",
+  "Donchian channel 20 day breakout strategy",
+  "Supertrend indicator 10 3 ATR trend follow",
+  "ATR trailing stop trend continuation rules",
+  "VWAP fade mean reversion futures intraday",
+  "Ichimoku cloud Kumo breakout futures",
+];
+
+const MEAN_REVERSION_QUERY_TEMPLATES: string[] = [
+  "mean reversion ATR scalping futures rules",
+  "Z-score futures reversion intraday strategy",
+  "Bollinger Bands mean reversion 2 standard deviation",
+  "range trading bollinger keltner reversion",
+];
+
+const SESSION_PATTERN_QUERY_TEMPLATES: string[] = [
+  "London open breakout futures strategy",
+  "New York open NY 9 30 ET breakout",
+  "Asian session range breakout futures",
+  "NY lunch reversal 11 30 12 30 strategy",
+  "London close 11am ET fade strategy",
+];
+
+// All concept-targeted queries — symbol-agnostic, work across MES/MNQ/MCL
+const ALL_CONCEPT_QUERIES: string[] = [
+  ...SMC_ICT_QUERY_TEMPLATES,
+  ...WYCKOFF_QUERY_TEMPLATES,
+  ...VOLUME_PROFILE_QUERY_TEMPLATES,
+  ...ORDER_FLOW_QUERY_TEMPLATES,
+  ...INDICATOR_SPECIFIC_QUERY_TEMPLATES,
+  ...MEAN_REVERSION_QUERY_TEMPLATES,
+  ...SESSION_PATTERN_QUERY_TEMPLATES,
+];
+
 // ─── Rotation logic ───────────────────────────────────────────────────────────
 //
 // W23F.E — deterministic MES → MNQ → MCL cycle. The cycle index is persisted
@@ -253,11 +340,19 @@ export function pickSymbolGroupForCycle(cycleIndex: number): SymbolGroup {
  * Exported for unit testing.
  */
 export function getQueryTemplatesForGroup(group: SymbolGroup): string[] {
-  switch (group) {
-    case "MES": return MES_QUERY_TEMPLATES;
-    case "MNQ": return MNQ_QUERY_TEMPLATES;
-    case "MCL": return MCL_QUERY_TEMPLATES;
-  }
+  // W23F.P — every symbol group includes the concept-targeted queries to
+  // surface diverse strategy families (SMC, ICT, Wyckoff, VP, order flow,
+  // indicator-specific, mean-reversion, session-pattern). The symbol-specific
+  // queries focus on contract specs; the concept queries focus on the edge
+  // hypothesis. The LLM extractor then identifies the market per source.
+  const base = (() => {
+    switch (group) {
+      case "MES": return MES_QUERY_TEMPLATES;
+      case "MNQ": return MNQ_QUERY_TEMPLATES;
+      case "MCL": return MCL_QUERY_TEMPLATES;
+    }
+  })();
+  return [...base, ...ALL_CONCEPT_QUERIES];
 }
 
 /**

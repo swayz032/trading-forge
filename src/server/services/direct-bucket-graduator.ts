@@ -591,7 +591,20 @@ function prettifyConcept(conceptName: string): string {
   if (/change.in.state.of.delivery|(^|_)cisd(_|$)/.test(cn)) return "cisd";
   if (/fair.value.gap|(^|_)fvg(_|$)/.test(cn)) return "fvg_retrace";
   if (/order.block|(^|_)ob(_|$)/.test(cn)) return "order_block";
-  if (/liquidity.sweep|(^|_)bsl(_|$)|(^|_)ssl(_|$)|stop.hunt/.test(cn)) return "liquidity_sweep";
+  if (/liquidity.sweep|liquidity_sweep_breakout|(^|_)bsl(_|$)|(^|_)ssl(_|$)|stop.hunt/.test(cn)) return "liquidity_sweep";
+
+  // ── Wyckoff archetypes (W23F.Q 2026-05-19) — route to engine analogs ──
+  if (/wyckoff.spring|spring.pattern|spring.wyckoff/.test(cn)) return "wyckoff_spring";
+  if (/wyckoff.upthrust|upthrust.after.distribution|(^|_)utad(_|$)/.test(cn)) return "wyckoff_upthrust";
+  if (/wyckoff.accumulation|accumulation.phase.wyckoff/.test(cn)) return "wyckoff_accumulation";
+  if (/wyckoff.distribution|distribution.phase.wyckoff/.test(cn)) return "wyckoff_distribution";
+
+  // ── Generic SMC umbrella — route to liquidity_sweep (most common SMC entry) ──
+  // Note: granular SMC concepts (FVG, OB, BSL/SSL) match earlier — this is the fallback
+  if (/smart.money.concept|(^|_)smc(_|$)|smart.money.technique/.test(cn)) return "liquidity_sweep";
+
+  // ── Order flow / cumulative delta — route to cumulative_delta primitive ──
+  if (/order.flow|footprint.chart|absorption.rejection|delta.divergence/.test(cn)) return "cumulative_delta";
 
   // ── Wyckoff ──
   if (/wyckoff.spring|spring.{0,8}wyckoff/.test(cn)) return "wyckoff_spring";
