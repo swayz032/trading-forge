@@ -101,3 +101,60 @@ export const paperTrades = new Counter({
   labelNames: ["symbol", "side", "outcome"] as const,
   registers: [promRegistry],
 });
+
+// ─── Backtest scoring counter ─────────────────────────────────────────────────
+// Incremented in backtest-service.ts after forge_score + tier are computed.
+// label "tier" carries the Tier enum value (tier1, tier2, tier3, null) so
+// dashboards can track tier-distribution over time without a separate query.
+export const backtestScoredTotal = new Counter({
+  name: "tf_backtest_scored_total",
+  help: "Total backtests scored with forge_score + tier",
+  labelNames: ["tier"] as const,
+  registers: [promRegistry],
+});
+
+// ─── Cross-validator metrics ──────────────────────────────────────────────────
+// Incremented by agent.ts cross-validate endpoint on every call attempt.
+// label "outcome" carries: match_confirmed | match_rejected | model_unavailable | error
+export const crossValidatorCallsTotal = new Counter({
+  name: "tf_cross_validator_calls_total",
+  help: "Total cross-validator LLM calls, labelled by outcome",
+  labelNames: ["outcome"] as const,
+  registers: [promRegistry],
+});
+
+// Histogram over LLM latency for cross-validator calls (seconds, not ms).
+// Using prom-client default buckets (.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10).
+export const crossValidatorLatencySeconds = new Histogram({
+  name: "tf_cross_validator_latency_seconds",
+  help: "Cross-validator LLM call latency in seconds",
+  registers: [promRegistry],
+});
+
+// ─── Pending bucket metrics ───────────────────────────────────────────────────
+// pendingBucketsGraduatedTotal — incremented each time a pending bucket is
+// promoted to a graduated strategy. No label needed; cardinality = 0.
+export const pendingBucketsGraduatedTotal = new Counter({
+  name: "tf_pending_buckets_graduated_total",
+  help: "Total pending buckets graduated to strategies",
+  registers: [promRegistry],
+});
+
+// pendingBucketsTotal — set at scrape time from direct-bucket-graduator counts
+// broken out by status (pending | graduating | graduated | expired | killed).
+// label "status" keeps this gauge at 5 time series max — safe cardinality.
+export const pendingBucketsTotal = new Gauge({
+  name: "tf_pending_buckets_count",
+  help: "Current count of pending concept buckets by status",
+  labelNames: ["status"] as const,
+  registers: [promRegistry],
+});
+
+// ─── Cron job concurrency gauge ───────────────────────────────────────────────
+// Tracks how many scheduler cron jobs are executing simultaneously.
+// Updated at entry/exit of withRetry so ops-on-call can spot concurrency spikes.
+export const cronJobsConcurrent = new Gauge({
+  name: "tf_cron_jobs_concurrent",
+  help: "Number of scheduler cron jobs currently executing",
+  registers: [promRegistry],
+});

@@ -4,6 +4,48 @@
 
 ---
 
+### Session Log — 2026-05-19 Backtest Core — Phase 11: TS2305 cascade resolution + backtest lifecycle fix
+
+**Mission:** Resolve all 17 remaining TS2305 import-not-found errors (5 production blockers in metrics-registry + 10 test blockers in firm-config + scheduler + sse), confirm backend starts clean, surface and fix lifecycle bugs by firing backtests on all 4 strategies.
+
+**Work completed:**
+
+- `src/server/lib/metrics-registry.ts` — Added 6 missing exports:
+  - `backtestScoredTotal: Counter` (`tf_backtest_scored_total`, label: `tier`) — used by `backtest-service.ts`
+  - `crossValidatorCallsTotal: Counter` (`tf_cross_validator_calls_total`, label: `outcome`) — used by `agent.ts` cross-validate route
+  - `crossValidatorLatencySeconds: Histogram` (`tf_cross_validator_latency_seconds`, prom-client default buckets)
+  - `pendingBucketsGraduatedTotal: Counter` (`tf_pending_buckets_graduated_total`)
+  - `pendingBucketsTotal: Gauge` (`tf_pending_buckets_count`, label: `status`)
+  - `cronJobsConcurrent: Gauge` (`tf_cron_jobs_concurrent`) — also expected by wave13 test
+- `src/shared/firm-config.ts` — Added `hftMaxTradesPerDay?: number` field to `FirmAccountConfig` interface; wired it as `hftMaxTradesPerDay: 500` in MFFU 50K entry; added 10 module-level named constants derived from canonical docs (values cross-checked against `docs/prop-firm-rules-2026-mffu.md` and `docs/prop-firm-rules-2026-topstep.md` — MFFU_HFT_MAX_TRADES_PER_DAY=500 per docs, not 200; MFFU_BASELINE_SLIPPAGE_TICKS_MES=2 per docs, not 1.0).
+- `src/server/scheduler.ts` — Exported `reconcileMissedRuns` as public export; added `_testOnly` seam (registerJob/getJobs/resetJobs) for scheduler-reconcile-pipelinegate tests.
+- `src/server/routes/sse.ts` — Added `FACTORY_EVENTS` const with `MULTI_MARKET_BUCKET`, `GRADUATION_ENTRY_QUALITY`, `SCOUT_IDEA_EXTRACTED`, `STRATEGY_CREATED`, `FRAMEWORK_OVERLAY_APPLIED` event names; added `FactoryEventName` union type.
+
+**Lifecycle bug found and fixed:**
+
+**Bug:** `POST /api/backtests` route returned a ghost backtestId even when pipeline was PAUSED. Root cause: `runBacktest()` defaults to `actor="automated"` which short-circuits on pipeline pause (returns `{ status:"skipped", id:null }` without writing DB row). Route did not pass `actor="operator"` so all 4 operator-initiated backtests produced IDs that vanished — `GET /api/backtests/:id` returned 404.
+
+**Fix:** `src/server/routes/backtests.ts` — Pass `actor="operator"` to `runBacktest()`. This is the explicitly documented intended behavior (backtest-service.ts lines 283-291 say operator calls bypass the gate; pause stops automated scout drains, not validation probes).
+
+**Metric drift impact:** None — only structural code changes (exports + route parameter), no P&L calculation touched.
+
+**Verification:**
+- `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c TS2305` → **0** (down from 17)
+- `npm run check:production-isolation` → **CLEAN — 4 file(s) checked, 0 violations**
+- `npm run check:2026-compliance` → **OK — MFFU + Topstep aligned with canonical 2026 docs**
+- `npm run system-map:check` → **status:ok**
+- `curl http://localhost:4000/api/health` → **status:ok** (all subsystems green)
+- All 4 backtests fired and DB rows created with status "running" — walk-forward completing
+
+**Known-facts updates:**
+- `POST /api/backtests` must pass `actor="operator"` or pipeline-paused instances silently drop backtests with ghost IDs
+- `crossValidatorCallsTotal` uses label `outcome` (not `status`) — confirmed from agent.ts usage and test mocks
+
+**Carry-forward for next session:**
+- Backtest results (metrics, tier, forgeScore) pending Python engine completion — query `backtests` table for terminal status
+
+---
+
 ### Session Log — 2026-05-19 Backtest Core — Phase 9: opening_range_breakout indicator (atomic ship)
 
 **Mission:** Ship `compute_opening_range_breakout()` + dispatcher + validator entry + test suite atomically in one commit so that 3 ORB-based strategies (`orb_15m_mes`, `orb_mnq_15m`, `crude_oil_technical_analysis_mcl_5m`) can be backtested through the Python engine instead of receiving NO_BACKTEST rejections.

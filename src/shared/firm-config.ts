@@ -23,6 +23,7 @@ export interface FirmAccountConfig {
   minTradingDays: number;         // Min trading days required to pass eval
   // ── MFFU 2026 compliance fields ──────────────────────────────────────────
   payoutCycleDays?: number;       // MFFU: 14 (bi-weekly)
+  hftMaxTradesPerDay?: number;    // MFFU: 500 (trades/day ceiling before HFT classification)
   // ── Topstep 2026 compliance fields ───────────────────────────────────────
   platformLockdownDate?: string;  // Topstep: "2026-01-12" (TopstepX-only since this date)
   requiredPlatform?: string;      // Topstep: "topstepx"
@@ -56,6 +57,7 @@ export const FIRMS: Record<string, FirmConfig> = {
         minTradingDays: 5,
         // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
         payoutCycleDays: 14,
+        hftMaxTradesPerDay: 500,
       },
     },
   },
@@ -280,3 +282,42 @@ export function getTotalHurdle(firmName: string, _accountType: string = "50k"): 
   if (!acct) return null;
   return acct.profitTarget + acct.maxDrawdown;
 }
+
+// ─── MFFU 2026 named constants (no magic numbers in compliance code) ─────────
+// Canonical source: docs/prop-firm-rules-2026-mffu.md §§1,7,8,9
+// These must stay in sync with the `mffu["50k"]` entry in FIRMS above.
+// If a value changes in FIRMS it must change here too — test mffu-2026-compliance
+// asserts equality between constants and firm-config values.
+
+/** Max trades per day before MFFU classifies the account as HFT (Rule 1). */
+export const MFFU_HFT_MAX_TRADES_PER_DAY = 500;
+
+/** Max fraction of account balance that a single trade's intended loss may represent (Rule 8). */
+export const MFFU_TWO_PERCENT_RULE_PCT = 0.02;
+
+/** Minimum slippage tick floor for MES on MFFU paths — enforced in slippage.py (Rule 7). */
+export const MFFU_BASELINE_SLIPPAGE_TICKS_MES = 2;
+
+/** Payout cycle in calendar days (bi-weekly, Rule 9). */
+export const MFFU_PAYOUT_CYCLE_DAYS = 14;
+
+/** Initial trader payout split (Rule 9). */
+export const MFFU_PAYOUT_SPLIT = 0.80;
+
+// ─── Topstep 2026 named constants (no magic numbers in compliance code) ───────
+// Canonical source: docs/prop-firm-rules-2026-topstep.md §Platform §API
+
+/** Date Topstep locked trading exclusively to TopstepX platform. */
+export const TOPSTEP_PLATFORM_LOCKDOWN_DATE = "2026-01-12";
+
+/** Required platform identifier after lockdown. */
+export const TOPSTEP_REQUIRED_PLATFORM = "topstepx";
+
+/** Topstep does NOT allow cloud failover (VPS/VPN/remote desktop banned). */
+export const TOPSTEP_ALLOWS_CLOUD_FAILOVER = false;
+
+/** TopstepX API monthly subscription fee in USD (with promo code). */
+export const TOPSTEPX_API_MONTHLY_FEE_USD = 14.50;
+
+/** Promo code for TopstepX API subscription discount. */
+export const TOPSTEPX_PROMO_CODE = "topstep";

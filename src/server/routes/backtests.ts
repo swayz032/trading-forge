@@ -133,8 +133,13 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
 
   // Fire and forget — return 202 immediately.
   // req.id and req.log are set by correlationMiddleware (typed in src/server/types/express.d.ts).
+  //
+  // actor="operator": POST /api/backtests is an explicit operator invocation — it must
+  // bypass the pipeline-pause gate (pause stops automated scout drains, NOT operator
+  // validation probes). Without actor="operator", a PAUSED pipeline silently drops the
+  // backtest and the caller receives a ghost ID that never appears in GET /api/backtests/:id.
   const correlationId = req.id;
-  runBacktest(strategyId, fullConfig, strategyClass, backtestId, correlationId).then((_result) => {
+  runBacktest(strategyId, fullConfig, strategyClass, backtestId, correlationId, "operator").then((_result) => {
     // Logged internally by runBacktest
   }).catch((err) => {
     req.log.error({ err, strategyId, backtestId, correlationId }, "Fire-and-forget backtest failed");

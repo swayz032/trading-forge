@@ -293,7 +293,28 @@ function markJobRun(name: string) {
   schedulerLastError[name] = null; // clear any previous error on successful run
 }
 
-async function reconcileMissedRuns() {
+// ─── Test seam ────────────────────────────────────────────────────────────────
+// Exported ONLY for regression tests (scheduler-reconcile-pipelinegate.test.ts).
+// Production code MUST NOT call _testOnly. The seam is intentionally minimal —
+// just enough to register synthetic jobs and inspect the live registry.
+export const _testOnly = {
+  /** Register a synthetic job into SCHEDULER_JOBS (test isolation). */
+  registerJob(name: string, intervalMs: number, run: () => Promise<void>): void {
+    registerJob(name, intervalMs, run);
+  },
+  /** Get direct mutable reference to SCHEDULER_JOBS (tests set lastRunAt). */
+  getJobs(): Record<string, JobMeta> {
+    return SCHEDULER_JOBS;
+  },
+  /** Clear all registered jobs — call in beforeEach to avoid cross-test pollution. */
+  resetJobs(): void {
+    for (const key of Object.keys(SCHEDULER_JOBS)) {
+      delete SCHEDULER_JOBS[key];
+    }
+  },
+};
+
+export async function reconcileMissedRuns() {
   const now = Date.now();
   for (const [name, meta] of Object.entries(SCHEDULER_JOBS)) {
     if (!meta.lastRunAt) {

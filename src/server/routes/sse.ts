@@ -196,3 +196,18 @@ export const PAPER_EXIT_EVENTS = {
 } as const;
 
 export type PaperExitEventName = (typeof PAPER_EXIT_EVENTS)[keyof typeof PAPER_EXIT_EVENTS];
+
+// ─── Factory Pipeline SSE Event Names ────────────────────────────────────────
+// Centralized event-name constants for scout/graduator pipeline events.
+// broadcast by direct-bucket-graduator.ts and autonomous-scout-runner.ts.
+// The frontend subscribes to these by exact name — do not rename without
+// a coordinated frontend update.
+export const FACTORY_EVENTS = {
+  MULTI_MARKET_BUCKET:        "factory:multi_market_bucket",
+  GRADUATION_ENTRY_QUALITY:   "factory:graduation_entry_quality",
+  SCOUT_IDEA_EXTRACTED:       "factory:scout_idea_extracted",
+  STRATEGY_CREATED:           "factory:strategy_created",
+  FRAMEWORK_OVERLAY_APPLIED:  "factory:framework_overlay_applied",
+} as const;
+
+export type FactoryEventName = (typeof FACTORY_EVENTS)[keyof typeof FACTORY_EVENTS];
