@@ -202,7 +202,14 @@ def run_walk_forward(
         and os.environ.get("WF_PARALLEL", "1") == "1"
         and len(windows) > 1
     )
-    _max_workers_env = int(os.environ.get("WF_MAX_WORKERS", "4"))
+    # Phase 14 concurrency fix: default WF_MAX_WORKERS=2 (was 4).
+    # Under 6 concurrent backtests: 6 × 4 workers = 24 simultaneous Python
+    # subprocesses → OOM → server crash. At 2 workers: 6 × 2 = 12 subprocesses,
+    # which fits within the 8-core tower's memory budget (~400 MB per worker for
+    # 10yr Parquet load + vectorbt).
+    # Override with WF_MAX_WORKERS=4 for dedicated promotion-gate runs where only
+    # 1 backtest is in flight at a time.
+    _max_workers_env = int(os.environ.get("WF_MAX_WORKERS", "2"))
     # Leave 1 CPU for OS + Node parent; cap at env override
     _n_workers = min(len(windows), max(1, (os.cpu_count() or 2) - 1), _max_workers_env)
     _base_seed = int(os.environ.get("BACKTEST_SEED", "42"))

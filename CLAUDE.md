@@ -483,6 +483,55 @@ npm run audit:n8n                        # n8n drift detector
 
 ---
 
+## §14b. Backtest Concurrency Contract (Phase 14)
+
+**Production-grade concurrency hardening shipped 2026-05-19** after a server crash caused by 6 concurrent backtests × 4 WF parallel workers = 24 simultaneous Python subprocesses → OOM.
+
+### Capacity limits (tunable via .env)
+
+| Env var | Default | Effect |
+|---|---|---|
+| `MAX_CONCURRENT_BACKTESTS` | `3` | POST /api/backtests returns HTTP 429 when this many are in-flight |
+| `WF_MAX_WORKERS` | `2` | Max parallel walk-forward windows per backtest subprocess |
+| `BACKTEST_TIMEOUT_MS` | `1800000` (30 min) | Individual backtest hard timeout |
+
+**Load math:** 3 concurrent × 2 WF workers = 6 Python subprocesses. At ~400 MB each = ~2.4 GB for backtest workers — safe on the 16 GB Skytech tower.
+
+### 429 handling
+
+When `MAX_CONCURRENT_BACKTESTS` is reached, POST /api/backtests returns:
+```json
+{ "error": "backtest_concurrent_cap", "retry_after_seconds": 30, "active": 3, "cap": 3 }
+```
+Caller must retry after 30s. Do not queue or block — the 429 is the backpressure signal.
+
+### Orphan cleanup policy
+
+True orphan = `status='running'` for **more than 60 minutes**. On server restart, only rows older than 60 min are swept to `failed`. Rows younger than 60 min are presumed live at the time of crash — left unchanged for operator inspection.
+
+Error message for swept rows: `"Backtest exceeded 1h+ runtime; swept as orphan on server restart."`
+
+This unambiguously distinguishes:
+- "Server restart killed a freshly-started run" → row is NOT swept (< 60 min)
+- "This row was abandoned for over an hour" → row IS swept (> 60 min)
+
+### Promotion-gate override
+
+For dedicated promotion-gate runs (1 backtest at a time, maximize speed):
+```env
+WF_MAX_WORKERS=4
+MAX_CONCURRENT_BACKTESTS=1
+```
+
+### Health endpoint
+
+`/api/health` now includes:
+```json
+{ "backtestConcurrency": { "active": 2, "cap": 3, "saturated": false } }
+```
+
+---
+
 ## §15. Tech Stack
 
 - **API Server:** Express.js 5 + TypeScript (`src/server/`)

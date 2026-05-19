@@ -8,6 +8,48 @@ import { runBacktest } from "../services/backtest-service.js";
 import { runMatrix, getMatrixStatus } from "../services/matrix-backtest-service.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
 
+// ─── Phase 14: Concurrent backtest cap ───────────────────────────────────────
+// Without this cap, operator batch-firing 6+ backtests + 4 parallel WF workers
+// = 24+ simultaneous Python subprocesses → OOM → server crash.
+//
+// Policy: cap at MAX_CONCURRENT_BACKTESTS (default 3). When the cap is reached,
+// return HTTP 429 with retry_after_seconds=30. The operator's calling pattern is
+// fire-and-forget: fire N backtests, get 429s on the excess, retry after 30s.
+// Do NOT queue or block the route — a queued response hides the actual load state.
+//
+// Math: 3 concurrent × 2 WF workers = 6 Python subprocesses. At ~400 MB each
+// on the Skytech tower (16 GB RAM), that's ~2.4 GB for backtest workers alone.
+// The remaining Node + Ollama + Postgres client can run in the remaining ~13 GB.
+//
+// Override: set MAX_CONCURRENT_BACKTESTS=5 in .env for dedicated validation runs
+// where WF_MAX_WORKERS is also reduced to 1.
+const MAX_CONCURRENT_BACKTESTS = Math.max(
+  1,
+  parseInt(process.env.MAX_CONCURRENT_BACKTESTS ?? "3", 10) || 3,
+);
+let _concurrentBacktestCount = 0;
+
+/** Acquire a backtest slot. Returns true if acquired, false if cap reached. */
+function _acquireBacktestSlot(): boolean {
+  if (_concurrentBacktestCount >= MAX_CONCURRENT_BACKTESTS) return false;
+  _concurrentBacktestCount++;
+  return true;
+}
+
+/** Release a backtest slot. Called in finally block of fire-and-forget. */
+function _releaseBacktestSlot(): void {
+  _concurrentBacktestCount = Math.max(0, _concurrentBacktestCount - 1);
+}
+
+/** Expose current concurrency state for /api/health. */
+export function getBacktestConcurrencyStats(): { active: number; cap: number; saturated: boolean } {
+  return {
+    active: _concurrentBacktestCount,
+    cap: MAX_CONCURRENT_BACKTESTS,
+    saturated: _concurrentBacktestCount >= MAX_CONCURRENT_BACKTESTS,
+  };
+}
+
 export const backtestRoutes = Router();
 
 /**
@@ -125,6 +167,19 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
     return;
   }
 
+  // Phase 14: concurrent backtest cap — return 429 when cap is reached.
+  // This prevents the pool-saturation → OOM → server-crash chain under batch firing.
+  if (!_acquireBacktestSlot()) {
+    res.status(429).json({
+      error: "backtest_concurrent_cap",
+      message: `Server is running ${_concurrentBacktestCount}/${MAX_CONCURRENT_BACKTESTS} concurrent backtests. Retry after the current set completes.`,
+      retry_after_seconds: 30,
+      active: _concurrentBacktestCount,
+      cap: MAX_CONCURRENT_BACKTESTS,
+    });
+    return;
+  }
+
   // Reassemble config with the resolved strategy
   const fullConfig = { ...config, strategy: resolvedStrategy };
 
@@ -143,6 +198,9 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
     // Logged internally by runBacktest
   }).catch((err) => {
     req.log.error({ err, strategyId, backtestId, correlationId }, "Fire-and-forget backtest failed");
+  }).finally(() => {
+    // Always release the slot — whether the backtest succeeded, failed, or timed out.
+    _releaseBacktestSlot();
   });
 
   const response: BacktestSubmitResponse = {

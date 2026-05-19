@@ -10,6 +10,7 @@ import { authMiddleware } from "./middleware/auth.js";
 import { standardRateLimit } from "./middleware/rate-limit.js";
 import { strictRateLimit } from "./middleware/strict-rate-limit.js";
 import { gracefullyShutdownPythonSubprocesses, getPythonSubprocessStats } from "./lib/python-runner.js";
+import { getBacktestConcurrencyStats } from "./routes/backtests.js";
 import { correlationMiddleware } from "./middleware/correlation.js";
 import { strategyRoutes } from "./routes/strategies.js";
 import { journalRoutes } from "./routes/journal.js";
@@ -270,6 +271,10 @@ app.get("/api/health", async (_req, res) => {
     saturated: rawPool.active >= rawPool.cap,
   };
 
+  // Phase 14: concurrent backtest cap stats — shows how many backtests are in-flight
+  // vs the server-side cap. When saturated, new POST /api/backtests return 429.
+  const backtestConcurrency = getBacktestConcurrencyStats();
+
   // Massive WebSocket stream status — derives connected state from the live
   // sharedSockets registry. `reason` disambiguates "disconnected" between
   // expected idle (no paper sessions running), missing credentials, and
@@ -372,6 +377,7 @@ app.get("/api/health", async (_req, res) => {
     python: pythonHealth,
     pythonDependencies: pythonDependencyHealth,
     pythonPool,
+    backtestConcurrency,
     massive,
     n8n,
     // C4: Network failover — ISP/broker connectivity state (null if monitor not started)
@@ -573,19 +579,33 @@ const server = app.listen(port, () => {
   });
 
   // ─── Orphaned backtest cleanup ────────────────────────────────
-  // On every restart, mark backtests that have been stuck in "running" for more
-  // than 10 minutes as failed. These are process-killed survivors from prior
-  // restarts — they will never complete and must not block subsequent runs.
+  // Phase 14 fix: only sweep rows that have been "running" for more than 60
+  // minutes. A backtest created 60s before the server restarted is NOT an
+  // orphan — its Python subprocess died with the parent process, but the row
+  // is "freshly started", not a zombie from a prior crashed session.
+  //
+  // The old threshold was 10 minutes, which was shorter than actual walkforward
+  // execution time under load (6 concurrent × 4 parallel workers). That caused
+  // legitimate mid-run backtests to be swept on pm2 restart.
+  //
+  // True orphan = status='running' for more than 60 minutes. Anything younger
+  // than 60 minutes is presumed to have been live when the server restarted —
+  // it should be left for the operator to observe and manually retry if needed.
+  //
+  // The error message is intentionally different from a process crash message so
+  // operators can distinguish "this row was abandoned too long" from "server died".
   import("./db/schema.js").then(async ({ backtests }) => {
     try {
-      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
       const orphaned = await db
         .update(backtests)
-        .set({ status: "failed", errorMessage: "Server restart — orphaned running backtest" })
-        .where(and(eq(backtests.status, "running"), lt(backtests.createdAt, tenMinutesAgo)))
+        .set({ status: "failed", errorMessage: "Backtest exceeded 1h+ runtime; swept as orphan on server restart." })
+        .where(and(eq(backtests.status, "running"), lt(backtests.createdAt, oneHourAgo)))
         .returning({ id: backtests.id });
       if (orphaned.length > 0) {
-        logger.warn({ count: orphaned.length, ids: orphaned.map((r) => r.id) }, "Startup: cleaned up orphaned running backtests");
+        logger.warn({ count: orphaned.length, ids: orphaned.map((r) => r.id) }, "Startup: cleaned up orphaned running backtests (> 1h old)");
+      } else {
+        logger.info("Startup: no orphaned running backtests found (all running rows < 1h old — left as-is)");
       }
     } catch (err) {
       logger.error({ err }, "Startup: orphaned backtest cleanup failed (non-blocking)");

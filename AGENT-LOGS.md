@@ -4,7 +4,98 @@
 
 ---
 
-### Session Log — 2026-05-19 Backtest Core — Phase 12: Production-grade backtest performance fix
+### Session Log — 2026-05-19 Backtest Core Subagent — Phase 14: Production-grade concurrency hardening
+
+**Mission:** Fix server crash caused by Phase 13 firing 6 concurrent backtests × 4 WF parallel workers = 24 simultaneous Python subprocesses → OOM → pm2 restart → orphan-cleanup swept all 6 as failed.
+
+**Root causes identified and fixed:**
+
+**A. Orphan cleanup time-bound (src/server/index.ts:~580)**
+- Before: swept any `status='running'` row created more than 10 minutes ago on restart
+- After: only sweeps rows created more than 60 minutes ago
+- Error message changed from "Server restart — orphaned running backtest" to "Backtest exceeded 1h+ runtime; swept as orphan on server restart." — unambiguous disambiguation
+- 6 backtests from Phase 13 were killed because they started at 14:33:50, server restarted ~14:49 (15 min) — the 10-min threshold swept them immediately
+
+**B. WF_MAX_WORKERS default reduced (src/engine/walk_forward.py:~205)**
+- Before: `WF_MAX_WORKERS=4` (4 parallel ProcessPoolExecutor workers per backtest)
+- After: `WF_MAX_WORKERS=2` (2 parallel workers per backtest)
+- Load math: 6 concurrent × 4 = 24 subprocesses (OOM); 6 concurrent × 2 = 12 subprocesses (safe at ~400 MB each on 16 GB tower)
+- Override with `WF_MAX_WORKERS=4` for dedicated promotion-gate runs (1 backtest at a time)
+
+**C. Concurrent backtest cap at POST /api/backtests (src/server/routes/backtests.ts)**
+- Before: no cap — operator could fire unlimited backtests simultaneously
+- After: `MAX_CONCURRENT_BACKTESTS=3` (default) — returns HTTP 429 `{error: "backtest_concurrent_cap", retry_after_seconds: 30}` when cap is reached
+- In-memory counter (`_concurrentBacktestCount`) incremented on accept, released in `.finally()` after runBacktest completes/fails/times out
+- `getBacktestConcurrencyStats()` exported and wired into `/api/health` as `backtestConcurrency`
+
+**D. Subprocess crash resilience (src/server/lib/python-runner.ts)**
+- Already correct: try/catch + settled flag + finally { _releasePythonSlot() } covers all crash vectors
+- `proc.on("close")` with non-zero code rejects the promise (caller marks backtest failed)
+- `proc.on("error")` also rejects (spawn failure case)
+- Verified no gap — Node cannot OOM-crash from a Python subprocess crash (subprocess isolation is OS-level)
+
+**Contract documented:**
+- §14b added to CLAUDE.md with concurrency table, 429 handling, orphan policy, promotion-gate override
+- `/api/health` now includes `backtestConcurrency: {active, cap, saturated}`
+
+**Verification:**
+- `npm run check:production-isolation` CLEAN
+- `npm run check:2026-compliance` OK
+- `npm run system-map:check` status:ok (sync run first to clear pre-existing drift)
+- ESLint on changed files: 0 errors
+- Python tests pending (background job)
+
+**Carry-forward:**
+- Verification step E (progressive concurrency test 1→2→3→5 backtests) requires the server to be running with fresh code. Operator should pm2 reload and run the progressive test.
+- The 6 dead backtests (ema_9_21, orb_mes, orb_mnq, mcl_5m, bb_mes_5m, bb_mes_1d) should be re-fired after the server picks up new code — they will complete cleanly under the 3-concurrent cap.
+
+---
+
+### Session Log — 2026-05-19 Parent Claude — Phase 13: Git object store corruption + 47-file recovery + production speed validation
+
+**Mission:** After Phase 12 shipped production-grade backtest perf fixes (parallel walk-forward + Parquet cache + stress-test skip + 1800s timeout), Phase 9 backend restart failed with ESM `ERR_MODULE_NOT_FOUND` on `scripts/n8n-workflow-sync.ts`. Investigation revealed null-byte content beyond the original Phase 0 86-file inventory. Full project rescan + history-walk recovery + service restart + validate production speed.
+
+**Critical finding — git object store corruption:**
+- 47 additional files had ALL-NULL content (Trading_forge_frontend/, workflows/n8n/, docs/, scripts/, src/engine/)
+- `git fsck --full` reported NO errors (blob SHAs match the null-byte content — git's checksum says "valid")
+- `git cat-file -p HEAD:<file>` returned all-null for 47 files
+- **`origin/feature/deep-analysis-pipeline` ALSO had the corrupt blobs** — the null-byte working tree had been committed + pushed during my earlier recovery commits
+- The 86-file Phase 0 recovery was incomplete: I restored from HEAD which already had a chunk of corrupt blobs
+
+**Recovery sequence (Phase 13):**
+1. Python-based full-project rescan (faster than nested bash) — 47 files corrupt
+2. Per-file `git log --pretty=format:"%H"` walk → first commit with non-null blob content
+3. `git checkout <clean-commit> -- <file>` for each (mostly `fb2ce3d`, the W1 foundation commit)
+4. Final Python rescan confirmed 0 corrupt files remaining
+5. Commit + push (`77613f6`) per the codified commit-and-push HARD RULE
+6. `pm2 delete + pm2 start` to force fresh process pickup of Phase 12 TS changes (`BACKTEST_TIMEOUT_MS=1800000`)
+7. Backend healthy with uptime 19s on fresh code
+8. Fire 6 backtests (library grew from 4 → 6; scout pipeline produced 2 new bollinger_bands strategies during recovery)
+
+**Known-facts pinned this session:**
+- Git fsck does NOT catch null-byte blob corruption. `git fsck --full` says "no errors" when blob SHA == sha of null content. Use `git cat-file -p HEAD:<file> | tr -d -c '\\000' | wc -c` to detect.
+- A corrupt working tree at commit time bakes the corruption into git history permanently. `origin` is NOT a safety net if the corrupt commit was pushed.
+- Recovery from corrupt git blobs: walk `git log -- <file>` history and find earliest commit with non-null content. The `fb2ce3d` W1 foundation commit (pre any 2026-05 corruption events) was the clean source for all 47 files this round.
+- Windows service-spawned processes (PID in Session 0) cannot be killed by non-admin user-session bash. `pm2 delete + pm2 start` from non-admin is the only path to force-restart a service-owned process when sc/net stop are blocked.
+
+**Files modified (commit `77613f6`):**
+- 47 files restored (mostly `Trading_forge_frontend/amber-vision-main/**` + `workflows/n8n/**` + `docs/PROP-FIRM*.md` + `scripts/n8n-workflow-sync.ts` + `src/engine/*.py`)
+- 2 generated files added by Drizzle introspect during the session (`src/server/db/migrations/relations.ts`, `src/server/db/migrations/schema.ts`)
+
+**Verification:**
+- Python rescan: 0 corrupt files remaining
+- Backend `/api/health` returns `status:ok` on fresh process (uptime 19s)
+- `pm2 list` shows trading-forge-api online
+- 6 backtests fired with valid backtestIds (Monitor task `baibp0thw` polling for completion)
+
+**Carry-forward:**
+- Phase 12 production-grade backtest perf fixes are now LIVE on the running server (fresh process picked up BACKTEST_TIMEOUT_MS bump + Python parallel walk-forward + stress-test skip default)
+- Backtest results pending — Monitor will report per-strategy wall-clock
+- TradingForgeAPI Windows service (PID 24232, separate from pm2-managed PID 35132) is STILL RUNNING on port 4000 conflict-free because the service-spawned process was bound to a different port OR the pm2 process took over the bind. Operator should verify which one is actually serving traffic + decommission the duplicate.
+
+---
+
+
 
 **Mission:** Fix all 4 walk-forward backtest timeouts (>600s). Make lifecycle move at production speed: < 90s per strategy for 5-split walk-forward over 2 years.
 
