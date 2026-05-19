@@ -181,3 +181,18 @@ export function closeAllSseClients(): void {
 }
 
 export { router as sseRoutes };
+
+// ─── Paper Execution SSE Event Names ─────────────────────────────────────────
+// Centralized event-name constants used by paper-execution-service.ts when it
+// broadcasts Style C exit-leg events. Names are SSE event channels — keep them
+// stable; the frontend subscribes by exact name.
+export const PAPER_EXIT_EVENTS = {
+  TP1_FILLED:           "paper:tp1_filled",
+  TP2_FILLED:           "paper:tp2_filled",
+  BE_STOP_MOVED:        "paper:be_stop_moved",
+  TRAIL_TIGHTENED:      "paper:trail_tightened",
+  TIME_STOP_FLATTENED:  "paper:time_stop_flattened",
+  HANDLER_ERROR:        "paper:handler_error",
+} as const;
+
+export type PaperExitEventName = (typeof PAPER_EXIT_EVENTS)[keyof typeof PAPER_EXIT_EVENTS];

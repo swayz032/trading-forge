@@ -841,6 +841,13 @@
       "when": 1747082400000,
       "tag": "0116_recover_daily_vp_levels",
       "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1747086000000,
+      "tag": "0117_recover_missing_tables",
+      "breakpoints": true
     }
   ]
 }

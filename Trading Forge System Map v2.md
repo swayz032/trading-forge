@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
+Updated automatically from the repo on `2026-05-19T09:18:15.817Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -17,7 +17,7 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `25`
-- Database tables tracked: `73`
+- Database tables tracked: `91`
 
 ### Subsystem Runtime States
 - `active`: `16`
@@ -56,7 +56,7 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 - Route coverage: `62/62`
 - Scheduler coverage: `61/61`
 - Engine coverage: `25/25`
-- Database coverage: `73/73`
+- Database coverage: `91/91`
 - Autonomous subsystems with audit coverage: `21/21`
 - Autonomous subsystems with audit actions: `21/21`
 - Autonomous subsystems with telemetry evidence: `21/21`
@@ -359,6 +359,7 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 
 ### Database Tables
 - `a_plus_market_scans`
+- `account_strategy_assignments`
 - `adversarial_stress_runs`
 - `agent_health_reports`
 - `alerts`
@@ -367,7 +368,11 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 - `backtest_provenance`
 - `backtest_trades`
 - `backtests`
+- `bias_ablation_results`
+- `bias_calibration_curves`
+- `bias_decisions`
 - `bias_state`
+- `broker_accounts`
 - `cloud_qmc_runs`
 - `compliance_drift_log`
 - `compliance_reviews`
@@ -376,7 +381,9 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 - `contract_specs_authoritative`
 - `critic_candidates`
 - `critic_optimization_runs`
+- `daily_reconciliation`
 - `daily_statistics`
+- `daily_volume_profile_levels`
 - `data_integrity_findings`
 - `data_sync_jobs`
 - `day_archetypes`
@@ -384,9 +391,11 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 - `deepar_forecasts`
 - `deepar_training_runs`
 - `exchange_outages`
+- `firm_adversarial_priors`
 - `frankenstein_test_runs`
 - `harsh_regime_phase`
 - `idempotency_keys`
+- `instance_config`
 - `lifecycle_transitions`
 - `llm_injection_attempts`
 - `macro_features`
@@ -395,6 +404,7 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 - `monte_carlo_runs`
 - `mutation_outcomes`
 - `n8n_execution_log`
+- `nemo_scenario_bank`
 - `opening_auction_imbalance`
 - `paper_positions`
 - `paper_session_feedback`
@@ -402,6 +412,7 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 - `paper_signal_logs`
 - `paper_trades`
 - `pilot_sessions`
+- `production_trades`
 - `prompt_ab_tests`
 - `prompt_versions`
 - `prop_firm_health_checks`
@@ -410,6 +421,7 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 - `quantum_run_costs`
 - `qubo_timing_runs`
 - `rl_training_runs`
+- `scout_drain_samples`
 - `shadow_rerun_findings`
 - `shadow_signals`
 - `skip_decisions`
@@ -422,15 +434,21 @@ Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 - `strategy_graveyard`
 - `strategy_lockouts`
 - `strategy_names`
+- `strategy_pending_buckets`
+- `strategy_pending_mentions`
 - `strategy_signal_vectors`
 - `stress_test_runs`
 - `subsystem_metrics`
+- `synthetic_black_swan_runs`
 - `system_journal`
 - `system_parameter_history`
 - `system_parameters`
+- `system_state`
 - `tensor_predictions`
 - `tournament_results`
+- `tradingview_markers`
 - `walk_forward_windows`
+- `weekly_drift_reports`
 <!-- END GENERATED: topology -->
 
 ---

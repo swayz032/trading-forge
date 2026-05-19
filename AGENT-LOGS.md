@@ -4710,6 +4710,63 @@ prevents the next one is now hard-pinned in CLAUDE.md §11a + AGENTS.md §11.
 
 ---
 
+### Session Log — 2026-05-19 Phase 10 Reconstruct 12 Missing DB Tables (Schema-Only Recovery)
+
+**Mission:** Restore Drizzle declarations for 12 tables that consumer services reference but that vanished from `schema.ts` in the 2026-05-19 86-file null-byte corruption rollback, so the TypeScript layer compiles cleanly and the backend can resolve all schema imports.
+
+**Critical discovery (saved us a destructive re-CREATE TABLE):** Live-DB introspection (`information_schema.tables`) revealed that ALL 12 tables listed as "missing from BOTH schema.ts AND live DB" actually EXIST in Postgres with full row data. The corruption only wiped the TypeScript declarations, not the persisted tables. This meant migration 0117 became a LIGHTWEIGHT `ALTER` + singleton bootstrap rather than a full DDL recreation that would have collided with existing live schema (initial attempt failed on `production_trades` because the live shape uses `strategy_version_hash` + `signal_value` + `bias_decision_id` rather than the strawman `account_id` / `firm_id` / `symbol` shape inferred from consumer reads).
+
+**Work completed:**
+
+- `src/server/db/schema.ts` — Appended 17 table declarations (12 originally-listed + 5 in-DB-not-in-schema). Every shape MIRRORS the live DB exactly (verified via `information_schema.columns`):
+  - `systemState` (kill-switch singleton; PK int id=1; production_mode in {ACTIVE,PAUSED,HALT})
+  - `weeklyDriftReports` (bigserial PK; `report_week` is **DATE** not text; UNIQUE on report_week)
+  - `productionTrades` (bigserial PK; `strategy_version_hash` + `signal_value` + `bias_decision_id` + `compliance_check_id` — NOT account_id/firm_id/symbol as initially guessed)
+  - `dailyReconciliation` (bigserial; `recon_date` is **DATE**; `mismatch_details jsonb NOT NULL default '[]'`)
+  - `biasDecisions` (bigserial; UNIQUE on (symbol, decision_timestamp, router_version))
+  - `biasCalibrationCurves` + `biasAblationResults` (both bigserial; period fields are **DATE**)
+  - `brokerAccounts` (PK is `account_id` UUID — no separate `id`; `api_key_vault_ref` not `bitwarden_item_ref`)
+  - `instanceConfig` (singleton; `instance_id NOT NULL`; has `active_strategies` + `tradeify_exclusive_mode`, no `enabled_markets`)
+  - `nemoScenarioBank` (bigserial; `duration_days NOT NULL`; severity CHECK constraint mild|moderate|severe|extreme)
+  - `accountStrategyAssignments` (bigserial; gained `hmac_secret` via 0117 ALTER)
+  - `tradingviewMarkers` (bigserial; signal smallint; `pine_alert_payload NOT NULL`; no UNIQUE on (account,strategy,bar,signal) — consumer uses raw SQL `ON CONFLICT DO NOTHING` against a separate index)
+  - Plus 5 already-in-DB tables newly declared: `firmAdversarialPriors`, `strategyPendingBuckets`, `strategyPendingMentions`, `scoutDrainSamples`, `syntheticBlackSwanRuns`
+- Type exports added: `ProductionMode` (`"ACTIVE"|"PAUSED"|"HALT"`), `SystemStateRow`, `SystemStateInsert`, `FirmAdversarialPriorRow`, `FirmAdversarialPriorInsert` (all derive via `$inferSelect` / `$inferInsert` where applicable).
+- `src/server/db/migrations/0117_recover_missing_tables.sql` — Idempotent ALTER + bootstrap:
+  - `ALTER TABLE account_strategy_assignments ADD COLUMN IF NOT EXISTS hmac_secret TEXT` (consumer-required by `tradingview-marker-service.ts.lookupHmacSecret()`).
+  - Singleton bootstrap for `system_state` (id=1, production_mode=HALT, fail-CLOSED default) and `instance_config` (id=1, instance_id='trading-forge-primary', enabled_firms=["mffu","topstep"]).
+  - One `audit_log` row with `entity_id=NULL` (UUID-typed column — string entity name would have failed the type check).
+- `src/server/db/migrations/meta/_journal.json` — Added idx=120, tag=`0117_recover_missing_tables`.
+- `src/server/routes/sse.ts` — Added `PAPER_EXIT_EVENTS` const + type export (6 event-name constants: TP1_FILLED, TP2_FILLED, BE_STOP_MOVED, TRAIL_TIGHTENED, TIME_STOP_FLATTENED, HANDLER_ERROR). Was needed by `paper-execution-service.ts` and surfaced as the next ESM resolution failure once schema imports cleared.
+
+**Migration applied to live DB:** Confirmed via `information_schema` query — all 12 tables present, `account_strategy_assignments.hmac_secret` column added, `system_state` singleton row exists (id=1, production_mode=HALT), `instance_config` singleton row exists (id=1, enabled_firms=["mffu","topstep"]).
+
+**Verification:**
+
+- `npx tsc --noEmit -p tsconfig.json | grep "TS2305.*db/schema" | wc -l` → **0** (was 27 before)
+- `npm run check:production-isolation` → **CLEAN — 4 file(s) checked, 0 violations**
+- `npm run check:2026-compliance` → **OK — MFFU + Topstep aligned with canonical 2026 docs**
+- `npm run system-map:check` → **status:ok, driftItems:[]** (after `system-map:sync` regenerated the topology snapshot to absorb the schema additions)
+- Backend startup probe: server still fails to bootstrap because a SEPARATE corruption-cascade chain is exposed once schema imports resolve. Next blocking import: `backtest-service.ts` imports `backtestScoredTotal` from `metrics-registry.ts` which doesn't export it. This is OUTSIDE the 12-tables phase scope.
+
+**Known-facts updates:**
+
+- All 12 tables originally believed missing from live DB actually EXIST in Postgres. Any future agent investigating "table-not-found" against the live DB should run `\d <table_name>` BEFORE writing a CREATE migration — the corruption pattern was schema.ts-only, not DB-level.
+- Live shape of `production_trades` is `strategy_version_hash` + `signal_value` + `bias_decision_id` + `compliance_check_id` (link-only, no embedded symbol/firm/account). Reconciliation/drift services join externally to get those fields.
+- Live shape of `broker_accounts` uses `account_id` as PRIMARY KEY (no separate `id` column) and `api_key_vault_ref` for vault lookup (NOT `bitwarden_item_ref`).
+- Live shape of `instance_config` requires `instance_id NOT NULL`; bootstrap value is `'trading-forge-primary'`. Does NOT have `enabled_markets` (mistakenly added in the first schema attempt). Markets are implied by deployed strategies, not by instance config.
+- `tradingview_markers` live DB has NO UNIQUE constraint on `(account_id, strategy_id, bar_timestamp, signal)` — the `ON CONFLICT DO NOTHING` idempotency in `routes/tradingview-webhook.ts` relies on whatever named conflict target the upstream insert provides. If duplicate inserts ever surface as a bug, that's where to look.
+- `audit_log.entity_id` is UUID-typed at the SQL level. Schema migrations must use `NULL` for `entity_id`, not a free-form string like `"table_name"`. Inserting a string fails with `invalid input syntax for type uuid`.
+
+**Carry-forward for next session:**
+
+- Backend startup is BLOCKED by a separate corruption cascade: `metrics-registry.ts` is missing exports (`backtestScoredTotal`, possibly `cronJobsConcurrent`), and several other consumer files have orphan imports. None of these are TS2305-against-db/schema — they're against `../lib/metrics-registry.js` and similar. A Phase 11 should sweep all `TS2305` errors NOT against `db/schema` and restore those missing exports the same way schema.ts was restored.
+- Run `npx tsc --noEmit 2>&1 | grep TS2305 | grep -v "db/schema"` to enumerate the remaining cascade.
+- Once startup succeeds, confirm `GET /api/health` and `GET /api/production/status` return 200 with the kill-switch reading the `system_state` singleton (production_mode=HALT).
+- The other concurrent agent attempted a `drizzle-kit introspect` recovery and left malformed output in schema.ts (orphan `})\`),` lines + `smallint` / `check` references against unimported symbols). Their attempt was discarded in favor of the hand-rolled mirror that compiles cleanly.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Library graveyard sweep is operator-triggered (pinned 2026-05-19)
