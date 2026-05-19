@@ -604,7 +604,8 @@ function prettifyConcept(conceptName: string): string {
   if (/smart.money.concept|(^|_)smc(_|$)|smart.money.technique/.test(cn)) return "liquidity_sweep";
 
   // ── Order flow / cumulative delta — route to cumulative_delta primitive ──
-  if (/order.flow|footprint.chart|absorption.rejection|delta.divergence/.test(cn)) return "cumulative_delta";
+  // W23F.R (2026-05-19) — broaden CVD matching to catch cvd_pro / cumulative_volume_delta variants
+  if (/order.flow|footprint.chart|absorption.rejection|delta.divergence|cvd.pro|cumulative.volume.delta|(^|_)cvd(_|$)|delta.imbalance/.test(cn)) return "cumulative_delta";
 
   // ── Wyckoff ──
   if (/wyckoff.spring|spring.{0,8}wyckoff/.test(cn)) return "wyckoff_spring";

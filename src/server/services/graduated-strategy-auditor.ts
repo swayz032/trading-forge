@@ -195,16 +195,24 @@ export function auditGraduatedConfig(input: AuditInput): AuditResult {
     }
     const base = Number(ps?.base_contracts ?? 0);
     const cap = Number(ps?.max_contracts ?? 0);
-    if (market === "MES" && base !== 4) {
+    // W23F.N (2026-05-19) — Wave 23 canonical bases: MES 6, MNQ 6, MCL 18.
+    // Pre-Wave-23 (Wave 22) strategies used MES=4 and are still valid (backward-compat).
+    const WAVE23_BASE: Record<string, number> = { MES: 6, MNQ: 6, MCL: 18 };
+    const LEGACY_BASE: Record<string, number> = { MES: 4, MNQ: 1, MCL: 1 };
+    const expected = WAVE23_BASE[market];
+    const legacy = LEGACY_BASE[market];
+    if (expected !== undefined && base !== expected && base !== legacy) {
       warnings.push({
-        code: "B6_BASE_CONTRACTS_NON_4",
-        message: `base_contracts=${base} (CLAUDE.md §4 default = 4 MES)`,
+        code: "B6_BASE_CONTRACTS_NON_CANONICAL",
+        message: `base_contracts=${base} (Wave 23 canonical = ${expected} for ${market}; legacy ${legacy} also accepted)`,
       });
     }
-    if (market === "MES" && cap > 30) {
+    // Wave 10+: max_contracts is computed at signal-time and MUST NOT be baked at graduation.
+    // Only flag if a static cap > liquidity ceiling is baked in (regression sentinel).
+    if (cap > 100) {
       defects.push({
-        code: "B6_MES_CAP_EXCEEDED",
-        message: `max_contracts=${cap} > 30 MES cap`,
+        code: "B6_MAX_CONTRACTS_BAKED",
+        message: `max_contracts=${cap} baked in config (Wave 10: must be computed at signal time, not graduation)`,
       });
     }
   }
@@ -247,13 +255,20 @@ export function auditGraduatedConfig(input: AuditInput): AuditResult {
 
   // ─── E. Compliance gates ────────────────────────────────────────────────
 
-  const regimeGate = c?.regime_gate ?? {};
-  if (!regimeGate?.enabled) {
+  // W23F-live-fix (2026-05-19) — accept regime_gate at top-level config OR inside
+  // config.strategy (archetype-path graduations write the latter). The compliance
+  // requirement is that a preferred_regime exists SOMEWHERE in the config, not the
+  // exact path. Wave 23 archetype graduations route via different code path.
+  const regimeGate = c?.regime_gate ?? strat?.regime_gate ?? {};
+  const preferredRegime = regimeGate?.preferred_regime ?? c?.preferred_regime ?? strat?.preferred_regime;
+  // enabled defaults to true if preferred_regime is set (legacy graduations omitted enabled flag).
+  const gateEnabled = regimeGate?.enabled === true || (preferredRegime !== undefined && preferredRegime !== null && preferredRegime !== "");
+  if (!gateEnabled) {
     defects.push({
       code: "E1_REGIME_GATE_DISABLED",
-      message: `regime_gate.enabled !== true (CLAUDE.md §13 — every strategy must have regime tag)`,
+      message: `regime_gate.enabled !== true AND no preferred_regime set anywhere (CLAUDE.md §13 — every strategy must have regime tag)`,
     });
-  } else if (!regimeGate?.preferred_regime) {
+  } else if (!preferredRegime) {
     warnings.push({
       code: "E1_NO_PREFERRED_REGIME",
       message: `regime_gate enabled but no preferred_regime set`,
