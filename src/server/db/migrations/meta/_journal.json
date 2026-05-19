@@ -834,6 +834,13 @@
       "when": 1747078800000,
       "tag": "0115_harsh_regime_phase",
       "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1747082400000,
+      "tag": "0116_recover_daily_vp_levels",
+      "breakpoints": true
     }
   ]
 }

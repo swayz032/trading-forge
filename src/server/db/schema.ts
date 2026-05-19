@@ -2032,6 +2032,34 @@ export const openingAuctionImbalance = pgTable(
 // Per-session bias decision (one row per session_date+symbol at session start;
 // 10:00 ET refresh inserts a NEW row — readers pick MAX(computed_at)).
 // Migration 0112 created the table (BIGSERIAL id, UNIQUE(session_date)).
+// ─── Daily Volume Profile Levels (VP) ───
+// Computed once per day per symbol by the 5:30 PM ET cron in volume-profile-service.ts.
+// Read by paper-signal-service for the vp_shape confluence factor + by bias engine
+// for HTF context. Migration 0116 (recovery — re-creates table lost in 2026-05-19 corruption event).
+export const dailyVolumeProfileLevels = pgTable(
+  "daily_volume_profile_levels",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    symbol: text("symbol").notNull(),
+    sessionDate: date("session_date").notNull(),
+    poc: numeric("poc", { precision: 20, scale: 8 }).notNull(),
+    vah: numeric("vah", { precision: 20, scale: 8 }).notNull(),
+    val: numeric("val", { precision: 20, scale: 8 }).notNull(),
+    nakedPocs: jsonb("naked_pocs").$type<Record<string, unknown>[]>().notNull().default([]),
+    profileShape: text("profile_shape").notNull(),  // D | b | P | Thin
+    shapeConfidence: numeric("shape_confidence", { precision: 5, scale: 4 }).notNull(),
+    ibHigh: numeric("ib_high", { precision: 20, scale: 8 }),
+    ibLow: numeric("ib_low", { precision: 20, scale: 8 }),
+    ibExtensionStatus: text("ib_extension_status"),  // "inside" | "extended_up" | "extended_down" | null
+    openClassification: text("open_classification"),  // "above_vah" | "below_val" | "inside_value" | "outside_range" | null
+    computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    symbolSessionIdx: uniqueIndex("daily_vp_levels_symbol_session_idx").on(table.symbol, table.sessionDate),
+    symbolIdx: index("daily_vp_levels_symbol_idx").on(table.symbol),
+  }),
+);
+
 // Migration 0114 added `symbol` column, dropped the single-column unique
 // constraint, added composite (session_date, symbol) index, and added
 // `symbol` index. No unique constraint now — service code uses INSERT only
