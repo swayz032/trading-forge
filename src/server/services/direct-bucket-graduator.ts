@@ -1189,12 +1189,23 @@ export async function graduateBucketDirectly(opts: {
   // both ways. User's other agent confirmed via backtest: every graduated
   // strategy was long-only, no shorts.
   //
-  // New policy:
-  //   1. If LLM emitted a direction (preserved by Wave 16/17/18 through to
-  //      extractedIdea), honor it as authoritative source.
-  //   2. Else if entry_indicator is naturally bidirectional, default to "both".
-  //   3. Else fall back to "long" (existing behavior for direction-specific
-  //      archetypes like wyckoff_spring, ict_silver_bullet, etc).
+  // 2026-05-19 policy revision (W23F.W): LLM "long" emit is NOT authoritative
+  // for naturally bidirectional indicators.
+  //
+  // Prior bug: LLM extracted source materials that demo'd one side (e.g. a
+  // YouTube video showing a long BB breakout setup), emitted direction:"long",
+  // and the graduator dutifully preserved it. Result: Bollinger Band breakout
+  // strategy that should fire both at upper-band (long) AND lower-band (short)
+  // ended up long-only, halving the edge. Confirmed by external research:
+  // BB breakout, CVD, MACD crossover, etc. are textbook bidirectional.
+  //
+  // New policy for BIDIRECTIONAL_INDICATORS:
+  //   - LLM "both"   → honor "both"
+  //   - LLM "short"  → honor "short" (rare; treat as intentional explicit call)
+  //   - LLM "long"   → OVERRIDE to "both" (treat as LLM under-extraction)
+  //   - LLM missing  → default to "both"
+  // For non-bidirectional indicators (archetypes, wyckoff_spring, ict_silver_bullet):
+  //   - Whatever LLM says wins, default "long".
   const BIDIRECTIONAL_INDICATORS = new Set([
     "ema_crossover", "sma_crossover", "dema_crossover",
     "rsi_reversal", "rsi_divergence",
@@ -1207,10 +1218,28 @@ export async function graduateBucketDirectly(opts: {
   ]);
   let resolvedDirection: "long" | "short" | "both";
   const llmDirection = String((extractedIdea as any)?.direction ?? "").toLowerCase();
-  if (llmDirection === "long" || llmDirection === "short" || llmDirection === "both") {
-    resolvedDirection = llmDirection;  // LLM-emitted direction wins
-  } else if (!isArchetype && BIDIRECTIONAL_INDICATORS.has(entryIndicator)) {
-    resolvedDirection = "both";  // Naturally bidirectional indicator
+  const indicatorIsBidirectional = !isArchetype && BIDIRECTIONAL_INDICATORS.has(entryIndicator);
+  if (indicatorIsBidirectional) {
+    // Naturally-bidirectional indicator: default to "both" unless LLM
+    // explicitly says "short" (rare intentional call).
+    if (llmDirection === "short") {
+      resolvedDirection = "short";
+    } else if (llmDirection === "both") {
+      resolvedDirection = "both";
+    } else {
+      // LLM said "long" or nothing → upgrade to "both".
+      // Audit-emit so we can track how often LLM under-extracts.
+      if (llmDirection === "long") {
+        logger.info(
+          { bucketId, strategyName, entryIndicator, llmDirection },
+          "direct-graduator W23F.W: upgrading LLM 'long' to 'both' for bidirectional indicator",
+        );
+      }
+      resolvedDirection = "both";
+    }
+  } else if (llmDirection === "long" || llmDirection === "short" || llmDirection === "both") {
+    // Non-bidirectional indicator: honor LLM direction as authoritative
+    resolvedDirection = llmDirection;
   } else {
     resolvedDirection = "long";  // Conservative default for archetypes / unknown
   }
