@@ -1,0 +1,35 @@
+{
+  "input": {
+    "research_find": {
+      "source": "quantpedia",
+      "url": "https://quantpedia.com/strategies/keltner-bollinger-squeeze-mcl-crude/",
+      "title": "Keltner-Bollinger Squeeze on MCL Crude Oil — Volatility Compression Breakout",
+      "description": "Quantpedia documents a volatility-compression strategy on Micro Crude (MCL) using the John Carter squeeze setup: enter when Bollinger bands contract inside Keltner channels for at least 6 consecutive bars (the squeeze condition), then break in direction of momentum on the first bar that closes outside the prior bar's range. Tested 2019-2025, the setup fires on average 4-6 times per week on MCL 15-minute bars. Stop loss at 2.5x ATR (wider than equity index micros to absorb crude noise). Profit factor 2.04, Sharpe 1.58, win rate 61%, max drawdown $1,930. Author flags that EIA Wednesday 10:30 ET inventory release breaks the pattern - strategy must skip Wednesday 10:00-12:00 ET window.",
+      "instruments": ["MCL"],
+      "indicators_mentioned": ["Keltner", "Bollinger", "ATR", "MACD"],
+      "signal_type": "strategy_candidate"
+    },
+    "regime_context": "HIGH_VOL",
+    "current_graveyard_summary": "1 prior Keltner squeeze on MES with multiplier=2.0 in graveyard (failed OOS). MCL variant is symbol-different and uses canonical multiplier=1.5."
+  },
+  "expected_output": {
+    "name": "heavy_mcl_keltner_squeeze",
+    "description": "Volatility-compression breakout on MCL 15m: enter when Bollinger bands inside Keltner for 6+ bars then break out; 2.5 ATR trail; skip Wed 10-12 ET EIA window per Quantpedia 2019-2025.",
+    "symbol": "MCL",
+    "timeframe": "15m",
+    "direction": "both",
+    "entry_type": "volatility_expansion",
+    "entry_indicator": "keltner_squeeze",
+    "entry_params": { "bb_period": 20, "kc_period": 20, "kc_multiplier": 1.5 },
+    "entry_condition": "Enter on close outside prior-bar range after 6+ bars of squeeze (BB inside KC); skip Wed 10:00-12:00 ET EIA window.",
+    "exit_type": "trailing_stop",
+    "exit_params": { "atr_period": 14, "multiplier": 2.5 },
+    "stop_loss_atr_multiple": 2.0,
+    "take_profit_atr_multiple": 4.0,
+    "preferred_regime": "HIGH_VOL",
+    "session_filter": "RTH_ONLY",
+    "max_contracts": 8,
+    "tags": ["volatility-expansion", "keltner", "squeeze", "mcl", "quantpedia-2019-2025"]
+  },
+  "notes": "Volatility-expansion synthesis on crude. Wider stop (2.0 ATR) and wider trail (2.5 ATR) reflect MCL noise — matches the heavy_mcl.json fixture pattern. kc_multiplier=1.5 is the canonical default and avoids the graveyard MES variant which used 2.0. The EIA-window skip is documented in entry_condition; engine-level macro gate handles the actual blocking. take_profit > stop_loss; max_contracts=8 matches the heavy_mcl fixture."
+}

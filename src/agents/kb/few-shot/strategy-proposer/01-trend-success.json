@@ -1,0 +1,35 @@
+{
+  "input": {
+    "research_find": {
+      "source": "robotwealth",
+      "url": "https://robotwealth.com/ema-crossover-mnq-systematic/",
+      "title": "9/21 EMA Crossover on MNQ — Why the Confirmation Bar Matters",
+      "description": "Walk-forward analysis of a 9/21 EMA crossover on Micro Nasdaq (MNQ) 15-minute bars from 2018 to 2024 shows that adding a 2-bar confirmation requirement after the cross reduces whipsaws by 38% with only an 8% reduction in total trades captured. The strategy targets trending sessions identified by ADX above 25 and uses a 2.0 ATR trailing stop with break-even-at-1R. RTH only. Profit factor 1.93, Sharpe 1.71, max drawdown $1,840 on a 50K simulated account. The author notes the edge is concentrated in the 10:00 ET to 14:00 ET window when institutional trend-followers are active.",
+      "instruments": ["MNQ"],
+      "indicators_mentioned": ["EMA", "ADX", "ATR"],
+      "signal_type": "strategy_candidate"
+    },
+    "regime_context": "TRENDING_UP",
+    "current_graveyard_summary": "12 strategies in graveyard. 4 used 9/21 EMA on MES — different symbol so this MNQ variant is not a duplicate."
+  },
+  "expected_output": {
+    "name": "trend_mnq_ema921",
+    "description": "Long/short 9/21 EMA crossover on MNQ 15m with 2-bar confirmation, 2.0 ATR trail, break-even at 1R; RTH-only edge in trending sessions per RobotWealth walk-forward 2018-2024.",
+    "symbol": "MNQ",
+    "timeframe": "15m",
+    "direction": "both",
+    "entry_type": "trend_follow",
+    "entry_indicator": "ema_crossover",
+    "entry_params": { "fast_period": 9, "slow_period": 21, "confirmation_bars": 2 },
+    "entry_condition": "Enter long on close above 21 EMA after 9 EMA crosses above 21 EMA and price holds for 2 bars; mirror short.",
+    "exit_type": "trailing_stop",
+    "exit_params": { "atr_period": 14, "multiplier": 2.0, "break_even_at_r": 1.0 },
+    "stop_loss_atr_multiple": 1.5,
+    "take_profit_atr_multiple": 3.0,
+    "preferred_regime": "TRENDING_UP",
+    "session_filter": "RTH_ONLY",
+    "max_contracts": 10,
+    "tags": ["trend", "ema", "rth", "mnq", "robotwealth-2018-2024"]
+  },
+  "notes": "Canonical trend-follow synthesis. Source had explicit entry condition, indicator with canonical params (9/21 — both in canonical range), regime tag, ATR-based stop, and OOS walk-forward evidence. The proposer transcribed faithfully without inventing fields. Confirmation_bars=2 matches canonical range. Symbol MNQ avoids the graveyard MES variants. The break_even_at_r=1.0 is in exit_params (W5b extension) not at the DSL top level."
+}

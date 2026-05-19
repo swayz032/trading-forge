@@ -1,0 +1,34 @@
+{
+  "input": {
+    "synthesized_dsl": {
+      "name": "atr_breakout_mes_aggressive",
+      "description": "Aggressive ATR breakout on MES with wide trailing stop. Backtest 2022-2024 shows Sharpe 3.4 and 82% win rate.",
+      "symbol": "MES",
+      "timeframe": "5m",
+      "direction": "both",
+      "entry_type": "breakout",
+      "entry_indicator": "atr_breakout",
+      "entry_params": { "period": 14, "multiplier": 1.5 },
+      "entry_condition": "Enter when price breaks above (long) or below (short) prior 14-bar range plus 1.5x ATR.",
+      "exit_type": "trailing_stop",
+      "exit_params": { "atr_period": 14, "multiplier": 3.0 },
+      "stop_loss_atr_multiple": 0.8,
+      "take_profit_atr_multiple": 5.0,
+      "preferred_regime": "HIGH_VOL",
+      "session_filter": "ALL_SESSIONS",
+      "max_contracts": 15
+    },
+    "compile_check_result": { "compiled": true, "errors": [] }
+  },
+  "expected_output": {
+    "score": 2,
+    "accept": false,
+    "concerns": [
+      "high_performance_ratio_mirage: description claims Sharpe 3.4 and 82% win rate. Realistic intraday futures strategies on micros plateau at Sharpe 1.5-2.0 and win rate 50-60%. Numbers above this band are almost always artifacts of in-sample overfitting, lookahead bias, or insufficient slippage modeling. Backtest window 2022-2024 is too short (3 years) to validate.",
+      "regime_fragile_setup: backtest window only 2022-2024 (3 years) — does not include 2020 COVID crash or 2018 vol-spike. No A4 Frankenstein test result.",
+      "prop_firm_drawdown_trap: stop_loss_atr_multiple=0.8 is below canonical floor of 1.0 — single-trade risk likely under-modeled; combined with max_contracts=15 the single-trade dollar risk approaches $1,800 on MES, eating 90% of Topstep 50K's $2,000 trailing drawdown.",
+      "session_filter=ALL_SESSIONS includes overnight ETH where ATR breakout signals routinely fail to follow through into RTH. Stop-loss 0.8 ATR plus thin overnight liquidity is the canonical paper-blowout setup."
+    ]
+  },
+  "notes": "Hard-reject via anti-pattern detection. Strategy compiles fine but trips THREE anti-patterns from anti-pattern-catalog.md: high_performance_ratio_mirage (impossible Sharpe), regime_fragile_setup (window too narrow + no Frankenstein), prop_firm_drawdown_trap (under-stop + over-size). Score 2 = block lifecycle promotion, regenerate from scratch. Critic must cite anti-pattern names exactly as in anti-pattern-catalog.md so audit_log can group rejections by pattern for nightly review."
+}

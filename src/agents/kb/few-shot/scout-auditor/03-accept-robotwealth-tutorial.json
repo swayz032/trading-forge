@@ -1,0 +1,19 @@
+{
+  "input": {
+    "scout_find": {
+      "source": "unified-search-brave",
+      "title": "RobotWealth: Trading the 9/21 EMA Crossover Without Getting Whipsawed",
+      "description": "RobotWealth tutorial walks through a 9/21 EMA crossover on Micro Nasdaq (MNQ) 15-minute bars from 2018 to 2024. The author argues that the canonical 9/21 cross alone produces too many whipsaws on intraday futures and demonstrates that adding a 2-bar confirmation requirement (price must hold above the slow EMA for 2 bars after the cross) reduces whipsaws by 38% with only an 8% reduction in total trades captured. Stop loss is 1.5 ATR; trailing exit is 2.0 ATR with break-even at 1R after the position becomes profitable. Strategy works best in TRENDING_UP and TRENDING_DOWN regimes (ADX above 25). Reported single-account 50K stats: profit factor 1.93, Sharpe 1.71, average daily P&L $284, max drawdown $1,840. RTH only. Author caveats apply to news days but does not specify a hard rule.",
+      "url": "https://robotwealth.com/ema-crossover-mnq-systematic/",
+      "confidence_score": 0.78,
+      "instruments_mentioned": ["MNQ"],
+      "indicators_mentioned": ["EMA", "ATR", "ADX"]
+    }
+  },
+  "expected_output": {
+    "score": 7,
+    "accept": true,
+    "reason": "RobotWealth tutorial with named strategy, canonical params (9/21 EMA, 2-bar confirmation — all in canonical range), explicit ADX-based regime filter, ATR-based stop and trail with break-even, and reported OOS metrics. Synthesizer can produce a clean TRENDING DSL. Confidence score 0.78 is moderate but content quality is high."
+  },
+  "notes": "RobotWealth is a known good source for systematic intraday futures. Score 7 because content is tutorial-grade rather than research-paper-grade — fewer formal robustness claims. Still highly extractable — accept."
+}

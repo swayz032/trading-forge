@@ -1,0 +1,35 @@
+{
+  "input": {
+    "research_find": {
+      "source": "alphaarchitect",
+      "url": "https://alphaarchitect.com/2026/03/vwap-fade-mnq-rth-range-bound-2026/",
+      "title": "VWAP Fade on MNQ in Range-Bound Sessions — A 2026 Replication",
+      "description": "Researchers replicated the classic intraday VWAP fade on MNQ 5-minute bars during range-bound sessions (ADX < 22) from January 2022 to March 2026. Entry trigger: price extends 1.5 standard deviations above session VWAP, holds for 2 bars, then closes back inside the band. Exit on return to VWAP or 1.5 ATR adverse. Trade only 10:00 ET to 14:30 ET (post opening range, pre last-hour drift). Single-account 50K stats: profit factor 1.89, Sharpe 1.62, average daily P&L $312, max drawdown $1,720, 58% win rate by days. Critical: must disable on news days (FOMC, CPI, NFP) — the authors note 80% of failures clustered around scheduled releases.",
+      "instruments": ["MNQ"],
+      "indicators_mentioned": ["VWAP", "ATR", "ADX"],
+      "signal_type": "strategy_candidate"
+    },
+    "regime_context": "RANGE_BOUND",
+    "current_graveyard_summary": "No prior VWAP-fade-on-MNQ in graveyard. 2 graveyard MES VWAP fades both lacked confirmation_bars filter."
+  },
+  "expected_output": {
+    "name": "range_fade_mnq_vwap",
+    "description": "Fade extensions of MNQ price 1.5 std-dev above/below session VWAP during range-bound sessions; 2-bar confirmation; RTH-only edge per AlphaArchitect 2022-2026 replication.",
+    "symbol": "MNQ",
+    "timeframe": "5m",
+    "direction": "both",
+    "entry_type": "mean_reversion",
+    "entry_indicator": "vwap_fade",
+    "entry_params": { "deviation_threshold": 1.5, "confirmation_bars": 2 },
+    "entry_condition": "Enter short when price extends 1.5 sigma above VWAP for 2 bars and closes back inside band; mirror long. Disable on FOMC/CPI/NFP days.",
+    "exit_type": "atr_multiple",
+    "exit_params": { "multiplier": 1.5 },
+    "stop_loss_atr_multiple": 1.5,
+    "take_profit_atr_multiple": 2.5,
+    "preferred_regime": "RANGE_BOUND",
+    "session_filter": "RTH_ONLY",
+    "max_contracts": 5,
+    "tags": ["mean-reversion", "vwap", "rth", "mnq", "alphaarchitect-2022-2026"]
+  },
+  "notes": "Mean-reversion synthesis from a peer-reviewed replication. Strategy correctly tagged RANGE_BOUND with bypass_news_blackout left at default (false) — the news day disable is enforced by the macro gate, not the strategy logic. deviation_threshold=1.5 sits in canonical range (0.5-3.0). Note that take_profit_atr_multiple > stop_loss_atr_multiple, satisfying schema invariant. max_contracts=5 conservative for a fade strategy where multiple losers can stack."
+}

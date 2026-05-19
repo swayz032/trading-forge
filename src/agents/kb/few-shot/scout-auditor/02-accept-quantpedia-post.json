@@ -1,0 +1,19 @@
+{
+  "input": {
+    "scout_find": {
+      "source": "unified-search-tavily",
+      "title": "Quantpedia: Range Fade with VWAP Anchor on E-mini Nasdaq Futures",
+      "description": "Quantpedia documents a range-bound fade strategy using session VWAP as anchor on Micro Nasdaq (MNQ) and E-mini Nasdaq (NQ) futures. Tested on 5-minute bars from 2018 to 2025. Entry: price extends 1.5 standard deviations above session VWAP, holds for 2 bars, then reverts. Exit: return to VWAP or 1.5 ATR adverse. Filter: ADX must be below 22 (range-bound regime confirmed). Trade window: 10:00 ET to 14:30 ET only (post opening range, pre last-hour drift). Reported metrics on MNQ 50K simulated account: profit factor 1.93, Sharpe 1.65, win rate 59%, max drawdown $1,810, average daily P&L $295. Authors note a critical caveat: strategy must be disabled on FOMC, CPI, NFP days where VWAP becomes unreliable.",
+      "url": "https://quantpedia.com/strategies/range-fade-vwap-anchor-emini-nasdaq",
+      "confidence_score": 0.84,
+      "instruments_mentioned": ["MNQ", "NQ"],
+      "indicators_mentioned": ["VWAP", "ATR", "ADX"]
+    }
+  },
+  "expected_output": {
+    "score": 8,
+    "accept": true,
+    "reason": "Quantpedia post with named strategy, explicit entry indicator (VWAP fade), specific parameter (1.5 std-dev, 2-bar confirmation), explicit ADX < 22 regime gate, explicit time-of-day window, and documented OOS performance. News-day caveat is honest. Synthesizer can produce a clean RANGE_BOUND DSL without fabrication."
+  },
+  "notes": "Quantpedia is a known good source. Score 8 because the post is structured but lacks the formal walk-forward methodology of arXiv (no explicit IS/OOS fold split). Still clearly extractable — accept."
+}

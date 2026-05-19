@@ -1,0 +1,35 @@
+{
+  "input": {
+    "video_metadata": {
+      "youtube_url": "https://www.youtube.com/watch?v=qVwapAfDxYz",
+      "title": "The VWAP Fade I Trade Every Day on Micro Nasdaq | Quant Walkthrough",
+      "channel": "Algorithmic Edge",
+      "duration_seconds": 1247
+    },
+    "transcript_snippet": "OK so today I want to walk through the exact VWAP fade setup I trade on Micro Nasdaq, MNQ. Five-minute bars, regular trading hours only — I do not touch this overnight. The setup is simple. I'm waiting for price to get one and a half standard deviations above session VWAP. Then I want it to hold there for at least two bars. Once it holds and starts to roll back inside, that's my entry — short. I size based on ATR, my stop is one and a half times ATR — usually that puts me about twelve points away on MNQ. My target is back to VWAP or one and a half ATR adverse, whichever hits first. The big rule: ADX has to be below twenty-two. If we're trending, this trade does not work — period. I learned that the hard way last year, blew through three Topstep accounts trying to fade trends. Disable this strategy on FOMC days, CPI mornings, NFP. The numbers I run on a fifty K simulated account: profit factor about one point nine, Sharpe one point six, sixty percent win rate. Average daily P&L around three hundred bucks. So that's the strategy."
+  },
+  "expected_output": {
+    "strategies": [
+      {
+        "name": "vwap_fade_mnq_intraday",
+        "description": "Fade extensions of MNQ price 1.5 std-dev above/below session VWAP after 2-bar hold; ADX < 22 regime gate; RTH only; disable on FOMC/CPI/NFP per Algorithmic Edge YouTube walkthrough.",
+        "symbol": "MNQ",
+        "timeframe": "5m",
+        "direction": "both",
+        "entry_type": "mean_reversion",
+        "entry_indicator": "vwap_fade",
+        "entry_params": { "deviation_threshold": 1.5, "confirmation_bars": 2 },
+        "entry_condition": "Enter short when price extends 1.5 sigma above VWAP for 2 bars then rolls back inside; mirror long. Skip FOMC/CPI/NFP days. Require ADX < 22.",
+        "exit_type": "atr_multiple",
+        "exit_params": { "multiplier": 1.5 },
+        "stop_loss_atr_multiple": 1.5,
+        "take_profit_atr_multiple": 2.0,
+        "preferred_regime": "RANGE_BOUND",
+        "session_filter": "RTH_ONLY",
+        "max_contracts": 5,
+        "tags": ["vwap-fade", "mnq", "youtube-extracted", "algorithmic-edge"]
+      }
+    ]
+  },
+  "notes": "Single-strategy extraction example. Video transcript was explicit about every required field: symbol (MNQ), timeframe (5m), entry trigger (1.5 sigma + 2-bar hold), exit (VWAP or 1.5 ATR), stop (1.5 ATR), regime (ADX < 22 → RANGE_BOUND), session (RTH), and event filter. Extractor produced one DSL faithful to the transcript. Note: deviation_threshold=1.5 (canonical range), confirmation_bars=2 (canonical), no fabricated parameters. take_profit > stop_loss preserved. This is the gold-standard extraction case."
+}

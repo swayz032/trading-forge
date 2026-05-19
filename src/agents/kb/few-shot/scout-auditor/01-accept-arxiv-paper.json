@@ -1,0 +1,19 @@
+{
+  "input": {
+    "scout_find": {
+      "source": "unified-search-exa",
+      "title": "Adaptive ATR Breakout on Micro Equity Index Futures: A Walk-Forward Robustness Study (arXiv:2603.04129)",
+      "description": "We evaluate an adaptive ATR-based breakout strategy on MES, MNQ, and MCL using 5-minute bars from 2019 to 2025. The strategy enters on a close beyond the prior 14-bar high plus 1.5x ATR (multiplier set across robust 1.0-2.5 plateau verified via Optuna 800-trial Bayesian search). Stop loss at 1.5 ATR, trailing exit at 2.0 ATR. Walk-forward analysis with 12-month IS / 3-month OOS folds shows OOS Sharpe of 1.71 (90% of IS Sharpe), profit factor 1.82, average daily P&L $287 on a 50K simulated account. Critical finding: the strategy's edge is concentrated in the OPENING_RANGE regime — performance during the 9:30-10:30 ET window is 2.3x the rest of RTH. Authors recommend session filter to RTH_ONLY with explicit OPENING_RANGE preferred regime tag.",
+      "url": "https://arxiv.org/abs/2603.04129",
+      "confidence_score": 0.91,
+      "instruments_mentioned": ["MES", "MNQ", "MCL"],
+      "indicators_mentioned": ["ATR", "Optuna"]
+    }
+  },
+  "expected_output": {
+    "score": 9,
+    "accept": true,
+    "reason": "Peer-reviewed arXiv paper with explicit entry indicator (ATR breakout), explicit parameter ranges with robustness study (1.0-2.5 plateau, 800-trial Optuna), explicit stop/exit (1.5 ATR / 2.0 ATR trail), explicit OOS evidence (1.71 Sharpe walk-forward), explicit regime tag (OPENING_RANGE), and explicit symbols (MES/MNQ/MCL). Synthesizer can produce a clean DSL with no fabrication."
+  },
+  "notes": "Strong-accept example. arXiv source + explicit parameter ranges + walk-forward OOS evidence + regime tag + symbol set = everything the proposer needs to synthesize without inventing. Score 9 (not 10) leaves headroom for even-better finds with multi-regime robustness data."
+}

@@ -1,16 +1,41 @@
 import { Router } from "express";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { AgentService } from "../services/agent-service.js";
 import { analyzeMarket } from "../services/regime-service.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
-import { auditLog } from "../db/schema.js";
-import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import { auditLog, strategyPendingBuckets, strategyPendingMentions, systemJournal, strategies } from "../db/schema.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { eq, desc, and, sql, inArray, countDistinct } from "drizzle-orm";
 import { OllamaClient } from "../services/ollama-client.js";
+import { callOpenAI, callOpenAIOrFallback } from "../services/model-router.js";
 import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
 import { requireLiveN8n } from "../middleware/require-live-n8n.js";
+import { computeFingerprintHash, computeConceptFingerprintHash, normalizeConceptName, extractEntryArchetype, normalizeExitType } from "../services/strategy-fingerprint.js";
+import { runParallelDiscovery } from "../services/parallel-broker.js";
+import { runExaDiscovery } from "../services/exa-broker.js";
+import { runBraveDiscovery } from "../services/brave-search-broker.js";
+import { broadcastSSE } from "./sse.js";
+import { notifyInfo } from "../services/notification-service.js";
+import {
+  crossValidatorCallsTotal,
+  crossValidatorLatencySeconds,
+  pendingBucketsGraduatedTotal,
+  pendingBucketsTotal,
+} from "../lib/metrics-registry.js";
+
+// ─── Correlation ID helper ───────────────────────────────────────
+// Extracts or generates a correlation ID for the current request.
+// Follows the standard pattern: x-correlation-id header → req.id → new UUID.
+function getCorrelationId(req: import("express").Request): string {
+  const header = req.headers["x-correlation-id"];
+  if (typeof header === "string" && header.length > 0) return header;
+  if (typeof (req as any).id === "string") return (req as any).id;
+  return randomUUID();
+}
 
 export const agentRoutes = Router();
 const agentService = new AgentService();
@@ -80,7 +105,7 @@ const critiqueSchema = z
   .object({
     backtestId: z.string().uuid().optional(),
     results: z.record(z.unknown()).optional(),
-    model: z.string().optional().default("llama3:8b"),
+    model: z.string().optional().default("llama3.1:8b"),
   })
   .refine((data) => data.backtestId || data.results, {
     message: "Either backtestId or results must be provided",
@@ -120,6 +145,15 @@ const scoutIdeaSchema = z.object({
   confidence_score: z.number().min(0).max(1).optional(),
   instruments: z.array(z.string()).optional(),
   indicators_mentioned: z.array(z.string()).optional(),
+  // Pass 4: signal_type discriminates strategy_candidate vs market_news_intel
+  // vs research_find. Backward-compatible default = "strategy_candidate"
+  // applied at write time in agent-service.scoutIdeas.
+  signal_type: z.enum(["strategy_candidate", "market_news_intel", "research_find"]).optional(),
+  // Optional fields used by Tier-1 regex pre-filter (Pass 4). Surfaced here
+  // so n8n workflows can submit strict-shape ideas through the legacy route
+  // and still get screened.
+  entry_rules: z.string().optional(),
+  concept_name: z.string().optional(),
 });
 
 const scoutSchema = z.object({
@@ -140,8 +174,16 @@ const strictScoutIdeaSchema = z.object({
   source_url: z.string().url(),
   regime: z.string().min(1),               // TRENDING_UP | RANGE_BOUND | etc.
   concept_name: z.string().min(1),         // canonical concept (e.g. "trend_follow_breakout")
-  source_provider: z.enum(["brave", "tavily", "exa", "parallel", "reddit", "manual"]),
+  // Pass 19: added "graduated_bucket" — the ONLY source that may create a
+  // strategy row. External callers that pass any other value get HTTP 423.
+  source_provider: z.enum(["brave", "tavily", "exa", "parallel", "reddit", "manual", "graduated_bucket"]),
   confidence_score: z.number().min(0).max(1).optional(),
+  // Pass 4: signal_type optional on strict schema as well. Default treatment
+  // = "strategy_candidate". 5M news-intel runs will set "market_news_intel".
+  signal_type: z.enum(["strategy_candidate", "market_news_intel", "research_find"]).optional(),
+  // Pass 19: bucket_id propagated from graduation so runStrategyFromDSL can
+  // backfill graduated_strategy_id on the bucket immediately after row insert.
+  bucket_id: z.string().optional(),
 });
 
 const strictScoutSchema = z.object({
@@ -320,7 +362,7 @@ agentRoutes.post("/scout-ideas", idempotencyMiddleware, async (req, res) => {
   }
 
   try {
-    const result = await agentService.scoutIdeas(parsed.data.ideas);
+    const result = await agentService.scoutIdeas(parsed.data.ideas, { correlationId: req.id ?? undefined });
     res.status(201).json(result);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -330,6 +372,14 @@ agentRoutes.post("/scout-ideas", idempotencyMiddleware, async (req, res) => {
 });
 
 // ─── POST /api/agent/scout-ideas/strict ──────────────────────────
+// Pass 19: Cross-validation gate — only calls with source_provider='graduated_bucket'
+// are allowed to create strategy rows. Direct scout calls from external sources
+// are rejected with HTTP 423 ("Cross-validation required: post via /scout-ideas/pending
+// instead."). Internal graduation calls from runGraduation() use 'graduated_bucket'.
+//
+// Original: accepted all scout providers directly, creating journal entries + strategies.
+// New:      only accepts 'graduated_bucket' as source_provider; all others → 423.
+//
 // Enforces the full structured contract — anything off-schema gets 400'd.
 // This is what stops OpenClaw's free-form chatter from leaking into the
 // journal and downstream Discord channels.
@@ -345,32 +395,570 @@ agentRoutes.post("/scout-ideas/strict", requireLiveN8n({ soft: true }), async (r
     return;
   }
 
+  // Pass 19: Cross-validation gate — reject any call where the ideas do not
+  // come from the graduated_bucket path. This is the hard enforcement that
+  // no strategy row is created without cross-validation provenance.
+  const nonGraduated = parsed.data.ideas.filter((i) => i.source_provider !== "graduated_bucket");
+  if (nonGraduated.length > 0) {
+    const blockedProviders = [...new Set(nonGraduated.map((i) => i.source_provider))];
+    logger.info(
+      { blockedProviders, count: nonGraduated.length },
+      "scout-ideas/strict: rejected non-graduated_bucket call (Pass 19 gate)",
+    );
+    res.status(423).json({
+      error: "Cross-validation required: post via /scout-ideas/pending instead.",
+      reason: "pass19_cross_validation_required",
+      blocked_providers: blockedProviders,
+      hint: "All scout ideas must accumulate ≥3 distinct-source confirmations in the pending bucket before reaching the strategies table.",
+    });
+    return;
+  }
+
   // M5 fix — collapse provider sources into the legacy enum so downstream
-  // runStrategyFromDSL doesn't choke on brave/tavily/exa/parallel/reddit.
+  // runStrategyFromDSL doesn't choke on graduated_bucket.
   // Original provider stays in `tags` for traceability.
-  const legacyShaped = parsed.data.ideas.map((i) => ({
-    source: "openclaw" as const,
-    title: i.thesis.slice(0, 200),
-    description: `${i.thesis}\n\nEntry: ${i.entry_rules}\nExit: ${i.exit_rules}\nRisk: ${i.risk_rules}\nRegime: ${i.regime}`,
-    url: i.source_url,
-    source_quality: "high" as const,
-    confidence_score: i.confidence_score,
-    instruments: [i.market],
-    indicators_mentioned: [i.concept_name, `provider:${i.source_provider}`],
-  }));
+  //
+  // Pass 21: Stop coercing graduated_bucket entries to "openclaw" — preserve
+  // the source on the journal row so periodic drain auto-detects it without
+  // needing override or bucket_id in params. The earlier fall-through hid the
+  // graduated provenance from drainScoutedIdeas's auto-detect path.
+  const legacyShaped = parsed.data.ideas.map((i) => {
+    const isGraduated = i.source_provider === "graduated_bucket";
+    return {
+      source: (isGraduated ? "graduated_bucket" : "openclaw") as "openclaw" | "graduated_bucket",
+      title: i.thesis.slice(0, 200),
+      description: `${i.thesis}\n\nEntry: ${i.entry_rules}\nExit: ${i.exit_rules}\nRisk: ${i.risk_rules}\nRegime: ${i.regime}`,
+      url: i.source_url,
+      source_quality: "high" as const,
+      confidence_score: i.confidence_score,
+      instruments: [i.market],
+      indicators_mentioned: [i.concept_name, `provider:${i.source_provider}`],
+      // Pass 19: carry bucket_id through so drainScoutedIdeas → runStrategyFromDSL
+      // can backfill graduated_strategy_id on the bucket immediately.
+      bucket_id: (i as any).bucket_id ?? undefined,
+    };
+  });
 
   try {
-    const result = await agentService.scoutIdeas(legacyShaped);
+    const result = await agentService.scoutIdeas(legacyShaped, { correlationId: req.id ?? undefined });
 
     // M4 fix — fire-and-forget drain so strict scouts don't dead-end in journal.
-    // drainScoutedIdeas internally checks pipeline pause; safe to call always.
+    // Pass 19: drainScoutedIdeas now passes source='graduated_bucket' so the
+    // assertCrossValidatedSource guard in runStrategyFromDSL passes.
     agentService
-      .drainScoutedIdeas(parsed.data.ideas.length)
+      .drainScoutedIdeas(parsed.data.ideas.length, { source: "graduated_bucket", bucketId: (parsed.data.ideas[0] as any).bucket_id ?? undefined })
       .catch((err) => req.log.warn({ err }, "scout-ideas/strict: post-scout drain failed"));
 
     res.status(201).json({ ...result, schema: "strict", drainTriggered: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── POST /api/agent/transcript-extract ──────────────────────────
+// Pass 5 Branch D — receives YouTube transcript from 5O n8n workflow,
+// runs GPT-5-mini transcript_extractor role to extract candidate strategies,
+// returns array of strategies (each enriched with source_url + provider).
+// Caller (5O) is responsible for posting each strategy to /scout-ideas/strict.
+
+const transcriptExtractSchema = z.object({
+  youtubeUrl: z.string().url(),
+  title: z.string().min(1).max(500),
+  channel: z.string().optional().default(""),
+  transcript: z.string().min(200),
+});
+
+agentRoutes.post("/transcript-extract", idempotencyMiddleware, async (req, res) => {
+  const parsed = transcriptExtractSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+
+  const { youtubeUrl, title, channel, transcript } = parsed.data;
+  const truncated = transcript.slice(0, 8000);
+  const userPayload = JSON.stringify({
+    youtube_url: youtubeUrl,
+    title,
+    channel,
+    transcript_text: truncated,
+  });
+
+  try {
+    const raw = await callOpenAI("transcript_extractor", [
+      { role: "user", content: userPayload },
+    ]);
+
+    if (!raw) {
+      // Cloud unavailable / circuit open / empty response — return empty list,
+      // never error the n8n workflow.
+      res.status(200).json({ strategies: [] });
+      return;
+    }
+
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(raw);
+    } catch (err) {
+      logger.warn({ err, youtubeUrl }, "transcript-extract: model returned non-JSON");
+      res.status(200).json({ strategies: [] });
+      return;
+    }
+
+    const strategiesIn = (parsedJson as { strategies?: unknown }).strategies;
+    if (!Array.isArray(strategiesIn)) {
+      res.status(200).json({ strategies: [] });
+      return;
+    }
+
+    const strategies = strategiesIn.map((s) => ({
+      ...(s as Record<string, unknown>),
+      source_url: youtubeUrl,
+      source_provider: "youtube-transcript",
+    }));
+
+    res.json({ strategies });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, youtubeUrl }, "transcript-extract failed");
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── POST /api/agent/scout-extract ───────────────────────────────
+// Pass 16 — receives crawled web markdown (Brave News page bodies, Tavily
+// blog crawl output, parallel/exa results) from the 5L/5M/5J n8n workflows,
+// runs the GPT-5-mini transcript_extractor role (re-used: same job —
+// "extract a complete systematic strategy from long-form text"), and
+// returns ready-to-forward strict-scout ideas.
+//
+// Why re-use transcript_extractor instead of a new role:
+//   - Identical job: read prose, extract MES/MNQ/MCL strategies, SKIP if incomplete.
+//   - Conservative-skip behavior already baked in (won't fabricate params).
+//   - KB cards (strategy-schema-snapshot + indicator-catalog) already attached.
+//   - Avoids prompt sprawl and new token-budget allocation.
+//
+// Caller (n8n) is responsible for posting each returned idea to
+// /scout-ideas/strict one-at-a-time, throttled by a 3s Wait, to respect
+// the backend rate limiter that 5M Brave News was previously tripping.
+
+const scoutExtractSchema = z.object({
+  sourceUrl: z.string().url(),
+  markdown: z.string().min(80).max(100_000), // 100KB guard; short Brave snippets allowed — model returns empty if insufficient
+  sourceProvider: z.enum(["brave", "tavily", "parallel", "exa"]),
+  title: z.string().max(500).optional().default(""),
+});
+
+// Strategy LOGIC is identical across contract sizes — opening range breakout on
+// ES is the SAME setup on MES. Per operator directive (Pass 19 Track F), ES/NQ/CL
+// articles are valid strategy sources; we auto-remap to the micro symbol so the
+// safe (1/10th contract size) version is what lands in the strategies table.
+// CLAUDE.md §13 Don't rule applies to LIVE EXECUTION contract sizing, not to
+// strategy ideation. The DSL stores micro symbol; position sizing math uses
+// MICRO point values, preserving the safety guarantee.
+const MARKET_REMAP: Record<string, "MES" | "MNQ" | "MCL"> = {
+  MES: "MES", MNQ: "MNQ", MCL: "MCL",
+  ES:  "MES", NQ:  "MNQ", CL:  "MCL",
+  "/ES": "MES", "/NQ": "MNQ", "/CL": "MCL",
+  "ES1!": "MES", "NQ1!": "MNQ", "CL1!": "MCL",
+  EMINI_SP: "MES", EMINI_NQ: "MNQ",
+  SPY: "MES",  // SPY equity strategies translate to MES (same underlying SPX index)
+  QQQ: "MNQ",  // QQQ equity strategies translate to MNQ (same underlying NDX index)
+};
+
+// Wave 10: ES→MES, NQ→MNQ, CL→MCL conversions lose 90% of dollar-risk exposure
+// because point values differ 10× (ES=$50/pt → MES=$5/pt). Any max_contracts
+// authored against a mini symbol must be multiplied by 10× when remapped to the
+// micro equivalent so the intended dollar-risk is preserved.
+//
+// Already-micro symbols (MES/MNQ/MCL) and non-futures proxies (SPY/QQQ) are 1×
+// because the source contract size already refers to the micro instrument.
+const MARKET_SIZE_MULTIPLIER: Record<string, number> = {
+  // Mini → Micro: 10× (point value ratio is exactly 10 for all three pairs)
+  ES: 10, NQ: 10, CL: 10,
+  "/ES": 10, "/NQ": 10, "/CL": 10,
+  "ES1!": 10, "NQ1!": 10, "CL1!": 10,
+  EMINI_SP: 10, EMINI_NQ: 10,
+  // Already micro or equity proxy → 1× (no scale needed)
+  MES: 1, MNQ: 1, MCL: 1,
+  SPY: 1, QQQ: 1,
+};
+
+interface RemapResult {
+  market: "MES" | "MNQ" | "MCL";
+  /** Multiply any max_contracts / base_contracts / tier_increment by this value. */
+  sizeMultiplier: number;
+}
+
+function remapMarket(raw: string): RemapResult | null {
+  const k = String(raw ?? "").toUpperCase().trim();
+  const market = MARKET_REMAP[k] ?? null;
+  if (!market) return null;
+  const sizeMultiplier = MARKET_SIZE_MULTIPLIER[k] ?? 1;
+  return { market, sizeMultiplier };
+}
+
+// Pass 21 — CLAUDE.md §13 hard block: Trading Forge trades MES/MNQ/MCL micro
+// futures EXCLUSIVELY. Options strategies (straddles, strangles, iron condors,
+// calendar spreads, etc.) violate the framework even when discovered alongside
+// futures content. Volatilitybox-style "use micro futures FOR volatility/options
+// trading" articles also contaminate buckets because they conflate options
+// edges with futures execution. This filter blocks the whole extraction
+// payload — not just one idea — when options-strategy markers appear.
+//
+// Conservative: matches whole-word options-derivative terms ONLY. Won't catch
+// "volatility" alone (legit futures concept) but DOES catch "selling premium",
+// "iron condor", "credit spread", "covered call", etc.
+const OPTIONS_FORBIDDEN_PATTERNS = [
+  /\b(straddle|strangle|iron condor|iron butterfly|butterfly spread|calendar spread|diagonal spread|credit spread|debit spread|vertical spread|covered call|cash[- ]secured put|short put|short call|naked call|naked put|protective put|protective call|collar(?!\s*back)|ratio spread|jade lizard|broken wing)s?\b/i,
+  /\bsell(?:ing)?\s+(?:the\s+)?(?:premium|option|put|call)\b/i,
+  /\bbuy(?:ing)?\s+(?:the\s+)?(?:straddle|strangle|put|call|premium)\b/i,
+  /\b(?:options?\s+(?:trader|strateg|premium|chain|expiration|expir))/i,
+  /\b(?:theta|delta|gamma|vega)\s+(?:harvest|decay|trade|strategy)\b/i,
+  /\b(?:0DTE|weekly|monthly)\s+(?:options?|expir)/i,
+];
+
+function containsForbiddenOptionsContent(text: string): { blocked: boolean; matched?: string } {
+  if (!text) return { blocked: false };
+  for (const p of OPTIONS_FORBIDDEN_PATTERNS) {
+    const m = text.match(p);
+    if (m) return { blocked: true, matched: m[0] };
+  }
+  return { blocked: false };
+}
+
+agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
+  const parsed = scoutExtractSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+
+  // Pass 21 — CLAUDE.md §13 hard block at INPUT: if the markdown contains
+  // options-derivative content, refuse to even run the LLM. Saves tokens AND
+  // prevents the extractor from leaking options strategies into downstream
+  // buckets. URL-level filter too — block obviously options-themed sources.
+  const optionsCheck = containsForbiddenOptionsContent(parsed.data.markdown);
+  const urlCheck = containsForbiddenOptionsContent(parsed.data.sourceUrl);
+  if (optionsCheck.blocked || urlCheck.blocked) {
+    logger.warn(
+      { sourceUrl: parsed.data.sourceUrl, matched: optionsCheck.matched ?? urlCheck.matched },
+      "scout-extract: CLAUDE.md §13 block — options-derivative content rejected"
+    );
+    res.status(200).json({
+      extracted: false,
+      reason: "options_content_forbidden",
+      matched: optionsCheck.matched ?? urlCheck.matched,
+      ideas: [],
+    });
+    return;
+  }
+
+  const { sourceUrl, markdown, sourceProvider, title } = parsed.data;
+
+  // Pass 21 Fix #2: chunked extraction. Many YouTube transcripts (and long
+  // articles) ramble for 3-5 minutes before specifics. A single 8K-char window
+  // anchored at the start misses the meat. We try the full window first; on
+  // empty result, fall back to 3 overlapping 4K-char chunks (start/mid/end)
+  // and merge unique strategies by concept_name.
+  // Sentinel: extractFromChunk returns this symbol when the model response
+  // is not valid JSON. Distinguishes "garbage response" (non_json) from
+  // "valid JSON with empty strategies array" (no_strategy_content).
+  const NON_JSON_SENTINEL = Symbol("non_json");
+
+  // Wave 11 — capture LLM-provided `empty_reason` when strategies array is empty.
+  // The prompt v5 requires the LLM to populate one of 8 categories so future tuning
+  // can see WHICH content type is being dropped. Each chunk may overwrite; if any
+  // chunk yielded strategies we discard the captured reason.
+  const VALID_EMPTY_REASONS = new Set([
+    "no_strategy_content", "portfolio_theory", "missing_params",
+    "promotional", "wrong_instrument", "speaker_uncertain",
+    "transcript_corrupt", "other",
+  ]);
+  let lastEmptyReason: string | null = null;
+  let lastEmptyReasonDetail: string | null = null;
+  async function extractFromChunk(chunk: string): Promise<unknown[] | typeof NON_JSON_SENTINEL | null> {
+    const userPayload = JSON.stringify({
+      youtube_url: sourceUrl,
+      title: title || sourceUrl,
+      channel: sourceProvider,
+      transcript_text: chunk,
+    });
+    const raw = await callOpenAIOrFallback("transcript_extractor", [
+      { role: "user", content: userPayload },
+    ]);
+    if (!raw) return null; // model unavailable
+    try {
+      const obj = JSON.parse(raw) as { strategies?: unknown; empty_reason?: unknown; empty_reason_detail?: unknown };
+      const strategies = Array.isArray(obj.strategies) ? obj.strategies : [];
+      if (strategies.length === 0) {
+        // Validate against allowed categories — discard anything else as "other"
+        // so the audit-log enum stays predictable for downstream filtering.
+        const rawReason = typeof obj.empty_reason === "string" ? obj.empty_reason : null;
+        lastEmptyReason = rawReason && VALID_EMPTY_REASONS.has(rawReason) ? rawReason : (rawReason ? "other" : null);
+        lastEmptyReasonDetail = typeof obj.empty_reason_detail === "string" ? obj.empty_reason_detail.slice(0, 500) : null;
+      } else {
+        lastEmptyReason = null;
+        lastEmptyReasonDetail = null;
+      }
+      return strategies;
+    } catch {
+      // Model returned non-JSON — propagate as sentinel so caller can emit
+      // the distinct "non_json" reason rather than "no_strategy_content".
+      return NON_JSON_SENTINEL;
+    }
+  }
+
+  try {
+    // First pass — full window from start (8K).
+    let strategiesIn = await extractFromChunk(markdown.slice(0, 8000));
+    if (strategiesIn === null) {
+      res.status(200).json({ extracted: false, reason: "model_unavailable", ideas: [] });
+      return;
+    }
+    // Non-JSON response from model — emit distinct reason for observability.
+    // Operators need to distinguish "LLM returned garbage" from "LLM returned
+    // valid JSON with no strategies" when diagnosing extraction yield issues.
+    if (strategiesIn === NON_JSON_SENTINEL) {
+      res.status(200).json({ extracted: false, reason: "non_json", ideas: [] });
+      return;
+    }
+
+    // Chunked fallback when first pass empty AND source is long enough to chunk.
+    if ((strategiesIn as unknown[]).length === 0 && markdown.length > 4000) {
+      const chunks = [
+        markdown.slice(0, 4000),
+        markdown.slice(Math.floor(markdown.length / 2) - 2000, Math.floor(markdown.length / 2) + 2000),
+        markdown.slice(Math.max(0, markdown.length - 4000)),
+      ];
+      const merged: unknown[] = [];
+      const seenConcepts = new Set<string>();
+      for (const c of chunks) {
+        const res2 = await extractFromChunk(c);
+        if (!res2 || res2 === NON_JSON_SENTINEL) continue;
+        for (const s of (res2 as unknown[])) {
+          const cn = (s as { concept_name?: string }).concept_name || (s as { name?: string }).name || "";
+          if (seenConcepts.has(cn)) continue;
+          seenConcepts.add(cn);
+          merged.push(s);
+        }
+      }
+      strategiesIn = merged;
+      logger.info({ sourceUrl, chunked: true, found: merged.length }, "scout-extract chunked fallback");
+    }
+
+    if (!Array.isArray(strategiesIn) || (strategiesIn as unknown[]).length === 0) {
+      // Wave 11 — audit the empty result with the LLM-captured category so future
+      // extractor-tuning can see WHICH content class is being dropped (most-common
+      // category in 7d will drive prompt/source-selection improvements).
+      const llmReason = lastEmptyReason ?? "no_strategy_content";
+      try {
+        await insertAuditRow({
+          action: "scout_extract.empty_reasoned",
+          entityType: "scout_extract",
+          entityId: null,
+          status: "success",
+          decisionAuthority: "agent",
+          result: {
+            sourceUrl,
+            title: title?.slice(0, 256) ?? null,
+            sourceProvider,
+            empty_reason: llmReason,
+            empty_reason_detail: lastEmptyReasonDetail,
+            transcript_length: markdown.length,
+          },
+          correlationId: (req as { id?: string }).id ?? null,
+        });
+      } catch (auditErr) {
+        // Audit failures must NOT block the route response. Log and continue.
+        logger.warn({ err: auditErr instanceof Error ? auditErr.message : String(auditErr), sourceUrl }, "scout-extract: empty_reasoned audit insert failed");
+      }
+      res.status(200).json({
+        extracted: false,
+        reason: llmReason,
+        empty_reason_detail: lastEmptyReasonDetail,
+        ideas: [],
+      });
+      return;
+    }
+
+    // Transform DSL-shaped output → strict scout shape.
+    // CLAUDE.md §13 enforcement: MES/MNQ/MCL only — silently drop ES/NQ/CL/etc.
+    const ideas: Array<Record<string, unknown>> = [];
+    for (const sRaw of strategiesIn) {
+      const s = sRaw as Record<string, unknown>;
+      const rawSymbol = typeof s.symbol === "string" ? s.symbol : "";
+      const remapped = remapMarket(rawSymbol);
+      if (!remapped) continue; // unmapped symbol (e.g. forex, single-stock options) — drop
+
+      const { market, sizeMultiplier } = remapped;
+
+      // Wave 10 Task 1: scale contract counts when remapping from mini → micro.
+      // ES→MES / NQ→MNQ / CL→MCL: point value drops 10×, so contracts must rise
+      // 10× to preserve the same dollar-risk exposure. Write an audit row for
+      // every non-1× scaling so the 90-day reconstruction mandate is honored.
+      const rawMaxContracts = typeof s.max_contracts === "number" ? s.max_contracts : null;
+      const rawBaseContracts = typeof s.base_contracts === "number" ? s.base_contracts : null;
+      const rawTierIncrement = typeof s.tier_increment === "number" ? s.tier_increment : null;
+
+      const scaledMaxContracts   = rawMaxContracts   !== null ? Math.round(rawMaxContracts   * sizeMultiplier) : null;
+      const scaledBaseContracts  = rawBaseContracts  !== null ? Math.round(rawBaseContracts  * sizeMultiplier) : null;
+      const scaledTierIncrement  = rawTierIncrement  !== null ? Math.round(rawTierIncrement  * sizeMultiplier) : null;
+
+      if (sizeMultiplier !== 1) {
+        // Fire-and-forget audit row — the scout extract route is not transactional
+        // so we accept that this row might not persist on catastrophic failure.
+        db.insert(auditLog).values({
+          action: "scout_extract.contract_remap_scaled",
+          entityType: "scout_extract",
+          entityId: sourceUrl,
+          decisionAuthority: "system",
+          input: { rawSymbol, sourceUrl } as Record<string, unknown>,
+          result: {
+            source_symbol:       rawSymbol,
+            dest_market:         market,
+            multiplier:          sizeMultiplier,
+            max_contracts_pre:   rawMaxContracts,
+            max_contracts_post:  scaledMaxContracts,
+            base_contracts_pre:  rawBaseContracts,
+            base_contracts_post: scaledBaseContracts,
+            tier_increment_pre:  rawTierIncrement,
+            tier_increment_post: scaledTierIncrement,
+          } as Record<string, unknown>,
+          status: "success",
+          correlationId: null,
+        }).catch((err) => {
+          logger.warn({ err, rawSymbol, market, sizeMultiplier }, "scout-extract: audit_log write failed for contract_remap_scaled (non-blocking)");
+        });
+
+        logger.info(
+          { rawSymbol, market, sizeMultiplier, rawMaxContracts, scaledMaxContracts },
+          "scout-extract: contract count scaled for mini→micro remap",
+        );
+      }
+
+      // Propagate scaled values back into the raw strategy record for downstream use
+      if (scaledMaxContracts  !== null) s.max_contracts  = scaledMaxContracts;
+      if (scaledBaseContracts !== null) s.base_contracts = scaledBaseContracts;
+      if (scaledTierIncrement !== null) s.tier_increment = scaledTierIncrement;
+
+      const desc = typeof s.description === "string" ? s.description : "";
+      const entryCond = typeof s.entry_condition === "string" ? s.entry_condition : "";
+      const entryInd = typeof s.entry_indicator === "string" ? s.entry_indicator : "";
+      const exitType = typeof s.exit_type === "string" ? s.exit_type : "";
+      const exitParams = s.exit_params && typeof s.exit_params === "object"
+        ? JSON.stringify(s.exit_params) : "";
+      const stopAtr = typeof s.stop_loss_atr_multiple === "number" ? s.stop_loss_atr_multiple : 1.5;
+      const tpAtr = typeof s.take_profit_atr_multiple === "number" ? s.take_profit_atr_multiple : 3.0;
+      const regime = typeof s.preferred_regime === "string" && s.preferred_regime.length > 0
+        ? s.preferred_regime : "UNSPECIFIED";
+      const concept = typeof s.concept_name === "string" && s.concept_name.length > 0
+        ? s.concept_name : (typeof s.name === "string" ? s.name : "extracted_strategy");
+      const tf = typeof s.timeframe === "string" ? s.timeframe : "5m";
+
+      // strict schema field guards (min 20 for entry/exit, min 10 for risk, min 20 for thesis)
+      const thesis = (desc || `${concept} on ${market} ${tf} via ${entryInd}`).slice(0, 2000);
+      if (thesis.length < 20) continue;
+      const entryRules = (entryCond || `Trigger on ${entryInd} per parameters ${JSON.stringify(s.entry_params ?? {})}`).slice(0, 2000);
+      if (entryRules.length < 20) continue;
+      const exitRules = (`${exitType || "atr_multiple"} exit; take profit at ${tpAtr}R; ${exitParams}`).slice(0, 2000);
+      if (exitRules.length < 20) continue;
+      // Use scaled max_contracts for the risk_rules prose if available
+      const effectiveMaxContracts = scaledMaxContracts ?? (typeof s.max_contracts === "number" ? s.max_contracts : 3);
+      const riskRules = `ATR stop ${stopAtr}x; max ${effectiveMaxContracts} ${market} contracts (risk-derived at signal time); structural stop ceiling 14pt MES / 40pt MNQ / 25 tick MCL per CLAUDE.md §4`;
+
+      // Wave 16 (2026-05-18) — preserve LLM-extracted parametric DSL fields.
+      // Prior code ran the LLM through transcript_extractor prompt v6 (which correctly
+      // emits entry_indicator + entry_params + direction + extraction_confidence per
+      // canonical-defaults table) — then read those fields into LOCAL variables
+      // (entryInd, stopAtr, tpAtr, etc.) for prose construction but NEVER wrote them
+      // to the output object. Downstream strategy_pending_mentions.extracted_idea
+      // therefore always had entry_params={} and no entry_indicator, defeating every
+      // Wave 9-14 graduator gate that depended on parametric data.
+      //
+      // Single-video probe with ema921.txt (rule-rich "9 21 EMA pullback") confirmed:
+      // LLM correctly emits {entry_indicator: "ema_crossover", entry_params: {fast:9,
+      // slow:21}, direction: "long"} and we were dropping all of it. This was the
+      // root architectural bottleneck for the entire factory.
+      const direction = typeof s.direction === "string" ? s.direction : "long";
+      const entryParams = s.entry_params && typeof s.entry_params === "object" ? s.entry_params as Record<string, unknown> : {};
+      const extractionConfidence = typeof s.extraction_confidence === "number" ? s.extraction_confidence : 0.5;
+      const entryType = typeof s.entry_type === "string" ? s.entry_type : null;
+      const entryArchetype = typeof s.entry_archetype === "string" ? s.entry_archetype : null;
+      const sessionFilter = typeof s.session_filter === "string" ? s.session_filter : null;
+      const exitParamsObj = s.exit_params && typeof s.exit_params === "object" ? s.exit_params as Record<string, unknown> : {};
+      const extractedName = typeof s.name === "string" ? s.name : null;
+
+      // Wave 23F (2026-05-19) — A+ confluence gate fields. Read from LLM output if present.
+      const VALID_CONFLUENCE_FACTORS = new Set(["regime_match", "structural_setup", "volume_confirmation", "macro_alignment", "vp_shape"]);
+      const confluenceFactors = Array.isArray(s.confluence_factors)
+        ? (s.confluence_factors as unknown[]).filter((f): f is string => typeof f === "string" && VALID_CONFLUENCE_FACTORS.has(f))
+        : undefined;
+      const minFactorsSatisfied = typeof s.min_factors_satisfied === "number" && Number.isInteger(s.min_factors_satisfied)
+        ? Math.max(0, Math.min(5, s.min_factors_satisfied))
+        : undefined;
+      const sourceClaimWinRate = typeof s.source_claim_win_rate === "number"
+        ? Math.max(0, Math.min(1, s.source_claim_win_rate))
+        : (s.source_claim_win_rate === null ? null : undefined);
+      const sourceClaimAvgR = typeof s.source_claim_avg_r === "number"
+        ? s.source_claim_avg_r
+        : (s.source_claim_avg_r === null ? null : undefined);
+      const VALID_SYMBOLS = new Set(["MES", "MNQ", "MCL"]);
+      const extractedSymbols = Array.isArray(s.symbols)
+        ? (s.symbols as unknown[]).filter((sym): sym is string => typeof sym === "string" && VALID_SYMBOLS.has(sym))
+        : undefined;
+
+      ideas.push({
+        thesis,
+        market,
+        timeframe: tf,
+        entry_rules: entryRules,
+        exit_rules: exitRules,
+        risk_rules: riskRules.slice(0, 1000),
+        source_url: sourceUrl,
+        regime,
+        concept_name: concept,
+        source_provider: sourceProvider,
+        confidence_score: 0.5,
+        signal_type: "strategy_candidate",
+        // Wave 16 — STRUCTURED DSL fields preserved from LLM extraction
+        name:                       extractedName,
+        entry_indicator:            entryInd || null,
+        entry_archetype:            entryArchetype,
+        entry_params:               entryParams,
+        entry_condition:            entryCond || null,
+        entry_type:                 entryType,
+        direction,
+        exit_type:                  exitType || null,
+        exit_params:                exitParamsObj,
+        stop_loss_atr_multiple:     stopAtr,
+        take_profit_atr_multiple:   tpAtr,
+        preferred_regime:           regime,
+        session_filter:             sessionFilter,
+        extraction_confidence:      extractionConfidence,
+        // Sizing fields (scaled via mini→micro remap above)
+        max_contracts:              effectiveMaxContracts,
+        base_contracts:             scaledBaseContracts,
+        tier_increment:             scaledTierIncrement,
+        // Wave 23F (2026-05-19) — A+ confluence gate fields (optional; undefined when LLM omits)
+        ...(confluenceFactors !== undefined   && { confluence_factors:       confluenceFactors }),
+        ...(minFactorsSatisfied !== undefined && { min_factors_satisfied:    minFactorsSatisfied }),
+        ...(sourceClaimWinRate !== undefined  && { source_claim_win_rate:    sourceClaimWinRate }),
+        ...(sourceClaimAvgR !== undefined     && { source_claim_avg_r:       sourceClaimAvgR }),
+        ...(extractedSymbols !== undefined    && { symbols:                  extractedSymbols }),
+      });
+    }
+
+    if (ideas.length === 0) {
+      res.status(200).json({ extracted: false, reason: "no_supported_market", ideas: [] });
+      return;
+    }
+
+    res.json({ extracted: true, ideas });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, sourceUrl }, "scout-extract failed");
     res.status(500).json({ error: msg });
   }
 });
@@ -416,6 +1004,7 @@ agentRoutes.post("/robustness", async (req, res) => {
     input: parsed.data as unknown as Record<string, unknown>,
     status: "pending",
     decisionAuthority: "agent",
+    correlationId: req.id ?? null,
   }).returning();
 
   // Fire and forget — update the pending audit row when the run finishes so
@@ -454,7 +1043,7 @@ agentRoutes.post("/robustness", async (req, res) => {
 });
 
 // ─── POST /api/agent/find-strategies ───────────────────────────────
-// Fire-and-forget — calls Ollama trading-quant model to generate DSL strategies,
+// Fire-and-forget — calls Ollama qwen2.5-coder:7b model to generate DSL strategies,
 // validates each, then submits valid ones for backtest via agentService.runStrategy.
 
 agentRoutes.post("/find-strategies", async (req, res) => {
@@ -471,6 +1060,7 @@ agentRoutes.post("/find-strategies", async (req, res) => {
     input: parsed.data as unknown as Record<string, unknown>,
     status: "pending",
     decisionAuthority: "agent",
+    correlationId: req.id ?? null,
   }).returning();
 
   const { symbol, timeframe, start_date, end_date, count } = parsed.data;
@@ -499,7 +1089,7 @@ Focus on proven edges: trend following, mean reversion, volatility expansion, or
 Target: $250+/day avg P&L, 60%+ win days, profit factor >= 1.75, max drawdown <= $2,000.${avoidBlock}
 Output ONLY the DSL JSON object, nothing else.`;
 
-        const response = await ollama.generate("trading-quant", prompt, {
+        const response = await ollama.generate("qwen2.5-coder:7b", prompt, {
           temperature: 0.7 + (i * 0.05), // Vary temperature for diversity
           num_ctx: 8192,
         });
@@ -591,6 +1181,1851 @@ Output ONLY the DSL JSON object, nothing else.`;
   });
 
   res.status(202).json({ job_id: job.id, message: "Strategy search submitted" });
+});
+
+// ─── POST /api/agent/scout-ideas/pending ─────────────────────────────────
+// Pass 18 — Cross-source validation pending bucket.
+//
+// Every scout extraction now lands here first instead of /scout-ideas/strict.
+// The pending layer accumulates evidence: once ≥3 distinct source_providers
+// confirm the same fingerprint, the route graduates the bucket by internally
+// POSTing the best consensus idea to /scout-ideas/strict.
+//
+// Fingerprint key: sha256(market|entry_archetype|exit_type).hex()[:32]
+//   - Same setup from different sources → same bucket
+//   - Different setup (different market or different archetype) → new bucket
+//
+// Idempotency: (bucket_id, source_url) — same URL cannot count twice.
+//
+// is_cross_validation_result:
+//   - false (default, organic scout): fire-and-forget POST to CV1 webhook
+//   - true (CV1 cross-validator posting back a match): skip the webhook to
+//     avoid infinite loops
+//
+// Graduation transaction is race-safe: UPDATE WHERE status='pending' means
+// only one concurrent graduation wins.
+
+// Extended source_provider enum for the pending endpoint (includes new scouts).
+// Pass 21: added compound provider values that n8n workflows 5P/5Q/5R emit.
+// They used to be rejected silently — a critical bug that blocked organic graduations.
+const pendingSourceProviderEnum = z.enum([
+  "brave", "tavily", "exa", "parallel", "reddit", "manual",
+  "youtube", "scrapingbee", "apify", "tf_search",
+  "scrapingbee_youtube", "reddit_json", "brave_search",
+  "parallel_web_discovery", "exa_web_discovery",
+  // Wave 9 (2026-05-17) — Google YT Data API + youtube-transcript npm chain
+  "youtube_data_api", "youtube_transcript_npm",
+]);
+
+const pendingIdeaSchema = z.object({
+  thesis: z.string().min(20).max(2000),
+  market: z.enum(["MES", "MNQ", "MCL"]),
+  timeframe: z.string().min(1),
+  entry_rules: z.string().min(20).max(2000),
+  exit_rules: z.string().min(20).max(2000),
+  risk_rules: z.string().min(10).max(1000),
+  source_url: z.string().url(),
+  regime: z.string().min(1),
+  concept_name: z.string().min(1),
+  source_provider: pendingSourceProviderEnum,
+  confidence_score: z.number().min(0).max(1).optional(),
+  signal_type: z.enum(["strategy_candidate", "market_news_intel", "research_find"]).optional(),
+  is_cross_validation_result: z.boolean().default(false),
+  cross_validator_confidence: z.number().min(0).max(1).optional(),
+  // Pass 20: scout layer that produced this mention.
+  // Defaults to 'web' for backward compat with Pass 18/19 callers.
+  // Graduation for concept-fingerprinted buckets requires all 3 layers true.
+  layer: z.enum(["web", "youtube", "reddit"]).default("web"),
+  // Wave 18 (2026-05-18) — rich parametric DSL forwarded by Wave 17 postLayerMention.
+  // Optional because CV-only mentions (Wave 9 fallback, web-cite-only) won't have them.
+  // When present, these MUST be propagated to extracted_idea so the graduator's
+  // best-mention scorer + dsl_quality_critic + Wave 14 canonical-defaults can use them.
+  name:                       z.string().optional(),
+  entry_indicator:            z.string().optional(),
+  entry_archetype:            z.string().optional(),
+  entry_params:               z.record(z.unknown()).optional(),
+  entry_condition:            z.string().optional(),
+  entry_type:                 z.string().optional(),
+  direction:                  z.enum(["long", "short", "both"]).optional(),
+  exit_type:                  z.string().optional(),
+  exit_params:                z.record(z.unknown()).optional(),
+  stop_loss_atr_multiple:     z.number().optional(),
+  take_profit_atr_multiple:   z.number().optional(),
+  preferred_regime:           z.string().optional(),
+  session_filter:             z.string().optional(),
+  extraction_confidence:      z.number().min(0).max(1).optional(),
+  max_contracts:              z.number().optional(),
+  base_contracts:             z.number().optional(),
+  tier_increment:             z.number().optional(),
+  // Wave 23F (2026-05-19) — A+ confluence gate fields forwarded from scout-extract.
+  // All optional: extractors that omit them must not crash the pipeline.
+  // Defaults apply downstream at graduation, not at extraction.
+  confluence_factors: z.array(z.enum([
+    "regime_match", "structural_setup", "volume_confirmation",
+    "macro_alignment", "vp_shape",
+  ])).optional(),
+  min_factors_satisfied:      z.number().int().min(0).max(5).optional(),
+  source_claim_win_rate:      z.number().min(0).max(1).nullable().optional(),
+  source_claim_avg_r:         z.number().nullable().optional(),
+  symbols:                    z.array(z.enum(["MES", "MNQ", "MCL"])).optional(),
+  // W23F.E — scout-runner rotation seed tag (post-restart fix 2026-05-19).
+  // Stored in extracted_idea so the graduator can prefer it when LLM symbol inference is ambiguous.
+  __scout_seeded_symbol:      z.enum(["MES", "MNQ", "MCL"]).optional(),
+});
+
+// Graduation threshold constants — explicit, no magic numbers
+const GRADUATION_SOURCE_COUNT_THRESHOLD    = 3;
+const GRADUATION_PROVIDERS_THRESHOLD       = 3;
+// Pass 21 — fast-graduation path: when at least 2 of the 3 layers are confirmed
+// (web + reddit, OR web + youtube, OR reddit + youtube) AND ≥2 distinct providers
+// AND ≥3 total source mentions, allow graduation without requiring all 3 layers.
+// Rationale: YouTube's transcript_extractor is intentionally strict (won't
+// fabricate parametric strategies). Real edges discovered on web + reddit
+// shouldn't be held hostage to a YouTube layer that may never confirm.
+// Strict 3-layer path remains as the GOLD standard; this is the SILVER path.
+const FAST_GRADUATION_SOURCE_COUNT_THRESHOLD = 3;
+const FAST_GRADUATION_PROVIDERS_THRESHOLD    = 2;
+const FAST_GRADUATION_LAYERS_THRESHOLD       = 2;
+
+agentRoutes.post("/scout-ideas/pending", idempotencyMiddleware, async (req, res) => {
+  const parsed = pendingIdeaSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid request — pending scout schema not satisfied",
+      details: parsed.error.issues,
+      hint: "Required fields: thesis, market, timeframe, entry_rules, exit_rules, risk_rules, source_url, regime, concept_name, source_provider",
+    });
+    return;
+  }
+
+  const idea = parsed.data;
+
+  // Pass 21 — CLAUDE.md §13 hard block: refuse to accept any mention whose
+  // content references options derivatives. Trading Forge trades MES/MNQ/MCL
+  // futures only; options strategies (straddles, strangles, etc.) are out of
+  // scope and would pollute buckets. Check all narrative fields + the source URL.
+  for (const [field, txt] of [
+    ["thesis", idea.thesis],
+    ["entry_rules", idea.entry_rules],
+    ["exit_rules", idea.exit_rules],
+    ["risk_rules", idea.risk_rules],
+    ["source_url", idea.source_url],
+    ["concept_name", idea.concept_name],
+  ] as const) {
+    const c = containsForbiddenOptionsContent(txt);
+    if (c.blocked) {
+      req.log.warn({ field, matched: c.matched, sourceUrl: idea.source_url }, "scout-ideas/pending: CLAUDE.md §13 block — options content rejected");
+      res.status(422).json({
+        accepted: false,
+        reason: "options_content_forbidden",
+        field,
+        matched: c.matched,
+        hint: "Trading Forge trades MES/MNQ/MCL micro futures exclusively. Options derivatives are out of scope per CLAUDE.md §13.",
+      });
+      return;
+    }
+  }
+
+  const correlationId = getCorrelationId(req);
+  const entryArchetype = extractEntryArchetype(idea.entry_rules);
+  // Pass 20: use concept-name fingerprint as the primary bucket key.
+  // This distinguishes "1-min ORB" from "15-min ORB" (same archetype + exit,
+  // but different concept names → different buckets).
+  const useConceptFingerprint = true; // always on for Pass 20+ submissions
+
+  // 0. Pass 19 Track E — Source URL verification gate.
+  // Every mention must point to a REAL, REACHABLE URL with content that
+  // matches the strategy thesis. Stops fabricated URLs from incrementing
+  // bucket source counts and falsely graduating strategies.
+  try {
+    const { verifySourceUrl } = await import("../services/source-url-verifier.js");
+    const verification = await verifySourceUrl({
+      sourceUrl:      idea.source_url,
+      market:         idea.market,
+      conceptName:    idea.concept_name,
+      entryArchetype,
+      thesis:         idea.thesis,
+    });
+    if (!verification.verified) {
+      logger.warn(
+        { sourceUrl: idea.source_url, reason: verification.reason, detail: verification.detail, correlationId },
+        "scout-ideas/pending: source URL verification FAILED — rejecting mention",
+      );
+      db.insert(auditLog).values({
+        action:            "pending_bucket.source_url_rejected",
+        entityType:        "system_journal",
+        input:             { source_url: idea.source_url, source_provider: idea.source_provider, market: idea.market, concept_name: idea.concept_name } as Record<string, unknown>,
+        result:            { reason: verification.reason, detail: verification.detail, fetchedBytes: verification.fetchedBytes ?? null } as Record<string, unknown>,
+        status:            "rejected",
+        decisionAuthority: "gate",
+        correlationId,
+      }).catch((err) => logger.warn({ err }, "pending_bucket.source_url_rejected audit write failed"));
+      res.status(422).json({
+        accepted: false,
+        reason:   "source_url_verification_failed",
+        detail:   verification.reason,
+        message:  verification.detail,
+        hint:     "Source URL must be reachable (HEAD 2xx), return ≥200 chars of content, and match ≥2 strategy keywords (market, concept, archetype, thesis). Test/fixture URLs are rejected.",
+      });
+      return;
+    }
+  } catch (verifyErr) {
+    // Fail-CLOSED on verifier crash — better to reject than to admit unverified.
+    logger.error({ err: verifyErr, sourceUrl: idea.source_url, correlationId }, "scout-ideas/pending: verifier threw — failing closed");
+    res.status(503).json({ accepted: false, reason: "verifier_unavailable", message: "Source URL verifier failed; retry shortly." });
+    return;
+  }
+
+  // 1. Compute fingerprint.
+  // Pass 20: prefer concept-name fingerprint. Falls back to archetype fingerprint
+  // if concept_name is missing/empty (defensive — schema requires min(1) but guard here).
+  const exitType       = normalizeExitType(idea.exit_rules);
+  const fingerprintHash = useConceptFingerprint && idea.concept_name
+    ? computeConceptFingerprintHash({ market: idea.market, concept_name: idea.concept_name })
+    : computeFingerprintHash({ market: idea.market, entry_archetype: entryArchetype, exit_type: exitType });
+
+  try {
+    // 2. Upsert into strategy_pending_buckets
+    //    ON CONFLICT: bump last_seen_at. source_count and distinct_providers are
+    //    recomputed from mentions after each insert (below) to stay consistent.
+    //    We detect new-vs-existing by checking whether first_seen_at == last_seen_at
+    //    after the upsert (or by checking if the returned row has sourceCount==0).
+    //    The reliable approach: attempt insert, if conflict → update, then check
+    //    if the row's first_seen_at equals its last_seen_at at time of returning.
+    const upserted = await db.insert(strategyPendingBuckets).values({
+      fingerprintHash,
+      market:        idea.market,
+      entryArchetype,
+      exitType,
+      conceptName:       idea.concept_name || null,
+      // Pass 20: initialize layer_coverage_json with the incoming layer set to true.
+      // Other layers default to false until they post a mention.
+      layerCoverageJson: { web: false, youtube: false, reddit: false, [idea.layer ?? "web"]: true },
+      sourceCount:       0,
+      distinctProviders: 0,
+      status:            "pending",
+    }).onConflictDoUpdate({
+      target: strategyPendingBuckets.fingerprintHash,
+      set: {
+        lastSeenAt:  sql`NOW()`,
+        // Update concept_name if not yet set (first mention wins the name)
+        conceptName: sql`COALESCE(strategy_pending_buckets.concept_name, EXCLUDED.concept_name)`,
+      },
+    }).returning();
+
+    const bucket = upserted[0];
+    if (!bucket) {
+      res.status(500).json({ error: "Failed to upsert pending bucket" });
+      return;
+    }
+
+    // Detect if this is a brand-new bucket: sourceCount == 0 means no mentions
+    // have ever been added (first upsert sets sourceCount=0, distinct=0).
+    // On subsequent upserts the count will be ≥ 1 because we update it below.
+    // This is reliable because the upsert ON CONFLICT path does not reset counts.
+    const isBucketNew = bucket.sourceCount === 0 && bucket.distinctProviders === 0;
+    if (isBucketNew) {
+      db.insert(auditLog).values({
+        action:            "pending_bucket.created",
+        entityType:        "strategy_pending_bucket",
+        entityId:          bucket.id,
+        input: {
+          fingerprint_hash: fingerprintHash,
+          market:           idea.market,
+          entry_archetype:  entryArchetype,
+          exit_type:        exitType,
+          source_provider:  idea.source_provider,
+          source_url:       idea.source_url,
+          concept_name:     idea.concept_name,
+        } as unknown as Record<string, unknown>,
+        status:            "success",
+        decisionAuthority: "agent",
+        correlationId,
+      }).catch((err) => {
+        logger.warn({ err, bucketId: bucket.id }, "pending-bucket: audit_log created write failed");
+      });
+    }
+
+    // 3. Insert mention (idempotent on bucket_id + source_url)
+    // Wave 18 — propagate ALL rich parametric DSL fields (when present) so
+    // downstream graduator can use them. Without this, the schema-validated
+    // fields would be silently dropped at the storage boundary.
+    const extractedIdeaJson: Record<string, unknown> = {
+      thesis:           idea.thesis,
+      market:           idea.market,
+      timeframe:        idea.timeframe,
+      entry_rules:      idea.entry_rules,
+      exit_rules:       idea.exit_rules,
+      risk_rules:       idea.risk_rules,
+      source_url:       idea.source_url,
+      regime:           idea.regime,
+      concept_name:     idea.concept_name,
+      source_provider:  idea.source_provider,
+      confidence_score: idea.confidence_score,
+    };
+    // Wave 18 — only add rich fields if Wave 17 caller actually forwarded them.
+    // Optional fields are `undefined` in `idea` when caller omits them; we strip
+    // those before storage to keep extracted_idea clean.
+    const richKeys = [
+      "name", "entry_indicator", "entry_archetype", "entry_params", "entry_condition",
+      "entry_type", "direction", "exit_type", "exit_params",
+      "stop_loss_atr_multiple", "take_profit_atr_multiple",
+      "preferred_regime", "session_filter", "extraction_confidence",
+      "max_contracts", "base_contracts", "tier_increment",
+      // Wave 23F (2026-05-19) — A+ confluence gate fields
+      "confluence_factors", "min_factors_satisfied",
+      "source_claim_win_rate", "source_claim_avg_r", "symbols",
+      // W23F.E — scout rotation seed metadata (post-restart fix 2026-05-19)
+      "__scout_seeded_symbol",
+    ] as const;
+    // These Wave 23F fields can legitimately be null (null = "source didn't state a value").
+    // They must pass through even when null so the graduator can distinguish
+    // "extractor omitted the field" (undefined → not stored) from "source had no claim" (null → stored).
+    const nullAllowedRichKeys = new Set(["source_claim_win_rate", "source_claim_avg_r"]);
+    for (const k of richKeys) {
+      const v = (idea as Record<string, unknown>)[k];
+      if (nullAllowedRichKeys.has(k)) {
+        if (v !== undefined) extractedIdeaJson[k] = v;
+      } else {
+        if (v !== undefined && v !== null) extractedIdeaJson[k] = v;
+      }
+    }
+
+    const mentionInserted = await db.insert(strategyPendingMentions).values({
+      bucketId:                 bucket.id,
+      sourceProvider:           idea.source_provider,
+      sourceUrl:                idea.source_url,
+      extractedIdea:            extractedIdeaJson,
+      isCrossValidationResult:  idea.is_cross_validation_result,
+      crossValidatorConfidence: idea.cross_validator_confidence !== undefined
+        ? String(idea.cross_validator_confidence)
+        : null,
+      scoutLayer:               idea.layer ?? "web",
+    }).onConflictDoNothing()   // idempotent — same URL for same bucket is a no-op
+      .returning();
+
+    const mentionWasNew = mentionInserted.length > 0;
+
+    // 4. Recompute source_count + distinct_providers + layer_coverage from the mentions table.
+    //    This is authoritative — avoids drift from concurrent inserts.
+    const [counts] = await db.execute(sql`
+      SELECT
+        COUNT(*)::int AS source_count,
+        COUNT(DISTINCT source_provider)::int AS distinct_providers,
+        BOOL_OR(scout_layer = 'web')     AS has_web,
+        BOOL_OR(scout_layer = 'youtube') AS has_youtube,
+        BOOL_OR(scout_layer = 'reddit')  AS has_reddit
+      FROM strategy_pending_mentions
+      WHERE bucket_id = ${bucket.id}
+    `);
+    const sourceCount       = Number((counts as any)?.source_count       ?? 0);
+    const distinctProviders = Number((counts as any)?.distinct_providers ?? 0);
+    const hasWeb     = Boolean((counts as any)?.has_web);
+    const hasYoutube = Boolean((counts as any)?.has_youtube);
+    const hasReddit  = Boolean((counts as any)?.has_reddit);
+    const layerCoverageJson = { web: hasWeb, youtube: hasYoutube, reddit: hasReddit };
+    // All 3 layers confirmed — Pass 20 graduation requirement for concept-fingerprinted buckets
+    const allLayersCovered = hasWeb && hasYoutube && hasReddit;
+
+    // Update bucket with fresh counts and layer coverage
+    await db.update(strategyPendingBuckets).set({
+      sourceCount,
+      distinctProviders,
+      layerCoverageJson,
+      lastSeenAt: sql`NOW()`,
+    }).where(eq(strategyPendingBuckets.id, bucket.id));
+
+    // Audit: mention added (only when new)
+    if (mentionWasNew) {
+      db.insert(auditLog).values({
+        action:            "pending_bucket.mention_added",
+        entityType:        "strategy_pending_bucket",
+        entityId:          bucket.id,
+        input:             {
+          source_provider:              idea.source_provider,
+          source_url:                   idea.source_url,
+          is_cross_validation_result:   idea.is_cross_validation_result,
+          source_count_after:           sourceCount,
+          distinct_providers_after:     distinctProviders,
+        } as unknown as Record<string, unknown>,
+        status:            "success",
+        decisionAuthority: "agent",
+        correlationId,
+      }).catch((err) => {
+        logger.warn({ err, bucketId: bucket.id }, "pending-bucket: audit_log mention_added write failed");
+      });
+    }
+
+    // 5. Fire-and-forget CV1 webhook (only for organic scout submissions)
+    // Pass 21 (2026-05-12): n8n cv1-validate workflow is RETIRED (CLAUDE.md §2b
+    // moved discovery in-process via autonomous-scout-runner.ts). Backend was
+    // still firing the webhook → flooded Railway n8n service logs with "unknown
+    // webhook" errors. Gated behind explicit TF_ENABLE_CV1_WEBHOOK env (default
+    // false). Set to "true" only if the cv1-validate workflow is re-imported.
+    const cv1Enabled = String(process.env.TF_ENABLE_CV1_WEBHOOK ?? "").toLowerCase() === "true";
+    const n8nBaseUrl = process.env.N8N_BASE_URL;
+    const cv1BearerToken = process.env.N8N_CV1_BEARER ?? process.env.N8N_BEARER_TOKEN;
+    if (cv1Enabled && !idea.is_cross_validation_result && n8nBaseUrl && cv1BearerToken && mentionWasNew) {
+      const mentionId = mentionInserted[0]?.id;
+      fetch(`${n8nBaseUrl}/webhook/cv1-validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${cv1BearerToken}`,
+        },
+        body: JSON.stringify({ bucket_id: bucket.id, seed_mention_id: mentionId }),
+        signal: AbortSignal.timeout(5_000),
+      }).catch((err) => {
+        // Fire-and-forget — CV1 failure never blocks the pending insert
+        logger.warn({ err, bucketId: bucket.id }, "pending-bucket: CV1 webhook fire failed (non-fatal)");
+      });
+    }
+
+    // 6. Graduation check — race-safe via UPDATE WHERE status='pending'
+    //
+    // Pass 20: concept-fingerprinted buckets (concept_name set) require ALL 3
+    // scout layers (web + youtube + reddit) to be confirmed in addition to the
+    // existing distinct_providers ≥ 3 AND source_count ≥ 3 thresholds.
+    //
+    // Legacy buckets (concept_name NULL) use the old distinct_providers-only
+    // logic to remain backward-compatible with Pass 18/19 data.
+    const isConceptBucket = !!bucket.conceptName;
+    const layerGatePassed = isConceptBucket ? allLayersCovered : true;
+
+    // Pass 21 — count how many of the 3 layers are confirmed for the fast path.
+    const layersCovered = isConceptBucket
+      ? Number(layerCoverageJson.web ?? false) + Number(layerCoverageJson.youtube ?? false) + Number(layerCoverageJson.reddit ?? false)
+      : 3;  // legacy buckets get full credit
+    const goldPath =
+      sourceCount >= GRADUATION_SOURCE_COUNT_THRESHOLD &&
+      distinctProviders >= GRADUATION_PROVIDERS_THRESHOLD &&
+      layerGatePassed;
+    const silverPath =
+      sourceCount >= FAST_GRADUATION_SOURCE_COUNT_THRESHOLD &&
+      distinctProviders >= FAST_GRADUATION_PROVIDERS_THRESHOLD &&
+      layersCovered >= FAST_GRADUATION_LAYERS_THRESHOLD;
+
+    let finalStatus = bucket.status;
+    if (goldPath || silverPath) {
+      // Atomic lock: only the first concurrent writer wins the graduation.
+      // status is set to 'graduating' atomically — subsequent concurrent
+      // inserts will find status!='pending' and skip.
+      const graduated = await db.update(strategyPendingBuckets).set({
+        status:       "graduating",
+        graduatedAt:  sql`NOW()`,
+      }).where(
+        and(
+          eq(strategyPendingBuckets.id, bucket.id),
+          eq(strategyPendingBuckets.status, "pending"),
+        )
+      ).returning();
+
+      if (graduated.length > 0) {
+        // We won the graduation race — proceed
+        finalStatus = "graduating";
+        logger.info({ bucketId: bucket.id, sourceCount, distinctProviders }, "pending-bucket: starting graduation");
+
+        // Increment graduation counter immediately (bucket is now locked for graduation)
+        pendingBucketsGraduatedTotal.inc();
+
+        // Run graduation in background — do not await (keeps /pending fast)
+        runGraduation(bucket.id, sourceCount, distinctProviders, correlationId).catch((err) => {
+          logger.error({ err, bucketId: bucket.id }, "pending-bucket: graduation failed");
+        });
+      } else {
+        // Another concurrent insert already graduated this bucket
+        const [current] = await db.select({ status: strategyPendingBuckets.status })
+          .from(strategyPendingBuckets)
+          .where(eq(strategyPendingBuckets.id, bucket.id))
+          .limit(1);
+        finalStatus = current?.status ?? "graduating";
+      }
+    }
+
+    // SSE: emit pending_bucket.updated after every new mention (counts changed).
+    // Placed AFTER graduation check so finalStatus is accurate.
+    // Idempotency: skip if mention was a duplicate (counts unchanged).
+    if (mentionWasNew) {
+      broadcastSSE("pending_bucket.updated", {
+        bucket_id:          bucket.id,
+        fingerprint_hash:   fingerprintHash,
+        source_count:       sourceCount,
+        distinct_providers: distinctProviders,
+        status:             finalStatus,
+        market:             idea.market,
+        entry_archetype:    entryArchetype,
+        correlation_id:     correlationId,
+      });
+    }
+
+    res.status(201).json({
+      accepted:           true,
+      bucket_id:          bucket.id,
+      fingerprint_hash:   fingerprintHash,
+      entry_archetype:    entryArchetype,
+      exit_type:          exitType,
+      source_count:       sourceCount,
+      distinct_providers: distinctProviders,
+      status:             finalStatus,
+      mention_was_new:    mentionWasNew,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, fingerprintHash }, "scout-ideas/pending failed");
+    res.status(500).json({ error: msg });
+  }
+});
+
+/**
+ * Resolves a system_journal row ID to its compiled strategies.id, if 8A has
+ * already drained the journal and created a strategy row. Returns null if the
+ * journal hasn't been compiled yet — callers should re-attempt via backfill.
+ */
+async function resolveStrategyIdFromJournalId(journalId: string): Promise<string | null> {
+  try {
+    const [row] = await db
+      .select({ strategyId: systemJournal.strategyId })
+      .from(systemJournal)
+      .where(eq(systemJournal.id, journalId))
+      .limit(1);
+    return row?.strategyId ?? null;
+  } catch (err) {
+    logger.warn({ err, journalId }, "resolveStrategyIdFromJournalId: query failed");
+    return null;
+  }
+}
+
+/**
+ * Backfill `strategy_pending_buckets.graduated_strategy_id` for buckets that
+ * have graduated but whose journal entry has only just been compiled by 8A
+ * synthesizer. Idempotent and safe to call repeatedly.
+ *
+ * Strategy: find all buckets with status='graduated' AND graduated_strategy_id
+ * IS NULL, look up the most recent matching `pending_bucket.graduated` audit
+ * row (which carries graduated_journal_id), resolve the journal's strategy_id,
+ * and patch the bucket. Returns the count of buckets backfilled.
+ *
+ * Called: (a) lazily inside the GET /pending-buckets list endpoint (bounded
+ * cost — at most N buckets per call), (b) once per graduation as a delayed
+ * retry inside runGraduation.
+ */
+async function backfillGraduatedStrategyIds(maxBuckets = 50): Promise<number> {
+  try {
+    // Find graduated buckets with no strategy_id yet
+    const candidates = await db
+      .select({ id: strategyPendingBuckets.id })
+      .from(strategyPendingBuckets)
+      .where(
+        and(
+          eq(strategyPendingBuckets.status, "graduated"),
+          sql`${strategyPendingBuckets.graduatedStrategyId} IS NULL`,
+        ),
+      )
+      .limit(maxBuckets);
+
+    if (candidates.length === 0) return 0;
+
+    let patched = 0;
+    for (const bucket of candidates) {
+      // Find the graduation audit row carrying this bucket's journal_id
+      const [audit] = await db
+        .select({ result: auditLog.result })
+        .from(auditLog)
+        .where(
+          and(
+            eq(auditLog.action, "pending_bucket.graduated"),
+            eq(auditLog.entityId, bucket.id),
+          ),
+        )
+        .orderBy(desc(auditLog.createdAt))
+        .limit(1);
+
+      let journalId: string | null = (audit?.result as any)?.graduated_journal_id ?? null;
+
+      // Fallback for buckets graduated before the journal_id stash existed: try
+      // to match a system_journal row created near the graduation time whose
+      // strategy_params.url is one of the bucket's mention source_urls.
+      if (!journalId || typeof journalId !== "string") {
+        const [bucketRow] = await db
+          .select({ graduatedAt: strategyPendingBuckets.graduatedAt })
+          .from(strategyPendingBuckets)
+          .where(eq(strategyPendingBuckets.id, bucket.id))
+          .limit(1);
+
+        const mentionUrls = await db
+          .select({ sourceUrl: strategyPendingMentions.sourceUrl })
+          .from(strategyPendingMentions)
+          .where(eq(strategyPendingMentions.bucketId, bucket.id));
+
+        if (!bucketRow?.graduatedAt || mentionUrls.length === 0) continue;
+
+        const gradAt = bucketRow.graduatedAt instanceof Date
+          ? bucketRow.graduatedAt : new Date(bucketRow.graduatedAt as unknown as string);
+        const windowStart = new Date(gradAt.getTime() - 5 * 60_000);
+        const windowEnd = new Date(gradAt.getTime() + 60 * 60_000);
+
+        const candidates = await db.execute(sql`
+          SELECT id, strategy_id, strategy_params
+          FROM system_journal
+          WHERE created_at BETWEEN ${windowStart.toISOString()} AND ${windowEnd.toISOString()}
+            AND source = 'openclaw'
+          ORDER BY created_at ASC
+          LIMIT 20
+        `);
+        const candidateRows: Array<{ id: string; strategy_id: string | null; strategy_params: any }> =
+          Array.isArray(candidates) ? candidates as any : ((candidates as any)?.rows ?? []);
+        const urlSet = new Set(mentionUrls.map((m) => m.sourceUrl));
+        const match = candidateRows.find((c) => {
+          const url = c.strategy_params?.url;
+          return typeof url === "string" && urlSet.has(url);
+        });
+        if (!match) continue;
+        journalId = match.id;
+      }
+
+      const strategyId = await resolveStrategyIdFromJournalId(journalId);
+      if (!strategyId) continue;
+
+      await db
+        .update(strategyPendingBuckets)
+        .set({ graduatedStrategyId: strategyId })
+        .where(eq(strategyPendingBuckets.id, bucket.id));
+      patched++;
+    }
+    if (patched > 0) {
+      logger.info({ patched, candidates: candidates.length }, "backfillGraduatedStrategyIds: patched buckets");
+    }
+    return patched;
+  } catch (err) {
+    logger.warn({ err }, "backfillGraduatedStrategyIds: failed (non-fatal)");
+    return 0;
+  }
+}
+
+/**
+ * Graduation flow — runs after the bucket is atomically set to 'graduating'.
+ * Picks the best consensus mention, POSTs to /scout-ideas/strict, and updates
+ * bucket status to 'graduated' (or rolls back to 'pending' on failure so the
+ * next mention can retry).
+ *
+ * Emits SSE pending_bucket.graduated and Discord alert on success.
+ */
+async function runGraduation(
+  bucketId: string,
+  sourceCount: number,
+  distinctProviders: number,
+  correlationId?: string,
+): Promise<void> {
+  try {
+    // Read all mentions for this bucket (with scout_layer for tag evidence)
+    const mentions = await db.select().from(strategyPendingMentions)
+      .where(eq(strategyPendingMentions.bucketId, bucketId));
+
+    if (mentions.length === 0) {
+      logger.warn({ bucketId }, "graduation: no mentions found — rolling back to pending");
+      await db.update(strategyPendingBuckets).set({ status: "pending" })
+        .where(eq(strategyPendingBuckets.id, bucketId));
+      return;
+    }
+
+    // Wave 13B (2026-05-18) — DSL richness scoring. Prior logic ranked by
+    // confidence_score alone, which let web-layer CV-only mentions (entry_long
+    // = "Web-layer cross-validation: ..." with no params) win over real Reddit
+    // or YouTube DSL extractions. Result: graduator assembled strategies from
+    // citation text instead of actual entry rules, and LLM judge correctly
+    // rejected them.
+    //
+    // New scoring (higher = richer DSL):
+    //   +10  entry_params is a non-empty object (numeric params present)
+    //   + 5  entry_long / entry_rules contains a structural keyword
+    //        (cross/close/break/above/below/when/sweep/MSS/FVG/etc)
+    //   + 3  entry_long / entry_rules is ≥80 chars (real prose, not citation)
+    //   + 2  provider rank: youtube_transcript_npm > reddit_json > brave > web_data_api
+    //   + 1  base for CV-result mentions (still slight preference)
+    //   * cross_validator_confidence as a tie-breaker multiplier on top
+    //
+    // Picks the mention with the highest score — guaranteed to be the richest
+    // DSL the bucket has accumulated, NOT the first-extracted or highest-confidence
+    // CV citation.
+    const STRUCTURAL_KEYWORDS_RE = /\b(close|cross|break|above|below|enter|trigger|when|rsi\s*[<>]|sweep|displacement|mss|(^|\W)fvg(\W|$)|retrace|(^|\W)ote(\W|$)|breaker|choch|(^|\W)bos(\W|$)|killzone|manipulation|order.block|fair.value.gap|liquidity|raid|accumulation|distribution|spring|upthrust|imbalance|absorption)\b/i;
+    const PROVIDER_RANK: Record<string, number> = {
+      youtube_transcript_npm: 4,
+      reddit_json: 3,
+      brave_search: 2,
+      youtube_data_api: 1,  // CV-only fallback — least rich
+      exa: 3, parallel_web_discovery: 2, exa_web_discovery: 2,
+    };
+    function scoreMentionRichness(m: typeof mentions[0]): number {
+      const idea = (m.extractedIdea as any) ?? {};
+      const entryParams = idea?.entry_params;
+      const entryLong = String(idea?.entry_long ?? idea?.entry_rules ?? idea?.entry_condition ?? "");
+      const entryRules = String(idea?.entry_rules ?? "");
+      const combinedProse = `${entryLong} ${entryRules}`.trim();
+      let score = 0;
+      if (entryParams && typeof entryParams === "object" && Object.keys(entryParams).length > 0) score += 10;
+      if (STRUCTURAL_KEYWORDS_RE.test(combinedProse)) score += 5;
+      if (combinedProse.length >= 80) score += 3;
+      score += PROVIDER_RANK[m.sourceProvider ?? ""] ?? 0;
+      if (m.isCrossValidationResult) score += 1;
+      const tieBreak = m.crossValidatorConfidence !== null ? Number(m.crossValidatorConfidence) : 0;
+      return score + tieBreak * 0.5;  // small tie-break weight
+    }
+    let best = mentions[0];
+    let bestScore = scoreMentionRichness(best);
+    for (const m of mentions) {
+      const s = scoreMentionRichness(m);
+      if (s > bestScore) { bestScore = s; best = m; }
+    }
+    logger.info({
+      bucketId, bestSource: best.sourceProvider, bestScore,
+      candidates: mentions.length,
+    }, "graduator: best-mention selected by Wave 13B richness scoring");
+
+    const ideaPayload = best.extractedIdea as Record<string, unknown>;
+
+    // Pass 21 (2026-05-12) — DIRECT graduation. We no longer write scout
+    // candidates to system_journal (that table belongs to the bot's actual
+    // trade-journal, read by the 3am GPT-5 self-critique agent). The legacy
+    // /scout-ideas/strict → drain chain also broke for silver-path graduations
+    // because the journal lacked DSL fields. Now we construct the production
+    // strategy in-process using framework-overlay and insert directly.
+    const { graduateBucketDirectly, deriveEntryType } = await import("../services/direct-bucket-graduator.js");
+
+    // Read bucket metadata now (needed by graduator + downstream audit)
+    const [bucketMetaEarly] = await db.select({
+      market:         strategyPendingBuckets.market,
+      entryArchetype: strategyPendingBuckets.entryArchetype,
+      exitType:       strategyPendingBuckets.exitType,
+      conceptName:    strategyPendingBuckets.conceptName,
+      layerCoverageJson: strategyPendingBuckets.layerCoverageJson,
+    }).from(strategyPendingBuckets)
+      .where(eq(strategyPendingBuckets.id, bucketId))
+      .limit(1);
+
+    // Layer URL split for audit + graduator tags
+    const _webUrls     = mentions.filter((m) => (m as any).scoutLayer === "web").map((m) => m.sourceUrl);
+    const _youtubeUrls = mentions.filter((m) => (m as any).scoutLayer === "youtube").map((m) => m.sourceUrl);
+    const _redditUrls  = mentions.filter((m) => (m as any).scoutLayer === "reddit").map((m) => m.sourceUrl);
+    const _layerTags: string[] = ["cross-validated"];
+    if (_webUrls.length > 0)     _layerTags.push("web-confirmed");
+    if (_youtubeUrls.length > 0) _layerTags.push("youtube-confirmed");
+    if (_redditUrls.length > 0)  _layerTags.push("reddit-confirmed");
+    const _lcj = (bucketMetaEarly?.layerCoverageJson as any) ?? {};
+    const _layersCovered = Number(_lcj.web ?? false) + Number(_lcj.youtube ?? false) + Number(_lcj.reddit ?? false);
+
+    const grad = await graduateBucketDirectly({
+      bucketId,
+      bestMention: {
+        sourceUrl: best.sourceUrl,
+        sourceProvider: best.sourceProvider,
+        scoutLayer: (best as any).scoutLayer ?? null,
+        extractedIdea: ideaPayload,
+      },
+      bucketMeta: {
+        conceptName: bucketMetaEarly?.conceptName ?? "unknown_concept",
+        market: (bucketMetaEarly?.market as any) ?? "MES",
+        entryArchetype: bucketMetaEarly?.entryArchetype ?? null,
+        exitType: bucketMetaEarly?.exitType ?? null,
+      },
+      sourceCount,
+      distinctProviders,
+      layersCovered: _layersCovered,
+      layerTags: _layerTags,
+      webUrls: _webUrls,
+      youtubeUrls: _youtubeUrls,
+      redditUrls: _redditUrls,
+      correlationId: correlationId ?? null,
+    });
+
+    // For backward-compat with the rest of the handler (audit + Discord notify)
+    const graduatedStrategyId: string | null = grad.strategyId;
+    const graduatedJournalId: string | undefined = undefined;  // no longer used — system_journal is no longer polluted
+
+    // Audit log
+    const sourceUrls = mentions.map((m) => m.sourceUrl);
+
+    // Read bucket metadata needed for SSE + Discord
+    const [bucketMeta] = await db.select({
+      market:         strategyPendingBuckets.market,
+      entryArchetype: strategyPendingBuckets.entryArchetype,
+      exitType:       strategyPendingBuckets.exitType,
+    }).from(strategyPendingBuckets)
+      .where(eq(strategyPendingBuckets.id, bucketId))
+      .limit(1);
+
+    const conceptName = typeof (ideaPayload as any)?.concept_name === "string"
+      ? (ideaPayload as any).concept_name : undefined;
+
+    // Pass 20: compute per-layer source URLs for audit evidence.
+    const webUrls     = mentions.filter((m) => (m as any).scoutLayer === "web").map((m) => m.sourceUrl);
+    const youtubeUrls = mentions.filter((m) => (m as any).scoutLayer === "youtube").map((m) => m.sourceUrl);
+    const redditUrls  = mentions.filter((m) => (m as any).scoutLayer === "reddit").map((m) => m.sourceUrl);
+    // Tags for the graduated strategy row (one per confirmed layer)
+    const layerTags: string[] = ["cross-validated"];
+    if (webUrls.length > 0)     layerTags.push("web-confirmed");
+    if (youtubeUrls.length > 0) layerTags.push("youtube-confirmed");
+    if (redditUrls.length > 0)  layerTags.push("reddit-confirmed");
+
+    // ─── Wave 12: Gate-aware bucket transition + audit (FAIL-CLOSED) ──────────
+    // The previous code unconditionally set bucket.status='graduated' and fired
+    // audit status='success' regardless of whether the strategy INSERT succeeded.
+    // This produced 6 leaked buckets with graduated_strategy_id=NULL per 24h cycle.
+    //
+    // Correct ordering:
+    //   graduateBucketDirectly() returns strategyId=non-null  → INSERT succeeded
+    //   graduateBucketDirectly() returns insertFailed=true    → DB INSERT failed (infra)
+    //   graduateBucketDirectly() returns skipped=true (only)  → gate rejection (no INSERT attempted)
+    //
+    // For INSERT failure and gate rejection: revert bucket to pending so the next
+    // cron cycle can retry. Do NOT mark `graduated` with a null strategy id.
+    if (graduatedStrategyId !== null) {
+      // ─── SUCCESS PATH ───────────────────────────────────────────────────────
+      // INSERT confirmed — only now mark the bucket graduated.
+      await db.update(strategyPendingBuckets).set({
+        status:               "graduated",
+        graduatedAt:          sql`NOW()`,
+        graduatedStrategyId:  graduatedStrategyId,
+      }).where(eq(strategyPendingBuckets.id, bucketId));
+
+      // Store the journal_id in `result` so the backfill query can resolve
+      // strategy_id later. The backfill scans audit rows where
+      // action='strategy.cross_validated' AND result->>'journal_id' IS NOT NULL
+      // AND the matching bucket still has graduated_strategy_id=NULL.
+      db.insert(auditLog).values({
+        action:            "strategy.cross_validated",
+        entityType:        "strategy_pending_bucket",
+        entityId:          bucketId,
+        input:             {
+          bucket_id:             bucketId,
+          distinct_providers:    distinctProviders,
+          source_count:          sourceCount,
+          source_urls:           sourceUrls,
+          graduated_strategy_id: graduatedStrategyId,
+          graduated_journal_id:  graduatedJournalId ?? null,
+          concept_name:          conceptName,
+          market:                bucketMeta?.market,
+          entry_archetype:       bucketMeta?.entryArchetype,
+          web_source_urls:       webUrls,
+          youtube_source_urls:   youtubeUrls,
+          reddit_source_urls:    redditUrls,
+          layer_tags:            layerTags,
+        } as unknown as Record<string, unknown>,
+        result:            {
+          graduated_journal_id:  graduatedJournalId ?? null,
+          graduated_strategy_id: graduatedStrategyId,
+          layer_tags:            layerTags,
+          web_source_urls:       webUrls,
+          youtube_source_urls:   youtubeUrls,
+          reddit_source_urls:    redditUrls,
+        } as unknown as Record<string, unknown>,
+        status:            "success",
+        decisionAuthority: "agent",
+        correlationId,
+      }).catch((err) => {
+        logger.warn({ err, bucketId }, "graduation: audit_log write failed");
+      });
+    } else if (grad.insertFailed) {
+      // ─── INSERT FAILURE PATH (infrastructure error / constraint collision) ──
+      // The graduator already wrote the DLQ row + graduation.rejected_insert_failed
+      // audit. Here we: revert bucket to pending, fire the cross_validated audit
+      // with status=failure so the operator can query the exact 24h failure rate.
+      logger.error(
+        { bucketId, conceptName, reason: grad.reason },
+        "graduation: INSERT failed — reverting bucket to pending for retry"
+      );
+      await db.update(strategyPendingBuckets).set({
+        status: "pending",
+      }).where(eq(strategyPendingBuckets.id, bucketId));
+
+      db.insert(auditLog).values({
+        action:            "strategy.cross_validated",
+        entityType:        "strategy_pending_bucket",
+        entityId:          bucketId,
+        input:             {
+          bucket_id:             bucketId,
+          distinct_providers:    distinctProviders,
+          source_count:          sourceCount,
+          source_urls:           sourceUrls,
+          graduated_strategy_id: null,
+          concept_name:          conceptName,
+          market:                bucketMeta?.market,
+          entry_archetype:       bucketMeta?.entryArchetype,
+          web_source_urls:       webUrls,
+          youtube_source_urls:   youtubeUrls,
+          reddit_source_urls:    redditUrls,
+          layer_tags:            layerTags,
+        } as unknown as Record<string, unknown>,
+        result:            {
+          graduated_strategy_id: null,
+          error:                 grad.reason,
+          layer_tags:            layerTags,
+          web_source_urls:       webUrls,
+          youtube_source_urls:   youtubeUrls,
+          reddit_source_urls:    redditUrls,
+        } as unknown as Record<string, unknown>,
+        status:            "failure",
+        decisionAuthority: "system",
+        correlationId,
+      }).catch((err) => {
+        logger.warn({ err, bucketId }, "graduation: failure audit_log write failed");
+      });
+
+      // Return early — do not fire SSE graduation event or Discord notify for a failed INSERT
+      return;
+    } else {
+      // ─── GATE REJECTION PATH (thin_dsl, no_engine_indicator, etc.) ─────────
+      // The graduator already wrote a graduation.rejected_* audit row. The bucket
+      // was previously transitioned to `graduating` by the cron. Revert it so it
+      // can be re-attempted if the concept name or DSL extraction improves.
+      // NOTE: if the concept is structurally un-graduatable (no engine spec, bad
+      // DSL) the cron will keep attempting until the bucket expires or is killed.
+      // That is intentional — future engine additions may unblock these.
+      logger.warn(
+        { bucketId, conceptName, reason: grad.reason },
+        "graduation: gate rejected — reverting bucket to pending"
+      );
+      await db.update(strategyPendingBuckets).set({
+        status: "pending",
+      }).where(eq(strategyPendingBuckets.id, bucketId));
+
+      db.insert(auditLog).values({
+        action:            "strategy.cross_validated",
+        entityType:        "strategy_pending_bucket",
+        entityId:          bucketId,
+        input:             {
+          bucket_id:          bucketId,
+          distinct_providers: distinctProviders,
+          source_count:       sourceCount,
+          source_urls:        sourceUrls,
+          concept_name:       conceptName,
+          market:             bucketMeta?.market,
+          entry_archetype:    bucketMeta?.entryArchetype,
+          layer_tags:         layerTags,
+        } as unknown as Record<string, unknown>,
+        result:            {
+          graduated_strategy_id: null,
+          rejection_reason:      grad.reason,
+          layer_tags:            layerTags,
+        } as unknown as Record<string, unknown>,
+        status:            "rejected",
+        decisionAuthority: "system",
+        correlationId,
+      }).catch((err) => {
+        logger.warn({ err, bucketId }, "graduation: rejected audit_log write failed");
+      });
+
+      // Return early — do not fire SSE graduation event or Discord notify for a rejected bucket
+      return;
+    }
+
+    // Legacy audit row for backward-compat with backfill query that scans
+    // 'pending_bucket.graduated' rows.
+    db.insert(auditLog).values({
+      action:            "pending_bucket.graduated",
+      entityType:        "strategy_pending_bucket",
+      entityId:          bucketId,
+      input:             { bucket_id: bucketId, concept_name: conceptName } as unknown as Record<string, unknown>,
+      result:            {
+        graduated_journal_id:  graduatedJournalId ?? null,
+        graduated_strategy_id: graduatedStrategyId,
+      } as unknown as Record<string, unknown>,
+      status:            "success",
+      decisionAuthority: "agent",
+      correlationId,
+    }).catch((err) => {
+      logger.warn({ err, bucketId }, "graduation: legacy audit_log write failed");
+    });
+
+    // SSE: pending_bucket.graduated — frontend subscribes to this event
+    broadcastSSE("pending_bucket.graduated", {
+      bucket_id:             bucketId,
+      market:                bucketMeta?.market ?? null,
+      entry_archetype:       bucketMeta?.entryArchetype ?? null,
+      source_urls:           sourceUrls,
+      graduated_strategy_id: graduatedStrategyId ?? null,
+      source_count:          sourceCount,
+      distinct_providers:    distinctProviders,
+      concept_name:          conceptName ?? null,
+      correlation_id:        correlationId ?? null,
+    });
+
+    // Discord: single INFO message to #strategy-finds channel on graduation.
+    // Uses DISCORD_WEBHOOK_URL (default channel) — dedup is handled by
+    // notification-service title-based cooldown (10-min window). Because each
+    // bucket has a unique ID in the title, dedup will never suppress distinct
+    // graduations. Fire-and-forget.
+    const frontendBaseUrl = process.env.FRONTEND_BASE_URL ?? "";
+    const bucketLink = frontendBaseUrl
+      ? `${frontendBaseUrl}/pending-buckets/${bucketId}`
+      : `bucket:${bucketId}`;
+    const sourceList = sourceUrls
+      .slice(0, 5)
+      .map((u, i) => `${i + 1}. ${u}`)
+      .join("\n");
+    // Resolve a human-meaningful archetype label for Discord. When the
+    // bucket-level entryArchetype is missing or 'unknown' (LLM scout-extract
+    // couldn't classify), fall back to the same regex-derived entry_type the
+    // graduator uses for the DSL — so Discord shows what the strategy actually
+    // does instead of "unknown".
+    const displayArchetype =
+      (bucketMeta?.entryArchetype && bucketMeta.entryArchetype !== "unknown")
+        ? bucketMeta.entryArchetype
+        : deriveEntryType(conceptName ?? "", bucketMeta?.entryArchetype ?? null);
+    notifyInfo(
+      `New strategy graduated: ${conceptName ?? displayArchetype} (${bucketMeta?.market ?? "?"})`,
+      [
+        `Market: **${bucketMeta?.market ?? "?"}** | Archetype: **${displayArchetype}**`,
+        `Confirmed by **${distinctProviders}** independent sources (${sourceCount} total mentions)`,
+        `Sources:\n${sourceList}`,
+        graduatedStrategyId ? `Strategy ID: \`${graduatedStrategyId}\`` : "",
+        bucketLink ? `[View bucket](${bucketLink})` : `Bucket ID: \`${bucketId}\``,
+      ].filter(Boolean).join("\n"),
+      {
+        bucket_id:    bucketId,
+        strategy_id:  graduatedStrategyId ?? null,
+        market:       bucketMeta?.market ?? null,
+        source_count: sourceCount,
+      },
+    );
+
+    logger.info({ bucketId, graduatedStrategyId, sourceCount, distinctProviders, correlationId }, "pending-bucket: graduated successfully");
+
+    // Delayed backfill retry: if graduated_strategy_id is still null (journal
+    // hasn't been compiled by 8A yet), schedule retries at 60s/5m/30m. This
+    // covers the common case where 8A drains within minutes of graduation.
+    // Each retry is bounded (one bucket); cron-based bulk backfill handles
+    // anything that slips past.
+    if (!graduatedStrategyId && graduatedJournalId) {
+      const retryAfterMs = [60_000, 5 * 60_000, 30 * 60_000];
+      for (const delay of retryAfterMs) {
+        setTimeout(async () => {
+          try {
+            const sid = await resolveStrategyIdFromJournalId(graduatedJournalId);
+            if (!sid) return;
+            // Only patch if still null (avoid clobbering a manual / earlier patch)
+            await db.update(strategyPendingBuckets)
+              .set({ graduatedStrategyId: sid })
+              .where(
+                and(
+                  eq(strategyPendingBuckets.id, bucketId),
+                  sql`${strategyPendingBuckets.graduatedStrategyId} IS NULL`,
+                ),
+              );
+            logger.info({ bucketId, strategyId: sid, delayMs: delay }, "pending-bucket: graduated_strategy_id backfilled");
+          } catch (err) {
+            logger.warn({ err, bucketId, delayMs: delay }, "pending-bucket: backfill retry failed (non-fatal)");
+          }
+        }, delay).unref();
+      }
+    }
+  } catch (err) {
+    // Rollback to pending so the next mention can retry graduation
+    logger.error({ err, bucketId }, "graduation: failed — rolling bucket back to pending");
+    await db.update(strategyPendingBuckets).set({ status: "pending" })
+      .where(eq(strategyPendingBuckets.id, bucketId))
+      .catch((rollbackErr) => {
+        logger.error({ err: rollbackErr, bucketId }, "graduation: rollback itself failed");
+      });
+    throw err; // re-throw so the caller can log the root error
+  }
+}
+
+// ─── GET /api/agent/pending-buckets ──────────────────────────────────────
+// Pass 18 — Frontend PendingValidationTab list endpoint. Returns buckets
+// filtered by status (default 'pending'), most recent first, with the set
+// of distinct providers surfaced for chip rendering.
+
+const pendingBucketStatusEnum = z.enum([
+  "pending", "graduating", "graduated", "expired", "killed",
+]);
+
+agentRoutes.get("/pending-buckets", async (req, res) => {
+  const statusParam = String(req.query.status ?? "pending");
+  const parsedStatus = pendingBucketStatusEnum.safeParse(statusParam);
+  if (!parsedStatus.success) {
+    res.status(400).json({ error: "Invalid status filter", allowed: pendingBucketStatusEnum.options });
+    return;
+  }
+  const status = parsedStatus.data;
+  const limit = Math.min(Number(req.query.limit) || 100, 500);
+
+  try {
+    // Lazy backfill — bounded — so this list endpoint also drives
+    // graduated_strategy_id reconciliation as a side effect when the operator
+    // visits the tab. Fire-and-forget; failures non-fatal.
+    backfillGraduatedStrategyIds(25).catch(() => undefined);
+
+    // Refresh the Prometheus gauge from authoritative DB counts (bounded query,
+    // cheap — runs whenever the operator pulls the list). Fire-and-forget.
+    db.execute(sql`
+      SELECT status, COUNT(*)::int AS n
+      FROM strategy_pending_buckets
+      GROUP BY status
+    `).then((res: any) => {
+      const rowsAll: Array<{ status: string; n: number }> =
+        Array.isArray(res) ? res : (res?.rows ?? []);
+      for (const s of ["pending", "graduating", "graduated", "expired", "killed"]) {
+        const found = rowsAll.find((r) => r.status === s);
+        pendingBucketsTotal.set({ status: s }, found?.n ?? 0);
+      }
+    }).catch(() => undefined);
+
+    // Pass 21 (2026-05-12) — surface conceptName + layerCoverageJson on the
+    // list payload so the new Scout page can render layer chips + humanized
+    // concept titles without an extra fetch per bucket.
+    const rows = await db
+      .select({
+        id:                  strategyPendingBuckets.id,
+        fingerprintHash:     strategyPendingBuckets.fingerprintHash,
+        market:              strategyPendingBuckets.market,
+        entryArchetype:      strategyPendingBuckets.entryArchetype,
+        exitType:            strategyPendingBuckets.exitType,
+        sourceCount:         strategyPendingBuckets.sourceCount,
+        distinctProviders:   strategyPendingBuckets.distinctProviders,
+        status:              strategyPendingBuckets.status,
+        firstSeenAt:         strategyPendingBuckets.firstSeenAt,
+        lastSeenAt:          strategyPendingBuckets.lastSeenAt,
+        graduatedAt:         strategyPendingBuckets.graduatedAt,
+        graduatedStrategyId: strategyPendingBuckets.graduatedStrategyId,
+        conceptName:         strategyPendingBuckets.conceptName,
+        layerCoverageJson:   strategyPendingBuckets.layerCoverageJson,
+      })
+      .from(strategyPendingBuckets)
+      .where(eq(strategyPendingBuckets.status, status))
+      .orderBy(desc(strategyPendingBuckets.lastSeenAt))
+      .limit(limit);
+
+    if (rows.length === 0) {
+      res.json({ data: [], total: 0 });
+      return;
+    }
+
+    const bucketIds = rows.map((r) => r.id);
+    const providerRows = await db
+      .selectDistinct({
+        bucketId:       strategyPendingMentions.bucketId,
+        sourceProvider: strategyPendingMentions.sourceProvider,
+      })
+      .from(strategyPendingMentions)
+      .where(inArray(strategyPendingMentions.bucketId, bucketIds));
+
+    const providersByBucket = new Map<string, string[]>();
+    for (const p of providerRows) {
+      const arr = providersByBucket.get(p.bucketId) ?? [];
+      arr.push(p.sourceProvider);
+      providersByBucket.set(p.bucketId, arr);
+    }
+
+    const data = rows.map((r) => ({
+      id:                  r.id,
+      fingerprintHash:     r.fingerprintHash,
+      market:              r.market,
+      entryArchetype:      r.entryArchetype,
+      exitType:            r.exitType,
+      sourceCount:         r.sourceCount,
+      distinctProviders:   r.distinctProviders,
+      status:              r.status,
+      firstSeenAt:         r.firstSeenAt instanceof Date ? r.firstSeenAt.toISOString() : r.firstSeenAt,
+      lastSeenAt:          r.lastSeenAt instanceof Date ? r.lastSeenAt.toISOString() : r.lastSeenAt,
+      graduatedAt:         r.graduatedAt instanceof Date ? r.graduatedAt.toISOString() : (r.graduatedAt ?? null),
+      graduatedStrategyId: r.graduatedStrategyId ?? null,
+      providers:           providersByBucket.get(r.id) ?? [],
+      // Pass 21 — Pass 20 concept-fingerprint fields surfaced on the list endpoint
+      conceptName:         r.conceptName ?? null,
+      layerCoverageJson:   r.layerCoverageJson ?? null,
+    }));
+
+    res.json({ data, total: data.length });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, status }, "GET /pending-buckets failed");
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── GET /api/agent/pending-buckets/:id/mentions ─────────────────────────
+// Pass 18 — Returns all mentions for a bucket so the frontend can render the
+// provider chips, source URLs, and CV confidence per row.
+
+agentRoutes.get("/pending-buckets/:id/mentions", async (req, res) => {
+  const bucketId = String(req.params.id);
+  try {
+    const rows = await db
+      .select({
+        id:                       strategyPendingMentions.id,
+        bucketId:                 strategyPendingMentions.bucketId,
+        sourceProvider:           strategyPendingMentions.sourceProvider,
+        sourceUrl:                strategyPendingMentions.sourceUrl,
+        crossValidatorConfidence: strategyPendingMentions.crossValidatorConfidence,
+        isCrossValidationResult:  strategyPendingMentions.isCrossValidationResult,
+        createdAt:                strategyPendingMentions.createdAt,
+      })
+      .from(strategyPendingMentions)
+      .where(eq(strategyPendingMentions.bucketId, bucketId))
+      .orderBy(desc(strategyPendingMentions.createdAt));
+
+    const data = rows.map((r) => ({
+      id:                       r.id,
+      bucketId:                 r.bucketId,
+      sourceProvider:           r.sourceProvider,
+      sourceUrl:                r.sourceUrl,
+      crossValidatorConfidence: r.crossValidatorConfidence !== null ? Number(r.crossValidatorConfidence) : null,
+      isCrossValidationResult:  r.isCrossValidationResult,
+      createdAt:                r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+    }));
+
+    res.json({ data });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, bucketId }, "GET /pending-buckets/:id/mentions failed");
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── POST /api/agent/pending-buckets/:id/graduate ────────────────────────
+// Pass 18 — Operator force-graduate. Skips the 3-source threshold and runs
+// the same graduation flow used by automatic graduation.
+
+agentRoutes.post("/pending-buckets/:id/graduate", idempotencyMiddleware, async (req, res) => {
+  const bucketId = String(req.params.id);
+  const correlationId = getCorrelationId(req);
+
+  try {
+    const [bucket] = await db.select()
+      .from(strategyPendingBuckets)
+      .where(eq(strategyPendingBuckets.id, bucketId))
+      .limit(1);
+
+    if (!bucket) {
+      res.status(404).json({ error: "Bucket not found" });
+      return;
+    }
+
+    if (bucket.status !== "pending") {
+      res.status(409).json({
+        error:  `Bucket not in pending state (status=${bucket.status})`,
+        status: bucket.status,
+      });
+      return;
+    }
+
+    const locked = await db.update(strategyPendingBuckets).set({
+      status:      "graduating",
+      graduatedAt: sql`NOW()`,
+    }).where(
+      and(
+        eq(strategyPendingBuckets.id, bucketId),
+        eq(strategyPendingBuckets.status, "pending"),
+      ),
+    ).returning();
+
+    if (locked.length === 0) {
+      const [current] = await db.select({ status: strategyPendingBuckets.status })
+        .from(strategyPendingBuckets)
+        .where(eq(strategyPendingBuckets.id, bucketId))
+        .limit(1);
+      res.status(409).json({
+        error:  "Bucket already graduating (race lost)",
+        status: current?.status ?? "graduating",
+      });
+      return;
+    }
+
+    pendingBucketsGraduatedTotal.inc();
+
+    db.insert(auditLog).values({
+      action:            "pending_bucket.graduated_by_operator",
+      entityType:        "strategy_pending_bucket",
+      entityId:          bucketId,
+      input: {
+        bucket_id:          bucketId,
+        source_count:       bucket.sourceCount,
+        distinct_providers: bucket.distinctProviders,
+        operator_forced:    true,
+      } as unknown as Record<string, unknown>,
+      status:            "success",
+      decisionAuthority: "human",
+      correlationId,
+    }).catch((err) => {
+      logger.warn({ err, bucketId }, "pending_bucket.graduated_by_operator audit write failed");
+    });
+
+    broadcastSSE("pending_bucket.updated", {
+      bucket_id:          bucketId,
+      fingerprint_hash:   bucket.fingerprintHash,
+      source_count:       bucket.sourceCount,
+      distinct_providers: bucket.distinctProviders,
+      status:             "graduating",
+      market:             bucket.market,
+      entry_archetype:    bucket.entryArchetype,
+      correlation_id:     correlationId,
+    });
+
+    runGraduation(bucketId, bucket.sourceCount, bucket.distinctProviders, correlationId).catch((err) => {
+      logger.error({ err, bucketId }, "operator force-graduate: graduation failed");
+    });
+
+    res.status(202).json({ ok: true, status: "graduating", strategyId: null });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, bucketId }, "POST /pending-buckets/:id/graduate failed");
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── POST /api/agent/pending-buckets/:id/kill ────────────────────────────
+// Pass 18 — Operator kill. Sets status='killed' so the row is excluded from
+// future graduation and disappears from the operator's pending list.
+
+agentRoutes.post("/pending-buckets/:id/kill", idempotencyMiddleware, async (req, res) => {
+  const bucketId = String(req.params.id);
+  const correlationId = getCorrelationId(req);
+
+  try {
+    const [bucket] = await db.select()
+      .from(strategyPendingBuckets)
+      .where(eq(strategyPendingBuckets.id, bucketId))
+      .limit(1);
+
+    if (!bucket) {
+      res.status(404).json({ error: "Bucket not found" });
+      return;
+    }
+
+    if (bucket.status === "killed") {
+      res.json({ ok: true, status: "killed", strategyId: null });
+      return;
+    }
+
+    if (bucket.status === "graduated") {
+      res.status(409).json({
+        error:  "Cannot kill a graduated bucket — strategy already in pipeline",
+        status: bucket.status,
+      });
+      return;
+    }
+
+    await db.update(strategyPendingBuckets)
+      .set({ status: "killed" })
+      .where(eq(strategyPendingBuckets.id, bucketId));
+
+    db.insert(auditLog).values({
+      action:            "pending_bucket.killed",
+      entityType:        "strategy_pending_bucket",
+      entityId:          bucketId,
+      input: {
+        bucket_id:          bucketId,
+        previous_status:    bucket.status,
+        source_count:       bucket.sourceCount,
+        distinct_providers: bucket.distinctProviders,
+      } as unknown as Record<string, unknown>,
+      status:            "success",
+      decisionAuthority: "human",
+      correlationId,
+    }).catch((err) => {
+      logger.warn({ err, bucketId }, "pending_bucket.killed audit write failed");
+    });
+
+    broadcastSSE("pending_bucket.updated", {
+      bucket_id:          bucketId,
+      fingerprint_hash:   bucket.fingerprintHash,
+      source_count:       bucket.sourceCount,
+      distinct_providers: bucket.distinctProviders,
+      status:             "killed",
+      market:             bucket.market,
+      entry_archetype:    bucket.entryArchetype,
+      correlation_id:     correlationId,
+    });
+
+    res.json({ ok: true, status: "killed", strategyId: null });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, bucketId }, "POST /pending-buckets/:id/kill failed");
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── GET /api/agent/pending-mention/:id ──────────────────────────────────
+// Pass 18 — CV1 workflow fetches the seed mention to build search terms.
+// Returns the full extracted_idea + bucket metadata for the mention.
+
+agentRoutes.get("/pending-mention/:id", async (req, res) => {
+  try {
+    const [mention] = await db.select({
+      id:                      strategyPendingMentions.id,
+      bucketId:                strategyPendingMentions.bucketId,
+      sourceProvider:          strategyPendingMentions.sourceProvider,
+      sourceUrl:               strategyPendingMentions.sourceUrl,
+      extractedIdea:           strategyPendingMentions.extractedIdea,
+      isCrossValidationResult: strategyPendingMentions.isCrossValidationResult,
+      createdAt:               strategyPendingMentions.createdAt,
+    }).from(strategyPendingMentions)
+      .where(eq(strategyPendingMentions.id, req.params.id))
+      .limit(1);
+
+    if (!mention) {
+      res.status(404).json({ error: "Mention not found" });
+      return;
+    }
+
+    // Include bucket metadata
+    const [bucket] = await db.select({
+      id:                strategyPendingBuckets.id,
+      fingerprintHash:   strategyPendingBuckets.fingerprintHash,
+      market:            strategyPendingBuckets.market,
+      entryArchetype:    strategyPendingBuckets.entryArchetype,
+      exitType:          strategyPendingBuckets.exitType,
+      sourceCount:       strategyPendingBuckets.sourceCount,
+      distinctProviders: strategyPendingBuckets.distinctProviders,
+      status:            strategyPendingBuckets.status,
+    }).from(strategyPendingBuckets)
+      .where(eq(strategyPendingBuckets.id, mention.bucketId))
+      .limit(1);
+
+    res.json({ mention, bucket });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── POST /api/agent/pending-bucket/:id/kill ─────────────────────────────────
+// Pass 18 — Operator kills a pending bucket (marks status='killed').
+// Emits audit_log entry and SSE event. Idempotent: killing an already-killed
+// bucket is a no-op (returns 200 with already_killed=true).
+
+agentRoutes.post("/pending-bucket/:id/kill", async (req, res) => {
+  const bucketId = req.params.id;
+  const correlationId = getCorrelationId(req);
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.slice(0, 500) : "operator_killed";
+
+  try {
+    // Atomic update: only kill if currently pending (not already killed/graduated)
+    const updated = await db.update(strategyPendingBuckets).set({
+      status: "killed",
+    }).where(
+      and(
+        eq(strategyPendingBuckets.id, bucketId),
+        sql`${strategyPendingBuckets.status} NOT IN ('killed', 'graduated')`,
+      )
+    ).returning();
+
+    if (updated.length === 0) {
+      // Either not found or already in a terminal state
+      const [current] = await db.select({ status: strategyPendingBuckets.status })
+        .from(strategyPendingBuckets)
+        .where(eq(strategyPendingBuckets.id, bucketId))
+        .limit(1);
+
+      if (!current) {
+        res.status(404).json({ error: "Pending bucket not found" });
+        return;
+      }
+
+      res.json({ killed: false, already_killed: true, status: current.status, bucket_id: bucketId });
+      return;
+    }
+
+    // Audit
+    db.insert(auditLog).values({
+      action:            "pending_bucket.killed",
+      entityType:        "strategy_pending_bucket",
+      entityId:          bucketId,
+      input:             { reason, killed_by: "operator" } as unknown as Record<string, unknown>,
+      status:            "success",
+      decisionAuthority: "agent",
+      correlationId,
+    }).catch((err) => {
+      logger.warn({ err, bucketId }, "pending-bucket kill: audit_log write failed");
+    });
+
+    // SSE
+    broadcastSSE("pending_bucket.killed", {
+      bucket_id:      bucketId,
+      reason,
+      correlation_id: correlationId,
+    });
+
+    logger.info({ bucketId, reason, correlationId }, "pending-bucket: killed by operator");
+    res.json({ killed: true, bucket_id: bucketId, status: "killed" });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, bucketId, correlationId }, "pending-bucket kill failed");
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── POST /api/agent/discover-strategy-names ────────────────────────────────
+// Pass 20 Layer 1 — GPT-5-mini strategy_name_discoverer role.
+// Reads a web article markdown and returns an array of named strategies found.
+// No DSL extraction here — just names + 1-sentence concepts.
+// Idempotent. Audit log: scout.names_discovered per call.
+//
+// This is the first step in the 3-layer scout architecture:
+//   Layer 1 (this endpoint): discover names from web articles
+//   Layer 2 (transcript-extract): YouTube transcripts → DSL extraction
+//   Layer 3 (Reddit): community validation
+// Graduation: same concept_name confirmed across all 3 layers → /strategies.
+
+const discoverStrategyNamesSchema = z.object({
+  sourceUrl:      z.string().url(),
+  markdown:       z.string().min(200).max(100_000), // 100KB guard
+  sourceProvider: z.enum(["brave", "tavily", "exa", "parallel", "manual"]),
+});
+
+agentRoutes.post("/discover-strategy-names", idempotencyMiddleware, async (req, res) => {
+  const parsed = discoverStrategyNamesSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid request — discover-strategy-names schema not satisfied",
+      details: parsed.error.issues,
+      hint: "Required: sourceUrl (URL), markdown (200+ chars), sourceProvider",
+    });
+    return;
+  }
+
+  const { sourceUrl, markdown, sourceProvider } = parsed.data;
+  const correlationId = getCorrelationId(req);
+  const truncated = markdown.slice(0, 8000);
+
+  const userPayload = JSON.stringify({
+    source_url:     sourceUrl,
+    source_provider: sourceProvider,
+    article_markdown: truncated,
+  });
+
+  try {
+    const raw = await callOpenAIOrFallback("strategy_name_discoverer", [
+      { role: "user", content: userPayload },
+    ]);
+
+    if (!raw) {
+      res.status(200).json({ discovered: false, count: 0, names: [] });
+      return;
+    }
+
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(raw);
+    } catch (err) {
+      logger.warn({ err, sourceUrl }, "discover-strategy-names: model returned non-JSON");
+      res.status(200).json({ discovered: false, count: 0, names: [] });
+      return;
+    }
+
+    const namesIn = (parsedJson as { names?: unknown }).names;
+    if (!Array.isArray(namesIn) || namesIn.length === 0) {
+      res.status(200).json({ discovered: false, count: 0, names: [] });
+      return;
+    }
+
+    // Validate and normalize each name entry
+    const names = namesIn
+      .filter((n): n is Record<string, unknown> => typeof n === "object" && n !== null)
+      .map((n) => ({
+        name:              typeof n.name            === "string" ? n.name.trim()             : "",
+        concept_archetype: typeof n.concept_archetype === "string" ? n.concept_archetype.trim() : "unknown",
+        brief_concept:     typeof n.brief_concept   === "string" ? n.brief_concept.trim().slice(0, 150) : "",
+        source_url:        typeof n.source_url      === "string" ? n.source_url.trim()       : sourceUrl,
+        source_provider:   sourceProvider,
+      }))
+      .filter((n) => n.name.length > 0); // drop nameless items
+
+    // Audit log — fire-and-forget
+    db.insert(auditLog).values({
+      action:            "scout.names_discovered",
+      entityType:        "system_journal",
+      input:             { source_url: sourceUrl, source_provider: sourceProvider, markdown_bytes: markdown.length } as Record<string, unknown>,
+      result:            { count: names.length, names: names.map((n) => n.name) } as unknown as Record<string, unknown>,
+      status:            "success",
+      decisionAuthority: "agent",
+      correlationId,
+    }).catch((err) => {
+      logger.warn({ err, sourceUrl }, "discover-strategy-names: audit_log write failed");
+    });
+
+    logger.info({ sourceUrl, sourceProvider, count: names.length, correlationId }, "discover-strategy-names: completed");
+    res.json({ discovered: names.length > 0, count: names.length, names });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, sourceUrl, correlationId }, "discover-strategy-names failed");
+    res.status(500).json({ error: msg });
+  }
+});
+
+// ─── POST /api/agent/web-discovery ──────────────────────────────────────────
+// Pass 20 Track H — Three-broker fan-out: Exa + Brave Search + Parallel.ai.
+//
+// All 3 Layer-1 sources are queried in parallel via Promise.allSettled.
+// Results are merged into a single flat array, deduped by source_url (first
+// occurrence wins — preserves provider attribution).
+//
+// Response: { strategies: [...], counts: {exa, brave, parallel, total_after_dedupe} }
+//
+// Fail-OPEN: any single broker failure returns [] for its slice; the other
+// brokers' results are still returned. Never 5xx the caller.
+// Idempotent. Audit log: scout.web_discovery_invoked per call.
+
+const webDiscoverySchema = z.object({
+  query: z.string().min(3).max(500),
+});
+
+agentRoutes.post("/web-discovery", idempotencyMiddleware, async (req, res) => {
+  const parsed = webDiscoverySchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid request — web-discovery schema not satisfied",
+      details: parsed.error.issues,
+      hint: "Required: query (3-500 chars, e.g. 'opening range breakout futures trading strategy')",
+    });
+    return;
+  }
+
+  const { query } = parsed.data;
+  const correlationId = getCorrelationId(req);
+
+  try {
+    // Fan-out to all 3 Layer-1 sources in parallel.
+    // Promise.allSettled: one broker failure must not suppress others.
+    const [exaResult, braveResult, parallelResult] = await Promise.allSettled([
+      runExaDiscovery(query, correlationId),
+      runBraveDiscovery(query, correlationId),
+      runParallelDiscovery(query),
+    ]);
+
+    const exaStrategies      = exaResult.status      === "fulfilled" ? exaResult.value      : [];
+    const braveStrategies    = braveResult.status     === "fulfilled" ? braveResult.value     : [];
+    const parallelStrategies = parallelResult.status  === "fulfilled" ? parallelResult.value  : [];
+
+    if (exaResult.status === "rejected") {
+      logger.warn({ reason: exaResult.reason, query }, "web-discovery: exa broker rejected");
+    }
+    if (braveResult.status === "rejected") {
+      logger.warn({ reason: braveResult.reason, query }, "web-discovery: brave broker rejected");
+    }
+    if (parallelResult.status === "rejected") {
+      logger.warn({ reason: parallelResult.reason, query }, "web-discovery: parallel broker rejected");
+    }
+
+    // Normalise parallel strategies to the shared shape — parallel broker returns
+    // a different interface (no concept_archetype/brief_concept fields) so we adapt.
+    const parallelNormalised = parallelStrategies.map((s) => ({
+      name:              s.name,
+      concept_archetype: "unknown" as const,
+      brief_concept:     s.concept ?? "",
+      source_url:        s.source_url ?? "",
+      source_provider:   "parallel" as const,
+    }));
+
+    // Merge: exa first (highest signal quality), then brave, then parallel.
+    const merged = [
+      ...exaStrategies,
+      ...braveStrategies,
+      ...parallelNormalised,
+    ];
+
+    // Dedupe by source_url — keep first occurrence, preserving provider attribution.
+    const seenUrls  = new Set<string>();
+    const deduped   = merged.filter((s) => {
+      if (!s.source_url) return true; // keep items with no URL (can't dedupe them)
+      if (seenUrls.has(s.source_url)) return false;
+      seenUrls.add(s.source_url);
+      return true;
+    });
+
+    const counts = {
+      exa:               exaStrategies.length,
+      brave:             braveStrategies.length,
+      parallel:          parallelStrategies.length,
+      total_after_dedupe: deduped.length,
+    };
+
+    // Audit log — fire-and-forget
+    db.insert(auditLog).values({
+      action:            "scout.web_discovery_invoked",
+      entityType:        "system_journal",
+      input:             { query } as Record<string, unknown>,
+      result:            { counts, strategy_names: deduped.map((s) => s.name) } as unknown as Record<string, unknown>,
+      status:            "success",
+      decisionAuthority: "agent",
+      correlationId,
+    }).catch((err) => {
+      logger.warn({ err, query }, "web-discovery: audit_log write failed");
+    });
+
+    logger.info({ query, counts, correlationId }, "web-discovery: completed");
+    res.json({ strategies: deduped, counts });
+  } catch (err) {
+    // Belt-and-suspenders — brokers never throw, but guard top-level just in case.
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, query, correlationId }, "web-discovery: unexpected error (returning [])");
+    res.json({ strategies: [], counts: { exa: 0, brave: 0, parallel: 0, total_after_dedupe: 0 }, error: msg });
+  }
+});
+
+// ─── POST /api/agent/cross-validate ──────────────────────────────────────
+// Pass 18 — Thin LLM wrapper for the CV1 n8n workflow.
+//
+// Receives a seed extraction + N candidates from CV1.
+// Calls cross_source_validator role (GPT-5-mini, adversarial similarity judge).
+// Returns per-candidate match verdict with confidence.
+//
+// CV1 uses the response to decide which candidates to POST back to
+// /scout-ideas/pending as confirmed matches (is_cross_validation_result=true).
+
+const crossValidateSchema = z.object({
+  seed: z.object({
+    thesis:          z.string().min(1),
+    market:          z.string().min(1),
+    timeframe:       z.string().min(1),
+    entry_rules:     z.string().min(1),
+    exit_rules:      z.string().min(1),
+    risk_rules:      z.string().min(1),
+    regime:          z.string().min(1),
+    concept_name:    z.string().min(1),
+    source_url:      z.string().url(),
+    source_provider: z.string().min(1),
+    confidence_score: z.number().min(0).max(1).optional(),
+  }),
+  candidates: z.array(z.object({
+    source_provider: z.string().min(1),
+    source_url:      z.string().url(),
+    extracted_idea:  z.record(z.unknown()),
+  })).max(20),  // Guard: oversized payload rejected
+});
+
+agentRoutes.post("/cross-validate", idempotencyMiddleware, async (req, res) => {
+  const parsed = crossValidateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid request — cross-validate schema not satisfied",
+      details: parsed.error.issues,
+    });
+    return;
+  }
+
+  const { seed, candidates } = parsed.data;
+  const correlationId = getCorrelationId(req);
+
+  if (candidates.length === 0) {
+    // Empty candidates — nothing to validate
+    res.json({ matches: [] });
+    return;
+  }
+
+  // Audit: cross_validator.invoked — record that the LLM judge was called
+  db.insert(auditLog).values({
+    action:            "cross_validator.invoked",
+    entityType:        "strategy_pending_bucket",
+    input:             {
+      seed_source_url:   seed.source_url,
+      seed_concept_name: seed.concept_name,
+      seed_market:       seed.market,
+      candidate_count:   candidates.length,
+    } as unknown as Record<string, unknown>,
+    status:            "pending",
+    decisionAuthority: "agent",
+    correlationId,
+  }).catch((err) => {
+    logger.warn({ err, correlationId }, "cross-validate: audit_log invoked write failed");
+  });
+
+  const userPayload = JSON.stringify({ seed, candidates });
+
+  try {
+    // Measure cross-validator LLM call latency per spec §Observability
+    const cvStartSec = Date.now() / 1000;
+    const raw = await callOpenAIOrFallback("cross_source_validator", [
+      { role: "user", content: userPayload },
+    ]);
+    crossValidatorLatencySeconds.observe(Date.now() / 1000 - cvStartSec);
+
+    if (!raw) {
+      // Both cloud and Ollama unavailable — return empty matches (fail-open at
+      // the cross-validator level; the bucket will not graduate without real
+      // corroboration, which is the safe direction).
+      crossValidatorCallsTotal.labels({ outcome: "model_unavailable" }).inc();
+      res.json({ matches: [], reason: "model_unavailable" });
+      return;
+    }
+
+    let parsedJson: unknown;
+    try {
+      parsedJson = JSON.parse(raw);
+    } catch {
+      logger.warn({ raw: raw.slice(0, 200), correlationId }, "cross-validate: model returned non-JSON");
+      crossValidatorCallsTotal.labels({ outcome: "error" }).inc();
+      res.json({ matches: [], reason: "non_json" });
+      return;
+    }
+
+    const matchesIn = (parsedJson as { matches?: unknown }).matches;
+    if (!Array.isArray(matchesIn)) {
+      crossValidatorCallsTotal.labels({ outcome: "error" }).inc();
+      res.json({ matches: [], reason: "invalid_schema" });
+      return;
+    }
+
+    // Validate each match entry — drop malformed items rather than crash
+    const matches = matchesIn
+      .filter((m) =>
+        typeof (m as any)?.index === "number" &&
+        typeof (m as any)?.is_same_setup === "boolean" &&
+        typeof (m as any)?.confidence === "number" &&
+        typeof (m as any)?.divergence_notes === "string",
+      )
+      .map((m: any) => ({
+        index:            Number(m.index),
+        is_same_setup:    Boolean(m.is_same_setup),
+        confidence:       Number(m.confidence),
+        divergence_notes: String(m.divergence_notes),
+      }));
+
+    // Emit per-match audit rows and metric counters
+    let confirmedCount = 0;
+    let rejectedCount  = 0;
+    for (const match of matches) {
+      const isConfirmed = match.is_same_setup && match.confidence >= 0.7;
+      const outcome = isConfirmed ? "match_confirmed" : "match_rejected";
+      crossValidatorCallsTotal.labels({ outcome }).inc();
+      if (isConfirmed) confirmedCount++;
+      else rejectedCount++;
+
+      // Per-match audit row — fire-and-forget
+      const candidateInfo = candidates[match.index];
+      db.insert(auditLog).values({
+        action:            `cross_validator.${outcome}`,
+        entityType:        "strategy_pending_bucket",
+        input:             {
+          seed_concept_name:    seed.concept_name,
+          seed_market:          seed.market,
+          candidate_index:      match.index,
+          candidate_source_url: candidateInfo?.source_url ?? null,
+          candidate_provider:   candidateInfo?.source_provider ?? null,
+          is_same_setup:        match.is_same_setup,
+          confidence:           match.confidence,
+          divergence_notes:     match.divergence_notes.slice(0, 500),
+        } as unknown as Record<string, unknown>,
+        status:            "success",
+        decisionAuthority: "agent",
+        correlationId,
+      }).catch((err) => {
+        logger.warn({ err, correlationId, matchIndex: match.index }, `cross-validate: audit_log ${outcome} write failed`);
+      });
+    }
+
+    logger.info(
+      { correlationId, candidateCount: candidates.length, confirmedCount, rejectedCount },
+      "cross-validate: verdicts emitted",
+    );
+
+    res.json({ matches });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err, correlationId }, "cross-validate failed");
+    crossValidatorCallsTotal.labels({ outcome: "error" }).inc();
+    res.status(500).json({ error: msg });
+  }
 });
 
 // ─── GET /api/agent/failure-patterns ──────────────────────────────
