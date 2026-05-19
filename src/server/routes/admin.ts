@@ -157,6 +157,118 @@ adminRoutes.get("/agent-health-reports", async (req, res) => {
   }
 });
 
+// ─── GET /admin/harsh-regime-phase — Read current phase + evidence ───────────
+//
+// Returns the current harsh-regime gate phase (advisory|hard) along with
+// activation evidence (activatedAt, firstStrategyId, activatedBy, updatedAt).
+// Used by the operator dashboard to display gate status without modifying state.
+//
+// Phase semantics:
+//   advisory — gate warns but never blocks TESTING→PAPER promotion
+//   hard     — gate BLOCKS TESTING→PAPER if regime survival fails
+//
+// The phase flips automatically to "hard" 90 days after the first strategy
+// reaches PAPER state (via harsh-regime-phase-activation-check cron at 03:00 UTC).
+adminRoutes.get("/harsh-regime-phase", async (req, res) => {
+  const correlationId = randomUUID();
+  try {
+    const record = await getPhaseRecord();
+    if (!record) {
+      // No row — migration 0115 not applied yet
+      req.log.warn({ correlationId }, "Admin harsh-regime-phase: no phase record found — migration 0115 may not be applied");
+      return res.status(503).json({
+        error: "Phase record unavailable (migration 0115 not applied)",
+        correlationId,
+      });
+    }
+    return res.json({
+      phase: record.phase,
+      activatedAt: record.activatedAt?.toISOString() ?? null,
+      firstStrategyId: record.firstStrategyId ?? null,
+      activatedBy: record.activatedBy,
+      updatedAt: record.updatedAt.toISOString(),
+      correlationId,
+    });
+  } catch (err) {
+    req.log.error({ err, correlationId }, "Admin: failed to read harsh-regime phase");
+    return res.status(500).json({ error: "Failed to read harsh-regime phase", correlationId });
+  }
+});
+
+// ─── POST /admin/harsh-regime-phase — Operator phase override ────────────────
+//
+// Allows the operator to manually override the harsh-regime gate phase.
+// Required body fields:
+//   phase  — "advisory" | "hard"
+//   reason — human-readable string, min 5 chars (stored in audit_log)
+//
+// Every override (any direction) writes an audit_log row with:
+//   action: "harsh_regime_phase.manual_override"
+//   decisionAuthority: "human"
+//   input: { previousPhase, newPhase, operator, reason }
+//
+// Rolling back to advisory also clears activatedAt + firstStrategyId so the
+// cron can re-trigger auto-activation if conditions are met again later.
+//
+// Security: this route is admin-authenticated (same auth as all /api/admin/*).
+adminRoutes.post("/harsh-regime-phase", async (req, res) => {
+  const correlationId = randomUUID();
+  const body = req.body as { phase?: string; reason?: string };
+
+  // Input validation
+  if (!body.phase || (body.phase !== "advisory" && body.phase !== "hard")) {
+    return res.status(400).json({
+      error: "Invalid phase: must be 'advisory' or 'hard'",
+      correlationId,
+    });
+  }
+  if (!body.reason || typeof body.reason !== "string" || body.reason.trim().length < 5) {
+    return res.status(400).json({
+      error: "reason required (min 5 characters)",
+      correlationId,
+    });
+  }
+
+  const newPhase = body.phase as PhaseValue;
+  const reason = body.reason.trim();
+  const operator = (req as { user?: { email?: string } }).user?.email ?? "operator";
+
+  try {
+    const result = await setPhaseOverride(newPhase, reason, operator, correlationId);
+
+    // Notify Discord: critical for hard activation, warning for advisory rollback
+    if (newPhase === "hard") {
+      notifyCritical(
+        "Harsh-Regime Gate: MANUALLY ACTIVATED (HARD phase)",
+        `Operator override: gate manually hardened to HARD phase.\n\nReason: ${reason}\nOperator: ${operator}\nPrevious phase: ${result.previousPhase}\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER will be BLOCKED.`,
+        { operator, reason, previousPhase: result.previousPhase, correlationId },
+      );
+    } else if (newPhase === "advisory" && result.previousPhase === "hard") {
+      notifyWarning(
+        "Harsh-Regime Gate: Rolled back to ADVISORY",
+        `Operator override: gate rolled back from HARD to advisory.\n\nReason: ${reason}\nOperator: ${operator}\n\nThe 90-day auto-activation clock has been reset. The cron will re-trigger automatically if conditions are met again.`,
+        { operator, reason, previousPhase: result.previousPhase, correlationId },
+      );
+    }
+
+    req.log.info(
+      { correlationId, operator, newPhase, previousPhase: result.previousPhase, flipped: result.flipped, reason },
+      "Admin: harsh-regime phase override applied",
+    );
+
+    return res.json({
+      phase: newPhase,
+      previousPhase: result.previousPhase,
+      flipped: result.flipped,
+      reason: result.reason,
+      correlationId,
+    });
+  } catch (err) {
+    req.log.error({ err, correlationId, newPhase, reason }, "Admin: failed to apply harsh-regime phase override");
+    return res.status(500).json({ error: "Failed to apply harsh-regime phase override", correlationId });
+  }
+});
+
 // ─── GET /admin/data-integrity-findings ─────────────────────────
 // Surfaces unresolved (default) or all rows from data_integrity_findings (A8).
 // data-integrity-service writes here nightly at 4:00 AM ET but until the

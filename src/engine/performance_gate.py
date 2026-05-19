@@ -82,6 +82,7 @@ def check_performance_gate(stats: dict, firm_key: str | None = None) -> tuple[bo
         (passed, rejection_reasons)
     """
     rejections: list[str] = []
+    warnings: list[str] = []  # W23-D.1: initialised early (used by permissive fallback)
 
     # P2-G: compute per-firm adjusted daily PnL threshold
     _pnl_adjustment = _FIRM_DAILY_PNL_ADJUSTMENT.get(firm_key or "", 0)
@@ -211,7 +212,6 @@ def check_performance_gate(stats: dict, firm_key: str | None = None) -> tuple[bo
         )
 
     # Task 3.7: Sample size warning (not a rejection, but flagged)
-    warnings: list[str] = []
     total_trades = stats.get("total_trades", 0)
     if total_trades < 500:
         warnings.append(
