@@ -273,8 +273,12 @@ interface RlTrainingResult {
   comparison_result?: Record<string, unknown> | null;
 }
 
-// 10 minutes max per backtest — prevents matrix from hanging on slow strategies
-const BACKTEST_TIMEOUT_MS = 10 * 60 * 1000;
+// Phase 12 perf fix: bumped from 10 min to 30 min (safety net only — primary speedup is
+// parallel WF windows + stress-test skip in data_loader.py and walk_forward.py).
+// A correctly cached + parallelized backtest should complete in < 2 min. The 30 min
+// ceiling prevents zombie processes from a legitimate 5-10 min overrun without
+// killing runs that are genuinely completing.
+const BACKTEST_TIMEOUT_MS = 30 * 60 * 1000;
 
 export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string, actor: "operator" | "automated" = "automated") {
   // ─── Pipeline pause guard ─────────────────────────────────────

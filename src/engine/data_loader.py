@@ -29,7 +29,6 @@ import polars as pl
 
 from src.engine.config import DataQualityReport
 
-
 # ─── Singleton DuckDB Connection ──────────────────────────────────
 
 _con: Optional[duckdb.DuckDBPyConnection] = None
@@ -60,15 +59,59 @@ def _get_connection() -> duckdb.DuckDBPyConnection:
 
 
 # ─── Local Cache ──────────────────────────────────────────────────
+# Phase 12 perf fix: 24-hour TTL + BACKTEST_CACHE_BUST env var for invalidation.
+#
+# Cache key: data_cache/<data_symbol>/<timeframe>.parquet
+# TTL: 24 hours (S3 data is updated nightly by Databento sync; daytime reruns are safe)
+# Bust: BACKTEST_CACHE_BUST=1 → delete + re-fetch ALL cached files before loading
+# Scope: bust runs ONCE per Python process (cleared after first load_ohlcv call)
+#
+# This cache is ratio_adj/consolidated data ONLY. Raw/unadjusted data is never cached
+# here (CLAUDE.md §13: "Don't backtest on raw/unadjusted continuous contracts").
 
 CACHE_DIR = Path(os.environ.get(
     "DATA_CACHE_DIR",
     Path(__file__).resolve().parent.parent.parent / "data_cache",
 ))
 
+# 24 hours TTL for local cache files
+CACHE_TTL_SECONDS: float = float(os.environ.get("DATA_CACHE_TTL_SECONDS", str(24 * 3600)))
+
+# Process-level bust flag: set True once per process when BACKTEST_CACHE_BUST=1
+_cache_busted: bool = False
+
 
 def _cache_path(symbol: str, timeframe: str) -> Path:
     return CACHE_DIR / symbol / f"{timeframe}.parquet"
+
+
+def _is_cache_fresh(cache_file: Path) -> bool:
+    """Return True if the cache file exists and is younger than CACHE_TTL_SECONDS."""
+    if not cache_file.exists():
+        return False
+    import time as _time_mod
+    age = _time_mod.time() - cache_file.stat().st_mtime
+    return age < CACHE_TTL_SECONDS
+
+
+def _maybe_bust_cache() -> None:
+    """If BACKTEST_CACHE_BUST=1, delete all cache files once per process and log."""
+    global _cache_busted
+    if _cache_busted:
+        return
+    if os.environ.get("BACKTEST_CACHE_BUST", "0") != "1":
+        _cache_busted = True  # Mark as handled (no-op)
+        return
+    _cache_busted = True  # Prevent repeated bust in the same process
+    if CACHE_DIR.exists():
+        stale = list(CACHE_DIR.glob("**/*.parquet"))
+        for f in stale:
+            try:
+                f.unlink()
+                print(f"Cache bust: deleted {f}", file=sys.stderr)
+            except Exception as _e:
+                print(f"Cache bust: could not delete {f}: {_e}", file=sys.stderr)
+        print(f"Cache bust: removed {len(stale)} cached file(s) from {CACHE_DIR}", file=sys.stderr)
 
 
 # ─── S3 Paths ────────────────────────────────────────────────────
@@ -364,6 +407,9 @@ def load_ohlcv(
             f"Use adjusted=True (default) for backtesting."
         )
 
+    # Phase 12: bust stale cache if BACKTEST_CACHE_BUST=1 (runs once per process)
+    _maybe_bust_cache()
+
     con = _get_connection()
 
     # Determine source (use data_symbol for paths — micro symbols share full-size data)
@@ -374,13 +420,20 @@ def load_ohlcv(
         _verify_ratio_adjusted_source(source, adjusted)
     else:
         cache_file = _cache_path(data_symbol, timeframe)
-        if cache_file.exists():
+        if _is_cache_fresh(cache_file):
             source = str(cache_file)
-            print(f"Loading {data_symbol} {timeframe} from local cache", file=sys.stderr)
-        else:
-            # Read directly from S3 consolidated file (single HTTP request)
+            print(f"Loading {data_symbol} {timeframe} from local cache ({cache_file})", file=sys.stderr)
+        elif cache_file.exists():
+            # Cache exists but is stale (> 24h) — re-fetch from S3
+            print(
+                f"Loading {data_symbol} {timeframe} — cache stale (>24h), refreshing from S3",
+                file=sys.stderr,
+            )
             source = _consolidated_s3_path(data_symbol, timeframe, adjusted=adjusted)
-            print(f"Loading {data_symbol} {timeframe} from S3 consolidated", file=sys.stderr)
+        else:
+            # Cache miss — read directly from S3 consolidated file (single HTTP request)
+            source = _consolidated_s3_path(data_symbol, timeframe, adjusted=adjusted)
+            print(f"Loading {data_symbol} {timeframe} from S3 consolidated (cache miss)", file=sys.stderr)
 
     sql = f"""
         SELECT ts_event, open, high, low, close, volume
@@ -414,15 +467,18 @@ def load_ohlcv(
         )
 
     # Auto-cache: write to local cache after S3 fetch so re-runs are instant.
-    # NOTE: Cache stores a date-filtered slice. On cache hit, we re-query with
-    # the user's date range, so wider requests will read from S3 if cache is too narrow.
-    # To avoid stale narrow cache, we skip caching if the source was already cached.
+    # Phase 12: always write the FULL dataset (no date filter). Cache is overwritten
+    # when stale (>24h) so a fresh nightly S3 sync is picked up automatically.
+    # Cache stores ratio_adj consolidated data ONLY (CLAUDE.md §13).
     if not local_path and not str(source).startswith(str(CACHE_DIR)):
         cache_file = _cache_path(data_symbol, timeframe)
-        if not cache_file.exists():
+        _should_write_cache = not _is_cache_fresh(cache_file)  # Write if missing OR stale
+        if _should_write_cache:
             try:
                 cache_file.parent.mkdir(parents=True, exist_ok=True)
-                # Re-fetch the FULL dataset (no date filter) for caching
+                # Re-fetch the FULL dataset (no date filter) for caching so future
+                # date-range requests (including crisis scenarios in stress_test.py
+                # that need 2008-2020 data) all hit the local cache.
                 full_sql = f"SELECT ts_event, open, high, low, close, volume FROM read_parquet('{source}') ORDER BY ts_event"
                 try:
                     full_pdf = con.execute(full_sql).fetchdf()
@@ -432,7 +488,8 @@ def load_ohlcv(
                     # Fallback: cache the filtered slice (better than nothing)
                     df.write_parquet(str(cache_file), compression="zstd")
                 size_kb = cache_file.stat().st_size / 1024
-                print(f"Auto-cached {data_symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
+                action = "refreshed" if cache_file.exists() else "auto-cached"
+                print(f"Cache {action}: {data_symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
             except Exception as e:
                 print(f"Auto-cache failed (non-fatal): {e}", file=sys.stderr)
 
@@ -520,7 +577,7 @@ def _third_friday(year: int, month: int) -> int:
     return third_friday
 
 
-def _second_thursday_before_third_friday(year: int, month: int) -> "date":
+def _second_thursday_before_third_friday(year: int, month: int) -> "date":  # noqa: F821
     """Standard CME equity index rollover: 2nd Thursday before 3rd Friday of delivery month.
 
     This is typically 8 days before the 3rd Friday (the Thursday of the prior week).
@@ -537,7 +594,7 @@ def compute_rollover_dates(
     symbol: str,
     start_year: int,
     end_year: int,
-) -> list["date"]:
+) -> list["date"]:  # noqa: F821
     """Compute standard rollover dates for a futures symbol across a year range.
 
     Uses CME convention: 2nd Thursday before 3rd Friday of each delivery month.
@@ -577,7 +634,6 @@ def flag_rollover_days(
     Returns:
         DataFrame with 'is_rollover_day' boolean column added
     """
-    from datetime import date
 
     if "ts_event" not in df.columns:
         return df.with_columns(pl.lit(False).alias("is_rollover_day"))

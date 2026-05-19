@@ -179,11 +179,22 @@ export async function runPythonModule<T = Record<string, unknown>>(
     // in backtest/MC/WF subprocesses (they are single-threaded by design) and
     // eliminate the #1 source of nondeterminism in Python financial code.
     // DETERMINISM_MODE=true additionally triggers enable_determinism() inside Python.
+    //
+    // Phase 12 perf defaults:
+    // - TF_STRESS_TEST_MODE=pipeline: skip the 8-scenario crisis stress test
+    //   during pipeline validation backtests. Run "full" only for explicit
+    //   promotion-gate stress tests (stress_test module CLI).
+    // - WF_PARALLEL=1: enable parallel walk-forward OOS windows (ProcessPoolExecutor).
+    //   Override with WF_PARALLEL=0 in .env to force serial execution.
+    // Both can be overridden by setting the env var in the parent process .env.
     const deterministicEnv: Record<string, string> = {
       MKL_CBWR: "COMPATIBLE",
       OPENBLAS_NUM_THREADS: "1",
       BLIS_NUM_THREADS: "1",
       OMP_NUM_THREADS: "1",
+      // Phase 12: default pipeline mode for all Python backtests
+      TF_STRESS_TEST_MODE: process.env.TF_STRESS_TEST_MODE ?? "pipeline",
+      WF_PARALLEL: process.env.WF_PARALLEL ?? "1",
     };
     return await new Promise((resolve, reject) => {
       const proc = spawn(pythonCmd, finalArgs, {

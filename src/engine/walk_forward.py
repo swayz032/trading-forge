@@ -2,18 +2,27 @@
 
 Per CLAUDE.md: Walk-forward validation is mandatory.
 Aggregate OOS metrics are the ONLY performance numbers that count.
+
+Phase 12 performance fix: OOS windows are now parallelised via
+ProcessPoolExecutor (Option B). Each window is an independent
+IS-train → OOS-test pair on disjoint data slices. Determinism
+is preserved by seeding each worker with (global_seed + window_index).
 """
 
 from __future__ import annotations
 
 # A1 Determinism: import FIRST, before numpy/polars. Sets BLAS env vars at load time.
 import os as _os
+
 if _os.environ.get("DETERMINISM_MODE", "").lower() == "true":
     from src.engine.determinism import enable_determinism as _enable_det
     _enable_det()
 else:
     import src.engine.determinism  # noqa: F401 — side-effect: sets env vars
 
+import concurrent.futures
+import multiprocessing
+import os
 import sys
 import time
 from typing import Optional
@@ -21,19 +30,40 @@ from typing import Optional
 import numpy as np
 import polars as pl
 
-from src.engine.config import BacktestRequest
 from src.engine.backtester import run_backtest, run_class_backtest
-from src.engine.strategy_base import BaseStrategy
-from src.engine.optimizer import optimize_strategy, _apply_params, _build_search_space
-from src.engine.sanity_checks import run_sanity_checks
+from src.engine.config import BacktestRequest
 from src.engine.cross_validation import run_cross_validation
-from src.engine.nvtx_markers import range_push, range_pop
-
+from src.engine.nvtx_markers import range_pop, range_push
+from src.engine.optimizer import _apply_params, _build_search_space, optimize_strategy
+from src.engine.sanity_checks import run_sanity_checks
+from src.engine.strategy_base import BaseStrategy
 
 # ─── OOS Window Minimums ─────────────────────────────────────────
 # Below these thresholds, OOS results are statistically unreliable.
 MIN_OOS_TRADES = 30
 MIN_OOS_DAYS = 60
+
+
+# ─── Parallel window worker (module-level required for pickling on Windows) ──────────
+def _run_wf_window(args: tuple) -> dict:
+    """Worker function for a single walk-forward OOS window.
+
+    Must be at module level (not a closure or lambda) for multiprocessing
+    pickling to work correctly on Windows (spawn context).
+
+    Args:
+        args: (window_index, oos_request, oos_data, is_data, window_seed)
+
+    Returns:
+        oos_result dict from run_backtest()
+    """
+    window_index, oos_request, oos_data, is_data, window_seed = args
+    # Apply per-window seed offset so each worker has deterministic but distinct RNG
+    os.environ["BACKTEST_WINDOW_SEED"] = str(window_seed + window_index)
+    # Re-seed numpy for this worker process
+    np.random.seed(window_seed + window_index)
+    result = run_backtest(oos_request, data=oos_data, warmup_data=is_data)
+    return result
 
 
 def split_walk_forward_windows(
@@ -155,49 +185,140 @@ def run_walk_forward(
     all_oos_equity_bars: list[float] = []
     all_oos_trades: list[dict] = []
 
-    for i, (is_data, oos_data) in enumerate(windows):
-        range_push(f"forge/wf_window_{i}")
-        print(f"  Window {i+1}/{len(windows)}: IS={len(is_data)} bars, OOS={len(oos_data)} bars", file=sys.stderr)
+    # ─── Phase 12: Parallel OOS window dispatch ─────────────────────────────
+    # When not optimizing (Optuna uses SQLite which is single-writer), dispatch
+    # all windows in parallel via ProcessPoolExecutor.
+    #
+    # Worker cap: min(n_windows, cpu_count-1, WF_MAX_WORKERS env) so at least
+    # 1 core stays free for the OS and the Node parent process.
+    # DETERMINISM: each worker is seeded with (base_seed + window_index) so
+    # identical inputs always produce identical outputs per window. The base seed
+    # comes from BACKTEST_SEED env (default 42).
+    #
+    # Fallback: if parallelism fails for any reason (Windows fork issues,
+    # memory pressure, etc.) we fall back to serial execution — no data loss.
+    _use_parallel = (
+        not optimize
+        and os.environ.get("WF_PARALLEL", "1") == "1"
+        and len(windows) > 1
+    )
+    _max_workers_env = int(os.environ.get("WF_MAX_WORKERS", "4"))
+    # Leave 1 CPU for OS + Node parent; cap at env override
+    _n_workers = min(len(windows), max(1, (os.cpu_count() or 2) - 1), _max_workers_env)
+    _base_seed = int(os.environ.get("BACKTEST_SEED", "42"))
 
-        # Optionally optimize on IS, then apply best params to OOS
-        best_config = config
-        opt_result = None
-        if optimize and len(is_data) > 50:
-            opt_result = optimize_strategy(config, is_data, n_trials=n_trials)
-            if opt_result["best_params"]:
-                space = _build_search_space(config)
-                best_config = _apply_params(config, opt_result["best_params"], space)
-                print(f"    Optimized: applied {opt_result['best_params']} (IS Sharpe={opt_result['best_score']:.4f})", file=sys.stderr)
+    # Build the shared OOS request template (config is the same for all windows when
+    # not optimizing — each worker uses the same request but different data slices)
+    _shared_oos_request = BacktestRequest(
+        strategy=config,
+        start_date=request.start_date,
+        end_date=request.end_date,
+        slippage_ticks=request.slippage_ticks,
+        commission_per_side=request.commission_per_side,
+        firm_key=request.firm_key,
+        max_trades_per_day=request.max_trades_per_day,
+        event_calendar=request.event_calendar,
+        fill_model=request.fill_model,
+    )
 
-        # Run backtest on OOS
-        oos_request = BacktestRequest(
-            strategy=best_config,
-            start_date=request.start_date,
-            end_date=request.end_date,
-            slippage_ticks=request.slippage_ticks,
-            commission_per_side=request.commission_per_side,
-            firm_key=request.firm_key,
-            max_trades_per_day=request.max_trades_per_day,
-            event_calendar=request.event_calendar,
-            fill_model=request.fill_model,
+    if _use_parallel and _n_workers > 1:
+        print(
+            f"Walk-forward: launching {len(windows)} windows with {_n_workers} parallel workers",
+            file=sys.stderr,
         )
-        # E7.2: pass IS data as warmup_data so adaptive indicators (rolling quantiles,
-        # regime detection) are computed on IS+OOS concatenated, then OOS-only is
-        # used for trade execution. Prevents lookahead leakage at window boundaries.
-        oos_result = run_backtest(oos_request, data=oos_data, warmup_data=is_data)
+        _worker_args = [
+            (i, _shared_oos_request, oos_data, is_data, _base_seed)
+            for i, (is_data, oos_data) in enumerate(windows)
+        ]
+        try:
+            # 'spawn' is the safe context on Windows — avoids inheriting the DuckDB
+            # singleton connection (which is not fork-safe) and numpy global state.
+            _mp_ctx = concurrent.futures.ProcessPoolExecutor(
+                max_workers=_n_workers,
+                mp_context=multiprocessing.get_context("spawn"),
+            )
+            with _mp_ctx as executor:
+                _futures = {executor.submit(_run_wf_window, arg): arg[0] for arg in _worker_args}
+                # Collect results in window order (not submission order)
+                _oos_results_by_idx: dict[int, dict] = {}
+                for future in concurrent.futures.as_completed(_futures):
+                    win_idx = _futures[future]
+                    try:
+                        _oos_results_by_idx[win_idx] = future.result()
+                    except Exception as _wf_exc:
+                        print(
+                            f"  Walk-forward window {win_idx+1} parallel execution failed: {_wf_exc}. "
+                            f"Falling back to serial for this window.",
+                            file=sys.stderr,
+                        )
+                        # Fall back to serial execution for this window
+                        _fb_is, _fb_oos = windows[win_idx]
+                        _oos_results_by_idx[win_idx] = run_backtest(
+                            _shared_oos_request, data=_fb_oos, warmup_data=_fb_is
+                        )
+            _oos_results_ordered = [_oos_results_by_idx[i] for i in range(len(windows))]
+            print(f"Walk-forward: all {len(windows)} windows completed (parallel)", file=sys.stderr)
+        except Exception as _parallel_exc:
+            print(
+                f"Walk-forward: parallel dispatch failed ({_parallel_exc}), falling back to serial",
+                file=sys.stderr,
+            )
+            # Full serial fallback
+            _oos_results_ordered = [
+                run_backtest(_shared_oos_request, data=oos_d, warmup_data=is_d)
+                for is_d, oos_d in windows
+            ]
+    else:
+        # Serial path: used when optimize=True or WF_PARALLEL=0 or single window
+        print(
+            f"Walk-forward: running {len(windows)} windows serially"
+            f"{' (optimize=True)' if optimize else ''}",
+            file=sys.stderr,
+        )
+        _oos_results_ordered = []
+        for i, (is_data, oos_data) in enumerate(windows):
+            range_push(f"forge/wf_window_{i}")
+            print(f"  Window {i+1}/{len(windows)}: IS={len(is_data)} bars, OOS={len(oos_data)} bars", file=sys.stderr)
 
-        # OOS window minimum validation
+            best_config = config
+            opt_result_serial = None
+            if optimize and len(is_data) > 50:
+                opt_result_serial = optimize_strategy(config, is_data, n_trials=n_trials)
+                if opt_result_serial["best_params"]:
+                    space = _build_search_space(config)
+                    best_config = _apply_params(config, opt_result_serial["best_params"], space)
+                    print(f"    Optimized: applied {opt_result_serial['best_params']} (IS Sharpe={opt_result_serial['best_score']:.4f})", file=sys.stderr)
+
+            _opt_req = BacktestRequest(
+                strategy=best_config,
+                start_date=request.start_date,
+                end_date=request.end_date,
+                slippage_ticks=request.slippage_ticks,
+                commission_per_side=request.commission_per_side,
+                firm_key=request.firm_key,
+                max_trades_per_day=request.max_trades_per_day,
+                event_calendar=request.event_calendar,
+                fill_model=request.fill_model,
+            )
+            _window_res = run_backtest(_opt_req, data=oos_data, warmup_data=is_data)
+            # Stash opt_result for later annotation (keyed by index)
+            _window_res["_opt_result_serial"] = opt_result_serial  # type: ignore[assignment]
+            _oos_results_ordered.append(_window_res)
+            range_pop()
+
+    # ─── Assemble window_results from ordered OOS results ────────────────────
+    def _ts_col(df: pl.DataFrame) -> str:
+        for col in ("ts_event", "ts_et"):
+            if col in df.columns:
+                return col
+        return ""
+
+    for i, (is_data, oos_data) in enumerate(windows):
+        oos_result = _oos_results_ordered[i]
+        opt_result = oos_result.pop("_opt_result_serial", None)
+
         oos_trade_count = oos_result["total_trades"]
         oos_trading_days = oos_result.get("total_trading_days", 0)
-
-        # Extract date boundaries for persistence.
-        # Guard: ts_event column may be absent on synthetic test data — use ts_et as
-        # a fallback, then fall back to "" rather than raising KeyError.
-        def _ts_col(df: pl.DataFrame) -> str:
-            for col in ("ts_event", "ts_et"):
-                if col in df.columns:
-                    return col
-            return ""
 
         _is_ts = _ts_col(is_data)
         _oos_ts = _ts_col(oos_data)
@@ -248,7 +369,7 @@ def run_walk_forward(
 
         if warnings:
             window_detail["warning"] = "; ".join(warnings)
-            print(f"    ⚠ Window {i+1}: {'; '.join(warnings)}", file=sys.stderr)
+            print(f"  Walk-forward window {i+1}: {'; '.join(warnings)}", file=sys.stderr)
 
         if opt_result:
             window_detail["optimization"] = {
@@ -267,7 +388,7 @@ def run_walk_forward(
         _dupes = len(_new_records) - len(_deduped_records)
         if _dupes > 0:
             print(
-                f"    Walk-forward dedup: dropped {_dupes} duplicate boundary-day P&L record(s) "
+                f"  Walk-forward dedup: dropped {_dupes} duplicate boundary-day P&L record(s) "
                 f"at window {i+1} boundary (embargo=0 overlap).",
                 file=sys.stderr,
             )
@@ -281,7 +402,6 @@ def run_walk_forward(
         # equity_bars is a list[float] of bar-level equity values from the backtest result.
         all_oos_equity_bars.extend(oos_result.get("equity_bars", []))
         all_oos_trades.extend(oos_result.get("trades", []))
-        range_pop()  # forge/wf_window_{i}
 
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates
     total_trades = len(all_oos_trades)
@@ -365,7 +485,7 @@ def run_walk_forward(
             }
             if fragile:
                 overall_confidence = "LOW"
-                print(f"  Param stability: FRAGILE — variance > 30% across windows", file=sys.stderr)
+                print("  Param stability: FRAGILE — variance > 30% across windows", file=sys.stderr)
 
     # ─── Prop firm compliance on aggregated OOS results ─────
     prop_compliance = None
@@ -634,11 +754,8 @@ def run_walk_forward_class(
     sanity = run_sanity_checks(_oos_aggregate, is_walk_forward_aggregate=True, symbol=symbol, timeframe=strategy.timeframe)
 
     # Compute average IS Sharpe across optimization windows for WFE
+    # run_walk_forward_class does not support Optuna optimization — avg_is_sharpe is None.
     avg_is_sharpe = None
-    if optimize:
-        is_sharpes = [w["optimization"]["best_sharpe"] for w in window_results if w.get("optimization")]
-        if is_sharpes:
-            avg_is_sharpe = float(np.mean(is_sharpes))
 
     cross_val = run_cross_validation(_oos_aggregate, is_sharpe=avg_is_sharpe)
 

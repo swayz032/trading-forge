@@ -3788,15 +3788,61 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
             print(json.dumps({"error": f"Invalid config: {e}"}))
             sys.exit(1)
 
+        # ─── Phase 12: per-stage timing ──────────────────────────────
+        _t0 = time.perf_counter()
+
         if mode == "walkforward":
+            # Stage: data load (happens inside run_walk_forward on first call)
+            _t_data_start = time.perf_counter()
+            from src.engine.data_loader import load_ohlcv
+            _preloaded_data = load_ohlcv(
+                request.strategy.symbol,
+                request.strategy.timeframe,
+                request.start_date,
+                request.end_date,
+            )
+            _t_data_end = time.perf_counter()
+            print(
+                f"[timing] data_load={_t_data_end - _t_data_start:.2f}s "
+                f"({len(_preloaded_data)} bars, symbol={request.strategy.symbol} "
+                f"tf={request.strategy.timeframe})",
+                file=sys.stderr,
+            )
+
+            _t_wf_start = time.perf_counter()
             from src.engine.walk_forward import run_walk_forward
-            result = run_walk_forward(request, embargo_bars=request.embargo_bars)
+            result = run_walk_forward(request, data=_preloaded_data, embargo_bars=request.embargo_bars)
+            _t_wf_end = time.perf_counter()
+            print(
+                f"[timing] walk_forward={_t_wf_end - _t_wf_start:.2f}s "
+                f"(windows={result.get('n_splits', '?')}, "
+                f"total_elapsed={_t_wf_end - _t0:.2f}s)",
+                file=sys.stderr,
+            )
         else:
+            _t_single_start = time.perf_counter()
             result = run_backtest(request, use_eligibility_gate=True)
+            _t_single_end = time.perf_counter()
+            print(
+                f"[timing] single_backtest={_t_single_end - _t_single_start:.2f}s",
+                file=sys.stderr,
+            )
 
     # ─── Chain stress testing (all modes, not just walk-forward) ────
-    if "error" not in result:
+    # Phase 12 perf fix: TF_STRESS_TEST_MODE=pipeline skips the 8-scenario stress
+    # test for fast pipeline validation runs. The stress test runs 8 serial
+    # run_backtest() calls on crisis date ranges (each ~5-15s with local cache) — that's
+    # 40-120s extra per strategy. For daily library validation we don't need it.
+    # Use TF_STRESS_TEST_MODE=full (default) for promotion-gate evaluations.
+    _stress_mode = os.environ.get("TF_STRESS_TEST_MODE", "full").lower()
+    _skip_stress = _stress_mode == "pipeline"
+    if _skip_stress:
+        result["crisis_results"] = None
+        print("Stress test: skipped (TF_STRESS_TEST_MODE=pipeline)", file=sys.stderr)
+
+    if "error" not in result and not _skip_stress:
         try:
+            _t_stress_start = time.perf_counter()
             from src.engine.config import StrategyConfig, StressTestRequest
             from src.engine.stress_test import run_stress_test
             strategy_cfg = config.get("strategy", {})
@@ -3842,9 +3888,14 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
             )
             result["forge_score"] = float(_stress_forge_result["score"])
             result["forge_score_components"] = _stress_forge_result
-            print(f"Stress test: {len(crisis.get('scenarios', []))} scenarios, "
-                  f"passed={crisis.get('passed', False)}, "
-                  f"forge_score={result['forge_score']}", file=sys.stderr)
+            _t_stress_end = time.perf_counter()
+            print(
+                f"[timing] stress_test={_t_stress_end - _t_stress_start:.2f}s "
+                f"({len(crisis.get('scenarios', []))} scenarios, "
+                f"passed={crisis.get('passed', False)}, "
+                f"forge_score={result['forge_score']})",
+                file=sys.stderr,
+            )
         except Exception as e:
             print(f"Stress test skipped: {e}", file=sys.stderr)
             result["crisis_results"] = None
