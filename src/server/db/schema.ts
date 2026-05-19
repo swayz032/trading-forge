@@ -30,6 +30,7 @@ import {
   date,
   numeric,
   integer,
+  bigserial,
   jsonb,
   boolean,
   index,
@@ -635,6 +636,11 @@ export const paperSessions = pgTable(
     // peakEquity above is kept as a UI display column (MTM HWM updated every price tick).
     // Trailing-DD compliance checks must use realizedPeakEquity, not peakEquity.
     realizedPeakEquity: numeric("realized_peak_equity").notNull().default("50000"),
+    // Wave 23 B.2 — closed-equity high-water-mark for risk sizing (Topstep trailing-DD buffer math).
+    // Distinct from realizedPeakEquity (W12 MTM-HWM display). Migration 0113.
+    highWaterBalance: numeric("high_water_balance", { precision: 20, scale: 8 })
+      .notNull()
+      .default("50000"),
     config: jsonb("config"),
     lastSignalTime: timestamp("last_signal_time"),    // Gap 3: cooldown persistence
     cooldownUntil: timestamp("cooldown_until"),        // Gap 3: cooldown persistence
@@ -2021,3 +2027,61 @@ export const openingAuctionImbalance = pgTable(
     index("idx_auction_imbalance_symbol_date").on(table.symbol, table.auctionDate.desc()),
   ]
 );
+
+// ─── Bias State (Wave 23.C + Gap-Fix-B) ────────────────────────────────────
+// Per-session bias decision (one row per session_date+symbol at session start;
+// 10:00 ET refresh inserts a NEW row — readers pick MAX(computed_at)).
+// Migration 0112 created the table (BIGSERIAL id, UNIQUE(session_date)).
+// Migration 0114 added `symbol` column, dropped the single-column unique
+// constraint, added composite (session_date, symbol) index, and added
+// `symbol` index. No unique constraint now — service code uses INSERT only
+// and readers use MAX(computed_at) per (session_date, symbol).
+export const biasState = pgTable(
+  "bias_state",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    sessionDate: date("session_date").notNull(),
+    symbol: text("symbol").notNull().default("MES"),
+    regimeLabel: text("regime_label").notNull(),
+    playbook: text("playbook").notNull(),
+    activeStrategyId: uuid("active_strategy_id").references(() => strategies.id, {
+      onDelete: "set null",
+    }),
+    correlationId: text("correlation_id"),
+    evidence: jsonb("evidence").notNull().default({}),
+    computedAt: timestamp("computed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("bias_state_session_date_symbol_idx").on(
+      table.sessionDate.desc(),
+      table.symbol,
+    ),
+    index("bias_state_symbol_idx").on(table.symbol),
+    index("bias_state_regime_label_idx").on(table.regimeLabel),
+    index("bias_state_active_strategy_idx").on(table.activeStrategyId),
+  ],
+);
+
+export type BiasStateRow = typeof biasState.$inferSelect;
+export type BiasStateInsert = typeof biasState.$inferInsert;
+
+// ─── Harsh-Regime Phase (Wave 23D Carry-Forward) ───────────────────────────
+// Singleton table (id=1 always). Tracks whether the harsh-regime survival gate
+// at TESTING→PAPER is in "advisory" (soft, never blocks) or "hard" (blocking).
+// Flipped to "hard" by daily cron after 90 days of PAPER activation data, or
+// manually via POST /api/admin/harsh-regime-phase. Migration 0115.
+export const harshRegimePhase = pgTable("harsh_regime_phase", {
+  id: integer("id").primaryKey().default(1),
+  phase: text("phase").notNull().default("advisory"), // "advisory" | "hard"
+  activatedAt: timestamp("activated_at", { withTimezone: true }),
+  firstStrategyId: uuid("first_strategy_id"),
+  activatedBy: text("activated_by").notNull().default("system"), // "cron_auto" | "operator_override_admin" | "system"
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type HarshRegimePhaseValue = "advisory" | "hard";
+export type HarshRegimePhaseRow = typeof harshRegimePhase.$inferSelect;
+export type HarshRegimePhaseInsert = typeof harshRegimePhase.$inferInsert;

@@ -161,9 +161,38 @@ def check_performance_gate(stats: dict, firm_key: str | None = None) -> tuple[bo
             f"Maximum 4 allowed."
         )
 
-    # Expectancy per trade
-    if stats.get("expectancy_per_trade", 0) < 75:
-        rejections.append("expectancy_per_trade < $75")
+    # ── W23-D.1: R-multiple expectancy gate (replaces $75 dollar gate) ──────────
+    # Previous behavior: expectancy_per_trade >= $75 (dollar-denominated).
+    # New behavior: expectancy_R = avg_trade_pnl / avg_trade_risk >= 2.0.
+    #   Scale-invariant — 2R is 2R regardless of contract count or account size.
+    #   avg_trade_risk = mean(stop_distance × point_value × contracts) per trade.
+    # Legacy fallback: when avg_trade_risk is absent (pre-W23 backtests),
+    #   warn but proceed permissively — avoids blocking valid historical results.
+    # Permissive fallback also applies when avg_trade_risk == 0 (data error).
+    #
+    # Risk of metric drift:
+    #   Strategies that previously passed the $75 gate on small dollar expectancy
+    #   but low R (e.g. $75 at 6 MES × $420 avg_risk = 0.18R) will now be REJECTED.
+    #   This is intentional — the $75 gate was scale-dependent and ignored risk sizing.
+    avg_trade_risk = stats.get("avg_trade_risk", None)
+    if avg_trade_risk is None or avg_trade_risk == 0:
+        # Pre-W23 backtest or data error — warn and proceed permissively
+        warnings.append(
+            "expectancy_R gate: avg_trade_risk absent or zero — proceeding permissively "
+            "(pre-W23 backtest; re-run after W23 engine to enforce R-multiple gate)"
+        )
+    else:
+        expectancy_r = stats.get("expectancy_r", None)
+        if expectancy_r is None:
+            avg_trade_pnl = stats.get("avg_trade_pnl", 0.0)
+            expectancy_r = avg_trade_pnl / avg_trade_risk if avg_trade_risk > 0 else 0.0
+        if expectancy_r < 2.0:
+            sample_size = stats.get("total_trades", 0)
+            rejections.append(
+                f"expectancy_R {expectancy_r:.3f}R < 2.0R threshold "
+                f"(avg_trade_risk=${avg_trade_risk:.0f}, sample_size={sample_size}). "
+                f"Strategy must earn 2R per trade on average to clear promotion gate."
+            )
 
     # Red days vs green days
     avg_loss = abs(stats.get("avg_loss_on_red_days", 0))

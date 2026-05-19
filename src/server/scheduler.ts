@@ -11,9 +11,9 @@
 
 import cron from "node-cron";
 import { randomUUID } from "crypto";
-import { eq, and, gte, lte, desc, inArray, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates } from "./db/schema.js";
+import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
@@ -46,6 +46,9 @@ import {
 import { runDefinitionPull } from "./services/contract-specs-service.js";
 import { runStatisticsPull, runSettlementReconciliation } from "./services/settlement-reconciliation-service.js";
 import { runAuctionImbalancePull } from "./services/opening-auction-service.js";
+// W23D / Wave 23 Gap-Fix-B: bias engine + harsh-regime phase activation
+import { computeBiasForAllSymbols } from "./services/bias-state-service.js";
+import { getPhase, flipPhaseToHard } from "./services/harsh-regime-phase-service.js";
 
 let initialized = false;
 
@@ -2262,7 +2265,252 @@ export function initScheduler() {
     emitJobComplete("prop-firm-dashboard-snapshot", Date.now() - t0snap);
   });
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate)");
+  // ─── Wave 23 Gap-Fix-B: Bias engine session-start — 9:30 AM ET weekdays ────
+  //
+  // DST-aware double-fire: fires at 13:30 UTC (EDT, UTC-4) AND 14:30 UTC (EST, UTC-5).
+  // ET hour+minute check ensures only one fires per day.
+  //
+  // NOT pipeline-gated: bias computation is a safety/observability input —
+  // the lifecycle gate and paper signal service read bias state at decision time.
+  // Pausing the pipeline must not suppress bias signals.
+  //
+  // Calls computeBiasForAllSymbols() for all 3 symbols (MES/MNQ/MCL) in parallel.
+  // Failures are fail-open per-symbol: a symbol error returns a stub; others proceed.
+  registerJob("bias-engine-session-start", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    const today = new Date().toISOString().slice(0, 10);
+    logger.info({ correlationId, jobName: "bias-engine-session-start", sessionDate: today }, "cron tick start");
+    const results = await computeBiasForAllSymbols(today, correlationId, false);
+    const symbolCount = Object.keys(results).length;
+    logger.info({ correlationId, sessionDate: today, symbolCount }, "bias-engine-session-start: bias computed for all symbols");
+    broadcastSSE("bias_engine:session_start", {
+      sessionDate: today,
+      correlationId,
+      symbolCount,
+      symbols: Object.keys(results),
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // 9:30 AM ET = 13:30 UTC (EDT) or 14:30 UTC (EST) — fire both, filter on ET
+  cron.schedule("30 13,14 * * 1-5", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etHourStr, etMinStr] = etTimeStr.split(":");
+    const etHour = parseInt(etHourStr, 10);
+    const etMin = parseInt(etMinStr, 10);
+    if (etHour !== 9 || etMin !== 30) {
+      logger.debug({ etHour, etMin, utcHour: now.getUTCHours() }, "Scheduler: bias-engine-session-start cron fired but not 9:30 AM ET — skipping");
+      return;
+    }
+    // NOT pipeline-gated (safety/observability)
+    logger.info("Scheduler: Bias engine session-start (9:30 AM ET confirmed)");
+    const t0bias = Date.now();
+    await withRetry("bias-engine-session-start", SCHEDULER_JOBS["bias-engine-session-start"].run);
+    markJobRun("bias-engine-session-start");
+    emitJobComplete("bias-engine-session-start", Date.now() - t0bias);
+  });
+
+  // ─── Wave 23 Gap-Fix-B: Bias engine 10:00 AM ET refresh — weekdays ─────────
+  //
+  // DST-aware double-fire: 14:00 UTC (EDT) AND 15:00 UTC (EST).
+  // ET hour+minute check ensures only one fires per day.
+  //
+  // Calls computeBiasForAllSymbols() with forceRefresh=true. The refresh
+  // re-runs compute_bias() with enriched intraday SessionContext (opening
+  // range, overnight bias, NY killzone active) from the first 30-min bar.
+  //
+  // FAIL-OPEN: on refresh failure, the 9:30 row is preserved as authoritative.
+  // Refresh errors are logged as warnings, never fatal.
+  //
+  // NOT pipeline-gated: bias refresh is a safety/observability input.
+  registerJob("bias-engine-refresh-10am-et", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    const today = new Date().toISOString().slice(0, 10);
+    logger.info({ correlationId, jobName: "bias-engine-refresh-10am-et", sessionDate: today }, "cron tick start");
+    try {
+      const results = await computeBiasForAllSymbols(today, correlationId, true);
+      const symbolCount = Object.keys(results).length;
+      logger.info(
+        { correlationId, sessionDate: today, symbolCount, forceRefresh: true },
+        "bias-engine-refresh-10am-et: intraday refresh complete — 9:30 rows remain authoritative on partial failure",
+      );
+      broadcastSSE("bias_engine:refreshed", {
+        sessionDate: today,
+        correlationId,
+        symbolCount,
+        symbols: Object.keys(results),
+        forceRefresh: true,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      // Fail-open: refresh failure must never drop the 9:30 session-start row.
+      // The 9:30 bias state remains authoritative for this session.
+      logger.warn(
+        { err, correlationId, sessionDate: today },
+        "bias-engine-refresh-10am-et: refresh threw — 9:30 row preserved as authoritative (fail-open)",
+      );
+    }
+  });
+
+  // 10:00 AM ET = 14:00 UTC (EDT) or 15:00 UTC (EST) — fire both, filter on ET
+  cron.schedule("0 14,15 * * 1-5", async () => {
+    const now = new Date();
+    const etTimeStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const [etHourStr, etMinStr] = etTimeStr.split(":");
+    const etHour = parseInt(etHourStr, 10);
+    const etMin = parseInt(etMinStr, 10);
+    if (etHour !== 10 || etMin !== 0) {
+      logger.debug({ etHour, etMin, utcHour: now.getUTCHours() }, "Scheduler: bias-engine-refresh-10am-et cron fired but not 10:00 AM ET — skipping");
+      return;
+    }
+    // NOT pipeline-gated (safety/observability)
+    logger.info("Scheduler: Bias engine 10:00 AM ET intraday refresh confirmed");
+    const t0biasRefresh = Date.now();
+    await withRetry("bias-engine-refresh-10am-et", SCHEDULER_JOBS["bias-engine-refresh-10am-et"].run, 1);
+    markJobRun("bias-engine-refresh-10am-et");
+    emitJobComplete("bias-engine-refresh-10am-et", Date.now() - t0biasRefresh);
+  });
+
+  // ─── Wave 23D: Harsh-regime phase activation check — daily 03:00 UTC ────────
+  //
+  // Queries lifecycle_transitions for the earliest to_state='PAPER' row.
+  // If that row is >= 90 days old: flips the harsh_regime_phase singleton
+  // from "advisory" to "hard", fires a critical Discord alert, and emits
+  // lifecycle:gate_evaluated SSE.
+  //
+  // The 90-day clock starts at first PAPER promotion — not at system boot.
+  // As of 2026-05-19, no strategies are at PAPER state; clock not started.
+  //
+  // Phase flip is idempotent: if already "hard", this is a pure no-op.
+  // NOT pipeline-gated: the activation check must run regardless of pause state
+  // (the gate protects production strategies, not research pipeline throughput).
+  registerJob("harsh-regime-phase-activation-check", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "harsh-regime-phase-activation-check" }, "cron tick start");
+
+    // 1. Read current phase — fail-open (getPhase() returns "advisory" on DB error)
+    const currentPhase = await getPhase();
+    if (currentPhase === "hard") {
+      logger.debug({ correlationId }, "harsh-regime-phase-activation-check: phase already hard — no-op");
+      return;
+    }
+
+    // 2. Query lifecycle_transitions for the earliest to_state='PAPER' created_at
+    //    (NOT strategies.activated_at — that column does not exist)
+    let earliestPaperActivation: Date | null = null;
+    let firstStrategyId: string | null = null;
+    try {
+      const [row] = await db
+        .select({
+          earliest: min(lifecycleTransitions.createdAt),
+          strategyId: lifecycleTransitions.strategyId,
+        })
+        .from(lifecycleTransitions)
+        .where(eq(lifecycleTransitions.toState, "PAPER"))
+        .limit(1);
+
+      if (row?.earliest) {
+        earliestPaperActivation = new Date(row.earliest as unknown as string | number | Date);
+        firstStrategyId = row.strategyId ?? null;
+      }
+    } catch (err) {
+      logger.warn({ err, correlationId }, "harsh-regime-phase-activation-check: DB query failed — skipping this tick");
+      return;
+    }
+
+    // 3. Clock not started — no PAPER activations yet
+    if (!earliestPaperActivation || !firstStrategyId) {
+      logger.info(
+        { correlationId },
+        "harsh-regime-phase-activation-check: no PAPER activations found — clock not started (advisory phase continues)",
+      );
+      return;
+    }
+
+    // 4. Compute age
+    const ageDays = Math.floor((Date.now() - earliestPaperActivation.getTime()) / (24 * 60 * 60 * 1000));
+    const THRESHOLD_DAYS = 90;
+    const daysRemaining = THRESHOLD_DAYS - ageDays;
+
+    if (ageDays < THRESHOLD_DAYS) {
+      logger.info(
+        {
+          correlationId,
+          ageDays,
+          daysRemaining,
+          earliestPaperActivation: earliestPaperActivation.toISOString(),
+          firstStrategyId,
+        },
+        `harsh-regime-phase-activation-check: ${daysRemaining} days remaining until hard activation (advisory phase continues)`,
+      );
+      return;
+    }
+
+    // 5. Threshold met — flip to hard
+    logger.info(
+      {
+        correlationId,
+        ageDays,
+        earliestPaperActivation: earliestPaperActivation.toISOString(),
+        firstStrategyId,
+      },
+      "harsh-regime-phase-activation-check: 90-day threshold met — flipping to HARD phase",
+    );
+
+    const flipResult = await flipPhaseToHard(firstStrategyId, correlationId);
+
+    if (flipResult.flipped) {
+      // Critical Discord alert — this is an irreversible gate hardening event
+      notifyCritical(
+        "Harsh-Regime Gate: ACTIVATED (HARD phase)",
+        `The harsh-regime survival gate has been automatically hardened to HARD phase after ${ageDays} days of PAPER activation.\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER gate will be BLOCKED (not just warned).\n\nFirst PAPER activation: ${earliestPaperActivation.toISOString()}\nStrategy: ${firstStrategyId}\n\nTo roll back (operator only): POST /api/admin/harsh-regime-phase { "phase": "advisory", "reason": "<explanation>" }`,
+        { ageDays, firstStrategyId, activatedAt: new Date().toISOString(), correlationId },
+      );
+
+      // SSE: lifecycle:gate_evaluated (not a strategy-specific event — use system entity)
+      broadcastSSE("lifecycle:gate_evaluated", {
+        gate: "harsh_regime_phase",
+        previousPhase: "advisory",
+        newPhase: "hard",
+        ageDays,
+        firstStrategyId,
+        activatedAt: new Date().toISOString(),
+        correlationId,
+        severity: "critical",
+      });
+
+      logger.info(
+        { correlationId, ageDays, firstStrategyId },
+        "harsh-regime-phase-activation-check: HARD phase activated — Discord alerted, SSE emitted",
+      );
+    } else {
+      // Already hard (idempotent path — should not reach here, covered by early exit above)
+      logger.debug({ correlationId, flipResult }, "harsh-regime-phase-activation-check: flip returned flipped=false (already hard)");
+    }
+  });
+
+  // Daily 03:00 UTC — NOT DST-sensitive (UTC-anchored deliberately, not ET)
+  // NOT pipeline-gated (safety/observability — must run when paused)
+  cron.schedule("0 3 * * *", async () => {
+    logger.info("Scheduler: Harsh-regime phase activation check (03:00 UTC daily)");
+    const t0hrp = Date.now();
+    await withRetry("harsh-regime-phase-activation-check", SCHEDULER_JOBS["harsh-regime-phase-activation-check"].run, 1);
+    markJobRun("harsh-regime-phase-activation-check");
+    emitJobComplete("harsh-regime-phase-activation-check", Date.now() - t0hrp);
+  });
+
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated)");
 
   // ─── Startup reconciliation: catch up missed jobs ─────────
   reconcileMissedRuns().then(() => {

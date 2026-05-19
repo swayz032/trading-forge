@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
+Updated automatically from the repo on `2026-05-19T07:57:21.482Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,12 +12,12 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `operator-halt-only, tradingview_deploy`
 - API routes tracked: `62`
-- Scheduler jobs tracked: `82`
+- Scheduler jobs tracked: `61`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `25`
-- Database tables tracked: `94`
+- Database tables tracked: `73`
 
 ### Subsystem Runtime States
 - `active`: `16`
@@ -54,9 +54,9 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `21`
 - Route coverage: `62/62`
-- Scheduler coverage: `82/82`
+- Scheduler coverage: `61/61`
 - Engine coverage: `25/25`
-- Database coverage: `94/94`
+- Database coverage: `73/73`
 - Autonomous subsystems with audit coverage: `21/21`
 - Autonomous subsystems with audit actions: `21/21`
 - Autonomous subsystems with telemetry evidence: `21/21`
@@ -90,7 +90,7 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - Experimental subsystem targets: `5`
 - Shadow workflow candidates: `0`
 - Inactive workflow candidates: `0`
-- Broken workflow blockers: `0`
+- Broken workflow blockers: `21`
 - Failing workflow blockers: `0`
 - Source-missing workflow blockers: `3`
 - Awaiting redeploy workflow blockers: `0`
@@ -114,9 +114,9 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `shadow_experimental`: `5`
 
 ### Workflow States
-- `production-active`: `28`
+- `production-active`: `7`
 - `built-inactive`: `0`
-- `broken`: `0`
+- `broken`: `21`
 - `external-non-core`: `0`
 - health `healthy`: `23`
 - health `failing`: `0`
@@ -243,11 +243,8 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `anti-setup-effectiveness`
 - `anti-setup-mine`
 - `archetype-daily-classify`
-- `autonomous-scout-discovery`
-- `b14-priors-refit`
 - `bias-engine-refresh-10am-et`
 - `bias-engine-session-start`
-- `bitwarden-session-refresh-daily`
 - `c11-bls-release`
 - `c11-fred-daily`
 - `c11-h41-weekly`
@@ -257,11 +254,8 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `compliance-rule-drift`
 - `contract-roll-sweep`
 - `critic-feedback`
-- `daily-reconciliation`
 - `data-integrity-suite`
 - `databento-weekly-refresh`
-- `dead-mans-heartbeat-check`
-- `dead-mans-heartbeat-write`
 - `decay-monitor`
 - `deepar-predict`
 - `deepar-train`
@@ -271,7 +265,6 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `dlq-retry`
 - `drain-scouted-ideas-periodic`
 - `funnel-snapshot`
-- `graduated-strategy-drift-check`
 - `graveyard-pattern-extraction`
 - `harsh-regime-phase-activation-check`
 - `idempotency-cleanup`
@@ -280,21 +273,15 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `meta-parameter-review`
 - `metrics-collector`
 - `metrics-heartbeat`
-- `n8n-data-backup-daily`
-- `n8n-drift-monthly`
-- `n8n-execution-scrape`
 - `n8n-health-check`
 - `n8n-workflow-sync`
-- `nemo-scenario-weekly`
 - `nightly-critique`
 - `paper-vs-backtest`
-- `pending-bucket-expiry`
 - `pipeline-resume-drain`
 - `portfolio-correlation`
 - `pre-market-prep`
 - `pre-trading-day-health-check`
 - `prompt-ab-resolution`
-- `prop-firm-cookie-refresh-daily`
 - `prop-firm-dashboard-snapshot`
 - `prop-firm-health-check`
 - `python-pool-saturation-check`
@@ -303,23 +290,15 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `regret-score-fill`
 - `resource-snapshot`
 - `rolling-sharpe`
-- `scout-drain-stall-check`
-- `scout-reject-distribution-check`
-- `scout-reject-spike-check`
 - `session-analytics-rollup`
-- `single-mention-bucket-sweep`
 - `stale-pending-sweeper`
 - `stale-session-check`
-- `synthetic-regime-refresh`
-- `synthetic-tsgen-train`
 - `system-map-drift`
 - `tournament-staleness-check`
 - `validation-cadence-monthly`
-- `vp-daily-compute`
 - `w19-definition-pull`
 - `w19-imbalance-pull`
 - `w19-statistics-pull`
-- `weekly-drift-detection`
 
 ### Engine Subsystems
 - `anti_setups`
@@ -380,7 +359,6 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 
 ### Database Tables
 - `a_plus_market_scans`
-- `account_strategy_assignments`
 - `adversarial_stress_runs`
 - `agent_health_reports`
 - `alerts`
@@ -389,11 +367,7 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `backtest_provenance`
 - `backtest_trades`
 - `backtests`
-- `bias_ablation_results`
-- `bias_calibration_curves`
-- `bias_decisions`
 - `bias_state`
-- `broker_accounts`
 - `cloud_qmc_runs`
 - `compliance_drift_log`
 - `compliance_reviews`
@@ -402,9 +376,7 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `contract_specs_authoritative`
 - `critic_candidates`
 - `critic_optimization_runs`
-- `daily_reconciliation`
 - `daily_statistics`
-- `daily_volume_profile_levels`
 - `data_integrity_findings`
 - `data_sync_jobs`
 - `day_archetypes`
@@ -412,11 +384,9 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `deepar_forecasts`
 - `deepar_training_runs`
 - `exchange_outages`
-- `firm_adversarial_priors`
 - `frankenstein_test_runs`
 - `harsh_regime_phase`
 - `idempotency_keys`
-- `instance_config`
 - `lifecycle_transitions`
 - `llm_injection_attempts`
 - `macro_features`
@@ -425,16 +395,13 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `monte_carlo_runs`
 - `mutation_outcomes`
 - `n8n_execution_log`
-- `nemo_scenario_bank`
 - `opening_auction_imbalance`
-- `operator_absent_periods`
 - `paper_positions`
 - `paper_session_feedback`
 - `paper_sessions`
 - `paper_signal_logs`
 - `paper_trades`
 - `pilot_sessions`
-- `production_trades`
 - `prompt_ab_tests`
 - `prompt_versions`
 - `prop_firm_health_checks`
@@ -443,7 +410,6 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `quantum_run_costs`
 - `qubo_timing_runs`
 - `rl_training_runs`
-- `scout_drain_samples`
 - `shadow_rerun_findings`
 - `shadow_signals`
 - `skip_decisions`
@@ -456,23 +422,15 @@ Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 - `strategy_graveyard`
 - `strategy_lockouts`
 - `strategy_names`
-- `strategy_pending_buckets`
-- `strategy_pending_mentions`
 - `strategy_signal_vectors`
 - `stress_test_runs`
 - `subsystem_metrics`
-- `synthetic_black_swan_runs`
-- `synthetic_regime_bank`
-- `system_health_heartbeat`
 - `system_journal`
 - `system_parameter_history`
 - `system_parameters`
-- `system_state`
 - `tensor_predictions`
 - `tournament_results`
-- `tradingview_markers`
 - `walk_forward_windows`
-- `weekly_drift_reports`
 <!-- END GENERATED: topology -->
 
 ---

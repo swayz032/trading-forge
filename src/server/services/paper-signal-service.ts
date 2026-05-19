@@ -14,7 +14,18 @@ import { checkCorrelatedPositionGuard, KILL_REASON_CORRELATED_POSITION_OPEN } fr
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
 import { CONTRACT_SPECS, CONTRACT_CAP_MIN, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
+// Wave 23.C: bias engine + A+ gate consumer wiring
+import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateForSignal } from "./bias-state-service.js";
+import { getSessionShapeScore } from "./volume-profile-service.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
+
+// ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
+// Score threshold for the vp_shape confluence factor.
+// Score formula (from volume-profile-service.ts):
+//   score = Math.round(shapeConfidence × (|shape_weight| / 10) × 100)
+//   weights: D=0, b=5, P=5, Thin=10
+// Thin@100%=100, b/P@100%=50 (meets threshold exactly), D=always 0 (never satisfies).
+const VP_SHAPE_SCORE_THRESHOLD = 50;
 
 // ─── P1-6: Firm Contract Cap Lookup ─────────────────────────────────────────
 // TS mirror of firm_config.py::FIRM_CONTRACT_CAPS.
@@ -1560,6 +1571,9 @@ export async function evaluateSignals(
     mode: paperSessions.mode,
     firmId: paperSessions.firmId,
     config: paperSessions.config,
+    // Wave 23.C C.6: HWM for risk-derived pyramid sizing
+    highWaterBalance: paperSessions.highWaterBalance,
+    currentEquity: paperSessions.currentEquity,
   }).from(paperSessions).where(eq(paperSessions.id, sessionId));
 
   // Skip if session doesn't exist or is paused/stopped
@@ -1591,6 +1605,32 @@ export async function evaluateSignals(
       "DEPLOY_READY Sharpe comparison may underestimate strategy quality. " +
       "Set TF_BACKTEST_SKIP_MODE=enforce to align.",
     );
+  }
+
+  // ─── Wave 23.C C.1: Session-start bias engine invocation ─────────────────
+  // Fire-and-forget cache prime: on the first bar seen for this session × day,
+  // ensure the bias_state row exists in DB for today's session date × symbol.
+  // The result is cached in-process so subsequent bars are sub-millisecond reads.
+  // Fail-open: a bias engine failure never blocks signal evaluation.
+  // Not pipeline-gated: bias computation is an observability/promotion-gate input
+  // that must run even when the trading pipeline is paused (same pattern as crons).
+  let biasState: BiasStateForSignal | null = null;
+  try {
+    biasState = await getOrComputeBiasStateForDay(
+      bar.timestamp,
+      correlationId,
+      symbol,
+    );
+    span.setAttribute("bias_regime", biasState.regimeLabel);
+    span.setAttribute("bias_playbook", biasState.playbook);
+    span.setAttribute("bias_active_strategy_id", biasState.activeStrategyId ?? "none");
+  } catch (biasEngineErr) {
+    // Fail-open: bias state unavailable → legacy bypass path
+    logger.warn(
+      { err: biasEngineErr, sessionId, symbol, correlationId },
+      "Wave 23.C: bias engine call failed — legacy bypass path active (fail-open)",
+    );
+    span.setAttribute("bias_engine_error", true);
   }
 
   let skipBlocked = false;   // SKIP/SIT_OUT blocks new entries
@@ -2304,6 +2344,235 @@ export async function evaluateSignals(
       // Shadow signal is already persisted for effectiveness analysis.
       riskGatePassed = false;
     } else {
+
+      // ─── Wave 23.C Stage 1: Active-strategy gate ───────────────────────────
+      // Block entry if today's bias engine selected a DIFFERENT strategy as active
+      // for this symbol+regime.  Legacy strategies (legacy_no_confluence provenance
+      // or no entry_quality block) bypass this gate — they are regime-agnostic.
+      //
+      // Fail-open: if biasState is null (engine failed earlier) → no block.
+      // Audit: signal.not_active_strategy_for_regime on block.
+      const rawConfig = config as unknown as Record<string, unknown>;
+      const entryQuality = (
+        rawConfig.entry_quality ??
+        (rawConfig.strategy as Record<string, unknown> | undefined)?.entry_quality
+      ) as { confluence_factors?: string[]; min_factors_satisfied?: number; extraction_provenance?: string } | undefined;
+
+      const isLegacyStrategy =
+        !entryQuality ||
+        entryQuality.extraction_provenance === "legacy_no_confluence";
+
+      let stage1Blocked = false;
+      if (!isLegacyStrategy && biasState && biasState.activeStrategyId !== null) {
+        if (biasState.activeStrategyId !== sessionConfig.strategyId) {
+          stage1Blocked = true;
+          span.setAttribute("bias_gate_stage1_blocked", true);
+          span.setAttribute("bias_active_strategy_id", biasState.activeStrategyId);
+          logger.info(
+            {
+              sessionId,
+              symbol,
+              thisStrategyId: sessionConfig.strategyId,
+              activeStrategyId: biasState.activeStrategyId,
+              regimeLabel: biasState.regimeLabel,
+              playbook: biasState.playbook,
+            },
+            "Wave 23.C Stage 1: entry blocked — not active strategy for regime",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "bias_gate_blocked_not_active_strategy",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _bias_active_strategy_id: biasState.activeStrategyId,
+              _bias_regime: biasState.regimeLabel,
+              _bias_playbook: biasState.playbook,
+              _this_strategy_id: sessionConfig.strategyId,
+            },
+            acted: false,
+            reason: `signal.not_active_strategy_for_regime: active=${biasState.activeStrategyId} this=${sessionConfig.strategyId} regime=${biasState.regimeLabel}`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist bias stage1 block log"));
+        }
+      }
+
+      // ─── Wave 23.C Stage 2: A+ confluence gate ─────────────────────────────
+      // Evaluates each confluence_factor from entry_quality block.
+      // Legacy bypass: legacy_no_confluence provenance → no gate.
+      // Missing entry_quality → treat as legacy, bypass.
+      // Fail-open: each factor is fail-open individually; gate never throws.
+      //
+      // Factors evaluated:
+      //   regime_match        — activeStrategyId === null OR === thisStrategyId
+      //   structural_setup    — always true (entry expression already satisfied)
+      //   volume_confirmation — bar.volume > rolling_mean(volume,20) × 1.2
+      //   macro_alignment     — not in economic event blackout
+      //   vp_shape            — getSessionShapeScore() >= VP_SHAPE_SCORE_THRESHOLD (50)
+      //
+      // Audit: signal.a_plus_passed / signal.a_plus_rejected / signal.a_plus_bypassed_legacy
+      // SSE: signal:a_plus_rejected on block
+      let stage2Blocked = false;
+      if (!stage1Blocked) {
+        if (isLegacyStrategy) {
+          // Bypass: legacy strategy has no confluence factors defined
+          logger.debug(
+            { sessionId, symbol, strategyId: sessionConfig.strategyId },
+            "Wave 23.C Stage 2: A+ gate bypassed — legacy_no_confluence strategy",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "a_plus_bypassed_legacy",
+            price: String(bar.close),
+            indicatorSnapshot: { ...indicators, _bypass_reason: "legacy_no_confluence" },
+            acted: true,
+            reason: "signal.a_plus_bypassed_legacy: no entry_quality block or legacy_no_confluence provenance",
+          }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ bypass log"));
+        } else if (entryQuality) {
+          // Run the A+ confluence gate
+          const factors = entryQuality.confluence_factors ?? [];
+          const minRequired = entryQuality.min_factors_satisfied ?? factors.length;
+
+          // Evaluate each factor
+          const factorResults: Array<{ factor: string; satisfied: boolean; reason: string }> = [];
+
+          for (const factor of factors) {
+            try {
+              let satisfied = true;
+              let reason = "unknown_factor_fail_open";
+
+              if (factor === "regime_match") {
+                satisfied = biasState === null || biasState.activeStrategyId === null || biasState.activeStrategyId === sessionConfig.strategyId;
+                reason = satisfied ? "regime_matched" : "regime_mismatch";
+              } else if (factor === "structural_setup") {
+                satisfied = true;
+                reason = "entry_expression_true";
+              } else if (factor === "volume_confirmation") {
+                const volumeSeries = barBuffer.map((b) => b.volume).filter((v): v is number => Number.isFinite(v));
+                if (volumeSeries.length >= 20) {
+                  const rollingMean = volumeSeries.slice(-20).reduce((s, v) => s + v, 0) / 20;
+                  satisfied = bar.volume !== undefined && bar.volume > rollingMean * 1.2;
+                  reason = satisfied ? "volume_above_threshold" : "volume_insufficient";
+                } else {
+                  satisfied = true; // fail-open when insufficient history
+                  reason = "insufficient_history_fail_open";
+                }
+              } else if (factor === "macro_alignment") {
+                // Reuse calendarBlocked result (already computed above)
+                satisfied = !calendarBlocked;
+                reason = satisfied ? "no_event_blackout" : "event_blackout_active";
+              } else if (factor === "vp_shape") {
+                // Wave 23.C Gap A.1: real VP shape score from volume-profile-service
+                try {
+                  const sessionDateStr = barTimestampToTradingDay(bar.timestamp);
+                  const vpData = await getSessionShapeScore(symbol, sessionDateStr);
+                  if (!vpData.available) {
+                    satisfied = true; // fail-open when VP data unavailable
+                    reason = "vp_not_available_fail_open";
+                    logger.warn(
+                      { sessionId, symbol, sessionDate: sessionDateStr },
+                      "Wave 23.C vp_shape: VP shape data unavailable — fail-open (satisfied=true)",
+                    );
+                  } else {
+                    satisfied = vpData.score >= VP_SHAPE_SCORE_THRESHOLD;
+                    reason = satisfied
+                      ? `vp_shape_score_${vpData.score}_shape_${vpData.shape}`
+                      : `vp_shape_insufficient_${vpData.score}_lt_${VP_SHAPE_SCORE_THRESHOLD}`;
+                    logger.debug(
+                      { sessionId, symbol, score: vpData.score, shape: vpData.shape, confidence: vpData.confidence, satisfied },
+                      "Wave 23.C vp_shape factor evaluated",
+                    );
+                  }
+                } catch {
+                  satisfied = true; // fail-open on any VP error
+                  reason = "vp_shape_error_fail_open";
+                }
+              }
+
+              factorResults.push({ factor, satisfied, reason });
+            } catch {
+              // Per-factor fail-open: any evaluation error marks it satisfied
+              factorResults.push({ factor, satisfied: true, reason: "factor_eval_error_fail_open" });
+            }
+          }
+
+          const satisfiedCount = factorResults.filter((r) => r.satisfied).length;
+          const passed = satisfiedCount >= minRequired;
+
+          span.setAttribute("a_plus_satisfied_count", satisfiedCount);
+          span.setAttribute("a_plus_min_required", minRequired);
+          span.setAttribute("a_plus_passed", passed);
+
+          if (!passed) {
+            stage2Blocked = true;
+            logger.info(
+              {
+                sessionId,
+                symbol,
+                satisfiedCount,
+                minRequired,
+                factorResults,
+                strategyId: sessionConfig.strategyId,
+              },
+              "Wave 23.C Stage 2: A+ gate REJECTED — insufficient confluence factors",
+            );
+            broadcastSSE("signal:a_plus_rejected", {
+              sessionId,
+              symbol,
+              satisfiedCount,
+              minRequired,
+              factorResults,
+              price: bar.close,
+              timestamp: bar.timestamp,
+            });
+            db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "a_plus_rejected",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _a_plus_satisfied_count: satisfiedCount,
+                _a_plus_min_required: minRequired,
+                _a_plus_factor_results: factorResults,
+              },
+              acted: false,
+              reason: `signal.a_plus_rejected: ${satisfiedCount}/${minRequired} factors satisfied (${factorResults.filter((r) => !r.satisfied).map((r) => r.factor).join(", ")} failed)`,
+            }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist A+ rejected log"));
+          } else {
+            logger.debug(
+              { sessionId, symbol, satisfiedCount, minRequired, factorResults },
+              "Wave 23.C Stage 2: A+ gate PASSED",
+            );
+            db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "a_plus_passed",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _a_plus_satisfied_count: satisfiedCount,
+                _a_plus_min_required: minRequired,
+                _a_plus_factor_results: factorResults,
+              },
+              acted: true,
+              reason: `signal.a_plus_passed: ${satisfiedCount}/${minRequired} factors satisfied`,
+            }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ passed log"));
+          }
+        }
+      }
+
+      // If either Stage 1 or Stage 2 blocked — treat as gate rejected (no entry)
+      if (stage1Blocked || stage2Blocked) {
+        riskGatePassed = false;
+        // Skip to end of else branch — no OI / macro / risk gate needed
+      } else {
+
       // ─── W19: OI liquidity soft-gate check (ADVISORY) ─────────────
       // checkOiLiquidity() inspects 5-day open-interest trend on the contract
       // and flags rolls/expiry where liquidity is drying up. Authority is
@@ -2413,7 +2682,8 @@ export async function evaluateSignals(
           riskGatePassed = false;
         }
       }
-    }
+      } // close inner else { (stage1Blocked || stage2Blocked guard)
+    } // close outer else { (antiSetupBlocked guard)
 
     if (riskGatePassed) {
       // ─── Context Gate: TAKE/REDUCE/SKIP ───────────────────

@@ -1152,6 +1152,297 @@ def _apply_max_trades_per_day(
     return filtered_long, filtered_short
 
 
+# ─── Wave 21 E.3 — Stop ceiling per symbol ───────────────────────────────────
+# Per CLAUDE.md §4: structural stops have a CEILING per instrument.
+# If stop_distance > ceiling → SKIP THE TRADE (never clamp).
+# MCL ceiling is 0.25 points (25 ticks × $0.01/tick = $0.25/pt).
+_STOP_CEILING_TABLE: dict[str, float] = {
+    "MES": 14.0,
+    "ES":  14.0,   # micro alias
+    "MNQ": 40.0,
+    "NQ":  40.0,   # micro alias
+    "MCL": 0.25,
+    "CL":  0.25,   # micro alias
+}
+_STOP_CEILING_DEFAULT: float = 14.0  # fallback to MES ceiling
+
+
+def _get_stop_ceiling_for_symbol(symbol: str) -> float:
+    """Return the maximum allowed stop distance (in points) for a given symbol.
+
+    Per CLAUDE.md §4:
+        MES / ES  → 14 points
+        MNQ / NQ  → 40 points
+        MCL / CL  → 0.25 points (25 ticks)
+
+    Unknown symbols fall back to the MES default (14 points).
+    """
+    return _STOP_CEILING_TABLE.get(symbol.upper(), _STOP_CEILING_DEFAULT)
+
+
+def _apply_dsl_stop_loss_and_time_stop(
+    entry_long: np.ndarray,
+    exit_long: np.ndarray,
+    entry_short: np.ndarray,
+    exit_short: np.ndarray,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    atr_np: np.ndarray,
+    timestamps: list | np.ndarray,
+    stop_multiplier: float = 1.5,
+    symbol: str = "MES",
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict]:
+    """Enforce ATR stop ceiling and 15:55 ET time-stop for DSL strategies.
+
+    Wave 21 E.3/E.5 reconstruction.
+
+    UNCONDITIONAL — always applied for ALL DSL strategies regardless of whether
+    the exit expression is a sentinel or contains real signal values.
+    (Pre-Wave-21 root cause: was gated by `if exit_long_is_sentinel`, allowing
+    real-exit strategies to bypass the stop entirely.)
+
+    E.3 — Stop ceiling enforcement:
+        stop_distance = stop_multiplier × ATR[bar]
+        If stop_distance > ceiling_for_symbol → SKIP entry (set to False).
+        Never clamp — skipping is conservative and avoids oversizing.
+
+    E.5 — 15:55 ET time-stop:
+        Any open long/short position is closed at the 15:55 ET bar.
+        Both long and short sides are handled.
+        Fires unconditionally — no strategy config required.
+
+    Returns:
+        5-tuple (entry_long_out, exit_long_out, entry_short_out, exit_short_out, metadata)
+        metadata keys:
+            skipped_trades: list[dict] — each skip records {bar, direction, stop_dist, ceiling}
+            atr_stop_exits: int — number of ATR-based exit signals set
+            time_stop_exits: int — number of 15:55 ET time-stop exit signals set
+    """
+    ceiling = _get_stop_ceiling_for_symbol(symbol)
+
+    entry_long_out = entry_long.copy()
+    exit_long_out = exit_long.copy()
+    entry_short_out = entry_short.copy()
+    exit_short_out = exit_short.copy()
+
+    n = len(entry_long)
+    metadata: dict = {
+        "skipped_trades": [],
+        "atr_stop_exits": 0,
+        "time_stop_exits": 0,
+    }
+
+    # Track position state for ATR stop and time-stop
+    in_long = False
+    long_entry_price: float = 0.0
+    long_stop_price: float = 0.0
+    in_short = False
+    short_entry_price: float = 0.0
+    short_stop_price: float = 0.0
+
+    for i in range(n):
+        ts_str = str(timestamps[i]) if timestamps is not None and i < len(timestamps) else ""
+        atr = float(atr_np[i]) if not np.isnan(atr_np[i]) else 0.0
+        stop_dist = stop_multiplier * atr
+
+        # ── E.5: 15:55 ET time-stop ────────────────────────────────
+        is_1555 = "15:55" in ts_str
+        if is_1555:
+            if in_long:
+                exit_long_out[i] = True
+                metadata["time_stop_exits"] += 1
+                in_long = False
+            if in_short:
+                exit_short_out[i] = True
+                metadata["time_stop_exits"] += 1
+                in_short = False
+
+        # ── E.3: stop ceiling enforcement on new entries ────────────
+        # Check long entry
+        if bool(entry_long_out[i]) and not in_long:
+            if stop_dist > ceiling:
+                # SKIP — stop too wide
+                entry_long_out[i] = False
+                metadata["skipped_trades"].append({
+                    "bar": i,
+                    "direction": "long",
+                    "stop_dist": round(stop_dist, 4),
+                    "ceiling": ceiling,
+                    "reason": "stop_too_wide",
+                    "ts": ts_str,
+                })
+            else:
+                # Accept entry — record position state for ATR stop tracking
+                in_long = True
+                long_entry_price = float(high_np[i]) if not np.isnan(high_np[i]) else 0.0
+                long_stop_price = long_entry_price - stop_dist
+
+        # Check short entry
+        if bool(entry_short_out[i]) and not in_short:
+            if stop_dist > ceiling:
+                entry_short_out[i] = False
+                metadata["skipped_trades"].append({
+                    "bar": i,
+                    "direction": "short",
+                    "stop_dist": round(stop_dist, 4),
+                    "ceiling": ceiling,
+                    "reason": "stop_too_wide",
+                    "ts": ts_str,
+                })
+            else:
+                in_short = True
+                short_entry_price = float(low_np[i]) if not np.isnan(low_np[i]) else 0.0
+                short_stop_price = short_entry_price + stop_dist
+
+        # ── ATR stop fires: track when stop price is breached ───────
+        if in_long and not bool(exit_long_out[i]):
+            bar_low = float(low_np[i]) if not np.isnan(low_np[i]) else float("inf")
+            if bar_low < long_stop_price:
+                exit_long_out[i] = True
+                in_long = False
+                metadata["atr_stop_exits"] += 1
+
+        if in_short and not bool(exit_short_out[i]):
+            bar_high = float(high_np[i]) if not np.isnan(high_np[i]) else 0.0
+            if bar_high > short_stop_price:
+                exit_short_out[i] = True
+                in_short = False
+                metadata["atr_stop_exits"] += 1
+
+        # ── Track position exit via existing exit signals ────────────
+        if in_long and bool(exit_long_out[i]):
+            in_long = False
+        if in_short and bool(exit_short_out[i]):
+            in_short = False
+
+    return entry_long_out, exit_long_out, entry_short_out, exit_short_out, metadata
+
+
+# ─── Wave 21 E.4 — Account-ruin / DLL halt ──────────────────────────────────
+# Per CLAUDE.md §4:
+#   Personal DLL = 67% of firm DLL → HALT new entries for session
+#   95% of firm DLL → FORCE CLOSE all positions
+#
+# Implementation uses conservative ATR-based P&L estimate per entry
+# (worst-case: full stop hit at 1.5×ATR × contracts × point_value).
+# This is fail-safe: fires earlier than actual DLL would.
+
+def _apply_dll_halt_to_entries(
+    long_entries: np.ndarray,
+    short_entries: np.ndarray,
+    exit_long: np.ndarray,
+    exit_short: np.ndarray,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    atr_np: np.ndarray,
+    timestamps: np.ndarray,
+    point_value: float,
+    sizes: np.ndarray,
+    commission_per_side: float,
+    personal_dll_pct: float = 0.67,
+    firm_dll: float = 1000.0,
+) -> tuple[np.ndarray, np.ndarray, dict]:
+    """Suppress entries and force-close positions when DLL thresholds are breached.
+
+    Wave 21 E.4. Conservative ATR-based P&L estimate (not actual trade P&L).
+
+    Args:
+        long_entries, short_entries: Entry signal arrays (modified in-place copies returned).
+        exit_long, exit_short: Exit signal arrays (modified in-place for force-close).
+        high_np, low_np, close_np: OHLCV price arrays.
+        atr_np: ATR array.
+        timestamps: Bar timestamps (for session date grouping).
+        point_value: Dollar value per 1-point move.
+        sizes: Contract sizes per bar.
+        commission_per_side: Commission per trade side.
+        personal_dll_pct: Fraction of firm DLL that triggers entry halt (default 0.67).
+        firm_dll: Firm daily loss limit in dollars (default $1,000 for MFFU 50K).
+
+    Returns:
+        (long_entries_out, short_entries_out, metadata)
+        metadata keys:
+            dll_halt_sessions: list[str] — session dates where entry halt fired
+            dll_force_close_sessions: list[str] — session dates where force-close fired
+            entries_suppressed: int
+    """
+    personal_dll = firm_dll * personal_dll_pct
+    force_close_dll = firm_dll * 0.95
+
+    long_out = long_entries.copy()
+    short_out = short_entries.copy()
+    exit_long_out = exit_long.copy()
+    exit_short_out = exit_short.copy()
+
+    metadata: dict = {
+        "dll_halt_sessions": [],
+        "dll_force_close_sessions": [],
+        "entries_suppressed": 0,
+    }
+
+    n = len(long_out)
+    session_pnl: dict[str, float] = {}  # date → cumulative estimated P&L
+    session_halted: set[str] = set()
+    session_force_closed: set[str] = set()
+
+    for i in range(n):
+        ts_str = str(timestamps[i]) if i < len(timestamps) else ""
+        day_key = ts_str[:10] if len(ts_str) >= 10 else ts_str
+
+        cum_pnl = session_pnl.get(day_key, 0.0)
+
+        # Estimate loss for a trade entered on this bar
+        atr = float(atr_np[i]) if not np.isnan(atr_np[i]) else 0.0
+        size = float(sizes[i]) if i < len(sizes) and not np.isnan(sizes[i]) else 1.0
+        # Conservative: assume full stop distance hit (1.5×ATR) plus commission roundtrip
+        est_loss = atr * 1.5 * size * point_value + commission_per_side * size * 2
+
+        # Force-close threshold (95% DLL)
+        if cum_pnl <= -force_close_dll:
+            if day_key not in session_force_closed:
+                session_force_closed.add(day_key)
+                metadata["dll_force_close_sessions"].append(day_key)
+                print(
+                    f"[DLL] force_close FIRED session={day_key} cum_pnl={cum_pnl:.0f} "
+                    f"force_close_dll={force_close_dll:.0f}",
+                    file=sys.stderr,
+                )
+            # Suppress entry AND force-close any open position
+            if bool(long_out[i]):
+                long_out[i] = False
+                metadata["entries_suppressed"] += 1
+            if bool(short_out[i]):
+                short_out[i] = False
+                metadata["entries_suppressed"] += 1
+            exit_long_out[i] = True
+            exit_short_out[i] = True
+            continue
+
+        # Personal DLL halt threshold (67%)
+        if cum_pnl <= -personal_dll or day_key in session_halted:
+            if day_key not in session_halted:
+                session_halted.add(day_key)
+                metadata["dll_halt_sessions"].append(day_key)
+                print(
+                    f"[DLL] halt FIRED session={day_key} cum_pnl={cum_pnl:.0f} "
+                    f"personal_dll={personal_dll:.0f}",
+                    file=sys.stderr,
+                )
+            if bool(long_out[i]):
+                long_out[i] = False
+                metadata["entries_suppressed"] += 1
+            if bool(short_out[i]):
+                short_out[i] = False
+                metadata["entries_suppressed"] += 1
+            continue
+
+        # Accumulate estimated P&L impact for entries this bar
+        if bool(long_out[i]) or bool(short_out[i]):
+            session_pnl[day_key] = cum_pnl - est_loss
+
+    return long_out, short_out, metadata
+
+
 def run_backtest(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,

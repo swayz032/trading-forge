@@ -5,6 +5,7 @@ Contract specs MUST match src/server/routes/risk.ts lines 6-15 exactly.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Literal, Optional
 from pydantic import BaseModel, Field, field_validator
 
@@ -60,6 +61,19 @@ MARGIN_EXPANSION_MULTIPLIER = 2.0  # Applied when VIX > 30 or ATR > 90th percent
 
 VALID_SYMBOLS = set(CONTRACT_SPECS.keys())
 
+
+# ─── Track 3 pyramid constants (Wave 21 E.1) ──────────────────────────────────
+# Centralised here so sizing.py + backtester.py import from one source.
+# MES_PYRAMID_CAP: max contracts before risk-derived ceiling overrides.
+# PYRAMID_GRADUATION_PNL: cumulative profit trigger for tier step-up.
+
+@dataclass(frozen=True)
+class _Track3Config:
+    MES_PYRAMID_CAP: int = 30
+    PYRAMID_GRADUATION_PNL: float = 3_000.0  # +3 contracts per +$3K cumulative profit
+
+TRACK3_CONFIG = _Track3Config()
+
 VALID_INDICATOR_TYPES = {"sma", "ema", "rsi", "macd", "vwap", "bbands", "atr", "adx", "adr"}
 
 
@@ -94,11 +108,61 @@ class StopConfig(BaseModel):
 
 
 # ─── Position Size Config ─────────────────────────────────────────
+# Wave 21 E.1: Extended to support "risk_derived_pyramid" in addition to
+# the existing "dynamic_atr" and "fixed" types.
+# All 8 new fields default to None — absent for legacy strategies; Pydantic
+# validators enforce valid ranges only when the fields are explicitly set.
+# Backward compat: "fixed" and "dynamic_atr" strategies are unaffected.
 
 class PositionSizeConfig(BaseModel):
-    type: Literal["dynamic_atr", "fixed"]
+    type: Literal["dynamic_atr", "fixed", "risk_derived_pyramid"]
     target_risk_dollars: float = 500.0
     fixed_contracts: int = 1
+
+    # Wave 21 E.1 — risk_derived_pyramid fields (all optional for backward compat)
+    # base_contracts: starting pyramid tier (floor). Pyramid ramps from here.
+    base_contracts: Optional[int] = None
+    # tier_increment: contracts added per tier_threshold_dollars of cumulative profit.
+    tier_increment: Optional[int] = None
+    # tier_threshold_dollars: profit step triggering next pyramid tier.
+    tier_threshold_dollars: Optional[float] = None
+    # max_risk_pct_per_trade: fraction of risk-base to risk per trade (e.g. 0.02 = 2%).
+    max_risk_pct_per_trade: Optional[float] = None
+    # personal_dll_pct: fraction of firm DLL that triggers personal halt (default 0.67).
+    personal_dll_pct: Optional[float] = None
+    # liquidity_comfort_cap: per-symbol contract ceiling from book-depth analysis.
+    liquidity_comfort_cap: Optional[int] = None
+    # topstep_account_cap_override: override firm cap for Topstep trailing-DD math.
+    topstep_account_cap_override: Optional[int] = None
+    # firm_contract_cap: explicit per-firm tier cap from firm_config.py.
+    firm_contract_cap: Optional[int] = None
+
+    @field_validator("base_contracts")
+    @classmethod
+    def validate_base_contracts(cls, v: Optional[int]) -> Optional[int]:
+        if v is not None and v <= 0:
+            raise ValueError(f"base_contracts must be > 0, got {v}")
+        return v
+
+    @field_validator("max_risk_pct_per_trade")
+    @classmethod
+    def validate_max_risk_pct(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and not (0 < v <= 0.05):
+            raise ValueError(
+                f"max_risk_pct_per_trade must be in (0, 0.05], got {v}. "
+                "Values > 5% indicate a misconfiguration (risk math expects fraction, not percent)."
+            )
+        return v
+
+    @field_validator("personal_dll_pct")
+    @classmethod
+    def validate_personal_dll_pct(cls, v: Optional[float]) -> Optional[float]:
+        if v is not None and not (0 < v <= 1.0):
+            raise ValueError(
+                f"personal_dll_pct must be in (0, 1.0], got {v}. "
+                "Must be a fraction of firm DLL, e.g. 0.67 = 67%."
+            )
+        return v
 
 
 # ─── Strategy Config ──────────────────────────────────────────────

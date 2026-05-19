@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-19T06:53:45.822Z",
+  "generatedAt": "2026-05-19T07:57:21.482Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,11 +16,11 @@
   },
   "counts": {
     "routes": 62,
-    "schedulerJobs": 82,
+    "schedulerJobs": 61,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 25,
-    "databaseTables": 94,
+    "databaseTables": 73,
     "registrySubsystems": 21
   },
   "routes": [
@@ -93,11 +93,8 @@
     "anti-setup-effectiveness",
     "anti-setup-mine",
     "archetype-daily-classify",
-    "autonomous-scout-discovery",
-    "b14-priors-refit",
     "bias-engine-refresh-10am-et",
     "bias-engine-session-start",
-    "bitwarden-session-refresh-daily",
     "c11-bls-release",
     "c11-fred-daily",
     "c11-h41-weekly",
@@ -107,11 +104,8 @@
     "compliance-rule-drift",
     "contract-roll-sweep",
     "critic-feedback",
-    "daily-reconciliation",
     "data-integrity-suite",
     "databento-weekly-refresh",
-    "dead-mans-heartbeat-check",
-    "dead-mans-heartbeat-write",
     "decay-monitor",
     "deepar-predict",
     "deepar-train",
@@ -121,7 +115,6 @@
     "dlq-retry",
     "drain-scouted-ideas-periodic",
     "funnel-snapshot",
-    "graduated-strategy-drift-check",
     "graveyard-pattern-extraction",
     "harsh-regime-phase-activation-check",
     "idempotency-cleanup",
@@ -130,21 +123,15 @@
     "meta-parameter-review",
     "metrics-collector",
     "metrics-heartbeat",
-    "n8n-data-backup-daily",
-    "n8n-drift-monthly",
-    "n8n-execution-scrape",
     "n8n-health-check",
     "n8n-workflow-sync",
-    "nemo-scenario-weekly",
     "nightly-critique",
     "paper-vs-backtest",
-    "pending-bucket-expiry",
     "pipeline-resume-drain",
     "portfolio-correlation",
     "pre-market-prep",
     "pre-trading-day-health-check",
     "prompt-ab-resolution",
-    "prop-firm-cookie-refresh-daily",
     "prop-firm-dashboard-snapshot",
     "prop-firm-health-check",
     "python-pool-saturation-check",
@@ -153,23 +140,15 @@
     "regret-score-fill",
     "resource-snapshot",
     "rolling-sharpe",
-    "scout-drain-stall-check",
-    "scout-reject-distribution-check",
-    "scout-reject-spike-check",
     "session-analytics-rollup",
-    "single-mention-bucket-sweep",
     "stale-pending-sweeper",
     "stale-session-check",
-    "synthetic-regime-refresh",
-    "synthetic-tsgen-train",
     "system-map-drift",
     "tournament-staleness-check",
     "validation-cadence-monthly",
-    "vp-daily-compute",
     "w19-definition-pull",
     "w19-imbalance-pull",
-    "w19-statistics-pull",
-    "weekly-drift-detection"
+    "w19-statistics-pull"
   ],
   "workflows": [
     "0A_health_monitor_66HEjQavpvirY6g5",
@@ -206,9 +185,9 @@
     "canonicalCount": 28,
     "duplicateVariantsCollapsed": 0,
     "byState": {
-      "production-active": 28,
+      "production-active": 7,
       "built-inactive": 0,
-      "broken": 0,
+      "broken": 21,
       "external-non-core": 0
     },
     "items": [
@@ -218,17 +197,20 @@
           "0A_health_monitor_66HEjQavpvirY6g5"
         ],
         "preferredName": "0A_health_monitor_66HEjQavpvirY6g5",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "unknown",
         "failureCount": 1,
         "lastSuccessAt": null,
         "lastFailureAt": "2026-03-22T17:45:31.359Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
           "No successful execution found in recent n8n execution history.",
-          "No live success timestamp is available for this active workflow."
+          "No live success timestamp is available for this active workflow.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -237,16 +219,19 @@
           "10A_master_orchestration_8HKXzNmo9KF59SBu"
         ],
         "preferredName": "10A_master_orchestration_8HKXzNmo9KF59SBu",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T09:00:00.476Z",
         "lastFailureAt": "2026-04-03T09:00:00.435Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -255,16 +240,19 @@
           "11A_critic_optimization_pVT6svNTljjBoQbW"
         ],
         "preferredName": "11A_critic_optimization_pVT6svNTljjBoQbW",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 0,
         "lastSuccessAt": "2026-04-03T07:00:00.347Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -273,16 +261,19 @@
           "3A_workflow_backup_J0p8oYkONmN7pYn6"
         ],
         "preferredName": "3A_workflow_backup_J0p8oYkONmN7pYn6",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 0,
         "lastSuccessAt": "2026-04-03T07:00:02.218Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -291,16 +282,19 @@
           "5A_weekly_tournament_2rVOEn4LnMAubTmW"
         ],
         "preferredName": "5A_weekly_tournament_2rVOEn4LnMAubTmW",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 0,
         "lastSuccessAt": "2026-03-22T23:00:05.306Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -309,16 +303,19 @@
           "5G_brave_search_scout_z2c7zJmSx5dNle6P"
         ],
         "preferredName": "5G_brave_search_scout_z2c7zJmSx5dNle6P",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T22:00:53.486Z",
         "lastFailureAt": "2026-03-21T22:00:17.476Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -327,16 +324,19 @@
           "5H_reddit_scout_ZMgHYjcTq4YTRQXh"
         ],
         "preferredName": "5H_reddit_scout_ZMgHYjcTq4YTRQXh",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T06:19:39.025Z",
         "lastFailureAt": "2026-03-26T22:30:06.037Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -364,16 +364,19 @@
           "6D_compliance_gate_RumAJUp4iS1TYlNm"
         ],
         "preferredName": "6D_compliance_gate_RumAJUp4iS1TYlNm",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T08:00:00.333Z",
         "lastFailureAt": "2026-03-23T08:00:00.559Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -382,16 +385,19 @@
           "7A_auto_evolution_MIIxmilbgZv3SUBh"
         ],
         "preferredName": "7A_auto_evolution_MIIxmilbgZv3SUBh",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T07:00:00.310Z",
         "lastFailureAt": "2026-03-23T07:00:00.345Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -400,16 +406,19 @@
           "8A_idea_to_strategy_vlCaiWM7F0AH1RRY"
         ],
         "preferredName": "8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 0,
         "lastSuccessAt": "2026-04-02T23:32:03.238Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -418,16 +427,19 @@
           "8B_source_quality_review_LQtqeWAcNOlkqROH"
         ],
         "preferredName": "8B_source_quality_review_LQtqeWAcNOlkqROH",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T06:19:42.296Z",
         "lastFailureAt": "2026-04-03T06:12:00.644Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -436,16 +448,19 @@
           "9A_nightly_self_critique_26ruSYvIjqHGOhsd"
         ],
         "preferredName": "9A_nightly_self_critique_26ruSYvIjqHGOhsd",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 0,
         "lastSuccessAt": "2026-04-03T06:00:52.869Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -454,16 +469,19 @@
           "Anti_Setup_Refresh_PHcD2tFZpzr7kQGF"
         ],
         "preferredName": "Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-01T07:00:00.752Z",
         "lastFailureAt": "2026-04-01T07:00:00.523Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -472,16 +490,19 @@
           "Daily_Compliance_Check_WT9sVMzG83rg1L29"
         ],
         "preferredName": "Daily_Compliance_Check_WT9sVMzG83rg1L29",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T13:00:00.326Z",
         "lastFailureAt": "2026-03-20T13:00:06.022Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -490,16 +511,19 @@
           "Daily_Portfolio_Monitor_u0RcmfuClgRinXAX"
         ],
         "preferredName": "Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T21:00:01.147Z",
         "lastFailureAt": "2026-03-23T21:00:00.758Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -528,16 +552,19 @@
           "Macro_Data_Sync_X2IjKuYseGukxKDj"
         ],
         "preferredName": "Macro_Data_Sync_X2IjKuYseGukxKDj",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T23:00:17.868Z",
         "lastFailureAt": "2026-03-31T23:02:55.957Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -546,17 +573,20 @@
           "Monthly_Robustness_Check_m6aD7X4ioWfhWaS9"
         ],
         "preferredName": "Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "unknown",
         "failureCount": 0,
         "lastSuccessAt": null,
         "lastFailureAt": null,
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
           "No successful execution found in recent n8n execution history.",
-          "No live success timestamp is available for this active workflow."
+          "No live success timestamp is available for this active workflow.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -583,16 +613,19 @@
           "Post_Session_Skip_Review_LayXj1mbHh4aGSM9"
         ],
         "preferredName": "Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T21:30:05.623Z",
         "lastFailureAt": "2026-04-02T21:30:05.270Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -601,16 +634,19 @@
           "Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en"
         ],
         "preferredName": "Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T13:15:06.730Z",
         "lastFailureAt": "2026-04-02T13:15:06.441Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -619,16 +655,19 @@
           "Pre_Session_Skip_Check_eaq72MwKwCjv7g7F"
         ],
         "preferredName": "Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T13:00:06.080Z",
         "lastFailureAt": "2026-04-02T13:00:05.475Z",
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -674,16 +713,19 @@
           "Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB"
         ],
         "preferredName": "Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
-        "state": "production-active",
+        "state": "broken",
         "healthStatus": "healthy",
         "failureCount": 0,
         "lastSuccessAt": "2026-03-23T00:00:00.536Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
-        "sourceValidationErrors": [],
+        "sourceStatus": "invalid",
+        "sourceValidationErrors": [
+          "Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
+        ],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Source validation: Unable to validate workflow source (Unexpected token '\u0000', \"\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\"... is not valid JSON)"
         ]
       },
       {
@@ -755,7 +797,6 @@
   ],
   "databaseTables": [
     "a_plus_market_scans",
-    "account_strategy_assignments",
     "adversarial_stress_runs",
     "agent_health_reports",
     "alerts",
@@ -764,11 +805,7 @@
     "backtest_provenance",
     "backtest_trades",
     "backtests",
-    "bias_ablation_results",
-    "bias_calibration_curves",
-    "bias_decisions",
     "bias_state",
-    "broker_accounts",
     "cloud_qmc_runs",
     "compliance_drift_log",
     "compliance_reviews",
@@ -777,9 +814,7 @@
     "contract_specs_authoritative",
     "critic_candidates",
     "critic_optimization_runs",
-    "daily_reconciliation",
     "daily_statistics",
-    "daily_volume_profile_levels",
     "data_integrity_findings",
     "data_sync_jobs",
     "day_archetypes",
@@ -787,11 +822,9 @@
     "deepar_forecasts",
     "deepar_training_runs",
     "exchange_outages",
-    "firm_adversarial_priors",
     "frankenstein_test_runs",
     "harsh_regime_phase",
     "idempotency_keys",
-    "instance_config",
     "lifecycle_transitions",
     "llm_injection_attempts",
     "macro_features",
@@ -800,16 +833,13 @@
     "monte_carlo_runs",
     "mutation_outcomes",
     "n8n_execution_log",
-    "nemo_scenario_bank",
     "opening_auction_imbalance",
-    "operator_absent_periods",
     "paper_positions",
     "paper_session_feedback",
     "paper_sessions",
     "paper_signal_logs",
     "paper_trades",
     "pilot_sessions",
-    "production_trades",
     "prompt_ab_tests",
     "prompt_versions",
     "prop_firm_health_checks",
@@ -818,7 +848,6 @@
     "quantum_run_costs",
     "qubo_timing_runs",
     "rl_training_runs",
-    "scout_drain_samples",
     "shadow_rerun_findings",
     "shadow_signals",
     "skip_decisions",
@@ -831,23 +860,15 @@
     "strategy_graveyard",
     "strategy_lockouts",
     "strategy_names",
-    "strategy_pending_buckets",
-    "strategy_pending_mentions",
     "strategy_signal_vectors",
     "stress_test_runs",
     "subsystem_metrics",
-    "synthetic_black_swan_runs",
-    "synthetic_regime_bank",
-    "system_health_heartbeat",
     "system_journal",
     "system_parameter_history",
     "system_parameters",
-    "system_state",
     "tensor_predictions",
     "tournament_results",
-    "tradingview_markers",
-    "walk_forward_windows",
-    "weekly_drift_reports"
+    "walk_forward_windows"
   ],
   "registryCoverage": {
     "registryEntries": 21,
@@ -899,9 +920,9 @@
     ],
     "coveredCounts": {
       "routes": 62,
-      "schedulerJobs": 82,
+      "schedulerJobs": 61,
       "engineSubsystems": 25,
-      "databaseTables": 94
+      "databaseTables": 73
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -971,7 +992,29 @@
       ],
       "shadowWorkflowCandidates": [],
       "inactiveWorkflowCandidates": [],
-      "brokenWorkflowBlockers": [],
+      "brokenWorkflowBlockers": [
+        "0A_health_monitor_66HEjQavpvirY6g5",
+        "10A_master_orchestration_8HKXzNmo9KF59SBu",
+        "11A_critic_optimization_pVT6svNTljjBoQbW",
+        "3A_workflow_backup_J0p8oYkONmN7pYn6",
+        "5A_weekly_tournament_2rVOEn4LnMAubTmW",
+        "5G_brave_search_scout_z2c7zJmSx5dNle6P",
+        "5H_reddit_scout_ZMgHYjcTq4YTRQXh",
+        "6D_compliance_gate_RumAJUp4iS1TYlNm",
+        "7A_auto_evolution_MIIxmilbgZv3SUBh",
+        "8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
+        "8B_source_quality_review_LQtqeWAcNOlkqROH",
+        "9A_nightly_self_critique_26ruSYvIjqHGOhsd",
+        "Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
+        "Daily_Compliance_Check_WT9sVMzG83rg1L29",
+        "Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
+        "Macro_Data_Sync_X2IjKuYseGukxKDj",
+        "Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
+        "Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
+        "Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
+        "Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
+        "Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB"
+      ],
       "failingWorkflowBlockers": [],
       "sourceMissingWorkflowBlockers": [
         "5I_tavily_scout_TMT3g7HenJ5etiwv",
@@ -983,9 +1026,28 @@
       "runtimeControlBlockers": [],
       "blockers": [
         "production_hardening:manual_gate:operator-halt-only",
-        "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
+        "workflow-broken:0A_health_monitor_66HEjQavpvirY6g5",
+        "workflow-broken:10A_master_orchestration_8HKXzNmo9KF59SBu",
+        "workflow-broken:11A_critic_optimization_pVT6svNTljjBoQbW",
+        "workflow-broken:3A_workflow_backup_J0p8oYkONmN7pYn6",
+        "workflow-broken:5A_weekly_tournament_2rVOEn4LnMAubTmW",
+        "workflow-broken:5G_brave_search_scout_z2c7zJmSx5dNle6P",
+        "workflow-broken:5H_reddit_scout_ZMgHYjcTq4YTRQXh",
+        "workflow-broken:6D_compliance_gate_RumAJUp4iS1TYlNm",
+        "workflow-broken:7A_auto_evolution_MIIxmilbgZv3SUBh",
+        "workflow-broken:8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
+        "workflow-broken:8B_source_quality_review_LQtqeWAcNOlkqROH",
+        "workflow-broken:9A_nightly_self_critique_26ruSYvIjqHGOhsd",
+        "workflow-broken:Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
+        "workflow-broken:Daily_Compliance_Check_WT9sVMzG83rg1L29",
+        "workflow-broken:Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
+        "workflow-broken:Macro_Data_Sync_X2IjKuYseGukxKDj",
+        "workflow-broken:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
+        "workflow-broken:Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
+        "workflow-broken:Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
+        "workflow-broken:Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
+        "workflow-broken:Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
         "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
         "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
         "workflow-source-missing:5I_tavily_scout_TMT3g7HenJ5etiwv",
@@ -1002,9 +1064,28 @@
         "prop_firm_survival_twin:experimental_governance",
         "quantum_adversarial_stress:experimental_governance",
         "synthetic_black_swan_survival:experimental_governance",
-        "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
+        "workflow-broken:0A_health_monitor_66HEjQavpvirY6g5",
+        "workflow-broken:10A_master_orchestration_8HKXzNmo9KF59SBu",
+        "workflow-broken:11A_critic_optimization_pVT6svNTljjBoQbW",
+        "workflow-broken:3A_workflow_backup_J0p8oYkONmN7pYn6",
+        "workflow-broken:5A_weekly_tournament_2rVOEn4LnMAubTmW",
+        "workflow-broken:5G_brave_search_scout_z2c7zJmSx5dNle6P",
+        "workflow-broken:5H_reddit_scout_ZMgHYjcTq4YTRQXh",
+        "workflow-broken:6D_compliance_gate_RumAJUp4iS1TYlNm",
+        "workflow-broken:7A_auto_evolution_MIIxmilbgZv3SUBh",
+        "workflow-broken:8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
+        "workflow-broken:8B_source_quality_review_LQtqeWAcNOlkqROH",
+        "workflow-broken:9A_nightly_self_critique_26ruSYvIjqHGOhsd",
+        "workflow-broken:Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
+        "workflow-broken:Daily_Compliance_Check_WT9sVMzG83rg1L29",
+        "workflow-broken:Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
+        "workflow-broken:Macro_Data_Sync_X2IjKuYseGukxKDj",
+        "workflow-broken:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
+        "workflow-broken:Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
+        "workflow-broken:Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
+        "workflow-broken:Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
+        "workflow-broken:Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
         "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
         "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
         "workflow-source-missing:5I_tavily_scout_TMT3g7HenJ5etiwv",
@@ -1647,7 +1728,6 @@
           "cme-status-poll",
           "contract-roll-sweep",
           "databento-weekly-refresh",
-          "harsh-regime-phase-activation-check",
           "macro-data-sync",
           "paper-vs-backtest",
           "portfolio-correlation",
@@ -4137,7 +4217,6 @@
         "cme-status-poll",
         "contract-roll-sweep",
         "databento-weekly-refresh",
-        "harsh-regime-phase-activation-check",
         "macro-data-sync",
         "paper-vs-backtest",
         "portfolio-correlation",
