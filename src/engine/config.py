@@ -74,15 +74,13 @@ class _Track3Config:
 
 TRACK3_CONFIG = _Track3Config()
 
-VALID_INDICATOR_TYPES = {"sma", "ema", "rsi", "macd", "vwap", "bbands", "atr", "adx", "adr"}
-# NOTE: opening_range_breakout is intentionally NOT in the validator yet.
-# Test scaffolding (src/engine/tests/test_opening_range_breakout.py) references
-# compute_opening_range_breakout from indicators/core.py, but the dispatcher
-# (compute_indicators in core.py) has NOT been wired. Adding "opening_range_breakout"
-# here without the dispatcher would let strategies validate but fail downstream at
-# backtest execution (missing orh_/orl_ columns) — silent contract drift.
-# Wave 23F follow-up: implement compute_opening_range_breakout() + wire dispatcher
-# in core.py in the SAME commit that adds it to this set. See AGENT-LOGS phase8 entry.
+VALID_INDICATOR_TYPES = {
+    "sma", "ema", "rsi", "macd", "vwap", "bbands", "atr", "adx", "adr",
+    # Phase 9: opening_range_breakout shipped atomically with compute_opening_range_breakout()
+    # in indicators/core.py and the dispatcher branch in compute_indicators().
+    # Emits orh_{range_minutes}m, orl_{range_minutes}m, or_range_{range_minutes}m columns.
+    "opening_range_breakout",
+}
 
 
 # ─── Indicator Config ──────────────────────────────────────────────
@@ -96,6 +94,9 @@ class IndicatorConfig(BaseModel):
     signal: Optional[int] = None
     # Bollinger-specific
     std_dev: float = 2.0
+    # Opening Range Breakout-specific (Phase 9)
+    range_minutes: Optional[int] = None        # OR window length in minutes (default 15)
+    session_start_et: Optional[str] = None     # Session open in ET, "HH:MM" (default "09:30")
 
     @field_validator("type")
     @classmethod

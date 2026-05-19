@@ -4,6 +4,43 @@
 
 ---
 
+### Session Log — 2026-05-19 Backtest Core — Phase 9: opening_range_breakout indicator (atomic ship)
+
+**Mission:** Ship `compute_opening_range_breakout()` + dispatcher + validator entry + test suite atomically in one commit so that 3 ORB-based strategies (`orb_15m_mes`, `orb_mnq_15m`, `crude_oil_technical_analysis_mcl_5m`) can be backtested through the Python engine instead of receiving NO_BACKTEST rejections.
+
+**Work completed:**
+
+- `src/engine/indicators/core.py` — Added `compute_opening_range_breakout(df, range_minutes, session_start_et)` function. Returns 3-tuple `(orh_series, orl_series, or_range_series)` as `pl.Series[Float64]`. Implementation: extracts ET wall-clock time from `ts_et` (preferred) or `ts_event`; computes `time_min` as `Int32` (avoids i8 overflow on 570-minute values); group_by date, agg max(high)/min(low) over rows where `start_total_minutes <= time_min < lock_total_minutes`; joins back; applies post-lock mask so pre-lock bars are `None`. Added dispatcher branch for `cfg.type == "opening_range_breakout"` in `compute_indicators()` that emits `orh_{range_min}m`, `orl_{range_min}m`, `or_range_{range_min}m` columns.
+- `src/engine/config.py` — Added `"opening_range_breakout"` to `VALID_INDICATOR_TYPES`. Added `range_minutes: Optional[int] = None` and `session_start_et: Optional[str] = None` fields to `IndicatorConfig`. Removed stale comment that explained why it was intentionally absent.
+- `src/engine/tests/test_opening_range_breakout.py` — Pre-existing test file (import was failing). All 18 tests now pass after the implementation lands.
+
+**Bug caught during implementation:**
+
+Polars `dt.hour()` and `dt.minute()` return `i8` Series. Multiplying by 60 and adding produces values up to 1439 (23h×60+59), which overflows `i8` (max 127). Fixed by casting to `Int32` before arithmetic. Without this fix all 17 non-empty-dataframe tests would fail with `OverflowError`.
+
+**Verification:**
+
+- `python3 -m pytest src/engine/tests/test_opening_range_breakout.py -v` → **18/18 passed**
+- `npm run check:production-isolation` → **CLEAN — 4 file(s) checked, 0 violations**
+- `npm run check:2026-compliance` → **OK — MFFU + Topstep aligned with canonical 2026 docs**
+- `npm run system-map:check` → **status:ok, driftItems:[]**
+- Smoke backtest (A.5): server was not running under pm2 at session time (development environment). The import path is now unblocked — next operator session should start the server and fire `POST /api/backtests` with `strategyId=dc6df7af-7277-4187-a860-e6ee6f8f12de` to confirm end-to-end flow.
+
+**Known-facts updates:**
+
+- `compute_opening_range_breakout()` now exists in `src/engine/indicators/core.py`. Returns 3-tuple (orh, orl, or_range) as pl.Series[Float64]. Pre-lock rows are None (no lookahead). Resets per trading day via `group_by("date")`.
+- `VALID_INDICATOR_TYPES` now includes `"opening_range_breakout"`. `IndicatorConfig` has `range_minutes` and `session_start_et` optional fields.
+- Polars i8 overflow hazard: `dt.hour()` / `dt.minute()` return i8 — always cast to Int32 before multiplication in time arithmetic.
+- `orb_15m_mes` and `orb_mnq_15m` should no longer return NO_BACKTEST from the validator. They may still fail downstream gates (prior backtest on `orb_15m_mes` returned Sharpe=-2.20, PF=0.36 — well below Wave 23 gates). Strategy quality gates are a separate concern from engine validation.
+
+**Carry-forward:**
+
+- Start server and fire smoke backtest on `orb_15m_mes` (`strategyId=dc6df7af-7277-4187-a860-e6ee6f8f12de`) to confirm end-to-end indicator compute path.
+- Re-run Wave 23 Pass 2 sweep for `orb_mnq_15m` and `crude_oil_technical_analysis_mcl_5m` — they can now receive a backtest result and enter the gate chain. Both are expected to be graveyarded (ORB on MNQ/MCL with prior terrible metrics) but the verdict must be data-driven.
+- Scout pipeline needs to produce new CANDIDATE strategies with PF ≥1.7, Sharpe ≥1.5, expectancy_R ≥2R.
+
+---
+
 ### Session Log — 2026-05-19 Backtest Core — Wave 23 Pass 2+3: Library Graveyard Sweep + Validation Gauntlet
 
 **Mission:** Execute Wave 23 Pass 2 (library graveyard sweep against new gate chain) and Pass 3 (validation gauntlet for survivors). Pipeline stayed PAUSED throughout.

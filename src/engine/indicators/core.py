@@ -164,6 +164,107 @@ def compute_vwap(df: pl.DataFrame) -> pl.Series:
     return vwap
 
 
+def compute_opening_range_breakout(
+    df: pl.DataFrame,
+    range_minutes: int = 15,
+    session_start_et: str = "09:30",
+) -> tuple[pl.Series, pl.Series, pl.Series]:
+    """Compute opening-range high/low/range for each trading session.
+
+    Returns a 3-tuple: (orh_series, orl_series, or_range_series)
+
+    Column semantics (when joined back via compute_indicators dispatcher):
+      orh_{range_minutes}m : float  — opening range high (locked once range completes)
+      orl_{range_minutes}m : float  — opening range low
+      or_range_{range_minutes}m : float — orh - orl
+
+    Correctness invariants:
+      - ET timezone (use ts_et if available; else treat ts_event as wall-clock ET)
+      - Range LOCKS at session_start_et + range_minutes (e.g. 09:45 ET for 15-min OR)
+      - Values BEFORE the lock time are None (no lookahead — not forward-fillable)
+      - Resets each trading day
+      - 09:30 ET start aligns with NYSE/CME RTH open
+    """
+    n = len(df)
+
+    # Return empty series for empty input
+    if n == 0:
+        null_float = pl.Series([], dtype=pl.Float64)
+        return null_float, null_float, null_float
+
+    # ── Resolve timestamp column ──────────────────────────────────────
+    # Prefer ts_et (already ET wall-clock); fall back to ts_event (treated as ET).
+    ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+    ts = df[ts_col]
+
+    # Extract date and time-of-day components
+    # Cast to Int32 before arithmetic: dt.hour() / dt.minute() return i8 in Polars,
+    # which overflows for values > 127 (e.g. 570 = 9*60+30 would wrap on i8).
+    dates = ts.dt.date()
+    hours = ts.dt.hour().cast(pl.Int32)
+    minutes = ts.dt.minute().cast(pl.Int32)
+    time_minutes = hours * 60 + minutes  # minutes since midnight (Int32)
+
+    # ── Parse session_start_et ────────────────────────────────────────
+    start_hh, start_mm = (int(x) for x in session_start_et.split(":"))
+    start_total_minutes = start_hh * 60 + start_mm
+    lock_total_minutes = start_total_minutes + range_minutes
+
+    # ── Per-day: compute max(high) and min(low) for bars in [start, lock) ───
+    # Build a working frame to use Polars grouped aggregations
+    temp = pl.DataFrame({
+        "date": dates,
+        "time_min": time_minutes,
+        "high": df["high"],
+        "low": df["low"],
+    })
+
+    # Rows that fall inside the opening range window
+    in_range_mask = (temp["time_min"] >= start_total_minutes) & (temp["time_min"] < lock_total_minutes)
+
+    or_rows = temp.filter(in_range_mask)
+
+    if len(or_rows) == 0:
+        # No in-range bars at all → all null
+        null_series = pl.Series([None] * n, dtype=pl.Float64)
+        return null_series, null_series, null_series
+
+    # Aggregate per day
+    day_or = or_rows.group_by("date").agg([
+        pl.col("high").max().alias("orh"),
+        pl.col("low").min().alias("orl"),
+    ])
+
+    # ── Join day aggregates back to all rows ─────────────────────────
+    full = temp.with_columns([
+        pl.col("date"),
+        pl.col("time_min"),
+    ]).join(day_or, on="date", how="left")
+
+    # ── Apply lock mask: pre-lock rows get None ───────────────────────
+    # A bar at lock_total_minutes or later is post-lock; earlier bars are null.
+    post_lock_mask = full["time_min"] >= lock_total_minutes
+
+    orh_list = [
+        full["orh"][i] if post_lock_mask[i] else None
+        for i in range(n)
+    ]
+    orl_list = [
+        full["orl"][i] if post_lock_mask[i] else None
+        for i in range(n)
+    ]
+    or_range_list = [
+        (orh_list[i] - orl_list[i]) if (orh_list[i] is not None and orl_list[i] is not None) else None
+        for i in range(n)
+    ]
+
+    orh_series = pl.Series(orh_list, dtype=pl.Float64)
+    orl_series = pl.Series(orl_list, dtype=pl.Float64)
+    or_range_series = pl.Series(or_range_list, dtype=pl.Float64)
+
+    return orh_series, orl_series, or_range_series
+
+
 def compute_indicators(
     df: pl.DataFrame,
     indicator_configs: list[IndicatorConfig],
@@ -222,5 +323,15 @@ def compute_indicators(
         elif cfg.type == "adr":
             col = compute_adr(df, cfg.period)
             result = result.with_columns(col.alias(f"adr_{cfg.period}"))
+
+        elif cfg.type == "opening_range_breakout":
+            range_min = cfg.range_minutes if cfg.range_minutes is not None else 15
+            session_start = cfg.session_start_et if cfg.session_start_et is not None else "09:30"
+            orh, orl, or_range = compute_opening_range_breakout(result, range_min, session_start)
+            result = result.with_columns([
+                orh.alias(f"orh_{range_min}m"),
+                orl.alias(f"orl_{range_min}m"),
+                or_range.alias(f"or_range_{range_min}m"),
+            ])
 
     return result
