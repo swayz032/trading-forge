@@ -848,6 +848,13 @@
       "when": 1747086000000,
       "tag": "0117_recover_missing_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1747688400000,
+      "tag": "0118_transcript_fetch_outcomes",
+      "breakpoints": true
     }
   ]
 }

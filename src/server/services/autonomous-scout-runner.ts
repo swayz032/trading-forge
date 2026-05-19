@@ -25,7 +25,8 @@
  */
 import { logger } from "../index.js";
 import { db } from "../db/index.js";
-import { strategies, strategyPendingBuckets, auditLog } from "../db/schema.js";
+import { strategies, strategyPendingBuckets, auditLog, transcriptFetchOutcomes } from "../db/schema.js";
+import { fetchTranscriptWithRetry } from "./transcript-fetch-queue.js";
 import { eq, sql as drizzleSql, count as drizzleCount } from "drizzle-orm";
 import { canonicalConceptName } from "./strategy-fingerprint.js";
 import { randomUUID } from "crypto";
@@ -413,7 +414,8 @@ export function checkTranscriptQuality(transcript: string): TranscriptQualityChe
  * Wave 11 title scoring with numeric bonus. Returns score in approximate range
  * [-3, +5]. Caller filters to score > -3 (well-known threshold from Pass 21).
  *
- * Exported for testing.
+ * Exported for testing. DO NOT change this function's signature or behavior —
+ * W23G.10 tests (wave23g-title-scorer-clickbait-tune.test.ts) import it directly.
  */
 export function scoreVideoTitle(title: string): { score: number; positiveHit: boolean; negativeHit: boolean; numericHit: boolean; clickbaitHit: boolean; indicatorHit: boolean } {
   let score = 0;
@@ -446,6 +448,53 @@ export function scoreVideoTitle(title: string): { score: number; positiveHit: bo
 // with real rules) enters the pipeline. Critique/podcast videos still excluded
 // (their score forced to <= -2 by the negativeHit branch).
 export const TITLE_SCORE_ELIGIBILITY_THRESHOLD = 0;
+
+/**
+ * W23G.6 — description-aware combined scoring.
+ *
+ * Extends scoreVideoTitle with snippet.description signal at HALF weight.
+ * Description is noisier than title (often auto-generated or marketing copy),
+ * so its contribution is halved before combining.
+ *
+ * combined_score = title_score + Math.round(description_score / 2)
+ *
+ * The same POSITIVE / NEGATIVE / CLICKBAIT / INDICATOR / NUMERIC regexes are
+ * applied to description so the scoring logic stays consistent. NEGATIVE in
+ * description is also halved — a description mentioning "warning" on a
+ * parametric video shouldn't be as damaging as a negative title.
+ *
+ * CRITICAL: scoreVideoTitle is UNCHANGED — this is a NEW wrapper. All existing
+ * callers and tests continue to use scoreVideoTitle directly.
+ *
+ * Exported for testing.
+ */
+export function scoreVideoContent(
+  title: string,
+  description: string,
+): { titleScore: number; combinedScore: number; titleResult: ReturnType<typeof scoreVideoTitle> } {
+  const titleResult = scoreVideoTitle(title);
+  const titleScore = titleResult.score;
+
+  if (!description || description.trim().length === 0) {
+    return { titleScore, combinedScore: titleScore, titleResult };
+  }
+
+  // Compute description raw score using the same regexes at half weight.
+  let descScore = 0;
+  const descPositive = POSITIVE_TITLE.test(description);
+  const descNegative = NEGATIVE_TITLE.test(description);
+  const descNumeric = NUMERIC_TITLE_PATTERNS.some((re) => re.test(description));
+  const descClickbait = CLICKBAIT_TITLE.test(description);
+  const descIndicator = INDICATOR_NAME_TITLE.test(description);
+  if (descPositive) descScore += 2;
+  if (descNumeric) descScore += 3;
+  if (descIndicator) descScore += 3;
+  if (descNegative) descScore = Math.min(descScore - 5, -2);
+  if (descClickbait) descScore -= descIndicator ? 1 : 3;
+
+  const combinedScore = titleScore + Math.round(descScore / 2);
+  return { titleScore, combinedScore, titleResult };
+}
 
 interface BraveResult { title: string; url: string; description?: string }
 interface ConceptCandidate {
@@ -664,12 +713,109 @@ async function fetchWebPageBody(url: string): Promise<string> {
   return "";
 }
 
+// W23G.5 (2026-05-19) — Multi-order YouTube sampling + per-channel cap.
+//
+// Quota math: 8 queries × 3 calls × 100 units = 2400/day (well inside 10K free
+// tier; previous single-call was 800/day). The 3 calls per query are fired in
+// parallel (Promise.all) so cycle time is bounded by the slowest call, not
+// the sum.
+//
+// Discovery order semantics:
+//   relevance(25) — YouTube's default ranking; surfaces SEO-dominant content
+//   viewCount(15)  — surfaces high-view educational content (may not be top-SEO)
+//   date(10)       — surfaces the freshest uploads; catches new educators
+//
+// Per-channel cap (2) is applied BEFORE transcript fetch to preserve transcript
+// quota for diverse channels (BrandonTrades / TradingLab domination prevention).
+//
+// W23G.6: scoring uses scoreVideoContent (title + description at half weight)
+// for the eligibility threshold. The discovery_order tag is preserved on each
+// video candidate for downstream observability.
+
+interface YouTubeCandidate {
+  videoId: string;
+  url: string;
+  title: string;
+  description: string;
+  channel: string;
+  titleScore: number;
+  combinedScore: number;
+  numericHit: boolean;
+  discoveryOrder: "relevance" | "viewCount" | "date";
+}
+
+/** Fetch one order page from YouTube Data API. Returns raw candidates.
+ *
+ * @param includeCaption  When true, adds `videoCaption=closedCaption` to the
+ *   request (Pass 1 — high-yield captioned content). When false, omits the
+ *   filter (Pass 2 — uncaptioned recovery pass). W23G.4.
+ */
+async function _fetchYouTubeOrder(
+  query: string,
+  order: "relevance" | "viewCount" | "date",
+  maxResults: number,
+  includeCaption = true,
+): Promise<YouTubeCandidate[]> {
+  const base = "https://www.googleapis.com/youtube/v3/search";
+  const paramObj: Record<string, string> = {
+    part: "snippet",
+    q: query,
+    type: "video",
+    videoDuration: "medium",
+    relevanceLanguage: "en",
+    maxResults: String(maxResults),
+    order,
+    key: YOUTUBE_API_KEY,
+  };
+  // W23G.4 — only add caption filter for Pass 1.
+  if (includeCaption) {
+    paramObj.videoCaption = "closedCaption";
+  }
+  const params = new URLSearchParams(paramObj);
+  const res = await fetch(`${base}?${params.toString()}`, { signal: AbortSignal.timeout(20_000) });
+  if (!res.ok) {
+    logger.warn({ status: res.status, query, order }, "autonomous-scout: YouTube API call failed");
+    return [];
+  }
+  const j = (await res.json()) as any;
+  const items = (j.items ?? []) as any[];
+  const out: YouTubeCandidate[] = [];
+  for (const item of items) {
+    const vid = item?.id?.videoId;
+    const title = String(item?.snippet?.title ?? "").trim();
+    const description = String(item?.snippet?.description ?? "").trim();
+    const channel = String(item?.snippet?.channelTitle ?? "").trim();
+    if (!vid || !title) continue;
+    const { titleScore, combinedScore, titleResult } = scoreVideoContent(title, description);
+    out.push({
+      videoId: vid,
+      url: `https://www.youtube.com/watch?v=${vid}`,
+      title,
+      description,
+      channel,
+      titleScore,
+      combinedScore,
+      numericHit: titleResult.numericHit,
+      discoveryOrder: order,
+    });
+  }
+  return out;
+}
+
 // Wave 9 (2026-05-17) — YouTube Data API v3 search.list is the sole discovery
-// path. Clean JSON, no regex parsing, official titles, 100 quota units per
-// search × ~18 searches/day = 1,800/day (within 10K free tier). When
-// YOUTUBE_DATA_API_KEY is missing, returns [] silently — no rendered-HTML
-// fallback (ScrapingBee removed).
-async function fetchYouTubeTopVideos(conceptName: string): Promise<Array<{ url: string; title: string }>> {
+// path. Clean JSON, no regex parsing, official titles.
+//
+// W23G.5 (2026-05-19) — upgraded from single order=relevance call to 3-order
+// parallel sampling. Dedupe by videoId; per-channel cap of 2. Audit log emits
+// diversity stats per cycle call.
+//
+// W23G.6 (2026-05-19) — eligibility now uses combined_score (title + description
+// at half weight) rather than title-only score. Threshold unchanged at > -3 but
+// applied to combined_score.
+async function fetchYouTubeTopVideos(
+  conceptName: string,
+  cycleCorrelationId?: string,
+): Promise<Array<{ url: string; title: string; source_pass: "captioned" | "uncaptioned"; sourceQuery: string }>> {
   if (!YOUTUBE_API_KEY) {
     logger.warn({ conceptName }, "autonomous-scout: YOUTUBE_DATA_API_KEY not set — YouTube layer disabled");
     return [];
@@ -677,35 +823,131 @@ async function fetchYouTubeTopVideos(conceptName: string): Promise<Array<{ url: 
   const human = conceptName.replace(/_/g, " ");
   const query = `${human} futures strategy rules`;
   try {
-    // W23F.T (2026-05-19) — YouTube-side filters to pre-filter the 50% transcript-disabled
-    // and Shorts that previously wasted scoring + transcript-fetch attempts:
-    //   videoCaption=closedCaption — only videos WITH captions (transcript fetch will succeed)
-    //   videoDuration=medium — 4-20 min only (excludes Shorts and excessively long content)
-    //   relevanceLanguage=en — skip foreign-language strategy videos
-    //   maxResults=20 — increased from 10 since YT pre-filter eliminates most noise
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCaption=closedCaption&videoDuration=medium&relevanceLanguage=en&maxResults=20&order=relevance&key=${YOUTUBE_API_KEY}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
-    if (!res.ok) {
-      logger.warn({ status: res.status, query }, "autonomous-scout: YouTube API failed");
-      return [];
+    // W23G.4 — Two-pass search strategy.
+    // Pass 1 (captioned, high-yield): videoCaption=closedCaption ensures 96%+ transcript
+    //   success rate. This is the primary discovery channel.
+    // Pass 2 (uncaptioned, recovery): no caption filter — catches high-value channels
+    //   (Novo Legacy, JackTrades, specialist educators) that don't caption. Operator
+    //   audit (tmp-factory-audit/manual-youtube-scout-v6.mjs) showed these channels
+    //   account for ~30% of quality content. Pass 2 videos are tagged "uncaptioned"
+    //   so the retry queue can apply appropriate backoff policy.
+    //
+    // W23G.5 — 3 parallel calls per pass: relevance(25) + viewCount(15) + date(10)
+    const [p1Relevance, p1ViewCount, p1Date] = await Promise.all([
+      _fetchYouTubeOrder(query, "relevance", 25, true),
+      _fetchYouTubeOrder(query, "viewCount", 15, true),
+      _fetchYouTubeOrder(query, "date", 10, true),
+    ]);
+
+    // Collect Pass 1 (captioned) videoIds for deduplication in Pass 2
+    const pass1Ids = new Set<string>();
+    const seenIds = new Set<string>();
+    const allCandidatesPass1: YouTubeCandidate[] = [];
+    for (const c of [...p1Relevance, ...p1ViewCount, ...p1Date]) {
+      if (seenIds.has(c.videoId)) continue;
+      seenIds.add(c.videoId);
+      pass1Ids.add(c.videoId);
+      allCandidatesPass1.push(c);
     }
-    const j = (await res.json()) as any;
-    const items = (j.items ?? []) as any[];
-    const candidates: Array<{ url: string; title: string; score: number; channel: string; numericHit: boolean }> = [];
-    for (const item of items) {
-      const vid = item?.id?.videoId;
-      const title = String(item?.snippet?.title ?? "").trim();
-      const channel = String(item?.snippet?.channelTitle ?? "").trim();
-      if (!vid || !title) continue;
-      const { score, numericHit } = scoreVideoTitle(title);
-      candidates.push({ url: `https://www.youtube.com/watch?v=${vid}`, title, score, channel, numericHit });
+
+    // Pass 2 (uncaptioned, recovery) — same 3-order parallel calls WITHOUT caption filter
+    const [p2Relevance, p2ViewCount, p2Date] = await Promise.all([
+      _fetchYouTubeOrder(query, "relevance", 25, false),
+      _fetchYouTubeOrder(query, "viewCount", 15, false),
+      _fetchYouTubeOrder(query, "date", 10, false),
+    ]);
+
+    // Pass 2 only adds videos NOT already in Pass 1 (additive, never duplicates)
+    const allCandidatesPass2: YouTubeCandidate[] = [];
+    for (const c of [...p2Relevance, ...p2ViewCount, ...p2Date]) {
+      if (seenIds.has(c.videoId)) continue;  // already found in Pass 1
+      seenIds.add(c.videoId);
+      allCandidatesPass2.push(c);
     }
-    let pool = candidates.filter((c) => c.score > -3);
-    if (pool.length === 0) pool = candidates;
-    pool.sort((a, b) => b.score - a.score);
-    const top = pool.slice(0, 2);
-    logger.info({ query, total: items.length, picked: top.length, provider: "youtube_data_api" }, "autonomous-scout: YouTube discovery done");
-    return top.map((c) => ({ url: c.url, title: c.title }));
+
+    const allCandidates = [...allCandidatesPass1, ...allCandidatesPass2];
+
+    // W23G.6 — filter on combined_score (title + description half-weight)
+    let pool = allCandidates.filter((c) => c.combinedScore > -3);
+    if (pool.length === 0) pool = [...allCandidates];  // fallback: no eligible → use all
+    pool.sort((a, b) => b.combinedScore - a.combinedScore);
+
+    // W23G.5 — per-channel cap: max 2 videos per channelTitle to prevent
+    // BrandonTrades / TradingLab domination of the candidate pool.
+    const channelCounts = new Map<string, number>();
+    const cappedPool: YouTubeCandidate[] = [];
+    for (const c of pool) {
+      const count = channelCounts.get(c.channel) ?? 0;
+      if (count >= 2) continue;
+      channelCounts.set(c.channel, count + 1);
+      cappedPool.push(c);
+    }
+
+    // W23G.5 — audit log: diversity stats for observability
+    const uniqueChannelCount = new Set(allCandidates.map((c) => c.channel)).size;
+    const maxPerChannelSeen = allCandidates.reduce((acc, c) => {
+      const k = c.channel;
+      const n = (acc.counts.get(k) ?? 0) + 1;
+      acc.counts.set(k, n);
+      acc.max = Math.max(acc.max, n);
+      return acc;
+    }, { counts: new Map<string, number>(), max: 0 }).max;
+
+    db.insert(auditLog).values({
+      action: "scout.diversity_stats",
+      entityType: "scout_youtube",
+      entityId: cycleCorrelationId ?? conceptName,
+      result: {
+        concept_name: conceptName,
+        total_unique_videos: allCandidates.length,
+        pass1_captioned_count: allCandidatesPass1.length,
+        pass2_uncaptioned_count: allCandidatesPass2.length,
+        unique_channels: uniqueChannelCount,
+        max_per_channel_seen: maxPerChannelSeen,
+        order_relevance_count: p1Relevance.length + p2Relevance.length,
+        order_viewcount_count: p1ViewCount.length + p2ViewCount.length,
+        order_date_count: p1Date.length + p2Date.length,
+        eligible_after_threshold: pool.length,
+        after_channel_cap: cappedPool.length,
+      } as Record<string, unknown>,
+      status: "success",
+      decisionAuthority: "autonomous_scout",
+      correlationId: cycleCorrelationId ?? conceptName,
+    }).catch((err) => {
+      logger.warn({ err: err instanceof Error ? err.message : String(err), conceptName }, "autonomous-scout: diversity_stats audit write failed (non-blocking)");
+    });
+
+    const top = cappedPool.slice(0, 3);  // W23G.4: up to 3 videos (was 2) to absorb Pass 2
+    logger.info({
+      query,
+      totalUnique: allCandidates.length,
+      pass1Captioned: allCandidatesPass1.length,
+      pass2Uncaptioned: allCandidatesPass2.length,
+      uniqueChannels: uniqueChannelCount,
+      afterCap: cappedPool.length,
+      picked: top.length,
+      provider: "youtube_data_api",
+    }, "autonomous-scout: YouTube two-pass discovery done (W23G.4)");
+
+    // Log per-video combined score for W23G.6 observability
+    for (const v of top) {
+      logger.debug({
+        videoId: v.videoId,
+        title: v.title,
+        channel: v.channel,
+        discoveryOrder: v.discoveryOrder,
+        titleScore: v.titleScore,
+        combinedScore: v.combinedScore,
+        sourcePass: pass1Ids.has(v.videoId) ? "captioned" : "uncaptioned",
+      }, "autonomous-scout: video scored (W23G.6)");
+    }
+
+    return top.map((c) => ({
+      url: c.url,
+      title: c.title,
+      source_pass: (pass1Ids.has(c.videoId) ? "captioned" : "uncaptioned") as "captioned" | "uncaptioned",
+      sourceQuery: query,
+    }));
   } catch (e) {
     logger.warn({ err: e instanceof Error ? e.message : String(e) }, "autonomous-scout: YouTube API error");
     return [];
@@ -1040,6 +1282,15 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
 
   logger.info({ conceptsDiscovered: concepts.length }, "autonomous-scout: Brave layer done");
 
+  // W23G.4 — cycle-level transcript fetch counters for summary audit event.
+  let transcriptFetchTotal = 0;
+  const transcriptFetchCounters = {
+    captioned_succeeded: 0,
+    captioned_failed: 0,
+    auto_recovered: 0,
+    all_failed: 0,
+  };
+
   // Step 2 — for each concept, fan out web + youtube + reddit
   for (const c of concepts) {
     // Web layer — Pass 21 (2026-05-12 burn-fix): use Brave's description only,
@@ -1124,11 +1375,33 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
     // The CV-only mention writes layer='youtube' but with thin entry_rules — the bucket-graduator
     // still requires real DSL prose from at least one layer (web or reddit) before graduation,
     // so CV-only YouTube cannot single-handedly graduate a junk concept.
-    const ytVideos = await fetchYouTubeTopVideos(c.conceptName);
+    const ytVideos = await fetchYouTubeTopVideos(c.conceptName, correlationId);
     const conceptTokens = c.conceptName.toLowerCase().split(/_+/).filter((t) => t.length >= 3);
     for (const v of ytVideos) {
-      const tr = await fetchYouTubeTranscript(v.url);
-      const transcript = tr.text;
+      // W23G.4 — use retry queue instead of single-shot fetchYouTubeTranscript.
+      // fetchTranscriptWithRetry: 3 attempts, 2s/8s/30s jitter backoff, lang:"en" → no-lang fallback.
+      const vid = extractYoutubeId(v.url) ?? v.url;
+      const retryResult = await fetchTranscriptWithRetry(vid);
+      const transcript = retryResult.transcript ?? "";
+
+      // Persist fetch outcome for cycle dashboard observability (fire-and-forget).
+      db.insert(transcriptFetchOutcomes).values({
+        videoId: vid,
+        outcome: retryResult.finalOutcome,
+        attemptCount: retryResult.attempts.length,
+        totalDurationMs: retryResult.attempts.reduce((a, x) => a + x.durationMs, 0),
+        sourcePass: v.source_pass,
+        sourceQuery: v.sourceQuery,
+        errorMessage: retryResult.attempts.at(-1)?.errorMessage ?? null,
+      }).catch((err) =>
+        logger.warn({ err: err instanceof Error ? err.message : String(err), videoId: vid }, "transcript_fetch_outcomes write failed"),
+      );
+
+      // Accumulate for cycle-end summary
+      transcriptFetchTotal++;
+      transcriptFetchCounters[retryResult.finalOutcome as keyof typeof transcriptFetchCounters]++;
+
+      const tr = { text: transcript, provider: retryResult.transcript ? "youtube_transcript_npm" : "none" };
       const titleLower = v.title.toLowerCase();
       const tokenHits = conceptTokens.filter((t) => titleLower.includes(t)).length;
       const titleConfirmsConcept = conceptTokens.length === 0 || tokenHits >= Math.min(2, conceptTokens.length);
@@ -1255,6 +1528,41 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
       });
       if (rdOk.accepted) redditMentions++;
     }
+  }
+
+  // W23G.4 — emit cycle-level transcript fetch summary for dashboard observability.
+  // Fires after the concept loop completes. Non-blocking (fire-and-forget + .catch).
+  if (transcriptFetchTotal > 0) {
+    const successCount =
+      transcriptFetchCounters.captioned_succeeded +
+      transcriptFetchCounters.captioned_failed +
+      transcriptFetchCounters.auto_recovered;
+    const successRatePct = Math.round((successCount / transcriptFetchTotal) * 100);
+    db.insert(auditLog).values({
+      action: "scout.transcript_fetch_summary",
+      entityType: "scout_cycle",
+      result: {
+        total_videos: transcriptFetchTotal,
+        captioned_succeeded: transcriptFetchCounters.captioned_succeeded,
+        captioned_failed: transcriptFetchCounters.captioned_failed,
+        auto_recovered: transcriptFetchCounters.auto_recovered,
+        all_failed: transcriptFetchCounters.all_failed,
+        success_rate_pct: successRatePct,
+        cycle_index: cycleIndex,
+        symbol_group: symbolGroup,
+      } as Record<string, unknown>,
+      status: "success",
+      decisionAuthority: "autonomous_scout",
+      correlationId,
+    }).catch((err) =>
+      logger.warn({ err: err instanceof Error ? err.message : String(err), correlationId }, "autonomous-scout: transcript_fetch_summary audit write failed (non-blocking)"),
+    );
+    logger.info({
+      transcriptFetchTotal,
+      successCount,
+      successRatePct,
+      ...transcriptFetchCounters,
+    }, "autonomous-scout: W23G.4 transcript fetch summary");
   }
 
   const finishedAt = new Date().toISOString();

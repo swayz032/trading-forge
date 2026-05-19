@@ -2504,3 +2504,27 @@ export const syntheticBlackSwanRuns = pgTable(
   ],
 );
 
+// ─── Transcript Fetch Outcomes (W23G.4, 2026-05-19) ─────────────────────────
+// Per-video transcript fetch telemetry written by autonomous-scout-runner.ts
+// during the YouTube layer loop. Enables monitoring of transcript success rate
+// per cycle and per source_pass (captioned vs uncaptioned recovery pass).
+// See migration 0118_transcript_fetch_outcomes.sql.
+export const transcriptFetchOutcomes = pgTable(
+  "transcript_fetch_outcomes",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    videoId: text("video_id").notNull(),
+    outcome: text("outcome").notNull(),       // captioned_succeeded | captioned_failed | auto_recovered | all_failed
+    attemptCount: integer("attempt_count").notNull(),
+    totalDurationMs: integer("total_duration_ms").notNull(),
+    sourcePass: text("source_pass").notNull(), // "captioned" | "uncaptioned"
+    sourceQuery: text("source_query"),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_transcript_outcomes_created").on(table.createdAt.desc()),
+    index("idx_transcript_outcomes_outcome").on(table.outcome, table.createdAt.desc()),
+  ],
+);
+
