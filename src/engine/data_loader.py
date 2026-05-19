@@ -400,6 +400,15 @@ def load_ohlcv(
     MICRO_TO_FULL = {"MES": "ES", "MNQ": "NQ", "MCL": "CL"}
     data_symbol = MICRO_TO_FULL.get(symbol, symbol)
 
+    # Canonicalize DSL timeframe short-form to S3 storage suffix.
+    # Strategy schema uses "5m"/"1h"/"1d"; S3 keys use "5min"/"1hour"/"daily".
+    # Without this, lookups hit s3://.../consolidated/5m.parquet → 404.
+    _TIMEFRAME_S3 = {
+        "1m": "1min", "5m": "5min", "15m": "15min", "30m": "30min",
+        "1h": "1hour", "4h": "4hour", "1d": "daily", "1D": "daily",
+    }
+    timeframe = _TIMEFRAME_S3.get(timeframe, timeframe)
+
     if not adjusted:
         warnings.warn(
             f"Loading UNADJUSTED data for {data_symbol} {timeframe}. "
