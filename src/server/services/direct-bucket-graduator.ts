@@ -86,6 +86,14 @@ const ARCHETYPE_REGISTRY: Record<string, { engineSpec: string; strategyClass: st
   market_structure_shift: { engineSpec: "ict_2022", strategyClass: "src.engine.strategies.ict_2022.ICT2022Strategy", description: "MSS — wraps into ICT-2022 sweep+MSS+FVG flow" },
   cisd: { engineSpec: "ict_scalp", strategyClass: "src.engine.strategies.ict_scalp.ICTScalpStrategy", description: "Change in State of Delivery — earliest reversal signal, routes to scalp" },
   fvg_retrace: { engineSpec: "silver_bullet", strategyClass: "src.engine.strategies.silver_bullet.SilverBulletStrategy", description: "Generic FVG retrace — uses Silver Bullet displacement+FVG mechanics" },
+  // W23G.3 (2026-05-19) — short-form aliases used by structural_recovery stub synthesis.
+  // These map to the same engine handlers as their canonical equivalents. The recovery
+  // branch in routes/agent.ts emits these exact names (no "ict_" prefix) because the
+  // transcript keyword regex fires on prose terms, not canonical concept names.
+  fvg: { engineSpec: "silver_bullet", strategyClass: "src.engine.strategies.silver_bullet.SilverBulletStrategy", description: "Fair value gap entry (alias for fvg_retrace) — structural recovery path" },
+  judas_swing: { engineSpec: "judas_swing", strategyClass: "src.engine.strategies.judas_swing.JudasSwingStrategy", description: "Judas swing (alias for ict_judas_swing) — structural recovery path" },
+  silver_bullet: { engineSpec: "silver_bullet", strategyClass: "src.engine.strategies.silver_bullet.SilverBulletStrategy", description: "ICT Silver Bullet 10-11 AM (alias for ict_silver_bullet_ny_am) — structural recovery path" },
+  breaker_block: { engineSpec: "breaker", strategyClass: "src.engine.strategies.breaker.BreakerStrategy", description: "Breaker block entry (alias for ict_breaker) — structural recovery path" },
   order_block: { engineSpec: "breaker", strategyClass: "src.engine.strategies.breaker.BreakerStrategy", description: "Order block entry — uses breaker detector + retest" },
   liquidity_sweep: { engineSpec: "turtle_soup", strategyClass: "src.engine.strategies.turtle_soup.TurtleSoupStrategy", description: "Liquidity sweep + reversal — uses turtle-soup detector" },
   // Wyckoff — closest engine analog is sweep-based structural primitive
@@ -573,6 +581,16 @@ function prettifyConcept(conceptName: string): string {
   if (/optimal.trade.entry|(^|_)ote(_|$)|62.{0,4}79.{0,4}fib/.test(cn)) return "ict_ote";
   if (/power.of.3|power.of.three|amd.cycle|accumulation.manipulation.distribution/.test(cn)) return "ict_power_of_3";
   if (/(^|_)unicorn(_|$)|fvg.breaker|breaker.fvg.confluence/.test(cn)) return "ict_unicorn";
+  // W23G.3 (2026-05-19) — short-form alias matches for structural recovery stubs.
+  // These must come before the "ict_breaker" / "fvg_retrace" canonical matches so
+  // that concepts named exactly "breaker_block", "judas_swing", "silver_bullet",
+  // "fvg" resolve to the W23G.3 short aliases (which ARCHETYPE_REGISTRY has direct
+  // entries for) rather than being rewritten to an "ict_" canonical key that the
+  // recovery stub didn't use.
+  if (/^fvg$|^fair_value_gap$/.test(cn)) return "fvg";
+  if (/^judas_swing$|^judas\.swing$/.test(cn)) return "judas_swing";
+  if (/^silver_bullet$|^silver\.bullet$/.test(cn)) return "silver_bullet";
+  if (/^breaker_block$|^breaker\.block$/.test(cn)) return "breaker_block";
   if (/breaker.block|failed.swing.breaker/.test(cn)) return "ict_breaker";
   if (/mitigation.block|mitigation.entry/.test(cn)) return "ict_mitigation";
   if (/(^|_)iofed(_|$)|institutional.order.flow.entry/.test(cn)) return "ict_iofed";

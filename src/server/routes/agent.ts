@@ -37,6 +37,41 @@ function getCorrelationId(req: import("express").Request): string {
   return randomUUID();
 }
 
+// ─── W23G.3 Structural Archetype Detection ──────────────────────────────────
+// Exported so the detection logic can be unit-tested independently of the
+// full HTTP route handler. Used by the W23F.S missing_params recovery branch.
+//
+// Archetype priority order (most-specific first):
+//   - wyckoff_spring/upthrust before wyckoff (broad Wyckoff terms)
+//   - judas_swing / silver_bullet before generic breaker / fvg
+//   - fvg before generic ICT terms
+//
+// Returns the archetype name + matched keyword list, or null if nothing matched.
+//
+export const STRUCTURAL_ARCHETYPE_PATTERNS: ReadonlyArray<[string, RegExp]> = [
+  ["liquidity_sweep",  /\b(liquidity\s+sweep|BSL|SSL|buyside\s+liquidity|sellside\s+liquidity|stop\s+hunt)\b/i],
+  ["order_block",      /\b(order\s+block|institutional\s+level|bullish\s+OB|bearish\s+OB)\b|(?<!\w)OB\s/i],
+  ["fvg",              /\b(fair\s+value\s+gap|FVG|imbalance|displacement)\b/i],
+  ["wyckoff_spring",   /\b(wyckoff\s+spring|spring\s+pattern|accumulation\s+spring)\b/i],
+  ["wyckoff_upthrust", /\b(upthrust|UTAD|wyckoff\s+distribution)\b/i],
+  ["judas_swing",      /\b(judas\s+swing|false\s+breakout\s+london)\b/i],
+  ["silver_bullet",    /\b(silver\s+bullet|ICT\s+silver\s+bullet|10\s*am\s+ny)\b/i],
+  ["breaker_block",    /\b(breaker\s+block|breaker\b)\b/i],
+] as const;
+
+export function detectStructuralArchetype(
+  searchText: string,
+): { archetypeName: string; matchedKeywords: string[] } | null {
+  for (const [archetypeName, pattern] of STRUCTURAL_ARCHETYPE_PATTERNS) {
+    const matches = searchText.match(new RegExp(pattern.source, "gi"));
+    if (matches && matches.length > 0) {
+      const matchedKeywords = [...new Set(matches.map((m) => m.trim().toLowerCase()))].slice(0, 5);
+      return { archetypeName, matchedKeywords };
+    }
+  }
+  return null;
+}
+
 export const agentRoutes = Router();
 const agentService = new AgentService();
 
@@ -658,17 +693,17 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
   const { sourceUrl, markdown, sourceProvider, title } = parsed.data;
 
   // Pass 21 Fix #2: chunked extraction. Many YouTube transcripts (and long
-  // articles) ramble for 3-5 minutes before specifics. A single 8K-char window
+  // articles) ramble for 3-5 minutes before specifics. A single 12K-char window
   // anchored at the start misses the meat. We try the full window first; on
   // empty result, fall back to 3 overlapping 4K-char chunks (start/mid/end)
-  // and merge unique strategies by concept_name.
+  // and merge unique strategies by concept_name (W23G.7: threshold now 12K).
   // Sentinel: extractFromChunk returns this symbol when the model response
   // is not valid JSON. Distinguishes "garbage response" (non_json) from
   // "valid JSON with empty strategies array" (no_strategy_content).
   const NON_JSON_SENTINEL = Symbol("non_json");
 
   // Wave 11 — capture LLM-provided `empty_reason` when strategies array is empty.
-  // The prompt v5 requires the LLM to populate one of 8 categories so future tuning
+  // The prompt v7 requires the LLM to populate one of 8 categories so future tuning
   // can see WHICH content type is being dropped. Each chunk may overwrite; if any
   // chunk yielded strategies we discard the captured reason.
   const VALID_EMPTY_REASONS = new Set([
@@ -676,6 +711,15 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     "promotional", "wrong_instrument", "speaker_uncertain",
     "transcript_corrupt", "other",
   ]);
+
+  // W23G.2 — capture `instrument_classification` from the LLM response.
+  // Valid values: "futures_primary" | "futures_with_forex_illustration" | "non_futures_primary".
+  // The first non-null classification from any chunk wins (first pass is authoritative).
+  const VALID_INSTRUMENT_CLASSIFICATIONS = new Set([
+    "futures_primary", "futures_with_forex_illustration", "non_futures_primary",
+  ]);
+  let lastInstrumentClassification: string | null = null;
+
   let lastEmptyReason: string | null = null;
   let lastEmptyReasonDetail: string | null = null;
   async function extractFromChunk(chunk: string): Promise<unknown[] | typeof NON_JSON_SENTINEL | null> {
@@ -694,7 +738,19 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     ]);
     if (!raw) return null; // model unavailable
     try {
-      const obj = JSON.parse(raw) as { strategies?: unknown; empty_reason?: unknown; empty_reason_detail?: unknown };
+      const obj = JSON.parse(raw) as {
+        strategies?: unknown;
+        empty_reason?: unknown;
+        empty_reason_detail?: unknown;
+        instrument_classification?: unknown;
+      };
+      // W23G.2 — capture instrument_classification from the first chunk that provides it.
+      if (lastInstrumentClassification === null && typeof obj.instrument_classification === "string") {
+        const rawClass = obj.instrument_classification;
+        if (VALID_INSTRUMENT_CLASSIFICATIONS.has(rawClass)) {
+          lastInstrumentClassification = rawClass;
+        }
+      }
       const strategies = Array.isArray(obj.strategies) ? obj.strategies : [];
       if (strategies.length === 0) {
         // Validate against allowed categories — discard anything else as "other"
@@ -715,8 +771,16 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
   }
 
   try {
-    // First pass — full window from start (8K).
-    let strategiesIn = await extractFromChunk(markdown.slice(0, 8000));
+    // W23G.7 — Single-pass extraction: 12K first-pass window (expanded from 8K).
+    // Chunked fallback (3×4K) fires ONLY if first pass returns empty AND raw
+    // markdown is longer than 12K. Per-call telemetry: extraction_mode field
+    // is emitted in the audit log and the final response for observability.
+    // Token estimate: char_count / 4 (no new deps, rough but sufficient for telemetry).
+    const FIRST_PASS_WINDOW = 12_000;
+    const CHUNKED_FALLBACK_THRESHOLD = 12_000;
+    let extractionMode: "single_pass" | "chunked_fallback" = "single_pass";
+
+    let strategiesIn = await extractFromChunk(markdown.slice(0, FIRST_PASS_WINDOW));
     if (strategiesIn === null) {
       res.status(200).json({ extracted: false, reason: "model_unavailable", ideas: [] });
       return;
@@ -729,8 +793,11 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       return;
     }
 
-    // Chunked fallback when first pass empty AND source is long enough to chunk.
-    if ((strategiesIn as unknown[]).length === 0 && markdown.length > 4000) {
+    // W23G.7 — Chunked fallback: only when first pass is empty AND source is
+    // longer than the first-pass window. This prevents wasting 3 extra LLM calls
+    // when a short transcript genuinely contains no strategy.
+    if ((strategiesIn as unknown[]).length === 0 && markdown.length > CHUNKED_FALLBACK_THRESHOLD) {
+      extractionMode = "chunked_fallback";
       const chunks = [
         markdown.slice(0, 4000),
         markdown.slice(Math.floor(markdown.length / 2) - 2000, Math.floor(markdown.length / 2) + 2000),
@@ -752,6 +819,41 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       logger.info({ sourceUrl, chunked: true, found: merged.length }, "scout-extract chunked fallback");
     }
 
+    // W23G.7 — per-call telemetry: log extraction_mode + estimated token count.
+    const tokensEstimated = Math.ceil(markdown.length / 4);
+    logger.info(
+      { sourceUrl, extraction_mode: extractionMode, tokens_estimated: tokensEstimated, markdown_length: markdown.length },
+      "scout-extract telemetry",
+    );
+
+    // W23G.2 — audit event for mixed-instrument keep path.
+    // When LLM classifies the transcript as futures_with_forex_illustration,
+    // it means the video was kept despite a brief non-futures chart illustration.
+    // Emit audit event for observability so operators can monitor false-keep rate.
+    if (lastInstrumentClassification === "futures_with_forex_illustration") {
+      insertAuditRow({
+        action: "scout.mixed_instrument_kept_futures",
+        entityType: "scout_extract",
+        entityId: null,
+        status: "success",
+        decisionAuthority: "agent",
+        result: {
+          sourceUrl,
+          title: title?.slice(0, 256) ?? null,
+          sourceProvider,
+          instrument_classification: lastInstrumentClassification,
+          reason: "futures_with_forex_illustration: brief non-futures chart present but strategy is futures-primary",
+          transcript_length: markdown.length,
+        },
+        correlationId: (req as { id?: string }).id ?? null,
+      }).catch((auditErr) => {
+        logger.warn(
+          { err: auditErr instanceof Error ? auditErr.message : String(auditErr), sourceUrl },
+          "scout-extract: mixed_instrument_kept_futures audit insert failed (non-blocking)",
+        );
+      });
+    }
+
     // W23F.S (2026-05-19) — missing_params recovery branch.
     // When LLM returns empty with `missing_params` BUT the transcript clearly
     // references a known indicator/concept, synthesize a stub idea with
@@ -759,29 +861,107 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     // CANONICAL_DEFAULT_PARAMS table will fill defaults at graduation time.
     // This unlocks SMC/ICT/Wyckoff/concept-named strategies that don't state
     // numeric params explicitly.
+    //
+    // W23G.3 (2026-05-19) — STRUCTURAL ARCHETYPE EXTENSION.
+    // For SMC/ICT/Wyckoff structural patterns the problem is different: the LLM
+    // cannot find *any* numeric params because the strategy has no numeric params —
+    // the engine handles structural detection internally. We must NOT put these
+    // through the generic indicator path (which would try to look up canonical
+    // defaults for "liquidity_sweep" as if it were a parametric indicator). Instead,
+    // detect archetype keywords in the title+transcript and synthesize a proper
+    // structural stub with `entry_type: "structural"` and
+    // `entry_indicator: "archetype:<name>"`. The engine routes via the structural
+    // handler, bypassing parametric param validation entirely.
+    //
+    // Archetype detection order: most-specific first (e.g. "silver bullet" before
+    // "breaker" so "ICT silver bullet" doesn't accidentally hit the breaker rule).
     if (
       (!Array.isArray(strategiesIn) || (strategiesIn as unknown[]).length === 0) &&
       lastEmptyReason === "missing_params"
     ) {
-      const INDICATOR_REGEX = /\b(rsi|macd|adx|atr|bollinger|keltner|donchian|stochastic|vwap|cci|williams|supertrend|ichimoku|cumulative.delta|order.flow|volume.profile|orb|opening.range|9.{0,4}21.{0,4}ema|ema|sma|hma|dema|liquidity.sweep|order.block|fair.value.gap|fvg|smt|smc|ict|wyckoff|spring|breaker|silver.bullet|judas|optimal.trade.entry|ote|displacement|imbalance|mean.reversion|chandelier|fibonacci|pivot)\b/i;
-      const m = markdown.match(INDICATOR_REGEX) ?? title?.match(INDICATOR_REGEX);
-      if (m) {
-        const detected = m[0].toLowerCase().replace(/\s+/g, "_");
-        const conceptName = (title || sourceUrl).toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 80) || `${detected}_${Date.now()}`;
-        const stubStrategy = {
+      // ── W23G.3 structural archetype scan ────────────────────────────────────
+      // Delegate to the module-level detectStructuralArchetype() helper (exported
+      // for unit testing). Searches title + first 12 K of transcript.
+      const searchText = `${title ?? ""} ${markdown.slice(0, 12000)}`;
+      const archetypeMatch = detectStructuralArchetype(searchText);
+      const detectedArchetype = archetypeMatch?.archetypeName ?? null;
+      const matchedKeywords = archetypeMatch?.matchedKeywords ?? [];
+
+      if (detectedArchetype !== null) {
+        // Structural recovery — emit archetype:<name> stub so engine routes to
+        // structural handler. direction="both" is intentional: structural patterns
+        // (liquidity sweeps, order blocks, FVGs) are symmetric by definition —
+        // they fire on BSL sweeps → short and SSL sweeps → long. framework-overlay
+        // is direction-agnostic and will apply Style C exits on both sides.
+        const conceptName = (title || sourceUrl)
+          .toLowerCase()
+          .replace(/[^a-z0-9_]+/g, "_")
+          .replace(/^_+|_+$/g, "")
+          .slice(0, 80) || `${detectedArchetype}_${Date.now()}`;
+        const archStub = {
           name: `${conceptName.slice(0, 40)}_recovered`,
           symbol: "MES",
           timeframe: "5m",
-          entry_indicator: detected,
+          entry_type: "structural",
+          entry_indicator: `archetype:${detectedArchetype}`,
           entry_params: {},
-          direction: "long",
+          entry_condition: `Structural ${detectedArchetype} pattern (engine archetype handler)`,
+          direction: "both",
           concept_name: conceptName,
-          entry_condition: `Concept identified from transcript: ${detected} (canonical defaults will be applied at graduation)`,
-          extraction_provenance_note: "W23F.S missing_params recovery — concept detected, params will use canonical defaults",
+          extraction_provenance: "structural_recovery",
+          archetype_detected: detectedArchetype,
         };
-        strategiesIn = [stubStrategy];
+        strategiesIn = [archStub];
         lastEmptyReason = null;
-        logger.info({ sourceUrl, detected, conceptName }, "scout-extract W23F.S: missing_params recovery synthesized stub");
+        logger.info(
+          { sourceUrl, detectedArchetype, matchedKeywords, conceptName },
+          "scout-extract W23G.3: structural_recovery synthesized archetype stub",
+        );
+        // Audit event — non-blocking; audit failure must not drop the recovered stub.
+        insertAuditRow({
+          action: "scout.structural_recovery",
+          entityType: "scout_extract",
+          entityId: null,
+          status: "success",
+          decisionAuthority: "agent",
+          result: {
+            sourceUrl,
+            title: title?.slice(0, 256) ?? null,
+            archetype_name: detectedArchetype,
+            transcript_keywords_matched: matchedKeywords,
+          },
+          correlationId: (req as { id?: string }).id ?? null,
+        }).catch((auditErr: unknown) =>
+          logger.warn(
+            { err: auditErr instanceof Error ? auditErr.message : String(auditErr), sourceUrl },
+            "scout-extract W23G.3: structural_recovery audit insert failed (non-blocking)",
+          )
+        );
+      } else {
+        // ── Original W23F.S generic indicator recovery (non-structural) ──────
+        // Falls through only when no structural archetype matched. Keeps the
+        // existing behavior for parametric indicators (RSI, MACD, EMA, etc.)
+        // that have missing_params but DO have identifiable indicators in prose.
+        const INDICATOR_REGEX = /\b(rsi|macd|adx|atr|bollinger|keltner|donchian|stochastic|vwap|cci|williams|supertrend|ichimoku|cumulative.delta|order.flow|volume.profile|orb|opening.range|9.{0,4}21.{0,4}ema|ema|sma|hma|dema|liquidity.sweep|order.block|fair.value.gap|fvg|smt|smc|ict|wyckoff|spring|breaker|silver.bullet|judas|optimal.trade.entry|ote|displacement|imbalance|mean.reversion|chandelier|fibonacci|pivot)\b/i;
+        const m = markdown.match(INDICATOR_REGEX) ?? title?.match(INDICATOR_REGEX);
+        if (m) {
+          const detected = m[0].toLowerCase().replace(/\s+/g, "_");
+          const conceptName = (title || sourceUrl).toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 80) || `${detected}_${Date.now()}`;
+          const stubStrategy = {
+            name: `${conceptName.slice(0, 40)}_recovered`,
+            symbol: "MES",
+            timeframe: "5m",
+            entry_indicator: detected,
+            entry_params: {},
+            direction: "long",
+            concept_name: conceptName,
+            entry_condition: `Concept identified from transcript: ${detected} (canonical defaults will be applied at graduation)`,
+            extraction_provenance_note: "W23F.S missing_params recovery — concept detected, params will use canonical defaults",
+          };
+          strategiesIn = [stubStrategy];
+          lastEmptyReason = null;
+          logger.info({ sourceUrl, detected, conceptName }, "scout-extract W23F.S: missing_params recovery synthesized stub");
+        }
       }
     }
 
@@ -992,7 +1172,17 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       return;
     }
 
-    res.json({ extracted: true, ideas });
+    // W23G.7 + W23G.2 — include telemetry fields in success response.
+    // extraction_mode: single_pass | chunked_fallback — for callers to log cycle-level stats.
+    // instrument_classification: advisory classification from the LLM (may be null if LLM omitted).
+    // tokens_estimated: char_count / 4 estimate for budget observability.
+    res.json({
+      extracted: true,
+      ideas,
+      extraction_mode: extractionMode,
+      instrument_classification: lastInstrumentClassification ?? "futures_primary",
+      tokens_estimated: Math.ceil(markdown.length / 4),
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error({ err, sourceUrl }, "scout-extract failed");

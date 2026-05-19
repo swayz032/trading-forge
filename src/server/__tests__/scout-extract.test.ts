@@ -29,11 +29,15 @@ vi.mock("../lib/logger.js", () => ({
 
 const callOpenAIMock = vi.fn();
 const callOpenAIOrFallbackMock = vi.fn();
+const callScoutExtractLlmMock = vi.fn();
 vi.mock("../services/model-router.js", () => ({
   callOpenAI:           (...args: unknown[]) => callOpenAIMock(...args),
   // Pass 17 changed /scout-extract to use callOpenAIOrFallback instead of callOpenAI.
-  // This mock must match so the tests don't get 500s on the Ollama fallback path.
+  // W23G.9 (2026-05-19) wrapped transcript_extractor in callScoutExtractLlm for
+  // exponential-backoff retry on 429/5xx/timeout. This mock must match so route
+  // doesn't blow up with TypeError on undefined LLM helper.
   callOpenAIOrFallback: (...args: unknown[]) => callOpenAIOrFallbackMock(...args),
+  callScoutExtractLlm:  (...args: unknown[]) => callScoutExtractLlmMock(...args),
   selectModel:          vi.fn(),
 }));
 
@@ -133,7 +137,7 @@ describe("POST /api/agent/scout-extract", () => {
   });
 
   it("returns no_strategy_content when model returns {strategies:[]}", async () => {
-    callOpenAIOrFallbackMock.mockResolvedValueOnce(JSON.stringify({ strategies: [] }));
+    callScoutExtractLlmMock.mockResolvedValueOnce(JSON.stringify({ strategies: [] }));
     const r = await postScoutExtract({
       sourceUrl: "https://example.com",
       sourceProvider: "tavily",
@@ -146,7 +150,7 @@ describe("POST /api/agent/scout-extract", () => {
   });
 
   it("returns model_unavailable when callOpenAI returns null", async () => {
-    callOpenAIOrFallbackMock.mockResolvedValueOnce(null);
+    callScoutExtractLlmMock.mockResolvedValueOnce(null);
     const r = await postScoutExtract({
       sourceUrl: "https://example.com",
       sourceProvider: "brave",
@@ -158,7 +162,7 @@ describe("POST /api/agent/scout-extract", () => {
   });
 
   it("returns non_json when model returns invalid JSON", async () => {
-    callOpenAIOrFallbackMock.mockResolvedValueOnce("not json at all");
+    callScoutExtractLlmMock.mockResolvedValueOnce("not json at all");
     const r = await postScoutExtract({
       sourceUrl: "https://example.com",
       sourceProvider: "brave",
@@ -173,7 +177,7 @@ describe("POST /api/agent/scout-extract", () => {
     // Wave 10 fix: ES sources are valid (operator directive Pass 19 Track F).
     // ES → MES is remapped, NOT dropped. The point-value ratio is preserved by
     // scaling max_contracts 10× (ES=$50/pt → MES=$5/pt).
-    callOpenAIOrFallbackMock.mockResolvedValueOnce(JSON.stringify({
+    callScoutExtractLlmMock.mockResolvedValueOnce(JSON.stringify({
       strategies: [
         {
           name: "es_breakout",
@@ -206,7 +210,7 @@ describe("POST /api/agent/scout-extract", () => {
   });
 
   it("keeps MES strategy and maps DSL → strict scout shape", async () => {
-    callOpenAIOrFallbackMock.mockResolvedValueOnce(JSON.stringify({
+    callScoutExtractLlmMock.mockResolvedValueOnce(JSON.stringify({
       strategies: [
         {
           name: "mes_vwap_fade",
@@ -252,7 +256,7 @@ describe("POST /api/agent/scout-extract", () => {
   it("mixed batch: keeps MES (1×) and remaps ES → MES (10×)", async () => {
     // Wave 10 fix: ES is now remapped to MES, not dropped.
     // Both strategies survive; ES idea gets market=MES.
-    callOpenAIOrFallbackMock.mockResolvedValueOnce(JSON.stringify({
+    callScoutExtractLlmMock.mockResolvedValueOnce(JSON.stringify({
       strategies: [
         {
           name: "es_remap",
