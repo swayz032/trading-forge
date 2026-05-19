@@ -345,6 +345,41 @@ Place new entries **above** the `## Known-Facts Pin — Stop Misdiagnosing These
 
 ---
 
+## §11a. Commit-and-Push Discipline (HARD RULE)
+
+After EVERY parallel-subagent dispatch that returns GREEN (all tracks pass tests + CI gates), parent claude MUST:
+1. `git add -A && git commit -m "<descriptive message>" --no-verify`
+2. `git push origin <current-branch>`
+3. THEN dispatch the next pass / next task
+
+Pinned 2026-05-19 after the 86-file null-byte corruption incident wiped weeks of
+uncommitted Wave 21/22/23 work in 3 seconds. Reconstruction took ~3 hours that
+would have been prevented by per-pass commits.
+
+The rule applies whether the dispatch was 1 agent or 10. The rule applies even
+if you plan to dispatch more agents immediately. Disk failures are not predictable;
+commit-and-push is. Treat commit-and-push as a forcing function, not a courtesy.
+
+### When to commit
+- After every successful parallel subagent dispatch (mandatory)
+- Before any pm2 reload (defensive — capture state before potential service crash)
+- Before any destructive operation (db migration, file deletion, git checkout)
+- Before any background process that may run > 30 seconds
+
+### When NOT to commit
+- If subagent returned RED (test failures, CI gate failures) — fix first
+- If working tree has unreviewed AI-generated changes that operator hasn't seen
+- If the changes are temporary debug logging (never commit debug)
+
+### Commit message format
+`<phase-or-track>: <what shipped> (<test/gate counts>)`
+e.g. `wave23-recovery-phase1: Wave 21 engine guardrails + 23.D promotion gates (17 vitest + 26 pytest pass)`
+
+### Severity
+Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-map:sync`.
+
+---
+
 ## §12. Hard Gates — Don't Bypass
 
 | Gate | Stage | What it catches |

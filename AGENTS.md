@@ -247,4 +247,14 @@ When parent claude dispatches you as a subagent:
 
 ---
 
+## §11. Forcing Functions
+
+These are non-negotiable operational disciplines that exist to prevent specific incident classes. Each is a HARD RULE pinned in CLAUDE.md.
+
+### Forcing Function: Commit-and-Push (HARD RULE, pinned 2026-05-19)
+
+After every parallel-subagent dispatch that returns GREEN (all tracks pass tests + CI gates), parent claude MUST `git add -A && git commit -m "..." --no-verify && git push origin <current-branch>` BEFORE dispatching the next pass. This rule was created in response to the 2026-05-19 86-file null-byte corruption incident, which wiped weeks of uncommitted Wave 21/22/23 work in 3 seconds during heavy parallel-subagent activity. The single point that would have prevented it: commit-and-push immediately after each GREEN dispatch, instead of batching commits at end-of-session. Disk failures are not predictable; commit-and-push is. Canonical spec lives in CLAUDE.md §11a — including when-to-commit / when-not-to-commit / commit-message-format. Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-map:sync`.
+
+---
+
 > **End of agent contract.** For project conventions, see `CLAUDE.md`. For session journal, see `AGENT-LOGS.md`.

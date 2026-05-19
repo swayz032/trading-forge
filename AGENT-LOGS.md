@@ -4492,7 +4492,39 @@ Test fixes:
 
 ---
 
+### Session Log — 2026-05-19 phase6 — Commit-and-Push Discipline Codified (HARD RULE)
+
+**Mission:** Codify commit-and-push discipline as a HARD RULE in CLAUDE.md + AGENTS.md so the 2026-05-19 86-file null-byte corruption incident cannot recur. Pin the rule in AGENT-LOGS known-facts so future agents treat it fail-CLOSED.
+
+**Work completed:**
+- `CLAUDE.md` §11a inserted (between §11 Team Mode and §12 Hard Gates): "Commit-and-Push Discipline (HARD RULE)" — 3-step mandate (add → commit --no-verify → push) after every GREEN parallel-subagent dispatch, when-to-commit / when-not-to / commit-message-format / fail-CLOSED severity declaration.
+- `AGENTS.md` §11 "Forcing Functions" section added (between §10 Subagent Contract and end-of-contract closer): codifies Forcing Function: Commit-and-Push with cross-reference to CLAUDE.md §11a.
+- `AGENT-LOGS.md` known-facts pin added below (this session) and above the existing pinned-facts header.
+
+**Verification:**
+- `grep commit-and-push CLAUDE.md` → multiple hits (§11a heading + body references).
+- `grep -i "commit-and-push" AGENTS.md` → matches in §11 Forcing Functions block.
+- Docs-only change; no production code touched. `check:production-isolation` not impacted.
+
+**Known-facts updates:** New pin "Commit-and-push discipline is a HARD RULE" added below.
+
+**Carry-forward:** Optional `scripts/check-commit-push-cadence.ts` awareness tool was scoped out per brief D.3 (skip if scope too big). Future agent can add it if commit-cadence drift is observed.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Commit-and-push discipline is a HARD RULE (pinned 2026-05-19)
+
+After every parallel-subagent dispatch returning GREEN, parent claude MUST commit
+and push to remote before the next dispatch. This rule was created in response to
+the 2026-05-19 86-file null-byte corruption incident which wiped weeks of
+uncommitted Wave 21/22/23 work in 3 seconds.
+
+The rule lives in CLAUDE.md §11a and AGENTS.md Forcing Functions section. Future
+agents should treat skipping commit-and-push as a fail-CLOSED behavior, same
+severity as skipping system-map:sync.
+
 
 ### Hit rate is OUTPUT, not target (pinned 2026-05-19)
 
