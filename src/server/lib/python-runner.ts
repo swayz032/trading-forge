@@ -2,7 +2,7 @@ import { spawn, type ChildProcess } from "child_process";
 import { logger } from "../index.js";
 import { parsePythonJson } from "../../shared/utils.js";
 import { resolve as pathResolve } from "path";
-import { writeFileSync, unlinkSync } from "fs";
+import { writeFileSync, unlinkSync, existsSync } from "fs";
 import { tmpdir } from "os";
 import { randomUUID } from "crypto";
 
@@ -141,7 +141,18 @@ export async function runPythonModule<T = Record<string, unknown>>(
   await _acquirePythonSlot();
 
   try {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    // Resolve Python: prefer project .venv (deterministic packages), fall back to system python.
+    // The schtasks-launched server runs with a non-interactive PATH that may not include
+    // user-site packages — relying on system `python` causes intermittent ModuleNotFoundError
+    // for packages installed via `pip install --user`. The .venv has every dependency the
+    // backtester needs, locked to known versions.
+    const venvPython = process.platform === "win32"
+      ? pathResolve(process.cwd(), ".venv", "Scripts", "python.exe")
+      : pathResolve(process.cwd(), ".venv", "bin", "python");
+    const venvExists = existsSync(venvPython);
+    const pythonCmd = venvExists
+      ? venvPython
+      : (process.platform === "win32" ? "python" : "python3");
     const finalArgs: string[] = [];
 
     // 1. Handle Script vs Module
