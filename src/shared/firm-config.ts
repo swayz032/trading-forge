@@ -21,6 +21,16 @@ export interface FirmAccountConfig {
   weekendOk: boolean;             // All firms = false
   commissionPerSide: number;      // Per-side commission in dollars
   minTradingDays: number;         // Min trading days required to pass eval
+  // ── MFFU 2026 compliance fields ──────────────────────────────────────────
+  payoutCycleDays?: number;       // MFFU: 14 (bi-weekly)
+  // ── Topstep 2026 compliance fields ───────────────────────────────────────
+  platformLockdownDate?: string;  // Topstep: "2026-01-12" (TopstepX-only since this date)
+  requiredPlatform?: string;      // Topstep: "topstepx"
+  allowsVps?: boolean;            // Topstep: false (personal device only)
+  allowsVpn?: boolean;            // Topstep: false
+  allowsRemoteDesktop?: boolean;  // Topstep: false
+  multiAccountWithinUserAllowed?: boolean;  // Topstep: true
+  copyTradesWithinUserAllowed?: boolean;    // Topstep: true
 }
 
 export interface FirmConfig {
@@ -44,6 +54,8 @@ export const FIRMS: Record<string, FirmConfig> = {
         payoutSplit: 0.80, minPayoutDays: 5, consistencyRule: 0.50, // Python: "mffu_50pct"
         dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
         minTradingDays: 5,
+        // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
+        payoutCycleDays: 14,
       },
     },
   },
@@ -59,6 +71,14 @@ export const FIRMS: Record<string, FirmConfig> = {
         payoutSplit: 0.90, minPayoutDays: 5, consistencyRule: null,
         dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.37,
         minTradingDays: 5,
+        // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-topstep.md)
+        platformLockdownDate: "2026-01-12",
+        requiredPlatform: "topstepx",
+        allowsVps: false,
+        allowsVpn: false,
+        allowsRemoteDesktop: false,
+        multiAccountWithinUserAllowed: true,
+        copyTradesWithinUserAllowed: true,
       },
     },
   },

@@ -162,6 +162,14 @@ FIRM_RULES: dict[str, dict] = {
         "daily_loss_limit": 1000,
         "overnight_ok": False,
         "weekend_ok": False,
+        # 2026-compliance fields (canonical: docs/prop-firm-rules-2026-topstep.md)
+        "platform_lockdown_date": "2026-01-12",   # NinjaTrader/Tradovate banned
+        "required_platform": "topstepx",           # TopstepX API only
+        "allows_vps": False,                        # Personal device only
+        "allows_vpn": False,
+        "allows_remote_desktop": False,
+        "multi_account_within_user_allowed": True,  # Multiple accounts under one user_id
+        "copy_trades_within_user_allowed": True,    # Same strategy across own accounts OK
     },
     "mffu_50k": {
         "account_size": 50_000,
@@ -179,6 +187,8 @@ FIRM_RULES: dict[str, dict] = {
         "daily_loss_limit": None,
         "overnight_ok": False,
         "weekend_ok": False,
+        # 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
+        "payout_cycle_days": 14,  # Bi-weekly payouts every 14 days
     },
     "tpt_50k": {
         "account_size": 50_000,

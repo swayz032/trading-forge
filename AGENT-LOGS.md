@@ -4,6 +4,26 @@
 
 ---
 
+### Session Log — 2026-05-19 Backtest Core — phase5: firm_config 2026-compliance drift close
+
+**Mission:** Restore `firm_config.py` + `firm-config.ts` to canonical 2026 spec after null-byte corruption recovery left both files at pre-Wave-22 state (restored from git HEAD 6858afa), missing 8 fields that the canonical docs require.
+
+**Work completed:**
+
+- `src/engine/firm_config.py` — added 7 Topstep 2026-compliance fields to `FIRM_RULES["topstep_50k"]`: `platform_lockdown_date`, `required_platform`, `allows_vps`, `allows_vpn`, `allows_remote_desktop`, `multi_account_within_user_allowed`, `copy_trades_within_user_allowed`. Added 1 MFFU field to `FIRM_RULES["mffu_50k"]`: `payout_cycle_days: 14`.
+- `src/shared/firm-config.ts` — extended `FirmAccountConfig` interface with 8 optional fields (camelCase) to type all new values. Added `payoutCycleDays: 14` to MFFU `50k` entry. Added all 7 Topstep fields to Topstep `50k` entry.
+
+**Verification:**
+- `npm run check:2026-compliance` → **OK — MFFU + Topstep aligned with canonical 2026 docs**
+- `npm run check:production-isolation` → **CLEAN — 4 file(s) checked, 0 violations**
+- `npm run system-map:check` → **status:ok, driftItems:[]**
+
+**Known-facts updates:** None — fields match what the canonical docs already specified; no new rules were added.
+
+**Carry-forward:** None. Drift fully closed.
+
+---
+
 ### Session Log — 2026-05-19 Observability Agent — W23D Carry-Forward: Harsh-Regime Phase Activation
 
 **Mission:** Close the W23D carry-forward: wire the harsh-regime gate flip from SOFT advisory to HARD blocking via a DB-persistent phase tracker + daily cron + lifecycle integration + operator override admin route. Prevent the gate from staying advisory forever.
