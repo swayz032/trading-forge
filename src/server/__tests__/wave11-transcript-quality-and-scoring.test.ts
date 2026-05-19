@@ -102,11 +102,15 @@ describe("wave11 — scoreVideoTitle numeric bonus", () => {
     expect(result.score).toBeGreaterThanOrEqual(5); // +2 positive (exact rules) + +3 numeric
   });
 
-  it("gives only +2 (no numeric bonus) on generic tutorial titles", () => {
+  it("gives +5 on indicator-named tutorial titles (INDICATOR +3 + POSITIVE +2)", () => {
+    // W23F.S added INDICATOR_NAME_TITLE(+3) bonus for titles naming specific indicators.
+    // "EMA" fires INDICATOR_NAME_TITLE, so score = +3 (indicator) + +2 (tutorial/positive) = 5.
+    // Original expectation of score=2 predated W23F.S and is intentionally updated here.
     const result = scoreVideoTitle("EMA Pullback Strategy Tutorial");
     expect(result.numericHit).toBe(false);
     expect(result.positiveHit).toBe(true);
-    expect(result.score).toBe(2);
+    expect(result.indicatorHit).toBe(true);
+    expect(result.score).toBe(5);
   });
 
   it("scores critique videos negative regardless of numbers", () => {
@@ -140,12 +144,15 @@ describe("wave11 — scoreVideoTitle numeric bonus", () => {
     expect(result.score).toBe(0);
   });
 
-  it("filters tutorials with positive but vague indicators (no numeric bonus)", () => {
-    // Realistic real-world tutorial without explicit params — only +2 keyword score
+  it("indicator-named tutorial without numeric params scores +5 (INDICATOR +3 + POSITIVE +2)", () => {
+    // W23F.S added INDICATOR_NAME_TITLE(+3) bonus for titles naming specific indicators.
+    // "EMA" fires INDICATOR_NAME_TITLE; "Complete Guide" fires POSITIVE_TITLE.
+    // Total: +3 + +2 = 5. Pre-W23F.S expectation of score=2 is intentionally updated here.
     const result = scoreVideoTitle("Complete Guide to EMA Pullback Setup");
     expect(result.positiveHit).toBe(true);
     expect(result.numericHit).toBe(false);
-    expect(result.score).toBe(2);
+    expect(result.indicatorHit).toBe(true);
+    expect(result.score).toBe(5);
   });
 });
 

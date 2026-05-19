@@ -1140,4 +1140,316 @@ async function writeLlmAuditLog(
   }
 }
 
+// ─── W23G.9 — Scout-extract exponential-backoff retry ──────────────────────
+//
+// Context: 429/5xx/timeout/model_unavailable from OpenAI was failing scout-
+// extract outright, losing 5-10% of ideas per cycle. This block adds 3-attempt
+// retry with exponential backoff + ±25% jitter, capped at 30s total wall time
+// (1s + 4s + 15s delays = 20s delays + ~5s typical API call = well under 30s).
+//
+// ONLY used by callScoutExtractLlm (transcript_extractor role).
+// strategy_proposer has different SLO and the synthesizer refusal contract;
+// it MUST NOT be wrapped here.
+//
+// Audit rows emitted per attempt failure (llm.retry_attempt) and on final
+// success-after-retry (llm.recovered_after_retry) or exhaustion
+// (llm.exhausted_retries).
+
+/** Reasons that qualify as transient and should be retried. */
+export type LlmRetryReason =
+  | "http_429"
+  | "http_5xx"
+  | "network_timeout"
+  | "model_unavailable"
+  | "rate_limit";
+
+/** Result from withScoutExtractRetry — either the raw text or null (exhausted). */
+export interface ScoutExtractRetryResult {
+  text: string | null;
+  /** true when a retry succeeded after at least one failure */
+  recoveredAfterRetry: boolean;
+  /** true when all attempts failed */
+  exhausted: boolean;
+  /** number of attempts made (1 = success on first try) */
+  attempts: number;
+  /** last retry reason, if any */
+  lastReason?: LlmRetryReason;
+}
+
+/** Classify an error/status into a retry reason (or null = not retryable). */
+export function classifyLlmError(
+  err: unknown,
+  httpStatus?: number,
+): LlmRetryReason | null {
+  if (httpStatus === 429) return "http_429";
+  if (httpStatus !== undefined && httpStatus >= 500) return "http_5xx";
+
+  const msg = (err instanceof Error ? err.message : String(err ?? "")).toLowerCase();
+  if (
+    msg.includes("timeout") ||
+    msg.includes("timed out") ||
+    msg.includes("aborted") ||
+    msg.includes("etimedout") ||
+    msg.includes("econnreset")
+  ) {
+    return "network_timeout";
+  }
+  if (msg.includes("model_unavailable")) return "model_unavailable";
+  if (msg.includes("rate_limit")) return "rate_limit";
+
+  // OpenAI SDK wraps HTTP status in .status
+  const status = (err as { status?: number })?.status;
+  if (status === 429) return "http_429";
+  if (typeof status === "number" && status >= 500) return "http_5xx";
+
+  return null;
+}
+
+/**
+ * Exponential-backoff delays in milliseconds (base values before jitter).
+ * Attempt 1 waits 1s, attempt 2 waits 4s, attempt 3 waits 15s.
+ * Total wall clock: ~20s delays + API call time < 30s budget.
+ */
+const SCOUT_RETRY_BASE_DELAYS_MS = [1_000, 4_000, 15_000] as const;
+const MAX_SCOUT_ATTEMPTS = 3;
+
+/**
+ * withScoutExtractRetry — wraps a single LLM call function with 3-attempt
+ * exponential-backoff retry for transient errors.
+ *
+ * Constraints:
+ *   - ONLY for scout_extract / transcript_extractor role.
+ *   - Idempotent: same messages in → same extraction logic; no side effects
+ *     are introduced by the retry itself.
+ *   - Audit rows written fire-and-forget (never block the caller path).
+ *   - Total wall-clock budget: 30s (1 + 4 + 15 delays + up to ~5s API call).
+ *
+ * @param callFn    The raw LLM call to retry. Must throw OR return null to
+ *                  signal failure. Returning a non-null string = success.
+ * @param auditFn   Fire-and-forget audit writer injected for testability.
+ *                  In production pass writeScoutRetryAudit; in tests pass a spy.
+ * @param sleepFn   setTimeout wrapper injected for test speed.
+ */
+export async function withScoutExtractRetry(
+  callFn: () => Promise<string | null>,
+  auditFn: (row: {
+    action: string;
+    decisionAuthority: string;
+    status: string;
+    result: Record<string, unknown>;
+  }) => Promise<void>,
+  sleepFn: (ms: number) => Promise<void> = (ms) =>
+    new Promise((r) => setTimeout(r, ms)),
+): Promise<ScoutExtractRetryResult> {
+  let lastReason: LlmRetryReason | undefined;
+  let attempt = 0;
+
+  for (; attempt < MAX_SCOUT_ATTEMPTS; attempt++) {
+    try {
+      const text = await callFn();
+
+      if (text !== null) {
+        // Success path
+        if (attempt > 0) {
+          // Recovered after at least one retry
+          void auditFn({
+            action: "llm.recovered_after_retry",
+            decisionAuthority: "system",
+            status: "success",
+            result: {
+              role: "scout_extract",
+              model_id: MODEL_CONFIGS.transcript_extractor?.model ?? "unknown",
+              attempts_total: attempt + 1,
+              last_reason: lastReason ?? null,
+            },
+          });
+        }
+        return {
+          text,
+          recoveredAfterRetry: attempt > 0,
+          exhausted: false,
+          attempts: attempt + 1,
+          lastReason,
+        };
+      }
+
+      // callFn returned null — OpenAI returned nothing (budget, circuit, refusal).
+      // Treat as non-retryable (budget gate / circuit open are not transient).
+      return {
+        text: null,
+        recoveredAfterRetry: false,
+        exhausted: false,
+        attempts: attempt + 1,
+        lastReason: undefined,
+      };
+    } catch (err: unknown) {
+      const reason = classifyLlmError(err);
+      if (!reason) {
+        // Non-transient error — do not retry
+        logger.warn(
+          { err, attempt: attempt + 1, role: "scout_extract" },
+          "withScoutExtractRetry: non-transient error, not retrying",
+        );
+        return {
+          text: null,
+          recoveredAfterRetry: false,
+          exhausted: false,
+          attempts: attempt + 1,
+          lastReason: undefined,
+        };
+      }
+
+      lastReason = reason;
+
+      // Emit audit row for this failed attempt (fire-and-forget)
+      void auditFn({
+        action: "llm.retry_attempt",
+        decisionAuthority: "system",
+        status: "retrying",
+        result: {
+          role: "scout_extract",
+          attempt: attempt + 1,
+          reason,
+          model_id: MODEL_CONFIGS.transcript_extractor?.model ?? "unknown",
+          err_message: err instanceof Error ? err.message : String(err ?? ""),
+        },
+      });
+
+      const isLastAttempt = attempt === MAX_SCOUT_ATTEMPTS - 1;
+      if (isLastAttempt) break; // fall through to exhaustion path
+
+      // Apply jitter ±25% to avoid retry storms
+      const base = SCOUT_RETRY_BASE_DELAYS_MS[attempt] ?? 1_000;
+      const jitter = base * 0.25 * (Math.random() * 2 - 1); // [-25%, +25%]
+      const delay = Math.max(100, Math.round(base + jitter));
+      logger.info(
+        { role: "scout_extract", attempt: attempt + 1, reason, delay_ms: delay },
+        "withScoutExtractRetry: transient error, retrying after backoff",
+      );
+      await sleepFn(delay);
+    }
+  }
+
+  // All attempts exhausted
+  void auditFn({
+    action: "llm.exhausted_retries",
+    decisionAuthority: "gate",
+    status: "rejected",
+    result: {
+      role: "scout_extract",
+      attempts_total: MAX_SCOUT_ATTEMPTS,
+      last_reason: lastReason ?? null,
+      model_id: MODEL_CONFIGS.transcript_extractor?.model ?? "unknown",
+    },
+  });
+  logger.warn(
+    { role: "scout_extract", last_reason: lastReason },
+    "withScoutExtractRetry: all retries exhausted, routing to Ollama fallback",
+  );
+
+  return {
+    text: null,
+    recoveredAfterRetry: false,
+    exhausted: true,
+    attempts: MAX_SCOUT_ATTEMPTS,
+    lastReason,
+  };
+}
+
+/**
+ * Audit writer used by callScoutExtractLlm in production.
+ * Lazily imports db/schema to avoid eager bootstrap graph pull.
+ */
+async function writeScoutRetryAudit(row: {
+  action: string;
+  decisionAuthority: string;
+  status: string;
+  result: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    const { db } = await import("../db/index.js");
+    const { auditLog } = await import("../db/schema.js");
+    await db.insert(auditLog).values({
+      action: row.action,
+      decisionAuthority: row.decisionAuthority as "system" | "gate" | "agent" | "operator",
+      status: row.status as "success" | "failure" | "retrying" | "rejected",
+      result: row.result,
+    });
+  } catch (err) {
+    logger.debug({ err, action: row.action }, "writeScoutRetryAudit: audit insert failed (fire-and-forget)");
+  }
+}
+
+/**
+ * callScoutExtractLlm — production entry-point for scout_extract / transcript_extractor
+ * LLM calls with exponential-backoff retry and Ollama fallback on exhaustion.
+ *
+ * ONLY use this for the transcript_extractor role in the scout-extract route.
+ * Do NOT use for strategy_proposer (different SLO + synthesizer refusal contract).
+ *
+ * Retry behaviour: up to 3 attempts, delays 1s / 4s / 15s (±25% jitter).
+ * Retries on: HTTP 429, HTTP 5xx, network timeout, model_unavailable, rate_limit.
+ * On exhaustion: falls back to Ollama qwen2.5-coder:7b (deterministic) via the
+ * same Ollama path as callOpenAIOrFallback.
+ *
+ * @param messages    Chat messages to send (same contract as callOpenAI).
+ * @param taskContext Optional task context for prompt caching.
+ * @param callFn      Injected for tests; defaults to callOpenAI.
+ * @param sleepFn     Injected for tests to avoid real setTimeout delays.
+ */
+export async function callScoutExtractLlm(
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+  taskContext?: PromptTaskContext,
+  callFn: typeof callOpenAI = callOpenAI,
+  sleepFn?: (ms: number) => Promise<void>,
+): Promise<string | null> {
+  const role = "transcript_extractor" as const;
+
+  const result = await withScoutExtractRetry(
+    () => callFn(role, messages, taskContext),
+    writeScoutRetryAudit,
+    sleepFn,
+  );
+
+  if (result.text !== null) return result.text;
+
+  // Fallback to Ollama — either on exhaustion (transient LLM errors) or on
+  // clean null (budget gate / circuit open). callOpenAIOrFallback already
+  // handles the Ollama path; route through it so we don't duplicate that logic.
+  // On retry-exhaustion, cloud is known bad — skip cloud call, go direct to Ollama.
+  if (result.exhausted) {
+    const config = MODEL_CONFIGS[role];
+    if (!config?.fallback || config.fallback.provider !== "ollama") {
+      logger.warn({ role }, "callScoutExtractLlm: retries exhausted but no Ollama fallback configured");
+      return null;
+    }
+    try {
+      const { OllamaClient } = await import("./ollama-client.js");
+      const ollama = new OllamaClient();
+      const systemPrompt = loadSystemPrompt(role, taskContext);
+      const userChunks = messages
+        .filter((m) => m.role !== "system")
+        .map((m) => m.content)
+        .join("\n\n");
+      const prompt = `${systemPrompt}\n\n${userChunks}`;
+      const wantJson = config.responseFormat === "json";
+      const startedAt = Date.now();
+      const res = await ollama.generate(config.fallback.model, prompt, undefined, wantJson);
+      const durationMs = Date.now() - startedAt;
+      logger.info(
+        { role, model: config.fallback.model, durationMs, responseLen: res?.response?.length ?? 0, retries_exhausted: true },
+        "callScoutExtractLlm: Ollama fallback after retry exhaustion completed",
+      );
+      return res?.response ?? null;
+    } catch (err) {
+      logger.error({ role, err }, "callScoutExtractLlm: Ollama fallback after retry exhaustion failed");
+      return null;
+    }
+  }
+
+  // Clean null from callOpenAI (budget gate / circuit open / refusal) — delegate
+  // to callOpenAIOrFallback which handles the Ollama path with proper logging.
+  return callOpenAIOrFallback(role, messages, taskContext);
+}
+
 export { MODEL_CONFIGS, KB_MANIFEST, FEWSHOT_ROLES };

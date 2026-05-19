@@ -9,7 +9,7 @@ import { auditLog, strategyPendingBuckets, strategyPendingMentions, systemJourna
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { eq, desc, and, sql, inArray, countDistinct } from "drizzle-orm";
 import { OllamaClient } from "../services/ollama-client.js";
-import { callOpenAI, callOpenAIOrFallback } from "../services/model-router.js";
+import { callOpenAI, callOpenAIOrFallback, callScoutExtractLlm } from "../services/model-router.js";
 import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
@@ -685,7 +685,11 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       channel: sourceProvider,
       transcript_text: chunk,
     });
-    const raw = await callOpenAIOrFallback("transcript_extractor", [
+    // W23G.9: use callScoutExtractLlm (transcript_extractor role only) so
+    // transient 429/5xx/timeout errors trigger exponential-backoff retry
+    // (3 attempts, 1s/4s/15s ±25% jitter) before falling back to Ollama.
+    // strategy_proposer is NOT wrapped here — different SLO.
+    const raw = await callScoutExtractLlm([
       { role: "user", content: userPayload },
     ]);
     if (!raw) return null; // model unavailable

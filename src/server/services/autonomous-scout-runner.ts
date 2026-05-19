@@ -432,7 +432,12 @@ export function scoreVideoTitle(title: string): { score: number; positiveHit: bo
   // rules; was filtered by score=-2 → operator forced re-evaluation. Clickbait now -3 (was -5,
   // hard floor -2) so a positive+indicator hit (+5) can offset clickbait (-3) to reach +2.
   if (negativeHit) score = Math.min(score - 5, -2);
-  if (clickbaitHit) score -= 3;
+  // W23G.10 (2026-05-19): when both an explicit indicator name AND clickbait are
+  // present, the indicator term is a stronger educational signal than the clickbait
+  // is a noise signal. Reduce clickbait penalty from -3 to -1 in that combo so
+  // INDICATOR(+3) + CLICKBAIT(-1) = +2 net-positive. Standalone clickbait (no
+  // indicator hit) retains the full -3 penalty.
+  if (clickbaitHit) score -= indicatorHit ? 1 : 3;
   return { score, positiveHit, negativeHit, numericHit, clickbaitHit, indicatorHit };
 }
 
