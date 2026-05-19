@@ -13,9 +13,18 @@ This file is discovered automatically by pytest when placed at the package
 root (src/engine/). No explicit conftest registration is needed.
 """
 
+import os
+
 import pytest
 
 from src.engine.determinism import enable_determinism
+
+# H7 fix: allow fixed_contracts=1 in all unit tests.
+# The H7 guard (raises ValueError on fixed_contracts=1 without this flag)
+# is a production safety check — not appropriate for unit tests that intentionally
+# use fixed_contracts=1 for simplicity. This env var is set session-wide here
+# so all existing tests continue to work without modification.
+os.environ.setdefault("TF_ALLOW_FIXED_1", "true")
 
 
 @pytest.fixture(autouse=True, scope="session")
