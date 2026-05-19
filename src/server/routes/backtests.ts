@@ -93,11 +93,16 @@ const strategyConfigSchema = z.object({
   }),
 });
 
+// Accept both snake_case (canonical) and camelCase aliases for dates so
+// curl/JS callers don't silently fall through to the resolveDataRange()
+// sentinel range when they happen to send startDate / endDate.
 const backtestRequestSchema = z.object({
   strategyId: z.string().uuid(),
   strategy: strategyConfigSchema.optional(), // Optional — if omitted, loaded from DB
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   slippage_ticks: z.number().positive().optional().default(1.0),
   commission_per_side: z.number().nonnegative().optional().default(0.62),
   mode: z.enum(["single", "walkforward"]).optional().default("walkforward"),
@@ -123,7 +128,11 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
     return;
   }
 
-  const { strategyId, strategy: providedStrategy, ...config } = parsed.data;
+  const { strategyId, strategy: providedStrategy, startDate: _alias_start, endDate: _alias_end, ...rest } = parsed.data;
+  // Promote camelCase aliases into the canonical snake_case keys the engine expects.
+  const config: Record<string, unknown> = { ...rest };
+  if (!config.start_date && _alias_start) config.start_date = _alias_start;
+  if (!config.end_date && _alias_end) config.end_date = _alias_end;
 
   // If no strategy config provided, load it from the DB
   let resolvedStrategy = providedStrategy;

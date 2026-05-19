@@ -192,8 +192,14 @@ async function resolveDataRange(symbol: string): Promise<{ start_date: string; e
     logger.info({ symbol, start, end, totalBars: info.totalBars }, "Auto-resolved data range from S3");
     return { start_date: start, end_date: end };
   } catch (err) {
-    logger.warn({ symbol, err }, "Failed to resolve data range from S3, using fallback");
-    return { start_date: "2010-01-01", end_date: "2030-12-31" };
+    // Conservative fallback aligned with actual ratio-adjusted S3 coverage
+    // (ES/NQ/CL 2015-08-02 → present). The previous 2010-01-01 / 2030-12-31
+    // sentinel polluted audit logs with future end-dates and triggered
+    // engine warmup walks past real data boundaries. Today's date is the
+    // hard cap so we never run "the future" through the engine.
+    const todayIso = new Date().toISOString().slice(0, 10);
+    logger.warn({ symbol, err, fallback_end: todayIso }, "Failed to resolve data range from S3, using calibrated fallback (2015-08-02 → today)");
+    return { start_date: "2015-08-02", end_date: todayIso };
   }
 }
 
