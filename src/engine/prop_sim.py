@@ -477,9 +477,17 @@ def simulate_all_firms(
     avg_contracts: float = 1.0,
     mc_pass_rates: Optional[dict[str, float]] = None,
 ) -> dict[str, dict]:
-    """Run prop firm simulation against all 8 firms.
+    """Run prop firm simulation against all active firms (Topstep + MFFU).
 
     Returns dict mapping firm_key → simulation result.
+
+    TODO (Wave 24 — carry-forward): per-firm-resize not implemented.
+    Both Topstep and MFFU receive the SAME trade list at the SAME contract
+    sizes. Correct behavior would re-size positions per firm's contract caps
+    (Topstep tier-based, MFFU 2%-of-account per trade) before simulation.
+    Currently only pass/fail flags differ between firms; P&L metrics are
+    identical. See prop_compliance.py docstring for full context.
+    Tracking: TODO:per-firm-resize
     """
     all_configs = _get_all_firm_configs()
     results = {}

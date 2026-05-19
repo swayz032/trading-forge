@@ -204,3 +204,40 @@ def compute_single_tp(
         if abs(tp - entry_price) >= min_tp_distance:
             return tp
     return None
+
+
+# ─── Exit Style Selection ─────────────────────────────────────────────────────
+# Style C (regime runner) conditions per CLAUDE.md §4 and style_c_handler.py:
+#   1. playbook == "TREND_CONTINUATION"
+#   2. vp_shape in {D, b, P, Thin}
+#   3. macro_state != "crisis"
+# All other combinations → Style D (default).
+#
+# Style D is the conservative default. Style C is only triggered in confirmed
+# trend-continuation regimes with a supportive VP profile and no crisis macro.
+
+_STYLE_C_VP_SHAPES = {"D", "b", "P", "Thin"}
+
+
+def select_exit_style(
+    playbook: Optional[str] = None,
+    vp_shape: Optional[str] = None,
+    macro_state: Optional[str] = None,
+) -> str:
+    """Select exit style based on current regime context.
+
+    Args:
+        playbook: Bias engine playbook (e.g. "TREND_CONTINUATION", "MEAN_REVERSION").
+        vp_shape: Volume profile shape (e.g. "D", "b", "P", "Thin").
+        macro_state: Current macro regime (e.g. "crisis", "growth", "easing").
+
+    Returns:
+        "style_c" if all three conditions are met, "style_d" otherwise.
+    """
+    if (
+        playbook == "TREND_CONTINUATION"
+        and vp_shape in _STYLE_C_VP_SHAPES
+        and macro_state != "crisis"
+    ):
+        return "style_c"
+    return "style_d"

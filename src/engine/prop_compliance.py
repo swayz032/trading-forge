@@ -10,6 +10,15 @@ payout splits, monthly fees) are the only differentiators applied per
 firm today; per-firm CONTRACT-CAP-AWARE re-sizing of the trade list is a
 Wave 23 carry-forward (today every firm runs the same trade list at the
 same sizes — only pass/fail flags differ between Topstep and MFFU).
+
+TODO (Wave 24): per-firm-resize — prop_sim does NOT re-size trades per firm.
+  Currently both Topstep and MFFU simulate the SAME trade list at the SAME
+  contract sizes. Topstep trailing-DD (EOD) and MFFU rules differ only in
+  pass/fail flag computation. Correct behavior would resize the trade list
+  per firm's contract caps and 2% max-risk rule before walking the sim.
+  Deferred to Wave 24 (carry-forward from 2026-05-19 audit).
+  Impact: Topstep cap = per-tier, MFFU cap = 2% of account per trade.
+  Tracking: search for TODO:per-firm-resize in codebase.
 """
 
 from __future__ import annotations  # noqa: I001

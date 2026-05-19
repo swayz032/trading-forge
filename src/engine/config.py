@@ -73,6 +73,10 @@ VALID_SYMBOLS = set(CONTRACT_SPECS.keys())
 class _Track3Config:
     MES_PYRAMID_CAP: int = 30
     PYRAMID_GRADUATION_PNL: float = 3_000.0  # +3 contracts per +$3K cumulative profit
+    # Hard time-stop: flatten all positions at 15:55 ET (5 minutes before RTH close).
+    # Per CLAUDE.md §4: "Time-stop: hard flatten 15:55 ET".
+    # Configurable via env var TIME_STOP_FLATTEN_ET (default "15:55").
+    TIME_STOP_FLATTEN_ET: str = os.environ.get("TIME_STOP_FLATTEN_ET", "15:55")
 
 TRACK3_CONFIG = _Track3Config()
 
