@@ -294,34 +294,7 @@ export const systemJournal = pgTable(
   ]
 );
 
-// ─── Production Mode type ─────
-export type ProductionMode = "HALT" | "PAPER" | "LIVE";
-
-// ─── System State (Production singleton — migration 0096 + 0101) ─────
-// Single source of truth for production trading mode. Singleton row id=1.
-// production_mode: 'HALT' | 'PAPER' | 'LIVE'
-// Only KillSwitch.setMode() may mutate. Every mutation writes an audit_log row + SSE.
-export const systemState = pgTable("system_state", {
-  id: integer("id").primaryKey().default(1),
-  productionMode: text("production_mode").notNull().default("HALT"),
-  killReason: text("kill_reason"),
-  setBy: text("set_by").notNull().default("system"),
-  setAt: timestamp("set_at", { withTimezone: true }).notNull().defaultNow(),
-  // Migration 0101 (autopilot): nullable column for vacation/operator-absent mode
-  operatorAbsentSince: timestamp("operator_absent_since", { withTimezone: true }),
-});
-
-// ─── Weekly Drift Reports ────────────────────────────────────
-// Auto-generated weekly metric drift reports (referenced by kill-switch + autopilot).
-export const weeklyDriftReports = pgTable("weekly_drift_reports", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  reportWeek: date("report_week").notNull(),
-  severity: text("severity"),
-  metrics: jsonb("metrics").notNull(),
-  driftDetected: boolean("drift_detected").notNull().default(false),
-  driftDetails: jsonb("drift_details"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+// (systemState, weeklyDriftReports, ProductionMode moved to Phase 10 Recovery section below — duplicate definitions removed W23F.N 2026-05-19)
 
 // ─── Audit Log (Trust Spine) ─────────────────────────────────
 export const auditLog = pgTable(
@@ -2142,3 +2115,392 @@ export const harshRegimePhase = pgTable("harsh_regime_phase", {
 export type HarshRegimePhaseValue = "advisory" | "hard";
 export type HarshRegimePhaseRow = typeof harshRegimePhase.$inferSelect;
 export type HarshRegimePhaseInsert = typeof harshRegimePhase.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 10 Recovery — schema-side reconstruction of 12 tables that consumer
+// services reference but vanished from schema.ts in the 2026-05-19 86-file
+// null-byte corruption rollback.
+//
+// Live DB introspection (2026-05-19) revealed that all 12 tables ALREADY EXIST
+// in Postgres — the corruption only wiped the Drizzle TypeScript declarations.
+// The shapes below MIRROR the live DB exactly (verified via information_schema).
+// Migration 0117 only ADDs columns where consumers reference something the live
+// DB lacks (e.g. account_strategy_assignments.hmac_secret for HMAC validation).
+//
+// 5 additional tables (firm_adversarial_priors, scout_drain_samples,
+// strategy_pending_buckets, strategy_pending_mentions, synthetic_black_swan_runs)
+// already exist in DB and have their Drizzle declarations restored here too.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── System State (kill-switch singleton) ─────────────────────────────────────
+export type ProductionMode = "ACTIVE" | "PAUSED" | "HALT";
+
+export const systemState = pgTable("system_state", {
+  id: integer("id").primaryKey().default(1),
+  productionMode: text("production_mode").notNull().default("HALT"),
+  killReason: text("kill_reason"),
+  setBy: text("set_by").notNull().default("system"),
+  setAt: timestamp("set_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type SystemStateRow = typeof systemState.$inferSelect;
+export type SystemStateInsert = typeof systemState.$inferInsert;
+
+// ─── Weekly Drift Reports ─────────────────────────────────────────────────────
+export const weeklyDriftReports = pgTable(
+  "weekly_drift_reports",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    reportWeek: date("report_week").notNull(),
+    liveSharpe30d: numeric("live_sharpe_30d"),
+    backtestSharpeExpected: numeric("backtest_sharpe_expected"),
+    sharpeDeltaSigma: numeric("sharpe_delta_sigma"),
+    winRateDelta: numeric("win_rate_delta"),
+    slippageDelta: numeric("slippage_delta"),
+    latencyP95Ms: integer("latency_p95_ms"),
+    severity: text("severity").notNull(),
+    autoHaltTriggered: boolean("auto_halt_triggered").notNull().default(false),
+    ranAt: timestamp("ran_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("weekly_drift_reports_report_week_uq").on(table.reportWeek),
+    index("weekly_drift_reports_ran_at_idx").on(table.ranAt.desc()),
+    index("weekly_drift_reports_severity_idx").on(table.severity),
+  ],
+);
+
+// ─── Production Trades ────────────────────────────────────────────────────────
+export const productionTrades = pgTable(
+  "production_trades",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    strategyId: uuid("strategy_id").notNull(),
+    strategyVersionHash: text("strategy_version_hash").notNull(),
+    barTimestamp: timestamp("bar_timestamp", { withTimezone: true }).notNull(),
+    signalValue: integer("signal_value").notNull(),
+    biasDecisionId: integer("bias_decision_id"),
+    complianceCheckId: integer("compliance_check_id"),
+    traderspostWebhookId: text("traderspost_webhook_id"),
+    tradovateFillId: text("tradovate_fill_id"),
+    expectedSlippage: numeric("expected_slippage"),
+    actualSlippage: numeric("actual_slippage"),
+    expectedPnl: numeric("expected_pnl"),
+    actualPnl: numeric("actual_pnl"),
+    correlationId: uuid("correlation_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("production_trades_strategy_idx").on(table.strategyId),
+    index("production_trades_bar_timestamp_idx").on(table.barTimestamp.desc()),
+  ],
+);
+
+// ─── Daily Reconciliation ─────────────────────────────────────────────────────
+export const dailyReconciliation = pgTable(
+  "daily_reconciliation",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    reconDate: date("recon_date").notNull(),
+    productionTradesCount: integer("production_trades_count").notNull(),
+    traderspostLogCount: integer("traderspost_log_count").notNull(),
+    tradovateFillsCount: integer("tradovate_fills_count").notNull(),
+    mffuDashboardPnl: numeric("mffu_dashboard_pnl"),
+    expectedPnl: numeric("expected_pnl").notNull(),
+    mismatchCount: integer("mismatch_count").notNull().default(0),
+    mismatchDetails: jsonb("mismatch_details").notNull().default(sql`'[]'::jsonb`),
+    alertFired: boolean("alert_fired").notNull().default(false),
+    ranAt: timestamp("ran_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("daily_reconciliation_recon_date_uq").on(table.reconDate),
+    index("daily_reconciliation_ran_at_idx").on(table.ranAt.desc()),
+    index("daily_reconciliation_mismatch_idx").on(table.mismatchCount),
+  ],
+);
+
+// ─── Bias Decisions ───────────────────────────────────────────────────────────
+export const biasDecisions = pgTable(
+  "bias_decisions",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    symbol: text("symbol").notNull(),
+    decisionTimestamp: timestamp("decision_timestamp", { withTimezone: true }).notNull(),
+    featureSnapshot: jsonb("feature_snapshot").notNull(),
+    featureVersions: jsonb("feature_versions").notNull(),
+    classifierVersion: text("classifier_version").notNull(),
+    rawStateProbs: jsonb("raw_state_probs").notNull(),
+    calibratedConfidence: numeric("calibrated_confidence"),
+    calibrationVersion: text("calibration_version"),
+    routerVersion: text("router_version").notNull(),
+    routerHash: text("router_hash").notNull(),
+    playbook: text("playbook").notNull(),
+    allowedStrategies: jsonb("allowed_strategies").notNull(),
+    hysteresisApplied: boolean("hysteresis_applied").notNull().default(false),
+    engineMode: text("engine_mode").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("bias_decisions_symbol_ts_router_uq").on(
+      table.symbol,
+      table.decisionTimestamp,
+      table.routerVersion,
+    ),
+    index("bias_decisions_symbol_idx").on(table.symbol),
+    index("bias_decisions_timestamp_idx").on(table.decisionTimestamp.desc()),
+    index("bias_decisions_engine_mode_idx").on(table.engineMode),
+  ],
+);
+
+// ─── Bias Calibration Curves ──────────────────────────────────────────────────
+export const biasCalibrationCurves = pgTable(
+  "bias_calibration_curves",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    fitAt: timestamp("fit_at", { withTimezone: true }).notNull().defaultNow(),
+    windowDays: integer("window_days").notNull(),
+    curveMethod: text("curve_method").notNull(),
+    curveParams: jsonb("curve_params").notNull(),
+    reliabilityScore: numeric("reliability_score"),
+    version: text("version").notNull(),
+  },
+  (table) => [
+    index("bias_calibration_curves_version_idx").on(table.version),
+    index("bias_calibration_curves_fit_at_idx").on(table.fitAt.desc()),
+  ],
+);
+
+// ─── Bias Ablation Results ────────────────────────────────────────────────────
+export const biasAblationResults = pgTable(
+  "bias_ablation_results",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    runAt: timestamp("run_at", { withTimezone: true }).notNull().defaultNow(),
+    periodStart: date("period_start").notNull(),
+    periodEnd: date("period_end").notNull(),
+    modeOffSharpe: numeric("mode_off_sharpe"),
+    modeGatedSharpe: numeric("mode_gated_sharpe"),
+    sharpeDelta: numeric("sharpe_delta"),
+    costMultiplier: numeric("cost_multiplier"),
+    pboScore: numeric("pbo_score"),
+    gpt5Verdict: text("gpt5_verdict"),
+    gpt5Reasoning: text("gpt5_reasoning"),
+    acceptedByOperator: boolean("accepted_by_operator"),
+  },
+  (table) => [
+    index("bias_ablation_results_period_idx").on(table.periodStart, table.periodEnd),
+    index("bias_ablation_results_run_at_idx").on(table.runAt.desc()),
+  ],
+);
+
+// ─── Broker Accounts ──────────────────────────────────────────────────────────
+export const brokerAccounts = pgTable(
+  "broker_accounts",
+  {
+    accountId: uuid("account_id").primaryKey().defaultRandom(),
+    firmId: text("firm_id").notNull(),
+    brokerType: text("broker_type").notNull(),
+    apiKeyVaultRef: text("api_key_vault_ref"),
+    accountIdExternal: text("account_id_external"),
+    enabled: boolean("enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("broker_accounts_firm_idx").on(table.firmId),
+    index("broker_accounts_enabled_idx").on(table.enabled),
+  ],
+);
+
+// ─── Instance Config ──────────────────────────────────────────────────────────
+export const instanceConfig = pgTable("instance_config", {
+  id: integer("id").primaryKey().default(1),
+  instanceId: text("instance_id").notNull(),
+  enabledFirms: jsonb("enabled_firms").notNull().default(sql`'[]'::jsonb`),
+  activeStrategies: jsonb("active_strategies").notNull().default(sql`'{}'::jsonb`),
+  tradeifyExclusiveMode: boolean("tradeify_exclusive_mode").notNull().default(false),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+});
+
+// ─── NeMo Scenario Bank ───────────────────────────────────────────────────────
+export const nemoScenarioBank = pgTable(
+  "nemo_scenario_bank",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    scenarioLabel: text("scenario_label").notNull(),
+    scenarioJson: jsonb("scenario_json").notNull(),
+    severity: text("severity").notNull(),
+    durationDays: integer("duration_days").notNull(),
+    targetVol: numeric("target_vol"),
+    targetTrend: numeric("target_trend"),
+    generatorVersion: text("generator_version").notNull(),
+    usedInA14RunIds: jsonb("used_in_a14_run_ids").notNull().default(sql`'[]'::jsonb`),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("nemo_scenario_bank_severity_idx").on(table.severity),
+    index("nemo_scenario_bank_created_at_idx").on(table.createdAt.desc()),
+  ],
+);
+
+// ─── Account Strategy Assignments ─────────────────────────────────────────────
+// hmac_secret column added by migration 0117 (consumer-required for HMAC validation).
+export const accountStrategyAssignments = pgTable(
+  "account_strategy_assignments",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    accountId: uuid("account_id").notNull(),
+    strategyId: uuid("strategy_id").notNull(),
+    status: text("status").notNull().default("active"),
+    releasedToFamily: boolean("released_to_family").notNull().default(false),
+    familyMemberLabel: text("family_member_label"),
+    hmacSecret: text("hmac_secret"),
+    assignedAt: timestamp("assigned_at", { withTimezone: true }).notNull().defaultNow(),
+    assignedBy: text("assigned_by").notNull(),
+  },
+  (table) => [
+    uniqueIndex("account_strategy_assignments_account_strategy_uq").on(
+      table.accountId,
+      table.strategyId,
+    ),
+    index("account_strategy_assignments_status_idx").on(table.status),
+    index("account_strategy_assignments_strategy_idx").on(table.strategyId),
+    index("account_strategy_assignments_account_idx").on(table.accountId),
+  ],
+);
+
+// ─── TradingView Markers ──────────────────────────────────────────────────────
+export const tradingviewMarkers = pgTable(
+  "tradingview_markers",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    strategyId: uuid("strategy_id").notNull(),
+    accountId: uuid("account_id").notNull(),
+    barTimestamp: timestamp("bar_timestamp", { withTimezone: true }).notNull(),
+    signal: integer("signal").notNull(),
+    pineAlertPayload: jsonb("pine_alert_payload").notNull(),
+    hmacValidated: boolean("hmac_validated").notNull().default(false),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+    correlationId: uuid("correlation_id"),
+  },
+  (table) => [
+    index("tradingview_markers_account_idx").on(table.accountId),
+    index("tradingview_markers_bar_timestamp_idx").on(table.barTimestamp.desc()),
+    index("tradingview_markers_received_at_idx").on(table.receivedAt.desc()),
+  ],
+);
+
+// ─── Firm Adversarial Priors (already in live DB) ────────────────────────────
+export const firmAdversarialPriors = pgTable(
+  "firm_adversarial_priors",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    firmId: text("firm_id").notNull(),
+    eventType: text("event_type").notNull(),
+    baseRate: numeric("base_rate").notNull(),
+    evidenceWeight: integer("evidence_weight").notNull().default(0),
+    evidenceSources: jsonb("evidence_sources"),
+    lastObservedAt: timestamp("last_observed_at"),
+    fitMethod: text("fit_method").notNull().default("manual_seed"),
+    lastFittedAt: timestamp("last_fitted_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_firm_priors_unique").on(table.firmId, table.eventType),
+    index("idx_firm_priors_firm").on(table.firmId),
+    index("idx_firm_priors_event").on(table.eventType),
+    index("idx_firm_priors_recent").on(table.lastFittedAt.desc()),
+  ],
+);
+
+export type FirmAdversarialPriorRow = typeof firmAdversarialPriors.$inferSelect;
+export type FirmAdversarialPriorInsert = typeof firmAdversarialPriors.$inferInsert;
+
+// ─── Strategy Pending Buckets (already in live DB) ───────────────────────────
+export const strategyPendingBuckets = pgTable(
+  "strategy_pending_buckets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fingerprintHash: text("fingerprint_hash").notNull(),
+    market: text("market").notNull(),
+    entryArchetype: text("entry_archetype").notNull(),
+    exitType: text("exit_type").notNull(),
+    sourceCount: integer("source_count").notNull().default(0),
+    distinctProviders: integer("distinct_providers").notNull().default(0),
+    status: text("status").notNull().default("pending"),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    graduatedAt: timestamp("graduated_at", { withTimezone: true }),
+    graduatedStrategyId: uuid("graduated_strategy_id"),
+    conceptName: text("concept_name"),
+    layerCoverageJson: jsonb("layer_coverage_json"),
+    wideFingerprintHash: text("wide_fingerprint_hash"),
+  },
+  (table) => [
+    uniqueIndex("strategy_pending_buckets_fingerprint_hash_key").on(table.fingerprintHash),
+    index("idx_buckets_status_lastseen").on(table.status, table.lastSeenAt.desc()),
+  ],
+);
+
+// ─── Strategy Pending Mentions (already in live DB) ──────────────────────────
+export const strategyPendingMentions = pgTable(
+  "strategy_pending_mentions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    bucketId: uuid("bucket_id").notNull(),
+    sourceProvider: text("source_provider").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    extractedIdea: jsonb("extracted_idea").notNull(),
+    isCrossValidationResult: boolean("is_cross_validation_result").notNull().default(false),
+    crossValidatorConfidence: numeric("cross_validator_confidence"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    scoutLayer: text("scout_layer").notNull().default("web"),
+  },
+  (table) => [
+    uniqueIndex("strategy_pending_mentions_bucket_url_unique").on(table.bucketId, table.sourceUrl),
+    index("idx_mentions_bucket").on(table.bucketId),
+    index("idx_mentions_recent").on(table.createdAt.desc()),
+    index("idx_mentions_layer").on(table.bucketId, table.scoutLayer),
+  ],
+);
+
+// ─── Scout Drain Samples (already in live DB) ────────────────────────────────
+export const scoutDrainSamples = pgTable(
+  "scout_drain_samples",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sampledAt: timestamp("sampled_at").notNull().defaultNow(),
+    scoutedCount: integer("scouted_count").notNull(),
+    pipelineMode: text("pipeline_mode"),
+  },
+  (table) => [
+    index("idx_scout_drain_samples_sampled_at").on(table.sampledAt.desc()),
+  ],
+);
+
+// ─── Synthetic Black Swan Runs (already in live DB) ──────────────────────────
+export const syntheticBlackSwanRuns = pgTable(
+  "synthetic_black_swan_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").notNull(),
+    backtestId: uuid("backtest_id").notNull(),
+    status: text("status").notNull().default("pending"),
+    numRegimesTested: integer("num_regimes_tested"),
+    numRegimesSurvived: integer("num_regimes_survived"),
+    survivalRate: numeric("survival_rate"),
+    worstRegimeId: uuid("worst_regime_id"),
+    worstRegimeDrawdown: numeric("worst_regime_drawdown"),
+    worstRegimeLabel: text("worst_regime_label"),
+    resultSummary: jsonb("result_summary"),
+    errorMessage: text("error_message"),
+    executionTimeMs: integer("execution_time_ms"),
+    generatorModelVersion: text("generator_model_version"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    resolvedAt: timestamp("resolved_at"),
+  },
+  (table) => [
+    index("idx_blackswan_backtest").on(table.backtestId),
+    index("idx_blackswan_strategy").on(table.strategyId, table.createdAt.desc()),
+  ],
+);
+
