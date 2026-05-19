@@ -27,6 +27,7 @@ import { logger } from "../index.js";
 import { db } from "../db/index.js";
 import { strategies, strategyPendingBuckets, auditLog, transcriptFetchOutcomes } from "../db/schema.js";
 import { fetchTranscriptWithRetry } from "./transcript-fetch-queue.js";
+import { fetchRedditEnrichment } from "./reddit-cross-extract.js";
 import { eq, sql as drizzleSql, count as drizzleCount } from "drizzle-orm";
 import { canonicalConceptName } from "./strategy-fingerprint.js";
 import { randomUUID } from "crypto";
@@ -815,7 +816,7 @@ async function _fetchYouTubeOrder(
 async function fetchYouTubeTopVideos(
   conceptName: string,
   cycleCorrelationId?: string,
-): Promise<Array<{ url: string; title: string; source_pass: "captioned" | "uncaptioned"; sourceQuery: string }>> {
+): Promise<Array<{ url: string; title: string; source_pass: "captioned" | "uncaptioned"; sourceQuery: string; titleScore: number; combinedScore: number; videoId: string }>> {
   if (!YOUTUBE_API_KEY) {
     logger.warn({ conceptName }, "autonomous-scout: YOUTUBE_DATA_API_KEY not set — YouTube layer disabled");
     return [];
@@ -947,6 +948,9 @@ async function fetchYouTubeTopVideos(
       title: c.title,
       source_pass: (pass1Ids.has(c.videoId) ? "captioned" : "uncaptioned") as "captioned" | "uncaptioned",
       sourceQuery: query,
+      titleScore: c.titleScore,
+      combinedScore: c.combinedScore,
+      videoId: c.videoId,
     }));
   } catch (e) {
     logger.warn({ err: e instanceof Error ? e.message : String(e) }, "autonomous-scout: YouTube API error");
@@ -1465,6 +1469,114 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
         });
         if (ytOk.accepted) youtubeMentions++;
         continue;
+      }
+
+      // W23G.8 — Reddit cross-extract enrichment. When YouTube extractor returned
+      // empty for a high-promise video (titleScore >= 5 — i.e. clear indicator +
+      // tutorial signal in the title), fall back to Reddit JSON API for a top
+      // post + top-5 comments and re-run scout-extract on that markdown. Reddit
+      // posters often state explicit rules that YouTube creators only flash
+      // on-screen. We tag the resulting idea with extraction_provenance:
+      // "reddit_only" so downstream observability can distinguish.
+      //
+      // Guardrails:
+      //   - Single-attempt per (video, concept) — no recursive Reddit re-extract
+      //   - Whitelisted subs only (futurestrading/daytrading/algotrading)
+      //   - Upvote >= 50 community signal-quality bar
+      //   - Failures (no post, all below threshold, network) audited and skipped
+      if (ideas.length === 0 && v.titleScore >= 5) {
+        try {
+          db.insert(auditLog).values({
+            action: "scout.reddit_enrichment_attempted",
+            entityType: "scout_youtube",
+            entityId: v.videoId,
+            result: {
+              concept_hint: c.conceptName,
+              video_id: v.videoId,
+              video_url: v.url,
+              title: v.title,
+              title_score: v.titleScore,
+            } as Record<string, unknown>,
+            status: "info",
+            decisionAuthority: "autonomous_scout",
+            correlationId,
+          }).catch(() => {});
+        } catch { /* non-blocking */ }
+
+        const enrichment = await fetchRedditEnrichment(c.conceptName).catch(() => null);
+        if (enrichment && enrichment.rawMarkdown.length >= 200) {
+          const reIdeas = await extractStrategyFromText({
+            sourceUrl: enrichment.postUrl,
+            markdown: enrichment.rawMarkdown,
+            sourceProvider: "brave",  // closest enum to "reddit" for scout-extract
+            title: `${v.title} (Reddit enrichment from r/${enrichment.subreddit})`,
+          });
+          if (reIdeas.length > 0) {
+            const idea = reIdeas[0] as Record<string, unknown>;
+            // Tag extraction_provenance so downstream observability can see this came from Reddit
+            (idea as any).extraction_provenance = "reddit_only";
+            (idea as any).reddit_enrichment_applied = true;
+            (idea as any).reddit_post_url = enrichment.postUrl;
+            (idea as any).reddit_subreddit = enrichment.subreddit;
+            (idea as any).reddit_upvote_score = enrichment.upvoteScore;
+
+            db.insert(auditLog).values({
+              action: "scout.reddit_enriched",
+              entityType: "scout_youtube",
+              entityId: v.videoId,
+              result: {
+                concept_name: c.conceptName,
+                subreddit: enrichment.subreddit,
+                upvote_score: enrichment.upvoteScore,
+                post_url: enrichment.postUrl,
+                video_id: v.videoId,
+              } as Record<string, unknown>,
+              status: "success",
+              decisionAuthority: "autonomous_scout",
+              correlationId,
+            }).catch(() => {});
+
+            const enrichedOk = await postLayerMention({
+              conceptName: c.conceptName,
+              market: ((idea as any).market as any) ?? "MES",
+              timeframe: ((idea as any).timeframe as any) ?? "5m",
+              layer: "youtube",  // logical layer remains YouTube (this is the YT-empty fallback path)
+              sourceProvider: "youtube_transcript_npm",
+              sourceUrl: v.url,
+              thesis: String((idea as any).thesis ?? `${v.title} — Reddit-enriched DSL for ${c.conceptName}`).slice(0, 2000),
+              entryRules: String((idea as any).entry_rules ?? "").slice(0, 2000) || `Reddit-enrichment extraction for ${c.conceptName} (r/${enrichment.subreddit}, ${enrichment.upvoteScore} upvotes). Framework overlay applies risk rules.`,
+              exitRules: String((idea as any).exit_rules ?? "").slice(0, 2000) || "Style C framework overlay applies.",
+              riskRules: String((idea as any).risk_rules ?? "").slice(0, 1000) || "CLAUDE.md §4 framework risk rules apply post-overlay.",
+              richIdea: idea,
+              seededSymbol: symbolGroup,
+              correlationId,
+            });
+            if (enrichedOk.accepted) youtubeMentions++;
+            logger.info({
+              videoId: v.videoId, conceptName: c.conceptName, subreddit: enrichment.subreddit,
+              upvotes: enrichment.upvoteScore, accepted: enrichedOk.accepted,
+            }, "autonomous-scout: Reddit-enriched extraction succeeded (W23G.8)");
+            continue;
+          }
+
+          // Reddit returned content but second extract still failed.
+          db.insert(auditLog).values({
+            action: "scout.reddit_enriched_but_extract_failed",
+            entityType: "scout_youtube",
+            entityId: v.videoId,
+            result: {
+              concept_name: c.conceptName,
+              subreddit: enrichment.subreddit,
+              upvote_score: enrichment.upvoteScore,
+              post_url: enrichment.postUrl,
+              video_id: v.videoId,
+            } as Record<string, unknown>,
+            status: "rejected",
+            decisionAuthority: "autonomous_scout",
+            correlationId,
+          }).catch(() => {});
+          // fall through to CV-only fallback below
+        }
       }
 
       // CV-only fallback — extractor empty AND title token-confirms concept.
