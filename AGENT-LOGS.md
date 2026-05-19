@@ -4,6 +4,59 @@
 
 ---
 
+### Session Log — 2026-05-19 Backtest Core — Wave 23 Pass 2+3: Library Graveyard Sweep + Validation Gauntlet
+
+**Mission:** Execute Wave 23 Pass 2 (library graveyard sweep against new gate chain) and Pass 3 (validation gauntlet for survivors). Pipeline stayed PAUSED throughout.
+
+**Work completed:**
+
+- `scripts/wave23-library-gate-sweep.ts` (new): standalone gate sweep script. 7-gate chain (C9 DSL Diversity, R-expectancy ≥2R, PF ≥1.7, Sharpe ≥1.5, A4 Frankenstein, A7 Signal Correlation, harsh-regime advisory). Direct DB access + Python subprocess (bypasses server bootstrap; no SSE imports). Python path resolution for bash-under-Windows: uses `python3` (resolves via bash PATH, NOT shell:true). Project root: `process.cwd()` not `import.meta.url` (which produces double-path `C:\C:\...` on Windows).
+- Sweep applied LIVE (not dry-run). 4 CANDIDATE strategies evaluated.
+- `scripts/wave23-inspect-candidates.ts`, `wave23-inspect-configs.ts`, `wave23-inspect-bt-config.ts`, `wave23-inspect-full.ts`, `wave23-verify-sweep.ts` (new): diagnostic helpers used during sweep development.
+
+**Pass 2 outcomes:**
+
+| Strategy | Symbol | Verdict | Gate Failed | Sharpe | PF | Notes |
+|---|---|---|---|---|---|---|
+| `ema_9_21_pullback_mes_5m` | MES | GRAVEYARD | Profit_Factor | -0.970 | 0.710 | Pre-W23 backtest, expectancy_R absent |
+| `orb_15m_mes` | MES | GRAVEYARD | Profit_Factor | -2.201 | 0.359 | Pre-W23 backtest, expectancy_R absent |
+| `orb_mnq_15m` | MNQ | NO_BACKTEST | — | — | — | Python engine rejects `opening_range_breakout` indicator (not in validator allowlist) |
+| `crude_oil_technical_analysis_mcl_5m` | MCL | NO_BACKTEST | — | — | — | Same engine validation issue |
+
+**Pass 3 outcomes:** 0 survivors entered Pass 3 — skipped entirely.
+
+**DB state post-sweep:**
+- `ema_9_21_pullback_mes_5m` → `GRAVEYARD`; `lifecycle_transitions` row inserted; `strategy_graveyard` row inserted
+- `orb_15m_mes` → `GRAVEYARD`; same
+- `orb_mnq_15m` → remains `CANDIDATE` (no backtest = no verdict, not a gate failure)
+- `crude_oil_technical_analysis_mcl_5m` → remains `CANDIDATE` (same)
+- `audit_log` rows: `strategy.graveyarded_by_wave23_sweep` for both graveyarded strategies
+
+**Verification:**
+- `npm run check:production-isolation` → CLEAN
+- `npm run system-map:check` → status:ok, driftItems:[]
+- DB verified via `wave23-verify-sweep.ts`
+
+**Known-facts updates:**
+- Python engine (as of 2026-05-19) does NOT have `opening_range_breakout` in its indicator validator allowlist. ORB-based strategies (`orb_mnq_15m`, `crude_oil_technical_analysis_mcl_5m`) cannot be backtested via the standalone Python subprocess. The server's backtest flow may have handled this via a different path (strategy_class override) or the indicator was added later. This is a Python engine gap — `orb_15m_mes` had a completed backtest (sharpe=-2.20, PF=0.36) which means the server previously ran it somehow.
+- The `opening_range_breakout` indicator IS referenced in Wave 13 ORB implementation (CLAUDE.md §2b note "ORB indicator landed Wave 13 A.2"). The Python engine validator may not have been updated when the ORB indicator was added.
+- S3 data structure: ES has `15min.parquet` and `5min.parquet` in local cache (`data_cache/ES/`). Data loader uses timeframe string directly for cache lookup — `"15m"` != `"15min"` as a cache key. Strategies with `timeframe: "15m"` will miss cache and need S3. S3 consolidated only has `15min.parquet` not `15m.parquet`.
+- Both graveyarded strategies had PF < 1.0 (losing money over 7 years). Graveyard was the correct verdict.
+
+**Operator report summary:**
+- 4 CANDIDATE strategies entered sweep
+- 2 graveyarded (failed PF gate — both losing strategies)
+- 2 remain CANDIDATE pending engine fix (ORB indicator not in Python validator)
+- 0 promoted to PAPER
+- Action required: fix `opening_range_breakout` indicator in Python engine validator, then re-run sweep for the 2 ORB strategies
+
+**Carry-forward:**
+- Fix Python engine: add `opening_range_breakout` to valid indicator type set in `src/engine/config.py` so ORB strategies can be backtested
+- Re-run sweep for `orb_mnq_15m` and `crude_oil_technical_analysis_mcl_5m` after engine fix
+- Scout pipeline needs to generate new CANDIDATE strategies with metrics that can pass PF ≥1.7, Sharpe ≥1.5, expectancy_R ≥2R
+
+---
+
 ### Session Log — 2026-05-19 Backtest Core — phase5: firm_config 2026-compliance drift close
 
 **Mission:** Restore `firm_config.py` + `firm-config.ts` to canonical 2026 spec after null-byte corruption recovery left both files at pre-Wave-22 state (restored from git HEAD 6858afa), missing 8 fields that the canonical docs require.
