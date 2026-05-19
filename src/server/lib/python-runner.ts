@@ -206,9 +206,15 @@ export async function runPythonModule<T = Record<string, unknown>>(
       WF_PARALLEL: process.env.WF_PARALLEL ?? "1",
       // Phase 15: force user-site visibility so subprocess sees `pip install --user`
       // packages (e.g. click) even when launched from non-interactive schtasks env.
-      // Without PYTHONUSERSITE=1, the schtasks-launched server's subprocesses ignore
-      // ~/AppData/Roaming/Python/.../site-packages and fail with ModuleNotFoundError.
+      // PYTHONUSERSITE=1 alone is insufficient when the server runs as a DIFFERENT
+      // OS user (e.g. schtasks default session user) — that user's user-site dir
+      // is empty. PYTHONPATH explicitly adds tonio's user-site to module search.
       PYTHONUSERSITE: "1",
+      PYTHONPATH: [
+        "C:\\Users\\tonio\\AppData\\Roaming\\Python\\Python313\\site-packages",
+        "C:\\Program Files\\Python313\\Lib\\site-packages",
+        process.env.PYTHONPATH ?? "",
+      ].filter(Boolean).join(";"),
     };
     return await new Promise((resolve, reject) => {
       const proc = spawn(pythonCmd, finalArgs, {
