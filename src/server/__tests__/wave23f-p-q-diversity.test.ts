@@ -20,43 +20,42 @@ const GRADUATOR = readFileSync(
   "utf8",
 );
 
-describe("W23F.P diversity query expansion", () => {
-  it("exports concept-targeted query groups", () => {
-    expect(SCOUT_RUNNER).toMatch(/SMC_ICT_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/WYCKOFF_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/VOLUME_PROFILE_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/ORDER_FLOW_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/INDICATOR_SPECIFIC_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/MEAN_REVERSION_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/SESSION_PATTERN_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/ALL_CONCEPT_QUERIES/);
+describe("W23F.V operator-curated query set (replaces W23F.P concept groups)", () => {
+  it("exports OPERATOR_QUERY_TEMPLATES with all 8 operator-curated keywords", () => {
+    expect(SCOUT_RUNNER).toMatch(/OPERATOR_QUERY_TEMPLATES/);
+    const required = [
+      "futures trading strategies rules",
+      "futures 4 hr strategy",
+      "futures 15min strategy",
+      "futures 5min strategy",
+      "futures 1hr strategy",
+      "futures indicators",
+      "futures trading A+ setups",
+      "futures trend trading strategy",
+    ];
+    for (const q of required) {
+      // String literal escape-safe match
+      expect(SCOUT_RUNNER).toContain(`"${q}"`);
+    }
   });
 
-  it("getQueryTemplatesForGroup includes concept queries for every symbol", () => {
-    // Verify the function spreads ALL_CONCEPT_QUERIES into every return
+  it("ALL_CONCEPT_QUERIES is the operator set only (no W23F.P sub-groups remain)", () => {
+    expect(SCOUT_RUNNER).toMatch(/ALL_CONCEPT_QUERIES.*=\s*\[\.\.\.OPERATOR_QUERY_TEMPLATES\]/);
+    // Defunct sub-group identifiers must NOT appear
+    expect(SCOUT_RUNNER).not.toMatch(/const\s+SMC_ICT_QUERY_TEMPLATES/);
+    expect(SCOUT_RUNNER).not.toMatch(/const\s+WYCKOFF_QUERY_TEMPLATES/);
+    expect(SCOUT_RUNNER).not.toMatch(/const\s+VOLUME_PROFILE_QUERY_TEMPLATES/);
+  });
+
+  it("getQueryTemplatesForGroup still spreads operator queries into every symbol group", () => {
     expect(SCOUT_RUNNER).toMatch(/return \[\.\.\.base, \.\.\.ALL_CONCEPT_QUERIES\]/);
   });
 
-  it("each concept group has ≥4 representative queries", () => {
-    const smcMatch = SCOUT_RUNNER.match(/SMC_ICT_QUERY_TEMPLATES[\s\S]*?\];/);
-    expect(smcMatch).toBeTruthy();
-    const wyckoffMatch = SCOUT_RUNNER.match(/WYCKOFF_QUERY_TEMPLATES[\s\S]*?\];/);
-    expect(wyckoffMatch).toBeTruthy();
-    const vpMatch = SCOUT_RUNNER.match(/VOLUME_PROFILE_QUERY_TEMPLATES[\s\S]*?\];/);
-    expect(vpMatch).toBeTruthy();
-    expect((smcMatch![0].match(/^\s*"/gm) || []).length).toBeGreaterThanOrEqual(4);
-    expect((wyckoffMatch![0].match(/^\s*"/gm) || []).length).toBeGreaterThanOrEqual(4);
-    expect((vpMatch![0].match(/^\s*"/gm) || []).length).toBeGreaterThanOrEqual(4);
-  });
-
-  it("ALL_CONCEPT_QUERIES spreads all 7 group arrays", () => {
-    expect(SCOUT_RUNNER).toMatch(/\.\.\.SMC_ICT_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/\.\.\.WYCKOFF_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/\.\.\.VOLUME_PROFILE_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/\.\.\.ORDER_FLOW_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/\.\.\.INDICATOR_SPECIFIC_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/\.\.\.MEAN_REVERSION_QUERY_TEMPLATES/);
-    expect(SCOUT_RUNNER).toMatch(/\.\.\.SESSION_PATTERN_QUERY_TEMPLATES/);
+  it("operator set has exactly 8 queries (no scope creep)", () => {
+    // Match the array initializer that follows the equals sign
+    const block = SCOUT_RUNNER.match(/OPERATOR_QUERY_TEMPLATES[^=]*=\s*\[([\s\S]*?)\];/)?.[1] ?? "";
+    const lines = block.split("\n").filter(l => /^\s*"/.test(l));
+    expect(lines.length).toBe(8);
   });
 });
 
