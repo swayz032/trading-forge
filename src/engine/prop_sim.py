@@ -93,10 +93,22 @@ def simulate_prop_firm(
                 if exit_day != day:
                     overnight_days.add(day)
 
+    # Track DLL cap simulation artifact: difference between true strategy P&L
+    # and DLL-capped P&L. Each time the firm's DLL would have halted trading,
+    # we cap that day's loss at the DLL — but the strategy's trade list is NOT
+    # re-filtered (per-firm-resize is a Wave 24 carry-forward). So the capped
+    # ending_balance reflects "if the firm halted you and you stopped trading
+    # the rest of the day, but the strategy still took all subsequent days'
+    # trades unchanged." Operator needs visibility into this artifact, hence
+    # ending_balance_uncapped + dll_capped_losses_total below.
+    uncapped_balance = account_size  # Mirror balance computation w/o DLL cap
+    dll_capped_losses_total = 0.0    # Sum of (true_loss - capped_loss) per breach day
+
     for day_idx, record in enumerate(daily_pnl_records):
         date_str = record.get("date", f"day_{day_idx}")
         # P&L from backtester is already net of commission — do NOT deduct again.
         net_pnl = record["pnl"]
+        true_net_pnl = net_pnl  # Capture pre-cap value for uncapped tracking
 
         # Commission cost kept for display-only in daily statements
         day_trades = trades_per_day.get(date_str, 0)
@@ -163,8 +175,18 @@ def simulate_prop_firm(
         else:
             intraday_low = prev_balance + net_pnl  # EOD: use closing balance
 
-        # Update balance
+        # Update balance (DLL-capped — represents firm-halt simulation)
         balance += net_pnl
+
+        # Update uncapped balance + accumulate DLL-cap artifact for transparency.
+        # When net_pnl was capped (DLL intraday breach branch above), the
+        # difference between true loss and capped loss is the "free win"
+        # Topstep simulation gives the strategy. We surface this so the
+        # operator isn't misled by ending_balance > starting_balance on
+        # losing strategies. See per-firm-resize TODO for the real fix.
+        uncapped_balance += true_net_pnl
+        if true_net_pnl != net_pnl:
+            dll_capped_losses_total += (net_pnl - true_net_pnl)  # positive number
 
         # Task 3.4: Intraday max DD tracking (approximation from daily resolution)
         # NOTE: For full accuracy, bar-level equity would be needed (future enhancement).
@@ -418,7 +440,17 @@ def simulate_prop_firm(
         "firm": firm_key,
         "firm_name": firm["name"],
         "starting_balance": starting_balance,
+        # ending_balance reflects the DLL-cap SIMULATION (firm halts on DLL day).
+        # ending_balance_uncapped is what the strategy would actually have produced
+        # without per-firm halting — matches the raw backtest total_return.
+        # dll_capped_losses_total = sum of (capped_loss - true_loss) per breach day.
+        # When > 0, ending_balance is artificially HIGHER than the strategy's real
+        # P&L. Operators MUST read ending_balance_uncapped for real-economics view.
+        # Wave 24 carry-forward (per-firm-resize) will fix this by removing the
+        # post-halt trades entirely instead of just capping the day's loss.
         "ending_balance": round(balance, 2),
+        "ending_balance_uncapped": round(uncapped_balance, 2),
+        "dll_capped_losses_total": round(dll_capped_losses_total, 2),
         "peak_equity": round(peak_equity, 2),
         "max_drawdown_dollars": round(max_dd_dollars, 2),
         "max_drawdown_eod": round(max_dd_eod, 2),

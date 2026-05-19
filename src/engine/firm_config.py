@@ -125,3 +125,63 @@ FIRM_RULES: dict[str, dict] = {
         "payout_cycle_days": 14,  # Bi-weekly payouts every 14 days
     },
 }
+
+
+# ─── Public helpers (consumed by backtester.py and others) ────────
+
+def get_commission_per_side(firm_key: str, symbol: str) -> float:
+    """Get per-side commission for a firm and symbol.
+
+    Args:
+        firm_key: Firm identifier (e.g., 'topstep_50k', 'mffu_50k')
+        symbol: Micro contract symbol (e.g., 'MES', 'MNQ', 'MCL')
+
+    Returns:
+        Commission in dollars per side per contract
+
+    Raises:
+        ValueError: If firm_key or symbol is not found
+    """
+    if firm_key not in FIRM_COMMISSIONS:
+        raise ValueError(
+            f"Unknown firm '{firm_key}'. Valid: {sorted(FIRM_COMMISSIONS.keys())}"
+        )
+    commissions = FIRM_COMMISSIONS[firm_key]
+    if symbol not in commissions:
+        raise ValueError(
+            f"Unknown symbol '{symbol}' for firm '{firm_key}'. "
+            f"Valid: {sorted(commissions.keys())}"
+        )
+    return commissions[symbol]
+
+
+def get_contract_cap(firm_key: str, symbol: str) -> int:
+    """Get max simultaneous MICRO contracts for a firm and symbol.
+
+    Returns the firm's per-symbol cap, clamped to
+    [CONTRACT_CAP_MIN, CONTRACT_CAP_MAX] = [0, 60] (Topstep + MFFU
+    micro range — MFFU Pro is the max at 60).
+
+    Args:
+        firm_key: Firm identifier (e.g., 'topstep_50k', 'mffu_50k')
+        symbol: Micro contract symbol (e.g., 'MES', 'MNQ', 'MCL')
+
+    Returns:
+        Max contracts allowed (clamped to CONTRACT_CAP_MIN..CONTRACT_CAP_MAX)
+
+    Raises:
+        ValueError: If firm_key not found or no cap data
+    """
+    if firm_key not in FIRM_CONTRACT_CAPS:
+        raise ValueError(
+            f"No contract cap data for firm '{firm_key}'. "
+            f"Available: {sorted(FIRM_CONTRACT_CAPS.keys())}"
+        )
+    caps = FIRM_CONTRACT_CAPS[firm_key]
+    if symbol not in caps:
+        raise ValueError(
+            f"No contract cap for symbol '{symbol}' at firm '{firm_key}'. "
+            f"Available: {sorted(caps.keys())}"
+        )
+    raw = caps[symbol]
+    return max(CONTRACT_CAP_MIN, min(raw, CONTRACT_CAP_MAX))
