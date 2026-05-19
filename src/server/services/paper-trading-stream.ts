@@ -1,7 +1,9 @@
 import { createMassiveFetcher } from "../../data/fetchers/massive.js";
 import { updatePositionPrices } from "./paper-execution-service.js";
-import { evaluateSignals } from "./paper-signal-service.js";
+import { evaluateSignals, updateStateOnly } from "./paper-signal-service.js";
+import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 import { logger } from "../index.js";
+import { toEasternDateString } from "./paper-risk-gate.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -42,6 +44,12 @@ const sessionLocks = new Map<string, Promise<void>>();
 
 const BAR_BUFFER_SIZE = 200;
 
+/** Symbol → whether backfill is in progress */
+const isBackfilling = new Map<string, boolean>();
+
+/** Symbol → bars received while backfilling */
+const pendingRealtimeBars = new Map<string, Bar[]>();
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function getMassiveFetcher() {
@@ -50,39 +58,32 @@ function getMassiveFetcher() {
   return createMassiveFetcher({ apiKey });
 }
 
+/** Track last bar date per symbol for session boundary detection */
+const lastBarDate = new Map<string, string>();
+
 function pushBar(symbol: string, bar: Bar) {
   let buf = barBuffer.get(symbol);
   if (!buf) {
     buf = [];
     barBuffer.set(symbol, buf);
   }
-  const last = buf.length > 0 ? buf[buf.length - 1] : null;
-  if (last) {
-    const lastTs = new Date(last.timestamp).getTime();
-    const nextTs = new Date(bar.timestamp).getTime();
-    if (isFinite(lastTs) && isFinite(nextTs)) {
-      if (nextTs < lastTs) return;
-      if (nextTs === lastTs) {
-        buf[buf.length - 1] = bar;
-        return;
-      }
-    }
+
+  // Session boundary reset: detect ET date change → clear buffer for VWAP freshness.
+  // Futures sessions reset at 6 PM ET (Globex open), which aligns with the ET date
+  // boundary for evening-to-overnight trading.  Using UTC date change would cause
+  // the VWAP to reset at midnight UTC (7 PM ET in winter, 8 PM ET in summer) —
+  // mid-session for overnight traders.  ET date change matches actual session logic.
+  const barEtDate = toEasternDateString(new Date(bar.timestamp));
+  const prevEtDate = lastBarDate.get(symbol);
+  if (prevEtDate && barEtDate !== prevEtDate) {
+    buf.length = 0; // Reset buffer on new ET trading day (Globex session boundary)
   }
+  lastBarDate.set(symbol, barEtDate);
+
   buf.push(bar);
   if (buf.length > BAR_BUFFER_SIZE) {
     buf.shift();
   }
-}
-
-function isValidCoreBar(bar: Bar): boolean {
-  const ts = new Date(bar.timestamp).getTime();
-  if (!isFinite(ts)) return false;
-  if (![bar.open, bar.high, bar.low, bar.close].every((v) => Number.isFinite(v))) return false;
-  if (!Number.isFinite(bar.volume)) return false;
-  if (bar.high < bar.low) return false;
-  if (bar.open < bar.low || bar.open > bar.high) return false;
-  if (bar.close < bar.low || bar.close > bar.high) return false;
-  return true;
 }
 
 /**
@@ -123,10 +124,17 @@ async function processSessionBar(sessionId: string, bar: Bar) {
  * where two bars for the same session overlap and corrupt state.
  */
 async function handleBar(bar: Bar) {
-  if (!isValidCoreBar(bar)) {
-    logger.warn({ symbol: bar.symbol, bar }, "Dropping invalid market data bar");
+  // If backfilling, buffer this bar to process later (in order)
+  if (isBackfilling.get(bar.symbol)) {
+    let pending = pendingRealtimeBars.get(bar.symbol);
+    if (!pending) {
+      pending = [];
+      pendingRealtimeBars.set(bar.symbol, pending);
+    }
+    pending.push(bar);
     return;
   }
+
   pushBar(bar.symbol, bar);
 
   const sessions = sessionsForSymbol(bar.symbol);
@@ -143,6 +151,67 @@ async function handleBar(bar: Bar) {
   });
 
   await Promise.all(promises);
+}
+
+async function backfillBars(symbol: string, lastTimestamp: string) {
+  if (isBackfilling.get(symbol)) return; // Already backfilling
+
+  isBackfilling.set(symbol, true);
+  logger.info({ symbol, lastTimestamp }, "Starting backfill for symbol");
+
+  try {
+    const fetcher = getMassiveFetcher();
+    const now = new Date().toISOString();
+
+    // Fetch 1min bars to fill the gap — protected by circuit breaker
+    // (WebSocket has its own reconnect logic, so only HTTP backfill is wrapped)
+    const bars = await CircuitBreakerRegistry.get("massive-api").call(() =>
+      fetcher.fetchBars({
+        symbol,
+        timeframe: "1min",
+        from: lastTimestamp,
+        to: now,
+      }),
+    );
+
+    if (bars.length > 0) {
+      logger.info({ symbol, count: bars.length }, "Backfilled bars fetched");
+      
+      // Sort just in case API returns out of order
+      bars.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      // Filter out bars we already have (duplicate overlap)
+      const lastTs = new Date(lastTimestamp).getTime();
+      const newBars = bars.filter(b => new Date(b.timestamp).getTime() > lastTs);
+
+      for (const rawBar of newBars) {
+        const bar: Bar = { ...rawBar, symbol };
+        pushBar(bar.symbol, bar);
+        
+        // Update state for all sessions (indicators only, no trading)
+        const sessions = sessionsForSymbol(bar.symbol);
+        await Promise.all(sessions.map(sid => 
+          updateStateOnly(sid, bar.symbol, bar, getBarBuffer(bar.symbol))
+        ));
+      }
+    }
+  } catch (err) {
+    logger.error({ err, symbol }, "Failed to backfill bars");
+  } finally {
+    // Process any buffered real-time bars
+    const pending = pendingRealtimeBars.get(symbol) || [];
+    pendingRealtimeBars.delete(symbol);
+    isBackfilling.set(symbol, false);
+
+    logger.info({ symbol, pendingCount: pending.length }, "Finished backfill, processing pending bars");
+    
+    // Sort pending bars by time to ensure order
+    pending.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    
+    for (const bar of pending) {
+      await handleBar(bar);
+    }
+  }
 }
 
 /**
@@ -173,6 +242,17 @@ function ensureSocket(symbol: string, sessionId: string) {
 
   ws.on("connected", () => {
     logger.info({ symbol }, "Massive WebSocket connected");
+    
+    // Check if we need to backfill (do we have existing bars?)
+    const buffer = barBuffer.get(symbol);
+    if (buffer && buffer.length > 0) {
+      const lastBar = buffer[buffer.length - 1];
+      // Fire and forget backfill — it will buffer real-time bars until done
+      backfillBars(symbol, lastBar.timestamp).catch(err => {
+        logger.error({ err, symbol }, "Backfill error");
+      });
+    }
+
     const s = sharedSockets.get(symbol);
     if (s) {
       // Mark all sessions using this symbol as connected
@@ -313,4 +393,20 @@ export function isStreaming(sessionId: string): boolean {
  */
 export function getBarBuffer(symbol: string): Bar[] {
   return barBuffer.get(symbol) ?? [];
+}
+
+/**
+ * Health snapshot for a single session — used by the scheduler's auto-recovery
+ * loop to detect crashed WebSocket streams. Returns `connected: false` for
+ * unknown / closed sessions so callers fail closed.
+ */
+export function getStreamHealth(sessionId: string): { connected: boolean; symbols: string[] } {
+  const symbols = sessionSymbols.get(sessionId);
+  if (!symbols) return { connected: false, symbols: [] };
+  const arr = Array.from(symbols);
+  const connected = arr.every((s) => {
+    const shared = sharedSockets.get(s);
+    return shared?.ws.isConnected() ?? false;
+  });
+  return { connected, symbols: arr };
 }

@@ -1,0 +1,9 @@
+{
+  "_fixture": "fixture_fees_killer",
+  "gross_pf": 1.6,
+  "n_trades": 200.0,
+  "net_pf": 0.840317100792752,
+  "net_pnl": -141.0,
+  "total_commission": 516.0,
+  "win_rate": 0.5
+}

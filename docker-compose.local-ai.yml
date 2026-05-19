@@ -4,6 +4,19 @@
 # Usage:
 #   docker compose -f docker-compose.local-ai.yml up -d
 #   docker compose -f docker-compose.local-ai.yml down
+#
+# ─── Port Allocation ────────────────────────────────────────────
+#   11434  Ollama LLM API (this file)
+#            WARNING: Native Ollama also binds 11434. You CANNOT run
+#            both native Ollama and Docker Ollama simultaneously.
+#            Stop native Ollama before starting this stack, or vice versa.
+#   6379   Redis (session cache + job queue)
+#   5433   PostgreSQL + pgvector (mapped from container 5432 to avoid
+#            conflict with any host-level PostgreSQL on 5432)
+#   3000   Grafana (docker-compose in docker/ dir) — conflicts with
+#            n8n-mcp if both run on 3000. Grafana is in a separate
+#            compose file; adjust one if running both.
+# ────────────────────────────────────────────────────────────────
 
 services:
 
@@ -20,9 +33,11 @@ services:
       - ./ollama:/modelfiles:ro
     environment:
       - OLLAMA_KEEP_ALIVE=24h
-      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_MAX_LOADED_MODELS=1
     deploy:
       resources:
+        limits:
+          memory: 20g
         reservations:
           devices:
             - driver: nvidia
@@ -66,11 +81,40 @@ services:
       POSTGRES_DB: trading_forge
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: localdev
+    deploy:
+      resources:
+        limits:
+          memory: 2g
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d trading_forge"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ─── Trading Forge API — Express server (optional containerised mode) ─
+  # Uncomment to run Express inside Docker with auto-restart.
+  # For local dev, prefer PM2: npx pm2 start pm2.config.cjs
+  # trading-forge:
+  #   build: .
+  #   container_name: trading-forge-api
+  #   restart: unless-stopped
+  #   ports:
+  #     - "4000:4000"
+  #   env_file: .env
+  #   depends_on:
+  #     postgres-local:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 4g
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:4000/api/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
 volumes:
   ollama_data:

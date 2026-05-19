@@ -199,7 +199,7 @@ def detect_sweep(df: pl.DataFrame, liquidity_levels: pl.DataFrame) -> pl.Series:
     closes = df["close"].to_list()
 
     for level in levels:
-        for i in range(1, len(df) - 1):
+        for i in range(1, len(df)):
             # Sweep above (BSL sweep)
             if highs[i] > level and closes[i] < level:
                 result[i] = True
@@ -276,7 +276,9 @@ def detect_raid(df: pl.DataFrame, liquidity_levels: pl.DataFrame) -> pl.Series:
         next_range = highs[next_i] - lows[next_i]
 
         # Displacement: body > 60% of total range
+        # Signal at the displacement bar (next_i), not the sweep bar,
+        # to avoid 1-bar lookahead bias
         if next_range > 0 and next_body / next_range > 0.6:
-            result[i] = True
+            result[next_i] = True
 
     return pl.Series("raid", result)

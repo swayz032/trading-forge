@@ -1,0 +1,1938 @@
+{
+  "updatedAt": "2026-05-05T14:27:11.593Z",
+  "createdAt": "2026-03-10T04:28:22.099Z",
+  "id": "sAIrnCVB4iOsodsy",
+  "name": "Weekly Strategy Hunt",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 6"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Saturday 8AM EST Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Generate 9 vectorbt-compatible strategies for Trading Forge's three approved micro-futures contracts: 3 each for MES (S&P 500 micro), MNQ (Nasdaq micro), and MCL (crude oil micro). Mix trend following, mean reversion, and volatility expansion. Trading Forge supports ONLY MES/MNQ/MCL micros (NOT ES/NQ/CL big contracts \u00e2\u20ac\u201d those are out of scope, correlation < 0.3 between the three micros so they fit a single 50K prop account).\n\nFor each strategy output: strategy_name (snake_case, \u00e2\u2030\u00a4100 chars), one_sentence (10-500 chars), edge_hypothesis, python_code (valid vectorbt Python), params (object with MAX 5 keys, prefer round numbers \u00e2\u20ac\u201d RSI 70 not 67.3), symbol (EXACT string: MES, MNQ, or MCL).\n\nDistribute 3 per symbol. Use proven indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD). Return as a JSON array of 9 objects. Output ONLY the JSON array, no markdown fences, no prose.",
+        "options": {
+          "systemMessage": "You are an extraction-oriented multi-symbol futures-strategy proposer for Trading Forge. Approved instruments are MES, MNQ, MCL micros only (never ES, NQ, or CL). You design simple, robust strategies (max 5 parameters, one-sentence logic, proven edges only) that target $250+/day on a single 50K prop firm account. Bias toward refusal over fabrication. Output JSON-only, no markdown."
+        }
+      },
+      "id": "ai-agent-generate",
+      "name": "Generate 9 Strategies",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        728,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the 9 strategies from Ollama output\nconst agentOutput = $input.first().json.output || $input.first().json.text || '';\n\nlet strategies = [];\ntry {\n  // Try to parse JSON from the agent output\n  const jsonMatch = agentOutput.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\n  if (jsonMatch) {\n    strategies = JSON.parse(jsonMatch[0]);\n  } else {\n    strategies = JSON.parse(agentOutput);\n  }\n} catch (e) {\n  return [{ json: { error: 'Failed to parse strategies JSON from Ollama output', raw: agentOutput, parseError: e.message } }];\n}\n\nif (!Array.isArray(strategies) || strategies.length === 0) {\n  return [{ json: { error: 'No strategies found in output', raw: agentOutput } }];\n}\n\n// Enrich each strategy with metadata\nconst enriched = strategies.map(s => ({\n  json: {\n    ...s,\n    timeframe: '15min',\n    start_date: '2024-01-01',\n    end_date: '2024-12-31',\n    source: 'ollama'\n  }\n}));\n\nreturn enriched;"
+      },
+      "id": "code-parse-strategies",
+      "name": "Parse and Enrich Strategies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Batch 3 Strategies",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1544,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/batch",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-submit-batch",
+      "name": "POST Batch to Backtest Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1768,
+        96
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "minutes"
+      },
+      "id": "wait-backtests",
+      "name": "Wait 10min for Backtests",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1992,
+        96
+      ],
+      "webhookId": "e7b7d114-d83b-4e0c-91cf-1a3b5c5e232d"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=9",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-get-results",
+      "name": "GET Completed Backtests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2216,
+        96
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter results to only TIER_1 and TIER_2 strategies\nconst items = $input.all();\nconst validTiers = ['TIER_1', 'TIER_2'];\n\n// Handle both array-in-single-item and multi-item formats\nlet allResults = [];\nfor (const item of items) {\n  if (Array.isArray(item.json)) {\n    allResults.push(...item.json);\n  } else if (item.json.data && Array.isArray(item.json.data)) {\n    allResults.push(...item.json.data);\n  } else {\n    allResults.push(item.json);\n  }\n}\n\nconst passed = allResults.filter(r => validTiers.includes(r.tier));\n\nreturn [{ json: { strategies: passed, count: passed.length, hasPassed: passed.length > 0 } }];"
+      },
+      "id": "code-filter-tiers",
+      "name": "Filter TIER_1 and TIER_2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-tier-check",
+              "leftValue": "={{ $json.hasPassed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-strategies-passed",
+      "name": "Any Strategies Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2664,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are a senior quantitative trading strategist reviewing strategies for Trading Forge \u00e2\u20ac\u201d an autonomous research lab targeting MES (S&P 500 micro), MNQ (Nasdaq micro), and MCL (crude oil micro) ONLY. ES/NQ/CL big contracts are out of scope. Critically review these passing strategies. For each strategy, evaluate: 1) Is the edge hypothesis statistically sound? 2) Does the python_code correctly implement the strategy? 3) Are the params overfit (>5 keys, tight precision like RSI 67.3 instead of 70)? 4) Is the symbol valid (MES/MNQ/MCL only)? 5) Would you allocate real capital from a single 50K prop account to this? Be harsh but fair. Strategies:\n\n={{ JSON.stringify($json.strategies, null, 2) }}",
+        "options": {}
+      },
+      "id": "ai-agent-critique",
+      "name": "AI Critique Passing Strategies",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3168,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/journal",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-journal-success",
+      "name": "POST Journal - Strategies Found",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3984,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/journal",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-journal-none",
+      "name": "POST Journal - No Strategies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2888,
+        192
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "5c-strategy-gen",
+        "tableName": "memory_5c_strategy_gen",
+        "contextWindowLength": 10
+      },
+      "id": "65f049cf-1fd9-4ab3-85ff-f69ef02f5f73",
+      "name": "5C Gen Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "XDOEjC2s3oL432Lj",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text"
+      },
+      "id": "f7d2bc24-75ce-4213-b2ab-9f8a2373a3f4",
+      "name": "5C Gen Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        904,
+        736
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "BLgLWvmLGaJQOYaF",
+          "name": "Ollama account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "tableName": "vectors_5c_strategy_gen",
+        "options": {}
+      },
+      "id": "b2a8863b-9a80-4fd7-b428-130f5d970a0f",
+      "name": "5C Gen Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        824,
+        528
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "XDOEjC2s3oL432Lj",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "af008110-f091-4969-b91c-f8a9678605a8",
+      "name": "5C Gen Memory QA Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        320
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "5c-strategy-critique",
+        "tableName": "memory_5c_strategy_critique",
+        "contextWindowLength": 10
+      },
+      "id": "b2db7790-fd30-43bf-a27e-5f5e8fc7d2b7",
+      "name": "5C Critique Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        3240,
+        224
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "XDOEjC2s3oL432Lj",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text"
+      },
+      "id": "a9ad6870-226f-447f-8583-cb2ae35ec5c2",
+      "name": "5C Critique Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        3344,
+        640
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "BLgLWvmLGaJQOYaF",
+          "name": "Ollama account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "tableName": "vectors_5c_strategy_critique",
+        "options": {}
+      },
+      "id": "5449212b-be1f-45bd-975c-1c791ab99ed2",
+      "name": "5C Critique Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        3264,
+        432
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "XDOEjC2s3oL432Lj",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "78131df8-7b30-4598-b0aa-9a44d2f218f7",
+      "name": "5C Critique Memory QA Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        3368,
+        224
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:14b",
+        "options": {}
+      },
+      "id": "b90f6b30-216a-46fd-9118-fe29b9a5cd90",
+      "name": "5C Gen QA LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1112,
+        528
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "BLgLWvmLGaJQOYaF",
+          "name": "Ollama account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:14b",
+        "options": {}
+      },
+      "id": "5eb22c56-8707-413d-8e0d-96d57355300d",
+      "name": "5C Critique QA LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        3552,
+        432
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "BLgLWvmLGaJQOYaF",
+          "name": "Ollama account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://host.docker.internal:4000/api/journal/{{ $json.journalId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'promoted', tier: $json.tier || 'TIER_3' }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "set-lifecycle-candidate",
+      "name": "Set Lifecycle CANDIDATE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2888,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-fetch-scouted-5c",
+      "name": "Fetch Scouted Ideas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        96
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet scoutedIdeas = [];\n\nfor (const item of items) {\n  const d = item.json;\n  if (Array.isArray(d)) scoutedIdeas = d;\n  else if (d.ideas && Array.isArray(d.ideas)) scoutedIdeas = d.ideas;\n  else if (d.entries && Array.isArray(d.entries)) scoutedIdeas = d.entries;\n  else if (d.data && Array.isArray(d.data)) scoutedIdeas = d.data;\n}\n\nlet scoutContext = '';\nif (scoutedIdeas.length > 0) {\n  const ideaSummaries = scoutedIdeas.slice(0, 10).map((idea, i) => {\n    const title = idea.title || idea.name || 'Untitled';\n    const summary = idea.summary || idea.description || '';\n    const source = idea.source || 'unknown';\n    return `${i + 1}. [${source}] ${title}: ${summary.substring(0, 150)}`;\n  }).join('\\n');\n  scoutContext = `\\n\\nRecent research discoveries to consider when generating strategies:\\n${ideaSummaries}`;\n}\n\nreturn [{ json: { scoutContext, scoutedIdeaCount: scoutedIdeas.length } }];"
+      },
+      "id": "code-format-scout-5c",
+      "name": "Format Scout Context for LLM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        96
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        632
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { title: 'Weekly Scout Error', message: ('Weekly strategy hunt failed: ' + (($input.first().json.execution && $input.first().json.execution.error && $input.first().json.execution.error.message) || ($input.first().json.error && $input.first().json.error.message) || 'Unknown error')).slice(0, 500), severity: 'warning', data: { workflow: 'Weekly Strategy Hunt', timestamp: new Date().toISOString() } } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "http-error-alert",
+      "name": "Discord: Weekly Scout Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        632
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/model-role",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ role: 'critic_evaluator', prompt: 'You are a quantitative analyst reviewing passing futures strategies. Provide depth critique and risk assessment. Strategies: ' + JSON.stringify($('AI Critique Passing Strategies').first().json) }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "gpt5-mini-critique-gate",
+      "name": "GPT-5-mini Depth Critique",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3760,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-5-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "id": "openai-gen-model",
+      "name": "GPT-5-mini Generator",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        672,
+        320
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LuoyBP8Xv16VTirj",
+          "name": "Trading Forge Proxy (OpenAI)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-5-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "id": "openai-critique-model",
+      "name": "GPT-5-mini Critic",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        3112,
+        224
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LuoyBP8Xv16VTirj",
+          "name": "Trading Forge Proxy (OpenAI)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Generate 9 Strategies": {
+      "main": [
+        [
+          {
+            "node": "Parse and Enrich Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse and Enrich Strategies": {
+      "main": [
+        [
+          {
+            "node": "Batch 3 Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch 3 Strategies": {
+      "main": [
+        [
+          {
+            "node": "POST Batch to Backtest Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Batch to Backtest Agent": {
+      "main": [
+        [
+          {
+            "node": "Wait 10min for Backtests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 10min for Backtests": {
+      "main": [
+        [
+          {
+            "node": "GET Completed Backtests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Completed Backtests": {
+      "main": [
+        [
+          {
+            "node": "Filter TIER_1 and TIER_2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter TIER_1 and TIER_2": {
+      "main": [
+        [
+          {
+            "node": "Any Strategies Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Strategies Passed?": {
+      "main": [
+        [
+          {
+            "node": "Set Lifecycle CANDIDATE",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "POST Journal - No Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Gen Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Generate 9 Strategies",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Gen Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "5C Gen Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Gen Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "5C Gen Memory QA Tool",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Gen Memory QA Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Generate 9 Strategies",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Critique Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Critique Passing Strategies",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Critique Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "5C Critique Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Critique Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "5C Critique Memory QA Tool",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Critique Memory QA Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Critique Passing Strategies",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Gen QA LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "5C Gen Memory QA Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5C Critique QA LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "5C Critique Memory QA Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Lifecycle CANDIDATE": {
+      "main": [
+        [
+          {
+            "node": "AI Critique Passing Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saturday 8AM EST Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Scouted Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Scouted Ideas": {
+      "main": [
+        [
+          {
+            "node": "Format Scout Context for LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Scout Context for LLM": {
+      "main": [
+        [
+          {
+            "node": "Generate 9 Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Discord: Weekly Scout Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Critique Passing Strategies": {
+      "main": [
+        [
+          {
+            "node": "GPT-5-mini Depth Critique",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-5-mini Depth Critique": {
+      "main": [
+        [
+          {
+            "node": "POST Journal - Strategies Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-5-mini Generator": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate 9 Strategies",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-5-mini Critic": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Critique Passing Strategies",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "BbCvlV1ARyyvY3NI"
+  },
+  "staticData": {
+    "node:Saturday 8AM EST Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "f086d472-a255-4b84-a93f-363899aa2fd1",
+  "activeVersionId": "8bdaf70d-f008-469c-8f06-f0e6086d7437",
+  "versionCounter": 144,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-10T04:28:22.099Z",
+      "createdAt": "2026-03-10T04:28:22.099Z",
+      "role": "workflow:owner",
+      "workflowId": "sAIrnCVB4iOsodsy",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-05-05T05:46:24.024Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-05-05",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-05T04:50:07.444Z",
+    "createdAt": "2026-05-05T04:50:07.444Z",
+    "versionId": "8bdaf70d-f008-469c-8f06-f0e6086d7437",
+    "workflowId": "sAIrnCVB4iOsodsy",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 8 * * 6"
+              }
+            ]
+          }
+        },
+        "id": "schedule-trigger",
+        "name": "Saturday 8AM EST Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          576
+        ]
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "Generate 9 vectorbt-compatible strategies for Trading Forge's three approved micro-futures contracts: 3 each for MES (S&P 500 micro), MNQ (Nasdaq micro), and MCL (crude oil micro). Mix trend following, mean reversion, and volatility expansion. Trading Forge supports ONLY MES/MNQ/MCL micros (NOT ES/NQ/CL big contracts \u00e2\u20ac\u201d those are out of scope, correlation < 0.3 between the three micros so they fit a single 50K prop account).\n\nFor each strategy output: strategy_name (snake_case, \u00e2\u2030\u00a4100 chars), one_sentence (10-500 chars), edge_hypothesis, python_code (valid vectorbt Python), params (object with MAX 5 keys, prefer round numbers \u00e2\u20ac\u201d RSI 70 not 67.3), symbol (EXACT string: MES, MNQ, or MCL).\n\nDistribute 3 per symbol. Use proven indicators (SMA, EMA, RSI, Bollinger, VWAP, ATR, Donchian, Keltner, MACD). Return as a JSON array of 9 objects. Output ONLY the JSON array, no markdown fences, no prose.",
+          "options": {
+            "systemMessage": "You are an extraction-oriented multi-symbol futures-strategy proposer for Trading Forge. Approved instruments are MES, MNQ, MCL micros only (never ES, NQ, or CL). You design simple, robust strategies (max 5 parameters, one-sentence logic, proven edges only) that target $250+/day on a single 50K prop firm account. Bias toward refusal over fabrication. Output JSON-only, no markdown."
+          }
+        },
+        "id": "ai-agent-generate",
+        "name": "Generate 9 Strategies",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          288,
+          576
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Parse the 9 strategies from Ollama output\nconst agentOutput = $input.first().json.output || $input.first().json.text || '';\n\nlet strategies = [];\ntry {\n  // Try to parse JSON from the agent output\n  const jsonMatch = agentOutput.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\n  if (jsonMatch) {\n    strategies = JSON.parse(jsonMatch[0]);\n  } else {\n    strategies = JSON.parse(agentOutput);\n  }\n} catch (e) {\n  return [{ json: { error: 'Failed to parse strategies JSON from Ollama output', raw: agentOutput, parseError: e.message } }];\n}\n\nif (!Array.isArray(strategies) || strategies.length === 0) {\n  return [{ json: { error: 'No strategies found in output', raw: agentOutput } }];\n}\n\n// Enrich each strategy with metadata\nconst enriched = strategies.map(s => ({\n  json: {\n    ...s,\n    timeframe: '15min',\n    start_date: '2024-01-01',\n    end_date: '2024-12-31',\n    source: 'ollama'\n  }\n}));\n\nreturn enriched;"
+        },
+        "id": "code-parse-strategies",
+        "name": "Parse and Enrich Strategies",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          576
+        ]
+      },
+      {
+        "parameters": {
+          "batchSize": 3,
+          "options": {}
+        },
+        "id": "split-batches",
+        "name": "Batch 3 Strategies",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          1104,
+          576
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/batch",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "http-submit-batch",
+        "name": "POST Batch to Backtest Agent",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1328,
+          576
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "amount": 10,
+          "unit": "minutes"
+        },
+        "id": "wait-backtests",
+        "name": "Wait 10min for Backtests",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          1552,
+          576
+        ],
+        "webhookId": "e7b7d114-d83b-4e0c-91cf-1a3b5c5e232d"
+      },
+      {
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=9",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "http-get-results",
+        "name": "GET Completed Backtests",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1776,
+          576
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Filter results to only TIER_1 and TIER_2 strategies\nconst items = $input.all();\nconst validTiers = ['TIER_1', 'TIER_2'];\n\n// Handle both array-in-single-item and multi-item formats\nlet allResults = [];\nfor (const item of items) {\n  if (Array.isArray(item.json)) {\n    allResults.push(...item.json);\n  } else if (item.json.data && Array.isArray(item.json.data)) {\n    allResults.push(...item.json.data);\n  } else {\n    allResults.push(item.json);\n  }\n}\n\nconst passed = allResults.filter(r => validTiers.includes(r.tier));\n\nreturn [{ json: { strategies: passed, count: passed.length, hasPassed: passed.length > 0 } }];"
+        },
+        "id": "code-filter-tiers",
+        "name": "Filter TIER_1 and TIER_2",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2000,
+          576
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 3,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "condition-tier-check",
+                "leftValue": "={{ $json.hasPassed }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "typeValidation": "loose"
+          }
+        },
+        "id": "if-strategies-passed",
+        "name": "Any Strategies Passed?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          2224,
+          576
+        ]
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "You are a senior quantitative trading strategist reviewing strategies for Trading Forge \u00e2\u20ac\u201d an autonomous research lab targeting MES (S&P 500 micro), MNQ (Nasdaq micro), and MCL (crude oil micro) ONLY. ES/NQ/CL big contracts are out of scope. Critically review these passing strategies. For each strategy, evaluate: 1) Is the edge hypothesis statistically sound? 2) Does the python_code correctly implement the strategy? 3) Are the params overfit (>5 keys, tight precision like RSI 67.3 instead of 70)? 4) Is the symbol valid (MES/MNQ/MCL only)? 5) Would you allocate real capital from a single 50K prop account to this? Be harsh but fair. Strategies:\n\n={{ JSON.stringify($json.strategies, null, 2) }}",
+          "options": {}
+        },
+        "id": "ai-agent-critique",
+        "name": "AI Critique Passing Strategies",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          2496,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/journal",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "http-journal-success",
+        "name": "POST Journal - Strategies Found",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3088,
+          320
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/journal",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "http-journal-none",
+        "name": "POST Journal - No Strategies",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2656,
+          816
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "5c-strategy-gen",
+          "tableName": "memory_5c_strategy_gen",
+          "contextWindowLength": 10
+        },
+        "id": "65f049cf-1fd9-4ab3-85ff-f69ef02f5f73",
+        "name": "5C Gen Chat Memory",
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [
+          352,
+          800
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "XDOEjC2s3oL432Lj",
+            "name": "Postgres account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "model": "nomic-embed-text"
+        },
+        "id": "f7d2bc24-75ce-4213-b2ab-9f8a2373a3f4",
+        "name": "5C Gen Embeddings",
+        "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+        "typeVersion": 1,
+        "position": [
+          464,
+          1216
+        ],
+        "credentials": {
+          "ollamaApi": {
+            "id": "BLgLWvmLGaJQOYaF",
+            "name": "Ollama account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "tableName": "vectors_5c_strategy_gen",
+          "options": {}
+        },
+        "id": "b2a8863b-9a80-4fd7-b428-130f5d970a0f",
+        "name": "5C Gen Vector Store",
+        "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+        "typeVersion": 1.3,
+        "position": [
+          384,
+          1008
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "XDOEjC2s3oL432Lj",
+            "name": "Postgres account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "toolDescription": "Searches prior weekly strategy hunt cycles in pgvector to avoid duplicate concept proposals across ES/NQ/CL \u00e2\u20ac\u201d used by the generator agent to maintain candidate diversity."
+        },
+        "id": "af008110-f091-4969-b91c-f8a9678605a8",
+        "name": "5C Gen Memory QA Tool",
+        "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+        "typeVersion": 1.1,
+        "position": [
+          480,
+          800
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "5c-strategy-critique",
+          "tableName": "memory_5c_strategy_critique",
+          "contextWindowLength": 10
+        },
+        "id": "b2db7790-fd30-43bf-a27e-5f5e8fc7d2b7",
+        "name": "5C Critique Chat Memory",
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [
+          2576,
+          224
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "XDOEjC2s3oL432Lj",
+            "name": "Postgres account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "model": "nomic-embed-text"
+        },
+        "id": "a9ad6870-226f-447f-8583-cb2ae35ec5c2",
+        "name": "5C Critique Embeddings",
+        "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+        "typeVersion": 1,
+        "position": [
+          2672,
+          640
+        ],
+        "credentials": {
+          "ollamaApi": {
+            "id": "BLgLWvmLGaJQOYaF",
+            "name": "Ollama account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "tableName": "vectors_5c_strategy_critique",
+          "options": {}
+        },
+        "id": "5449212b-be1f-45bd-975c-1c791ab99ed2",
+        "name": "5C Critique Vector Store",
+        "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+        "typeVersion": 1.3,
+        "position": [
+          2592,
+          432
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "XDOEjC2s3oL432Lj",
+            "name": "Postgres account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "toolDescription": "Searches prior critique cycles in pgvector for failure modes specific to weekly hunt outputs \u00e2\u20ac\u201d used by the critic to detect repeated overfitting patterns and concept fatigue."
+        },
+        "id": "78131df8-7b30-4598-b0aa-9a44d2f218f7",
+        "name": "5C Critique Memory QA Tool",
+        "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+        "typeVersion": 1.1,
+        "position": [
+          2704,
+          224
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "model": "deepseek-r1:14b",
+          "options": {}
+        },
+        "id": "b90f6b30-216a-46fd-9118-fe29b9a5cd90",
+        "name": "5C Gen QA LLM",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+        "typeVersion": 1,
+        "position": [
+          672,
+          1008
+        ],
+        "credentials": {
+          "ollamaApi": {
+            "id": "BLgLWvmLGaJQOYaF",
+            "name": "Ollama account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "model": "deepseek-r1:14b",
+          "options": {}
+        },
+        "id": "5eb22c56-8707-413d-8e0d-96d57355300d",
+        "name": "5C Critique QA LLM",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+        "typeVersion": 1,
+        "position": [
+          2880,
+          432
+        ],
+        "credentials": {
+          "ollamaApi": {
+            "id": "BLgLWvmLGaJQOYaF",
+            "name": "Ollama account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=http://host.docker.internal:4000/api/journal/{{ $json.journalId }}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ status: 'promoted', tier: $json.tier || 'TIER_3' }) }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "set-lifecycle-candidate",
+        "name": "Set Lifecycle CANDIDATE",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2368,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "http-fetch-scouted-5c",
+        "name": "Fetch Scouted Ideas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          100,
+          576
+        ],
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "code-format-scout-5c",
+        "name": "Format Scout Context for LLM",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          200,
+          576
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const items = $input.all();\nlet scoutedIdeas = [];\n\nfor (const item of items) {\n  const d = item.json;\n  if (Array.isArray(d)) scoutedIdeas = d;\n  else if (d.ideas && Array.isArray(d.ideas)) scoutedIdeas = d.ideas;\n  else if (d.entries && Array.isArray(d.entries)) scoutedIdeas = d.entries;\n  else if (d.data && Array.isArray(d.data)) scoutedIdeas = d.data;\n}\n\nlet scoutContext = '';\nif (scoutedIdeas.length > 0) {\n  const ideaSummaries = scoutedIdeas.slice(0, 10).map((idea, i) => {\n    const title = idea.title || idea.name || 'Untitled';\n    const summary = idea.summary || idea.description || '';\n    const source = idea.source || 'unknown';\n    return `${i + 1}. [${source}] ${title}: ${summary.substring(0, 150)}`;\n  }).join('\\n');\n  scoutContext = `\\n\\nRecent research discoveries to consider when generating strategies:\\n${ideaSummaries}`;\n}\n\nreturn [{ json: { scoutContext, scoutedIdeaCount: scoutedIdeas.length } }];"
+        }
+      },
+      {
+        "id": "error-trigger",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          1400
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "http-error-alert",
+        "name": "Discord: Weekly Scout Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          250,
+          1400
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { title: 'Weekly Scout Error', message: ('Weekly strategy hunt failed: ' + (($input.first().json.execution && $input.first().json.execution.error && $input.first().json.execution.error.message) || ($input.first().json.error && $input.first().json.error.message) || 'Unknown error')).slice(0, 500), severity: 'warning', data: { workflow: 'Weekly Strategy Hunt', timestamp: new Date().toISOString() } } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "gpt5-mini-critique-gate",
+        "name": "GPT-5-mini Depth Critique",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2992,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/model-role",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ role: 'critic_evaluator', prompt: 'You are a quantitative analyst reviewing passing futures strategies. Provide depth critique and risk assessment. Strategies: ' + JSON.stringify($('AI Critique Passing Strategies').first().json) }) }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "openai-gen-model",
+        "name": "GPT-5-mini Generator",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          224,
+          800
+        ],
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "id",
+            "value": "gpt-5-mini"
+          },
+          "options": {},
+          "responsesApiEnabled": false
+        },
+        "credentials": {
+          "openAiApi": {
+            "id": "LuoyBP8Xv16VTirj",
+            "name": "Trading Forge Proxy (OpenAI)"
+          }
+        }
+      },
+      {
+        "id": "openai-critique-model",
+        "name": "GPT-5-mini Critic",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          2448,
+          224
+        ],
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "id",
+            "value": "gpt-5-mini"
+          },
+          "options": {},
+          "responsesApiEnabled": false
+        },
+        "credentials": {
+          "openAiApi": {
+            "id": "LuoyBP8Xv16VTirj",
+            "name": "Trading Forge Proxy (OpenAI)"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Generate 9 Strategies": {
+        "main": [
+          [
+            {
+              "node": "Parse and Enrich Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse and Enrich Strategies": {
+        "main": [
+          [
+            {
+              "node": "Batch 3 Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Batch 3 Strategies": {
+        "main": [
+          [
+            {
+              "node": "POST Batch to Backtest Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Batch to Backtest Agent": {
+        "main": [
+          [
+            {
+              "node": "Wait 10min for Backtests",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 10min for Backtests": {
+        "main": [
+          [
+            {
+              "node": "GET Completed Backtests",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET Completed Backtests": {
+        "main": [
+          [
+            {
+              "node": "Filter TIER_1 and TIER_2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter TIER_1 and TIER_2": {
+        "main": [
+          [
+            {
+              "node": "Any Strategies Passed?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Strategies Passed?": {
+        "main": [
+          [
+            {
+              "node": "Set Lifecycle CANDIDATE",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "POST Journal - No Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Gen Chat Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Generate 9 Strategies",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Gen Embeddings": {
+        "ai_embedding": [
+          [
+            {
+              "node": "5C Gen Vector Store",
+              "type": "ai_embedding",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Gen Vector Store": {
+        "ai_vectorStore": [
+          [
+            {
+              "node": "5C Gen Memory QA Tool",
+              "type": "ai_vectorStore",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Gen Memory QA Tool": {
+        "ai_tool": [
+          [
+            {
+              "node": "Generate 9 Strategies",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Critique Chat Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "AI Critique Passing Strategies",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Critique Embeddings": {
+        "ai_embedding": [
+          [
+            {
+              "node": "5C Critique Vector Store",
+              "type": "ai_embedding",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Critique Vector Store": {
+        "ai_vectorStore": [
+          [
+            {
+              "node": "5C Critique Memory QA Tool",
+              "type": "ai_vectorStore",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Critique Memory QA Tool": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Critique Passing Strategies",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Gen QA LLM": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "5C Gen Memory QA Tool",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5C Critique QA LLM": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "5C Critique Memory QA Tool",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Set Lifecycle CANDIDATE": {
+        "main": [
+          [
+            {
+              "node": "AI Critique Passing Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Saturday 8AM EST Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Scouted Ideas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Scouted Ideas": {
+        "main": [
+          [
+            {
+              "node": "Format Scout Context for LLM",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Scout Context for LLM": {
+        "main": [
+          [
+            {
+              "node": "Generate 9 Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "Discord: Weekly Scout Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Critique Passing Strategies": {
+        "main": [
+          [
+            {
+              "node": "GPT-5-mini Depth Critique",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPT-5-mini Depth Critique": {
+        "main": [
+          [
+            {
+              "node": "POST Journal - Strategies Found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPT-5-mini Generator": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Generate 9 Strategies",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPT-5-mini Critic": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Critique Passing Strategies",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-05T04:50:07.469Z",
+        "id": 1639,
+        "workflowId": "sAIrnCVB4iOsodsy",
+        "versionId": "8bdaf70d-f008-469c-8f06-f0e6086d7437",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

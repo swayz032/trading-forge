@@ -12,10 +12,12 @@ import { spawn } from "child_process";
 import { resolve as pathResolve } from "path";
 import { z } from "zod";
 import { logger } from "../index.js";
+import { runPythonModule } from "../lib/python-runner.js";
 
 export const governorRoutes = Router();
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
+const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+const GOVERNOR_TIMEOUT_MS = 60_000;
 
 // ─── Python subprocess helper ──────────────────────────────────
 
@@ -31,6 +33,14 @@ function runPython(module: string, configJson: string): Promise<Record<string, u
 
     let stdout = "";
     let stderr = "";
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      proc.kill("SIGKILL");
+      reject(new Error(`Governor engine timed out after ${GOVERNOR_TIMEOUT_MS}ms`));
+    }, GOVERNOR_TIMEOUT_MS);
 
     proc.stdout.on("data", (data) => (stdout += data.toString()));
     proc.stderr.on("data", (data) => {
@@ -39,6 +49,9 @@ function runPython(module: string, configJson: string): Promise<Record<string, u
     });
 
     proc.on("close", (code) => {
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true;
       if (code === 0) {
         try {
           resolve(JSON.parse(stdout.trim()));
@@ -51,6 +64,9 @@ function runPython(module: string, configJson: string): Promise<Record<string, u
     });
 
     proc.on("error", (err) => {
+      clearTimeout(timer);
+      if (settled) return;
+      settled = true;
       if (pythonCmd === "python") {
         const proc2 = spawn("python3", args, {
           env: { ...process.env },
@@ -106,16 +122,18 @@ const backtestSchema = z.object({
 // ─── GET /api/governor/status/:strategyId ───────────────────────
 // Current governor state for a strategy
 governorRoutes.get("/status/:strategyId", async (req, res) => {
-  const { strategyId } = req.params;
-
-  // In a full implementation, this would query stored governor state
-  res.json({
-    strategy_id: strategyId,
-    state: "normal",
-    size_multiplier: 1.0,
-    can_trade: true,
-    message: "Governor state tracking. Use POST /api/governor/trade to process trades through the governor.",
-  });
+  // Return governor state from the latest backtest for this strategy
+  try {
+    const result = await runPythonModule({
+      module: "src.engine.governor.governor_backtest",
+      config: { action: "status", strategy_id: req.params.strategyId },
+      componentName: "governor-status",
+    });
+    res.json(result);
+  } catch (err) {
+    req.log.error({ err }, "Governor status failed");
+    res.status(500).json({ error: "Failed to get governor status", details: String(err) });
+  }
 });
 
 // ─── POST /api/governor/trade ───────────────────────────────────
@@ -134,7 +152,7 @@ governorRoutes.post("/trade", async (req, res) => {
     );
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Governor trade processing failed");
+    req.log.error({ err }, "Governor trade processing failed");
     res.status(500).json({ error: "Governor trade processing failed", details: String(err) });
   }
 });
@@ -155,7 +173,7 @@ governorRoutes.post("/session-end", async (req, res) => {
     );
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Governor session end failed");
+    req.log.error({ err }, "Governor session end failed");
     res.status(500).json({ error: "Governor session end failed", details: String(err) });
   }
 });
@@ -176,7 +194,7 @@ governorRoutes.post("/backtest", async (req, res) => {
     );
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Governor backtest failed");
+    req.log.error({ err }, "Governor backtest failed");
     res.status(500).json({ error: "Governor backtest failed", details: String(err) });
   }
 });

@@ -5,6 +5,7 @@ import { ArrowLeft, Clock, Target, TrendingUp, Shield, Grid3X3, CalendarDays } f
 import { useQuery } from "@tanstack/react-query";
 import { StatusBadge } from "@/components/forge/StatusBadge";
 import { LightweightChart } from "@/components/forge/LightweightChart";
+import { EmptyChartShell } from "@/components/forge/EmptyChartShell";
 import { ForgeTable } from "@/components/forge/ForgeTable";
 import { MatrixHeatmap } from "@/components/forge/MatrixHeatmap";
 import { PnLCalendar } from "@/components/forge/PnLCalendar";
@@ -17,7 +18,7 @@ import {
 import { useBacktest, useBacktestEquity, useBacktestTrades } from "@/hooks/useBacktests";
 import { useStrategies } from "@/hooks/useStrategies";
 import { api } from "@/lib/api-client";
-import { num } from "@/lib/utils";
+import { num, fmtMaxDrawdown, fmtDateRange, DEFAULT_STARTING_CAPITAL } from "@/lib/utils";
 
 /** Adaptive P&L formatter for heatmap cells */
 function adaptivePnlFormat(val: number): string {
@@ -351,7 +352,7 @@ export default function BacktestDetail() {
 
   const statusVariant = backtest.status === "completed" ? "profit" : backtest.status === "failed" ? "loss" : "warning";
 
-  const period = `${backtest.startDate?.split("T")[0] ?? "?"} — ${backtest.endDate?.split("T")[0] ?? "?"}`;
+  const period = fmtDateRange(backtest.startDate, backtest.endDate);
 
   return (
     <div className="space-y-6 max-w-[1400px]">
@@ -374,7 +375,7 @@ export default function BacktestDetail() {
           { label: "Sharpe", value: sharpeRatio.toFixed(2), cls: sharpeRatio >= 1.5 ? "text-profit" : "text-foreground" },
           { label: "Win Rate", value: `${winRate.toFixed(1)}%`, cls: "text-foreground" },
           { label: "Profit Factor", value: profitFactor.toFixed(2), cls: "text-foreground" },
-          { label: "Max DD", value: `${maxDrawdown.toFixed(1)}%`, cls: "text-loss" },
+          { label: "Max DD", value: fmtMaxDrawdown(maxDrawdown, DEFAULT_STARTING_CAPITAL), cls: "text-loss" },
           { label: "Trades", value: totalTrades.toString(), cls: "text-foreground" },
         ].map((m, i) => (
           <div key={i} className="forge-card px-4 py-3">
@@ -440,7 +441,7 @@ export default function BacktestDetail() {
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-[200px] flex items-center justify-center text-text-muted text-sm">No drawdown data</div>
+          <EmptyChartShell type="drawdown" height={200} label="Drawdown preview" hint="Real drawdown renders here when the equity curve loads" />
         )}
       </motion.div>
 
@@ -467,7 +468,7 @@ export default function BacktestDetail() {
                     </div>
                   );
                 }} />
-                <Scatter data={maeMfeData} fill="#FFBF00">
+                <Scatter data={maeMfeData} fill="#10B981">
                   {maeMfeData.map((entry, i) => (
                     <Cell key={i} fill={entry.profitable ? "#22C55E" : "#EF4444"} fillOpacity={0.7} />
                   ))}
@@ -475,7 +476,7 @@ export default function BacktestDetail() {
               </ScatterChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[280px] flex items-center justify-center text-text-muted text-sm">No MAE/MFE data available</div>
+            <EmptyChartShell type="line" height={280} label="MAE / MFE preview" hint="Trades populate this scatter once a backtest completes" />
           )}
         </motion.div>
 
@@ -534,7 +535,7 @@ export default function BacktestDetail() {
             </div>
             );
           })() : (
-            <div className="h-[200px] flex items-center justify-center text-text-muted text-sm">No monthly data</div>
+            <EmptyChartShell type="bar" height={200} label="Monthly P&L preview" hint="Real monthly bars render after a completed run" />
           )}
 
           {/* Legend */}

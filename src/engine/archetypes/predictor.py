@@ -117,3 +117,65 @@ def predict_archetype(
         "confidence": round(confidence, 4),
         "nearest_dates": nearest_dates,
     }
+
+
+# ─── CLI Entry Point (for Node python-runner bridge / scheduler C2) ─────
+
+
+if __name__ == "__main__":
+    import json
+    import os
+    import sys
+
+    # Accept config via --config file path (matches calendar_filter.py pattern)
+    config_path: str | None = None
+    argv = sys.argv[1:]
+    for i, arg in enumerate(argv):
+        if arg == "--config" and i + 1 < len(argv):
+            config_path = argv[i + 1]
+            break
+        if os.path.isfile(arg):
+            config_path = arg
+            break
+
+    if config_path:
+        with open(config_path, encoding="utf-8") as f:
+            config = json.load(f)
+    else:
+        config = json.load(sys.stdin)
+
+    action = config.get("action", "predict")
+
+    if action == "predict":
+        # Predict from pre-computed features + historical labels
+        features = config.get("features") or {}
+        historical = config.get("historical_features") or []
+        k = int(config.get("k", 7))
+
+        result = predict_archetype(features, historical, k=k)
+        print(json.dumps(result))
+
+    elif action == "extract_and_predict":
+        # Extract features from raw premarket + prev day, then predict.
+        # Used by the scheduler when historical features are loaded server-side.
+        from .feature_extractor import extract_features
+
+        current_premarket = config.get("current_premarket") or {}
+        prev_day = config.get("prev_day") or {}
+        historical_context = config.get("historical_context") or {}
+        historical_features = config.get("historical_features") or []
+        k = int(config.get("k", 7))
+
+        features = extract_features(current_premarket, prev_day, historical_context)
+        prediction = predict_archetype(features, historical_features, k=k)
+
+        print(json.dumps({
+            "features": features,
+            "prediction": prediction,
+        }))
+
+    else:
+        print(json.dumps({
+            "error": f"Unknown action: {action}",
+            "supported_actions": ["predict", "extract_and_predict"],
+        }))

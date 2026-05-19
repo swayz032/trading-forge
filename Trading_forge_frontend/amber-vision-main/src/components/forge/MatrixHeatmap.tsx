@@ -14,7 +14,7 @@ export interface MatrixHeatmapProps {
   }>;
 }
 
-const SYMBOLS = ["ES", "NQ", "CL", "YM", "RTY", "GC"];
+const SYMBOLS = ["ES", "NQ", "CL"];
 const TIMEFRAMES = ["1min", "5min", "15min", "30min", "1hour", "4hour", "daily"];
 
 function scoreColor(score: number): string {
@@ -67,7 +67,7 @@ export function MatrixHeatmap({ matrixData }: MatrixHeatmapProps) {
           </span>
         )}
       </div>
-      <p className="text-xs text-text-muted mb-5">Forge Score across symbols × timeframes (42-combo matrix)</p>
+      <p className="text-xs text-text-muted mb-5">Forge Score across symbols × timeframes (21-combo matrix)</p>
 
       {/* Grid */}
       <div className="overflow-x-auto">

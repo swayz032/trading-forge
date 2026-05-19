@@ -5,7 +5,7 @@ walks through each trading day as if executing on a real prop firm
 account, enforcing:
   - Daily loss limits (Topstep $1K, Alpha $1K)
   - Trailing drawdown (EOD vs realtime/intraday)
-  - Consistency rules (TPT 50%, FFN Express 15%)
+  - Consistency rules (TPT 50%, FFN 40%)
   - Profit targets and payout projections
 
 Uses configs from prop_compliance.py and firm_config.py.
@@ -21,41 +21,18 @@ from src.engine.prop_compliance import FIRM_CONFIGS
 from src.engine.firm_config import FIRM_COMMISSIONS
 
 
-# Daily loss limits per firm (from firm_profiles.py)
+# Daily loss limits derived from firm_config.py FIRM_RULES (single source of truth)
 # None = no daily limit
-DAILY_LOSS_LIMITS: dict[str, Optional[float]] = {
-    "topstep_50k": 1000,
-    "mffu_50k": None,
-    "tpt_50k": None,
-    "apex_50k": None,
-    "tradeify_50k": None,
-    "alpha_50k": 1000,
-    "ffn_50k": 1250.0,
-    "earn2trade_50k": None,
-}
+from src.engine.firm_config import FIRM_RULES
 
-# Earn2Trade config (missing from prop_compliance.py FIRM_CONFIGS)
-EARN2TRADE_CONFIG = {
-    "name": "Earn2Trade 50K",
-    "monthly_fee": 150,
-    "activation_fee": 0,
-    "profit_target": 3000,
-    "max_drawdown": 2000,
-    "trailing": "eod",
-    "locks_at_start": False,
-    "consistency_rule": None,
-    "overnight_ok": True,
-    "payout_split": 0.80,
-    "ongoing_fee": 0,
+DAILY_LOSS_LIMITS: dict[str, Optional[float]] = {
+    key: rules.get("daily_loss_limit") for key, rules in FIRM_RULES.items()
 }
 
 
 def _get_all_firm_configs() -> dict[str, dict]:
-    """Get all firm configs including Earn2Trade."""
-    configs = dict(FIRM_CONFIGS)
-    if "earn2trade_50k" not in configs:
-        configs["earn2trade_50k"] = EARN2TRADE_CONFIG
-    return configs
+    """Get all firm configs. All 8 firms are in FIRM_CONFIGS."""
+    return dict(FIRM_CONFIGS)
 
 
 def simulate_prop_firm(
@@ -146,6 +123,7 @@ def simulate_prop_firm(
         # Daily loss limit enforcement
         day_halted = False
         gap_breached = False
+        original_net_pnl = net_pnl  # Preserve uncapped loss for intraday low estimate
         if daily_loss_limit is not None and net_pnl < -daily_loss_limit:
             # Task 7.11: Distinguish gap breach from intraday breach.
             # If holding overnight and the day opens with a loss already
@@ -167,6 +145,8 @@ def simulate_prop_firm(
                 daily_loss_breaches.append(date_str)
 
         # Compute intraday low BEFORE updating balance (for realtime DD)
+        # Use original_net_pnl (uncapped) for intraday low estimate — the actual
+        # intraday low occurred BEFORE the firm halted trading at the daily limit.
         prev_balance = balance
         if is_realtime:
             # Realtime trailing DD checks equity at EVERY tick, not just EOD.
@@ -179,12 +159,13 @@ def simulate_prop_firm(
             #
             # Factor: on losing days, assume intraday low was 1.3x the closing loss.
             # On winning days, assume a brief dip of 30% of the day's gain.
-            if net_pnl < 0:
+            if original_net_pnl < 0:
                 # Losing day: intraday low was worse than close
-                intraday_low = prev_balance + net_pnl * 1.3
+                # Use uncapped loss — actual intraday low occurred before halt
+                intraday_low = prev_balance + original_net_pnl * 1.3
             else:
                 # Winning day: assume a brief dip before recovery
-                intraday_low = prev_balance - abs(net_pnl) * 0.3
+                intraday_low = prev_balance - abs(original_net_pnl) * 0.3
         else:
             intraday_low = prev_balance + net_pnl  # EOD: use closing balance
 
@@ -217,8 +198,9 @@ def simulate_prop_firm(
             trailing_dd_breached = True
             breach_day = date_str
 
-        # Check if eval passed (hit profit target)
-        if not eval_passed and (balance - starting_balance) >= profit_target:
+        # Check if eval passed (hit profit target + min trading days)
+        min_days = firm.get("min_trading_days", 1)
+        if not eval_passed and (balance - starting_balance) >= profit_target and (day_idx + 1) >= min_days:
             eval_passed = True
             days_to_pass_eval = day_idx + 1
 
@@ -282,7 +264,7 @@ def simulate_prop_firm(
     consistency_ratio = best_single_day / total_profit if total_profit > 0 else 0.0
 
     # Consistency check
-    _KNOWN_CONSISTENCY_RULES = {"tpt_50pct", "alpha_50pct", "ffn_15pct"}
+    _KNOWN_CONSISTENCY_RULES = {"tpt_50pct", "alpha_50pct", "ffn_40pct", "mffu_50pct", "apex_50pct_funded", "tradeify_40pct", "earn2trade_consistency"}
     rule = firm.get("consistency_rule")
     if rule and rule not in _KNOWN_CONSISTENCY_RULES:
         import warnings
@@ -293,14 +275,23 @@ def simulate_prop_firm(
     if firm.get("consistency_rule") == "tpt_50pct" and consistency_ratio > 0.50:
         consistency_passed = False
         consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (limit: 50%)"
-    elif firm.get("consistency_rule") == "ffn_15pct":
-        daily_limit_pct = profit_target * 0.15
-        if best_single_day > daily_limit_pct:
-            consistency_passed = False
-            consistency_failure = f"Best day ${best_single_day:.0f} > ${daily_limit_pct:.0f} limit"
     elif firm.get("consistency_rule") == "alpha_50pct" and consistency_ratio > 0.50:
         consistency_passed = False
         consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (limit: 50%)"
+    elif firm.get("consistency_rule") == "mffu_50pct" and consistency_ratio > 0.50:
+        consistency_passed = False
+        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (MFFU limit: 50%)"
+    elif firm.get("consistency_rule") == "ffn_40pct" and consistency_ratio > 0.40:
+        consistency_passed = False
+        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (FFN limit: 40%)"
+    elif firm.get("consistency_rule") == "tradeify_40pct" and consistency_ratio > 0.40:
+        consistency_passed = False
+        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (Tradeify limit: 40%)"
+    elif firm.get("consistency_rule") == "apex_50pct_funded":
+        pass  # Apex 50% applies only to funded payouts, not eval — skip in eval sim
+    elif firm.get("consistency_rule") == "earn2trade_consistency" and consistency_ratio > 0.50:
+        consistency_passed = False
+        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (Earn2Trade limit: 50%)"
 
     # Max drawdown in dollars (EOD and intraday tracked separately)
     max_dd_dollars = max((s["drawdown_from_peak"] for s in daily_statements), default=0)
@@ -338,10 +329,44 @@ def simulate_prop_firm(
     # Payout projection
     total_net_profit = balance - starting_balance
     if total_net_profit > 0 and eval_passed:
-        split = firm["payout_split"]
+        # Alpha uses payout-count tiers (1st payout=70%, 2nd=80%, 3rd+=90%)
+        # Other firms use dollar-threshold tiers (e.g. TPT: <$5K=80%, >$5K=90%)
+        count_tiers = firm.get("payout_count_tiers")
+        dollar_tiers = firm.get("payout_split_tiers")
+
+        if count_tiers:
+            # Payout-count based: split depends on which payout number this is.
+            # In simulation we model the FIRST payout — use payout_number=1.
+            first_tier = next((t for t in count_tiers if t["payout_number"] == 1), None)
+            split = first_tier["split"] if first_tier else firm["payout_split"]
+            payout_amount = total_net_profit * split
+        elif dollar_tiers:
+            # Dollar-threshold tiers: progressive split rates by profit amount.
+            # Base split applies below first threshold, then each tier's split
+            # applies to profit above that tier's threshold.
+            sorted_tiers = sorted(dollar_tiers, key=lambda t: t["threshold"])
+            payout_amount = 0.0
+            prev_threshold = 0.0
+            base_split = firm["payout_split"]
+            current_split = base_split
+            for tier in sorted_tiers:
+                tier_threshold = tier["threshold"]
+                if total_net_profit < prev_threshold:
+                    break
+                taxable = min(total_net_profit, tier_threshold) - prev_threshold
+                if taxable > 0:
+                    payout_amount += taxable * current_split
+                current_split = tier["split"]
+                prev_threshold = tier_threshold
+            # Remaining profit above the last tier threshold
+            if total_net_profit > prev_threshold:
+                payout_amount += (total_net_profit - prev_threshold) * current_split
+        else:
+            payout_amount = total_net_profit * firm["payout_split"]
+
         monthly_fee = firm.get("ongoing_fee", 0)
         total_months = len(monthly_summary) or 1
-        monthly_gross = total_net_profit * split / total_months
+        monthly_gross = payout_amount / total_months
         payout_projection = round(monthly_gross - monthly_fee, 2)
     else:
         payout_projection = 0
@@ -351,7 +376,7 @@ def simulate_prop_firm(
 
     # Overnight hold violation check
     overnight_violation = False
-    if not firm.get("overnight_ok", True) and overnight_risk_days > 0:
+    if not firm.get("overnight_ok", False) and overnight_risk_days > 0:
         overnight_violation = True
 
     # Overall verdict
@@ -380,11 +405,12 @@ def simulate_prop_firm(
     )
 
     # Annual net payout after all deductions
+    # NOTE: payout_projection already has ongoing_fee subtracted (line 370),
+    # so do NOT subtract annual_ongoing_fees again here.
     annual_gross_payout = payout_projection * 12 if payout_projection > 0 else 0
-    annual_ongoing_fees = firm.get("ongoing_fee", 0) * 12
     # Amortize expected eval cost over first year
     true_net_annual_payout = round(
-        annual_gross_payout - annual_ongoing_fees - expected_eval_cost, 2
+        annual_gross_payout - expected_eval_cost, 2
     ) if annual_gross_payout > 0 else 0
     true_net_monthly_payout = round(
         true_net_annual_payout / 12, 2

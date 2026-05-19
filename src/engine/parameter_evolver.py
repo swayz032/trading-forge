@@ -22,6 +22,33 @@ OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 MODEL = "qwen3-coder:30b"
 
 
+def _summarise_mutation_outcomes(outcomes: list[dict]) -> str:
+    """Shared helper: group mutation outcomes by (param_name, direction) and render
+    one summary line per group with attempts, success rate, and avg Sharpe delta.
+
+    Used by both the lineage-history section and the cross-archetype section so the
+    rendering format stays consistent across both prompt blocks.
+    """
+    from collections import defaultdict
+    summary: dict[str, dict] = defaultdict(lambda: {"attempts": 0, "successes": 0, "total_improvement": 0.0})
+    for entry in outcomes:
+        key = f"{entry.get('param_name', '?')} {entry.get('direction', '?')}"
+        summary[key]["attempts"] += 1
+        if entry.get("success"):
+            summary[key]["successes"] += 1
+        summary[key]["total_improvement"] += float(entry.get("improvement", 0))
+
+    lines = []
+    for key, data in sorted(summary.items(), key=lambda x: -x[1]["total_improvement"]):
+        avg_imp = data["total_improvement"] / max(data["attempts"], 1)
+        win_rate = data["successes"] / max(data["attempts"], 1)
+        lines.append(
+            f"  - {key}: {data['attempts']} tries, "
+            f"{win_rate:.0%} success, avg Sharpe delta {avg_imp:+.3f}"
+        )
+    return "\n".join(lines)
+
+
 def build_mutation_prompt(
     name: str,
     symbol: str,
@@ -31,14 +58,45 @@ def build_mutation_prompt(
     current_sharpe: float,
     baseline_sharpe: float,
     window_sharpes: list[float],
+    mutation_history: list[dict] | None = None,
+    cross_archetype_history: list[dict] | None = None,
 ) -> str:
-    """Build the LLM mutation prompt."""
+    """Build the LLM mutation prompt.
+
+    Args:
+        mutation_history: Optional list of prior mutation outcomes for this
+            strategy/archetype lineage. Each entry is a dict with keys:
+            param_name, direction, magnitude, improvement, success, regime.
+            When provided, the summary is injected into the prompt so the
+            LLM can avoid repeating failed directions and reinforce working ones.
+        cross_archetype_history: Optional list of prior mutation outcomes from
+            sibling lineages of the same archetype (excluding this lineage).
+            Rendered as ADVISORY context only — these are weaker signals because
+            they come from different parent strategies.
+    """
+    lineage_section = ""
+    if mutation_history:
+        lineage_section = (
+            "\nYour lineage history (this strategy's prior mutations):\n"
+            + _summarise_mutation_outcomes(mutation_history)
+            + "\nPrefer directions with high success rates. Avoid repeating high-attempt, low-success directions.\n"
+        )
+
+    cross_archetype_section = ""
+    if cross_archetype_history:
+        cross_archetype_section = (
+            "\nCross-archetype insights (advisory — from sibling lineages of the same archetype, NOT this strategy):\n"
+            + _summarise_mutation_outcomes(cross_archetype_history)
+            + "\nThese are weaker signals than your own lineage history. Use them to break ties or "
+            + "explore directions you haven't tried, but defer to your lineage history when in conflict.\n"
+        )
+
     return f"""Strategy "{name}" ({symbol} {timeframe}) is declining.
 Current params: {json.dumps(params)}
 Robust ranges from Optuna: {json.dumps(robust_ranges)}
 Last 30-day rolling Sharpe: {current_sharpe:.4f} (was {baseline_sharpe:.4f})
 Walk-forward window performance trend: {window_sharpes}
-
+{lineage_section}{cross_archetype_section}
 Suggest 3 parameter mutations that:
 1. Stay within robust ranges (avoid cliff-edge params)
 2. Target the SPECIFIC weakness (if Sharpe dropped -> adjust R:R params; if win rate dropped -> tighten entries)
@@ -127,7 +185,13 @@ def validate_mutations(
 
 
 def evolve(config_path: str) -> dict:
-    """Main evolution entry point. Reads config JSON, calls LLM, returns mutations."""
+    """Main evolution entry point. Reads config JSON, calls LLM, returns mutations.
+
+    The config JSON may optionally contain a "mutation_history" key carrying a
+    list of prior mutation outcome records (see mutationOutcomes schema).  When
+    present, a summarised version is injected into the LLM prompt so the model
+    can learn from what has and has not worked before.
+    """
     with open(config_path, "r") as f:
         config = json.load(f)
 
@@ -139,13 +203,21 @@ def evolve(config_path: str) -> dict:
     current_sharpe = config.get("current_sharpe", 0.0)
     baseline_sharpe = config.get("baseline_sharpe", 0.0)
     window_sharpes = config.get("window_sharpes", [])
+    mutation_history: list[dict] | None = config.get("mutation_history") or None
+    cross_archetype_history: list[dict] | None = config.get("cross_archetype_history") or None
 
     print(f"Evolving: {name} ({symbol} {timeframe})", file=sys.stderr)
     print(f"  Current Sharpe: {current_sharpe:.4f}, Baseline: {baseline_sharpe:.4f}", file=sys.stderr)
+    if mutation_history:
+        print(f"  Mutation history: {len(mutation_history)} prior outcomes provided", file=sys.stderr)
+    if cross_archetype_history:
+        print(f"  Cross-archetype history: {len(cross_archetype_history)} prior outcomes from sibling lineages", file=sys.stderr)
 
     prompt = build_mutation_prompt(
         name, symbol, timeframe, params, robust_ranges,
         current_sharpe, baseline_sharpe, window_sharpes,
+        mutation_history=mutation_history,
+        cross_archetype_history=cross_archetype_history,
     )
 
     raw_mutations = call_ollama(prompt)

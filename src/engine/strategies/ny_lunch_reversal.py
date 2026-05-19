@@ -27,7 +27,7 @@ class NYLunchReversalStrategy(BaseStrategy):
         self.lookback = lookback
         self.displacement_mult = displacement_mult
         self.min_am_move_atr = min_am_move_atr
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "5min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:

@@ -1,0 +1,646 @@
+{
+  "updatedAt": "2026-05-12T22:39:43.029Z",
+  "createdAt": "2026-05-12T11:02:08.011Z",
+  "id": "9poOSNOCuWsJQidZ",
+  "name": "5G-brave-search-scout",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 18
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.search.brave.com/res/v1/web/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Subscription-Token",
+              "value": "BSA-12bUd_kRylS3PUt7rSOahkSoQ-3"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "futures trading strategies algo edge profitable backtest"
+            },
+            {
+              "name": "count",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "brave-search",
+      "name": "Brave Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst webResults = $input.first().json.web?.results || [];\nfor (const r of webResults) {\n  results.push({\n    json: {\n      source: 'brave',\n      title: r.title || '',\n      description: r.description || '',\n      url: r.url || '',\n      confidence_score: r.extra_snippets ? 0.7 : 0.5\n    }\n  });\n}\nreturn [{ json: { ideas: results.map(r => r.json) } }];"
+      },
+      "id": "parse-brave",
+      "name": "Parse Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/agent/scout-ideas",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ideas: $json.ideas }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "post-ideas",
+      "name": "Post Scout Ideas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"5G-brave-search-scout\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Brave Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brave Search": {
+      "main": [
+        [
+          {
+            "node": "Parse Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Results": {
+      "main": [
+        [
+          {
+            "node": "Post Scout Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "iTftiIkCZndPXVt3"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+  "activeVersionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+  "versionCounter": 49,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-12T11:02:08.012Z",
+      "createdAt": "2026-05-12T11:02:08.012Z",
+      "role": "workflow:owner",
+      "workflowId": "9poOSNOCuWsJQidZ",
+      "projectId": "ztIDnX0JJlEKn0zl",
+      "project": {
+        "updatedAt": "2026-05-12T10:59:35.296Z",
+        "createdAt": "2026-05-12T10:49:44.320Z",
+        "id": "ztIDnX0JJlEKn0zl",
+        "name": "Tonio Scott <tonioswayz42@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-12T12:14:42.461Z",
+    "createdAt": "2026-05-12T12:14:42.461Z",
+    "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+    "workflowId": "9poOSNOCuWsJQidZ",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 18
+              }
+            ]
+          }
+        },
+        "id": "schedule-trigger",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/web/search",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Subscription-Token",
+                "value": "BSA-12bUd_kRylS3PUt7rSOahkSoQ-3"
+              }
+            ]
+          },
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "q",
+                "value": "futures trading strategies algo edge profitable backtest"
+              },
+              {
+                "name": "count",
+                "value": "20"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "brave-search",
+        "name": "Brave Search",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const results = [];\nconst webResults = $input.first().json.web?.results || [];\nfor (const r of webResults) {\n  results.push({\n    json: {\n      source: 'brave',\n      title: r.title || '',\n      description: r.description || '',\n      url: r.url || '',\n      confidence_score: r.extra_snippets ? 0.7 : 0.5\n    }\n  });\n}\nreturn [{ json: { ideas: results.map(r => r.json) } }];"
+        },
+        "id": "parse-brave",
+        "name": "Parse Results",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/agent/scout-ideas",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ ideas: $json.ideas }) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "post-ideas",
+        "name": "Post Scout Ideas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"5G-brave-search-scout\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Brave Search",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Brave Search": {
+        "main": [
+          [
+            {
+              "node": "Parse Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Results": {
+        "main": [
+          [
+            {
+              "node": "Post Scout Ideas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-12T12:14:42.505Z",
+        "id": 282,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T12:14:46.774Z",
+        "id": 342,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T19:57:36.656Z",
+        "id": 402,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T19:57:45.515Z",
+        "id": 462,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T21:32:37.026Z",
+        "id": 522,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T21:32:41.946Z",
+        "id": 582,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T21:34:44.241Z",
+        "id": 642,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T21:34:48.468Z",
+        "id": 702,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:36:33.833Z",
+        "id": 762,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:36:38.148Z",
+        "id": 820,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:37:59.056Z",
+        "id": 878,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:38:03.138Z",
+        "id": 936,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:39:43.078Z",
+        "id": 994,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:39:49.744Z",
+        "id": 1052,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T12:14:42.484Z",
+        "id": 281,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T12:14:46.755Z",
+        "id": 341,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T19:57:36.641Z",
+        "id": 401,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T19:57:45.497Z",
+        "id": 461,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T21:32:37.009Z",
+        "id": 521,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T21:32:41.929Z",
+        "id": 581,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T21:34:44.225Z",
+        "id": 641,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T21:34:48.451Z",
+        "id": 701,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:36:33.817Z",
+        "id": 761,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:36:38.132Z",
+        "id": 819,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:37:59.039Z",
+        "id": 877,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:38:03.121Z",
+        "id": 935,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:39:43.052Z",
+        "id": 993,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-12T22:39:49.728Z",
+        "id": 1051,
+        "workflowId": "9poOSNOCuWsJQidZ",
+        "versionId": "3616170f-5618-4da3-9a29-e8ab4c2d9ef1",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      }
+    ]
+  }
+}

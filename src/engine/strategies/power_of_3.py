@@ -42,7 +42,7 @@ class PowerOf3Strategy(BaseStrategy):
         self.displacement_mult = displacement_mult
         self.sweep_buffer_atr = sweep_buffer_atr
         self.max_bars_held = max_bars_held
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "5min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -163,6 +163,8 @@ class PowerOf3Strategy(BaseStrategy):
             h, m = hours[i], minutes[i]
             t_minutes = h * 60 + m
             session_exit_time = 15 * 60 + 45  # 15:45 ET
+            exited_this_bar_long = False
+            exited_this_bar_short = False
 
             if long_entry_bar >= 0:
                 bars_held = i - long_entry_bar
@@ -171,6 +173,7 @@ class PowerOf3Strategy(BaseStrategy):
                 if t_minutes >= session_exit_time or bars_held >= self.max_bars_held or structure_break:
                     exit_long[i] = True
                     long_entry_bar = -1
+                    exited_this_bar_long = True
 
             if short_entry_bar >= 0:
                 bars_held = i - short_entry_bar
@@ -178,6 +181,7 @@ class PowerOf3Strategy(BaseStrategy):
                 if t_minutes >= session_exit_time or bars_held >= self.max_bars_held or structure_break:
                     exit_short[i] = True
                     short_entry_bar = -1
+                    exited_this_bar_short = True
 
             # ─── Phase 3: Distribution (NY AM) — entry ─────────
             if not nyam[i]:
@@ -187,7 +191,7 @@ class PowerOf3Strategy(BaseStrategy):
 
             # Only enter if flat (no existing position)
             # SHORT: London swept Asia High + bearish displacement confirmed
-            if short_entry_bar < 0 and london_swept_high and displacement_bearish_after_high_sweep:
+            if short_entry_bar < 0 and not exited_this_bar_short and london_swept_high and displacement_bearish_after_high_sweep:
                 if closes[i] < asia_high:  # price has returned below Asia High (fake breakout confirmed)
                     entry_short[i] = True
                     short_entry_bar = i
@@ -196,7 +200,7 @@ class PowerOf3Strategy(BaseStrategy):
                     displacement_bearish_after_high_sweep = False
 
             # LONG: London swept Asia Low + bullish displacement confirmed
-            if long_entry_bar < 0 and london_swept_low and displacement_bullish_after_low_sweep:
+            if long_entry_bar < 0 and not exited_this_bar_long and london_swept_low and displacement_bullish_after_low_sweep:
                 if closes[i] > asia_low:  # price has returned above Asia Low (fake breakdown confirmed)
                     entry_long[i] = True
                     long_entry_bar = i

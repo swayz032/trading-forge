@@ -2,8 +2,6 @@ import { Router } from "express";
 import { db } from "../db/index.js";
 import { alerts } from "../db/schema.js";
 import { eq, desc, and, sql } from "drizzle-orm";
-import { logger } from "../index.js";
-
 const router = Router();
 
 // GET /api/alerts — list alerts with optional filters
@@ -49,7 +47,7 @@ router.post("/", async (req, res) => {
       .insert(alerts)
       .values({ type, severity, title, message, metadata })
       .returning();
-    logger.info({ alertId: alert.id }, "Alert created");
+    req.log.info({ alertId: alert.id }, "Alert created");
     res.status(201).json(alert);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

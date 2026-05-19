@@ -1,0 +1,2039 @@
+{
+  "updatedAt": "2026-05-05T04:50:02.003Z",
+  "createdAt": "2026-03-10T04:18:42.955Z",
+  "id": "Z4NcOCDbet8KzjDd",
+  "name": "Nightly Strategy Research Loop",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Nightly 2AM EST Cron",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=The current MES (S&P 500 micro) regime is: {{ $('Detect Market Regime').item.json.regime }} (ADX: {{ $('Detect Market Regime').item.json.adx }}). Use this as a directional proxy for equity-index regime context; for MCL (crude micro) and MNQ (Nasdaq micro), assume mixed/unknown regime unless otherwise indicated.\n\nGenerate 15 vectorbt-compatible strategies covering Trading Forge's three approved micro-futures contracts: 5 for MES, 5 for MNQ, 5 for MCL.\n\nEach strategy MUST conform to the StrategyDSL schema (src/engine/compiler/strategy_schema.py):\n- symbol: EXACT string, one of [MES, MNQ, MCL] (NOT ES, NQ, or CL \u00e2\u20ac\u201d those are big contracts and out of scope)\n- timeframe: one of [1m, 5m, 15m, 30m, 1h, 4h, 1d]\n- direction: long | short | both\n- entry_type: one of [breakout, mean_reversion, trend_follow, volatility_expansion, session_pattern, event_driven]\n- entry_indicator: a value from kb/indicator-catalog.md (RSI, EMA, SMA, ATR, VWAP, Bollinger, Donchian, Keltner, MACD, etc.)\n- entry_params: object, MAX 5 keys, prefer round numbers (RSI 70, not 67.3 \u00e2\u20ac\u201d tight precision is the overfitting anti-pattern)\n- exit_type: one of [fixed_target, trailing_stop, time_exit, indicator_signal, atr_multiple]\n- stop_loss_atr_multiple, take_profit_atr_multiple: numbers; SL < TP when both set\n- name: snake_case, \u00e2\u2030\u00a4 100 chars\n- description: one sentence, 10-500 chars\n- preferred_regime: from kb/regime-taxonomy.md\n\nDistribute across regimes (TRENDING, RANGE_BOUND, VOLATILE, OPENING_RANGE, NEWS_DRIVEN, OVERNIGHT_DRIFT). MES regime above is a directional hint, not a constraint.\n\nReturn ONLY a JSON array of 15 StrategyDSL objects. No markdown fences, no prose outside the JSON.",
+        "options": {
+          "systemMessage": "You are an extraction-oriented multi-symbol futures-strategy proposer for Trading Forge \u00e2\u20ac\u201d an autonomous research lab targeting MES (S&P 500 micro), MNQ (Nasdaq micro), and MCL (crude oil micro). You design systematic strategies with proven statistical edges (mean reversion, momentum, volatility expansion, session patterns, event-driven). Your bias is REFUSAL over fabrication: you propose only edges with concrete entry/exit triggers; you never invent precise parameter values. Strategies MUST conform exactly to the StrategyDSL schema (src/engine/compiler/strategy_schema.py): symbol is one of [MES, MNQ, MCL] EXACTLY (never ES, NQ, or CL \u00e2\u20ac\u201d those big contracts are out of scope), max 5 entry_params, round-number params (RSI 70 not 67.3), SL < TP when both set, name snake_case \u00e2\u2030\u00a4100 chars, description one sentence. Output JSON-only, no markdown fences, no prose."
+        }
+      },
+      "id": "ai-agent-gen",
+      "name": "Generate Strategies",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        960,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output || $input.first().json.text || '';\n\n// Extract JSON array from response (handle markdown code fences)\nlet jsonStr = raw;\nconst fenceMatch = raw.match(/```(?:json)?\\s*([\\s\\S]*?)```/);\nif (fenceMatch) {\n  jsonStr = fenceMatch[1].trim();\n}\n\n// Try to find array brackets if not already clean\nconst arrayMatch = jsonStr.match(/(\\[[\\s\\S]*\\])/);\nif (arrayMatch) {\n  jsonStr = arrayMatch[1];\n}\n\nlet strategies;\ntry {\n  strategies = JSON.parse(jsonStr);\n} catch (e) {\n  return [{\n    json: {\n      error: 'Failed to parse Ollama output as JSON',\n      raw_output: raw.substring(0, 500),\n      parse_error: e.message\n    }\n  }];\n}\n\nif (!Array.isArray(strategies)) {\n  strategies = [strategies];\n}\n\nconst enriched = strategies.map(s => ({\n  json: {\n    strategy_name: s.strategy_name || 'unnamed',\n    one_sentence: s.one_sentence || '',\n    python_code: s.python_code || '',\n    params: s.params || {},\n    symbol: 'ES',\n    timeframe: '15min',\n    start_date: '2024-01-01',\n    end_date: '2024-12-31',\n    source: 'ollama'\n  }\n}));\n\nreturn enriched;"
+      },
+      "id": "code-parse",
+      "name": "Parse Ollama Strategy Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/batch",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-batch-submit",
+      "name": "Submit Strategies for Backtest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1776,
+        304
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "id": "wait-backtest",
+      "name": "Wait 5min for Backtests",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        304
+      ],
+      "webhookId": "d7b1ba09-2562-458b-83a3-63e92ad76d4a"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=5",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-fetch-results",
+      "name": "Fetch Completed Backtests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2224,
+        304
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Review these backtest results. Which strategies pass all gates (Sharpe >= 1.5, PF >= 1.75, win rate >= 60%, max DD <= $2K)? Suggest param refinements for borderline strategies. Here are the results:\n\n{{ JSON.stringify($json) }}",
+        "options": {
+          "systemMessage": "You are a senior risk manager and trading strategy reviewer. You evaluate backtest results against strict performance gates. Be critical and data-driven. For borderline strategies, suggest specific parameter adjustments that could improve performance."
+        }
+      },
+      "id": "ai-agent-critique",
+      "name": "Critique Backtest Results",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2496,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/critique",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-post-critique",
+      "name": "Post Critique to Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3088,
+        304
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/journal",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-log-journal",
+      "name": "Log Cycle to Journal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3312,
+        304
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "5a-strategy-gen",
+        "tableName": "memory_5a_strategy_gen",
+        "contextWindowLength": 10
+      },
+      "id": "2ee72890-2889-4ae0-84e9-fda4f290fec9",
+      "name": "5A Gen Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        528
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "XDOEjC2s3oL432Lj",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text"
+      },
+      "id": "9f325f4f-68cc-431d-8d36-527f07725768",
+      "name": "5A Gen Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        944
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "BLgLWvmLGaJQOYaF",
+          "name": "Ollama account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "tableName": "vectors_5a_strategy_gen",
+        "options": {}
+      },
+      "id": "5546f0aa-2eb2-4928-9a49-d72f20603dfb",
+      "name": "5A Gen Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1056,
+        736
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "XDOEjC2s3oL432Lj",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "5a-strategy-critique",
+        "tableName": "memory_5a_strategy_critique",
+        "contextWindowLength": 10
+      },
+      "id": "a461181e-63eb-4743-b606-35061ad48307",
+      "name": "5A Critique Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2576,
+        528
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "XDOEjC2s3oL432Lj",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text"
+      },
+      "id": "57b030bd-49b2-4eec-9867-6f090bec4295",
+      "name": "5A Critique Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        2672,
+        944
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "BLgLWvmLGaJQOYaF",
+          "name": "Ollama account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "tableName": "vectors_5a_strategy_critique",
+        "options": {}
+      },
+      "id": "b71c45b6-3be7-4058-a96c-a4fbf8686bf3",
+      "name": "5A Critique Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        2592,
+        736
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "XDOEjC2s3oL432Lj",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "59959d9c-aa2d-44f5-b440-5d34d66c7538",
+      "name": "5A Gen Memory QA Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        528
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "f607f4c9-47b2-4a8e-b2ff-965d4a24bf94",
+      "name": "5A Critique Memory QA Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        2704,
+        528
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:14b",
+        "options": {}
+      },
+      "id": "b3c8f3d0-4dfc-4624-9977-c628277b7cb7",
+      "name": "5A Gen QA LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        736
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "BLgLWvmLGaJQOYaF",
+          "name": "Ollama account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-r1:14b",
+        "options": {}
+      },
+      "id": "03a4ab1d-d1e8-4aea-a12a-3831b922414b",
+      "name": "5A Critique QA LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        2880,
+        736
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "BLgLWvmLGaJQOYaF",
+          "name": "Ollama account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/analyze-market",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ symbol: 'MES', timeframe: '1h' }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "detect-regime",
+      "name": "Detect Market Regime",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        304
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-fetch-scouted",
+      "name": "Fetch Scouted Ideas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        304
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Filter out untitled/empty scout results\nconst validIdeas = items.filter(item => {\n  const title = item.json.title || item.json.name || '';\n  const desc = item.json.description || item.json.summary || '';\n  if (!title.trim() || title.toLowerCase() === 'untitled' || title.trim().length < 10) return false;\n  if (!desc.trim() || desc.trim().length < 20) return false;\n  return true;\n});\n\nif (validIdeas.length === 0) {\n  return [{ json: { scoutContext: '\\nNo high-quality research discoveries available for this cycle.', scoutedIdeaCount: 0 } }];\n}\n\nconst lines = validIdeas.slice(0, 5).map((item, i) => {\n  const source = item.json.source || 'web';\n  const title = (item.json.title || item.json.name || 'Untitled').slice(0, 100);\n  const desc = (item.json.description || item.json.summary || '').slice(0, 200);\n  return `${i + 1}. [${source}] ${title}: ${desc}`;\n});\n\nreturn [{\n  json: {\n    scoutContext: `\\n\\nRecent research discoveries to consider when generating strategies:\\n${lines.join('\\n')}`,\n    scoutedIdeaCount: validIdeas.length\n  }\n}];"
+      },
+      "id": "code-format-scout-context",
+      "name": "Format Scout Context for LLM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        304
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1408
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { title: 'Nightly Research Error', message: ('Nightly research failed: ' + (($input.first().json.execution && $input.first().json.execution.error && $input.first().json.execution.error.message) || ($input.first().json.error && $input.first().json.error.message) || 'Unknown error')).slice(0, 500), severity: 'warning', data: { workflow: 'Nightly Strategy Research Loop', timestamp: new Date().toISOString() } } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "http-error-alert",
+      "name": "Discord: Nightly Research Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        256,
+        1408
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-5-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "id": "openai-gen-model",
+      "name": "GPT-5-mini Generator",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        528
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LuoyBP8Xv16VTirj",
+          "name": "Trading Forge Proxy (OpenAI)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-5-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "id": "openai-critique-model",
+      "name": "GPT-5-mini Critic",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2448,
+        528
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LuoyBP8Xv16VTirj",
+          "name": "Trading Forge Proxy (OpenAI)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TRADING_FORGE_API_URL || 'http://host.docker.internal:4000' }}/api/quantum/pre-flight",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TRADING_FORGE_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"dsl\": {{ JSON.stringify($json.strategy_config || $json) }},\n  \"workflowRunId\": \"{{ $execution.id }}\",\n  \"source\": \"nightly_strategy_research_loop\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 5000
+        }
+      },
+      "id": "quantum-preflight-check",
+      "name": "Quantum Pre-Flight Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1664,
+        144
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "preflight-block",
+              "leftValue": "={{ $json.cached === true && $json.passed === false }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "quantum-preflight-gate",
+      "name": "Pre-Flight Pass?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pre-flight blocked this strategy because a prior quantum_mc_run produced UCI > threshold.\n// Tier 6: cache-READ-ONLY gate. The strategy is dropped from this cycle to avoid\n// re-running an already-failed prop-firm UCI test. Counts as a graveyard signal.\nconst input = $input.first().json;\nreturn [{\n  json: {\n    skipped: true,\n    reason: 'quantum_pre_flight_failed',\n    score: input.score,\n    qmcRunId: input.qmcRunId,\n    backtestId: input.backtestId,\n    threshold: input.threshold,\n    workflowRunId: input.workflowRunId\n  }\n}];"
+      },
+      "id": "preflight-blocked-noop",
+      "name": "Pre-Flight Blocked (No-Op)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1888,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        1456,
+        848
+      ],
+      "id": "5715c6bc-ce37-4daa-8346-a490deb2d642",
+      "name": "AI Agent Tool"
+    }
+  ],
+  "connections": {
+    "Generate Strategies": {
+      "main": [
+        [
+          {
+            "node": "Parse Ollama Strategy Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Strategies for Backtest": {
+      "main": [
+        [
+          {
+            "node": "Wait 5min for Backtests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5min for Backtests": {
+      "main": [
+        [
+          {
+            "node": "Fetch Completed Backtests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Completed Backtests": {
+      "main": [
+        [
+          {
+            "node": "Critique Backtest Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Critique Backtest Results": {
+      "main": [
+        [
+          {
+            "node": "Post Critique to Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Critique to Agent": {
+      "main": [
+        [
+          {
+            "node": "Log Cycle to Journal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Gen Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Generate Strategies",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Gen Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "5A Gen Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Critique Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Critique Backtest Results",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Critique Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "5A Critique Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Gen Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "5A Gen Memory QA Tool",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Gen Memory QA Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Generate Strategies",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Critique Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "5A Critique Memory QA Tool",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Critique Memory QA Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Critique Backtest Results",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Gen QA LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "5A Gen Memory QA Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5A Critique QA LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "5A Critique Memory QA Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nightly 2AM EST Cron": {
+      "main": [
+        [
+          {
+            "node": "Detect Market Regime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Market Regime": {
+      "main": [
+        [
+          {
+            "node": "Fetch Scouted Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Scouted Ideas": {
+      "main": [
+        [
+          {
+            "node": "Format Scout Context for LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Scout Context for LLM": {
+      "main": [
+        [
+          {
+            "node": "Generate Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Discord: Nightly Research Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-5-mini Generator": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Strategies",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-5-mini Critic": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Critique Backtest Results",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Ollama Strategy Output": {
+      "main": [
+        [
+          {
+            "node": "Quantum Pre-Flight Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quantum Pre-Flight Check": {
+      "main": [
+        [
+          {
+            "node": "Pre-Flight Pass?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre-Flight Pass?": {
+      "main": [
+        [
+          {
+            "node": "Pre-Flight Blocked (No-Op)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Submit Strategies for Backtest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Generate Strategies",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "BbCvlV1ARyyvY3NI"
+  },
+  "staticData": {
+    "node:Nightly 2AM EST Cron": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "versionId": "d169f78f-7408-4eaf-ad79-1352ed9791ad",
+  "activeVersionId": "d169f78f-7408-4eaf-ad79-1352ed9791ad",
+  "versionCounter": 168,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-10T04:18:42.955Z",
+      "createdAt": "2026-03-10T04:18:42.955Z",
+      "role": "workflow:owner",
+      "workflowId": "Z4NcOCDbet8KzjDd",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-05-05T05:46:24.024Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-05-05",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-05T04:50:02.004Z",
+    "createdAt": "2026-05-05T04:50:02.004Z",
+    "versionId": "d169f78f-7408-4eaf-ad79-1352ed9791ad",
+    "workflowId": "Z4NcOCDbet8KzjDd",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 2 * * 1-5"
+              }
+            ]
+          }
+        },
+        "id": "schedule-trigger",
+        "name": "Nightly 2AM EST Cron",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=The current MES (S&P 500 micro) regime is: {{ $('Detect Market Regime').item.json.regime }} (ADX: {{ $('Detect Market Regime').item.json.adx }}). Use this as a directional proxy for equity-index regime context; for MCL (crude micro) and MNQ (Nasdaq micro), assume mixed/unknown regime unless otherwise indicated.\n\nGenerate 15 vectorbt-compatible strategies covering Trading Forge's three approved micro-futures contracts: 5 for MES, 5 for MNQ, 5 for MCL.\n\nEach strategy MUST conform to the StrategyDSL schema (src/engine/compiler/strategy_schema.py):\n- symbol: EXACT string, one of [MES, MNQ, MCL] (NOT ES, NQ, or CL \u00e2\u20ac\u201d those are big contracts and out of scope)\n- timeframe: one of [1m, 5m, 15m, 30m, 1h, 4h, 1d]\n- direction: long | short | both\n- entry_type: one of [breakout, mean_reversion, trend_follow, volatility_expansion, session_pattern, event_driven]\n- entry_indicator: a value from kb/indicator-catalog.md (RSI, EMA, SMA, ATR, VWAP, Bollinger, Donchian, Keltner, MACD, etc.)\n- entry_params: object, MAX 5 keys, prefer round numbers (RSI 70, not 67.3 \u00e2\u20ac\u201d tight precision is the overfitting anti-pattern)\n- exit_type: one of [fixed_target, trailing_stop, time_exit, indicator_signal, atr_multiple]\n- stop_loss_atr_multiple, take_profit_atr_multiple: numbers; SL < TP when both set\n- name: snake_case, \u00e2\u2030\u00a4 100 chars\n- description: one sentence, 10-500 chars\n- preferred_regime: from kb/regime-taxonomy.md\n\nDistribute across regimes (TRENDING, RANGE_BOUND, VOLATILE, OPENING_RANGE, NEWS_DRIVEN, OVERNIGHT_DRIFT). MES regime above is a directional hint, not a constraint.\n\nReturn ONLY a JSON array of 15 StrategyDSL objects. No markdown fences, no prose outside the JSON.",
+          "options": {
+            "systemMessage": "You are an extraction-oriented multi-symbol futures-strategy proposer for Trading Forge \u00e2\u20ac\u201d an autonomous research lab targeting MES (S&P 500 micro), MNQ (Nasdaq micro), and MCL (crude oil micro). You design systematic strategies with proven statistical edges (mean reversion, momentum, volatility expansion, session patterns, event-driven). Your bias is REFUSAL over fabrication: you propose only edges with concrete entry/exit triggers; you never invent precise parameter values. Strategies MUST conform exactly to the StrategyDSL schema (src/engine/compiler/strategy_schema.py): symbol is one of [MES, MNQ, MCL] EXACTLY (never ES, NQ, or CL \u00e2\u20ac\u201d those big contracts are out of scope), max 5 entry_params, round-number params (RSI 70 not 67.3), SL < TP when both set, name snake_case \u00e2\u2030\u00a4100 chars, description one sentence. Output JSON-only, no markdown fences, no prose."
+          }
+        },
+        "id": "ai-agent-gen",
+        "name": "Generate Strategies",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          960,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json.output || $input.first().json.text || '';\n\n// Extract JSON array from response (handle markdown code fences)\nlet jsonStr = raw;\nconst fenceMatch = raw.match(/```(?:json)?\\s*([\\s\\S]*?)```/);\nif (fenceMatch) {\n  jsonStr = fenceMatch[1].trim();\n}\n\n// Try to find array brackets if not already clean\nconst arrayMatch = jsonStr.match(/(\\[[\\s\\S]*\\])/);\nif (arrayMatch) {\n  jsonStr = arrayMatch[1];\n}\n\nlet strategies;\ntry {\n  strategies = JSON.parse(jsonStr);\n} catch (e) {\n  return [{\n    json: {\n      error: 'Failed to parse Ollama output as JSON',\n      raw_output: raw.substring(0, 500),\n      parse_error: e.message\n    }\n  }];\n}\n\nif (!Array.isArray(strategies)) {\n  strategies = [strategies];\n}\n\nconst enriched = strategies.map(s => ({\n  json: {\n    strategy_name: s.strategy_name || 'unnamed',\n    one_sentence: s.one_sentence || '',\n    python_code: s.python_code || '',\n    params: s.params || {},\n    symbol: 'ES',\n    timeframe: '15min',\n    start_date: '2024-01-01',\n    end_date: '2024-12-31',\n    source: 'ollama'\n  }\n}));\n\nreturn enriched;"
+        },
+        "id": "code-parse",
+        "name": "Parse Ollama Strategy Output",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1552,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/batch",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "http-batch-submit",
+        "name": "Submit Strategies for Backtest",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1776,
+          304
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "unit": "minutes"
+        },
+        "id": "wait-backtest",
+        "name": "Wait 5min for Backtests",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          2000,
+          304
+        ],
+        "webhookId": "d7b1ba09-2562-458b-83a3-63e92ad76d4a"
+      },
+      {
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=5",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "http-fetch-results",
+        "name": "Fetch Completed Backtests",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2224,
+          304
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=Review these backtest results. Which strategies pass all gates (Sharpe >= 1.5, PF >= 1.75, win rate >= 60%, max DD <= $2K)? Suggest param refinements for borderline strategies. Here are the results:\n\n{{ JSON.stringify($json) }}",
+          "options": {
+            "systemMessage": "You are a senior risk manager and trading strategy reviewer. You evaluate backtest results against strict performance gates. Be critical and data-driven. For borderline strategies, suggest specific parameter adjustments that could improve performance."
+          }
+        },
+        "id": "ai-agent-critique",
+        "name": "Critique Backtest Results",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          2496,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/critique",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "http-post-critique",
+        "name": "Post Critique to Agent",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3088,
+          304
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/journal",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {}
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "http-log-journal",
+        "name": "Log Cycle to Journal",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3312,
+          304
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "5a-strategy-gen",
+          "tableName": "memory_5a_strategy_gen",
+          "contextWindowLength": 10
+        },
+        "id": "2ee72890-2889-4ae0-84e9-fda4f290fec9",
+        "name": "5A Gen Chat Memory",
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [
+          1024,
+          528
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "XDOEjC2s3oL432Lj",
+            "name": "Postgres account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "model": "nomic-embed-text"
+        },
+        "id": "9f325f4f-68cc-431d-8d36-527f07725768",
+        "name": "5A Gen Embeddings",
+        "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+        "typeVersion": 1,
+        "position": [
+          1136,
+          944
+        ],
+        "credentials": {
+          "ollamaApi": {
+            "id": "BLgLWvmLGaJQOYaF",
+            "name": "Ollama account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "tableName": "vectors_5a_strategy_gen",
+          "options": {}
+        },
+        "id": "5546f0aa-2eb2-4928-9a49-d72f20603dfb",
+        "name": "5A Gen Vector Store",
+        "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+        "typeVersion": 1.3,
+        "position": [
+          1056,
+          736
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "XDOEjC2s3oL432Lj",
+            "name": "Postgres account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "5a-strategy-critique",
+          "tableName": "memory_5a_strategy_critique",
+          "contextWindowLength": 10
+        },
+        "id": "a461181e-63eb-4743-b606-35061ad48307",
+        "name": "5A Critique Chat Memory",
+        "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+        "typeVersion": 1.3,
+        "position": [
+          2576,
+          528
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "XDOEjC2s3oL432Lj",
+            "name": "Postgres account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "model": "nomic-embed-text"
+        },
+        "id": "57b030bd-49b2-4eec-9867-6f090bec4295",
+        "name": "5A Critique Embeddings",
+        "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+        "typeVersion": 1,
+        "position": [
+          2672,
+          944
+        ],
+        "credentials": {
+          "ollamaApi": {
+            "id": "BLgLWvmLGaJQOYaF",
+            "name": "Ollama account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "tableName": "vectors_5a_strategy_critique",
+          "options": {}
+        },
+        "id": "b71c45b6-3be7-4058-a96c-a4fbf8686bf3",
+        "name": "5A Critique Vector Store",
+        "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+        "typeVersion": 1.3,
+        "position": [
+          2592,
+          736
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "XDOEjC2s3oL432Lj",
+            "name": "Postgres account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {},
+        "id": "59959d9c-aa2d-44f5-b440-5d34d66c7538",
+        "name": "5A Gen Memory QA Tool",
+        "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+        "typeVersion": 1.1,
+        "position": [
+          1152,
+          528
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {},
+        "id": "f607f4c9-47b2-4a8e-b2ff-965d4a24bf94",
+        "name": "5A Critique Memory QA Tool",
+        "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+        "typeVersion": 1.1,
+        "position": [
+          2704,
+          528
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "model": "deepseek-r1:14b",
+          "options": {}
+        },
+        "id": "b3c8f3d0-4dfc-4624-9977-c628277b7cb7",
+        "name": "5A Gen QA LLM",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+        "typeVersion": 1,
+        "position": [
+          1344,
+          736
+        ],
+        "credentials": {
+          "ollamaApi": {
+            "id": "BLgLWvmLGaJQOYaF",
+            "name": "Ollama account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "model": "deepseek-r1:14b",
+          "options": {}
+        },
+        "id": "03a4ab1d-d1e8-4aea-a12a-3831b922414b",
+        "name": "5A Critique QA LLM",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+        "typeVersion": 1,
+        "position": [
+          2880,
+          736
+        ],
+        "credentials": {
+          "ollamaApi": {
+            "id": "BLgLWvmLGaJQOYaF",
+            "name": "Ollama account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/analyze-market",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ symbol: 'MES', timeframe: '1h' }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "detect-regime",
+        "name": "Detect Market Regime",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          224,
+          304
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "http-fetch-scouted",
+        "name": "Fetch Scouted Ideas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          448,
+          304
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\n// Filter out untitled/empty scout results\nconst validIdeas = items.filter(item => {\n  const title = item.json.title || item.json.name || '';\n  const desc = item.json.description || item.json.summary || '';\n  if (!title.trim() || title.toLowerCase() === 'untitled' || title.trim().length < 10) return false;\n  if (!desc.trim() || desc.trim().length < 20) return false;\n  return true;\n});\n\nif (validIdeas.length === 0) {\n  return [{ json: { scoutContext: '\\nNo high-quality research discoveries available for this cycle.', scoutedIdeaCount: 0 } }];\n}\n\nconst lines = validIdeas.slice(0, 5).map((item, i) => {\n  const source = item.json.source || 'web';\n  const title = (item.json.title || item.json.name || 'Untitled').slice(0, 100);\n  const desc = (item.json.description || item.json.summary || '').slice(0, 200);\n  return `${i + 1}. [${source}] ${title}: ${desc}`;\n});\n\nreturn [{\n  json: {\n    scoutContext: `\\n\\nRecent research discoveries to consider when generating strategies:\\n${lines.join('\\n')}`,\n    scoutedIdeaCount: validIdeas.length\n  }\n}];"
+        },
+        "id": "code-format-scout-context",
+        "name": "Format Scout Context for LLM",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          304
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "error-trigger",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          1408
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { title: 'Nightly Research Error', message: ('Nightly research failed: ' + (($input.first().json.execution && $input.first().json.execution.error && $input.first().json.execution.error.message) || ($input.first().json.error && $input.first().json.error.message) || 'Unknown error')).slice(0, 500), severity: 'warning', data: { workflow: 'Nightly Strategy Research Loop', timestamp: new Date().toISOString() } } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "id": "http-error-alert",
+        "name": "Discord: Nightly Research Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          256,
+          1408
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "id",
+            "value": "gpt-5-mini"
+          },
+          "responsesApiEnabled": false,
+          "options": {}
+        },
+        "id": "openai-gen-model",
+        "name": "GPT-5-mini Generator",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          896,
+          528
+        ],
+        "credentials": {
+          "openAiApi": {
+            "id": "LuoyBP8Xv16VTirj",
+            "name": "Trading Forge Proxy (OpenAI)"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "id",
+            "value": "gpt-5-mini"
+          },
+          "responsesApiEnabled": false,
+          "options": {}
+        },
+        "id": "openai-critique-model",
+        "name": "GPT-5-mini Critic",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          2448,
+          528
+        ],
+        "credentials": {
+          "openAiApi": {
+            "id": "LuoyBP8Xv16VTirj",
+            "name": "Trading Forge Proxy (OpenAI)"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.TRADING_FORGE_API_URL || 'http://host.docker.internal:4000' }}/api/quantum/pre-flight",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.TRADING_FORGE_API_KEY }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"dsl\": {{ JSON.stringify($json.strategy_config || $json) }},\n  \"workflowRunId\": \"{{ $execution.id }}\",\n  \"source\": \"nightly_strategy_research_loop\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            },
+            "timeout": 5000
+          }
+        },
+        "id": "quantum-preflight-check",
+        "name": "Quantum Pre-Flight Check",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1664,
+          144
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "preflight-block",
+                "leftValue": "={{ $json.cached === true && $json.passed === false }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "quantum-preflight-gate",
+        "name": "Pre-Flight Pass?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1664,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Pre-flight blocked this strategy because a prior quantum_mc_run produced UCI > threshold.\n// Tier 6: cache-READ-ONLY gate. The strategy is dropped from this cycle to avoid\n// re-running an already-failed prop-firm UCI test. Counts as a graveyard signal.\nconst input = $input.first().json;\nreturn [{\n  json: {\n    skipped: true,\n    reason: 'quantum_pre_flight_failed',\n    score: input.score,\n    qmcRunId: input.qmcRunId,\n    backtestId: input.backtestId,\n    threshold: input.threshold,\n    workflowRunId: input.workflowRunId\n  }\n}];"
+        },
+        "id": "preflight-blocked-noop",
+        "name": "Pre-Flight Blocked (No-Op)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1888,
+          -144
+        ]
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agentTool",
+        "typeVersion": 3,
+        "position": [
+          1456,
+          848
+        ],
+        "id": "5715c6bc-ce37-4daa-8346-a490deb2d642",
+        "name": "AI Agent Tool"
+      }
+    ],
+    "connections": {
+      "Generate Strategies": {
+        "main": [
+          [
+            {
+              "node": "Parse Ollama Strategy Output",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Submit Strategies for Backtest": {
+        "main": [
+          [
+            {
+              "node": "Wait 5min for Backtests",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait 5min for Backtests": {
+        "main": [
+          [
+            {
+              "node": "Fetch Completed Backtests",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Completed Backtests": {
+        "main": [
+          [
+            {
+              "node": "Critique Backtest Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Critique Backtest Results": {
+        "main": [
+          [
+            {
+              "node": "Post Critique to Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Post Critique to Agent": {
+        "main": [
+          [
+            {
+              "node": "Log Cycle to Journal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Gen Chat Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Generate Strategies",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Gen Embeddings": {
+        "ai_embedding": [
+          [
+            {
+              "node": "5A Gen Vector Store",
+              "type": "ai_embedding",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Critique Chat Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "Critique Backtest Results",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Critique Embeddings": {
+        "ai_embedding": [
+          [
+            {
+              "node": "5A Critique Vector Store",
+              "type": "ai_embedding",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Gen Vector Store": {
+        "ai_vectorStore": [
+          [
+            {
+              "node": "5A Gen Memory QA Tool",
+              "type": "ai_vectorStore",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Gen Memory QA Tool": {
+        "ai_tool": [
+          [
+            {
+              "node": "Generate Strategies",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Critique Vector Store": {
+        "ai_vectorStore": [
+          [
+            {
+              "node": "5A Critique Memory QA Tool",
+              "type": "ai_vectorStore",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Critique Memory QA Tool": {
+        "ai_tool": [
+          [
+            {
+              "node": "Critique Backtest Results",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Gen QA LLM": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "5A Gen Memory QA Tool",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "5A Critique QA LLM": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "5A Critique Memory QA Tool",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nightly 2AM EST Cron": {
+        "main": [
+          [
+            {
+              "node": "Detect Market Regime",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Detect Market Regime": {
+        "main": [
+          [
+            {
+              "node": "Fetch Scouted Ideas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Scouted Ideas": {
+        "main": [
+          [
+            {
+              "node": "Format Scout Context for LLM",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Scout Context for LLM": {
+        "main": [
+          [
+            {
+              "node": "Generate Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "Discord: Nightly Research Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPT-5-mini Generator": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Generate Strategies",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPT-5-mini Critic": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Critique Backtest Results",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Ollama Strategy Output": {
+        "main": [
+          [
+            {
+              "node": "Quantum Pre-Flight Check",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Quantum Pre-Flight Check": {
+        "main": [
+          [
+            {
+              "node": "Pre-Flight Pass?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Pre-Flight Pass?": {
+        "main": [
+          [
+            {
+              "node": "Pre-Flight Blocked (No-Op)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Submit Strategies for Backtest",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent Tool": {
+        "ai_tool": [
+          [
+            {
+              "node": "Generate Strategies",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-05T04:50:02.029Z",
+        "id": 1637,
+        "workflowId": "Z4NcOCDbet8KzjDd",
+        "versionId": "d169f78f-7408-4eaf-ad79-1352ed9791ad",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

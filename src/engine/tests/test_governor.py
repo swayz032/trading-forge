@@ -139,7 +139,8 @@ class TestGovernorStateMachine:
         gov.reset_session()
         assert gov.session_pnl == 0.0
         assert gov.session_trades == 0
-        assert gov.consecutive_losses == 0
+        # consecutive_losses persists across sessions for cross-session streak tracking
+        assert gov.consecutive_losses == 2
 
 
 # ─── Session Tracker Tests ───────────────────────────────────────

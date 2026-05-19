@@ -1,0 +1,44 @@
+{
+  "_comment": "KILL example. Negative ablation Sharpe delta, high PBO, miscalibrated engine.",
+  "input": {
+    "bias_decisions_sample": {
+      "count": 287,
+      "coverage_days": 68,
+      "engine_mode_distribution": { "SHADOW": 287 },
+      "hysteresis_applied_pct": 0.51,
+      "playbook_distribution": {
+        "TREND_CONTINUATION_LONG": 103,
+        "TREND_CONTINUATION_SHORT": 91,
+        "SWEEP_REVERSAL_LONG": 22,
+        "SWEEP_REVERSAL_SHORT": 19,
+        "MEAN_REVERSION_LONG": 26,
+        "MEAN_REVERSION_SHORT": 26,
+        "NO_TRADE": 0
+      }
+    },
+    "bias_calibration_curves_latest": {
+      "fit_at": "2026-05-09T06:00:00Z",
+      "window_days": 90,
+      "curve_method": "platt",
+      "curve_params": { "intercept": 0.38, "slope": 0.21 },
+      "reliability_score": 0.29,
+      "version": "1.0.0"
+    },
+    "bias_ablation_results_latest": {
+      "run_at": "2026-05-09T06:15:00Z",
+      "period_start": "2018-01-01",
+      "period_end": "2026-12-31",
+      "mode_off_sharpe": 0.0,
+      "mode_gated_sharpe": -0.21,
+      "sharpe_delta": -0.21,
+      "cost_multiplier": 2.0,
+      "pbo_score": 0.67,
+      "gpt5_verdict": null
+    }
+  },
+  "output": {
+    "verdict": "KILL",
+    "reasoning": "The bias engine lost 0.21 Sharpe compared to making no decisions at all — it is actively worse than random. The calibration Brier score (0.29) is poor, meaning the engine's confidence numbers are unreliable. The hysteresis rate is 51%, which means the router is oscillating almost every other decision rather than holding a position long enough to matter. All three signals point the same direction: the engine is adding noise, not signal.",
+    "evidence_summary": "68 days, 287 decisions — adequate sample. Calibration Brier: 0.29 (poor — engine's confidence is not meaningful). Sharpe delta: -0.21 (the engine hurt performance relative to making no call at all). PBO: 0.67 (high overfitting risk — even the bad result may not be a stable bad result). Hysteresis rate: 51% (router is flip-flopping constantly). Conclusion: the bias engine in its current form is not helping. Kill it (flip BIAS_ENGINE_MODE back to OFF), and diagnose the feature snapshot quality or HMM state design before re-attempting SHADOW mode."
+  }
+}

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Manual pre-commit hook — KB schema snapshot freshness check.
+#
+# This repo does NOT have Husky installed. To enable this hook manually:
+#
+#   cp scripts/hooks/pre-commit-schema-snapshot.sample .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# Or, if you already have a .git/hooks/pre-commit, append this body to it.
+#
+# Behavior:
+#   - If `src/engine/compiler/strategy_schema.py` (or any file under that dir)
+#     is in the staged diff, run `npm run kb:schema-snapshot:check`.
+#   - The :check variant regenerates the snapshot in memory and compares to
+#     the committed copy. If different, exits 1 and prints a remediation
+#     message. Commit aborts.
+#   - If schema files are not staged, this hook is a no-op.
+#
+# When schema_versions/ shipping happens later, extend the regex below.
+
+set -e
+
+CHANGED=$(git diff --cached --name-only --diff-filter=ACMR -- 'src/engine/compiler/strategy_schema.py' 'src/engine/compiler/schema_versions/' 2>/dev/null || true)
+
+if [ -z "$CHANGED" ]; then
+  exit 0
+fi
+
+echo "[pre-commit] strategy_schema.py changed — verifying KB snapshot freshness…"
+if ! npm run --silent kb:schema-snapshot:check; then
+  echo
+  echo "[pre-commit] ABORT: src/agents/kb/strategy-schema-snapshot.json is out of sync."
+  echo "  Fix: run \`npm run kb:schema-snapshot\` then \`git add src/agents/kb/strategy-schema-snapshot.json src/agents/kb/strategy-schema-snapshot.sha256\`."
+  exit 1
+fi
+
+exit 0

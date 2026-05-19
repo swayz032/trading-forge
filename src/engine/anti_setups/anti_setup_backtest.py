@@ -108,7 +108,7 @@ def _compute_stats(trades: list[dict]) -> dict:
 
     pnls = [t.get("pnl", 0) for t in trades]
     total_pnl = sum(pnls)
-    winners = sum(1 for p in pnls if p >= 0)
+    winners = sum(1 for p in pnls if p > 0)
     win_rate = winners / len(pnls) if pnls else 0.0
 
     # Sharpe: mean / stdev (annualize not needed for comparison)

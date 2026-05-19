@@ -1,0 +1,45 @@
+{
+  "_comment": "STAY_IN_SHADOW example. Adequate sample and positive Sharpe but PBO too high.",
+  "input": {
+    "bias_decisions_sample": {
+      "count": 241,
+      "coverage_days": 61,
+      "engine_mode_distribution": { "SHADOW": 241 },
+      "hysteresis_applied_pct": 0.18,
+      "playbook_distribution": {
+        "TREND_CONTINUATION_LONG": 72,
+        "TREND_CONTINUATION_SHORT": 63,
+        "SWEEP_REVERSAL_LONG": 44,
+        "SWEEP_REVERSAL_SHORT": 38,
+        "MEAN_REVERSION_LONG": 12,
+        "MEAN_REVERSION_SHORT": 12,
+        "NO_TRADE": 0
+      }
+    },
+    "bias_calibration_curves_latest": {
+      "fit_at": "2026-05-09T06:00:00Z",
+      "window_days": 90,
+      "curve_method": "isotonic",
+      "curve_params": { "breakpoints": [0.3, 0.5, 0.7, 0.85], "values": [0.28, 0.48, 0.66, 0.80] },
+      "reliability_score": 0.11,
+      "version": "1.0.0"
+    },
+    "bias_ablation_results_latest": {
+      "run_at": "2026-05-09T06:15:00Z",
+      "period_start": "2018-01-01",
+      "period_end": "2026-12-31",
+      "mode_off_sharpe": 0.0,
+      "mode_gated_sharpe": 0.19,
+      "sharpe_delta": 0.19,
+      "cost_multiplier": 2.0,
+      "pbo_score": 0.57,
+      "gpt5_verdict": null
+    }
+  },
+  "output": {
+    "verdict": "STAY_IN_SHADOW",
+    "reasoning": "The Sharpe lift (+0.19) looks encouraging, and the sample size is adequate (241 decisions, 61 days). However, the PBO score is 0.57 — meaning there is a 57% chance this lift was overfitted to the particular historical window tested. That exceeds the 0.50 hard floor. Calibration is acceptable (Brier 0.11) but the overfitting risk alone is sufficient reason to wait.",
+    "next_review_days": 30,
+    "evidence_summary": "61 days, 241 decisions. Calibration Brier: 0.11 (acceptable). Sharpe lift: +0.19 (real-looking, but we cannot trust it). PBO: 0.57 (above the 0.50 ceiling — more than half the time, this result would flip negative on new data). Come back in 30 days with more out-of-sample decisions. The engine is not broken — it just needs more evidence before we trust it with sizing authority."
+  }
+}

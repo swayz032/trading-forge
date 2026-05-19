@@ -8,81 +8,45 @@
  */
 
 import { Router } from "express";
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
 import { z } from "zod";
 import { db } from "../db/index.js";
 import { skipDecisions } from "../db/schema.js";
-import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
-import { logger } from "../index.js";
+import { eq, desc, and, gte, lte } from "drizzle-orm";
+import { runPythonModule } from "../lib/python-runner.js";
+import { getRegimeState, getAllRegimeState } from "../services/regime-state-service.js";
+import { getLatestForecast, getDeepARWeight } from "../services/deepar-service.js";
 
 export const skipRoutes = Router();
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
+/**
+ * Symbol used to fetch regime weights for portfolio-wide skip decisions.
+ * NQ is Trading Forge's primary instrument — when no symbol is in the
+ * signal payload, NQ regime is used as the proxy for "market regime".
+ */
+const DEFAULT_REGIME_SYMBOL = "NQ";
 
-// ─── Python subprocess helper ──────────────────────────────────
-
-function runPython(module: string, configJson: string): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", module, "--config", configJson];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "skip-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse skip engine output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Skip engine failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      if (pythonCmd === "python") {
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let stdout2 = "";
-        let stderr2 = "";
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
-          } else {
-            reject(new Error(`Skip engine failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => reject(err));
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
+const stableSkipDecisionSelect = {
+  id: skipDecisions.id,
+  strategyId: skipDecisions.strategyId,
+  decisionDate: skipDecisions.decisionDate,
+  decision: skipDecisions.decision,
+  score: skipDecisions.score,
+  signals: skipDecisions.signals,
+  triggeredSignals: skipDecisions.triggeredSignals,
+  reason: skipDecisions.reason,
+  override: skipDecisions.override,
+  overrideReason: skipDecisions.overrideReason,
+  actualOutcome: skipDecisions.actualOutcome,
+  actualPnl: skipDecisions.actualPnl,
+  createdAt: skipDecisions.createdAt,
+};
 
 // ─── Validation Schemas ──────────────────────────────────────────
 
 const classifySchema = z.object({
   strategy_id: z.string().uuid().optional(),
+  /** Optional symbol override for regime weighting; defaults to NQ */
+  symbol: z.string().optional(),
   signals: z.object({
     event_proximity: z.object({
       event: z.string(),
@@ -102,6 +66,20 @@ const classifySchema = z.object({
       roll_week: z.boolean().optional(),
     }).optional(),
     bad_days: z.array(z.string()).optional(),
+    /** C1: caller may pre-attach regime weights; otherwise route fetches them */
+    regime_probs: z.object({
+      high_vol: z.number(),
+      trending: z.number(),
+      mean_revert: z.number(),
+      effective_weight: z.number(),
+    }).optional(),
+    /**
+     * Tier 1.3 slot — Quantum Entropy Filter (Tier 3.1 / W3a).
+     * When QUANTUM_ENTROPY_FILTER_ENABLED=false (default), callers omit this
+     * field or pass null; skip_classifier receives None and scores 0.0.
+     * When the entropy filter ships, callers pass a normalized [0,1] noise score.
+     */
+    quantum_noise_score: z.number().min(0).max(1).nullable().optional(),
   }),
 });
 
@@ -114,6 +92,14 @@ const backtestSchema = z.object({
   skip_threshold: z.number().default(6.0),
   reduce_threshold: z.number().default(3.0),
   reduce_size_factor: z.number().min(0).max(1).default(0.5),
+});
+
+const SkipResult = z.object({
+  decision: z.enum(["TRADE", "REDUCE", "SKIP"]),
+  score: z.number(),
+  signals: z.array(z.object({ name: z.string(), score: z.number(), detail: z.string() })).optional(),
+  triggered_signals: z.array(z.string()).optional(),
+  reason: z.string().optional(),
 });
 
 const overrideSchema = z.object({
@@ -135,32 +121,111 @@ skipRoutes.post("/classify", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.skip_engine.skip_classifier",
-      JSON.stringify(parsed.data),
-    );
+    // C1: enrich signals with DeepAR regime state if caller didn't attach it.
+    // We never fail the skip classify if regime fetch errors — the classifier
+    // simply scores regime_bias as 0 when the field is absent.
+    //
+    // Wiring order:
+    //   1. getRegimeState — in-memory (set by scheduler after predictRegime),
+    //      or DB fallback, or uniform fallback.
+    //   2. If getRegimeState returned uniform fallback (source === "fallback_uniform"),
+    //      attempt a direct getLatestForecast() to hydrate raw DeepAR probs.
+    //      This ensures the pre-session path never silently degrades to uniform
+    //      weights when a real forecast row exists but the in-memory map was cleared.
+    //   3. DeepAR governance: if getDeepARWeight() === 0, effective_weight is 0 and
+    //      skip_classifier contributes 0 from regime_bias — challenger_only preserved.
+    let enrichedSignals: Record<string, unknown> = { ...parsed.data.signals };
+    if (!parsed.data.signals.regime_probs) {
+      try {
+        const regimeSym = parsed.data.symbol ?? DEFAULT_REGIME_SYMBOL;
+        const regime = await getRegimeState(regimeSym);
 
-    // Store decision in DB
+        // If the regime-state service fell back to uniform weights (in-memory map
+        // was empty AND DB had no row), attempt a direct DeepAR forecast read.
+        // This closes the gap where the scheduler hasn't run yet today but a
+        // forecast row from a prior run exists in deeparForecasts.
+        let high_vol = regime.weights.high_vol;
+        let trending = regime.weights.trending;
+        let mean_revert = regime.weights.mean_revert;
+        let effectiveWeight = regime.effectiveWeight;
+
+        if (regime.source === "fallback_uniform") {
+          try {
+            const rawForecast = await getLatestForecast(regimeSym);
+            if (rawForecast) {
+              // Raw forecast exists — override the uniform fallback values.
+              // effective_weight still comes from getDeepARWeight() so governance
+              // is not loosened: challenger_only weight is still 0 in shadow mode.
+              high_vol = Number(rawForecast.pHighVol ?? 1 / 3);
+              trending = Number(rawForecast.pTrending ?? 1 / 3);
+              mean_revert = Number(rawForecast.pMeanRevert ?? 1 / 3);
+              effectiveWeight = getDeepARWeight();
+              req.log.info(
+                { symbol: regimeSym, forecastDate: rawForecast.forecastDate, effectiveWeight },
+                "Skip classify: hydrated regime_probs from raw DeepAR forecast (fallback path)",
+              );
+            }
+          } catch (forecastErr) {
+            // Non-blocking — uniform weights will be used; classifier scores 0 for regime_bias.
+            req.log.warn({ err: forecastErr, symbol: regimeSym }, "Skip classify: direct DeepAR forecast fetch failed (non-blocking)");
+          }
+        }
+
+        enrichedSignals = {
+          ...enrichedSignals,
+          regime_probs: {
+            high_vol,
+            trending,
+            mean_revert,
+            effective_weight: effectiveWeight,
+          },
+        };
+      } catch (regimeErr) {
+        req.log.warn({ err: regimeErr }, "Skip classify: regime state fetch failed (non-blocking)");
+      }
+    }
+
+    const pythonConfig = {
+      ...parsed.data,
+      signals: enrichedSignals,
+    };
+
+    const raw = await runPythonModule({
+      module: "src.engine.skip_engine.skip_classifier",
+      config: pythonConfig as unknown as Record<string, unknown>,
+      componentName: "skip-classifier",
+    });
+
+    const skipParsed = SkipResult.safeParse(raw);
+    if (!skipParsed.success) {
+      req.log.error({ issues: skipParsed.error.issues }, "Invalid skip classifier response");
+      res.status(502).json({ error: "Invalid skip classifier response", details: skipParsed.error.issues });
+      return;
+    }
+    const result = skipParsed.data;
+
+    // Store decision in DB — persist the enriched signals so replay sees the
+    // exact regime weights we used (replayability is non-negotiable).
     const [saved] = await db.insert(skipDecisions).values({
       strategyId: parsed.data.strategy_id || null,
       decisionDate: new Date(),
-      decision: String(result.decision),
+      decision: result.decision,
       score: String(result.score),
-      signals: parsed.data.signals,
+      signals: enrichedSignals,
       triggeredSignals: result.triggered_signals as string[],
       reason: String(result.reason || ""),
     }).returning();
 
     res.json({ ...result, id: saved.id });
   } catch (err) {
-    logger.error({ err }, "Skip classify failed");
+    req.log.error({ err }, "Skip classify failed");
     res.status(500).json({ error: "Skip classification failed", details: String(err) });
   }
 });
 
 // ─── GET /api/skip/today ──────────────────────────────────────────
 // Today's skip decisions for all strategies
-skipRoutes.get("/today", async (_req, res) => {
+skipRoutes.get("/today", async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -168,7 +233,7 @@ skipRoutes.get("/today", async (_req, res) => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const decisions = await db
-      .select()
+      .select(stableSkipDecisionSelect)
       .from(skipDecisions)
       .where(
         and(
@@ -178,9 +243,17 @@ skipRoutes.get("/today", async (_req, res) => {
       )
       .orderBy(desc(skipDecisions.createdAt));
 
-    res.json({ date: today.toISOString().split("T")[0], decisions });
+    // C1: surface current regime state alongside decisions so dashboards
+    // and n8n workflows see the same view the classifier used.
+    const regimeState = getAllRegimeState();
+
+    res.json({
+      date: today.toISOString().split("T")[0],
+      decisions,
+      regime: regimeState,
+    });
   } catch (err) {
-    logger.error({ err }, "Failed to fetch today's skip decisions");
+    req.log.error({ err }, "Failed to fetch today's skip decisions");
     res.status(500).json({ error: "Failed to fetch today's decisions", details: String(err) });
   }
 });
@@ -195,13 +268,14 @@ skipRoutes.post("/backtest", async (req, res) => {
   }
 
   try {
-    const result = await runPython(
-      "src.engine.skip_engine.historical_skip_stats",
-      JSON.stringify(parsed.data),
-    );
+    const result = await runPythonModule({
+      module: "src.engine.skip_engine.historical_skip_stats",
+      config: parsed.data as unknown as Record<string, unknown>,
+      componentName: "skip-backtester",
+    });
     res.json(result);
   } catch (err) {
-    logger.error({ err }, "Skip backtest failed");
+    req.log.error({ err }, "Skip backtest failed");
     res.status(500).json({ error: "Skip backtest failed", details: String(err) });
   }
 });
@@ -221,7 +295,7 @@ skipRoutes.get("/history", async (req, res) => {
     }
 
     const query = db
-      .select()
+      .select(stableSkipDecisionSelect)
       .from(skipDecisions)
       .orderBy(desc(skipDecisions.decisionDate))
       .limit(Number(limit))
@@ -235,7 +309,7 @@ skipRoutes.get("/history", async (req, res) => {
       res.json({ decisions, limit: Number(limit), offset: Number(offset) });
     }
   } catch (err) {
-    logger.error({ err }, "Failed to fetch skip history");
+    req.log.error({ err }, "Failed to fetch skip history");
     res.status(500).json({ error: "Failed to fetch history", details: String(err) });
   }
 });
@@ -267,7 +341,7 @@ skipRoutes.patch("/:id/override", async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    logger.error({ err }, "Failed to override skip decision");
+    req.log.error({ err }, "Failed to override skip decision");
     res.status(500).json({ error: "Override failed", details: String(err) });
   }
 });
@@ -299,7 +373,7 @@ skipRoutes.patch("/:id/outcome", async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    logger.error({ err }, "Failed to record outcome");
+    req.log.error({ err }, "Failed to record outcome");
     res.status(500).json({ error: "Outcome update failed", details: String(err) });
   }
 });

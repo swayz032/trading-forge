@@ -1,0 +1,205 @@
+[
+  {
+    "name": "5G-brave-search-scout",
+    "oldId": "9poOSNOCuWsJQidZ",
+    "newId": "51vtQf8XwXuWFt6G",
+    "activeInSource": true,
+    "source": "fresh-w9"
+  },
+  {
+    "name": "3A-workflow-backup",
+    "oldId": "fCwCHrq0zXYtbTox",
+    "newId": "5bfT33w0TylM0Hbk",
+    "activeInSource": true,
+    "source": "fresh-w9"
+  },
+  {
+    "name": "5H-reddit-scout",
+    "oldId": "PlX9TmXAkIoRRKTO",
+    "newId": "xXt5uAIAAxBvsD1c",
+    "activeInSource": true,
+    "source": "fresh-w9"
+  },
+  {
+    "name": "Nightly Strategy Research Loop",
+    "oldId": "ZUq9UufuWh5gZJi2",
+    "newId": "MTnzkeGMAEeE7HQu",
+    "activeInSource": true,
+    "source": "fresh-w9"
+  },
+  {
+    "name": "10A-master-orchestration",
+    "oldId": "UhAvoHwWdrgxyAod",
+    "newId": "LTH2vot3Mv9B5AHb",
+    "activeInSource": true,
+    "source": "fresh-may17"
+  },
+  {
+    "name": "6D-compliance-gate",
+    "oldId": "hiGZoK75NTUeSfrr",
+    "newId": "UJUSRydbOZHDq7LB",
+    "activeInSource": true,
+    "source": "fresh-may17"
+  },
+  {
+    "name": "Macro Data Sync - Morning (7am Skip Classifier)",
+    "oldId": "wL2GrvUVHvpVL5Pi",
+    "newId": "hhGHmV0JSlpI5raC",
+    "activeInSource": true,
+    "source": "fresh-may17"
+  },
+  {
+    "name": "Weekly Strategy Hunt",
+    "oldId": "hzoWiVeKdhXSI31v",
+    "newId": "TaRpu6HwVsVB3XgY",
+    "activeInSource": true,
+    "source": "fresh-may17"
+  },
+  {
+    "name": "0A-health-monitor",
+    "oldId": "66HEjQavpvirY6g5",
+    "newId": "DGEk1D478xWJClKD",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "11A-critic-optimization",
+    "oldId": "pVT6svNTljjBoQbW",
+    "newId": "MXTkxH5x8yjpLNXS",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "5A-weekly-tournament",
+    "oldId": "2rVOEn4LnMAubTmW",
+    "newId": "iGjDyKYpxNFzoXCw",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "5P-nemo-scenario-generator",
+    "oldId": "5PNeMoScenarioGenerator001",
+    "newId": "0ooxmt74fCtHiTo6",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "7A-auto-evolution",
+    "oldId": "MIIxmilbgZv3SUBh",
+    "newId": "eEt2dJrZbV6C7TRL",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "8A-idea-to-strategy",
+    "oldId": "vlCaiWM7F0AH1RRY",
+    "newId": "vvNevHjP9PE8nioR",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "8B-source-quality-review",
+    "oldId": "LQtqeWAcNOlkqROH",
+    "newId": "yhKnxushfe0Q3FKk",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "9A-nightly-self-critique",
+    "oldId": "26ruSYvIjqHGOhsd",
+    "newId": "cN2IPq27NeEsOCiu",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Anti-Setup Refresh",
+    "oldId": "PHcD2tFZpzr7kQGF",
+    "newId": "9KY6ixHP47mP7k0y",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Daily Compliance Check",
+    "oldId": "WT9sVMzG83rg1L29",
+    "newId": "b8CSc84wQzJ4lEGH",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Daily Portfolio Monitor",
+    "oldId": "u0RcmfuClgRinXAX",
+    "newId": "eZSbajXAi7v7tGPx",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Macro Data Sync - Evening (7pm Regime Summary)",
+    "oldId": "X2IjKuYseGukxKDj",
+    "newId": "pSKkMAYwaV0GzBUq",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Monthly Robustness Check",
+    "oldId": "m6aD7X4ioWfhWaS9",
+    "newId": "RIK5eQ0rFEG78Vtd",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Nightly Self-Correction",
+    "oldId": "rMaOIscmLjebn8jR",
+    "newId": "7qd92chhmrK2xXtz",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Post-Session Skip Review",
+    "oldId": "LayXj1mbHh4aGSM9",
+    "newId": "ao1OK1SCNVMQbCPK",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Pre-Session Compliance Gate",
+    "oldId": "gFwNlA3eCHbSb7en",
+    "newId": "VB3PLAMAJ4q9gthk",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Pre-Session Skip Check",
+    "oldId": "eaq72MwKwCjv7g7F",
+    "newId": "flOq70zNhT3Umemt",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Strategy Deep Analysis Pipeline",
+    "oldId": "DOupmbBiM95a1kho",
+    "newId": "40q1SdSjUxyZ9Jux",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Strategy Generation Loop",
+    "oldId": "eCr7cyb0aPArFCZc",
+    "newId": "1N8GcmcMKvQH4GRG",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Strategy Tournament",
+    "oldId": "hPXhUaSC3ScznZE9",
+    "newId": "7BSvnyQEky84DXwl",
+    "activeInSource": true,
+    "source": "git-stale"
+  },
+  {
+    "name": "Weekly Compliance Re-Parse",
+    "oldId": "YuDGQkuej7qybPAB",
+    "newId": "rNcIEbpUQkm3p4Jp",
+    "activeInSource": true,
+    "source": "git-stale"
+  }
+]

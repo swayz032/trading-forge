@@ -116,7 +116,7 @@ class QuarterlySwingStrategy(BaseStrategy):
         self.lookback = lookback
         self.htf_lookback = htf_lookback
         self.disp_atr_mult = disp_atr_mult
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "1h"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:

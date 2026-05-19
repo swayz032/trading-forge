@@ -1,0 +1,19 @@
+{
+  "input": {
+    "scout_find": {
+      "source": "unified-search-brave",
+      "title": "S&P 500 Risk-On Rotation Continues as Tech Leads Rally to New All-Time High",
+      "description": "U.S. stocks closed sharply higher Tuesday with the S&P 500 up 1.2% to 5,847 as technology shares led the advance. The risk-on rotation reflects strengthening earnings forecasts and a slightly more dovish Fed posture after April CPI came in below expectations. Mega-cap technology gained over 2% on the session. Energy lagged amid soft crude inventories. Bond yields slipped with the 10-year Treasury closing at 4.32%, four basis points lower. Volume below the 20-day average. Strategists at Goldman Sachs note that risk appetite remains constructive into the May FOMC meeting.",
+      "url": "https://www.bloomberg.com/news/articles/2026-04-30/sp-500-risk-on-rotation-tech-leads-rally",
+      "confidence_score": 0.62,
+      "instruments_mentioned": [],
+      "indicators_mentioned": []
+    }
+  },
+  "expected_output": {
+    "score": 2,
+    "accept": false,
+    "reason": "Bloomberg news article describing yesterday's market action. No entry condition, no exit rule, no stop, no indicator parameters, no symbol the trader can act on systematically. This is market commentary (signal_type='market_news_intel'), not a strategy_candidate. Routing to news-intel stream via 5M-brave-news-watcher is correct; reject from strategy candidate stream."
+  },
+  "notes": "CRITICAL reject example — addresses the user's stated pet peeve. Bloomberg URL + descriptive past-tense commentary + zero entry/exit/stop/indicator content = news headline, NOT a strategy. Score 2 (not 0) because the article is well-written market intelligence and might be useful in the news-intel stream — just not as a strategy candidate. The auditor's reject reason explicitly references the correct re-routing target."
+}

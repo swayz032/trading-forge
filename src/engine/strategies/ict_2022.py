@@ -51,7 +51,7 @@ class ICT2022Strategy(BaseStrategy):
         self.atr_period = atr_period
         self.sweep_window = sweep_window  # bars to look back for a sweep event
         self.ote_window = ote_window
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "5min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:

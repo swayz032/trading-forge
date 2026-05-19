@@ -235,10 +235,11 @@ def compute_premium_discount(
     sl_ptr = 0
 
     for i in range(len(df)):
-        while sh_ptr < len(sh_indices) and sh_indices[sh_ptr] <= i:
+        # Use strict < to match detect_bos/detect_choch swing pointer advancement
+        while sh_ptr < len(sh_indices) and sh_indices[sh_ptr] < i:
             last_sh = sh_prices[sh_ptr]
             sh_ptr += 1
-        while sl_ptr < len(sl_indices) and sl_indices[sl_ptr] <= i:
+        while sl_ptr < len(sl_indices) and sl_indices[sl_ptr] < i:
             last_sl = sl_prices[sl_ptr]
             sl_ptr += 1
 
@@ -285,10 +286,11 @@ def compute_equilibrium(
     sl_ptr = 0
 
     for i in range(len(df)):
-        while sh_ptr < len(sh_indices) and sh_indices[sh_ptr] <= i:
+        # Use strict < to match detect_bos/detect_choch swing pointer advancement
+        while sh_ptr < len(sh_indices) and sh_indices[sh_ptr] < i:
             last_sh = sh_prices[sh_ptr]
             sh_ptr += 1
-        while sl_ptr < len(sl_indices) and sl_indices[sl_ptr] <= i:
+        while sl_ptr < len(sl_indices) and sl_indices[sl_ptr] < i:
             last_sl = sl_prices[sl_ptr]
             sl_ptr += 1
 

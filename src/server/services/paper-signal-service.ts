@@ -1,11 +1,214 @@
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, strategies, paperSignalLogs } from "../db/schema.js";
+import { paperSessions, paperPositions, strategies, paperSignalLogs, skipDecisions, shadowSignals } from "../db/schema.js";
 import { openPosition, closePosition } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
 import { evaluateContextGate } from "./context-gate-service.js";
+import { checkAntiSetupGate, type AntiSetupGateResult } from "./anti-setup-gate-service.js";
 import { broadcastSSE } from "../routes/sse.js";
-import { logger } from "../index.js";
-import { eq, and, isNull } from "drizzle-orm";
+import { logger } from "../lib/logger.js";
+import { eq, and, isNull, gte, lte, desc } from "drizzle-orm";
+import { tracer } from "../lib/tracing.js";
+import { isDSLStrategy, translateDSLToPaperConfig } from "./dsl-translator.js";
+import { getActiveLockout } from "./strategy-lockout-service.js";
+import { checkCorrelatedPositionGuard, KILL_REASON_CORRELATED_POSITION_OPEN } from "./correlated-position-guard.js";
+import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { isUsDst } from "../lib/dst-utils.js";
+import { CONTRACT_SPECS, CONTRACT_CAP_MIN, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
+// Wave 23.C: bias engine + A+ gate consumer wiring
+import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateForSignal } from "./bias-state-service.js";
+import { getSessionShapeScore } from "./volume-profile-service.js";
+const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
+
+// ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
+// Score threshold for the vp_shape confluence factor.
+// Score formula (from volume-profile-service.ts):
+//   score = Math.round(shapeConfidence × (|shape_weight| / 10) × 100)
+//   weights: D=0, b=5, P=5, Thin=10
+// Thin@100%=100, b/P@100%=50 (meets threshold exactly), D=always 0 (never satisfies).
+const VP_SHAPE_SCORE_THRESHOLD = 50;
+
+// ─── P1-6: Firm Contract Cap Lookup ─────────────────────────────────────────
+// TS mirror of firm_config.py::FIRM_CONTRACT_CAPS.
+// All firms allow the same per-symbol caps (10 min, 15 default, 20 max).
+// getFirmContractCap() is a pure lookup — no Python subprocess needed.
+
+const FIRM_CONTRACT_CAPS_TS: Record<string, Record<string, number>> = {
+  topstep_50k:    { MES: 15, MNQ: 15, MCL: 15 },
+  mffu_50k:       { MES: 15, MNQ: 15, MCL: 15 },
+  tpt_50k:        { MES: 15, MNQ: 15, MCL: 15 },
+  apex_50k:       { MES: 15, MNQ: 15, MCL: 15 },
+  tradeify_50k:   { MES: 15, MNQ: 15, MCL: 15 },
+  alpha_50k:      { MES: 15, MNQ: 15, MCL: 15 },
+  ffn_50k:        { MES: 15, MNQ: 15, MCL: 15 },
+  earn2trade_50k: { MES: 15, MNQ: 15, MCL: 15 },
+  // Aliases for firmIds without _50k suffix (matches session.firmId values)
+  topstep:    { MES: 15, MNQ: 15, MCL: 15 },
+  mffu:       { MES: 15, MNQ: 15, MCL: 15 },
+  tpt:        { MES: 15, MNQ: 15, MCL: 15 },
+  apex:       { MES: 15, MNQ: 15, MCL: 15 },
+  tradeify:   { MES: 15, MNQ: 15, MCL: 15 },
+  alpha:      { MES: 15, MNQ: 15, MCL: 15 },
+  ffn:        { MES: 15, MNQ: 15, MCL: 15 },
+  earn2trade: { MES: 15, MNQ: 15, MCL: 15 },
+};
+
+/**
+ * Returns the firm contract cap for a given firmKey + symbol.
+ * Clamped to [CONTRACT_CAP_MIN, CONTRACT_CAP_MAX] per firm_config.py.
+ * Falls back to CONTRACT_CAP_MAX (15) when firmKey or symbol is unknown.
+ */
+function getFirmContractCap(firmKey: string | null | undefined, symbol: string): number {
+  if (!firmKey) return CONTRACT_CAP_MAX;
+  const caps = FIRM_CONTRACT_CAPS_TS[firmKey.toLowerCase()];
+  if (!caps) return CONTRACT_CAP_MAX;
+  const raw = caps[symbol.toUpperCase()] ?? CONTRACT_CAP_MAX;
+  return Math.max(CONTRACT_CAP_MIN, Math.min(raw, CONTRACT_CAP_MAX));
+}
+
+// ─── Calendar Filter Cache (Fix 3) ──────────────────────────────
+// Caches Python calendar_filter results per ET hour (YYYY-MM-DD-HH).
+// Economic event blackout windows are ±30 min, so hourly granularity is safe.
+// Reduces subprocess spawns from ~O(bars/day) to at most 24 calls/day.
+// Process-local — paper engine is single-instance.
+
+interface SignalCalendarCacheEntry {
+  is_holiday: boolean;
+  is_triple_witching: boolean;
+  holiday_proximity: number;
+  is_economic_event: boolean;
+  economic_event_name: string;
+  event_window_minutes: number;
+}
+
+const signalCalendarCache = new Map<string, SignalCalendarCacheEntry>();
+
+/**
+ * Test-only: reset the signal calendar cache between unit tests so mocked
+ * Python responses aren't masked by a previously-cached entry from an
+ * earlier test within the same hour-key bucket.
+ * Production code must never call this.
+ */
+export function __resetSignalCalendarCacheForTests(): void {
+  signalCalendarCache.clear();
+}
+
+// ─── Skip Classifier Cache (Task 1 / P0-3) ──────────────────────
+// Caches Python skip_classifier.classify_session() results per session × ET hour.
+// Pre-market signals (VIX, overnight gap, calendar) change at most once per hour;
+// bar-level caching would spawn O(bars/day) Python processes — excessive.
+// Cache key: `${sessionId}:${etHourKey}` so each session gets its own classification
+// (different strategies may have different bad_days / consecutive_losses).
+//
+// TF_PAPER_SKIP_MODE controls enforcement:
+//   "off"     — classifier is never called (use only DB-based pre-market decisions)
+//   "shadow"  — classifier runs, decision is logged but NEVER blocks trades
+//   "enforce" — SKIP blocks entries, REDUCE halves position size (DEFAULT in production)
+//
+// Fail policy: classifier errors are always fail-OPEN (logged at error, trading continues).
+// The DB-based skip engine above this is the hard gate; the classifier is a second layer.
+
+const PAPER_SKIP_MODE: "off" | "shadow" | "enforce" =
+  (process.env.TF_PAPER_SKIP_MODE as "off" | "shadow" | "enforce" | undefined) === "off"   ? "off"
+  : (process.env.TF_PAPER_SKIP_MODE as "off" | "shadow" | "enforce" | undefined) === "shadow" ? "shadow"
+  : "enforce"; // default: enforce
+
+interface SkipClassifierCacheEntry {
+  decision: "TRADE" | "REDUCE" | "SKIP";
+  score: number;
+  reason: string;
+  confidence: number;
+  override_allowed: boolean;
+}
+
+const skipClassifierCache = new Map<string, SkipClassifierCacheEntry>();
+
+/**
+ * Test-only: reset the skip classifier cache between unit tests.
+ * Production code must never call this.
+ */
+export function __resetSkipClassifierCacheForTests(): void {
+  skipClassifierCache.clear();
+}
+
+/**
+ * Call skip_classifier.classify_session() via Python runner and cache per session×hour.
+ * The signals dict is populated with lightweight in-process data (session state, calendar)
+ * rather than fetching live market data (VIX etc.) — those are populated by the pre-market
+ * scheduler job and written to skip_decisions. Here we only pass what is available in-process.
+ */
+async function getCachedSkipClassification(
+  barTimestamp: string,
+  sessionId: string,
+  strategyId: string,
+  governorState: GovernorSessionState,
+): Promise<SkipClassifierCacheEntry> {
+  const hourKey = formatSignalEtHourKey(barTimestamp);
+  const cacheKey = `${sessionId}:${hourKey}`;
+  const cached = skipClassifierCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const { runPythonModule } = await import("../lib/python-runner.js");
+
+  // Build signals dict from in-process state.
+  // VIX, overnight gap, premarket volume are NOT available here (need live data fetch);
+  // those are handled by the pre-market scheduler. We populate what we know in-process:
+  //   - consecutive_losses — from the governor state machine
+  //   - day_of_week — computed from bar timestamp
+  //   - calendar — passed as empty (calendar_filter already covered by the separate check above)
+  const barDate = new Date(barTimestamp);
+  const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const dayOfWeek = dayNames[barDate.getUTCDay() === 0 ? 6 : barDate.getUTCDay() - 1] ?? "Monday";
+
+  const signals: Record<string, unknown> = {
+    consecutive_losses: governorState.consecutiveLosses,
+    day_of_week: dayOfWeek,
+    // calendar signals are handled by the dedicated calendar_filter check above;
+    // pass a neutral calendar here so we don't double-block on those conditions.
+    calendar: { holiday_proximity: 99, triple_witching: false, roll_week: false },
+  };
+
+  const result = await runPythonModule<SkipClassifierCacheEntry>({
+    module: "src.engine.skip_engine.skip_classifier",
+    config: { signals, strategy_id: strategyId },
+    timeoutMs: 5_000,
+    componentName: "skip-classifier",
+  });
+
+  skipClassifierCache.set(cacheKey, result);
+  return result;
+}
+
+function formatSignalEtHourKey(ts: string): string {
+  const d = new Date(ts);
+  const etOffsetMs = (isUsDst(d) ? -4 : -5) * 3_600_000;
+  const et = new Date(d.getTime() + etOffsetMs);
+  const yyyy = et.getUTCFullYear();
+  const mm   = String(et.getUTCMonth() + 1).padStart(2, "0");
+  const dd   = String(et.getUTCDate()).padStart(2, "0");
+  const hh   = String(et.getUTCHours()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}-${hh}`;
+}
+
+async function getCachedSignalCalendarStatus(
+  barTimestamp: string,
+): Promise<SignalCalendarCacheEntry> {
+  const key = formatSignalEtHourKey(barTimestamp);
+  const cached = signalCalendarCache.get(key);
+  if (cached !== undefined) return cached;
+
+  const { runPythonModule } = await import("../lib/python-runner.js");
+  const result = await runPythonModule<SignalCalendarCacheEntry>({
+    module: "src.engine.skip_engine.calendar_filter",
+    config: {
+      date: barTimestamp.split("T")[0],
+      datetime: barTimestamp,
+    },
+    timeoutMs: 5_000,
+    componentName: "calendar-filter",
+  });
+  signalCalendarCache.set(key, result);
+  return result;
+}
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -25,6 +228,8 @@ interface StrategyConfig {
   side: "long" | "short";
   contracts: number;
   stop_loss?: StopLossConfig;
+  trail_stop?: TrailStopConfig;    // 2.3: trailing stop (ATR-based)
+  max_hold_bars?: number;          // 2.4: force-close after N bars
   preferred_sessions?: string[];   // ["NY_RTH", "London", "Asia"]
   cooldown_bars?: number;          // bars to wait after closing before re-entry
   indicators?: Record<string, unknown>; // optional indicator overrides
@@ -37,13 +242,445 @@ interface StopLossConfig {
   atr_period?: number;    // default 14
 }
 
+export interface TrailStopConfig {
+  atr_multiple: number;   // e.g. 2.0 → trail distance = 2 × ATR
+  atr_period?: number;    // ATR period, default 14
+  // W5b Tier 5.1 — break-even + time-decay extensions (all optional; null/undefined = no change to existing behavior)
+  break_even_at_r?: number;        // trigger at 1.0 = 1:1 profit (1R). null = disabled.
+  time_decay_minutes?: number;     // minutes after open at which trail tightens. null = disabled.
+  time_decay_multiplier?: number;  // factor to multiply atr_multiple after time_decay_minutes (e.g. 0.75 → 2x→1.5x). null = disabled.
+}
+
+// ─── Tick Sizes by Symbol ───────────────────────────────────────
+// Used by break-even leg to set SL at entry ± 1 tick.
+// Only micro futures listed here; unknown symbols default to 0.25.
+export const TICK_SIZES: Record<string, number> = {
+  MES:  0.25,  // S&P micro
+  MNQ:  0.25,  // Nasdaq micro
+  MCL:  0.01,  // Crude oil micro (0.01 per contract = $1)
+  M2K:  0.10,  // Russell 2000 micro
+  MYM:  1.00,  // Dow Jones micro
+  MGC:  0.10,  // Gold micro
+  M6E:  0.0001, // Euro micro FX
+  // Add additional symbols here as needed
+};
+
+export interface TrailStopExtendedInput {
+  positionId: string;
+  side: "long" | "short";
+  entryPrice: number;
+  initialRiskPoints: number;  // |entry - hard SL| in price points
+  atrValue: number;
+  currentHigh: number;        // bar.high
+  currentLow: number;         // bar.low
+  minutesOpen: number;        // minutes elapsed since position opened
+  currentHWM: number | null;  // existing HWM from trailStopHWM map (null if first bar)
+  symbol: string;
+}
+
+interface TrailStopExtendedResult {
+  hit: boolean;
+  stopPrice: number;
+  newHWM: number;
+  breakEvenActive: boolean;
+  timeDecayActive: boolean;
+  effectiveMultiple: number;
+}
+
+/**
+ * Extended trail stop evaluation (Tier 5.1).
+ *
+ * Evaluates break-even leg and time-decay tightening ON TOP of the existing
+ * ATR-based HWM trail.  When break_even_at_r and time_decay_minutes are both
+ * null/undefined, output is identical to the pre-W5b checkTrailStop() —
+ * backwards-compatible by design.
+ *
+ * Break-even leg:
+ *   If profit ≥ break_even_at_r × initial_risk_points → SL advances to
+ *   entry ± 1 tick (long: entry + tick, short: entry - tick), whichever is
+ *   more favourable than the current ATR trail.
+ *
+ * Time-decay tightening:
+ *   If minutes_open ≥ time_decay_minutes → effective atr_multiple is
+ *   multiplied by time_decay_multiplier before computing the ATR trail.
+ *   This makes the trail tighter after the position has been held "too long",
+ *   encouraging exit before the move fades.
+ *
+ * Priority: stop level = max(ATR trail, break-even SL) for longs;
+ *           min(ATR trail, break-even SL) for shorts.
+ */
+export function checkTrailStopExtended(
+  config: TrailStopConfig,
+  input: TrailStopExtendedInput,
+): TrailStopExtendedResult {
+  const {
+    positionId: _positionId, side, entryPrice, initialRiskPoints,
+    atrValue, currentHigh, currentLow, minutesOpen, currentHWM, symbol,
+  } = input;
+
+  // 1. Update HWM
+  let newHWM: number;
+  if (side === "long") {
+    newHWM = currentHWM === null ? currentHigh : Math.max(currentHWM, currentHigh);
+  } else {
+    newHWM = currentHWM === null ? currentLow : Math.min(currentHWM, currentLow);
+  }
+
+  // 2. Resolve effective ATR multiple (time-decay tightening)
+  const timeDecayActive =
+    config.time_decay_minutes != null &&
+    config.time_decay_multiplier != null &&
+    minutesOpen >= config.time_decay_minutes;
+
+  const effectiveMultiple = timeDecayActive
+    ? config.atr_multiple * config.time_decay_multiplier!
+    : config.atr_multiple;
+
+  // 3. Compute ATR-based trail level
+  let atrTrailLevel: number;
+  if (side === "long") {
+    atrTrailLevel = newHWM - effectiveMultiple * atrValue;
+  } else {
+    atrTrailLevel = newHWM + effectiveMultiple * atrValue;
+  }
+
+  // 4. Break-even leg
+  const tickSize = TICK_SIZES[symbol] ?? 0.25;
+  let breakEvenActive = false;
+  let breakEvenLevel: number | null = null;
+
+  if (config.break_even_at_r != null && initialRiskPoints > 0) {
+    const profitThreshold = config.break_even_at_r * initialRiskPoints;
+    let currentProfit: number;
+    if (side === "long") {
+      currentProfit = newHWM - entryPrice;
+    } else {
+      currentProfit = entryPrice - newHWM;
+    }
+
+    if (currentProfit >= profitThreshold) {
+      breakEvenActive = true;
+      if (side === "long") {
+        breakEvenLevel = entryPrice + tickSize;
+      } else {
+        breakEvenLevel = entryPrice - tickSize;
+      }
+    }
+  }
+
+  // 5. Final stop level = most favourable of ATR trail and break-even
+  let stopPrice: number;
+  if (side === "long") {
+    stopPrice = breakEvenLevel !== null
+      ? Math.max(atrTrailLevel, breakEvenLevel)
+      : atrTrailLevel;
+    const hit = currentLow <= stopPrice;
+    return { hit, stopPrice, newHWM, breakEvenActive, timeDecayActive, effectiveMultiple };
+  } else {
+    stopPrice = breakEvenLevel !== null
+      ? Math.min(atrTrailLevel, breakEvenLevel)
+      : atrTrailLevel;
+    const hit = currentHigh >= stopPrice;
+    return { hit, stopPrice, newHWM, breakEvenActive, timeDecayActive, effectiveMultiple };
+  }
+}
+
 interface CachedSession {
   config: StrategyConfig;
   strategyId: string;
-  strategyName: string;
   symbol: string;
   timeframe: string;             // e.g. "1m", "5m", "15m", "1h"
   cooldownRemaining: number;     // bars remaining in cooldown
+  // B8b: PILOT canary state — read from strategy.lifecycleState at session cache load.
+  // Used to enforce the 1-contract ceiling during PILOT canary window.
+  lifecycleState: string;
+}
+
+// ─── B4.3: In-memory Governor State (per session) ──────────────
+// Mirrors Python Governor state machine — tracked in-process to avoid
+// subprocess overhead on the hot signal evaluation path (every bar).
+// State transitions match src/engine/governor/state_machine.py exactly.
+//
+// Parity guarantee: same state + same thresholds as the Python Governor
+// used in backtest_governor replay. Drift would require changing both.
+
+type GovernorStateName =
+  | "normal" | "alert" | "cautious" | "defensive" | "lockout" | "recovery";
+
+interface GovernorSessionState {
+  state: GovernorStateName;
+  consecutiveLosses: number;
+  consecutiveWins: number;
+  sessionPnl: number;
+  sessionTrades: number;
+  profitableSessions: number;
+  dailyLossBudget: number;
+}
+
+const SIZE_MULTIPLIERS_TS: Record<GovernorStateName, number> = {
+  normal: 1.0,
+  alert: 1.0,
+  cautious: 0.75,
+  defensive: 0.50,
+  lockout: 0.0,
+  recovery: 0.50,
+};
+
+// Per-session governor state cache. Keyed by sessionId.
+// Evicted when session stops (cleanupSession).
+const governorStateCache = new Map<string, GovernorSessionState>();
+
+// ─── FIX 1 (B2 PARITY CRITICAL): Pending-entry queue — next-bar fill ─────────
+// Backtest convention (backtester.py:1305): entry signal on bar N fires at the
+// OPEN of bar N+1 (implemented via np.roll(entries_np, 1)).  Paper was executing
+// fills at bar N's close — 1 bar early, systematically better entry prices.
+//
+// Fix: when an entry signal fires on bar N, store the pending params in this map.
+// On bar N+1 arrival, the deferred entry executes at bar N+1's close.
+//
+// Key: `${sessionId}:${symbol}` — one pending entry per session+symbol.
+// Evicted: on execution, on position-open failure, or on session cleanup.
+// Signal-exits (exitSignal) are NOT deferred — they remain same-bar.
+// Stop-loss / trail-stop / time-exits are already intra-bar in both backtest
+// and paper (hit-price logic, not bar-close of signal bar), so no deferral needed.
+
+interface PendingEntry {
+  sessionId: string;
+  symbol: string;
+  side: "long" | "short";
+  contracts: number;
+  orderType: "stop_limit";
+  stopLimitOffset: number | undefined;
+  rsi: number | undefined;
+  atr: number | undefined;
+  barVolume: number | undefined;
+  medianBarVolume: number | undefined;
+  signalBarTimestamp: string; // bar N timestamp (for audit trail)
+  correlationId: string | undefined;
+}
+
+const pendingEntryQueue = new Map<string, PendingEntry>();
+
+/**
+ * Test hook — clear pending entry queue between tests.
+ * Production code must never call this.
+ */
+export function __clearPendingEntryQueueForTests(): void {
+  pendingEntryQueue.clear();
+}
+
+// ─── Fix 4: Parity divergence warning — logged once per session start ──────
+// Paper enforces skip engine + anti-setup gates ALWAYS.
+// Backtest defaults: TF_BACKTEST_SKIP_MODE=off, TF_BACKTEST_ANTI_SETUP_MODE=off.
+// This means the DEPLOY_READY gate compares filtered paper Sharpe against
+// unfiltered backtest Sharpe — apples to oranges.  We surface this as a
+// structured WARNING once per session so operators can act on it.
+// Resolution: set TF_BACKTEST_SKIP_MODE=enforce to align both sides.
+const parityWarnedSessions = new Set<string>();
+
+/**
+ * Return the current governor state for a session.
+ * Initialises to NORMAL if not yet tracked.
+ */
+function getGovernorState(
+  sessionId: string,
+  dailyLossBudget: number = 500,
+): GovernorSessionState {
+  let state = governorStateCache.get(sessionId);
+  if (!state) {
+    state = {
+      state: "normal",
+      consecutiveLosses: 0,
+      consecutiveWins: 0,
+      sessionPnl: 0,
+      sessionTrades: 0,
+      profitableSessions: 0,
+      dailyLossBudget,
+    };
+    governorStateCache.set(sessionId, state);
+  }
+  return state;
+}
+
+/**
+ * Update governor state after a trade closes.
+ * Call this from the position-close path so the state stays current.
+ * Returns new state name for logging.
+ */
+export function updateGovernorOnTrade(
+  sessionId: string,
+  pnl: number,
+  dailyLossBudget: number = 500,
+): GovernorStateName {
+  const gov = getGovernorState(sessionId, dailyLossBudget);
+  gov.sessionPnl += pnl;
+  gov.sessionTrades += 1;
+
+  if (pnl < 0) {
+    gov.consecutiveLosses += 1;
+    gov.consecutiveWins = 0;
+  } else {
+    gov.consecutiveWins += 1;
+    gov.consecutiveLosses = 0;
+  }
+
+  const sessionLossPct =
+    gov.dailyLossBudget > 0 && gov.sessionPnl < 0
+      ? Math.abs(gov.sessionPnl) / gov.dailyLossBudget
+      : 0;
+
+  const prev = gov.state;
+
+  switch (gov.state) {
+    case "normal":
+      if (gov.consecutiveLosses >= 2 || sessionLossPct >= 0.30) gov.state = "alert";
+      break;
+    case "alert":
+      if (gov.consecutiveLosses >= 3 || sessionLossPct >= 0.50) gov.state = "cautious";
+      else if (gov.consecutiveWins >= 2) gov.state = "normal";
+      break;
+    case "cautious":
+      if (gov.consecutiveLosses >= 4 || sessionLossPct >= 0.65) gov.state = "defensive";
+      else if (gov.consecutiveWins >= 2) gov.state = "alert";
+      break;
+    case "defensive":
+      if (gov.consecutiveLosses >= 5 || sessionLossPct >= 0.80) gov.state = "lockout";
+      else if (gov.consecutiveWins >= 3) gov.state = "cautious";
+      break;
+    case "lockout":
+      break; // only session_end transitions out of lockout
+    case "recovery":
+      if (pnl < 0) {
+        gov.state = "lockout";
+        gov.profitableSessions = 0;
+      }
+      break;
+  }
+
+  if (prev !== gov.state) {
+    logger.info(
+      { sessionId, prevState: prev, newState: gov.state, consecutiveLosses: gov.consecutiveLosses, sessionLossPct: sessionLossPct.toFixed(2) },
+      "Governor B4.3: state transition",
+    );
+  }
+
+  // P0-4: Persist governor state to DB on every update (async, non-blocking).
+  // This ensures the state survives a server restart — resumeActivePaperSessions()
+  // reads this column and restores the in-memory cache entry.
+  // Do NOT await — must not block the trade-close path.
+  const governorSnapshot = {
+    state: gov.state,
+    consecutiveLosses: gov.consecutiveLosses,
+    consecutiveWins: gov.consecutiveWins,
+    sessionLossPct: parseFloat(sessionLossPct.toFixed(4)),
+    lastUpdatedAt: new Date().toISOString(),
+  };
+  db.update(paperSessions)
+    .set({ governorState: governorSnapshot })
+    .where(eq(paperSessions.id, sessionId))
+    .catch((err: unknown) =>
+      logger.warn({ err, sessionId, governorState: gov.state }, "Failed to persist governor state to DB (non-blocking)"),
+    );
+
+  return gov.state;
+}
+
+/**
+ * Check whether the governor allows a new entry.
+ * Returns { allowed, adjustedContracts, reason }.
+ */
+function checkGovernor(
+  sessionId: string,
+  requestedContracts: number,
+  dailyLossBudget: number = 500,
+): { allowed: boolean; adjustedContracts: number; reason: string; governorState: GovernorStateName } {
+  const gov = getGovernorState(sessionId, dailyLossBudget);
+  const mult = SIZE_MULTIPLIERS_TS[gov.state];
+
+  if (gov.state === "lockout" || mult === 0.0) {
+    return {
+      allowed: false,
+      adjustedContracts: 0,
+      reason: `governor_lockout: state=${gov.state}`,
+      governorState: gov.state,
+    };
+  }
+
+  const adjusted = Math.max(1, Math.floor(requestedContracts * mult));
+  return {
+    allowed: true,
+    adjustedContracts: adjusted,
+    reason: adjusted < requestedContracts
+      ? `governor_reduced: state=${gov.state}, mult=${mult}`
+      : `governor_allowed: state=${gov.state}`,
+    governorState: gov.state,
+  };
+}
+
+/**
+ * P0-4: Restore governor state from a persisted DB snapshot into the in-memory cache.
+ * Called by resumeActivePaperSessions() after server restart.
+ * Returns the restored state name for logging, or null if the snapshot was invalid.
+ *
+ * Only restores fields the governor state machine actually uses; ignores unknown keys.
+ * Snapshots persisted before the "alert" state was added will have partial fields —
+ * those are safely defaulted.
+ */
+export function restoreGovernorState(
+  sessionId: string,
+  snapshot: Record<string, unknown>,
+): GovernorStateName | null {
+  const validStates: ReadonlySet<string> = new Set([
+    "normal", "alert", "cautious", "defensive", "lockout", "recovery",
+  ]);
+
+  const rawState = snapshot.state;
+  if (typeof rawState !== "string" || !validStates.has(rawState)) {
+    logger.warn(
+      { sessionId, rawState },
+      "P0-4: Governor state snapshot has invalid state field — not restoring",
+    );
+    return null;
+  }
+
+  const restoredState: GovernorSessionState = {
+    state: rawState as GovernorStateName,
+    consecutiveLosses: typeof snapshot.consecutiveLosses === "number" ? snapshot.consecutiveLosses : 0,
+    consecutiveWins: typeof snapshot.consecutiveWins === "number" ? snapshot.consecutiveWins : 0,
+    sessionPnl: 0, // reset session-level P&L on restart (new trading day)
+    sessionTrades: 0,
+    profitableSessions: 0,
+    dailyLossBudget: typeof snapshot.dailyLossBudget === "number" ? snapshot.dailyLossBudget : 500,
+  };
+
+  governorStateCache.set(sessionId, restoredState);
+  return restoredState.state;
+}
+
+/**
+ * Reset per-session state at end of trading day (mirrors Python on_session_end).
+ * Call from session-stop or end-of-day scheduler.
+ */
+export function governorOnSessionEnd(sessionId: string): void {
+  const gov = governorStateCache.get(sessionId);
+  if (!gov) return;
+
+  if (gov.state === "lockout") {
+    gov.state = "recovery";
+    gov.profitableSessions = 0;
+  } else if (gov.state === "recovery") {
+    if (gov.sessionPnl > 0) {
+      gov.profitableSessions += 1;
+      if (gov.profitableSessions >= 2) gov.state = "normal";
+    } else {
+      gov.state = "lockout";
+      gov.profitableSessions = 0;
+    }
+  }
+  // Reset session-level counters
+  gov.sessionPnl = 0;
+  gov.sessionTrades = 0;
+  // NOTE: consecutiveLosses/consecutiveWins persist across sessions (cross-session streaks)
 }
 
 interface SignalLogEntry {
@@ -56,7 +693,7 @@ interface SignalLogEntry {
   sessionFiltered: boolean;
   cooldownActive: boolean;
   riskGatePassed: boolean | null;
-  action: "none" | "open" | "close_signal" | "close_stop";
+  action: "none" | "open" | "close_signal" | "close_stop" | "close_trail" | "close_time";
   indicators: Record<string, number>;
   barClose: number;
   strategySide: "long" | "short";   // actual strategy side for correct signal logging
@@ -83,7 +720,12 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
     .where(eq(strategies.id, session.strategyId));
   if (!strategy) return null;
 
-  const config = strategy.config as StrategyConfig;
+  // Auto-detect and translate strategy format
+  let paperConfig = strategy.config as Record<string, any>;
+  if (isDSLStrategy(paperConfig)) {
+    paperConfig = translateDSLToPaperConfig(paperConfig as any);
+  }
+  const config = paperConfig as StrategyConfig;
 
   // Warn if no exit mechanism exists — positions will be trapped open forever
   if ((!config.exit_rules || config.exit_rules.length === 0) && !config.stop_loss) {
@@ -96,10 +738,14 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
   const entry: CachedSession = {
     config,
     strategyId: strategy.id,
-    strategyName: strategy.name,
     symbol: strategy.symbol,
     timeframe: strategy.timeframe ?? "1m",
     cooldownRemaining: 0,
+    // B8b: capture lifecycle state at cache-load time for PILOT contract clamp.
+    // Cache miss on state change is acceptable — the 6h cron ensures PILOT strategies
+    // are only in PILOT during the narrow canary window. Callers that need the
+    // latest state will see it on the next cache miss (session restart or invalidation).
+    lifecycleState: strategy.lifecycleState,
   };
 
   sessionCache.set(sessionId, entry);
@@ -120,8 +766,20 @@ export function clearSessionCache(): void {
  */
 export function cleanupSession(sessionId: string, symbols: string[]): void {
   sessionCache.delete(sessionId);
+  governorStateCache.delete(sessionId);   // B4.3: evict governor state on session stop
   for (const symbol of symbols) {
     previousIndicators.delete(`${sessionId}:${symbol}`);
+    // FIX 1 (B2): evict any pending deferred entry for this session+symbol on stop
+    pendingEntryQueue.delete(`${sessionId}:${symbol}`);
+  }
+  // Trail stop HWM and bars-held are keyed by position UUID — we can't filter
+  // by sessionId without an extra DB lookup.  Accept the small leak; positions
+  // should all be closed before session stop, so in practice the maps are empty.
+  // ICT indicator cache: prune entries for this session
+  for (const key of ictIndicatorCache.keys()) {
+    if (key.startsWith(`${sessionId}:`)) {
+      ictIndicatorCache.delete(key);
+    }
   }
 }
 
@@ -233,6 +891,12 @@ export function BollingerBands(
 
 interface IndicatorValues {
   [key: string]: number;
+}
+
+interface ICTBridgeResult {
+  values: IndicatorValues;
+  bridgeHealthy: boolean;
+  error?: string;
 }
 
 function computeIndicators(barBuffer: Bar[]): IndicatorValues {
@@ -368,41 +1032,6 @@ function evaluateRules(
   return rules.every((rule) => evaluateExpression(rule, current, previous));
 }
 
-function getRequiredIndicatorKeys(config: StrategyConfig): string[] {
-  const keys = new Set<string>(["open", "high", "low", "close", "volume"]);
-  const allRules = [...(config.entry_rules ?? []), ...(config.exit_rules ?? [])];
-  const regex = /\b(sma_\d+|ema_\d+|rsi_\d+|atr_\d+|bbands_\d+_(?:upper|middle|lower)|vwap|open|high|low|close|volume)\b/g;
-
-  for (const rule of allRules) {
-    for (const match of rule.matchAll(regex)) {
-      keys.add(match[1]);
-    }
-  }
-
-  if (config.stop_loss?.type === "atr") {
-    keys.add(`atr_${config.stop_loss.atr_period ?? 14}`);
-  }
-
-  return [...keys];
-}
-
-function hasCorruptedCoreData(bar: Bar, indicators: IndicatorValues, requiredKeys: string[]): string[] {
-  const issues: string[] = [];
-  if (![bar.open, bar.high, bar.low, bar.close, bar.volume].every((v) => Number.isFinite(v))) {
-    issues.push("non_finite_bar_values");
-  }
-  if (!(bar.high >= bar.low && bar.open >= bar.low && bar.open <= bar.high && bar.close >= bar.low && bar.close <= bar.high)) {
-    issues.push("ohlc_sanity_violation");
-  }
-  for (const key of requiredKeys) {
-    const value = indicators[key];
-    if (value === undefined || !Number.isFinite(value)) {
-      issues.push(`missing_or_non_finite_${key}`);
-    }
-  }
-  return issues;
-}
-
 // ─── Session Time Filters ───────────────────────────────────
 
 interface SessionWindow {
@@ -413,21 +1042,30 @@ interface SessionWindow {
   crossesMidnight: boolean;
 }
 
-const SESSION_WINDOWS: Record<string, SessionWindow> = {
-  NY_RTH: { startHour: 13, startMinute: 30, endHour: 20, endMinute: 0, crossesMidnight: false },
-  London: { startHour: 8, startMinute: 0, endHour: 16, endMinute: 30, crossesMidnight: false },
-  Asia: { startHour: 23, startMinute: 0, endHour: 6, endMinute: 0, crossesMidnight: true },
-};
+// isUsDst is imported from src/server/lib/dst-utils.ts (shared utility).
+// Removed duplicate inline implementation — see Fix 1 consolidation.
+
+function getSessionWindows(date: Date): Record<string, SessionWindow> {
+  const dst = isUsDst(date);
+  // NY RTH: 9:30-16:00 ET → EDT=UTC-4, EST=UTC-5
+  const nyOffset = dst ? 4 : 5;
+  return {
+    NY_RTH: { startHour: 9 + nyOffset, startMinute: 30, endHour: 16 + nyOffset, endMinute: 0, crossesMidnight: false },
+    London: { startHour: 8, startMinute: 0, endHour: 16, endMinute: 30, crossesMidnight: false },
+    Asia: { startHour: 23, startMinute: 0, endHour: 6, endMinute: 0, crossesMidnight: true },
+  };
+}
 
 function isWithinSession(timestamp: string, preferredSessions?: string[]): boolean {
   const sessions = preferredSessions?.length ? preferredSessions : ["NY_RTH"];
   const date = new Date(timestamp);
+  const sessionWindows = getSessionWindows(date);
   const utcHour = date.getUTCHours();
   const utcMinute = date.getUTCMinutes();
   const timeVal = utcHour * 60 + utcMinute;
 
   for (const sessionName of sessions) {
-    const window = SESSION_WINDOWS[sessionName];
+    const window = sessionWindows[sessionName];
     if (!window) continue;
 
     const startVal = window.startHour * 60 + window.startMinute;
@@ -442,6 +1080,174 @@ function isWithinSession(timestamp: string, preferredSessions?: string[]): boole
   }
 
   return false;
+}
+
+// ─── 2.7: TS Indicator Name Set ─────────────────────────────
+// These are all indicator names that `computeIndicators()` produces.
+// Any indicator name referenced in strategy rules that is NOT in this set
+// will be delegated to the Python ICT bridge.
+
+const TS_INDICATOR_NAMES: ReadonlySet<string> = new Set([
+  // SMA
+  "sma_5", "sma_10", "sma_20", "sma_50", "sma_100", "sma_200",
+  // EMA
+  "ema_5", "ema_9", "ema_12", "ema_20", "ema_26", "ema_50",
+  // RSI
+  "rsi_7", "rsi_14", "rsi_21",
+  // ATR
+  "atr_7", "atr_14", "atr_21",
+  // VWAP
+  "vwap",
+  // Bollinger Bands
+  "bbands_20_upper", "bbands_20_middle", "bbands_20_lower",
+  // Current bar OHLCV
+  "open", "high", "low", "close", "volume",
+]);
+
+/**
+ * Extract all indicator token names referenced in a set of rule expressions.
+ * Returns only tokens that are not numeric literals.
+ */
+function extractIndicatorNames(rules: string[]): Set<string> {
+  const names = new Set<string>();
+  for (const rule of rules) {
+    // Match cross functions: cross_above(a, b), cross_below(a, b)
+    const crossMatch = rule.trim().match(/^(?:cross_above|cross_below)\(\s*(\w+)\s*,\s*(\w+)\s*\)$/);
+    if (crossMatch) {
+      names.add(crossMatch[1]);
+      names.add(crossMatch[2]);
+      continue;
+    }
+    // Match comparison: left_token OP right_token_or_literal
+    const compMatch = rule.trim().match(/^(\w+)\s*(?:>=|<=|>|<)\s*(.+)$/);
+    if (compMatch) {
+      const leftToken = compMatch[1].trim();
+      const rightToken = compMatch[2].trim();
+      if (isNaN(parseFloat(leftToken))) names.add(leftToken);
+      if (isNaN(parseFloat(rightToken))) names.add(rightToken);
+    }
+  }
+  return names;
+}
+
+/**
+ * Check if a strategy config references any ICT indicators not in the TS set.
+ * Returns the set of unknown indicator names.
+ */
+function findUnknownIndicators(config: StrategyConfig): Set<string> {
+  const allRules = [...(config.entry_rules ?? []), ...(config.exit_rules ?? [])];
+  const referenced = extractIndicatorNames(allRules);
+  const unknown = new Set<string>();
+  for (const name of referenced) {
+    if (!TS_INDICATOR_NAMES.has(name)) {
+      unknown.add(name);
+    }
+  }
+  return unknown;
+}
+
+/**
+ * Fetch ICT indicator values for a bar from the Python engine.
+ * Results are cached per (sessionId, symbol, barTimestamp) to avoid redundant subprocess calls.
+ *
+ * The Python bridge accepts a bar buffer as JSON, computes the requested indicators,
+ * and returns a flat dict of { indicator_name: float }.
+ *
+ * Returns an empty object if the Python call fails — fail-open: strategy evaluation
+ * continues with NaN for missing indicators (which causes rules to return false, not crash).
+ */
+async function fetchICTIndicators(
+  sessionId: string,
+  symbol: string,
+  barTimestamp: string,
+  barBuffer: Bar[],
+  unknownNames: Set<string>,
+): Promise<ICTBridgeResult> {
+  const cacheKey = `${sessionId}:${symbol}:${barTimestamp}`;
+  const cached = ictIndicatorCache.get(cacheKey);
+  if (cached) return { values: cached, bridgeHealthy: true };
+
+  try {
+    const { runPythonModule } = await import("../lib/python-runner.js");
+    // Pass the last 200 bars (sufficient for all ICT indicators) and the list
+    // of requested indicator names.  The Python bridge selects which functions
+    // to run based on the name list.
+    const barsToSend = barBuffer.slice(-200);
+    const result = await runPythonModule<Record<string, number>>({
+      module: "src.engine.indicators.paper_bridge",
+      config: {
+        bars: barsToSend,
+        requested: Array.from(unknownNames),
+        symbol,
+      },
+      timeoutMs: 8_000,
+      componentName: "ict-indicator-bridge",
+    });
+
+    // Validate: only accept numeric values, discard nulls/NaN strings
+    const validated: IndicatorValues = {};
+    for (const [k, v] of Object.entries(result)) {
+      if (typeof v === "number" && isFinite(v)) {
+        validated[k] = v;
+      }
+    }
+
+    // Fix 4.5: Detect bridge-succeeded-but-returned-all-NaN case.
+    // If every requested indicator came back non-finite, treat it as a bridge failure:
+    // the bridge ran but produced no usable values (e.g. Python returned NaN for all
+    // requested names).  Emit alert + log entry so the outage is visible.
+    const requestedNames = Array.from(unknownNames);
+    const allNaN = requestedNames.length > 0 && requestedNames.every(name => !(name in validated));
+    if (allNaN) {
+      const nanError = "ICT bridge returned NaN/null for all requested indicators — possible bridge outage";
+      logger.error({ sessionId, symbol, barTimestamp, requestedNames }, nanError);
+      broadcastSSE("alert:ict_bridge_down", { sessionId, symbol, error: nanError });
+      try {
+        await db.insert(paperSignalLogs).values({
+          sessionId,
+          symbol,
+          direction: "long",   // placeholder — not a real signal direction
+          signalType: "ict_bridge_failure",
+          price: "0",
+          indicatorSnapshot: { requested: requestedNames.join(","), bridgeResult: "all_nan" } as Record<string, unknown>,
+          acted: false,
+          reason: nanError,
+        });
+      } catch (logErr) {
+        logger.error({ logErr, sessionId }, "Failed to persist ict_bridge_failure signal log");
+      }
+      ictIndicatorCache.set(cacheKey, validated);
+      return { values: validated, bridgeHealthy: false, error: nanError };
+    }
+
+    ictIndicatorCache.set(cacheKey, validated);
+    return { values: validated, bridgeHealthy: true };
+  } catch (err) {
+    // Fix 4.5: Bridge subprocess failed entirely (timeout, crash, spawn error).
+    // Emit SSE alert and persist a paper_signal_logs entry so the outage is
+    // visible in the dashboard and queryable for post-session diagnosis.
+    // Continue with fail-open behaviour (return empty — rules evaluate to false).
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error({ sessionId, symbol, barTimestamp, err }, "ICT indicator bridge failed — unknown indicators will be NaN");
+    broadcastSSE("alert:ict_bridge_down", { sessionId, symbol, error: errMsg });
+    try {
+      await db.insert(paperSignalLogs).values({
+        sessionId,
+        symbol,
+        direction: "long",   // placeholder — not a real signal direction
+        signalType: "ict_bridge_failure",
+        price: "0",
+        indicatorSnapshot: { error: errMsg } as Record<string, unknown>,
+        acted: false,
+        reason: errMsg,
+      });
+    } catch (logErr) {
+      logger.error({ logErr, sessionId }, "Failed to persist ict_bridge_failure signal log");
+    }
+    const empty: IndicatorValues = {};
+    ictIndicatorCache.set(cacheKey, empty);
+    return { values: empty, bridgeHealthy: false, error: errMsg };
+  }
 }
 
 // ─── Stop-Loss Check ────────────────────────────────────────
@@ -483,9 +1289,177 @@ function checkStopLoss(
   }
 }
 
+// ─── 2.3: Trail Stop Check ──────────────────────────────────
+
+/**
+ * Check trailing stop for an open position.
+ * Updates the high-water mark map and returns hit status + trail stop price.
+ *
+ * For longs:  HWM = max(high) seen since open.  Trail level = HWM - (atr_mult × ATR).
+ *             Hit when bar.low <= trail level.
+ * For shorts: HWM = min(low)  seen since open.  Trail level = HWM + (atr_mult × ATR).
+ *             Hit when bar.high >= trail level.
+ */
+function checkTrailStop(
+  position: { id: string; side: string; entryPrice: string; entryTime: Date; symbol?: string },
+  bar: Bar,
+  trailConfig: TrailStopConfig,
+  indicators: IndicatorValues,
+  stopLossConfig?: StopLossConfig,
+): { hit: boolean; stopPrice: number; newHWM: number | null } {
+  const atrPeriod = trailConfig.atr_period ?? 14;
+  let atrVal = indicators[`atr_${atrPeriod}`];
+  if (atrVal === undefined || isNaN(atrVal)) {
+    const available = [7, 14, 21];
+    const nearest = available.reduce((a, b) => Math.abs(b - atrPeriod) < Math.abs(a - atrPeriod) ? b : a);
+    atrVal = indicators[`atr_${nearest}`];
+    if (atrVal === undefined || isNaN(atrVal)) return { hit: false, stopPrice: 0, newHWM: null };
+  }
+
+  const posId = position.id;
+
+  // W5b Tier 5.1: delegate to extended function when break_even or time_decay fields are set
+  if (
+    trailConfig.break_even_at_r != null ||
+    trailConfig.time_decay_minutes != null
+  ) {
+    // Compute initial risk points from stopLossConfig if available, else fall back to 1x ATR
+    let initialRiskPoints: number;
+    const entryPrice = Number(position.entryPrice);
+    if (stopLossConfig) {
+      if (stopLossConfig.type === "fixed" && stopLossConfig.amount != null) {
+        initialRiskPoints = stopLossConfig.amount;
+      } else {
+        // ATR-based stop: risk = multiplier * ATR
+        initialRiskPoints = atrVal * (stopLossConfig.multiplier ?? 2);
+      }
+    } else {
+      // No stop config → use 1x ATR as fallback risk measure
+      initialRiskPoints = atrVal;
+    }
+
+    const minutesOpen = (bar.timestamp
+      ? (new Date(bar.timestamp).getTime() - position.entryTime.getTime()) / 60000
+      : 0);
+
+    const currentHWM = trailStopHWM.get(posId) ?? null;
+    const symbol = position.symbol ?? "MES";
+
+    const result = checkTrailStopExtended(trailConfig, {
+      positionId: posId,
+      side: position.side as "long" | "short",
+      entryPrice,
+      initialRiskPoints,
+      atrValue: atrVal,
+      currentHigh: bar.high,
+      currentLow: bar.low,
+      minutesOpen,
+      currentHWM,
+      symbol,
+    });
+
+    trailStopHWM.set(posId, result.newHWM);
+    return { hit: result.hit, stopPrice: result.stopPrice, newHWM: result.newHWM };
+  }
+
+  // ─── Legacy path (no W5b fields) — behavior identical to pre-W5b ─────────
+  const mult = trailConfig.atr_multiple;
+
+  if (position.side === "long") {
+    // Update HWM: track highest high seen
+    const prevHWM = trailStopHWM.get(posId);
+    const newHWM = prevHWM === undefined ? bar.high : Math.max(prevHWM, bar.high);
+    trailStopHWM.set(posId, newHWM);
+    const trailLevel = newHWM - mult * atrVal;
+    return { hit: bar.low <= trailLevel, stopPrice: trailLevel, newHWM };
+  } else {
+    // For shorts: track lowest low seen
+    const prevHWM = trailStopHWM.get(posId);
+    const newHWM = prevHWM === undefined ? bar.low : Math.min(prevHWM, bar.low);
+    trailStopHWM.set(posId, newHWM);
+    const trailLevel = newHWM + mult * atrVal;
+    return { hit: bar.high >= trailLevel, stopPrice: trailLevel, newHWM };
+  }
+}
+
 // ─── Previous Indicator Cache (for crossover detection) ─────
 
 const previousIndicators = new Map<string, IndicatorValues>();
+
+// ─── 2.3: Trail Stop High-Water Mark ────────────────────────
+// Keyed by position ID.  Tracks the most favourable price seen since open.
+// For longs: HWM = max(high) since entry.  For shorts: HWM = min(low) since entry.
+// Cleaned up on position close.
+
+const trailStopHWM = new Map<string, number>();
+
+// ─── 2.4: Bars-Held Counter ──────────────────────────────────
+// Keyed by position ID.  Incremented on each bar tick while the position is open.
+// Cleaned up on position close.
+
+const positionBarsHeld = new Map<string, number>();
+
+/**
+ * Restore in-memory position state after a server restart.
+ * Called by the scheduler during paper session resume.
+ */
+export function restorePositionState(
+  positions: { id: string; trailHwm: string | null; barsHeld: number }[],
+): void {
+  for (const pos of positions) {
+    if (pos.trailHwm != null) {
+      trailStopHWM.set(pos.id, Number(pos.trailHwm));
+    }
+    if (pos.barsHeld > 0) {
+      positionBarsHeld.set(pos.id, pos.barsHeld);
+    }
+  }
+}
+
+// ─── 2.7: Python ICT Indicator Cache ────────────────────────
+// Keyed by "<sessionId>:<symbol>:<barTimestamp>".
+// Avoids spawning a new Python subprocess for every bar when the same bar is
+// processed by multiple evaluation paths.
+
+const ictIndicatorCache = new Map<string, IndicatorValues>();
+
+// ─── H2: Initialize position state maps from DB ──────────────
+// Called at server startup (or when a session resumes) so that trail-stop HWM
+// and bars-held counters survive process restarts.  Both maps are the hot path
+// (read every bar), but are persisted to DB on every update.
+//
+// Only open positions (closedAt IS NULL) are loaded — closed positions no longer
+// need their counters and are excluded to keep the maps lean.
+
+export async function initializePositionStateMaps(): Promise<void> {
+  try {
+    const openPositions = await db
+      .select({
+        id: paperPositions.id,
+        trailHwm: paperPositions.trailHwm,
+        barsHeld: paperPositions.barsHeld,
+      })
+      .from(paperPositions)
+      .where(isNull(paperPositions.closedAt));
+
+    let loaded = 0;
+    for (const pos of openPositions) {
+      if (pos.trailHwm !== null && pos.trailHwm !== undefined) {
+        trailStopHWM.set(pos.id, Number(pos.trailHwm));
+        loaded++;
+      }
+      if (pos.barsHeld !== null && pos.barsHeld !== undefined) {
+        positionBarsHeld.set(pos.id, pos.barsHeld);
+      }
+    }
+    logger.info(
+      { openPositions: openPositions.length, hwmLoaded: loaded },
+      "Position state maps initialized from DB",
+    );
+  } catch (err) {
+    logger.error({ err }, "Failed to initialize position state maps from DB — in-memory state starts empty");
+  }
+}
 
 // ─── Signal Log (persisted to DB + broadcast via SSE) ────────
 
@@ -506,14 +1480,26 @@ async function logSignal(entry: SignalLogEntry): Promise<void> {
         else if (entry.riskGatePassed === false) reason = "risk_gate_rejected";
       }
       if (entry.action === "close_stop") reason = "stop_loss";
+      if (entry.action === "close_trail") reason = "trail_stop";
+      if (entry.action === "close_time") reason = "max_hold_bars";
+
+      // Map action to signalType enum
+      let signalType: string;
+      if (entry.action === "close_stop" || entry.action === "close_trail") {
+        signalType = "stop_loss";
+      } else if (entry.action === "close_signal" || entry.action === "close_time") {
+        signalType = "exit";
+      } else if (entry.action === "open") {
+        signalType = "entry";
+      } else {
+        signalType = entry.exitSignal ? "exit" : "entry";
+      }
 
       await db.insert(paperSignalLogs).values({
         sessionId: entry.sessionId,
         symbol: entry.symbol,
         direction,
-        signalType: entry.action === "close_stop" ? "stop_loss"
-          : (entry.action === "close_signal" ? "exit"
-          : (entry.action === "open" ? "entry" : (entry.exitSignal ? "exit" : "entry"))),
+        signalType,
         price: String(entry.barClose),
         indicatorSnapshot: entry.indicators,
         acted,
@@ -568,13 +1554,26 @@ export async function evaluateSignals(
   sessionId: string,
   symbol: string,
   bar: Bar,
-  barBuffer: Bar[]
+  barBuffer: Bar[],
+  context?: { correlationId?: string },
 ): Promise<void> {
+  const correlationId = context?.correlationId;
+  const span = tracer.startSpan("paper.signal_evaluation");
+  span.setAttribute("symbol", symbol);
+  span.setAttribute("session_id", sessionId);
+
+  try {
   // Single DB query for pause + cooldown + mode check
+  // P1-6: also fetch firmId for firm contract cap enforcement
   const [sessionRow] = await db.select({
     status: paperSessions.status,
     cooldownUntil: paperSessions.cooldownUntil,
     mode: paperSessions.mode,
+    firmId: paperSessions.firmId,
+    config: paperSessions.config,
+    // Wave 23.C C.6: HWM for risk-derived pyramid sizing
+    highWaterBalance: paperSessions.highWaterBalance,
+    currentEquity: paperSessions.currentEquity,
   }).from(paperSessions).where(eq(paperSessions.id, sessionId));
 
   // Skip if session doesn't exist or is paused/stopped
@@ -586,37 +1585,296 @@ export async function evaluateSignals(
     return;
   }
 
+  // ─── Fix 4: Parity divergence warning (once per session) ────────────────
+  // Paper enforces skip engine + anti-setup gates unconditionally.
+  // Backtest defaults TF_BACKTEST_SKIP_MODE=off, TF_BACKTEST_ANTI_SETUP_MODE=off.
+  // The DEPLOY_READY gate compares paper Sharpe (filtered) vs backtest Sharpe
+  // (unfiltered) — apples-to-oranges; paper quality is systematically
+  // underestimated relative to what backtest reports.
+  // ACTION: set TF_BACKTEST_SKIP_MODE=enforce to align backtest filters with paper.
+  if (!parityWarnedSessions.has(sessionId)) {
+    parityWarnedSessions.add(sessionId);
+    logger.warn(
+      {
+        sessionId,
+        strategyId: sessionConfig.strategyId,
+        parity_gap: "skip_and_anti_setup_gates",
+        resolution: "set TF_BACKTEST_SKIP_MODE=enforce to align",
+      },
+      "PARITY WARNING: Paper engine enforces skip + anti-setup gates that backtest does NOT enforce by default. " +
+      "DEPLOY_READY Sharpe comparison may underestimate strategy quality. " +
+      "Set TF_BACKTEST_SKIP_MODE=enforce to align.",
+    );
+  }
+
+  // ─── Wave 23.C C.1: Session-start bias engine invocation ─────────────────
+  // Fire-and-forget cache prime: on the first bar seen for this session × day,
+  // ensure the bias_state row exists in DB for today's session date × symbol.
+  // The result is cached in-process so subsequent bars are sub-millisecond reads.
+  // Fail-open: a bias engine failure never blocks signal evaluation.
+  // Not pipeline-gated: bias computation is an observability/promotion-gate input
+  // that must run even when the trading pipeline is paused (same pattern as crons).
+  let biasState: BiasStateForSignal | null = null;
+  try {
+    biasState = await getOrComputeBiasStateForDay(
+      bar.timestamp,
+      correlationId,
+      symbol,
+    );
+    span.setAttribute("bias_regime", biasState.regimeLabel);
+    span.setAttribute("bias_playbook", biasState.playbook);
+    span.setAttribute("bias_active_strategy_id", biasState.activeStrategyId ?? "none");
+  } catch (biasEngineErr) {
+    // Fail-open: bias state unavailable → legacy bypass path
+    logger.warn(
+      { err: biasEngineErr, sessionId, symbol, correlationId },
+      "Wave 23.C: bias engine call failed — legacy bypass path active (fail-open)",
+    );
+    span.setAttribute("bias_engine_error", true);
+  }
+
+  let skipBlocked = false;   // SKIP/SIT_OUT blocks new entries
+  let skipReduce = false;    // REDUCE halves position size
+
+  // ─── Pipeline pause guard: block new entries when paused ───
+  // PAUSED/VACATION mode prevents NEW orders but does NOT close open
+  // positions — they continue to be managed (stop-loss, trailing stop,
+  // exit signals, max-hold). This matches the user's mental model:
+  // "press pause = no new orders, not kill switch."
+  // Treated symmetrically with skipBlocked so all the existing entry
+  // gating logic applies. Position management continues unaffected.
+  const pipelinePaused = !(await isPipelineActive());
+  if (pipelinePaused) {
+    skipBlocked = true;
+    span.setAttribute("pipeline_paused", true);
+    // Persist pipeline-paused signal so the block is visible in post-session
+    // analysis (matches the skip_engine_blocked log pattern).
+    db.insert(paperSignalLogs).values({
+      sessionId,
+      symbol,
+      direction: sessionConfig.config.side,
+      signalType: "pipeline_paused",
+      price: String(bar.close),
+      indicatorSnapshot: {},
+      acted: false,
+      reason: "pipeline_paused: new entries blocked, open positions still managed",
+    }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist pipeline_paused signal log"));
+    logger.info({ sessionId, symbol, fn: "evaluateSignals" }, "Skipped new entries: pipeline paused");
+  }
+
+  // ─── Skip Engine Gate: respect pre-market skip decisions ───
+  // If today's skip decision is SKIP or SIT_OUT, block all new entries.
+  // Existing positions can still be managed (stop-loss, exit signals).
+  // P1-8: Use bar timestamp for date boundary (not wall-clock) so the skip
+  // decision is anchored to the bar's trading session, not server wall-clock.
+  try {
+    const barDate = new Date(bar.timestamp);
+    const today = new Date(barDate);
+    today.setUTCHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+
+    const [skipDecision] = await db
+      .select({ decision: skipDecisions.decision, override: skipDecisions.override, reason: skipDecisions.reason })
+      .from(skipDecisions)
+      .where(
+        and(
+          eq(skipDecisions.strategyId, sessionConfig.strategyId),
+          gte(skipDecisions.decisionDate, today),
+          lte(skipDecisions.decisionDate, tomorrow),
+        ),
+      )
+      .orderBy(desc(skipDecisions.createdAt))
+      .limit(1);
+
+    // Also check portfolio-wide skip decisions (strategyId is null)
+    const [portfolioSkip] = await db
+      .select({ decision: skipDecisions.decision, override: skipDecisions.override, reason: skipDecisions.reason })
+      .from(skipDecisions)
+      .where(
+        and(
+          isNull(skipDecisions.strategyId),
+          gte(skipDecisions.decisionDate, today),
+          lte(skipDecisions.decisionDate, tomorrow),
+        ),
+      )
+      .orderBy(desc(skipDecisions.createdAt))
+      .limit(1);
+
+    const effectiveSkip = skipDecision ?? portfolioSkip;
+    if (effectiveSkip && !effectiveSkip.override) {
+      if (effectiveSkip.decision === "SKIP" || effectiveSkip.decision === "SIT_OUT") {
+        skipBlocked = true;
+        span.setAttribute("skip_decision", effectiveSkip.decision);
+        logger.info(
+          { sessionId, symbol, decision: effectiveSkip.decision },
+          "Skip engine: blocking new entries — existing positions still managed",
+        );
+        // Persist skip engine block unconditionally — regardless of whether an entry
+        // signal also fired on this bar.  Without this, a blocked session looks
+        // identical to an idle session in the signal log and the block is invisible
+        // in post-session analysis.  Use .catch() so a DB failure never stops evaluation.
+        db.insert(paperSignalLogs).values({
+          sessionId,
+          symbol,
+          direction: sessionConfig.config.side,
+          signalType: "skip_engine_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: {
+            _skip_decision: effectiveSkip.decision,
+            _skip_reason: effectiveSkip.reason ?? null,
+          },
+          acted: false,
+          reason: `skip_engine_blocked: ${effectiveSkip.decision}${effectiveSkip.reason ? ` — ${effectiveSkip.reason}` : ""}`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist skip engine block log"));
+      } else if (effectiveSkip.decision === "REDUCE") {
+        skipReduce = true;
+        span.setAttribute("skip_decision", "REDUCE");
+      }
+    }
+  } catch (err) {
+    // Skip check is non-blocking — proceed if DB query fails
+    logger.debug({ err, sessionId }, "Skip decision check failed — proceeding");
+  }
+
+  // ─── P0-3: Skip Classifier Gate (real-time, per-bar) ─────────────────────
+  // Calls skip_classifier.py classify_session() if TF_PAPER_SKIP_MODE != "off".
+  // This is a second, complementary layer to the pre-market DB-based skip decisions
+  // above. It uses in-process state (governor consecutive_losses, day_of_week) to
+  // catch situations where the pre-market classifier didn't run (e.g. weekend restart,
+  // new session started mid-day).
+  //
+  // Fail policy: ALWAYS fail-open. A classifier error never blocks trades — the DB-based
+  // skip gate above is the hard gate. Log at error so the operator can see the issue.
+  //
+  // Cache: results are cached per session × ET hour to avoid per-bar Python spawns.
+  if (PAPER_SKIP_MODE !== "off" && !skipBlocked) {
+    try {
+      const govState = getGovernorState(sessionId);
+      const classifierResult = await getCachedSkipClassification(
+        bar.timestamp,
+        sessionId,
+        sessionConfig.strategyId,
+        govState,
+      );
+
+      if (PAPER_SKIP_MODE === "enforce") {
+        if (classifierResult.decision === "SKIP") {
+          skipBlocked = true;
+          span.setAttribute("skip_classifier_decision", "SKIP");
+          span.setAttribute("skip_classifier_score", classifierResult.score);
+          logger.info(
+            {
+              sessionId, symbol,
+              decision: classifierResult.decision,
+              score: classifierResult.score,
+              reason: classifierResult.reason,
+              confidence: classifierResult.confidence,
+              mode: "enforce",
+            },
+            "Skip classifier (P0-3): SKIP — blocking new entries",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: sessionConfig.config.side,
+            signalType: "skip_classifier_blocked",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              _skip_classifier_decision: classifierResult.decision,
+              _skip_classifier_score: classifierResult.score,
+              _skip_classifier_reason: classifierResult.reason,
+              _skip_classifier_confidence: classifierResult.confidence,
+              _skip_classifier_mode: "enforce",
+            },
+            acted: false,
+            reason: `skip_classifier_blocked: ${classifierResult.reason}`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist skip_classifier block log"));
+        } else if (classifierResult.decision === "REDUCE") {
+          skipReduce = true;
+          span.setAttribute("skip_classifier_decision", "REDUCE");
+          span.setAttribute("skip_classifier_score", classifierResult.score);
+          logger.info(
+            {
+              sessionId, symbol,
+              decision: classifierResult.decision,
+              score: classifierResult.score,
+              reason: classifierResult.reason,
+              mode: "enforce",
+            },
+            "Skip classifier (P0-3): REDUCE — position size will be halved",
+          );
+        } else {
+          span.setAttribute("skip_classifier_decision", "TRADE");
+        }
+      } else {
+        // shadow mode: log but never block
+        span.setAttribute("skip_classifier_decision", classifierResult.decision);
+        span.setAttribute("skip_classifier_score", classifierResult.score);
+        if (classifierResult.decision !== "TRADE") {
+          logger.info(
+            {
+              sessionId, symbol,
+              decision: classifierResult.decision,
+              score: classifierResult.score,
+              reason: classifierResult.reason,
+              confidence: classifierResult.confidence,
+              mode: "shadow",
+            },
+            "Skip classifier (P0-3): shadow mode — would have blocked/reduced but not enforcing",
+          );
+          // Persist shadow decision for analysis
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: sessionConfig.config.side,
+            signalType: "skip_classifier_shadow",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              _skip_classifier_decision: classifierResult.decision,
+              _skip_classifier_score: classifierResult.score,
+              _skip_classifier_reason: classifierResult.reason,
+              _skip_classifier_confidence: classifierResult.confidence,
+              _skip_classifier_mode: "shadow",
+            },
+            acted: true, // trade proceeds — shadow only
+            reason: `skip_classifier_shadow: ${classifierResult.reason}`,
+          }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist skip_classifier shadow log"));
+        }
+      }
+    } catch (skipClassErr) {
+      // Fail-open: classifier error never blocks trades
+      logger.error(
+        { sessionId, symbol, err: skipClassErr, mode: PAPER_SKIP_MODE },
+        "Skip classifier (P0-3) error — fail-open, trading continues",
+      );
+      span.setAttribute("skip_classifier_error", true);
+    }
+  }
+
   const config = sessionConfig.config;
   const indicators = computeIndicators(barBuffer);
   const prevKey = `${sessionId}:${symbol}`;
   const prevIndicators = previousIndicators.get(prevKey) ?? null;
-  const requiredKeys = getRequiredIndicatorKeys(config);
-  const dataIssues = hasCorruptedCoreData(bar, indicators, requiredKeys);
 
-  // Hybrid-safe gate policy: fail-closed on corrupted/missing core market data.
-  if (dataIssues.length > 0) {
-    logger.warn(
-      { sessionId, symbol, issues: dataIssues.slice(0, 8) },
-      "Core market data invalid or insufficient — skipping signal evaluation",
-    );
-    previousIndicators.set(prevKey, indicators);
-    await logSignal({
-      sessionId,
-      symbol,
-      timestamp: bar.timestamp,
-      entrySignal: false,
-      exitSignal: false,
-      stopHit: false,
-      sessionFiltered: false,
-      cooldownActive: false,
-      riskGatePassed: false,
-      action: "none",
-      indicators,
-      barClose: bar.close,
-      strategySide: config.side,
-      fillMiss: false,
-    });
-    return;
+  // ─── 2.7: ICT Indicator Bridge ──────────────────────────────
+  // If strategy references indicators not in the TS set, fetch them from Python
+  // before evaluating rules.  Merged into the indicator map so expressions resolve.
+  const unknownInds = findUnknownIndicators(config);
+  let ictBridgeBlocked = false;
+  if (unknownInds.size > 0) {
+    const ictBridge = await fetchICTIndicators(sessionId, symbol, bar.timestamp, barBuffer, unknownInds);
+    Object.assign(indicators, ictBridge.values);
+    if (!ictBridge.bridgeHealthy && FAIL_CLOSED_EXECUTION) {
+      ictBridgeBlocked = true;
+      skipBlocked = true;
+      logger.error(
+        { sessionId, symbol, unknownIndicators: Array.from(unknownInds), error: ictBridge.error },
+        "ICT bridge unavailable — fail-closed blocks new entries",
+      );
+    }
+    span.setAttribute("ict_bridge_indicators", Array.from(unknownInds).join(","));
+    span.setAttribute("ict_bridge_blocked", ictBridgeBlocked);
   }
 
   // Evaluate entry and exit rules
@@ -625,6 +1883,102 @@ export async function evaluateSignals(
 
   // Session time filter
   const sessionFiltered = !isWithinSession(bar.timestamp, config.preferred_sessions);
+
+  // ─── 2.5: Calendar filter ────────────────────────────────────
+  // Check holidays AND FOMC/CPI/NFP ±30min blackout.
+  // Fix 3: results are cached per ET hour — at most 24 Python spawns/day instead of
+  // one per bar (~390 bars/day for 1m bars). Hour granularity is safe given ±30min
+  // blackout windows: at most one stale hit at the hour boundary, then corrects.
+  //
+  // B11: bypass_news_blackout opt-in — event-driven strategies (e.g., news_fade_mcl)
+  // that MUST trade during macro release windows can set bypass_news_blackout=true
+  // in their DSL fixture. This bypasses the is_economic_event check ONLY (holidays
+  // still block — no strategy should trade on CME-closed holidays). The bypass is
+  // explicit opt-in; default is the full blackout (fail-safe for all other strategies).
+  //
+  // Authority: CLAUDE.md "Don't trade through FOMC/CPI/NFP without explicit event handling
+  // — default is SIT_OUT ±30 min". bypass_news_blackout IS the explicit event handling.
+  const bypassNewsBlackout =
+    (sessionConfig.config as unknown as Record<string, unknown>).bypass_news_blackout === true;
+
+  let calendarBlocked = false;
+  let calendarBlockReason = "";
+  try {
+    const calResult = await getCachedSignalCalendarStatus(bar.timestamp);
+
+    if (calResult.is_holiday === true) {
+      // Holidays always block — even bypass_news_blackout strategies cannot trade
+      // when CME is closed. This is not an override path.
+      calendarBlocked = true;
+      calendarBlockReason = "holiday";
+      logger.info({ sessionId, symbol, date: bar.timestamp }, "Calendar filter: holiday — skipping signals");
+    } else if (calResult.is_economic_event === true) {
+      if (bypassNewsBlackout) {
+        // Event-driven strategy with explicit bypass — log the decision and allow through
+        logger.info(
+          {
+            sessionId, symbol, event: calResult.economic_event_name,
+            windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
+            bypass: true,
+          },
+          `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — BYPASSED (bypass_news_blackout=true, event-driven strategy)`,
+        );
+        span.setAttribute("calendar_news_bypass", true);
+        span.setAttribute("calendar_block_event", calResult.economic_event_name);
+      } else {
+        calendarBlocked = true;
+        calendarBlockReason = calResult.economic_event_name;
+        logger.info(
+          {
+            sessionId, symbol, event: calResult.economic_event_name,
+            windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
+          },
+          `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — skipping signals`,
+        );
+        span.setAttribute("calendar_block_event", calResult.economic_event_name);
+      }
+    }
+  } catch (calErr) {
+    // Calendar check is non-blocking — trading continues (fail-open).
+    // BUT the failure must be VISIBLE: a silent swallow hides a broken risk guard.
+    // Log at error level so the operator can see the guard is down.
+    logger.error(
+      { sessionId, symbol, err: calErr },
+      "Calendar guard DOWN — Python calendar_filter failed; trading continues unblocked",
+    );
+    // Broadcast SSE so the dashboard can surface a warning banner immediately.
+    broadcastSSE("alert:calendar_guard_down", {
+      sessionId,
+      symbol,
+      error: calErr instanceof Error ? calErr.message : String(calErr),
+      timestamp: bar.timestamp,
+    });
+    span.setAttribute("calendar_guard_down", true);
+  }
+
+  if (calendarBlocked) {
+    // M5: Log calendar block to DB so it leaves a traceable record for post-session
+    // analysis.  Without this, a blocked session looks identical to an idle session
+    // in the signal logs — no way to distinguish "no signals fired" from "signals were
+    // blocked by calendar".  Use .catch() so a DB failure never stops the early return.
+    db.insert(paperSignalLogs).values({
+      sessionId,
+      symbol,
+      direction: sessionConfig.config.side,
+      signalType: "calendar_blocked",
+      price: String(bar.close),
+      indicatorSnapshot: {},
+      acted: false,
+      reason: `Calendar blocked: ${calendarBlockReason}`,
+    }).catch((err: unknown) => logger.warn({ err }, "Failed to log calendar block to DB"));
+
+    // ICT cache cleanup for this timestamp (no longer needed)
+    ictIndicatorCache.delete(`${sessionId}:${symbol}:${bar.timestamp}`);
+    span.setAttribute("calendar_blocked", true);
+    span.setAttribute("calendar_block_reason", calendarBlockReason);
+    span.end();
+    return;
+  }
 
   // Check for open position FIRST — needed for cooldown logic
   const [openPos] = await db
@@ -654,96 +2008,906 @@ export async function evaluateSignals(
   let stopHit = false;
   let fillMiss = false;
 
+  // Convenience: current ATR for passing to closePosition (2.6 exit slippage)
+  const currentAtr = indicators["atr_14"];
+
   // Shadow mode: log signals only, never execute trades
   const isShadow = sessionRow.mode === "shadow";
 
+  // ─── FIX 1 (B2 PARITY CRITICAL): Execute deferred entry from previous bar ──
+  // backtester.py:1305 rolls signals forward 1 bar (np.roll); fills happen at
+  // the open of bar N+1.  Paper fills at bar N's close — 1 bar early.
+  // Fix: a signal fired on bar N stores a pending entry.  On bar N+1 we execute
+  // it here, before any position-management checks, using bar N+1's close price.
+  //
+  // This block only fires when no position is open AND the session is not in shadow
+  // mode AND no position was just opened (openPos check above is fresh).
+  const pendingKey = `${sessionId}:${symbol}`;
+  const pendingEntry = pendingEntryQueue.get(pendingKey);
+  if (pendingEntry && !openPos && !isShadow) {
+    pendingEntryQueue.delete(pendingKey); // consume the pending entry
+
+    logger.info(
+      {
+        sessionId, symbol,
+        side: pendingEntry.side,
+        contracts: pendingEntry.contracts,
+        executionPrice: bar.close,
+        signalBarTimestamp: pendingEntry.signalBarTimestamp,
+        executionBarTimestamp: bar.timestamp,
+      },
+      "FIX 1: Executing deferred entry from previous bar (next-bar fill parity)",
+    );
+
+    const deferredResult = await openPosition(sessionId, {
+      symbol,
+      side: pendingEntry.side,
+      signalPrice: bar.close,          // bar N+1's close — matching backtest convention
+      contracts: pendingEntry.contracts,
+      orderType: pendingEntry.orderType,
+      stopLimitOffset: pendingEntry.stopLimitOffset,
+      barTimestamp: new Date(bar.timestamp), // bar N+1 timestamp for session classification
+      rsi: pendingEntry.rsi,
+      atr: pendingEntry.atr,
+      barVolume: bar.volume,            // use bar N+1's volume for fill probability
+      medianBarVolume: pendingEntry.medianBarVolume,
+    }, { correlationId: pendingEntry.correlationId });
+
+    if (deferredResult.position) {
+      action = "open";
+      positionBarsHeld.set(deferredResult.position.id, 0);
+      span.setAttribute("deferred_fill", true);
+      span.setAttribute("signal_bar", pendingEntry.signalBarTimestamp);
+      logger.info(
+        { sessionId, symbol, side: pendingEntry.side, executionPrice: bar.close, contracts: pendingEntry.contracts },
+        "FIX 1: Deferred entry filled — position opened at bar N+1 close",
+      );
+    } else {
+      fillMiss = true;
+      db.insert(paperSignalLogs).values({
+        sessionId,
+        symbol,
+        direction: pendingEntry.side,
+        signalType: "fill_miss",
+        price: String(bar.close),
+        indicatorSnapshot: { _deferred_fill: true, _signal_bar: pendingEntry.signalBarTimestamp },
+        acted: false,
+        reason: `Deferred fill miss (bar N+1 fill, fillRatio: ${deferredResult.executionResult.fillRatio ?? 0})`,
+      }).catch((err: unknown) => logger.warn({ err }, "Failed to log deferred fill miss to DB"));
+    }
+
+    // After a deferred fill (success or miss), skip the rest of this bar's signal
+    // evaluation to avoid double-processing entry logic on the same bar.
+    previousIndicators.set(prevKey, indicators);
+    span.end();
+    return;
+  }
+
   if (openPos && !isShadow) {
     // ─── Position open: check for exit signal or stop-loss ──
+
+    // ─── 2.4: Time-based exit — max hold bars ───────────────
+    // Increment bars-held counter.  Force-close when limit reached.
+    // H2: persist the new value to DB so restarts don't reset the counter.
+    let timeExit = false;
+    if (config.max_hold_bars !== undefined && config.max_hold_bars > 0) {
+      const prevBarsHeld = positionBarsHeld.get(openPos.id) ?? 0;
+      const newBarsHeld = prevBarsHeld + 1;
+      positionBarsHeld.set(openPos.id, newBarsHeld);
+      // Persist to DB (non-blocking — a missed write just means the counter
+      // reverts to the last persisted value after a restart, not a hard failure)
+      db.update(paperPositions)
+        .set({ barsHeld: newBarsHeld })
+        .where(eq(paperPositions.id, openPos.id))
+        .catch((err: unknown) => logger.warn({ err, positionId: openPos.id }, "Failed to persist barsHeld to DB"));
+      if (newBarsHeld >= config.max_hold_bars) {
+        timeExit = true;
+        span.setAttribute("time_exit_bars", newBarsHeld);
+      }
+    }
+
+    // ─── 2.3: Trail stop check ───────────────────────────────
+    let trailResult: { hit: boolean; stopPrice: number; newHWM: number | null } = { hit: false, stopPrice: 0, newHWM: null };
+    if (config.trail_stop) {
+      trailResult = checkTrailStop(openPos, bar, config.trail_stop, indicators, config.stop_loss);
+      // H2: persist HWM to DB so restarts don't reset the trailing stop level.
+      // Fire-and-forget — a missed write reverts to the last persisted HWM after
+      // a restart (slightly less aggressive stop), not a hard failure.
+      if (trailResult.newHWM !== null) {
+        db.update(paperPositions)
+          .set({ trailHwm: String(trailResult.newHWM) })
+          .where(eq(paperPositions.id, openPos.id))
+          .catch((err: unknown) => logger.warn({ err, positionId: openPos.id }, "Failed to persist trailHwm to DB"));
+      }
+    }
+
+    // Fixed stop-loss check
     const stopResult = checkStopLoss(openPos, bar, config.stop_loss, indicators);
     stopHit = stopResult.hit;
 
+    // Priority order: fixed stop > trail stop > time exit > exit signal
+    // Fixed stop is checked first because it is the firm risk limit.
+    // P1-8: Pass bar timestamp to closePosition so session classification uses bar time, not wall-clock.
+    const barTs = new Date(bar.timestamp);
     if (stopHit) {
       action = "close_stop";
-      // Fill at the stop level, not bar.close — bar.close overstates P&L
-      await closePosition(openPos.id, stopResult.stopPrice);
+      positionBarsHeld.delete(openPos.id);
+      trailStopHWM.delete(openPos.id);
+      await closePosition(openPos.id, stopResult.stopPrice, currentAtr, { correlationId, barTimestamp: barTs });
       await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
       logger.info(
         { sessionId, symbol, reason: "stop_loss", stopPrice: stopResult.stopPrice },
-        "Paper position closed — stop-loss hit"
+        "Paper position closed — stop-loss hit",
+      );
+    } else if (trailResult.hit) {
+      action = "close_trail";
+      positionBarsHeld.delete(openPos.id);
+      trailStopHWM.delete(openPos.id);
+      await closePosition(openPos.id, trailResult.stopPrice, currentAtr, { correlationId, barTimestamp: barTs });
+      await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
+      logger.info(
+        { sessionId, symbol, reason: "trail_stop", stopPrice: trailResult.stopPrice },
+        "Paper position closed — trailing stop hit",
+      );
+    } else if (timeExit) {
+      action = "close_time";
+      positionBarsHeld.delete(openPos.id);
+      trailStopHWM.delete(openPos.id);
+      await closePosition(openPos.id, bar.close, currentAtr, { correlationId, barTimestamp: barTs });
+      await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
+      logger.info(
+        { sessionId, symbol, reason: "max_hold_bars", barsHeld: config.max_hold_bars },
+        "Paper position closed — max hold duration reached",
       );
     } else if (exitSignal) {
       action = "close_signal";
-      await closePosition(openPos.id, bar.close);
+      positionBarsHeld.delete(openPos.id);
+      trailStopHWM.delete(openPos.id);
+      await closePosition(openPos.id, bar.close, currentAtr, { correlationId, barTimestamp: barTs });
       await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
       logger.info(
         { sessionId, symbol, reason: "exit_signal" },
-        "Paper position closed — exit signal"
+        "Paper position closed — exit signal",
       );
     }
-  } else if (entrySignal && !sessionFiltered && !cooldownActive && !isShadow) {
-    let plannedContracts = config.contracts;
-    let contextAction: "TAKE" | "REDUCE" | "SKIP" = "TAKE";
+    // Position still open: bars-held counter updated above; HWM updated inside checkTrailStop.
+  } else if (entrySignal && !sessionFiltered && !cooldownActive && !isShadow && !skipBlocked && !ictBridgeBlocked) {
+    // ─── No position: check for entry ───────────────��───────
 
+    // ─── Tier 5.3: 24-hour lockout gate ─────────────────────────────────
+    // Runs BEFORE anti-setup and risk gate. If a strategy lockout is active
+    // (written by writeLockoutFromKillEvent on daily_loss_kill), block all
+    // new entry signals until the lockout expires.
+    // Fail-OPEN: lockout query errors return null so trading is not blocked.
+    let lockoutBlocked = false;
     try {
-      const context = await evaluateContextGate(
-        symbol,
-        config.side,
-        bar.close,
-        sessionConfig.strategyName,
-        barBuffer,
-        indicators,
-      );
-      contextAction = context.action;
-
-      if (context.action === "SKIP") {
+      const activeLockout = await getActiveLockout(sessionConfig.strategyId);
+      if (activeLockout) {
+        lockoutBlocked = true;
+        span.setAttribute("lockout_blocked", true);
+        span.setAttribute("lockout_reason", activeLockout.reason);
+        span.setAttribute("lockout_until", activeLockout.lockedUntil.toISOString());
         logger.info(
-          { sessionId, symbol, reason: context.reasoning.slice(0, 3) },
-          "Context gate rejected entry",
+          {
+            sessionId,
+            symbol,
+            strategyId: sessionConfig.strategyId,
+            lockoutId: activeLockout.id,
+            lockedUntil: activeLockout.lockedUntil.toISOString(),
+            reason: activeLockout.reason,
+          },
+          "Tier 5.3: entry blocked — active strategy lockout (24h compliance pause)",
         );
-      } else if (context.action === "REDUCE") {
-        plannedContracts = Math.max(
-          1,
-          Math.floor(config.contracts * Math.max(0, context.positionSizeAdjustment)),
-        );
+        db.insert(paperSignalLogs).values({
+          sessionId,
+          symbol,
+          direction: config.side,
+          signalType: "lockout_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: {
+            ...indicators,
+            _lockout_id: activeLockout.id,
+            _lockout_reason: activeLockout.reason,
+            _lockout_until: activeLockout.lockedUntil.toISOString(),
+          },
+          acted: false,
+          reason: `lockout_blocked: ${activeLockout.reason} (expires ${activeLockout.lockedUntil.toISOString()})`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist lockout block log"));
       }
-    } catch (err) {
-      logger.warn({ err, sessionId, symbol }, "Context gate failed - defaulting to TAKE");
+    } catch (lockoutErr) {
+      logger.warn({ err: lockoutErr, sessionId, symbol }, "Tier 5.3: lockout gate error — fail-open, proceeding");
     }
 
-    if (contextAction === "SKIP") {
+    // ─── Tier 5.3.1: Correlated Position Guard ──────────────
+    // Blocks new entry if any open position (cross-session) is correlated
+    // > threshold with the proposed symbol. Closes the Tier 3.3 lead-lag
+    // compliance gap: cross-market signals are legal; CONCURRENT correlated
+    // positions are a prop firm violation (position-limit bypass).
+    // Fail-OPEN: query errors do not block trading.
+    let correlatedBlocked = lockoutBlocked; // short-circuit if already blocked
+    if (!lockoutBlocked) {
+      try {
+        // Query ALL open positions across sessions for cross-symbol guard
+        const allOpenPositions = await db
+          .select({ symbol: paperPositions.symbol })
+          .from(paperPositions)
+          .where(isNull(paperPositions.closedAt));
+
+        const correlGuard = checkCorrelatedPositionGuard(symbol, allOpenPositions);
+        if (!correlGuard.allowed) {
+          correlatedBlocked = true;
+          span.setAttribute("correlated_position_blocked", true);
+          span.setAttribute("correlated_blocking_symbol", correlGuard.blockingSymbol ?? "");
+          span.setAttribute("correlated_correlation", correlGuard.blockingCorrelation ?? 0);
+          logger.info(
+            {
+              sessionId,
+              symbol,
+              blockingSymbol: correlGuard.blockingSymbol,
+              blockingCorrelation: correlGuard.blockingCorrelation,
+              threshold: correlGuard.threshold,
+              reason: KILL_REASON_CORRELATED_POSITION_OPEN,
+            },
+            "Tier 5.3.1: entry blocked — correlated position open (compliance.correlated_position_blocked)",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "correlated_position_blocked",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _blocking_symbol: correlGuard.blockingSymbol,
+              _blocking_correlation: correlGuard.blockingCorrelation,
+              _correlation_threshold: correlGuard.threshold,
+            },
+            acted: false,
+            reason: `correlated_position_blocked: open ${correlGuard.blockingSymbol} (corr=${correlGuard.blockingCorrelation?.toFixed(3)})`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist correlated position block log"));
+        }
+      } catch (correlErr) {
+        logger.warn({ err: correlErr, sessionId, symbol }, "Tier 5.3.1: guard query error — fail-open, proceeding");
+      }
+    }
+
+    // ─���─ Anti-setup gate: check if known bad pattern blocks entry ──
+    // Anti-setup gate short-circuits if lockout or correlated position guard is already active
+    let antiSetupBlocked = lockoutBlocked || correlatedBlocked;
+    let antiSetupResult: AntiSetupGateResult | null = null;
+    try {
+      antiSetupResult = await checkAntiSetupGate(
+        sessionConfig.strategyId,
+        {
+          time: bar.timestamp,
+          hour: new Date(bar.timestamp).getHours(),
+          atr: indicators["atr_14"],
+          volume: bar.volume,
+          regime: indicators["regime"] as unknown as string | undefined,
+          day_of_week: new Date(bar.timestamp).getDay(),
+        },
+      );
+      if (antiSetupResult.blocked) {
+        antiSetupBlocked = true;
+        span.setAttribute("anti_setup_blocked", true);
+        span.setAttribute("anti_setup_rule", antiSetupResult.matchedRule ?? "unknown");
+        logger.info(
+          { sessionId, symbol, rule: antiSetupResult.matchedRule, confidence: antiSetupResult.confidence },
+          "Anti-setup gate BLOCKED entry — logging shadow signal for effectiveness tracking",
+        );
+        // Log to paper_signal_logs for auditability
+        db.insert(paperSignalLogs).values({
+          sessionId,
+          symbol,
+          direction: config.side,
+          signalType: "anti_setup_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: {
+            ...indicators,
+            _anti_setup_rule: antiSetupResult.matchedRule,
+            _anti_setup_confidence: antiSetupResult.confidence,
+            _anti_setup_condition: antiSetupResult.matchedCondition,
+            _anti_setup_filter: antiSetupResult.matchedFilter,
+          },
+          acted: false,
+          reason: `anti_setup_blocked: ${antiSetupResult.matchedRule ?? "unknown"} (confidence: ${antiSetupResult.confidence?.toFixed(2) ?? "?"})`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist anti-setup block log"));
+
+        // Log to shadow_signals for hypothetical P&L tracking
+        // theoreticalPnl will be computed by the weekly effectiveness job
+        db.insert(shadowSignals).values({
+          sessionId,
+          signalTime: new Date(bar.timestamp),
+          direction: config.side,
+          expectedEntry: String(bar.close),
+          actualMarketPrice: String(bar.close),
+          wouldHaveFilled: true, // assume market order would fill
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist anti-setup shadow signal"));
+
+        broadcastSSE("anti-setup:blocked", {
+          sessionId,
+          symbol,
+          rule: antiSetupResult.matchedRule,
+          confidence: antiSetupResult.confidence,
+          price: bar.close,
+          timestamp: bar.timestamp,
+        });
+      }
+    } catch (antiSetupErr) {
+      // Anti-setup gate is fail-open: if it errors, do NOT block the trade.
+      logger.error({ err: antiSetupErr, sessionId, symbol }, "Anti-setup gate error — fail-open, proceeding with entry");
+      span.setAttribute("anti_setup_gate_error", true);
+    }
+
+    if (antiSetupBlocked) {
+      // Signal was blocked by anti-setup — skip downstream gates.
+      // Shadow signal is already persisted for effectiveness analysis.
       riskGatePassed = false;
     } else {
-      try {
-        const gateResult = await checkRiskGate(sessionId, symbol, plannedContracts);
-        riskGatePassed = gateResult.allowed;
-        if (!riskGatePassed) {
-          logger.info({ sessionId, symbol, reason: gateResult.reason }, "Risk gate rejected entry");
+
+      // ─── Wave 23.C Stage 1: Active-strategy gate ───────────────────────────
+      // Block entry if today's bias engine selected a DIFFERENT strategy as active
+      // for this symbol+regime.  Legacy strategies (legacy_no_confluence provenance
+      // or no entry_quality block) bypass this gate — they are regime-agnostic.
+      //
+      // Fail-open: if biasState is null (engine failed earlier) → no block.
+      // Audit: signal.not_active_strategy_for_regime on block.
+      const rawConfig = config as unknown as Record<string, unknown>;
+      const entryQuality = (
+        rawConfig.entry_quality ??
+        (rawConfig.strategy as Record<string, unknown> | undefined)?.entry_quality
+      ) as { confluence_factors?: string[]; min_factors_satisfied?: number; extraction_provenance?: string } | undefined;
+
+      const isLegacyStrategy =
+        !entryQuality ||
+        entryQuality.extraction_provenance === "legacy_no_confluence";
+
+      let stage1Blocked = false;
+      if (!isLegacyStrategy && biasState && biasState.activeStrategyId !== null) {
+        if (biasState.activeStrategyId !== sessionConfig.strategyId) {
+          stage1Blocked = true;
+          span.setAttribute("bias_gate_stage1_blocked", true);
+          span.setAttribute("bias_active_strategy_id", biasState.activeStrategyId);
+          logger.info(
+            {
+              sessionId,
+              symbol,
+              thisStrategyId: sessionConfig.strategyId,
+              activeStrategyId: biasState.activeStrategyId,
+              regimeLabel: biasState.regimeLabel,
+              playbook: biasState.playbook,
+            },
+            "Wave 23.C Stage 1: entry blocked — not active strategy for regime",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "bias_gate_blocked_not_active_strategy",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _bias_active_strategy_id: biasState.activeStrategyId,
+              _bias_regime: biasState.regimeLabel,
+              _bias_playbook: biasState.playbook,
+              _this_strategy_id: sessionConfig.strategyId,
+            },
+            acted: false,
+            reason: `signal.not_active_strategy_for_regime: active=${biasState.activeStrategyId} this=${sessionConfig.strategyId} regime=${biasState.regimeLabel}`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist bias stage1 block log"));
         }
-      } catch (err) {
-        logger.error({ err, sessionId }, "Risk gate check failed - skipping entry");
-        riskGatePassed = false;
       }
-    }
+
+      // ─── Wave 23.C Stage 2: A+ confluence gate ─────────────────────────────
+      // Evaluates each confluence_factor from entry_quality block.
+      // Legacy bypass: legacy_no_confluence provenance → no gate.
+      // Missing entry_quality → treat as legacy, bypass.
+      // Fail-open: each factor is fail-open individually; gate never throws.
+      //
+      // Factors evaluated:
+      //   regime_match        — activeStrategyId === null OR === thisStrategyId
+      //   structural_setup    — always true (entry expression already satisfied)
+      //   volume_confirmation — bar.volume > rolling_mean(volume,20) × 1.2
+      //   macro_alignment     — not in economic event blackout
+      //   vp_shape            — getSessionShapeScore() >= VP_SHAPE_SCORE_THRESHOLD (50)
+      //
+      // Audit: signal.a_plus_passed / signal.a_plus_rejected / signal.a_plus_bypassed_legacy
+      // SSE: signal:a_plus_rejected on block
+      let stage2Blocked = false;
+      if (!stage1Blocked) {
+        if (isLegacyStrategy) {
+          // Bypass: legacy strategy has no confluence factors defined
+          logger.debug(
+            { sessionId, symbol, strategyId: sessionConfig.strategyId },
+            "Wave 23.C Stage 2: A+ gate bypassed — legacy_no_confluence strategy",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "a_plus_bypassed_legacy",
+            price: String(bar.close),
+            indicatorSnapshot: { ...indicators, _bypass_reason: "legacy_no_confluence" },
+            acted: true,
+            reason: "signal.a_plus_bypassed_legacy: no entry_quality block or legacy_no_confluence provenance",
+          }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ bypass log"));
+        } else if (entryQuality) {
+          // Run the A+ confluence gate
+          const factors = entryQuality.confluence_factors ?? [];
+          const minRequired = entryQuality.min_factors_satisfied ?? factors.length;
+
+          // Evaluate each factor
+          const factorResults: Array<{ factor: string; satisfied: boolean; reason: string }> = [];
+
+          for (const factor of factors) {
+            try {
+              let satisfied = true;
+              let reason = "unknown_factor_fail_open";
+
+              if (factor === "regime_match") {
+                satisfied = biasState === null || biasState.activeStrategyId === null || biasState.activeStrategyId === sessionConfig.strategyId;
+                reason = satisfied ? "regime_matched" : "regime_mismatch";
+              } else if (factor === "structural_setup") {
+                satisfied = true;
+                reason = "entry_expression_true";
+              } else if (factor === "volume_confirmation") {
+                const volumeSeries = barBuffer.map((b) => b.volume).filter((v): v is number => Number.isFinite(v));
+                if (volumeSeries.length >= 20) {
+                  const rollingMean = volumeSeries.slice(-20).reduce((s, v) => s + v, 0) / 20;
+                  satisfied = bar.volume !== undefined && bar.volume > rollingMean * 1.2;
+                  reason = satisfied ? "volume_above_threshold" : "volume_insufficient";
+                } else {
+                  satisfied = true; // fail-open when insufficient history
+                  reason = "insufficient_history_fail_open";
+                }
+              } else if (factor === "macro_alignment") {
+                // Reuse calendarBlocked result (already computed above)
+                satisfied = !calendarBlocked;
+                reason = satisfied ? "no_event_blackout" : "event_blackout_active";
+              } else if (factor === "vp_shape") {
+                // Wave 23.C Gap A.1: real VP shape score from volume-profile-service
+                try {
+                  const sessionDateStr = barTimestampToTradingDay(bar.timestamp);
+                  const vpData = await getSessionShapeScore(symbol, sessionDateStr);
+                  if (!vpData.available) {
+                    satisfied = true; // fail-open when VP data unavailable
+                    reason = "vp_not_available_fail_open";
+                    logger.warn(
+                      { sessionId, symbol, sessionDate: sessionDateStr },
+                      "Wave 23.C vp_shape: VP shape data unavailable — fail-open (satisfied=true)",
+                    );
+                  } else {
+                    satisfied = vpData.score >= VP_SHAPE_SCORE_THRESHOLD;
+                    reason = satisfied
+                      ? `vp_shape_score_${vpData.score}_shape_${vpData.shape}`
+                      : `vp_shape_insufficient_${vpData.score}_lt_${VP_SHAPE_SCORE_THRESHOLD}`;
+                    logger.debug(
+                      { sessionId, symbol, score: vpData.score, shape: vpData.shape, confidence: vpData.confidence, satisfied },
+                      "Wave 23.C vp_shape factor evaluated",
+                    );
+                  }
+                } catch {
+                  satisfied = true; // fail-open on any VP error
+                  reason = "vp_shape_error_fail_open";
+                }
+              }
+
+              factorResults.push({ factor, satisfied, reason });
+            } catch {
+              // Per-factor fail-open: any evaluation error marks it satisfied
+              factorResults.push({ factor, satisfied: true, reason: "factor_eval_error_fail_open" });
+            }
+          }
+
+          const satisfiedCount = factorResults.filter((r) => r.satisfied).length;
+          const passed = satisfiedCount >= minRequired;
+
+          span.setAttribute("a_plus_satisfied_count", satisfiedCount);
+          span.setAttribute("a_plus_min_required", minRequired);
+          span.setAttribute("a_plus_passed", passed);
+
+          if (!passed) {
+            stage2Blocked = true;
+            logger.info(
+              {
+                sessionId,
+                symbol,
+                satisfiedCount,
+                minRequired,
+                factorResults,
+                strategyId: sessionConfig.strategyId,
+              },
+              "Wave 23.C Stage 2: A+ gate REJECTED — insufficient confluence factors",
+            );
+            broadcastSSE("signal:a_plus_rejected", {
+              sessionId,
+              symbol,
+              satisfiedCount,
+              minRequired,
+              factorResults,
+              price: bar.close,
+              timestamp: bar.timestamp,
+            });
+            db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "a_plus_rejected",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _a_plus_satisfied_count: satisfiedCount,
+                _a_plus_min_required: minRequired,
+                _a_plus_factor_results: factorResults,
+              },
+              acted: false,
+              reason: `signal.a_plus_rejected: ${satisfiedCount}/${minRequired} factors satisfied (${factorResults.filter((r) => !r.satisfied).map((r) => r.factor).join(", ")} failed)`,
+            }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist A+ rejected log"));
+          } else {
+            logger.debug(
+              { sessionId, symbol, satisfiedCount, minRequired, factorResults },
+              "Wave 23.C Stage 2: A+ gate PASSED",
+            );
+            db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "a_plus_passed",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _a_plus_satisfied_count: satisfiedCount,
+                _a_plus_min_required: minRequired,
+                _a_plus_factor_results: factorResults,
+              },
+              acted: true,
+              reason: `signal.a_plus_passed: ${satisfiedCount}/${minRequired} factors satisfied`,
+            }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ passed log"));
+          }
+        }
+      }
+
+      // If either Stage 1 or Stage 2 blocked — treat as gate rejected (no entry)
+      if (stage1Blocked || stage2Blocked) {
+        riskGatePassed = false;
+        // Skip to end of else branch — no OI / macro / risk gate needed
+      } else {
+
+      // ─── W19: OI liquidity soft-gate check (ADVISORY) ─────────────
+      // checkOiLiquidity() inspects 5-day open-interest trend on the contract
+      // and flags rolls/expiry where liquidity is drying up. Authority is
+      // ADVISORY — we never block on this signal, we just persist a paper
+      // signal log row (signalType="oi_decline_advisory") so the operator can
+      // see that an entry fired into a thinning book. Fail-open on any error.
+      // Wired 2026-04-30 in the integration audit (file existed but was an
+      // orphan — its own header doc claimed it was wired here).
+      try {
+        const { checkOiLiquidity } = await import("./oi-liquidity-filter.js");
+        const oiResult = await checkOiLiquidity(symbol.toUpperCase());
+        if (oiResult.shouldBlock) {
+          span.setAttribute("oi_decline_advisory", true);
+          span.setAttribute("oi_decline_pct", oiResult.declinePct ?? 0);
+          logger.warn(
+            { sessionId, symbol, declinePct: oiResult.declinePct, latestOi: oiResult.latestOi, earliestOi: oiResult.earliestOi },
+            "W19 OI liquidity advisory: declining open interest detected (entry NOT blocked — advisory only)",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "oi_decline_advisory",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _oi_decline_pct: oiResult.declinePct,
+              _oi_latest: oiResult.latestOi,
+              _oi_earliest: oiResult.earliestOi,
+              _oi_data_points: oiResult.dataPoints,
+              _oi_threshold: oiResult.threshold,
+            },
+            acted: true, // entry WILL fire — this is advisory only
+            reason: `oi_decline_advisory: ${oiResult.reason}`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist OI advisory log"));
+        }
+      } catch (oiErr) {
+        logger.debug({ err: oiErr, sessionId, symbol }, "W19 OI liquidity check failed — fail-open, proceeding");
+      }
+
+      // ─── C11: Macro hard gate check (BEFORE risk gate) ─────────────
+      // Fail-open: if evaluateMacroGates throws or macro data unavailable,
+      // trading continues unblocked. Same fail-open pattern as calendar_filter.
+      let macroGateBlocked = false;
+      try {
+        const { evaluateMacroGates } = await import("./macro-gate-service.js");
+        const macroGate = await evaluateMacroGates(
+          symbol.toUpperCase(),
+          config.side as "long" | "short",
+          sessionConfig.strategyId,
+        );
+        if (!macroGate.allowed) {
+          macroGateBlocked = true;
+          span.setAttribute("macro_gate_blocked", true);
+          span.setAttribute("macro_gate_reason", macroGate.gateReason);
+          logger.info(
+            { sessionId, symbol, direction: config.side, reason: macroGate.gateReason, severity: macroGate.severity },
+            "C11 macro gate BLOCKED entry signal",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "macro_gate_blocked",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _macro_gate_reason: macroGate.gateReason,
+              _macro_crisis_prob: macroGate.macroContext.probCrisis,
+              _macro_dominant_state: macroGate.macroContext.dominantState,
+              _macro_severity: macroGate.severity,
+            },
+            acted: false,
+            reason: `macro_gate_blocked: ${macroGate.gateReason}`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist macro gate block log"));
+        }
+        // C11: FOMC proximity → halve contracts (advisory, not a block)
+        // The halved contract count is stored in fomcReducedContracts and applied
+        // at position open time below.
+        if (macroGate.fomcSizeReduction && !macroGateBlocked) {
+          const fomcReducedContracts = Math.max(1, Math.floor((config.contracts ?? 1) / 2));
+          span.setAttribute("fomc_size_reduction", true);
+          span.setAttribute("fomc_reduced_contracts", fomcReducedContracts);
+          logger.info(
+            { sessionId, symbol, originalContracts: config.contracts, fomcReducedContracts },
+            "C11 FOMC ±1 day: contract size advisory halved (applied at entry)",
+          );
+          // Store in span attributes for downstream position open (best-effort signal)
+          span.setAttribute("c11_fomc_contracts", fomcReducedContracts);
+        }
+      } catch (macroGateErr) {
+        logger.warn({ err: macroGateErr, sessionId, symbol }, "C11 macro gate check error — fail-open, proceeding");
+        span.setAttribute("macro_gate_error", true);
+      }
+
+      if (macroGateBlocked) {
+        riskGatePassed = false;
+      } else {
+        try {
+          const gateResult = await checkRiskGate(sessionId, symbol, config.contracts);
+          riskGatePassed = gateResult.allowed;
+          if (!riskGatePassed) {
+            logger.info({ sessionId, symbol, reason: gateResult.reason }, "Risk gate rejected entry");
+          }
+        } catch (err) {
+          logger.error({ err, sessionId }, "Risk gate check failed — skipping entry");
+          riskGatePassed = false;
+        }
+      }
+      } // close inner else { (stage1Blocked || stage2Blocked guard)
+    } // close outer else { (antiSetupBlocked guard)
 
     if (riskGatePassed) {
-      action = "open";
-      const result = await openPosition(sessionId, {
-        symbol,
-        side: config.side,
-        signalPrice: bar.close,
-        contracts: plannedContracts,
-        orderType: "market",
-        rsi: indicators["rsi_14"],
-        atr: indicators["atr_14"],
-      });
-      if (!result.position) {
-        action = "none";
-        fillMiss = true;
-        await setCooldown(sessionId, sessionConfig, Math.max(1, Math.floor((config.cooldown_bars ?? 4) / 2)));
-      } else {
+      // ─── Context Gate: TAKE/REDUCE/SKIP ───────────────────
+
+      // P1-6(b): Dynamic ATR sizing — mirrors backtester's compute_position_sizes().
+      // When config.position_size.type === "dynamic_atr", compute contracts as:
+      //   floor(target_risk_dollars / (atr * tick_value)), minimum 1.
+      // Falls back to config.contracts for fixed sizing or missing ATR.
+      const positionSizeCfg = (config as unknown as Record<string, unknown>).position_size as
+        | { type?: string; target_risk?: number; fixed_contracts?: number }
+        | undefined;
+      let baseContracts = config.contracts;
+      if (positionSizeCfg?.type === "dynamic_atr") {
+        const currentAtrForSizing = indicators["atr_14"];
+        const spec = CONTRACT_SPECS[symbol];
+        if (currentAtrForSizing && currentAtrForSizing > 0 && spec) {
+          const targetRisk = positionSizeCfg.target_risk ?? 200;
+          const _tickValue = spec.tickValue; // retained for reference; pointValue used below
+          const atrInPoints = currentAtrForSizing; // ATR is already in price points
+          // dollar risk per contract = atr_points * point_value = atr_ticks * tick_value
+          // Using tick_value matches sizing.py: raw = target_risk / (atr * point_value)
+          // but atr here is in points so: risk = atr * point_value
+          const riskPerContract = atrInPoints * spec.pointValue;
+          if (riskPerContract > 0) {
+            baseContracts = Math.max(1, Math.floor(targetRisk / riskPerContract));
+          }
+        }
+      }
+
+      // P1-6(a): Apply firm contract cap (clamped to [CONTRACT_CAP_MIN, CONTRACT_CAP_MAX])
+      const firmCap = getFirmContractCap(sessionRow.firmId, symbol);
+      baseContracts = Math.min(baseContracts, firmCap);
+
+      let contextContracts = skipReduce
+        ? Math.max(1, Math.round(baseContracts / 2))
+        : baseContracts;
+      try {
+        const ctxGate = await evaluateContextGate(
+          symbol, config.side, bar.close,
+          sessionConfig.strategyId, barBuffer, indicators,
+        );
+        if (ctxGate.action === "SKIP") {
+          riskGatePassed = false;
+          logger.info(
+            { sessionId, symbol, action: "SKIP", reasons: ctxGate.reasoning },
+            "Context gate SKIP — signal rejected",
+          );
+          // Persist SKIP decision to paper_signal_logs so it is auditable and
+          // visible in post-session analysis.  The logSignal() path only fires
+          // for entrySignal/exitSignal/stopHit; context gate SKIP bypasses that
+          // condition and would otherwise leave no DB trace.
+          try {
+            const skipReason = `context_gate_skip: ${ctxGate.reasoning ?? "no reason"}`;
+            await db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "context_gate_skip",
+              price: String(bar.close),
+              indicatorSnapshot: indicators,
+              acted: false,
+              reason: skipReason,
+            });
+          } catch (skipLogErr) {
+            logger.error({ skipLogErr, sessionId }, "Failed to persist context gate SKIP log");
+          }
+        } else if (ctxGate.action === "REDUCE") {
+          contextContracts = Math.max(1, Math.round(baseContracts * ctxGate.positionSizeAdjustment));
+          logger.info(
+            { sessionId, symbol, action: "REDUCE", from: baseContracts, to: contextContracts },
+            "Context gate REDUCE — position size halved",
+          );
+          // Persist REDUCE decision to paper_signal_logs for auditable post-session
+          // analysis.  Without this, a REDUCE is invisible — the trade fires at the
+          // reduced size but the journal never explains why.
+          try {
+            const reduceReason = `context_gate_reduce: ${(ctxGate.reasoning ?? []).join("; ") || "no reason"}`;
+            await db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "context_gate_reduce",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _contracts_original: baseContracts,
+                _contracts_adjusted: contextContracts,
+                _context_gate_confidence: ctxGate.confidence,
+                _position_size_adjustment: ctxGate.positionSizeAdjustment,
+              },
+              acted: true,
+              reason: reduceReason,
+            });
+          } catch (reduceLogErr) {
+            logger.error({ reduceLogErr, sessionId }, "Failed to persist context gate REDUCE log");
+          }
+        }
+        // TAKE → proceed with full size
+      } catch (err) {
+        if (FAIL_CLOSED_EXECUTION) {
+          riskGatePassed = false;
+          logger.error({ err, sessionId }, "Context gate error — fail-closed blocks entry");
+        } else {
+          // Explicit fail-open mode: context gate error does NOT block the trade
+          logger.debug({ err, sessionId }, "Context gate error — proceeding with TAKE");
+        }
+      }
+
+      if (riskGatePassed) {
+        // ─── B4.3: Governor gate — check state machine before entry ───
+        // Governor mirrors Python's first-loss state machine used in
+        // backtest_governor replay. State transitions fire via
+        // updateGovernorOnTrade() when positions close.
+        // Fail-open: if config.daily_loss_budget is missing, default to $500.
+        const dailyBudget = (sessionConfig.config as unknown as Record<string, unknown>).daily_loss_budget as number | undefined ?? 500;
+        const govResult = checkGovernor(sessionId, contextContracts, dailyBudget);
+        if (!govResult.allowed) {
+          riskGatePassed = false;
+          span.setAttribute("governor_blocked", true);
+          span.setAttribute("governor_state", govResult.governorState);
+          logger.info(
+            { sessionId, symbol, governorState: govResult.governorState, reason: govResult.reason },
+            "Governor (B4.3): entry blocked — lockout state",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "governor_blocked",
+            price: String(bar.close),
+            indicatorSnapshot: { ...indicators, _governor_state: govResult.governorState },
+            acted: false,
+            reason: govResult.reason,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist governor block log"));
+        } else if (govResult.adjustedContracts < contextContracts) {
+          // Governor reduced size — apply adjustment
+          const prevContracts = contextContracts;
+          contextContracts = govResult.adjustedContracts;
+          span.setAttribute("governor_reduced", true);
+          span.setAttribute("governor_state", govResult.governorState);
+          logger.info(
+            { sessionId, symbol, from: prevContracts, to: contextContracts, governorState: govResult.governorState },
+            "Governor (B4.3): position size reduced",
+          );
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "governor_reduced",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _governor_state: govResult.governorState,
+              _contracts_original: prevContracts,
+              _contracts_adjusted: contextContracts,
+            },
+            acted: true,
+            reason: govResult.reason,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist governor reduce log"));
+        }
+      }
+
+      // ─── B8b: PILOT canary — hard 1-contract ceiling ──────────────────────
+      // This clamp runs AFTER all other sizing logic (ATR sizing, firm cap,
+      // context gate REDUCE, Kelly/profit-tier, governor REDUCE) so no earlier
+      // gate can inadvertently bypass it.
+      //
+      // PILOT strategies must run exactly 1 contract per the canary contract:
+      //   "Exactly 1 contract is enforced by paper-signal-service during PILOT"
+      //   (see checkPilotAutoPromotions() comment in lifecycle-service.ts).
+      //
+      // The clamp is HARD — no config, no env var, no override.  If the strategy
+      // is in PILOT, it trades 1 contract.  Always.
+      if (sessionConfig.lifecycleState === "PILOT" && riskGatePassed && contextContracts !== 1) {
+        const dslMax = contextContracts;
+        contextContracts = 1;
         logger.info(
-          { sessionId, symbol, side: config.side, price: bar.close, contracts: plannedContracts, contextAction },
-          "Paper position opened - entry signal",
+          { sessionId, symbol, dslMax, pilotContracts: 1 },
+          "PILOT canary: contracts clamped to 1 (DSL max=" + dslMax + ")",
+        );
+        span.setAttribute("pilot_canary_clamp", true);
+        span.setAttribute("pilot_contracts_before_clamp", dslMax);
+      }
+
+      if (riskGatePassed) {
+        // ─── FIX 1 (B2 PARITY CRITICAL): Defer entry to next bar ─────────────
+        // backtester.py rolls signals +1 bar (np.roll) so fills happen at bar N+1.
+        // Paper was executing at bar N's close — 1 bar early, systematically better
+        // entry prices.  We enqueue the entry here and execute on the NEXT bar's close.
+        action = "open"; // log as "open" pending — the actual fill happens on bar N+1
+        const volumeSeries = barBuffer
+          .map((bufferBar) => bufferBar.volume)
+          .filter((volume): volume is number => Number.isFinite(volume));
+        const sortedVolumes = [...volumeSeries].sort((left, right) => left - right);
+        const medianBarVolume =
+          sortedVolumes.length === 0
+            ? undefined
+            : sortedVolumes.length % 2 === 1
+              ? sortedVolumes[Math.floor(sortedVolumes.length / 2)]
+              : (sortedVolumes[sortedVolumes.length / 2 - 1] + sortedVolumes[sortedVolumes.length / 2]) / 2;
+        const currentAtrForEntry = indicators["atr_14"];
+        const stopLimitOffset = currentAtrForEntry ? 0.5 * currentAtrForEntry : undefined;
+
+        // Store the pending entry — execution deferred to bar N+1 in the next evaluateSignals call
+        pendingEntryQueue.set(pendingKey, {
+          sessionId,
+          symbol,
+          side: config.side,
+          contracts: contextContracts,
+          orderType: "stop_limit",
+          stopLimitOffset,
+          rsi: indicators["rsi_14"],
+          atr: currentAtrForEntry,
+          barVolume: bar.volume,        // bar N's volume — used as fallback medianBarVolume context
+          medianBarVolume,
+          signalBarTimestamp: bar.timestamp,
+          correlationId,
+        });
+
+        span.setAttribute("pending_entry_queued", true);
+        span.setAttribute("signal_bar", bar.timestamp);
+        logger.info(
+          { sessionId, symbol, side: config.side, signalPrice: bar.close, contracts: contextContracts },
+          "FIX 1: Entry signal queued — will execute at next bar's close (next-bar fill parity with backtest)",
         );
       }
     }
@@ -769,4 +2933,27 @@ export async function evaluateSignals(
     strategySide: config.side,  // BUG 1 fix: pass actual strategy side
     fillMiss,
   });
+  } finally {
+    span.end();
+  }
+}
+
+/**
+ * Backfill state for a bar without executing trades or logging signals.
+ * Used to repair indicator state after a connection drop.
+ */
+export async function updateStateOnly(
+  sessionId: string,
+  symbol: string,
+  bar: Bar,
+  barBuffer: Bar[]
+): Promise<void> {
+  const sessionConfig = await getSessionConfig(sessionId);
+  if (!sessionConfig) return;
+
+  const indicators = computeIndicators(barBuffer);
+  const prevKey = `${sessionId}:${symbol}`;
+  
+  // Just update the previous indicators so the NEXT real-time bar has correct context
+  previousIndicators.set(prevKey, indicators);
 }

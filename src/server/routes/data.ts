@@ -7,7 +7,7 @@ import {
   queryInfo,
   listAvailableSymbols,
 } from "../../data/loaders/index.js";
-import { logger } from "../index.js";
+
 
 export const dataRoutes = Router();
 
@@ -36,12 +36,12 @@ const fetchSchema = z.object({
 
 // ─── GET /api/data/symbols ───────────────────────────────────────
 
-dataRoutes.get("/symbols", async (_req, res) => {
+dataRoutes.get("/symbols", async (req, res) => {
   try {
     const symbols = await listAvailableSymbols();
     res.json({ symbols });
   } catch (err) {
-    logger.error({ err }, "Failed to list symbols");
+    req.log.error({ err }, "Failed to list symbols");
     res.status(500).json({ symbols: [], error: "Could not query S3 — data may not be loaded yet" });
   }
 });
@@ -74,7 +74,7 @@ dataRoutes.get("/query-info", async (req, res) => {
           totalBars: info.totalBars,
         };
       } catch (err) {
-        logger.warn({ err, symbol }, "Failed to get info for symbol");
+        req.log.warn({ err, symbol }, "Failed to get info for symbol");
         result[symbol] = { error: "No data available" };
       }
     })
@@ -113,7 +113,7 @@ dataRoutes.get("/:symbol/ohlcv", async (req, res) => {
       bars,
     });
   } catch (err) {
-    logger.error({ err, symbol: req.params.symbol }, "OHLCV query failed");
+    req.log.error({ err, symbol: req.params.symbol }, "OHLCV query failed");
     res.status(500).json({ error: "Query failed — data may not be available for this symbol/range" });
   }
 });
@@ -125,7 +125,7 @@ dataRoutes.get("/:symbol/info", async (req, res) => {
     const info = await queryInfo(req.params.symbol);
     res.json(info);
   } catch (err) {
-    logger.error({ err, symbol: req.params.symbol }, "Info query failed");
+    req.log.error({ err, symbol: req.params.symbol }, "Info query failed");
     res.status(500).json({ error: "Could not get info for this symbol" });
   }
 });
@@ -172,13 +172,13 @@ dataRoutes.post("/fetch", async (req, res) => {
 
   let stdout = "";
   proc.stdout.on("data", (data) => (stdout += data.toString()));
-  proc.stderr.on("data", (data) => logger.info({ step: "pipeline" }, data.toString().trim()));
+  proc.stderr.on("data", (data) => req.log.info({ step: "pipeline" }, data.toString().trim()));
 
   proc.on("close", (code) => {
     if (code === 0) {
-      logger.info({ symbol, result: stdout.slice(0, 500) }, "Pipeline completed");
+      req.log.info({ symbol, result: stdout.slice(0, 500) }, "Pipeline completed");
     } else {
-      logger.error({ symbol, code, stdout: stdout.slice(0, 500) }, "Pipeline failed");
+      req.log.error({ symbol, code, stdout: stdout.slice(0, 500) }, "Pipeline failed");
     }
   });
 });

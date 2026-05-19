@@ -14,26 +14,44 @@
     "db:studio": "drizzle-kit studio",
     "test": "vitest",
     "lint": "eslint src/",
+    "deep-scan": "tsx scripts/deep-scan.ts",
+    "system-map:check": "tsx scripts/system-map.ts check",
+    "system-map:sync": "tsx scripts/system-map.ts sync",
+    "check:production-isolation": "node scripts/check-production-isolation.mjs",
+    "check:2026-compliance": "node scripts/verify-2026-rules-compliance.mjs",
+    "audit:n8n": "tsx scripts/n8n-drift-audit.ts",
     "forge": "tsx scripts/cli.ts",
     "discord": "tsx src/discord/bot.ts",
-    "discord:dev": "tsx watch src/discord/bot.ts"
+    "discord:dev": "tsx watch src/discord/bot.ts",
+    "test:metrics": "python -m pytest src/engine/tests/test_metric_snapshot.py src/engine/tests/test_golden_fixtures.py src/engine/tests/test_frankenstein.py src/engine/tests/test_cross_engine_parity.py -v --tb=short",
+    "test:metrics:fast": "python -m pytest src/engine/tests/test_metric_snapshot.py::TestSnapshotPerfect src/engine/tests/test_metric_snapshot.py::TestSnapshotMarginal src/engine/tests/test_metric_snapshot.py::TestSnapshotFeesKiller src/engine/tests/test_metric_snapshot.py::TestSnapshotConsistency -q --tb=short",
+    "test:metrics:update-snapshots": "SNAPSHOT_UPDATE=1 python -m pytest src/engine/tests/test_metric_snapshot.py -v --tb=short"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1005.0",
     "@aws-sdk/lib-storage": "^3.1005.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.52.0",
+    "@opentelemetry/resources": "^1.25.0",
+    "@opentelemetry/sdk-trace-base": "^1.25.0",
+    "@opentelemetry/sdk-trace-node": "^1.25.0",
+    "@opentelemetry/semantic-conventions": "^1.25.0",
     "discord.js": "^14.25.1",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.45.1",
     "duckdb-async": "^1.4.2",
     "express": "^5.2.1",
     "node-cron": "^4.2.1",
+    "openai": "^6.33.0",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "postgres": "^3.4.7",
+    "prom-client": "^15.1.3",
     "ws": "^8.19.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.0",
     "@types/node": "^22.15.0",
     "@types/node-cron": "^3.0.11",
@@ -42,6 +60,7 @@
     "eslint": "^9.20.0",
     "tsx": "^4.19.0",
     "typescript": "~5.9.2",
+    "typescript-eslint": "^8.57.1",
     "vitest": "^3.1.0"
   }
 }

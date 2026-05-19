@@ -37,7 +37,7 @@ class LondonRaidStrategy(BaseStrategy):
         self.displacement_mult = displacement_mult
         self.swing_lookback = swing_lookback
         self.fvg_lookback = fvg_lookback
-        self.symbol = "ES"
+        self.symbol = "MES"
         self.timeframe = "5min"
 
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:

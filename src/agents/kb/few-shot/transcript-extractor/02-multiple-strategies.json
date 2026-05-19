@@ -1,0 +1,73 @@
+{
+  "input": {
+    "video_metadata": {
+      "youtube_url": "https://www.youtube.com/watch?v=mK3JxQ8Lz4P",
+      "title": "Three Setups I Trade on Futures Every Week | Quant Trader Q&A",
+      "channel": "FutureTrader Quant",
+      "duration_seconds": 1834
+    },
+    "transcript_snippet": "Alright let's go through the three setups I run every week. First setup is the opening range breakout on MES, five-minute bars. I take the first thirty minutes of regular hours, mark the high and the low, and on the first five-minute close that breaks either side by two ticks I enter in that direction. Stop is one point eight ATR. Target is three ATR, scale half off at one point five and trail the rest. Only RTH. Second setup is a 9/21 EMA crossover on MNQ, fifteen-minute bars. Confirmation has to be two bars after the cross — that's non-negotiable, otherwise you get whipsawed to death. ADX has to be above twenty-five for me to take the trade. Stop one and a half ATR, trail at two ATR with break-even after the move goes one R in my favor. Third setup, this one is the Keltner squeeze on Micro Crude, MCL. Fifteen-minute bars again. I look for at least six bars where the Bollinger bands sit inside the Keltner channels — that's the squeeze. When price breaks out the first bar that closes outside the prior range I'm in. Bigger stop on this one, two ATR, because crude noise is wild. Trail at two and a half ATR. I do not trade this around the EIA inventory release Wednesday at ten thirty Eastern. So those are the three. All of them are RTH only."
+  },
+  "expected_output": {
+    "strategies": [
+      {
+        "name": "orb_mes_5m",
+        "description": "Opening range breakout on MES 5m: 30-minute opening range, 2-tick break confirmation, scale half at 1.5 ATR, trail rest at 3 ATR. RTH only per FutureTrader Quant YouTube walkthrough.",
+        "symbol": "MES",
+        "timeframe": "5m",
+        "direction": "both",
+        "entry_type": "breakout",
+        "entry_indicator": "session_open_breakout",
+        "entry_params": { "range_minutes": 30, "buffer_ticks": 2 },
+        "entry_condition": "Mark first 30 min of RTH as opening range; enter long on first 5m close 2 ticks above range high; mirror short on close below range low.",
+        "exit_type": "trailing_stop",
+        "exit_params": { "atr_period": 14, "multiplier": 3.0 },
+        "stop_loss_atr_multiple": 1.8,
+        "take_profit_atr_multiple": 3.0,
+        "preferred_regime": "OPENING_RANGE",
+        "session_filter": "RTH_ONLY",
+        "max_contracts": 5,
+        "tags": ["orb", "mes", "youtube-extracted", "futuretrader-quant"]
+      },
+      {
+        "name": "trend_mnq_ema921_v2",
+        "description": "9/21 EMA crossover on MNQ 15m with 2-bar confirmation, ADX > 25 regime gate, 2.0 ATR trail, break-even at 1R per FutureTrader Quant YouTube walkthrough.",
+        "symbol": "MNQ",
+        "timeframe": "15m",
+        "direction": "both",
+        "entry_type": "trend_follow",
+        "entry_indicator": "ema_crossover",
+        "entry_params": { "fast_period": 9, "slow_period": 21, "confirmation_bars": 2 },
+        "entry_condition": "Enter long on close above 21 EMA after 9/21 cross with 2-bar hold; require ADX > 25; mirror short.",
+        "exit_type": "trailing_stop",
+        "exit_params": { "atr_period": 14, "multiplier": 2.0, "break_even_at_r": 1.0 },
+        "stop_loss_atr_multiple": 1.5,
+        "take_profit_atr_multiple": 3.0,
+        "preferred_regime": "TRENDING_UP",
+        "session_filter": "RTH_ONLY",
+        "max_contracts": 10,
+        "tags": ["trend", "ema", "mnq", "youtube-extracted"]
+      },
+      {
+        "name": "keltner_squeeze_mcl_15m",
+        "description": "Keltner-Bollinger squeeze breakout on MCL 15m: 6+ bars BB inside KC, enter on first bar closing outside prior range, 2.5 ATR trail, skip Wed 10:30 ET EIA window.",
+        "symbol": "MCL",
+        "timeframe": "15m",
+        "direction": "both",
+        "entry_type": "volatility_expansion",
+        "entry_indicator": "keltner_squeeze",
+        "entry_params": { "bb_period": 20, "kc_period": 20, "kc_multiplier": 1.5 },
+        "entry_condition": "After 6+ bars of squeeze (BB inside KC), enter on first bar closing outside prior bar range; skip Wed 10:00-12:00 ET EIA window.",
+        "exit_type": "trailing_stop",
+        "exit_params": { "atr_period": 14, "multiplier": 2.5 },
+        "stop_loss_atr_multiple": 2.0,
+        "take_profit_atr_multiple": 4.0,
+        "preferred_regime": "HIGH_VOL",
+        "session_filter": "RTH_ONLY",
+        "max_contracts": 8,
+        "tags": ["keltner", "squeeze", "mcl", "youtube-extracted"]
+      }
+    ]
+  },
+  "notes": "Multi-strategy extraction. Transcript covers three distinct setups with explicit symbols, timeframes, indicators, params, stops, and exits. Extractor produced three DSLs, each in canonical parameter range, each with a regime tag matching the transcript's stated context. All three preserve take_profit > stop_loss. Common pitfall avoided: NOT merging the three setups into one composite DSL — each gets its own row because they're independent edges. The Keltner Squeeze includes the EIA-window skip in entry_condition (engine-level macro gate handles enforcement)."
+}

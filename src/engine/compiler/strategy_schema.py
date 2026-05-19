@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Timeframe(str, Enum):
@@ -30,6 +30,7 @@ class EntryType(str, Enum):
     TREND_FOLLOW = "trend_follow"
     VOLATILITY_EXPANSION = "volatility_expansion"
     SESSION_PATTERN = "session_pattern"
+    EVENT_DRIVEN = "event_driven"  # W13 B3 — news/inventory release reactions
 
 
 class ExitType(str, Enum):
@@ -38,6 +39,53 @@ class ExitType(str, Enum):
     TIME_EXIT = "time_exit"
     INDICATOR_SIGNAL = "indicator_signal"
     ATR_MULTIPLE = "atr_multiple"
+
+
+class ChartConstruction(str, Enum):
+    """Chart construction type. CANDLES is the safe default (real OHLC).
+    RENKO is opt-in for grid/scaling strategies and requires brick_size_atr in entry_params.
+    HEIKIN_ASHI is rejected — synthetic price means backtests don't validate real edge."""
+
+    CANDLES = "candles"
+    RENKO = "renko"
+
+
+# Indicator names that signal Heikin-Ashi or other synthetic price construction —
+# rejected at validation time per QuantVue ATS post-mortem (Qpilot 95% phantom alerts).
+_HEIKIN_FORBIDDEN_PATTERNS = (
+    "heikin",
+    "heikin_ashi",
+    "heikinashi",
+    "ha_close",
+    "ha_open",
+    "ha_high",
+    "ha_low",
+    "haclose",
+    "haopen",
+)
+
+
+class ProfitScalingTier(BaseModel):
+    """Profit-tier sizing config (W5a / Tier 5.4).
+
+    Pairs with `compute_profit_tier()` and `compute_position_sizes()` in
+    `src/engine/sizing.py`. Every `threshold` of cumulative single-account profit
+    adds `increment` extra micro contracts to the base ATR-derived size, capped by
+    the firm-specific cap and the global CONTRACT_CAP_MAX (20).
+
+    DSL fixtures emit `{"increment": 2, "threshold": 3000}` only —
+    `account_pnl_total` is injected at backtest-run time from live account PnL,
+    so it is intentionally absent from the schema.
+    """
+
+    increment: int = Field(2, ge=1, le=10, description="Contracts added per tier")
+    threshold: float = Field(
+        3000.0,
+        gt=0,
+        description="Cumulative single-account profit per tier ($)",
+    )
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class StrategyDSL(BaseModel):
@@ -53,8 +101,11 @@ class StrategyDSL(BaseModel):
     )
 
     # Core identity
-    symbol: str = Field(
-        ..., description="Futures symbol (ES, NQ, CL, YM, RTY, GC, MES, MNQ)"
+    # M8 fix: constrain to the symbols the engine actually supports.
+    # config.CONTRACT_SPECS only has MES/MNQ/MCL — free-form string used
+    # to silently accept invalid symbols that crashed the backtester later.
+    symbol: Literal["MES", "MNQ", "MCL"] = Field(
+        ..., description="Futures symbol (MES, MNQ, MCL only)"
     )
     timeframe: Timeframe
     direction: Direction
@@ -99,12 +150,91 @@ class StrategyDSL(BaseModel):
         description="RTH_ONLY | ETH_ONLY | ALL_SESSIONS | LONDON | ASIA",
     )
 
+    # Chart construction — candles is the safe default. Renko is opt-in.
+    # Heikin-Ashi is rejected (see _HEIKIN_FORBIDDEN_PATTERNS).
+    chart_construction: ChartConstruction = Field(
+        default=ChartConstruction.CANDLES,
+        description="Chart bar construction. 'candles' (default) uses real OHLC. "
+        "'renko' is opt-in for grid/scaling strategies — requires brick_size_atr in entry_params.",
+    )
+
     # Metadata
     source: str = Field(
         default="manual",
         description="manual | ollama | openclaw | n8n",
     )
     tags: list[str] = Field(default_factory=list)
+
+    # Profit-tier sizing (W5a / Tier 5.4) — optional. None = no profit scaling
+    # (behavior identical to pre-Tier-5.4). When set, plumbed through to
+    # compute_position_sizes(profit_scaling_tier=...) at backtest-run time.
+    # Field name `profit_scaling_tier` MUST match Team A's compute_position_sizes()
+    # parameter — see CLAUDE.md "Profit-Based Position Scaling" section.
+    profit_scaling_tier: Optional[ProfitScalingTier] = Field(
+        None,
+        description="Optional profit-tier sizing config. When None, no scaling.",
+    )
+
+    # Optional archetype-level daily P&L target (used by paper automation telemetry).
+    daily_target_dollars: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="Daily P&L target in dollars (informational). None = no target.",
+    )
+
+    # Frankenstein test mode (A4 — W10 Team C).
+    # Controls how the randomization detection test shuffles data when this strategy
+    # is tested via frankenstein_test.py before TESTING→PAPER promotion.
+    #
+    # Modes:
+    #   full_shuffle        — bars shuffled uniformly (default; destroys all temporal structure)
+    #   benchmark_relative  — excess returns above benchmark shuffled (long-only strategies)
+    #   calendar_preserving — shuffle within day-of-week buckets (calendar-effect strategies)
+    #   synthetic_gbm       — replace data with GBM random walk at matched mean/vol
+    #
+    # None (default) → full_shuffle is used. Operators may override for strategies
+    # that legitimately exploit calendar effects (use calendar_preserving instead of
+    # full_shuffle so the test doesn't incorrectly reject a valid edge).
+    frankenstein_test_mode: Optional[Literal[
+        "full_shuffle",
+        "benchmark_relative",
+        "calendar_preserving",
+        "synthetic_gbm",
+    ]] = Field(
+        None,
+        description="Shuffle mode for A4 Frankenstein randomization test. None = full_shuffle.",
+    )
+
+    # News-blackout opt-out (W13 B3 — event-driven archetypes).
+    # Default: skip entries during macro release blackouts (CPI/NFP/FOMC/EIA).
+    # Setting True must be conscious — required for news_fade_mcl which trades
+    # INTO EIA inventory volatility intentionally.
+    bypass_news_blackout: Optional[bool] = Field(
+        None,
+        description=(
+            "When True, strategy explicitly opts into trading during news windows. "
+            "Required for event-driven strategies like news_fade_mcl. "
+            "Must be explicitly set — no default opt-in."
+        ),
+    )
+
+    # Position sizing method (W13 B7 — Kelly Criterion sizing).
+    # None (default) = use existing fixed/profit_scaling logic (100% backward-compatible).
+    # "kelly" = use kelly_optimal_contracts() from src/engine/sizing.py.
+    # "fixed" = explicit fixed sizing (same as None but self-documenting).
+    # "atr_based" = dynamic ATR sizing (same as None but self-documenting).
+    # Kelly sizing is ADDITIVE with profit_scaling_tier:
+    #   Kelly determines the base contract count; profit tier scales it up.
+    # Kelly sizing NEVER exceeds the firm's contract cap.
+    sizing_method: Optional[Literal["fixed", "kelly", "atr_based"]] = Field(
+        None,
+        description=(
+            "Position sizing method. None = existing fixed/ATR logic (backward-compatible). "
+            "'kelly' = Kelly Criterion optimal sizing (quarter-Kelly by default). "
+            "'fixed' = fixed contracts (same as None, explicit). "
+            "'atr_based' = dynamic ATR sizing (same as None, explicit)."
+        ),
+    )
 
     model_config = {"extra": "forbid"}
 
@@ -114,4 +244,38 @@ class StrategyDSL(BaseModel):
             raise ValueError(
                 f"entry_params must have <= 5 keys, got {len(self.entry_params)}"
             )
+        return self
+
+    @model_validator(mode="after")
+    def reject_heikin_ashi(self) -> "StrategyDSL":
+        """Heikin-Ashi rejection: synthetic price means backtests validate a smoothed
+        visualization, not real edge. Real fills happen on real candles, so HA-derived
+        signals disappear in production. See QuantVue ATS post-mortem (Discord image 16)."""
+        haystack = (self.entry_indicator + " " + self.name).lower()
+        for pattern in _HEIKIN_FORBIDDEN_PATTERNS:
+            if pattern in haystack:
+                raise ValueError(
+                    f"Heikin-Ashi-derived strategies are rejected. Found '{pattern}' in "
+                    f"entry_indicator='{self.entry_indicator}' or name='{self.name}'. "
+                    f"HA is a synthetic price — backtest edge does not transfer to live fills."
+                )
+        return self
+
+    @model_validator(mode="after")
+    def validate_renko_opt_in(self) -> "StrategyDSL":
+        """Renko strategies require brick_size_atr in entry_params (per QuantVue Qgrid_Elite pattern).
+        This forces deterministic brick close timing tied to real ATR, preventing the Qpilot
+        repaint failure mode where bricks 'paint and unpaint' with new ticks."""
+        if self.chart_construction == ChartConstruction.RENKO:
+            if "brick_size_atr" not in self.entry_params:
+                raise ValueError(
+                    "Renko strategies must declare brick_size_atr in entry_params "
+                    "(brick size as multiple of ATR — typically 0.5 to 2.0). "
+                    "Without explicit brick sizing, signals can repaint as ticks arrive."
+                )
+            brick = self.entry_params["brick_size_atr"]
+            if not isinstance(brick, (int, float)) or brick < 0.1 or brick > 5.0:
+                raise ValueError(
+                    f"brick_size_atr must be a number between 0.1 and 5.0, got {brick!r}"
+                )
         return self

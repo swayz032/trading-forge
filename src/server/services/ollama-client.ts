@@ -24,21 +24,25 @@ export interface EmbedResponse {
   embeddings: number[][];
 }
 
+import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
+
 // Model routing: task type → model name
 const MODEL_ROUTES: Record<string, string> = {
-  fast: "llama3.1:8b",
+  fast: "deepseek-r1:14b",
   generate: "trading-quant",
   embed: "nomic-embed-text",
 };
 
 export type ModelRole = keyof typeof MODEL_ROUTES;
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export class OllamaClient {
   public readonly baseUrl: string;
   private timeoutMs: number;
 
   constructor(baseUrl?: string, timeoutMs = 120_000) {
-    this.baseUrl = baseUrl ?? process.env.OLLAMA_HOST ?? "http://localhost:11434";
+    this.baseUrl = baseUrl ?? process.env.OLLAMA_HOST ?? process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
     this.timeoutMs = timeoutMs;
   }
 
@@ -106,66 +110,133 @@ export class OllamaClient {
   }
 
   private async request<T>(path: string, body: Record<string, unknown>): Promise<T> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+    const cb = CircuitBreakerRegistry.get("ollama", { failureThreshold: 3, cooldownMs: 30_000 });
 
-    let res: Response;
-    try {
-      res = await fetch(`${this.baseUrl}${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-    } catch (err) {
-      clearTimeout(timeout);
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`Ollama unreachable at ${this.baseUrl}: ${msg}`);
-    } finally {
-      clearTimeout(timeout);
-    }
+    // The entire retry loop is the unit of work for the circuit breaker.
+    // If the loop exhausts all retries and throws, that counts as one failure.
+    return cb.call(async () => {
+      let lastError: unknown;
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`Ollama error ${res.status}: ${text}`);
-    }
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
-    try {
-      return (await res.json()) as T;
-    } catch {
-      throw new Error("Failed to parse Ollama response");
-    }
+        try {
+          const res = await fetch(`${this.baseUrl}${path}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+            signal: controller.signal,
+          });
+
+          // 503 = Service Unavailable (often model loading)
+          if (!res.ok) {
+            if (res.status === 503 && attempt < 2) {
+              clearTimeout(timeout);
+              await sleep(1000 * Math.pow(2, attempt));
+              continue;
+            }
+            const text = await res.text().catch(() => "");
+            throw new Error(`Ollama error ${res.status}: ${text}`);
+          }
+
+          try {
+            return (await res.json()) as T;
+          } catch {
+            throw new Error("Failed to parse Ollama response");
+          }
+        } catch (err) {
+          // Do not let CircuitOpenError be swallowed by the retry loop
+          if (err instanceof CircuitOpenError) throw err;
+
+          lastError = err;
+          const isRetryable =
+            err instanceof Error &&
+            (err.name === "AbortError" || // Timeout
+              (err.cause as any)?.code === "ECONNREFUSED" || // Connection refused
+              (err.cause as any)?.code === "ETIMEDOUT"); // Network timeout
+
+          if (isRetryable && attempt < 2) {
+            clearTimeout(timeout);
+            await sleep(1000 * Math.pow(2, attempt));
+            continue;
+          }
+
+          clearTimeout(timeout);
+          const msg = err instanceof Error ? err.message : String(err);
+          throw new Error(`Ollama unreachable at ${this.baseUrl}: ${msg}`, { cause: err });
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+
+      throw lastError;
+    });
   }
 
   private async *streamRequest(path: string, body: Record<string, unknown>): AsyncGenerator<string> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+    const cb = CircuitBreakerRegistry.get("ollama", { failureThreshold: 3, cooldownMs: 30_000 });
 
-    let res: Response;
+    // Wrap the initial connection (including retries) in the circuit breaker.
+    // Once connected, streaming chunks flow outside the CB.
+    const res = await cb.call(async () => {
+      let lastError: unknown;
+
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+        try {
+          const response = await fetch(`${this.baseUrl}${path}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+            signal: controller.signal,
+          });
+
+          if (!response.ok) {
+            if (response.status === 503 && attempt < 2) {
+              clearTimeout(timeout);
+              await sleep(1000 * Math.pow(2, attempt));
+              continue;
+            }
+            const text = await response.text().catch(() => "");
+            throw new Error(`Ollama error ${response.status}: ${text}`);
+          }
+
+          clearTimeout(timeout);
+          return response;
+        } catch (err) {
+          if (err instanceof CircuitOpenError) throw err;
+
+          lastError = err;
+          const isRetryable =
+            err instanceof Error &&
+            (err.name === "AbortError" ||
+              (err.cause as any)?.code === "ECONNREFUSED" ||
+              (err.cause as any)?.code === "ETIMEDOUT");
+
+          if (isRetryable && attempt < 2) {
+            clearTimeout(timeout);
+            await sleep(1000 * Math.pow(2, attempt));
+            continue;
+          }
+
+          clearTimeout(timeout);
+          const msg = err instanceof Error ? err.message : String(err);
+          throw new Error(`Ollama unreachable at ${this.baseUrl}: ${msg}`, { cause: err });
+        }
+      }
+
+      throw lastError;
+    });
+
+    // Connection established — stream chunks outside the circuit breaker
+    const reader = res.body?.getReader();
+    if (!reader) throw new Error("No response body");
+    const decoder = new TextDecoder();
+
     try {
-      res = await fetch(`${this.baseUrl}${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-    } catch (err) {
-      clearTimeout(timeout);
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`Ollama unreachable at ${this.baseUrl}: ${msg}`);
-    }
-
-    if (!res.ok) {
-      clearTimeout(timeout);
-      const text = await res.text().catch(() => "");
-      throw new Error(`Ollama error ${res.status}: ${text}`);
-    }
-
-    try {
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response body");
-      const decoder = new TextDecoder();
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -180,7 +251,7 @@ export class OllamaClient {
         }
       }
     } finally {
-      clearTimeout(timeout);
+      reader.releaseLock();
     }
   }
 }

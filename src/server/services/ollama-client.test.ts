@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { OllamaClient } from "./ollama-client.js";
+import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 
 describe("OllamaClient", () => {
   let client: OllamaClient;
 
   beforeEach(() => {
+    // Reset circuit breaker state — prior tests intentionally trip the breaker via
+    // network/non-200/malformed JSON failures, which leaves it OPEN for 30s and
+    // would block subsequent tests (e.g., chat()) with CircuitOpenError.
+    CircuitBreakerRegistry._resetForTests();
     client = new OllamaClient("http://localhost:11434");
   });
 

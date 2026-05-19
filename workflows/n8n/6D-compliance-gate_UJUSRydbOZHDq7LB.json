@@ -1,0 +1,668 @@
+{
+  "updatedAt": "2026-05-18T03:42:51.968Z",
+  "createdAt": "2026-05-18T00:56:04.408Z",
+  "id": "UJUSRydbOZHDq7LB",
+  "name": "6D-compliance-gate",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 4 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-paper",
+      "name": "Fetch Paper Strategies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/strategies",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "lifecycleState",
+              "value": "PAPER"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "split-strategies",
+      "name": "Split Strategies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst items = Array.isArray(data) ? data : (data.data || []);\nif (items.length === 0) return [{ json: { _empty: true } }];\nreturn items.map(s => ({ json: { strategyId: s.id || s._id, name: s.name, config: s } }));"
+      }
+    },
+    {
+      "id": "check-empty",
+      "name": "Any Paper?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json._empty }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "compliance-review",
+      "name": "POST Compliance Review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -100
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/compliance/review",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "strategyId",
+              "value": "={{ $json.strategyId }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "build-results",
+      "name": "Build Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst total = items.length;\nconst passed = items.filter(i => i.json.compliant || i.json.status === 'passed' || i.json.pass).length;\nconst failed = total - passed;\nconst severity = failed > 0 ? 'warning' : 'info';\nreturn [{ json: { title: `Compliance Gate: ${passed}/${total} passed`, severity, body: `Reviewed ${total} paper-trading strategies.\nPassed: ${passed}\nFailed: ${failed}` } }];"
+      }
+    },
+    {
+      "id": "no-paper",
+      "name": "No Paper Strategies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        100
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { title: 'Compliance Gate: No paper strategies', severity: 'info', body: 'No strategies in PAPER state to review.' } }];"
+      }
+    },
+    {
+      "id": "send-alert",
+      "name": "Send Compliance Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: $json.title, severity: $json.severity, message: $json.body, data: { body: $json.body } }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"6D-compliance-gate\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Paper Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Paper Strategies": {
+      "main": [
+        [
+          {
+            "node": "Split Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Strategies": {
+      "main": [
+        [
+          {
+            "node": "Any Paper?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Paper?": {
+      "main": [
+        [
+          {
+            "node": "POST Compliance Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Paper Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Compliance Review": {
+      "main": [
+        [
+          {
+            "node": "Build Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Results": {
+      "main": [
+        [
+          {
+            "node": "Send Compliance Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Paper Strategies": {
+      "main": [
+        [
+          {
+            "node": "Send Compliance Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "DGEk1D478xWJClKD"
+  },
+  "staticData": {
+    "node:Cron Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "9f0f3395-6c31-40d9-b00d-5a5fca46b3bb",
+  "activeVersionId": "9f0f3395-6c31-40d9-b00d-5a5fca46b3bb",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-18T00:56:04.408Z",
+      "createdAt": "2026-05-18T00:56:04.408Z",
+      "role": "workflow:owner",
+      "workflowId": "UJUSRydbOZHDq7LB",
+      "projectId": "MbOHOApVuCtg1xkk"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-05-18T00:56:04.408Z",
+    "createdAt": "2026-05-18T00:56:04.408Z",
+    "versionId": "9f0f3395-6c31-40d9-b00d-5a5fca46b3bb",
+    "workflowId": "UJUSRydbOZHDq7LB",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Cron Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 4 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-paper",
+        "name": "Fetch Paper Strategies",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/strategies",
+          "method": "GET",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "lifecycleState",
+                "value": "PAPER"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "split-strategies",
+        "name": "Split Strategies",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst items = Array.isArray(data) ? data : (data.data || []);\nif (items.length === 0) return [{ json: { _empty: true } }];\nreturn items.map(s => ({ json: { strategyId: s.id || s._id, name: s.name, config: s } }));"
+        }
+      },
+      {
+        "id": "check-empty",
+        "name": "Any Paper?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          660,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "1",
+                "leftValue": "={{ $json._empty }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "compliance-review",
+        "name": "POST Compliance Review",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          -100
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/compliance/review",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "strategyId",
+                "value": "={{ $json.strategyId }}"
+              },
+              {
+                "name": "name",
+                "value": "={{ $json.name }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "build-results",
+        "name": "Build Results",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1100,
+          -100
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst total = items.length;\nconst passed = items.filter(i => i.json.compliant || i.json.status === 'passed' || i.json.pass).length;\nconst failed = total - passed;\nconst severity = failed > 0 ? 'warning' : 'info';\nreturn [{ json: { title: `Compliance Gate: ${passed}/${total} passed`, severity, body: `Reviewed ${total} paper-trading strategies.\nPassed: ${passed}\nFailed: ${failed}` } }];"
+        }
+      },
+      {
+        "id": "no-paper",
+        "name": "No Paper Strategies",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          100
+        ],
+        "parameters": {
+          "jsCode": "return [{ json: { title: 'Compliance Gate: No paper strategies', severity: 'info', body: 'No strategies in PAPER state to review.' } }];"
+        }
+      },
+      {
+        "id": "send-alert",
+        "name": "Send Compliance Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1320,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "method": "POST",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: $json.title, severity: $json.severity, message: $json.body, data: { body: $json.body } }) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"6D-compliance-gate\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Cron Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Paper Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Paper Strategies": {
+        "main": [
+          [
+            {
+              "node": "Split Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Strategies": {
+        "main": [
+          [
+            {
+              "node": "Any Paper?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Paper?": {
+        "main": [
+          [
+            {
+              "node": "POST Compliance Review",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Paper Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Compliance Review": {
+        "main": [
+          [
+            {
+              "node": "Build Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Results": {
+        "main": [
+          [
+            {
+              "node": "Send Compliance Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "No Paper Strategies": {
+        "main": [
+          [
+            {
+              "node": "Send Compliance Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

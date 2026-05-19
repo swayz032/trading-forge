@@ -1,17 +1,712 @@
-"""Position sizing — dynamic ATR-based and fixed.
+"""Position sizing — dynamic ATR-based, fixed, Kelly Criterion, and risk-derived pyramid.
 
 Dynamic ATR: contracts = floor(target_risk / (ATR * tick_value)), clamped min=1.
 Per CLAUDE.md: never use fixed position sizes in production.
+
+Tier 5.4 — Profit-Based Position Scaling (Gemini Quantum Blueprint W5a):
+  compute_profit_tier(account_pnl_total, base_contracts, increment, threshold, firm_max)
+  Formula: tier_count = floor(pnl / threshold); extra = tier_count * increment
+           final = min(base + extra, firm_max)
+  Negative PnL -> tier_count=0 (no scaling). Single-account compounding only.
+  Per CLAUDE.md: "ONE account must be profitable." No multi-account aggregation.
+
+W13 B7 — Kelly Criterion Sizing:
+  kelly_optimal_contracts(edge, odds, bankroll, kelly_fraction, firm_max) -> int
+  Formula: f* = (b*p - q) / b  where b=odds, p=win_rate, q=1-p
+  Quarter-Kelly (default): kelly_fraction=0.25 (industry safety standard)
+  Position: contracts = floor((f* * kelly_fraction) * (bankroll / risk_per_trade))
+  Cap: NEVER exceed firm_max.
+  Kelly is ADDITIVE with profit_scaling_tier (Kelly = base, tier scales it up).
+
+Track 3 (2026-05-09) — MES Pyramid Cap and Graduation Signal:
+  MES_PYRAMID_CAP = 30 micros (raised from CONTRACT_CAP_MAX=20 for MES specifically).
+  Non-MES instruments still use CONTRACT_CAP_MAX=20.
+  compute_profit_tier() gains an optional mes_pyramid=False flag. When True:
+    - firm_max defaults to MES_PYRAMID_CAP (30) instead of CONTRACT_CAP_MAX (20)
+    - Returns (contracts: int, graduation_signal: bool) instead of just int
+  graduation_signal=True when: profit_tier_count would exceed 30 OR account_pnl_total
+  >= PYRAMID_GRADUATION_PNL ($30K). Signal means "consider graduating to ES minis."
+  Does NOT auto-graduate or block sizing — advisory only.
+
+Wave 21 — Risk-Derived Pyramid (E.2):
+  compute_risk_derived_contracts() — exact Python port of risk-sizing.ts.
+  Formula: finalContracts = min(pyramidTier, riskDerivedCap, firmCap, liquidityCap)
+  pyramidTier  = base_contracts + tier_increment × floor(max(0, cumulative_profit) / tier_threshold)
+  riskDerivedCap = floor(accountBalance × max_risk_pct / (stop_multiplier × atr × point_value))
+  Rejection conditions: ATR=0, balance<=0, stop_multiplier<=0 → finalContracts=0.
+  Returns RiskSizingResult dataclass with all component values for audit logging.
+  CRITICAL: Do NOT pass slippage/fees to vectorbt — this module computes contracts only.
+
+Wave 22 — Firm-Aware Risk Cap:
+  compute_risk_derived_contracts() now accepts firm: str = "topstep" (operator primary).
+  Topstep branch: riskDollars = buffer * max_risk_pct
+    where buffer = currentBalance - trailingFloor
+    and trailingFloor = min(highWaterBalance - trailingDD, accountStartingFloor)
+  MFFU branch (unchanged): riskDollars = accountBalance * max_risk_pct
+  New rejection: zero_buffer — Topstep buffer <= 0 (account at or below trailing floor).
+  New RiskSizingResult fields: firm, risk_cap_method ("topstep_trailing_dd" | "mffu_balance_pct"),
+    firm_cap_applied (bool).
+
+Wave 23 — Pyramid Floor Enforcement (B.1):
+  base_contracts is the MINIMUM viable contract count (MES=6, MNQ=6, MCL=18).
+  All bases are divisible by 3 — Style C 33/33/33 partials clean at every tier.
+  Micro point values LOCKED (per operator directive 2026-05-19):
+    MES = $5/point  (1/10 of ES at $50/pt)
+    MNQ = $2/point  (1/10 of NQ at $20/pt)
+    MCL = $1/tick   ($100/point, tick=0.01, tick_value=$1.00)
+  Floor rule: on healthy accounts (balance >= 85% of starting_capital), if risk-cap
+  returns fewer than base_contracts, use base_contracts instead. On drawdown accounts
+  (< 85%), risk-cap fully binds to protect firm compliance.
+  New RiskSizingResult fields: pyramid_floor_applied (bool), account_health_ratio (float).
 """
 
 from __future__ import annotations
 
+import logging
 import math
+from dataclasses import dataclass, field
+from typing import Optional
 
 import numpy as np
 import polars as pl
 
-from src.engine.config import ContractSpec, PositionSizeConfig
+from src.engine.config import ContractSpec, PositionSizeConfig, TRACK3_CONFIG
+from src.engine.firm_config import CONTRACT_CAP_MAX, CONTRACT_CAP_MIN
+
+# Track 3: MES-specific pyramid cap (overrides CONTRACT_CAP_MAX for MES only).
+MES_PYRAMID_CAP: int = TRACK3_CONFIG.MES_PYRAMID_CAP          # 30 micros
+PYRAMID_GRADUATION_PNL: float = TRACK3_CONFIG.PYRAMID_GRADUATION_PNL  # $30K trigger
+
+logger = logging.getLogger(__name__)
+
+
+# ─── Wave 21: Risk-Derived Pyramid (E.2) ─────────────────────────────────────
+# Exact Python port of src/server/lib/risk-sizing.ts:computeRiskDerivedContracts().
+# Same math, same edge cases, identical numeric outputs.
+# CRITICAL: This computes CONTRACT COUNT only. Never pass fees/slippage to vectorbt.
+
+@dataclass
+class RiskSizingResult:
+    """Output of compute_risk_derived_contracts(). All component values for audit trail."""
+    final_contracts: int
+    pyramid_tier: int
+    risk_derived_cap: int
+    firm_cap: Optional[int]
+    liquidity_cap: int
+    rejection_reason: Optional[str]   # None | "zero_atr" | "zero_balance" | "negative_cap" | "zero_buffer"
+    # Wave 22 additions
+    firm: str = "topstep"                                          # "topstep" | "mffu"
+    risk_cap_method: str = "topstep_trailing_dd"                   # how riskDollars was derived
+    firm_cap_applied: bool = False                                 # True if firm cap was binding
+    # Wave 23 additions
+    pyramid_floor_applied: bool = False  # True when base_contracts floor overrode risk-cap
+    account_health_ratio: float = 1.0    # currentBalance / startingCapital (floor binds at >= 0.85)
+    evidence: dict = field(default_factory=dict)
+
+
+def _compute_topstep_trailing_floor(
+    high_water_balance: float,
+    trailing_dd: float,
+    account_starting_floor: float,
+) -> float:
+    """Compute Topstep EOD trailing-DD floor.
+
+    Per docs/prop-firm-rules-2026-topstep.md §6:
+      - Floor starts at (startingBalance - trailingDD).
+      - Trails up as HWM rises.
+      - LOCKS at startingBalance once HWM >= startingBalance.
+
+    Formula: trailingFloor = min(highWaterBalance - trailingDD, accountStartingFloor)
+    """
+    raw_floor = high_water_balance - trailing_dd
+    return min(raw_floor, account_starting_floor)
+
+
+def compute_risk_derived_contracts(
+    base_contracts: int,
+    tier_increment: int,
+    tier_threshold_dollars: float,
+    max_risk_pct_per_trade: float,
+    liquidity_comfort_cap: int,
+    account_balance: float,
+    cumulative_profit: float,
+    atr_points: float,
+    stop_multiplier: float,
+    point_dollar_value: float,
+    firm_contract_cap: Optional[int] = None,
+    topstep_account_cap_override: Optional[int] = None,
+    # ── Wave 22: firm-aware parameters ──────────────────────────────────────
+    firm: str = "topstep",
+    trailing_dd: float = 2000.0,
+    high_water_balance: Optional[float] = None,
+    account_starting_floor: float = 50_000.0,
+) -> RiskSizingResult:
+    """Compute risk-derived contract count at signal time.
+
+    Firm-aware port of risk-sizing.ts:computeRiskDerivedContracts() (Wave 22).
+
+    Topstep branch (firm="topstep", default):
+        trailingFloor  = min(highWaterBalance - trailingDD, accountStartingFloor)
+        buffer         = accountBalance - trailingFloor
+        riskDollars    = buffer × max_risk_pct_per_trade
+
+    MFFU branch (firm="mffu"):
+        riskDollars = account_balance × max_risk_pct_per_trade  (unchanged from Wave 21)
+
+    Common:
+        pyramidTier    = base_contracts + tier_increment × floor(max(0, cumulative_profit) / tier_threshold)
+        stopDollars    = stop_multiplier × atr_points × point_dollar_value
+        riskDerivedCap = floor(riskDollars / stopDollars)
+        firmCap        = topstep_account_cap_override if set, else firm_contract_cap, else None (∞)
+        liquidityCap   = liquidity_comfort_cap
+        finalContracts = max(0, min(pyramidTier, riskDerivedCap, firmCap, liquidityCap))
+
+    Rejection conditions (return finalContracts=0 with reason):
+        - atr_points <= 0 → "zero_atr"
+        - account_balance <= 0 → "zero_balance"
+        - riskDerivedCap <= 0 → "negative_cap" (extreme ATR or tiny account/buffer)
+        - buffer <= 0 (Topstep only) → "zero_buffer" (account at/below trailing floor)
+
+    Args:
+        base_contracts: Starting contracts (4 for standard).
+        tier_increment: Extra contracts per profit tier (2 per $3K is default).
+        tier_threshold_dollars: Profit per tier in dollars (3000.0 default).
+        max_risk_pct_per_trade: Fraction of risk base to risk per trade (0.02 = 2%).
+        liquidity_comfort_cap: Book-depth ceiling (100 for MES default).
+        account_balance: Live account equity in dollars.
+        cumulative_profit: Sum of realized P&L since strategy inception.
+        atr_points: Current ATR in price points (e.g. 4.0 for MES).
+        stop_multiplier: ATR multiple for stop distance (1.5 per CLAUDE.md §4).
+        point_dollar_value: Dollar value of one price point (MES=$5, MNQ=$2, MCL=$100).
+        firm_contract_cap: Firm per-account contract ceiling (None = no firm cap).
+        topstep_account_cap_override: DSL override that takes priority over firm_contract_cap.
+        firm: Prop firm identifier ("topstep" default | "mffu"). Wave 22.
+        trailing_dd: Topstep trailing drawdown amount ($2000 for 50K account). Wave 22.
+        high_water_balance: Topstep HWM since inception (defaults to account_balance). Wave 22.
+        account_starting_floor: Topstep starting account balance floor ($50K default). Wave 22.
+
+    Returns:
+        RiskSizingResult dataclass with all component values.
+    """
+    liquidity_cap = liquidity_comfort_cap
+
+    # Resolve HWM default: first day or no drawdown → HWM = current balance
+    _high_water = high_water_balance if high_water_balance is not None else account_balance
+
+    # Pyramid tier (slow ramp-up — identical to TS: floor(max(0, cumulativeProfit) / threshold))
+    profit_floor = max(0.0, cumulative_profit)
+    tiers = math.floor(profit_floor / tier_threshold_dollars) if tier_threshold_dollars > 0 else 0
+    pyramid_tier = base_contracts + tier_increment * tiers
+
+    # Determine risk cap method from firm
+    risk_cap_method = "topstep_trailing_dd" if firm == "topstep" else "mffu_balance_pct"
+
+    # Wave 23: Account health ratio for pyramid floor enforcement.
+    # Floor binds when account is healthy (>= 85% of starting capital).
+    # Starting capital: for Topstep = account_starting_floor; for MFFU = 50K default.
+    _starting_capital_for_health = account_starting_floor if account_starting_floor > 0 else 50_000.0
+    account_health_ratio = (
+        account_balance / _starting_capital_for_health
+        if _starting_capital_for_health > 0
+        else 1.0
+    )
+    account_is_healthy = account_health_ratio >= 0.85
+
+    # Edge case: balance <= 0
+    if account_balance <= 0:
+        return RiskSizingResult(
+            final_contracts=0,
+            pyramid_tier=pyramid_tier,
+            risk_derived_cap=0,
+            firm_cap=None,
+            liquidity_cap=liquidity_cap,
+            rejection_reason="zero_balance",
+            firm=firm,
+            risk_cap_method=risk_cap_method,
+            firm_cap_applied=False,
+            pyramid_floor_applied=False,
+            account_health_ratio=account_health_ratio,
+            evidence={
+                "account_balance": account_balance,
+                "atr_points": atr_points,
+                "pyramid_tier": pyramid_tier,
+                "risk_derived_cap": 0,
+                "firm_cap": None,
+                "liquidity_cap": liquidity_cap,
+                "final_contracts": 0,
+                "rejection_reason": "zero_balance",
+                "firm": firm,
+                "account_health_ratio": account_health_ratio,
+                "pyramid_floor_applied": False,
+            },
+        )
+
+    # Edge case: ATR = 0
+    if atr_points <= 0:
+        return RiskSizingResult(
+            final_contracts=0,
+            pyramid_tier=pyramid_tier,
+            risk_derived_cap=0,
+            firm_cap=None,
+            liquidity_cap=liquidity_cap,
+            rejection_reason="zero_atr",
+            firm=firm,
+            risk_cap_method=risk_cap_method,
+            firm_cap_applied=False,
+            pyramid_floor_applied=False,
+            account_health_ratio=account_health_ratio,
+            evidence={
+                "account_balance": account_balance,
+                "atr_points": atr_points,
+                "pyramid_tier": pyramid_tier,
+                "risk_derived_cap": 0,
+                "firm_cap": None,
+                "liquidity_cap": liquidity_cap,
+                "final_contracts": 0,
+                "rejection_reason": "zero_atr",
+                "firm": firm,
+                "account_health_ratio": account_health_ratio,
+                "pyramid_floor_applied": False,
+            },
+        )
+
+    # ── Wave 22: Firm-aware risk dollar computation ──────────────────────────
+    trailing_floor: Optional[float] = None
+    buffer: Optional[float] = None
+
+    if firm == "topstep":
+        trailing_floor = _compute_topstep_trailing_floor(
+            high_water_balance=_high_water,
+            trailing_dd=trailing_dd,
+            account_starting_floor=account_starting_floor,
+        )
+        buffer = account_balance - trailing_floor
+
+        # Edge case: no buffer left (account at or below trailing floor)
+        if buffer <= 0:
+            return RiskSizingResult(
+                final_contracts=0,
+                pyramid_tier=pyramid_tier,
+                risk_derived_cap=0,
+                firm_cap=None,
+                liquidity_cap=liquidity_cap,
+                rejection_reason="zero_buffer",
+                firm=firm,
+                risk_cap_method=risk_cap_method,
+                firm_cap_applied=False,
+                pyramid_floor_applied=False,
+                account_health_ratio=account_health_ratio,
+                evidence={
+                    "account_balance": account_balance,
+                    "trailing_floor": trailing_floor,
+                    "buffer": buffer,
+                    "high_water_balance": _high_water,
+                    "trailing_dd": trailing_dd,
+                    "account_starting_floor": account_starting_floor,
+                    "pyramid_tier": pyramid_tier,
+                    "risk_derived_cap": 0,
+                    "firm_cap": None,
+                    "liquidity_cap": liquidity_cap,
+                    "final_contracts": 0,
+                    "rejection_reason": "zero_buffer",
+                    "firm": firm,
+                    "account_health_ratio": account_health_ratio,
+                    "pyramid_floor_applied": False,
+                },
+            )
+
+        risk_dollars = buffer * max_risk_pct_per_trade
+    else:
+        # MFFU: risk against current balance (unchanged from Wave 21)
+        risk_dollars = account_balance * max_risk_pct_per_trade
+
+    # Risk-derived ceiling (common to both firms)
+    stop_dollars_per_contract = stop_multiplier * atr_points * point_dollar_value
+    risk_derived_cap = math.floor(risk_dollars / stop_dollars_per_contract)
+
+    # Edge case: computed cap <= 0 (extreme ATR or tiny account/buffer).
+    # Wave 23: On healthy accounts, pyramid floor still applies even here.
+    # If account_is_healthy AND risk_cap <= 0, use base_contracts as the floor.
+    # This handles the Topstep fresh-combine case: risk_cap=0 but account is healthy.
+    # On drawdown accounts, this rejection holds (risk-cap protects the account).
+    if risk_derived_cap <= 0:
+        if account_is_healthy and base_contracts > 0:
+            # Pyramid floor applies on healthy account — use base_contracts
+            floored_contracts = base_contracts
+            ev_floor: dict = {
+                "account_balance": account_balance,
+                "atr_points": atr_points,
+                "stop_multiplier": stop_multiplier,
+                "point_dollar_value": point_dollar_value,
+                "stop_dollars_per_contract": stop_dollars_per_contract,
+                "risk_dollars": risk_dollars,
+                "pyramid_tier": pyramid_tier,
+                "risk_derived_cap": risk_derived_cap,
+                "firm_cap": None,
+                "liquidity_cap": liquidity_cap,
+                "final_contracts": floored_contracts,
+                "rejection_reason": None,
+                "firm": firm,
+                "account_health_ratio": account_health_ratio,
+                "pyramid_floor_applied": True,
+                "binding_cap": "pyramid_floor_override",
+                "base_contracts": base_contracts,
+                "risk_cap_method": risk_cap_method,
+            }
+            if firm == "topstep":
+                ev_floor.update({
+                    "trailing_floor": trailing_floor,
+                    "buffer": buffer,
+                    "high_water_balance": _high_water,
+                    "trailing_dd": trailing_dd,
+                    "account_starting_floor": account_starting_floor,
+                })
+            return RiskSizingResult(
+                final_contracts=floored_contracts,
+                pyramid_tier=pyramid_tier,
+                risk_derived_cap=risk_derived_cap,
+                firm_cap=None,
+                liquidity_cap=liquidity_cap,
+                rejection_reason=None,  # not a rejection — floor overrides
+                firm=firm,
+                risk_cap_method=risk_cap_method,
+                firm_cap_applied=False,
+                pyramid_floor_applied=True,
+                account_health_ratio=account_health_ratio,
+                evidence=ev_floor,
+            )
+
+        ev: dict = {
+            "account_balance": account_balance,
+            "atr_points": atr_points,
+            "stop_multiplier": stop_multiplier,
+            "point_dollar_value": point_dollar_value,
+            "stop_dollars_per_contract": stop_dollars_per_contract,
+            "risk_dollars": risk_dollars,
+            "pyramid_tier": pyramid_tier,
+            "risk_derived_cap": risk_derived_cap,
+            "firm_cap": None,
+            "liquidity_cap": liquidity_cap,
+            "final_contracts": 0,
+            "rejection_reason": "negative_cap",
+            "firm": firm,
+            "account_health_ratio": account_health_ratio,
+            "pyramid_floor_applied": False,
+        }
+        if firm == "topstep":
+            ev.update({
+                "trailing_floor": trailing_floor,
+                "buffer": buffer,
+                "high_water_balance": _high_water,
+                "trailing_dd": trailing_dd,
+                "account_starting_floor": account_starting_floor,
+            })
+        return RiskSizingResult(
+            final_contracts=0,
+            pyramid_tier=pyramid_tier,
+            risk_derived_cap=risk_derived_cap,
+            firm_cap=None,
+            liquidity_cap=liquidity_cap,
+            rejection_reason="negative_cap",
+            firm=firm,
+            risk_cap_method=risk_cap_method,
+            firm_cap_applied=False,
+            pyramid_floor_applied=False,
+            account_health_ratio=account_health_ratio,
+            evidence=ev,
+        )
+
+    # Effective firm cap: DSL override takes priority (mirrors TS logic)
+    if topstep_account_cap_override is not None:
+        effective_firm_cap: Optional[int] = int(topstep_account_cap_override)
+    elif firm_contract_cap is not None:
+        effective_firm_cap = int(firm_contract_cap)
+    else:
+        effective_firm_cap = None  # No firm cap = infinity
+
+    # Final: pyramid is FLOOR (slow ramp), risk/firm/liquidity are CEILING.
+    # Step 1: min(pyramidTier, riskDerivedCap, firmCap, liquidityCap) — mirrors TS exactly.
+    final_contracts = min(pyramid_tier, risk_derived_cap, liquidity_cap)
+    _pre_firm_final = final_contracts
+    if effective_firm_cap is not None:
+        final_contracts = min(final_contracts, effective_firm_cap)
+    final_contracts = max(0, final_contracts)
+    firm_cap_applied = (effective_firm_cap is not None and effective_firm_cap < _pre_firm_final)
+
+    # Step 2 (Wave 23): Pyramid floor enforcement.
+    # On healthy accounts (>= 85% of starting capital), base_contracts is the minimum viable
+    # contract count. Risk-cap can return fewer than base on fresh Topstep combines (narrow
+    # buffer = low risk cap), which would break Style C 33/33/33 partials.
+    # Rule: if account is healthy AND risk-cap produced fewer than base_contracts → use base_contracts.
+    # On drawdown accounts (< 85%), risk-cap fully binds — floor does not override.
+    pyramid_floor_applied = False
+    if account_is_healthy and final_contracts < base_contracts:
+        final_contracts = base_contracts
+        pyramid_floor_applied = True
+
+    # Determine which cap is binding (for audit trail)
+    if pyramid_floor_applied:
+        binding_cap = "pyramid_floor_override"
+    elif (risk_derived_cap <= pyramid_tier
+            and (effective_firm_cap is None or risk_derived_cap <= effective_firm_cap)
+            and risk_derived_cap <= liquidity_cap):
+        binding_cap = "risk_derived"
+    elif (effective_firm_cap is not None
+          and effective_firm_cap <= pyramid_tier
+          and effective_firm_cap <= risk_derived_cap
+          and effective_firm_cap <= liquidity_cap):
+        binding_cap = "firm_cap"
+    elif (liquidity_cap <= pyramid_tier
+          and liquidity_cap <= risk_derived_cap
+          and (effective_firm_cap is None or liquidity_cap <= effective_firm_cap)):
+        binding_cap = "liquidity_cap"
+    else:
+        binding_cap = "pyramid"
+
+    ev_full: dict = {
+        "account_balance": account_balance,
+        "cumulative_profit": cumulative_profit,
+        "atr_points": atr_points,
+        "stop_multiplier": stop_multiplier,
+        "point_dollar_value": point_dollar_value,
+        "stop_dollars_per_contract": stop_dollars_per_contract,
+        "risk_dollars": risk_dollars,
+        "pyramid_tier": pyramid_tier,
+        "risk_derived_cap": risk_derived_cap,
+        "firm_cap": effective_firm_cap,
+        "liquidity_cap": liquidity_cap,
+        "final_contracts": final_contracts,
+        "binding_cap": binding_cap,
+        "base_contracts": base_contracts,
+        "tier_increment": tier_increment,
+        "tier_threshold_dollars": tier_threshold_dollars,
+        "max_risk_pct_per_trade": max_risk_pct_per_trade,
+        "tiers_earned": tiers,
+        "firm": firm,
+        "risk_cap_method": risk_cap_method,
+        "account_health_ratio": account_health_ratio,
+        "pyramid_floor_applied": pyramid_floor_applied,
+    }
+    if firm == "topstep":
+        ev_full.update({
+            "trailing_floor": trailing_floor,
+            "buffer": buffer,
+            "high_water_balance": _high_water,
+            "trailing_dd": trailing_dd,
+            "account_starting_floor": account_starting_floor,
+        })
+
+    return RiskSizingResult(
+        final_contracts=final_contracts,
+        pyramid_tier=pyramid_tier,
+        risk_derived_cap=risk_derived_cap,
+        firm_cap=effective_firm_cap,
+        liquidity_cap=liquidity_cap,
+        rejection_reason=None,
+        firm=firm,
+        risk_cap_method=risk_cap_method,
+        firm_cap_applied=firm_cap_applied,
+        pyramid_floor_applied=pyramid_floor_applied,
+        account_health_ratio=account_health_ratio,
+        evidence=ev_full,
+    )
+
+
+def compute_profit_tier(
+    account_pnl_total: float,
+    base_contracts: int,
+    increment: int = 2,
+    threshold: float = 3000.0,
+    firm_max: int | None = None,
+) -> int:
+    """Compute contract count after applying profit-based scaling tier.
+
+    Gemini "Forge-Tested" 2026 Edition: every $3,000 of profit = +2 micros.
+    Single-account compounding only. CLAUDE.md: ONE account must be profitable.
+
+    Args:
+        account_pnl_total: Cumulative realized PnL on the single account ($).
+        base_contracts:    Starting contract count (from ATR sizing or fixed).
+        increment:         Extra contracts added per tier (default 2).
+        threshold:         Profit required per tier (default $3,000).
+        firm_max:          Hard ceiling. Defaults to CONTRACT_CAP_MAX (20).
+
+    Returns:
+        int: Final contract count, always >= base_contracts, <= firm_max.
+
+    Examples:
+        compute_profit_tier(0,    10) -> 10  (no profit, no scaling)
+        compute_profit_tier(3000, 10) -> 12  (1 tier x 2)
+        compute_profit_tier(9000, 10) -> 16  (3 tiers x 2)
+        compute_profit_tier(-500, 10) -> 10  (negative pnl, no scaling)
+    """
+    effective_max = firm_max if firm_max is not None else CONTRACT_CAP_MAX
+
+    # Negative or zero PnL -> no scaling
+    if account_pnl_total <= 0.0:
+        return max(base_contracts, min(base_contracts, effective_max))
+
+    tier_count: int = math.floor(account_pnl_total / threshold)
+    extra_contracts: int = tier_count * increment
+    final: int = min(base_contracts + extra_contracts, effective_max)
+    # Never return fewer than base_contracts (scaling is additive only)
+    final = max(final, base_contracts)
+
+    if extra_contracts > 0:
+        logger.debug(
+            "sizing.profit_tier_applied base=%d extra=%d final=%d firm_cap=%d pnl=%.2f",
+            base_contracts,
+            extra_contracts,
+            final,
+            effective_max,
+            account_pnl_total,
+        )
+
+    return final
+
+
+def compute_profit_tier_mes(
+    account_pnl_total: float,
+    base_contracts: int,
+    increment: int = 2,
+    threshold: float = 3000.0,
+) -> tuple[int, bool]:
+    """Compute MES micro contract count with Track 3 pyramid cap (30) and graduation signal.
+
+    Track 3 change: MES uses a 30-contract cap (raised from CONTRACT_CAP_MAX=20).
+    Returns (contracts, graduation_signal) where graduation_signal=True means the
+    operator should consider graduating to full-size ES minis.
+
+    graduation_signal fires when EITHER:
+      - Scaled contract count would exceed MES_PYRAMID_CAP (30); OR
+      - account_pnl_total >= PYRAMID_GRADUATION_PNL ($30K cumulative profit).
+
+    Does NOT auto-graduate or block sizing. Advisory only — human decision.
+
+    Args:
+        account_pnl_total: Cumulative realized PnL on the single account ($).
+        base_contracts:    Starting contract count.
+        increment:         Extra contracts per tier (default 2).
+        threshold:         Profit required per tier (default $3,000).
+
+    Returns:
+        Tuple of (final_contracts: int, graduation_signal: bool).
+
+    Examples:
+        compute_profit_tier_mes(0,     4)  -> (4,  False)
+        compute_profit_tier_mes(3000,  4)  -> (6,  False)
+        compute_profit_tier_mes(30000, 4)  -> (24, True)   # $30K graduation trigger
+        compute_profit_tier_mes(50000, 4)  -> (30, True)   # capped at 30, graduation
+    """
+    if account_pnl_total <= 0.0:
+        return (max(base_contracts, min(base_contracts, MES_PYRAMID_CAP)), False)
+
+    tier_count: int = math.floor(account_pnl_total / threshold)
+    extra_contracts: int = tier_count * increment
+    # MES uses 30-contract cap, not CONTRACT_CAP_MAX=20
+    final: int = min(base_contracts + extra_contracts, MES_PYRAMID_CAP)
+    final = max(final, base_contracts)
+
+    # Graduation signal: would-have-exceeded cap OR PnL threshold met
+    would_exceed_cap = (base_contracts + extra_contracts) > MES_PYRAMID_CAP
+    pnl_graduation = account_pnl_total >= PYRAMID_GRADUATION_PNL
+    graduation_signal = would_exceed_cap or pnl_graduation
+
+    if extra_contracts > 0:
+        logger.debug(
+            "sizing.mes_profit_tier_applied base=%d extra=%d final=%d cap=%d pnl=%.2f grad=%s",
+            base_contracts,
+            extra_contracts,
+            final,
+            MES_PYRAMID_CAP,
+            account_pnl_total,
+            graduation_signal,
+        )
+
+    return (final, graduation_signal)
+
+
+def kelly_optimal_contracts(
+    edge: float,
+    odds: float,
+    bankroll: float,
+    risk_per_trade: float,
+    kelly_fraction: float = 0.25,
+    firm_max: int | None = None,
+) -> int:
+    """Compute Kelly-optimal contract count for a single strategy.
+
+    Kelly Criterion maximises log-growth of bankroll. Quarter-Kelly (kelly_fraction=0.25)
+    is the industry safety standard — it reduces variance while capturing most of the
+    log-growth benefit. NEVER exceeds firm_max.
+
+    Formula:
+        f* = (b*p - q) / b   where b=odds, p=edge (win rate), q=1-p
+        contracts = floor((f* * kelly_fraction) * (bankroll / risk_per_trade))
+
+    Args:
+        edge: Win rate probability (0 < edge < 1). E.g., 0.60 for 60% win rate.
+        odds: Avg winner / avg loser ratio (b). E.g., 1.5 for 1:1.5 R:R.
+        bankroll: Current account equity in dollars.
+        risk_per_trade: Dollar risk per contract per trade (e.g., ATR * point_value).
+        kelly_fraction: Fraction of full Kelly to use (default 0.25 = quarter-Kelly).
+        firm_max: Hard ceiling from firm contract cap. Default: CONTRACT_CAP_MAX (20).
+
+    Returns:
+        int: Contract count >= 0, always <= firm_max.
+
+    Examples:
+        kelly_optimal_contracts(0.60, 1.0, 50000, 250)  -> uses f*=0.20, quarter=0.05
+        kelly_optimal_contracts(0.55, 1.5, 50000, 300)  -> uses f*=0.1833, quarter=0.0458
+
+    Raises:
+        ValueError: If edge, odds, bankroll, or risk_per_trade are invalid.
+    """
+    if not (0.0 < edge < 1.0):
+        raise ValueError(f"edge must be in (0, 1), got {edge}")
+    if odds <= 0.0:
+        raise ValueError(f"odds must be > 0, got {odds}")
+    if bankroll <= 0.0:
+        raise ValueError(f"bankroll must be > 0, got {bankroll}")
+    if risk_per_trade <= 0.0:
+        raise ValueError(f"risk_per_trade must be > 0, got {risk_per_trade}")
+    if not (0.0 < kelly_fraction <= 1.0):
+        raise ValueError(f"kelly_fraction must be in (0, 1], got {kelly_fraction}")
+
+    effective_max = firm_max if firm_max is not None else CONTRACT_CAP_MAX
+
+    q = 1.0 - edge
+    # Full Kelly fraction of bankroll to risk
+    f_star = (odds * edge - q) / odds
+
+    # Negative or zero Kelly = no edge, size 0
+    if f_star <= 0.0:
+        logger.debug(
+            "sizing.kelly_no_edge edge=%.4f odds=%.4f f_star=%.4f -> 0 contracts",
+            edge, odds, f_star,
+        )
+        return 0
+
+    # Scale by kelly_fraction (quarter-Kelly by default)
+    scaled_fraction = f_star * kelly_fraction
+
+    # Dollar amount to risk = scaled_fraction * bankroll
+    dollar_risk = scaled_fraction * bankroll
+
+    # Convert to contracts: how many contracts fit within that dollar risk?
+    raw_contracts = dollar_risk / risk_per_trade
+    contracts = math.floor(raw_contracts)
+
+    # Floor to 0 (never negative), cap to firm max
+    contracts = max(0, min(contracts, effective_max))
+
+    logger.debug(
+        "sizing.kelly f_star=%.4f fraction=%.4f bankroll=%.2f risk_per_trade=%.2f "
+        "raw=%.3f final=%d firm_max=%d",
+        f_star, scaled_fraction, bankroll, risk_per_trade, raw_contracts, contracts, effective_max,
+    )
+
+    return contracts
 
 
 def compute_position_sizes(
@@ -20,6 +715,9 @@ def compute_position_sizes(
     contract_spec: ContractSpec,
     atr_period: int = 14,
     max_contracts: int | None = None,
+    profit_scaling_tier: dict | None = None,
+    kelly_params: dict | None = None,
+    fomc_proximity: int | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute position sizes for each bar.
 
@@ -30,6 +728,39 @@ def compute_position_sizes(
         atr_period: ATR period to look up column name
         max_contracts: Optional firm contract cap. When provided,
             sizes are clamped to this maximum.
+        profit_scaling_tier: Optional dict for Tier 5.4 profit-based scaling.
+            When None (default), behavior is identical to pre-Tier-5.4 (no change).
+            When provided, must contain:
+                {
+                    "account_pnl_total": float,   # cumulative realized PnL ($)
+                    "increment": int,              # contracts per tier (default 2)
+                    "threshold": float,            # profit per tier (default $3000)
+                }
+            The ATR-derived base size per bar is scaled up via compute_profit_tier().
+            Result is still capped at the firm's max_contracts limit.
+            Negative account_pnl_total -> no scaling (base unchanged).
+            Only applies to dynamic_atr mode; fixed mode ignores this parameter.
+        kelly_params: Optional dict for W13 B7 Kelly Criterion sizing.
+            When None (default), falls through to existing ATR/fixed logic (backward-compatible).
+            When provided, must contain:
+        fomc_proximity: C11 FOMC day proximity in days. When abs(fomc_proximity) <= 1,
+            all computed sizes are halved (floor, minimum 1). None = no reduction.
+            Applied LAST, after all other sizing (Kelly, tier, cap).
+            When provided, must contain:
+                {
+                    "edge": float,            # win rate probability (0 < p < 1)
+                    "odds": float,            # avg_winner / avg_loser ratio
+                    "bankroll": float,        # current account equity ($)
+                    "risk_per_trade": float,  # dollar risk per contract per trade
+                }
+            Optional keys:
+                {
+                    "kelly_fraction": float,  # default 0.25 (quarter-Kelly)
+                }
+            Kelly sizing produces a CONSTANT base size for all bars (it is strategy-level,
+            not bar-level like ATR). Profit tier is then applied on top of Kelly base.
+            Result is always capped at max_contracts / firm cap.
+            Strategies without kelly_params use existing ATR/fixed logic unchanged.
 
     Returns:
         Tuple of (sizes, over_risk):
@@ -37,11 +768,152 @@ def compute_position_sizes(
           - over_risk: boolean numpy array flagging bars where ATR-implied
             risk exceeds target for even 1 contract (raw < 1.0). These bars
             still get size=1 but callers should log warnings.
+            For Kelly mode: over_risk is all-False (Kelly is bankroll-relative,
+            not ATR-relative, so the concept does not apply).
     """
     n = len(df)
 
+    # W13 B7: Kelly Criterion sizing dispatch.
+    # When kelly_params is provided, compute a constant Kelly-optimal base for all bars.
+    # Profit tier (if provided) is applied on top of the Kelly base.
+    # Kelly mode skips the ATR pipeline entirely — over_risk is always all-False.
+    if kelly_params is not None:
+        kelly_edge = float(kelly_params["edge"])
+        kelly_odds = float(kelly_params["odds"])
+        kelly_bankroll = float(kelly_params["bankroll"])
+        kelly_risk = float(kelly_params["risk_per_trade"])
+        kelly_frac = float(kelly_params.get("kelly_fraction", 0.25))
+
+        if max_contracts is not None:
+            # Kelly: respect the firm's actual cap directly. CONTRACT_CAP_MIN (10) is
+            # the ATR-sizing floor, not a Kelly constraint. Conservative firms with
+            # max_contracts=5 must not be inflated. Still hard-capped at CONTRACT_CAP_MAX.
+            kelly_firm_max = min(max_contracts, CONTRACT_CAP_MAX)
+        else:
+            kelly_firm_max = CONTRACT_CAP_MAX
+
+        kelly_base = kelly_optimal_contracts(
+            edge=kelly_edge,
+            odds=kelly_odds,
+            bankroll=kelly_bankroll,
+            risk_per_trade=kelly_risk,
+            kelly_fraction=kelly_frac,
+            firm_max=kelly_firm_max,
+        )
+
+        # Apply profit tier on top of Kelly base (Kelly = base, tier scales it up)
+        if profit_scaling_tier is not None:
+            pnl_total_k = float(profit_scaling_tier.get("account_pnl_total", 0.0))
+            tier_increment_k = int(profit_scaling_tier.get("increment", 2))
+            tier_threshold_k = float(profit_scaling_tier.get("threshold", 3000.0))
+            kelly_base = compute_profit_tier(
+                account_pnl_total=pnl_total_k,
+                base_contracts=kelly_base,
+                increment=tier_increment_k,
+                threshold=tier_threshold_k,
+                firm_max=kelly_firm_max,
+            )
+
+        # Constant size for all bars; over_risk meaningless in Kelly mode
+        sizes = np.full(n, float(kelly_base), dtype=np.float64)
+        over_risk = np.zeros(n, dtype=bool)
+        return sizes, over_risk
+
     if config.type == "fixed":
         return np.full(n, config.fixed_contracts, dtype=np.float64), np.zeros(n, dtype=bool)
+
+    # ── risk_derived_pyramid (Wave 21 E.2) ─────────────────────────────────
+    # Compute bar-by-bar position sizes using risk-derived pyramid math.
+    # Contract count is constant across all bars in a single backtest run
+    # because account_balance / cumulative_profit are point-in-time snapshots,
+    # not bar-level series. The backtester calls this at run time with the
+    # current account state; the result is a flat array (same count every bar).
+    # Per CLAUDE.md §4: finalContracts = min(pyramidTier, riskCap, firmCap, liquidityCap).
+    if config.type == "risk_derived_pyramid":
+        # ATR at the first data bar (or fallback 1.0) for initial sizing
+        atr_col = f"atr_{atr_period}"
+        if atr_col in df.columns:
+            _atr_arr = df[atr_col].to_numpy().astype(np.float64)
+            # Use mean ATR across the run period (more stable than first bar)
+            _valid_atr = _atr_arr[~np.isnan(_atr_arr)]
+            atr_for_sizing = float(np.mean(_valid_atr)) if len(_valid_atr) > 0 else 1.0
+        else:
+            atr_for_sizing = 1.0
+
+        # profit_scaling_tier dict carries cumulative_profit if provided (optional)
+        cumulative_profit = 0.0
+        if profit_scaling_tier is not None:
+            cumulative_profit = float(profit_scaling_tier.get("account_pnl_total", 0.0))
+
+        # account_balance: use max_contracts parameter as a proxy when provided,
+        # otherwise default to 50_000 (MFFU 50K eval funded account).
+        # Callers that know live balance should pass it via profit_scaling_tier.
+        account_balance = float(profit_scaling_tier.get("account_balance", 50_000.0)) \
+            if profit_scaling_tier is not None else 50_000.0
+
+        # Wave 22: read firm from profit_scaling_tier dict if caller provided it.
+        # Callers that know the destination account's firm should pass:
+        #   profit_scaling_tier={"firm": "topstep", ...other fields...}
+        # Falls back to "topstep" (operator primary per directive 2026-05-18).
+        _firm = "topstep"
+        _trailing_dd = 2000.0
+        _high_water: Optional[float] = None
+        _account_starting_floor = 50_000.0
+        if profit_scaling_tier is not None:
+            _firm = str(profit_scaling_tier.get("firm", "topstep"))
+            _trailing_dd = float(profit_scaling_tier.get("trailing_dd", 2000.0))
+            _hwm = profit_scaling_tier.get("high_water_balance")
+            _high_water = float(_hwm) if _hwm is not None else None
+            _account_starting_floor = float(profit_scaling_tier.get("account_starting_floor", 50_000.0))
+
+        sizing_result = compute_risk_derived_contracts(
+            base_contracts=config.base_contracts,
+            tier_increment=config.tier_increment,
+            tier_threshold_dollars=config.tier_threshold_dollars,
+            max_risk_pct_per_trade=config.max_risk_pct_per_trade,
+            liquidity_comfort_cap=config.liquidity_comfort_cap,
+            account_balance=account_balance,
+            cumulative_profit=cumulative_profit,
+            atr_points=atr_for_sizing,
+            stop_multiplier=1.5,   # CLAUDE.md §4 default stop multiplier
+            point_dollar_value=contract_spec.point_value,
+            firm_contract_cap=config.firm_contract_cap if config.firm_contract_cap else max_contracts,
+            topstep_account_cap_override=config.topstep_account_cap_override,
+            firm=_firm,
+            trailing_dd=_trailing_dd,
+            high_water_balance=_high_water,
+            account_starting_floor=_account_starting_floor,
+        )
+
+        if sizing_result.rejection_reason is not None:
+            logger.warning(
+                "sizing.risk_derived_rejected reason=%s atr=%.4f balance=%.2f → 1 contract fallback",
+                sizing_result.rejection_reason, atr_for_sizing, account_balance,
+            )
+            # Fall back to 1 contract on rejection (minimum tradeable)
+            contracts = 1
+        else:
+            contracts = sizing_result.final_contracts
+
+        logger.debug(
+            "sizing.risk_derived pyramid=%d risk_cap=%d firm_cap=%s liquidity=%d → %d contracts "
+            "binding=%s atr=%.4f balance=%.2f pnl=%.2f firm=%s method=%s",
+            sizing_result.pyramid_tier,
+            sizing_result.risk_derived_cap,
+            sizing_result.firm_cap,
+            sizing_result.liquidity_cap,
+            contracts,
+            sizing_result.evidence.get("binding_cap", "?"),
+            atr_for_sizing,
+            account_balance,
+            cumulative_profit,
+            sizing_result.firm,
+            sizing_result.risk_cap_method,
+        )
+
+        sizes = np.full(n, float(max(1, contracts)), dtype=np.float64)
+        over_risk = np.zeros(n, dtype=bool)
+        return sizes, over_risk
 
     # dynamic_atr: contracts = floor(target_risk / (ATR * tick_value))
     atr_col = f"atr_{atr_period}"
@@ -75,8 +947,49 @@ def compute_position_sizes(
     # Bars with zero or negative raw get NaN (no trade)
     sizes = np.where((~np.isnan(raw)) & (raw <= 0), np.nan, sizes)
 
-    # Apply firm contract cap (default max 15 micros — user's standard size)
-    cap = max_contracts if max_contracts is not None else 15
+    # Apply firm contract cap, clamped to [10, 20] range (default 15 micros)
+    if max_contracts is not None:
+        cap = max(CONTRACT_CAP_MIN, min(max_contracts, CONTRACT_CAP_MAX))
+    else:
+        cap = 15
     sizes = np.where(np.isnan(sizes), np.nan, np.minimum(sizes, cap))
+
+    # Tier 5.4: Profit-based position scaling (Gemini Quantum Blueprint W5a).
+    # Only active when profit_scaling_tier dict is explicitly provided.
+    # Backwards-compatible: None (default) -> no behavior change whatsoever.
+    # Only applies in dynamic_atr mode (fixed mode already returned above).
+    if profit_scaling_tier is not None:
+        pnl_total: float = float(profit_scaling_tier.get("account_pnl_total", 0.0))
+        tier_increment: int = int(profit_scaling_tier.get("increment", 2))
+        tier_threshold: float = float(profit_scaling_tier.get("threshold", 3000.0))
+
+        def _scale_size(base_val: float) -> float:
+            """Apply profit tier scaling to a single bar's base size."""
+            if np.isnan(base_val):
+                return base_val
+            scaled = compute_profit_tier(
+                account_pnl_total=pnl_total,
+                base_contracts=int(base_val),
+                increment=tier_increment,
+                threshold=tier_threshold,
+                firm_max=cap,
+            )
+            return float(scaled)
+
+        sizes = np.array([_scale_size(s) for s in sizes], dtype=np.float64)
+
+    # C11: FOMC proximity reduction (applied last, after all other sizing).
+    # When within ±1 day of FOMC: halve all positions (floor, minimum 1).
+    # Determinism: pure arithmetic on existing sizes array, no randomness.
+    if fomc_proximity is not None and abs(fomc_proximity) <= 1:
+        fomc_sizes = np.where(
+            np.isnan(sizes),
+            np.nan,
+            np.maximum(1.0, np.floor(sizes / 2.0)),
+        )
+        sizes = fomc_sizes
+        logger.debug(
+            "C11 FOMC ±1 day: all position sizes halved (proximity=%d)", fomc_proximity
+        )
 
     return sizes, over_risk

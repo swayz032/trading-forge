@@ -89,13 +89,22 @@ def _apply_params(config: StrategyConfig, params: dict, space: list[dict]) -> St
 
 
 def _update_expression(expr: str, old_indicators: list, new_indicators: list) -> str:
-    """Update column references in expression when periods change."""
+    """Update column references in expression when periods change.
+
+    Uses two-pass placeholder approach to prevent collisions when
+    indicator names overlap (e.g., ema_10→ema_15, ema_15→ema_20).
+    """
     result = expr
-    for old_ind, new_ind in zip(old_indicators, new_indicators):
+    # Pass 1: replace old names with unique placeholders
+    for i, (old_ind, new_ind) in enumerate(zip(old_indicators, new_indicators)):
         if old_ind.period != new_ind.period:
             old_name = f"{old_ind.type}_{old_ind.period}"
+            result = result.replace(old_name, f"__IND_PLACEHOLDER_{i}__")
+    # Pass 2: replace placeholders with new names
+    for i, (old_ind, new_ind) in enumerate(zip(old_indicators, new_indicators)):
+        if old_ind.period != new_ind.period:
             new_name = f"{new_ind.type}_{new_ind.period}"
-            result = result.replace(old_name, new_name)
+            result = result.replace(f"__IND_PLACEHOLDER_{i}__", new_name)
     return result
 
 
@@ -147,7 +156,7 @@ def optimize_strategy(
             return -sharpe  # Minimize negative Sharpe
         except Exception as exc:
             print(f"    Optuna trial {trial.number} failed: {exc}", file=sys.stderr)
-            return 0.0  # Neutral on error
+            return float("inf")  # Worst possible for minimization — never selected as best
 
     sampler = optuna.samplers.TPESampler(seed=42)
     study = optuna.create_study(sampler=sampler, direction="minimize")
@@ -229,7 +238,7 @@ def run_robustness_test(
             return -sharpe
         except Exception as exc:
             print(f"    Optuna trial {trial.number} failed: {exc}", file=sys.stderr)
-            return 0.0
+            return float("inf")  # Worst possible for minimization — never selected as best
 
     sampler = optuna.samplers.TPESampler(seed=42)
     study = optuna.create_study(sampler=sampler, direction="minimize")

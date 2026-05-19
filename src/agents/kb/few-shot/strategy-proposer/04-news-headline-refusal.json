@@ -1,0 +1,20 @@
+{
+  "input": {
+    "research_find": {
+      "source": "bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2026-04-30/sp-500-risk-on-rotation-tech-leads-rally",
+      "title": "S&P 500 Risk-On Rotation Continues as Tech Leads Rally",
+      "description": "U.S. stocks closed higher Tuesday with the S&P 500 up 1.2% to 5,847 as technology shares led the advance. The risk-on rotation reflects strengthening earnings forecasts and a slightly more dovish Fed posture after April CPI came in below expectations. Mega-cap technology gained over 2% on the session, driving the Nasdaq 100 to a fresh all-time high. Energy lagged amid soft crude inventories. Bond yields slipped with the 10-year Treasury yield closing at 4.32%, four basis points lower. Volume on the NYSE was below the 20-day average. Strategists at Goldman Sachs note that risk appetite remains constructive into the May FOMC meeting, with positioning still light by historical standards.",
+      "instruments": [],
+      "indicators_mentioned": [],
+      "signal_type": "strategy_candidate"
+    },
+    "regime_context": null,
+    "current_graveyard_summary": "(not relevant — input is not a strategy)"
+  },
+  "expected_output": {
+    "reject": true,
+    "reason": "Article describes market commentary (yesterday's index moves, Fed posture, sector leadership) with no extractable systematic entry/exit conditions. No indicator parameters, no entry trigger condition, no stop or exit logic. This is news-intel content (signal_type='market_news_intel'), NOT a strategy_candidate. Re-route to the news-intel stream via 5M-brave-news-watcher; do not pass to synthesizer."
+  },
+  "notes": "CRITICAL refusal example — addresses the user's stated pet peeve: 'the scout is not supposed to bring back raw data.' Bloomberg URL + commentary phrasing ('rotation continues', 'risk-on') + no entry/exit/stop/indicator-parameter mentions = news headline, not strategy. The proposer must NOT fabricate entry rules to make this pass. The correct outcome is REJECT and route to market_news_intel. This refusal pattern is non-negotiable per research finding A.4 — every role must have at least one refusal example."
+}

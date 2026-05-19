@@ -1,71 +1,43 @@
 /**
  * Macro Routes — FRED/BLS/EIA macro data overlay + regime classification.
  *
+ * Existing routes (pre-C11):
  * GET   /api/macro/current            — Current macro regime (latest snapshot + classification)
  * GET   /api/macro/history            — Historical snapshots (with pagination ?limit=&offset=)
  * POST  /api/macro/sync               — Trigger manual data sync from FRED/BLS/EIA
  * GET   /api/macro/calendar           — Upcoming FOMC/CPI/NFP events
  * GET   /api/macro/strategy-fit/:id   — Strategy performance across macro regimes
+ *
+ * C11 HMM routes (4-state macro regime overlay):
+ * GET   /api/macro/regime/current     — Current 4-state HMM regime + hard gate status
+ * GET   /api/macro/regime/history     — Last N days of HMM regime states
+ * GET   /api/macro/series/:id         — Recent observations for a C11 macro series
+ * POST  /api/macro/ingest/fred        — Manual trigger: FRED daily pull (admin)
+ * POST  /api/macro/ingest/h41         — Manual trigger: H.4.1 pull (admin)
+ * POST  /api/macro/classify           — Manual trigger: run HMM classifier (admin)
  */
 
 import { Router } from "express";
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
-import { z } from "zod";
 import { db } from "../db/index.js";
-import { macroSnapshots, backtests, backtestTrades } from "../db/schema.js";
-import { desc, eq, sql, inArray } from "drizzle-orm";
-import { logger } from "../index.js";
+import { macroSnapshots, macroRegimeStates, backtests, backtestTrades } from "../db/schema.js";
+import { desc, sql, inArray, and, gte } from "drizzle-orm";
+
+import { runPythonModule } from "../lib/python-runner.js";
+import { authMiddleware } from "../middleware/auth.js";
+import {
+  getLatestMacroRegimeState,
+  getMacroSeriesHistory,
+  runFredDailyIngestion,
+  runH41Ingestion,
+  runMacroRegimeClassification,
+} from "../services/macro-regime-service.js";
+import { evaluateMacroGates } from "../services/macro-gate-service.js";
 
 export const macroRoutes = Router();
 
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
-
-// ─── Python subprocess helper ──────────────────────────────────
-
-function runPython(module: string, configJson: string): Promise<Record<string, unknown>> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-c", `
-import json, sys
-sys.path.insert(0, '.')
-config = json.loads('''${configJson.replace(/'/g, "\\'")}''')
-${module}
-`];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "macro-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse macro output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Macro engine failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => reject(err));
-  });
-}
-
 // ─── GET /api/macro/current ────────────────────────────────────
 // Returns the latest macro snapshot + regime classification
-macroRoutes.get("/current", async (_req, res) => {
+macroRoutes.get("/current", async (req, res) => {
   try {
     const [latest] = await db
       .select()
@@ -104,7 +76,7 @@ macroRoutes.get("/current", async (_req, res) => {
       created_at: latest.createdAt,
     });
   } catch (err) {
-    logger.error({ err }, "Failed to fetch current macro regime");
+    req.log.error({ err }, "Failed to fetch current macro regime");
     res.status(500).json({ error: "Failed to fetch current macro regime", details: String(err) });
   }
 });
@@ -148,18 +120,17 @@ macroRoutes.get("/history", async (req, res) => {
       },
     });
   } catch (err) {
-    logger.error({ err }, "Failed to fetch macro history");
+    req.log.error({ err }, "Failed to fetch macro history");
     res.status(500).json({ error: "Failed to fetch macro history", details: String(err) });
   }
 });
 
 // ─── POST /api/macro/sync ──────────────────────────────────────
 // Trigger manual data sync from FRED/BLS/EIA
-macroRoutes.post("/sync", async (_req, res) => {
+macroRoutes.post("/sync", async (req, res) => {
   try {
-    // Run Python sync script
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const proc = spawn(pythonCmd, ["-c", `
+    const result = await runPythonModule({
+      scriptCode: `
 import json, sys, os
 sys.path.insert(0, '.')
 
@@ -186,77 +157,42 @@ except Exception as e:
 
 results["status"] = "ok"
 print(json.dumps(results))
-`], {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
+`,
+      componentName: "macro-sync",
+      timeoutMs: 120_000,
     });
 
-    let stdout = "";
-    let stderr = "";
+    const fredData = (result as any).fred_data || {};
+    const regime = (result as any).regime || {};
 
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "macro-sync" }, data.toString().trim());
+    // Store snapshot in DB
+    await db.insert(macroSnapshots).values({
+      snapshotDate: new Date(),
+      fedFundsRate: fredData.fed_funds_rate?.toString() ?? null,
+      treasury10y: fredData.treasury_10y?.toString() ?? null,
+      treasury2y: fredData.treasury_2y?.toString() ?? null,
+      treasury3m: fredData.treasury_3m?.toString() ?? null,
+      vix: fredData.vix?.toString() ?? null,
+      yieldSpread10y2y: fredData.yield_spread_10y2y?.toString() ?? null,
+      unemployment: fredData.unemployment?.toString() ?? null,
+      cpiYoy: fredData.cpi_yoy?.toString() ?? null,
+      pceYoy: fredData.pce_yoy?.toString() ?? null,
+      wtiCrude: fredData.wti_crude?.toString() ?? null,
+      naturalGas: fredData.natural_gas?.toString() ?? null,
+      macroRegime: regime.regime || "TRANSITION",
+      regimeConfidence: regime.confidence?.toString() ?? "0",
+      rawData: result as Record<string, unknown>,
     });
 
-    let responded = false;
-    proc.on("close", async (code) => {
-      if (responded) return;
-      if (code !== 0) {
-        responded = true;
-        res.status(500).json({
-          error: "Macro sync failed",
-          details: stderr,
-        });
-        return;
-      }
-
-      try {
-        const result = JSON.parse(stdout.trim());
-        const fredData = result.fred_data || {};
-        const regime = result.regime || {};
-
-        // Store snapshot in DB
-        await db.insert(macroSnapshots).values({
-          snapshotDate: new Date(),
-          fedFundsRate: fredData.fed_funds_rate?.toString() ?? null,
-          treasury10y: fredData.treasury_10y?.toString() ?? null,
-          treasury2y: fredData.treasury_2y?.toString() ?? null,
-          treasury3m: fredData.treasury_3m?.toString() ?? null,
-          vix: fredData.vix?.toString() ?? null,
-          yieldSpread10y2y: fredData.yield_spread_10y2y?.toString() ?? null,
-          unemployment: fredData.unemployment?.toString() ?? null,
-          cpiYoy: fredData.cpi_yoy?.toString() ?? null,
-          pceYoy: fredData.pce_yoy?.toString() ?? null,
-          wtiCrude: fredData.wti_crude?.toString() ?? null,
-          naturalGas: fredData.natural_gas?.toString() ?? null,
-          macroRegime: regime.regime || "TRANSITION",
-          regimeConfidence: regime.confidence?.toString() ?? "0",
-          rawData: result,
-        });
-
-        responded = true;
-        res.json({
-          status: "ok",
-          regime: regime.regime || "TRANSITION",
-          confidence: regime.confidence || 0,
-          sources: result.sources || {},
-          snapshot_date: new Date().toISOString(),
-        });
-      } catch (parseErr) {
-        logger.error({ parseErr, stdout }, "Failed to parse/store macro sync result");
-        if (!responded) { responded = true; res.status(500).json({ error: "Failed to store sync result", details: String(parseErr) }); }
-      }
-    });
-
-    proc.on("error", (err) => {
-      if (responded) return;
-      responded = true;
-      res.status(500).json({ error: "Failed to start Python process", details: String(err) });
+    res.json({
+      status: "ok",
+      regime: regime.regime || "TRANSITION",
+      confidence: regime.confidence || 0,
+      sources: (result as any).sources || {},
+      snapshot_date: new Date().toISOString(),
     });
   } catch (err) {
-    logger.error({ err }, "Macro sync failed");
+    req.log.error({ err }, "Macro sync failed");
     res.status(500).json({ error: "Macro sync failed", details: String(err) });
   }
 });
@@ -267,8 +203,8 @@ macroRoutes.get("/calendar", async (req, res) => {
   const daysAhead = Math.min(Number(req.query.days_ahead) || 30, 365);
 
   try {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const proc = spawn(pythonCmd, ["-c", `
+    const result = await runPythonModule({
+      scriptCode: `
 import json, sys
 sys.path.insert(0, '.')
 from src.data.macro.event_calendar import get_upcoming_events, event_proximity
@@ -282,39 +218,12 @@ print(json.dumps({
     "proximity": proximity,
     "today": date.today().isoformat(),
 }))
-`], {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
+`,
+      componentName: "macro-calendar",
     });
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => (stderr += data.toString()));
-
-    let calResponded = false;
-    proc.on("close", (code) => {
-      if (calResponded) return;
-      calResponded = true;
-      if (code === 0) {
-        try {
-          res.json(JSON.parse(stdout.trim()));
-        } catch {
-          res.status(500).json({ error: "Failed to parse calendar output", details: stdout });
-        }
-      } else {
-        res.status(500).json({ error: "Calendar fetch failed", details: stderr });
-      }
-    });
-
-    proc.on("error", (err) => {
-      if (calResponded) return;
-      calResponded = true;
-      res.status(500).json({ error: "Failed to start Python", details: String(err) });
-    });
+    res.json(result);
   } catch (err) {
-    logger.error({ err }, "Calendar fetch failed");
+    req.log.error({ err }, "Calendar fetch failed");
     res.status(500).json({ error: "Calendar fetch failed", details: String(err) });
   }
 });
@@ -458,7 +367,133 @@ macroRoutes.get("/strategy-fit/:id", async (req, res) => {
       recommendation,
     });
   } catch (err) {
-    logger.error({ err }, "Strategy-fit analysis failed");
+    req.log.error({ err }, "Strategy-fit analysis failed");
     res.status(500).json({ error: "Strategy-fit analysis failed", details: String(err) });
+  }
+});
+
+// ─── C11: GET /api/macro/regime/current ───────────────────────────
+// Current 4-state HMM macro regime state + hard gate evaluation
+macroRoutes.get("/regime/current", async (req, res) => {
+  try {
+    const state = await getLatestMacroRegimeState();
+
+    if (!state) {
+      return res.status(200).json({
+        available: false,
+        message: "No C11 macro regime state — FRED ingestion cron may not have run yet.",
+        regime: null,
+      });
+    }
+
+    const gateES = await evaluateMacroGates("ES", "long");
+    const gateMCL = await evaluateMacroGates("MCL", "long");
+
+    return res.json({
+      available: true,
+      regime: state,
+      gates: {
+        ES_long: { allowed: gateES.allowed, reason: gateES.gateReason, severity: gateES.severity },
+        MCL_long: { allowed: gateMCL.allowed, reason: gateMCL.gateReason, severity: gateMCL.severity },
+        fomc_size_reduction: gateES.fomcSizeReduction,
+      },
+    });
+  } catch (err) {
+    req.log.error({ err }, "C11 GET /api/macro/regime/current failed");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── C11: GET /api/macro/regime/history ──────────────────────────
+macroRoutes.get("/regime/history", async (req, res) => {
+  try {
+    const limitDays = Math.min(parseInt(String(req.query.days ?? "30"), 10), 365);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - limitDays);
+
+    const rows = await db
+      .select()
+      .from(macroRegimeStates)
+      .where(gte(macroRegimeStates.stateDate, cutoff.toISOString().slice(0, 10)))
+      .orderBy(desc(macroRegimeStates.stateDate))
+      .limit(limitDays);
+
+    return res.json({
+      days: limitDays,
+      count: rows.length,
+      history: rows.map((r) => ({
+        date: String(r.stateDate),
+        dominant_state: r.dominantState,
+        prob_growth: parseFloat(r.probGrowth ?? "0"),
+        prob_inflation: parseFloat(r.probInflation ?? "0"),
+        prob_crisis: parseFloat(r.probCrisis ?? "0"),
+        prob_easing: parseFloat(r.probEasing ?? "0"),
+        crisis_gate_triggered: r.crisisGateTriggered,
+        fomc_day_proximity: r.fomcDayProximity,
+        macro_release_day: r.macroReleaseDay,
+      })),
+    });
+  } catch (err) {
+    req.log.error({ err }, "C11 GET /api/macro/regime/history failed");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── C11: GET /api/macro/series/:id ─────────────────────────────
+macroRoutes.get("/series/:id", async (req, res) => {
+  try {
+    const seriesId = req.params.id;
+    if (!seriesId) return res.status(400).json({ error: "series id required" });
+
+    const limitDays = Math.min(parseInt(String(req.query.days ?? "90"), 10), 365);
+    const data = await getMacroSeriesHistory(seriesId, limitDays);
+
+    return res.json({
+      series_id: seriesId,
+      days: limitDays,
+      count: data.length,
+      observations: data,
+    });
+  } catch (err) {
+    req.log.error({ err }, "C11 GET /api/macro/series/:id failed");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─── C11: POST /api/macro/ingest/fred (admin) ────────────────────
+macroRoutes.post("/ingest/fred", authMiddleware, async (req, res) => {
+  try {
+    const count = await runFredDailyIngestion();
+    return res.json({ status: "ok", persisted: count });
+  } catch (err) {
+    req.log.error({ err }, "C11 POST /api/macro/ingest/fred failed");
+    return res.status(500).json({ error: "FRED ingestion failed" });
+  }
+});
+
+// ─── C11: POST /api/macro/ingest/h41 (admin) ─────────────────────
+macroRoutes.post("/ingest/h41", authMiddleware, async (req, res) => {
+  try {
+    const count = await runH41Ingestion();
+    return res.json({ status: "ok", persisted: count });
+  } catch (err) {
+    req.log.error({ err }, "C11 POST /api/macro/ingest/h41 failed");
+    return res.status(500).json({ error: "H.4.1 ingestion failed" });
+  }
+});
+
+// ─── C11: POST /api/macro/classify (admin) ───────────────────────
+macroRoutes.post("/classify", authMiddleware, async (req, res) => {
+  try {
+    const state = await runMacroRegimeClassification();
+    if (!state) {
+      return res.status(422).json({
+        error: "HMM classification failed or insufficient macro_features data (need 30+ rows)",
+      });
+    }
+    return res.json({ status: "ok", state });
+  } catch (err) {
+    req.log.error({ err }, "C11 POST /api/macro/classify failed");
+    return res.status(500).json({ error: "Classification failed" });
   }
 });

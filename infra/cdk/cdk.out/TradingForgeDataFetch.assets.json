@@ -1,0 +1,36 @@
+{
+  "version": "52.0.0",
+  "files": {
+    "2aca3e6b4bacb13f1b03fe788e9bee0b6717613ddad42d5258ed8f91f9074a11": {
+      "displayName": "NightlyDataFetch/Code",
+      "source": {
+        "path": "asset.2aca3e6b4bacb13f1b03fe788e9bee0b6717613ddad42d5258ed8f91f9074a11",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-us-east-1-ed1c8432": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "2aca3e6b4bacb13f1b03fe788e9bee0b6717613ddad42d5258ed8f91f9074a11.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    },
+    "ef4efd711b903d78ec847fb7e5ea85eb7ae6987af76155c776cc0121c33db35e": {
+      "displayName": "TradingForgeDataFetch Template",
+      "source": {
+        "path": "TradingForgeDataFetch.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-us-east-1-82f28f21": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "ef4efd711b903d78ec847fb7e5ea85eb7ae6987af76155c776cc0121c33db35e.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

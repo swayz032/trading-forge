@@ -17,7 +17,7 @@ def run_sanity_checks(
     result: dict,
     initial_capital: float = 50_000.0,
     is_walk_forward_aggregate: bool = False,
-    symbol: str = "ES",
+    symbol: str = "MES",
     timeframe: str = "5min",
 ) -> dict:
     """Run all 8 sanity checks against a backtest result.
@@ -132,10 +132,10 @@ def run_sanity_checks(
     duration_detail = "all trades within bounds"
     if trades:
         for t in trades:
-            entry_idx = t.get("Entry Idx", 0)
-            exit_idx = t.get("Exit Idx", entry_idx)
+            entry_idx = t.get("Entry Idx", t.get("entry_idx", 0))
+            exit_idx = t.get("Exit Idx", t.get("exit_idx", entry_idx))
             bar_count = exit_idx - entry_idx
-            if bar_count > max_bars:
+            if bar_count < 0 or bar_count > max_bars:
                 duration_ok = False
                 duration_detail = f"trade held {bar_count} bars (>{max_bars} for {timeframe})"
                 break
@@ -148,7 +148,7 @@ def run_sanity_checks(
     # 8. Spot-Check 3 Random Trades — verify P&L math
     spot_ok = True
     spot_details = []
-    point_value = CONTRACT_SPECS.get(symbol, CONTRACT_SPECS["ES"]).point_value
+    point_value = CONTRACT_SPECS.get(symbol, CONTRACT_SPECS["MES"]).point_value
     if len(trades) >= 3:
         rng = np.random.RandomState(42)
         sample_indices = rng.choice(len(trades), size=min(3, len(trades)), replace=False)

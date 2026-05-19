@@ -1,0 +1,10 @@
+{
+  "name": "trading-forge-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HTTP-over-WebSocket reverse tunnel server. Deployed on Railway, paired with a tower-side client, gives a stable Railway URL that reaches localhost:4000 on the tower.",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "ws": "^8.18.0" },
+  "engines": { "node": ">=20" }
+}

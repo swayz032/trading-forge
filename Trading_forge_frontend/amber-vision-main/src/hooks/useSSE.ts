@@ -1,57 +1,870 @@
 import { useEffect, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { sseClient } from "@/lib/sse-client";
+import type { SSEEvent, SSEEventType, SSEEventData } from "@/types/sse-events";
 
-type SSEHandler = (data: any) => void;
+/**
+ * Typed handler the consumer can supply. Receives the discriminated union so
+ * components can `switch` on `type` and get the right data shape for free.
+ */
+export type SSEHandler = (event: SSEEvent) => void;
 
-export function useSSE(eventTypes: string[], onEvent?: SSEHandler) {
-  const qc = useQueryClient();
-  const sourceRef = useRef<EventSource | null>(null);
+/**
+ * Per-event-type side effects (cache invalidations + UX). Keeping this as a
+ * lookup table makes it obvious which events are wired and which aren't.
+ *
+ * NOTE: backend SSE event names live in `src/server/` (search for
+ * `broadcastSSE("...")`). When you add a new one there, mirror it here AND in
+ * `@/types/sse-events`.
+ *
+ * Connection model: this hook subscribes to the shared `sseClient` singleton
+ * (`@/lib/sse-client`). Every `useSSE` mount used to open its own EventSource;
+ * with ~6 routes mounting the hook plus banner components doing their own
+ * connections, a tab could exceed the browser's per-domain connection cap.
+ * The singleton multiplexes a single EventSource across all subscribers and
+ * owns the reconnect/backoff logic so this hook can stay declarative.
+ */
+function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
+  switch (event.type) {
+    // ─── Already-handled events (kept verbatim for parity) ─────────────
+    case "alert:new":
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
 
-  useEffect(() => {
-    const es = new EventSource("/api/sse/events");
-    sourceRef.current = es;
+    case "backtest:complete":
+    case "backtest:completed":
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      break;
 
-    for (const type of eventTypes) {
-      es.addEventListener(type, (e) => {
-        const data = JSON.parse(e.data);
-        onEvent?.(data);
+    case "paper:trade":
+    case "paper:pnl":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      break;
 
-        // Auto-invalidate relevant queries
-        if (type === "alert:new") qc.invalidateQueries({ queryKey: ["alerts"] });
-        if (type === "strategy:updated") qc.invalidateQueries({ queryKey: ["strategies"] });
-        if (type === "backtest:complete") qc.invalidateQueries({ queryKey: ["backtests"] });
-        if (type === "paper:trade") qc.invalidateQueries({ queryKey: ["paper"] });
-        if (type === "paper:pnl") qc.invalidateQueries({ queryKey: ["paper"] });
-        if (type === "paper:signal") qc.invalidateQueries({ queryKey: ["paper", "signals"] });
-        if (type === "strategy:promoted") qc.invalidateQueries({ queryKey: ["paper"] });
-        // n8n pipeline events
-        if (type === "strategy:analyzed") {
-          qc.invalidateQueries({ queryKey: ["strategies"] });
-          qc.invalidateQueries({ queryKey: ["backtests"] });
-          qc.invalidateQueries({ queryKey: ["journal"] });
-        }
-        if (type === "strategy:analysis-error") qc.invalidateQueries({ queryKey: ["strategies"] });
-        if (type === "nightly:review-complete") {
-          qc.invalidateQueries({ queryKey: ["paper"] });
-          qc.invalidateQueries({ queryKey: ["journal"] });
-        }
-        // Express scheduler events
-        if (type === "scheduler:sharpe-updated") qc.invalidateQueries({ queryKey: ["strategies"] });
-        if (type === "scheduler:pre-market-alert") qc.invalidateQueries({ queryKey: ["alerts"] });
-        if (type === "strategy:drift-alert") {
-          qc.invalidateQueries({ queryKey: ["paper"] });
-          qc.invalidateQueries({ queryKey: ["strategies"] });
-        }
-      });
+    case "paper:signal":
+      qc.invalidateQueries({ queryKey: ["paper", "signals"] });
+      break;
+
+    case "strategy:promoted":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+
+    case "mc:completed":
+      qc.invalidateQueries({ queryKey: ["monte-carlo"] });
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      break;
+
+    case "pipeline:mode-change":
+      qc.invalidateQueries({ queryKey: ["pipeline"] });
+      break;
+
+    case "pipeline:pause_snapshot":
+    case "pipeline:resume_stale_positions":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "deepar:forecast_ready":
+      qc.invalidateQueries({ queryKey: ["deepar"] });
+      break;
+
+    case "critic:replay_started":
+    case "critic:replay_complete":
+      qc.invalidateQueries({ queryKey: ["critic"] });
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      break;
+
+    case "strategy:analyzed":
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      qc.invalidateQueries({ queryKey: ["journal"] });
+      break;
+
+    case "strategy:analysis-error":
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+
+    case "nightly:review-complete":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["journal"] });
+      break;
+
+    case "scheduler:sharpe-updated":
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+
+    case "scheduler:pre-market-alert":
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "strategy:drift-alert":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+
+    case "paper:kill-switch-tripped":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["paper", "sessions"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "alert:kill_switch_down":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "alert:compliance_gate_blocked":
+      qc.invalidateQueries({ queryKey: ["paper", "compliance"] });
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "backtest:failed":
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "mc:failed":
+      qc.invalidateQueries({ queryKey: ["monte-carlo"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "paper:auto_stopped":
+    case "paper:auto_recovered":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["paper", "sessions"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    // ─── NEW: priority events (lifecycle / decay / critic / system) ────
+
+    // Lifecycle promotion is the umbrella event that fires on every state
+    // transition (CANDIDATE→TESTING, TESTING→PAPER, PAPER→DEPLOY_READY, …).
+    // The strategies and paper panels both depend on freshness here.
+    case "lifecycle:promoted": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      const data = event.data as SSEEventData<"lifecycle:promoted">;
+      const label = data.name ? `"${data.name}"` : "Strategy";
+      toast.info(`${label} ${data.from} → ${data.to}`);
+      break;
     }
 
-    es.onerror = () => {
-      // EventSource auto-reconnects
+    // Human-in-the-loop gate: surface as a sticky-feeling toast so the user
+    // notices even if they're not on the strategies page.
+    case "strategy:deploy-ready": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"strategy:deploy-ready">;
+      toast.success(
+        data.message ?? `${data.name} ready to deploy — review in library`,
+        { duration: 10_000 }
+      );
+      break;
+    }
+
+    case "strategy:decay-warning": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      const data = event.data as SSEEventData<"strategy:decay-warning">;
+      const label = data.name ? `"${data.name}"` : "Strategy";
+      toast.warning(
+        data.message ?? `${label} decay warning (score ${data.decayScore})`
+      );
+      break;
+    }
+
+    case "strategy:decay-demotion": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      const data = event.data as SSEEventData<"strategy:decay-demotion">;
+      const label = data.name ? `"${data.name}"` : "Strategy";
+      toast.error(
+        data.message ?? `${label} demoted ${data.fromState} → ${data.toState}`,
+        { duration: 8_000 }
+      );
+      break;
+    }
+
+    case "strategy:exportability_blocked": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"strategy:exportability_blocked">;
+      const label = data.name ? `"${data.name}"` : "Strategy";
+      toast.warning(
+        `${label} blocked at Pine export gate (score ${data.score ?? "?"}, band ${data.band ?? "?"})`
+      );
+      break;
+    }
+
+    case "strategy:evolved": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["critic"] });
+      const data = event.data as SSEEventData<"strategy:evolved">;
+      toast.info(
+        `Critic evolved strategy → gen ${data.generation}` +
+          (typeof data.improvement === "number" ? ` (+${data.improvement}%)` : "")
+      );
+      break;
+    }
+
+    case "strategy:deployed": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      const data = event.data as SSEEventData<"strategy:deployed">;
+      toast.success(`Deployed: ${data.name ?? data.strategyId}`);
+      break;
+    }
+
+    case "strategy:created":
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+
+    case "strategy:drift-demotion": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      const data = event.data as SSEEventData<"strategy:drift-demotion">;
+      toast.error(`Strategy demoted (drift ${data.driftSeverity.toFixed?.(2) ?? data.driftSeverity}σ)`);
+      break;
+    }
+
+    case "strategy:paper-vs-backtest-alert":
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    // ─── Critic loop ──────────────────────────────────────────────────
+
+    case "critic:started":
+    case "critic:started_async":
+    case "critic:evidence_collected":
+    case "critic:evidence_collected_async":
+    case "critic:evidence_source":
+    case "critic:evaluation_complete":
+      qc.invalidateQueries({ queryKey: ["critic"] });
+      break;
+
+    case "critic:candidates_ready": {
+      qc.invalidateQueries({ queryKey: ["critic"] });
+      const data = event.data as SSEEventData<"critic:candidates_ready">;
+      toast.info(`Critic produced ${data.count} candidate${data.count === 1 ? "" : "s"}`);
+      break;
+    }
+
+    case "critic:completed": {
+      qc.invalidateQueries({ queryKey: ["critic"] });
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      const data = event.data as SSEEventData<"critic:completed">;
+      if (data.status === "failed") {
+        toast.error(`Critic run failed${data.error ? `: ${data.error}` : ""}`);
+      } else if (data.killSignal) {
+        toast.warning(`Critic killed run: ${data.killSignal}`);
+      } else if (data.survivor) {
+        toast.success(`Critic selected survivor ${String(data.survivor).slice(0, 8)}`);
+      }
+      break;
+    }
+
+    case "critic:child_created": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["critic"] });
+      const data = event.data as SSEEventData<"critic:child_created">;
+      // Idempotent re-emits aren't user-actionable — skip the toast.
+      if (!data.idempotent) {
+        toast.success(`Child strategy created (gen ${data.generation})`);
+      }
+      break;
+    }
+
+    // ─── Backtest matrix progress ─────────────────────────────────────
+
+    case "backtest:matrix-progress":
+    case "backtest:matrix-tier":
+      qc.invalidateQueries({ queryKey: ["backtests", "matrix"] });
+      break;
+
+    case "backtest:matrix-completed": {
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      qc.invalidateQueries({ queryKey: ["backtests", "matrix"] });
+      const data = event.data as SSEEventData<"backtest:matrix-completed">;
+      toast.success(
+        `Matrix complete (${data.totalCombos} combos)` +
+          (data.bestCombo
+            ? ` — best ${data.bestCombo.symbol ?? "?"} ${data.bestCombo.timeframe ?? ""} score ${data.bestCombo.forgeScore ?? "?"}`
+            : "")
+      );
+      break;
+    }
+
+    case "backtest:matrix-failed": {
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      qc.invalidateQueries({ queryKey: ["backtests", "matrix"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"backtest:matrix-failed">;
+      toast.error(`Matrix backtest failed${data.error ? `: ${data.error}` : ""}`);
+      break;
+    }
+
+    // ─── Paper trading (additional surface area) ──────────────────────
+
+    case "paper:position-opened":
+    case "paper:fill-miss":
+    case "paper:roll-flatten":
+    case "paper:roll-warning":
+    case "paper:consistency-warning":
+    case "paper:decay-alert":
+    case "paper:decay-warning":
+    case "paper:session-feedback-computed":
+    case "paper:session_start":
+    case "paper:session_stop":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      break;
+
+    // ─── Pipeline ─────────────────────────────────────────────────────
+
+    case "pipeline:drain-resume":
+      qc.invalidateQueries({ queryKey: ["pipeline"] });
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      break;
+
+    // ─── Alerts / compliance / guards ─────────────────────────────────
+
+    case "alert:triggered":
+    case "alert:compliance_guard_down":
+    case "alert:calendar_guard_down":
+    case "alert:ict_bridge_down":
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "compliance:cascade_revalidation": {
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      qc.invalidateQueries({ queryKey: ["paper", "compliance"] });
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"compliance:cascade_revalidation">;
+      toast.error(data.message, { duration: 12_000 });
+      break;
+    }
+
+    // ─── Scheduler / lifecycle housekeeping ───────────────────────────
+
+    case "scheduler:job-complete":
+    case "scheduler:decay-sweep-complete":
+    case "scheduler:regret-score-fill":
+    case "lifecycle:auto-check":
+      // Housekeeping events — touch broad caches only when likely to change UX.
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+
+    // ─── DeepAR ───────────────────────────────────────────────────────
+
+    case "deepar:training_complete":
+      qc.invalidateQueries({ queryKey: ["deepar"] });
+      break;
+
+    case "deepar:weight_changed": {
+      qc.invalidateQueries({ queryKey: ["deepar"] });
+      const data = event.data as SSEEventData<"deepar:weight_changed">;
+      toast.info(
+        `DeepAR weight ${data.previousWeight.toFixed(2)} → ${data.currentWeight.toFixed(2)}`
+      );
+      break;
+    }
+
+    // ─── Anti-setup / regime / archetype ──────────────────────────────
+
+    case "anti-setup:mined":
+    case "anti-setup:blocked":
+    case "anti-setup:effectiveness":
+      qc.invalidateQueries({ queryKey: ["anti-setup"] });
+      break;
+
+    case "archetype:predicted":
+      qc.invalidateQueries({ queryKey: ["archetype"] });
+      break;
+
+    case "regime:state_updated":
+      qc.invalidateQueries({ queryKey: ["regime"] });
+      break;
+
+    case "correlation:alert":
+    case "portfolio:correlation_snapshot":
+      qc.invalidateQueries({ queryKey: ["portfolio", "correlation"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "drift:alert":
+      qc.invalidateQueries({ queryKey: ["drift"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    // ─── Pine export ──────────────────────────────────────────────────
+    // Legacy underscore event — server emits `pine:export-completed` (hyphen)
+    // these days, but the union still includes the underscore variant for
+    // backward compatibility with any in-flight clients. Treat both the same.
+    case "pine:export_completed": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["pine"] });
+      break;
+    }
+
+    // ─── n8n / agents ─────────────────────────────────────────────────
+
+    case "n8n:health-alert": {
+      qc.invalidateQueries({ queryKey: ["n8n"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"n8n:health-alert">;
+      const failingCount = data.failing?.length ?? 0;
+      toast.warning(
+        `n8n: ${failingCount} workflow${failingCount === 1 ? "" : "s"} with recent failures`
+      );
+      break;
+    }
+
+    case "n8n:workflow-failed": {
+      qc.invalidateQueries({ queryKey: ["n8n"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"n8n:workflow-failed">;
+      toast.error(`n8n workflow failed${data.workflowName ? `: ${data.workflowName}` : ""}`);
+      break;
+    }
+
+    case "agent:health_sweep":
+      qc.invalidateQueries({ queryKey: ["agents"] });
+      break;
+
+    case "prompt-ab-test:resolved":
+    case "prompt-evolution:complete":
+    case "meta:parameter_review":
+      qc.invalidateQueries({ queryKey: ["agents"] });
+      break;
+
+    // ─── Metrics ──────────────────────────────────────────────────────
+
+    case "metrics:snapshot":
+      qc.invalidateQueries({ queryKey: ["metrics"] });
+      break;
+
+    case "metrics:trade-close":
+      qc.invalidateQueries({ queryKey: ["metrics"] });
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      break;
+
+    // ─── Paper roll-spread (cost surfaced separately from slippage) ──
+    case "paper:roll-spread-applied": {
+      qc.invalidateQueries({ queryKey: ["paper", "trades"] });
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      const data = event.data as SSEEventData<"paper:roll-spread-applied">;
+      toast.info(
+        `Roll cost applied: ${data.symbol} (${data.contracts}x) — $${data.costUsd.toFixed(2)}`
+      );
+      break;
+    }
+
+    // ─── n8n tournament freshness watchdog ───────────────────────────
+    case "n8n:tournament-stale": {
+      qc.invalidateQueries({ queryKey: ["n8n"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"n8n:tournament-stale">;
+      const age = data.ageHours == null ? "never" : `${data.ageHours.toFixed(1)}h old`;
+      toast.warning(`n8n tournament results stale (${age}) — workflow may be down`);
+      break;
+    }
+
+    // ─── Evolution loop aborted at child-promotion gate ──────────────
+    case "evolution:abort": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"evolution:abort">;
+      toast.warning(`Evolution aborted (${data.stage}): ${data.reason}`);
+      break;
+    }
+
+    // ─── System shutdown ──────────────────────────────────────────────
+    // The `ServerStatusBanner` component is the primary surface for this
+    // event — it owns its own EventSource and persists state across the
+    // reconnect window. We still surface a quick toast so consumers that
+    // don't render the banner (e.g. embedded panels) get a hint.
+    case "system:shutdown": {
+      const data = event.data as SSEEventData<"system:shutdown">;
+      toast.warning(`Server going offline (${data.reason}) — reconnecting…`, {
+        duration: 8_000,
+      });
+      break;
+    }
+
+    // ─── Pine export agent events ─────────────────────────────────────
+    case "pine:export-completed": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["pine"] });
+      const data = event.data as SSEEventData<"pine:export-completed">;
+      const score = (data as { score?: number })?.score;
+      toast.success(`Pine export ready${score != null ? ` (score ${score})` : ""}`);
+      break;
+    }
+    case "pine:export-failed": {
+      const data = event.data as SSEEventData<"pine:export-failed">;
+      toast.error(`Pine export failed (${data.errorCode}): ${data.message}`);
+      break;
+    }
+
+    // ─── Critic agent run events ──────────────────────────────────────
+    case "critic:run-completed": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+    }
+    case "critic:run-failed": {
+      const data = event.data as SSEEventData<"critic:run-failed">;
+      toast.error(`Critic run failed (${data.errorCode}): ${data.message}`);
+      break;
+    }
+    case "critic:replay-completed": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["critic"] });
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      break;
+    }
+
+    // ─── Metrics aggregator warm-up ───────────────────────────────────
+    case "metrics:warmed-up": {
+      // Warm-up is informational — no toast needed; query invalidation
+      // ensures dashboards reload fresh rolling metrics.
+      qc.invalidateQueries({ queryKey: ["metrics"] });
+      break;
+    }
+
+    // ─── Pending validation watchlist (Pass 18) ───────────────────────
+    case "pending_bucket.updated": {
+      qc.invalidateQueries({ queryKey: ["pending-buckets"] });
+      break;
+    }
+
+    case "pending_bucket.graduated": {
+      qc.invalidateQueries({ queryKey: ["pending-buckets"] });
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"pending_bucket.graduated">;
+      const label = data.name ?? data.market ?? "Strategy";
+      toast.success(`Strategy graduated! ${label}`);
+      break;
+    }
+
+    // ─── Lifecycle gate evaluation (Wave 4, 2026-05-16) ─────────────────
+    // Wires the Wave 2 lifecycle:gate_evaluated emits to the frontend.
+    // Shows a toast on FAIL / KILL decisions. On A7 PASS with ramp_up_mode,
+    // shows a distinct informational toast so operator sees first-strategy
+    // is in ramp-up territory. Silent for routine PASS rows.
+    case "lifecycle:gate_evaluated": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"lifecycle:gate_evaluated">;
+      const { gate, decision, strategy_id, ramp_up_mode } = data;
+      const shortId = String(strategy_id).slice(0, 8);
+
+      if (decision === "killed") {
+        toast.error(
+          `Gate ${gate}: strategy ${shortId} — KILLED (sent to graveyard)`,
+          { duration: 10_000 }
+        );
+      } else if (decision === "failed") {
+        toast.warning(`Gate ${gate}: strategy ${shortId} — FAILED`);
+      } else if (decision === "passed" && ramp_up_mode) {
+        // A7 ramp-up: first strategy, no DEPLOYED strategy to compare against.
+        // Must be surfaced distinctly per pinned facts (plan §2, A7 ramp_up_mode).
+        toast.info(
+          `Gate A7 PASS (ramp-up mode) — strategy ${shortId} is the first strategy, no signal-vector baseline yet`,
+          { duration: 8_000 }
+        );
+      } else if (decision === "promoted") {
+        toast.success(`Gate ${gate}: strategy ${shortId} — auto-promoted to DEPLOYED`);
+      } else if (
+        decision === "deferred_insufficient_sessions" ||
+        decision === "deferred_sharpe_below_threshold"
+      ) {
+        // Deferred is informational — no toast noise, just invalidate.
+        if (import.meta.env.DEV) {
+          console.info(`[lifecycle:gate_evaluated] ${gate} ${decision} for ${shortId}`);
+        }
+      }
+      // PASS without ramp_up_mode: silent, no toast.
+      break;
+    }
+
+    // ─── Operator-dashboard events (cache invalidations; panels not yet built) ─
+    // These events are typed for exhaustiveness. When a dashboard panel is
+    // added for each category, promote the case to produce a real UX effect.
+
+    case "production:mode-changed":
+      qc.invalidateQueries({ queryKey: ["production"] });
+      break;
+
+    case "production:drift-detection-completed":
+      qc.invalidateQueries({ queryKey: ["production", "drift"] });
+      break;
+
+    case "production:reconciliation-completed":
+      qc.invalidateQueries({ queryKey: ["production", "reconciliation"] });
+      break;
+
+    case "compute:failover-state-change":
+      qc.invalidateQueries({ queryKey: ["compute"] });
+      break;
+
+    case "network:failover-state-change":
+      qc.invalidateQueries({ queryKey: ["network"] });
+      break;
+
+    case "strategy:compliance_blocked": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      const data = event.data as SSEEventData<"strategy:compliance_blocked">;
+      toast.error(
+        `Strategy ${String(data.strategyId).slice(0, 8)} blocked by compliance gate`
+      );
+      break;
+    }
+
+    case "strategy:assignment_collision": {
+      qc.invalidateQueries({ queryKey: ["assignments"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"strategy:assignment_collision">;
+      toast.error(
+        `Assignment collision: strategy ${String(data.strategyId).slice(0, 8)} + account ${String(data.accountId).slice(0, 8)}`
+      );
+      break;
+    }
+
+    case "compliance:collaborative_trading_warning": {
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"compliance:collaborative_trading_warning">;
+      toast.error(
+        `MFFU collaborative-trading warning: strategy ${String(data.strategyId).slice(0, 8)} on ${(data.accountIds?.length ?? 0)} accounts`,
+        { duration: 12_000 }
+      );
+      break;
+    }
+
+    case "lifecycle:operator_absent_autopromoted": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"lifecycle:operator_absent_autopromoted">;
+      toast.info(
+        `Operator-absent auto-promotion: ${String(data.strategyId).slice(0, 8)} ${data.from} → ${data.to}`
+      );
+      break;
+    }
+
+    case "paper:entry-blocked-production-halt":
+    case "paper:order-blocked-outage":
+    case "paper:order-blocked-suspension":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "paper:kill-switch-threshold-tripped": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"paper:kill-switch-threshold-tripped">;
+      toast.warning(
+        `Kill switch threshold (${data.threshold ?? "67"}% DLL): new entries blocked for session ${String(data.sessionId).slice(0, 8)}`,
+        { duration: 10_000 }
+      );
+      break;
+    }
+
+    case "paper:force-flatten-all": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"paper:force-flatten-all">;
+      toast.error(
+        `Force-flatten: ${data.count} position${data.count === 1 ? "" : "s"} (${data.reason})`
+      );
+      break;
+    }
+
+    case "broker:order_routed":
+      qc.invalidateQueries({ queryKey: ["broker"] });
+      break;
+
+    case "pine_export:hmac_persist_failed": {
+      qc.invalidateQueries({ queryKey: ["pine"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      toast.error("Pine export: HMAC secret persist failed — delivery may retry");
+      break;
+    }
+
+    case "pine_export:recipient_generated":
+    case "pine_export:delivered":
+      qc.invalidateQueries({ queryKey: ["pine"] });
+      break;
+
+    case "pending_bucket.expired":
+      qc.invalidateQueries({ queryKey: ["pending-buckets"] });
+      break;
+
+    case "auction:imbalance-updated":
+      qc.invalidateQueries({ queryKey: ["auction"] });
+      break;
+
+    case "scout-health:reject-spike":
+    case "scout-health:no-strategies-today":
+      qc.invalidateQueries({ queryKey: ["scout"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "prop-firm:snapshot-captured":
+    case "prop-firm:suspension-detected":
+    case "prop-firm:suspension-cleared":
+      qc.invalidateQueries({ queryKey: ["prop-firm"] });
+      break;
+
+    case "vp:levels-computed":
+      qc.invalidateQueries({ queryKey: ["volume-profile"] });
+      break;
+
+    case "windows:health-check-failed":
+    case "windows:health-check-ram-warning":
+    case "windows:real-reboot-pending":
+      qc.invalidateQueries({ queryKey: ["health"] });
+      break;
+
+    case "compliance:violation_detected":
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "migration:legacy_firm_cleanup_complete":
+    case "firm_count_changed":
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      break;
+
+    case "paper:exit:tp1_filled":
+    case "paper:exit:tp2_filled":
+    case "paper:exit:be_stop_moved":
+    case "paper:exit:trail_tightened":
+    case "paper:exit:time_stop_flattened":
+    case "paper:exit:handler_error":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      break;
+
+    case "a-plus-auditor:scan-complete":
+      qc.invalidateQueries({ queryKey: ["agents"] });
+      break;
+
+    case "nemo:scenario-generated":
+    case "nemo:scenario-error":
+      qc.invalidateQueries({ queryKey: ["nemo"] });
+      break;
+
+    case "strategy:assigned":
+    case "strategy:unassigned":
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["assignments"] });
+      break;
+
+    // ─── Wave 8: graveyard burial (terminal non-reversible transition) ──
+    case "strategy:graveyard_burial": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"strategy:graveyard_burial">;
+      const label = data.name ? `"${data.name}"` : String(data.strategyId).slice(0, 8);
+      toast.error(
+        `${label} buried in graveyard — ${data.failureModes?.join(", ") ?? data.deathReason}`,
+        { duration: 10_000 }
+      );
+      break;
+    }
+
+    // ─── Wave 9-2: Pine export server-side failure ────────────────────
+    case "pine_export:failed": {
+      qc.invalidateQueries({ queryKey: ["pine"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"pine_export:failed">;
+      const shortId = data.strategyId ? String(data.strategyId).slice(0, 8) : "?";
+      toast.error(
+        `Pine export failed [${data.errorCode}] strategy ${shortId}: ${data.errorMessage}`,
+        { duration: 10_000 }
+      );
+      break;
+    }
+
+    // ─── Wave 9-3: Walk-forward window progress ───────────────────────
+    case "walkforward:window_complete": {
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      // No toast — this fires per window and would be noisy for multi-window jobs.
+      break;
+    }
+
+    // ─── Wave 9-3: Compliance drift detection ─────────────────────────
+    case "compliance:drift_detected": {
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"compliance:drift_detected">;
+      const firmList = data.affectedFirms?.join(", ") ?? "unknown";
+      if (data.severity === "critical") {
+        toast.error(
+          `Compliance rules drifted — CRITICAL: active strategies may be violating updated ${firmList} rules`,
+          { duration: 12_000 }
+        );
+      } else {
+        toast.warning(
+          `Compliance rules drifted (${firmList}) — review and re-validate active strategies`,
+          { duration: 10_000 }
+        );
+      }
+      break;
+    }
+
+    default: {
+      // Exhaustiveness check — TypeScript will complain if any union member
+      // isn't handled. At runtime, log unknown event names so the dev
+      // console makes new backend events visible immediately.
+      const _exhaustive: never = event;
+      void _exhaustive;
+      break;
+    }
+  }
+}
+
+/**
+ * Subscribe to a list of SSE event types. The returned discriminated union
+ * narrows on `type`, so consumers can `switch` and get fully-typed `data`.
+ *
+ * Example:
+ *   useSSE(["lifecycle:promoted"], (event) => {
+ *     if (event.type === "lifecycle:promoted") {
+ *       console.log(event.data.from, event.data.to); // typed
+ *     }
+ *   });
+ *
+ * Implementation: thin wrapper over the shared `sseClient` singleton. The
+ * singleton owns the EventSource, reconnect logic, and listener attach/detach;
+ * this hook only handles React lifecycle (subscribe on mount, unsubscribe on
+ * unmount) and the per-event side-effect dispatch.
+ */
+export function useSSE(eventTypes: SSEEventType[], onEvent?: SSEHandler): void;
+// Backwards-compatible signature — older call sites pass plain `string[]`.
+export function useSSE(eventTypes: string[], onEvent?: SSEHandler): void;
+export function useSSE(eventTypes: string[], onEvent?: SSEHandler): void {
+  const qc = useQueryClient();
+  // Stash the latest callback so identity changes don't force a re-subscribe.
+  const onEventRef = useRef<SSEHandler | undefined>(onEvent);
+  onEventRef.current = onEvent;
+
+  // Stable key for the dependency array: re-subscribe only when event names
+  // actually change (sorting protects against shallow-array reorderings).
+  const subscriptionKey = eventTypes.slice().sort().join(",");
+
+  useEffect(() => {
+    const handler: SSEHandler = (event) => {
+      try {
+        dispatchSideEffects(event, qc);
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.error(`[useSSE] dispatch error for ${event.type}`, err);
+        }
+      }
+      onEventRef.current?.(event);
     };
 
-    return () => {
-      es.close();
-      sourceRef.current = null;
-    };
-  }, [eventTypes.join(",")]);
+    const unsubscribe = sseClient.subscribe(eventTypes, handler);
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subscriptionKey, qc]);
 }

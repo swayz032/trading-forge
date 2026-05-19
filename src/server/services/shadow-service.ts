@@ -7,7 +7,6 @@
 import { db } from "../db/index.js";
 import { shadowSignals } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
-import { logger } from "../index.js";
 
 interface ShadowSignalInput {
   sessionId: string;

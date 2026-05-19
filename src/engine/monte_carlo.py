@@ -15,6 +15,14 @@ Usage:
 
 from __future__ import annotations
 
+# A1 Determinism: import FIRST, before numpy. Sets BLAS env vars at load time.
+import os as _os
+if _os.environ.get("DETERMINISM_MODE", "").lower() == "true":
+    from src.engine.determinism import enable_determinism as _enable_det
+    _enable_det()
+else:
+    import src.engine.determinism  # noqa: F401 — side-effect: sets env vars
+
 import json
 import sys
 import time
@@ -35,9 +43,25 @@ try:
 except ImportError:
     NUMBA_AVAILABLE = False
 
+from numpy.random import PCG64DXSM, SeedSequence
+
 from src.engine.config import MonteCarloRequest
+from src.engine.nvtx_markers import annotate, range_push, range_pop
 
 DEFAULT_NUM_SIMULATIONS = 100_000
+
+
+def create_authoritative_rng(seed: int, n_streams: int = 1) -> list[np.random.Generator]:
+    """Create reproducible RNG streams using PCG64DXSM + SeedSequence.
+
+    PCG64DXSM: 128-bit, period 2^128, guaranteed reproducible.
+    SeedSequence.spawn(): independent parallel streams for MC batches.
+    """
+    ss = SeedSequence(seed)
+    if n_streams == 1:
+        return [np.random.Generator(PCG64DXSM(ss))]
+    child_seeds = ss.spawn(n_streams)
+    return [np.random.Generator(PCG64DXSM(s)) for s in child_seeds]
 
 
 def adjust_p_value_bonferroni(raw_p: float, n_variants: int) -> tuple:
@@ -66,6 +90,7 @@ def _to_numpy(arr, xp) -> np.ndarray:
 # ─── Bootstrap Methods ───────────────────────────────────────────
 
 
+@annotate("forge/mc_trade_resample")
 def trade_resample(
     trades: np.ndarray,
     n_sims: int,
@@ -87,7 +112,8 @@ def trade_resample(
         xp = np
 
     trades_xp = xp.asarray(trades)
-    rng = xp.random.default_rng(seed)
+    # Use PCG64DXSM for authoritative reproducibility (CPU path)
+    rng = create_authoritative_rng(seed)[0] if xp is np else xp.random.default_rng(seed)
     indices = rng.integers(0, len(trades), size=(n_sims, len(trades)))
     sampled = trades_xp[indices]
     paths = xp.cumsum(sampled, axis=1)
@@ -95,6 +121,7 @@ def trade_resample(
     return _to_numpy(paths, xp)
 
 
+@annotate("forge/mc_return_bootstrap")
 def return_bootstrap(
     daily_returns: np.ndarray,
     n_sims: int,
@@ -114,7 +141,14 @@ def return_bootstrap(
         xp = np
 
     returns_xp = xp.asarray(daily_returns)
-    rng = xp.random.default_rng(seed)
+    # Fix 3: was xp.random.default_rng(seed) unconditionally, which on CPU produces an
+    # SFC64-backed generator — inconsistent with trade_resample() which uses PCG64DXSM.
+    # In "both" mode this caused inter-method RNG family inconsistency.
+    # Now: CPU path uses create_authoritative_rng() (PCG64DXSM), GPU path keeps xp.random.
+    if xp is np:
+        rng = create_authoritative_rng(seed)[0]
+    else:
+        rng = xp.random.default_rng(seed)
     indices = rng.integers(0, len(daily_returns), size=(n_sims, n_days))
     sampled = returns_xp[indices]
     paths = xp.cumsum(sampled, axis=1)
@@ -177,6 +211,7 @@ def _block_bootstrap_python(trades, n_sims, n_trades, p, rng):
     return paths
 
 
+@annotate("forge/mc_block_bootstrap")
 def block_bootstrap(
     trades: np.ndarray,
     n_sims: int,
@@ -209,6 +244,14 @@ def block_bootstrap(
     p = 1.0 / expected_block_length
     rng = np.random.default_rng(seed)
 
+    # GPU path: use CuPy vectorized bootstrap when available
+    if GPU_AVAILABLE and n_sims >= 1000:
+        try:
+            from src.engine.gpu_pipeline import block_bootstrap_gpu
+            return block_bootstrap_gpu(trades, n_sims, expected_block_length, seed)
+        except Exception:
+            pass  # Fall through to CPU
+
     if NUMBA_AVAILABLE:
         # Pre-generate all random numbers (Numba doesn't support default_rng)
         start_pos = rng.integers(0, n_trades, size=n_sims)
@@ -222,9 +265,61 @@ def block_bootstrap(
     return np.cumsum(paths, axis=1)
 
 
+@annotate("forge/mc_arch_stationary")
+def arch_stationary_bootstrap(
+    trades: np.ndarray,
+    n_sims: int,
+    seed: int = 42,
+    block_length: Optional[int] = None,
+) -> np.ndarray:
+    """Dependence-aware stationary bootstrap using arch StationaryBootstrap.
+
+    Uses the arch library's StationaryBootstrap which draws block lengths from
+    a geometric distribution (mean = block_length), preserving serial dependence
+    in the trade sequence. This is the authoritative method for autocorrelated
+    returns — IID resampling underestimates tail risk by 40-60% when trades
+    have momentum or mean-reversion structure.
+
+    Falls back to block_bootstrap if arch is not installed.
+
+    Args:
+        trades: 1D array of trade P&Ls
+        n_sims: Number of simulation paths
+        seed: RNG seed for reproducibility (passed to StationaryBootstrap)
+        block_length: Mean block length for geometric distribution.
+            If None, computed via optimal_block_length() (PPW 2004).
+
+    Returns:
+        2D array of shape (n_sims, n_trades) — cumulative equity paths
+    """
+    if len(trades) == 0:
+        raise ValueError("Cannot bootstrap empty trades array")
+
+    computed_block_len = block_length if block_length is not None else optimal_block_length(trades)
+
+    try:
+        from arch.bootstrap import StationaryBootstrap
+
+        bs = StationaryBootstrap(computed_block_len, trades, seed=seed)
+        paths = []
+        for (data,), _ in bs.bootstrap(n_sims):
+            equity = np.cumsum(data)
+            paths.append(equity)
+        return np.array(paths)
+
+    except ImportError:
+        # arch not installed — fall back to our own block_bootstrap implementation
+        return block_bootstrap(
+            trades, n_sims,
+            expected_block_length=computed_block_len,
+            seed=seed,
+        )
+
+
 # ─── Stress Testing ─────────────────────────────────────────────
 
 
+@annotate("forge/mc_stress_test")
 def stress_test_trades(
     trades: np.ndarray,
     loss_multiplier: float = 1.5,
@@ -344,7 +439,8 @@ def simulate_firm_survival(
     account_size: float = 50000,
     daily_trades_per_day: int = 3,
     granularity: str = "day",
-    symbol: str = "ES",
+    symbol: str = "MES",
+    backtest_commission_rt: float | None = None,
 ) -> dict:
     """Per-firm Monte Carlo survival simulation.
 
@@ -360,6 +456,10 @@ def simulate_firm_survival(
         granularity: "day" or "trade". When "trade", daily loss limit
             enforcement is skipped (each row is a trade, not a day).
         symbol: Contract symbol for commission lookup
+        backtest_commission_rt: Actual per-round-trip commission used in the
+            backtest (both sides, in $). If None, falls back to $1.24 default
+            with a warning. Pass the real value from the backtest run to get
+            correct commission delta adjustment (Fix 4 — GAP 14).
 
     Returns:
         Dict with eval_pass_rate, funded_survival_6mo, breach_reasons,
@@ -369,12 +469,7 @@ def simulate_firm_survival(
     from src.engine.prop_sim import DAILY_LOSS_LIMITS
     from src.engine.firm_config import FIRM_COMMISSIONS
 
-    # Handle earn2trade specially
-    if firm_key == "earn2trade_50k":
-        from src.engine.prop_sim import EARN2TRADE_CONFIG
-        firm = EARN2TRADE_CONFIG
-    else:
-        firm = FIRM_CONFIGS.get(firm_key)
+    firm = FIRM_CONFIGS.get(firm_key)
 
     if firm is None:
         return {"error": f"Unknown firm: {firm_key}"}
@@ -388,16 +483,18 @@ def simulate_firm_survival(
     _consistency_map = {
         "tpt_50pct": 0.50,
         "alpha_50pct": 0.50,
-        "ffn_15pct": 0.15,
+        "mffu_50pct": 0.50,
+        "ffn_40pct": 0.40,
+        "tradeify_40pct": 0.40,
+        "earn2trade_consistency": 0.50,
+        # apex_50pct_funded: applies only to funded payouts, not eval sim
     }
     consistency_ratio = _consistency_map.get(firm.get("consistency_rule"), None)
 
     # Per-firm commission per round trip per contract
     firm_comms = FIRM_COMMISSIONS.get(firm_key, {})
-    comm_per_side = firm_comms.get(symbol, 2.52)  # default $2.52/side
+    comm_per_side = firm_comms.get(symbol, 0.62)  # default micro commission
     # Daily commission cost: trades_per_day × 2 sides × commission_per_side
-    daily_commission = daily_trades_per_day * 2 * comm_per_side
-
     n_sims = paths.shape[0]
     n_steps = paths.shape[1]
 
@@ -425,7 +522,19 @@ def simulate_firm_survival(
     intraday_substeps = daily_trades_per_day if (is_realtime and granularity == "day") else 1
 
     # Compute commission delta ONCE (constant across all sims/steps)
-    backtest_comm_rt = 0.62 * 2  # Default backtest commission per round trip
+    # Fix 4: was hardcoded 0.62*2=$1.24. Now accepts actual backtest commission from caller.
+    # If None (caller didn't propagate it), fall back to $1.24 but warn — the delta may be wrong
+    # for firms where the backtest used a different commission (e.g. Alpha Futures = $0.00).
+    if backtest_commission_rt is None:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "simulate_firm_survival: backtest_commission_rt not provided — "
+            "falling back to $1.24 default. Commission delta may be wrong if "
+            "backtest used a different commission (e.g. Alpha Futures $0.00)."
+        )
+        backtest_comm_rt = 0.62 * 2  # Legacy fallback — $1.24 round trip
+    else:
+        backtest_comm_rt = float(backtest_commission_rt)
     firm_comm_rt = comm_per_side * 2
     comm_delta = firm_comm_rt - backtest_comm_rt
     comm_adj_day = comm_delta * daily_trades_per_day
@@ -596,8 +705,14 @@ def compute_drawdown_stats(paths: np.ndarray, initial_capital: float) -> dict:
         starts = np.where(diff[sim] == 1)[0]
         ends = np.where(diff[sim] == -1)[0]
         if len(starts) > 0 and len(ends) > 0:
-            runs = ends[:len(starts)] - starts[:len(ends)]
+            # If last drawdown is still open, append n_steps as synthetic end
+            if len(starts) > len(ends):
+                ends = np.append(ends, n_steps)
+            runs = ends[:len(starts)] - starts[:len(starts)]
             max_dd_duration[sim] = int(np.max(runs)) if len(runs) > 0 else 0
+        elif len(starts) > 0:
+            # Drawdown started but never ended — duration = remaining bars
+            max_dd_duration[sim] = int(n_steps - starts[0])
 
     # ── Recovery time: bars from max DD trough back to previous peak ──
     # Find bar index of the deepest drawdown point per sim
@@ -749,7 +864,11 @@ def run_monte_carlo(
     # Step 3: Minimum trade count gate
     MIN_TRADES_IID = 30
     MIN_TRADES_BLOCK = 50
-    min_required = MIN_TRADES_BLOCK if request.method == "block_bootstrap" else MIN_TRADES_IID
+    min_required = (
+        MIN_TRADES_BLOCK
+        if request.method in ("block_bootstrap", "arch_stationary")
+        else MIN_TRADES_IID
+    )
     if len(trades_arr) < min_required:
         return {
             "error": f"Insufficient trades ({len(trades_arr)}) for Monte Carlo. "
@@ -780,14 +899,17 @@ def run_monte_carlo(
         daily_arr = inject_synthetic_stress(daily_arr, seed=request.seed + 101, max_loss_cap=max_loss)
 
     # Determine annualization factor based on method
+    # Compute both variants — "both" method needs trade-level AND daily
+    n_trading_days = len(daily_pnls) if len(daily_pnls) > 0 else 1
+    years = n_trading_days / 252.0
+    periods_per_year_trades = len(trades_arr) / years if years > 0 else 252.0
+    periods_per_year_daily = 252.0
+
     if request.method == "trade_resample":
-        # trade_resample: compute trades per year from actual data
-        n_trading_days = len(daily_pnls) if len(daily_pnls) > 0 else 1
-        years = n_trading_days / 252.0
-        periods_per_year = len(trades_arr) / years if years > 0 else 252.0
+        periods_per_year = periods_per_year_trades
     else:
-        # return_bootstrap / block_bootstrap: daily data → 252
-        periods_per_year = 252.0
+        # return_bootstrap / block_bootstrap / arch_stationary / both: daily default
+        periods_per_year = periods_per_year_daily
 
     # Generate paths based on method
     both_metrics: Optional[dict] = None
@@ -806,12 +928,32 @@ def run_monte_carlo(
             expected_block_length=computed_block_len, seed=request.seed,
         )
 
+    elif request.method == "arch_stationary":
+        computed_block_len = optimal_block_length(trades_arr)
+        paths = arch_stationary_bootstrap(
+            trades_arr, request.num_simulations,
+            seed=request.seed,
+            block_length=computed_block_len,
+        )
+
     else:  # "both"
-        half = request.num_simulations // 2
-        other_half = request.num_simulations - half
-        trade_paths = trade_resample(trades_arr, half, seed=request.seed, xp=xp)
+        # Split simulations: trade_resample + return_bootstrap + arch_stationary
+        third = request.num_simulations // 3
+        remainder = request.num_simulations - (3 * third)
+        # Distribute remainder to trade_resample (most conservative — prop firm sim uses it)
+        n_trade = third + remainder
+        n_return = third
+        n_arch = third
+
+        trade_paths = trade_resample(trades_arr, n_trade, seed=request.seed, xp=xp)
         n_days = len(daily_pnls)
-        return_paths = return_bootstrap(daily_arr, other_half, n_days, seed=request.seed + 1, xp=xp)
+        return_paths = return_bootstrap(daily_arr, n_return, n_days, seed=request.seed + 1, xp=xp)
+        computed_block_len = optimal_block_length(trades_arr)
+        arch_paths = arch_stationary_bootstrap(
+            trades_arr, n_arch,
+            seed=request.seed + 2,
+            block_length=computed_block_len,
+        )
 
         both_metrics = {
             "trade_resample": {
@@ -820,7 +962,7 @@ def run_monte_carlo(
                     request.confidence_levels,
                 ),
                 "sharpe_ratios": _compute_percentiles(
-                    _compute_sharpe_ratios(trade_paths, periods_per_year),
+                    _compute_sharpe_ratios(trade_paths, periods_per_year_trades),
                     request.confidence_levels,
                 ),
             },
@@ -830,13 +972,23 @@ def run_monte_carlo(
                     request.confidence_levels,
                 ),
                 "sharpe_ratios": _compute_percentiles(
-                    _compute_sharpe_ratios(return_paths, periods_per_year),
+                    _compute_sharpe_ratios(return_paths, periods_per_year_daily),
+                    request.confidence_levels,
+                ),
+            },
+            "arch_stationary": {
+                "max_drawdowns": _compute_percentiles(
+                    _compute_max_drawdowns(arch_paths, request.initial_capital),
+                    request.confidence_levels,
+                ),
+                "sharpe_ratios": _compute_percentiles(
+                    _compute_sharpe_ratios(arch_paths, periods_per_year_daily),
                     request.confidence_levels,
                 ),
             },
         }
 
-        # Use trade_paths for main metrics (more conservative for prop firm sim)
+        # Use trade_paths for main metrics (most conservative — prop firm sim depends on this)
         paths = trade_paths
 
     # Compute main metrics
@@ -883,12 +1035,17 @@ def run_monte_carlo(
     firm_survival: Optional[dict[str, dict]] = None
     if request.firms:
         granularity = "trade" if request.method == "trade_resample" else "day"
+        # Fix 4: propagate actual backtest commission (round-trip) to survival sim.
+        # MonteCarloRequest.backtest_commission_rt is optional — getattr with None fallback
+        # ensures backward compat if callers haven't updated to pass the new field yet.
+        _bt_comm_rt = getattr(request, "backtest_commission_rt", None)
         firm_survival = {}
         for firm_key in request.firms:
             firm_survival[firm_key] = simulate_firm_survival(
                 paths, firm_key,
                 account_size=request.initial_capital,
                 granularity=granularity,
+                backtest_commission_rt=_bt_comm_rt,
             )
 
     elapsed_ms = int((time.perf_counter() - start_time) * 1000)
@@ -918,7 +1075,7 @@ def run_monte_carlo(
     if firm_survival:
         result["firm_survival"] = firm_survival
 
-    if request.method == "block_bootstrap":
+    if request.method in ("block_bootstrap", "arch_stationary", "both"):
         result["block_length"] = computed_block_len
 
     # Step 18: Optional permutation overfitting test
@@ -937,8 +1094,12 @@ def run_monte_carlo(
         # Deflated Sharpe Ratio
         from src.engine.risk_metrics import compute_deflated_sharpe_ratio
         from scipy import stats as sp_stats
+        # Annualize trade-level Sharpe: use actual trades/year from daily data
+        n_trading_days = len(daily_pnls) if len(daily_pnls) > 0 else 1
+        years = n_trading_days / 252.0
+        trades_per_year = len(trades_arr) / years if years > 0 else 252.0
         obs_sharpe = float(
-            np.mean(trades_arr) / max(np.std(trades_arr, ddof=1), 1e-10) * np.sqrt(252)
+            np.mean(trades_arr) / max(np.std(trades_arr, ddof=1), 1e-10) * np.sqrt(trades_per_year)
         )
         dsr_result = compute_deflated_sharpe_ratio(
             observed_sharpe=obs_sharpe,
@@ -954,6 +1115,21 @@ def run_monte_carlo(
         _, threshold, bonf_passes = adjust_p_value_bonferroni(raw_p, request.n_variants)
         result["permutation_test"]["bonferroni_threshold"] = round(threshold, 6)
         result["permutation_test"]["bonferroni_passes"] = bonf_passes
+
+    # ─── Bootstrap Confidence Intervals (if paths available) ───
+    # Temporarily attach the full paths ndarray so compute_all_mc_cis can read it.
+    # It is removed before return to avoid serializing a (100K × N) array to stdout.
+    result["all_paths"] = paths
+    try:
+        from src.engine.mc_confidence import compute_all_mc_cis
+        if "all_paths" in result and isinstance(result["all_paths"], np.ndarray):
+            cis = compute_all_mc_cis(result["all_paths"], seed=request.seed + 500)
+            result["bca_confidence_intervals"] = cis
+        result["rng_metadata"] = {"generator": "PCG64DXSM", "seed": request.seed}
+    except Exception:
+        pass  # CIs are optional — don't block MC output
+    finally:
+        result.pop("all_paths", None)  # Never serialize raw paths ndarray
 
     return result
 

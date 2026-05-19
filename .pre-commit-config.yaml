@@ -1,0 +1,62 @@
+# Trading Forge — Pre-Commit Hooks (A9 W11 Team D)
+#
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+#
+# Design constraints:
+#   - All hooks must complete in < 5 seconds total on a typical commit
+#   - metric-snapshot hook runs only the 3 fast golden fixtures (no MC, no engine imports)
+#   - Full suite (A3 + A4 + A5 + all snapshots) runs in CI PR gate, not here
+
+repos:
+  # ─── Python linting (ruff — fast, replaces flake8/isort/pycodestyle) ───────
+  # language: system means pre-commit uses the system Python where ruff is installed.
+  # This avoids the isolated venv overhead (~3 sec) that kills the <5 sec budget.
+  - repo: local
+    hooks:
+      - id: ruff-lint
+        name: ruff lint
+        language: system
+        entry: python -m ruff check
+        args: ["--select=E,F,W,I", "--ignore=E501,E741,E722", "--quiet"]
+        types: [python]
+        # Scope to src/engine only — we own this code; skills/ is third-party
+        files: ^src/engine/
+        pass_filenames: true
+
+  # ─── Metric snapshot fast subset (3 fixtures, no engine imports, < 3 sec) ───
+  # Uses language: system so pytest runs against the system Python where numpy,
+  # pytest-snapshot etc. are already installed — no venv spin-up overhead.
+  #
+  # Runs ONLY:
+  #   TestSnapshotPerfect, TestSnapshotMarginal, TestSnapshotFeesKiller
+  #   TestSnapshotConsistency (pure snapshot reads — no computation)
+  # Does NOT run:
+  #   TestSnapshotLosing (would be fine but keep strictly to fast subset)
+  #   TestSnapshotRegimeShift (epoch calculations add latency)
+  #   Full A3/A4/A5 suites (those belong in the PR gate)
+  - repo: local
+    hooks:
+      - id: metric-snapshot-fast
+        name: metric snapshot (fast subset)
+        language: system
+        entry: python -m pytest
+        args:
+          - src/engine/tests/test_metric_snapshot.py::TestSnapshotPerfect
+          - src/engine/tests/test_metric_snapshot.py::TestSnapshotMarginal
+          - src/engine/tests/test_metric_snapshot.py::TestSnapshotFeesKiller
+          - src/engine/tests/test_metric_snapshot.py::TestSnapshotConsistency
+          - -q
+          - --tb=short
+          - --no-header
+        pass_filenames: false
+        always_run: false
+        files: >
+          (?x)^(
+            src/engine/tests/test_metric_snapshot\.py|
+            src/engine/tests/snapshots/.*\.json|
+            src/engine/tests/fixtures/golden/.*\.json|
+            src/engine/.*metric.*\.py|
+            src/engine/backtester\.py|
+            src/engine/risk_metrics\.py
+          )$

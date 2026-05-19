@@ -1,0 +1,516 @@
+{
+  "updatedAt": "2026-05-05T04:48:55.118Z",
+  "createdAt": "2026-04-29T07:38:26.433Z",
+  "id": "lUenVARPUG1uz4OE",
+  "name": "5K-parallel-deep-research",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "cron",
+      "name": "Daily 3AM ET Cron",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "task-submit",
+      "name": "POST Parallel Task (core processor)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.parallel.ai/v1/tasks/runs",
+        "authentication": "none",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.PARALLEL_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ input: 'Find 5 systematic intraday futures trading strategies (ES, NQ, or CL) with documented entry rules, exit rules, walk-forward results, and Sharpe > 1.5. Source from arxiv, ssrn, quantpedia, robotwealth, quantitativo. Strategies must be implementable with one of these indicators: sma_crossover, ema_crossover, rsi_reversal, bollinger_breakout, atr_breakout, vwap_reversion, donchian_breakout, keltner_squeeze, session_open_breakout, macd_crossover.', processor: 'core', task_spec: { output_schema: { type: 'json', json_schema: { type: 'object', properties: { strategies: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, description: { type: 'string' }, symbol: { type: 'string', enum: ['MES','MNQ','MCL'] }, timeframe: { type: 'string' }, direction: { type: 'string', enum: ['long','short','both'] }, entry_type: { type: 'string' }, entry_indicator: { type: 'string' }, entry_params: { type: 'string', description: 'JSON-stringified or natural-language description of entry parameters' }, entry_condition: { type: 'string' }, exit_type: { type: 'string' }, exit_params: { type: 'string', description: 'JSON-stringified or natural-language description of exit parameters' }, stop_loss_atr_multiple: { type: 'number' }, take_profit_atr_multiple: { type: 'number' }, source_url: { type: 'string' } }, required: ['name','description','symbol','timeframe','direction','entry_type','entry_indicator','entry_params','entry_condition','exit_type','exit_params','stop_loss_atr_multiple'] } } }, required: ['strategies'] } } }, source_policy: { include_domains: ['arxiv.org','ssrn.com','quantpedia.com','robotwealth.com','quantitativo.com','papers.ssrn.com','papers.nber.org','quantocracy.com','quant.stackexchange.com'], after_date: new Date(Date.now() - 365 * 86400000).toISOString().slice(0,10) } }) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "split",
+      "name": "Split Strategy Array",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst output = r.output || r.result || r;\nconst strategies = (output.strategies || output.output?.strategies || []);\nconsole.log(`Got ${strategies.length} strategies from Parallel Task API`);\nreturn strategies.map(s => ({ json: s }));"
+      }
+    },
+    {
+      "id": "post-strict",
+      "name": "POST scout-ideas/strict (per strategy)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/scout-ideas/strict",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ideas: [{ thesis: $json.description, market: $json.symbol === 'MES' ? 'ES' : ($json.symbol === 'MNQ' ? 'NQ' : 'CL'), timeframe: $json.timeframe, entry_rules: $json.entry_condition + ' (indicator: ' + $json.entry_indicator + ')', exit_rules: 'Exit type: ' + $json.exit_type + '. Stop: ' + $json.stop_loss_atr_multiple + ' ATR. Target: ' + ($json.take_profit_atr_multiple || 'trailing'), risk_rules: 'ATR-based stop at ' + $json.stop_loss_atr_multiple + 'x ATR; max contracts per ATR scaling.', source_url: $json.source_url || 'https://parallel.ai/research', regime: 'TRENDING_UP', concept_name: $json.entry_indicator, source_provider: 'parallel', signal_type: 'strategy_candidate' }] }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "alert-finds",
+      "name": "POST strategy-finds (Discord)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'strategy:find', payload: { thesis: $json.description, market: $json.symbol === 'MES' ? 'ES' : ($json.symbol === 'MNQ' ? 'NQ' : 'CL'), timeframe: $json.timeframe, entryRules: $json.entry_condition, exitRules: 'exit_type: ' + $json.exit_type, riskRules: 'stop ' + $json.stop_loss_atr_multiple + ' ATR', sourceUrl: $json.source_url || 'https://parallel.ai/research', regime: 'TRENDING_UP', crossValStatus: 'pending' } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "error-alert",
+      "name": "POST workflow-errors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        540
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { workflowId: '5K-parallel-deep-research', workflowName: '5K Parallel Deep Research', executionId: $execution.id, nodeName: 'unknown', errorMessage: ($json.error?.message || 'unknown error').slice(0, 500), firstSeenAt: new Date().toISOString(), occurrenceCount: 1 } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    }
+  ],
+  "connections": {
+    "Daily 3AM ET Cron": {
+      "main": [
+        [
+          {
+            "node": "POST Parallel Task (core processor)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Parallel Task (core processor)": {
+      "main": [
+        [
+          {
+            "node": "Split Strategy Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Strategy Array": {
+      "main": [
+        [
+          {
+            "node": "POST scout-ideas/strict (per strategy)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST scout-ideas/strict (per strategy)": {
+      "main": [
+        [
+          {
+            "node": "POST strategy-finds (Discord)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "POST workflow-errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "BbCvlV1ARyyvY3NI"
+  },
+  "staticData": {
+    "node:Daily 3AM ET Cron": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "d7d4008f-bbeb-40aa-8d96-ec3ae8a0ca3b",
+  "activeVersionId": "d7d4008f-bbeb-40aa-8d96-ec3ae8a0ca3b",
+  "versionCounter": 28,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-29T07:38:26.433Z",
+      "createdAt": "2026-04-29T07:38:26.433Z",
+      "role": "workflow:owner",
+      "workflowId": "lUenVARPUG1uz4OE",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-05-05T04:22:09.084Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-05-05",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-05T04:48:55.119Z",
+    "createdAt": "2026-05-05T04:48:55.119Z",
+    "versionId": "d7d4008f-bbeb-40aa-8d96-ec3ae8a0ca3b",
+    "workflowId": "lUenVARPUG1uz4OE",
+    "nodes": [
+      {
+        "id": "cron",
+        "name": "Daily 3AM ET Cron",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          240,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 3 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "task-submit",
+        "name": "POST Parallel Task (core processor)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.parallel.ai/v1/tasks/runs",
+          "authentication": "none",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "x-api-key",
+                "value": "={{ $env.PARALLEL_API_KEY }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ input: 'Find 5 systematic intraday futures trading strategies (ES, NQ, or CL) with documented entry rules, exit rules, walk-forward results, and Sharpe > 1.5. Source from arxiv, ssrn, quantpedia, robotwealth, quantitativo. Strategies must be implementable with one of these indicators: sma_crossover, ema_crossover, rsi_reversal, bollinger_breakout, atr_breakout, vwap_reversion, donchian_breakout, keltner_squeeze, session_open_breakout, macd_crossover.', processor: 'core', task_spec: { output_schema: { type: 'json', json_schema: { type: 'object', properties: { strategies: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, description: { type: 'string' }, symbol: { type: 'string', enum: ['MES','MNQ','MCL'] }, timeframe: { type: 'string' }, direction: { type: 'string', enum: ['long','short','both'] }, entry_type: { type: 'string' }, entry_indicator: { type: 'string' }, entry_params: { type: 'string', description: 'JSON-stringified or natural-language description of entry parameters' }, entry_condition: { type: 'string' }, exit_type: { type: 'string' }, exit_params: { type: 'string', description: 'JSON-stringified or natural-language description of exit parameters' }, stop_loss_atr_multiple: { type: 'number' }, take_profit_atr_multiple: { type: 'number' }, source_url: { type: 'string' } }, required: ['name','description','symbol','timeframe','direction','entry_type','entry_indicator','entry_params','entry_condition','exit_type','exit_params','stop_loss_atr_multiple'] } } }, required: ['strategies'] } } }, source_policy: { include_domains: ['arxiv.org','ssrn.com','quantpedia.com','robotwealth.com','quantitativo.com','papers.ssrn.com','papers.nber.org','quantocracy.com','quant.stackexchange.com'], after_date: new Date(Date.now() - 365 * 86400000).toISOString().slice(0,10) } }) }}",
+          "options": {
+            "timeout": 600000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "split",
+        "name": "Split Strategy Array",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const r = $input.first().json;\nconst output = r.output || r.result || r;\nconst strategies = (output.strategies || output.output?.strategies || []);\nconsole.log(`Got ${strategies.length} strategies from Parallel Task API`);\nreturn strategies.map(s => ({ json: s }));"
+        }
+      },
+      {
+        "id": "post-strict",
+        "name": "POST scout-ideas/strict (per strategy)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1200,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/scout-ideas/strict",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ ideas: [{ thesis: $json.description, market: $json.symbol === 'MES' ? 'ES' : ($json.symbol === 'MNQ' ? 'NQ' : 'CL'), timeframe: $json.timeframe, entry_rules: $json.entry_condition + ' (indicator: ' + $json.entry_indicator + ')', exit_rules: 'Exit type: ' + $json.exit_type + '. Stop: ' + $json.stop_loss_atr_multiple + ' ATR. Target: ' + ($json.take_profit_atr_multiple || 'trailing'), risk_rules: 'ATR-based stop at ' + $json.stop_loss_atr_multiple + 'x ATR; max contracts per ATR scaling.', source_url: $json.source_url || 'https://parallel.ai/research', regime: 'TRENDING_UP', concept_name: $json.entry_indicator, source_provider: 'parallel', signal_type: 'strategy_candidate' }] }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "alert-finds",
+        "name": "POST strategy-finds (Discord)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1520,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'strategy:find', payload: { thesis: $json.description, market: $json.symbol === 'MES' ? 'ES' : ($json.symbol === 'MNQ' ? 'NQ' : 'CL'), timeframe: $json.timeframe, entryRules: $json.entry_condition, exitRules: 'exit_type: ' + $json.exit_type, riskRules: 'stop ' + $json.stop_loss_atr_multiple + ' ATR', sourceUrl: $json.source_url || 'https://parallel.ai/research', regime: 'TRENDING_UP', crossValStatus: 'pending' } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "error-trigger",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          540
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "error-alert",
+        "name": "POST workflow-errors",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          540
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { workflowId: '5K-parallel-deep-research', workflowName: '5K Parallel Deep Research', executionId: $execution.id, nodeName: 'unknown', errorMessage: ($json.error?.message || 'unknown error').slice(0, 500), firstSeenAt: new Date().toISOString(), occurrenceCount: 1 } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      }
+    ],
+    "connections": {
+      "Daily 3AM ET Cron": {
+        "main": [
+          [
+            {
+              "node": "POST Parallel Task (core processor)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Parallel Task (core processor)": {
+        "main": [
+          [
+            {
+              "node": "Split Strategy Array",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Strategy Array": {
+        "main": [
+          [
+            {
+              "node": "POST scout-ideas/strict (per strategy)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST scout-ideas/strict (per strategy)": {
+        "main": [
+          [
+            {
+              "node": "POST strategy-finds (Discord)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "POST workflow-errors",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-05T04:48:55.143Z",
+        "id": 1630,
+        "workflowId": "lUenVARPUG1uz4OE",
+        "versionId": "d7d4008f-bbeb-40aa-8d96-ec3ae8a0ca3b",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

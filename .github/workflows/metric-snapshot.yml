@@ -1,0 +1,234 @@
+# Trading Forge — Metric Snapshot Regression Gate (A9 W11 Team D)
+#
+# Trigger: every PR to main or develop
+# Purpose: detect when code changes silently move metrics on golden fixtures
+#
+# 3-tier gate architecture:
+#   Tier 1 (pre-commit): 3 fast fixtures < 5 sec                [local only]
+#   Tier 2 (this workflow): full A3 + A4 + A5 + all 5 snapshots [PR gate]
+#   Tier 3 (canary): live paper engine metric checks             [post-deploy]
+#
+# Jobs (this workflow):
+#   snapshot-fast   — 5 golden fixture metric snapshots (A5 subset)
+#   snapshot-full   — all 5 snapshots + consistency checks
+#   frankenstein    — 100-shuffle randomization detection (A4)
+#   cross-parity    — cross-engine parity on 2 fixtures (A3)
+#
+# Failure behavior:
+#   - Snapshot drift fails the PR with a diagnostic message showing
+#     expected/actual/tolerance/drift for every metric that moved.
+#   - To update snapshots intentionally, run locally with SNAPSHOT_UPDATE=1
+#     and commit the updated JSON files.
+#   - A3/A4 failures fail independently (they are separate jobs).
+#
+# Performance budget:
+#   snapshot-fast:  < 30 sec (5 pure-math fixtures)
+#   snapshot-full:  < 60 sec (includes consistency checks)
+#   frankenstein:   ~ 3-5 min (100 shuffles × 30 bars)
+#   cross-parity:   ~ 1-2 min (2 DSL fixtures × 2 engines)
+
+name: Metric Snapshot Regression
+
+on:
+  pull_request:
+    branches: [main, develop, "feature/*"]
+  push:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+
+jobs:
+  # ─── Job 1: Golden fixture metric snapshots (A5 subset + all 5) ─────────────
+  snapshot-regression:
+    name: Snapshot Regression (A5 — all 5 fixtures)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pytest pytest-snapshot
+          # Install engine requirements (excluding heavy optional deps)
+          pip install -r src/engine/requirements.txt \
+            --ignore-requires-python \
+            2>/dev/null || true
+
+      - name: Verify snapshot files are committed
+        run: |
+          SNAPSHOTS=(
+            src/engine/tests/snapshots/fixture_perfect.json
+            src/engine/tests/snapshots/fixture_losing.json
+            src/engine/tests/snapshots/fixture_marginal.json
+            src/engine/tests/snapshots/fixture_fees_killer.json
+            src/engine/tests/snapshots/fixture_regime_shift.json
+          )
+          missing=0
+          for f in "${SNAPSHOTS[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING SNAPSHOT: $f"
+              echo "Run: SNAPSHOT_UPDATE=1 pytest src/engine/tests/test_metric_snapshot.py"
+              echo "and commit the generated files."
+              missing=1
+            fi
+          done
+          if [ $missing -eq 1 ]; then
+            exit 1
+          fi
+          echo "All 5 snapshot files present."
+
+      - name: Run metric snapshot regression (all fixtures)
+        run: |
+          pytest src/engine/tests/test_metric_snapshot.py \
+            -v \
+            --tb=short \
+            -x \
+            --no-header
+        # SNAPSHOT_UPDATE not set → assertion mode (fails on drift)
+
+      - name: Upload snapshot artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-drift-report
+          path: src/engine/tests/snapshots/
+          retention-days: 7
+
+  # ─── Job 2: Frankenstein randomization detection (A4) ───────────────────────
+  frankenstein-gate:
+    name: Frankenstein Test (A4 — 100 shuffles)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pytest
+          pip install -r src/engine/requirements.txt \
+            --ignore-requires-python \
+            2>/dev/null || true
+
+      - name: Run Frankenstein randomization detection tests
+        run: |
+          pytest src/engine/tests/test_frankenstein.py \
+            -v \
+            --tb=short \
+            -x \
+            --no-header \
+            -k "not test_probe_does_not_show_positive_sharpe_on_shuffled_data or True"
+        # Note: We run the full Frankenstein test suite.
+        # The production Frankenstein test (100 shuffles) runs in frankenstein_test.py
+        # and is called via API. This CI job runs the unit test suite for the module.
+
+      - name: Run Frankenstein unit test on fixture_perfect (structural check)
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          import numpy as np
+          from src.engine.frankenstein_test import run_frankenstein_test
+
+          # Build minimal bars matching fixture_perfect's trade count (100 trades)
+          # Use 600 bars to give warmup room for SMA 50/200
+          rng = np.random.default_rng(42)
+          n = 600
+          prices = np.exp(np.cumsum(rng.normal(0.0001, 0.005, n)) + 5.0) * 4000.0
+          spread = prices * 0.001 * rng.random(n)
+          open_ = prices + rng.uniform(-spread, spread)
+          high = np.maximum(open_, prices) + rng.uniform(0, spread)
+          low = np.minimum(open_, prices) - rng.uniform(0, spread)
+          bars = np.column_stack([open_, high, low, prices])
+
+          result = run_frankenstein_test({}, bars, n_shuffles=100, seed=42)
+          print(f'Status: {result.status}')
+          print(f'n_shuffles: {result.n_shuffles}')
+          print(f'p95_sharpe: {result.p95_sharpe:.4f} (pass < 0.3)')
+          print(f'median_pf: {result.median_pf:.4f} (pass in [0.85, 1.15])')
+          print(f'passed: {result.passed}')
+
+          if result.status != 'completed':
+              print(f'ERROR: {result.error_message}')
+              sys.exit(1)
+
+          print('Frankenstein structural check: PASSED')
+          "
+
+  # ─── Job 3: Cross-engine parity (A3) ────────────────────────────────────────
+  cross-engine-parity:
+    name: Cross-Engine Parity (A3 — trend_mnq + scalper_mes)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas pytest
+          pip install -r src/engine/requirements.txt \
+            --ignore-requires-python \
+            2>/dev/null || true
+
+      - name: Run cross-engine parity tests (2 fixtures)
+        run: |
+          pytest src/engine/tests/test_cross_engine_parity.py \
+            -v \
+            --tb=short \
+            -x \
+            --no-header \
+            -k "TestParityTrendMNQ or TestParityScalperMES or TestParityHarnessInfra"
+        # Runs parity on both DSL fixtures with diagnostic trade-by-trade output on failure
+
+      - name: Verify parity engine is test-only (not in production paths)
+        run: |
+          pytest src/engine/tests/test_cross_engine_parity.py::TestProductionIsolation \
+            -v --tb=short --no-header
+
+  # ─── Gating: require all 3 jobs to pass ─────────────────────────────────────
+  all-metric-gates-pass:
+    name: All Metric Gates Pass
+    runs-on: ubuntu-latest
+    needs: [snapshot-regression, frankenstein-gate, cross-engine-parity]
+    if: always()
+    steps:
+      - name: Check all metric gate results
+        run: |
+          if [ "${{ needs.snapshot-regression.result }}" != "success" ]; then
+            echo "FAILED: Snapshot regression gate failed"
+            echo "Metric snapshot drift detected — check the snapshot-drift-report artifact"
+            echo "To update snapshots intentionally:"
+            echo "  SNAPSHOT_UPDATE=1 pytest src/engine/tests/test_metric_snapshot.py"
+            echo "  git add src/engine/tests/snapshots/ && git commit"
+            exit 1
+          fi
+          if [ "${{ needs.frankenstein-gate.result }}" != "success" ]; then
+            echo "FAILED: Frankenstein randomization detection gate failed"
+            echo "A lookahead bug may have been introduced. Check test output."
+            exit 1
+          fi
+          if [ "${{ needs.cross-engine-parity.result }}" != "success" ]; then
+            echo "FAILED: Cross-engine parity gate failed"
+            echo "VBT and backtrader engines have diverged. Check trade-by-trade output."
+            exit 1
+          fi
+          echo "All 3 metric gates passed (A3 + A4 + A5 snapshot regression)"

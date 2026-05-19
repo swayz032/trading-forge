@@ -12,10 +12,12 @@ export async function fetchForge<T = any>(
   options?: RequestInit,
 ): Promise<T> {
   const url = `${baseUrl}${path}`;
+  const apiKey = process.env.API_KEY;
   const res = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
       ...(options?.headers ?? {}),
     },
   });

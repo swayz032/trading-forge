@@ -3,36 +3,112 @@ import { paperSessions, paperPositions } from "../db/schema.js";
 import { eq, and, isNull } from "drizzle-orm";
 import { logger } from "../index.js";
 import { getFirmAccount, getTightestDrawdown, type FirmAccountConfig } from "../../shared/firm-config.js";
+import { tracer } from "../lib/tracing.js";
+import { isUsDst } from "../lib/dst-utils.js";
+// isUsDst is imported from the shared dst-utils utility.
+// The inline implementation has been removed; the canonical version
+// lives in src/server/lib/dst-utils.ts and is the same algorithm.
+
+// ─── ET date helpers ─────────────────────────────────────────────────────────
+//
+// Two distinct date-string functions serve different purposes:
+//
+//   toEasternDateString — ET calendar midnight boundary.
+//     Used for VWAP buffer resets, skipDecisions lookups, and any query
+//     that should align with the calendar ET date (Globex reopen at ~18:00 ET).
+//
+//   toFuturesTradingDayString — CME 5:00 PM ET trading-day boundary.
+//     Used for ALL daily P&L aggregation: dailyPnlBreakdown keys, kill-switch
+//     day-loss reads, and the global daily-loss cache.
+//     CME futures day N starts 18:00 ET on day N-1 and ends 17:00 ET on day N.
+//     Formula: shift timestamp +7h before ET date conversion so that
+//     17:00 ET maps to midnight-ET of the NEXT calendar day (= correct CME day).
+//     Example: 17:05 ET Mon → +7h → 00:05 ET Tue → "Tue" trading day.
+//              16:55 ET Mon → +7h → 23:55 ET Mon → "Mon" trading day.
+
+const _ET_FORMATTER = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
 
 /**
- * Precise US DST detection: second Sunday of March through first Sunday of November.
+ * Get the calendar ET date string (YYYY-MM-DD) for a UTC timestamp.
+ * Uses ET midnight as the day boundary. Correct for VWAP resets, skipDecisions,
+ * and any query whose day boundary is ET calendar midnight.
+ * NOT correct for CME daily P&L attribution — use toFuturesTradingDayString.
  */
-function isUsDst(date: Date): boolean {
-  const year = date.getUTCFullYear();
-  // Second Sunday of March: find first Sunday in March, add 7 days
-  const mar1 = new Date(Date.UTC(year, 2, 1)); // March 1
-  const mar1Day = mar1.getUTCDay(); // 0=Sun
-  const secondSunMar = 1 + (7 - mar1Day) % 7 + 7; // day of month
-  const dstStart = new Date(Date.UTC(year, 2, secondSunMar, 7, 0)); // 2AM ET = 7AM UTC (still EST)
-
-  // First Sunday of November
-  const nov1 = new Date(Date.UTC(year, 10, 1)); // Nov 1
-  const nov1Day = nov1.getUTCDay();
-  const firstSunNov = 1 + (7 - nov1Day) % 7;
-  const dstEnd = new Date(Date.UTC(year, 10, firstSunNov, 6, 0)); // 2AM ET = 6AM UTC (still EDT)
-
-  return date >= dstStart && date < dstEnd;
+export function toEasternDateString(date: Date = new Date()): string {
+  return _ET_FORMATTER.format(date);
 }
 
 /**
- * Get today's date string in Eastern Time (for daily P&L tracking).
- * Futures trading day is defined in ET, not UTC.
+ * Get the CME futures trading day string (YYYY-MM-DD) for a UTC timestamp.
+ * CME futures day rolls at 17:00 ET: trades closed 17:00–23:59 ET belong
+ * to the NEXT calendar day's trading session.
+ * Use this for ALL daily P&L aggregation, kill-switch day-loss reads,
+ * and dailyPnlBreakdown JSONB keys.
  */
-export function toEasternDateString(date: Date = new Date()): string {
-  const utcMs = date.getTime();
-  const etOffsetMs = isUsDst(date) ? -4 * 3600_000 : -5 * 3600_000;
-  const etDate = new Date(utcMs + etOffsetMs);
-  return etDate.toISOString().split("T")[0];
+export function toFuturesTradingDayString(date: Date = new Date()): string {
+  // Shifting +7 hours aligns the 17:00 ET CME cutoff with ET calendar midnight:
+  //   17:00 ET + 7h = 00:00 ET next day  → correct next-day attribution.
+  //   16:59 ET + 7h = 23:59 ET same day  → correct same-day attribution.
+  const shifted = new Date(date.getTime() + 7 * 3600_000);
+  return _ET_FORMATTER.format(shifted);
+}
+
+// ─── Fix 3: Global daily loss aggregate cache ────────────────────────────────
+//
+// Problem: the global-daily-loss check fetches ALL active sessions and reduces
+// their dailyPnlBreakdown JSONB in JS on EVERY entry signal.  At 5+ sessions
+// this is a full-table scan per signal firing.
+//
+// Strategy: cache the aggregate (sum of today's losses across all active
+// sessions) keyed by ET date.  Cache is invalidated (cleared) whenever any
+// paper position closes — the primary update mechanism.  A 30-second TTL
+// acts as a safety net for any cache-warming that might slip past the
+// invalidation call (e.g. manual DB edits, test isolation).
+//
+// NOTE: This is an AGGREGATE cache (total across all sessions), not per-session,
+// because the check sums across all active sessions.  A per-session approach
+// would require fetching and summing every other session on each miss anyway.
+// Aggregate is simpler and correct.
+
+const globalDailyLossCache = new Map<string, { value: number; updatedAt: number }>();
+const GLOBAL_DAILY_LOSS_CACHE_TTL_MS = 30_000;
+
+function getCachedGlobalDailyLoss(etDate: string): number | null {
+  const cached = globalDailyLossCache.get(etDate);
+  if (cached === undefined) return null;
+  if (Date.now() - cached.updatedAt > GLOBAL_DAILY_LOSS_CACHE_TTL_MS) {
+    globalDailyLossCache.delete(etDate);
+    return null;
+  }
+  return cached.value;
+}
+
+function setCachedGlobalDailyLoss(etDate: string, value: number): void {
+  globalDailyLossCache.set(etDate, { value, updatedAt: Date.now() });
+}
+
+/**
+ * Evict the global daily loss aggregate cache for any date keyed to the given
+ * session. Called by closePosition() after a trade commits — at that point
+ * the session's dailyPnlBreakdown has changed and the cached aggregate is stale.
+ *
+ * The sessionId argument is accepted (but unused) to keep the call-site
+ * semantically clear ("invalidate for this session") and to allow a
+ * per-session strategy in future without changing callers.
+ */
+export function invalidateDailyLossCache(_sessionId: string): void {
+  // We cache by etDate only. A close might affect today's or (rarely) yesterday's
+  // date if called right at midnight ET. Clearing all entries is safe and cheap
+  // (at most 1–2 entries in practice — one per trading day).
+  globalDailyLossCache.clear();
+}
+
+/**
+ * Test-only: clear the global daily loss cache between unit tests.
+ * Production code must never call this.
+ */
+export function __resetDailyLossCacheForTests(): void {
+  globalDailyLossCache.clear();
 }
 
 export interface RiskGateResult {
@@ -43,7 +119,7 @@ export interface RiskGateResult {
 
 // Per-symbol contract defaults (used when no firm config or firm doesn't specify per-symbol)
 const DEFAULT_MAX_CONTRACTS: Record<string, number> = {
-  ES: 15, NQ: 15, CL: 15, YM: 15, RTY: 15, GC: 15, MES: 150, MNQ: 150,
+  MES: 150, MNQ: 150, MCL: 150,
 };
 
 const DEFAULT_SESSION_DRAWDOWN = getTightestDrawdown()?.maxDrawdown ?? 2_000;
@@ -64,6 +140,11 @@ export async function checkRiskGate(
   symbol: string,
   contracts: number,
 ): Promise<RiskGateResult> {
+  const span = tracer.startSpan("paper.risk_gate");
+  span.setAttribute("symbol", symbol);
+  span.setAttribute("contracts", contracts);
+
+  try {
   // ── Load session ───────────────────────────────────────────
   const [openPositions, session] = await Promise.all([
     db.select({ id: paperPositions.id })
@@ -82,6 +163,15 @@ export async function checkRiskGate(
   const config = (session.config ?? {}) as Record<string, unknown>;
   const firmConfig = resolveFirmConfig(session.firmId);
 
+  // If session is tied to a firm but the firm config is missing, reject — don't silently fall back to defaults
+  if (session.firmId && !firmConfig) {
+    return {
+      allowed: false,
+      reason: `Firm "${session.firmId}" not found in config — cannot apply risk limits`,
+      check: "firm_config_missing",
+    };
+  }
+
   // ── a) Max concurrent positions ────────────────────────────
   const maxPositions = (config.max_positions as number) ?? DEFAULT_MAX_POSITIONS;
 
@@ -95,7 +185,14 @@ export async function checkRiskGate(
   }
 
   // ── b) Session drawdown limit (trailing peak-to-trough, firm-specific or default) ───
-  const peakEquity = Number(session.peakEquity ?? session.startingCapital);
+  // W12 Bug #2: use realizedPeakEquity (closed-equity HWM) for trailing-DD compliance.
+  // peakEquity is the MTM HWM (updated every tick) — over-tightens the floor.
+  // realizedPeakEquity is updated only on trade close, matching Topstep/Apex EOD spec.
+  // Fall back to peakEquity for sessions that predate migration 0075 (column = 50000).
+  const rawRealizedPeak = Number((session as Record<string, unknown>).realizedPeakEquity ?? 0);
+  const peakEquity = rawRealizedPeak > 0
+    ? rawRealizedPeak
+    : Number(session.peakEquity ?? session.startingCapital);
   const currentEquity = Number(session.currentEquity);
   const drawdownLimit = firmConfig?.maxDrawdown
     ?? (config.daily_loss_limit as number)
@@ -132,8 +229,9 @@ export async function checkRiskGate(
 
   // ── d) Daily loss limit (firm-specific) ────────────────────
   if (firmConfig?.dailyLossLimit) {
-    // Use today's loss from dailyPnlBreakdown (tracks actual daily P&L, not session cumulative)
-    const today = toEasternDateString();
+    // Use CME futures trading-day key to match dailyPnlBreakdown entries.
+    // Trades closed 17:00–23:59 ET belong to the NEXT trading day (5pm ET cutoff).
+    const today = toFuturesTradingDayString();
     const breakdown = (session.dailyPnlBreakdown as Record<string, number> | null) ?? {};
     const todayPnl = breakdown[today] ?? 0;
     const todayLoss = todayPnl < 0 ? Math.abs(todayPnl) : 0;
@@ -172,21 +270,30 @@ export async function checkRiskGate(
   }
 
   // ── f) Global daily loss limit across all active sessions ──
-  // Use today's loss from dailyPnlBreakdown (not cumulative lifetime loss)
-  // Must use Eastern Time date to match dailyPnlBreakdown keys (futures trading day = ET)
-  const today = toEasternDateString();
-  const activeSessions = await db
-    .select({
-      dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
-    })
-    .from(paperSessions)
-    .where(eq(paperSessions.status, "active"));
+  // Use CME futures trading-day key so the aggregate matches dailyPnlBreakdown entries.
+  // Trades closed 17:00–23:59 ET are attributed to the NEXT trading day (5pm ET cutoff).
+  const today = toFuturesTradingDayString();
 
-  const totalTodayLoss = activeSessions.reduce((sum, s) => {
-    const breakdown = (s.dailyPnlBreakdown as Record<string, number> | null) ?? {};
-    const todayPnl = breakdown[today] ?? 0;
-    return sum + (todayPnl < 0 ? Math.abs(todayPnl) : 0);
-  }, 0);
+  // Fix 3: try aggregate cache before issuing the full-table DB query.
+  // Cache is invalidated by invalidateDailyLossCache() on every trade close.
+  // 30-second TTL is a safety net only.
+  let totalTodayLoss = getCachedGlobalDailyLoss(today);
+  if (totalTodayLoss === null) {
+    const activeSessions = await db
+      .select({
+        dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
+      })
+      .from(paperSessions)
+      .where(eq(paperSessions.status, "active"));
+
+    totalTodayLoss = activeSessions.reduce((sum, s) => {
+      const breakdown = (s.dailyPnlBreakdown as Record<string, number> | null) ?? {};
+      const todayPnl = breakdown[today] ?? 0;
+      return sum + (todayPnl < 0 ? Math.abs(todayPnl) : 0);
+    }, 0);
+
+    setCachedGlobalDailyLoss(today, totalTodayLoss);
+  }
 
   if (totalTodayLoss >= DEFAULT_GLOBAL_LOSS_LIMIT) {
     logger.warn({ totalTodayLoss, limit: DEFAULT_GLOBAL_LOSS_LIMIT }, "Risk gate: global daily loss limit hit");
@@ -198,4 +305,7 @@ export async function checkRiskGate(
   }
 
   return { allowed: true };
+  } finally {
+    span.end();
+  }
 }

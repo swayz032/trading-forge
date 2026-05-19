@@ -1,8 +1,8 @@
 """
 Skip Engine — Pre-session classifier.
-Evaluates 9 signals before market open. Decision: TRADE | REDUCE | SKIP.
+Evaluates 10 signals before market open. Decision: TRADE | REDUCE | SKIP.
 
-The 9 Skip Signals:
+The 10 Skip Signals:
 1. FOMC/CPI/NFP proximity (±30 min = SIT_OUT)
 2. VIX level (>30 = SKIP, 25-30 = REDUCE)
 3. Overnight gap size (>1.5 ATR = SKIP)
@@ -12,11 +12,11 @@ The 9 Skip Signals:
 7. Monthly P&L vs drawdown budget (>60% used = REDUCE, >80% = SKIP)
 8. Correlation spike (portfolio strategies correlated >0.7 today = REDUCE)
 9. Calendar filter (holiday, triple witching, roll week)
+10. QUBO timing (experimental — penalize blocks optimizer says to skip)
 """
 
 from __future__ import annotations
 
-import sys
 from typing import Any
 
 # Signal weights for scoring
@@ -30,6 +30,9 @@ SIGNAL_WEIGHTS: dict[str, float] = {
     "monthly_budget": 2.5,
     "correlation_spike": 1.5,
     "calendar_filter": 2.0,
+    "qubo_timing": 1.5,
+    "regime_bias": 1.5,           # DeepAR regime probabilities (C1)
+    "quantum_noise": 1.5,         # Tier 3.1 slot — Quantum Entropy Filter (W3a); 0.0 until shipped
 }
 
 # Thresholds
@@ -198,7 +201,109 @@ def _score_calendar_filter(signals: dict[str, Any]) -> float:
     return score
 
 
+def _score_qubo_timing(signals: dict[str, Any]) -> float:
+    """
+    QUBO timing signal — if a QUBO timing schedule exists for this session,
+    penalize trading during blocks the optimizer says to skip.
+
+    Expects signals["qubo_timing"] = {"current_block_trade": bool, "schedule_active": bool}
+    """
+    qubo = signals.get("qubo_timing")
+    if not qubo or not qubo.get("schedule_active"):
+        return 0.0
+
+    if not qubo.get("current_block_trade", True):
+        return 1.0  # Moderate penalty — QUBO says skip this time block
+
+    return 0.0
+
+
+def _score_regime_bias(signals: dict[str, Any]) -> float:
+    """
+    Regime bias scorer (C1) — uses DeepAR regime probabilities to nudge
+    the skip score.  DeepAR is challenger_only — its 'effective_weight'
+    multiplies the contribution so a stale or shadow forecast contributes 0.
+
+    Heuristic:
+      - high_vol regime probability is risk-off — adds to skip score
+      - trending regime is risk-on — subtracts (clamped at 0)
+      - mean_revert is neutral
+
+    Expects:
+      signals["regime_probs"] = {
+          "high_vol": 0..1, "trending": 0..1, "mean_revert": 0..1,
+          "effective_weight": 0..1,   # DeepAR's authority multiplier
+      }
+    """
+    rp = signals.get("regime_probs")
+    if not rp or not isinstance(rp, dict):
+        return 0.0
+
+    eff = float(rp.get("effective_weight", 0.0))
+    if eff <= 0:
+        return 0.0
+
+    p_high_vol = float(rp.get("high_vol", 0.0))
+    p_trending = float(rp.get("trending", 0.0))
+
+    # Bias = how risk-off the forecast is, scaled to 0..1
+    # high_vol > 0.5 starts to bite; trending > 0.5 cancels some of that
+    raw_bias = max(0.0, p_high_vol - 0.5) * 2.0 - max(0.0, p_trending - 0.5) * 1.0
+    raw_bias = max(0.0, min(1.0, raw_bias))
+
+    return raw_bias * eff
+
+
+def _score_quantum_entropy(noise_score: float | None) -> float:
+    """
+    Quantum entropy noise scorer — Tier 1.3 slot for Tier 3.1 Quantum Entropy Filter.
+
+    Pre-wires the seam for W3a.  When the entropy filter module is not yet built
+    or is disabled (QUANTUM_ENTROPY_FILTER_ENABLED=false), the caller passes None
+    and this scorer contributes 0.0 to the total skip score — existing decisions
+    are unaffected.
+
+    When the entropy filter IS active, noise_score is a normalized float in [0, 1]
+    representing the circuit-noise level from the QCNN, and is returned directly.
+    The SIGNAL_WEIGHTS["quantum_noise"] weight (1.5) describes the slot's authority
+    at full contribution relative to other signals.
+
+    Args:
+        noise_score: Normalized entropy noise score in [0, 1] from Tier 3.1, or None.
+
+    Returns:
+        noise_score if provided, else 0.0.
+    """
+    if noise_score is None:
+        return 0.0
+    return float(noise_score)
+
+
 # ─── Main Classifier ──────────────────────────────────────────────
+
+
+def _scale_signal_score(
+    name: str,
+    raw_score: float,
+    learned_weights: dict[str, float] | None,
+) -> float:
+    """
+    Apply optional learned-weight scaling to a single signal score.
+
+    qubo_timing is always excluded from learned-weight scaling — its raw signal
+    logic stands. When learned_weights is None, the score is unchanged. Otherwise
+    the score is multiplied by (learned_weight / base_weight) so that passing
+    learned_weights == BASE_WEIGHTS reduces to identity (ratio = 1.0).
+    """
+    if name == "qubo_timing":
+        return raw_score
+    if learned_weights is None:
+        return raw_score
+    base_w = SIGNAL_WEIGHTS.get(name)
+    learned_w = learned_weights.get(name)
+    if base_w is None or learned_w is None or base_w == 0:
+        return raw_score
+    return raw_score * (learned_w / base_w)
 
 
 def classify_session(
@@ -222,16 +327,11 @@ def classify_session(
             "calendar": {"holiday_proximity": 0, "triple_witching": False, "roll_week": False},
         }
         strategy_id: Optional strategy identifier for strategy-specific rules.
-        learned_weights: Optional dict of learned per-signal weights produced by
-            weight_trainer.py. Keys match SIGNAL_WEIGHTS keys. When None (default),
-            behavior is identical to the base classifier — no breaking change.
-
-            Each scorer function returns a pre-weighted value calibrated against
-            BASE_WEIGHTS. To apply a learned weight without rewriting the scorer,
-            we rescale:
-                adjusted_score = raw_score * (learned_weight / base_weight)
-            This preserves the scorer logic and only stretches or compresses the
-            contribution of each signal based on what we observed empirically.
+        learned_weights: Optional per-signal weight overrides from the weight
+            trainer. When provided, each signal's raw score is multiplied by
+            (learned_weights[name] / SIGNAL_WEIGHTS[name]) so that passing
+            SIGNAL_WEIGHTS-equivalent values reduces to identity. qubo_timing
+            is always excluded from this scaling.
 
     Returns:
         {
@@ -242,22 +342,11 @@ def classify_session(
             "reason": str,  # Human-readable explanation
             "confidence": float,  # 0-1
             "override_allowed": bool,  # True for REDUCE, False for SKIP on FOMC day
+            "weights_source": "base" | "learned",
         }
     """
-    # Log which weight set is in use
-    if learned_weights is not None:
-        print(
-            f"[skip_classifier] Using learned weights: {learned_weights}",
-            file=sys.stderr,
-        )
-    else:
-        print(
-            "[skip_classifier] Using base weights (no learned weights supplied).",
-            file=sys.stderr,
-        )
-
-    # Score each signal using the scorer functions
-    raw_scores: dict[str, float] = {
+    # Score each signal (raw scores from individual scorers).
+    raw_signal_scores: dict[str, float] = {
         "event_proximity": _score_event_proximity(signals),
         "vix_level": _score_vix_level(signals),
         "overnight_gap": _score_overnight_gap(signals),
@@ -267,23 +356,17 @@ def classify_session(
         "monthly_budget": _score_monthly_budget(signals),
         "correlation_spike": _score_correlation_spike(signals),
         "calendar_filter": _score_calendar_filter(signals),
+        "qubo_timing": _score_qubo_timing(signals),
+        "regime_bias": _score_regime_bias(signals),
+        # Tier 1.3 slot: quantum_noise_score is None when QUANTUM_ENTROPY_FILTER_ENABLED=false
+        "quantum_noise": _score_quantum_entropy(signals.get("quantum_noise_score")),
     }
 
-    # Apply learned weight rescaling if provided.
-    # Formula: adjusted = raw * (learned_weight / base_weight)
-    # If a key is missing from learned_weights, fall back to the base weight
-    # (i.e. multiplier = 1.0, no change for that signal).
-    if learned_weights is not None:
-        signal_scores: dict[str, float] = {}
-        for key, raw in raw_scores.items():
-            base_weight = SIGNAL_WEIGHTS[key]
-            lw = learned_weights.get(key)
-            if lw is not None and base_weight > 0:
-                signal_scores[key] = raw * (lw / base_weight)
-            else:
-                signal_scores[key] = raw
-    else:
-        signal_scores = raw_scores
+    # Apply optional learned-weight scaling. qubo_timing is excluded by helper.
+    signal_scores: dict[str, float] = {
+        name: _scale_signal_score(name, raw, learned_weights)
+        for name, raw in raw_signal_scores.items()
+    }
 
     # Total weighted score
     total_score = sum(signal_scores.values())
@@ -352,6 +435,18 @@ def classify_session(
         reason_parts.append("portfolio correlation spike")
     if signal_scores["calendar_filter"] > 0:
         reason_parts.append("calendar filter (holiday/witching/roll)")
+    if signal_scores["qubo_timing"] > 0:
+        reason_parts.append("QUBO timing (skip block)")
+    if signal_scores["regime_bias"] > 0:
+        rp = signals.get("regime_probs", {}) or {}
+        reason_parts.append(
+            f"DeepAR regime risk-off (P(high_vol)={rp.get('high_vol', 0):.2f},"
+            f" eff_w={rp.get('effective_weight', 0):.2f})"
+        )
+    if signal_scores["quantum_noise"] > 0:
+        reason_parts.append(
+            f"quantum entropy noise ({signals.get('quantum_noise_score', 0):.2f}, Tier 3.1 slot)"
+        )
 
     reason = (
         f"{decision}: " + ", ".join(reason_parts)
@@ -367,4 +462,39 @@ def classify_session(
         "reason": reason,
         "confidence": round(confidence, 3),
         "override_allowed": override_allowed,
+        "weights_source": "learned" if learned_weights is not None else "base",
     }
+
+
+# ─── CLI Entry Point ─────────────────────────────────────────────
+# Called by python-runner.ts via: python -m src.engine.skip_engine.skip_classifier --config <tmpfile>
+# Config JSON:
+#   { "signals": {...}, "strategy_id": str | null, "learned_weights": {...} | null }
+
+if __name__ == "__main__":
+    import json
+    import sys
+    import os
+
+    # Accept config via --config file path or stdin (mirrors calendar_filter.py pattern)
+    config_path = None
+    for i, arg in enumerate(sys.argv[1:], 1):
+        if arg == "--config" and i < len(sys.argv):
+            config_path = sys.argv[i + 1]
+            break
+        elif os.path.isfile(arg):
+            config_path = arg
+            break
+
+    if config_path:
+        with open(config_path) as f:
+            config = json.load(f)
+    else:
+        config = json.load(sys.stdin)
+
+    signals: dict = config.get("signals", {})
+    strategy_id: str | None = config.get("strategy_id")
+    learned_weights: dict | None = config.get("learned_weights")
+
+    result = classify_session(signals, strategy_id=strategy_id, learned_weights=learned_weights)
+    print(json.dumps(result))

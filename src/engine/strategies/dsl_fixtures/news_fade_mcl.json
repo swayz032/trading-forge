@@ -1,0 +1,39 @@
+{
+  "schema_version": "v1",
+  "name": "News Fade MCL EIA",
+  "description": "Fade extreme price moves exceeding 2 ATR in crude oil within 15 minutes of the EIA Wednesday 10:30 AM ET inventory release, targeting mean reversion to pre-release price.",
+  "symbol": "MCL",
+  "timeframe": "5m",
+  "direction": "both",
+  "entry_type": "event_driven",
+  "entry_indicator": "event_driven_fade",
+  "entry_params": {
+    "atr_move_threshold": 2.0,
+    "event_window_minutes": 15,
+    "confirmation_bars": 1
+  },
+  "entry_condition": "Fade price when it moves more than 2 ATR within 15 minutes of the EIA crude inventory release on Wednesdays at 10:30 AM ET.",
+  "exit_type": "trailing_stop",
+  "exit_params": {
+    "trail_atr": 1.5,
+    "break_even_at_r": 1.0,
+    "time_decay_minutes": 20,
+    "time_decay_multiplier": 0.75,
+    "pre_release_level_exit": true
+  },
+  "stop_loss_atr_multiple": 1.5,
+  "take_profit_atr_multiple": 3.0,
+  "max_contracts": 5,
+  "preferred_regime": "NEWS_DRIVEN",
+  "session_filter": "RTH_ONLY",
+  "frankenstein_test_mode": "calendar_preserving",
+  "bypass_news_blackout": true,
+  "profit_scaling_tier": {
+    "increment": 2,
+    "threshold": 3000
+  },
+  "daily_target_dollars": 300.0,
+  "source": "manual",
+  "sizing_method": "kelly",
+  "tags": ["news", "eia", "crude", "fade", "event_driven", "mcl", "wednesday", "bypass_news_blackout"]
+}

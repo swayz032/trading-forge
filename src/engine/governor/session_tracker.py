@@ -58,7 +58,7 @@ class SessionTracker:
                 "losing_trades": int,
             }
         """
-        winning = sum(1 for t in self.trades if t["pnl"] >= 0)
+        winning = sum(1 for t in self.trades if t["pnl"] > 0)
         losing = sum(1 for t in self.trades if t["pnl"] < 0)
 
         # Calculate current consecutive losses (from end of trade list)

@@ -1,0 +1,15 @@
+{
+  "input": {
+    "video_metadata": {
+      "youtube_url": "https://www.youtube.com/watch?v=hT2uVcMrL9w",
+      "title": "Markets Today: Why I'm Bullish on Tech and Bearish on Energy",
+      "channel": "Daily Market Take",
+      "duration_seconds": 743
+    },
+    "transcript_snippet": "Hey traders welcome back to Daily Market Take. Looking at the action today the S&P closed up about a percent, Nasdaq leading as usual, and energy was the laggard. I think we're in a continuation of the risk-on rotation that started last week. The Fed minutes leaned slightly dovish which is helping the long-duration trade, growth and tech catching a bid, financials kind of meh. Crude is struggling because the dollar is firming and we had a soft inventories print. So what does that mean? I think tech is going to keep grinding higher into FOMC. I'd be a buyer on dips. Energy I would not be touching, lots of supply overhang. The setup I like best right now is just being long quality tech and waiting out the noise. As always not financial advice, do your own research, see you tomorrow."
+  },
+  "expected_output": {
+    "strategies": []
+  },
+  "notes": "CRITICAL refusal example — the transcript is market commentary, NOT a systematic strategy. Speaker states a directional view ('long quality tech', 'avoid energy') but provides no entry trigger, no exit rule, no stop, no specific symbol or timeframe, no parameters. Extractor MUST return an empty strategies array — fabricating an entry rule like 'long tech if price > VWAP' would be hallucination. The empty-array refusal is the canonical correct behavior per research finding A.4 (every role MUST have a refusal example). Without this example the extractor learns to fill the void with invented logic, which corrupts the entire strategy_candidate stream."
+}

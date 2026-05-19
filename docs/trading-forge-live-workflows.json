@@ -1,0 +1,274 @@
+{
+  "generatedAt": "2026-04-03T11:14:44.081Z",
+  "source": "live-n8n-api-normalized",
+  "description": "Normalized for deep-scan: workflow health uses unknown until explicit readiness evidence promotion.",
+  "workflows": [
+    {
+      "id": "26ruSYvIjqHGOhsd",
+      "name": "9A-nightly-self-critique",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": "2026-04-03T06:00:52.869Z",
+      "lastFailureAt": null
+    },
+    {
+      "id": "sAIrnCVB4iOsodsy",
+      "name": "Weekly Strategy Hunt",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-03-21T13:01:32.840Z",
+      "lastFailureAt": "2026-03-21T13:01:32.412Z"
+    },
+    {
+      "id": "hPXhUaSC3ScznZE9",
+      "name": "Strategy Tournament",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": "2026-04-03T10:00:06.116Z",
+      "lastFailureAt": null
+    },
+    {
+      "id": "u0RcmfuClgRinXAX",
+      "name": "Daily Portfolio Monitor",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-02T21:00:01.147Z",
+      "lastFailureAt": "2026-03-23T21:00:00.758Z"
+    },
+    {
+      "id": "z2c7zJmSx5dNle6P",
+      "name": "5G-brave-search-scout",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-02T22:00:53.486Z",
+      "lastFailureAt": "2026-03-21T22:00:17.476Z"
+    },
+    {
+      "id": "YuDGQkuej7qybPAB",
+      "name": "Weekly Compliance Re-Parse",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": "2026-03-23T00:00:00.536Z",
+      "lastFailureAt": null
+    },
+    {
+      "id": "Z4NcOCDbet8KzjDd",
+      "name": "Nightly Strategy Research Loop",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-01T06:22:42.196Z",
+      "lastFailureAt": "2026-04-03T06:00:12.848Z"
+    },
+    {
+      "id": "gFwNlA3eCHbSb7en",
+      "name": "Pre-Session Compliance Gate",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-02T13:15:06.730Z",
+      "lastFailureAt": "2026-04-02T13:15:06.441Z"
+    },
+    {
+      "id": "2rVOEn4LnMAubTmW",
+      "name": "5A-weekly-tournament",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": "2026-03-22T23:00:05.306Z",
+      "lastFailureAt": null
+    },
+    {
+      "id": "X2IjKuYseGukxKDj",
+      "name": "Macro Data Sync",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-02T23:00:17.868Z",
+      "lastFailureAt": "2026-03-31T23:02:55.957Z"
+    },
+    {
+      "id": "vlCaiWM7F0AH1RRY",
+      "name": "8A-idea-to-strategy",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": "2026-04-02T23:32:03.238Z",
+      "lastFailureAt": null
+    },
+    {
+      "id": "66HEjQavpvirY6g5",
+      "name": "0A-health-monitor",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": null,
+      "lastFailureAt": "2026-03-22T17:45:31.359Z",
+      "notes": [
+        "No successful execution found in recent n8n execution history."
+      ]
+    },
+    {
+      "id": "eaq72MwKwCjv7g7F",
+      "name": "Pre-Session Skip Check",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-02T13:00:06.080Z",
+      "lastFailureAt": "2026-04-02T13:00:05.475Z"
+    },
+    {
+      "id": "RumAJUp4iS1TYlNm",
+      "name": "6D-compliance-gate",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-03T08:00:00.333Z",
+      "lastFailureAt": "2026-03-23T08:00:00.559Z"
+    },
+    {
+      "id": "m6aD7X4ioWfhWaS9",
+      "name": "Monthly Robustness Check",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": null,
+      "lastFailureAt": null,
+      "notes": [
+        "No successful execution found in recent n8n execution history."
+      ]
+    },
+    {
+      "id": "J0p8oYkONmN7pYn6",
+      "name": "3A-workflow-backup",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": "2026-04-03T07:00:02.218Z",
+      "lastFailureAt": null
+    },
+    {
+      "id": "LQtqeWAcNOlkqROH",
+      "name": "8B-source-quality-review",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-03T06:19:42.296Z",
+      "lastFailureAt": "2026-04-03T06:12:00.644Z"
+    },
+    {
+      "id": "WT9sVMzG83rg1L29",
+      "name": "Daily Compliance Check",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-02T13:00:00.326Z",
+      "lastFailureAt": "2026-03-20T13:00:06.022Z"
+    },
+    {
+      "id": "ZMgHYjcTq4YTRQXh",
+      "name": "5H-reddit-scout",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-03T06:19:39.025Z",
+      "lastFailureAt": "2026-03-26T22:30:06.037Z"
+    },
+    {
+      "id": "TMT3g7HenJ5etiwv",
+      "name": "5I-tavily-scout",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-02T23:00:06.283Z",
+      "lastFailureAt": "2026-03-21T23:00:16.239Z"
+    },
+    {
+      "id": "PHcD2tFZpzr7kQGF",
+      "name": "Anti-Setup Refresh",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-01T07:00:00.752Z",
+      "lastFailureAt": "2026-04-01T07:00:00.523Z"
+    },
+    {
+      "id": "eCr7cyb0aPArFCZc",
+      "name": "Strategy Generation Loop",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": null,
+      "lastFailureAt": null,
+      "notes": [
+        "No successful execution found in recent n8n execution history."
+      ]
+    },
+    {
+      "id": "MIIxmilbgZv3SUBh",
+      "name": "7A-auto-evolution",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-03T07:00:00.310Z",
+      "lastFailureAt": "2026-03-23T07:00:00.345Z"
+    },
+    {
+      "id": "pVT6svNTljjBoQbW",
+      "name": "11A-critic-optimization",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": "2026-04-03T07:00:00.347Z",
+      "lastFailureAt": null
+    },
+    {
+      "id": "LayXj1mbHh4aGSM9",
+      "name": "Post-Session Skip Review",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-02T21:30:05.623Z",
+      "lastFailureAt": "2026-04-02T21:30:05.270Z"
+    },
+    {
+      "id": "8HKXzNmo9KF59SBu",
+      "name": "10A-master-orchestration",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 1,
+      "lastSuccessAt": "2026-04-03T09:00:00.476Z",
+      "lastFailureAt": "2026-04-03T09:00:00.435Z"
+    },
+    {
+      "id": "7GCDtSCifGgdpeuq",
+      "name": "Daily Scout (5E)",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": null,
+      "lastFailureAt": null,
+      "notes": [
+        "Restored from repository canonical workflow set."
+      ]
+    },
+    {
+      "id": "zmjj1mqjSbeVcWZg",
+      "name": "Weekly Deep Research (5F)",
+      "active": true,
+      "healthStatus": "unknown",
+      "failureCount": 0,
+      "lastSuccessAt": null,
+      "lastFailureAt": null,
+      "notes": [
+        "Restored from repository canonical workflow set."
+      ]
+    }
+  ]
+}

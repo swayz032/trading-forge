@@ -1,0 +1,408 @@
+{
+  "updatedAt": "2026-05-18T03:42:51.968Z",
+  "createdAt": "2026-05-18T00:56:02.532Z",
+  "id": "51vtQf8XwXuWFt6G",
+  "name": "5G-brave-search-scout",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 18
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.search.brave.com/res/v1/web/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Subscription-Token",
+              "value": "={{ $env.BRAVE_API_KEY }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "futures trading strategies algo edge profitable backtest"
+            },
+            {
+              "name": "count",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "brave-search",
+      "name": "Brave Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst webResults = $input.first().json.web?.results || [];\nfor (const r of webResults) {\n  results.push({\n    json: {\n      source: 'brave',\n      title: r.title || '',\n      description: r.description || '',\n      url: r.url || '',\n      confidence_score: r.extra_snippets ? 0.7 : 0.5\n    }\n  });\n}\nreturn [{ json: { ideas: results.map(r => r.json) } }];"
+      },
+      "id": "parse-brave",
+      "name": "Parse Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/agent/scout-ideas",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ideas: ($json.ideas || []).map(i => Object.assign({}, i, { signal_type: 'strategy_candidate' })) }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "post-ideas",
+      "name": "Post Scout Ideas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"5G-brave-search-scout\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Brave Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brave Search": {
+      "main": [
+        [
+          {
+            "node": "Parse Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Results": {
+      "main": [
+        [
+          {
+            "node": "Post Scout Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "DGEk1D478xWJClKD"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "d500ed72-796d-4761-bfbe-cd1f6718f4ce",
+  "activeVersionId": "d500ed72-796d-4761-bfbe-cd1f6718f4ce",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-18T00:56:02.532Z",
+      "createdAt": "2026-05-18T00:56:02.532Z",
+      "role": "workflow:owner",
+      "workflowId": "51vtQf8XwXuWFt6G",
+      "projectId": "MbOHOApVuCtg1xkk"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-05-18T00:57:35.755Z",
+    "createdAt": "2026-05-18T00:57:35.755Z",
+    "versionId": "d500ed72-796d-4761-bfbe-cd1f6718f4ce",
+    "workflowId": "51vtQf8XwXuWFt6G",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 18
+              }
+            ]
+          }
+        },
+        "id": "schedule-trigger",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/web/search",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Subscription-Token",
+                "value": "={{ $env.BRAVE_API_KEY }}"
+              }
+            ]
+          },
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "q",
+                "value": "futures trading strategies algo edge profitable backtest"
+              },
+              {
+                "name": "count",
+                "value": "20"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "brave-search",
+        "name": "Brave Search",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const results = [];\nconst webResults = $input.first().json.web?.results || [];\nfor (const r of webResults) {\n  results.push({\n    json: {\n      source: 'brave',\n      title: r.title || '',\n      description: r.description || '',\n      url: r.url || '',\n      confidence_score: r.extra_snippets ? 0.7 : 0.5\n    }\n  });\n}\nreturn [{ json: { ideas: results.map(r => r.json) } }];"
+        },
+        "id": "parse-brave",
+        "name": "Parse Results",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/agent/scout-ideas",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ ideas: ($json.ideas || []).map(i => Object.assign({}, i, { signal_type: 'strategy_candidate' })) }) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "id": "post-ideas",
+        "name": "Post Scout Ideas",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"5G-brave-search-scout\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Brave Search",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Brave Search": {
+        "main": [
+          [
+            {
+              "node": "Parse Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Results": {
+        "main": [
+          [
+            {
+              "node": "Post Scout Ideas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

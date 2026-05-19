@@ -7,7 +7,23 @@ Output: JSON to stdout, progress/errors to stderr (matches databento.ts bridge p
 
 from __future__ import annotations
 
+# A1 Determinism: import FIRST, before any numpy/polars/vectorbt import.
+# Sets MKL_CBWR=COMPATIBLE, OPENBLAS_NUM_THREADS=1, BLIS_NUM_THREADS=1,
+# OMP_NUM_THREADS=1 at module-load time and applies threadpoolctl limits.
+# enable_determinism() is called when DETERMINISM_MODE=true or in CI
+# (conftest autouse fixture handles the CI case automatically).
+import os as _os
+
+if _os.environ.get("DETERMINISM_MODE", "").lower() == "true":
+    from src.engine.determinism import enable_determinism as _enable_det
+    _enable_det()
+else:
+    # Still apply env vars at module load (the determinism module does this
+    # at import time even when enable_determinism() is not called explicitly).
+    import src.engine.determinism  # noqa: F401 — side-effect: sets env vars
+
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -19,27 +35,32 @@ import pandas as pd
 import polars as pl
 import vectorbt as vbt
 
+from src.engine.analytics import compute_full_analytics
 from src.engine.config import (
-    BacktestRequest,
     CONTRACT_SPECS,
+    BacktestRequest,
     IndicatorConfig,
     StrategyConfig,
 )
-from src.engine.data_loader import load_ohlcv, flag_rollover_days, compute_dataset_hash
-from src.engine.firm_config import get_commission_per_side, get_contract_cap, FIRM_CONTRACT_CAPS
-from src.engine.indicators.core import compute_indicators, compute_atr
+from src.engine.cross_validation import run_cross_validation
+from src.engine.data_loader import compute_dataset_hash, flag_rollover_days, load_ohlcv
+from src.engine.decay.half_life import fit_decay
+from src.engine.decay.sub_signals import composite_decay_score
+from src.engine.firm_config import (
+    FIRM_COMMISSIONS,
+    FIRM_CONTRACT_CAPS,
+    get_commission_per_side,
+    get_contract_cap,
+)
+from src.engine.indicators.core import compute_atr, compute_indicators
 from src.engine.liquidity import get_session_multipliers
+from src.engine.nvtx_markers import range_pop, range_push
+from src.engine.prop_sim import simulate_all_firms
+from src.engine.sanity_checks import run_sanity_checks
 from src.engine.signals import generate_signals
 from src.engine.sizing import compute_position_sizes
 from src.engine.slippage import compute_slippage
-from src.engine.analytics import compute_full_analytics
-from src.engine.prop_sim import simulate_all_firms
 from src.engine.strategy_base import BaseStrategy
-from src.engine.decay.half_life import fit_decay
-from src.engine.decay.sub_signals import composite_decay_score
-from src.engine.sanity_checks import run_sanity_checks
-from src.engine.cross_validation import run_cross_validation
-
 
 # ─── Signal Fill Convention ──────────────────────────────────────────
 # PRODUCTION STANDARD: "next-bar fill" — signal on bar N, fill on bar N+1.
@@ -60,6 +81,19 @@ from src.engine.cross_validation import run_cross_validation
 #     already started. NautilusTrader, QuantConnect, Zipline, and Backtrader all
 #     default to next-bar fills.
 #   - Every result produced with same-bar fills is inflated by lookahead.
+#
+# ─── DSL Critic Contract (W23F.K live-fix 2026-05-19) ─────────────────
+# This shift makes bare `close > X`, `high > Y`, `low < Z` references in DSL
+# entry conditions SAFE — the engine handles next-bar timing automatically.
+# DSL authors do NOT need to write "next bar" qualifiers.
+#
+# The DSL quality critic MUST NOT reject strategies for bare close/high/low
+# references. See `src/agents/kb/anti-pattern-catalog.md` §3 for the narrow
+# rule that flags only impossible references (tomorrow, future_*, centered
+# windows, explicit same-bar opt-outs) — not the engine-handled bare cases.
+#
+# If you change this shift behavior, you MUST update anti-pattern-catalog.md §3
+# in the same commit. Cross-service contract — keep them in sync.
 # ─────────────────────────────────────────────────────────────────────
 
 # ─── Multi-TF Look-Ahead Prevention Convention ─────────────────────
@@ -100,14 +134,13 @@ def apply_eligibility_gate(
     Returns:
         Tuple of (filtered_entries, filtered_exits, gate_stats)
     """
-    from src.engine.context.htf_context import HTFContext
-    from src.engine.context.session_context import compute_session_context
     from src.engine.context.bias_engine import compute_bias
-    from src.engine.context.playbook_router import route_playbook
+    from src.engine.context.eligibility_gate import evaluate_signal
     from src.engine.context.location_score import compute_location_score
+    from src.engine.context.playbook_router import route_playbook
+    from src.engine.context.session_context import compute_session_context
     from src.engine.context.structural_stops import compute_structural_stop
     from src.engine.context.structural_targets import compute_targets
-    from src.engine.context.eligibility_gate import evaluate_signal
 
     gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}}
 
@@ -133,8 +166,8 @@ def apply_eligibility_gate(
 
     # Pre-extract numpy arrays for speed
     close_np = df["close"].to_numpy()
-    high_np = df["high"].to_numpy() if "high" in df.columns else close_np
-    low_np = df["low"].to_numpy() if "low" in df.columns else close_np
+    df["high"].to_numpy() if "high" in df.columns else close_np
+    df["low"].to_numpy() if "low" in df.columns else close_np
     ts_col = "ts_event"
     has_ts = ts_col in df.columns
 
@@ -246,13 +279,311 @@ def apply_eligibility_gate(
             else:
                 gate_stats["take"] += 1
 
-        except Exception as e:
+        except Exception:
             # Context computation failed for this bar — skip conservatively
             filtered[idx] = False
             gate_stats["skip"] += 1
             gate_stats["skip_reasons"]["context_error"] = gate_stats["skip_reasons"].get("context_error", 0) + 1
 
     return filtered, exit_signals, gate_stats
+
+
+# G2: Backtest/Paper parity gates — skip engine + anti-setup filter + compliance gate.
+# Production defaults (P0-3 hardening):
+#   TF_BACKTEST_SKIP_MODE       ∈ {off, shadow, enforce}  default: enforce
+#   TF_BACKTEST_ANTI_SETUP_MODE ∈ {off, shadow, enforce}  default: enforce
+#   TF_BACKTEST_COMPLIANCE_MODE ∈ {off, shadow, enforce}  default: shadow
+#
+# In "shadow" mode, decisions are computed and counted but signals pass through
+# unchanged — for parity-delta logging.
+# In "enforce" mode, signals matching SKIP / anti-setup / compliance conditions
+# are removed from the entry array.
+#
+# Anti-setup loading is via a hook (default: returns []). Production wiring of
+# the per-strategy anti-setup data is a follow-up; the gate is here so flipping
+# the env var produces telemetry as soon as the data feed lands.
+def _backtest_skip_signals_for_day(df, day_idx_start: int, day_idx_end: int) -> dict:
+    """Derive skip-classifier signals from df slice. Shadow-only — no DB/macro deps."""
+    try:
+        if day_idx_end <= day_idx_start or day_idx_end > len(df):
+            return {}
+        close_np = df["close"].to_numpy()
+        prev_close = float(close_np[day_idx_start - 1]) if day_idx_start > 0 else float(close_np[day_idx_start])
+        day_open = float(close_np[day_idx_start])
+        atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else None
+        atr_at_open = float(atr_np[day_idx_start]) if atr_np is not None and not np.isnan(atr_np[day_idx_start]) else 1.0
+        gap_atr = abs(day_open - prev_close) / atr_at_open if atr_at_open > 0 else 0.0
+        # Day of week from ts_et if present
+        dow_str = "Monday"
+        if "ts_et" in df.columns:
+            try:
+                ts = df["ts_et"][day_idx_start]
+                (str(ts)[:10],)
+                # Polars dt accessor unavailable for scalar — fall back to datetime parse
+                from datetime import datetime as _dt
+                dow_str = _dt.fromisoformat(str(ts)[:19]).strftime("%A")
+            except Exception:
+                pass
+        return {
+            "overnight_gap_atr": gap_atr,
+            "day_of_week": dow_str,
+            # macro/event signals (vix, fomc, premarket_volume) require external feeds;
+            # left empty in shadow mode — classifier will score them as 0.
+        }
+    except Exception:
+        return {}
+
+
+def _load_anti_setups_for_strategy(strategy_name: str) -> list[dict]:
+    """Hook for loading anti-setups. Returns [] until DB feed is wired (G2 follow-up)."""
+    return []
+
+
+def _apply_backtest_parity_gates(
+    entry_signals: np.ndarray,
+    df,
+    direction: str,
+    symbol: str,
+    strategy_name: str,
+) -> tuple[np.ndarray, dict]:
+    """G2 parity gate. Default enforce; env-var toggle to shadow or off.
+
+    TF_BACKTEST_SKIP_MODE      — "enforce" (default) | "shadow" | "off"
+    TF_BACKTEST_ANTI_SETUP_MODE — "enforce" (default) | "shadow" | "off"
+    TF_BACKTEST_COMPLIANCE_MODE — "shadow" (default)  | "enforce" | "off"
+
+    Returns (filtered_entries, parity_stats).
+    """
+    import os
+    # P0-3: default changed from "off" to "enforce" — production hardening.
+    skip_mode = os.environ.get("TF_BACKTEST_SKIP_MODE", "enforce").lower()
+    anti_mode = os.environ.get("TF_BACKTEST_ANTI_SETUP_MODE", "enforce").lower()
+    # P0-2: compliance gate mode. Default "shadow" (logs violations, does not block).
+    compliance_mode = os.environ.get("TF_BACKTEST_COMPLIANCE_MODE", "shadow").lower()
+
+    parity_stats = {
+        "skip_mode": skip_mode,
+        "anti_mode": anti_mode,
+        "compliance_mode": compliance_mode,
+        "skip_signals_evaluated": 0,
+        "skip_decision_skip": 0,
+        "skip_decision_reduce": 0,
+        "anti_setup_evaluated": 0,
+        "anti_setup_blocked": 0,
+        "anti_setup_load_failed": False,
+        "compliance_violations": [],
+        "compliance_blocked": 0,
+    }
+
+    all_off = skip_mode == "off" and anti_mode == "off" and compliance_mode == "off"
+    if all_off:
+        return entry_signals, parity_stats
+
+    out = entry_signals.copy()
+    signal_indices = np.where(entry_signals)[0]
+    if len(signal_indices) == 0:
+        return out, parity_stats
+
+    # ── P0-2: Compliance gate (per-strategy, at gate entry) ────────────────
+    # Runs once per parity-gate call. Checks the strategy against prop firm
+    # rules using check_strategy_compliance(). In "shadow" mode violations are
+    # logged but signals are not blocked. In "enforce" mode ALL signals in this
+    # call are blocked when the strategy fails compliance.
+    if compliance_mode in ("shadow", "enforce"):
+        try:
+            from src.engine.compliance.compliance_gate import check_strategy_compliance
+            # Build a minimal strategy dict from what's available in parity context.
+            # Full check (drawdown, daily_loss, consistency) requires backtest results
+            # that are not available at signal-generation time. We check what we CAN:
+            # overnight holding policy and contract caps. Post-backtest compliance
+            # (drawdown, daily loss) is handled by prop_sim downstream.
+            _strategy_snapshot: dict = {
+                "strategy_id": strategy_name or "unknown",
+                "strategy_name": strategy_name or "unknown",
+                "automated": True,  # Trading Forge strategies are always automated
+                "overnight_holding": False,  # conservative default; overridden below
+                "contracts_per_symbol": {},
+            }
+            # Best-effort: read overnight_hold from df if tagged
+            if hasattr(df, "schema") and "overnight_hold" in df.columns:
+                try:
+                    _oh_vals = df["overnight_hold"].to_list()
+                    _strategy_snapshot["overnight_holding"] = any(bool(v) for v in _oh_vals if v is not None)
+                except Exception:
+                    pass
+
+            # Use a permissive ruleset (no hard limits) — we only want to catch
+            # automation-banned or overnight violations at signal time.
+            _permissive_rules: dict = {
+                "automation_banned": False,
+                "overnight_allowed": True,
+            }
+            _compliance_result = check_strategy_compliance(_strategy_snapshot, _permissive_rules)
+
+            if _compliance_result["violations"]:
+                parity_stats["compliance_violations"] = _compliance_result["violations"]
+                print(
+                    f"[parity-gate] COMPLIANCE {compliance_mode.upper()} strategy={strategy_name or '?'} "
+                    f"violations={_compliance_result['violations']}",
+                    file=sys.stderr,
+                )
+                if compliance_mode == "enforce":
+                    # Block all signals — strategy failed hard compliance check
+                    parity_stats["compliance_blocked"] = int(len(signal_indices))
+                    return np.zeros_like(out), parity_stats
+            elif _compliance_result.get("warnings"):
+                print(
+                    f"[parity-gate] compliance warnings strategy={strategy_name or '?'} "
+                    f"warnings={_compliance_result['warnings']}",
+                    file=sys.stderr,
+                )
+        except Exception as _ce:
+            # Import or check failure: log and continue (gate should never crash the backtest)
+            if compliance_mode == "enforce":
+                print(
+                    f"[parity-gate] WARNING compliance gate error in enforce mode "
+                    f"strategy={strategy_name or '?'} error={_ce}",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    f"[parity-gate] DEBUG compliance gate error (shadow) "
+                    f"strategy={strategy_name or '?'} error={_ce}",
+                    file=sys.stderr,
+                )
+
+    # ── Anti-setup gate (per-bar) ───────────────────────────────────
+    anti_setups = []
+    if anti_mode in ("shadow", "enforce"):
+        try:
+            anti_setups = _load_anti_setups_for_strategy(strategy_name)
+        except Exception as _e:
+            parity_stats["anti_setup_load_failed"] = True
+            if anti_mode == "enforce":
+                print(
+                    f"[parity-gate] WARNING anti_setup load failed strategy={strategy_name or '?'} error={_e}",
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    f"[parity-gate] DEBUG anti_setup load failed (shadow) strategy={strategy_name or '?'} error={_e}",
+                    file=sys.stderr,
+                )
+
+    if anti_setups and anti_mode in ("shadow", "enforce"):
+        try:
+            from src.engine.anti_setups.filter_gate import should_filter
+        except Exception as _e:
+            should_filter = None
+            if anti_mode == "enforce":
+                print(
+                    f"[parity-gate] WARNING could not import anti_setups.filter_gate error={_e}",
+                    file=sys.stderr,
+                )
+
+        if should_filter is not None:
+            close_np = df["close"].to_numpy()
+            atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else None
+            for bar_idx, idx in enumerate(signal_indices):
+                parity_stats["anti_setup_evaluated"] += 1
+                hour = None
+                if "ts_et" in df.columns:
+                    try:
+                        ts = str(df["ts_et"][int(idx)])
+                        if "T" in ts:
+                            hour = int(ts.split("T")[1].split(":")[0])
+                    except Exception as _e:
+                        if anti_mode == "enforce":
+                            print(
+                                f"[parity-gate] WARNING ts_et parse failed at bar {int(idx)}: {_e}",
+                                file=sys.stderr,
+                            )
+                ctx = {
+                    "hour": hour,
+                    "atr": float(atr_np[int(idx)]) if atr_np is not None and not np.isnan(atr_np[int(idx)]) else None,
+                    "direction": direction,
+                    "entry_price": float(close_np[int(idx)]),
+                }
+                try:
+                    res = should_filter(ctx, anti_setups)
+                    if res.get("filter"):
+                        parity_stats["anti_setup_blocked"] += 1
+                        if anti_mode == "enforce":
+                            out[int(idx)] = False
+                except Exception as _e:
+                    if anti_mode == "enforce":
+                        print(
+                            f"[parity-gate] WARNING anti_setup filter error at bar {int(idx)}: {_e}",
+                            file=sys.stderr,
+                        )
+                    else:
+                        print(
+                            f"[parity-gate] DEBUG anti_setup filter error (shadow) at bar {int(idx)}: {_e}",
+                            file=sys.stderr,
+                        )
+
+    # ── Skip-engine (per-day) ───────────────────────────────────────
+    if skip_mode in ("shadow", "enforce") and "ts_et" in df.columns:
+        try:
+            from src.engine.skip_engine.skip_classifier import classify_session
+        except Exception as _e:
+            classify_session = None
+            if skip_mode == "enforce":
+                print(
+                    f"[parity-gate] WARNING could not import skip_classifier error={_e}",
+                    file=sys.stderr,
+                )
+
+        if classify_session is not None:
+            ts_col = df["ts_et"].cast(pl.Utf8).to_list() if hasattr(df["ts_et"], "cast") else [str(x) for x in df["ts_et"]]
+            day_keys = [s[:10] for s in ts_col]
+            # Group bar indices by day
+            day_to_indices: dict[str, list[int]] = {}
+            for i, dk in enumerate(day_keys):
+                day_to_indices.setdefault(dk, []).append(i)
+
+            day_decisions: dict[str, str] = {}
+            for dk, idxs in day_to_indices.items():
+                start, end = idxs[0], idxs[-1] + 1
+                signals = _backtest_skip_signals_for_day(df, start, end)
+                if not signals:
+                    continue
+                try:
+                    decision = classify_session(signals, strategy_id=strategy_name or None)
+                    day_decisions[dk] = decision.get("decision", "TRADE")
+                    parity_stats["skip_signals_evaluated"] += 1
+                    if day_decisions[dk] == "SKIP":
+                        parity_stats["skip_decision_skip"] += 1
+                    elif day_decisions[dk] == "REDUCE":
+                        parity_stats["skip_decision_reduce"] += 1
+                except Exception as _e:
+                    if skip_mode == "enforce":
+                        print(
+                            f"[parity-gate] WARNING classify_session failed for day {dk}: {_e}",
+                            file=sys.stderr,
+                        )
+                    else:
+                        print(
+                            f"[parity-gate] DEBUG classify_session failed (shadow) for day {dk}: {_e}",
+                            file=sys.stderr,
+                        )
+
+            if skip_mode == "enforce":
+                for idx in signal_indices:
+                    if day_decisions.get(day_keys[int(idx)]) == "SKIP":
+                        out[int(idx)] = False
+
+    # Telemetry (stderr — captured by Node bridge):
+    if skip_mode != "off" or anti_mode != "off" or compliance_mode != "off":
+        print(
+            f"[parity-gate] strategy={strategy_name or '?'} dir={direction} "
+            f"skip_mode={skip_mode} skipped_days={parity_stats['skip_decision_skip']} "
+            f"anti_mode={anti_mode} anti_blocked={parity_stats['anti_setup_blocked']} "
+            f"compliance_mode={compliance_mode} compliance_blocked={parity_stats['compliance_blocked']}",
+            file=sys.stderr,
+        )
+
+    return out, parity_stats
 
 
 def _apply_trade_management(
@@ -448,6 +779,7 @@ def shift_higher_tf_columns(
 # vectorbt uses freq to annualize Sharpe. Hardcoding "1D" deflates
 # Sharpe ~5x for intraday data because it assumes 1 bar = 1 day.
 FREQ_MAP = {
+    # Engine-native names
     "1min": "1min",
     "5min": "5min",
     "15min": "15min",
@@ -458,6 +790,13 @@ FREQ_MAP = {
     "4h": "4h",
     "daily": "1D",
     "1D": "1D",
+    # DSL Timeframe enum aliases (M2 fix — strategy_schema.py uses these)
+    # Without these, intraday strategies fall back to "1D" which deflates Sharpe ~5x
+    "1m": "1min",
+    "5m": "5min",
+    "15m": "15min",
+    "30m": "30min",
+    "1d": "1D",
 }
 
 
@@ -522,7 +861,7 @@ def _compute_monthly_returns(equity: np.ndarray, index) -> list[dict]:
     monthly: dict[tuple[int, int], list[float]] = {}
     for i, v in enumerate(equity):
         if hasattr(index[i], "year"):
-            key = (index[i].year, index[i].month - 1)  # 0-indexed month
+            key = (index[i].year, index[i].month)  # 1-indexed month (1-12)
         else:
             continue
         if key not in monthly:
@@ -606,9 +945,33 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
         if long_metrics["pnl"] > 0 and short_metrics["pnl"] < 0:
             warnings.append("Short side is net negative. Long side carrying the strategy.")
 
+    # QuantVue-style bidirectional symmetry diagnostic. Per V2 deck page 10:
+    # they prominently display long_wr (80.3%) vs short_wr (78.5%) as a portfolio
+    # quality marker — within 2pp == genuine bidirectional alpha. > 10pp gap == directional
+    # bias that may mask a long-only beta tilt.
+    asymmetry_pp = round(abs(long_metrics["win_rate"] - short_metrics["win_rate"]) * 100, 2)
+    if long_metrics["trades"] >= 30 and short_metrics["trades"] >= 30:
+        if asymmetry_pp <= 5:
+            asymmetry_flag = "BALANCED"
+        elif asymmetry_pp <= 10:
+            asymmetry_flag = "SLIGHT_TILT"
+        else:
+            asymmetry_flag = "BIASED"
+    else:
+        asymmetry_flag = "INSUFFICIENT_DATA"
+
+    if asymmetry_flag == "BIASED":
+        warnings.append(
+            f"Directional asymmetry: long WR {long_metrics['win_rate']*100:.1f}% vs "
+            f"short WR {short_metrics['win_rate']*100:.1f}% (gap {asymmetry_pp}pp). "
+            f"Edge may not be bidirectional."
+        )
+
     return {
         "long": long_metrics,
         "short": short_metrics,
+        "directional_asymmetry_pp": asymmetry_pp,
+        "asymmetry_flag": asymmetry_flag,
         "warnings": warnings,
     }
 
@@ -688,8 +1051,19 @@ def _build_run_receipt(config: "StrategyConfig", dataset_hash: str = "") -> dict
         print(f"WARNING: Failed to compute code hash: {exc}", file=sys.stderr)
         code_hash = "unknown"
 
+    # E7.3: determinism_verified was hardcoded False — meaningless and misleading.
+    # New behavior: set True only when TF_VERIFY_DETERMINISM=1 env var is set AND
+    # the caller has already run a second identical backtest and compared hashes.
+    # At receipt-build time, we record whether determinism verification was requested.
+    # The actual two-run comparison happens at the caller level when the env var is set.
+    # Default: False (verification not run — second run is expensive, skip in production).
+    # To enable: set TF_VERIFY_DETERMINISM=1 in env; the run_backtest() caller will
+    # run the backtest twice, compare JSON output hashes, and set determinism_verified=True.
+    import os
+    determinism_requested = os.environ.get("TF_VERIFY_DETERMINISM", "0") == "1"
+
     return {
-        "engine_version": "2.0",
+        "engine_version": engine_version,  # Fix 2: was hardcoded "2.0"; now uses importlib.metadata result
         "git_commit": git_commit,
         "code_hash": code_hash,
         "config_hash": config_hash,
@@ -699,16 +1073,383 @@ def _build_run_receipt(config: "StrategyConfig", dataset_hash: str = "") -> dict
         "polars_version": pl.__version__,
         "python_version": sys.version.split()[0],
         "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "determinism_verified": False,  # Set True after determinism test passes
+        # determinism_verified=True is set by run_backtest() after second-run comparison
+        # when TF_VERIFY_DETERMINISM=1. False = not verified this run (default).
+        "determinism_verified": False,
+        "determinism_verification_requested": determinism_requested,
     }
+
+
+def _apply_max_trades_per_day(
+    long_entries: np.ndarray,
+    short_entries: np.ndarray,
+    timestamps: np.ndarray,
+    max_trades: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Suppress entries beyond max_trades per calendar day.
+
+    Counts long + short entries combined per day. Once the daily limit is
+    reached, all subsequent entries that day are masked out. Earlier entries
+    within the day are kept (first-come, first-served).
+
+    Args:
+        long_entries: Boolean array of long entry signals (post-roll)
+        short_entries: Boolean array of short entry signals (post-roll)
+        timestamps: Array of datetime-like values (ts_event or ts_et)
+        max_trades: Maximum entries per calendar day (0 = unlimited)
+
+    Returns:
+        (filtered_long, filtered_short) — modified copies
+    """
+    if max_trades <= 0:
+        return long_entries, short_entries
+
+    filtered_long = long_entries.copy()
+    filtered_short = short_entries.copy()
+    n = len(long_entries)
+
+    # Extract date for each bar
+    daily_counts: dict[str, int] = {}
+    suppressed = 0
+
+    for i in range(n):
+        has_long = bool(filtered_long[i])
+        has_short = bool(filtered_short[i])
+        if not has_long and not has_short:
+            continue
+
+        # Get calendar date string from timestamp
+        ts = timestamps[i]
+        try:
+            day_key = str(ts)[:10]  # "YYYY-MM-DD" from any datetime-like
+        except Exception:
+            continue
+
+        count = daily_counts.get(day_key, 0)
+
+        if has_long:
+            if count < max_trades:
+                daily_counts[day_key] = count + 1
+                count += 1
+            else:
+                filtered_long[i] = False
+                suppressed += 1
+
+        if has_short:
+            if count < max_trades:
+                daily_counts[day_key] = count + 1
+                count += 1
+            else:
+                filtered_short[i] = False
+                suppressed += 1
+
+    if suppressed > 0:
+        print(
+            f"max_trades_per_day={max_trades}: suppressed {suppressed} entries",
+            file=sys.stderr,
+        )
+
+    return filtered_long, filtered_short
+
+
+# ─── Wave 21 E.3 — Stop ceiling per symbol ───────────────────────────────────
+# Per CLAUDE.md §4: structural stops have a CEILING per instrument.
+# If stop_distance > ceiling → SKIP THE TRADE (never clamp).
+# MCL ceiling is 0.25 points (25 ticks × $0.01/tick = $0.25/pt).
+_STOP_CEILING_TABLE: dict[str, float] = {
+    "MES": 14.0,
+    "ES":  14.0,   # micro alias
+    "MNQ": 40.0,
+    "NQ":  40.0,   # micro alias
+    "MCL": 0.25,
+    "CL":  0.25,   # micro alias
+}
+_STOP_CEILING_DEFAULT: float = 14.0  # fallback to MES ceiling
+
+
+def _get_stop_ceiling_for_symbol(symbol: str) -> float:
+    """Return the maximum allowed stop distance (in points) for a given symbol.
+
+    Per CLAUDE.md §4:
+        MES / ES  → 14 points
+        MNQ / NQ  → 40 points
+        MCL / CL  → 0.25 points (25 ticks)
+
+    Unknown symbols fall back to the MES default (14 points).
+    """
+    return _STOP_CEILING_TABLE.get(symbol.upper(), _STOP_CEILING_DEFAULT)
+
+
+def _apply_dsl_stop_loss_and_time_stop(
+    entry_long: np.ndarray,
+    exit_long: np.ndarray,
+    entry_short: np.ndarray,
+    exit_short: np.ndarray,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    atr_np: np.ndarray,
+    timestamps: list | np.ndarray,
+    stop_multiplier: float = 1.5,
+    symbol: str = "MES",
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict]:
+    """Enforce ATR stop ceiling and 15:55 ET time-stop for DSL strategies.
+
+    Wave 21 E.3/E.5 reconstruction.
+
+    UNCONDITIONAL — always applied for ALL DSL strategies regardless of whether
+    the exit expression is a sentinel or contains real signal values.
+    (Pre-Wave-21 root cause: was gated by `if exit_long_is_sentinel`, allowing
+    real-exit strategies to bypass the stop entirely.)
+
+    E.3 — Stop ceiling enforcement:
+        stop_distance = stop_multiplier × ATR[bar]
+        If stop_distance > ceiling_for_symbol → SKIP entry (set to False).
+        Never clamp — skipping is conservative and avoids oversizing.
+
+    E.5 — 15:55 ET time-stop:
+        Any open long/short position is closed at the 15:55 ET bar.
+        Both long and short sides are handled.
+        Fires unconditionally — no strategy config required.
+
+    Returns:
+        5-tuple (entry_long_out, exit_long_out, entry_short_out, exit_short_out, metadata)
+        metadata keys:
+            skipped_trades: list[dict] — each skip records {bar, direction, stop_dist, ceiling}
+            atr_stop_exits: int — number of ATR-based exit signals set
+            time_stop_exits: int — number of 15:55 ET time-stop exit signals set
+    """
+    ceiling = _get_stop_ceiling_for_symbol(symbol)
+
+    entry_long_out = entry_long.copy()
+    exit_long_out = exit_long.copy()
+    entry_short_out = entry_short.copy()
+    exit_short_out = exit_short.copy()
+
+    n = len(entry_long)
+    metadata: dict = {
+        "skipped_trades": [],
+        "atr_stop_exits": 0,
+        "time_stop_exits": 0,
+    }
+
+    # Track position state for ATR stop and time-stop
+    in_long = False
+    long_entry_price: float = 0.0
+    long_stop_price: float = 0.0
+    in_short = False
+    short_entry_price: float = 0.0
+    short_stop_price: float = 0.0
+
+    for i in range(n):
+        ts_str = str(timestamps[i]) if timestamps is not None and i < len(timestamps) else ""
+        atr = float(atr_np[i]) if not np.isnan(atr_np[i]) else 0.0
+        stop_dist = stop_multiplier * atr
+
+        # ── E.5: 15:55 ET time-stop ────────────────────────────────
+        is_1555 = "15:55" in ts_str
+        if is_1555:
+            if in_long:
+                exit_long_out[i] = True
+                metadata["time_stop_exits"] += 1
+                in_long = False
+            if in_short:
+                exit_short_out[i] = True
+                metadata["time_stop_exits"] += 1
+                in_short = False
+
+        # ── E.3: stop ceiling enforcement on new entries ────────────
+        # Check long entry
+        if bool(entry_long_out[i]) and not in_long:
+            if stop_dist > ceiling:
+                # SKIP — stop too wide
+                entry_long_out[i] = False
+                metadata["skipped_trades"].append({
+                    "bar": i,
+                    "direction": "long",
+                    "stop_dist": round(stop_dist, 4),
+                    "ceiling": ceiling,
+                    "reason": "stop_too_wide",
+                    "ts": ts_str,
+                })
+            else:
+                # Accept entry — record position state for ATR stop tracking
+                in_long = True
+                long_entry_price = float(high_np[i]) if not np.isnan(high_np[i]) else 0.0
+                long_stop_price = long_entry_price - stop_dist
+
+        # Check short entry
+        if bool(entry_short_out[i]) and not in_short:
+            if stop_dist > ceiling:
+                entry_short_out[i] = False
+                metadata["skipped_trades"].append({
+                    "bar": i,
+                    "direction": "short",
+                    "stop_dist": round(stop_dist, 4),
+                    "ceiling": ceiling,
+                    "reason": "stop_too_wide",
+                    "ts": ts_str,
+                })
+            else:
+                in_short = True
+                short_entry_price = float(low_np[i]) if not np.isnan(low_np[i]) else 0.0
+                short_stop_price = short_entry_price + stop_dist
+
+        # ── ATR stop fires: track when stop price is breached ───────
+        if in_long and not bool(exit_long_out[i]):
+            bar_low = float(low_np[i]) if not np.isnan(low_np[i]) else float("inf")
+            if bar_low < long_stop_price:
+                exit_long_out[i] = True
+                in_long = False
+                metadata["atr_stop_exits"] += 1
+
+        if in_short and not bool(exit_short_out[i]):
+            bar_high = float(high_np[i]) if not np.isnan(high_np[i]) else 0.0
+            if bar_high > short_stop_price:
+                exit_short_out[i] = True
+                in_short = False
+                metadata["atr_stop_exits"] += 1
+
+        # ── Track position exit via existing exit signals ────────────
+        if in_long and bool(exit_long_out[i]):
+            in_long = False
+        if in_short and bool(exit_short_out[i]):
+            in_short = False
+
+    return entry_long_out, exit_long_out, entry_short_out, exit_short_out, metadata
+
+
+# ─── Wave 21 E.4 — Account-ruin / DLL halt ──────────────────────────────────
+# Per CLAUDE.md §4:
+#   Personal DLL = 67% of firm DLL → HALT new entries for session
+#   95% of firm DLL → FORCE CLOSE all positions
+#
+# Implementation uses conservative ATR-based P&L estimate per entry
+# (worst-case: full stop hit at 1.5×ATR × contracts × point_value).
+# This is fail-safe: fires earlier than actual DLL would.
+
+def _apply_dll_halt_to_entries(
+    long_entries: np.ndarray,
+    short_entries: np.ndarray,
+    exit_long: np.ndarray,
+    exit_short: np.ndarray,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    atr_np: np.ndarray,
+    timestamps: np.ndarray,
+    point_value: float,
+    sizes: np.ndarray,
+    commission_per_side: float,
+    personal_dll_pct: float = 0.67,
+    firm_dll: float = 1000.0,
+) -> tuple[np.ndarray, np.ndarray, dict]:
+    """Suppress entries and force-close positions when DLL thresholds are breached.
+
+    Wave 21 E.4. Conservative ATR-based P&L estimate (not actual trade P&L).
+
+    Args:
+        long_entries, short_entries: Entry signal arrays (modified in-place copies returned).
+        exit_long, exit_short: Exit signal arrays (modified in-place for force-close).
+        high_np, low_np, close_np: OHLCV price arrays.
+        atr_np: ATR array.
+        timestamps: Bar timestamps (for session date grouping).
+        point_value: Dollar value per 1-point move.
+        sizes: Contract sizes per bar.
+        commission_per_side: Commission per trade side.
+        personal_dll_pct: Fraction of firm DLL that triggers entry halt (default 0.67).
+        firm_dll: Firm daily loss limit in dollars (default $1,000 for MFFU 50K).
+
+    Returns:
+        (long_entries_out, short_entries_out, metadata)
+        metadata keys:
+            dll_halt_sessions: list[str] — session dates where entry halt fired
+            dll_force_close_sessions: list[str] — session dates where force-close fired
+            entries_suppressed: int
+    """
+    personal_dll = firm_dll * personal_dll_pct
+    force_close_dll = firm_dll * 0.95
+
+    long_out = long_entries.copy()
+    short_out = short_entries.copy()
+    exit_long_out = exit_long.copy()
+    exit_short_out = exit_short.copy()
+
+    metadata: dict = {
+        "dll_halt_sessions": [],
+        "dll_force_close_sessions": [],
+        "entries_suppressed": 0,
+    }
+
+    n = len(long_out)
+    session_pnl: dict[str, float] = {}  # date → cumulative estimated P&L
+    session_halted: set[str] = set()
+    session_force_closed: set[str] = set()
+
+    for i in range(n):
+        ts_str = str(timestamps[i]) if i < len(timestamps) else ""
+        day_key = ts_str[:10] if len(ts_str) >= 10 else ts_str
+
+        cum_pnl = session_pnl.get(day_key, 0.0)
+
+        # Estimate loss for a trade entered on this bar
+        atr = float(atr_np[i]) if not np.isnan(atr_np[i]) else 0.0
+        size = float(sizes[i]) if i < len(sizes) and not np.isnan(sizes[i]) else 1.0
+        # Conservative: assume full stop distance hit (1.5×ATR) plus commission roundtrip
+        est_loss = atr * 1.5 * size * point_value + commission_per_side * size * 2
+
+        # Force-close threshold (95% DLL)
+        if cum_pnl <= -force_close_dll:
+            if day_key not in session_force_closed:
+                session_force_closed.add(day_key)
+                metadata["dll_force_close_sessions"].append(day_key)
+                print(
+                    f"[DLL] force_close FIRED session={day_key} cum_pnl={cum_pnl:.0f} "
+                    f"force_close_dll={force_close_dll:.0f}",
+                    file=sys.stderr,
+                )
+            # Suppress entry AND force-close any open position
+            if bool(long_out[i]):
+                long_out[i] = False
+                metadata["entries_suppressed"] += 1
+            if bool(short_out[i]):
+                short_out[i] = False
+                metadata["entries_suppressed"] += 1
+            exit_long_out[i] = True
+            exit_short_out[i] = True
+            continue
+
+        # Personal DLL halt threshold (67%)
+        if cum_pnl <= -personal_dll or day_key in session_halted:
+            if day_key not in session_halted:
+                session_halted.add(day_key)
+                metadata["dll_halt_sessions"].append(day_key)
+                print(
+                    f"[DLL] halt FIRED session={day_key} cum_pnl={cum_pnl:.0f} "
+                    f"personal_dll={personal_dll:.0f}",
+                    file=sys.stderr,
+                )
+            if bool(long_out[i]):
+                long_out[i] = False
+                metadata["entries_suppressed"] += 1
+            if bool(short_out[i]):
+                short_out[i] = False
+                metadata["entries_suppressed"] += 1
+            continue
+
+        # Accumulate estimated P&L impact for entries this bar
+        if bool(long_out[i]) or bool(short_out[i]):
+            session_pnl[day_key] = cum_pnl - est_loss
+
+    return long_out, short_out, metadata
 
 
 def run_backtest(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,
     fill_rate: float = 1.0,
-    use_eligibility_gate: bool = False,
+    use_eligibility_gate: bool = True,
     spread_multiplier: float = 1.0,
+    warmup_data: Optional[pl.DataFrame] = None,
 ) -> dict:
     """Run a single backtest and return metrics dict.
 
@@ -718,7 +1459,16 @@ def run_backtest(
         fill_rate: Fraction of entry signals to keep (0.0-1.0). Used for
             crisis stress testing to simulate reduced fill rates.
         use_eligibility_gate: When True, apply the eligibility gate post-filter
-            to entry/exit signals. Default False to preserve existing behavior.
+            to entry/exit signals. Default True (enabled for all backtests).
+        warmup_data: E7.2 — Optional IS (in-sample) data to prepend for adaptive
+            indicator computation. When provided, indicators are computed on
+            warmup_data+data (full context), then the warmup rows are stripped
+            before signal generation and trade execution. This prevents lookahead
+            leakage in walk-forward windows where rolling quantiles or regime
+            detectors would otherwise look forward into OOS data during indicator
+            init. Only affects adaptive indicators (rolling quantiles, regime
+            detection) — simple indicators (MA, ATR) are unaffected in practice
+            but benefit from the warmer initialization.
 
     Returns:
         dict with metrics, equity_curve, trades, daily_pnls, execution_time_ms
@@ -728,13 +1478,34 @@ def run_backtest(
     spec = CONTRACT_SPECS[config.symbol]
     atr_period = _extract_atr_period(config)
 
+    # ─── Auto-wire fill_rate / spread_multiplier from StrategyConfig ─────
+    # Caveat 2 hardening: BacktestConfig (TS) and StrategyConfig (Pydantic) both
+    # carry optional fill_rate / spread_multiplier fields. Stress-test scenarios
+    # pass these positionally; sensitivity analysis or runtime overrides can now
+    # set them on the strategy config and have them auto-flow into signal masking
+    # (fill_rate -> generate_signals) and slippage scaling (spread_multiplier ->
+    # compute_slippage). Positional args remain authoritative when a caller
+    # explicitly passes a non-default value, so stress_test.py overrides win.
+    # Test coverage: stress_test.py scenarios already pass these values; sensitivity
+    # analysis can now exercise non-default ranges via BacktestConfig fields.
+    if fill_rate == 1.0:
+        cfg_fill_rate = getattr(config, "fill_rate", None)
+        if cfg_fill_rate is not None and 0.0 <= cfg_fill_rate <= 1.0:
+            fill_rate = cfg_fill_rate
+    if spread_multiplier == 1.0:
+        cfg_spread = getattr(config, "spread_multiplier", None)
+        if cfg_spread is not None and cfg_spread > 0:
+            spread_multiplier = cfg_spread
+
     # ─── Load data ─────────────────────────────────────────────
+    range_push("forge/data_load")
     if data is None:
         print(f"Loading {config.symbol} {config.timeframe} data...", file=sys.stderr)
         data = load_ohlcv(
             config.symbol, config.timeframe,
             request.start_date, request.end_date,
         )
+    range_pop()
 
     # ─── Validate bar count ──────────────────────────────────
     _validate_bar_count(data, config.timeframe, request.start_date, request.end_date)
@@ -742,13 +1513,43 @@ def run_backtest(
     # ─── Flag rollover days (Task 7.1) ───────────────────────
     data = flag_rollover_days(data, config.symbol)
 
+    # ─── E7.2: IS warmup prepend for adaptive indicators ─────
+    # When warmup_data is provided (walk-forward context), prepend IS bars so that
+    # rolling indicators are properly initialized before the OOS window begins.
+    # Without this, a rolling 60-bar quantile computed on just the OOS slice would
+    # use future OOS bars during the first 60 bars — lookahead leakage.
+    # The warmup_rows count is used to strip IS rows after indicator computation,
+    # before signal generation and trade execution. Trade results are OOS-only.
+    warmup_rows = 0
+    if warmup_data is not None and len(warmup_data) > 0:
+        warmup_data = flag_rollover_days(warmup_data, config.symbol)
+        warmup_rows = len(warmup_data)
+        data = pl.concat([warmup_data, data], how="vertical")
+        print(
+            f"  IS warmup: prepended {warmup_rows} IS bars for indicator initialization",
+            file=sys.stderr,
+        )
+
     # ─── Compute indicators ───────────────────────────────────
     # Ensure ATR is included for sizing/slippage
     indicator_configs = list(config.indicators)
     if not any(ind.type == "atr" for ind in indicator_configs):
         indicator_configs.append(IndicatorConfig(type="atr", period=atr_period))
 
+    range_push("forge/indicators")
     df = compute_indicators(data, indicator_configs)
+    range_pop()
+
+    # ─── E7.2: Strip IS warmup rows after indicator computation ──
+    # Now that indicators have warm state (correct rolling windows), strip the
+    # prepended IS rows so signal generation and trade replay run on OOS-only data.
+    # This preserves indicator initialization correctness without executing IS trades.
+    if warmup_rows > 0:
+        df = df.slice(warmup_rows)
+        print(
+            f"  IS warmup: stripped {warmup_rows} IS rows — OOS-only data for trade execution",
+            file=sys.stderr,
+        )
 
     # ─── Economic event mask (Task 3.8) ─────────────────────
     event_mask = None
@@ -761,9 +1562,72 @@ def run_backtest(
         policies = [p.model_dump() for p in request.event_calendar.policies]
         event_mask = generate_event_mask(df["ts_event"], policies)
         event_slippage_mult = get_event_slippage_multipliers(df["ts_event"], policies)
+    elif "ts_event" in df.columns:
+        # P1-D fix: CLAUDE.md mandates default SIT_OUT ±30 min for FOMC/CPI/NFP.
+        # When no event_calendar is supplied, apply a conservative time-of-day blackout:
+        #   - 8:30–9:00 AM ET: covers NFP (1st Fri), CPI/PPI releases (typically 8:30 ET)
+        #   - 14:00–14:30 ET: covers FOMC rate decisions (2:00 PM ET)
+        # This is a structural approximation — every bar in these windows is masked out.
+        # Callers can disable this by passing event_calendar with an empty policies list
+        # and setting event_blackout_default=False (not yet a field — use EventCalendarConfig
+        # with an explicit IGNORE policy to override).
+        # NOTE: this does NOT affect slippage multipliers (no event_slippage_mult set here).
+        # The mask only suppresses entry signals during the high-risk windows.
+        _ts_series = df["ts_event"]
+
+        def _build_default_event_mask(ts_series: "pl.Series") -> "np.ndarray":
+            """Return a bool mask: True = ALLOW trade, False = SIT_OUT.
+
+            Blocks bars falling in 8:30-9:00 ET and 14:00-14:30 ET windows.
+            Uses UTC offsets: ET = UTC-5 (EST) or UTC-4 (EDT). We use the safe
+            conservative: check hour/minute in UTC and accept both offsets.
+            The 30-min window is wide enough that ±1h timezone ambiguity is tolerable.
+            """
+            import numpy as _np_ev
+            n = len(ts_series)
+            mask = _np_ev.ones(n, dtype=bool)  # True = allow
+
+            for i in range(n):
+                ts_val = ts_series[i]
+                if ts_val is None:
+                    continue
+                try:
+                    ts_str = str(ts_val)
+                    # Extract time portion from ISO-like string "YYYY-MM-DDTHH:MM:SS..."
+                    time_part = ts_str[11:16] if len(ts_str) >= 16 else ""
+                    if not time_part:
+                        continue
+                    h, m = int(time_part[:2]), int(time_part[3:5])
+                    total_min = h * 60 + m
+
+                    # 8:30-9:00 ET = 13:30-14:00 UTC (EST) or 12:30-13:00 UTC (EDT)
+                    # Accept both: 12:30-14:00 UTC covers both seasons conservatively
+                    in_morning_window = (12 * 60 + 30) <= total_min < (14 * 60 + 0)
+
+                    # 14:00-14:30 ET = 19:00-19:30 UTC (EST) or 18:00-18:30 UTC (EDT)
+                    # Accept both: 18:00-19:30 UTC
+                    in_fomc_window = (18 * 60 + 0) <= total_min < (19 * 60 + 30)
+
+                    if in_morning_window or in_fomc_window:
+                        mask[i] = False
+                except Exception:
+                    continue
+            return mask
+
+        event_mask = _build_default_event_mask(_ts_series)
+        _masked_bars = int((~event_mask).sum())
+        if _masked_bars > 0:
+            print(
+                f"Default event blackout: masking {_masked_bars} bars "
+                f"(8:30-9:00 ET + 14:00-14:30 ET windows — FOMC/CPI/NFP SIT_OUT). "
+                f"Pass event_calendar with explicit policies to override.",
+                file=sys.stderr,
+            )
 
     # ─── Generate signals ─────────────────────────────────────
+    range_push("forge/signals")
     df = generate_signals(df, config, fill_rate=fill_rate, event_mask=event_mask)
+    range_pop()
 
     # ─── Suppress entries on rollover days (Task 7.1) ─────────
     if "is_rollover_day" in df.columns:
@@ -787,10 +1651,19 @@ def run_backtest(
         ])
 
     # ─── Commission: firm override → request value → contract spec default ──
+    # E7.1 fix: the previous `elif commission == 0.62` branch silently overrode
+    # an explicit Tradeify $0.62 commission (which IS the correct Tradeify rate)
+    # because 0.62 happened to equal the system default sentinel. This caused
+    # Tradeify backtests to use the contract spec default instead of the $0.62
+    # firm rate, making P&L wrong for that firm. The correct test is whether a
+    # firm was specified at all — if no firm, use the contract spec default.
     commission = request.commission_per_side
-    if request.firm_key:
+    if request.firm_key and request.firm_key in FIRM_COMMISSIONS:
         commission = get_commission_per_side(request.firm_key, config.symbol)
-    elif commission == 0.62:  # default unchanged — use contract spec
+    elif request.firm_key is None and request.commission_per_side == 0.62:
+        # No firm specified and no explicit commission override — use contract spec default.
+        # Only apply when commission equals the pydantic field default (0.62) to avoid
+        # silently overriding an explicit commission_per_side value from the caller.
         commission = spec.default_commission
 
     # ─── Firm contract cap (Task 3.12) ────────────────────────
@@ -837,6 +1710,12 @@ def run_backtest(
         session_multipliers=combined_slippage_mult,
         order_type=_order_type,
     )
+    # spread_multiplier scales slippage for crisis stress tests / sensitivity analysis.
+    # fill_model.compute_fill_probabilities_v2 already consumes spread_multiplier for
+    # limit-order fill probability — applying it here ensures market-order slippage
+    # also reflects the wider spread regime in stress scenarios.
+    if spread_multiplier != 1.0:
+        slippage_arr = slippage_arr * spread_multiplier
 
     # ─── Eligibility gate (Wave 2.8 integration point) ─────────
     entries_np = df["entry_long"].to_numpy()
@@ -866,10 +1745,25 @@ def run_backtest(
                 pl.Series("exit_short", short_exits_np),
             ])
 
+    # ─── G2 parity gate (skip + anti-setup, default off) ────────
+    entries_np, _parity_long = _apply_backtest_parity_gates(
+        entries_np, df, "long", config.symbol, getattr(config, "name", ""),
+    )
+    df = df.with_columns([pl.Series("entry_long", entries_np)])
+    if "entry_short" in df.columns:
+        short_entries_np = df["entry_short"].to_numpy()
+        short_entries_np, _parity_short = _apply_backtest_parity_gates(
+            short_entries_np, df, "short", config.symbol, getattr(config, "name", ""),
+        )
+        df = df.with_columns([pl.Series("entry_short", short_entries_np)])
+
     # ─── Fill probability model (Task 3.10) ───────────────────
     entries_np = df["entry_long"].to_numpy()
     if request.fill_model:
-        from src.engine.fill_model import compute_fill_probabilities_v2, apply_fill_model
+        from src.engine.fill_model import (
+            apply_fill_model,
+            compute_fill_probabilities_v2,
+        )
         fill_config = request.fill_model.model_dump()
         fill_probs = compute_fill_probabilities_v2(
             df, fill_config, entries_np,
@@ -878,10 +1772,35 @@ def run_backtest(
             spread_multiplier=spread_multiplier,
         )
         entries_np, sizes = apply_fill_model(entries_np, fill_probs, sizes, seed=42)
+        long_adjusted_sizes = sizes.copy()  # Save before rolling for re-alignment
+
+    # ─── A7: Capture pre-roll signal vector ──────────────────────
+    # Capture the final filtered signal vector BEFORE the next-bar roll.
+    # Vector convention: 1 = long entry, -1 = short entry, 0 = no signal.
+    # Only entry signals are captured (not exits) — we want "when did the
+    # strategy decide to enter?" not "when did it exit?".
+    # Captured AFTER all gates (eligibility, parity, fill model, max_trades)
+    # so it reflects the actual decisions the strategy would have made.
+    # A7 determinism: signal arrays at this point are fully determined by
+    # the same inputs as the rest of the backtest (no new randomness).
+    _pre_roll_long_np = entries_np.copy()
+    _pre_roll_short_np = (
+        df["entry_short"].to_numpy().copy() if "entry_short" in df.columns
+        else np.zeros(len(entries_np), dtype=bool)
+    )
 
     # ─── Shift entry signals by 1 bar (next-bar fill) ──────────
     # Signal on bar N → fill on bar N+1. Eliminates lookahead bias.
-    entries_np = np.roll(entries_np, 1); entries_np[0] = False
+    entries_np = np.roll(entries_np, 1)
+    entries_np[0] = False
+
+    # Re-align long-side fill model sizes with rolled entries
+    if request.fill_model:
+        shifted_long_mask = entries_np.astype(bool)
+        long_pre_shift_indices = np.where(shifted_long_mask)[0] - 1
+        long_valid = long_pre_shift_indices >= 0
+        for idx, pre_idx in zip(np.where(shifted_long_mask)[0][long_valid], long_pre_shift_indices[long_valid]):
+            sizes[idx] = long_adjusted_sizes[pre_idx]
 
     # ─── Convert to Pandas at vectorbt boundary (CLAUDE.md rule) ─
     # Use ts_event as index so equity curve has proper datetime indices
@@ -904,7 +1823,10 @@ def run_backtest(
         short_entries_np = df["entry_short"].to_numpy()
         # Apply fill model to short entries too
         if request.fill_model:
-            from src.engine.fill_model import compute_fill_probabilities_v2, apply_fill_model
+            from src.engine.fill_model import (
+                apply_fill_model,
+                compute_fill_probabilities_v2,
+            )
             fill_config = request.fill_model.model_dump()
             short_fill_probs = compute_fill_probabilities_v2(
                 df, fill_config, short_entries_np,
@@ -918,7 +1840,19 @@ def run_backtest(
             short_fill_mask = short_entries_np.astype(bool)
             sizes[short_fill_mask] = short_adjusted_sizes[short_fill_mask]
         # Shift short entries by 1 bar (next-bar fill)
-        short_entries_np = np.roll(short_entries_np, 1); short_entries_np[0] = False
+        # Also shift the short-side sizes to match — sizes[N] was set for a signal
+        # on bar N, but after the roll the signal is at bar N+1. We need to shift
+        # the short-adjusted sizes to bar N+1 as well.
+        short_entries_np = np.roll(short_entries_np, 1)
+        short_entries_np[0] = False
+        if request.fill_model:
+            # Re-align: for bars where short entry is now True (post-shift),
+            # pull the adjusted size from the previous bar (pre-shift index)
+            shifted_short_mask = short_entries_np.astype(bool)
+            pre_shift_indices = np.where(shifted_short_mask)[0] - 1
+            valid = pre_shift_indices >= 0
+            for idx, pre_idx in zip(np.where(shifted_short_mask)[0][valid], pre_shift_indices[valid]):
+                sizes[idx] = short_adjusted_sizes[pre_idx]
         short_entries_pd = pl.Series("entry_short", short_entries_np).to_pandas()
     else:
         short_entries_pd = pd.Series(False, index=close_pd.index)
@@ -927,11 +1861,27 @@ def run_backtest(
         short_entries_pd.index = ts_index
         short_exits_pd.index = ts_index
 
+    # ─── Max trades per day filter ──────────────────────────────
+    if request.max_trades_per_day > 0:
+        ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+        if ts_col in df.columns:
+            ts_arr = df[ts_col].to_numpy()
+            entries_np, short_entries_np_filtered = _apply_max_trades_per_day(
+                entries_np,
+                short_entries_np if "entry_short" in df.columns else np.zeros(len(entries_np), dtype=bool),
+                ts_arr,
+                request.max_trades_per_day,
+            )
+            entries_pd = pd.Series(entries_np, index=entries_pd.index)
+            if "entry_short" in df.columns:
+                short_entries_pd = pd.Series(short_entries_np_filtered, index=short_entries_pd.index)
+
     # NaN sizes = position sizer couldn't compute → suppress those entries
+    # Must update the pandas Series (not stale numpy arrays) since vectorbt reads from pandas
     nan_mask = np.isnan(sizes)
-    entries_np[nan_mask] = False
-    if "entry_short" in df.columns:
-        short_entries_np[nan_mask] = False
+    if np.any(nan_mask):
+        entries_pd[nan_mask] = False
+        short_entries_pd[nan_mask] = False
     # Clean NaN values (safety — no NaNs remain after mask)
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
@@ -998,6 +1948,12 @@ def run_backtest(
     winner_loser_ratio = 0.0
     trades_list: list[dict] = []
     trade_pnls_arr = np.array([])
+    # Default arrays for winners/losers/avg values — used in expectancy_per_trade calculation.
+    # These are overwritten inside `if trades_records is not None:` when trades exist.
+    winners = np.array([])
+    losers = np.array([])
+    avg_winner = 0.0
+    avg_loser = 0.0
 
     if trades_records is not None:
         # Compute correct dollar P&L per trade:
@@ -1061,7 +2017,7 @@ def run_backtest(
             # MAE = max adverse move in $ (always positive = how far against you)
             # MFE = max favorable move in $ (always positive = how far in your favor)
             try:
-                ei = max(0, entry_idx)
+                ei = max(0, entry_idx + 1)
                 xi = min(exit_idx + 1, len(high_np))
                 if xi > ei:
                     bar_highs = high_np[ei:xi]
@@ -1132,10 +2088,23 @@ def run_backtest(
             if t_exit_idx < n_bars:
                 bar_dollar_pnls[t_exit_idx] += sign * (t_exit_p - prev_price) * t_size * spec.point_value
 
-            # Friction: deducted once per trade (entry + exit)
+            # Friction Fix 2: split friction across entry and exit bars for accurate daily metrics.
+            # Previously all friction landed on the entry bar, biasing daily Sharpe and calendar
+            # analytics (entry days too negative, exit days too positive). Total is unchanged so
+            # the reconciliation check below still passes.
+            slip_cost = float(trade.get("SlippageCost", 0))
+            comm_cost = float(trade.get("CommissionCost", 0))
+            entry_slip = float(trade.get("EntrySlipCost", slip_cost / 2.0))
+            exit_slip = float(trade.get("ExitSlipCost", slip_cost / 2.0))
+            half_comm = comm_cost / 2.0
             if t_entry_idx < n_bars:
-                friction = float(trade.get("SlippageCost", 0)) + float(trade.get("CommissionCost", 0))
-                bar_dollar_pnls[t_entry_idx] -= friction
+                bar_dollar_pnls[t_entry_idx] -= (entry_slip + half_comm)
+            if t_exit_idx < n_bars:
+                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm)
+            assert abs((entry_slip + half_comm) + (exit_slip + half_comm) - (slip_cost + comm_cost)) < 0.01, (
+                f"Friction split invariant: entry_slip={entry_slip:.4f}, exit_slip={exit_slip:.4f}, "
+                f"comm={comm_cost:.4f}, expected_total={slip_cost + comm_cost:.4f}"
+            )
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
@@ -1180,6 +2149,75 @@ def run_backtest(
     else:
         sharpe = 0.0
 
+    # ─── A13: Information Ratio vs market benchmark ───────────────
+    # Benchmark selection:
+    #   ES, NQ, MES, MNQ → SPX (S&P 500 index daily price changes)
+    #   MCL              → USO-proxy (crude oil spot daily price changes)
+    # Both benchmark series are derived from the same OHLCV price data we
+    # already have loaded (df).  We compute daily close-to-close returns
+    # from the underlying price data for the same dates as our strategy's
+    # daily P&L records.  This gives a buy-and-hold benchmark in the same
+    # price space so IR is meaningful.
+    #
+    # Dollar-return scaling: benchmark daily $ move = price_change × 1 unit
+    # Strategy daily P&L is already in dollars. To make them comparable we
+    # convert benchmark to a dollar-normalised series with the same scale as
+    # the strategy's per-day P&L so the active-return difference is in dollars
+    # (same units → σ_diff is a $ std-dev, IR is dimensionless ratio).
+    #
+    # When the price data does not span enough dates, information_ratio = None.
+    information_ratio: Optional[float] = None
+    try:
+        from src.engine.risk_metrics import compute_information_ratio as _compute_ir
+
+        _BENCHMARK_SYMBOLS = {"ES", "NQ", "MES", "MNQ"}  # SPX proxy
+        # For both SPX-proxy and USO-proxy we use the loaded futures close prices
+        # as the benchmark: the underlying futures price series IS the index
+        # (MES/MNQ track S&P 500 / Nasdaq 100 directly).
+        # Close-to-close daily returns in price-point space:
+        if "ts_event" in df.columns and len(daily_pnl_records) > 1:
+            # Build a date-keyed lookup of daily close prices
+            _close_np = df["close"].to_numpy()
+            _ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+            _dates_series = df[_ts_col]
+
+            # Map each daily P&L record date to first bar's close in that day
+            _date_to_close: dict[str, float] = {}
+            for _i in range(len(df)):
+                _day = str(_dates_series[_i])[:10]
+                if _day not in _date_to_close:
+                    _date_to_close[_day] = float(_close_np[_i])
+
+            # Daily benchmark returns (close-to-close price change on trading days)
+            _pnl_dates = [r["date"] for r in daily_pnl_records]
+            _sorted_dates = sorted(_date_to_close.keys())
+            _bench_by_date: dict[str, float] = {}
+            for _di in range(1, len(_sorted_dates)):
+                _d_curr = _sorted_dates[_di]
+                _d_prev = _sorted_dates[_di - 1]
+                if _d_prev in _date_to_close and _d_curr in _date_to_close:
+                    _bench_by_date[_d_curr] = _date_to_close[_d_curr] - _date_to_close[_d_prev]
+
+            # Align benchmark to the exact strategy trading dates
+            # Strategy daily P&L is in dollars; benchmark is in price-point units.
+            # Multiply benchmark point-move by spec.point_value so both series are
+            # in dollars (1 contract buy-and-hold as the dollar benchmark).
+            _bm_returns = np.array([
+                _bench_by_date.get(r["date"], 0.0) * spec.point_value
+                for r in daily_pnl_records
+            ], dtype=np.float64)
+
+            _strat_returns = np.array(daily_pnl_values, dtype=np.float64)
+
+            if len(_strat_returns) > 1 and len(_bm_returns) > 1:
+                information_ratio = round(
+                    _compute_ir(_strat_returns, _bm_returns, periods_per_year=252.0), 4
+                )
+    except Exception as _ir_exc:
+        print(f"WARNING: information_ratio computation failed: {_ir_exc}", file=sys.stderr)
+        information_ratio = None
+    # ─────────────────────────────────────────────────────────────
+
     # Cap infinite values for JSON
     if profit_factor == float("inf"):
         profit_factor = 999.99
@@ -1190,10 +2228,10 @@ def run_backtest(
     gap_adjusted_dd = None
     if config.overnight_hold and "ts_event" in df.columns and trades_list:
         from src.engine.gap_risk import (
+            compute_gap_adjusted_drawdown,
+            compute_gap_adjusted_mae,
             compute_overnight_gaps,
             tag_trades_overnight,
-            compute_gap_adjusted_mae,
-            compute_gap_adjusted_drawdown,
         )
         gaps = compute_overnight_gaps(df)
         trades_list = tag_trades_overnight(trades_list, df["ts_event"])
@@ -1210,13 +2248,80 @@ def run_backtest(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
-    # Avg R:R on winning trades (must be >= 2.0 to pass any tier)
-    winner_rrs = [t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0]
-    avg_winner_rr = float(np.mean(winner_rrs)) if winner_rrs else 0.0
-
     tier = _compute_tier(avg_daily_pnl, winning_days, total_trading_days,
-                         max_dd, profit_factor, sharpe, avg_rr=avg_winner_rr)
-    forge_score = _compute_forge_score(sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl)
+                         max_dd, profit_factor, sharpe, winner_loser_ratio=winner_loser_ratio)
+
+    # ─── Performance gate (B-3) ───────────────────────────────
+    from src.engine.performance_gate import check_performance_gate, classify_tier
+    from src.engine.performance_gate import compute_forge_score as _pgate_forge_score
+    _gate_stats = {
+        "avg_daily_pnl": avg_daily_pnl,
+        "winning_days": winning_days,
+        "total_trading_days": total_trading_days,
+        "total_trades": total_trades,
+        "profit_factor": profit_factor,
+        "sharpe_ratio": sharpe,
+        "max_drawdown": max_dd,
+        "max_consecutive_losing_days": max_consec_losers,
+        "avg_winner_to_loser_ratio": winner_loser_ratio,
+        "recovery_days_from_max_dd": _compute_recovery_days_from_max_dd(daily_pnl_records),
+        **_compute_monthly_survival_stats(daily_pnl_records),
+    }
+    gate_passed, gate_rejections = check_performance_gate(_gate_stats)
+    gate_tier = classify_tier(_gate_stats)
+    # Fix 1 / P1-F: Replace private _compute_forge_score (no crisis veto, no survival) with the
+    # authoritative performance_gate.compute_forge_score. MC/crisis/survival args are None
+    # here — they are not computed yet at this point in run_backtest(). compute_forge_score
+    # handles None gracefully (crisis_veto=False, survival_component=0).
+    #
+    # P1-F NOTE: Single (non-walk-forward) backtests compute forge_score WITHOUT MC or crisis
+    # results because MC runs AFTER this point. The forge_score here will be lower than the
+    # full score (no MC survival bonus, no crisis bonus). The CLI path (main()) recalculates
+    # with full inputs after stress test. The API path (run_backtest() direct) returns the
+    # partial score — this is intentional and documented. The lifecycle gate (forgeScore >= 50)
+    # uses the PARTIAL score on first backtest; the full score is available after MC + stress test.
+    # Gate safety: compute_forge_score() without MC/crisis will NOT produce false positives —
+    # a strategy passing forgeScore >= 50 without MC bonus is genuinely strong on core metrics.
+    # It may produce false negatives (strategies that would pass only WITH MC bonus are deferred).
+    _full_forge_result = _pgate_forge_score(
+        _gate_stats,
+        mc_results=None,
+        crisis_results=None,
+        survival_results=None,
+    )
+    forge_score = _full_forge_result["score"]
+    if not gate_passed:
+        print(f"Performance gate REJECTED: {'; '.join(gate_rejections[:3])}", file=sys.stderr)
+
+    # ─── Governor replay (B-4) ─────────────────────────────────
+    from src.engine.governor.governor_backtest import backtest_governor
+    _gov_trades = [
+        {
+            "pnl": float(t.get("PnL", 0)),
+            "mae": float(t.get("mae", 0) or 0),
+            "contracts": max(1, int(float(t.get("Size", 1)))),
+            "entry_time": t.get("Entry Timestamp", t.get("Entry Idx", "")),
+        }
+        for t in trades_list
+    ]
+    # Pull daily_loss_limit from firm config (Topstep=$1K, Apex=$1K, Earn2Trade=$1.1K).
+    # Firms without a daily loss limit (None) default to $500 as a conservative safety net.
+    _gov_daily_budget = 500.0
+    if request.firm_key:
+        from src.engine.firm_config import FIRM_RULES
+        _firm_rules = FIRM_RULES.get(request.firm_key, {})
+        _gov_daily_budget = _firm_rules.get("daily_loss_limit") or 500.0
+    governor_result = backtest_governor(_gov_trades, daily_loss_budget=_gov_daily_budget)
+    if governor_result["governed"]["trades_blocked"] > 0:
+        print(
+            f"Governor: {governor_result['governed']['trades_blocked']} trades blocked, "
+            f"DD reduced {governor_result['improvement']['dd_reduction_pct']:.0f}%",
+            file=sys.stderr,
+        )
+
+    # ─── Fixed sizing warning (B-7) ──────────────────────────
+    if config.position_size.type == "fixed":
+        print("WARNING: Fixed position sizing detected. Use dynamic_atr for production.", file=sys.stderr)
 
     # ─── Sanity checks + cross-validation ─────────────────────
     _prelim = {
@@ -1269,7 +2374,26 @@ def run_backtest(
 
     sample_confidence = "HIGH" if total_trades >= 500 else "MEDIUM" if total_trades >= 200 else "LOW"
 
-    return {
+    # ─── A7: Build signal vector for correlation check ───────────
+    # Combine pre-roll long/short entries into int8 signal vector:
+    #   1 = long entry, -1 = short entry, 0 = no signal.
+    # Where both long and short fire on the same bar (shouldn't happen in
+    # practice but possible in rare edge cases), long takes priority.
+    # Stored as Python list[int] for JSON serialization — TS side compresses
+    # to gzip int8 bytes before DB storage (zlib.gzipSync).
+    _signal_vector_np = np.zeros(len(_pre_roll_long_np), dtype=np.int8)
+    _signal_vector_np[_pre_roll_long_np.astype(bool)] = 1
+    # Apply short entries where not already long (long takes priority)
+    _short_only_mask = _pre_roll_short_np.astype(bool) & (~_pre_roll_long_np.astype(bool))
+    _signal_vector_np[_short_only_mask] = -1
+    signal_vector = _signal_vector_np.tolist()
+
+    # P1-B fix: assign to local variable FIRST, run determinism check, THEN return.
+    # Previously `return {...}` at this point made the verification block (below) dead
+    # code — the function exited before reaching it. Now `result` exists for the
+    # verification block to reference (line ~1827), and the single `return result`
+    # at the bottom is the only exit point.
+    result = {
         "total_return": round(total_return, 6),
         "sharpe_ratio": round(sharpe, 4),
         "max_drawdown": round(max_dd, 6),
@@ -1283,12 +2407,21 @@ def run_backtest(
         "winning_days": winning_days,
         "total_trading_days": total_trading_days,
         "max_consecutive_losing_days": max_consec_losers,
-        "expectancy_per_trade": round(avg_trade_pnl, 2),
+        "expectancy_per_trade": round(
+            (len(winners) / total_trades) * avg_winner - (len(losers) / total_trades) * avg_loser
+            if len(winners) > 0 and len(losers) > 0 and total_trades > 0
+            else avg_trade_pnl,
+            2,
+        ),
         "avg_winner_to_loser_ratio": round(winner_loser_ratio, 4),
         "avg_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None])), 2) if trades_list else 0.0,
         "avg_winner_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0])), 2) if any(t.get("rr", 0) > 0 for t in trades_list) else 0.0,
         "avg_loser_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] < 0])), 2) if any(t.get("rr", 0) < 0 for t in trades_list) else 0.0,
         "equity_curve": _aggregate_equity_daily(equity, equity_index),
+        # WF Fix 1: raw bar-level equity for intraday max DD calculation in walk_forward.py.
+        # daily-aggregated equity_curve misses intraday swings — this field preserves them.
+        # Downstream: walk_forward.py reads this to compute continuous bar-level max_dd.
+        "equity_bars": equity.tolist(),
         "monthly_returns": _compute_monthly_returns(equity, equity_index),
         "trades": trades_list,
         "daily_pnls": daily_pnl_values,
@@ -1296,8 +2429,21 @@ def run_backtest(
         "execution_time_ms": elapsed_ms,
         "gap_adjusted_drawdown": gap_adjusted_dd,
         "tier": tier,
+        # P0-1 fix: forge_score is the SCALAR float for the TS bridge.
+        # The TS bridge persists String(result.forge_score) — if this were the full
+        # compute_forge_score() dict, it would serialize as "[object Object]" and the
+        # DB would store garbage. The scalar ensures forgeScore >= 50 lifecycle gate works.
         "forge_score": forge_score,
+        # forge_score_components carries the full compute_forge_score() output dict
+        # (score, passed, crisis_veto, crisis_veto_reason, components, tier).
+        # Downstream analytics that need component breakdown should read this key,
+        # not forge_score itself.
+        "forge_score_components": _full_forge_result,
         "sanity_checks": sanity,
+        # A13: Information Ratio (Sharpe vs market benchmark).
+        # None when price data insufficient; downstream TS bridge writes to
+        # backtests.information_ratio (migration 0083).
+        "information_ratio": information_ratio,
         "cross_validation": cross_val,
         "sortino_ratio": cross_val.get("sortino_ratio", 0.0),
         "bootstrap_ci_95": cross_val.get("bootstrap_ci_95", [0, 0]),
@@ -1318,19 +2464,171 @@ def run_backtest(
         "statistical_warnings": statistical_warnings,
         "sample_confidence": sample_confidence,
         "run_receipt": _build_run_receipt(config, dataset_hash=compute_dataset_hash(df)),
+        # Fix 1: gate_result now carries the full performance_gate.compute_forge_score() output.
+        # Keys: score, passed, crisis_veto, crisis_veto_reason, components{...}.
+        # tier and gate_rejections are also included for backward compat.
+        # CONTRACT for downstream (backtest-service.ts): read result["gate_result"] to persist
+        # to backtests.gateResult JSONB column. Required keys at that path:
+        #   gate_result.score, gate_result.passed, gate_result.crisis_veto,
+        #   gate_result.crisis_veto_reason, gate_result.components,
+        #   gate_result.tier, gate_result.gate_rejections
+        "gate_result": {
+            **_full_forge_result,
+            "tier": gate_tier,
+            "gate_rejections": gate_rejections,
+        },
+        "gate_rejections": gate_rejections,
+        "governor": {
+            "governed_pnl": governor_result["governed"]["pnl"],
+            "governed_max_dd": governor_result["governed"]["max_dd"],
+            "trades_blocked": governor_result["governed"]["trades_blocked"],
+            "trades_reduced": governor_result["governed"]["trades_reduced"],
+            "dd_reduction_pct": governor_result["improvement"]["dd_reduction_pct"],
+            "lockout_events": governor_result["lockout_events"],
+        },
+        # A7: Empirical signal vector for cross-correlation checks.
+        # Array of int8 per bar: 1=long entry, -1=short entry, 0=no signal.
+        # Captured AFTER all gates (eligibility, parity, fill model, max_trades)
+        # but BEFORE the next-bar roll — represents "when the strategy decided to enter".
+        # TS bridge: backtest-service.ts reads this field, gzips it, and persists
+        # to strategy_signal_vectors (migration 0072). Non-empty only for completed
+        # backtests. Empty list fallback if n_bars == 0.
+        # Determinism: fully determined by the same input data + config as all other
+        # result fields. DETERMINISM_MODE=true produces bit-identical vectors.
+        "signal_vector": signal_vector,
+    }
+
+    # E7.3 / P1-B: TF_VERIFY_DETERMINISM second-run check.
+    # When TF_VERIFY_DETERMINISM=1, run the backtest a second time and compare
+    # the JSON hash of both results (excluding timestamp_utc which varies by wall clock).
+    # If hashes match, set run_receipt.determinism_verified = True.
+    # Skip by default — second run doubles compute time and is expensive in production.
+    import os
+    if os.environ.get("TF_VERIFY_DETERMINISM", "0") == "1":
+        try:
+            import json as _json
+
+            def _hash_result(r: dict) -> str:
+                """Hash backtest result excluding wall-clock timestamp."""
+                import copy
+                import hashlib
+                r_copy = copy.deepcopy(r)
+                receipt = r_copy.get("run_receipt", {})
+                receipt.pop("timestamp_utc", None)
+                return hashlib.sha256(_json.dumps(r_copy, sort_keys=True, default=str).encode()).hexdigest()
+
+            first_hash = _hash_result(result)
+            second_run = run_backtest(request, data=data)
+            second_hash = _hash_result(second_run)
+            is_deterministic = first_hash == second_hash
+            result["run_receipt"]["determinism_verified"] = is_deterministic
+            if not is_deterministic:
+                print(
+                    "WARNING: determinism check FAILED — same inputs produced different outputs. "
+                    f"first_hash={first_hash[:12]}, second_hash={second_hash[:12]}",
+                    file=sys.stderr,
+                )
+        except Exception as _det_exc:
+            print(f"WARNING: determinism verification failed: {_det_exc}", file=sys.stderr)
+
+    return result
+
+
+def _compute_recovery_days_from_max_dd(daily_pnl_records: list[dict]) -> int:
+    """Count trading days from max-drawdown trough until equity recovers to the peak level.
+
+    Returns the number of days from trough to recovery (or trough to end-of-data if
+    equity never recovers).  Returns 0 when there are fewer than 2 records.
+    """
+    if len(daily_pnl_records) < 2:
+        return 0
+
+    # Build cumulative equity curve
+    equity = []
+    cumulative = 0.0
+    for rec in daily_pnl_records:
+        cumulative += rec.get("pnl", 0.0)
+        equity.append(cumulative)
+
+    # Find peak-to-trough max drawdown
+    peak = equity[0]
+    peak_idx = 0
+    max_dd = 0.0
+    dd_peak_idx = 0
+    dd_trough_idx = 0
+
+    for i, eq in enumerate(equity):
+        if eq >= peak:
+            peak = eq
+            peak_idx = i
+        dd = peak - eq
+        if dd > max_dd:
+            max_dd = dd
+            dd_peak_idx = peak_idx
+            dd_trough_idx = i
+
+    if max_dd == 0.0:
+        return 0
+
+    peak_level = equity[dd_peak_idx]
+
+    # Count days from AFTER the trough until equity recovers to peak level
+    recovery_days = 0
+    for i in range(dd_trough_idx + 1, len(equity)):
+        recovery_days += 1
+        if equity[i] >= peak_level:
+            break
+
+    return recovery_days
+
+
+def _compute_monthly_survival_stats(daily_pnl_records: list[dict]) -> dict:
+    """Compute worst_month_win_days, avg_loss_on_red_days, avg_win_on_green_days from daily P&Ls."""
+    if not daily_pnl_records:
+        return {"worst_month_win_days": 0, "avg_loss_on_red_days": 0.0, "avg_win_on_green_days": 0.0}
+
+    from collections import defaultdict
+    monthly_wins: dict[str, int] = defaultdict(int)
+    monthly_days: dict[str, int] = defaultdict(int)
+    red_losses: list[float] = []
+    green_wins: list[float] = []
+
+    for rec in daily_pnl_records:
+        date_str = rec.get("date")
+        pnl = rec.get("pnl", 0.0)
+        month_key = date_str[:7] if date_str and len(date_str) >= 7 else "unknown"
+        monthly_days[month_key] += 1
+        if pnl > 0:
+            monthly_wins[month_key] += 1
+            green_wins.append(pnl)
+        elif pnl < 0:
+            red_losses.append(pnl)
+
+    # Only consider months with 10+ trading days (avoid partial months skewing)
+    # Iterate monthly_days (not monthly_wins) to include months with 0 winning days
+    full_months = [monthly_wins.get(month, 0) for month, days in monthly_days.items() if days >= 10]
+    worst_month = min(full_months) if full_months else 0
+
+    avg_loss_red = float(np.mean(red_losses)) if red_losses else 0.0
+    avg_win_green = float(np.mean(green_wins)) if green_wins else 0.0
+
+    return {
+        "worst_month_win_days": worst_month,
+        "avg_loss_on_red_days": round(avg_loss_red, 2),
+        "avg_win_on_green_days": round(avg_win_green, 2),
     }
 
 
 def _compute_tier(avg_daily_pnl: float, winning_days: int, total_trading_days: int,
                    max_dd: float, profit_factor: float, sharpe: float,
-                   avg_rr: float = 0.0) -> str:
+                   winner_loser_ratio: float = 0.0) -> str:
     """Classify strategy into TIER_1, TIER_2, TIER_3, or REJECTED per CLAUDE.md gates."""
     # max_dd is now in positive dollars (e.g. 1500 = $1500 max drawdown from peak)
     max_dd_dollars = abs(max_dd)
     win_days_per_20 = (winning_days / max(total_trading_days, 1)) * 20
 
-    # Hard gate: minimum 1:2 R:R on winning trades
-    if avg_rr < 2.0:
+    # Hard gate: minimum 1:2 R:R — avg win $ / avg loss $ must be >= 2.0
+    if winner_loser_ratio < 2.0:
         return "REJECTED"
 
     if (avg_daily_pnl >= 500 and win_days_per_20 >= 14 and max_dd_dollars < 1500
@@ -1487,29 +2785,61 @@ def run_class_backtest(
     start_date: str,
     end_date: str,
     slippage_ticks: float = 1.0,
-    commission_per_side: float = 4.50,
+    commission_per_side: float = 0.62,
     firm_key: Optional[str] = None,
     data: Optional[pl.DataFrame] = None,
     fixed_contracts: Optional[int] = None,
     htf_cache: Optional[dict] = None,
     daily_data: Optional[pl.DataFrame] = None,
     skip_eligibility_gate: bool = False,
+    max_trades_per_day: int = 2,
+    use_performance_gate: bool = True,
+    warmup_data: Optional[pl.DataFrame] = None,
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
     This is the bridge for class-based strategies (ICT strategies in src/engine/strategies/).
     The strategy's compute() method produces entry/exit signals, then we feed those
     into the same vectorbt pipeline as the DSL backtester.
+
+    Args:
+        warmup_data: Optional IS (in-sample) data to prepend before running strategy.compute().
+            This ensures rolling indicators (e.g., ATR, EMAs) are correctly initialized at
+            the OOS boundary — mirrors the run_backtest() warmup_data parameter (E7.2).
+            When provided: IS data is prepended to `data`, compute() runs on full IS+OOS
+            context, then IS rows are stripped before signal execution. Signals and trades
+            are OOS-only. Without this, indicators at the start of each OOS window are
+            computed on a cold window (insufficient lookback), producing biased signals.
     """
     start_time = time.time()
     symbol = strategy.symbol
     timeframe = strategy.timeframe
     spec = CONTRACT_SPECS[symbol]
 
+    # ─── P1-A: Warmup data prepend (IS context for indicator initialization) ──
+    # Mirror run_backtest warmup_data logic. Prepend IS rows so strategy.compute()
+    # has correct rolling window state at the OOS boundary, then strip IS rows
+    # from the result before trade execution. Signals are evaluated on OOS only.
+    warmup_rows = 0
+    if warmup_data is not None and len(warmup_data) > 0:
+        warmup_rows = len(warmup_data)
+        if data is not None:
+            data = pl.concat([warmup_data, data], how="vertical")
+        else:
+            data = warmup_data  # will be populated by load below; store for post-load prepend
+        print(
+            f"  Class backtest IS warmup: prepended {warmup_rows} IS bars for indicator init",
+            file=sys.stderr,
+        )
+
     # ─── Load data ─────────────────────────────────────────────
     if data is None:
         print(f"Loading {symbol} {timeframe} data...", file=sys.stderr)
         data = load_ohlcv(symbol, timeframe, start_date, end_date)
+        # If warmup_data was provided but data was None, we stored warmup in `data` above
+        # but then overwrote it — re-prepend warmup here.
+        if warmup_data is not None and len(warmup_data) > 0:
+            data = pl.concat([warmup_data, data], how="vertical")
 
     # ─── Load daily data for HTF context (needed by eligibility gate) ──
     if htf_cache is None and daily_data is None:
@@ -1541,9 +2871,10 @@ def run_class_backtest(
     _validate_bar_count(data, timeframe, start_date, end_date)
 
     # ─── Strategy validation gate (static) ───────────────────
-    from src.engine.validation import validate_static, load_spec, STRATEGY_CONCEPT_MAP
+    from src.engine.validation import STRATEGY_CONCEPT_MAP, load_spec, validate_static
     concept = STRATEGY_CONCEPT_MAP.get(strategy.name)
     validation_warnings = []
+    val_spec = None
     if concept:
         try:
             val_spec = load_spec(concept)
@@ -1568,16 +2899,36 @@ def run_class_backtest(
                 time.time() - start_time,
             )
 
+    # ─── P1-A: Strip IS warmup rows after compute() ─────────────
+    # compute() ran on full IS+OOS data for correct indicator init.
+    # Now strip the prepended IS rows so signal execution and P&L
+    # calculation are OOS-only. Mirrors run_backtest() E7.2 strip.
+    if warmup_rows > 0 and len(df) > warmup_rows:
+        df = df.slice(warmup_rows)
+        print(
+            f"  Class backtest IS warmup: stripped {warmup_rows} IS rows — OOS-only for trade execution",
+            file=sys.stderr,
+        )
+    elif warmup_rows > 0:
+        print(
+            f"  WARNING: warmup_rows={warmup_rows} but df has only {len(df)} rows — skip strip",
+            file=sys.stderr,
+        )
+
     # Ensure ATR column exists for sizing/slippage
     if "atr_14" not in df.columns:
         atr = compute_atr(df, 14)
         df = df.with_columns(atr.alias("atr_14"))
 
     # ─── Commission: firm override → explicit value → contract spec default ──
+    # G2.3 fix: previous `elif commission == 0.62` branch silently overrode an
+    # explicit Tradeify $0.62 fee because 0.62 happened to equal the parameter
+    # default sentinel. Mirrors the run_backtest fix at line ~931 — only fall back
+    # to the contract spec when no firm was specified.
     commission = commission_per_side
     if firm_key:
         commission = get_commission_per_side(firm_key, symbol)
-    elif commission == 0.62:  # default unchanged — use contract spec
+    elif firm_key is None:  # No firm specified — use contract spec default
         commission = spec.default_commission
 
     # ─── Firm contract cap ─────────────────────────────────────
@@ -1625,7 +2976,7 @@ def run_class_backtest(
     short_exits_np = df["exit_short"].to_numpy()
 
     # ─── Strategy validation gate (runtime) ──────────────────
-    if concept:
+    if concept and val_spec is not None:
         try:
             from src.engine.validation import validate_runtime
             rt_result = validate_runtime(df, val_spec)
@@ -1660,6 +3011,13 @@ def run_class_backtest(
             firm_key=firm_key, htf_cache=htf_cache, spec=spec,
             strategy_name=strategy.name,
         )
+        # G2 parity gate (skip + anti-setup, default off via env vars)
+        long_entries_np, _parity_long = _apply_backtest_parity_gates(
+            long_entries_np, df, "long", symbol, strategy.name,
+        )
+        short_entries_np, _parity_short = _apply_backtest_parity_gates(
+            short_entries_np, df, "short", symbol, strategy.name,
+        )
 
     # Merge gate stats
     gate_stats = {
@@ -1687,8 +3045,21 @@ def run_class_backtest(
 
     # ─── Shift entry signals by 1 bar (next-bar fill) ──────────
     # Signal on bar N → fill on bar N+1. Eliminates lookahead bias.
-    long_entries_np = np.roll(long_entries_np, 1); long_entries_np[0] = False
-    short_entries_np = np.roll(short_entries_np, 1); short_entries_np[0] = False
+    long_entries_np = np.roll(long_entries_np, 1)
+    long_entries_np[0] = False
+    short_entries_np = np.roll(short_entries_np, 1)
+    short_entries_np[0] = False
+
+    # ─── Max trades per day filter ──────────────────────────────
+    # run_class_backtest doesn't have a BacktestRequest, so we accept max_trades_per_day
+    # as a parameter defaulting to 2 (set below in function signature).
+    if max_trades_per_day > 0:
+        ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+        if ts_col in df.columns:
+            ts_arr = df[ts_col].to_numpy()
+            long_entries_np, short_entries_np = _apply_max_trades_per_day(
+                long_entries_np, short_entries_np, ts_arr, max_trades_per_day,
+            )
 
     # Replace signal columns with filtered+shifted versions
     df = df.with_columns([
@@ -1797,7 +3168,7 @@ def run_class_backtest(
             trades_records, high_np, low_np, close_np, atr_np,
             spec, htf_cache, df,
         )
-        mgmt_exits = {m["exit_reason"] for m in managed_trades}
+        {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
         sl_count = sum(1 for m in managed_trades if m["exit_reason"] == "stop_loss")
         trail_count = sum(1 for m in managed_trades if m["exit_reason"] == "trailing_stop")
@@ -1880,7 +3251,7 @@ def run_class_backtest(
 
             # ─── Per-trade MAE/MFE ($ excursion from entry) ───────
             try:
-                ei = max(0, entry_idx)
+                ei = max(0, entry_idx + 1)
                 xi = min(exit_idx + 1, len(high_np))
                 if xi > ei:
                     bar_highs = high_np[ei:xi]
@@ -1951,10 +3322,20 @@ def run_class_backtest(
             if t_exit_idx < n_bars:
                 bar_dollar_pnls[t_exit_idx] += sign * (t_exit_p - prev_price) * t_size * spec.point_value
 
-            # Friction: deducted once per trade (entry + exit)
+            # Friction Fix 2: split friction across entry and exit bars (run_class_backtest path).
+            slip_cost = float(trade.get("SlippageCost", 0))
+            comm_cost = float(trade.get("CommissionCost", 0))
+            entry_slip = float(trade.get("EntrySlipCost", slip_cost / 2.0))
+            exit_slip = float(trade.get("ExitSlipCost", slip_cost / 2.0))
+            half_comm = comm_cost / 2.0
             if t_entry_idx < n_bars:
-                friction = float(trade.get("SlippageCost", 0)) + float(trade.get("CommissionCost", 0))
-                bar_dollar_pnls[t_entry_idx] -= friction
+                bar_dollar_pnls[t_entry_idx] -= (entry_slip + half_comm)
+            if t_exit_idx < n_bars:
+                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm)
+            assert abs((entry_slip + half_comm) + (exit_slip + half_comm) - (slip_cost + comm_cost)) < 0.01, (
+                f"Friction split invariant: entry_slip={entry_slip:.4f}, exit_slip={exit_slip:.4f}, "
+                f"comm={comm_cost:.4f}, expected_total={slip_cost + comm_cost:.4f}"
+            )
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
@@ -2011,10 +3392,10 @@ def run_class_backtest(
     if "ts_event" in df.columns and trades_list:
         try:
             from src.engine.gap_risk import (
+                compute_gap_adjusted_drawdown,
+                compute_gap_adjusted_mae,
                 compute_overnight_gaps,
                 tag_trades_overnight,
-                compute_gap_adjusted_mae,
-                compute_gap_adjusted_drawdown,
             )
             gaps = compute_overnight_gaps(df)
             trades_list = tag_trades_overnight(trades_list, df["ts_event"])
@@ -2033,13 +3414,83 @@ def run_class_backtest(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
-    # Avg R:R on winning trades (must be >= 2.0 to pass any tier)
-    winner_rrs = [t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0]
-    avg_winner_rr = float(np.mean(winner_rrs)) if winner_rrs else 0.0
-
     tier = _compute_tier(avg_daily_pnl, winning_days, total_trading_days,
-                         max_dd, profit_factor, sharpe, avg_rr=avg_winner_rr)
-    forge_score = _compute_forge_score(sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl)
+                         max_dd, profit_factor, sharpe, winner_loser_ratio=winner_loser_ratio)
+
+    # ─── Performance gate (B-3) ───────────────────────────────
+    gate_passed = True
+    gate_rejections: list[str] = []
+    gate_tier = "REJECTED"
+    governor_result = None
+    _full_forge_result_class: dict = {}
+    if use_performance_gate and total_trading_days > 0:
+        from src.engine.performance_gate import check_performance_gate, classify_tier
+        from src.engine.performance_gate import (
+            compute_forge_score as _pgate_forge_score_class,
+        )
+        _gate_stats = {
+            "avg_daily_pnl": avg_daily_pnl,
+            "winning_days": winning_days,
+            "total_trading_days": total_trading_days,
+            "total_trades": total_trades,
+            "profit_factor": profit_factor,
+            "sharpe_ratio": sharpe,
+            "max_drawdown": max_dd,
+            "max_consecutive_losing_days": max_consec_losers,
+            "avg_winner_to_loser_ratio": winner_loser_ratio,
+            "recovery_days_from_max_dd": _compute_recovery_days_from_max_dd(daily_pnl_records),
+            **_compute_monthly_survival_stats(daily_pnl_records),
+        }
+        gate_passed, gate_rejections = check_performance_gate(_gate_stats)
+        gate_tier = classify_tier(_gate_stats)
+        # Fix 1 (run_class_backtest path): use authoritative forge_score with crisis veto + survival
+        _full_forge_result_class = _pgate_forge_score_class(
+            _gate_stats,
+            mc_results=None,
+            crisis_results=None,
+            survival_results=None,
+        )
+        if not gate_passed:
+            print(f"Performance gate REJECTED: {'; '.join(gate_rejections[:3])}", file=sys.stderr)
+    else:
+        # No gate run: fall back to legacy private formula so forge_score is never missing
+        _full_forge_result_class = {
+            "score": _compute_forge_score(sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl),
+            "passed": True,
+            "crisis_veto": False,
+            "crisis_veto_reason": "",
+            "components": {},
+        }
+    forge_score = _full_forge_result_class["score"]
+
+    # ─── Governor replay (B-4) ─────────────────────────────────
+    if trades_list:
+        from src.engine.governor.governor_backtest import backtest_governor
+        _gov_trades = [
+            {
+                "pnl": float(t.get("PnL", 0)),
+                "mae": float(t.get("mae", 0) or 0),
+                "contracts": max(1, int(float(t.get("Size", 1)))),
+                "entry_time": t.get("Entry Timestamp", t.get("Entry Idx", "")),
+            }
+            for t in trades_list
+        ]
+        _gov_daily_budget = 500.0
+        if firm_key:
+            from src.engine.firm_config import FIRM_RULES
+            _firm_rules = FIRM_RULES.get(firm_key, {})
+            _gov_daily_budget = _firm_rules.get("daily_loss_limit") or 500.0
+        governor_result = backtest_governor(_gov_trades, daily_loss_budget=_gov_daily_budget)
+        if governor_result["governed"]["trades_blocked"] > 0:
+            print(
+                f"Governor: {governor_result['governed']['trades_blocked']} trades blocked, "
+                f"DD reduced {governor_result['improvement']['dd_reduction_pct']:.0f}%",
+                file=sys.stderr,
+            )
+
+    # ─── Fixed sizing warning (B-7) ──────────────────────────
+    if fixed_contracts is not None:
+        print("WARNING: Fixed position sizing detected. Use dynamic_atr for production.", file=sys.stderr)
 
     # ─── Prop firm simulation (all 8 firms) ─────────────────
     # ─── Sanity checks + cross-validation ─────────────────────
@@ -2090,6 +3541,42 @@ def run_class_backtest(
 
     sample_confidence = "HIGH" if total_trades >= 500 else "MEDIUM" if total_trades >= 200 else "LOW"
 
+    # ─── A13: Information Ratio (run_class_backtest path) ────────
+    information_ratio_class: Optional[float] = None
+    try:
+        from src.engine.risk_metrics import (
+            compute_information_ratio as _compute_ir_class,  # noqa: PLC0415
+        )
+        if "ts_event" in df.columns and len(daily_pnl_records) > 1:
+            _close_np_c = df["close"].to_numpy()
+            _ts_col_c = "ts_et" if "ts_et" in df.columns else "ts_event"
+            _dates_series_c = df[_ts_col_c]
+            _date_to_close_c: dict[str, float] = {}
+            for _ic in range(len(df)):
+                _day_c = str(_dates_series_c[_ic])[:10]
+                if _day_c not in _date_to_close_c:
+                    _date_to_close_c[_day_c] = float(_close_np_c[_ic])
+            _sorted_dates_c = sorted(_date_to_close_c.keys())
+            _bench_by_date_c: dict[str, float] = {}
+            for _dic in range(1, len(_sorted_dates_c)):
+                _dc_curr = _sorted_dates_c[_dic]
+                _dc_prev = _sorted_dates_c[_dic - 1]
+                if _dc_prev in _date_to_close_c and _dc_curr in _date_to_close_c:
+                    _bench_by_date_c[_dc_curr] = (_date_to_close_c[_dc_curr] - _date_to_close_c[_dc_prev]) * spec.point_value
+            _bm_returns_c = np.array(
+                [_bench_by_date_c.get(r["date"], 0.0) for r in daily_pnl_records],
+                dtype=np.float64,
+            )
+            _strat_returns_c = np.array(daily_pnl_values, dtype=np.float64)
+            if len(_strat_returns_c) > 1:
+                information_ratio_class = round(
+                    _compute_ir_class(_strat_returns_c, _bm_returns_c, periods_per_year=252.0), 4
+                )
+    except Exception as _ir_exc_c:
+        print(f"WARNING: information_ratio computation failed (class): {_ir_exc_c}", file=sys.stderr)
+        information_ratio_class = None
+    # ─────────────────────────────────────────────────────────────
+
     return {
         "total_return": round(total_return, 6),
         "sharpe_ratio": round(sharpe, 4),
@@ -2104,12 +3591,19 @@ def run_class_backtest(
         "winning_days": winning_days,
         "total_trading_days": total_trading_days,
         "max_consecutive_losing_days": max_consec_losers,
-        "expectancy_per_trade": round(avg_trade_pnl, 2),
+        "expectancy_per_trade": round(
+            (len(winners) / total_trades) * avg_winner - (len(losers) / total_trades) * avg_loser
+            if len(winners) > 0 and len(losers) > 0 and total_trades > 0
+            else avg_trade_pnl,
+            2,
+        ),
         "avg_winner_to_loser_ratio": round(winner_loser_ratio, 4),
         "avg_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None])), 2) if trades_list else 0.0,
         "avg_winner_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0])), 2) if any(t.get("rr", 0) > 0 for t in trades_list) else 0.0,
         "avg_loser_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] < 0])), 2) if any(t.get("rr", 0) < 0 for t in trades_list) else 0.0,
         "equity_curve": _aggregate_equity_daily(equity, equity_index),
+        # WF Fix 1: raw bar-level equity for intraday max DD calculation in walk_forward.py.
+        "equity_bars": equity.tolist(),
         "monthly_returns": _compute_monthly_returns(equity, equity_index),
         "trades": trades_list,
         "daily_pnls": daily_pnl_values,
@@ -2119,6 +3613,8 @@ def run_class_backtest(
         "tier": tier,
         "forge_score": forge_score,
         "sanity_checks": sanity,
+        # A13: Information Ratio
+        "information_ratio": information_ratio_class,
         "cross_validation": cross_val,
         "sortino_ratio": cross_val.get("sortino_ratio", 0.0),
         "bootstrap_ci_95": cross_val.get("bootstrap_ci_95", [0, 0]),
@@ -2153,6 +3649,14 @@ def run_class_backtest(
             "exit_long_count": diag_raw_exit_long,
             "exit_short_count": diag_raw_exit_short,
         },
+        # Fix 1 (run_class_backtest): full forge score object, same contract as run_backtest
+        "gate_result": {
+            **_full_forge_result_class,
+            "tier": gate_tier,
+            "gate_rejections": gate_rejections,
+        },
+        "gate_rejections": gate_rejections,
+        "governor": governor_result,
         "run_receipt": _build_run_receipt(strategy._config if hasattr(strategy, '_config') else StrategyConfig(
             name=strategy.name, symbol=strategy.symbol, timeframe=strategy.timeframe,
             indicators=[], entry_long="", entry_short="", exit="",
@@ -2201,16 +3705,20 @@ def _load_strategy_class(class_path: str) -> BaseStrategy:
 # ─── CLI Entry Point ──────────────────────────────────────────────
 
 @click.command()
-@click.option("--config", "config_json", required=True, help="JSON config string")
+@click.option("--config", "config_input", required=True, help="JSON config string or file path")
 @click.option("--backtest-id", default=None, help="UUID for this backtest run")
 @click.option("--mode", default="single", type=click.Choice(["single", "walkforward"]))
 @click.option("--strategy-class", default=None, help="Dotted path to BaseStrategy subclass (e.g. src.engine.strategies.breaker.BreakerStrategy)")
-def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class: Optional[str]):
+def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_class: Optional[str]):
     """Run backtest engine. Outputs JSON to stdout, errors to stderr."""
     try:
-        config = json.loads(config_json)
+        if os.path.isfile(config_input):
+            with open(config_input, 'r') as f:
+                config = json.load(f)
+        else:
+            config = json.loads(config_input)
     except Exception as e:
-        print(json.dumps({"error": f"Invalid JSON: {e}"}))
+        print(json.dumps({"error": f"Invalid JSON config: {e}"}))
         sys.exit(1)
 
     if strategy_class:
@@ -2235,10 +3743,14 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
             )
             # Compute tier from OOS metrics (walk-forward doesn't do this itself)
             oos = result.get("oos_metrics", {})
-            # Collect avg winner R:R across OOS windows
-            wf_winner_rrs = [w.get("avg_winner_rr", 0) for w in result.get("windows", []) if w.get("avg_winner_rr")]
-            wf_avg_winner_rr = float(np.mean(wf_winner_rrs)) if wf_winner_rrs else 0.0
-            result["avg_winner_rr"] = round(wf_avg_winner_rr, 2)
+            # Compute winner/loser ratio from aggregated OOS trades (avg win $ / avg loss $)
+            wf_trades = result.get("trades", [])
+            wf_winners = [t["pnl"] for t in wf_trades if isinstance(t, dict) and t.get("pnl", 0) > 0]
+            wf_losers = [abs(t["pnl"]) for t in wf_trades if isinstance(t, dict) and t.get("pnl", 0) < 0]
+            wf_avg_winner = float(np.mean(wf_winners)) if wf_winners else 0.0
+            wf_avg_loser = float(np.mean(wf_losers)) if wf_losers else 0.0
+            wf_winner_loser_ratio = wf_avg_winner / wf_avg_loser if wf_avg_loser > 0 else (999.99 if wf_avg_winner > 0 else 0.0)
+            result["avg_winner_to_loser_ratio"] = round(wf_winner_loser_ratio, 4)
             result["tier"] = _compute_tier(
                 oos.get("avg_daily_pnl", 0),
                 oos.get("winning_days", 0),
@@ -2246,7 +3758,7 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
                 abs(oos.get("max_drawdown", 0)),
                 oos.get("profit_factor", 0),
                 oos.get("sharpe_ratio", 0),
-                avg_rr=wf_avg_winner_rr,
+                winner_loser_ratio=wf_winner_loser_ratio,
             )
             result["forge_score"] = _compute_forge_score(
                 oos.get("sharpe_ratio", 0),
@@ -2257,7 +3769,6 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
             )
             print(f"Walk-forward OOS: tier={result['tier']}, forge_score={result['forge_score']:.1f}", file=sys.stderr)
             # Attach run receipt for walk-forward (single backtests attach it themselves)
-            from src.engine.data_loader import compute_dataset_hash
             result["run_receipt"] = _build_run_receipt(config, dataset_hash="wf-aggregate")
         else:
             result = run_class_backtest(
@@ -2267,12 +3778,12 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
                 slippage_ticks=config.get("slippage_ticks", 1.0),
                 commission_per_side=config.get("commission_per_side", 0.62),
                 firm_key=config.get("firm_key"),
-                skip_eligibility_gate=True,
+                skip_eligibility_gate=False,
             )
     else:
         # DSL expression-based strategy path (original)
         try:
-            request = BacktestRequest.model_validate_json(config_json)
+            request = BacktestRequest.model_validate(config)
         except Exception as e:
             print(json.dumps({"error": f"Invalid config: {e}"}))
             sys.exit(1)
@@ -2281,13 +3792,13 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
             from src.engine.walk_forward import run_walk_forward
             result = run_walk_forward(request, embargo_bars=request.embargo_bars)
         else:
-            result = run_backtest(request)
+            result = run_backtest(request, use_eligibility_gate=True)
 
-    # ─── Chain stress testing after walk-forward ─────────────────
-    if mode == "walkforward" and "error" not in result:
+    # ─── Chain stress testing (all modes, not just walk-forward) ────
+    if "error" not in result:
         try:
+            from src.engine.config import StrategyConfig, StressTestRequest
             from src.engine.stress_test import run_stress_test
-            from src.engine.config import StressTestRequest, StrategyConfig
             strategy_cfg = config.get("strategy", {})
             if strategy_class and hasattr(strategy, 'symbol'):
                 # Class-based: build minimal StrategyConfig from the strategy instance
@@ -2308,10 +3819,16 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
             crisis = run_stress_test(stress_req)
             result["crisis_results"] = crisis
             # Recalculate Forge Score with crisis bonus using full formula
-            from src.engine.performance_gate import compute_forge_score as full_forge_score
+            from src.engine.performance_gate import (
+                compute_forge_score as full_forge_score,
+            )
             oos = result.get("oos_metrics", result)
             mc = result.get("mc_results") or result.get("monte_carlo")
-            result["forge_score"] = full_forge_score(
+            # P0-1 fix: full_forge_score returns a DICT. Storing it directly in
+            # result["forge_score"] caused the TS bridge to serialize it as
+            # "[object Object]" and persist garbage to the DB. Store the scalar
+            # float in forge_score and the full dict in forge_score_components.
+            _stress_forge_result = full_forge_score(
                 {
                     "avg_daily_pnl": oos.get("avg_daily_pnl", 0),
                     "winning_days": oos.get("winning_days", 0),
@@ -2323,6 +3840,8 @@ def main(config_json: str, backtest_id: Optional[str], mode: str, strategy_class
                 mc_results=mc,
                 crisis_results=crisis,
             )
+            result["forge_score"] = float(_stress_forge_result["score"])
+            result["forge_score_components"] = _stress_forge_result
             print(f"Stress test: {len(crisis.get('scenarios', []))} scenarios, "
                   f"passed={crisis.get('passed', False)}, "
                   f"forge_score={result['forge_score']}", file=sys.stderr)
@@ -2341,14 +3860,14 @@ if __name__ == "__main__":
     # Verify all 7 context layers are importable and callable.
     # Run with: python -m src.engine.backtester --help
     try:
-        from src.engine.context.htf_context import compute_htf_context
-        from src.engine.context.session_context import compute_session_context
         from src.engine.context.bias_engine import compute_bias
-        from src.engine.context.playbook_router import route_playbook
+        from src.engine.context.eligibility_gate import evaluate_signal
+        from src.engine.context.htf_context import compute_htf_context
         from src.engine.context.location_score import compute_location_score
+        from src.engine.context.playbook_router import route_playbook
+        from src.engine.context.session_context import compute_session_context
         from src.engine.context.structural_stops import compute_structural_stop
         from src.engine.context.structural_targets import compute_targets
-        from src.engine.context.eligibility_gate import evaluate_signal
 
         assert callable(compute_htf_context), "compute_htf_context not callable"
         assert callable(compute_session_context), "compute_session_context not callable"

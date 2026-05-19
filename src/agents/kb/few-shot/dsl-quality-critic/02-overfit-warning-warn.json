@@ -1,0 +1,34 @@
+{
+  "input": {
+    "synthesized_dsl": {
+      "name": "rsi_optimized_mes_5m",
+      "description": "RSI mean reversion on MES with optimized parameters from 800-trial Optuna search.",
+      "symbol": "MES",
+      "timeframe": "5m",
+      "direction": "long",
+      "entry_type": "mean_reversion",
+      "entry_indicator": "rsi_reversal",
+      "entry_params": { "period": 13, "oversold": 27.345, "overbought": 67.829 },
+      "entry_condition": "Long when RSI(13) closes below 27.345; close when RSI closes above 67.829.",
+      "exit_type": "indicator_signal",
+      "exit_params": { "exit_rsi": 67.829 },
+      "stop_loss_atr_multiple": 1.7,
+      "take_profit_atr_multiple": 2.853,
+      "preferred_regime": "RANGE_BOUND",
+      "session_filter": "RTH_ONLY",
+      "max_contracts": 5
+    },
+    "compile_check_result": { "compiled": true, "errors": [] }
+  },
+  "expected_output": {
+    "score": 5,
+    "accept": false,
+    "concerns": [
+      "tight_parameter_overfitting: oversold=27.345 and overbought=67.829 have 3-decimal precision — strongly suggests Optuna picked the single-best in-sample combination without robustness validation. Canonical RSI range is oversold 20-40 and overbought 60-80; values inside the range with 3-dp precision are overfit-bait.",
+      "tight_parameter_overfitting: take_profit_atr_multiple=2.853 has 3-decimal precision — same overfitting flag.",
+      "Description references Optuna 800-trial search but provides no robust-plateau evidence. Per RobotWealth/Quantpedia 2026, Optuna runs without parameter-range robustness check are NOT acceptable.",
+      "Direction=long only when preferred_regime=RANGE_BOUND — directional bias inside a range strategy is suspect; range trading typically wants both."
+    ]
+  },
+  "notes": "Warn example — strategy compiles cleanly but the parameter precision is the canonical overfitting tell. Score 5 (below the 6-accept threshold) = REJECT with explicit concerns. Critic must cite the anti-pattern by name (tight_parameter_overfitting) so audit_log forensics can trace the rejection. Critic should NOT lower score because of the long-only/RANGE_BOUND mismatch alone — that's a concern, not a kill — but combined with the 3-dp precision it pushes the strategy below threshold."
+}

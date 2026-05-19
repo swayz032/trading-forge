@@ -20,10 +20,8 @@ required_concepts:
 
 multi_instrument: true
 instrument_pairs:
-  - ["ES", "NQ"]
-  - ["NQ", "ES"]
-  - ["YM", "ES"]
-  - ["GC", "DXY"]
+  - ["MES", "MNQ"]
+  - ["MNQ", "MES"]
 
 runtime_assertions:
   - signal_count_nonzero

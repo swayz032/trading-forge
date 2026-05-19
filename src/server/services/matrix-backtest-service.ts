@@ -16,7 +16,7 @@ import { runBacktest } from "./backtest-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 
-const ALL_SYMBOLS = ["ES", "NQ", "CL"] as const;
+const ALL_SYMBOLS = ["MES", "MNQ", "MCL"] as const;
 const TIER1_TIMEFRAMES = ["30min", "1hour", "4hour", "daily"];
 const TIER2_TIMEFRAMES = ["15min", "5min"];
 const TIER3_TIMEFRAMES = ["1min"];
@@ -157,9 +157,9 @@ function pearsonCorrelation(x: number[], y: number[]): number {
 
 // Known correlation priors for futures pairs (empirical baselines)
 const KNOWN_CORRELATIONS: Record<string, number> = {
-  "CL-ES": 0.35,
-  "CL-NQ": 0.30,
-  "ES-NQ": 0.90,
+  "MCL-MES": 0.35,
+  "MCL-MNQ": 0.30,
+  "MES-MNQ": 0.90,
 };
 
 async function computeCorrelations(

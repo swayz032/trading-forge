@@ -49,7 +49,7 @@ def _make_ohlcv(n: int = 200, base: float = 4000.0, seed: int = 42) -> pl.DataFr
 def _simple_strategy():
     return StrategyConfig(
         name="Test SMA Cross",
-        symbol="ES",
+        symbol="MES",
         timeframe="daily",
         indicators=[
             IndicatorConfig(type="sma", period=10),

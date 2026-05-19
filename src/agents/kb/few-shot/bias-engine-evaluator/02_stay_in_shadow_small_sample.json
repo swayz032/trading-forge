@@ -1,0 +1,45 @@
+{
+  "_comment": "STAY_IN_SHADOW example. Insufficient sample size — data has only been accumulating 18 days.",
+  "input": {
+    "bias_decisions_sample": {
+      "count": 84,
+      "coverage_days": 18,
+      "engine_mode_distribution": { "SHADOW": 84 },
+      "hysteresis_applied_pct": 0.21,
+      "playbook_distribution": {
+        "TREND_CONTINUATION_LONG": 28,
+        "TREND_CONTINUATION_SHORT": 19,
+        "SWEEP_REVERSAL_LONG": 14,
+        "SWEEP_REVERSAL_SHORT": 11,
+        "MEAN_REVERSION_LONG": 6,
+        "MEAN_REVERSION_SHORT": 6,
+        "NO_TRADE": 0
+      }
+    },
+    "bias_calibration_curves_latest": {
+      "fit_at": "2026-05-09T06:00:00Z",
+      "window_days": 30,
+      "curve_method": "platt",
+      "curve_params": { "intercept": 0.12, "slope": 0.78 },
+      "reliability_score": 0.17,
+      "version": "1.0.0"
+    },
+    "bias_ablation_results_latest": {
+      "run_at": "2026-05-09T06:15:00Z",
+      "period_start": "2026-04-21",
+      "period_end": "2026-05-09",
+      "mode_off_sharpe": 0.0,
+      "mode_gated_sharpe": 0.09,
+      "sharpe_delta": 0.09,
+      "cost_multiplier": 2.0,
+      "pbo_score": 0.48,
+      "gpt5_verdict": null
+    }
+  },
+  "output": {
+    "verdict": "STAY_IN_SHADOW",
+    "reasoning": "Only 84 decisions over 18 days — that is not enough data to know if the engine is genuinely helping. The calibration Brier score (0.17) is in the marginal zone, and the PBO score (0.48) means there is a 48% chance the small Sharpe lift (+0.09) is just luck. Come back in 6 weeks when there are at least 200 decisions.",
+    "next_review_days": 42,
+    "evidence_summary": "18 days, 84 decisions — well below the 200-decision minimum. Calibration Brier: 0.17 (marginal — the engine's confidence numbers are not yet reliable). Sharpe lift: +0.09 (very small, could be noise). PBO: 0.48 (nearly coin-flip — can't trust this result). Wait another 6 weeks before running the harness again. The SHADOW mode is accumulating data correctly; there is no problem, just not enough history yet."
+  }
+}

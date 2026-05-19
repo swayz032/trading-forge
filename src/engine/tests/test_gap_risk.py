@@ -124,7 +124,7 @@ class TestGapAdjustedMAE:
             "hold_type": "HOLDS_OVERNIGHT",
         }]
 
-        adjusted = compute_gap_adjusted_mae(trades, gaps, symbol="ES", seed=42)
+        adjusted = compute_gap_adjusted_mae(trades, gaps, symbol="MES", seed=42)
         assert adjusted[0]["gap_adjusted_mae"] > 100.0
         assert adjusted[0]["simulated_gap"] > 0
 
@@ -141,7 +141,7 @@ class TestGapAdjustedMAE:
             "hold_type": "INTRADAY_ONLY",
         }]
 
-        adjusted = compute_gap_adjusted_mae(trades, gaps, symbol="ES", seed=42)
+        adjusted = compute_gap_adjusted_mae(trades, gaps, symbol="MES", seed=42)
         assert adjusted[0]["gap_adjusted_mae"] == 50.0
         assert adjusted[0]["simulated_gap"] == 0.0
 
@@ -157,16 +157,16 @@ class TestGapAdjustedMAE:
             "hold_type": "HOLDS_OVERNIGHT",
         }]
 
-        a1 = compute_gap_adjusted_mae(trades, gaps, symbol="ES", seed=42)
-        a2 = compute_gap_adjusted_mae(trades, gaps, symbol="ES", seed=42)
+        a1 = compute_gap_adjusted_mae(trades, gaps, symbol="MES", seed=42)
+        a2 = compute_gap_adjusted_mae(trades, gaps, symbol="MES", seed=42)
         assert a1[0]["gap_adjusted_mae"] == a2[0]["gap_adjusted_mae"]
 
 
 class TestGapAdjustedDrawdown:
     def test_overnight_increases_drawdown(self):
         """Gap-adjusted drawdown > raw drawdown for overnight strategies."""
-        # Equity curve: rising then plateau
-        equity = [50000, 100500, 101000, 101200, 101300, 101400]
+        # Equity curve: rising then small dip — gap impact should widen the dip
+        equity = [50000, 50010, 50020, 50015, 50018, 50025]
         trades = [{
             "Entry Index": 1,
             "Exit Index": 3,
@@ -177,10 +177,10 @@ class TestGapAdjustedDrawdown:
         gaps = compute_overnight_gaps(df)
 
         gap_dd = compute_gap_adjusted_drawdown(
-            equity, trades, gaps, symbol="ES", point_value=50.0, seed=42,
+            equity, trades, gaps, symbol="MES", point_value=5.0, seed=42,
         )
 
-        # Raw max DD is very small (equity always rising)
+        # Raw max DD: peak at 50020, trough at 50015 → DD = 5
         raw_equity = np.array(equity)
         raw_running_max = np.maximum.accumulate(raw_equity)
         raw_max_dd = float(np.max(raw_running_max - raw_equity))
@@ -202,7 +202,7 @@ class TestGapAdjustedDrawdown:
         gaps = compute_overnight_gaps(df)
 
         gap_dd = compute_gap_adjusted_drawdown(
-            equity, trades, gaps, symbol="ES", point_value=50.0, seed=42,
+            equity, trades, gaps, symbol="MES", point_value=5.0, seed=42,
         )
 
         # Should equal raw max DD since no overnight trades
@@ -218,9 +218,9 @@ class TestGapAdjustedDrawdown:
 
 
 class TestGapDistributions:
-    def test_all_major_symbols_covered(self):
-        """ES, NQ, CL all have gap distributions."""
-        for symbol in ["ES", "NQ", "CL"]:
+    def test_all_micro_symbols_covered(self):
+        """MES, MNQ, MCL all have gap distributions."""
+        for symbol in ["MES", "MNQ", "MCL"]:
             assert symbol in GAP_DISTRIBUTIONS
 
     def test_crisis_gaps_larger_than_normal(self):

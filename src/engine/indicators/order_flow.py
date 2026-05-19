@@ -126,18 +126,29 @@ def _compute_breaker_signals(closes, b_tops, b_bottoms, b_broken_at, b_is_bull, 
 
 # ─── Public API (Polars in/out, Numba inside) ─────────────────────
 
-def detect_bullish_ob(df: pl.DataFrame, swings: pl.DataFrame) -> pl.DataFrame:
-    """Detect Bullish Order Blocks — last bearish candle before a swing low."""
+def detect_bullish_ob(df: pl.DataFrame, swings: pl.DataFrame, lookback: int = 0) -> pl.DataFrame:
+    """Detect Bullish Order Blocks — last bearish candle before a swing low.
+
+    Args:
+        lookback: If > 0, swing indices are assumed to be shifted forward by
+                  this amount for confirmation delay.  The shift is removed
+                  before searching so the OB is found relative to the actual
+                  swing bar, not the confirmation bar.
+    """
     swing_lows = swings.filter(pl.col("type") == "low").sort("index")
     empty = pl.DataFrame(schema={"index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64, "type": pl.Utf8})
 
     if len(swing_lows) == 0:
         return empty
 
+    raw_indices = swing_lows["index"].to_numpy().astype(np.int64)
+    if lookback > 0:
+        raw_indices = np.maximum(raw_indices - lookback, 0)
+
     idx, top, bot = _find_bullish_obs(
         df["open"].to_numpy(), df["close"].to_numpy(),
         df["high"].to_numpy(), df["low"].to_numpy(),
-        swing_lows["index"].to_numpy().astype(np.int64),
+        raw_indices,
     )
 
     if len(idx) == 0:
@@ -146,18 +157,29 @@ def detect_bullish_ob(df: pl.DataFrame, swings: pl.DataFrame) -> pl.DataFrame:
     return pl.DataFrame({"index": idx, "top": top, "bottom": bot, "type": ["bullish"] * len(idx)})
 
 
-def detect_bearish_ob(df: pl.DataFrame, swings: pl.DataFrame) -> pl.DataFrame:
-    """Detect Bearish Order Blocks — last bullish candle before a swing high."""
+def detect_bearish_ob(df: pl.DataFrame, swings: pl.DataFrame, lookback: int = 0) -> pl.DataFrame:
+    """Detect Bearish Order Blocks — last bullish candle before a swing high.
+
+    Args:
+        lookback: If > 0, swing indices are assumed to be shifted forward by
+                  this amount for confirmation delay.  The shift is removed
+                  before searching so the OB is found relative to the actual
+                  swing bar, not the confirmation bar.
+    """
     swing_highs = swings.filter(pl.col("type") == "high").sort("index")
     empty = pl.DataFrame(schema={"index": pl.Int64, "top": pl.Float64, "bottom": pl.Float64, "type": pl.Utf8})
 
     if len(swing_highs) == 0:
         return empty
 
+    raw_indices = swing_highs["index"].to_numpy().astype(np.int64)
+    if lookback > 0:
+        raw_indices = np.maximum(raw_indices - lookback, 0)
+
     idx, top, bot = _find_bearish_obs(
         df["open"].to_numpy(), df["close"].to_numpy(),
         df["high"].to_numpy(), df["low"].to_numpy(),
-        swing_highs["index"].to_numpy().astype(np.int64),
+        raw_indices,
     )
 
     if len(idx) == 0:

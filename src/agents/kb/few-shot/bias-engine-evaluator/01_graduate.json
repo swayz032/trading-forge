@@ -1,0 +1,46 @@
+{
+  "_comment": "Strong-signal GRADUATE example. High Sharpe lift, low PBO, well-calibrated.",
+  "input": {
+    "bias_decisions_sample": {
+      "count": 312,
+      "coverage_days": 72,
+      "engine_mode_distribution": { "SHADOW": 312 },
+      "hysteresis_applied_pct": 0.14,
+      "playbook_distribution": {
+        "TREND_CONTINUATION_LONG": 89,
+        "TREND_CONTINUATION_SHORT": 76,
+        "SWEEP_REVERSAL_LONG": 48,
+        "SWEEP_REVERSAL_SHORT": 41,
+        "MEAN_REVERSION_LONG": 31,
+        "MEAN_REVERSION_SHORT": 27,
+        "NO_TRADE": 0
+      }
+    },
+    "bias_calibration_curves_latest": {
+      "fit_at": "2026-05-09T06:00:00Z",
+      "window_days": 90,
+      "curve_method": "platt",
+      "curve_params": { "intercept": 0.04, "slope": 0.91 },
+      "reliability_score": 0.082,
+      "version": "1.0.0"
+    },
+    "bias_ablation_results_latest": {
+      "run_at": "2026-05-09T06:15:00Z",
+      "period_start": "2018-01-01",
+      "period_end": "2026-12-31",
+      "mode_off_sharpe": 0.0,
+      "mode_gated_sharpe": 0.38,
+      "sharpe_delta": 0.38,
+      "cost_multiplier": 2.0,
+      "pbo_score": 0.22,
+      "gpt5_verdict": null
+    }
+  },
+  "output": {
+    "verdict": "GRADUATE",
+    "to_mode": "SIZING_ONLY",
+    "reasoning": "The bias engine added 0.38 Sharpe points above the unfiltered baseline over the 72-day SHADOW window (312 decisions). The calibration Brier score is 0.082, which is well-calibrated — the engine's confidence numbers reflect how often it is actually right. The overfitting probability (PBO) is 0.22, meaning there is only a 22% chance this Sharpe lift was luck. All three graduation thresholds are met.",
+    "confidence": 0.86,
+    "evidence_summary": "72 days, 312 decisions. Calibration: Brier 0.082 (good — below the 0.15 concern threshold). Sharpe lift: +0.38 (the engine helped, not just noise). PBO: 0.22 (low overfitting risk). Hysteresis rate: 14% (router is stable, not oscillating). Recommendation: flip BIAS_ENGINE_MODE from SHADOW to SIZING_ONLY. This means the bias confidence score starts scaling position size — it does not block any trades."
+  }
+}

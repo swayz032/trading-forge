@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { eq, desc, sql } from "drizzle-orm";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { monteCarloRuns, stressTestRuns, backtests, strategies } from "../db/schema.js";
 import { runMonteCarlo } from "../services/monte-carlo-service.js";
+import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
 
 export const monteCarloRoutes = Router();
 
@@ -23,6 +25,16 @@ const mcRequestSchema = z.object({
 
 // ─── POST /api/monte-carlo — Run MC on a backtest (async) ────────
 monteCarloRoutes.post("/", async (req, res) => {
+  // FIX 5 — pipeline pause gate. MC spawns a Python subprocess and writes a
+  // monte_carlo_runs row; both are pipeline-side-effects that must not run
+  // when the pipeline is PAUSED/VACATION. 423 (Locked) signals "the resource
+  // is intentionally unavailable" so callers (n8n, dashboard) can distinguish
+  // pause from real failure.
+  if (!(await isPipelineActive())) {
+    res.status(423).json({ error: "pipeline_paused" });
+    return;
+  }
+
   const parsed = mcRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -31,22 +43,17 @@ monteCarloRoutes.post("/", async (req, res) => {
 
   const { backtestId, ...options } = parsed.data;
 
-  // Fire and forget
-  runMonteCarlo(backtestId, options).catch(() => {
-    // Error already persisted to audit log
-  });
+  // Generate the MC run ID upfront to avoid race condition
+  const mcId = randomUUID();
 
-  // Return immediately with 202
-  const [latest] = await db
-    .select({ id: monteCarloRuns.id })
-    .from(monteCarloRuns)
-    .where(eq(monteCarloRuns.backtestId, backtestId))
-    .orderBy(desc(monteCarloRuns.createdAt))
-    .limit(1);
+  // Fire and forget — req.log carries the request correlation ID (typed in src/server/types/express.d.ts)
+  runMonteCarlo(backtestId, options, mcId).catch((err) => {
+    req.log.error({ err, backtestId, mcId }, "Fire-and-forget Monte Carlo simulation failed");
+  });
 
   res.status(202).json({
     message: "Monte Carlo simulation started",
-    mcId: latest?.id,
+    mcId,
   });
 });
 

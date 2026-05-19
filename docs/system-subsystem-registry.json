@@ -1,0 +1,1984 @@
+[
+  {
+    "id": "research_orchestration",
+    "domain": "research",
+    "owner_surface": "node-python-n8n",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "mixed",
+    "automation_scope": "Automates research intake, compilation, validation, and journal capture; promotion still routes through gates.",
+    "data_sources": [
+      "OpenClaw scout outputs",
+      "LLM prompts and responses",
+      "concept specs",
+      "backtest eligibility inputs"
+    ],
+    "reads_from": [
+      "system_journal",
+      "strategy_graveyard",
+      "backtests"
+    ],
+    "writes_to": [
+      "system_journal",
+      "tournament_results",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "system_journal"
+    ],
+    "audit_actions": [
+      "agent.run-strategy",
+      "agent.find-strategies",
+      "compiler.compile",
+      "compiler.validate"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard",
+      "/api/journal/stats/summary"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "/api/journal/stats/summary",
+      "agent:* SSE"
+    ],
+    "scheduler_jobs": [
+      "autonomous-scout-discovery",
+      "drain-scouted-ideas-periodic",
+      "graduated-strategy-drift-check",
+      "graveyard-pattern-extraction",
+      "pending-bucket-expiry",
+      "pipeline-resume-drain",
+      "prompt-ab-resolution",
+      "scout-drain-stall-check",
+      "scout-reject-distribution-check",
+      "scout-reject-spike-check",
+      "single-mention-bucket-sweep",
+      "tournament-staleness-check"
+    ],
+    "routes": [
+      "/api/agent",
+      "/api/agents",
+      "/api/compiler",
+      "/api/journal",
+      "/api/openai-proxy",
+      "/api/openclaw/daily-report",
+      "/api/scout",
+      "/api/search",
+      "/api/supadata",
+      "/api/tournament",
+      "/api/validation"
+    ],
+    "engine_subsystems": [
+      "compiler",
+      "strategy_memory",
+      "validation",
+      "validation_runner"
+    ],
+    "database_tables": [
+      "audit_log",
+      "llm_injection_attempts",
+      "prompt_ab_tests",
+      "prompt_versions",
+      "scout_drain_samples",
+      "strategy_dsl_features",
+      "strategy_pending_buckets",
+      "strategy_pending_mentions",
+      "system_journal",
+      "tournament_results"
+    ],
+    "learning_from": [
+      "system_journal",
+      "strategy_graveyard",
+      "audit_log"
+    ],
+    "learning_assets": [
+      "system_journal",
+      "strategy_graveyard",
+      "audit_log"
+    ],
+    "learning_writes_to": [
+      "system_journal",
+      "tournament_results"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "circuit-breaker-and-fallback",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/journal/stats/summary",
+      "audit_log:agent.run-strategy",
+      "system_journal:recent-entry"
+    ],
+    "evidence_queries": [
+      "journal-summary",
+      "recent-agent-audit-events",
+      "research-topology-health"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "strategy_lifecycle",
+    "domain": "lifecycle",
+    "owner_surface": "node",
+    "automation_mode": "manual-gated",
+    "manual_gate": "tradingview_deploy",
+    "runtime_state": "active",
+    "decision_authority": "mixed",
+    "automation_scope": "Automates promotions, demotions, retirement, and graveyard handling; TradingView deployment stays human-approved.",
+    "data_sources": [
+      "qualification metrics",
+      "paper parity metrics",
+      "graveyard history"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests",
+      "monte_carlo_runs",
+      "paper_sessions",
+      "strategy_graveyard"
+    ],
+    "writes_to": [
+      "strategies",
+      "strategy_names",
+      "strategy_graveyard",
+      "audit_log",
+      "lifecycle_transitions"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "lifecycle_transitions"
+    ],
+    "audit_actions": [
+      "strategy.lifecycle",
+      "strategy.graveyard_burial",
+      "strategy.deploy_approved"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "lifecycle:auto-check SSE",
+      "strategy:deploy-ready SSE"
+    ],
+    "scheduler_jobs": [
+      "funnel-snapshot",
+      "harsh-regime-phase-activation-check",
+      "lifecycle-auto-check",
+      "rolling-sharpe"
+    ],
+    "routes": [
+      "/api/graveyard",
+      "/api/strategies",
+      "/api/strategy-names"
+    ],
+    "engine_subsystems": [
+      "graveyard"
+    ],
+    "database_tables": [
+      "audit_log",
+      "harsh_regime_phase",
+      "lifecycle_transitions",
+      "pilot_sessions",
+      "strategies",
+      "strategy_firm_eligibility",
+      "strategy_graveyard",
+      "strategy_names"
+    ],
+    "learning_from": [
+      "strategy_graveyard",
+      "mutation_outcomes"
+    ],
+    "learning_assets": [
+      "strategy_graveyard",
+      "mutation_outcomes"
+    ],
+    "learning_writes_to": [
+      "strategies",
+      "strategy_graveyard",
+      "strategy_names"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/alerts",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "gate-and-human-approval",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "audit_log:strategy.lifecycle",
+      "paper_sessions:recent-update"
+    ],
+    "evidence_queries": [
+      "lifecycle-audit-events",
+      "paper-session-freshness",
+      "deploy-manual-gate"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "human_release",
+    "criticality": "critical"
+  },
+  {
+    "id": "backtest_qualification",
+    "domain": "qualification",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates compilation through qualification scoring, Monte Carlo, survival, and archetype output persistence.",
+    "data_sources": [
+      "compiled strategies",
+      "historical market data",
+      "walk-forward windows"
+    ],
+    "reads_from": [
+      "backtests",
+      "backtest_trades",
+      "market_data_meta"
+    ],
+    "writes_to": [
+      "backtests",
+      "backtest_trades",
+      "backtest_matrix",
+      "monte_carlo_runs",
+      "stress_test_runs",
+      "walk_forward_windows",
+      "day_archetypes",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "backtest.run",
+      "mc.run",
+      "compiler.compile",
+      "compiler.validate"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "backtest:* SSE",
+      "mc:* SSE"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/anti-setups",
+      "/api/archetypes",
+      "/api/backtests",
+      "/api/monte-carlo",
+      "/api/prevalidate",
+      "/api/shadow-rerun",
+      "/api/survival"
+    ],
+    "engine_subsystems": [
+      "anti_setups",
+      "archetypes",
+      "backtester",
+      "monte_carlo",
+      "parity_engine",
+      "survival",
+      "walk_forward"
+    ],
+    "database_tables": [
+      "audit_log",
+      "backtest_matrix",
+      "backtest_provenance",
+      "backtest_trades",
+      "backtests",
+      "day_archetypes",
+      "monte_carlo_runs",
+      "shadow_rerun_findings",
+      "stress_test_runs",
+      "walk_forward_windows"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "transaction-and-retry",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "audit_log:backtest.run",
+      "backtests:recent-completion"
+    ],
+    "evidence_queries": [
+      "recent-backtest-audit-events",
+      "backtest-table-writes",
+      "qualification-route-coverage"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "frankenstein_randomization_gate",
+    "domain": "qualification",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Randomization detection test (A4 W10): runs 100 shuffles plus 50 GBM synthetic runs against shuffled bars. If a strategy still shows edge on shuffled/GBM data the backtester likely has a lookahead/future-data leak. Hard gate on TESTING->PAPER lifecycle promotion (fail-closed).",
+    "data_sources": [
+      "backtest trade ledger",
+      "strategy DSL config"
+    ],
+    "reads_from": [
+      "backtests",
+      "backtest_trades"
+    ],
+    "writes_to": [
+      "frankenstein_test_runs",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "frankenstein_test_runs"
+    ],
+    "audit_actions": [
+      "frankenstein.run-complete",
+      "lifecycle.gate-blocked-frankenstein"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "frankenstein:* SSE"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/frankenstein"
+    ],
+    "engine_subsystems": [
+      "frankenstein_test"
+    ],
+    "database_tables": [
+      "frankenstein_test_runs"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "frankenstein_test_runs",
+      "audit_log"
+    ],
+    "recovery_mode": "fail-closed-block-promotion",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "frankenstein_test_runs:recent-completion"
+    ],
+    "evidence_queries": [
+      "frankenstein-pending-row",
+      "frankenstein-pass-rate"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "signal_correlation_gate",
+    "domain": "qualification",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Empirical signal-correlation check (A7 W11) on PAPER->DEPLOY_READY promotion. Backtester emits per-bar int8 signal vector (1=long, -1=short, 0=none); persistence layer gzip-compresses to bytea in strategy_signal_vectors. Hard gate fails closed when a candidate strategy lacks a signal vector OR has cosine similarity > 0.85 with any DEPLOYED strategy. Closes the Two Sigma 2025 failure mode (different code, identical signals). Defense-in-depth complement to C9 DSL diversity (W17, pre-backtest).",
+    "data_sources": [
+      "backtester signal_vector output",
+      "strategies.lifecycle_state"
+    ],
+    "reads_from": [
+      "strategies",
+      "strategy_signal_vectors",
+      "backtests"
+    ],
+    "writes_to": [
+      "strategy_signal_vectors",
+      "audit_log",
+      "alerts"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "strategy_signal_vectors"
+    ],
+    "audit_actions": [
+      "lifecycle.promotion_blocked_signal_correlation",
+      "alert.signal_correlation_threshold"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard",
+      "/api/signal-correlation"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "/api/signal-correlation"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/signal-correlation"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "strategy_signal_vectors"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "strategy_signal_vectors",
+      "audit_log"
+    ],
+    "recovery_mode": "fail-closed-block-promotion",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "strategy_signal_vectors:recent-write"
+    ],
+    "evidence_queries": [
+      "signal-correlation-matrix",
+      "signal-vector-coverage"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "synthetic_black_swan_survival",
+    "domain": "qualification",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "experimental",
+    "decision_authority": "challenger_only",
+    "automation_scope": "Synthetic Black Swan Survival check (A14 W19) — Phase 0 SHADOW ONLY (Day 0-60). Trains a VAE generator on real OHLCV and produces statistically-realistic novel regimes that didn't happen but plausibly could; tests every PAPER-promotable strategy against thousands of these synthetic regimes before PAPER->DEPLOY_READY. Phase 0 logs WARN + writes audit_log advisory when survival_rate < 0.60; promotion proceeds regardless. Phase 1 (Day 60+, requires explicit env flag flip) becomes a hard gate blocking PAPER->DEPLOY_READY when survival_rate < 0.60. Closes the gap A4 Frankenstein and B10 MRP cannot — fragility to UNSEEN regimes.",
+    "data_sources": [
+      "real OHLCV (S3) for generator training",
+      "synthetic regime bank (S3) for evaluation",
+      "strategy DSL config",
+      "backtests"
+    ],
+    "reads_from": [
+      "backtests",
+      "strategies",
+      "synthetic_regime_bank"
+    ],
+    "writes_to": [
+      "synthetic_black_swan_runs",
+      "synthetic_regime_bank",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "synthetic_black_swan_runs"
+    ],
+    "audit_actions": [
+      "lifecycle_gate_advisory",
+      "synth_black_swan_eval_failed"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard",
+      "/api/synthetic-black-swan"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "/api/synthetic-black-swan"
+    ],
+    "scheduler_jobs": [
+      "nemo-scenario-weekly",
+      "synthetic-regime-refresh",
+      "synthetic-tsgen-train"
+    ],
+    "routes": [
+      "/api/nemo-scenarios",
+      "/api/synthetic-black-swan"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "nemo_scenario_bank",
+      "synthetic_black_swan_runs",
+      "synthetic_regime_bank"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "synthetic_black_swan_runs",
+      "audit_log"
+    ],
+    "recovery_mode": "fire-and-forget-non-blocking",
+    "health_check": "/api/health/dashboard",
+    "status": "experimental",
+    "self_evolving": false,
+    "proof_mode": "experimental-runtime",
+    "freshness_signals": [
+      "synthetic_black_swan_runs:recent-completion",
+      "synthetic_regime_bank:recent-write"
+    ],
+    "evidence_queries": [
+      "synthetic-black-swan-pending-row",
+      "synthetic-black-swan-survival-distribution"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "experimental_opt_in",
+    "criticality": "important"
+  },
+  {
+    "id": "prop_firm_survival_twin",
+    "domain": "qualification",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "experimental",
+    "decision_authority": "challenger_only",
+    "automation_scope": "Prop-Firm Survival Twin (B14 W20) — Phase 0 ADVISORY ONLY (Day 0-60). Bayesian + Monte Carlo survival probability per (strategy, firm) over a 180-day challenge horizon. Combines per-firm adversarial priors (suspension, VPN detection, payout denial, fund freeze, profitable-trader ban) with strategy modulators (payout-request size HIGH/EXTREME bands, payout-frequency cap, VPN coefficient driven by 1-automation_friendly). READ paths bypass pipelinePauseGate; admin refit endpoint is pause-gated (423). Per-firm error isolation in /rank and /simulate augmentation. Phase 0 surfaces survival probability + 180-day curve + evidence weight on every response and the /prop-firm UI but NEVER affects bestFirm selection or any lifecycle gate. Phase 1 (Day 60+, requires explicit B14_PHASE_1=true env flag flip) becomes a hard gate at PAPER->DEPLOY_READY when survival_probability < 0.50 and a tiebreaker in bestFirm selection. Answers the question B5 ROI ranking cannot — which firm will actually let the operator collect the payout (Apex banned profitable traders May 2025; MFFU froze funds 2023-2025; VPN-denied payouts unresolved 6+ months).",
+    "data_sources": [
+      "compliance_rulesets.parsedRules.allowsAutomation",
+      "prop_firm_health_checks (last 90 days)",
+      "strategy DSL config",
+      "seed priors (scripts/seed-w20-firm-priors.json)"
+    ],
+    "reads_from": [
+      "firm_adversarial_priors",
+      "compliance_rulesets",
+      "prop_firm_health_checks",
+      "strategies",
+      "strategy_firm_eligibility"
+    ],
+    "writes_to": [
+      "firm_adversarial_priors",
+      "strategy_firm_eligibility",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "firm_adversarial_priors"
+    ],
+    "audit_actions": [
+      "b14_prior_updated"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard",
+      "/api/prop-firm"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "/api/prop-firm"
+    ],
+    "scheduler_jobs": [
+      "b14-priors-refit"
+    ],
+    "routes": [
+      "/api/prop-firm"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "firm_adversarial_priors",
+      "strategy_firm_eligibility"
+    ],
+    "learning_from": [
+      "prop_firm_health_checks"
+    ],
+    "learning_assets": [
+      "firm_adversarial_priors"
+    ],
+    "learning_writes_to": [
+      "firm_adversarial_priors"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "firm_adversarial_priors",
+      "audit_log"
+    ],
+    "recovery_mode": "per-firm-isolation-read-fallback-to-seed",
+    "health_check": "/api/health/dashboard",
+    "status": "experimental",
+    "self_evolving": true,
+    "proof_mode": "experimental-runtime",
+    "freshness_signals": [
+      "firm_adversarial_priors:last_fitted_at",
+      "audit_log:b14_prior_updated"
+    ],
+    "evidence_queries": [
+      "b14-priors-refit-recency",
+      "b14-survival-distribution-by-firm"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "advisory_only",
+    "deployment_authority": "experimental_opt_in",
+    "criticality": "important"
+  },
+  {
+    "id": "context_execution",
+    "domain": "execution",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates context ingestion, paper execution, skip decisions, and portfolio snapshots.",
+    "data_sources": [
+      "live and historical market data",
+      "session context",
+      "macro snapshots",
+      "paper signal evaluations"
+    ],
+    "reads_from": [
+      "market_data_meta",
+      "macro_snapshots",
+      "paper_signal_logs",
+      "skip_decisions"
+    ],
+    "writes_to": [
+      "paper_sessions",
+      "paper_positions",
+      "paper_trades",
+      "paper_signal_logs",
+      "portfolio_snapshots",
+      "skip_decisions",
+      "shadow_signals",
+      "data_sync_jobs",
+      "watchlist",
+      "macro_snapshots",
+      "market_data_meta",
+      "audit_log",
+      "system_journal"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "system_journal"
+    ],
+    "audit_actions": [
+      "paper.session_start",
+      "paper.session_stop",
+      "paper.trade_open",
+      "paper.trade_close"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "metrics:snapshot SSE",
+      "paper:* SSE",
+      "portfolio:correlation_snapshot SSE"
+    ],
+    "scheduler_jobs": [
+      "anti-setup-mine",
+      "archetype-daily-classify",
+      "bias-engine-refresh-10am-et",
+      "bias-engine-session-start",
+      "c11-bls-release",
+      "c11-fred-daily",
+      "c11-h41-weekly",
+      "c11-treasury-auctions",
+      "cme-status-poll",
+      "contract-roll-sweep",
+      "databento-weekly-refresh",
+      "macro-data-sync",
+      "paper-vs-backtest",
+      "portfolio-correlation",
+      "pre-market-prep",
+      "prop-firm-dashboard-snapshot",
+      "prop-firm-health-check",
+      "session-analytics-rollup",
+      "stale-session-check",
+      "vp-daily-compute",
+      "w19-definition-pull",
+      "w19-imbalance-pull",
+      "w19-statistics-pull"
+    ],
+    "routes": [
+      "/api/context",
+      "/api/data",
+      "/api/indicators",
+      "/api/macro",
+      "/api/paper",
+      "/api/portfolio",
+      "/api/risk",
+      "/api/signals",
+      "/api/bias-decisions",
+      "/api/bias-state",
+      "/api/library-diversity",
+      "/api/nemo-scenarios",
+      "/api/skip",
+      "/api/volume-profile"
+    ],
+    "engine_subsystems": [
+      "context",
+      "exits",
+      "macro_data",
+      "skip_engine"
+    ],
+    "database_tables": [
+      "audit_log",
+      "bias_ablation_results",
+      "bias_calibration_curves",
+      "bias_decisions",
+      "bias_state",
+      "contract_rolls",
+      "harsh_regime_phase",
+      "contract_specs_authoritative",
+      "daily_statistics",
+      "daily_volume_profile_levels",
+      "data_sync_jobs",
+      "exchange_outages",
+      "macro_features",
+      "macro_regime_states",
+      "macro_snapshots",
+      "market_data_meta",
+      "opening_auction_imbalance",
+      "paper_positions",
+      "paper_session_feedback",
+      "paper_sessions",
+      "paper_signal_logs",
+      "paper_trades",
+      "portfolio_snapshots",
+      "prop_firm_health_checks",
+      "shadow_signals",
+      "skip_decisions",
+      "strategy_lockouts",
+      "system_journal",
+      "watchlist"
+    ],
+    "learning_from": [
+      "paper_trades",
+      "paper_signal_logs",
+      "portfolio_snapshots",
+      "skip_decisions",
+      "system_journal"
+    ],
+    "learning_assets": [
+      "paper_trades",
+      "paper_signal_logs",
+      "portfolio_snapshots",
+      "skip_decisions",
+      "system_journal"
+    ],
+    "learning_writes_to": [
+      "paper_signal_logs",
+      "portfolio_snapshots",
+      "skip_decisions",
+      "system_journal"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "/api/alerts",
+      "audit_log"
+    ],
+    "recovery_mode": "circuit-breaker-and-auto-stop",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "paper_sessions:recent-update",
+      "metrics:snapshot SSE"
+    ],
+    "evidence_queries": [
+      "paper-session-writes",
+      "paper-trade-audit-events",
+      "context-route-coverage"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "production_hardening",
+    "domain": "production",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "operator-halt-only",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Production carve-out: kill switch (9-layer), daily reconciliation (4-source), weekly drift detection (auto-HALT on >2σ). Hard isolation from research-side modules enforced by CI lint.",
+    "data_sources": [
+      "production_trades",
+      "paper_trades",
+      "TradersPost webhook log",
+      "Tradovate fills",
+      "MFFU dashboard snapshot"
+    ],
+    "reads_from": [
+      "system_state",
+      "production_trades",
+      "paper_trades",
+      "weekly_drift_reports"
+    ],
+    "writes_to": [
+      "system_state",
+      "production_trades",
+      "daily_reconciliation",
+      "weekly_drift_reports",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "production.mode_changed",
+      "production.reconciliation.completed",
+      "production.drift_detection.completed",
+      "paper.entry_blocked",
+      "paper.force_flatten_all"
+    ],
+    "metrics_surfaces": [
+      "/api/production/status"
+    ],
+    "telemetry_sources": [
+      "/api/production/status",
+      "production:mode-changed SSE",
+      "production:reconciliation-completed SSE",
+      "production:drift-detection-completed SSE",
+      "paper:entry-blocked-production-halt SSE",
+      "paper:force-flatten-all SSE"
+    ],
+    "scheduler_jobs": [
+      "daily-reconciliation",
+      "weekly-drift-detection"
+    ],
+    "routes": [
+      "/api/production"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "system_state",
+      "production_trades",
+      "daily_reconciliation",
+      "weekly_drift_reports"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/production/status",
+      "/api/sse",
+      "/api/alerts",
+      "audit_log"
+    ],
+    "recovery_mode": "fail-closed-and-halt",
+    "health_check": "/api/production/status",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/production/status",
+      "daily_reconciliation:recent-entry",
+      "weekly_drift_reports:recent-entry"
+    ],
+    "evidence_queries": [
+      "production-mode-history",
+      "reconciliation-mismatch-history",
+      "drift-detection-history"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "compliance_governance",
+    "domain": "governance",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates compliance evaluation, stale-rule blocking, and drift detection. Human review remains available for exceptions, but not as a normal lifecycle gate.",
+    "data_sources": [
+      "prop firm rule sources",
+      "strategy metadata",
+      "drift detection inputs"
+    ],
+    "reads_from": [
+      "compliance_rulesets",
+      "compliance_reviews"
+    ],
+    "writes_to": [
+      "compliance_rulesets",
+      "compliance_reviews",
+      "compliance_drift_log",
+      "alerts",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "compliance_drift_log"
+    ],
+    "audit_actions": [
+      "analyze",
+      "evaluate",
+      "on_trade",
+      "on_session_end"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "alert:new SSE",
+      "drift:alert SSE"
+    ],
+    "scheduler_jobs": [
+      "compliance-rule-drift",
+      "decay-monitor"
+    ],
+    "routes": [
+      "/api/compliance",
+      "/api/decay",
+      "/api/governor",
+      "/api/prop-firm"
+    ],
+    "engine_subsystems": [
+      "compliance",
+      "decay",
+      "governor"
+    ],
+    "database_tables": [
+      "alerts",
+      "audit_log",
+      "compliance_drift_log",
+      "compliance_reviews",
+      "compliance_rulesets"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/alerts",
+      "/api/sse",
+      "compliance_drift_log"
+    ],
+    "recovery_mode": "alert-and-human-review",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "compliance_rulesets:recent-retrieval",
+      "compliance_drift_log:recent-entry"
+    ],
+    "evidence_queries": [
+      "compliance-ruleset-freshness",
+      "drift-log-events",
+      "compliance-route-coverage"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "critic_evolution",
+    "domain": "optimization",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates critic replay, mutation review, and parameter optimization under gate-controlled thresholds.",
+    "data_sources": [
+      "critic evidence packets",
+      "mutation outcomes",
+      "journal critique history",
+      "system parameters"
+    ],
+    "reads_from": [
+      "critic_candidates",
+      "mutation_outcomes",
+      "system_parameters",
+      "system_journal",
+      "deepar_forecasts"
+    ],
+    "writes_to": [
+      "critic_candidates",
+      "critic_optimization_runs",
+      "mutation_outcomes",
+      "system_parameters",
+      "system_parameter_history",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "meta-optimizer.review",
+      "strategy.evolved",
+      "strategy.evolution-skipped",
+      "strategy.evolution-exhausted"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "critic:* SSE",
+      "meta:parameter_review SSE"
+    ],
+    "scheduler_jobs": [
+      "anti-setup-effectiveness",
+      "critic-feedback",
+      "meta-parameter-review",
+      "nightly-critique",
+      "regen-declining-sweep",
+      "regret-score-fill"
+    ],
+    "routes": [
+      "/api/critic-optimizer"
+    ],
+    "engine_subsystems": [
+      "critic_optimizer",
+      "parameter_evolver"
+    ],
+    "database_tables": [
+      "audit_log",
+      "critic_candidates",
+      "critic_optimization_runs",
+      "mutation_outcomes",
+      "system_parameter_history",
+      "system_parameters"
+    ],
+    "learning_from": [
+      "mutation_outcomes",
+      "system_journal",
+      "deepar_forecasts",
+      "backtests"
+    ],
+    "learning_assets": [
+      "mutation_outcomes",
+      "system_journal",
+      "deepar_forecasts",
+      "backtests"
+    ],
+    "learning_writes_to": [
+      "mutation_outcomes",
+      "system_parameters",
+      "system_parameter_history",
+      "critic_optimization_runs"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "circuit-breaker-and-quarantine",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "critic_optimization_runs:recent-run",
+      "mutation_outcomes:recent-write"
+    ],
+    "evidence_queries": [
+      "critic-run-persistence",
+      "mutation-outcome-history",
+      "meta-optimizer-scheduler"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "deepar_regime",
+    "domain": "forecasting",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates forecast training, scoring, bounded weight changes, and stale-model fallback inside the pre-deploy decision layer.",
+    "data_sources": [
+      "OHLCV history",
+      "VIX and volume features",
+      "forecast validation outcomes"
+    ],
+    "reads_from": [
+      "deepar_forecasts",
+      "deepar_training_runs"
+    ],
+    "writes_to": [
+      "deepar_forecasts",
+      "deepar_training_runs",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "deepar.train",
+      "deepar.weight_change"
+    ],
+    "metrics_surfaces": [
+      "/api/deepar/accuracy",
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/deepar/accuracy",
+      "/api/health/dashboard",
+      "deepar:* SSE"
+    ],
+    "scheduler_jobs": [
+      "deepar-predict",
+      "deepar-train",
+      "deepar-validate"
+    ],
+    "routes": [
+      "/api/deepar"
+    ],
+    "engine_subsystems": [
+      "deepar_forecaster",
+      "deepar_regime_classifier"
+    ],
+    "database_tables": [
+      "audit_log",
+      "deepar_forecasts",
+      "deepar_training_runs"
+    ],
+    "learning_from": [
+      "deepar_forecasts",
+      "deepar_training_runs",
+      "mutation_outcomes"
+    ],
+    "learning_assets": [
+      "deepar_forecasts",
+      "deepar_training_runs",
+      "mutation_outcomes"
+    ],
+    "learning_writes_to": [
+      "deepar_forecasts",
+      "deepar_training_runs"
+    ],
+    "failure_visibility": [
+      "/api/deepar/accuracy",
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "bounded-weight-fallback-and-demotion",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/deepar/accuracy",
+      "deepar_forecasts:recent-generation",
+      "deepar_training_runs:recent-run"
+    ],
+    "evidence_queries": [
+      "deepar-forecast-history",
+      "deepar-training-history",
+      "deepar-scheduler-jobs"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "quantum_experimental",
+    "domain": "experimental",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates quantum challenger analytics with automatic classical fallback and persists benchmark evidence inside the pre-deploy pipeline.",
+    "data_sources": [
+      "qualified backtest outputs",
+      "probability distributions",
+      "optimizer search spaces"
+    ],
+    "reads_from": [
+      "backtests",
+      "monte_carlo_runs"
+    ],
+    "writes_to": [
+      "quantum_mc_runs",
+      "quantum_mc_benchmarks",
+      "qubo_timing_runs",
+      "rl_training_runs",
+      "sqa_optimization_runs",
+      "tensor_predictions",
+      "quantum_run_costs",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "quantum-mc.run"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "mc:* SSE"
+    ],
+    "scheduler_jobs": [
+      "quantum-cost-prune"
+    ],
+    "routes": [
+      "/api/quantum-mc",
+      "/api/quantum/cost",
+      "/api/quantum/pre-flight"
+    ],
+    "engine_subsystems": [
+      "quantum_mc"
+    ],
+    "database_tables": [
+      "audit_log",
+      "quantum_mc_benchmarks",
+      "quantum_mc_runs",
+      "quantum_run_costs",
+      "qubo_timing_runs",
+      "rl_training_runs",
+      "sqa_optimization_runs",
+      "tensor_predictions"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "automatic-classical-fallback",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "quantum_mc_runs:recent-run",
+      "audit_log:quantum-mc.run"
+    ],
+    "evidence_queries": [
+      "quantum-run-persistence",
+      "quantum-route-coverage",
+      "quantum-fallback-boundary"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "advisory"
+  },
+  {
+    "id": "a_plus_market_auditor",
+    "domain": "quantum-challenger",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "runtime_state": "experimental",
+    "decision_authority": "advisory",
+    "automation_scope": "Daily 8:00 AM ET pre-market scan scoring MES/MNQ/MCL via volatility audit, quantum MC, entropy filter (W3a), and 4-qubit cross-market lead-lag VQC. Emits OBSERVATION_MODE when no market is A+. Challenger-only output â€” no execution authority.",
+    "data_sources": [
+      "pre-market ATR data",
+      "VIX",
+      "rolling 60-min correlation matrix"
+    ],
+    "reads_from": [
+      "quantum_entropy_filter",
+      "quantum_mc"
+    ],
+    "writes_to": [
+      "a_plus_market_scans",
+      "quantum_run_costs",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "a-plus-auditor.scan-complete"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "a-plus-auditor:scan-complete SSE",
+      "quantum_run_costs"
+    ],
+    "scheduler_jobs": [
+      "a-plus-auditor-scan"
+    ],
+    "routes": [
+      "/api/auditor"
+    ],
+    "engine_subsystems": [
+      "a_plus_market_auditor"
+    ],
+    "database_tables": [
+      "a_plus_market_scans",
+      "quantum_run_costs"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "a_plus_market_scans"
+    ],
+    "recovery_mode": "automatic-classical-fallback",
+    "health_check": "/api/auditor/latest",
+    "status": "experimental",
+    "self_evolving": false,
+    "proof_mode": "experimental-runtime",
+    "freshness_signals": [
+      "a_plus_market_scans:recent-scan",
+      "a-plus-auditor:scan-complete SSE"
+    ],
+    "evidence_queries": [
+      "a-plus-auditor-isolation",
+      "a-plus-auditor-pending-row-contract",
+      "a-plus-auditor-compliance-handoff"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_challenger",
+    "criticality": "advisory"
+  },
+  {
+    "id": "quantum_adversarial_stress",
+    "domain": "quantum-challenger",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "runtime_state": "experimental",
+    "decision_authority": "advisory",
+    "automation_scope": "Grover worst-case sequencer: finds the worst possible trade ordering that could breach prop firm rules. Pre-PAPER promotion gate (TIER_1/TIER_2). Challenger-only advisory output.",
+    "data_sources": [
+      "backtest trade ledger",
+      "prop firm rule set"
+    ],
+    "reads_from": [
+      "backtests"
+    ],
+    "writes_to": [
+      "adversarial_stress_runs",
+      "quantum_run_costs"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "adversarial-stress.run-complete"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "quantum_run_costs"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/adversarial-stress"
+    ],
+    "engine_subsystems": [
+      "quantum_adversarial_stress"
+    ],
+    "database_tables": [
+      "adversarial_stress_runs",
+      "quantum_run_costs"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "adversarial_stress_runs"
+    ],
+    "recovery_mode": "automatic-classical-fallback",
+    "health_check": "/api/health/dashboard",
+    "status": "experimental",
+    "self_evolving": false,
+    "proof_mode": "experimental-runtime",
+    "freshness_signals": [
+      "adversarial_stress_runs:recent-run"
+    ],
+    "evidence_queries": [
+      "adversarial-stress-isolation",
+      "adversarial-stress-pending-row"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_challenger",
+    "criticality": "advisory"
+  },
+  {
+    "id": "cloud_qmc_ising",
+    "domain": "quantum-challenger",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "runtime_state": "experimental",
+    "decision_authority": "advisory",
+    "automation_scope": "Tier 4.5 W4: Ising-encoded IBM QPU enrichment. SHADOW ONLY â€” async best-effort enrichment after classical TESTINGâ†’PAPER promotion. Never a gate. d=3 rotated surface code encoder + Ising decoder + PyMatching baseline. Budget: 600s/month IBM QPU, all reserved for Ising runs.",
+    "data_sources": [
+      "IBM Quantum Platform (ibm_fez, ibm_kingston, ibm_marrakesh)",
+      "quantum_mc_runs"
+    ],
+    "reads_from": [
+      "backtests",
+      "quantum_mc_runs"
+    ],
+    "writes_to": [
+      "cloud_qmc_runs"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "cloud-qmc.enqueued",
+      "cloud-qmc.budget_exhausted"
+    ],
+    "metrics_surfaces": [
+      "/api/cloud-qmc/budget",
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "cloud_qmc_runs"
+    ],
+    "scheduler_jobs": [
+      "cloud-qmc-poll"
+    ],
+    "routes": [
+      "/api/cloud-qmc"
+    ],
+    "engine_subsystems": [
+      "surface_code_encoder",
+      "ising_decoder_wrapper",
+      "cloud_backend"
+    ],
+    "database_tables": [
+      "cloud_qmc_runs"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "cloud_qmc_runs"
+    ],
+    "recovery_mode": "automatic-classical-fallback",
+    "health_check": "/api/cloud-qmc/budget",
+    "status": "experimental",
+    "self_evolving": false,
+    "proof_mode": "experimental-runtime",
+    "freshness_signals": [
+      "cloud_qmc_runs:recent-run"
+    ],
+    "evidence_queries": [
+      "cloud-qmc-isolation",
+      "cloud-qmc-pending-row",
+      "cloud-qmc-budget-check"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_challenger",
+    "criticality": "advisory",
+    "phase": "0_shadow",
+    "ibm_budget_seconds": 600,
+    "ibm_pessimism_factor": 2,
+    "estimated_runs_per_month": 5,
+    "credential_setup": "export IBM_QUANTUM_TOKEN=<token>; export QUANTUM_CLOUD_ENABLED=true"
+  },
+  {
+    "id": "pine_export_preparation",
+    "domain": "deployment-prep",
+    "owner_surface": "python-node",
+    "automation_mode": "manual-gated",
+    "manual_gate": "tradingview_deploy",
+    "runtime_state": "active",
+    "decision_authority": "mixed",
+    "automation_scope": "Automates Pine artifact generation and export preparation after qualification or approved deployment.",
+    "data_sources": [
+      "qualified strategies",
+      "compiler outputs",
+      "export constraints"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests"
+    ],
+    "writes_to": [
+      "strategy_exports",
+      "strategy_export_artifacts",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "pine-export.compile",
+      "strategy.deploy_approved"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "pine:export_completed SSE",
+      "strategy:deployed SSE"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/pine-export",
+      "/api/pine-export/recipient"
+    ],
+    "engine_subsystems": [
+      "pine_compiler",
+      "pine_templates"
+    ],
+    "database_tables": [
+      "audit_log",
+      "strategy_export_artifacts",
+      "strategy_exports",
+      "account_strategy_assignments"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "human-approval-boundary",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "strategy_export_artifacts:recent-write",
+      "audit_log:pine-export.compile"
+    ],
+    "evidence_queries": [
+      "pine-export-artifacts",
+      "deploy-approval-audit-events",
+      "pine-route-coverage"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "human_release",
+    "criticality": "critical"
+  },
+  {
+    "id": "observability_reliability",
+    "domain": "observability",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Automates health checks, metrics emission, alerts, and circuit-breaker visibility.",
+    "data_sources": [
+      "scheduler health",
+      "circuit breaker state",
+      "agent health probes",
+      "alert events"
+    ],
+    "reads_from": [
+      "agent_health_reports",
+      "alerts",
+      "audit_log"
+    ],
+    "writes_to": [
+      "agent_health_reports",
+      "alerts",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "agent_health_reports"
+    ],
+    "audit_actions": [
+      "paper.session_auto_stop",
+      "regret.score-fill"
+    ],
+    "metrics_surfaces": [
+      "/api/health",
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health",
+      "/api/health/dashboard",
+      "metrics:snapshot SSE",
+      "scheduler:job-complete SSE",
+      "CircuitBreakerRegistry.statusAll"
+    ],
+    "scheduler_jobs": [
+      "agent-health-sweep",
+      "data-integrity-suite",
+      "disabled-job-probe",
+      "dlq-escalation",
+      "dlq-retry",
+      "idempotency-cleanup",
+      "metrics-collector",
+      "metrics-heartbeat",
+      "pre-trading-day-health-check",
+      "python-pool-saturation-check",
+      "resource-snapshot",
+      "stale-pending-sweeper",
+      "system-map-drift",
+      "validation-cadence-monthly"
+    ],
+    "routes": [
+      "/api/admin",
+      "/api/alerts",
+      "/api/dlq",
+      "/api/health",
+      "/api/metrics",
+      "/api/sse",
+      "/api/validation-cadence"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "agent_health_reports",
+      "alerts",
+      "audit_log",
+      "data_integrity_findings",
+      "dead_letter_queue",
+      "idempotency_keys",
+      "subsystem_metrics"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health",
+      "/api/health/dashboard",
+      "/api/alerts",
+      "/api/sse",
+      "agent_health_reports"
+    ],
+    "recovery_mode": "retry-and-alert",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "agent_health_reports:recent-entry",
+      "scheduler:job-complete SSE"
+    ],
+    "evidence_queries": [
+      "health-dashboard-runtime",
+      "agent-health-history",
+      "circuit-breaker-status"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "workflow_orchestration",
+    "domain": "orchestration",
+    "owner_surface": "n8n",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "mixed",
+    "automation_scope": "Core n8n workflows run as production-active pre-deploy orchestration with retries, handoffs, and audit evidence while release authority stays bounded upstream of TradingView deployment.",
+    "data_sources": [
+      "workflow exports",
+      "system journal",
+      "audit history"
+    ],
+    "reads_from": [
+      "system_journal",
+      "audit_log"
+    ],
+    "writes_to": [
+      "system_journal",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "system_journal"
+    ],
+    "audit_actions": [
+      "agent.run-strategy",
+      "meta-optimizer.review"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "/api/health/dashboard",
+      "n8n:/api/v1/workflows",
+      "docs/system-topology.generated.json"
+    ],
+    "scheduler_jobs": [
+      "n8n-data-backup-daily",
+      "n8n-drift-monthly",
+      "n8n-execution-scrape",
+      "n8n-health-check",
+      "n8n-workflow-sync"
+    ],
+    "routes": [
+      "/api/n8n"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "n8n_execution_log"
+    ],
+    "learning_from": [
+      "system_journal",
+      "audit_log"
+    ],
+    "learning_assets": [
+      "system_journal",
+      "audit_log"
+    ],
+    "learning_writes_to": [
+      "system_journal",
+      "audit_log"
+    ],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "n8n:/api/v1/workflows",
+      "docs/system-topology.generated.json",
+      "audit_log"
+    ],
+    "recovery_mode": "production-replay-and-disable",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "/api/health/dashboard",
+      "n8n:/api/v1/workflows:lastUpdated",
+      "docs/system-topology.generated.json"
+    ],
+    "evidence_queries": [
+      "n8n-workflow-activation-health",
+      "workflow-export-inventory",
+      "generated-topology-workflow-summary",
+      "production-workflow-activation-boundary"
+    ],
+    "ownership_boundary": "external-integrated",
+    "learning_boundary": "pre_deploy_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "broker_abstraction_layer",
+    "domain": "execution",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Single source of truth for order routing across TradersPost (active) and TopstepX (stub). routeOrder() is the only path; direct broker client calls are forbidden.",
+    "data_sources": [
+      "broker_accounts",
+      "instance_config"
+    ],
+    "reads_from": [
+      "broker_accounts",
+      "instance_config"
+    ],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "broker.order_routed",
+      "broker.credentials_loaded"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard"
+    ],
+    "telemetry_sources": [
+      "broker:order_routed SSE",
+      "audit_log:broker.order_routed"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/strategy-assignments"
+    ],
+    "engine_subsystems": [
+      "broker_router",
+      "traderspost_client",
+      "topstepx_stub"
+    ],
+    "database_tables": [
+      "broker_accounts",
+      "instance_config",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "fail-closed",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:broker.order_routed",
+      "broker_accounts:recent-write"
+    ],
+    "evidence_queries": [
+      "broker-order-routing-audit",
+      "broker-credentials-loaded-audit"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "human_release",
+    "criticality": "critical"
+  },
+  {
+    "id": "operator_absent_autopilot",
+    "domain": "execution",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Operator-Absent Mode + dead-man heartbeat + credential refresh autopilot. Tier-1 auto-promotion runs without operator while dead-man monitor halts trading on heartbeat loss; reconciliation collects TradingView markers as the 5th source.",
+    "data_sources": [
+      "operator_absent_periods",
+      "system_health_heartbeat",
+      "tradingview_markers"
+    ],
+    "reads_from": [
+      "operator_absent_periods",
+      "system_health_heartbeat",
+      "account_strategy_assignments",
+      "tradingview_markers"
+    ],
+    "writes_to": [
+      "operator_absent_periods",
+      "system_health_heartbeat",
+      "tradingview_markers",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "autopilot.tier1_auto_promoted",
+      "autopilot.dead_mans_heartbeat",
+      "tradingview.marker_received",
+      "reconciliation.5_source_mismatch"
+    ],
+    "metrics_surfaces": [
+      "/api/health/dashboard",
+      "/api/production-status"
+    ],
+    "telemetry_sources": [
+      "lifecycle:operator_absent_autopromoted SSE",
+      "tradingview:marker-received SSE",
+      "audit_log:autopilot.*"
+    ],
+    "scheduler_jobs": [
+      "bitwarden-session-refresh-daily",
+      "dead-mans-heartbeat-check",
+      "dead-mans-heartbeat-write",
+      "prop-firm-cookie-refresh-daily"
+    ],
+    "routes": [
+      "/api/tradingview"
+    ],
+    "engine_subsystems": [
+      "operator_absent_mode_service",
+      "tradingview_marker_service",
+      "dead_mans_heartbeat",
+      "credential_refresh"
+    ],
+    "database_tables": [
+      "operator_absent_periods",
+      "system_health_heartbeat",
+      "tradingview_markers",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/health/dashboard",
+      "/api/sse",
+      "audit_log"
+    ],
+    "recovery_mode": "fail-closed",
+    "health_check": "/api/health/dashboard",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:autopilot.dead_mans_heartbeat",
+      "system_health_heartbeat:recent-write",
+      "tradingview_markers:recent-write"
+    ],
+    "evidence_queries": [
+      "autopilot-tier1-promotion-audit",
+      "dead-mans-heartbeat-audit",
+      "tradingview-marker-audit"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "human_release",
+    "criticality": "critical"
+  }
+]

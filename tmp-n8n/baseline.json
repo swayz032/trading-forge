@@ -1,0 +1,176 @@
+{
+  "J0p8oYkONmN7pYn6": {
+    "name": "3A-workflow-backup",
+    "lastExecId": "20911",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-03T09:47:00.725Z"
+  },
+  "4qVyxZd29pQkGn9p": {
+    "name": "5N-brave-video-discoverer",
+    "lastExecId": "20912",
+    "lastStatus": "error",
+    "lastStarted": "2026-05-03T09:48:05.982Z"
+  },
+  "26ruSYvIjqHGOhsd": {
+    "name": "9A-nightly-self-critique",
+    "lastExecId": "20879",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-03T06:00:00.028Z"
+  },
+  "7PgUY6Wa07aZbAPX": {
+    "name": "5M-brave-news-watcher",
+    "lastExecId": "20785",
+    "lastStatus": "error",
+    "lastStarted": "2026-05-02T10:00:00.411Z"
+  },
+  "sAIrnCVB4iOsodsy": {
+    "name": "Weekly Strategy Hunt",
+    "lastExecId": "20799",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-02T12:00:03.156Z"
+  },
+  "F6i4JoTdxgiyjHhM": {
+    "name": "5L-quant-blog-harvester",
+    "lastExecId": "20882",
+    "lastStatus": "error",
+    "lastStarted": "2026-05-03T06:00:00.332Z"
+  },
+  "hPXhUaSC3ScznZE9": {
+    "name": "Strategy Tournament",
+    "lastExecId": "20781",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-02T10:00:00.021Z"
+  },
+  "u0RcmfuClgRinXAX": {
+    "name": "Daily Portfolio Monitor",
+    "lastExecId": "20711",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-01T21:00:00.028Z"
+  },
+  "lUenVARPUG1uz4OE": {
+    "name": "5K-parallel-deep-research",
+    "lastExecId": "20891",
+    "lastStatus": "error",
+    "lastStarted": "2026-05-03T07:00:00.077Z"
+  },
+  "v4eSeAoaEErYp472": {
+    "name": "0Z-openclaw-daily-report",
+    "lastExecId": "20797",
+    "lastStatus": "error",
+    "lastStarted": "2026-05-02T12:00:00.047Z"
+  },
+  "YuDGQkuej7qybPAB": {
+    "name": "Weekly Compliance Re-Parse",
+    "lastExecId": "20113",
+    "lastStatus": "success",
+    "lastStarted": "2026-04-27T00:00:00.027Z"
+  },
+  "Z4NcOCDbet8KzjDd": {
+    "name": "Nightly Strategy Research Loop",
+    "lastExecId": "20626",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-01T06:00:13.960Z"
+  },
+  "gFwNlA3eCHbSb7en": {
+    "name": "Pre-Session Compliance Gate",
+    "lastExecId": "20676",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-01T13:15:00.010Z"
+  },
+  "J8K0PfErL2v4W9Zw": {
+    "name": "5O-supadata-transcript-pipeline",
+    "lastExecId": null,
+    "lastStatus": null,
+    "lastStarted": null
+  },
+  "X2IjKuYseGukxKDj": {
+    "name": "Macro Data Sync",
+    "lastExecId": "20847",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-02T23:00:00.026Z"
+  },
+  "vlCaiWM7F0AH1RRY": {
+    "name": "8A-idea-to-strategy",
+    "lastExecId": "20851",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-02T23:30:11.018Z"
+  },
+  "66HEjQavpvirY6g5": {
+    "name": "0A-health-monitor",
+    "lastExecId": null,
+    "lastStatus": null,
+    "lastStarted": null
+  },
+  "eaq72MwKwCjv7g7F": {
+    "name": "Pre-Session Skip Check",
+    "lastExecId": "20673",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-01T13:00:00.016Z"
+  },
+  "RumAJUp4iS1TYlNm": {
+    "name": "6D-compliance-gate",
+    "lastExecId": "20898",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-03T08:00:01.082Z"
+  },
+  "m6aD7X4ioWfhWaS9": {
+    "name": "Monthly Robustness Check",
+    "lastExecId": null,
+    "lastStatus": null,
+    "lastStarted": null
+  },
+  "Ep2Zsu33tMOsaJbE": {
+    "name": "5J-unified-search-router-scout",
+    "lastExecId": "20871",
+    "lastStatus": "error",
+    "lastStarted": "2026-05-03T04:00:00.048Z"
+  },
+  "LQtqeWAcNOlkqROH": {
+    "name": "8B-source-quality-review",
+    "lastExecId": "20098",
+    "lastStatus": "success",
+    "lastStarted": "2026-04-26T22:00:00.028Z"
+  },
+  "WT9sVMzG83rg1L29": {
+    "name": "Daily Compliance Check",
+    "lastExecId": "20674",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-01T13:00:00.017Z"
+  },
+  "PHcD2tFZpzr7kQGF": {
+    "name": "Anti-Setup Refresh",
+    "lastExecId": "20638",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-01T07:00:10.113Z"
+  },
+  "eCr7cyb0aPArFCZc": {
+    "name": "Strategy Generation Loop",
+    "lastExecId": "20908",
+    "lastStatus": "error",
+    "lastStarted": "2026-05-03T09:34:22.070Z"
+  },
+  "MIIxmilbgZv3SUBh": {
+    "name": "7A-auto-evolution",
+    "lastExecId": "20892",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-03T07:00:01.083Z"
+  },
+  "pVT6svNTljjBoQbW": {
+    "name": "11A-critic-optimization",
+    "lastExecId": "20889",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-03T07:00:00.041Z"
+  },
+  "LayXj1mbHh4aGSM9": {
+    "name": "Post-Session Skip Review",
+    "lastExecId": "20713",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-01T21:30:00.012Z"
+  },
+  "8HKXzNmo9KF59SBu": {
+    "name": "10A-master-orchestration",
+    "lastExecId": "20903",
+    "lastStatus": "success",
+    "lastStarted": "2026-05-03T09:00:00.031Z"
+  }
+}

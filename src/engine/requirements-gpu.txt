@@ -1,0 +1,19 @@
+# Trading Forge - GPU Acceleration Dependencies (NVIDIA RTX 5060, 8GB VRAM)
+# Install with: pip install -r requirements-gpu.txt
+# Requires: CUDA 12.x toolkit installed
+
+# Core GPU
+cupy-cuda12x>=13.0.0      # GPU-accelerated numpy (MC cumsum, block bootstrap)
+numba>=0.59.0              # Already in base, but Numba CUDA kernels need this
+
+# NVIDIA RAPIDS (require 8+ GB VRAM — cannot coexist with Ollama on GPU)
+# Install via conda: conda install -c rapidsai -c conda-forge cudf cuml cuvs
+cudf>=24.10.0              # GPU DataFrame for evidence assembly
+cuml>=24.10.0              # GPU ML for regime clustering
+cuvs>=24.10.0              # GPU vector search for strategy memory
+
+# NVIDIA cuOpt (constrained optimization)
+# cuopt>=24.10.0           # LP/MIP for candidate selection — install from NVIDIA channel
+
+# Profiling
+nvtx>=0.2.10              # NVTX markers for Nsight Systems profiling

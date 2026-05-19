@@ -168,7 +168,7 @@
       "type": "string"
     },
     "symbol": {
-      "description": "Futures symbol (ES, NQ, CL, YM, RTY, GC, MES, MNQ)",
+      "description": "Futures symbol (ES, NQ, CL, MES, MNQ, MCL)",
       "title": "Symbol",
       "type": "string"
     },

@@ -18,8 +18,8 @@ module.exports = {
       interpreter: "node",
       windowsHide: true,
       env: {
-        NODE_ENV: "development",
-        PORT: "4000",
+        NODE_ENV: process.env.NODE_ENV || "production",
+        PORT: process.env.PORT || "4000",
       },
       // Restart policy
       autorestart: true,
@@ -44,7 +44,7 @@ module.exports = {
       interpreter: "node",
       windowsHide: true,
       env: {
-        NODE_ENV: "development",
+        NODE_ENV: process.env.NODE_ENV || "production",
       },
       autorestart: true,
       max_restarts: 20,
@@ -67,9 +67,9 @@ module.exports = {
       windowsHide: true,
       env: {
         OPENCLAW_SERVICE: "v2026.3.13",
-        OLLAMA_API_KEY: "ollama",
-        BRAVE_API_KEY: "BSA-12bUd_kRylS3PUt7rSOahkSoQ-3",
-        TAVILY_API_KEY: "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",
+        OLLAMA_API_KEY: process.env.OLLAMA_API_KEY || "ollama",
+        BRAVE_API_KEY: process.env.BRAVE_API_KEY || "",
+        TAVILY_API_KEY: process.env.TAVILY_API_KEY || "",
         DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN || "",
       },
       autorestart: true,

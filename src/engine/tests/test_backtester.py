@@ -43,7 +43,7 @@ class TestPositionSizing:
     def test_dynamic_atr_sizing(self):
         df = _make_ohlcv(30)
         config = PositionSizeConfig(type="dynamic_atr", target_risk_dollars=500)
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
 
         # Add ATR column
         from src.engine.indicators.core import compute_atr
@@ -79,7 +79,7 @@ class TestPositionSizing:
     def test_fixed_sizing(self):
         df = _make_ohlcv(10)
         config = PositionSizeConfig(type="fixed", fixed_contracts=3)
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
 
         sizes, over_risk = compute_position_sizes(df, config, spec, atr_period=14)
         assert all(s == 3 for s in sizes)
@@ -90,7 +90,7 @@ class TestPositionSizing:
 class TestSlippage:
     def test_variable_slippage(self):
         df = _make_ohlcv(30)
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
 
         from src.engine.indicators.core import compute_atr
         atr = compute_atr(df, 14)
@@ -106,7 +106,7 @@ class TestSlippage:
     def test_slippage_scales_with_volatility(self):
         """Bars with higher ATR get higher slippage within same dataset."""
         from src.engine.indicators.core import compute_atr
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
 
         # Mixed vol: first 15 bars tight, next 15 bars wide
         n = 30
@@ -134,14 +134,14 @@ class TestSlippage:
     def test_slippage_in_dollars(self):
         """Slippage output should be in dollar terms."""
         df = _make_ohlcv(30)
-        spec = CONTRACT_SPECS["ES"]  # tick_value = $12.50
+        spec = CONTRACT_SPECS["MES"]  # tick_value = $12.50
 
         from src.engine.indicators.core import compute_atr
         atr = compute_atr(df, 14)
         df_with_atr = df.with_columns(atr.alias("atr_14"))
 
         slippage = compute_slippage(df_with_atr, spec, base_ticks=1.0, atr_period=14)
-        # 1 tick of ES = $12.50, so min slippage should be around that
+        # 1 tick of MES = $1.25, so min slippage should be around that
         non_nan = [s for s in slippage if not math.isnan(s)]
         assert len(non_nan) > 0
         # Should be reasonable dollar amounts
@@ -160,7 +160,7 @@ class TestBacktesterOutput:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="SMA Cross",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -177,7 +177,7 @@ class TestBacktesterOutput:
             ),
             start_date="2023-01-01",
             end_date="2023-12-31",
-            commission_per_side=4.50,
+            commission_per_side=0.62,
         )
 
         df = _make_ohlcv(200, base=4000.0, trend=0.5)
@@ -202,7 +202,7 @@ class TestBacktesterOutput:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -234,7 +234,7 @@ class TestBacktesterOutput:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),

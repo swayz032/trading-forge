@@ -10,7 +10,6 @@ import hashlib
 from datetime import datetime, timezone
 from typing import Any
 
-
 # ─── Freshness Thresholds ────────────────────────────────────────
 
 RULESET_MAX_AGE_HOURS = {
@@ -42,13 +41,14 @@ def check_freshness(
             "message": str,
         }
     """
+    max_age = RULESET_MAX_AGE_HOURS.get(context, 24)
     try:
         retrieved_at = datetime.fromisoformat(ruleset["retrieved_at"])
     except (ValueError, TypeError) as exc:
         return {
             "fresh": False,
             "age_hours": float("inf"),
-            "max_age_hours": max_age_hours,
+            "max_age_hours": max_age,
             "drift_detected": False,
             "status": "stale",
             "message": f"Invalid retrieved_at timestamp: {exc}",
@@ -77,7 +77,6 @@ def check_freshness(
             ),
         }
 
-    max_age = RULESET_MAX_AGE_HOURS.get(context, 24)
     fresh = age_hours <= max_age
 
     if fresh:
@@ -392,3 +391,760 @@ def detect_drift(
         "old_hash": stored_hash,
         "new_hash": new_hash,
     }
+
+
+# ─── Violation Check (per-firm, per-strategy) ───────────────────
+
+
+def check_violation(
+    firm: str,
+    ruleset: dict[str, Any],
+    strategy_state: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """
+    Pre-order violation check.  Distinct from check_freshness:
+    freshness asks "are the rules still trustworthy?"; violation asks
+    "given the (assumed-fresh) rules, is the strategy currently in
+    violation of any hard prohibition?"
+
+    Hard prohibitions checked:
+      - automation banned on PA/Live (Apex 4.0, Tradeify, FundingPips)
+      - VPS/VPN/remote-access prohibited (Topstep)
+      - household account cap exceeded (Apex 20-account cap)
+
+    Args:
+        firm: firm key ("apex_trader_funding", "topstep", etc.)
+        ruleset: parsed ruleset dict (typically from compliance_rulesets row)
+        strategy_state: optional runtime context — { automated: bool,
+            account_phase: 'eval'|'pa'|'live', host: str, pa_account_count: int }
+
+    Returns:
+        {
+            "violation": bool,
+            "firm": str,
+            "violations": [...],
+            "status": "ok" | "blocked",
+            "message": str,
+        }
+    """
+    state = strategy_state or {}
+    rules = ruleset.get("parsed_rules") or ruleset.get("rules") or ruleset
+    violations: list[str] = []
+
+    is_automated = bool(state.get("automated", False))
+    account_phase = state.get("account_phase", "pa")  # default: pa/live (strictest)
+    host = str(state.get("host", "unknown"))
+    pa_account_count = int(state.get("pa_account_count", 0))
+
+    # ── Automation policy (Apex 4.0, Tradeify, FundingPips) ──────
+    automation_banned = bool(rules.get("automation_banned", False))
+    automation_banned_pa = bool(rules.get("automation_banned_pa_live", False))
+    if is_automated and automation_banned:
+        violations.append(
+            f"{firm}: full automation prohibited — strategy must route "
+            f"through indicator + manual approval."
+        )
+    if is_automated and automation_banned_pa and account_phase in ("pa", "live"):
+        violations.append(
+            f"{firm}: full automation prohibited on {account_phase} accounts "
+            f"(eval allowed). Use semi-auto with manual approval."
+        )
+
+    # ── Topstep: no VPS / VPN / remote ───────────────────────────
+    vps_banned = bool(rules.get("vps_prohibited", False))
+    if vps_banned and host not in ("local", "skytech-tower", "personal-device"):
+        violations.append(
+            f"{firm}: VPS/VPN/remote-access prohibited — orders must "
+            f"originate from personal device (got host={host!r})."
+        )
+
+    # ── Apex household 20-account cap ────────────────────────────
+    account_cap = rules.get("household_max_pa_accounts")
+    if account_cap is not None and pa_account_count > int(account_cap):
+        violations.append(
+            f"{firm}: household has {pa_account_count} PA accounts, "
+            f"exceeds cap of {account_cap}."
+        )
+
+    if violations:
+        return {
+            "violation": True,
+            "firm": firm,
+            "violations": violations,
+            "status": "blocked",
+            "message": "; ".join(violations),
+        }
+
+    return {
+        "violation": False,
+        "firm": firm,
+        "violations": [],
+        "status": "ok",
+        "message": f"{firm}: no hard violations against current ruleset.",
+    }
+
+
+# ─── Kill Switch (D6) ───────────────────────────────────────────
+
+# Kill switch reasons (enumerated — queryable, not free-text)
+KILL_REASON_APPROACHING_DAILY_LOSS = "approaching_daily_loss_limit"
+KILL_REASON_DAILY_LOSS_BREACHED    = "daily_loss_limit_breached"
+KILL_REASON_MAX_TRADES             = "max_trades_per_session"
+KILL_REASON_CONSECUTIVE_LOSSES     = "consecutive_loss_limit"
+
+# Default limits
+DEFAULT_CONSECUTIVE_LOSS_LIMIT = 4
+
+# ─── DLL Kill Switch Thresholds ────────────────────────────────────────────────
+# These implement the funded-trader playbook:
+#   HALT (67%): stop new entries when daily loss reaches 67% of firm DLL.
+#   FORCE_CLOSE (95%): flatten all positions when daily loss reaches 95% of firm DLL.
+#
+# Previously: HALT=95%, FORCE_CLOSE=100% — left no buffer for next-day trading.
+# Now: HALT=67%, FORCE_CLOSE=95% — personal DLL is 67% of firm DLL, preserving
+#   a next-day trading buffer even on the worst days.
+#
+# Configurable via env vars DLL_HALT_PCT / DLL_FORCE_CLOSE_PCT.
+# Callers (paper-execution-service.ts) may also pass thresholds directly in config
+# so the Python layer and TypeScript layer stay in sync without process restart.
+import os as _os
+_DEFAULT_DLL_HALT_PCT        = float(_os.environ.get("DLL_HALT_PCT", "0.67"))
+_DEFAULT_DLL_FORCE_CLOSE_PCT = float(_os.environ.get("DLL_FORCE_CLOSE_PCT", "0.95"))
+
+
+def check_kill_switch(
+    session_id: str,
+    firm_key: str,
+    current_daily_pnl: float,
+    daily_loss_limit: float,
+    max_trades_per_session: int | None = None,
+    trades_today: int = 0,
+    consecutive_losses: int = 0,
+    consecutive_loss_limit: int = DEFAULT_CONSECUTIVE_LOSS_LIMIT,
+    halt_pct: float | None = None,
+    force_close_pct: float | None = None,
+) -> dict[str, Any]:
+    """
+    Pre-order kill switch — runs BEFORE every order entry.
+
+    Conditions evaluated in priority order (cheapest/most critical first):
+      1. daily_loss_limit_breached  — actual breach (force_close=True)
+      2. approaching_daily_loss_limit — personal DLL halt threshold reached
+      3. max_trades_per_session — hard trade count cap
+      4. consecutive_loss_limit — 4+ consecutive losses
+
+    Fail-CLOSED by design: any missing or invalid numeric inputs result
+    in tripped=True rather than letting a potentially blown account trade.
+    Callers must pass valid floats; never supply None for P&L fields.
+
+    Threshold semantics (funded-trader playbook):
+      force_close_pct (default 0.95): force-flatten all positions at 95% of firm DLL.
+        Previously 1.00 (actual breach) — now forces action before full breach.
+      halt_pct (default 0.67): block new entries at 67% of firm DLL.
+        This is the personal DLL = 67% of firm DLL rule. Leaves a buffer for next-day.
+
+    Args:
+        session_id:             paper session UUID (for structured logging)
+        firm_key:               firm identifier (for structured logging)
+        current_daily_pnl:      session's running daily P&L ($, negative = loss)
+        daily_loss_limit:       firm's daily loss limit ($, positive value)
+        max_trades_per_session: optional hard cap on trades per session-day
+        trades_today:           number of trades taken today
+        consecutive_losses:     number of consecutive losing trades this session
+        consecutive_loss_limit: threshold before kill trips (default 4)
+        halt_pct:               fraction of DLL at which new entries are blocked
+                                (default: DLL_HALT_PCT env var, fallback 0.67)
+        force_close_pct:        fraction of DLL at which positions are force-closed
+                                (default: DLL_FORCE_CLOSE_PCT env var, fallback 0.95)
+
+    Returns:
+        {
+            "tripped": bool,
+            "reason": str | None,         # KILL_REASON_* constant or None
+            "force_close": bool,          # True only when force_close_pct reached
+            "session_id": str,
+            "firm_key": str,
+            "daily_pnl_pct": float,       # current_daily_pnl / daily_loss_limit
+            "halt_pct_used": float,       # effective halt threshold (for audit)
+            "force_close_pct_used": float,# effective force_close threshold (for audit)
+        }
+    """
+    effective_halt_pct        = halt_pct        if halt_pct        is not None else _DEFAULT_DLL_HALT_PCT
+    effective_force_close_pct = force_close_pct if force_close_pct is not None else _DEFAULT_DLL_FORCE_CLOSE_PCT
+
+    # Guard: invalid daily_loss_limit makes the P&L check meaningless — fail closed
+    if not isinstance(daily_loss_limit, (int, float)) or daily_loss_limit <= 0:
+        return {
+            "tripped": True,
+            "reason": "invalid_daily_loss_limit",
+            "force_close": False,
+            "session_id": session_id,
+            "firm_key": firm_key,
+            "daily_pnl_pct": float("nan"),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
+        }
+
+    daily_pnl_pct = current_daily_pnl / daily_loss_limit  # negative when losing
+
+    # 1. Force-close threshold — flatten all positions
+    if daily_pnl_pct <= -effective_force_close_pct:
+        return {
+            "tripped": True,
+            "reason": KILL_REASON_DAILY_LOSS_BREACHED,
+            "force_close": True,
+            "session_id": session_id,
+            "firm_key": firm_key,
+            "daily_pnl_pct": round(daily_pnl_pct, 4),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
+        }
+
+    # 2. Halt threshold — stop new entries, don't force close existing positions
+    if daily_pnl_pct <= -effective_halt_pct:
+        return {
+            "tripped": True,
+            "reason": KILL_REASON_APPROACHING_DAILY_LOSS,
+            "force_close": False,
+            "session_id": session_id,
+            "firm_key": firm_key,
+            "daily_pnl_pct": round(daily_pnl_pct, 4),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
+        }
+
+    # 3. Max trades per session-day
+    if max_trades_per_session is not None and trades_today >= max_trades_per_session:
+        return {
+            "tripped": True,
+            "reason": KILL_REASON_MAX_TRADES,
+            "force_close": False,
+            "session_id": session_id,
+            "firm_key": firm_key,
+            "daily_pnl_pct": round(daily_pnl_pct, 4),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
+        }
+
+    # 4. Consecutive loss limit
+    if consecutive_losses >= consecutive_loss_limit:
+        return {
+            "tripped": True,
+            "reason": KILL_REASON_CONSECUTIVE_LOSSES,
+            "force_close": False,
+            "session_id": session_id,
+            "firm_key": firm_key,
+            "daily_pnl_pct": round(daily_pnl_pct, 4),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
+        }
+
+    return {
+        "tripped": False,
+        "reason": None,
+        "force_close": False,
+        "session_id": session_id,
+        "firm_key": firm_key,
+        "daily_pnl_pct": round(daily_pnl_pct, 4),
+        "halt_pct_used": effective_halt_pct,
+        "force_close_pct_used": effective_force_close_pct,
+    }
+
+
+# ─── Correlated Position Guard (Tier 5.3.1 — W5b) ──────────────
+
+import logging  # noqa: E402
+import os  # noqa: E402
+import pathlib  # noqa: E402
+
+# Constant for audit logging
+KILL_REASON_CORRELATED_POSITION_OPEN = "correlated_position_open"
+
+# Default correlation matrix path — resolved relative to this file
+_DEFAULT_MATRIX_PATH = pathlib.Path(__file__).parent / "correlation_matrix.yaml"
+
+_logger = logging.getLogger(__name__)
+
+
+def _load_correlation_matrix(matrix_path: str | None = None) -> dict[str, Any]:
+    """
+    Load the correlation matrix YAML.
+
+    Returns a dict with:
+      - "correlations": dict of "SYMBOL_SYMBOL" → float
+      - "threshold": float (default 0.70)
+
+    Falls back to {"correlations": {}, "threshold": 0.70} if YAML unavailable.
+    Failure to load emits a WARNING and never raises — the guard defaults to
+    pass-through (no pairs → no blocks) rather than fail-closed.
+    """
+    import yaml  # lazy import — yaml may not be installed in all envs
+
+    path = pathlib.Path(matrix_path) if matrix_path else _DEFAULT_MATRIX_PATH
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        return {
+            "correlations": data.get("correlations") or {},
+            "threshold": float(data.get("threshold", 0.70)),
+        }
+    except ImportError:
+        _logger.warning(
+            "PyYAML not installed — correlated position guard defaults to pass-through (no blocks)",
+        )
+    except FileNotFoundError:
+        _logger.warning(
+            "correlation_matrix.yaml not found at %s — guard defaults to pass-through", path
+        )
+    except Exception as exc:
+        _logger.warning(
+            "Failed to load correlation matrix from %s: %s — guard defaults to pass-through",
+            path, exc,
+        )
+    return {"correlations": {}, "threshold": 0.70}
+
+
+def _pair_key(symbol_a: str, symbol_b: str) -> str:
+    """Canonical key for a symbol pair — lexicographically sorted, joined with '_'."""
+    parts = sorted([symbol_a.upper(), symbol_b.upper()])
+    return f"{parts[0]}_{parts[1]}"
+
+
+def _get_correlation(
+    symbol_a: str,
+    symbol_b: str,
+    correlations: dict[str, float],
+) -> float:
+    """
+    Look up correlation between two symbols.
+    Symmetric: MNQ_MES == MES_MNQ.
+    Returns 0.0 for unknown pairs (with WARNING logged by caller).
+    """
+    key = _pair_key(symbol_a, symbol_b)
+    return float(correlations.get(key, 0.0))
+
+
+def check_correlated_position_guard(
+    symbol: str,
+    open_positions: list[dict[str, Any]],
+    correlation_matrix: dict[str, Any] | None = None,
+    matrix_path: str | None = None,
+) -> dict[str, Any]:
+    """
+    Block new entry if any open position is correlated > threshold with proposed symbol.
+
+    Tier 5.3.1 compliance gate — enforces sequential position logic for cross-market
+    lead-lag signals (Tier 3.3). Prop firms ban concurrent correlated positions as a
+    position-limit-bypass. This gate closes that gap.
+
+    Args:
+        symbol:             Proposed entry symbol (e.g. "MES").
+        open_positions:     List of currently open position dicts. Each must have
+                            a "symbol" key. Other keys are ignored.
+        correlation_matrix: Pre-loaded matrix dict (for tests). If None, loaded from
+                            correlation_matrix.yaml via matrix_path.
+        matrix_path:        Override path to correlation_matrix.yaml. Default = sibling file.
+
+    Returns:
+        {
+            "allowed": bool,
+            "reason": KILL_REASON_CORRELATED_POSITION_OPEN | None,
+            "blocking_symbol": str | None,          # symbol of the open position that blocked
+            "blocking_correlation": float | None,   # correlation value that triggered block
+            "threshold": float,
+            "symbol": str,
+        }
+
+    Fail-OPEN: if the matrix cannot be loaded (yaml missing, file not found),
+    the function returns allowed=True so trading is not blocked by infrastructure
+    failures. The failure is already logged inside _load_correlation_matrix.
+
+    Symmetry: MNQ→MES and MES→MNQ produce identical decisions.
+
+    Empty open_positions: always returns allowed=True (no false positives on
+    first trade of the day).
+
+    Missing pair in matrix: defaults to correlation 0.0 (ALLOWED) with WARNING.
+    """
+    if not open_positions:
+        return {
+            "allowed": True,
+            "reason": None,
+            "blocking_symbol": None,
+            "blocking_correlation": None,
+            "threshold": 0.70,
+            "symbol": symbol,
+        }
+
+    # Load matrix (use pre-loaded if provided, e.g. from tests)
+    if correlation_matrix is None:
+        correlation_matrix = _load_correlation_matrix(matrix_path)
+
+    correlations: dict[str, float] = correlation_matrix.get("correlations", {})
+    threshold: float = float(correlation_matrix.get("threshold", 0.70))
+
+    for pos in open_positions:
+        pos_symbol = str(pos.get("symbol", ""))
+        if not pos_symbol:
+            continue
+        if pos_symbol.upper() == symbol.upper():
+            # Same symbol — not a correlation block (handled by existing position guard)
+            continue
+
+        corr = _get_correlation(symbol, pos_symbol, correlations)
+        key = _pair_key(symbol, pos_symbol)
+
+        if key not in correlations:
+            _logger.warning(
+                "check_correlated_position_guard: unknown pair %s/%s — defaulting to 0.0 (ALLOWED)",
+                symbol, pos_symbol,
+            )
+
+        if corr > threshold:
+            _logger.warning(
+                "compliance.correlated_position_blocked symbol=%s open=%s correlation=%.3f threshold=%.3f",
+                symbol, pos_symbol, corr, threshold,
+            )
+            return {
+                "allowed": False,
+                "reason": KILL_REASON_CORRELATED_POSITION_OPEN,
+                "blocking_symbol": pos_symbol,
+                "blocking_correlation": corr,
+                "threshold": threshold,
+                "symbol": symbol,
+            }
+
+    return {
+        "allowed": True,
+        "reason": None,
+        "blocking_symbol": None,
+        "blocking_correlation": None,
+        "threshold": threshold,
+        "symbol": symbol,
+    }
+
+
+# ─── 2026 MFFU Hard Rules ───────────────────────────────────────────────
+# Canonical reference: docs/prop-firm-rules-2026-mffu.md
+#
+# These functions enforce MFFU 2026-specific compliance rules that don't fit
+# the legacy check_strategy_compliance shape. They are called from Python
+# subprocess entry points or directly from tests.
+#
+# Constants are imported from firm_config to keep the canonical doc parsed
+# by scripts/verify-2026-rules-compliance.mjs in sync with code.
+
+# Reasons for kill switch / blocked-order events
+KILL_REASON_TWO_PERCENT_RULE             = "two_percent_price_limit_breach"
+KILL_REASON_HFT_LIMIT                    = "hft_max_trades_per_day"
+KILL_REASON_SIMULTANEOUS_LIMIT_PRICE     = "simultaneous_limits_at_same_price"
+KILL_REASON_HEDGE_SAME_UNDERLYING        = "hedge_same_underlying"
+
+
+def check_two_percent_rule(
+    intended_max_loss_dollars: float,
+    account_balance_dollars: float,
+    pct_threshold: float = 0.02,
+) -> dict[str, Any]:
+    """
+    MFFU 2026 Rule 8: 2% price limit rule.
+
+    Pre-order check. Blocks any order whose intended max loss exceeds
+    `pct_threshold * account_balance_dollars`. For 50K MFFU at 0.02, that's
+    $1,000 max loss per trade.
+
+    Args:
+        intended_max_loss_dollars: positive dollar amount the strategy is
+            willing to lose on this entry (entry_price - stop_price) * tick_value * contracts.
+        account_balance_dollars:   current account balance (positive).
+        pct_threshold:             firm's per-trade loss cap as a fraction
+            of account balance. Default 0.02 (MFFU 2026).
+
+    Returns:
+        {
+            "allowed": bool,
+            "reason": KILL_REASON_TWO_PERCENT_RULE | None,
+            "intended_max_loss": float,
+            "limit_dollars": float,
+            "pct_threshold": float,
+        }
+
+    Fail-CLOSED: invalid inputs return allowed=False.
+    """
+    if not isinstance(intended_max_loss_dollars, (int, float)) or intended_max_loss_dollars < 0:
+        return {
+            "allowed": False,
+            "reason": KILL_REASON_TWO_PERCENT_RULE,
+            "intended_max_loss": float("nan"),
+            "limit_dollars": float("nan"),
+            "pct_threshold": pct_threshold,
+        }
+    if not isinstance(account_balance_dollars, (int, float)) or account_balance_dollars <= 0:
+        return {
+            "allowed": False,
+            "reason": KILL_REASON_TWO_PERCENT_RULE,
+            "intended_max_loss": intended_max_loss_dollars,
+            "limit_dollars": float("nan"),
+            "pct_threshold": pct_threshold,
+        }
+
+    limit = pct_threshold * account_balance_dollars
+    allowed = intended_max_loss_dollars <= limit
+
+    if not allowed:
+        _logger.warning(
+            "compliance.two_percent_rule_violation "
+            "intended_max_loss=%.2f limit_dollars=%.2f pct_threshold=%.4f account_balance=%.2f",
+            intended_max_loss_dollars, limit, pct_threshold, account_balance_dollars,
+        )
+
+    return {
+        "allowed": allowed,
+        "reason": None if allowed else KILL_REASON_TWO_PERCENT_RULE,
+        "intended_max_loss": round(float(intended_max_loss_dollars), 2),
+        "limit_dollars": round(float(limit), 2),
+        "pct_threshold": pct_threshold,
+    }
+
+
+def check_hft_limit(
+    trades_today: int,
+    max_trades_per_day: int = 500,
+) -> dict[str, Any]:
+    """
+    MFFU 2026 Rule 1: High-frequency trading not allowed.
+
+    Returns blocked when trades_today >= max_trades_per_day.
+
+    Args:
+        trades_today:        count of trades already taken in this session.
+        max_trades_per_day:  hard ceiling. Default 500 (MFFU 2026 HFT line).
+
+    Returns:
+        {
+            "allowed": bool,
+            "reason": KILL_REASON_HFT_LIMIT | None,
+            "trades_today": int,
+            "max_trades_per_day": int,
+        }
+    """
+    try:
+        trades = int(trades_today)
+        cap = int(max_trades_per_day)
+    except (TypeError, ValueError):
+        return {
+            "allowed": False,
+            "reason": KILL_REASON_HFT_LIMIT,
+            "trades_today": 0,
+            "max_trades_per_day": max_trades_per_day,
+        }
+    allowed = trades < cap
+    if not allowed:
+        _logger.warning(
+            "compliance.hft_limit_violation trades_today=%d cap=%d",
+            trades, cap,
+        )
+    return {
+        "allowed": allowed,
+        "reason": None if allowed else KILL_REASON_HFT_LIMIT,
+        "trades_today": trades,
+        "max_trades_per_day": cap,
+    }
+
+
+def check_simultaneous_limit_price(
+    proposed_symbol: str,
+    proposed_side: str,
+    proposed_price: float,
+    open_limit_orders: list[dict[str, Any]],
+    price_epsilon: float = 1e-6,
+) -> dict[str, Any]:
+    """
+    MFFU 2026 Rule 6: Simultaneous limits at same price prohibited.
+
+    Returns blocked when an open limit order matches (symbol, side, price)
+    within `price_epsilon`.
+
+    Args:
+        proposed_symbol:    symbol of the new limit order
+        proposed_side:      "buy" | "sell"
+        proposed_price:     limit price of new order
+        open_limit_orders:  list of dicts; each must have keys
+                            "symbol", "side", "price", "order_type" (= "limit")
+        price_epsilon:      float tolerance for price equality
+
+    Returns:
+        {
+            "allowed": bool,
+            "reason": KILL_REASON_SIMULTANEOUS_LIMIT_PRICE | None,
+            "conflicting_order_count": int,
+            "proposed": {symbol, side, price},
+        }
+    """
+    sym = (proposed_symbol or "").upper()
+    side = (proposed_side or "").lower()
+    try:
+        price = float(proposed_price)
+    except (TypeError, ValueError):
+        return {
+            "allowed": False,
+            "reason": KILL_REASON_SIMULTANEOUS_LIMIT_PRICE,
+            "conflicting_order_count": 0,
+            "proposed": {"symbol": sym, "side": side, "price": proposed_price},
+        }
+
+    conflicts = 0
+    for order in open_limit_orders or []:
+        if (order.get("order_type") or "").lower() != "limit":
+            continue
+        if (order.get("symbol") or "").upper() != sym:
+            continue
+        if (order.get("side") or "").lower() != side:
+            continue
+        try:
+            order_price = float(order.get("price"))
+        except (TypeError, ValueError):
+            continue
+        if abs(order_price - price) <= price_epsilon:
+            conflicts += 1
+
+    allowed = conflicts == 0
+    if not allowed:
+        _logger.warning(
+            "compliance.simultaneous_limit_price_violation symbol=%s side=%s price=%.6f conflicting_order_count=%d",
+            sym, side, price, conflicts,
+        )
+    return {
+        "allowed": allowed,
+        "reason": None if allowed else KILL_REASON_SIMULTANEOUS_LIMIT_PRICE,
+        "conflicting_order_count": conflicts,
+        "proposed": {"symbol": sym, "side": side, "price": price},
+    }
+
+
+# ─── CLI Entry Point (for Node python-runner bridge) ────────────
+
+
+if __name__ == "__main__":
+    import json
+    import os
+    import sys
+
+    # Accept config via --config file path or stdin (matches calendar_filter.py)
+    config_path: str | None = None
+    argv = sys.argv[1:]
+    for i, arg in enumerate(argv):
+        if arg == "--config" and i + 1 < len(argv):
+            config_path = argv[i + 1]
+            break
+        if os.path.isfile(arg):
+            config_path = arg
+            break
+
+    if config_path:
+        with open(config_path, encoding="utf-8") as f:
+            config = json.load(f)
+    else:
+        config = json.load(sys.stdin)
+
+    action = config.get("action", "check_freshness")
+    firm = config.get("firm", "unknown")
+    ruleset = config.get("ruleset") or {}
+    context = config.get("context", "active_trading")
+
+    # If ruleset is empty but session_id is provided, fall back to a
+    # synthetic "stale" response so the Node-side guard fails open
+    # (we log the gap but don't block trading on missing rule data).
+    if not ruleset and not config.get("ruleset"):
+        # Without a ruleset we can't run a real check — emit a structured
+        # "unknown" response.  The Node guard treats fresh=false as block,
+        # so this is conservative-by-default.  Caller is expected to pass
+        # the ruleset dict directly when it's hot-cached.
+        result = {
+            "fresh": False,
+            "firm": firm,
+            "age_hours": float("inf"),
+            "max_age_hours": RULESET_MAX_AGE_HOURS.get(context, 24),
+            "drift_detected": False,
+            "status": "no_ruleset",
+            "message": (
+                f"{firm}: no ruleset payload provided to compliance_gate "
+                f"(action={action}). Provide config.ruleset to evaluate."
+            ),
+        }
+        print(json.dumps(result))
+        sys.exit(0)
+
+    if action == "check_freshness":
+        result = check_freshness(firm, ruleset, context)
+    elif action == "check_violation":
+        strategy_state = config.get("strategy_state") or {}
+        result = check_violation(firm, ruleset, strategy_state)
+    elif action == "pre_session_gate":
+        strategies = config.get("strategies") or []
+        rulesets = config.get("rulesets") or [ruleset] if ruleset else []
+        result = pre_session_gate(strategies, rulesets, context)
+    elif action == "detect_drift":
+        stored_hash = config.get("stored_hash", "")
+        new_content = config.get("new_content", "")
+        result = detect_drift(stored_hash, new_content)
+    elif action == "check_kill_switch":
+        _raw_halt_pct        = config.get("haltPct")
+        _raw_force_close_pct = config.get("forceClosePct")
+        result = check_kill_switch(
+            session_id=config.get("sessionId", "unknown"),
+            firm_key=config.get("firmKey", firm),
+            current_daily_pnl=float(config.get("currentDailyPnl", 0)),
+            daily_loss_limit=float(config.get("dailyLossLimit", 0)),
+            max_trades_per_session=config.get("maxTradesPerSession"),
+            trades_today=int(config.get("tradesToday", 0)),
+            consecutive_losses=int(config.get("consecutiveLosses", 0)),
+            consecutive_loss_limit=int(config.get("consecutiveLossLimit", DEFAULT_CONSECUTIVE_LOSS_LIMIT)),
+            halt_pct=float(_raw_halt_pct) if _raw_halt_pct is not None else None,
+            force_close_pct=float(_raw_force_close_pct) if _raw_force_close_pct is not None else None,
+        )
+    elif action == "check_strategy_compliance":
+        # B5 — multi-firm promotion: per-firm eligibility check.
+        # strategy dict + firm_rules dict passed directly from TS caller,
+        # which builds firm_rules from shared/firm-config.ts FIRMS.
+        strategy_dict = config.get("strategy") or {}
+        firm_rules_dict = config.get("firm_rules") or {}
+        result = check_strategy_compliance(strategy_dict, firm_rules_dict)
+    elif action == "check_two_percent_rule":
+        # MFFU 2026 Rule 8 — pre-order 2% price-limit gate.
+        result = check_two_percent_rule(
+            intended_max_loss_dollars=float(config.get("intendedMaxLoss", 0)),
+            account_balance_dollars=float(config.get("accountBalance", 0)),
+            pct_threshold=float(config.get("pctThreshold", 0.02)),
+        )
+    elif action == "check_hft_limit":
+        # MFFU 2026 Rule 1 — pre-order HFT cap gate.
+        result = check_hft_limit(
+            trades_today=int(config.get("tradesToday", 0)),
+            max_trades_per_day=int(config.get("maxTradesPerDay", 500)),
+        )
+    elif action == "check_simultaneous_limit_price":
+        # MFFU 2026 Rule 6 — pre-order duplicate-limit-price gate.
+        result = check_simultaneous_limit_price(
+            proposed_symbol=str(config.get("proposedSymbol", "")),
+            proposed_side=str(config.get("proposedSide", "")),
+            proposed_price=float(config.get("proposedPrice", 0)),
+            open_limit_orders=config.get("openLimitOrders") or [],
+        )
+    else:
+        result = {
+            "error": f"Unknown action: {action}",
+            "supported_actions": [
+                "check_freshness",
+                "check_violation",
+                "pre_session_gate",
+                "detect_drift",
+                "check_kill_switch",
+                "check_strategy_compliance",
+                "check_two_percent_rule",
+                "check_hft_limit",
+                "check_simultaneous_limit_price",
+            ],
+        }
+
+    print(json.dumps(result))

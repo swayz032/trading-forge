@@ -140,7 +140,7 @@ class TestCheckStrategyCompliance:
             "daily_loss_limit": 1000,
             "consistency_threshold": 0.50,
             "overnight_allowed": True,
-            "contract_limits": {"ES": 5, "NQ": 5},
+            "contract_limits": {"MES": 5, "MNQ": 5},
             "automation_banned": False,
         }
         result = check_strategy_compliance(strategy, firm_rules)
@@ -231,13 +231,13 @@ class TestCheckStrategyCompliance:
         """Exceeding contract limit for a symbol should fail."""
         strategy = _make_strategy(
             "tpt_50k",
-            contracts_per_symbol={"ES": 5, "NQ": 2},
+            contracts_per_symbol={"MES": 5, "MNQ": 2},
         )
-        firm_rules = {"contract_limits": {"ES": 3, "NQ": 3}}
+        firm_rules = {"contract_limits": {"MES": 3, "MNQ": 3}}
         result = check_strategy_compliance(strategy, firm_rules)
 
         assert result["result"] == "fail"
-        assert any("ES" in v for v in result["violations"])
+        assert any("MES" in v for v in result["violations"])
 
     def test_automation_banned_violation(self):
         """Automated strategy on a firm that bans bots should fail."""
@@ -279,7 +279,7 @@ class TestCheckStrategyCompliance:
             total_pnl=5000,
             overnight_holding=True,
             automated=True,
-            contracts_per_symbol={"ES": 20},
+            contracts_per_symbol={"MES": 20},
         )
         firm_rules = {
             "max_drawdown_limit": 2000,
@@ -287,7 +287,7 @@ class TestCheckStrategyCompliance:
             "consistency_threshold": 0.15,
             "overnight_allowed": False,
             "automation_banned": True,
-            "contract_limits": {"ES": 3},
+            "contract_limits": {"MES": 3},
         }
         result = check_strategy_compliance(strategy, firm_rules)
 

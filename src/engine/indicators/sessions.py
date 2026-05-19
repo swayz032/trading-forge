@@ -56,7 +56,8 @@ def is_asia_killzone(ts: pl.Series) -> pl.Series:
         Boolean Series: True during Asia killzone.
     """
     hour, _ = _to_et_components(ts)
-    return (hour >= 20).alias("asia_killzone")
+    # Asia = 8 PM to midnight ET (hours 20-23 AND hour 0 for midnight bar)
+    return ((hour >= 20) | (hour == 0)).alias("asia_killzone")
 
 
 def is_london_killzone(ts: pl.Series) -> pl.Series:

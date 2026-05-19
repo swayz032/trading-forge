@@ -1,0 +1,53 @@
+# G5.3 — Trading Forge OpenTelemetry Collector configuration.
+#
+# Pipeline:
+#   OTLP receiver (port 4318 HTTP, 4317 gRPC)
+#     → batch processor (5s window, 1024 max items)
+#     → debug exporter (logs spans to stdout for local dev)
+#     → otlp/tempo exporter (forwards to Grafana Tempo if enabled)
+#
+# Tracing.ts in Trading Forge already emits OTLP HTTP spans when
+# OTEL_EXPORTER_OTLP_ENDPOINT is set. Default unset → spans dropped.
+# With this collector running and the env var set to http://otel-collector:4318
+# (in-docker) or http://localhost:4318 (host), spans flow end-to-end.
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 256
+    spike_limit_mib: 64
+
+exporters:
+  debug:
+    verbosity: detailed
+    sampling_initial: 5
+    sampling_thereafter: 50
+  # Forward to Grafana Tempo. Requires the `tempo` service to be running and
+  # reachable at the configured endpoint (default: tempo:4317 per OTEL convention).
+  # Override via TEMPO_OTLP_ENDPOINT env var, e.g. TEMPO_OTLP_ENDPOINT=localhost:4317
+  # when running Tempo outside Docker on the host.
+  otlp/tempo:
+    endpoint: ${TEMPO_OTLP_ENDPOINT:-tempo:4317}
+    tls:
+      insecure: true
+
+service:
+  telemetry:
+    logs:
+      level: info
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug, otlp/tempo]

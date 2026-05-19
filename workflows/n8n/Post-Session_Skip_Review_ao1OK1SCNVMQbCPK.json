@@ -1,0 +1,476 @@
+{
+  "updatedAt": "2026-05-18T03:42:51.968Z",
+  "createdAt": "2026-05-18T00:56:06.619Z",
+  "id": "ao1OK1SCNVMQbCPK",
+  "name": "Post-Session Skip Review",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger-schedule",
+      "name": "Weekday 5:30PM ET Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 17 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http-get-decisions",
+      "name": "GET Today Decisions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://tf-relay-production.up.railway.app/api/skip/today",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "code-build-review",
+      "name": "Build Review Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\n\nconst decisions = Array.isArray(response) ? response : (response.decisions || response.data || []);\n\nconst reviewData = decisions.map(d => {\n  const name = d.strategyName || d.strategy || d.name || 'Unknown';\n  const decision = (d.decision || d.action || 'TRADE').toUpperCase();\n  const reason = d.reason || d.rationale || '';\n  const outcome = d.outcome || d.result || null;\n  const pnl = d.pnl !== undefined ? d.pnl : null;\n  const hasOutcome = outcome !== null || pnl !== null;\n\n  return {\n    name,\n    decision,\n    reason,\n    outcome,\n    pnl,\n    hasOutcome\n  };\n});\n\nreturn [{\n  json: {\n    reviewData,\n    totalDecisions: reviewData.length,\n    withOutcomes: reviewData.filter(r => r.hasOutcome).length,\n    withoutOutcomes: reviewData.filter(r => !r.hasOutcome).length,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "code-calc-metrics",
+      "name": "Calculate Skip Accuracy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst reviews = data.reviewData;\n\nlet correctSkips = 0;\nlet falseSkips = 0;\nlet correctTrades = 0;\nlet missedSaves = 0;\nlet noOutcomeCount = 0;\n\nfor (const r of reviews) {\n  if (!r.hasOutcome) {\n    noOutcomeCount++;\n    continue;\n  }\n\n  const wasSkipped = r.decision === 'SKIP';\n  const wasReduced = r.decision === 'REDUCE';\n  const wouldHaveLost = r.pnl !== null ? r.pnl < 0 : (r.outcome === 'LOSS' || r.outcome === 'LOSER');\n  const wouldHaveWon = r.pnl !== null ? r.pnl >= 0 : (r.outcome === 'WIN' || r.outcome === 'WINNER');\n\n  if (wasSkipped && wouldHaveLost) {\n    correctSkips++;\n  } else if (wasSkipped && wouldHaveWon) {\n    falseSkips++;\n  } else if (!wasSkipped && wouldHaveWon) {\n    correctTrades++;\n  } else if (!wasSkipped && wouldHaveLost) {\n    missedSaves++;\n  }\n}\n\nconst totalWithOutcome = correctSkips + falseSkips + correctTrades + missedSaves;\nconst skipAccuracy = (correctSkips + falseSkips) > 0\n  ? ((correctSkips / (correctSkips + falseSkips)) * 100).toFixed(1)\n  : 'N/A';\nconst tradeAccuracy = (correctTrades + missedSaves) > 0\n  ? ((correctTrades / (correctTrades + missedSaves)) * 100).toFixed(1)\n  : 'N/A';\n\nreturn [{\n  json: {\n    metrics: {\n      correctSkips,\n      falseSkips,\n      correctTrades,\n      missedSaves,\n      skipAccuracy: skipAccuracy + '%',\n      tradeAccuracy: tradeAccuracy + '%',\n      totalWithOutcome,\n      noOutcomeCount\n    },\n    reviewData: data.reviewData,\n    timestamp: data.timestamp\n  }\n}];"
+      }
+    },
+    {
+      "id": "code-format-report",
+      "name": "Format Review Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst m = data.metrics;\nconst today = new Date().toISOString().split('T')[0];\n\nconst strategyLines = [];\nfor (const r of data.reviewData) {\n  let outcomeStr = 'No outcome recorded';\n  if (r.hasOutcome) {\n    outcomeStr = r.pnl !== null ? 'PnL: $' + String(r.pnl) : 'Outcome: ' + String(r.outcome);\n  }\n  strategyLines.push('  - ' + r.name + ' [' + r.decision + ']: ' + outcomeStr);\n}\nconst strategyDetails = strategyLines.join('\\n');\n\nconst summaryLines = [\n  'Correct Skips: ' + String(m.correctSkips) + ' (avoided losers)',\n  'False Skips: ' + String(m.falseSkips) + ' (missed winners)',\n  'Correct Trades: ' + String(m.correctTrades) + ' (traded winners)',\n  'Missed Saves: ' + String(m.missedSaves) + ' (traded losers, should have skipped)'\n];\n\nconst message = 'Skip Accuracy: ' + String(m.skipAccuracy) + ' | Trade Accuracy: ' + String(m.tradeAccuracy) + '\\n\\n' +\n  summaryLines.join('\\n') + '\\n\\nStrategy Details:\\n' + strategyDetails;\n\nreturn [{\n  json: {\n    title: 'Post-Session Skip Review (' + today + ')',\n    message: message,\n    severity: 'info',\n    data: {\n      date: today,\n      skipAccuracy: String(m.skipAccuracy),\n      tradeAccuracy: String(m.tradeAccuracy),\n      correctSkips: String(m.correctSkips),\n      falseSkips: String(m.falseSkips),\n      correctTrades: String(m.correctTrades),\n      missedSaves: String(m.missedSaves)\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "http-post-report",
+      "name": "POST Review Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/__oc/alert/skip",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 10000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "http-error-alert",
+      "name": "POST Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/__oc/alert/alerts",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ alert_type: 'WORKFLOW_ERROR', workflow: 'Post-Session Skip Review', error: $json.execution ? $json.execution.error.message : 'Unknown error', timestamp: new Date().toISOString() }) }}",
+        "options": {
+          "timeout": 10000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Post-Session Skip Review', message: $json.execution ? $json.execution.error.message : 'Unknown error', severity: 'critical', data: { workflow: 'Post-Session Skip Review', timestamp: new Date().toISOString() } }) }}"
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Weekday 5:30PM ET Trigger": {
+      "main": [
+        [
+          {
+            "node": "GET Today Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Today Decisions": {
+      "main": [
+        [
+          {
+            "node": "Build Review Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Review Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Skip Accuracy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Skip Accuracy": {
+      "main": [
+        [
+          {
+            "node": "Format Review Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Review Report": {
+      "main": [
+        [
+          {
+            "node": "POST Review Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "POST Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "DGEk1D478xWJClKD"
+  },
+  "staticData": {
+    "node:Weekday 5:30PM ET Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "0cbed3ac-2c57-4e3b-95c7-2eca2d750aa5",
+  "activeVersionId": "0cbed3ac-2c57-4e3b-95c7-2eca2d750aa5",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-18T00:56:06.619Z",
+      "createdAt": "2026-05-18T00:56:06.619Z",
+      "role": "workflow:owner",
+      "workflowId": "ao1OK1SCNVMQbCPK",
+      "projectId": "MbOHOApVuCtg1xkk"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-05-18T00:56:06.619Z",
+    "createdAt": "2026-05-18T00:56:06.619Z",
+    "versionId": "0cbed3ac-2c57-4e3b-95c7-2eca2d750aa5",
+    "workflowId": "ao1OK1SCNVMQbCPK",
+    "nodes": [
+      {
+        "id": "trigger-schedule",
+        "name": "Weekday 5:30PM ET Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "30 17 * * 1-5"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "http-get-decisions",
+        "name": "GET Today Decisions",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://tf-relay-production.up.railway.app/api/skip/today",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "code-build-review",
+        "name": "Build Review Data",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const response = $input.first().json;\n\nconst decisions = Array.isArray(response) ? response : (response.decisions || response.data || []);\n\nconst reviewData = decisions.map(d => {\n  const name = d.strategyName || d.strategy || d.name || 'Unknown';\n  const decision = (d.decision || d.action || 'TRADE').toUpperCase();\n  const reason = d.reason || d.rationale || '';\n  const outcome = d.outcome || d.result || null;\n  const pnl = d.pnl !== undefined ? d.pnl : null;\n  const hasOutcome = outcome !== null || pnl !== null;\n\n  return {\n    name,\n    decision,\n    reason,\n    outcome,\n    pnl,\n    hasOutcome\n  };\n});\n\nreturn [{\n  json: {\n    reviewData,\n    totalDecisions: reviewData.length,\n    withOutcomes: reviewData.filter(r => r.hasOutcome).length,\n    withoutOutcomes: reviewData.filter(r => !r.hasOutcome).length,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        }
+      },
+      {
+        "id": "code-calc-metrics",
+        "name": "Calculate Skip Accuracy",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst reviews = data.reviewData;\n\nlet correctSkips = 0;\nlet falseSkips = 0;\nlet correctTrades = 0;\nlet missedSaves = 0;\nlet noOutcomeCount = 0;\n\nfor (const r of reviews) {\n  if (!r.hasOutcome) {\n    noOutcomeCount++;\n    continue;\n  }\n\n  const wasSkipped = r.decision === 'SKIP';\n  const wasReduced = r.decision === 'REDUCE';\n  const wouldHaveLost = r.pnl !== null ? r.pnl < 0 : (r.outcome === 'LOSS' || r.outcome === 'LOSER');\n  const wouldHaveWon = r.pnl !== null ? r.pnl >= 0 : (r.outcome === 'WIN' || r.outcome === 'WINNER');\n\n  if (wasSkipped && wouldHaveLost) {\n    correctSkips++;\n  } else if (wasSkipped && wouldHaveWon) {\n    falseSkips++;\n  } else if (!wasSkipped && wouldHaveWon) {\n    correctTrades++;\n  } else if (!wasSkipped && wouldHaveLost) {\n    missedSaves++;\n  }\n}\n\nconst totalWithOutcome = correctSkips + falseSkips + correctTrades + missedSaves;\nconst skipAccuracy = (correctSkips + falseSkips) > 0\n  ? ((correctSkips / (correctSkips + falseSkips)) * 100).toFixed(1)\n  : 'N/A';\nconst tradeAccuracy = (correctTrades + missedSaves) > 0\n  ? ((correctTrades / (correctTrades + missedSaves)) * 100).toFixed(1)\n  : 'N/A';\n\nreturn [{\n  json: {\n    metrics: {\n      correctSkips,\n      falseSkips,\n      correctTrades,\n      missedSaves,\n      skipAccuracy: skipAccuracy + '%',\n      tradeAccuracy: tradeAccuracy + '%',\n      totalWithOutcome,\n      noOutcomeCount\n    },\n    reviewData: data.reviewData,\n    timestamp: data.timestamp\n  }\n}];"
+        }
+      },
+      {
+        "id": "code-format-report",
+        "name": "Format Review Report",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst m = data.metrics;\nconst today = new Date().toISOString().split('T')[0];\n\nconst strategyLines = [];\nfor (const r of data.reviewData) {\n  let outcomeStr = 'No outcome recorded';\n  if (r.hasOutcome) {\n    outcomeStr = r.pnl !== null ? 'PnL: $' + String(r.pnl) : 'Outcome: ' + String(r.outcome);\n  }\n  strategyLines.push('  - ' + r.name + ' [' + r.decision + ']: ' + outcomeStr);\n}\nconst strategyDetails = strategyLines.join('\\n');\n\nconst summaryLines = [\n  'Correct Skips: ' + String(m.correctSkips) + ' (avoided losers)',\n  'False Skips: ' + String(m.falseSkips) + ' (missed winners)',\n  'Correct Trades: ' + String(m.correctTrades) + ' (traded winners)',\n  'Missed Saves: ' + String(m.missedSaves) + ' (traded losers, should have skipped)'\n];\n\nconst message = 'Skip Accuracy: ' + String(m.skipAccuracy) + ' | Trade Accuracy: ' + String(m.tradeAccuracy) + '\\n\\n' +\n  summaryLines.join('\\n') + '\\n\\nStrategy Details:\\n' + strategyDetails;\n\nreturn [{\n  json: {\n    title: 'Post-Session Skip Review (' + today + ')',\n    message: message,\n    severity: 'info',\n    data: {\n      date: today,\n      skipAccuracy: String(m.skipAccuracy),\n      tradeAccuracy: String(m.tradeAccuracy),\n      correctSkips: String(m.correctSkips),\n      falseSkips: String(m.falseSkips),\n      correctTrades: String(m.correctTrades),\n      missedSaves: String(m.missedSaves)\n    }\n  }\n}];"
+        }
+      },
+      {
+        "id": "http-post-report",
+        "name": "POST Review Report",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1100,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/__oc/alert/skip",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 10000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}"
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
+      },
+      {
+        "id": "error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "http-error-alert",
+        "name": "POST Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          220,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/__oc/alert/alerts",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify({ alert_type: 'WORKFLOW_ERROR', workflow: 'Post-Session Skip Review', error: $json.execution ? $json.execution.error.message : 'Unknown error', timestamp: new Date().toISOString() }) }}",
+          "options": {
+            "timeout": 10000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: 'Workflow Error: Post-Session Skip Review', message: $json.execution ? $json.execution.error.message : 'Unknown error', severity: 'critical', data: { workflow: 'Post-Session Skip Review', timestamp: new Date().toISOString() } }) }}"
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 2,
+        "continueOnFail": true
+      }
+    ],
+    "connections": {
+      "Weekday 5:30PM ET Trigger": {
+        "main": [
+          [
+            {
+              "node": "GET Today Decisions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GET Today Decisions": {
+        "main": [
+          [
+            {
+              "node": "Build Review Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Review Data": {
+        "main": [
+          [
+            {
+              "node": "Calculate Skip Accuracy",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculate Skip Accuracy": {
+        "main": [
+          [
+            {
+              "node": "Format Review Report",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Review Report": {
+        "main": [
+          [
+            {
+              "node": "POST Review Report",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "POST Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

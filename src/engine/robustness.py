@@ -6,6 +6,7 @@ ranges) or overfit (performance collapses with small parameter changes).
 
 from __future__ import annotations
 
+import math
 from typing import Optional
 
 import optuna
@@ -35,7 +36,8 @@ def analyze_optuna_study(study: optuna.Study) -> dict:
         }
 
     # Get all completed trial values (negate back since we minimize negative Sharpe)
-    values = [-t.value for t in study.trials if t.value is not None]
+    # Filter out inf/-inf from failed trials (optimizer returns inf on error)
+    values = [-t.value for t in study.trials if t.value is not None and not math.isinf(t.value)]
 
     if not values:
         return {
@@ -108,12 +110,17 @@ def extract_robust_range(
     if len(study.trials) == 0:
         return {}
 
-    values = [-t.value for t in study.trials if t.value is not None]
+    values = [-t.value for t in study.trials if t.value is not None and not math.isinf(t.value)]
     if not values:
         return {}
 
     best_score = max(values)
-    cutoff = best_score * threshold
+    # For negative scores, multiplying by threshold (0.85) makes cutoff LESS negative,
+    # which inverts the filter. Use division instead to get MORE negative cutoff.
+    if best_score > 0:
+        cutoff = best_score * threshold
+    else:
+        cutoff = best_score / threshold if threshold > 0 else best_score
 
     # Collect params from trials above cutoff
     param_ranges: dict[str, list[float]] = {}

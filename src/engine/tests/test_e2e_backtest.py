@@ -44,7 +44,7 @@ class TestE2EBacktest:
         return BacktestRequest(
             strategy=StrategyConfig(
                 name="SMA Cross E2E",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=10),
@@ -61,7 +61,7 @@ class TestE2EBacktest:
             ),
             start_date="2023-01-01",
             end_date="2023-06-30",
-            commission_per_side=4.50,
+            commission_per_side=0.62,
         )
 
     def test_full_pipeline_runs(self):
@@ -116,7 +116,8 @@ class TestE2EBacktest:
 
         passed, rejections = check_performance_gate(stats)
         tier = classify_tier(stats)
-        score = compute_forge_score(stats)
+        forge_result = compute_forge_score(stats)
+        score = forge_result["score"]  # compute_forge_score returns a dict; score is the float
 
         # These should return valid results regardless of pass/fail
         assert isinstance(passed, bool)
@@ -143,8 +144,8 @@ class TestE2EBacktest:
 
         compliance = run_prop_compliance(daily_pnls, stats)
 
-        # Must have all 7 firms
-        assert len(compliance) == 7
+        # Must have all 8 firms
+        assert len(compliance) == 8
         for firm, details in compliance.items():
             assert "passed" in details
             assert "expected_eval_cost" in details

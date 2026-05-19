@@ -1,0 +1,448 @@
+{
+  "updatedAt": "2026-05-18T03:42:51.968Z",
+  "createdAt": "2026-05-18T00:56:04.953Z",
+  "id": "MXTkxH5x8yjpLNXS",
+  "name": "11A-critic-optimization",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "cron-trigger",
+      "name": "Daily 3AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-backtests",
+      "name": "Fetch Recent Backtests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/backtests",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "completed"
+            },
+            {
+              "name": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "filter-tiers",
+      "name": "Filter TIER_1/2/3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst backtests = Array.isArray(data) ? data : (data.data || data.backtests || []);\nconst qualifying = backtests.filter(b => ['TIER_1','TIER_2','TIER_3'].includes(b.tier));\nreturn qualifying.map(b => ({ json: { strategy_id: b.strategyId, backtest_id: b.id, tier: b.tier } }));"
+      }
+    },
+    {
+      "id": "trigger-critic",
+      "name": "POST Critic Analyze",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/critic-optimizer/analyze",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": null,
+        "options": {
+          "timeout": 60000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategy_id: $json.strategy_id, backtest_id: $json.backtest_id }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "log-result",
+      "name": "Log to Journal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/journal",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": null,
+        "options": {
+          "timeout": 15000
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: 'critic_optimization', status: 'logged', analystNotes: JSON.stringify($json) }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "log-error",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const error = $input.all();\nconsole.error('11A-critic-optimization error:', JSON.stringify(error, null, 2));\nreturn error;"
+      }
+    }
+  ],
+  "connections": {
+    "Daily 3AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recent Backtests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recent Backtests": {
+      "main": [
+        [
+          {
+            "node": "Filter TIER_1/2/3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter TIER_1/2/3": {
+      "main": [
+        [
+          {
+            "node": "POST Critic Analyze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Critic Analyze": {
+      "main": [
+        [
+          {
+            "node": "Log to Journal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "DGEk1D478xWJClKD"
+  },
+  "staticData": {
+    "node:Daily 3AM Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "b1f56484-16dc-4c21-9c89-ee2b047db582",
+  "activeVersionId": "b1f56484-16dc-4c21-9c89-ee2b047db582",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-18T00:56:04.953Z",
+      "createdAt": "2026-05-18T00:56:04.953Z",
+      "role": "workflow:owner",
+      "workflowId": "MXTkxH5x8yjpLNXS",
+      "projectId": "MbOHOApVuCtg1xkk"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-05-18T00:56:04.953Z",
+    "createdAt": "2026-05-18T00:56:04.953Z",
+    "versionId": "b1f56484-16dc-4c21-9c89-ee2b047db582",
+    "workflowId": "MXTkxH5x8yjpLNXS",
+    "nodes": [
+      {
+        "id": "cron-trigger",
+        "name": "Daily 3AM Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 3 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-backtests",
+        "name": "Fetch Recent Backtests",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/backtests",
+          "method": "GET",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "status",
+                "value": "completed"
+              },
+              {
+                "name": "limit",
+                "value": "10"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "filter-tiers",
+        "name": "Filter TIER_1/2/3",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst backtests = Array.isArray(data) ? data : (data.data || data.backtests || []);\nconst qualifying = backtests.filter(b => ['TIER_1','TIER_2','TIER_3'].includes(b.tier));\nreturn qualifying.map(b => ({ json: { strategy_id: b.strategyId, backtest_id: b.id, tier: b.tier } }));"
+        }
+      },
+      {
+        "id": "trigger-critic",
+        "name": "POST Critic Analyze",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/critic-optimizer/analyze",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": null,
+          "options": {
+            "timeout": 60000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ strategy_id: $json.strategy_id, backtest_id: $json.backtest_id }) }}"
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "log-result",
+        "name": "Log to Journal",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/journal",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": null,
+          "options": {
+            "timeout": 15000
+          },
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ source: 'critic_optimization', status: 'logged', analystNotes: JSON.stringify($json) }) }}"
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "error-trigger",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          200
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "log-error",
+        "name": "Log Error",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          420,
+          200
+        ],
+        "parameters": {
+          "jsCode": "const error = $input.all();\nconsole.error('11A-critic-optimization error:', JSON.stringify(error, null, 2));\nreturn error;"
+        }
+      }
+    ],
+    "connections": {
+      "Daily 3AM Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Recent Backtests",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Recent Backtests": {
+        "main": [
+          [
+            {
+              "node": "Filter TIER_1/2/3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter TIER_1/2/3": {
+        "main": [
+          [
+            {
+              "node": "POST Critic Analyze",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Critic Analyze": {
+        "main": [
+          [
+            {
+              "node": "Log to Journal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Log Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

@@ -1,0 +1,846 @@
+{
+  "updatedAt": "2026-05-18T03:42:51.968Z",
+  "createdAt": "2026-05-18T00:56:06.475Z",
+  "id": "7qd92chhmrK2xXtz",
+  "name": "Nightly Self-Correction",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 23 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-sessions",
+      "name": "Fetch Active Paper Sessions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        470,
+        300
+      ],
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/paper/sessions",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "active"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "split-sessions",
+      "name": "Split Sessions",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        690,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "detect-drift",
+      "name": "Detect Drift",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        910,
+        300
+      ],
+      "parameters": {
+        "url": "=https://tf-relay-production.up.railway.app/api/paper/drift/{{ $json.id }}?strategyId={{ $json.strategyId }}",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "check-drift",
+      "name": "IF Drift > 2σ",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1130,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "or",
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-drift",
+              "leftValue": "={{ $json.driftScore }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "condition-mc-pct",
+              "leftValue": "={{ $json.mc_percentile }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ollama-drift-critique",
+      "name": "Ollama Drift Critique",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1350,
+        200
+      ],
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/__ollama/api/generate",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'deepseek-r1:14b', prompt: 'This strategy is drifting from backtest expectations. Drift score: ' + $('Detect Drift').first().json.driftScore + '. MC percentile: ' + ($('Compare Paper to MC').first().json.mc_percentile || 'N/A') + '. Paper metrics vs backtest diverging. Check: regime shift? Execution quality? Slippage > assumptions? Recommendation: continue, reduce size, or stop?', stream: false }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "lifecycle-check",
+      "name": "Lifecycle Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1570,
+        200
+      ],
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/strategies/lifecycle/check",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "journal-nightly",
+      "name": "Journal Nightly Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1790,
+        300
+      ],
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/journal",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: 'n8n', status: 'tested', analystNotes: 'Nightly review: ' + $('Fetch Active Paper Sessions').all().length + ' active sessions checked' }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "broadcast-nightly",
+      "name": "Broadcast Nightly SSE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2010,
+        300
+      ],
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'nightly:review-complete', data: { timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "1142ff2e-0a35-49f5-9e2e-498ea320eb72",
+      "name": "Compare Paper to MC",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://tf-relay-production.up.railway.app/api/paper/mc-compare/{{ $json.id }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"Nightly Self-Correction\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Paper Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Paper Sessions": {
+      "main": [
+        [
+          {
+            "node": "Split Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Sessions": {
+      "main": [
+        [
+          {
+            "node": "Detect Drift",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Journal Nightly Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Drift": {
+      "main": [
+        [
+          {
+            "node": "Compare Paper to MC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Drift > 2σ": {
+      "main": [
+        [
+          {
+            "node": "Ollama Drift Critique",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Drift Critique": {
+      "main": [
+        [
+          {
+            "node": "Lifecycle Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lifecycle Check": {
+      "main": [
+        [
+          {
+            "node": "Split Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Journal Nightly Summary": {
+      "main": [
+        [
+          {
+            "node": "Broadcast Nightly SSE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Paper to MC": {
+      "main": [
+        [
+          {
+            "node": "IF Drift > 2σ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "DGEk1D478xWJClKD"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "9d8c5294-5be7-4b2c-bf33-b93bd40ce3b1",
+  "activeVersionId": "9d8c5294-5be7-4b2c-bf33-b93bd40ce3b1",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-18T00:56:06.475Z",
+      "createdAt": "2026-05-18T00:56:06.475Z",
+      "role": "workflow:owner",
+      "workflowId": "7qd92chhmrK2xXtz",
+      "projectId": "MbOHOApVuCtg1xkk"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-05-18T00:56:06.475Z",
+    "createdAt": "2026-05-18T00:56:06.475Z",
+    "versionId": "9d8c5294-5be7-4b2c-bf33-b93bd40ce3b1",
+    "workflowId": "7qd92chhmrK2xXtz",
+    "nodes": [
+      {
+        "id": "schedule-trigger",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 23 * * 1-5"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-sessions",
+        "name": "Fetch Active Paper Sessions",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          470,
+          300
+        ],
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/paper/sessions",
+          "method": "GET",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "status",
+                "value": "active"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "split-sessions",
+        "name": "Split Sessions",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          690,
+          300
+        ],
+        "parameters": {
+          "batchSize": 1
+        }
+      },
+      {
+        "id": "detect-drift",
+        "name": "Detect Drift",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          910,
+          300
+        ],
+        "parameters": {
+          "url": "=https://tf-relay-production.up.railway.app/api/paper/drift/{{ $json.id }}?strategyId={{ $json.strategyId }}",
+          "method": "GET",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "check-drift",
+        "name": "IF Drift > 2σ",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1130,
+          300
+        ],
+        "parameters": {
+          "conditions": {
+            "combinator": "or",
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "condition-drift",
+                "leftValue": "={{ $json.driftScore }}",
+                "rightValue": 2,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              },
+              {
+                "id": "condition-mc-pct",
+                "leftValue": "={{ $json.mc_percentile }}",
+                "rightValue": 10,
+                "operator": {
+                  "type": "number",
+                  "operation": "lt"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "ollama-drift-critique",
+        "name": "Ollama Drift Critique",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1350,
+          200
+        ],
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/__ollama/api/generate",
+          "method": "POST",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ model: 'deepseek-r1:14b', prompt: 'This strategy is drifting from backtest expectations. Drift score: ' + $('Detect Drift').first().json.driftScore + '. MC percentile: ' + ($('Compare Paper to MC').first().json.mc_percentile || 'N/A') + '. Paper metrics vs backtest diverging. Check: regime shift? Execution quality? Slippage > assumptions? Recommendation: continue, reduce size, or stop?', stream: false }) }}",
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "lifecycle-check",
+        "name": "Lifecycle Check",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1570,
+          200
+        ],
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/strategies/lifecycle/check",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "journal-nightly",
+        "name": "Journal Nightly Summary",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1790,
+          300
+        ],
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/journal",
+          "method": "POST",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ source: 'n8n', status: 'tested', analystNotes: 'Nightly review: ' + $('Fetch Active Paper Sessions').all().length + ' active sessions checked' }) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "broadcast-nightly",
+        "name": "Broadcast Nightly SSE",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2010,
+          300
+        ],
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "method": "POST",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ type: 'nightly:review-complete', data: { timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "1142ff2e-0a35-49f5-9e2e-498ea320eb72",
+        "name": "Compare Paper to MC",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1020,
+          200
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://tf-relay-production.up.railway.app/api/paper/mc-compare/{{ $json.id }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"Nightly Self-Correction\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Active Paper Sessions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Active Paper Sessions": {
+        "main": [
+          [
+            {
+              "node": "Split Sessions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Sessions": {
+        "main": [
+          [
+            {
+              "node": "Detect Drift",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Journal Nightly Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Detect Drift": {
+        "main": [
+          [
+            {
+              "node": "Compare Paper to MC",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Drift > 2σ": {
+        "main": [
+          [
+            {
+              "node": "Ollama Drift Critique",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Split Sessions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ollama Drift Critique": {
+        "main": [
+          [
+            {
+              "node": "Lifecycle Check",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Lifecycle Check": {
+        "main": [
+          [
+            {
+              "node": "Split Sessions",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Journal Nightly Summary": {
+        "main": [
+          [
+            {
+              "node": "Broadcast Nightly SSE",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Compare Paper to MC": {
+        "main": [
+          [
+            {
+              "node": "IF Drift > 2σ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

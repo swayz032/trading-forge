@@ -19,42 +19,6 @@ from src.engine.config import (
 # ─── Contract Specs must match risk.ts exactly ─────────────────────
 
 class TestContractSpecs:
-    def test_es_spec(self):
-        s = CONTRACT_SPECS["ES"]
-        assert s.tick_size == 0.25
-        assert s.tick_value == 1.25
-        assert s.point_value == 5.00
-
-    def test_nq_spec(self):
-        s = CONTRACT_SPECS["NQ"]
-        assert s.tick_size == 0.25
-        assert s.tick_value == 0.50
-        assert s.point_value == 2.00
-
-    def test_cl_spec(self):
-        s = CONTRACT_SPECS["CL"]
-        assert s.tick_size == 0.01
-        assert s.tick_value == 1.00
-        assert s.point_value == 100.00
-
-    def test_ym_spec(self):
-        s = CONTRACT_SPECS["YM"]
-        assert s.tick_size == 1.00
-        assert s.tick_value == 0.50
-        assert s.point_value == 0.50
-
-    def test_rty_spec(self):
-        s = CONTRACT_SPECS["RTY"]
-        assert s.tick_size == 0.10
-        assert s.tick_value == 0.50
-        assert s.point_value == 5.00
-
-    def test_gc_spec(self):
-        s = CONTRACT_SPECS["GC"]
-        assert s.tick_size == 0.10
-        assert s.tick_value == 1.00
-        assert s.point_value == 10.00
-
     def test_mes_spec(self):
         s = CONTRACT_SPECS["MES"]
         assert s.tick_size == 0.25
@@ -67,8 +31,15 @@ class TestContractSpecs:
         assert s.tick_value == 0.50
         assert s.point_value == 2.00
 
-    def test_all_ten_symbols(self):
-        expected = {"ES", "NQ", "CL", "YM", "RTY", "GC", "MES", "MNQ", "MCL", "MGC"}
+    def test_mcl_spec(self):
+        s = CONTRACT_SPECS["MCL"]
+        assert s.tick_size == 0.01
+        assert s.tick_value == 1.00
+        assert s.point_value == 100.00
+
+    def test_all_three_micro_symbols(self):
+        # MES/MNQ/MCL are micro contracts; ES/NQ/CL are S3 data labels with identical micro specs
+        expected = {"MES", "MNQ", "MCL", "ES", "NQ", "CL"}
         assert set(CONTRACT_SPECS.keys()) == expected
 
 
@@ -113,7 +84,7 @@ class TestStrategyConfig:
     def _valid_config(self, **overrides):
         base = dict(
             name="SMA Cross",
-            symbol="ES",
+            symbol="MES",
             timeframe="daily",
             indicators=[
                 IndicatorConfig(type="sma", period=10),
@@ -131,7 +102,7 @@ class TestStrategyConfig:
     def test_valid_config(self):
         cfg = self._valid_config()
         assert cfg.name == "SMA Cross"
-        assert cfg.symbol == "ES"
+        assert cfg.symbol == "MES"
 
     def test_max_5_indicators(self):
         indicators = [IndicatorConfig(type="sma", period=i) for i in range(6)]
@@ -157,7 +128,7 @@ class TestBacktestRequest:
     def test_default_commission(self):
         cfg = StrategyConfig(
             name="Test",
-            symbol="ES",
+            symbol="MES",
             timeframe="daily",
             indicators=[IndicatorConfig(type="sma", period=20)],
             entry_long="close > sma_20",
@@ -262,7 +233,7 @@ class TestStressTestRequest:
     def _make_strategy(self):
         return StrategyConfig(
             name="Test",
-            symbol="ES",
+            symbol="MES",
             timeframe="daily",
             indicators=[IndicatorConfig(type="sma", period=20)],
             entry_long="close > sma_20",

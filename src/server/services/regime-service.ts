@@ -3,11 +3,7 @@
  * Same pattern as backtest-service.ts.
  */
 
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
-import { logger } from "../index.js";
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+import { runPythonModule } from "../lib/python-runner.js";
 
 export interface RegimeResult {
   regime: string;
@@ -20,81 +16,44 @@ export interface RegimeResult {
   error?: string;
 }
 
-function runPythonRegime(configJson: string): Promise<RegimeResult> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", "src.engine.regime", "--config", configJson];
-
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    const REGIME_TIMEOUT_MS = 120_000;
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        proc.kill("SIGTERM");
-        reject(new Error(`Regime detection timed out after ${REGIME_TIMEOUT_MS / 1000}s`));
-      }
-    }, REGIME_TIMEOUT_MS);
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "regime-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      clearTimeout(timer);
-      if (settled) return;
-      settled = true;
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse regime output: ${stdout}`));
-        }
-      } else {
-        reject(new Error(`Regime detection failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      if (pythonCmd === "python") {
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let stdout2 = "";
-        let stderr2 = "";
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2}`)); }
-          } else {
-            reject(new Error(`Regime detection failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => reject(err));
-      } else {
-        reject(err);
-      }
-    });
-  });
-}
-
 export async function analyzeMarket(
   symbol: string,
   timeframe: string = "1h",
   adxPeriod: number = 14,
 ): Promise<RegimeResult> {
-  const config = JSON.stringify({ symbol, timeframe, adx_period: adxPeriod });
-  return runPythonRegime(config);
+  return runPythonModule<RegimeResult>({
+    module: "src.engine.regime",
+    config: { symbol, timeframe, adx_period: adxPeriod },
+    componentName: "regime-engine",
+  });
+}
+
+/**
+ * HMM probabilistic regime detection — slower but more accurate.
+ * Returns transition matrix, state probabilities, regime persistence.
+ * Falls back to rule-based if hmmlearn unavailable.
+ */
+export interface HMMRegimeResult {
+  method: string;
+  n_regimes?: number;
+  current_regime?: number;
+  current_probabilities?: number[];
+  transition_matrix?: number[][];
+  persistence?: Record<string, { stay_probability: number; expected_duration_days: number }>;
+  regime_stats?: Array<{ regime_id: number; mean_return: number; volatility: number; frequency: number }>;
+  log_likelihood?: number;
+  hmm_available?: boolean;
+  error?: string;
+}
+
+export async function analyzeMarketHMM(
+  symbol: string,
+  timeframe: string = "daily",
+  nRegimes: number = 3,
+): Promise<HMMRegimeResult> {
+  return runPythonModule<HMMRegimeResult>({
+    module: "src.engine.regime",
+    config: { symbol, timeframe, mode: "hmm", n_regimes: nRegimes },
+    componentName: "regime-hmm",
+  });
 }

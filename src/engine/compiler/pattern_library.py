@@ -101,6 +101,36 @@ ENTRY_PATTERNS: dict[str, dict] = {
             "signal_period": (7, 12),
         },
     },
+    "vwap_fade": {
+        "description": "Fade price back toward session VWAP when extended beyond ATR threshold",
+        "required_params": ["atr_extension_threshold"],
+        "optional_params": ["confirmation_bars", "vwap_touch_exit"],
+        "param_ranges": {
+            "atr_extension_threshold": (1.0, 3.0),
+            "confirmation_bars": (1, 5),
+            "vwap_touch_exit": (0, 1),
+        },
+    },
+    "event_driven_fade": {
+        "description": "Fade extreme ATR move within a defined time window after a scheduled event",
+        "required_params": ["atr_move_threshold", "event_window_minutes"],
+        "optional_params": ["confirmation_bars"],
+        "param_ranges": {
+            "atr_move_threshold": (1.5, 4.0),
+            "event_window_minutes": (5, 30),
+            "confirmation_bars": (1, 3),
+        },
+    },
+    "overnight_drift": {
+        "description": "Detect session directional drift during Asia hours and enter at Europe open",
+        "required_params": ["drift_atr_threshold", "asia_lookback_bars"],
+        "optional_params": ["min_drift_bars"],
+        "param_ranges": {
+            "drift_atr_threshold": (0.5, 2.0),
+            "asia_lookback_bars": (4, 24),
+            "min_drift_bars": (2, 12),
+        },
+    },
 }
 
 

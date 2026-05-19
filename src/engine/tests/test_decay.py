@@ -9,9 +9,13 @@ Tests:
 - Quarantine escalation: healthy -> watch -> reduce -> quarantine -> retire
 - Quarantine recovery: reduce -> watch -> healthy
 - Quarantine won't escalate without min_days met
+- evaluate_decay_gate: output schema includes critical/warning signal lists
+- evaluate_decay_gate: effective_composite_score equals composite in shadow mode
 """
 
 import math
+import os
+import unittest.mock
 import pytest
 import numpy as np
 
@@ -28,6 +32,7 @@ from src.engine.decay.quarantine import (
     TRANSITIONS,
     SIZE_MULTIPLIERS,
 )
+from src.engine.decay.decay_gate import evaluate_decay_gate
 
 
 # ─── Fixtures ────────────────────────────────────────────────────
@@ -335,3 +340,55 @@ class TestQuarantineSizeMultipliers:
 
     def test_retire_zero_size(self):
         assert SIZE_MULTIPLIERS[QuarantineLevel.RETIRE] == 0.0
+
+
+# ─── evaluate_decay_gate: schema + shadow/enforce parity ─────────────────
+
+
+class TestEvaluateDecayGateSchema:
+    """evaluate_decay_gate output schema is stable and includes new TF_DECAY_FULL_SUBSIGNALS fields."""
+
+    def _make_inputs(self):
+        rng = np.random.default_rng(99)
+        daily_pnls = rng.normal(300, 80, 100).tolist()
+        trades = [
+            {"mfe": 300 + rng.normal(0, 20), "pnl": 200, "slippage": 0.5, "fill_status": "filled"}
+            for _ in range(60)
+        ]
+        return daily_pnls, trades
+
+    def test_output_has_required_keys(self):
+        """All expected keys present in shadow mode output."""
+        daily_pnls, trades = self._make_inputs()
+        with unittest.mock.patch.dict(os.environ, {"TF_DECAY_FULL_SUBSIGNALS": "false"}):
+            # Re-import to pick up patched env var
+            import importlib, src.engine.decay.decay_gate as dg
+            importlib.reload(dg)
+            result = dg.evaluate_decay_gate(daily_pnls, trades)
+
+        for key in ("verdict", "reason", "size_multiplier", "composite_score",
+                    "effective_composite_score", "full_subsignals_enforced",
+                    "critical_signals", "warning_signals", "half_life", "quarantine", "sub_signals"):
+            assert key in result, f"Missing key: {key}"
+
+    def test_shadow_effective_equals_composite(self):
+        """In shadow mode (default), effective_composite_score == composite_score."""
+        daily_pnls, trades = self._make_inputs()
+        with unittest.mock.patch.dict(os.environ, {"TF_DECAY_FULL_SUBSIGNALS": "false"}):
+            import importlib, src.engine.decay.decay_gate as dg
+            importlib.reload(dg)
+            result = dg.evaluate_decay_gate(daily_pnls, trades)
+
+        assert result["full_subsignals_enforced"] is False
+        assert result["effective_composite_score"] == pytest.approx(result["composite_score"])
+
+    def test_critical_warning_lists_are_lists(self):
+        """critical_signals and warning_signals are always lists."""
+        daily_pnls, trades = self._make_inputs()
+        with unittest.mock.patch.dict(os.environ, {"TF_DECAY_FULL_SUBSIGNALS": "false"}):
+            import importlib, src.engine.decay.decay_gate as dg
+            importlib.reload(dg)
+            result = dg.evaluate_decay_gate(daily_pnls, trades)
+
+        assert isinstance(result["critical_signals"], list)
+        assert isinstance(result["warning_signals"], list)

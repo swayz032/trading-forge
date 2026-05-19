@@ -1,0 +1,8 @@
+# Trading Forge - WSL2 GPU Dependencies (PennyLane + cuQuantum)
+# Install INSIDE WSL2 Ubuntu 22.04 with CUDA 12.x
+# pip install -r requirements-wsl2-gpu.txt
+
+pennylane>=0.42.0
+pennylane-lightning[gpu]>=0.42.0   # GPU statevector simulator
+cupy-cuda12x>=13.0.0               # CuPy for WSL2 GPU
+cuquantum-cu12>=24.3.0             # NVIDIA cuQuantum for quantum simulation

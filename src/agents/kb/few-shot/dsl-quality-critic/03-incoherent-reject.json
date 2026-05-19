@@ -1,0 +1,34 @@
+{
+  "input": {
+    "synthesized_dsl": {
+      "name": "rsi_breakout_mes",
+      "description": "RSI breakout strategy on MES.",
+      "symbol": "MES",
+      "timeframe": "5m",
+      "direction": "long",
+      "entry_type": "breakout",
+      "entry_indicator": "rsi_reversal",
+      "entry_params": { "period": 14, "oversold": 30, "overbought": 70 },
+      "entry_condition": "Long when RSI > 70 (overbought breakout).",
+      "exit_type": "atr_multiple",
+      "exit_params": { "multiplier": 2.0 },
+      "stop_loss_atr_multiple": 2.5,
+      "take_profit_atr_multiple": 1.5,
+      "preferred_regime": "RANGE_BOUND",
+      "session_filter": "RTH_ONLY",
+      "max_contracts": 5
+    },
+    "compile_check_result": { "compiled": true, "errors": [] }
+  },
+  "expected_output": {
+    "score": 3,
+    "accept": false,
+    "concerns": [
+      "Indicator/entry_type mismatch: entry_indicator=rsi_reversal is a mean-reversion primitive but entry_type=breakout. The canonical mapping is rsi_reversal → mean_reversion. Synthesizer mis-tagged the entry_type.",
+      "entry_condition contradicts preferred_regime: 'Long when RSI > 70' is the overbought-extension trade, suitable for TRENDING_UP follow-through, but preferred_regime=RANGE_BOUND. In RANGE_BOUND the canonical RSI > 70 trade is the short-fade, not a long.",
+      "Inverted R:R: take_profit_atr_multiple=1.5 < stop_loss_atr_multiple=2.5 — the strategy risks 2.5R to make 1.5R. This violates the schema invariant `take_profit > stop_loss` AND violates the universal performance rule `avg_winner_to_loser >= 2.0`.",
+      "Description is generic ('RSI breakout strategy on MES') with no source citation, no parameter-range justification, no regime evidence."
+    ]
+  },
+  "notes": "Hard-reject example. Strategy compiles (the schema doesn't enforce R:R inversion at the DSL layer — it should, but the critic catches it). Multiple coherence failures: indicator/entry_type mismatch, regime/condition contradiction, inverted R:R, generic description. Score 3 = reject; concerns array spells out each failure mode so synthesizer regeneration knows what to fix. The R:R inversion alone would be a kill — combined with the others, it's a clear regenerate-from-scratch."
+}

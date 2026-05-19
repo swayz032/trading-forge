@@ -6,12 +6,21 @@ import { ForgeTable } from "@/components/forge/ForgeTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSymbols, useHealth, useSyncData } from "@/hooks/useData";
+import { useSSE } from "@/hooks/useSSE";
 import { num, timeAgo } from "@/lib/utils";
 import { toast } from "sonner";
 
 const coverageColor = (v: number) => v >= 98 ? "text-profit" : v >= 94 ? "text-foreground" : v >= 90 ? "text-primary" : "text-loss";
 
 export default function DataPipeline() {
+  // SSE: keep pipeline status fresh on mode changes & scheduler events
+  useSSE([
+    "pipeline:mode-change",
+    "pipeline:pause_snapshot",
+    "pipeline:resume_stale_positions",
+    "scheduler:pre-market-alert",
+  ]);
+
   const { data: symbols, isLoading: symbolsLoading } = useSymbols();
   const { data: health, isLoading: healthLoading, refetch: refetchHealth } = useHealth();
   const syncData = useSyncData();

@@ -14,7 +14,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from src.engine.backtester import run_backtest, _compute_daily_pnls, _build_run_receipt
+from src.engine.backtester import run_backtest, _compute_daily_pnls, _build_run_receipt, _apply_max_trades_per_day
 from src.engine.config import (
     BacktestRequest,
     ContractSpec,
@@ -56,30 +56,30 @@ class TestSingleTradePnL:
 
     def test_long_trade_gross_pnl(self):
         """
-        1 MES contract (labeled "ES" in config), entry at 5000, exit at 5010.
+        1 MES contract, entry at 5000, exit at 5010.
         Gross P&L = (5010 - 5000) * 1 * 5.0 = $50.
-        (ES maps to MES micro specs — point_value=5.0, not 50.0)
+        (MES micro specs — point_value=5.0, not 50.0)
         """
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
         gross = (5010 - 5000) * 1 * spec.point_value
         assert gross == pytest.approx(50.0)
 
     def test_long_trade_commission_deduction(self):
         """
         Commission = commission_per_side * size * 2 (roundtrip).
-        MFFU MES: $1.58/side * 1 contract * 2 = $3.16.
+        MFFU MES: $0.62/side * 1 contract * 2 = $1.24.
         """
-        commission_per_side = 1.58
+        commission_per_side = 0.62
         size = 1
         roundtrip = commission_per_side * size * 2
-        assert roundtrip == pytest.approx(3.16)
+        assert roundtrip == pytest.approx(1.24)
 
     def test_short_trade_gross_pnl(self):
         """
         1 MES short, entry at 5010, exit at 5000.
         Gross = (5010 - 5000) * 1 * 5.0 = $50.
         """
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
         gross = (5010 - 5000) * 1 * spec.point_value
         assert gross == pytest.approx(50.0)
 
@@ -88,7 +88,7 @@ class TestSingleTradePnL:
         1 MES short, entry at 5000, exit at 5010.
         Gross = (5000 - 5010) * 1 * 5.0 = -$50.
         """
-        spec = CONTRACT_SPECS["ES"]
+        spec = CONTRACT_SPECS["MES"]
         gross = (5000 - 5010) * 1 * spec.point_value
         assert gross == pytest.approx(-50.0)
 
@@ -98,7 +98,7 @@ class TestSingleTradePnL:
 class TestMultiContractPnL:
     def test_3_contract_long(self):
         """3 MES contracts, +10 points = $150 gross."""
-        spec = CONTRACT_SPECS["ES"]  # ES = MES specs in this codebase
+        spec = CONTRACT_SPECS["MES"]
         gross = (5010 - 5000) * 3 * spec.point_value
         assert gross == pytest.approx(150.0)
 
@@ -107,13 +107,12 @@ class TestMultiContractPnL:
         comm = 4.50 * 3 * 2
         assert comm == 27.0
 
-    def test_es_and_mes_are_same_spec(self):
-        """ES and MES map to the same spec (micro contracts)."""
-        es = CONTRACT_SPECS["ES"]
+    def test_mes_spec_is_micro(self):
+        """MES maps to micro contract specs."""
         mes = CONTRACT_SPECS["MES"]
-        assert es.point_value == mes.point_value
-        assert es.tick_value == mes.tick_value
-        assert es.tick_size == mes.tick_size
+        assert mes.point_value == 5.0
+        assert mes.tick_value == 1.25
+        assert mes.tick_size == 0.25
 
 
 # ─── Test 3: Equity curve correctness ─────────────────────────────
@@ -124,7 +123,7 @@ class TestEquityCurve:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -151,7 +150,7 @@ class TestEquityCurve:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -166,7 +165,7 @@ class TestEquityCurve:
             ),
             start_date="2023-01-01",
             end_date="2023-12-31",
-            commission_per_side=4.50,
+            commission_per_side=0.62,
         )
 
         df = _make_controlled_ohlcv([4000 + i * 0.5 + (i % 7) * 3 for i in range(200)])
@@ -191,7 +190,7 @@ class TestEquityCurve:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -255,7 +254,7 @@ class TestMaxDrawdown:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -413,7 +412,7 @@ class TestCommissionImpact:
         base_config = dict(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -446,7 +445,7 @@ class TestCommissionImpact:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -461,7 +460,7 @@ class TestCommissionImpact:
             ),
             start_date="2023-01-01",
             end_date="2023-12-31",
-            commission_per_side=4.50,
+            commission_per_side=0.62,
         )
 
         df = _make_controlled_ohlcv([4000 + i * 0.5 for i in range(200)])
@@ -469,7 +468,7 @@ class TestCommissionImpact:
 
         for trade in result["trades"]:
             size = float(trade["Size"])
-            expected_comm = 4.50 * size * 2
+            expected_comm = 0.62 * size * 2
             actual_comm = float(trade["CommissionCost"])
             assert actual_comm == pytest.approx(expected_comm, abs=0.01), (
                 f"Trade commission {actual_comm} != expected {expected_comm} "
@@ -512,7 +511,7 @@ class TestConsecutiveLosers:
 def _minimal_strategy_config():
     return StrategyConfig(
         name="Test",
-        symbol="ES",
+        symbol="MES",
         timeframe="daily",
         indicators=[IndicatorConfig(type="sma", period=5), IndicatorConfig(type="atr", period=14)],
         entry_long="close crosses_above sma_5",
@@ -553,7 +552,7 @@ class TestEdgeCases:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="NoTrades",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -583,7 +582,7 @@ class TestEdgeCases:
         config = BacktestRequest(
             strategy=StrategyConfig(
                 name="Test",
-                symbol="ES",
+                symbol="MES",
                 timeframe="daily",
                 indicators=[
                     IndicatorConfig(type="sma", period=5),
@@ -614,15 +613,10 @@ class TestEdgeCases:
 
 class TestContractSpecs:
     @pytest.mark.parametrize("symbol,expected_pv,expected_tv", [
-        # ES/NQ/YM/RTY map to MICRO specs (MES/MNQ etc.) — see config.py line 24
-        ("ES", 5.0, 1.25),
+        # Micro contract specs — see config.py
         ("MES", 5.0, 1.25),
-        ("NQ", 2.0, 0.50),
         ("MNQ", 2.0, 0.50),
-        ("CL", 100.0, 1.0),
-        ("YM", 0.50, 0.50),
-        ("RTY", 5.0, 0.50),
-        ("GC", 10.0, 1.0),
+        ("MCL", 100.0, 1.0),
     ])
     def test_point_value_and_tick_value(self, symbol, expected_pv, expected_tv):
         """Contract specs must match micro CME specifications."""
@@ -637,4 +631,352 @@ class TestContractSpecs:
             assert spec.tick_value == pytest.approx(calculated, abs=0.01), (
                 f"{symbol}: tick_value={spec.tick_value} != "
                 f"tick_size({spec.tick_size}) * point_value({spec.point_value}) = {calculated}"
+            )
+
+
+# ─── Max Trades Per Day Tests ─────────────────────────────────────────
+
+
+class TestMaxTradesPerDay:
+    """Verify _apply_max_trades_per_day suppresses entries beyond the daily limit."""
+
+    def _make_timestamps(self, dates: list[str]) -> np.ndarray:
+        """Create numpy array of datetime-like strings."""
+        return np.array(dates, dtype="datetime64[ns]")
+
+    def test_no_suppression_within_limit(self):
+        """2 entries on day 1, 1 on day 2 — max=2 should keep all."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00", "2025-01-06T10:30:00",
+            "2025-01-07T09:30:00", "2025-01-07T10:00:00",
+        ])
+        long_e = np.array([True, True, False, True, False])
+        short_e = np.array([False, False, False, False, False])
+
+        filt_long, filt_short = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        assert filt_long.tolist() == [True, True, False, True, False]
+        assert filt_short.tolist() == [False, False, False, False, False]
+
+    def test_suppresses_third_entry(self):
+        """3 long entries on same day, max=2 → third suppressed."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-06T10:30:00", "2025-01-06T11:00:00",
+        ])
+        long_e = np.array([True, True, True, False])
+        short_e = np.array([False, False, False, False])
+
+        filt_long, filt_short = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        assert filt_long.tolist() == [True, True, False, False]
+
+    def test_long_and_short_count_together(self):
+        """1 long + 1 short = 2 trades. Third entry (either side) suppressed."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-06T10:30:00", "2025-01-06T11:00:00",
+        ])
+        long_e = np.array([True, False, True, False])
+        short_e = np.array([False, True, False, False])
+
+        filt_long, filt_short = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        # First long kept, short kept, second long suppressed (already at 2)
+        assert filt_long.tolist() == [True, False, False, False]
+        assert filt_short.tolist() == [False, True, False, False]
+
+    def test_separate_days_independent(self):
+        """Each day gets its own counter. 2 entries on day 1 + 2 on day 2 = all kept."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-07T09:30:00", "2025-01-07T10:00:00",
+        ])
+        long_e = np.array([True, True, True, True])
+        short_e = np.array([False, False, False, False])
+
+        filt_long, _ = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        assert filt_long.tolist() == [True, True, True, True]
+
+    def test_max_trades_zero_means_unlimited(self):
+        """max_trades=0 → no filtering."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-06T10:30:00", "2025-01-06T11:00:00",
+        ])
+        long_e = np.array([True, True, True, True])
+        short_e = np.array([False, False, False, False])
+
+        filt_long, _ = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=0)
+
+        assert filt_long.tolist() == [True, True, True, True]
+
+    def test_max_trades_one(self):
+        """Strict 1 trade per day — only first entry kept."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+            "2025-01-06T10:30:00",
+        ])
+        long_e = np.array([True, True, True])
+        short_e = np.array([False, False, False])
+
+        filt_long, _ = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=1)
+
+        assert filt_long.tolist() == [True, False, False]
+
+    def test_no_entries_no_change(self):
+        """No entries → no change."""
+        ts = self._make_timestamps([
+            "2025-01-06T09:30:00", "2025-01-06T10:00:00",
+        ])
+        long_e = np.array([False, False])
+        short_e = np.array([False, False])
+
+        filt_long, filt_short = _apply_max_trades_per_day(long_e, short_e, ts, max_trades=2)
+
+        assert filt_long.tolist() == [False, False]
+        assert filt_short.tolist() == [False, False]
+
+    def test_backtest_request_default(self):
+        """BacktestRequest should default max_trades_per_day to 2."""
+        from src.engine.config import BacktestRequest, StrategyConfig, IndicatorConfig, StopConfig, PositionSizeConfig
+        req = BacktestRequest(
+            strategy=StrategyConfig(
+                name="test", symbol="MES", timeframe="15min",
+                indicators=[IndicatorConfig(type="sma", period=20)],
+                entry_long="close crosses_above sma_20",
+                entry_short="close crosses_below sma_20",
+                exit="close crosses_below sma_20",
+                stop_loss=StopConfig(type="atr", multiplier=2.0),
+                position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
+            ),
+            start_date="2025-01-01",
+            end_date="2025-03-01",
+        )
+        assert req.max_trades_per_day == 2
+
+
+# ─── Wave 1 — Commission Deduction Golden Fixture ─────────────────────────────
+#
+# CONTRACT:
+#   backtester.py deducts commission from every trade's P&L at line ~1684:
+#       net_pnl = gross - slip_cost - comm_cost
+#       where comm_cost = commission_per_side * size * 2  (round-trip)
+#   prop_sim.py reads record["pnl"] as already NET (line 107 comment).
+#   Commission is deducted EXACTLY ONCE — in the backtester.
+#
+# FIRM RATES (from firm_config.py FIRM_COMMISSIONS):
+#   Topstep MES: $0.37/side → $0.74 round-trip
+#   MFFU MES:    $0.62/side → $1.24 round-trip
+#
+# These tests lock the contract so a regression to double-deduction or
+# missed-deduction is caught immediately.
+
+class TestWave1CommissionGoldenFixture:
+    """Wave 1 — commission deduction contract tests.
+
+    10-trade synthetic backtest. We don't control fill prices precisely
+    (vectorbt drives execution), so we can't assert an exact sum. Instead
+    we assert:
+      1. Every trade's CommissionCost matches the per-side * 2 formula.
+      2. Every trade's PnL == GrossPnL - SlippageCost - CommissionCost.
+      3. Total net_pnl == sum(gross) - total_commission (within $0.01 per trade).
+    This is stronger than a sum assertion — it verifies the per-trade contract.
+    """
+
+    def _make_alternating_ohlcv(self, n_bars: int = 120) -> pl.DataFrame:
+        """Create OHLCV with alternating up/down moves to generate multiple trades."""
+        from datetime import datetime, timedelta
+        base = 5000.0
+        closes = []
+        for i in range(n_bars):
+            # Zigzag: 5 up, 5 down — guarantees SMA crossings
+            phase = (i // 5) % 2
+            closes.append(base + (50.0 if phase == 0 else -50.0))
+        dates = [datetime(2023, 6, 1) + timedelta(days=i) for i in range(n_bars)]
+        return pl.DataFrame({
+            "ts_event": dates,
+            "open":   [c - 2.0 for c in closes],
+            "high":   [c + 10.0 for c in closes],
+            "low":    [c - 10.0 for c in closes],
+            "close":  closes,
+            "volume": [100_000] * n_bars,
+        })
+
+    def _make_backtest_request(self, commission_per_side: float, firm_key: str | None = None) -> BacktestRequest:
+        return BacktestRequest(
+            strategy=StrategyConfig(
+                name="CommissionFixture",
+                symbol="MES",
+                timeframe="daily",
+                indicators=[
+                    IndicatorConfig(type="sma", period=3),
+                    IndicatorConfig(type="sma", period=7),
+                    IndicatorConfig(type="atr", period=14),
+                ],
+                entry_long="close crosses_above sma_3",
+                entry_short="close crosses_below sma_3",
+                exit="close crosses_below sma_7",
+                stop_loss=StopConfig(type="atr", multiplier=2.0),
+                position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
+            ),
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            commission_per_side=commission_per_side,
+            firm_key=firm_key,
+        )
+
+    def test_topstep_mes_commission_per_trade_contract(self):
+        """Topstep MES: $0.37/side, $0.74 round-trip.
+
+        CONTRACT: every trade.CommissionCost == 0.37 * size * 2.
+        CONTRACT: every trade.PnL == GrossPnL - SlippageCost - CommissionCost.
+        Backtester deducts; prop_sim trusts the input. No double-deduction.
+        """
+        from src.engine.firm_config import FIRM_COMMISSIONS
+        topstep_rate = FIRM_COMMISSIONS["topstep_50k"]["MES"]
+        assert topstep_rate == pytest.approx(0.37), "Topstep MES rate changed — update fixture"
+        round_trip = topstep_rate * 2
+        assert round_trip == pytest.approx(0.74)
+
+        df = self._make_alternating_ohlcv()
+        result = run_backtest(self._make_backtest_request(topstep_rate, firm_key="topstep_50k"), data=df)
+
+        assert result["total_trades"] >= 1, "Fixture produced no trades — check OHLCV shape"
+        for i, trade in enumerate(result["trades"]):
+            size = float(trade["Size"])
+            expected_comm = topstep_rate * size * 2
+            actual_comm = float(trade["CommissionCost"])
+            assert actual_comm == pytest.approx(expected_comm, abs=0.01), (
+                f"Topstep trade {i}: CommissionCost {actual_comm} != expected {expected_comm} "
+                f"(size={size}, rate={topstep_rate}/side)"
+            )
+            # PnL contract: net = gross - slip - comm (deducted ONCE in backtester)
+            gross = float(trade["GrossPnL"])
+            slip = float(trade["SlippageCost"])
+            net = float(trade["PnL"])
+            assert net == pytest.approx(gross - slip - actual_comm, abs=0.02), (
+                f"Topstep trade {i}: PnL contract violated. "
+                f"net={net:.4f}, gross={gross:.4f}, slip={slip:.4f}, comm={actual_comm:.4f}, "
+                f"expected net={gross - slip - actual_comm:.4f}"
+            )
+
+    def test_mffu_mes_commission_per_trade_contract(self):
+        """MFFU MES: $0.62/side, $1.24 round-trip.
+
+        CONTRACT: every trade.CommissionCost == 0.62 * size * 2.
+        CONTRACT: every trade.PnL == GrossPnL - SlippageCost - CommissionCost.
+        """
+        from src.engine.firm_config import FIRM_COMMISSIONS
+        mffu_rate = FIRM_COMMISSIONS["mffu_50k"]["MES"]
+        assert mffu_rate == pytest.approx(0.62), "MFFU MES rate changed — update fixture"
+        round_trip = mffu_rate * 2
+        assert round_trip == pytest.approx(1.24)
+
+        df = self._make_alternating_ohlcv()
+        result = run_backtest(self._make_backtest_request(mffu_rate, firm_key="mffu_50k"), data=df)
+
+        assert result["total_trades"] >= 1, "Fixture produced no trades — check OHLCV shape"
+        for i, trade in enumerate(result["trades"]):
+            size = float(trade["Size"])
+            expected_comm = mffu_rate * size * 2
+            actual_comm = float(trade["CommissionCost"])
+            assert actual_comm == pytest.approx(expected_comm, abs=0.01), (
+                f"MFFU trade {i}: CommissionCost {actual_comm} != expected {expected_comm} "
+                f"(size={size}, rate={mffu_rate}/side)"
+            )
+            gross = float(trade["GrossPnL"])
+            slip = float(trade["SlippageCost"])
+            net = float(trade["PnL"])
+            assert net == pytest.approx(gross - slip - actual_comm, abs=0.02), (
+                f"MFFU trade {i}: PnL contract violated. "
+                f"net={net:.4f}, gross={gross:.4f}, slip={slip:.4f}, comm={actual_comm:.4f}"
+            )
+
+    def test_topstep_vs_mffu_commission_difference(self):
+        """MFFU costs $0.50 more per round-trip than Topstep on MES.
+
+        If both run the same strategy on identical data, the MFFU total net P&L
+        should be lower by exactly (n_trades * 0.50) dollars — where 0.50 is
+        the difference in round-trip commission ($1.24 - $0.74).
+        """
+        from src.engine.firm_config import FIRM_COMMISSIONS
+        topstep_rate = FIRM_COMMISSIONS["topstep_50k"]["MES"]
+        mffu_rate = FIRM_COMMISSIONS["mffu_50k"]["MES"]
+        comm_diff_per_trade = (mffu_rate - topstep_rate) * 2  # $0.50/trade
+
+        df = self._make_alternating_ohlcv()
+        topstep_result = run_backtest(self._make_backtest_request(topstep_rate, "topstep_50k"), data=df)
+        mffu_result = run_backtest(self._make_backtest_request(mffu_rate, "mffu_50k"), data=df)
+
+        n = topstep_result["total_trades"]
+        assert n == mffu_result["total_trades"], "Trade counts differ — data not identical"
+        if n > 0:
+            topstep_net = sum(float(t["PnL"]) for t in topstep_result["trades"])
+            mffu_net = sum(float(t["PnL"]) for t in mffu_result["trades"])
+            expected_diff = n * comm_diff_per_trade
+            actual_diff = topstep_net - mffu_net
+            assert actual_diff == pytest.approx(expected_diff, abs=0.05), (
+                f"Commission difference mismatch: expected {expected_diff:.2f} "
+                f"(={n} trades * ${comm_diff_per_trade:.2f}/trade), got {actual_diff:.2f}"
+            )
+
+    def test_prop_sim_trusts_net_pnl_no_double_deduction(self):
+        """prop_sim.simulate_prop_firm reads record['pnl'] as already-net.
+
+        Verify that running the same 10-trade backtest through prop_sim does NOT
+        deduct commission a second time — the balance trajectory must be
+        consistent with a single deduction.
+
+        The assertion: sum of net P&Ls from backtester ==
+        final_balance - account_size from prop_sim (within $1).
+        """
+        from src.engine.prop_sim import simulate_prop_firm
+
+        topstep_rate = 0.37
+        df = self._make_alternating_ohlcv()
+        result = run_backtest(self._make_backtest_request(topstep_rate, "topstep_50k"), data=df)
+
+        if result["total_trades"] == 0:
+            pytest.skip("No trades generated — fixture needs more data")
+
+        # Build daily_pnl_records as prop_sim expects
+        daily_pnl_records = [
+            {"date": p.get("date") or f"day_{i}", "pnl": p["pnl"]}
+            for i, p in enumerate(result.get("daily_pnls_detailed") or result.get("daily_pnls_raw") or [])
+        ]
+        if not daily_pnl_records and "daily_pnls" in result:
+            # daily_pnls is a list of floats in the simplified output
+            dpnls = result["daily_pnls"]
+            if isinstance(dpnls, list) and dpnls:
+                if isinstance(dpnls[0], dict):
+                    daily_pnl_records = [{"date": d.get("date", f"day_{i}"), "pnl": d["pnl"]} for i, d in enumerate(dpnls)]
+                else:
+                    daily_pnl_records = [{"date": f"day_{i}", "pnl": float(p)} for i, p in enumerate(dpnls)]
+
+        if not daily_pnl_records:
+            pytest.skip("No daily_pnl_records available — check run_backtest output shape")
+
+        # Net P&L sum from backtester (commissions already deducted once)
+        backtester_net = sum(float(t["PnL"]) for t in result["trades"])
+
+        ACCOUNT_SIZE = 50_000.0
+        sim = simulate_prop_firm(
+            daily_pnl_records=daily_pnl_records,
+            trades=result["trades"],
+            firm_key="topstep_50k",
+            symbol="MES",
+            account_size=ACCOUNT_SIZE,
+        )
+
+        # If prop_sim double-deducted, the balance would be lower than backtester net
+        # We check the DIRECTION: prop_sim balance change should track backtester net
+        if "final_balance" in sim:
+            balance_change = float(sim["final_balance"]) - ACCOUNT_SIZE
+            # Must agree within $5 (daily aggregation rounding)
+            assert abs(balance_change - backtester_net) < 5.0, (
+                f"prop_sim balance change ({balance_change:.2f}) diverges from "
+                f"backtester net PnL ({backtester_net:.2f}) by more than $5. "
+                f"Possible double-deduction in prop_sim."
             )

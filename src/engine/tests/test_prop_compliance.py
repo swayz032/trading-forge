@@ -108,7 +108,7 @@ class TestFFNConsistency:
 # ─── Full Compliance Run ──────────────────────────────────────────
 
 class TestRunPropCompliance:
-    def test_returns_all_7_firms(self):
+    def test_returns_all_8_firms(self):
         daily_pnls = [250] * 20
         stats = {
             "avg_daily_pnl": 250,
@@ -117,7 +117,7 @@ class TestRunPropCompliance:
             "consistency_ratio": 0.10,
         }
         results = run_prop_compliance(daily_pnls, stats)
-        assert len(results) == 7
+        assert len(results) == 8
         assert "topstep_50k" in results
         assert "mffu_50k" in results
         assert "tpt_50k" in results
@@ -126,9 +126,8 @@ class TestRunPropCompliance:
         assert "alpha_50k" in results
         assert "ffn_50k" in results
 
-    def test_topstep_fails_high_dd(self):
-        """$2,100 DD fails Topstep but passes TPT ($3K limit)."""
-        # PnLs: up $1000, then drop $2,100 from peak, then recover
+    def test_high_dd_fails_all_firms(self):
+        """$2,100 DD exceeds all firms' $2K limit — all fail."""
         daily_pnls = [500, 500, -700, -700, -700, 500, 500, 500, 500]
         stats = {
             "avg_daily_pnl": 300,
@@ -138,7 +137,7 @@ class TestRunPropCompliance:
         }
         results = run_prop_compliance(daily_pnls, stats)
         assert results["topstep_50k"]["passed"] is False
-        assert results["tpt_50k"]["passed"] is True  # $3K limit
+        assert results["tpt_50k"]["passed"] is False  # All firms $2K limit now
 
     def test_alpha_no_overnight(self):
         """Alpha Futures flags overnight positions."""
@@ -185,17 +184,16 @@ class TestRankFirms:
         for i in range(len(rankings) - 1):
             assert rankings[i]["roi"] >= rankings[i + 1]["roi"]
 
-    def test_high_dd_excludes_firms(self):
+    def test_high_dd_excludes_all_firms(self):
+        """$2,800 DD exceeds all firms' $2K limit — all excluded."""
         stats = {
             "avg_daily_pnl": 300,
             "max_daily_pnl": 600,
-            "max_drawdown": 2800,  # Exceeds most firms
+            "max_drawdown": 2800,  # Exceeds all firms ($2K limit)
             "avg_days_to_target": 15,
             "trades_overnight": False,
             "consistency_ratio": 0.10,
         }
         rankings = rank_firms_for_strategy(stats)
-        # Should exclude firms with tighter limits
         firm_names = [r["firm"] for r in rankings]
-        assert "topstep_50k" not in firm_names  # $2K limit
-        assert "tpt_50k" in firm_names  # $3K limit
+        assert len(firm_names) == 0  # All firms now $2K — none survive $2,800 DD

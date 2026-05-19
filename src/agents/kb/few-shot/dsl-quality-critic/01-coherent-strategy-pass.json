@@ -1,0 +1,31 @@
+{
+  "input": {
+    "synthesized_dsl": {
+      "name": "trend_mnq_ema921",
+      "description": "Long/short 9/21 EMA crossover on MNQ 15m with 2-bar confirmation, 2.0 ATR trail, break-even at 1R; RTH-only edge in trending sessions per RobotWealth walk-forward 2018-2024.",
+      "symbol": "MNQ",
+      "timeframe": "15m",
+      "direction": "both",
+      "entry_type": "trend_follow",
+      "entry_indicator": "ema_crossover",
+      "entry_params": { "fast_period": 9, "slow_period": 21, "confirmation_bars": 2 },
+      "entry_condition": "Enter long on close above 21 EMA after 9 EMA crosses above 21 EMA and price holds for 2 bars; mirror short.",
+      "exit_type": "trailing_stop",
+      "exit_params": { "atr_period": 14, "multiplier": 2.0, "break_even_at_r": 1.0 },
+      "stop_loss_atr_multiple": 1.5,
+      "take_profit_atr_multiple": 3.0,
+      "preferred_regime": "TRENDING_UP",
+      "session_filter": "RTH_ONLY",
+      "max_contracts": 10
+    },
+    "compile_check_result": { "compiled": true, "errors": [] }
+  },
+  "expected_output": {
+    "score": 8,
+    "accept": true,
+    "concerns": [
+      "preferred_regime=TRENDING_UP but direction=both — short-side trades will fire in TRENDING_UP regime, opposite-direction trades have lower hit-rate per RobotWealth original; consider direction=long only or split into two strategies"
+    ]
+  },
+  "notes": "Coherent-pass example. Indicator (ema_crossover) matches entry_type (trend_follow). Params (9/21/2) all in canonical range. take_profit > stop_loss. Trail multiplier matches indicator catalog default. preferred_regime + session_filter + max_contracts all sane. The single advisory concern (regime/direction mismatch) is genuinely worth surfacing — the original research only validated long-side TRENDING_UP edge — but doesn't sink the strategy. Score 8 = solid pass with one note."
+}

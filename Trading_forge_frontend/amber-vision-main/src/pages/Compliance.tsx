@@ -3,9 +3,13 @@ import { useMemo } from "react";
 import { StatusBadge } from "@/components/forge/StatusBadge";
 import { Shield, ShieldAlert, ShieldCheck, Clock, AlertTriangle, FileCheck } from "lucide-react";
 import { useRulesets, useDrift, useGate } from "@/hooks/useCompliance";
+import { useSSE } from "@/hooks/useSSE";
 import { timeAgo } from "@/lib/utils";
 
 export default function Compliance() {
+  // SSE: invalidate compliance/alerts on gate-blocked or risk events
+  useSSE(["alert:compliance_gate_blocked", "alert:new", "paper:kill-switch-tripped"]);
+
   const { data: rulesets, isLoading: rulesetsLoading } = useRulesets();
   const { data: drifts, isLoading: driftsLoading } = useDrift();
   const { data: gate, isLoading: gateLoading } = useGate();

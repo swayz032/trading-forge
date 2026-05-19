@@ -9,7 +9,7 @@ def _make_config(**overrides) -> StrategyConfig:
     """Create a minimal StrategyConfig for testing."""
     defaults = {
         "name": "test_strategy",
-        "symbol": "ES",
+        "symbol": "MES",
         "timeframe": "15min",
         "indicators": [],
         "entry_long": "close > sma_20",

@@ -151,9 +151,9 @@ def evaluate_signal(
             playbook=playbook.playbook,
         )
 
-    # 7. TP2 R:R < 2.0 → hard SKIP
-    if target_plan.rr_achieved < 2.0:
-        reasoning.append(f"TP2 R:R {target_plan.rr_achieved:.1f} < 2.0 minimum")
+    # 7. TP2 R:R below regime-adjusted minimum → hard SKIP
+    if target_plan.rr_achieved < target_plan.min_rr_ratio:
+        reasoning.append(f"TP2 R:R {target_plan.rr_achieved:.1f} < {target_plan.min_rr_ratio:.1f} minimum")
         return EligibilityDecision(
             action="SKIP", confidence=0.0, reasoning=reasoning,
             bias_state=bias_state, location_score=location.score,

@@ -8,18 +8,18 @@
  * - stderr → logging
  */
 
-import { spawn } from "child_process";
-import { resolve as pathResolve } from "path";
-import { writeFileSync, unlinkSync } from "fs";
-import { tmpdir } from "os";
-import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { backtests, monteCarloRuns, auditLog } from "../db/schema.js";
+import { backtests, monteCarloRuns, auditLog, strategies, strategyExports } from "../db/schema.js";
+import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 import { runMatrix } from "./matrix-backtest-service.js";
-
-const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+import { runQuantumMC } from "./quantum-mc-service.js";
+import { compilePineExport } from "./pine-export-service.js";
+import { runPythonModule } from "../lib/python-runner.js";
+import { tracer } from "../lib/tracing.js";
+import { captureToDLQ } from "../lib/dlq-service.js";
+import { notifyCritical } from "./notification-service.js";
 
 interface MCOptions {
   numSimulations?: number;
@@ -33,6 +33,7 @@ interface MCOptions {
   runPermutationTest?: boolean;
   permutationN?: number;
   nVariants?: number;
+  correlationId?: string;
 }
 
 interface MCResult {
@@ -61,92 +62,11 @@ interface MCResult {
   };
 }
 
-function runPythonMonteCarlo(configPath: string, mcId: string): Promise<MCResult> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = [
-      "-m", "src.engine.monte_carlo",
-      "--config", configPath,
-      "--mc-id", mcId,
-    ];
+export async function runMonteCarlo(backtestId: string, options: MCOptions = {}, externalId?: string) {
+  const mcSpan = tracer.startSpan("monte_carlo.run");
+  mcSpan.setAttribute("backtestId", backtestId);
+  mcSpan.setAttribute("numSimulations", options.numSimulations ?? 10_000);
 
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
-
-    // Kill after 10 minutes to prevent hung processes
-    const MC_TIMEOUT_MS = 600_000;
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        proc.kill("SIGTERM");
-        reject(new Error(`Monte Carlo timed out after ${MC_TIMEOUT_MS / 1000}s`));
-      }
-    }, MC_TIMEOUT_MS);
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "monte-carlo-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      clearTimeout(timer);
-      if (settled) return;
-      settled = true;
-      if (code === 0) {
-        try {
-          resolve(JSON.parse(stdout.trim()));
-        } catch {
-          reject(new Error(`Failed to parse MC output: ${stdout.slice(0, 500)}`));
-        }
-      } else {
-        reject(new Error(`Monte Carlo failed (exit ${code}): ${stderr}`));
-      }
-    });
-
-    proc.on("error", (err) => {
-      clearTimeout(timer);
-      if (settled) return;
-      if (pythonCmd === "python") {
-        const proc2 = spawn("python3", args, {
-          env: { ...process.env },
-          cwd: PROJECT_ROOT,
-        });
-        let stdout2 = "";
-        let stderr2 = "";
-        let settled2 = false;
-        const timer2 = setTimeout(() => {
-          if (!settled2) { settled2 = true; proc2.kill("SIGTERM"); reject(new Error(`Monte Carlo retry timed out after ${MC_TIMEOUT_MS / 1000}s`)); }
-        }, MC_TIMEOUT_MS);
-        proc2.stdout.on("data", (data) => (stdout2 += data.toString()));
-        proc2.stderr.on("data", (data) => (stderr2 += data.toString()));
-        proc2.on("close", (code) => {
-          clearTimeout(timer2);
-          if (settled2) return;
-          settled2 = true;
-          if (code === 0) {
-            try { resolve(JSON.parse(stdout2.trim())); }
-            catch { reject(new Error(`Failed to parse: ${stdout2.slice(0, 500)}`)); }
-          } else {
-            reject(new Error(`Monte Carlo failed: ${stderr2}`));
-          }
-        });
-        proc2.on("error", () => { clearTimeout(timer2); if (!settled2) { settled2 = true; reject(err); } });
-      } else {
-        settled = true;
-        reject(err);
-      }
-    });
-  });
-}
-
-export async function runMonteCarlo(backtestId: string, options: MCOptions = {}) {
   // Fetch backtest data (trades, daily_pnls, equity_curve)
   const [bt] = await db
     .select()
@@ -162,20 +82,58 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
     throw new Error(`Backtest ${backtestId} is not completed (status: ${bt.status})`);
   }
 
-  // Insert pending MC row
-  const [mcRow] = await db
-    .insert(monteCarloRuns)
-    .values({
-      backtestId,
-      numSimulations: options.numSimulations ?? 10_000,
-      gpuAccelerated: options.useGpu ?? true,
-    })
-    .returning();
+  // Insert pending MC row (use pre-generated ID if provided to avoid race conditions).
+  //
+  // P1-5 (idempotency): when callers pre-insert a pending row to guarantee the
+  // stale-pending sweeper can catch crashes between row-insert and Python call,
+  // they pass the pre-insert UUID as `externalId`. We .onConflictDoNothing()
+  // and re-fetch the existing row so a second .insert() with the same id is
+  // safe and the function reuses the caller's row instead of creating a
+  // duplicate. Without externalId the legacy behavior is unchanged.
+  let mcId: string;
+  if (externalId) {
+    const inserted = await db
+      .insert(monteCarloRuns)
+      .values({
+        id: externalId,
+        backtestId,
+        status: "running",
+        numSimulations: options.numSimulations ?? 10_000,
+        gpuAccelerated: options.useGpu ?? true,
+      })
+      .onConflictDoNothing()
+      .returning();
 
-  const mcId = mcRow.id;
+    if (inserted.length > 0) {
+      mcId = inserted[0].id;
+    } else {
+      // Row was pre-inserted by the caller — reuse it.
+      const [existing] = await db
+        .select({ id: monteCarloRuns.id })
+        .from(monteCarloRuns)
+        .where(eq(monteCarloRuns.id, externalId))
+        .limit(1);
+      if (!existing) {
+        throw new Error(`runMonteCarlo: externalId ${externalId} did not insert and no existing row found`);
+      }
+      mcId = existing.id;
+    }
+  } else {
+    const [mcRow] = await db
+      .insert(monteCarloRuns)
+      .values({
+        backtestId,
+        status: "running",
+        numSimulations: options.numSimulations ?? 10_000,
+        gpuAccelerated: options.useGpu ?? true,
+      })
+      .returning();
+    mcId = mcRow.id;
+  }
+
+  mcSpan.setAttribute("mcId", mcId);
 
   try {
-    // Build config JSON — write to temp file (trade lists can be large)
     const config = {
       backtest_id: backtestId,
       num_simulations: options.numSimulations ?? 10_000,
@@ -197,21 +155,21 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
       n_variants: options.nVariants ?? 1,
     };
 
-    const tmpPath = pathResolve(tmpdir(), `mc-config-${randomUUID()}.json`);
-    writeFileSync(tmpPath, JSON.stringify(config));
-
-    let result: MCResult;
-    try {
-      result = await runPythonMonteCarlo(tmpPath, mcId);
-    } finally {
-      try { unlinkSync(tmpPath); } catch { /* ignore cleanup errors */ }
-    }
+    const result = await runPythonModule<MCResult>({
+      module: "src.engine.monte_carlo",
+      args: ["--mc-id", mcId],
+      config: config as unknown as Record<string, unknown>,
+      timeoutMs: 600_000, // 10m
+      componentName: "monte-carlo-engine",
+      correlationId: options.correlationId,
+    });
 
     // Update MC row with results
     const ci = result.confidence_intervals;
     await db
       .update(monteCarloRuns)
       .set({
+        status: "completed",
         maxDrawdownP5: ci.max_drawdown?.p5 != null ? String(ci.max_drawdown.p5) : null,
         maxDrawdownP50: ci.max_drawdown?.p50 != null ? String(ci.max_drawdown.p50) : null,
         maxDrawdownP95: ci.max_drawdown?.p95 != null ? String(ci.max_drawdown.p95) : null,
@@ -244,7 +202,19 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
       },
       status: "success",
       durationMs: result.execution_time_ms,
+      decisionAuthority: "agent",
+      correlationId: options.correlationId ?? null,
     });
+
+    // ─── Broadcast MC completion SSE ──────────────────────────────
+    {
+      const ruin = Number(result.risk_metrics.probability_of_ruin ?? 1);
+      broadcastSSE("mc:completed", {
+        backtestId,
+        strategyId: bt.strategyId ?? null,
+        survivalRate: parseFloat((1 - ruin).toFixed(4)),
+      });
+    }
 
     // ─── Auto Cross Matrix if MC survival is strong (fire-and-forget) ───
     if (bt.strategyId && result.risk_metrics) {
@@ -260,16 +230,145 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
           logger.error({ strategyId: bt.strategyId, err: matrixErr }, "Auto matrix failed (non-blocking)");
         });
       }
+
+      // ─── Auto Quantum Challenger (fire-and-forget) ───
+      // Run quantum breach estimation as experimental challenger alongside classical MC
+      if (result.risk_metrics && result.risk_metrics.probability_of_ruin != null) {
+        runQuantumMC(backtestId, "breach", "topstep_50k").then((qmcResult) => {
+          logger.info(
+            { backtestId, qmcId: qmcResult.id, status: qmcResult.status },
+            "Auto quantum challenger completed",
+          );
+        }).catch((qmcErr) => {
+          logger.error({ backtestId, err: qmcErr }, "Auto quantum challenger failed (non-blocking)");
+        });
+      }
+
+      // ─── Auto Pine Export for deployment-ready strategies (fire-and-forget) ───
+      // Only auto-export for PAPER or DEPLOY_READY strategies — avoid wasting compute on CANDIDATE/TESTING
+      if (bt.strategyId && survivalRate > 0.8) {
+        const [strat] = await db
+          .select({ lifecycleState: strategies.lifecycleState, config: strategies.config })
+          .from(strategies).where(eq(strategies.id, bt.strategyId)).limit(1);
+        if (strat && ["PAPER", "DEPLOY_READY"].includes(strat.lifecycleState)) {
+          // ── Fix 2.10: Resolve firm key from backtest propCompliance, then strategy config, then fallback ──
+          // propCompliance shape expected: { firms: { <firm_key>: { passes: boolean, score?: number }, ... } }
+          let resolvedFirmKey = "topstep_50k"; // safe fallback
+          try {
+            const propCompliance = bt.propCompliance as Record<string, unknown> | null;
+            const firmsMap = propCompliance?.firms as Record<string, { passes?: boolean; score?: number }> | undefined;
+            if (firmsMap && typeof firmsMap === "object" && Object.keys(firmsMap).length > 0) {
+              // Pick the passing firm with the highest score; if scores are absent, take the first passer
+              const passingFirms = Object.entries(firmsMap)
+                .filter(([, v]) => v?.passes === true)
+                .sort(([, a], [, b]) => (b?.score ?? 0) - (a?.score ?? 0));
+              if (passingFirms.length > 0) {
+                resolvedFirmKey = passingFirms[0][0];
+                logger.info(
+                  { strategyId: bt.strategyId, firmKey: resolvedFirmKey, source: "propCompliance" },
+                  "Auto Pine export: resolved firm key from propCompliance",
+                );
+              }
+            } else {
+              // propCompliance has no firms map — check strategy config for an explicit firm preference
+              const stratConfig = strat.config as Record<string, unknown> | null;
+              const configFirm = stratConfig?.firm_key ?? stratConfig?.preferred_firm ?? stratConfig?.prop_firm;
+              if (typeof configFirm === "string" && configFirm.length > 0) {
+                resolvedFirmKey = configFirm;
+                logger.info(
+                  { strategyId: bt.strategyId, firmKey: resolvedFirmKey, source: "strategy.config" },
+                  "Auto Pine export: resolved firm key from strategy config",
+                );
+              } else {
+                logger.info(
+                  { strategyId: bt.strategyId, firmKey: resolvedFirmKey, source: "fallback" },
+                  "Auto Pine export: no firm key in propCompliance or strategy config, using fallback topstep_50k",
+                );
+              }
+            }
+          } catch (firmErr) {
+            logger.warn(
+              { strategyId: bt.strategyId, err: firmErr },
+              "Auto Pine export: firm key resolution threw, using fallback topstep_50k",
+            );
+          }
+
+          // Pass MC risk metrics directly — avoids a redundant DB round-trip inside compilePineExport
+          const autoRiskIntelligence = {
+            breach_probability: result.risk_metrics.breach_probability != null
+              ? Number(result.risk_metrics.breach_probability) : null,
+            ruin_probability: ruin,
+            survival_rate: survivalRate,
+            mc_sharpe_p50: result.confidence_intervals.sharpe_ratio?.p50 != null
+              ? Number(result.confidence_intervals.sharpe_ratio.p50) : null,
+            quantum_estimate: null, // quantum result not yet available at this trigger point
+          };
+
+          // ── Fix 2.11: Auto-select exportType by score band ──
+          // Compile with pine_indicator as the default mode. After compile returns, check the
+          // exportability score and patch the persisted exportType to alert_only for the 50-69
+          // band. No re-compile is needed — the Pine content itself is the same; only the stored
+          // export type and downstream consumer semantics change. Scores < 50 are blocked by the
+          // compiler (status: failed) so no further action is required in that case.
+          compilePineExport(bt.strategyId, resolvedFirmKey, "pine_indicator", autoRiskIntelligence).then(async (pineResult) => {
+            const score = pineResult.exportabilityScore ?? 0;
+            if (pineResult.status === "completed") {
+              let effectiveExportType = "pine_indicator";
+              if (score >= 50 && score < 70) {
+                // Downgrade to alert_only for the 50-69 score band
+                effectiveExportType = "alert_only";
+                try {
+                  await db.update(strategyExports)
+                    .set({ exportType: "alert_only" })
+                    .where(eq(strategyExports.id, pineResult.id));
+                } catch (patchErr) {
+                  logger.warn(
+                    { exportId: pineResult.id, err: patchErr },
+                    "Auto Pine export: failed to patch exportType to alert_only (non-blocking)",
+                  );
+                }
+              }
+              logger.info(
+                {
+                  strategyId: bt.strategyId,
+                  exportId: pineResult.id,
+                  score,
+                  exportType: effectiveExportType,
+                  firmKey: resolvedFirmKey,
+                },
+                score >= 70
+                  ? "Auto Pine export compiled (score >= 70, pine_indicator)"
+                  : "Auto Pine export compiled (score 50-69, downgraded to alert_only)",
+              );
+            } else {
+              logger.info(
+                {
+                  strategyId: bt.strategyId,
+                  exportId: pineResult.id,
+                  score,
+                  status: pineResult.status,
+                  firmKey: resolvedFirmKey,
+                },
+                "Auto Pine export attempted (below threshold or failed)",
+              );
+            }
+          }).catch((pineErr) => {
+            logger.error({ strategyId: bt.strategyId, err: pineErr }, "Auto Pine export failed (non-blocking)");
+          });
+        } // end lifecycle guard
+      }
     }
 
+    mcSpan.setAttribute("status", "completed");
+    mcSpan.end();
     return { id: mcId, status: "completed", ...result };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
 
-    // Mark the MC row as failed so it doesn't stay in pending state
+    // Mark the MC row as failed so it doesn't stay in running state
     await db
       .update(monteCarloRuns)
-      .set({ riskMetrics: { error: errorMsg } })
+      .set({ status: "failed", riskMetrics: { error: errorMsg } })
       .where(eq(monteCarloRuns.id, mcId));
 
     await db.insert(auditLog).values({
@@ -279,7 +378,36 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {})
       input: { backtestId, ...options },
       result: { error: errorMsg },
       status: "failure",
+      decisionAuthority: "agent",
+      errorMessage: errorMsg,
+      correlationId: options.correlationId ?? null,
     });
+
+    // Capture to DLQ so the failure is not silent
+    await captureToDLQ({
+      operationType: "monte_carlo:failure",
+      entityType: "monte_carlo",
+      entityId: mcId,
+      errorMessage: errorMsg,
+      metadata: {
+        backtestId,
+        strategyId: bt.strategyId ?? null,
+        numSimulations: options.numSimulations ?? 10_000,
+        correlationId: options.correlationId ?? null,
+      },
+    });
+
+    // MC failure blocks the TESTING→PAPER promotion gate (MC survival > 70% required)
+    notifyCritical(
+      "MC failed — promotion gate blocked",
+      `Monte Carlo run ${mcId} failed for strategy ${bt.strategyId ?? "unknown"} (backtest ${backtestId}). ` +
+      `The TESTING→PAPER promotion gate is now blocked until MC re-runs successfully. Error: ${errorMsg}`,
+      { mcId, backtestId, strategyId: bt.strategyId ?? null },
+    );
+
+    mcSpan.setAttribute("status", "failed");
+    mcSpan.end();
+    broadcastSSE("mc:failed", { backtestId, error: errorMsg });
 
     return { id: mcId, status: "failed", error: errorMsg };
   }
