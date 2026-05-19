@@ -4565,7 +4565,146 @@ Test fixes:
 
 ---
 
+### Session Log — 2026-05-19 Wave 23 Recovery + Reconstruction MASTER (Phases 0-8)
+
+**Mission:** Recover from the 2026-05-19 02:57 86-file null-byte corruption incident
+that wiped Wave 21/22/23 uncommitted work, reconstruct lost subsystems, run the
+canonical Wave 23 graveyard sweep, codify commit-and-push discipline, and close
+with an architect cross-cut + System Map sync.
+
+**Phase-by-phase summary:**
+
+| Phase | Commit | Description |
+|---|---|---|
+| 0 | `410b75c` | Restore 86 null-byte-corrupted files from git HEAD (recovery baseline) |
+| 1 | `aa2bd6e + 1442661` | Wave 21 engine guardrails + Wave 23.D promotion gates reconstruction |
+| 2 | `be9cf65` | Wave 23.C bias_engine service + A+ gate consumer in paper-signal-service |
+| 3 | `200523e` | Schema + migrations 0114/0115 + harsh-regime-phase service |
+| 4 | (merged) | Scheduler crons (bias-engine-session-start, refresh-10am-et, harsh-regime activation) + admin routes |
+| 5 | `56e2c11` | firm_config 2026-compliance restoration (8 fields) — `check:2026-compliance` GREEN |
+| 6 | `b0d74a0` | CLAUDE.md §11a + AGENTS.md §11 commit-and-push HARD RULE codified |
+| 7 | `71f8cc6` | Library graveyard sweep + Pass 3 validation gauntlet (2 graveyarded, 0 promoted, 2 NO_BACKTEST stranded by ORB validator gap) |
+| 8 | (this commit) | Architect cross-cut + ORB validator status pin + Wave 23 MASTER log + System Map sync |
+
+**Phase 8 work completed:**
+
+1. **ORB validator gap investigation (deliverable A).** Phase 7 reported 2 strategies
+   (`orb_mnq_15m`, `crude_oil_technical_analysis_mcl_5m`) stranded as NO_BACKTEST because
+   `opening_range_breakout` was missing from `VALID_INDICATOR_TYPES` in
+   `src/engine/config.py`. Architect investigation found a deeper contract drift:
+   the indicator implementation (`compute_opening_range_breakout`) does NOT actually
+   exist in `src/engine/indicators/core.py`. The dispatcher (`compute_indicators` in
+   core.py, lines 167-226) has no branch for `opening_range_breakout`. Adding the
+   type to the validator alone would only convert one failure mode (early validation
+   reject) into another (late dispatcher silent-skip → missing orh_/orl_ columns →
+   entry-condition error at backtest time). That is contract drift, not a fix.
+   The validator stays unchanged; an explanatory comment was added to config.py
+   documenting the gap, and a new known-facts pin was added below. The 2 stranded
+   strategies remain NO_BACKTEST until the indicator implementation + dispatcher
+   wiring ship in a single commit.
+
+2. **Cross-cutting contract integrity verification (deliverable D).** All 5 contracts
+   pass:
+   - entry_quality factory→consumer: `direct-bucket-graduator.ts:1469-1565` emits
+     `entry_quality` block + audit + SSE; `paper-signal-service.ts:2351-2437` reads
+     via `rawConfig.entry_quality` with `legacy_no_confluence` bypass. SHAPE MATCH.
+   - Sizing schema firm-aware: `risk-sizing.ts:185` accepts `firm: FirmId` default
+     "topstep"; `sizing.py:98,139` accepts `firm: str = "topstep"`. Branch labels
+     match (`topstep_trailing_dd` / `mffu_balance_pct`). NODE/PY SYNC.
+   - R-multiple gate: `performance_gate.py:186-193` reads `expectancy_r` from stats;
+     `lifecycle-service.ts:1243-1297` reads `gateResult` JSONB from `backtests`
+     table with permissive fallback for pre-Wave-23.D rows. WIRED.
+   - Bias-state contract: `bias-state-service.ts:34,196-203` writes via Drizzle into
+     `biasState` schema columns (regimeLabel, playbook, activeStrategyId, computedAt,
+     evidence, symbol); `paper-signal-service.ts` reads through the same service
+     surface (not raw SQL). SCHEMA-SAFE.
+   - Harsh-regime-phase: `harsh-regime-phase-service.ts:154,202-235` is the single
+     write surface (`harsh_regime_phase.activated`, `manual_override`). Cron
+     `harsh-regime-phase-activation-check` + lifecycle + admin route all consume the
+     service. NO BYPASS.
+
+3. **System Map sync (deliverable C).** `npm run system-map:check` returns
+   `status: "ok"`, `driftItems: []`, `generatedSectionPresent: true`,
+   `manualTradingViewDeployOnly: true`. Counts: routes 62, schedulerJobs 61,
+   workflowFiles 28, engineSubsystems 25, databaseTables 73, registrySubsystems 21.
+   New artifacts from Wave 23 (bias_state, harsh_regime_phase tables;
+   bias-state-service, harsh-regime-phase-service; admin + bias-state routes;
+   3 new scheduler crons; SSE events; audit actions) are all reflected in the
+   generated section — no manual System Map v2.md edits were required.
+
+4. **CI hard gates.** All three GREEN:
+   - `check:production-isolation`: CLEAN — 4 files checked, 0 violations
+   - `check:2026-compliance`: OK — MFFU + Topstep aligned with canonical docs
+   - `system-map:check`: status ok, driftItems empty
+
+**Final library state (post-Phase-7 sweep):** 2 strategies graveyarded by the
+canonical Wave 23 gate chain (C9 + R-expectancy ≥ 2R + PF ≥ 1.7 + Sharpe ≥ 1.5 +
+A4 + A7 + harsh-regime advisory). 2 strategies (`orb_mnq_15m`,
+`crude_oil_technical_analysis_mcl_5m`) stranded at NO_BACKTEST awaiting ORB
+indicator implementation. 0 strategies promoted Pass-3 ready.
+
+**Verification evidence:** vitest baseline 2280 pass / 18 fail (Wave 4 baseline
+preserved). Architect cross-cut produced no new failures. pytest engine tests
+not re-run in Phase 8 (no Python code changed; ORB validator stayed at status quo).
+
+**Known-facts updates:** Two new pins added below:
+1. Library graveyard sweep is operator-triggered (scripts/wave23-library-gate-sweep.ts).
+2. opening_range_breakout indicator status — validator gap is the symptom; missing
+   dispatcher implementation is the root cause. Future commit must ship both together.
+
+**Carry-forward for next session:**
+- Implement `compute_opening_range_breakout()` in `src/engine/indicators/core.py`
+  AND wire it into `compute_indicators()` dispatcher AND add `"opening_range_breakout"`
+  to `VALID_INDICATOR_TYPES` — all three in ONE commit. Test scaffolding already
+  exists at `src/engine/tests/test_opening_range_breakout.py` (currently failing
+  ImportError on `compute_opening_range_breakout`).
+- After ORB ships, re-run `scripts/wave23-library-gate-sweep.ts` to recover the
+  2 stranded strategies (they may or may not pass the canonical gate chain).
+- Formal pytest case for VALID_INDICATOR_TYPES set membership (after the function exists).
+- Long-overdue: factory entry_quality lifecycle persistence audit — ensure every
+  strategy with `entry_quality.extraction_provenance != "legacy_no_confluence"`
+  has a corresponding `graduation.entry_quality_attached` row in `audit_log`.
+
+**Architect Pass 1 acceptance summary:** Wave 23 recovery is COMPLETE pending
+the ORB indicator gap (which is properly documented, not silently swept). All
+contracts hold, all CI gates green, System Map in sync, commit-and-push discipline
+codified. The 86-file corruption incident is fully recovered; the rule that
+prevents the next one is now hard-pinned in CLAUDE.md §11a + AGENTS.md §11.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Library graveyard sweep is operator-triggered (pinned 2026-05-19)
+
+`scripts/wave23-library-gate-sweep.ts` is the canonical post-Wave-23 graveyard
+sweep tool. Runs the full gate chain (C9 + R-expectancy ≥ 2R + PF ≥ 1.7 +
+Sharpe ≥ 1.5 + A4 Frankenstein + A7 + harsh-regime advisory). Strategies that
+fail HARD gates → `lifecycle_state = GRAVEYARD` + audit_log row +
+Discord critical alert. Idempotent. Run after each scout pipeline cycle
+graduates new strategies, OR after framework changes (Wave-N) shift gate
+thresholds.
+
+### opening_range_breakout indicator gap (pinned 2026-05-19)
+
+`opening_range_breakout` is NOT yet a wired indicator. Status as of 2026-05-19:
+- Setup name referenced in `src/engine/context/playbook_router.py` (lines 112, 119)
+  as a `playbook.allowed_setups` value — that's a string label, not a computation.
+- Test scaffolding exists at `src/engine/tests/test_opening_range_breakout.py`
+  and DSL fixture exists at `src/engine/strategies/dsl_fixtures/opening_range_breakout_mes.json`.
+- BUT: `compute_opening_range_breakout()` is NOT defined in
+  `src/engine/indicators/core.py`, the dispatcher (`compute_indicators`, lines 167-226)
+  has NO branch for it, and `VALID_INDICATOR_TYPES` (config.py line 77) does NOT include it.
+
+DO NOT add `opening_range_breakout` to `VALID_INDICATOR_TYPES` alone — that just
+converts an early validator reject into a silent dispatcher skip with missing
+orh_/orl_ columns at backtest time. When ORB ships, ship ALL of:
+1. `compute_opening_range_breakout()` function in `indicators/core.py`
+2. Dispatcher branch in `compute_indicators()`
+3. `"opening_range_breakout"` in `VALID_INDICATOR_TYPES` set
+4. Pytest case for the dispatcher branch
+in the SAME commit. Phase 7's sweep stranded 2 strategies as NO_BACKTEST because
+of this gap; they recover automatically when ORB ships.
 
 ### Commit-and-push discipline is a HARD RULE (pinned 2026-05-19)
 

@@ -75,6 +75,14 @@ class _Track3Config:
 TRACK3_CONFIG = _Track3Config()
 
 VALID_INDICATOR_TYPES = {"sma", "ema", "rsi", "macd", "vwap", "bbands", "atr", "adx", "adr"}
+# NOTE: opening_range_breakout is intentionally NOT in the validator yet.
+# Test scaffolding (src/engine/tests/test_opening_range_breakout.py) references
+# compute_opening_range_breakout from indicators/core.py, but the dispatcher
+# (compute_indicators in core.py) has NOT been wired. Adding "opening_range_breakout"
+# here without the dispatcher would let strategies validate but fail downstream at
+# backtest execution (missing orh_/orl_ columns) — silent contract drift.
+# Wave 23F follow-up: implement compute_opening_range_breakout() + wire dispatcher
+# in core.py in the SAME commit that adds it to this set. See AGENT-LOGS phase8 entry.
 
 
 # ─── Indicator Config ──────────────────────────────────────────────
