@@ -139,19 +139,28 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
     if (stratConfig?.strategy_class) {
       strategyClass = String(stratConfig.strategy_class);
     }
-    // If no strategy config was sent in the request, use the one from DB
+    // If no strategy config was sent in the request, use the one from DB.
+    // Canonical DB shape (W23F) nests the strategy DSL under config.strategy.*;
+    // legacy/test strategies may have the same fields flat on config.*. Prefer
+    // the nested form, fall back to flat. Without this, every field resolves to
+    // the schema default ("" / [] / {fixed_contracts:1}) and the Python engine
+    // receives an empty entry expression → "Cannot parse expression: ''".
     if (!resolvedStrategy && stratConfig) {
-      // Merge DB fields with config — the DB strategy row has symbol/timeframe at top level
+      const nested = (stratConfig.strategy as Record<string, unknown> | undefined) ?? {};
+      const pick = <T,>(key: string, fallback: T): T => {
+        const v = (nested as any)[key] ?? (stratConfig as any)[key];
+        return (v === undefined || v === null) ? fallback : v;
+      };
       resolvedStrategy = {
         name: strat!.name,
         symbol: strat!.symbol as any,
         timeframe: strat!.timeframe,
-        indicators: (stratConfig.indicators as any[]) ?? [],
-        entry_long: String(stratConfig.entry_long ?? ""),
-        entry_short: String(stratConfig.entry_short ?? ""),
-        exit: String(stratConfig.exit ?? ""),
-        stop_loss: (stratConfig.stop_loss as any) ?? { type: "atr", multiplier: 2.0 },
-        position_size: (stratConfig.position_size as any) ?? { type: "fixed", fixed_contracts: 1 },
+        indicators: pick<any[]>("indicators", []),
+        entry_long: String(pick<string>("entry_long", "")),
+        entry_short: String(pick<string>("entry_short", "")),
+        exit: String(pick<string>("exit", "")),
+        stop_loss: pick<any>("stop_loss", { type: "atr", multiplier: 2.0 }),
+        position_size: pick<any>("position_size", { type: "fixed", fixed_contracts: 1 }),
       };
     }
   } catch {
