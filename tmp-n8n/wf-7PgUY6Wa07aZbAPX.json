@@ -1,0 +1,482 @@
+{
+  "updatedAt": "2026-05-05T04:49:12.434Z",
+  "createdAt": "2026-04-29T07:38:54.516Z",
+  "id": "7PgUY6Wa07aZbAPX",
+  "name": "5M-brave-news-watcher",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "cron",
+      "name": "Daily 6AM ET Cron",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "disabled": false
+    },
+    {
+      "id": "brave-news",
+      "name": "Brave News (past day)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.search.brave.com/res/v1/news/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "futures trading strategy backtest momentum mean reversion ES NQ"
+            },
+            {
+              "name": "freshness",
+              "value": "pd"
+            },
+            {
+              "name": "count",
+              "value": "20"
+            },
+            {
+              "name": "spellcheck",
+              "value": "false"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Subscription-Token",
+              "value": "={{ $env.BRAVE_API_KEY }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "shape",
+      "name": "Shape News Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "function applyQualityFilter(items) {\n  const BOOST_QUANT = {\n    'arxiv.org': 10, 'ssrn.com': 10, 'papers.ssrn.com': 10, 'papers.nber.org': 6,\n    'quantpedia.com': 8, 'quantitativo.com': 8, 'robotwealth.com': 8,\n    'quant.stackexchange.com': 7, 'quantstart.com': 7,\n    'quantocracy.com': 6, 'quantifiedstrategies.com': 6, 'alphaarchitect.com': 6,\n    'quantconnect.com': 5, 'reddit.com/r/algotrading': 5,\n    'tradingview.com/script': 4, 'cmegroup.com': 4,\n  };\n  const BOOST_NEWS = {\n    'reuters.com': 7, 'bloomberg.com': 7, 'wsj.com': 7, 'ft.com': 7,\n    'cnbc.com': 6, 'marketwatch.com': 5, 'barchart.com': 5,\n    'zerohedge.com': 4, 'tradingview.com/news': 4,\n  };\n  const DOWNRANK = {\n    'investopedia.com': 10, 'youtube.com/shorts': 10,\n    'medium.com': 8, 'benzinga.com': 8,\n    'marketbeat.com': 7, 'fool.com': 7,\n    'seekingalpha.com': 6, 'towardsdatascience.com': 6,\n    'businessinsider.com': 7, 'cryptoslate.com': 8,\n    'tradingkey.com': 9,\n  };\n  const DISCARD_DOMAINS = ['pinterest.com','tiktok.com','facebook.com','instagram.com',\n    'yoforex.org','yellow.com'];\n  // Path patterns must be specific enough to avoid English-word collisions.\n  // Removed bare '-ea' (false-positives on east/earnings/ahead).\n  const DISCARD_PATHS = [\n    'reddit.com/r/wallstreetbets','/binary-options','/forex-signals','/get-rich-',\n    '-ea-v','-mt5/','/free-download','/price-prediction','/nft-market','pudgy-penguins',\n  ];\n\n  function urlMatches(url, pattern) { return url.toLowerCase().includes(pattern.toLowerCase()); }\n  function domainOf(url) { try { return new URL(url).hostname.replace(/^www./,''); } catch { return ''; } }\n  function bestKey(map, url) {\n    const keys = Object.keys(map).sort((a, b) => b.length - a.length);\n    for (const k of keys) if (urlMatches(url, k)) return { key: k, weight: map[k] };\n    return null;\n  }\n  const titleLooksSpammy = (t) => /price prediction|free download|EA V|signals telegram|guaranteed|pump|moonshot|gem altcoin|get rich/i.test(t || '');\n\n  const filtered = [];\n  for (const it of items) {\n    const url = it.url || (it.json && it.json.url) || '';\n    if (!url) continue;\n    const dom = domainOf(url);\n    if (DISCARD_DOMAINS.some(d => dom.includes(d))) continue;\n    if (DISCARD_PATHS.some(p => urlMatches(url, p))) continue;\n    const title = it.title || (it.json && it.json.title) || '';\n    if (titleLooksSpammy(title)) continue;\n    const dr = bestKey(DOWNRANK, url);\n    if (dr && dr.weight >= 10) continue;\n    const boostQ = bestKey(BOOST_QUANT, url);\n    const boostN = bestKey(BOOST_NEWS, url);\n    let score = 0;\n    if (boostQ) score += boostQ.weight;\n    if (boostN) score += boostN.weight;\n    if (dr) score -= dr.weight * 0.5;\n    filtered.push({ ...it, _qualityScore: score });\n  }\n  filtered.sort((a, b) => (b._qualityScore || 0) - (a._qualityScore || 0));\n  return filtered;\n}\n\nconst r = $input.first().json;\nconst items = r.results || [];\nconst filtered = applyQualityFilter(items);\nconst out = filtered.slice(0, 10).map(i => ({\n  json: { title: i.title || '', description: (i.description || i.snippet || '').slice(0, 1500), url: i.url || '', source: 'brave-news', age: i.age || '', qualityScore: i._qualityScore || 0 }\n})).filter(o => o.json.title && o.json.url);\nconsole.log('Yielded ' + out.length + ' filtered news (from ' + items.length + ' raw)');\nreturn out;"
+      }
+    },
+    {
+      "id": "post-scout",
+      "name": "POST scout-ideas (legacy)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ideas: [{ source: 'brave-news', title: $json.title, description: $json.description, url: $json.url, source_quality: 'medium', signal_type: 'market_news_intel' }] }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "error-alert",
+      "name": "POST workflow-errors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        540
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { workflowId: '5M-brave-news-watcher', workflowName: '5M Brave News Watcher', executionId: $execution.id, nodeName: 'unknown', errorMessage: ($json.error?.message || 'unknown error').slice(0, 500), firstSeenAt: new Date().toISOString(), occurrenceCount: 1 } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    }
+  ],
+  "connections": {
+    "Daily 6AM ET Cron": {
+      "main": [
+        [
+          {
+            "node": "Brave News (past day)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brave News (past day)": {
+      "main": [
+        [
+          {
+            "node": "Shape News Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape News Results": {
+      "main": [
+        [
+          {
+            "node": "POST scout-ideas (legacy)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "POST workflow-errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "BbCvlV1ARyyvY3NI"
+  },
+  "staticData": {
+    "node:Daily 6AM ET Cron": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "935a7f93-789c-4e13-89b3-a5e413b00afc",
+  "activeVersionId": "935a7f93-789c-4e13-89b3-a5e413b00afc",
+  "versionCounter": 42,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-29T07:38:54.516Z",
+      "createdAt": "2026-04-29T07:38:54.516Z",
+      "role": "workflow:owner",
+      "workflowId": "7PgUY6Wa07aZbAPX",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-05-05T04:22:09.084Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-05-05",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-05T04:49:12.435Z",
+    "createdAt": "2026-05-05T04:49:12.435Z",
+    "versionId": "935a7f93-789c-4e13-89b3-a5e413b00afc",
+    "workflowId": "7PgUY6Wa07aZbAPX",
+    "nodes": [
+      {
+        "id": "cron",
+        "name": "Daily 6AM ET Cron",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          240,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 6 * * *"
+              }
+            ]
+          }
+        },
+        "disabled": false
+      },
+      {
+        "id": "brave-news",
+        "name": "Brave News (past day)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.search.brave.com/res/v1/news/search",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "q",
+                "value": "futures trading strategy backtest momentum mean reversion ES NQ"
+              },
+              {
+                "name": "freshness",
+                "value": "pd"
+              },
+              {
+                "name": "count",
+                "value": "20"
+              },
+              {
+                "name": "spellcheck",
+                "value": "false"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Subscription-Token",
+                "value": "={{ $env.BRAVE_API_KEY }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "shape",
+        "name": "Shape News Results",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          300
+        ],
+        "parameters": {
+          "jsCode": "function applyQualityFilter(items) {\n  const BOOST_QUANT = {\n    'arxiv.org': 10, 'ssrn.com': 10, 'papers.ssrn.com': 10, 'papers.nber.org': 6,\n    'quantpedia.com': 8, 'quantitativo.com': 8, 'robotwealth.com': 8,\n    'quant.stackexchange.com': 7, 'quantstart.com': 7,\n    'quantocracy.com': 6, 'quantifiedstrategies.com': 6, 'alphaarchitect.com': 6,\n    'quantconnect.com': 5, 'reddit.com/r/algotrading': 5,\n    'tradingview.com/script': 4, 'cmegroup.com': 4,\n  };\n  const BOOST_NEWS = {\n    'reuters.com': 7, 'bloomberg.com': 7, 'wsj.com': 7, 'ft.com': 7,\n    'cnbc.com': 6, 'marketwatch.com': 5, 'barchart.com': 5,\n    'zerohedge.com': 4, 'tradingview.com/news': 4,\n  };\n  const DOWNRANK = {\n    'investopedia.com': 10, 'youtube.com/shorts': 10,\n    'medium.com': 8, 'benzinga.com': 8,\n    'marketbeat.com': 7, 'fool.com': 7,\n    'seekingalpha.com': 6, 'towardsdatascience.com': 6,\n    'businessinsider.com': 7, 'cryptoslate.com': 8,\n    'tradingkey.com': 9,\n  };\n  const DISCARD_DOMAINS = ['pinterest.com','tiktok.com','facebook.com','instagram.com',\n    'yoforex.org','yellow.com'];\n  // Path patterns must be specific enough to avoid English-word collisions.\n  // Removed bare '-ea' (false-positives on east/earnings/ahead).\n  const DISCARD_PATHS = [\n    'reddit.com/r/wallstreetbets','/binary-options','/forex-signals','/get-rich-',\n    '-ea-v','-mt5/','/free-download','/price-prediction','/nft-market','pudgy-penguins',\n  ];\n\n  function urlMatches(url, pattern) { return url.toLowerCase().includes(pattern.toLowerCase()); }\n  function domainOf(url) { try { return new URL(url).hostname.replace(/^www./,''); } catch { return ''; } }\n  function bestKey(map, url) {\n    const keys = Object.keys(map).sort((a, b) => b.length - a.length);\n    for (const k of keys) if (urlMatches(url, k)) return { key: k, weight: map[k] };\n    return null;\n  }\n  const titleLooksSpammy = (t) => /price prediction|free download|EA V|signals telegram|guaranteed|pump|moonshot|gem altcoin|get rich/i.test(t || '');\n\n  const filtered = [];\n  for (const it of items) {\n    const url = it.url || (it.json && it.json.url) || '';\n    if (!url) continue;\n    const dom = domainOf(url);\n    if (DISCARD_DOMAINS.some(d => dom.includes(d))) continue;\n    if (DISCARD_PATHS.some(p => urlMatches(url, p))) continue;\n    const title = it.title || (it.json && it.json.title) || '';\n    if (titleLooksSpammy(title)) continue;\n    const dr = bestKey(DOWNRANK, url);\n    if (dr && dr.weight >= 10) continue;\n    const boostQ = bestKey(BOOST_QUANT, url);\n    const boostN = bestKey(BOOST_NEWS, url);\n    let score = 0;\n    if (boostQ) score += boostQ.weight;\n    if (boostN) score += boostN.weight;\n    if (dr) score -= dr.weight * 0.5;\n    filtered.push({ ...it, _qualityScore: score });\n  }\n  filtered.sort((a, b) => (b._qualityScore || 0) - (a._qualityScore || 0));\n  return filtered;\n}\n\nconst r = $input.first().json;\nconst items = r.results || [];\nconst filtered = applyQualityFilter(items);\nconst out = filtered.slice(0, 10).map(i => ({\n  json: { title: i.title || '', description: (i.description || i.snippet || '').slice(0, 1500), url: i.url || '', source: 'brave-news', age: i.age || '', qualityScore: i._qualityScore || 0 }\n})).filter(o => o.json.title && o.json.url);\nconsole.log('Yielded ' + out.length + ' filtered news (from ' + items.length + ' raw)');\nreturn out;"
+        }
+      },
+      {
+        "id": "post-scout",
+        "name": "POST scout-ideas (legacy)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1200,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ ideas: [{ source: 'brave-news', title: $json.title, description: $json.description, url: $json.url, source_quality: 'medium', signal_type: 'market_news_intel' }] }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "error-trigger",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          540
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "error-alert",
+        "name": "POST workflow-errors",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          540
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { workflowId: '5M-brave-news-watcher', workflowName: '5M Brave News Watcher', executionId: $execution.id, nodeName: 'unknown', errorMessage: ($json.error?.message || 'unknown error').slice(0, 500), firstSeenAt: new Date().toISOString(), occurrenceCount: 1 } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      }
+    ],
+    "connections": {
+      "Daily 6AM ET Cron": {
+        "main": [
+          [
+            {
+              "node": "Brave News (past day)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Brave News (past day)": {
+        "main": [
+          [
+            {
+              "node": "Shape News Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Shape News Results": {
+        "main": [
+          [
+            {
+              "node": "POST scout-ideas (legacy)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "POST workflow-errors",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-05T04:49:12.456Z",
+        "id": 1635,
+        "workflowId": "7PgUY6Wa07aZbAPX",
+        "versionId": "935a7f93-789c-4e13-89b3-a5e413b00afc",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

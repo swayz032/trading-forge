@@ -1,0 +1,372 @@
+/**
+ * ProductionStatusPanel.tsx — Track 4 Phase 4B
+ *
+ * Top-of-dashboard 6-question production health panel.
+ *
+ * Answers:
+ *   1. Are we trading right now? (GREEN check / RED X with reason)
+ *   2. Today's P&L: $X / target $Y (color-coded)
+ *   3. Drawdown distance: $X buffer left of $Y trailing DD
+ *   4. Last clean reconciliation: N days ago (GREEN <24hrs, YELLOW <72hrs, RED >72hrs)
+ *   5. Kill switches: 9 layers, all GREEN or specific RED layer named
+ *   6. Alerts: Discord webhook last fired X minutes ago
+ *
+ * Polls /api/production/status every 10 seconds.
+ *
+ * Visual identity: emerald (#10B981) on near-black, glassy 3D floating cards.
+ */
+
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  Shield,
+  Bell,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from "lucide-react";
+import { api } from "@/lib/api-client";
+
+// ─── Types (mirroring production-status.ts) ───────────────────────────────────
+
+type OverallSeverity = "green" | "yellow" | "red";
+
+interface KillSwitchLayer {
+  layer: number;
+  name: string;
+  halted: boolean;
+  reason?: string;
+}
+
+interface KillSwitchStatusReport {
+  overall_halted: boolean;
+  production_mode: string;
+  layers: KillSwitchLayer[];
+  checked_at: string;
+}
+
+interface ProductionStatusResponse {
+  overall: OverallSeverity;
+  productionMode: string;
+  sixQuestions: {
+    areWeTrading: {
+      answer: string;
+      halted: boolean;
+      reason: string | null;
+      severity: OverallSeverity;
+    };
+    pnlToday: {
+      todayPnl: number | null;
+      expectedPnl: number | null;
+      delta: number | null;
+      severity: OverallSeverity;
+    };
+    drawdownDistance: {
+      bufferRemaining: number | null;
+      firmLimit: number | null;
+      usedPct: number | null;
+      severity: OverallSeverity;
+    };
+    lastCleanReconciliation: {
+      lastCleanDate: string | null;
+      ageHours: number | null;
+      severity: OverallSeverity;
+    };
+    killSwitchLayers: KillSwitchStatusReport;
+    alertingStatus: {
+      lastAlertFiredAt: string | null;
+      minutesSinceLastAlert: number | null;
+      webhookConfigured: boolean;
+    };
+  };
+  generatedAt: string;
+  cacheHit: boolean;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function severityColor(s: OverallSeverity): string {
+  switch (s) {
+    case "green":  return "text-profit";
+    case "yellow": return "text-primary";
+    case "red":    return "text-loss";
+  }
+}
+
+function severityBg(s: OverallSeverity): string {
+  switch (s) {
+    case "green":  return "bg-profit/10";
+    case "yellow": return "bg-primary/10";
+    case "red":    return "bg-loss/10";
+  }
+}
+
+function severityBorder(s: OverallSeverity): string {
+  switch (s) {
+    case "green":  return "border-profit/30";
+    case "yellow": return "border-primary/30";
+    case "red":    return "border-loss/40";
+  }
+}
+
+function fmtPnl(v: number | null): string {
+  if (v === null) return "—";
+  return (v >= 0 ? "+" : "") + "$" + Math.abs(v).toFixed(0);
+}
+
+function fmtAgeHours(h: number | null): string {
+  if (h === null) return "never";
+  if (h < 1) return "< 1 hour ago";
+  if (h < 24) return `${Math.round(h)}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+}
+
+// ─── Sub-panels ───────────────────────────────────────────────────────────────
+
+function TradingStatusCard({ q }: { q: ProductionStatusResponse["sixQuestions"]["areWeTrading"] }) {
+  return (
+    <div className={`flex items-start gap-3 rounded-lg p-3 ${severityBg(q.severity)} border ${severityBorder(q.severity)}`}>
+      {q.halted
+        ? <XCircle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${severityColor(q.severity)}`} />
+        : <CheckCircle2 className={`w-5 h-5 mt-0.5 flex-shrink-0 ${severityColor(q.severity)}`} />
+      }
+      <div>
+        <p className="text-sm font-semibold text-text-primary leading-tight">Q1 — Are we trading?</p>
+        <p className={`text-sm mt-0.5 ${severityColor(q.severity)}`}>{q.answer}</p>
+        {q.reason && <p className="text-xs text-text-muted mt-0.5">{q.reason}</p>}
+      </div>
+    </div>
+  );
+}
+
+function PnLCard({ q }: { q: ProductionStatusResponse["sixQuestions"]["pnlToday"] }) {
+  const DeltaIcon = q.delta === null ? Minus : q.delta >= 0 ? TrendingUp : TrendingDown;
+  return (
+    <div className={`flex items-start gap-3 rounded-lg p-3 ${severityBg(q.severity)} border ${severityBorder(q.severity)}`}>
+      <DeltaIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${severityColor(q.severity)}`} />
+      <div>
+        <p className="text-sm font-semibold text-text-primary leading-tight">Q2 — Today's P&L</p>
+        <p className={`text-sm mt-0.5 ${severityColor(q.severity)}`}>
+          {fmtPnl(q.todayPnl)} actual · {fmtPnl(q.expectedPnl)} expected
+        </p>
+        {q.delta !== null && (
+          <p className="text-xs text-text-muted mt-0.5">
+            Delta: {fmtPnl(q.delta)}
+          </p>
+        )}
+        {q.todayPnl === null && (
+          <p className="text-xs text-text-muted mt-0.5">No recon run yet today</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DrawdownCard({ q }: { q: ProductionStatusResponse["sixQuestions"]["drawdownDistance"] }) {
+  return (
+    <div className={`flex items-start gap-3 rounded-lg p-3 ${severityBg(q.severity)} border ${severityBorder(q.severity)}`}>
+      <Shield className={`w-5 h-5 mt-0.5 flex-shrink-0 ${severityColor(q.severity)}`} />
+      <div>
+        <p className="text-sm font-semibold text-text-primary leading-tight">Q3 — Drawdown distance</p>
+        {q.bufferRemaining !== null
+          ? (
+            <p className={`text-sm mt-0.5 ${severityColor(q.severity)}`}>
+              ${q.bufferRemaining.toFixed(0)} buffer left of ${q.firmLimit?.toFixed(0)} trailing DD
+              {q.usedPct !== null && ` (${(q.usedPct * 100).toFixed(0)}% used)`}
+            </p>
+          )
+          : (
+            <p className="text-sm mt-0.5 text-text-muted">Wiring pending (Phase 4C)</p>
+          )
+        }
+      </div>
+    </div>
+  );
+}
+
+function ReconCard({ q }: { q: ProductionStatusResponse["sixQuestions"]["lastCleanReconciliation"] }) {
+  return (
+    <div className={`flex items-start gap-3 rounded-lg p-3 ${severityBg(q.severity)} border ${severityBorder(q.severity)}`}>
+      <Clock className={`w-5 h-5 mt-0.5 flex-shrink-0 ${severityColor(q.severity)}`} />
+      <div>
+        <p className="text-sm font-semibold text-text-primary leading-tight">Q4 — Last clean reconciliation</p>
+        <p className={`text-sm mt-0.5 ${severityColor(q.severity)}`}>
+          {q.lastCleanDate ?? "never"} · {fmtAgeHours(q.ageHours)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function KillSwitchCard({ q }: { q: KillSwitchStatusReport }) {
+  const haltedLayers = q.layers.filter((l) => l.halted);
+  const allGreen = haltedLayers.length === 0;
+  const severity: OverallSeverity = allGreen ? "green" : "red";
+
+  return (
+    <div className={`flex items-start gap-3 rounded-lg p-3 ${severityBg(severity)} border ${severityBorder(severity)}`}>
+      <Shield className={`w-5 h-5 mt-0.5 flex-shrink-0 ${severityColor(severity)}`} />
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-text-primary leading-tight">Q5 — Kill switches (9 layers)</p>
+        {allGreen
+          ? <p className="text-sm mt-0.5 text-profit">All 9 layers GREEN</p>
+          : (
+            <ul className="mt-1 space-y-0.5">
+              {haltedLayers.map((l) => (
+                <li key={l.layer} className="text-xs text-loss truncate">
+                  Layer {l.layer} ({l.name}){l.reason ? `: ${l.reason}` : ""}
+                </li>
+              ))}
+            </ul>
+          )
+        }
+        <p className="text-xs text-text-muted mt-0.5">
+          Mode: {q.production_mode}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AlertingCard({ q }: { q: ProductionStatusResponse["sixQuestions"]["alertingStatus"] }) {
+  const severity: OverallSeverity = q.webhookConfigured ? "green" : "yellow";
+  return (
+    <div className={`flex items-start gap-3 rounded-lg p-3 ${severityBg(severity)} border ${severityBorder(severity)}`}>
+      <Bell className={`w-5 h-5 mt-0.5 flex-shrink-0 ${severityColor(severity)}`} />
+      <div>
+        <p className="text-sm font-semibold text-text-primary leading-tight">Q6 — Alerting status</p>
+        <p className={`text-sm mt-0.5 ${severityColor(severity)}`}>
+          {q.webhookConfigured ? "Discord webhook configured" : "Webhook not configured"}
+        </p>
+        <p className="text-xs text-text-muted mt-0.5">
+          {q.minutesSinceLastAlert !== null
+            ? `Last alert: ${q.minutesSinceLastAlert}m ago`
+            : "No alerts yet"
+          }
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Overall badge ────────────────────────────────────────────────────────────
+
+function OverallBadge({ overall, mode }: { overall: OverallSeverity; mode: string }) {
+  const labels: Record<OverallSeverity, string> = {
+    green: "ALL SYSTEMS GREEN",
+    yellow: "ATTENTION REQUIRED",
+    red: "PRODUCTION HALTED",
+  };
+  return (
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold tracking-wide ${severityColor(overall)} ${severityBg(overall)} border ${severityBorder(overall)}`}>
+      {overall === "green"
+        ? <CheckCircle2 className="w-3.5 h-3.5" />
+        : overall === "yellow"
+          ? <AlertTriangle className="w-3.5 h-3.5" />
+          : <XCircle className="w-3.5 h-3.5" />
+      }
+      {labels[overall]} · {mode}
+    </div>
+  );
+}
+
+// ─── Main panel ───────────────────────────────────────────────────────────────
+
+export function ProductionStatusPanel() {
+  const [data, setData] = useState<ProductionStatusResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchStatus() {
+      try {
+        const res = await api.get<ProductionStatusResponse>("/production/status");
+        if (!cancelled) {
+          setData(res);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchStatus();
+    const iv = setInterval(fetchStatus, 10_000); // 10-second polling
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="forge-card p-5">
+        <div className="flex items-center gap-2 text-text-muted">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="text-sm">Loading production status…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="forge-card p-5 border-loss/40">
+        <div className="flex items-center gap-2 text-loss">
+          <AlertTriangle className="w-4 h-4" />
+          <span className="text-sm">Production status unavailable: {error ?? "no data"}</span>
+        </div>
+      </div>
+    );
+  }
+
+  const q = data.sixQuestions;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="forge-card p-5 space-y-4"
+      data-testid="production-status-panel"
+      data-overall={data.overall}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-text-primary">Production Status</h2>
+          <p className="text-xs text-text-muted">
+            {data.cacheHit ? "Cached · " : "Live · "}
+            {new Date(data.generatedAt).toLocaleTimeString()}
+          </p>
+        </div>
+        <OverallBadge overall={data.overall} mode={data.productionMode} />
+      </div>
+
+      {/* 6 Questions — 2-column grid on wide, 1-column on narrow */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <TradingStatusCard q={q.areWeTrading} />
+        <PnLCard q={q.pnlToday} />
+        <DrawdownCard q={q.drawdownDistance} />
+        <ReconCard q={q.lastCleanReconciliation} />
+        <div className="md:col-span-2">
+          <KillSwitchCard q={q.killSwitchLayers} />
+        </div>
+        <div className="md:col-span-2">
+          <AlertingCard q={q.alertingStatus} />
+        </div>
+      </div>
+    </motion.div>
+  );
+}

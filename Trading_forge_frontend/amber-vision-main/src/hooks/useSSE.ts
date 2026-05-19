@@ -399,8 +399,14 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       break;
 
     // ─── Pine export ──────────────────────────────────────────────────
-    // (legacy `pine:export_completed` underscore event removed — server
-    //  emits `pine:export-completed` hyphen, handled below)
+    // Legacy underscore event — server emits `pine:export-completed` (hyphen)
+    // these days, but the union still includes the underscore variant for
+    // backward compatibility with any in-flight clients. Treat both the same.
+    case "pine:export_completed": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["pine"] });
+      break;
+    }
 
     // ─── n8n / agents ─────────────────────────────────────────────────
 
@@ -523,6 +529,285 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       // Warm-up is informational — no toast needed; query invalidation
       // ensures dashboards reload fresh rolling metrics.
       qc.invalidateQueries({ queryKey: ["metrics"] });
+      break;
+    }
+
+    // ─── Pending validation watchlist (Pass 18) ───────────────────────
+    case "pending_bucket.updated": {
+      qc.invalidateQueries({ queryKey: ["pending-buckets"] });
+      break;
+    }
+
+    case "pending_bucket.graduated": {
+      qc.invalidateQueries({ queryKey: ["pending-buckets"] });
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"pending_bucket.graduated">;
+      const label = data.name ?? data.market ?? "Strategy";
+      toast.success(`Strategy graduated! ${label}`);
+      break;
+    }
+
+    // ─── Lifecycle gate evaluation (Wave 4, 2026-05-16) ─────────────────
+    // Wires the Wave 2 lifecycle:gate_evaluated emits to the frontend.
+    // Shows a toast on FAIL / KILL decisions. On A7 PASS with ramp_up_mode,
+    // shows a distinct informational toast so operator sees first-strategy
+    // is in ramp-up territory. Silent for routine PASS rows.
+    case "lifecycle:gate_evaluated": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"lifecycle:gate_evaluated">;
+      const { gate, decision, strategy_id, ramp_up_mode } = data;
+      const shortId = String(strategy_id).slice(0, 8);
+
+      if (decision === "killed") {
+        toast.error(
+          `Gate ${gate}: strategy ${shortId} — KILLED (sent to graveyard)`,
+          { duration: 10_000 }
+        );
+      } else if (decision === "failed") {
+        toast.warning(`Gate ${gate}: strategy ${shortId} — FAILED`);
+      } else if (decision === "passed" && ramp_up_mode) {
+        // A7 ramp-up: first strategy, no DEPLOYED strategy to compare against.
+        // Must be surfaced distinctly per pinned facts (plan §2, A7 ramp_up_mode).
+        toast.info(
+          `Gate A7 PASS (ramp-up mode) — strategy ${shortId} is the first strategy, no signal-vector baseline yet`,
+          { duration: 8_000 }
+        );
+      } else if (decision === "promoted") {
+        toast.success(`Gate ${gate}: strategy ${shortId} — auto-promoted to DEPLOYED`);
+      } else if (
+        decision === "deferred_insufficient_sessions" ||
+        decision === "deferred_sharpe_below_threshold"
+      ) {
+        // Deferred is informational — no toast noise, just invalidate.
+        if (import.meta.env.DEV) {
+          console.info(`[lifecycle:gate_evaluated] ${gate} ${decision} for ${shortId}`);
+        }
+      }
+      // PASS without ramp_up_mode: silent, no toast.
+      break;
+    }
+
+    // ─── Operator-dashboard events (cache invalidations; panels not yet built) ─
+    // These events are typed for exhaustiveness. When a dashboard panel is
+    // added for each category, promote the case to produce a real UX effect.
+
+    case "production:mode-changed":
+      qc.invalidateQueries({ queryKey: ["production"] });
+      break;
+
+    case "production:drift-detection-completed":
+      qc.invalidateQueries({ queryKey: ["production", "drift"] });
+      break;
+
+    case "production:reconciliation-completed":
+      qc.invalidateQueries({ queryKey: ["production", "reconciliation"] });
+      break;
+
+    case "compute:failover-state-change":
+      qc.invalidateQueries({ queryKey: ["compute"] });
+      break;
+
+    case "network:failover-state-change":
+      qc.invalidateQueries({ queryKey: ["network"] });
+      break;
+
+    case "strategy:compliance_blocked": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      const data = event.data as SSEEventData<"strategy:compliance_blocked">;
+      toast.error(
+        `Strategy ${String(data.strategyId).slice(0, 8)} blocked by compliance gate`
+      );
+      break;
+    }
+
+    case "strategy:assignment_collision": {
+      qc.invalidateQueries({ queryKey: ["assignments"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"strategy:assignment_collision">;
+      toast.error(
+        `Assignment collision: strategy ${String(data.strategyId).slice(0, 8)} + account ${String(data.accountId).slice(0, 8)}`
+      );
+      break;
+    }
+
+    case "compliance:collaborative_trading_warning": {
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"compliance:collaborative_trading_warning">;
+      toast.error(
+        `MFFU collaborative-trading warning: strategy ${String(data.strategyId).slice(0, 8)} on ${(data.accountIds?.length ?? 0)} accounts`,
+        { duration: 12_000 }
+      );
+      break;
+    }
+
+    case "lifecycle:operator_absent_autopromoted": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"lifecycle:operator_absent_autopromoted">;
+      toast.info(
+        `Operator-absent auto-promotion: ${String(data.strategyId).slice(0, 8)} ${data.from} → ${data.to}`
+      );
+      break;
+    }
+
+    case "paper:entry-blocked-production-halt":
+    case "paper:order-blocked-outage":
+    case "paper:order-blocked-suspension":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "paper:kill-switch-threshold-tripped": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"paper:kill-switch-threshold-tripped">;
+      toast.warning(
+        `Kill switch threshold (${data.threshold ?? "67"}% DLL): new entries blocked for session ${String(data.sessionId).slice(0, 8)}`,
+        { duration: 10_000 }
+      );
+      break;
+    }
+
+    case "paper:force-flatten-all": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"paper:force-flatten-all">;
+      toast.error(
+        `Force-flatten: ${data.count} position${data.count === 1 ? "" : "s"} (${data.reason})`
+      );
+      break;
+    }
+
+    case "broker:order_routed":
+      qc.invalidateQueries({ queryKey: ["broker"] });
+      break;
+
+    case "pine_export:hmac_persist_failed": {
+      qc.invalidateQueries({ queryKey: ["pine"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      toast.error("Pine export: HMAC secret persist failed — delivery may retry");
+      break;
+    }
+
+    case "pine_export:recipient_generated":
+    case "pine_export:delivered":
+      qc.invalidateQueries({ queryKey: ["pine"] });
+      break;
+
+    case "pending_bucket.expired":
+      qc.invalidateQueries({ queryKey: ["pending-buckets"] });
+      break;
+
+    case "auction:imbalance-updated":
+      qc.invalidateQueries({ queryKey: ["auction"] });
+      break;
+
+    case "scout-health:reject-spike":
+    case "scout-health:no-strategies-today":
+      qc.invalidateQueries({ queryKey: ["scout"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "prop-firm:snapshot-captured":
+    case "prop-firm:suspension-detected":
+    case "prop-firm:suspension-cleared":
+      qc.invalidateQueries({ queryKey: ["prop-firm"] });
+      break;
+
+    case "vp:levels-computed":
+      qc.invalidateQueries({ queryKey: ["volume-profile"] });
+      break;
+
+    case "windows:health-check-failed":
+    case "windows:health-check-ram-warning":
+    case "windows:real-reboot-pending":
+      qc.invalidateQueries({ queryKey: ["health"] });
+      break;
+
+    case "compliance:violation_detected":
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      break;
+
+    case "migration:legacy_firm_cleanup_complete":
+    case "firm_count_changed":
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      break;
+
+    case "paper:exit:tp1_filled":
+    case "paper:exit:tp2_filled":
+    case "paper:exit:be_stop_moved":
+    case "paper:exit:trail_tightened":
+    case "paper:exit:time_stop_flattened":
+    case "paper:exit:handler_error":
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      break;
+
+    case "a-plus-auditor:scan-complete":
+      qc.invalidateQueries({ queryKey: ["agents"] });
+      break;
+
+    case "nemo:scenario-generated":
+    case "nemo:scenario-error":
+      qc.invalidateQueries({ queryKey: ["nemo"] });
+      break;
+
+    case "strategy:assigned":
+    case "strategy:unassigned":
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["assignments"] });
+      break;
+
+    // ─── Wave 8: graveyard burial (terminal non-reversible transition) ──
+    case "strategy:graveyard_burial": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      const data = event.data as SSEEventData<"strategy:graveyard_burial">;
+      const label = data.name ? `"${data.name}"` : String(data.strategyId).slice(0, 8);
+      toast.error(
+        `${label} buried in graveyard — ${data.failureModes?.join(", ") ?? data.deathReason}`,
+        { duration: 10_000 }
+      );
+      break;
+    }
+
+    // ─── Wave 9-2: Pine export server-side failure ────────────────────
+    case "pine_export:failed": {
+      qc.invalidateQueries({ queryKey: ["pine"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"pine_export:failed">;
+      const shortId = data.strategyId ? String(data.strategyId).slice(0, 8) : "?";
+      toast.error(
+        `Pine export failed [${data.errorCode}] strategy ${shortId}: ${data.errorMessage}`,
+        { duration: 10_000 }
+      );
+      break;
+    }
+
+    // ─── Wave 9-3: Walk-forward window progress ───────────────────────
+    case "walkforward:window_complete": {
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      // No toast — this fires per window and would be noisy for multi-window jobs.
+      break;
+    }
+
+    // ─── Wave 9-3: Compliance drift detection ─────────────────────────
+    case "compliance:drift_detected": {
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const data = event.data as SSEEventData<"compliance:drift_detected">;
+      const firmList = data.affectedFirms?.join(", ") ?? "unknown";
+      if (data.severity === "critical") {
+        toast.error(
+          `Compliance rules drifted — CRITICAL: active strategies may be violating updated ${firmList} rules`,
+          { duration: 12_000 }
+        );
+      } else {
+        toast.warning(
+          `Compliance rules drifted (${firmList}) — review and re-validate active strategies`,
+          { duration: 10_000 }
+        );
+      }
       break;
     }
 

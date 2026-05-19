@@ -1,8 +1,8 @@
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls } from "../db/schema.js";
 import { writeLockoutFromKillEvent } from "./strategy-lockout-service.js";
-import { eq, and, isNull, desc, sql } from "drizzle-orm";
-import { broadcastSSE } from "../routes/sse.js";
+import { eq, and, isNull, desc, sql, inArray } from "drizzle-orm";
+import { broadcastSSE, PAPER_EXIT_EVENTS } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 import { onPaperTradeClose } from "../scheduler.js";
 import { getFirmAccount, CONTRACT_SPECS, getCommissionPerSide } from "../../shared/firm-config.js";
@@ -12,6 +12,8 @@ import { tracer } from "../lib/tracing.js";
 import { withSessionLock } from "../lib/db-locks.js";
 import { paperTrades as paperTradesCounter } from "../lib/metrics-registry.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+// Phase 4C: production kill switch — checked FIRST in openPosition (fail-CLOSED)
+import { killSwitch } from "../production/kill-switch.js";
 import { AlertFactory } from "./alert-service.js";
 import { computeRollSpreadCost } from "../lib/roll-calendar-loader.js";
 import {
@@ -22,6 +24,8 @@ import {
 import { isFirmSuspended, registerSuspensionChangeCallback } from "./prop-firm-health-service.js";
 // C4: network failover connectivity annotation (annotation-only, does not block orders)
 import { isConnectivityDegraded } from "../lib/network-failover.js";
+// Track 5: strategy assignment check — if accountId is provided, verify an active assignment exists
+import { getActiveAssignment } from "./strategy-assignment-service.js";
 export { CONTRACT_SPECS };
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
@@ -42,7 +46,7 @@ registerOutageChangeCallback(async (exchange: string, isActive: boolean, affecte
           entryPrice: paperPositions.entryPrice,
         })
         .from(paperPositions)
-        .where(and(isNull(paperPositions.closedAt), sql`${paperPositions.symbol} = ANY(${affectedSymbols})`));
+        .where(and(isNull(paperPositions.closedAt), inArray(paperPositions.symbol, affectedSymbols)));
 
       logger.error(
         {
@@ -115,7 +119,7 @@ registerSuspensionChangeCallback(async (firmId: string, suspended: boolean) => {
         const openPositions = await db
           .select({ id: paperPositions.id, sessionId: paperPositions.sessionId, symbol: paperPositions.symbol })
           .from(paperPositions)
-          .where(and(isNull(paperPositions.closedAt), sql`${paperPositions.sessionId} = ANY(${sessionIds})`));
+          .where(and(isNull(paperPositions.closedAt), inArray(paperPositions.sessionId, sessionIds)));
 
         logger.error(
           { firmId, activeSessions: firmSessions.length, openPositions: openPositions.length },
@@ -129,6 +133,32 @@ registerSuspensionChangeCallback(async (firmId: string, suspended: boolean) => {
     logger.info({ firmId }, "C2 prop firm suspension lifted: entry block cleared for firm");
   }
 });
+
+// ─── DLL Kill Switch Thresholds (Track 3 — funded-trader playbook) ───────────
+// HALT_AT_DLL_PCT  (0.67): Block new entries when daily loss reaches 67% of
+//   firm DLL. This is the personal DLL = 67% of firm DLL rule. Leaves a next-day
+//   trading buffer even on worst days. Previously: 0.95 (no practical buffer).
+// FORCE_CLOSE_AT_DLL_PCT (0.95): Force-flatten all positions at 95% of firm DLL.
+//   Previously: 1.00 (actual breach — too late to protect remaining capital).
+//
+// Both values read from environment variables so they can be overridden without
+// a code deploy. Defaults: DLL_HALT_PCT=0.67, DLL_FORCE_CLOSE_PCT=0.95.
+//
+// Audit: on first invocation post-deploy, a kill_switch.threshold_changed audit
+// row is written capturing old/new values (derived from the hard-coded pre-Track-3
+// defaults vs current effective values). Written once per process lifetime.
+const HALT_AT_DLL_PCT        = parseFloat(process.env.DLL_HALT_PCT        ?? "0.67");
+const FORCE_CLOSE_AT_DLL_PCT = parseFloat(process.env.DLL_FORCE_CLOSE_PCT ?? "0.95");
+
+// Validate env var values are sensible; fall back to defaults silently.
+const _effectiveHaltPct       = (Number.isFinite(HALT_AT_DLL_PCT) && HALT_AT_DLL_PCT > 0 && HALT_AT_DLL_PCT < 1) ? HALT_AT_DLL_PCT : 0.67;
+const _effectiveForceClosePct = (Number.isFinite(FORCE_CLOSE_AT_DLL_PCT) && FORCE_CLOSE_AT_DLL_PCT > 0 && FORCE_CLOSE_AT_DLL_PCT <= 1) ? FORCE_CLOSE_AT_DLL_PCT : 0.95;
+
+// Track 3 pre-change defaults (used only for audit row on first invocation).
+const _PRE_TRACK3_HALT_PCT        = 0.95;  // was "approaching_daily_loss_limit" at 95%
+const _PRE_TRACK3_FORCE_CLOSE_PCT = 1.00;  // was "daily_loss_limit_breached" at 100%
+
+let _thresholdAuditWritten = false;
 
 // ─── Kill Switch cache (D6) ─────────────────────────────────────
 // Cached per session for 5s. Same session cannot trip kill repeatedly in rapid
@@ -145,6 +175,8 @@ interface KillSwitchCacheEntry {
   reason: string | null;
   force_close: boolean;
   daily_pnl_pct: number;
+  halt_pct_used: number;
+  force_close_pct_used: number;
   cachedAt: number;
 }
 const KILL_SWITCH_CACHE_TTL_MS = 5_000;
@@ -506,8 +538,120 @@ export async function openPosition(sessionId: string, params: {
   atr?: number;
   barVolume?: number;
   medianBarVolume?: number;
-}, context?: { correlationId?: string }) {
+}, context?: { correlationId?: string; accountId?: string }) {
   const correlationId = context?.correlationId ?? null;
+
+  // ─── Track 5: Strategy assignment check ─────────────────────────────────
+  // If an accountId is provided, verify an active strategy assignment exists
+  // for that account before proceeding. Log debug and skip (return null) if
+  // no active assignment is found — this is not an error condition, it means
+  // the operator has not yet assigned a strategy to this account.
+  if (context?.accountId) {
+    try {
+      const assignment = await getActiveAssignment(context.accountId);
+      if (!assignment) {
+        logger.debug(
+          { fn: "openPosition", sessionId, accountId: context.accountId, symbol: params.symbol },
+          "paper-execution.no-assignment: no active strategy assignment for account — skipping signal",
+        );
+        return {
+          position: null,
+          executionResult: {
+            positionId: "",
+            entryPrice: 0,
+            contracts: params.contracts,
+            slippage: 0,
+            expectedPrice: params.signalPrice,
+            actualPrice: 0,
+            arrivalPrice: params.signalPrice,
+            implementationShortfall: 0,
+            fillRatio: 0,
+            filled: false,
+          } satisfies ExecutionResult,
+        };
+      }
+    } catch (err) {
+      // Assignment check failure is non-fatal — log and continue (fail-open for this optional check)
+      logger.warn(
+        { err, fn: "openPosition", sessionId, accountId: context.accountId },
+        "paper-execution: assignment check failed — proceeding without assignment gate (fail-open)",
+      );
+    }
+  }
+
+  // ─── Phase 4C: Production-mode halt gate (MUST BE FIRST) ────────────────
+  // Fail-CLOSED: DB error → isHaltedForProduction() returns true → block order.
+  // This gate supersedes every other gate including the pipeline pause guard.
+  // production_mode='HALT' means the operator has explicitly halted all
+  // paper trading activity — no new positions may be opened until they set
+  // production_mode back to 'PAPER' or 'LIVE'.
+  try {
+    if (await killSwitch.isHaltedForProduction()) {
+      logger.warn(
+        { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side, reason: "production_mode_halt" },
+        "paper-execution.production-halted: new entry blocked by production kill switch",
+      );
+      db.insert(auditLog).values({
+        action: "paper.entry_blocked",
+        entityType: "paper_session",
+        entityId: sessionId,
+        decisionAuthority: "system",
+        input: { sessionId, symbol: params.symbol, side: params.side } as Record<string, unknown>,
+        result: { reason: "production_halt", blocked: true } as Record<string, unknown>,
+        status: "success",
+        correlationId,
+      }).catch((err) => logger.error({ err }, "paper-execution: production-halt audit_log write failed (non-blocking)"));
+      broadcastSSE("paper:entry-blocked-production-halt", {
+        sessionId,
+        symbol: params.symbol,
+        side: params.side,
+        reason: "production_halt",
+      });
+      return {
+        position: null,
+        executionResult: {
+          positionId: "",
+          entryPrice: 0,
+          contracts: params.contracts,
+          slippage: 0,
+          expectedPrice: params.signalPrice,
+          actualPrice: 0,
+          arrivalPrice: params.signalPrice,
+          implementationShortfall: 0,
+          fillRatio: 0,
+          filled: false,
+        } satisfies ExecutionResult,
+      };
+    }
+  } catch (err) {
+    // Kill switch read failed — fail CLOSED (block the order)
+    logger.error(
+      { err, fn: "openPosition", sessionId, symbol: params.symbol },
+      "paper-execution: kill switch read error — failing CLOSED (blocking entry)",
+    );
+    broadcastSSE("paper:entry-blocked-production-halt", {
+      sessionId,
+      symbol: params.symbol,
+      side: params.side,
+      reason: "production_halt_check_error",
+    });
+    return {
+      position: null,
+      executionResult: {
+        positionId: "",
+        entryPrice: 0,
+        contracts: params.contracts,
+        slippage: 0,
+        expectedPrice: params.signalPrice,
+        actualPrice: 0,
+        arrivalPrice: params.signalPrice,
+        implementationShortfall: 0,
+        fillRatio: 0,
+        filled: false,
+      } satisfies ExecutionResult,
+    };
+  }
+
   // ─── Pipeline pause guard ─────────────────────────────────────
   // Last-line defence: paper-signal-service.ts gates entries upstream, but
   // any other caller (manual open, future automation) still gets blocked
@@ -730,12 +874,40 @@ export async function openPosition(sessionId: string, params: {
         // Previously wrapped in `dailyLossLimit > 0`, which silently bypassed maxTradesPerSession
         // enforcement for sessions configured with only a trade cap (no loss limit).
         if (dailyLossLimit > 0 || (maxTradesPerSession !== undefined && maxTradesPerSession > 0)) {
+          // Track 3: write one-time threshold-changed audit row on first invocation post-deploy.
+          // This creates an audit trail that shows exactly when the 67%/95% thresholds took effect.
+          if (!_thresholdAuditWritten) {
+            _thresholdAuditWritten = true;
+            db.insert(auditLog).values({
+              action: "kill_switch.threshold_changed",
+              entityType: "system",
+              entityId: null,
+              decisionAuthority: "system",
+              input: {
+                old_halt_pct: _PRE_TRACK3_HALT_PCT,
+                old_force_close_pct: _PRE_TRACK3_FORCE_CLOSE_PCT,
+              } as Record<string, unknown>,
+              result: {
+                new_halt_pct: _effectiveHaltPct,
+                new_force_close_pct: _effectiveForceClosePct,
+                env_DLL_HALT_PCT: process.env.DLL_HALT_PCT ?? null,
+                env_DLL_FORCE_CLOSE_PCT: process.env.DLL_FORCE_CLOSE_PCT ?? null,
+                track: "Track3_StopTPSizing",
+                description: "Personal DLL = 67% of firm DLL. Force-close at 95% instead of 100%.",
+              } as Record<string, unknown>,
+              status: "success",
+              correlationId: null,
+            }).catch((err) => logger.warn({ err }, "kill_switch.threshold_changed audit write failed (non-blocking)"));
+          }
+
           const { runPythonModule } = await import("../lib/python-runner.js");
           const killResult = await runPythonModule<{
             tripped: boolean;
             reason: string | null;
             force_close: boolean;
             daily_pnl_pct: number;
+            halt_pct_used: number;
+            force_close_pct_used: number;
           }>({
             module: "src.engine.compliance.compliance_gate",
             config: {
@@ -747,6 +919,9 @@ export async function openPosition(sessionId: string, params: {
               maxTradesPerSession: maxTradesPerSession ?? null,
               tradesToday,
               consecutiveLosses,
+              // Track 3: pass thresholds explicitly so Python and TypeScript stay in sync.
+              haltPct: _effectiveHaltPct,
+              forceClosePct: _effectiveForceClosePct,
             },
             timeoutMs: 3_000,
             componentName: "kill-switch",
@@ -779,7 +954,13 @@ export async function openPosition(sessionId: string, params: {
               entityType: "paper_session",
               entityId: sessionId,
               decisionAuthority: "system",
-              input: { force_close: killResult.force_close, daily_pnl_pct: killResult.daily_pnl_pct, reason: killResult.reason } as Record<string, unknown>,
+              input: {
+                force_close: killResult.force_close,
+                daily_pnl_pct: killResult.daily_pnl_pct,
+                reason: killResult.reason,
+                halt_pct_used: killResult.halt_pct_used ?? _effectiveHaltPct,
+                force_close_pct_used: killResult.force_close_pct_used ?? _effectiveForceClosePct,
+              } as Record<string, unknown>,
               result: { trip_time: new Date().toISOString() } as Record<string, unknown>,
               status: "success",
               correlationId,
@@ -802,7 +983,22 @@ export async function openPosition(sessionId: string, params: {
               symbol: params.symbol,
               reason: killResult.reason,
               force_close: killResult.force_close,
+              daily_pnl_pct: killResult.daily_pnl_pct,
+              halt_pct_used: killResult.halt_pct_used ?? _effectiveHaltPct,
+              force_close_pct_used: killResult.force_close_pct_used ?? _effectiveForceClosePct,
+              correlationId: correlationId ?? null,
             });
+            // Track 3: dedicated SSE event when halt threshold (67%) trips but force-close hasn't.
+            // Frontend can distinguish "halt new entries" from "force flatten positions".
+            if (!killResult.force_close && killResult.reason === "approaching_daily_loss_limit") {
+              broadcastSSE("paper:kill-switch-threshold-tripped", {
+                sessionId,
+                symbol: params.symbol,
+                halt_pct: killResult.halt_pct_used ?? _effectiveHaltPct,
+                daily_pnl_pct: killResult.daily_pnl_pct,
+                message: `New entries blocked: daily loss reached ${((killResult.halt_pct_used ?? _effectiveHaltPct) * 100).toFixed(0)}% of firm DLL. Existing positions held. Force-close triggers at ${((_effectiveForceClosePct) * 100).toFixed(0)}%.`,
+              });
+            }
             openSpan.setAttribute("kill_switch_tripped", true);
             openSpan.setAttribute("kill_switch_reason", killResult.reason ?? "");
             openSpan.end();
@@ -1776,18 +1972,485 @@ async function updateRollingMetrics(sessionId: string, strategyId: string | null
   }
 }
 
+// ─── Track 3: Exit Handler Circuit Breaker ────────────────────
+// Mirrors the SQA circuit breaker pattern (sqa-promise-registry.ts).
+// After 3 subprocess failures in 10 min the circuit OPENS and all
+// callExitHandler invocations return HOLD immediately (no subprocess spawn).
+// Auto-closes after 1 hour — same cooldown as the SQA breaker.
+// Audit log entries are written on state transitions.
+//
+// Fail-CLOSED is preserved: OPEN circuit → HOLD (same as subprocess error).
+// This prevents cascading subprocess spawns when Python is down.
+const EXIT_HANDLER_CB_THRESHOLD  = 3;
+const EXIT_HANDLER_CB_WINDOW_MS  = 10 * 60_000;  // 10 min sliding window
+const EXIT_HANDLER_CB_COOLDOWN_MS = 60 * 60_000; // 1 hour auto-close
+
+interface ExitHandlerCircuitBreaker {
+  state: "CLOSED" | "OPEN";
+  openedAt: number | null;
+  failTimestamps: number[];
+}
+const exitHandlerCb: ExitHandlerCircuitBreaker = {
+  state: "CLOSED",
+  openedAt: null,
+  failTimestamps: [],
+};
+
+function _exitCbPruneWindow(): void {
+  const cutoff = Date.now() - EXIT_HANDLER_CB_WINDOW_MS;
+  exitHandlerCb.failTimestamps = exitHandlerCb.failTimestamps.filter(t => t >= cutoff);
+}
+
+function _exitCbCheckAutoClose(): void {
+  if (exitHandlerCb.state === "OPEN" && exitHandlerCb.openedAt !== null) {
+    if (Date.now() - exitHandlerCb.openedAt >= EXIT_HANDLER_CB_COOLDOWN_MS) {
+      exitHandlerCb.state = "CLOSED";
+      exitHandlerCb.openedAt = null;
+      exitHandlerCb.failTimestamps = [];
+      logger.info("exit-handler circuit breaker: auto-closed after 1h cooldown");
+      db.insert(auditLog).values({
+        action: "exit_handler.circuit_breaker_closed",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: {} as Record<string, unknown>,
+        result: { reason: "cooldown_elapsed", cooldownMs: EXIT_HANDLER_CB_COOLDOWN_MS } as Record<string, unknown>,
+        status: "success",
+        correlationId: null,
+      }).catch((err) => logger.warn({ err }, "exit_handler CB close audit write failed (non-blocking)"));
+    }
+  }
+}
+
+function _exitCbRecordFailure(): void {
+  _exitCbPruneWindow();
+  exitHandlerCb.failTimestamps.push(Date.now());
+  if (exitHandlerCb.state === "CLOSED" && exitHandlerCb.failTimestamps.length >= EXIT_HANDLER_CB_THRESHOLD) {
+    exitHandlerCb.state = "OPEN";
+    exitHandlerCb.openedAt = Date.now();
+    logger.warn(
+      { failures: exitHandlerCb.failTimestamps.length, windowMs: EXIT_HANDLER_CB_WINDOW_MS },
+      "exit-handler circuit breaker: OPEN — all exit handler calls return HOLD for 1h",
+    );
+    AlertFactory.systemError("exit-handler-circuit-open", "Exit handler Python subprocess failed 3× in 10 min — circuit OPEN, HOLD applied to all positions for 1h");
+    db.insert(auditLog).values({
+      action: "exit_handler.circuit_breaker_open",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { failuresInWindow: exitHandlerCb.failTimestamps.length, windowMs: EXIT_HANDLER_CB_WINDOW_MS } as Record<string, unknown>,
+      result: { reason: "failure_threshold_reached", cooldownMs: EXIT_HANDLER_CB_COOLDOWN_MS } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    }).catch((err) => logger.warn({ err }, "exit_handler CB open audit write failed (non-blocking)"));
+  }
+}
+
+/** Test/admin hook — reset exit handler circuit breaker state. */
+export function resetExitHandlerCircuitBreaker(): void {
+  exitHandlerCb.state = "CLOSED";
+  exitHandlerCb.openedAt = null;
+  exitHandlerCb.failTimestamps = [];
+}
+
+// ─── Track 3: Style D/C Bar Context ──────────────────────────
+// Optional bar-level data supplied by callers to enable Style D/C handler dispatch.
+// When absent (legacy callers), dispatch is skipped and positions use ATR exits.
+// All float fields default to 0 if not provided — handlers return HOLD for 0/NaN inputs.
+
+export interface StyleExitBarContext {
+  /** ET time string HH:MM for the current bar (e.g. "15:54") */
+  currentTimeEt: string;
+  /** Per-symbol ATR-14 in points */
+  atr14: Record<string, number>;
+  /** Per-symbol running high since entry for each open position */
+  highSinceEntry?: Record<string, number>;
+  /** Per-symbol running low since entry for each open position */
+  lowSinceEntry?: Record<string, number>;
+  /** Per-symbol last 2-bar 15m swing low (for Style D long trail) */
+  last2barSwingLow?: Record<string, number>;
+  /** Per-symbol last 2-bar 15m swing high (for Style D short trail) */
+  last2barSwingHigh?: Record<string, number>;
+  /** Per-symbol developing session POC (for Style C runner) */
+  developingSessionPoc?: Record<string, number>;
+}
+
+interface ExitHandlerResult {
+  decision: string;
+  new_stop?: number | null;
+  evidence: Record<string, unknown>;
+  handler_version: string;
+}
+
+/**
+ * Call the appropriate Style D or C Python handler for a single open position.
+ * Fail-CLOSED: any subprocess error returns HOLD and writes an audit log row.
+ * Deterministic: same bar state → same ExitDecision (HANDLER_VERSION pinned in evidence).
+ * Circuit breaker: after 3 failures in 10 min, all calls return HOLD for 1h (no subprocess spawn).
+ */
+async function callExitHandler(
+  pos: typeof paperPositions.$inferSelect,
+  barCtx: StyleExitBarContext,
+  strategyId: string | null,
+  correlationId?: string | null,
+): Promise<ExitHandlerResult> {
+  const exitStyle = (pos.currentExitStyle ?? "D") as "D" | "C";
+  const entryPrice = Number(pos.entryPrice);
+  const atr14 = barCtx.atr14[pos.symbol] ?? 0;
+
+  // Compute stop_pts from trailHwm or estimate from ATR if no explicit stop stored.
+  // trailHwm field stores the trail high-water mark, not the original stop distance.
+  // For stop_pts we use 2x ATR as a reasonable default (matches BreakerStrategy sl_mult).
+  // Positions opened with Track 3 will have entryPrice and known ATR.
+  const stopPts = atr14 > 0 ? atr14 * 2.0 : 1.0;  // floor at 1.0 to avoid div/0 in handler
+
+  const highSinceEntry = barCtx.highSinceEntry?.[pos.symbol] ?? entryPrice;
+  const lowSinceEntry  = barCtx.lowSinceEntry?.[pos.symbol]  ?? entryPrice;
+
+  const spec = CONTRACT_SPECS[pos.symbol];
+  const tickSize = spec?.tickSize ?? 0.25;
+
+  const module = exitStyle === "C"
+    ? "src.engine.exits.style_c_handler"
+    : "src.engine.exits.style_d_handler";
+
+  let config: Record<string, unknown>;
+  if (exitStyle === "D") {
+    config = {
+      action: "evaluate_exit",
+      state: {
+        direction: pos.side,
+        entry_price: entryPrice,
+        stop_pts: stopPts,
+        current_price: Number(pos.currentPrice ?? entryPrice),
+        current_high_since_entry: highSinceEntry,
+        current_low_since_entry: lowSinceEntry,
+        atr_14: atr14,
+        last_2bar_swing_low:  barCtx.last2barSwingLow?.[pos.symbol]  ?? null,
+        last_2bar_swing_high: barCtx.last2barSwingHigh?.[pos.symbol] ?? null,
+        current_time_et: barCtx.currentTimeEt,
+        position_pct_open: Number(pos.fillRatio ?? 1.0),
+        tick_size: tickSize,
+        tp1_filled: pos.tp1Filled ?? false,
+        be_stop_applied: pos.beStopApplied ?? false,
+      },
+    };
+  } else {
+    config = {
+      action: "evaluate_exit",
+      state: {
+        direction: pos.side,
+        entry_price: entryPrice,
+        stop_pts: stopPts,
+        current_price: Number(pos.currentPrice ?? entryPrice),
+        current_time_et: barCtx.currentTimeEt,
+        position_pct_open: Number(pos.fillRatio ?? 1.0),
+        tick_size: tickSize,
+        tp1_filled: pos.tp1Filled ?? false,
+        tp2_filled: pos.tp2Filled ?? false,
+        developing_session_poc: barCtx.developingSessionPoc?.[pos.symbol] ?? null,
+      },
+    };
+  }
+
+  // ── Circuit breaker check (short-circuit before subprocess spawn) ────────
+  _exitCbCheckAutoClose();
+  if (exitHandlerCb.state === "OPEN") {
+    logger.debug(
+      { positionId: pos.id, exitStyle, strategyId },
+      "exit-handler circuit OPEN — returning HOLD without subprocess spawn",
+    );
+    return {
+      decision: "HOLD",
+      new_stop: null,
+      evidence: { circuit_breaker: "OPEN", reason: "exit_handler_circuit_open" },
+      handler_version: `style_${exitStyle.toLowerCase()}_cb_open`,
+    };
+  }
+
+  try {
+    const { runPythonModule } = await import("../lib/python-runner.js");
+    const result = await runPythonModule<ExitHandlerResult>({
+      module,
+      config,
+      timeoutMs: 3_000,
+      componentName: `style-${exitStyle.toLowerCase()}-handler`,
+    });
+    return result;
+  } catch (err) {
+    // Fail-CLOSED: subprocess error → HOLD + audit row + alert SSE
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      { positionId: pos.id, exitStyle, err: errMsg, strategyId, correlationId },
+      "Style exit handler subprocess error → fail-CLOSED HOLD",
+    );
+    // Record failure in circuit breaker sliding window
+    _exitCbRecordFailure();
+    // Audit row (non-blocking)
+    db.insert(auditLog).values({
+      action: "paper.exit_handler_error",
+      entityType: "paper_position",
+      entityId: pos.id,
+      decisionAuthority: "system",
+      input: { exitStyle, positionId: pos.id, strategyId, module, correlationId } as Record<string, unknown>,
+      result: { decision: "HOLD", error: errMsg, reason: "subprocess_error" } as Record<string, unknown>,
+      status: "failed",
+      correlationId: correlationId ?? null,
+    }).catch((dbErr) => logger.warn({ dbErr }, "exit_handler_error audit write failed (non-blocking)"));
+
+    broadcastSSE(PAPER_EXIT_EVENTS.HANDLER_ERROR, {
+      position_id: pos.id,
+      strategy_id: strategyId,
+      decision_type: "HOLD",
+      evidence: { error: errMsg, module },
+      exit_style: exitStyle,
+      correlation_id: correlationId ?? null,
+    });
+
+    return {
+      decision: "HOLD",
+      new_stop: null,
+      evidence: { error: errMsg },
+      handler_version: `style_${exitStyle.toLowerCase()}_handler_error`,
+    };
+  }
+}
+
+/**
+ * Apply an ExitDecision to an open position. Mutates DB state.
+ * Returns true if the position was fully closed (TIME_STOP_FLATTEN).
+ */
+async function applyExitDecision(
+  pos: typeof paperPositions.$inferSelect,
+  result: ExitHandlerResult,
+  exitStyle: "D" | "C",
+  strategyId: string | null,
+  currentPrice: number,
+  atr?: number,
+  correlationId?: string | null,
+): Promise<boolean> {
+  const { decision, new_stop, evidence } = result;
+
+  // Write audit log row for every non-HOLD decision (HOLD is high-frequency; skip for cost).
+  if (decision !== "HOLD") {
+    db.insert(auditLog).values({
+      action: `paper.exit_decision.${decision.toLowerCase()}`,
+      entityType: "paper_position",
+      entityId: pos.id,
+      decisionAuthority: "system",
+      input: { exitStyle, positionId: pos.id, strategyId, currentPrice, correlationId } as Record<string, unknown>,
+      result: { decision, new_stop, evidence, handler_version: result.handler_version } as Record<string, unknown>,
+      status: "success",
+      correlationId: correlationId ?? null,
+    }).catch((err) => logger.warn({ err, decision }, "exit_decision audit write failed (non-blocking)"));
+  }
+
+  const exitPayloadBase = {
+    position_id: pos.id,
+    strategy_id: strategyId,
+    decision_type: decision,
+    evidence,
+    exit_style: exitStyle,
+    correlation_id: correlationId ?? null,
+  };
+
+  switch (decision) {
+    case "FILL_TP1_50PCT": {
+      if (pos.tp1Filled) {
+        // Idempotent: already filled — downgrade to HOLD
+        logger.debug({ positionId: pos.id }, "style_exit: TP1 already filled — idempotent HOLD");
+        return false;
+      }
+      // Partial close: Style D=50%, Style C=33% of position contracts
+      const tp1Fraction = exitStyle === "C" ? 0.33 : 0.50;
+      const contractsToClose = Math.max(1, Math.floor(pos.contracts * tp1Fraction));
+      const evidenceTyped = evidence as Record<string, unknown>;
+      const tp1Price = evidenceTyped.tp1_price as number | undefined;
+      const rMultiple = tp1Price != null && pos.entryPrice != null
+        ? Math.abs((tp1Price - Number(pos.entryPrice)) / (evidenceTyped.stop_pts as number || 1))
+        : undefined;
+      // Close partial — if full position closes here, fall through to full close below
+      if (contractsToClose < pos.contracts) {
+        await db.update(paperPositions).set({
+          tp1Filled: true,
+          contracts: pos.contracts - contractsToClose,
+          lastHandlerEvalAt: new Date(),
+        }).where(eq(paperPositions.id, pos.id));
+        logger.info(
+          {
+            positionId: pos.id, strategyId, exitStyle, currentPrice, tp1Price,
+            rMultiple, contractsToClose, correlationId, evidence,
+          },
+          "style_exit: TP1 filled — partial close executed",
+        );
+        broadcastSSE(PAPER_EXIT_EVENTS.TP1_FILLED, exitPayloadBase);
+      } else {
+        // Fully closes (e.g. 1-contract position — close whole thing)
+        await closePosition(pos.id, currentPrice, atr);
+        logger.info(
+          {
+            positionId: pos.id, strategyId, exitStyle, currentPrice, tp1Price,
+            rMultiple, contractsToClose, correlationId, evidence,
+          },
+          "style_exit: TP1 filled — full position closed",
+        );
+        broadcastSSE(PAPER_EXIT_EVENTS.TP1_FILLED, exitPayloadBase);
+        return true;
+      }
+      break;
+    }
+
+    case "FILL_TP2": {
+      if (pos.tp2Filled) {
+        logger.debug({ positionId: pos.id }, "style_exit: TP2 already filled — idempotent HOLD");
+        return false;
+      }
+      const tp2Fraction = 0.33;
+      const contractsToClose = Math.max(1, Math.floor(pos.contracts * tp2Fraction));
+      const tp2Evidence = evidence as Record<string, unknown>;
+      if (contractsToClose < pos.contracts) {
+        await db.update(paperPositions).set({
+          tp2Filled: true,
+          contracts: pos.contracts - contractsToClose,
+          lastHandlerEvalAt: new Date(),
+        }).where(eq(paperPositions.id, pos.id));
+        logger.info(
+          {
+            positionId: pos.id, strategyId, exitStyle, currentPrice,
+            tp2Price: tp2Evidence.tp2_price, contractsToClose, correlationId, evidence,
+          },
+          "style_exit: TP2 filled — partial close executed (Style C runner remains)",
+        );
+        broadcastSSE(PAPER_EXIT_EVENTS.TP2_FILLED, exitPayloadBase);
+      } else {
+        await closePosition(pos.id, currentPrice, atr);
+        logger.info(
+          {
+            positionId: pos.id, strategyId, exitStyle, currentPrice,
+            tp2Price: tp2Evidence.tp2_price, contractsToClose, correlationId, evidence,
+          },
+          "style_exit: TP2 filled — full position closed",
+        );
+        broadcastSSE(PAPER_EXIT_EVENTS.TP2_FILLED, exitPayloadBase);
+        return true;
+      }
+      break;
+    }
+
+    case "MOVE_STOP_TO_BE": {
+      if (pos.beStopApplied) {
+        logger.debug({ positionId: pos.id }, "style_exit: BE already applied — idempotent HOLD");
+        return false;
+      }
+      const oldStop = pos.trailHwm;
+      await db.update(paperPositions).set({
+        beStopApplied: true,
+        trailHwm: new_stop != null ? String(new_stop) : pos.trailHwm,
+        lastHandlerEvalAt: new Date(),
+      }).where(eq(paperPositions.id, pos.id));
+      logger.info(
+        {
+          positionId: pos.id, strategyId, exitStyle, oldStop, newStop: new_stop,
+          correlationId, evidence,
+        },
+        "style_exit: BE stop applied — stop moved to break-even",
+      );
+      broadcastSSE(PAPER_EXIT_EVENTS.BE_STOP_MOVED, exitPayloadBase);
+      break;
+    }
+
+    case "TIGHTEN_TRAIL_TO_X": {
+      if (new_stop == null) break;
+      // Only update trail if X is tighter than current stop (closer to price)
+      const currentTrail = pos.trailHwm != null ? Number(pos.trailHwm) : null;
+      const isTighter = currentTrail == null || (
+        pos.side === "long"  ? new_stop > currentTrail   // long: higher stop = tighter
+                             : new_stop < currentTrail   // short: lower stop = tighter
+      );
+      if (isTighter) {
+        const trailMethod = (evidence as Record<string, unknown>).trail_method as string ?? null;
+        await db.update(paperPositions).set({
+          trailHwm: String(new_stop),
+          currentTrailMethod: trailMethod,
+          lastHandlerEvalAt: new Date(),
+        }).where(eq(paperPositions.id, pos.id));
+        logger.debug(
+          {
+            positionId: pos.id, strategyId, exitStyle, oldStop: currentTrail, newStop: new_stop,
+            trailMethod, correlationId,
+          },
+          "style_exit: trail tightened",
+        );
+        broadcastSSE(PAPER_EXIT_EVENTS.TRAIL_TIGHTENED, exitPayloadBase);
+      }
+      break;
+    }
+
+    case "TIME_STOP_FLATTEN": {
+      // Compute P&L at flatten for structured log
+      const entryPx = Number(pos.entryPrice);
+      const direction = pos.side === "long" ? 1 : -1;
+      const spec = CONTRACT_SPECS[pos.symbol];
+      const pnlAtFlatten = spec
+        ? direction * (currentPrice - entryPx) * spec.pointValue * pos.contracts
+        : null;
+      await closePosition(pos.id, currentPrice, atr);
+      logger.info(
+        {
+          positionId: pos.id, strategyId, exitStyle, currentPrice, pnlAtFlatten,
+          correlationId, evidence,
+        },
+        "style_exit: time-stop flatten executed at 15:55 ET",
+      );
+      broadcastSSE(PAPER_EXIT_EVENTS.TIME_STOP_FLATTENED, exitPayloadBase);
+      return true;
+    }
+
+    default:
+      // HOLD — no action
+      break;
+  }
+
+  // Update lastHandlerEvalAt for HOLD decisions (throttled — only if not recently updated)
+  if (decision === "HOLD") {
+    await db.update(paperPositions).set({
+      lastHandlerEvalAt: new Date(),
+    }).where(eq(paperPositions.id, pos.id));
+  }
+
+  return false;
+}
+
 // ─── Update Position Prices ──────────────────────────────────
 
 export async function updatePositionPrices(
   sessionId: string,
   prices: Record<string, PositionPriceUpdate>,
+  /** Optional bar context for Track 3 Style D/C exit handler dispatch.
+   *  When absent (legacy callers), exit handler dispatch is skipped. */
+  exitBarContext?: StyleExitBarContext,
+  context?: { correlationId?: string },
 ) {
+  const correlationId = context?.correlationId ?? null;
   const openPositions = await db.select().from(paperPositions)
     .where(and(eq(paperPositions.sessionId, sessionId), isNull(paperPositions.closedAt)));
+
+  // ── Track 3: Resolve session strategy_id once (not per-position) for audit rows.
+  // Lazy-loaded so legacy callers that skip exitBarContext pay no extra DB cost.
+  let sessionStrategyId: string | null | undefined = undefined;
+  async function getSessionStrategyId(): Promise<string | null> {
+    if (sessionStrategyId !== undefined) return sessionStrategyId;
+    const sessions = await db.select({ strategyId: paperSessions.strategyId })
+      .from(paperSessions).where(eq(paperSessions.id, sessionId)).limit(1);
+    sessionStrategyId = sessions[0]?.strategyId ?? null;
+    return sessionStrategyId;
+  }
 
   let totalUnrealizedPnl = 0;
   let totalUnrealizedDelta = 0; // FIX 2 (B1): sum of (newUnrealized - prevUnrealized) across all positions
   let positionsUpdated = 0;
+  // Track positions closed by exit handler so we skip their equity update
+  const closedByExitHandler = new Set<string>();
 
   for (const pos of openPositions) {
     const rawUpdate = prices[pos.symbol];
@@ -1829,6 +2492,44 @@ export async function updatePositionPrices(
     totalUnrealizedPnl += unrealizedPnl;
     totalUnrealizedDelta += unrealizedDelta;
     positionsUpdated++;
+
+    // ── Track 3: Style D/C exit handler dispatch ─────────────────────────────
+    // Only dispatched when the caller supplies exitBarContext. Legacy callers
+    // that don't supply it continue using ATR-based exits unchanged.
+    // Pipeline pause guard: if pipeline is inactive, skip dispatch (positions
+    // remain open, no exit decisions are made — safe state).
+    if (exitBarContext && (await isPipelineActive())) {
+      try {
+        const stratId = await getSessionStrategyId();
+        const handlerResult = await callExitHandler(pos, exitBarContext, stratId, correlationId);
+        const atr14ForClose = exitBarContext.atr14[pos.symbol];
+        const positionClosed = await applyExitDecision(
+          pos, handlerResult,
+          (pos.currentExitStyle ?? "D") as "D" | "C",
+          stratId, currentPrice, atr14ForClose, correlationId,
+        );
+        if (positionClosed) {
+          closedByExitHandler.add(pos.id);
+          // Closed positions must NOT contribute to the MTM equity delta below —
+          // closePosition already applied the realized P&L atomically.
+          totalUnrealizedDelta -= unrealizedDelta;
+          totalUnrealizedPnl   -= unrealizedPnl;
+          positionsUpdated--;
+        }
+      } catch (handlerErr) {
+        // Fail-CLOSED already handled inside callExitHandler; this catches
+        // any unexpected outer error (e.g. applyExitDecision throw).
+        logger.error(
+          { positionId: pos.id, err: String(handlerErr), correlationId },
+          "Outer exit handler dispatch error — HOLD applied, position preserved",
+        );
+      }
+    } else if (exitBarContext) {
+      logger.debug(
+        { positionId: pos.id, sessionId, correlationId },
+        "Style D/C dispatch skipped — pipeline paused. Position held.",
+      );
+    }
   }
 
   // FIX 2 (B1 MED-HIGH): Delta-only SQL-atomic equity update.
@@ -2251,4 +2952,67 @@ export async function runSessionEndRollSweep(context?: { correlationId?: string 
   }
 
   return { sessionsChecked: activeSessions.length, totalActions: allActions };
+}
+
+// ─── Phase 4C: Force-flatten all open positions ───────────────────────────────
+//
+// Called by kill-switch.ts setMode('HALT') via dynamic import to avoid a
+// circular module dependency:
+//   kill-switch.ts (production/) → paper-execution-service.ts (services/)
+//
+// Closes every open paper position using the current mid-price (signalPrice=0
+// triggers the closePosition fallback to last-known price). Each close writes
+// its own audit_log + SSE via the normal closePosition path.
+//
+// Callers: kill-switch.ts:setMode('HALT') only. Do NOT call from openPosition
+// or any hot path — this is a rare, operator-triggered emergency action.
+//
+export async function forceCloseAllPositions(reason: string): Promise<{ count: number }> {
+  const openPositions = await db
+    .select({
+      id: paperPositions.id,
+      sessionId: paperPositions.sessionId,
+      symbol: paperPositions.symbol,
+      entryPrice: paperPositions.entryPrice,
+    })
+    .from(paperPositions)
+    .where(isNull(paperPositions.closedAt));
+
+  const count = openPositions.length;
+
+  if (count === 0) {
+    logger.info({ reason }, "paper-execution.force-flatten: no open positions to close");
+  } else {
+    logger.warn({ reason, count }, "paper-execution.force-flatten: closing all open positions due to production halt");
+  }
+
+  const errors: string[] = [];
+  for (const pos of openPositions) {
+    try {
+      // Use entryPrice as the exit price proxy when no live price is available.
+      // This is conservative (no P&L distortion) and acceptable for a force-flatten
+      // that occurs because of a halt — the operator reviews the result manually.
+      await closePosition(pos.id, Number(pos.entryPrice) ?? 0, undefined, { correlationId: null as unknown as string | undefined });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      errors.push(`pos:${pos.id} err:${msg}`);
+      logger.error({ err, positionId: pos.id, reason }, "paper-execution.force-flatten: closePosition failed for one position (continuing)");
+    }
+  }
+
+  // Audit log the batch flatten event
+  db.insert(auditLog).values({
+    action: "paper.force_flatten_all",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "system",
+    input: { reason } as Record<string, unknown>,
+    result: { reason, count, errors } as Record<string, unknown>,
+    status: errors.length === 0 ? "success" : "partial_failure",
+    correlationId: null,
+  }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: audit_log write failed (non-blocking)"));
+
+  broadcastSSE("paper:force-flatten-all", { reason, count, errors: errors.length });
+
+  return { count };
 }

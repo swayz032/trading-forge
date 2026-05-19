@@ -29,7 +29,7 @@
     },
     {
       "parameters": {
-        "model": "qwen3-coder:30b",
+        "model": "qwen2.5-coder:7b",
         "options": {}
       },
       "id": "ollama-gen-model",
@@ -80,7 +80,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/agent/batch",
+        "url": "https://tf-relay-production.up.railway.app/api/agent/batch",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -130,7 +130,7 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=5",
+        "url": "https://tf-relay-production.up.railway.app/api/backtests?status=completed&limit=5",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -198,7 +198,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/agent/critique",
+        "url": "https://tf-relay-production.up.railway.app/api/agent/critique",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -235,7 +235,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/journal",
+        "url": "https://tf-relay-production.up.railway.app/api/journal",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -469,7 +469,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/agent/analyze-market",
+        "url": "https://tf-relay-production.up.railway.app/api/agent/analyze-market",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol || 'ES', timeframe: $json.timeframe || '1h' }) }}",
@@ -502,7 +502,7 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+        "url": "https://tf-relay-production.up.railway.app/api/journal?status=scouted&limit=20",
         "options": {
           "timeout": 15000
         }
@@ -556,7 +556,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Nightly Research Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Nightly Strategy Research', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
@@ -853,7 +853,7 @@
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false,
-    "errorWorkflow": "66HEjQavpvirY6g5"
+    "errorWorkflow": "iTftiIkCZndPXVt3"
   },
   "staticData": {
     "node:Nightly 2AM EST Cron": {
@@ -941,7 +941,7 @@
       },
       {
         "parameters": {
-          "model": "qwen3-coder:30b",
+          "model": "qwen2.5-coder:7b",
           "options": {}
         },
         "id": "ollama-gen-model",
@@ -992,7 +992,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/agent/batch",
+          "url": "https://tf-relay-production.up.railway.app/api/agent/batch",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -1042,7 +1042,7 @@
       },
       {
         "parameters": {
-          "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=5",
+          "url": "https://tf-relay-production.up.railway.app/api/backtests?status=completed&limit=5",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -1110,7 +1110,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/agent/critique",
+          "url": "https://tf-relay-production.up.railway.app/api/agent/critique",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -1147,7 +1147,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/journal",
+          "url": "https://tf-relay-production.up.railway.app/api/journal",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -1381,7 +1381,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/agent/analyze-market",
+          "url": "https://tf-relay-production.up.railway.app/api/agent/analyze-market",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol || 'ES', timeframe: $json.timeframe || '1h' }) }}",
@@ -1414,7 +1414,7 @@
       },
       {
         "parameters": {
-          "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+          "url": "https://tf-relay-production.up.railway.app/api/journal?status=scouted&limit=20",
           "options": {
             "timeout": 15000
           }
@@ -1468,7 +1468,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Nightly Research Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Nightly Strategy Research', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",

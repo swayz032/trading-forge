@@ -1,0 +1,660 @@
+{
+  "updatedAt": "2026-05-18T03:42:51.968Z",
+  "createdAt": "2026-05-18T00:56:05.349Z",
+  "id": "eEt2dJrZbV6C7TRL",
+  "name": "7A-auto-evolution",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-declining",
+      "name": "Fetch Declining Strategies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/strategies",
+        "method": "GET",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "lifecycleState",
+              "value": "DECLINING"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "check-any",
+      "name": "Any Declining?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.length || ($json.data && $json.data.length) || 0 }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "split-items",
+      "name": "Split Strategies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst items = Array.isArray(data) ? data : (data.data || []);\nreturn items.map(s => ({ json: { strategyId: s.id || s._id, name: s.name } }));"
+      }
+    },
+    {
+      "id": "decay-check",
+      "name": "POST Decay Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -100
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/decay/analyze",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "strategyId",
+              "value": "={{ $json.strategyId }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "build-results",
+      "name": "Build Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst total = items.length;\nconst evolved = items.filter(i => i.json.evolved || i.json.action === 'evolved').length;\nconst retired = items.filter(i => i.json.retired || i.json.action === 'retired').length;\nreturn [{ json: { title: `Auto-Evolution: ${total} declining checked`, severity: total > 0 ? 'warning' : 'info', body: `Checked ${total} declining strategies.\nEvolved: ${evolved}\nRetired: ${retired}` } }];"
+      }
+    },
+    {
+      "id": "no-declining",
+      "name": "No Declining",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        100
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { title: 'Auto-Evolution: No declining strategies', severity: 'info', body: 'No declining strategies found. Nothing to evolve.' } }];"
+      }
+    },
+    {
+      "id": "send-alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: $json.title, severity: $json.severity, message: $json.body, data: { body: $json.body } }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"7A-auto-evolution\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Declining Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Declining Strategies": {
+      "main": [
+        [
+          {
+            "node": "Any Declining?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Declining?": {
+      "main": [
+        [
+          {
+            "node": "Split Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Declining",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Strategies": {
+      "main": [
+        [
+          {
+            "node": "POST Decay Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Decay Check": {
+      "main": [
+        [
+          {
+            "node": "Build Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Results": {
+      "main": [
+        [
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Declining": {
+      "main": [
+        [
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "DGEk1D478xWJClKD"
+  },
+  "staticData": {
+    "node:Cron Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "a5ac9e91-76bc-4231-8083-4e0fb741425c",
+  "activeVersionId": "a5ac9e91-76bc-4231-8083-4e0fb741425c",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-18T00:56:05.349Z",
+      "createdAt": "2026-05-18T00:56:05.349Z",
+      "role": "workflow:owner",
+      "workflowId": "eEt2dJrZbV6C7TRL",
+      "projectId": "MbOHOApVuCtg1xkk"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-05-18T00:56:05.349Z",
+    "createdAt": "2026-05-18T00:56:05.349Z",
+    "versionId": "a5ac9e91-76bc-4231-8083-4e0fb741425c",
+    "workflowId": "eEt2dJrZbV6C7TRL",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Cron Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 3 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-declining",
+        "name": "Fetch Declining Strategies",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/strategies",
+          "method": "GET",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "lifecycleState",
+                "value": "DECLINING"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "check-any",
+        "name": "Any Declining?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "1",
+                "leftValue": "={{ $json.length || ($json.data && $json.data.length) || 0 }}",
+                "rightValue": "0",
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "split-items",
+        "name": "Split Strategies",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          -100
+        ],
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst items = Array.isArray(data) ? data : (data.data || []);\nreturn items.map(s => ({ json: { strategyId: s.id || s._id, name: s.name } }));"
+        }
+      },
+      {
+        "id": "decay-check",
+        "name": "POST Decay Check",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          -100
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/decay/analyze",
+          "method": "POST",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "strategyId",
+                "value": "={{ $json.strategyId }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "build-results",
+        "name": "Build Results",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1100,
+          -100
+        ],
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst total = items.length;\nconst evolved = items.filter(i => i.json.evolved || i.json.action === 'evolved').length;\nconst retired = items.filter(i => i.json.retired || i.json.action === 'retired').length;\nreturn [{ json: { title: `Auto-Evolution: ${total} declining checked`, severity: total > 0 ? 'warning' : 'info', body: `Checked ${total} declining strategies.\nEvolved: ${evolved}\nRetired: ${retired}` } }];"
+        }
+      },
+      {
+        "id": "no-declining",
+        "name": "No Declining",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          100
+        ],
+        "parameters": {
+          "jsCode": "return [{ json: { title: 'Auto-Evolution: No declining strategies', severity: 'info', body: 'No declining strategies found. Nothing to evolve.' } }];"
+        }
+      },
+      {
+        "id": "send-alert",
+        "name": "Send Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1320,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "method": "POST",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ title: $json.title, severity: $json.severity, message: $json.body, data: { body: $json.body } }) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"7A-auto-evolution\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Cron Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Declining Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Declining Strategies": {
+        "main": [
+          [
+            {
+              "node": "Any Declining?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Declining?": {
+        "main": [
+          [
+            {
+              "node": "Split Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No Declining",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Strategies": {
+        "main": [
+          [
+            {
+              "node": "POST Decay Check",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST Decay Check": {
+        "main": [
+          [
+            {
+              "node": "Build Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Results": {
+        "main": [
+          [
+            {
+              "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "No Declining": {
+        "main": [
+          [
+            {
+              "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

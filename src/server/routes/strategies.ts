@@ -1,12 +1,13 @@
 import { Router } from "express";
-import { eq, sql, desc, and, ilike } from "drizzle-orm";
+import { eq, sql, desc, asc, and, ilike } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, backtests, backtestTrades, monteCarloRuns, stressTestRuns, backtestMatrix, systemJournal, complianceReviews, paperSessions, skipDecisions, strategyGraveyard, auditLog, strategyExports, strategyExportArtifacts } from "../db/schema.js";
+import { strategies, backtests, backtestTrades, monteCarloRuns, stressTestRuns, backtestMatrix, systemJournal, complianceReviews, paperSessions, skipDecisions, strategyGraveyard, auditLog, strategyExports, strategyExportArtifacts, strategyPendingBuckets, strategyPendingMentions } from "../db/schema.js";
 import { inArray } from "drizzle-orm";
 import { logger } from "../index.js";
 import { broadcastSSE } from "./sse.js";
 import { LifecycleService } from "../services/lifecycle-service.js";
 import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
+import { assertCrossValidatedSource } from "../services/agent-service.js";
 
 export const strategyRoutes = Router();
 const lifecycleService = new LifecycleService();
@@ -62,15 +63,25 @@ function getPaperWinRate(paperSession: typeof paperSessions.$inferSelect | undef
 }
 
 // List all strategies (with optional pagination + filters)
+// Pass 21 (2026-05-16): excludes 'archived_duplicate'-tagged strategies by
+// default. Pass ?includeArchived=true to include them (admin / debug only).
 strategyRoutes.get("/", async (req, res) => {
-  const { limit, offset, name, lifecycleState, symbol } = req.query;
+  const { limit, offset, name, lifecycleState, symbol, includeArchived } = req.query;
 
   // Build filter conditions
   const conditions = [];
   if (name) conditions.push(ilike(strategies.name, `%${String(name)}%`));
   if (lifecycleState) conditions.push(eq(strategies.lifecycleState, String(lifecycleState)));
   if (symbol) conditions.push(eq(strategies.symbol, String(symbol)));
+  // Hide archived duplicates from the default list (dashboards, lifecycle UI).
+  // The dedup pass tagged these so they stay in DB for audit + history but
+  // don't pollute strategy counts or backtest queues.
+  if (String(includeArchived ?? "").toLowerCase() !== "true") {
+    conditions.push(sql`NOT ('archived_duplicate' = ANY(COALESCE(${strategies.tags}, ARRAY[]::text[])))`);
+  }
   const where = conditions.length > 0 ? and(...conditions) : undefined;
+  // Pass 21 diagnostic — confirm new code is loaded + filter active
+  logger.warn({ includeArchived, conditionsLen: conditions.length, hasFilter: conditions.length > 0 }, "strategies-route: list query with Pass 21 archived filter");
 
   if (limit) {
     // Paginated mode
@@ -184,6 +195,87 @@ strategyRoutes.get("/:id", async (req, res) => {
     return;
   }
   res.json(row);
+});
+
+/**
+ * GET /api/strategies/:id/evidence
+ *
+ * Pass 19 Track B — cross-validation provenance for the Strategy Detail page.
+ * Returns the pending bucket (if the strategy graduated from one) plus all
+ * source mentions that built consensus. Strategies without a linked bucket
+ * (manual injections / pre-Pass-18 residue) get a `cross_validated:false`
+ * payload with a fallback note so the UI can render the provenance gap.
+ *
+ * See: docs/superpowers/specs/2026-05-11-cross-source-strategy-validation-design.md
+ */
+strategyRoutes.get("/:id/evidence", async (req, res) => {
+  const strategyId = req.params.id;
+
+  const [strategy] = await db
+    .select()
+    .from(strategies)
+    .where(eq(strategies.id, strategyId))
+    .limit(1);
+
+  if (!strategy) {
+    res.status(404).json({ error: "Strategy not found" });
+    return;
+  }
+
+  const [bucket] = await db
+    .select()
+    .from(strategyPendingBuckets)
+    .where(eq(strategyPendingBuckets.graduatedStrategyId, strategyId))
+    .limit(1);
+
+  if (!bucket) {
+    // Pre-Pass-18 manual injection or other non-bucketed provenance.
+    const sourceLabel =
+      (strategy as { source?: string | null }).source ?? "manual_or_pre_pass18";
+    res.json({
+      cross_validated: false,
+      bucket: null,
+      mentions: [],
+      fallback_source_note:
+        `This strategy pre-dates the cross-validation layer (Pass 18, 2026-05-11). ` +
+        `Recorded source: ${sourceLabel}.`,
+    });
+    return;
+  }
+
+  const mentions = await db
+    .select()
+    .from(strategyPendingMentions)
+    .where(eq(strategyPendingMentions.bucketId, bucket.id))
+    .orderBy(asc(strategyPendingMentions.createdAt));
+
+  res.json({
+    cross_validated: true,
+    bucket: {
+      id: bucket.id,
+      fingerprint_hash: bucket.fingerprintHash,
+      market: bucket.market,
+      entry_archetype: bucket.entryArchetype,
+      exit_type: bucket.exitType,
+      source_count: bucket.sourceCount,
+      distinct_providers: bucket.distinctProviders,
+      status: bucket.status,
+      first_seen_at: bucket.firstSeenAt,
+      last_seen_at: bucket.lastSeenAt,
+      graduated_at: bucket.graduatedAt,
+    },
+    mentions: mentions.map((m) => ({
+      id: m.id,
+      source_provider: m.sourceProvider,
+      source_url: m.sourceUrl,
+      is_cross_validation_result: m.isCrossValidationResult,
+      cross_validator_confidence:
+        m.crossValidatorConfidence != null
+          ? Number(m.crossValidatorConfidence)
+          : null,
+      created_at: m.createdAt,
+    })),
+  });
 });
 
 /**
@@ -393,8 +485,30 @@ if __name__ == "__main__":
 });
 
 // Create strategy
+// P2D (Wave 9, 2026-05-17): operator_manual / backfill sources are trusted but
+// still require an audit row. All other sources must pass assertCrossValidatedSource.
 strategyRoutes.post("/", async (req, res) => {
   const { name, description, symbol, timeframe, config, tags } = req.body;
+  const source: string = (config as any)?.source ?? (config as any)?.metadata?.source ?? "unknown";
+  const OPERATOR_EXEMPT_SOURCES = new Set(["operator_manual", "backfill"]);
+
+  if (OPERATOR_EXEMPT_SOURCES.has(source)) {
+    // Operator-trusted insert: still requires audit trail
+    await db.insert(auditLog).values({
+      action: "strategies.operator_insert_unguarded",
+      entityType: "strategy",
+      entityId: null,
+      input: { name, source, symbol, timeframe, tags } as Record<string, unknown>,
+      result: { reason: "operator_exempt_source" } as Record<string, unknown>,
+      status: "accepted",
+      decisionAuthority: "operator",
+    }).catch(() => void 0);
+  } else {
+    // All other sources must satisfy cross-validation provenance
+    const insertTags: string[] = Array.isArray(tags) ? tags : [];
+    assertCrossValidatedSource(source, insertTags);
+  }
+
   const [row] = await db
     .insert(strategies)
     .values({ name, description, symbol, timeframe, config, tags })
@@ -611,6 +725,13 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
     name: metricsSnapshot.strategyName ?? null,
   });
 
+  // Track 5 advisory: operator must manually assign via Strategy Selection UI.
+  // Do NOT auto-assign — the operator chooses which account runs this strategy.
+  logger.info(
+    { strategyId },
+    "Track5: strategy DEPLOYED — ready to assign via Strategy Selection UI (/api/strategy-assignments). Operator chooses account assignment.",
+  );
+
   const response: DeployStrategyResponse = {
     success: true,
     id: strategyId,
@@ -634,7 +755,7 @@ strategyRoutes.post("/:id/reject-deploy", async (req, res) => {
 });
 
 // POST /api/strategies/lifecycle/check — trigger auto-promotion and demotion checks
-strategyRoutes.post("/lifecycle/check", async (_req, res) => {
+strategyRoutes.post("/lifecycle/check", async (req, res) => {
   // FIX 5 — pipeline pause gate. checkAutoPromotions/checkAutoDemotions write
   // lifecycle state changes, audit rows, and broadcast SSE. These are automated
   // pipeline actions and must short-circuit when pipeline is PAUSED/VACATION.
@@ -645,9 +766,12 @@ strategyRoutes.post("/lifecycle/check", async (_req, res) => {
     return;
   }
   try {
+    // P11: thread req.id so lifecycle audit rows from this manual trigger carry
+    // the same correlationId as the inbound HTTP request.
+    const correlationId = req.id;
     const [promotions, demotions] = await Promise.all([
-      lifecycleService.checkAutoPromotions(),
-      lifecycleService.checkAutoDemotions(),
+      lifecycleService.checkAutoPromotions({ correlationId }),
+      lifecycleService.checkAutoDemotions({ correlationId }),
     ]);
     res.json({ promotions, demotions });
   } catch (err: any) {

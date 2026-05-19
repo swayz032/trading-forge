@@ -22,6 +22,7 @@
  * criticOptimizationRuns.survivorBacktestId / survivorCandidateId.
  */
 
+import crypto from "crypto";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { eq, and, desc, gt, sql, inArray, isNotNull } from "drizzle-orm";
@@ -52,6 +53,7 @@ import { tracer } from "../lib/tracing.js";
 import { getDeepARWeight } from "./deepar-service.js";
 import { LifecycleService } from "./lifecycle-service.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { assertCrossValidatedSource } from "./agent-service.js";
 import { sqaRegistry } from "../lib/sqa-promise-registry.js";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
@@ -1656,6 +1658,7 @@ async function createChildStrategy(
     tags: string[] | null;
     generation: number;
     config: Record<string, unknown>;
+    source?: string | null;
   },
   survivorCandidate: { changedParams: unknown },
   replayResult: { tier: string | null; forgeScore: string | null },
@@ -1683,6 +1686,26 @@ async function createChildStrategy(
     );
   }
 
+  // P2D (Wave 9, 2026-05-17): propagate cross-validation provenance from parent.
+  // Critic-refined children inherit parent's cross-validated tag if present.
+  const parentTags: string[] = parentStrategy.tags ?? [];
+  const childTags = parentTags.includes("cross-validated")
+    ? [...parentTags, "critic-refined"]
+    : [...parentTags, "critic-refined"];
+  if (!parentTags.includes("cross-validated")) {
+    assertCrossValidatedSource(parentStrategy.source ?? "critic_refined", childTags);
+  }
+  // Audit lineage propagation
+  await db.insert(auditLog).values({
+    action: "strategies.evolved_from_parent",
+    entityType: "strategy",
+    entityId: parentStrategy.id,
+    input: { parent_strategy_id: parentStrategy.id, parent_source: parentStrategy.source, parent_tags: parentTags, critic_run_id: runId } as Record<string, unknown>,
+    result: { child_tags: childTags, cross_validated_propagated: parentTags.includes("cross-validated"), via: "critic_optimizer" } as Record<string, unknown>,
+    status: "accepted",
+    decisionAuthority: "system",
+  }).catch(() => void 0);
+
   const childId = crypto.randomUUID();
   const [child] = await db
     .insert(strategies)
@@ -1698,7 +1721,7 @@ async function createChildStrategy(
       generation: parentGen + 1,
       forgeScore: replayResult.forgeScore ?? undefined,
       preferredRegime: parentStrategy.preferredRegime ?? undefined,
-      tags: parentStrategy.tags ?? undefined,
+      tags: childTags,
     })
     .returning({ id: strategies.id });
 
@@ -1975,6 +1998,7 @@ async function replayCandidatesAsync(
             tags: strat.tags,
             generation: strat.generation ?? 0,
             config: (strat.config ?? {}) as Record<string, unknown>,
+            source: strat.source,
           },
           { changedParams: survivorRow.changedParams },
           { tier: replayBt?.tier ?? null, forgeScore: replayBt?.forgeScore ?? null },
@@ -2418,6 +2442,7 @@ export async function manualReplayCandidates(
               tags: strat.tags,
               generation: strat.generation ?? 0,
               config: (strat.config ?? {}) as Record<string, unknown>,
+              source: strat.source,
             },
             { changedParams: survivorRow.changedParams },
             { tier: replayBt?.tier ?? null, forgeScore: replayBt?.forgeScore ?? null },

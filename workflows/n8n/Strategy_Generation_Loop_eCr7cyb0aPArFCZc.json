@@ -42,7 +42,7 @@
       },
       {
         "parameters": {
-          "model": "qwen3-coder:30b",
+          "model": "qwen2.5-coder:7b",
           "options": {}
         },
         "id": "ollama-model",
@@ -93,7 +93,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/backtests",
+          "url": "https://tf-relay-production.up.railway.app/api/backtests",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ name: $json.name, description: $json.description, symbol: $json.symbol, timeframe: $json.timeframe, direction: $json.direction, entry_type: $json.entry_type, entry_indicator: $json.entry_indicator, entry_params: $json.entry_params, entry_condition: $json.entry_condition, exit_type: $json.exit_type, exit_params: $json.exit_params, stop_loss_atr_multiple: $json.stop_loss_atr_multiple, take_profit_atr_multiple: $json.take_profit_atr_multiple, preferred_regime: $json.preferred_regime, session_filter: $json.session_filter, source: $json.source, tags: $json.tags, start_date: $json.start_date, end_date: $json.end_date, refinement_stage: $json.stage, refinement_iteration: $json.iteration }) }}",
@@ -128,7 +128,7 @@
       },
       {
         "parameters": {
-          "url": "=http://host.docker.internal:4000/api/backtests/{{ $json.backtestId }}",
+          "url": "=https://tf-relay-production.up.railway.app/api/backtests/{{ $json.backtestId }}",
           "options": {
             "timeout": 15000
           }
@@ -179,7 +179,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/journal",
+          "url": "https://tf-relay-production.up.railway.app/api/journal",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ event: 'strategy_accepted', strategy_name: $json.strategy_name || $node['Parse AI Strategy Output'].json.strategy_name, tier: $json.tier, backtest_id: $json.id || $json.backtestId, metrics: { sharpe: $json.sharpe, max_drawdown: $json.max_drawdown, total_return: $json.total_return }, source: 'n8n-strategy-generation-loop', timestamp: new Date().toISOString() }) }}",
@@ -546,7 +546,7 @@
       {
         "parameters": {
           "method": "PATCH",
-          "url": "=http://host.docker.internal:4000/api/journal/{{ $json.journalId }}",
+          "url": "=https://tf-relay-production.up.railway.app/api/journal/{{ $json.journalId }}",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ status: 'promoted', tier: $json.tier || 'TIER_3' }) }}",
@@ -579,7 +579,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/compiler/validate",
+          "url": "https://tf-relay-production.up.railway.app/api/compiler/validate",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ name: $json.name, description: $json.description, symbol: $json.symbol, timeframe: $json.timeframe, direction: $json.direction, entry_type: $json.entry_type, entry_indicator: $json.entry_indicator, entry_params: $json.entry_params, entry_condition: $json.entry_condition, exit_type: $json.exit_type, exit_params: $json.exit_params, stop_loss_atr_multiple: $json.stop_loss_atr_multiple, take_profit_atr_multiple: $json.take_profit_atr_multiple, preferred_regime: $json.preferred_regime, session_filter: $json.session_filter, source: $json.source, tags: $json.tags }) }}",
@@ -678,7 +678,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Strategy Gen Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Strategy Generation Loop', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
@@ -707,7 +707,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/validation/cross",
+          "url": "https://tf-relay-production.up.railway.app/api/validation/cross",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ concept: ($json.strategy && $json.strategy.entry_type) || $json.entry_type || 'unknown' }) }}",
@@ -1254,7 +1254,7 @@
         },
         {
           "parameters": {
-            "model": "qwen3-coder:30b",
+            "model": "qwen2.5-coder:7b",
             "options": {}
           },
           "id": "ollama-model",
@@ -1305,7 +1305,7 @@
         {
           "parameters": {
             "method": "POST",
-            "url": "http://host.docker.internal:4000/api/backtests",
+            "url": "https://tf-relay-production.up.railway.app/api/backtests",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({ name: $json.name, description: $json.description, symbol: $json.symbol, timeframe: $json.timeframe, direction: $json.direction, entry_type: $json.entry_type, entry_indicator: $json.entry_indicator, entry_params: $json.entry_params, entry_condition: $json.entry_condition, exit_type: $json.exit_type, exit_params: $json.exit_params, stop_loss_atr_multiple: $json.stop_loss_atr_multiple, take_profit_atr_multiple: $json.take_profit_atr_multiple, preferred_regime: $json.preferred_regime, session_filter: $json.session_filter, source: $json.source, tags: $json.tags, start_date: $json.start_date, end_date: $json.end_date, refinement_stage: $json.stage, refinement_iteration: $json.iteration }) }}",
@@ -1340,7 +1340,7 @@
         },
         {
           "parameters": {
-            "url": "=http://host.docker.internal:4000/api/backtests/{{ $json.backtestId }}",
+            "url": "=https://tf-relay-production.up.railway.app/api/backtests/{{ $json.backtestId }}",
             "options": {
               "timeout": 15000
             }
@@ -1391,7 +1391,7 @@
         {
           "parameters": {
             "method": "POST",
-            "url": "http://host.docker.internal:4000/api/journal",
+            "url": "https://tf-relay-production.up.railway.app/api/journal",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({ event: 'strategy_accepted', strategy_name: $json.strategy_name || $node['Parse AI Strategy Output'].json.strategy_name, tier: $json.tier, backtest_id: $json.id || $json.backtestId, metrics: { sharpe: $json.sharpe, max_drawdown: $json.max_drawdown, total_return: $json.total_return }, source: 'n8n-strategy-generation-loop', timestamp: new Date().toISOString() }) }}",
@@ -1758,7 +1758,7 @@
         {
           "parameters": {
             "method": "PATCH",
-            "url": "=http://host.docker.internal:4000/api/journal/{{ $json.journalId }}",
+            "url": "=https://tf-relay-production.up.railway.app/api/journal/{{ $json.journalId }}",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({ status: 'promoted', tier: $json.tier || 'TIER_3' }) }}",
@@ -1791,7 +1791,7 @@
         {
           "parameters": {
             "method": "POST",
-            "url": "http://host.docker.internal:4000/api/compiler/validate",
+            "url": "https://tf-relay-production.up.railway.app/api/compiler/validate",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({ name: $json.name, description: $json.description, symbol: $json.symbol, timeframe: $json.timeframe, direction: $json.direction, entry_type: $json.entry_type, entry_indicator: $json.entry_indicator, entry_params: $json.entry_params, entry_condition: $json.entry_condition, exit_type: $json.exit_type, exit_params: $json.exit_params, stop_loss_atr_multiple: $json.stop_loss_atr_multiple, take_profit_atr_multiple: $json.take_profit_atr_multiple, preferred_regime: $json.preferred_regime, session_filter: $json.session_filter, source: $json.source, tags: $json.tags }) }}",
@@ -1890,7 +1890,7 @@
           ],
           "parameters": {
             "method": "POST",
-            "url": "http://host.docker.internal:4000/api/sse/broadcast",
+            "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({ title: 'Strategy Gen Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Strategy Generation Loop', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
@@ -1919,7 +1919,7 @@
           ],
           "parameters": {
             "method": "POST",
-            "url": "http://host.docker.internal:4000/api/validation/cross",
+            "url": "https://tf-relay-production.up.railway.app/api/validation/cross",
             "sendBody": true,
             "specifyBody": "json",
             "jsonBody": "={{ JSON.stringify({ concept: ($json.strategy && $json.strategy.entry_type) || $json.entry_type || 'unknown' }) }}",
@@ -2381,6 +2381,6 @@
     }
   },
   "settings": {
-    "errorWorkflow": "66HEjQavpvirY6g5"
+    "errorWorkflow": "iTftiIkCZndPXVt3"
   }
 }

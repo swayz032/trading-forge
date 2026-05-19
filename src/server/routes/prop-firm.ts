@@ -1,16 +1,145 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import { db } from "../db/index.js";
-import { backtests } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { backtests, strategies } from "../db/schema.js";
+import { eq, desc } from "drizzle-orm";
 import {
   FIRMS,
   getBufferAmount,
   getTotalHurdle,
   getAllFirms,
 } from "../../shared/firm-config.js";
+import {
+  simulateSurvivalCurve,
+  deriveStrategyProfile,
+  type StrategyProfile,
+  type SurvivalCurve,
+} from "../services/prop-firm-survival-service.js";
+import { getCurrentPriors } from "../services/firm-adversarial-event-service.js";
+import { refitPriorsForAllFirms } from "../services/firm-priors-fitter.js";
+import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
+import { strictRateLimit } from "../middleware/strict-rate-limit.js";
+import { logger } from "../lib/logger.js";
 
 export const propFirmRoutes = Router();
+
+// ─── B14 (W20 Pass 3) — survival augmentation types ─────────────────────────
+
+/**
+ * Survival augmentation fields added to per-firm rank/simulate rows.
+ * All fields are OPTIONAL on the wire (`?: ... | null`) so existing consumers
+ * that don't know about survival keep working unchanged.
+ *
+ * Pass 4 (frontend) imports `SurvivalCurve` from this module rather than
+ * re-defining the shape.
+ */
+export type { SurvivalCurve } from "../services/prop-firm-survival-service.js";
+
+export interface FirmSurvivalAugmentation {
+  /** 180-day survival probability (canonical headline horizon). 0..1. null on error / no data. */
+  survivalProbability: number | null;
+  /** Full survival curve at 30/90/180/365 day horizons. null on error. */
+  survivalCurve: SurvivalCurve | null;
+  /** Sum of evidence_weight across event types in firm priors. 0 = no priors. */
+  evidenceWeight: number;
+}
+
+/**
+ * Phase 0 advisory marker — frontend uses this to gate "advisory · Phase 0"
+ * microcopy near survival KPIs. Hard-coded literal until B14 graduates to
+ * Phase 1 via env flag (out of scope for Pass 3 — see W20 plan §Authority).
+ */
+const SURVIVAL_PHASE: "phase_0_advisory" = "phase_0_advisory";
+
+// SUPPORTED FIRMS: MFFU + Topstep ONLY. Legacy firms removed 2026-05-10 (migration 0097).
+const CANONICAL_FIRM_IDS = [
+  "topstep",
+  "mffu",
+] as const;
+type CanonicalFirmId = (typeof CANONICAL_FIRM_IDS)[number];
+
+function isCanonicalFirmId(s: string): s is CanonicalFirmId {
+  return (CANONICAL_FIRM_IDS as readonly string[]).includes(s);
+}
+
+/**
+ * Deterministic seed derived from a stable input string. Returns a uint32 the
+ * Monte Carlo LCG accepts. SHA-256 → first 4 BE bytes → uint32. Two consecutive
+ * calls for the same input produce identical seeds → same survival curve.
+ */
+function deriveSeed(input: string): number {
+  return createHash("sha256").update(input).digest().readUInt32BE(0);
+}
+
+/**
+ * Augment one firm row with survival data. Wraps every per-firm compute in
+ * its own try/catch so a single firm's failure does not cascade. On error,
+ * returns `{ survivalProbability: null, survivalCurve: null, evidenceWeight: 0 }`.
+ */
+async function computeFirmSurvival(
+  firmId: string,
+  profile: StrategyProfile,
+  seedInput: string,
+): Promise<FirmSurvivalAugmentation> {
+  try {
+    const priors = await getCurrentPriors(firmId);
+    const curve = simulateSurvivalCurve(priors, profile, {
+      numTrials: 1000,
+      seed: deriveSeed(seedInput),
+    });
+    return {
+      survivalProbability: curve.p_180d,
+      survivalCurve: curve,
+      evidenceWeight: priors.evidence_weight ?? 0,
+    };
+  } catch (err) {
+    logger.warn(
+      { firmId, err: err instanceof Error ? err.message : String(err) },
+      "b14_survival_compute_failed_for_firm",
+    );
+    return {
+      survivalProbability: null,
+      survivalCurve: null,
+      evidenceWeight: 0,
+    };
+  }
+}
+
+/**
+ * Build a sensible default StrategyProfile from the rank-endpoint input metrics.
+ * The rank endpoint is metrics-only (no strategy/backtest IDs in scope), so the
+ * profile is synthesised from `avgDailyPnl` rather than read from DB.
+ *
+ * Conservative defaults match the survival service's `deriveStrategyProfile`:
+ *   - 20 trading days/month × 0.8 prop firm split
+ *   - 12 payout requests/year (monthly)
+ *   - Trading Forge runs automated end-to-end → usesAutomation=true
+ *   - RTH-only is the safer default (no overnight)
+ */
+function profileFromRankInput(avgDailyPnl: number): StrategyProfile {
+  const PAYOUT_SPLIT = 0.8;
+  const monthlyPayoutDollars = Math.max(0, avgDailyPnl) * 20 * PAYOUT_SPLIT;
+  return {
+    monthlyPayoutDollars: monthlyPayoutDollars > 0 ? monthlyPayoutDollars : 5000,
+    payoutRequestFrequency: 12,
+    usesAutomation: true,
+    averagePosition: "rth_only",
+  };
+}
+
+/** Pipeline pause gate — mirrors `synthetic-black-swan.ts` exactly. */
+async function pipelinePauseGate(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  if (!(await isPipelineActive())) {
+    res.status(423).json({ error: "pipeline_paused" });
+    return;
+  }
+  next();
+}
 
 // All firms are 50K only. No multi-account-type logic needed.
 const ACCOUNT_TYPE = "50k";
@@ -83,7 +212,7 @@ const rankSchema = z.object({
   months: z.number().int().min(1).max(24).default(12),
 });
 
-propFirmRoutes.post("/rank", (req, res) => {
+propFirmRoutes.post("/rank", async (req, res) => {
   const parsed = rankSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -92,6 +221,55 @@ propFirmRoutes.post("/rank", (req, res) => {
 
   const { avgDailyPnl, maxDrawdown, winRate, profitFactor, holdsOvernight, bestDayPct, months } = parsed.data;
   const tradingDaysPerMonth = 20;
+
+  // ─── B14 survival augmentation (additive) ─────────────────────────────────
+  // One profile per request — survival math depends only on the input metrics,
+  // not on the per-firm payout split. Compute survival per firm in parallel
+  // with deterministic seeds so two requests with identical inputs return
+  // identical survivalCurve values. Cap the entire compute at ~2s wall-clock.
+  const survivalProfile = profileFromRankInput(avgDailyPnl);
+  const survivalStartMs = Date.now();
+  const SURVIVAL_BUDGET_MS = 2000;
+
+  const survivalById = new Map<string, FirmSurvivalAugmentation>();
+  try {
+    const eligibleFirms = Object.values(FIRMS).filter(
+      (firm) => firm.accountTypes[ACCOUNT_TYPE],
+    );
+    const survivalResults = await Promise.race([
+      Promise.all(
+        eligibleFirms.map(async (firm) => {
+          const seedInput = `rank|${firm.name}|${avgDailyPnl}|${maxDrawdown}`;
+          return [
+            firm.name,
+            await computeFirmSurvival(firm.name, survivalProfile, seedInput),
+          ] as const;
+        }),
+      ),
+      new Promise<Array<readonly [string, FirmSurvivalAugmentation]>>((resolve) =>
+        setTimeout(() => resolve([]), SURVIVAL_BUDGET_MS),
+      ),
+    ]);
+    for (const [firmId, aug] of survivalResults) {
+      survivalById.set(firmId, aug);
+    }
+  } catch (err) {
+    // Defensive — Promise.all should not throw because computeFirmSurvival
+    // catches per-firm. If we get here, log and fall through with empty map.
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      "b14_survival_rank_unexpected_failure",
+    );
+  }
+  const survivalDurationMs = Date.now() - survivalStartMs;
+  logger.debug(
+    {
+      route: "POST /api/prop-firm/rank",
+      survivalDurationMs,
+      firmsCovered: survivalById.size,
+    },
+    "b14_survival_compute_timing",
+  );
 
   const rankings = Object.values(FIRMS)
     .filter(firm => firm.accountTypes[ACCOUNT_TYPE])
@@ -143,6 +321,16 @@ propFirmRoutes.post("/rank", (req, res) => {
       // Annualized ROI
       const annualizedRoi = months > 0 ? roi * (12 / months) : 0;
 
+      // B14 — survival augmentation. Defaults to nulls when the firm wasn't
+      // covered by the survival compute (e.g. timeout) so the response shape
+      // is stable for downstream consumers.
+      const survivalAug =
+        survivalById.get(firm.name) ?? {
+          survivalProbability: null,
+          survivalCurve: null,
+          evidenceWeight: 0,
+        };
+
       return {
         firm: firm.name,
         displayName: firm.displayName,
@@ -168,6 +356,10 @@ propFirmRoutes.post("/rank", (req, res) => {
         trailing: acct.trailing,
         maxDrawdown: acct.maxDrawdown,
         maxContracts: acct.maxContracts,
+        // ─── B14 survival augmentation (additive — never null-removes) ────
+        survivalProbability: survivalAug.survivalProbability,
+        survivalCurve: survivalAug.survivalCurve,
+        evidenceWeight: survivalAug.evidenceWeight,
       };
     })
     .sort((a, b) => {
@@ -399,6 +591,66 @@ propFirmRoutes.get("/simulate/:backtestId", async (req, res) => {
       return;
     }
 
+    // ─── B14 survival profile (per-strategy) ──────────────────────────────
+    // Resolve strategy + use the canonical deriveStrategyProfile helper.
+    // Strategy lookup failure must not break the existing simulate response —
+    // fall back to a metric-derived default profile.
+    let survivalProfile: StrategyProfile;
+    try {
+      const [strategy] = await db
+        .select()
+        .from(strategies)
+        .where(eq(strategies.id, bt.strategyId))
+        .limit(1);
+      survivalProfile = deriveStrategyProfile(strategy ?? {}, bt);
+    } catch (err) {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        "b14_survival_simulate_strategy_lookup_failed",
+      );
+      survivalProfile = profileFromRankInput(avgDailyPnl);
+    }
+
+    const survivalStartMs = Date.now();
+    const SURVIVAL_BUDGET_MS = 2000;
+    const survivalById = new Map<string, FirmSurvivalAugmentation>();
+    try {
+      const eligibleFirms = Object.values(FIRMS).filter(
+        (f) => f.accountTypes[ACCOUNT_TYPE],
+      );
+      const survivalResults = await Promise.race([
+        Promise.all(
+          eligibleFirms.map(async (firm) => {
+            const seedInput = `${bt.strategyId}|${firm.name}`;
+            return [
+              firm.name,
+              await computeFirmSurvival(firm.name, survivalProfile, seedInput),
+            ] as const;
+          }),
+        ),
+        new Promise<Array<readonly [string, FirmSurvivalAugmentation]>>(
+          (resolve) => setTimeout(() => resolve([]), SURVIVAL_BUDGET_MS),
+        ),
+      ]);
+      for (const [firmId, aug] of survivalResults) {
+        survivalById.set(firmId, aug);
+      }
+    } catch (err) {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        "b14_survival_simulate_unexpected_failure",
+      );
+    }
+    logger.debug(
+      {
+        route: "GET /api/prop-firm/simulate/:backtestId",
+        backtestId: bt.id,
+        survivalDurationMs: Date.now() - survivalStartMs,
+        firmsCovered: survivalById.size,
+      },
+      "b14_survival_compute_timing",
+    );
+
     // Only simulate against 50K accounts (one per firm)
     const results = Object.values(FIRMS)
       .filter(firm => firm.accountTypes[ACCOUNT_TYPE])
@@ -426,6 +678,13 @@ propFirmRoutes.get("/simulate/:backtestId", async (req, res) => {
         const annualProfit = annualPayouts - annualCosts;
         const roi = annualCosts > 0 ? Math.round((annualProfit / annualCosts) * 100) : 0;
 
+        const survivalAug =
+          survivalById.get(firm.name) ?? {
+            survivalProbability: null,
+            survivalCurve: null,
+            evidenceWeight: 0,
+          };
+
         return {
           firm: firm.name,
           displayName: firm.displayName,
@@ -440,6 +699,10 @@ propFirmRoutes.get("/simulate/:backtestId", async (req, res) => {
           fundedPayoutMonths,
           annualProfit: Math.round(annualProfit),
           roi,
+          // ─── B14 survival augmentation ────────────────────────────────
+          survivalProbability: survivalAug.survivalProbability,
+          survivalCurve: survivalAug.survivalCurve,
+          evidenceWeight: survivalAug.evidenceWeight,
         };
       })
       .sort((a, b) => {
@@ -458,3 +721,205 @@ propFirmRoutes.get("/simulate/:backtestId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ─── GET /api/prop-firm/survival/:firmId — direct survival query (B14) ──────
+//
+// Read-only diagnostic. NO pipeline pause guard (per W20 plan: survival reads
+// must serve regardless of trading state). Returns 404 for unknown firmId.
+// Returns sane response (zeroed survival, evidenceWeight=0) when the firm has
+// no priors yet — never 500 on missing data.
+//
+// Accepts optional `?strategyId=<uuid>` to derive a per-strategy profile from
+// the latest backtest. When omitted, applies a sensible default profile.
+//
+// Response shape (Phase 0):
+//   { firmId, survivalProbability, survivalCurve, evidenceWeight,
+//     automationFriendly, appliedProfile, phase: "phase_0_advisory" }
+propFirmRoutes.get("/survival/:firmId", async (req, res) => {
+  const firmIdRaw = String(req.params.firmId ?? "").toLowerCase();
+  if (!isCanonicalFirmId(firmIdRaw)) {
+    res.status(404).json({
+      error: `Unknown firm: ${req.params.firmId}. Available: ${CANONICAL_FIRM_IDS.join(", ")}`,
+    });
+    return;
+  }
+  const firmId: CanonicalFirmId = firmIdRaw;
+
+  // Cross-check against firm-config.ts as a defensive convergence guard —
+  // CANONICAL_FIRM_IDS and FIRMS keys must stay in sync.
+  if (!FIRMS[firmId]) {
+    logger.error(
+      { firmId },
+      "b14_survival_route_canonical_firm_missing_in_firm_config",
+    );
+    res.status(500).json({
+      error: `firm-config.ts is missing firm: ${firmId}`,
+    });
+    return;
+  }
+
+  // Derive strategy profile if strategyId provided.
+  const strategyIdParam = req.query.strategyId;
+  let appliedProfile: StrategyProfile;
+  if (typeof strategyIdParam === "string" && strategyIdParam.length > 0) {
+    try {
+      const [strategy] = await db
+        .select()
+        .from(strategies)
+        .where(eq(strategies.id, strategyIdParam))
+        .limit(1);
+
+      if (!strategy) {
+        // Strategy not found — fall back to default profile rather than 404,
+        // since the firmId is the primary resource here.
+        appliedProfile = {
+          monthlyPayoutDollars: 5000,
+          payoutRequestFrequency: 12,
+          usesAutomation: true,
+          averagePosition: "rth_only",
+        };
+      } else {
+        const [latestBacktest] = await db
+          .select()
+          .from(backtests)
+          .where(eq(backtests.strategyId, strategyIdParam))
+          .orderBy(desc(backtests.createdAt))
+          .limit(1);
+        appliedProfile = deriveStrategyProfile(strategy, latestBacktest);
+      }
+    } catch (err) {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err), strategyIdParam },
+        "b14_survival_route_strategy_profile_lookup_failed",
+      );
+      appliedProfile = {
+        monthlyPayoutDollars: 5000,
+        payoutRequestFrequency: 12,
+        usesAutomation: true,
+        averagePosition: "rth_only",
+      };
+    }
+  } else {
+    appliedProfile = {
+      monthlyPayoutDollars: 5000,
+      payoutRequestFrequency: 12,
+      usesAutomation: true,
+      averagePosition: "rth_only",
+    };
+  }
+
+  // Compute priors + survival curve. Both are wrapped in try/catch — if the
+  // firm has no priors yet, getCurrentPriors returns zero priors (not throws),
+  // and the survival math returns p_*=1.0. We translate that into "no data"
+  // semantics on the wire when evidenceWeight is 0.
+  try {
+    const priors = await getCurrentPriors(firmId);
+    const seedInput = `${strategyIdParam ?? "default"}|${firmId}`;
+    const curve = simulateSurvivalCurve(priors, appliedProfile, {
+      numTrials: 1000,
+      seed: deriveSeed(seedInput),
+    });
+    const evidenceWeight = priors.evidence_weight ?? 0;
+
+    // No priors yet → return sane zeroed shape rather than 1.0 (which would
+    // misleadingly imply perfect safety from the absence of data).
+    if (evidenceWeight === 0) {
+      res.json({
+        firmId,
+        survivalProbability: 0,
+        survivalCurve: { p_30d: 0, p_90d: 0, p_180d: 0, p_365d: 0 },
+        evidenceWeight: 0,
+        automationFriendly: priors.automation_friendly,
+        appliedProfile,
+        phase: SURVIVAL_PHASE,
+      });
+      return;
+    }
+
+    res.json({
+      firmId,
+      survivalProbability: curve.p_180d,
+      survivalCurve: curve,
+      evidenceWeight,
+      automationFriendly: priors.automation_friendly,
+      appliedProfile,
+      phase: SURVIVAL_PHASE,
+    });
+  } catch (err) {
+    // Defensive — surface a structured error but don't 500 the diagnostic.
+    logger.error(
+      { firmId, err: err instanceof Error ? err.message : String(err) },
+      "b14_survival_route_compute_failed",
+    );
+    res.json({
+      firmId,
+      survivalProbability: null,
+      survivalCurve: null,
+      evidenceWeight: 0,
+      automationFriendly: 0.5,
+      appliedProfile,
+      phase: SURVIVAL_PHASE,
+      error: "survival_compute_failed",
+    });
+  }
+});
+
+// ─── POST /api/prop-firm/refit-priors — admin recalibration (B14) ───────────
+//
+// Behind `pipelinePauseGate` (returns 423 when paused — matches the gate-route
+// pattern from `synthetic-black-swan.ts`). Strict rate limit (1/min) — this is
+// expensive and should never be hammered.
+//
+// Body MUST include `{ confirm: true }` (defensive — reject without it).
+const refitPriorsSchema = z.object({
+  confirm: z.literal(true),
+});
+
+propFirmRoutes.post(
+  "/refit-priors",
+  pipelinePauseGate,
+  strictRateLimit,
+  async (req, res) => {
+    const parsed = refitPriorsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid request — `confirm: true` required",
+        details: parsed.error.issues,
+      });
+      return;
+    }
+
+    logger.info(
+      { route: "POST /api/prop-firm/refit-priors" },
+      "b14_refit_priors_entry",
+    );
+    const startMs = Date.now();
+
+    try {
+      const result = await refitPriorsForAllFirms();
+      const durationMs = Date.now() - startMs;
+      logger.info(
+        {
+          firmsProcessed: result.firmsProcessed,
+          priorsUpdated: result.priorsUpdated,
+          errorCount: result.errors.length,
+          durationMs,
+        },
+        "b14_refit_priors_complete",
+      );
+      res.json({
+        firmsProcessed: result.firmsProcessed,
+        priorsUpdated: result.priorsUpdated,
+        errors: result.errors,
+        durationMs,
+      });
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      logger.error(
+        { err: errMsg },
+        "b14_refit_priors_failed",
+      );
+      res.status(500).json({ error: errMsg });
+    }
+  },
+);

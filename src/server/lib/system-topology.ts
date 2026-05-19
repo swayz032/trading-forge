@@ -1,4 +1,5 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
+import { readFileSync as fsReadFileSync } from "node:fs";
 import path from "node:path";
 
 export type WorkflowState =
@@ -2211,6 +2212,92 @@ function buildDriftItems(snapshot: SystemTopologySnapshot, existingSection: stri
   return driftItems;
 }
 
+/**
+ * Wave 11 (2026-05-17): SSE inventory drift checker.
+ *
+ * The `## §SSE Events Canonical Inventory` section in `Trading Forge System Map v2.md`
+ * is the human-readable contract for every server-emitted SSE event. The Wave 9 architect
+ * found 3 new events (walkforward:window_complete, compliance:drift_detected,
+ * pine_export:failed) had been added to the SSEEvent union but never documented in
+ * this section — system-map:sync regen doesn't touch the manual section.
+ *
+ * This checker parses both surfaces and flags drift:
+ *   - SOURCE: `Trading_forge_frontend/amber-vision-main/src/types/sse-events.ts`
+ *     extracting every `| { type: "X"; data: Y }` discriminated-union arm.
+ *   - INVENTORY: `### eventname` headers under `## §SSE Events Canonical Inventory`,
+ *     handling slash-separated multi-event headers (`### paper:tp1 / paper:tp2 / ...`).
+ *
+ * Failure modes:
+ *   1. Event in union but NOT in inventory → operator dashboards out of sync with code.
+ *   2. Event in inventory but NOT in union → dead doc / removed event still documented.
+ */
+function extractSseUnionTypes(rootDir: string): Set<string> {
+  const ssePath = path.join(rootDir, "Trading_forge_frontend", "amber-vision-main", "src", "types", "sse-events.ts");
+  let source: string;
+  try {
+    source = fsReadFileSync(ssePath, "utf-8");
+  } catch {
+    return new Set();
+  }
+  const types = new Set<string>();
+  const re = /\|\s*\{\s*type:\s*"([a-zA-Z][a-zA-Z0-9_:.-]*)";/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(source)) !== null) {
+    types.add(m[1]);
+  }
+  return types;
+}
+
+function extractSseInventoryEvents(mapText: string): Set<string> {
+  const events = new Set<string>();
+  const sectionMatch = mapText.match(/## §SSE Events Canonical Inventory([\s\S]*?)(?=\n## |\n# |$)/);
+  if (!sectionMatch) return events;
+  const section = sectionMatch[1];
+  const headerRe = /^###\s+(.+?)\s*$/gm;
+  let m: RegExpExecArray | null;
+  while ((m = headerRe.exec(section)) !== null) {
+    const header = m[1].trim();
+    for (const part of header.split("/").map((p) => p.trim())) {
+      if (/^[a-zA-Z][a-zA-Z0-9_:.-]*$/.test(part)) {
+        events.add(part);
+      }
+    }
+  }
+  return events;
+}
+
+function buildSseInventoryDriftItems(rootDir: string, mapText: string): string[] {
+  const driftItems: string[] = [];
+  const unionTypes = extractSseUnionTypes(rootDir);
+  if (unionTypes.size === 0) {
+    return driftItems;
+  }
+  const inventoryEvents = extractSseInventoryEvents(mapText);
+  if (inventoryEvents.size === 0) {
+    driftItems.push("SSE inventory section missing or unparseable in System Map");
+    return driftItems;
+  }
+  const missingFromInventory: string[] = [];
+  for (const t of unionTypes) {
+    if (!inventoryEvents.has(t)) missingFromInventory.push(t);
+  }
+  if (missingFromInventory.length > 0) {
+    driftItems.push(
+      `SSE events in union but missing from System Map inventory: ${missingFromInventory.sort().join(", ")}`
+    );
+  }
+  const orphanInInventory: string[] = [];
+  for (const e of inventoryEvents) {
+    if (!unionTypes.has(e)) orphanInInventory.push(e);
+  }
+  if (orphanInInventory.length > 0) {
+    driftItems.push(
+      `SSE events in inventory but not in union (dead doc?): ${orphanInInventory.sort().join(", ")}`
+    );
+  }
+  return driftItems;
+}
+
 export async function syncSystemMapArtifacts(rootDir = getProjectRoot()): Promise<SystemMapCheckResult> {
   const mapPath = path.join(rootDir, "Trading Forge System Map v2.md");
   const topologyPath = path.join(rootDir, "docs", "system-topology.generated.json");
@@ -2220,7 +2307,10 @@ export async function syncSystemMapArtifacts(rootDir = getProjectRoot()): Promis
   const generatedSection = renderGeneratedTopologySection(snapshot);
   const existingDocument = await readFile(mapPath, "utf8");
   const nextDocument = upsertGeneratedSection(existingDocument, generatedSection);
-  const driftItems = buildDriftItems(snapshot, generatedSection, generatedSection);
+  const driftItems = [
+    ...buildDriftItems(snapshot, generatedSection, generatedSection),
+    ...buildSseInventoryDriftItems(rootDir, nextDocument),
+  ];
 
   await writeFile(mapPath, nextDocument, "utf8");
   await writeFile(topologyPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
@@ -2247,7 +2337,10 @@ export async function checkSystemMapDrift(rootDir = getProjectRoot()): Promise<S
     const generatedSection = renderGeneratedTopologySection(snapshot);
     const existingDocument = await readFile(mapPath, "utf8");
     const existingSection = extractExistingGeneratedSection(existingDocument);
-    const driftItems = buildDriftItems(snapshot, existingSection, generatedSection);
+    const driftItems = [
+      ...buildDriftItems(snapshot, existingSection, generatedSection),
+      ...buildSseInventoryDriftItems(rootDir, existingDocument),
+    ];
 
     return {
       status: driftItems.length === 0 ? "ok" : "drift",

@@ -1,0 +1,416 @@
+{
+  "updatedAt": "2026-05-18T03:42:51.968Z",
+  "createdAt": "2026-05-18T00:56:05.598Z",
+  "id": "yhKnxushfe0Q3FKk",
+  "name": "8B-source-quality-review",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "execute-workflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-source-stats",
+      "name": "Fetch Source Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/journal/source-stats?days=90",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
+    },
+    {
+      "id": "calc-quality",
+      "name": "Calculate Source Quality",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const payload = $input.first().json ?? {};\nconst sources = Array.isArray(payload.sources) ? payload.sources : [];\nconst ranked = sources.map((source) => ({\n  source: String(source.source || 'unknown'),\n  total: Number(source.total || 0),\n  scouted: Number(source.scouted || 0),\n  tested: Number(source.tested || 0),\n  promoted: Number(source.promoted || 0),\n  rejected: Number(source.rejected || 0),\n  promotionRate: Number(source.promotionRate || 0),\n})).sort((a, b) => b.promotionRate - a.promotionRate);\n\nconst lines = ranked.map((entry) =>\n  `${entry.source}: promotion=${entry.promotionRate.toFixed(2)}% | total=${entry.total} | scouted=${entry.scouted} | tested=${entry.tested} | promoted=${entry.promoted} | rejected=${entry.rejected}`\n);\n\nconst flagged = ranked.filter((entry) => entry.total >= 5 && entry.promotionRate < 5);\nconst tail = flagged.length > 0\n  ? ['', `Flagged sources (<5% promotion, min 5 observations): ${flagged.map((entry) => entry.source).join(', ')}`]\n  : [];\nconst body = ranked.length > 0\n  ? ['Weekly source quality review (90d):', ...lines, ...tail].join('\\n')\n  : 'No source data available yet.';\n\nreturn [{\n  json: {\n    severity: flagged.length > 0 ? 'warning' : 'info',\n    title: 'Weekly Source Quality Review',\n    message: body,\n    metadata: {\n      days: Number(payload.days || 90),\n      sourceCount: ranked.length,\n      flaggedSources: flagged.map((entry) => entry.source),\n      rankedSources: ranked,\n    },\n  },\n}];"
+      }
+    },
+    {
+      "id": "create-quality-alert",
+      "name": "Create Source Quality Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/alerts",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  type: 'source_quality_review',\n  severity: $json.severity,\n  title: $json.title,\n  message: $json.message,\n  metadata: $json.metadata,\n}) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        240
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "err-alert",
+      "name": "Create Workflow Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        240
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/alerts",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_error',\n  severity: 'critical',\n  title: '8B-source-quality-review failed',\n  message: $json.execution?.error?.message || $json.error?.message || 'Unknown workflow error',\n  metadata: {\n    workflow: '8B-source-quality-review',\n    timestamp: new Date().toISOString(),\n  },\n}) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Source Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Source Stats": {
+      "main": [
+        [
+          {
+            "node": "Calculate Source Quality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Source Quality": {
+      "main": [
+        [
+          {
+            "node": "Create Source Quality Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Create Workflow Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Source Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "DGEk1D478xWJClKD"
+  },
+  "staticData": {
+    "node:Cron Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "69778690-fb98-4bb7-840c-2cfcd11091e6",
+  "activeVersionId": "69778690-fb98-4bb7-840c-2cfcd11091e6",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-18T00:56:05.598Z",
+      "createdAt": "2026-05-18T00:56:05.598Z",
+      "role": "workflow:owner",
+      "workflowId": "yhKnxushfe0Q3FKk",
+      "projectId": "MbOHOApVuCtg1xkk"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-05-18T00:56:05.598Z",
+    "createdAt": "2026-05-18T00:56:05.598Z",
+    "versionId": "69778690-fb98-4bb7-840c-2cfcd11091e6",
+    "workflowId": "yhKnxushfe0Q3FKk",
+    "nodes": [
+      {
+        "id": "execute-workflow-trigger",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          -180
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "trigger",
+        "name": "Cron Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 18 * * 0"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-source-stats",
+        "name": "Fetch Source Stats",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          240,
+          0
+        ],
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/journal/source-stats?days=90",
+          "method": "GET",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
+      },
+      {
+        "id": "calc-quality",
+        "name": "Calculate Source Quality",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          480,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const payload = $input.first().json ?? {};\nconst sources = Array.isArray(payload.sources) ? payload.sources : [];\nconst ranked = sources.map((source) => ({\n  source: String(source.source || 'unknown'),\n  total: Number(source.total || 0),\n  scouted: Number(source.scouted || 0),\n  tested: Number(source.tested || 0),\n  promoted: Number(source.promoted || 0),\n  rejected: Number(source.rejected || 0),\n  promotionRate: Number(source.promotionRate || 0),\n})).sort((a, b) => b.promotionRate - a.promotionRate);\n\nconst lines = ranked.map((entry) =>\n  `${entry.source}: promotion=${entry.promotionRate.toFixed(2)}% | total=${entry.total} | scouted=${entry.scouted} | tested=${entry.tested} | promoted=${entry.promoted} | rejected=${entry.rejected}`\n);\n\nconst flagged = ranked.filter((entry) => entry.total >= 5 && entry.promotionRate < 5);\nconst tail = flagged.length > 0\n  ? ['', `Flagged sources (<5% promotion, min 5 observations): ${flagged.map((entry) => entry.source).join(', ')}`]\n  : [];\nconst body = ranked.length > 0\n  ? ['Weekly source quality review (90d):', ...lines, ...tail].join('\\n')\n  : 'No source data available yet.';\n\nreturn [{\n  json: {\n    severity: flagged.length > 0 ? 'warning' : 'info',\n    title: 'Weekly Source Quality Review',\n    message: body,\n    metadata: {\n      days: Number(payload.days || 90),\n      sourceCount: ranked.length,\n      flaggedSources: flagged.map((entry) => entry.source),\n      rankedSources: ranked,\n    },\n  },\n}];"
+        }
+      },
+      {
+        "id": "create-quality-alert",
+        "name": "Create Source Quality Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          720,
+          0
+        ],
+        "continueOnFail": true,
+        "onError": "continueRegularOutput",
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/alerts",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({\n  type: 'source_quality_review',\n  severity: $json.severity,\n  title: $json.title,\n  message: $json.message,\n  metadata: $json.metadata,\n}) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          240
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "err-alert",
+        "name": "Create Workflow Error Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          480,
+          240
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/alerts",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({\n  type: 'workflow_error',\n  severity: 'critical',\n  title: '8B-source-quality-review failed',\n  message: $json.execution?.error?.message || $json.error?.message || 'Unknown workflow error',\n  metadata: {\n    workflow: '8B-source-quality-review',\n    timestamp: new Date().toISOString(),\n  },\n}) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Cron Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Source Stats",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Source Stats": {
+        "main": [
+          [
+            {
+              "node": "Calculate Source Quality",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculate Source Quality": {
+        "main": [
+          [
+            {
+              "node": "Create Source Quality Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Create Workflow Error Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Source Stats",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

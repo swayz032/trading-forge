@@ -29,7 +29,7 @@
     },
     {
       "parameters": {
-        "model": "qwen3-coder:30b",
+        "model": "qwen2.5-coder:7b",
         "options": {}
       },
       "id": "ollama-model-1",
@@ -92,7 +92,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/agent/batch",
+        "url": "https://tf-relay-production.up.railway.app/api/agent/batch",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -134,7 +134,7 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=9",
+        "url": "https://tf-relay-production.up.railway.app/api/backtests?status=completed&limit=9",
         "options": {
           "timeout": 15000
         }
@@ -238,7 +238,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/journal",
+        "url": "https://tf-relay-production.up.railway.app/api/journal",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -266,7 +266,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/journal",
+        "url": "https://tf-relay-production.up.railway.app/api/journal",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -492,7 +492,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=http://host.docker.internal:4000/api/journal/{{ $json.journalId }}",
+        "url": "=https://tf-relay-production.up.railway.app/api/journal/{{ $json.journalId }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ status: 'promoted', tier: $json.tier || 'TIER_3' }) }}",
@@ -533,7 +533,7 @@
         576
       ],
       "parameters": {
-        "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+        "url": "https://tf-relay-production.up.railway.app/api/journal?status=scouted&limit=20",
         "options": {
           "timeout": 15000
         }
@@ -580,7 +580,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ title: 'Weekly Scout Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Weekly Strategy Hunt', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",
@@ -639,14 +639,14 @@
     },
     "Batch 3 Strategies": {
       "main": [
+        [],
         [
           {
             "node": "POST Batch to Backtest Agent",
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "POST Batch to Backtest Agent": {
@@ -907,7 +907,7 @@
     "saveExecutionProgress": true,
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false,
-    "errorWorkflow": "66HEjQavpvirY6g5"
+    "errorWorkflow": "iTftiIkCZndPXVt3"
   },
   "staticData": {
     "node:Saturday 8AM EST Trigger": {
@@ -995,7 +995,7 @@
       },
       {
         "parameters": {
-          "model": "qwen3-coder:30b",
+          "model": "qwen2.5-coder:7b",
           "options": {}
         },
         "id": "ollama-model-1",
@@ -1058,7 +1058,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/agent/batch",
+          "url": "https://tf-relay-production.up.railway.app/api/agent/batch",
           "sendBody": true,
           "bodyParameters": {
             "parameters": [
@@ -1100,7 +1100,7 @@
       },
       {
         "parameters": {
-          "url": "http://host.docker.internal:4000/api/backtests?status=completed&limit=9",
+          "url": "https://tf-relay-production.up.railway.app/api/backtests?status=completed&limit=9",
           "options": {
             "timeout": 15000
           }
@@ -1204,7 +1204,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/journal",
+          "url": "https://tf-relay-production.up.railway.app/api/journal",
           "sendBody": true,
           "bodyParameters": {
             "parameters": [
@@ -1232,7 +1232,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/journal",
+          "url": "https://tf-relay-production.up.railway.app/api/journal",
           "sendBody": true,
           "bodyParameters": {
             "parameters": [
@@ -1458,7 +1458,7 @@
       {
         "parameters": {
           "method": "PATCH",
-          "url": "=http://host.docker.internal:4000/api/journal/{{ $json.journalId }}",
+          "url": "=https://tf-relay-production.up.railway.app/api/journal/{{ $json.journalId }}",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ status: 'promoted', tier: $json.tier || 'TIER_3' }) }}",
@@ -1499,7 +1499,7 @@
           576
         ],
         "parameters": {
-          "url": "http://host.docker.internal:4000/api/journal?status=scouted&limit=20",
+          "url": "https://tf-relay-production.up.railway.app/api/journal?status=scouted&limit=20",
           "options": {
             "timeout": 15000
           }
@@ -1546,7 +1546,7 @@
         ],
         "parameters": {
           "method": "POST",
-          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={{ JSON.stringify({ title: 'Weekly Scout Error', message: String($json.execution ? ($json.execution.error ? $json.execution.error.message : 'Unknown error') : 'Unknown error'), severity: 'critical', data: { workflow: 'Weekly Strategy Hunt', execution: String($json.execution ? $json.execution.id : 'N/A') } }) }}",

@@ -378,6 +378,8 @@ in §7 above (Wave B/C/D/E) are **already shipped** — this section reconciles.
 | G6.2 SSE event coverage | `useSSE.ts` now invalidates on monte-carlo, pipeline mode, deepar, critic events | ✅ |
 | G6.3 Pine exportability pre-check | `pine-export-service.ts:51 checkExportability()` — call before TESTING→PAPER | ✅ scaffolding shipped, semantic-equivalence test = follow-up |
 | G7.1 API contracts versioning | `src/server/lib/api-contracts.ts` — `versioned()` helper + `Shapes` library + deprecation header helper | ✅ scaffolding |
+| A14 Synthetic Black Swan Survival (W19) | Migration 0088 (`synthetic_regime_bank` + `synthetic_black_swan_runs`); generator `src/engine/synthetic_market_simulator.py` (43 tests); evaluator `src/engine/black_swan_evaluator.py` (21 tests); service `src/server/services/synthetic-black-swan-service.ts` (9 tests); route `/api/synthetic-black-swan` (POST run + GET :backtestId, 423 on pause); fire-and-forget hook `backtest-service.ts:699-722`; Phase 0 advisory `lifecycle-service.ts:1639-1715` (12 tests); two pipeline-gated crons (`synthetic-tsgen-train` Sun 6 AM ET, `synthetic-regime-refresh` daily 3 AM ET). Authority: `decision_role: "challenger_only"`, `authoritative: false`. | ✅ WIRED Phase 0 (shadow) |
+| B14 Prop-Firm Survival Twin (W20) | Migration 0089 (`firm_adversarial_priors` + 4 nullable advisory cols on `strategy_firm_eligibility`); pure-math service `src/server/services/prop-firm-survival-service.ts` (42 tests, Bayesian + Monte Carlo, time-semantic conventions for 30-day vs annual rates documented and ENFORCED); DB layer `src/server/services/firm-adversarial-event-service.ts` (20 tests, audit on rate change only, READ bypasses pause); fitter `src/server/services/firm-priors-fitter.ts` (per-firm isolation from `prop_firm_health_checks` last 90 days); 4 routes: `/api/prop-firm/{rank,simulate/:backtestId}` augmented with `survivalProbability` + `survivalCurve` + `evidenceWeight`, `/api/prop-firm/survival/:firmId` (READ, 18 routes tests), `/api/prop-firm/refit-priors` (POST, pause-gated 423, requires `{confirm:true}`); cron `b14-priors-refit` (1st of month 4:00 AM ET, pipelineGated, 1hr cap); frontend `/prop-firm` redesigned with Trust Score headline KPI + 180-day survival curve as primary visualization; 8 live-DB integration tests. Authority: `decision_role: "challenger_only"`, `authoritative: false` — Phase 0 NEVER affects `bestFirm` selection. Phase 1 (Day 60+, requires `B14_PHASE_1=true`) becomes hard gate at `survival_probability < 0.50`. Rule freshness driven from `compliance_rulesets.parsedRules.allowsAutomation` (NOT hardcoded). | ✅ WIRED Phase 0 (advisory) |
 
 ### Outstanding (deferred to follow-up sessions, not blockers for shipping)
 
@@ -415,3 +417,86 @@ research at `docs/order-flow-integration.md`. Summary:
 - **Limitations:** Synthetic signals approximate ~60–70% of real footprint
   quality. False positives where bar-range proxy disagrees with actual
   aggressor flow. Drop-in replacement once a real feed is wired.
+
+---
+
+## 13. B14 Prop-Firm Survival Twin — Phase 1 Graduation Query (Day 60)
+
+The Phase 0 → Phase 1 graduation review for the B14 Prop-Firm Survival Twin
+(W20 Day 60) is **a query, not a code change** — mirrors the W7b Grover
+graduation pattern documented in CLAUDE.md "Tier 7 W7b Graduation Query
+Pattern".
+
+The query joins `strategy_firm_eligibility` (with the 4 new survival cols)
+through `lifecycle_transitions` (the actual PAPER → DEPLOY_READY promotions)
+into `paper_sessions` (the real-world outcome that followed each promotion).
+If the strategy/firm pairs the Phase 1 rule **would have blocked** show
+worse paper outcomes than those it **would have passed**, the survival
+prediction correlates with reality and we graduate. Graduation is mechanical:
+flip `B14_PHASE_1=true` env flag and let the gate honor it.
+
+**Phase 1 block rule:** `survival_probability < 0.50` (PAPER → DEPLOY_READY)
+AND tiebreaker on equal-ROI in `bestFirm` selection.
+
+```sql
+-- W20 Day 60: B14 Phase 0 → 1 graduation evaluation.
+-- Joins strategy_firm_eligibility (survival cols) through lifecycle_transitions
+-- through paper_sessions so we can compare each shadow prediction to the
+-- paper outcome that followed for each (strategy, firm) pair.
+SELECT
+  s.name                                       AS strategy_name,
+  sfe.firm_id,
+  sfe.survival_probability,
+  sfe.survival_evidence_weight,
+  lt.from_state,
+  lt.to_state,
+  lt.created_at                                AS promotion_date,
+  -- Phase 1 recommendation (would-have, never enforced in Phase 0)
+  CASE
+    WHEN sfe.survival_probability < 0.50 THEN 'WOULD_HAVE_BLOCKED'
+    ELSE 'WOULD_HAVE_PASSED'
+  END                                          AS phase1_recommendation,
+  ps.outcome                                   AS actual_paper_outcome,
+  -- Buckets the analyst computes externally
+  CASE
+    WHEN ps.outcome IN ('killed', 'rule_breach', 'drawdown_breach',
+                        'firm_suspended', 'payout_denied', 'fund_frozen',
+                        'profitable_trader_banned')
+    THEN 1 ELSE 0
+  END                                          AS bad_outcome_flag
+FROM strategy_firm_eligibility sfe
+JOIN strategies s              ON sfe.strategy_id = s.id
+JOIN lifecycle_transitions lt  ON lt.strategy_id  = s.id
+LEFT JOIN paper_sessions ps    ON ps.strategy_id  = s.id
+                              AND ps.firm_id      = sfe.firm_id
+                              AND ps.created_at   > lt.created_at
+WHERE lt.from_state = 'PAPER'
+  AND lt.to_state   = 'DEPLOY_READY'
+  AND lt.created_at > NOW() - INTERVAL '30 days'
+  AND sfe.survival_probability IS NOT NULL;
+```
+
+**Graduation decision:**
+- Compute `bad_outcome_rate(WOULD_HAVE_BLOCKED)` vs `bad_outcome_rate(WOULD_HAVE_PASSED)`.
+- "Bad outcome" = `paper_sessions.outcome IN ('killed', 'rule_breach',
+  'drawdown_breach', 'firm_suspended', 'payout_denied', 'fund_frozen',
+  'profitable_trader_banned')`.
+- If `bad_rate(BLOCKED) > bad_rate(PASSED) + 0.10` AND sample size ≥ 20
+  promotions per bucket → the gate would have improved outcomes → graduate.
+- Set `B14_PHASE_1=true` in the same change-window that flips `bestFirm`
+  selection to honor the survival tiebreaker.
+- If sample size is too small or the rate gap is < 0.10, leave the gate in
+  Phase 0 and re-run the query in 30 days.
+
+**Per-firm sanity check (read alongside the main query):**
+Run the same shape filtered to one firm at a time. If a single firm
+(e.g., Apex) drives 100% of the bad outcomes while every other firm
+shows zero divergence, do NOT graduate the global gate yet — the signal
+is too firm-specific for a global threshold and a per-firm threshold
+table is the correct next step.
+
+**Why this is documentation, not a script:**
+Day 60 graduation is a deliberate, human-reviewed event. Encoding it as
+an auto-cron risks flipping the gate during a low-data window or after a
+single anomalous Apex policy change. The query is canonical, the decision
+is not.

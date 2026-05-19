@@ -1,0 +1,544 @@
+{
+  "updatedAt": "2026-05-17T02:48:01.328Z",
+  "createdAt": "2026-05-12T11:02:07.675Z",
+  "id": "UhAvoHwWdrgxyAod",
+  "name": "10A-master-orchestration",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-stats",
+      "name": "Fetch Pipeline Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        -200
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/journal/stats/summary",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "format-summary",
+      "name": "Format Daily Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        550,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Tolerant pickup: any upstream node may have failed; never throw.\nfunction safeFirst(name) {\n  try { return $(name).first().json; } catch (e) { return null; }\n}\nconst health = safeFirst('Check System Health') || {};\nconst stats = safeFirst('Fetch Pipeline Stats') || {};\nconst strategies = safeFirst('Check Strategy Pipeline') || {};\n\nconst s = stats.data || stats || {};\nconst strats = strategies.data || strategies || [];\nconst stratList = Array.isArray(strats) ? strats : [];\n\nconst healthStatus = health.status || health.error || 'unknown';\nconst activeCount = stratList.filter(s => s.lifecycleState === 'ACTIVE' || s.lifecycleState === 'PAPER').length;\nconst testingCount = stratList.filter(s => s.lifecycleState === 'TESTING').length;\nconst decayCount = stratList.filter(s => s.lifecycleState === 'DECLINING' || s.decaying).length;\n\nconst lines = [\n  'System Health: ' + healthStatus,\n  'Total Strategies: ' + stratList.length,\n  'Active/Paper: ' + activeCount,\n  'Testing: ' + testingCount,\n  'Declining: ' + decayCount,\n  'Ideas sourced: ' + (s.totalIdeas ?? s.ideas ?? 'N/A'),\n  'Backtests run: ' + (s.totalBacktests ?? s.backtests ?? 'N/A'),\n  'Pass rate: ' + (s.passRate ?? 'N/A')\n];\n\nconst severity = healthStatus !== 'ok' ? 'warning' : 'info';\nreturn [{ json: { event: 'orchestration:daily-summary', data: { title: 'Daily Pipeline Summary (5 AM ET)', severity, body: lines.join('\\n'), healthStatus, strategyCount: stratList.length, activeCount, testingCount, decayCount } } }];"
+      }
+    },
+    {
+      "id": "send-alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        770,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "ch",
+      "name": "Check System Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/health",
+        "method": "GET",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "cs",
+      "name": "Check Strategy Pipeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        200
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "url": "https://tf-relay-production.up.railway.app/api/strategies",
+        "method": "GET",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "err-trigger",
+      "name": "On Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -300
+      ]
+    },
+    {
+      "id": "err-alert",
+      "name": "Alert on Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"10A-master-orchestration\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pipeline Stats",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check System Health",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Strategy Pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pipeline Stats": {
+      "main": [
+        [
+          {
+            "node": "Format Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check System Health": {
+      "main": [
+        [
+          {
+            "node": "Format Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Strategy Pipeline": {
+      "main": [
+        [
+          {
+            "node": "Format Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Daily Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "Alert on Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "iTftiIkCZndPXVt3"
+  },
+  "staticData": {
+    "node:Cron Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "50fb902f-99e0-4599-a032-77ad3fe61277",
+  "activeVersionId": "50fb902f-99e0-4599-a032-77ad3fe61277",
+  "versionCounter": 52,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-12T11:02:07.676Z",
+      "createdAt": "2026-05-12T11:02:07.676Z",
+      "role": "workflow:owner",
+      "workflowId": "UhAvoHwWdrgxyAod",
+      "projectId": "ztIDnX0JJlEKn0zl",
+      "project": {
+        "updatedAt": "2026-05-12T10:59:35.296Z",
+        "createdAt": "2026-05-12T10:49:44.320Z",
+        "id": "ztIDnX0JJlEKn0zl",
+        "name": "Tonio Scott <tonioswayz42@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-17T02:48:01.329Z",
+    "createdAt": "2026-05-17T02:48:01.329Z",
+    "versionId": "50fb902f-99e0-4599-a032-77ad3fe61277",
+    "workflowId": "UhAvoHwWdrgxyAod",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Cron Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 5 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-stats",
+        "name": "Fetch Pipeline Stats",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          -200
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/journal/stats/summary",
+          "method": "GET",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "format-summary",
+        "name": "Format Daily Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          550,
+          0
+        ],
+        "parameters": {
+          "jsCode": "// Tolerant pickup: any upstream node may have failed; never throw.\nfunction safeFirst(name) {\n  try { return $(name).first().json; } catch (e) { return null; }\n}\nconst health = safeFirst('Check System Health') || {};\nconst stats = safeFirst('Fetch Pipeline Stats') || {};\nconst strategies = safeFirst('Check Strategy Pipeline') || {};\n\nconst s = stats.data || stats || {};\nconst strats = strategies.data || strategies || [];\nconst stratList = Array.isArray(strats) ? strats : [];\n\nconst healthStatus = health.status || health.error || 'unknown';\nconst activeCount = stratList.filter(s => s.lifecycleState === 'ACTIVE' || s.lifecycleState === 'PAPER').length;\nconst testingCount = stratList.filter(s => s.lifecycleState === 'TESTING').length;\nconst decayCount = stratList.filter(s => s.lifecycleState === 'DECLINING' || s.decaying).length;\n\nconst lines = [\n  'System Health: ' + healthStatus,\n  'Total Strategies: ' + stratList.length,\n  'Active/Paper: ' + activeCount,\n  'Testing: ' + testingCount,\n  'Declining: ' + decayCount,\n  'Ideas sourced: ' + (s.totalIdeas ?? s.ideas ?? 'N/A'),\n  'Backtests run: ' + (s.totalBacktests ?? s.backtests ?? 'N/A'),\n  'Pass rate: ' + (s.passRate ?? 'N/A')\n];\n\nconst severity = healthStatus !== 'ok' ? 'warning' : 'info';\nreturn [{ json: { event: 'orchestration:daily-summary', data: { title: 'Daily Pipeline Summary (5 AM ET)', severity, body: lines.join('\\n'), healthStatus, strategyCount: stratList.length, activeCount, testingCount, decayCount } } }];"
+        }
+      },
+      {
+        "id": "send-alert",
+        "name": "Send Alert",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          770,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "method": "POST",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "ch",
+        "name": "Check System Health",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/health",
+          "method": "GET",
+          "options": {
+            "timeout": 15000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "cs",
+        "name": "Check Strategy Pipeline",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          200
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "url": "https://tf-relay-production.up.railway.app/api/strategies",
+          "method": "GET",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "err-trigger",
+        "name": "On Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          200,
+          -300
+        ]
+      },
+      {
+        "id": "err-alert",
+        "name": "Alert on Error",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          420,
+          -300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ event: \"alert:triggered\", data: { type: \"workflow_error\", workflow: \"10A-master-orchestration\", error: $json.execution?.error?.message || $json.error?.message || \"Unknown error\", timestamp: new Date().toISOString() } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Cron Trigger": {
+        "main": [
+          [
+            {
+              "node": "Fetch Pipeline Stats",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check System Health",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check Strategy Pipeline",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Pipeline Stats": {
+        "main": [
+          [
+            {
+              "node": "Format Daily Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check System Health": {
+        "main": [
+          [
+            {
+              "node": "Format Daily Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Strategy Pipeline": {
+        "main": [
+          [
+            {
+              "node": "Format Daily Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Daily Summary": {
+        "main": [
+          [
+            {
+              "node": "Send Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Error": {
+        "main": [
+          [
+            {
+              "node": "Alert on Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-17T02:48:01.373Z",
+        "id": 1106,
+        "workflowId": "UhAvoHwWdrgxyAod",
+        "versionId": "50fb902f-99e0-4599-a032-77ad3fe61277",
+        "event": "activated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      },
+      {
+        "createdAt": "2026-05-17T02:48:01.354Z",
+        "id": 1105,
+        "workflowId": "UhAvoHwWdrgxyAod",
+        "versionId": "50fb902f-99e0-4599-a032-77ad3fe61277",
+        "event": "deactivated",
+        "userId": "ed159f13-51e8-445c-8847-cfbafa47c3b3"
+      }
+    ]
+  }
+}

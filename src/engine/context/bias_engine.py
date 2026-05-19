@@ -35,6 +35,32 @@ BIAS_WEIGHTS = {
     "deepar_regime": 0.0,  # Starts at zero — no impact until auto-graduated
 }
 
+# ─── VP scoring config (Track 2) ─────────────────────────────────────────────
+# These are additive adjustments to net_bias when VP context is available.
+# They do NOT replace the existing 7-component scoring — they extend it.
+# All thresholds in one place; no magic numbers inline.
+VP_SHAPE_SCORE: dict[str, int] = {
+    "D": 0,       # balanced/neutral — no directional bias
+    "b": 5,       # lower portion = institutions bought → bullish lean
+    "P": -5,      # upper portion = institutions sold → bearish lean
+    "Thin": 10,   # abs value; direction = sign(htf_direction) at call site
+}
+
+VP_IB_SCORE_TABLE: dict[str, dict[str, int]] = {
+    # (ib_status, aligned_with_htf) → score adjustment
+    "IB_HOLD":              {"aligned": 0,  "against": 0},
+    "IB_EXTENSION_UP":      {"aligned": 5,  "against": -5},
+    "IB_EXTENSION_DOWN":    {"aligned": 5,  "against": -5},
+    "IB_EXTENSION_BOTH":    {"aligned": 0,  "against": 0},
+}
+
+VP_OPEN_CLASS_SCORE: dict[str, int] = {
+    "Open-In-Value":            0,   # neutral — could go either way
+    "Open-Outside-Value-Up":    5,   # price opened above VA → likely fade back into value
+    "Open-Outside-Value-Down": -5,   # price opened below VA → likely fade up into value
+    "Open-Outside-Range":       10,  # outside yesterday's range → strong trend-day signal (abs; direction from htf)
+}
+
 
 @dataclass
 class DailyBiasState:
@@ -61,6 +87,17 @@ class DailyBiasState:
     exhaustion_active: bool = False   # Large bar closing in opposite extreme = exhaustion
     sweep_delta_confirmed: bool = False  # Sweep + CVD shift > 1σ in reversal direction
     order_flow_score: int = 0         # 0–100 composite (kept positive; direction implied)
+    # Track 2: Volume Profile context (None when VP data unavailable — bias unchanged)
+    vp_shape: Optional[str] = None           # 'D' | 'b' | 'P' | 'Thin' | None
+    vp_shape_score: int = 0                  # additive VP shape score
+    vp_ib_score: int = 0                     # additive IB extension score
+    vp_open_class_score: int = 0             # additive open-relative-to-value score
+    vp_poc: Optional[float] = None           # session POC price level
+    vp_vah: Optional[float] = None           # Value Area High
+    vp_val: Optional[float] = None           # Value Area Low
+    ib_status: Optional[str] = None          # 'IB_HOLD' | 'IB_EXTENSION_UP' | 'IB_EXTENSION_DOWN' | 'IB_EXTENSION_BOTH'
+    open_classification: Optional[str] = None  # 'Open-In-Value' | 'Open-Outside-Value-*' | 'Open-Outside-Range'
+    htf_aligned: bool = False                # True when net_bias and htf_trend agree directionally
 
 
 def _score_htf_trend(htf: HTFContext) -> int:
@@ -428,6 +465,113 @@ def _compute_order_flow_features(
     return out
 
 
+# ─── Track 2: VP scorers ─────────────────────────────────────────────────────
+
+
+def _score_profile_shape(shape: str, confidence: float, htf_direction: int) -> int:
+    """Additive score from VP profile shape.
+
+    D=neutral 0; b=bullish +5; P=bearish -5; Thin=trend +10 * sign(htf_direction).
+    Scaled by confidence so low-confidence shapes contribute less.
+
+    Args:
+        shape: profile shape string — 'D', 'b', 'P', or 'Thin'
+        confidence: shape_confidence in [0, 1]
+        htf_direction: +1 bullish, -1 bearish, 0 neutral (from HTF trend map)
+
+    Returns:
+        Integer score contribution to net_bias.
+    """
+    base = VP_SHAPE_SCORE.get(shape, 0)
+    if shape == "Thin":
+        # Thin profile = trend day — directional sign comes from HTF
+        base = abs(base) * htf_direction
+    return max(-100, min(100, int(base * confidence)))
+
+
+def _score_initial_balance(ib_status: Optional[str], htf_direction: int) -> int:
+    """Additive score from IB extension status.
+
+    IB_HOLD = balance bias 0; IB_EXTENSION_UP aligned with HTF +5;
+    IB_EXTENSION_UP against HTF -5; BOTH = 0.
+
+    Args:
+        ib_status: 'IB_HOLD' | 'IB_EXTENSION_UP' | 'IB_EXTENSION_DOWN' | 'IB_EXTENSION_BOTH' | None
+        htf_direction: +1 bullish, -1 bearish, 0 neutral
+
+    Returns:
+        Integer score contribution to net_bias.
+    """
+    if not ib_status:
+        return 0
+    table = VP_IB_SCORE_TABLE.get(ib_status, {"aligned": 0, "against": 0})
+
+    if ib_status == "IB_EXTENSION_UP":
+        # Extension up: aligned if HTF is bullish
+        alignment = "aligned" if htf_direction > 0 else ("against" if htf_direction < 0 else "aligned")
+    elif ib_status == "IB_EXTENSION_DOWN":
+        # Extension down: aligned if HTF is bearish
+        alignment = "aligned" if htf_direction < 0 else ("against" if htf_direction > 0 else "aligned")
+    else:
+        alignment = "aligned"
+
+    return table[alignment]
+
+
+def _score_open_relative_to_value(classification: Optional[str], htf_direction: int) -> int:
+    """Additive score from open-relative-to-value classification.
+
+    Open-In-Value 0; Open-Outside-Value-Up +5 (fade back into value — bearish lean);
+    Open-Outside-Value-Down -5; Open-Outside-Range ±10 (trend day — sign from HTF).
+
+    Args:
+        classification: open_classification string or None
+        htf_direction: +1 bullish, -1 bearish, 0 neutral
+
+    Returns:
+        Integer score contribution to net_bias.
+    """
+    if not classification:
+        return 0
+    base = VP_OPEN_CLASS_SCORE.get(classification, 0)
+    if classification == "Open-Outside-Range":
+        # Outside range = trend day — strong directional signal
+        base = abs(base) * htf_direction
+    return max(-100, min(100, base))
+
+
+# ─── VPLevels type alias (matches service layer output) ──────────────────────
+
+class VPLevels:
+    """Lightweight container for VP levels passed into compute_bias.
+
+    Mirrors the VPLevels interface from volume-profile-service.ts.
+    All fields optional except poc/vah/val — those are validated at persist time.
+    """
+
+    def __init__(
+        self,
+        poc: float,
+        vah: float,
+        val: float,
+        profile_shape: str,
+        shape_confidence: float,
+        ib_high: Optional[float] = None,
+        ib_low: Optional[float] = None,
+        ib_extension_status: Optional[str] = None,
+        open_classification: Optional[str] = None,
+    ) -> None:
+        self.poc = poc
+        self.vah = vah
+        self.val = val
+        self.profile_shape = profile_shape
+        self.shape_confidence = shape_confidence
+        self.ib_high = ib_high
+        self.ib_low = ib_low
+        self.ib_extension_status = ib_extension_status
+        self.open_classification = open_classification
+
+
 def compute_bias(
     htf: HTFContext,
     session: SessionContext,
@@ -437,8 +581,12 @@ def compute_bias(
     event_minutes: int = 999,
     deepar_forecast: dict | None = None,
     bars: Optional[pl.DataFrame] = None,
+    vp_levels: Optional["VPLevels"] = None,
 ) -> DailyBiasState:
-    """Compute the full daily bias state from all 7 components.
+    """Compute the full daily bias state from all 7 components + optional VP context.
+
+    vp_levels is backwards-compatible: None → existing 7-component score unchanged.
+    When provided, three additive VP adjustments are applied to net_bias.
 
     Returns DailyBiasState with net_bias (-100..+100) and bias_confidence (0..1).
     """
@@ -457,9 +605,19 @@ def compute_bias(
         "deepar_regime": _score_deepar_regime(deepar_forecast),
     }
 
-    # Weighted sum
+    # Weighted sum — 7-component baseline
     net_bias = sum(scores[k] * BIAS_WEIGHTS[k] for k in BIAS_WEIGHTS)
     net_bias = max(-100, min(100, int(net_bias)))
+
+    # Track 2: VP additive adjustments (only when vp_levels is provided)
+    vp_shape_score = 0
+    vp_ib_score = 0
+    vp_open_class_score = 0
+    if vp_levels is not None:
+        vp_shape_score = _score_profile_shape(vp_levels.profile_shape, vp_levels.shape_confidence, direction_hint)
+        vp_ib_score = _score_initial_balance(vp_levels.ib_extension_status, direction_hint)
+        vp_open_class_score = _score_open_relative_to_value(vp_levels.open_classification, direction_hint)
+        net_bias = max(-100, min(100, net_bias + vp_shape_score + vp_ib_score + vp_open_class_score))
 
     # Confidence: how aligned are the components?
     # If all point the same direction → high confidence
@@ -503,6 +661,9 @@ def compute_bias(
     # when bars=None so existing callers see no behavior change.
     of_features = _compute_order_flow_features(bars, session)
 
+    # htf_aligned: True when net_bias direction agrees with HTF daily trend
+    htf_aligned = (net_bias > 0 and direction_hint > 0) or (net_bias < 0 and direction_hint < 0)
+
     state = DailyBiasState(
         htf_context=htf,
         session_context=session,
@@ -523,6 +684,140 @@ def compute_bias(
         exhaustion_active=of_features["exhaustion_active"],
         sweep_delta_confirmed=of_features["sweep_delta_confirmed"],
         order_flow_score=of_features["order_flow_score"],
+        # Track 2: VP fields (None when no vp_levels provided)
+        vp_shape=vp_levels.profile_shape if vp_levels is not None else None,
+        vp_shape_score=vp_shape_score,
+        vp_ib_score=vp_ib_score,
+        vp_open_class_score=vp_open_class_score,
+        vp_poc=vp_levels.poc if vp_levels is not None else None,
+        vp_vah=vp_levels.vah if vp_levels is not None else None,
+        vp_val=vp_levels.val if vp_levels is not None else None,
+        ib_status=vp_levels.ib_extension_status if vp_levels is not None else None,
+        open_classification=vp_levels.open_classification if vp_levels is not None else None,
+        htf_aligned=htf_aligned,
     )
 
+    # Track 5: SHADOW write — fire-and-forget persistence of bias decision.
+    # Gated on BIAS_ENGINE_MODE != 'OFF' so test environments with MODE=OFF see no DB side effects.
+    # Return value is UNCHANGED — this write never blocks or modifies state.
+    # Wrapped in try/except so any exception in the persist helper can never propagate.
+    try:
+        _maybe_persist_bias_decision(state, vp_levels)
+    except Exception:
+        pass  # Fail-open: shadow write must never block trading compute
+
     return state
+
+
+def _maybe_persist_bias_decision(state: "DailyBiasState", vp_levels: Optional["VPLevels"]) -> None:
+    """Fire-and-forget shadow write to bias_decisions table.
+
+    Gated on BIAS_ENGINE_MODE env var (default 'SHADOW').
+    MODE=OFF: no-op (test-safe, backwards-compatible).
+    Any DB error is swallowed — must never block compute_bias().
+
+    The write is done via subprocess call to a small TS helper that hits
+    the existing Express DB layer. This avoids importing psycopg2 in the
+    Python engine layer (which has no direct DB dependency today).
+    The subprocess is non-blocking (Popen without wait).
+    """
+    import os
+    engine_mode = os.environ.get("BIAS_ENGINE_MODE", "SHADOW").upper()
+    if engine_mode == "OFF":
+        return
+
+    try:
+        import json
+        import subprocess
+        import datetime
+
+        from src.engine.context.playbook_router import ROUTER_VERSION, ROUTER_HASH
+
+        symbol = getattr(state.session_context, "symbol", "UNKNOWN")
+        feature_snapshot = {
+            "net_bias": state.net_bias,
+            "bias_confidence": state.bias_confidence,
+            "playbook": state.playbook,
+            "htf_trend_score": state.htf_trend_score,
+            "pd_location_score": state.pd_location_score,
+            "overnight_score": state.overnight_score,
+            "liquidity_context_score": state.liquidity_context_score,
+            "vwap_state_score": state.vwap_state_score,
+            "event_risk_score": state.event_risk_score,
+            "session_regime_score": state.session_regime_score,
+            "deepar_regime_score": state.deepar_regime_score,
+            "cvd_zscore": state.cvd_zscore,
+            "absorption_active": state.absorption_active,
+            "exhaustion_active": state.exhaustion_active,
+            "sweep_delta_confirmed": state.sweep_delta_confirmed,
+            "order_flow_score": state.order_flow_score,
+            "vp_shape": state.vp_shape,
+            "vp_shape_score": state.vp_shape_score,
+            "vp_ib_score": state.vp_ib_score,
+            "vp_open_class_score": state.vp_open_class_score,
+            "ib_status": state.ib_status,
+            "open_classification": state.open_classification,
+            "htf_aligned": state.htf_aligned,
+        }
+
+        # Raw state probs — these are classical bias component scores reframed as probs.
+        # Full HMM probs replace this when a proper HMM classifier is wired.
+        total_abs = sum(abs(v) for v in [
+            state.htf_trend_score, state.pd_location_score, state.overnight_score,
+            state.liquidity_context_score, state.vwap_state_score,
+        ]) or 1.0
+        bullish_abs = sum(max(0, v) for v in [
+            state.htf_trend_score, state.pd_location_score, state.overnight_score,
+            state.liquidity_context_score, state.vwap_state_score,
+        ])
+        p_trend = round(bullish_abs / total_abs, 4)
+        raw_state_probs = {
+            "trend": p_trend,
+            "range": round((1.0 - p_trend) * 0.6, 4),
+            "reversal": round((1.0 - p_trend) * 0.3, 4),
+            "no_trade": round((1.0 - p_trend) * 0.1, 4),
+        }
+
+        payload = json.dumps({
+            "symbol": symbol,
+            "decisionTimestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "featureSnapshot": feature_snapshot,
+            "featureVersions": {
+                "bias_engine": "1.0.0",
+                "playbook_router": ROUTER_VERSION,
+                "vp": "1.0",
+            },
+            "classifierVersion": "classical_v1",
+            "rawStateProbs": raw_state_probs,
+            "routerVersion": ROUTER_VERSION,
+            "routerHash": ROUTER_HASH,
+            "playbook": state.playbook,
+            "allowedStrategies": [],  # populated by route_playbook caller
+            "hysteresisApplied": False,
+            "engineMode": engine_mode,
+        })
+
+        # Non-blocking subprocess: POST to the internal bias-decisions endpoint
+        # Fail-open on any error (Popen error, missing node, etc.)
+        api_url = os.environ.get("TRADING_FORGE_API_URL", "http://localhost:4000")
+        api_key = os.environ.get("API_KEY", "")
+
+        subprocess.Popen(
+            [
+                "curl", "-s", "-X", "POST",
+                f"{api_url}/api/bias-decisions/ingest",
+                "-H", "Content-Type: application/json",
+                "-H", f"Authorization: Bearer {api_key}",
+                "-d", payload,
+                "--max-time", "3",
+                "--silent",
+                "--output", "/dev/null",
+            ],
+            close_fds=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        # Fail-open: any error in shadow write is silently swallowed.
+        # Never raises. compute_bias() return value is unaffected.
+        pass

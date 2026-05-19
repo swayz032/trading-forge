@@ -320,6 +320,9 @@ export async function compileDualPineExport(
   injectedRiskIntelligence?: Record<string, number | string | null> | null,
   persist: boolean = true,
   correlationId?: string,
+  recipientQty?: number,
+  recipientLabel?: string,
+  hmacSecret?: string,
 ) {
   // FIX 4: track wall-clock duration for audit_log
   const startMs = Date.now();
@@ -422,12 +425,36 @@ export async function compileDualPineExport(
 
     // 4. Build config — pass strategy_id so it embeds in webhook payloads
     const strategyConfig = strategy.config as Record<string, unknown>;
-    const config = {
+
+    // Track 4: broker_type field for Pine alert template generation.
+    // When an account is wired via broker_accounts, its broker_type determines
+    // which webhook payload format the alerts_json artifact uses.
+    // TradersPost path: existing JSON shape.
+    // TopstepX path: generates a Pine comment stub (not yet implemented).
+    // Default: 'traderspost' (backwards-compatible — existing exports unchanged).
+    const brokerType = (strategyConfig.broker_type as "traderspost" | "topstepx" | undefined) ?? "traderspost";
+
+    const config: Record<string, unknown> = {
       strategy: { ...strategyConfig },
       firm_key: firmKey,
       strategy_id: strategyId,
+      broker_type: brokerType,
       ...(riskIntelligence != null ? { risk_intelligence: riskIntelligence } : {}),
     };
+    // T6: Per-recipient params — injected into config JSON for Python subprocess
+    if (recipientQty != null) config.recipient_qty = recipientQty;
+    if (recipientLabel) config.recipient_label = recipientLabel;
+    if (hmacSecret) {
+      config.hmac_secret = hmacSecret;
+      // Track 8: inject Trading Forge webhook URL so Pine alert payload includes
+      // the destination for marker collection. The URL is embedded as a Pine
+      // comment / alert_message field for operator reference — the TradingView
+      // alert webhook URL configured by the operator should point here.
+      const tfPublicUrl = process.env["TRADING_FORGE_PUBLIC_URL"] ?? "";
+      if (tfPublicUrl) {
+        config.tf_marker_webhook_url = `${tfPublicUrl}/api/tradingview/marker`;
+      }
+    }
 
     const tmpPath = pathResolve(tmpdir(), `pine-dual-config-${strategyId.slice(0, 8)}.json`);
     writeFileSync(tmpPath, JSON.stringify(config));
@@ -443,7 +470,7 @@ export async function compileDualPineExport(
     const durationMs = Date.now() - startMs;
 
     // P2-4: persist=false → skip all DB writes, return in-memory result only
-    let artifactRows: { id: string; artifactType: string; fileName: string; sizeBytes: number | null }[] = [];
+    const artifactRows: { id: string; artifactType: string; fileName: string; sizeBytes: number | null }[] = [];
 
     if (persist && exportId) {
       // 5. Update export row — FIX 3: write contentHash, configSnapshot, backtestId

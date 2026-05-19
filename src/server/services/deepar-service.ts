@@ -43,7 +43,7 @@ interface RegimeForecast {
 }
 
 interface TrainingResult {
-  status: "completed" | "failed";
+  status: "completed" | "failed" | "deferred";
   runId: string;
   epochs?: number;
   training_loss?: number;
@@ -53,6 +53,7 @@ interface TrainingResult {
   data_range_end?: string;
   duration_ms?: number;
   error?: string;
+  reason?: "no_training_data";
 }
 
 interface PythonTrainingOutput {
@@ -65,21 +66,24 @@ interface PythonTrainingOutput {
   data_range_end?: string;
   duration_ms?: number;
   error?: string;
+  reason?: "no_training_data";
 }
 
 interface PythonPredictOutput {
   forecasts: Record<string, RegimeForecast>;
   model_version?: string;
   error?: string;
+  status?: "deferred";
+  reason?: "no_trained_model";
 }
 
-// Caveat 1 hardening: predictRegime returns this sentinel when the python-deepar
-// circuit is open, so callers can branch on the result instead of wrapping every
-// call in try/catch. Other failure modes (CLI errors, prediction errors) still
-// throw to preserve existing semantics — only the circuit-open path is deferred.
+// Caveat 1 hardening: predictRegime returns this sentinel when DeepAR is unavailable
+// (circuit open) or has not yet been trained (no_trained_model — pre-shadow state per
+// System Map: weight 0.0 for 60 days, signal #11 inactive until weight > 0). Callers
+// branch via isDeepARDeferred() instead of try/catch. Other failure modes still throw.
 export interface DeepARDeferredResponse {
   status: "deferred";
-  reason: "circuit_open";
+  reason: "circuit_open" | "no_trained_model";
   symbols: string[];
   endpoint?: string;
   reopensAt?: string;
@@ -430,6 +434,28 @@ export async function trainDeepAR(symbols?: string[], correlationId?: string): P
       }),
     );
 
+    // Pre-shadow state: training data not available (no local Parquet, S3 fallback
+    // missing/forbidden). Per System Map governance, DeepAR is shadow-mode for 60d
+    // before earning challenger weight — operating without training data is the
+    // EXPECTED bootstrap state. Mark the row as "deferred" (not "failed"), skip the
+    // DLQ and error audit, and return cleanly so the breaker stays CLOSED.
+    if (result.status === "deferred" && result.reason === "no_training_data") {
+      await db.update(deeparTrainingRuns)
+        .set({ status: "deferred" })
+        .where(eq(deeparTrainingRuns.id, runId));
+
+      logger.warn(
+        { runId, symbols: targetSymbols, reason: result.reason },
+        "DeepAR training deferred — no training data (operating in pre-shadow state)",
+      );
+
+      return {
+        status: "deferred",
+        runId,
+        reason: "no_training_data",
+      };
+    }
+
     // Update to completed
     await db.update(deeparTrainingRuns)
       .set({
@@ -588,6 +614,23 @@ export async function predictRegime(
   if (result.error) {
     logger.error({ error: result.error }, "DeepAR prediction returned error");
     throw new Error(`DeepAR prediction failed: ${result.error}`);
+  }
+
+  // Pre-shadow state: model has never been trained. Per System Map governance
+  // (weight 0.0 → 60d shadow → 0.05 challenger), this is an EXPECTED operating
+  // state, not a service failure. Return the deferred sentinel without firing
+  // SSE/audit/persist — those would lie about a successful prediction.
+  if (result.status === "deferred" && result.reason === "no_trained_model") {
+    logger.warn(
+      { symbols: targetSymbols, reason: result.reason },
+      "DeepAR predict deferred — no trained model (operating in pre-shadow state)",
+    );
+    return {
+      status: "deferred",
+      reason: "no_trained_model",
+      symbols: targetSymbols,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   const forecasts = result.forecasts ?? {};

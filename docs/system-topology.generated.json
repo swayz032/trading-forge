@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-03T08:12:51.982Z",
+  "generatedAt": "2026-05-19T06:53:45.822Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,23 +15,26 @@
     ]
   },
   "counts": {
-    "routes": 51,
-    "schedulerJobs": 57,
+    "routes": 62,
+    "schedulerJobs": 82,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
-    "engineSubsystems": 24,
-    "databaseTables": 71,
-    "registrySubsystems": 16
+    "engineSubsystems": 25,
+    "databaseTables": 94,
+    "registrySubsystems": 21
   },
   "routes": [
     "/api/admin",
     "/api/adversarial-stress",
     "/api/agent",
+    "/api/agents",
     "/api/alerts",
     "/api/anti-setups",
     "/api/archetypes",
     "/api/auditor",
     "/api/backtests",
+    "/api/bias-decisions",
+    "/api/bias-state",
     "/api/cloud-qmc",
     "/api/compiler",
     "/api/compliance",
@@ -47,21 +50,26 @@
     "/api/health",
     "/api/indicators",
     "/api/journal",
+    "/api/library-diversity",
     "/api/macro",
     "/api/metrics",
     "/api/monte-carlo",
     "/api/n8n",
+    "/api/nemo-scenarios",
     "/api/openai-proxy",
     "/api/openclaw/daily-report",
     "/api/paper",
     "/api/pine-export",
+    "/api/pine-export/recipient",
     "/api/portfolio",
     "/api/prevalidate",
+    "/api/production",
     "/api/prop-firm",
     "/api/quantum-mc",
     "/api/quantum/cost",
     "/api/quantum/pre-flight",
     "/api/risk",
+    "/api/scout",
     "/api/search",
     "/api/shadow-rerun",
     "/api/signal-correlation",
@@ -69,12 +77,15 @@
     "/api/skip",
     "/api/sse",
     "/api/strategies",
+    "/api/strategy-assignments",
     "/api/strategy-names",
-    "/api/supadata",
     "/api/survival",
+    "/api/synthetic-black-swan",
     "/api/tournament",
+    "/api/tradingview",
     "/api/validation",
-    "/api/validation-cadence"
+    "/api/validation-cadence",
+    "/api/volume-profile"
   ],
   "schedulerJobs": [
     "a-plus-auditor-scan",
@@ -82,6 +93,11 @@
     "anti-setup-effectiveness",
     "anti-setup-mine",
     "archetype-daily-classify",
+    "autonomous-scout-discovery",
+    "b14-priors-refit",
+    "bias-engine-refresh-10am-et",
+    "bias-engine-session-start",
+    "bitwarden-session-refresh-daily",
     "c11-bls-release",
     "c11-fred-daily",
     "c11-h41-weekly",
@@ -91,8 +107,11 @@
     "compliance-rule-drift",
     "contract-roll-sweep",
     "critic-feedback",
+    "daily-reconciliation",
     "data-integrity-suite",
     "databento-weekly-refresh",
+    "dead-mans-heartbeat-check",
+    "dead-mans-heartbeat-write",
     "decay-monitor",
     "deepar-predict",
     "deepar-train",
@@ -102,21 +121,30 @@
     "dlq-retry",
     "drain-scouted-ideas-periodic",
     "funnel-snapshot",
+    "graduated-strategy-drift-check",
     "graveyard-pattern-extraction",
+    "harsh-regime-phase-activation-check",
     "idempotency-cleanup",
     "lifecycle-auto-check",
     "macro-data-sync",
     "meta-parameter-review",
     "metrics-collector",
     "metrics-heartbeat",
+    "n8n-data-backup-daily",
+    "n8n-drift-monthly",
+    "n8n-execution-scrape",
     "n8n-health-check",
     "n8n-workflow-sync",
+    "nemo-scenario-weekly",
+    "nightly-critique",
     "paper-vs-backtest",
+    "pending-bucket-expiry",
     "pipeline-resume-drain",
     "portfolio-correlation",
     "pre-market-prep",
     "pre-trading-day-health-check",
     "prompt-ab-resolution",
+    "prop-firm-cookie-refresh-daily",
     "prop-firm-dashboard-snapshot",
     "prop-firm-health-check",
     "python-pool-saturation-check",
@@ -125,15 +153,23 @@
     "regret-score-fill",
     "resource-snapshot",
     "rolling-sharpe",
+    "scout-drain-stall-check",
+    "scout-reject-distribution-check",
+    "scout-reject-spike-check",
     "session-analytics-rollup",
+    "single-mention-bucket-sweep",
     "stale-pending-sweeper",
     "stale-session-check",
+    "synthetic-regime-refresh",
+    "synthetic-tsgen-train",
     "system-map-drift",
     "tournament-staleness-check",
     "validation-cadence-monthly",
+    "vp-daily-compute",
     "w19-definition-pull",
     "w19-imbalance-pull",
-    "w19-statistics-pull"
+    "w19-statistics-pull",
+    "weekly-drift-detection"
   ],
   "workflows": [
     "0A_health_monitor_66HEjQavpvirY6g5",
@@ -314,11 +350,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T23:00:06.283Z",
         "lastFailureAt": "2026-03-21T23:00:16.239Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -700,6 +737,7 @@
     "decay",
     "deepar_forecaster",
     "deepar_regime_classifier",
+    "exits",
     "governor",
     "graveyard",
     "macro_data",
@@ -717,6 +755,7 @@
   ],
   "databaseTables": [
     "a_plus_market_scans",
+    "account_strategy_assignments",
     "adversarial_stress_runs",
     "agent_health_reports",
     "alerts",
@@ -725,6 +764,11 @@
     "backtest_provenance",
     "backtest_trades",
     "backtests",
+    "bias_ablation_results",
+    "bias_calibration_curves",
+    "bias_decisions",
+    "bias_state",
+    "broker_accounts",
     "cloud_qmc_runs",
     "compliance_drift_log",
     "compliance_reviews",
@@ -733,7 +777,9 @@
     "contract_specs_authoritative",
     "critic_candidates",
     "critic_optimization_runs",
+    "daily_reconciliation",
     "daily_statistics",
+    "daily_volume_profile_levels",
     "data_integrity_findings",
     "data_sync_jobs",
     "day_archetypes",
@@ -741,8 +787,11 @@
     "deepar_forecasts",
     "deepar_training_runs",
     "exchange_outages",
+    "firm_adversarial_priors",
     "frankenstein_test_runs",
+    "harsh_regime_phase",
     "idempotency_keys",
+    "instance_config",
     "lifecycle_transitions",
     "llm_injection_attempts",
     "macro_features",
@@ -751,13 +800,16 @@
     "monte_carlo_runs",
     "mutation_outcomes",
     "n8n_execution_log",
+    "nemo_scenario_bank",
     "opening_auction_imbalance",
+    "operator_absent_periods",
     "paper_positions",
     "paper_session_feedback",
     "paper_sessions",
     "paper_signal_logs",
     "paper_trades",
     "pilot_sessions",
+    "production_trades",
     "prompt_ab_tests",
     "prompt_versions",
     "prop_firm_health_checks",
@@ -766,6 +818,7 @@
     "quantum_run_costs",
     "qubo_timing_runs",
     "rl_training_runs",
+    "scout_drain_samples",
     "shadow_rerun_findings",
     "shadow_signals",
     "skip_decisions",
@@ -778,68 +831,77 @@
     "strategy_graveyard",
     "strategy_lockouts",
     "strategy_names",
+    "strategy_pending_buckets",
+    "strategy_pending_mentions",
     "strategy_signal_vectors",
     "stress_test_runs",
     "subsystem_metrics",
+    "synthetic_black_swan_runs",
+    "synthetic_regime_bank",
+    "system_health_heartbeat",
     "system_journal",
     "system_parameter_history",
     "system_parameters",
+    "system_state",
     "tensor_predictions",
     "tournament_results",
-    "walk_forward_windows"
+    "tradingview_markers",
+    "walk_forward_windows",
+    "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 16,
-    "autonomousSubsystems": 16,
-    "selfEvolvingSubsystems": 6,
+    "registryEntries": 21,
+    "autonomousSubsystems": 21,
+    "selfEvolvingSubsystems": 7,
     "proofStatusCounts": {
-      "runtime-proven": 13,
+      "runtime-proven": 16,
       "partially-proven": 0,
       "offline-by-design": 0,
-      "experimental": 3,
+      "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 13,
-      "experimental": 3
+      "active": 16,
+      "experimental": 5
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 13,
-      "experimental_preprod": 3
+      "active_preprod": 16,
+      "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 11,
+      "runtime_proven_autonomous": 14,
       "runtime_proven_manual_gate": 2,
-      "experimental_challenger": 3
+      "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 7,
+      "not_collecting": 10,
       "collecting_only": 0,
       "learning_active": 6,
       "learning_blocked": 0,
-      "shadow_experimental": 3
+      "shadow_experimental": 5
     },
     "learningModeCounts": {
       "active_learning": 5,
-      "deterministic_instrumented": 6,
+      "deterministic_instrumented": 9,
       "manual_gate_only": 2,
-      "shadow_experimental": 3
+      "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 5,
-      "deterministic_instrumented": 9,
+      "deterministic_instrumented": 14,
       "manual_gated": 2
     },
     "manualGates": [
+      "operator-halt-only",
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 51,
-      "schedulerJobs": 57,
-      "engineSubsystems": 24,
-      "databaseTables": 71
+      "routes": 62,
+      "schedulerJobs": 82,
+      "engineSubsystems": 25,
+      "databaseTables": 94
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -864,30 +926,32 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "complete",
-      "automationComplete": 13,
-      "dataCollectionComplete": 16,
-      "auditabilityComplete": 16,
-      "failureVisibilityComplete": 16,
-      "authorityCorrect": 16,
+      "automationComplete": 16,
+      "dataCollectionComplete": 21,
+      "auditabilityComplete": 21,
+      "failureVisibilityComplete": 21,
+      "authorityCorrect": 21,
       "learningActive": 6,
       "incompleteSubsystems": []
     },
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 11,
+        "production_autonomous": 14,
         "production_manual_gate": 2,
-        "production_experimental": 3,
+        "production_experimental": 5,
         "production_not_intended": 0
       },
       "readySubsystems": [
         "backtest_qualification",
+        "broker_abstraction_layer",
         "compliance_governance",
         "context_execution",
         "critic_evolution",
         "deepar_regime",
         "frankenstein_randomization_gate",
         "observability_reliability",
+        "operator_absent_autopilot",
         "pine_export_preparation",
         "quantum_experimental",
         "research_orchestration",
@@ -895,17 +959,22 @@
         "strategy_lifecycle",
         "workflow_orchestration"
       ],
-      "blockedSubsystems": [],
+      "blockedSubsystems": [
+        "production_hardening"
+      ],
       "experimentalSubsystems": [
         "a_plus_market_auditor",
         "cloud_qmc_ising",
-        "quantum_adversarial_stress"
+        "prop_firm_survival_twin",
+        "quantum_adversarial_stress",
+        "synthetic_black_swan_survival"
       ],
       "shadowWorkflowCandidates": [],
       "inactiveWorkflowCandidates": [],
       "brokenWorkflowBlockers": [],
       "failingWorkflowBlockers": [],
       "sourceMissingWorkflowBlockers": [
+        "5I_tavily_scout_TMT3g7HenJ5etiwv",
         "Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
       ],
@@ -913,11 +982,13 @@
       "staleWorkflowBlockers": [],
       "runtimeControlBlockers": [],
       "blockers": [
+        "production_hardening:manual_gate:operator-halt-only",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
         "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
         "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+        "workflow-source-missing:5I_tavily_scout_TMT3g7HenJ5etiwv",
         "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
       ]
@@ -927,19 +998,26 @@
       "blockers": [
         "a_plus_market_auditor:experimental_governance",
         "cloud_qmc_ising:experimental_governance",
+        "production_hardening:manual_gate:operator-halt-only",
+        "prop_firm_survival_twin:experimental_governance",
         "quantum_adversarial_stress:experimental_governance",
+        "synthetic_black_swan_survival:experimental_governance",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
         "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
         "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+        "workflow-source-missing:5I_tavily_scout_TMT3g7HenJ5etiwv",
         "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
       ],
       "launchBlockedSubsystems": [
         "a_plus_market_auditor",
         "cloud_qmc_ising",
-        "quantum_adversarial_stress"
+        "production_hardening",
+        "prop_firm_survival_twin",
+        "quantum_adversarial_stress",
+        "synthetic_black_swan_survival"
       ],
       "inactiveByDesignSubsystems": [],
       "collectingOnlySubsystems": [],
@@ -1150,6 +1228,89 @@
           "recent-backtest-audit-events",
           "backtest-table-writes",
           "qualification-route-coverage"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "broker_abstraction_layer",
+        "domain": "execution",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "gate",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "human_release",
+        "criticality": "critical",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "/api/health/dashboard",
+          "audit_log:broker.order_routed",
+          "broker_accounts:recent-write",
+          "broker:order_routed SSE",
+          "broker.credentials_loaded",
+          "broker.order_routed"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "broker_accounts",
+          "instance_config"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health/dashboard",
+          "audit_log:broker.order_routed",
+          "broker_accounts:recent-write",
+          "broker-credentials-loaded-audit",
+          "broker-order-routing-audit",
+          "broker:order_routed SSE",
+          "broker.credentials_loaded",
+          "broker.order_routed"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/strategy-assignments"
+        ],
+        "schedulerJobs": [],
+        "healthCheck": "/api/health/dashboard",
+        "freshnessSignals": [
+          "audit_log:broker.order_routed",
+          "broker_accounts:recent-write"
+        ],
+        "evidenceQueries": [
+          "broker-order-routing-audit",
+          "broker-credentials-loaded-audit"
         ],
         "coverageGaps": []
       },
@@ -1391,11 +1552,17 @@
         ],
         "dataCollectionCoverage": [
           "audit_log",
+          "bias_ablation_results",
+          "bias_calibration_curves",
+          "bias_decisions",
+          "bias_state",
           "contract_rolls",
           "contract_specs_authoritative",
           "daily_statistics",
+          "daily_volume_profile_levels",
           "data_sync_jobs",
           "exchange_outages",
+          "harsh_regime_phase",
           "live and historical market data",
           "macro snapshots",
           "macro_features",
@@ -1461,11 +1628,18 @@
           "/api/portfolio",
           "/api/risk",
           "/api/signals",
-          "/api/skip"
+          "/api/bias-decisions",
+          "/api/bias-state",
+          "/api/library-diversity",
+          "/api/nemo-scenarios",
+          "/api/skip",
+          "/api/volume-profile"
         ],
         "schedulerJobs": [
           "anti-setup-mine",
           "archetype-daily-classify",
+          "bias-engine-refresh-10am-et",
+          "bias-engine-session-start",
           "c11-bls-release",
           "c11-fred-daily",
           "c11-h41-weekly",
@@ -1473,6 +1647,7 @@
           "cme-status-poll",
           "contract-roll-sweep",
           "databento-weekly-refresh",
+          "harsh-regime-phase-activation-check",
           "macro-data-sync",
           "paper-vs-backtest",
           "portfolio-correlation",
@@ -1481,6 +1656,7 @@
           "prop-firm-health-check",
           "session-analytics-rollup",
           "stale-session-check",
+          "vp-daily-compute",
           "w19-definition-pull",
           "w19-imbalance-pull",
           "w19-statistics-pull"
@@ -1592,6 +1768,7 @@
           "anti-setup-effectiveness",
           "critic-feedback",
           "meta-parameter-review",
+          "nightly-critique",
           "regen-declining-sweep",
           "regret-score-fill"
         ],
@@ -1910,6 +2087,112 @@
         "coverageGaps": []
       },
       {
+        "id": "operator_absent_autopilot",
+        "domain": "execution",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "gate",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "human_release",
+        "criticality": "critical",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "/api/health/dashboard",
+          "/api/production-status",
+          "audit_log:autopilot.*",
+          "audit_log:autopilot.dead_mans_heartbeat",
+          "autopilot.dead_mans_heartbeat",
+          "autopilot.tier1_auto_promoted",
+          "lifecycle:operator_absent_autopromoted SSE",
+          "reconciliation.5_source_mismatch",
+          "system_health_heartbeat:recent-write",
+          "tradingview_markers:recent-write",
+          "tradingview:marker-received SSE",
+          "tradingview.marker_received"
+        ],
+        "dataCollectionCoverage": [
+          "account_strategy_assignments",
+          "audit_log",
+          "operator_absent_periods",
+          "system_health_heartbeat",
+          "tradingview_markers"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health/dashboard",
+          "/api/production-status",
+          "audit_log:autopilot.*",
+          "audit_log:autopilot.dead_mans_heartbeat",
+          "autopilot-tier1-promotion-audit",
+          "autopilot.dead_mans_heartbeat",
+          "autopilot.tier1_auto_promoted",
+          "dead-mans-heartbeat-audit",
+          "lifecycle:operator_absent_autopromoted SSE",
+          "reconciliation.5_source_mismatch",
+          "system_health_heartbeat:recent-write",
+          "tradingview_markers:recent-write",
+          "tradingview-marker-audit",
+          "tradingview:marker-received SSE",
+          "tradingview.marker_received"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/tradingview"
+        ],
+        "schedulerJobs": [
+          "bitwarden-session-refresh-daily",
+          "dead-mans-heartbeat-check",
+          "dead-mans-heartbeat-write",
+          "prop-firm-cookie-refresh-daily"
+        ],
+        "healthCheck": "/api/health/dashboard",
+        "freshnessSignals": [
+          "audit_log:autopilot.dead_mans_heartbeat",
+          "system_health_heartbeat:recent-write",
+          "tradingview_markers:recent-write"
+        ],
+        "evidenceQueries": [
+          "autopilot-tier1-promotion-audit",
+          "dead-mans-heartbeat-audit",
+          "tradingview-marker-audit"
+        ],
+        "coverageGaps": []
+      },
+      {
         "id": "pine_export_preparation",
         "domain": "deployment-prep",
         "ownerSurface": "python-node",
@@ -1945,6 +2228,7 @@
           "strategy.deploy_approved"
         ],
         "dataCollectionCoverage": [
+          "account_strategy_assignments",
           "audit_log",
           "backtests",
           "compiler outputs",
@@ -1987,7 +2271,8 @@
         ],
         "productionAuthorityBoundary": "Autonomous through DEPLOY_READY; TradingView release remains human-controlled.",
         "routes": [
-          "/api/pine-export"
+          "/api/pine-export",
+          "/api/pine-export/recipient"
         ],
         "schedulerJobs": [],
         "healthCheck": "/api/health/dashboard",
@@ -2000,6 +2285,218 @@
           "pine-export-artifacts",
           "deploy-approval-audit-events",
           "pine-route-coverage"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "production_hardening",
+        "domain": "production",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "gate",
+        "manualGate": "operator-halt-only",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "critical",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "manual_gate:operator-halt-only"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "/api/production/status",
+          "daily_reconciliation:recent-entry",
+          "paper:entry-blocked-production-halt SSE",
+          "paper:force-flatten-all SSE",
+          "paper.entry_blocked",
+          "paper.force_flatten_all",
+          "production:drift-detection-completed SSE",
+          "production:mode-changed SSE",
+          "production:reconciliation-completed SSE",
+          "production.drift_detection.completed",
+          "production.mode_changed",
+          "production.reconciliation.completed",
+          "weekly_drift_reports:recent-entry"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "daily_reconciliation",
+          "MFFU dashboard snapshot",
+          "paper_trades",
+          "production_trades",
+          "system_state",
+          "TradersPost webhook log",
+          "Tradovate fills",
+          "weekly_drift_reports"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [
+          "manual_gate:operator-halt-only"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/production/status",
+          "daily_reconciliation:recent-entry",
+          "drift-detection-history",
+          "paper:entry-blocked-production-halt SSE",
+          "paper:force-flatten-all SSE",
+          "paper.entry_blocked",
+          "paper.force_flatten_all",
+          "production-mode-history",
+          "production:drift-detection-completed SSE",
+          "production:mode-changed SSE",
+          "production:reconciliation-completed SSE",
+          "production.drift_detection.completed",
+          "production.mode_changed",
+          "production.reconciliation.completed",
+          "reconciliation-mismatch-history",
+          "weekly_drift_reports:recent-entry"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/production"
+        ],
+        "schedulerJobs": [
+          "daily-reconciliation",
+          "weekly-drift-detection"
+        ],
+        "healthCheck": "/api/production/status",
+        "freshnessSignals": [
+          "/api/production/status",
+          "daily_reconciliation:recent-entry",
+          "weekly_drift_reports:recent-entry"
+        ],
+        "evidenceQueries": [
+          "production-mode-history",
+          "reconciliation-mismatch-history",
+          "drift-detection-history"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "prop_firm_survival_twin",
+        "domain": "qualification",
+        "ownerSurface": "node",
+        "runtimeState": "experimental",
+        "automationMode": "autonomous",
+        "decisionAuthority": "challenger_only",
+        "manualGate": "none",
+        "selfEvolving": true,
+        "proofMode": "experimental-runtime",
+        "proofStatus": "experimental",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "advisory_only",
+        "deploymentAuthority": "experimental_opt_in",
+        "criticality": "important",
+        "currentState": "experimental_preprod",
+        "launchTargetState": "experimental_challenger",
+        "productionTargetState": "production_experimental",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "experimental_governance"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "learning loop affects downstream behavior",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "/api/health/dashboard",
+          "/api/prop-firm",
+          "audit_log:b14_prior_updated",
+          "b14_prior_updated",
+          "firm_adversarial_priors:last_fitted_at"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "compliance_rulesets",
+          "compliance_rulesets.parsedRules.allowsAutomation",
+          "firm_adversarial_priors",
+          "prop_firm_health_checks",
+          "prop_firm_health_checks (last 90 days)",
+          "seed priors (scripts/seed-w20-firm-priors.json)",
+          "strategies",
+          "strategy DSL config",
+          "strategy_firm_eligibility"
+        ],
+        "closedLoopStatus": "shadow_experimental",
+        "learningMode": "shadow_experimental",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "experimental",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "experimental",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "experimental",
+        "productionBlockers": [
+          "experimental_governance"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "experimental governance remains isolated from release authority",
+          "failure visibility remains wired",
+          "learning loop remains bounded to pre-deploy authority",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health/dashboard",
+          "/api/prop-firm",
+          "audit_log:b14_prior_updated",
+          "b14_prior_updated",
+          "b14-priors-refit-recency",
+          "b14-survival-distribution-by-firm",
+          "firm_adversarial_priors:last_fitted_at"
+        ],
+        "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+        "routes": [
+          "/api/prop-firm"
+        ],
+        "schedulerJobs": [
+          "b14-priors-refit"
+        ],
+        "healthCheck": "/api/health/dashboard",
+        "freshnessSignals": [
+          "firm_adversarial_priors:last_fitted_at",
+          "audit_log:b14_prior_updated"
+        ],
+        "evidenceQueries": [
+          "b14-priors-refit-recency",
+          "b14-survival-distribution-by-firm"
         ],
         "coverageGaps": []
       },
@@ -2236,8 +2733,11 @@
           "OpenClaw scout outputs",
           "prompt_ab_tests",
           "prompt_versions",
+          "scout_drain_samples",
           "strategy_dsl_features",
           "strategy_graveyard",
+          "strategy_pending_buckets",
+          "strategy_pending_mentions",
           "system_journal",
           "tournament_results"
         ],
@@ -2277,20 +2777,29 @@
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
           "/api/agent",
+          "/api/agents",
           "/api/compiler",
           "/api/journal",
           "/api/openai-proxy",
           "/api/openclaw/daily-report",
+          "/api/scout",
           "/api/search",
           "/api/supadata",
           "/api/tournament",
           "/api/validation"
         ],
         "schedulerJobs": [
+          "autonomous-scout-discovery",
           "drain-scouted-ideas-periodic",
+          "graduated-strategy-drift-check",
           "graveyard-pattern-extraction",
+          "pending-bucket-expiry",
           "pipeline-resume-drain",
           "prompt-ab-resolution",
+          "scout-drain-stall-check",
+          "scout-reject-distribution-check",
+          "scout-reject-spike-check",
+          "single-mention-bucket-sweep",
           "tournament-staleness-check"
         ],
         "healthCheck": "/api/health/dashboard",
@@ -2432,6 +2941,7 @@
           "audit_log",
           "backtests",
           "graveyard history",
+          "harsh_regime_phase",
           "lifecycle_transitions",
           "monte_carlo_runs",
           "paper parity metrics",
@@ -2484,6 +2994,7 @@
         ],
         "schedulerJobs": [
           "funnel-snapshot",
+          "harsh-regime-phase-activation-check",
           "lifecycle-auto-check",
           "rolling-sharpe"
         ],
@@ -2497,6 +3008,106 @@
           "lifecycle-audit-events",
           "paper-session-freshness",
           "deploy-manual-gate"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "synthetic_black_swan_survival",
+        "domain": "qualification",
+        "ownerSurface": "python-node",
+        "runtimeState": "experimental",
+        "automationMode": "autonomous",
+        "decisionAuthority": "challenger_only",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "experimental-runtime",
+        "proofStatus": "experimental",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "experimental_opt_in",
+        "criticality": "important",
+        "currentState": "experimental_preprod",
+        "launchTargetState": "experimental_challenger",
+        "productionTargetState": "production_experimental",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "experimental_governance"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "/api/health/dashboard",
+          "/api/synthetic-black-swan",
+          "lifecycle_gate_advisory",
+          "synth_black_swan_eval_failed",
+          "synthetic_black_swan_runs:recent-completion",
+          "synthetic_regime_bank:recent-write"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtests",
+          "nemo_scenario_bank",
+          "real OHLCV (S3) for generator training",
+          "strategies",
+          "strategy DSL config",
+          "synthetic regime bank (S3) for evaluation",
+          "synthetic_black_swan_runs",
+          "synthetic_regime_bank"
+        ],
+        "closedLoopStatus": "shadow_experimental",
+        "learningMode": "shadow_experimental",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "experimental",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "experimental",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "experimental",
+        "productionBlockers": [
+          "experimental_governance"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "experimental governance remains isolated from release authority",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health/dashboard",
+          "/api/synthetic-black-swan",
+          "lifecycle_gate_advisory",
+          "synth_black_swan_eval_failed",
+          "synthetic_black_swan_runs:recent-completion",
+          "synthetic_regime_bank:recent-write",
+          "synthetic-black-swan-pending-row",
+          "synthetic-black-swan-survival-distribution"
+        ],
+        "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+        "routes": [
+          "/api/nemo-scenarios",
+          "/api/synthetic-black-swan"
+        ],
+        "schedulerJobs": [
+          "nemo-scenario-weekly",
+          "synthetic-regime-refresh",
+          "synthetic-tsgen-train"
+        ],
+        "healthCheck": "/api/health/dashboard",
+        "freshnessSignals": [
+          "synthetic_black_swan_runs:recent-completion",
+          "synthetic_regime_bank:recent-write"
+        ],
+        "evidenceQueries": [
+          "synthetic-black-swan-pending-row",
+          "synthetic-black-swan-survival-distribution"
         ],
         "coverageGaps": []
       },
@@ -2580,6 +3191,9 @@
           "/api/n8n"
         ],
         "schedulerJobs": [
+          "n8n-data-backup-daily",
+          "n8n-drift-monthly",
+          "n8n-execution-scrape",
           "n8n-health-check",
           "n8n-workflow-sync"
         ],
@@ -2717,6 +3331,18 @@
         "learningMode": "active_learning",
         "operatingClass": "adaptive",
         "criticality": "important",
+        "coverageGaps": []
+      },
+      {
+        "id": "exits",
+        "ownerSubsystemId": "context_execution",
+        "ownerDomain": "execution",
+        "runtimeState": "active",
+        "proofStatus": "runtime-proven",
+        "manualGate": "none",
+        "learningMode": "active_learning",
+        "operatingClass": "adaptive",
+        "criticality": "critical",
         "coverageGaps": []
       },
       {
@@ -3096,6 +3722,89 @@
       "coverageGaps": []
     },
     {
+      "id": "broker_abstraction_layer",
+      "domain": "execution",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "gate",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "human_release",
+      "criticality": "critical",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "/api/health/dashboard",
+        "audit_log:broker.order_routed",
+        "broker_accounts:recent-write",
+        "broker:order_routed SSE",
+        "broker.credentials_loaded",
+        "broker.order_routed"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "broker_accounts",
+        "instance_config"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "audit_log:broker.order_routed",
+        "broker_accounts:recent-write",
+        "broker-credentials-loaded-audit",
+        "broker-order-routing-audit",
+        "broker:order_routed SSE",
+        "broker.credentials_loaded",
+        "broker.order_routed"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/strategy-assignments"
+      ],
+      "schedulerJobs": [],
+      "healthCheck": "/api/health/dashboard",
+      "freshnessSignals": [
+        "audit_log:broker.order_routed",
+        "broker_accounts:recent-write"
+      ],
+      "evidenceQueries": [
+        "broker-order-routing-audit",
+        "broker-credentials-loaded-audit"
+      ],
+      "coverageGaps": []
+    },
+    {
       "id": "cloud_qmc_ising",
       "domain": "quantum-challenger",
       "ownerSurface": "python-node",
@@ -3333,11 +4042,17 @@
       ],
       "dataCollectionCoverage": [
         "audit_log",
+        "bias_ablation_results",
+        "bias_calibration_curves",
+        "bias_decisions",
+        "bias_state",
         "contract_rolls",
         "contract_specs_authoritative",
         "daily_statistics",
+        "daily_volume_profile_levels",
         "data_sync_jobs",
         "exchange_outages",
+        "harsh_regime_phase",
         "live and historical market data",
         "macro snapshots",
         "macro_features",
@@ -3403,11 +4118,18 @@
         "/api/portfolio",
         "/api/risk",
         "/api/signals",
-        "/api/skip"
+        "/api/bias-decisions",
+        "/api/bias-state",
+        "/api/library-diversity",
+        "/api/nemo-scenarios",
+        "/api/skip",
+        "/api/volume-profile"
       ],
       "schedulerJobs": [
         "anti-setup-mine",
         "archetype-daily-classify",
+        "bias-engine-refresh-10am-et",
+        "bias-engine-session-start",
         "c11-bls-release",
         "c11-fred-daily",
         "c11-h41-weekly",
@@ -3415,6 +4137,7 @@
         "cme-status-poll",
         "contract-roll-sweep",
         "databento-weekly-refresh",
+        "harsh-regime-phase-activation-check",
         "macro-data-sync",
         "paper-vs-backtest",
         "portfolio-correlation",
@@ -3423,6 +4146,7 @@
         "prop-firm-health-check",
         "session-analytics-rollup",
         "stale-session-check",
+        "vp-daily-compute",
         "w19-definition-pull",
         "w19-imbalance-pull",
         "w19-statistics-pull"
@@ -3534,6 +4258,7 @@
         "anti-setup-effectiveness",
         "critic-feedback",
         "meta-parameter-review",
+        "nightly-critique",
         "regen-declining-sweep",
         "regret-score-fill"
       ],
@@ -3852,6 +4577,112 @@
       "coverageGaps": []
     },
     {
+      "id": "operator_absent_autopilot",
+      "domain": "execution",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "gate",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "human_release",
+      "criticality": "critical",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "/api/health/dashboard",
+        "/api/production-status",
+        "audit_log:autopilot.*",
+        "audit_log:autopilot.dead_mans_heartbeat",
+        "autopilot.dead_mans_heartbeat",
+        "autopilot.tier1_auto_promoted",
+        "lifecycle:operator_absent_autopromoted SSE",
+        "reconciliation.5_source_mismatch",
+        "system_health_heartbeat:recent-write",
+        "tradingview_markers:recent-write",
+        "tradingview:marker-received SSE",
+        "tradingview.marker_received"
+      ],
+      "dataCollectionCoverage": [
+        "account_strategy_assignments",
+        "audit_log",
+        "operator_absent_periods",
+        "system_health_heartbeat",
+        "tradingview_markers"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "/api/production-status",
+        "audit_log:autopilot.*",
+        "audit_log:autopilot.dead_mans_heartbeat",
+        "autopilot-tier1-promotion-audit",
+        "autopilot.dead_mans_heartbeat",
+        "autopilot.tier1_auto_promoted",
+        "dead-mans-heartbeat-audit",
+        "lifecycle:operator_absent_autopromoted SSE",
+        "reconciliation.5_source_mismatch",
+        "system_health_heartbeat:recent-write",
+        "tradingview_markers:recent-write",
+        "tradingview-marker-audit",
+        "tradingview:marker-received SSE",
+        "tradingview.marker_received"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/tradingview"
+      ],
+      "schedulerJobs": [
+        "bitwarden-session-refresh-daily",
+        "dead-mans-heartbeat-check",
+        "dead-mans-heartbeat-write",
+        "prop-firm-cookie-refresh-daily"
+      ],
+      "healthCheck": "/api/health/dashboard",
+      "freshnessSignals": [
+        "audit_log:autopilot.dead_mans_heartbeat",
+        "system_health_heartbeat:recent-write",
+        "tradingview_markers:recent-write"
+      ],
+      "evidenceQueries": [
+        "autopilot-tier1-promotion-audit",
+        "dead-mans-heartbeat-audit",
+        "tradingview-marker-audit"
+      ],
+      "coverageGaps": []
+    },
+    {
       "id": "pine_export_preparation",
       "domain": "deployment-prep",
       "ownerSurface": "python-node",
@@ -3887,6 +4718,7 @@
         "strategy.deploy_approved"
       ],
       "dataCollectionCoverage": [
+        "account_strategy_assignments",
         "audit_log",
         "backtests",
         "compiler outputs",
@@ -3929,7 +4761,8 @@
       ],
       "productionAuthorityBoundary": "Autonomous through DEPLOY_READY; TradingView release remains human-controlled.",
       "routes": [
-        "/api/pine-export"
+        "/api/pine-export",
+        "/api/pine-export/recipient"
       ],
       "schedulerJobs": [],
       "healthCheck": "/api/health/dashboard",
@@ -3942,6 +4775,218 @@
         "pine-export-artifacts",
         "deploy-approval-audit-events",
         "pine-route-coverage"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "production_hardening",
+      "domain": "production",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "gate",
+      "manualGate": "operator-halt-only",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "critical",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "manual_gate:operator-halt-only"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "/api/production/status",
+        "daily_reconciliation:recent-entry",
+        "paper:entry-blocked-production-halt SSE",
+        "paper:force-flatten-all SSE",
+        "paper.entry_blocked",
+        "paper.force_flatten_all",
+        "production:drift-detection-completed SSE",
+        "production:mode-changed SSE",
+        "production:reconciliation-completed SSE",
+        "production.drift_detection.completed",
+        "production.mode_changed",
+        "production.reconciliation.completed",
+        "weekly_drift_reports:recent-entry"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "daily_reconciliation",
+        "MFFU dashboard snapshot",
+        "paper_trades",
+        "production_trades",
+        "system_state",
+        "TradersPost webhook log",
+        "Tradovate fills",
+        "weekly_drift_reports"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [
+        "manual_gate:operator-halt-only"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/production/status",
+        "daily_reconciliation:recent-entry",
+        "drift-detection-history",
+        "paper:entry-blocked-production-halt SSE",
+        "paper:force-flatten-all SSE",
+        "paper.entry_blocked",
+        "paper.force_flatten_all",
+        "production-mode-history",
+        "production:drift-detection-completed SSE",
+        "production:mode-changed SSE",
+        "production:reconciliation-completed SSE",
+        "production.drift_detection.completed",
+        "production.mode_changed",
+        "production.reconciliation.completed",
+        "reconciliation-mismatch-history",
+        "weekly_drift_reports:recent-entry"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/production"
+      ],
+      "schedulerJobs": [
+        "daily-reconciliation",
+        "weekly-drift-detection"
+      ],
+      "healthCheck": "/api/production/status",
+      "freshnessSignals": [
+        "/api/production/status",
+        "daily_reconciliation:recent-entry",
+        "weekly_drift_reports:recent-entry"
+      ],
+      "evidenceQueries": [
+        "production-mode-history",
+        "reconciliation-mismatch-history",
+        "drift-detection-history"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "prop_firm_survival_twin",
+      "domain": "qualification",
+      "ownerSurface": "node",
+      "runtimeState": "experimental",
+      "automationMode": "autonomous",
+      "decisionAuthority": "challenger_only",
+      "manualGate": "none",
+      "selfEvolving": true,
+      "proofMode": "experimental-runtime",
+      "proofStatus": "experimental",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "advisory_only",
+      "deploymentAuthority": "experimental_opt_in",
+      "criticality": "important",
+      "currentState": "experimental_preprod",
+      "launchTargetState": "experimental_challenger",
+      "productionTargetState": "production_experimental",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "experimental_governance"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "learning loop affects downstream behavior",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "/api/health/dashboard",
+        "/api/prop-firm",
+        "audit_log:b14_prior_updated",
+        "b14_prior_updated",
+        "firm_adversarial_priors:last_fitted_at"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "compliance_rulesets",
+        "compliance_rulesets.parsedRules.allowsAutomation",
+        "firm_adversarial_priors",
+        "prop_firm_health_checks",
+        "prop_firm_health_checks (last 90 days)",
+        "seed priors (scripts/seed-w20-firm-priors.json)",
+        "strategies",
+        "strategy DSL config",
+        "strategy_firm_eligibility"
+      ],
+      "closedLoopStatus": "shadow_experimental",
+      "learningMode": "shadow_experimental",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "experimental",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "experimental",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "experimental",
+      "productionBlockers": [
+        "experimental_governance"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "experimental governance remains isolated from release authority",
+        "failure visibility remains wired",
+        "learning loop remains bounded to pre-deploy authority",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "/api/prop-firm",
+        "audit_log:b14_prior_updated",
+        "b14_prior_updated",
+        "b14-priors-refit-recency",
+        "b14-survival-distribution-by-firm",
+        "firm_adversarial_priors:last_fitted_at"
+      ],
+      "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+      "routes": [
+        "/api/prop-firm"
+      ],
+      "schedulerJobs": [
+        "b14-priors-refit"
+      ],
+      "healthCheck": "/api/health/dashboard",
+      "freshnessSignals": [
+        "firm_adversarial_priors:last_fitted_at",
+        "audit_log:b14_prior_updated"
+      ],
+      "evidenceQueries": [
+        "b14-priors-refit-recency",
+        "b14-survival-distribution-by-firm"
       ],
       "coverageGaps": []
     },
@@ -4178,8 +5223,11 @@
         "OpenClaw scout outputs",
         "prompt_ab_tests",
         "prompt_versions",
+        "scout_drain_samples",
         "strategy_dsl_features",
         "strategy_graveyard",
+        "strategy_pending_buckets",
+        "strategy_pending_mentions",
         "system_journal",
         "tournament_results"
       ],
@@ -4219,20 +5267,29 @@
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
         "/api/agent",
+        "/api/agents",
         "/api/compiler",
         "/api/journal",
         "/api/openai-proxy",
         "/api/openclaw/daily-report",
+        "/api/scout",
         "/api/search",
         "/api/supadata",
         "/api/tournament",
         "/api/validation"
       ],
       "schedulerJobs": [
+        "autonomous-scout-discovery",
         "drain-scouted-ideas-periodic",
+        "graduated-strategy-drift-check",
         "graveyard-pattern-extraction",
+        "pending-bucket-expiry",
         "pipeline-resume-drain",
         "prompt-ab-resolution",
+        "scout-drain-stall-check",
+        "scout-reject-distribution-check",
+        "scout-reject-spike-check",
+        "single-mention-bucket-sweep",
         "tournament-staleness-check"
       ],
       "healthCheck": "/api/health/dashboard",
@@ -4374,6 +5431,7 @@
         "audit_log",
         "backtests",
         "graveyard history",
+        "harsh_regime_phase",
         "lifecycle_transitions",
         "monte_carlo_runs",
         "paper parity metrics",
@@ -4426,6 +5484,7 @@
       ],
       "schedulerJobs": [
         "funnel-snapshot",
+        "harsh-regime-phase-activation-check",
         "lifecycle-auto-check",
         "rolling-sharpe"
       ],
@@ -4439,6 +5498,106 @@
         "lifecycle-audit-events",
         "paper-session-freshness",
         "deploy-manual-gate"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "synthetic_black_swan_survival",
+      "domain": "qualification",
+      "ownerSurface": "python-node",
+      "runtimeState": "experimental",
+      "automationMode": "autonomous",
+      "decisionAuthority": "challenger_only",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "experimental-runtime",
+      "proofStatus": "experimental",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "experimental_opt_in",
+      "criticality": "important",
+      "currentState": "experimental_preprod",
+      "launchTargetState": "experimental_challenger",
+      "productionTargetState": "production_experimental",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "experimental_governance"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "/api/health/dashboard",
+        "/api/synthetic-black-swan",
+        "lifecycle_gate_advisory",
+        "synth_black_swan_eval_failed",
+        "synthetic_black_swan_runs:recent-completion",
+        "synthetic_regime_bank:recent-write"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtests",
+        "nemo_scenario_bank",
+        "real OHLCV (S3) for generator training",
+        "strategies",
+        "strategy DSL config",
+        "synthetic regime bank (S3) for evaluation",
+        "synthetic_black_swan_runs",
+        "synthetic_regime_bank"
+      ],
+      "closedLoopStatus": "shadow_experimental",
+      "learningMode": "shadow_experimental",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "experimental",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "experimental",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "experimental",
+      "productionBlockers": [
+        "experimental_governance"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "experimental governance remains isolated from release authority",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health/dashboard",
+        "/api/synthetic-black-swan",
+        "lifecycle_gate_advisory",
+        "synth_black_swan_eval_failed",
+        "synthetic_black_swan_runs:recent-completion",
+        "synthetic_regime_bank:recent-write",
+        "synthetic-black-swan-pending-row",
+        "synthetic-black-swan-survival-distribution"
+      ],
+      "productionAuthorityBoundary": "Experimental only; may collect evidence but cannot widen release authority.",
+      "routes": [
+        "/api/nemo-scenarios",
+        "/api/synthetic-black-swan"
+      ],
+      "schedulerJobs": [
+        "nemo-scenario-weekly",
+        "synthetic-regime-refresh",
+        "synthetic-tsgen-train"
+      ],
+      "healthCheck": "/api/health/dashboard",
+      "freshnessSignals": [
+        "synthetic_black_swan_runs:recent-completion",
+        "synthetic_regime_bank:recent-write"
+      ],
+      "evidenceQueries": [
+        "synthetic-black-swan-pending-row",
+        "synthetic-black-swan-survival-distribution"
       ],
       "coverageGaps": []
     },
@@ -4522,6 +5681,9 @@
         "/api/n8n"
       ],
       "schedulerJobs": [
+        "n8n-data-backup-daily",
+        "n8n-drift-monthly",
+        "n8n-execution-scrape",
         "n8n-health-check",
         "n8n-workflow-sync"
       ],
@@ -4659,6 +5821,18 @@
       "learningMode": "active_learning",
       "operatingClass": "adaptive",
       "criticality": "important",
+      "coverageGaps": []
+    },
+    {
+      "id": "exits",
+      "ownerSubsystemId": "context_execution",
+      "ownerDomain": "execution",
+      "runtimeState": "active",
+      "proofStatus": "runtime-proven",
+      "manualGate": "none",
+      "learningMode": "active_learning",
+      "operatingClass": "adaptive",
+      "criticality": "critical",
       "coverageGaps": []
     },
     {
@@ -4831,6 +6005,7 @@
     }
   ],
   "manualGates": [
+    "operator-halt-only",
     "tradingview_deploy"
   ]
 }

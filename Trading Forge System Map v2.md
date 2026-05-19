@@ -1,1345 +1,98 @@
 
-===============================================================================
-  Trading Forge — Full System Map v2 (2026-03-29)
-===============================================================================
-
-  MISSION STATEMENT
-
-  The Trading Forge system map is the source of truth. The mission is:
-
-  1. Full production enterprise-grade system — every subsystem collects data
-     at every step.
-  2. Self-evolving — the system gets smarter as more data is collected
-     (DeepAR auto-graduates, critic loop improves, strategy memory learns).
-  3. Full automation — the entire lifecycle/pipeline is autonomous EXCEPT
-     TradingView deploy approval (human determines what strategies get
-     deployed).
-  4. Zero tolerance for bugs, errors, incidents, blockers, and issues in
-     the lifecycle/pipeline.
-  5. Every data handoff is tracked, every decision is auditable, every
-     failure is visible.
-
-  NOTE: n8n orchestration workflows are ONLINE in shadow pre-production mode.
-  They collect runtime evidence, retries, and health signals now, but they do
-  not widen release authority. TradingView deployment approval remains manual.
-
-  CURRENT-STATE RULE
-
-  Active claims in this map must reflect repo-enforced behavior, tests, and
-  generated topology evidence. Anything built but not production-ready must be
-  labeled inactive, broken, or experimental instead of being described as live.
-
-===============================================================================
-
-  1. STRATEGY LIFECYCLE
-
-  CANDIDATE → TESTING → PAPER → DEPLOY_READY → DEPLOYED → DECLINING → RETIRED
-      ↑                              ↑   ↓                      ↓
-      │                              └───┘                      │
-      └──── GRAVEYARD (dead strategies) ←───────────────────────┘
-                ↑
-      Strategy Memory (cuVS) feeds next generation
-
-  GRAVEYARD is a valid lifecycle state. Any state can transition to GRAVEYARD
-  on catastrophic failure, compliance violation, or kill signal.
-
-  How strategies enter:
-    OpenClaw Scout (n8n) → Ollama/GPT-5-mini writes DSL
-    → Compiler validates → Backtester scores → Gates grade → CANDIDATE
-
-  How strategies advance (automated transitions):
-    CANDIDATE → TESTING:       Auto (forgeScore >= 50, tier 1/2/3,
-                               backtest + WF complete). Runs every 6h.
-                               (src/server/services/lifecycle-service.ts)
-    TESTING → PAPER:           Auto (MC survival > 70%, prop compliance
-                               >= 1 firm). Runs every 6h.
-    PAPER → DEPLOY_READY:      Auto (30+ days paper, rolling Sharpe >= 1.5)
-    DEPLOY_READY → DEPLOYED:   HUMAN APPROVAL ONLY (POST /api/strategies/:id/deploy)
-    DEPLOY_READY → PAPER:      Human rejects (POST /api/strategies/:id/reject-deploy)
-    DEPLOYED → DECLINING:      Drift + change-point detection flags decay
-    PAPER → DECLINING:         Auto (drift detection > 2 sigma, or rolling
-                               Sharpe drop)
-    TESTING → DECLINING:       Auto (catastrophic failure)
-    DECLINING → RETIRED:       Fails recovery OR max evolution attempts
-    Any stage → GRAVEYARD:     Auto (catastrophic failure, compliance
-                               violation, kill signal)
-
-  Inline demotion check:
-    Rolling Sharpe update (every 4h) immediately demotes
-    DEPLOYED → DECLINING if Sharpe < 1.0.
-    (src/server/services/lifecycle-service.ts → checkDemotions())
-
-  Evolution service routes retirements through lifecycle service
-    (audit trail, graveyard burial, SSE broadcast).
-    (src/server/services/evolution-service.ts → lifecycle.promoteStrategy())
-
-  Strategy Library: GET /api/strategies/library
-    Browse all DEPLOY_READY strategies with backtest, MC, and paper metrics.
-    You choose what deploys. The system NEVER auto-deploys.
-
-===============================================================================
-
-  2. AI MODEL LAYER
-
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │  LOCAL MODELS (Volume — runs 24/7, zero cost)                      │
-  │                                                                     │
-  │  qwen3-coder:30b     — Primary DSL writer (strategy proposer)      │
-  │  deepseek-r1:14b     — Fast critique, tournament, inline analysis  │
-  │  nomic-embed-text    — Embeddings for similarity/graveyard search  │
-  │  GluonTS DeepAR      — Probabilistic regime forecasting (PyTorch,  │
-  │                         local, $0/month)                            │
-  ├─────────────────────────────────────────────────────────────────────┤
-  │  CLOUD MODEL (Depth — frontier reasoning, ~185K tokens/day)        │
-  │                                                                     │
-  │  GPT-5-mini          — Three roles:                                │
-  │    Critic Evaluator     temp 0.2  Finds multi-dimensional flaws    │
-  │    Strategy Proposer    temp 0.7  Novel concepts after easy ones   │
-  │    Nightly Self-Critique temp 0.4 Synthesizes journal patterns     │
-  │                                                                     │
-  │  Every cloud call has local fallback. API down → local model.      │
-  │  Circuit breakers on Ollama and OpenAI (3-failure threshold,       │
-  │  30s cooldown). Breaker open → immediate local fallback.           │
-  │  Models propose/evaluate/summarize. Gates decide. Never the LLM.   │
-  └─────────────────────────────────────────────────────────────────────┘
-
-  GPT-5-mini Critic Evaluator is wired into the critic optimizer:
-    evaluates evidence packets before candidate generation.
-    Verdict "fail" kills the run immediately.
-
-  DeepAR Regime Forecaster:
-    Trains nightly at 2:30 AM ET on NQ/ES/CL OHLCV + VIX + volume
-    Predicts at 6:00 AM ET pre-market:
-      P(high_vol), P(trending), P(mean_revert), P(correlation_stress)
-    Auto-graduation:
-      shadow (0.0 weight, 60 days) → challenger (0.05) → validated (0.10)
-    Auto-demotion:
-      hit_rate < 0.50 for 30 days → weight back to 0.0
-    Governance: experimental, challenger_only
-    Files: src/engine/deepar_forecaster.py
-           src/engine/deepar_regime_classifier.py
-           src/server/services/deepar-service.ts
-           src/server/routes/deepar.ts
-
-  Model Router: src/server/services/model-router.ts
-  Prompt Files: src/agents/critic-evaluator.md
-                src/agents/strategy-proposer.md
-                src/agents/nightly-self-critique.md
-
-===============================================================================
-
-  3. RESEARCH & GENERATION PIPELINE
-
-  n8n Strategy Generation Loop
-      │
-      ├─ 1. OpenClaw Scout (Brave/Tavily/Reddit/YouTube/Academic)
-      ├─ 2. Ollama deepseek-r1:14b OR GPT-5-mini critiques concept
-      ├─ 3. Ollama qwen3-coder:30b OR GPT-5-mini writes DSL JSON
-      ├─ 4. POST /api/compiler/compile → Python AST compilation
-      ├─ 5. POST /api/validation/cross → Cross-validate concept spec
-      ├─ 6. POST /api/backtests → Run backtest with slippage model
-      ├─ 7. Performance gate scores results
-      ├─ 8. POST /api/strategies → Store if passes all gates
-      └─ 9. Loop: up to N iterations per concept
-
-  Gates:
-    Compiler gate:     Does the DSL parse? All indicators valid?
-    Validation gate:   Concept matches known spec? Static + runtime checks
-    Performance gate:  Win rate >= 55%, R:R >= 2.0, PF >= 1.5, DD within limits
-    Tier assignment:   _compute_tier() grades TIER_1/2/3/REJECTED
-
-===============================================================================
-
-  4. BACKTESTING ENGINE (Python)
-
-  src/engine/backtester.py
-      │
-      ├─ DSL Path: Parse JSON strategy definition
-      │   ├─ Load indicators (8 modules, 50+ indicators)
-      │   ├─ Evaluate entry/exit conditions per bar
-      │   ├─ Apply position sizing (Kelly, fixed, ATR-based)
-      │   ├─ Simulate fills with variable slippage model
-      │   ├─ Track equity curve, drawdowns, trades
-      │   └─ _compute_tier() → TIER_1/2/3/REJECTED
-      │
-      ├─ Class Path: Strategy class instances (same flow)
-      │
-      ├─ Walk-Forward (walk_forward.py)
-      │   ├─ Rolling anchored windows: train IS, test OOS
-      │   ├─ Optuna TPE optimization (800 trials per window)
-      │   ├─ 20-bar embargo between IS/OOS
-      │   └─ OOS-only metrics count (per CLAUDE.md)
-      │
-      ├─ Monte Carlo (monte_carlo.py) — GPU-ACCELERATED
-      │   ├─ Trade shuffling (IID, block, arch stationary)
-      │   ├─ Return bootstrapping (PCG64DXSM reproducible RNG)
-      │   ├─ Block bootstrap (Numba JIT + CuPy GPU path)
-      │   ├─ arch StationaryBootstrap ("arch_stationary" method, dependence-aware)
-      │   ├─ "both" method = three-way split (trade_resample + return_bootstrap
-      │   │                                    + arch_stationary)
-      │   ├─ Stress testing (3 severity levels + synthetic catastrophic)
-      │   ├─ Per-firm survival simulation (8 firms)
-      │   ├─ BCa confidence intervals on all metrics (live)
-      │   ├─ QMC scenario coverage (Sobol/Halton/LHS)
-      │   └─ Convergence checking at 1st percentile
-      │
-      ├─ SQA Alternative Optimizer (quantum_annealing_optimizer.py)
-      │   ├─ QUBO formulation of parameter search space
-      │   ├─ dwave-samplers SimulatedAnnealingSampler
-      │   ├─ Results persisted to sqa_optimization_runs table
-      │   └─ Governance: experimental, challenger_only
-      │
-      └─ Supporting modules:
-          ├─ fill_model.py — V1 (RSI) + V2 (spread-aware) fill simulation
-          ├─ slippage.py — Variable ATR-scaled, session multipliers, order-type
-          ├─ gap_risk.py — Overnight gap exposure (EVT fat-tail model via genpareto)
-          ├─ liquidity.py — Volume-based fill probability
-          ├─ stress_test.py — 8 historical crisis scenarios
-          ├─ qmc_sampler.py — Sobol/Halton/LHS quasi-Monte Carlo
-          └─ mc_confidence.py — BCa confidence intervals
-
-  Additional modules not shown:
-    config.py, data_loader.py, firm_config.py, signals.py, sizing.py,
-    strategy_base.py, optimizer.py, cross_validation.py, analytics.py (27 functions),
-    prop_sim.py, prop_compliance.py, regime.py, risk_metrics.py (21 functions),
-    robustness.py, performance_gate.py, changepoint.py, evt_tail.py,
-    economic_calendar.py, gpu_pipeline.py, cuopt_helpers.py, nvtx_markers.py
-
-  Additional subsystems:
-    anti_setups/   — Anti-pattern detection & filtering (5 files, incl. regime_filter.py)
-    archetypes/    — Strategy classification (6 files)
-    decay/         — Exponential decay fitting & quarantine (4 files, incl. decay_gate.py)
-    graveyard/     — Failed strategy archive & similarity search (5 files)
-    survival/      — Firm-specific survival modeling (6 files)
-
-  Backtest completion writes are TRANSACTIONAL (atomic DB commit).
-
-===============================================================================
-
-  5. CONTEXT ENGINE (Python → Node bridge)
-
-  Signal arrives
-      │
-      ├─ Layer 0: Data Collection (src/engine/context/)
-      │   ├─ context/htf_context.py — Daily bars from DuckDB/S3 Parquet
-      │   └─ context/session_context.py — Intraday session analysis
-      │
-      ├─ Layer 1: Bias Computation
-      │   └─ context/bias_engine.py — 8 signals → net bias (-100 to +100)
-      │       Signal #8: DeepAR regime forecast (weight starts 0.0,
-      │       active only after auto-graduation to challenger/validated)
-      │
-      ├─ Layer 2: Playbook + Location
-      │   ├─ context/playbook_router.py — Maps bias → playbook name
-      │   └─ context/location_score.py — ATR-normalized price location
-      │
-      ├─ Layer 3: Eligibility Decision
-      │   └─ context/eligibility_gate.py → TAKE / REDUCE / SKIP
-      │
-      ├─ Layer 4: Tensor Network Signal
-      │   └─ context-gate-service.ts → evaluateTensorSignal()
-      │       ├─ Runs in PARALLEL (zero added latency)
-      │       ├─ MPS model returns P(profitable) [0,1]
-      │       ├─ Fragility score across regimes
-      │       ├─ regime_breakdown consumed (variance penalizes fragility)
-      │       ├─ Informational only — does NOT change eligibility
-      │       └─ Governance: experimental, challenger_only
-      │
-      └─ Layer 5: DeepAR Regime Forecast
-          └─ src/engine/deepar_forecaster.py → regime probabilities
-              src/engine/deepar_regime_classifier.py → regime labels
-              ├─ Feeds into bias engine (signal #8, weight starts 0.0)
-              ├─ Feeds into skip engine (signal #11: deepar_regime_risk,
-              │   weight 1.5 — only active when DeepAR weight > 0.0)
-              ├─ Feeds into structural targets
-              │   (src/engine/context/structural_targets.py — continuous
-              │    regime_mult applied when DeepAR reaches validated tier)
-              └─ Feeds into critic optimizer (±0.01 composite modifier
-                  based on 60+ day rolling hit rate)
-
-===============================================================================
-
-  6. CRITIC OPTIMIZATION SERVICE (The Missing Bridge)
-
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │  CLOSED-LOOP CRITIC REPLAY SYSTEM                                   │
-  │                                                                     │
-  │  Backtest completes                                                 │
-  │    → SQA fire-and-forget → sqa_optimization_runs                   │
-  │    → MC fire-and-forget → monte_carlo_runs (GPU-accelerated)       │
-  │    → Quantum MC auto-trigger → quantum_mc_runs                     │
-  │    → QUBO timing auto-trigger → qubo_timing_runs                   │
-  │    → Tensor evaluation auto-trigger → tensor_predictions           │
-  │                                                                     │
-  │  Evidence arrives (poll DB, 5 min max)                              │
-  │    │                                                                │
-  │    ▼                                                                │
-  │  CRITIC OPTIMIZER (Python: critic_optimizer.py)                     │
-  │    │                                                                │
-  │    ├─ Stage A: Classical Consensus                                  │
-  │    │   └─ Optuna × SQA intersection → robust regions               │
-  │    │                                                                │
-  │    ├─ Stage B: PennyLane Local Refinement                           │
-  │    │   └─ Real VQC circuit (AngleEmbedding + StronglyEntanglingLayers)│
-  │    │                                                                │
-  │    ├─ Stage C: cuOpt Constrained Selection (threshold: n<3)         │
-  │    │   └─ LP/MIP: maximize composite subject to constraints         │
-  │    │                                                                │
-  │    ├─ Evidence Sources:                                             │
-  │    │   Classical: Optuna ranges, walk-forward stability             │
-  │    │   SQA: robust plateau regions                                  │
-  │    │   Quantum MC: breach/ruin as risk penalty                      │
-  │    │   Tensor: fragility score + regime disagreement                │
-  │    │   QUBO: timing schedule improvement                            │
-  │    │   RL: candidate scores feed composite (±0.02 modifier)          │
-  │    │   DeepAR: rolling hit rate + days tracked (±0.01 modifier,     │
-  │    │     requires 60+ days of tracking data)                        │
-  │    │   Strategy Memory: cuVS loop functional (historical runs       │
-  │    │     queried, index built, memory_similar used in scoring)      │
-  │    │                                                                │
-  │    └─ Kill Signals: catastrophic_risk | no_improvement | disagrees  │
-  │       Kill threshold: 95% of parent composite (not 50%)             │
-  │                                                                     │
-  │  MC gate null bypass FIXED: survivalRate === null → bestCandidate   │
-  │    nulled (prevents candidates from bypassing MC gate entirely).    │
-  │  Param application warning: unrecognized keys logged, not silently  │
-  │    ignored.                                                         │
-  │  Replay completion validation: stuck pending candidates cleaned up  │
-  │    (try/finally + outer catch).                                     │
-  │                                                                     │
-  │  Top 3 candidates → REPLAY QUEUE                                   │
-  │    → runBacktest(walkforward) for each                              │
-  │    → Auto MC + auto SQA + auto QUBO + auto tensor                  │
-  │    → Classical gates decide survival                                │
-  │                                                                     │
-  │  Survivor must pass: TIER_1/2/3, MC > 70%, prop compliance,        │
-  │                      composite > parent                             │
-  │    → Accept: creates child strategy version                         │
-  │      (parentStrategyId + generation+1, MAX_GENERATIONS = 3)         │
-  │    → OR reject (parent survives)                                    │
-  │                                                                     │
-  │  Auto-trigger fires on any qualifying backtest (not just SQA)       │
-  │  Replay stuck-state fix (try/finally + outer catch)                 │
-  │  compositeWeights written to DB for audit reproducibility           │
-  │  Rate limit: 1 run/strategy/24h                                    │
-  │  GPT-5-mini evaluator: evaluates evidence, can kill run on "fail"  │
-  └─────────────────────────────────────────────────────────────────────┘
-
-  Composite Objective Weights:
-    oos_return:         +0.15    payout_feasibility: +0.10
-    survival_rate:      +0.15    breach_probability: -0.10
-    profit_factor:      +0.15    param_instability:  -0.10
-    max_drawdown:       -0.15    regime_fragility:   -0.05
-                                 timing_fragility:   -0.05
-
-  API Routes: /api/critic-optimizer
-    POST /analyze — Trigger analysis for a strategy
-    GET  /candidates/:strategyId — List candidates (supports ?status= filter)
-    POST /replay — Manual replay trigger
-    GET  /history — Runs list (?strategy_id= optional filter)
-    GET  /run/:runId — Full detail
-
-===============================================================================
-
-  7. PAPER TRADING (Real-Time Execution)
-
-  Market Data (Massive.io WebSocket)
-      │
-      └─ paper-trading-stream.ts — Per-symbol OHLCV streaming
-          │
-          └─ paper-signal-service.ts — Signal detection + execution
-              │
-              ├─ 1. Bar buffer fills (200-bar rolling, VWAP resets at ET session boundary)
-              ├─ 2. Calendar check (holidays, early close, FOMC/CPI/NFP ±30min sit-out)
-              │     64 events loaded (2026-2027)
-              ├─ 3. Indicators computed on buffer
-              ├─ 4. ICT indicator bridge (paper_bridge.py subprocess)
-              ├─ 5. Strategy conditions evaluated
-              ├─ 6. SIGNAL DETECTED
-              │
-              ├─ 7. Risk Gate (paper-risk-gate.ts)
-              │   ├─ Daily loss limit (firm-specific)
-              │   ├─ Max concurrent positions
-              │   ├─ Trailing drawdown check
-              │   ├─ Contract cap per symbol
-              │   └─ Global daily loss ($5K cap)
-              │
-              ├─ 8. Context Gate (context-gate-service.ts)
-              │   ├─ Fetches daily bars (cached per symbol/day)
-              │   ├─ Calls Python context engine subprocess
-              │   ├─ Tensor signal P(profitable) + fragility
-              │   ├─ SKIP → reject signal, log reasoning
-              │   │   SKIP decisions journaled to paper_signal_logs
-              │   ├─ REDUCE → halve contracts
-              │   └─ TAKE → proceed full size
-              │
-              ├─ 9. Position OPEN
-              │   ├─ Variable slippage: base × (ATR/medianATR) × orderType × session
-              │   ├─ V2 fill probability: RSI + spread + order-type + partial fills
-              │   ├─ Volume-based fill probability (liquidity.py)
-              │   ├─ Latency simulation: 150ms drift model
-              │   ├─ TCA: arrivalPrice, implementationShortfall, fillRatio
-              │   ├─ Auto shadow signal entry
-              │   └─ SSE event → frontend
-              │
-              ├─ 10. Position MANAGEMENT (per bar)
-              │   ├─ Stop loss / take profit check
-              │   ├─ Trail stop (ATR-based HWM tracking)
-              │   ├─ Time-based exit (max_hold_bars)
-              │   └─ Update unrealized P&L
-              │
-              └─ 11. Position CLOSE
-                  ├─ Exit slippage ATR-scaled (symmetric with entry)
-                  ├─ Commission deduction per firm (net P&L per firm)
-                  ├─ Compute realized P&L (our math, NOT vectorbt)
-                  ├─ UPDATE paper_sessions equity/drawdown
-                  ├─ QuantStats analytics on session stop
-                  ├─ Drift detection: compare live vs backtest
-                  ├─ SSE event → frontend (broadcastSSE always fires
-                  │   even if post-transaction calls fail — resilience
-                  │   contract enforced)
-                  └─ Trigger post-trade analytics
-
-  OpenTelemetry Spans (all 6 implemented):
-    paper.signal_evaluation   — paper-signal-service.ts
-    paper.context_gate        — context-gate-service.ts
-    paper.risk_gate           — paper-risk-gate.ts
-    paper.fill_check          — paper-execution-service.ts
-    paper.position_open       — paper-execution-service.ts
-    paper.position_close      — paper-execution-service.ts
-
-===============================================================================
-
-  8. PROP FIRM INTEGRATION
-
-  8 Supported Firms:
-    MFFU, Topstep, TPT, Apex, FFN, Alpha Futures, Tradeify, Earn2Trade
-
-  Each firm has:
-    Account sizes, max drawdown (trailing/EOD), daily loss limits,
-    profit targets, contract caps, scaling plan, payout rules,
-    consistency rules, commission rates
-
-  Routes: /api/prop-firm
-    GET  /firms — List all firms + configs
-    GET  /simulate/:backtestId — Run prop sim for a backtest
-    POST /rank — Rank firms for a strategy
-    POST /timeline — Estimate payout timeline
-    POST /payout — Calculate payout projections
-    (Compliance lives at /api/compliance/* — separate module)
-
-  Compliance (3 layers):
-    OpenClaw monitors → Rule engine enforces → Human approves
-
-===============================================================================
-
-  9. QUANTUM RISK LAB
-
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │  GOVERNANCE MODEL                                                   │
-  │                                                                     │
-  │  Authoritative (ground truth):     Experimental Challenger:         │
-  │  ├─ Classical Monte Carlo          ├─ Quantum MC (IAE)              │
-  │  ├─ Walk-forward validation        ├─ Tensor Network (MPS)          │
-  │  ├─ Prop-firm rules engine         ├─ SQA Optimizer                 │
-  │  ├─ Performance gate scoring       ├─ QUBO Trade Timing             │
-  │  └─ Critic Optimizer (authority)   └─ PennyLane VQC RL Agent        │
-  │                                                                     │
-  │  Every quantum run: experimental=true, authoritative=false,         │
-  │                      decision_role=challenger_only                   │
-  │                                                                     │
-  │  Challengers contribute evidence to the authoritative critic.       │
-  │  They cannot mutate parameters directly.                            │
-  └─────────────────────────────────────────────────────────────────────┘
-
-  9a. Quantum Engines (all experimental, challenger_only)
-
-  quantum_mc.py           — IAE Amplitude Estimation (Qiskit 2.3.1, executes
-                            EstimationProblem + IterativeAmplitudeEstimation,
-                            classical_fallback flag surfaced in raw_result)
-                            IBM SamplerV2 path (drop-in for cloud QPU)
-  quantum_annealing_optimizer.py — SQA Parameter Search (dwave-samplers 1.7)
-  tensor_signal_model.py  — MPS Tensor Network + Fragility Scoring (quimb 1.13)
-                            Braket TN1 stub for bond_dim >= 8 (planned)
-  qubo_trade_timing.py    — QUBO Session Block Optimization (dwave-samplers 1.7)
-  quantum_rl_agent.py     — VQC RL Agent (PennyLane, WSL2 GPU)
-                            PennyLane-Braket device routing
-                            (braket.aws.sv1, braket.aws.ionq)
-                            max_cloud_evaluations=100
-
-  9b. Quantum Persistence (6 first-class tables)
-
-  sqa_optimization_runs   — Params, plateaus, solutions, governance
-  qubo_timing_runs        — Session schedules, improvement metrics
-  tensor_predictions      — P(profitable), fragility, regime breakdown
-  rl_training_runs        — Policy weights, comparison results (route persists after training)
-  quantum_mc_runs         — IAE estimates, tolerance, reproducibility hash
-                            + Cloud metadata: provider, backend, job_id,
-                              qpu_time_ms, estimated_cost, region
-  quantum_mc_benchmarks   — Quantum vs classical delta, tolerance gate
-                            + backendType (cloud_qpu | cloud_sim |
-                              local_gpu | local_cpu | classical)
-
-  Status columns on all fire-and-forget tables (MC, quantum MC, SQA,
-  QUBO, tensor, RL) for tracking pending/complete/failed runs.
-
-  9c. Quantum API Endpoints
-
-  POST /api/quantum-mc/run              → IAE breach/ruin/target estimation
-  POST /api/quantum-mc/hybrid-compare   → Classical + quantum side-by-side
-  POST /api/quantum-mc/tensor-train     → Train MPS model
-  POST /api/quantum-mc/tensor-predict   → MPS P(profitable) prediction
-  POST /api/quantum-mc/sqa-optimize     → SQA parameter search
-  POST /api/quantum-mc/qubo-timing      → QUBO session block optimization
-  POST /api/quantum-mc/rl-train         → Train VQC RL agent
-  POST /api/quantum-mc/rl-evaluate      → Evaluate/compare RL agent
-
-  9d. Quantum Hardware
-
-  ┌──────────────────────────────┬──────────────────────────────────────┐
-  │  Windows Native (CPU)        │  WSL2 Ubuntu 22.04 (GPU)             │
-  ├──────────────────────────────┼──────────────────────────────────────┤
-  │  qiskit 2.3.1                │  qiskit 2.3.1                        │
-  │  dwave-samplers 1.7.0        │  pennylane 0.42.3                    │
-  │  quimb 1.13.0                │  pennylane-lightning[gpu] 0.42.0     │
-  │  scipy, numpy                │  cupy-cuda12x, cuquantum-cu12        │
-  ├──────────────────────────────┼──────────────────────────────────────┤
-  │  CPU statevector: ~30 qubits │  GPU statevector: ~27 qubits         │
-  └──────────────────────────────┴──────────────────────────────────────┘
-
-  9e. Cloud QPU Integration
-
-  src/engine/cloud_backend.py — Provider abstraction + budget tracker
-
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │  IBM Quantum Platform                                               │
-  │    4 backends: ibm_fez (156q), ibm_kingston (156q),                │
-  │                ibm_marrakesh (156q), ibm_torino (133q)              │
-  │    SamplerV2 drop-in replacement in quantum_mc.py                  │
-  │    Budget: 600 seconds QPU time/month                               │
-  ├─────────────────────────────────────────────────────────────────────┤
-  │  AWS Braket                                                         │
-  │    QPU: IonQ Forte 1                                                │
-  │    Simulators: SV1, TN1, dm1                                       │
-  │    Budget: $30/month hard cap                                       │
-  │    S3 bucket: amazon-braket-trading-forge                           │
-  │    Braket SV1 fallback path (planned)                               │
-  ├─────────────────────────────────────────────────────────────────────┤
-  │  Two-Gate Safety                                                    │
-  │    Gate 1: QUANTUM_CLOUD_ENABLED env var must be true               │
-  │    Gate 2: opt_in_cloud=true per-request flag                       │
-  │    Both gates must pass — either false → local immediately          │
-  ├─────────────────────────────────────────────────────────────────────┤
-  │  CloudBudgetTracker                                                 │
-  │    Persistent JSON file, monthly auto-reset                         │
-  │    2x pessimism factor on cost estimates                            │
-  │    Hard-stop when budget exhausted (no silent overrun)              │
-  └─────────────────────────────────────────────────────────────────────┘
-
-===============================================================================
-
-  10. GPU ACCELERATION PIPELINE
-
-  NVIDIA RTX 5060 (8GB VRAM, 32GB RAM)
-
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │  TOOL              │  WHERE                 │  SPEEDUP              │
-  ├────────────────────┼────────────────────────┼───────────────────────┤
-  │  CuPy              │  MC cumsum (accumulate  │  5-20x (accumulate    │
-  │                    │  falls back to numpy)  │  reverts to CPU)      │
-  │  RAPIDS cuDF       │  Evidence assembly     │  2-5x                 │
-  │  RAPIDS cuML       │  Regime clustering     │  3-10x                │
-  │  cuOpt             │  Candidate selection   │  Constrained LP/MIP   │
-  │  cuVS              │  Strategy memory       │  GPU vector search    │
-  │  Nsight + NVTX     │  Full pipeline         │  Profiling/visibility │
-  └─────────────────────────────────────────────────────────────────────┘
-
-  Ollama Modelfile: num_ctx 8192 (was 32768), MAX_LOADED_MODELS=1
-
-  Profiling: nsys profile --trace=cuda,nvtx,osrt from WSL2
-  NVTX markers on: data_load, indicators, signals (backtester),
-                   mc_trade_resample, mc_return_bootstrap, mc_block_bootstrap,
-                   mc_stress_test (monte_carlo), wf_window (walk_forward),
-                   sqa_optimize (quantum_annealing_optimizer),
-                   tensor_train, tensor_predict (tensor_signal_model),
-                   critic_optimizer, critic_evidence, critic_consensus,
-                   critic_pennylane, critic_candidates (critic_optimizer)
-
-===============================================================================
-
-  11. STATISTICAL MATH STACK
-
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │  COMPONENT          │  LIBRARY             │  REPLACES              │
-  ├─────────────────────┼──────────────────────┼────────────────────────┤
-  │  Robust Covariance  │  sklearn LedoitWolf  │  np.corrcoef Pearson   │
-  │                     │  MinCovDet           │                        │
-  │                     │  GraphicalLassoCV    │                        │
-  ├─────────────────────┼──────────────────────┼────────────────────────┤
-  │  Change-Point       │  ruptures PELT       │  2-sigma retrospective │
-  │  Detection          │  Binseg, KernelCPD   │  heuristic             │
-  ├─────────────────────┼──────────────────────┼────────────────────────┤
-  │  EVT Tail Modeling  │  scipy genpareto     │  Normal assumption     │
-  │                     │  Peak-Over-Threshold │                        │
-  ├─────────────────────┼──────────────────────┼────────────────────────┤
-  │  Regime Detection   │  hmmlearn GaussianHMM│  Rule-based ADX/ATR    │
-  │                     │  + existing rules    │  (rules stay as fast   │
-  │                     │                      │   path)                │
-  ├─────────────────────┼──────────────────────┼────────────────────────┤
-  │  RNG Discipline     │  NumPy PCG64DXSM     │  default_rng(seed)     │
-  │                     │  SeedSequence.spawn() │                       │
-  ├─────────────────────┼──────────────────────┼────────────────────────┤
-  │  QMC Sampling       │  scipy.stats.qmc     │  IID random sampling   │
-  │                     │  Sobol/Halton/LHS    │                        │
-  ├─────────────────────┼──────────────────────┼────────────────────────┤
-  │  Bootstrap          │  arch Stationary     │  Custom block only     │
-  │                     │  CircularBlock       │                        │
-  ├─────────────────────┼──────────────────────┼────────────────────────┤
-  │  Confidence         │  scipy.stats.bootstrap│ Percentile only       │
-  │  Intervals          │  BCa method          │                        │
-  ├─────────────────────┼──────────────────────┼────────────────────────┤
-  │  Risk Decomposition │  Euler decomposition │  Simple correlation    │
-  │                     │  Component/marginal  │  scoring               │
-  └─────────────────────────────────────────────────────────────────────┘
-
-===============================================================================
-
-  12. SKIP ENGINE (Pre-Market Gate)
-
-  POST /api/skip/classify — 11 signals:
-
-    1. event_proximity    (3.0) — FOMC/CPI/NFP ±30 min = SIT_OUT (minute-precision)
-    2. vix_level          (2.5) — >30 = SKIP, 25-30 = REDUCE
-    3. overnight_gap      (2.0) — >1.5 ATR = SKIP
-    4. premarket_volume   (1.5) — <30% normal = SKIP
-    5. day_of_week        (1.0) — Historically bad days
-    6. loss_streak        (2.0) — >3 days = REDUCE, >5 = SKIP
-    7. monthly_budget     (2.5) — >60% DD used = REDUCE, >80% = SKIP
-    8. correlation_spike  (1.5) — Portfolio corr >0.7 = REDUCE
-    9. calendar_filter    (2.0) — Holiday (2026+2027), triple witching, roll week
-   10. qubo_timing        (1.5) — SQA session block says skip
-   11. deepar_regime_risk (1.5) — DeepAR regime forecast risk
-       P(high_vol) > 0.85 → SKIP (3.0 points)
-       P(high_vol) > 0.70 → REDUCE (1.5 points)
-       P(correlation_stress) > 0.60 → +1.0 point
-       Only active when DeepAR weight > 0.0 (after auto-graduation)
-       (src/engine/skip_engine/premarket_analyzer.py)
-
-  Thresholds: score >= 6.0 → SKIP, >= 3.0 → REDUCE, else → TRADE
-
-===============================================================================
-
-  13. MONITORING & DECAY DETECTION
-
-  Scheduler (src/server/scheduler.ts):
-
-    Rolling Sharpe        (every 4 hours)  — Recompute for active strategies
-                                             Inline demotion: DEPLOYED →
-                                             DECLINING if Sharpe < 1.0
-    Pre-Market Prep       (6:00 AM ET)     — Skip classifier + QUBO timing
-    Drift Detection       (event-driven)   — PELT change-point on trade close
-    Decay Monitor         (daily, 2:00 AM ET) — Equity slope, DD duration
-    Lifecycle Check       (every 6 hours)  — Auto promote/demote
-    Graveyard Gate        (on DECLINING)   — Archive + cause of death
-    Stale Session Check   (every 5 min)    — 2+ hours inactive → auto-stop
-                                             + QuantStats analytics generated
-                                             Registered via registerJob()
-                                             (missed-run reconciliation)
-    DeepAR Train          (2:30 AM ET)     — Nightly model training
-    DeepAR Predict        (6:00 AM ET)     — Pre-market regime forecast
-    DeepAR Validate       (6:30 AM ET)     — Hit rate + auto-graduation check
-
-  Drift Detection (UPGRADED):
-    PELT structural break on: daily P&L, rolling Sharpe (event-driven on trade close)
-    Coincident breakpoints (2+ signals in 5-day window) = edge death confirmed
-    HMM regime detection available via analyzeMarketHMM() (on-demand, not scheduled)
-    EVT tail estimates → breach/ruin risk updated with fat-tail model
-
-  Audit Log Events:
-    paper.session_stop        — Manual or auto session stop (src/server/routes/paper.ts)
-    paper.session_auto_stop   — Stale session auto-stop (src/server/scheduler.ts)
-    strategy.graveyard_burial — Strategy buried in graveyard
-                                (src/server/services/lifecycle-service.ts)
-
-===============================================================================
-
-  14. GOVERNOR (Position-Level Risk)
-
-  Routes: /api/governor
-    POST /backtest — Backtest-time risk check
-    POST /trade    — Live trade risk check
-    POST /session-end — End-of-session reconciliation
-    GET  /status/:strategyId — Current governor state
-    GET  /configs  — All governor configs
-
-  Python modules (src/engine/governor/):
-    governor_backtest.py   — Backtest-integrated risk checks
-    governor_config.py     — Governor configuration + thresholds
-    session_tracker.py     — Session state tracking
-    state_machine.py       — Governor state transitions
-    trade_filter.py        — Pre-trade filtering rules
-
-  Robust Covariance (robust_covariance.py):
-    LedoitWolf shrinkage, MinCovDet, GraphicalLassoCV
-    Used by analytics.py for portfolio correlation matrix
-
-  Risk Decomposition (robust_covariance.py):
-    Euler decomposition: marginal risk, component risk, % contribution
-
-===============================================================================
-
-  15. PINE EXPORT COMPILER (DSL → TradingView)
-
-  Strategy (passes all gates)
-      │
-      ├─ Exportability Check (0-100 score)
-      ├─ Pine v6 Compilation (indicator mapping + state machine)
-      ├─ exportType enum: alert_only, pine_strategy, pine_indicator
-      ├─ Prop-risk overlay (firm-specific commission, risk_lockout declared
-      │   in no-firm path so TradingView loads correctly)
-      ├─ Risk intelligence wired end-to-end (TS→Python)
-      ├─ Alert definitions JSON
-      └─ DB Persistence (strategy_exports + artifacts)
-
-  Auto-trigger: MC survival > 80% → auto Pine compile
-
-===============================================================================
-
-  16. DATA LAYER
-
-  Database: PostgreSQL (Drizzle ORM, 38+ tables)
-
-    Core:       strategies, backtests, backtest_trades, walk_forward_windows
-    Paper:      paper_sessions, paper_positions, paper_trades, paper_signal_logs
-    Monitoring: graveyard, skip_decisions
-    Risk:       stress_test_runs, monte_carlo_runs
-    Quantum:    quantum_mc_runs, quantum_mc_benchmarks,
-                sqa_optimization_runs, qubo_timing_runs,
-                tensor_predictions, rl_training_runs
-                (Cloud metadata columns on quantum_mc_runs: provider,
-                 backend, job_id, qpu_time_ms, estimated_cost, region)
-                (backendType on quantum_mc_benchmarks: cloud_qpu |
-                 cloud_sim | local_gpu | local_cpu | classical)
-                (Status columns on all fire-and-forget tables)
-    Critic:     critic_optimization_runs, critic_candidates
-    Pine:       strategy_exports, strategy_export_artifacts
-    Compliance: compliance_rulesets, compliance_reviews, compliance_drift_log
-    DeepAR:     deepar_forecasts — regime predictions per symbol per day
-                deepar_training_runs — nightly training history
-    Other:      alerts, tournament_results, journal_entries, audit_log,
-                shadow_signals, strategy_names, watchlist, data_sync_jobs,
-                day_archetypes, backtest_matrix, walk_forward_windows
-
-  Market Data:
-    Databento    — Historical bulk (OHLCV-1m, S3 Parquet, $125 credits)
-    Massive.io   — Real-time WebSocket (paper trading, free)
-    Alpha Vantage— Indicators + sentiment (MCP, free)
-    DuckDB       — S3 Parquet queries (no download needed)
-
-  Local AI:
-    Ollama       — qwen3-coder:30b, deepseek-r1:14b, nomic-embed-text
-    GPT-5-mini   — Critic evaluator, strategy proposer, nightly review
-    OpenClaw     — Autonomous research agent
-
-  DeepAR Routes:
-    GET  /api/deepar/forecast/:symbol  — Latest forecast for symbol
-    GET  /api/deepar/forecast/all      — All current forecasts
-    GET  /api/deepar/accuracy          — Rolling hit rate + graduation status
-    GET  /api/deepar/training-history  — Nightly training run history
-    POST /api/deepar/train             — Trigger manual training run
-    POST /api/deepar/predict           — Trigger manual prediction
-
-  Additional Routes (not shown above):
-    /api/data         — Data provider integration (Databento, Massive, Alpha Vantage)
-    /api/indicators   — Technical indicators API (54 ICT + standard)
-    /api/signals      — Signal aggregation & analysis
-    /api/context      — Context gate eligibility evaluation
-
-  Additional Services (src/server/services/):
-    alert-service.ts, backtest-service.ts, correlation-service.ts,
-    critic-optimizer-service.ts, deepar-service.ts, evolution-service.ts,
-    graveyard-gate.ts, lifecycle-service.ts, monte-carlo-service.ts,
-    ollama-client.ts, pine-export-service.ts, regime-service.ts,
-    robustness-service.ts, shadow-service.ts, signal-confirmation-service.ts
-
-===============================================================================
-
-  17. PORTFOLIO & CORRELATION
-
-  /api/portfolio:
-    Portfolio-level metrics (all active strategies)
-    Correlation matrix (LedoitWolf shrinkage covariance)
-    Euler risk decomposition (component/marginal risk)
-    Diversification scoring
-    Combined equity curve
-    Risk-adjusted returns (Sharpe, Sortino, Calmar)
-
-  Routes:
-    GET /api/portfolio/decomposition  — Euler risk decomposition
-    GET /api/portfolio/equity-curve   — Combined equity curve
-    GET /api/portfolio/diversification — Diversification scoring
-
-===============================================================================
-
-  18. SSE REAL-TIME EVENTS
-
-  /api/sse/events:
-    Events have sequence numbers.
-    Last-Event-ID reconnect replay (100-event ring buffer).
-
-    position:open/close/update    signal:detected/rejected
-    alert:triggered               session:update
-    drift:detected                strategy:promoted
-    critic:started                critic:candidates_ready
-    critic:replay_complete        critic:completed
-    paper:session_stop            paper:auto_stopped
-
-===============================================================================
-
-  19. n8n ORCHESTRATION WORKFLOWS
-
-  Strategy Generation:
-    Strategy Generation Loop    — Scout → Critique → Compile → Validate → Backtest
-    Nightly Strategy Research   — Deep concept research loop
-    Weekly Strategy Hunt        — Broader concept search
-    8A Idea-to-Strategy         — Concept → DSL pipeline
-    5G/5H/5I Scouts             — Brave/Reddit/Tavily research agents
-
-  Validation & Tournament:
-    Strategy Tournament         — Head-to-head strategy comparison
-    5A Weekly Tournament        — Weekly tournament bracket
-    Monthly Robustness Check    — Parameter robustness sweep
-
-  Compliance:
-    Daily Compliance Check      — Prop firm rule compliance
-    Weekly Compliance Re-Parse  — Rule document freshness
-    Pre-Session Compliance Gate — Compliance before trading
-    6D Compliance Gate          — Compliance enforcement
-
-  Pre/Post Session:
-    Pre-Session Skip Check      — Daily skip decision + context bias
-    Post-Session Skip Review    — Post-session outcome tracking
-
-  Monitoring & Maintenance:
-    Daily Portfolio Monitor     — Portfolio health check
-    Anti-Setup Refresh          — Anti-setup pattern updates
-    Macro Data Sync             — Economic data sync
-    0A Health Monitor           — System health check
-    3A Workflow Backup          — n8n workflow versioning
-    8B Source Quality Review    — Source quality scoring
-
-  Optimization & Learning:
-    9A Nightly Self-Critique    — Ollama/GPT-5-mini reviews journal
-    7A Auto-Evolution           — Strategy mutation when declining
-    11A Critic Optimization     — Evidence → Candidates → Replay → Survivor
-    10A Master Orchestration    — Coordinates all workflows
-
-  Internal Services (Python/TS, not n8n):
-    Critic Optimizer            — POST /api/critic-optimizer/analyze
-    Drift Detection             — Event-driven in drift-detection-service.ts
-    Decay Monitoring            — Scheduled in scheduler.ts
-
-  Production Readiness Fixes (all workflows):
-    - Error alerting fixed (port 4100 → 4000, route /alert/alerts → /api/alerts)
-    - 5H Reddit Scout merge bug fixed
-    - 11A Critic Optimization journal format fixed (form-encoded → JSON)
-    - Strategy Gen Loop expression syntax fixed (optional chaining → ternary guards)
-    - Nightly Research symbol enum fixed (ES → MES)
-    - 9A Self-Critique journal writeback added
-    - 11A schedule conflict resolved (moved to 3 AM)
-    - Error handling added to 5G Brave + 5I Tavily scouts
-    - All workflows remain INACTIVE until production launch
-
-===============================================================================
-
-  20. COMPLETE DATA FLOW (End-to-End)
-
-                    ┌──────────────────────────────────────────────┐
-                    │           n8n + AI ORCHESTRATION              │
-                    │  Scout → Critique (GPT-5-mini) → Compile     │
-                    │  → Validate → Backtest → Gates → Store       │
-                    └──────────────────┬───────────────────────────┘
-                                       │ New strategy (CANDIDATE)
-                                       ▼
-                    ┌──────────────────────────────────────────────┐
-                    │     MULTI-GATE VALIDATION PIPELINE            │
-                    │  Walk-Forward → Monte Carlo (GPU, arch, BCa) │
-                    │  → Prop Sim → Tournament → Paper Assignment   │
-                    └──────────────────┬───────────────────────────┘
-                                       │
-                    ┌──────────────────┼───────────────────────────┐
-                    │                  ▼                            │
-                    │  Auto Quantum Challengers (fire-and-forget)  │
-                    │    ├─ SQA → sqa_optimization_runs            │
-                    │    ├─ QUBO → qubo_timing_runs                │
-                    │    ├─ Tensor → tensor_predictions             │
-                    │    ├─ Quantum MC → quantum_mc_runs            │
-                    │    └─ Pine Export (if survival > 80%)         │
-                    │                                              │
-                    │  ┌────────────────────────────────────────┐  │
-                    │  │  CRITIC OPTIMIZER (GPT-5-mini + math)  │  │
-                    │  │  Evidence → Consensus → PennyLane      │  │
-                    │  │  → cuOpt Selection → Replay Queue      │  │
-                    │  │  → MC gate → Classical Gates            │  │
-                    │  │  → Child strategy version (LOOP CLOSES) │  │
-                    │  └────────────────────────────────────────┘  │
-                    └──────────────────┬───────────────────────────┘
-                                       │ Strategy enters PAPER
-                                       ▼
-┌──────────────┐   ┌──────────────────────────────────────────────┐
-│  PRE-MARKET  │──▶│           PAPER TRADING ENGINE                │
-│  Skip Engine │   │  Massive.io → Bars → Calendar Check           │
-│ (11 signals) │   │  → Indicators → Signal → Risk Gate            │
-│  + QUBO      │   │  → Context Gate → Variable Slippage           │
-│  + DeepAR    │   │  → V2 Fills → Position → P&L → Analytics     │
-│    regime    │   │  OpenTelemetry traced end-to-end              │
-└──────────────┘   └──────────────────┬───────────────────────────┘
-                                       │ Trade results
-                                       ▼
-                    ┌──────────────────────────────────────────────┐
-                    │     MONITORING & DECAY (UPGRADED)             │
-                    │  PELT Change-Point │ HMM Regime Detection    │
-                    │  EVT Tail Risk     │ LedoitWolf Covariance   │
-                    │  Rolling Sharpe    │ Graveyard + cuVS Memory │
-                    └──────────────────┬───────────────────────────┘
-                                       │ Metrics feed back
-                                       ▼
-                    ┌──────────────────────────────────────────────┐
-                    │     PROP FIRM OPTIMIZATION                    │
-                    │  Simulate → Rank Firms → Compliance          │
-                    │  → Payout Timeline → Best Fit Selection      │
-                    └──────────────────┬───────────────────────────┘
-                                       │
-                                       ▼
-                    ┌──────────────────────────────────────────────┐
-                    │     DEPLOYMENT (TradingView)                  │
-                    │  Pine v6 Indicator │ Alert JSON               │
-                    │  Prop Risk Overlay │ Risk Intelligence        │
-                    └──────────────────┬───────────────────────────┘
-                                       │
-                                       ▼
-                    ┌──────────────────────────────────────────────┐
-                    │     NIGHTLY SELF-CRITIQUE                     │
-                    │  GPT-5-mini reviews journal entries           │
-                    │  → What concepts fail? What params rejected?  │
-                    │  → Meta-learning feeds next generation        │
-                    │  → Strategy Memory (cuVS) updated             │
-                    └──────────────────┬───────────────────────────┘
-                                       │
-                                       ▼
-                    ┌──────────────────────────────────────────────┐
-                    │     DeepAR SELF-EVOLVING FEEDBACK LOOP        │
-                    │                                              │
-                    │  Nightly (2:30 AM ET):                       │
-                    │    DeepAR trains on NQ/ES/CL + VIX + volume  │
-                    │    → deepar_training_runs (loss, epochs)      │
-                    │                                              │
-                    │  Pre-Market (6:00 AM ET):                    │
-                    │    DeepAR predicts regime probabilities       │
-                    │    → deepar_forecasts (per symbol per day)    │
-                    │                                              │
-                    │  Validation (6:30 AM ET):                    │
-                    │    Compare predictions vs actual outcomes     │
-                    │    → Rolling hit rate updated                 │
-                    │    → Auto-graduation check:                   │
-                    │      shadow (0.0) → challenger (0.05)         │
-                    │      → validated (0.10)                       │
-                    │    → Auto-demotion: hit_rate < 0.50           │
-                    │      for 30 days → weight 0.0                 │
-                    │                                              │
-                    │  When validated:                              │
-                    │    → Bias engine signal #8 active             │
-                    │    → Skip engine signal #11 active            │
-                    │    → Structural targets regime_mult active    │
-                    │    → Critic optimizer ±0.01 modifier active   │
-                    │                                              │
-                    │  The system gets smarter as data accumulates  │
-                    └──────────────────────────────────────────────┘
-
-===============================================================================
-
-  21. GOVERNANCE (12 Gates)
-
-  1.  All quantum output = challenger_only (Python output dicts)
-  2.  Candidates = proposals, never direct mutations (TS enforcement)
-  3.  Replay = full backtest pipeline (runBacktest triggers MC + prop)
-  4.  Survivor must pass classical gates (tier + MC + prop + composite)
-  5.  Full audit trail (audit_log for every action)
-  6.  Kill signals halt optimization (Python returns zero candidates)
-  7.  Rate limit: 1 critic run/strategy/24h (DB recency check)
-  8.  Version lineage tracked (parentStrategyId + generation, max 3)
-  9.  compositeWeights written to every run for reproducibility
-  10. DeepAR auto-graduation: shadow → challenger → validated,
-      with auto-demotion (hit_rate < 0.50 for 30 days → weight 0.0)
-  11. Cloud quantum two-gate safety: QUANTUM_CLOUD_ENABLED env flag
-      + opt_in_cloud per-request flag (both required)
-  12. Cloud budget hard-stops: IBM 600s QPU/month, Braket $30/month
-      (CloudBudgetTracker with 2x pessimism factor)
-  13. Live execution: human start + auto-flatten on risk (Phase 13, deferred)
-
-  LLMs propose/evaluate/summarize. Gates decide. Never the model.
-
-===============================================================================
-
-  22. TEST COVERAGE
-
-  Unified pytest runner (both test directories).
-  82+ Python tests (existing) + new test suites:
-
-  ┌──────────────────────────────────────┬───────────────────────────┐
-  │  Test File                           │ Coverage Area             │
-  ├──────────────────────────────────────┼───────────────────────────┤
-  │  test_quantum_mc.py                  │ IAE estimation            │
-  │  test_quantum_models.py              │ Distribution fitting      │
-  │  test_quantum_bench.py               │ Tolerance validation      │
-  │  test_quantum_rl_agent.py            │ VQC RL training           │
-  │  test_quantum_annealing_optimizer.py │ SQA optimization          │
-  │  test_qubo_trade_timing.py           │ Session QUBO              │
-  │  test_tensor_signal_model.py         │ MPS prediction + fragility│
-  │  test_cloud_backend.py (43 tests)    │ Governance, budget,       │
-  │                                      │ fallback chain            │
-  │  test_exportability.py               │ Export scoring            │
-  │  test_pine_compiler.py (30 tests)    │ Pine transpilation +      │
-  │                                      │ 5 alert alignment tests   │
-  │                                      │ + golden snapshot regen   │
-  │  test_hardware_profile.py            │ GPU detection             │
-  │  test_golden_snapshots.py            │ Regression snapshots      │
-  │  verify_all_phases.py                │ 37 functional tests       │
-  │  check_plan_deliverables.sh          │ 67-point deliverable check│
-  ├──────────────────────────────────────┼───────────────────────────┤
-  │  TS integration smoke tests (6)      │ Service health            │
-  │  Circuit breaker tests (14)          │ Breaker states + recovery │
-  │  Observability tests (16)            │ OTel + correlation IDs    │
-  │  Paper parity tests:                 │                           │
-  │    TS parity (34), slippage (8),     │ Paper trading accuracy    │
-  │    volume fill (12), VWAP (8),       │ + 13 new (ICT bridge,     │
-  │    calendar (16),                    │   post-close resilience)  │
-  │    ICT bridge (5), post-close (8)    │                           │
-  │  Pine tests (26+5 alert alignment)   │ Export correctness        │
-  └──────────────────────────────────────┴───────────────────────────┘
-
-===============================================================================
-
-  23. INFRASTRUCTURE & OBSERVABILITY
-
-  Circuit Breaker: src/server/lib/circuit-breaker.ts
-    3-failure threshold, 30s cooldown. Used on Ollama and OpenAI calls.
-
-  Request Correlation ID: src/server/middleware/correlation.ts
-    Every request gets a unique correlation ID propagated through logs and spans.
-
-  OpenTelemetry Spans:
-    Paper trading (6):
-      paper.signal_evaluation   — paper-signal-service.ts
-      paper.context_gate        — context-gate-service.ts
-      paper.risk_gate           — paper-risk-gate.ts
-      paper.fill_check          — paper-execution-service.ts
-      paper.position_open       — paper-execution-service.ts
-      paper.position_close      — paper-execution-service.ts
-    Pipeline spans (4):
-      backtest.run              — backtest-service.ts
-      monte_carlo.run           — monte-carlo-service.ts
-      quantum_mc.run            — quantum-mc-service.ts
-      critic.analyze            — critic-optimizer-service.ts
-
-  Health Endpoint: GET /api/health
-    Reports "degraded" for Ollama outage + circuit breaker status per provider.
-    Python runtime health check included (python --version with 3s timeout).
-
-  Audit Trail Events:
-    paper.session_start         — Paper session started
-    paper.session_stop          — Manual session stop
-    paper.session_auto_stop     — Stale session auto-stop (2+ hours inactive)
-    paper.trade_open            — Paper trade opened
-    paper.trade_close           — Paper trade closed
-    strategy.deploy_approved    — Human approved deployment
-    strategy.graveyard_burial   — Strategy buried in graveyard
-    backtest.run                — Backtest completed
-    mc.run                      — Monte Carlo completed
-
-  Post-Close SSE Resilience:
-    broadcastSSE always fires even if post-transaction calls fail.
-    Contract enforced by paper parity tests.
-
-  Stale Session Auto-Stop:
-    Registered as proper scheduler job via registerJob()
-    (missed-run reconciliation supported).
-    2+ hours inactive → auto-stop + QuantStats analytics.
-
-===============================================================================
-
-  24. PRODUCTION HARDENING WAVES W9–W19 (47-DAY BLUEPRINT, COMPLETE)
-
-  The 47-day production-hardening blueprint shipped from W9 (2026-04-22)
-  through W19 (2026-04-30). All waves complete. Migrations 0070–0084 applied.
-  Detailed contracts, gate behavior, and authority for each subsystem live in
-  CLAUDE.md (canonical operational doc). This section is the System Map index.
-
-  24a. New Tables (migrations 0070–0084)
-
-    backtest_provenance              W10 A2  — result-hash drift detection
-    frankenstein_test_runs           W10 A4  — randomization gate, HARD GATE
-                                              TESTING→PAPER
-    strategy_signal_vectors          W11 A7  — empirical signal cosine,
-                                              HARD GATE PAPER→DEPLOY_READY
-    data_integrity_findings          W11 A8  — nightly reconciliation +
-                                              drift detection (consolidated)
-    shadow_rerun_findings            W12 A11 — PAPER+ shadow re-run results
-    strategy_firm_eligibility        W13 B5  — per-firm eligibility,
-                                              fire-and-forget AFTER promotion
-    pilot_sessions                   W14 B8  — 5-session canary track,
-                                              1-contract clamp
-    backtests.mrp_sharpe             W14 B10 — Min Regime Performance, soft gate
-    backtests.mrp_regime_breakdown   W14 B10 — per-regime Sharpe map
-    exchange_outages                 W15 C1  — CME GLOBEX outage state
-    prop_firm_health_checks          W15 C2  — 15-min firm probe history
-    llm_injection_attempts           W15 C3  — OWASP LLM01 detection log
-    strategy_dsl_features            W17 C9  — pre-backtest DSL diversity
-                                              gate (cosine on 13-d feature
-                                              vector)
-    backtests.information_ratio      W18 A13 — IR vs SPX/CL benchmark
-    macro_features                   W18 C11 — 10 macro series with
-                                              publication_timestamp barrier
-    macro_regime_states              W18 C11 — daily HMM regime probabilities
-    contract_specs_authoritative     W19     — Databento Definition snapshot
-    daily_statistics                 W19     — settlement, OI, volume
-    opening_auction_imbalance        W19     — pre-cash auction imbalance
-
-  24b. New Services (Node)
-
-    Backtest gates / lifecycle:
-      frankenstein-service.ts                A4   randomization HARD GATE
-      signal-correlation-service.ts          A7   cosine HARD GATE
-      shadow-rerun-service.ts                A11  re-run on git-sha drift
-      multi-firm-promotion-service.ts        B5   8-firm eligibility writer
-      validation-cadence-service.ts          C7   forcing-function metrics
-      dsl-diversity-service.ts               C9   pre-backtest mode-collapse
-
-    Macro overlay (C11):
-      macro-regime-service.ts                C11  ingest + HMM classify
-      macro-gate-service.ts                  C11  hard gates (4 rules)
-
-    Safety / venue / firm:
-      exchange-status-service.ts             C1   CME outage detection
-      prop-firm-health-service.ts            C2   firm suspension probe
-      dashboard-snapshot-service.ts          C2   payout-evidence snapshots
-      windows-health-check-service.ts        C8   pre-market reboot check
-      llm-input-sanitizer.ts                 C3   prompt-injection scrub
-      llm-output-validator.ts                C3   LLM response validation
-      llm-sandbox-service.ts                 C3   AST pre-scan + subprocess
-
-    Data layer (W19):
-      contract-specs-service.ts              W19  Definition pull
-      settlement-reconciliation-service.ts   W19  Statistics reconciliation
-      oi-liquidity-filter.ts                 W19  OI/volume gates
-      opening-auction-service.ts             W19  imbalance ingest
-
-    Lib / infrastructure:
-      src/server/lib/compute-failover.ts     B6   Skytech→Railway state machine
-      src/server/lib/network-failover.ts     C4   ISP/broker classification
-      src/server/lib/credential-loader.ts    C6   Bitwarden CLI vault loader
-
-  24c. New Engine Modules (Python)
-
-    src/engine/determinism.py                A1   reproducibility primitives
-    src/engine/parity_engine/                A3   backtest/paper parity ledger
-    src/engine/frankenstein_test.py          A4   N-shuffle randomization
-    src/engine/risk_parity.py                B7   inverse-vol allocation
-    src/engine/macro_data/                   C11  fred/h41/bls/treasury
-    src/engine/macro_regime_classifier.py    C11  4-state Gaussian HMM
-    src/engine/macro_regime_fusion.py        C11  HMM × DeepAR (cap 0.30)
-
-  24d. New Routes
-
-    /api/frankenstein                        A4   trigger + result
-    /api/signal-correlation/matrix           A7   visual review of cosine
-    /api/shadow-rerun/trigger                A11  manual re-run
-    /api/validation-cadence/dashboard        C7   live cadence panel
-    /api/validation-cadence/reality-check    C7   monthly synthesis report
-    /api/macro/regime/current                C11  current regime probs
-    /api/macro/series/:id                    C11  series history
-
-  24e. New Scheduler Crons (15 added W9–W19)
-
-    databento-weekly-refresh         W9  B1   Sun 9 PM ET
-    data-integrity-suite             W11 A8   4 AM ET daily (pause-honored)
-    regen-declining-sweep            W13 B4   2 AM ET daily
-    cme-status-poll                  W15 C1   60 s (NOT pause-gated, safety)
-    prop-firm-health-check           W15 C2   15 min (NOT pause-gated, safety)
-    prop-firm-dashboard-snapshot     W15 C2   1 h (Playwright capture)
-    pre-trading-day-health-check     W17 C8   8 AM ET weekdays (NOT pause-
-                                              gated; fail-CLOSED to PAUSED)
-    validation-cadence-monthly       W16 C7   1st of month (bypass pause)
-    c11-fred-daily                   W18 C11  4 PM ET weekdays
-    c11-h41-weekly                   W18 C11  Thu 4:30 PM ET
-    c11-bls-release                  W18 C11  daily release check
-    c11-treasury-auctions            W18 C11  daily auction tail/indirect
-    w19-definition-pull              W19      Sun 8 PM ET
-    w19-statistics-pull              W19      daily 6 PM ET
-    w19-imbalance-pull               W19      weekdays 8:25 AM ET
-
-    Crons NOT pipeline-gated by design (safety signals must run during pause):
-      cme-status-poll, prop-firm-health-check, prop-firm-dashboard-snapshot,
-      pre-trading-day-health-check, validation-cadence-monthly.
-
-  24f. New DSL Fixtures (W13 B3 — regime coverage 7 total)
-
-    range_fade_mnq.json              RANGE_BOUND        full_shuffle
-    opening_range_breakout_mes.json  OPENING_RANGE      calendar_preserving
-    news_fade_mcl.json               NEWS_DRIVEN        calendar_preserving
-                                     (sets bypass_news_blackout=true)
-    overnight_drift_mes.json         OVERNIGHT_DRIFT    calendar_preserving
-
-  24g. End-to-End Pipeline After W9–W19
-
-    1. Generation
-       LLM scout → C9 DSL diversity check → C3 prompt-injection defense
-       → DSL compiler → CANDIDATE
-    2. Validation
-       backtest with A1 determinism + A2 provenance + A13 IR + B10 MRP
-       → walk-forward → MC → quantum (W1-W6 prior) → A4 Frankenstein gate
-       → TESTING
-    3. Promotion (TESTING → PAPER)
-       A4 Frankenstein HARD GATE
-    4. Promotion (PAPER → DEPLOY_READY)
-       A7 signal-correlation HARD GATE → B5 multi-firm fire-and-forget
-       → B10 MRP soft gate
-    5. Canary (DEPLOY_READY → PILOT, B8/B8b)
-       5 sessions, 1 contract, automatic post-promotion
-    6. Live (DEPLOYED)
-       C1 CME outage + C2 prop firm health + C4 network failover
-       + C8 Windows update protection + C11 macro hard gates
-    7. Decline (DEPLOYED → DECLINING → CANDIDATE)
-       Rolling Sharpe < 1.0 → B4 regen auto-trigger (loop closes)
-
-    Background continuous loops:
-      A6 Hypothesis property tests (CI on every PR)
-      A8 data integrity service (nightly reconciliation + drift detection)
-      A9 snapshot CI (3-tier regression)
-      A11 shadow re-run (PAPER+ strategies)
-      A12 audit (12-category code audit)
-      B12 closed feedback loops (paper outcome → strategy memory)
-      C6 Bitwarden vault (credential rotation)
-      C7 validation cadence forcing function
-
-  24h. Removed / Constraints
-
-    B9 Pine Marketplace (REMOVED 2026-05-03, commit 6740db2)
-      Trading Forge is PRIVATE — no SaaS, no marketplace, no monetization.
-      Pine export remains available for personal TradingView indicator use.
-      Reject any feature framed around selling or licensing strategy artifacts.
-
-    Hosting / Cost Posture
-      Railway is the PAID $20/month plan (NOT free tier). Plenty of usage-
-      based compute headroom for backtests, async paper signal generation,
-      and B6 cloud failover. Skytech is primary compute. Railway is
-      emergency failover (B6 state machine in compute-failover.ts).
-      Other free tiers (Fly.io, Cloudflare Workers, IBM Quantum) remain in
-      use as secondary fallbacks; cost discipline still applies elsewhere.
-      Free-tier dependencies kept by design: Bitwarden CLI (vault),
-      phone USB tethering (network-failover backup), free govt APIs
-      (FRED / BLS / TreasuryDirect for C11 macro overlay).
-
-  Detailed contracts, gate behavior, schemas, and authority for every
-  W9–W19 subsystem are documented in CLAUDE.md. This section is the
-  System Map index. The auto-generated section below provides the
-  authoritative live registry coverage and drift status.
-
-===============================================================================
 
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
+Updated automatically from the repo on `2026-05-19T06:53:45.822Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
 - Production runtime controls: `ready` (strict)
 
 - TradingView deployment gate: `manual-only`
-- Manual gates declared: `tradingview_deploy`
-- API routes tracked: `51`
-- Scheduler jobs tracked: `57`
+- Manual gates declared: `operator-halt-only, tradingview_deploy`
+- API routes tracked: `62`
+- Scheduler jobs tracked: `82`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
-- Engine subsystems tracked: `24`
-- Database tables tracked: `71`
+- Engine subsystems tracked: `25`
+- Database tables tracked: `94`
 
 ### Subsystem Runtime States
-- `active`: `13`
-- `experimental`: `3`
+- `active`: `16`
+- `experimental`: `5`
 
 ### Current Pre-Production States
-- `active_preprod`: `13`
-- `experimental_preprod`: `3`
+- `active_preprod`: `16`
+- `experimental_preprod`: `5`
 - `inactive_preprod`: `0`
 - `partially_active_preprod`: `0`
 
 ### Launch Target States
-- `experimental_challenger`: `3`
-- `runtime_proven_autonomous`: `11`
+- `experimental_challenger`: `5`
+- `runtime_proven_autonomous`: `14`
 - `runtime_proven_manual_gate`: `2`
 
 ### Production Target States
-- `production_autonomous`: `11`
-- `production_experimental`: `3`
+- `production_autonomous`: `14`
+- `production_experimental`: `5`
 - `production_manual_gate`: `2`
 - `production_not_intended`: `0`
 
 ### Subsystem Operating Classes
 - `adaptive`: `5`
-- `deterministic_instrumented`: `9`
+- `deterministic_instrumented`: `14`
 - `manual_gated`: `2`
 
 ### Learning Modes
 - `active_learning`: `5`
-- `deterministic_instrumented`: `6`
+- `deterministic_instrumented`: `9`
 - `manual_gate_only`: `2`
-- `shadow_experimental`: `3`
+- `shadow_experimental`: `5`
 
 ### Registry Coverage
-- Registry subsystems tracked: `16`
-- Route coverage: `51/51`
-- Scheduler coverage: `57/57`
-- Engine coverage: `24/24`
-- Database coverage: `71/71`
-- Autonomous subsystems with audit coverage: `16/16`
-- Autonomous subsystems with audit actions: `16/16`
-- Autonomous subsystems with telemetry evidence: `16/16`
-- Active-runtime subsystems with freshness signals: `16/16`
-- Runtime/experimental subsystems with evidence queries: `16/16`
-- Self-evolving subsystems with learning inputs: `6/6`
-- Self-evolving subsystems with learning persistence: `6/6`
-- Failure visibility complete: `16/16`
+- Registry subsystems tracked: `21`
+- Route coverage: `62/62`
+- Scheduler coverage: `82/82`
+- Engine coverage: `25/25`
+- Database coverage: `94/94`
+- Autonomous subsystems with audit coverage: `21/21`
+- Autonomous subsystems with audit actions: `21/21`
+- Autonomous subsystems with telemetry evidence: `21/21`
+- Active-runtime subsystems with freshness signals: `21/21`
+- Runtime/experimental subsystems with evidence queries: `21/21`
+- Self-evolving subsystems with learning inputs: `7/7`
+- Self-evolving subsystems with learning persistence: `7/7`
+- Failure visibility complete: `21/21`
 
 ### Proof Status
-- `runtime-proven`: `13`
+- `runtime-proven`: `16`
 - `partially-proven`: `0`
 - `offline-by-design`: `0`
-- `experimental`: `3`
+- `experimental`: `5`
 - `drifted`: `0`
 
 ### Pre-Production Integrity
 - Integrity status: `complete`
-- Automation complete: `13/16`
-- Data collection complete: `16/16`
-- Auditability complete: `16/16`
-- Failure visibility complete: `16/16`
-- Authority correct: `16/16`
-- Learning active: `6/6`
+- Automation complete: `16/21`
+- Data collection complete: `21/21`
+- Auditability complete: `21/21`
+- Failure visibility complete: `21/21`
+- Authority correct: `21/21`
+- Learning active: `6/7`
 - Incomplete subsystems: `0`
 
 ### Production Convergence
 - Convergence status: `blocked`
-- Ready subsystem targets: `13`
-- Blocked subsystem targets: `0`
-- Experimental subsystem targets: `3`
+- Ready subsystem targets: `15`
+- Blocked subsystem targets: `1`
+- Experimental subsystem targets: `5`
 - Shadow workflow candidates: `0`
 - Inactive workflow candidates: `0`
 - Broken workflow blockers: `0`
 - Failing workflow blockers: `0`
-- Source-missing workflow blockers: `2`
+- Source-missing workflow blockers: `3`
 - Awaiting redeploy workflow blockers: `0`
 - Stale workflow blockers: `0`
 - Runtime control blockers: `0`
@@ -1347,7 +100,7 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 ### Readiness Summary
 - Launch ready: `false`
 - Only TradingView manual at launch: `true`
-- Launch-blocked subsystems: `3`
+- Launch-blocked subsystems: `6`
 - Inactive by design: `0`
 - Collecting only: `0`
 - Learning blocked: `0`
@@ -1357,8 +110,8 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `collecting_only`: `0`
 - `learning_active`: `6`
 - `learning_blocked`: `0`
-- `not_collecting`: `7`
-- `shadow_experimental`: `3`
+- `not_collecting`: `10`
+- `shadow_experimental`: `5`
 
 ### Workflow States
 - `production-active`: `28`
@@ -1373,6 +126,7 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 ### Subsystem Coverage Gaps
 - `a_plus_market_auditor` class=`deterministic_instrumented` learningMode=`shadow_experimental` current=`experimental_preprod` target=`production_experimental` automation=`experimental` data=`complete` audit=`complete` failureVisibility=`complete` learning=`experimental` authority=`correct` ready=`false` preprodBlockers=experimental_governance productionBlockers=experimental_governance gaps=none
 - `backtest_qualification` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
+- `broker_abstraction_layer` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `cloud_qmc_ising` class=`deterministic_instrumented` learningMode=`shadow_experimental` current=`experimental_preprod` target=`production_experimental` automation=`experimental` data=`complete` audit=`complete` failureVisibility=`complete` learning=`experimental` authority=`correct` ready=`false` preprodBlockers=experimental_governance productionBlockers=experimental_governance gaps=none
 - `compliance_governance` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `context_execution` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
@@ -1380,12 +134,16 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `deepar_regime` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `frankenstein_randomization_gate` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `observability_reliability` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
+- `operator_absent_autopilot` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `pine_export_preparation` class=`manual_gated` learningMode=`manual_gate_only` current=`active_preprod` target=`production_manual_gate` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
+- `production_hardening` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-halt-only productionBlockers=manual_gate:operator-halt-only gaps=none
+- `prop_firm_survival_twin` class=`deterministic_instrumented` learningMode=`shadow_experimental` current=`experimental_preprod` target=`production_experimental` automation=`experimental` data=`complete` audit=`complete` failureVisibility=`complete` learning=`experimental` authority=`correct` ready=`false` preprodBlockers=experimental_governance productionBlockers=experimental_governance gaps=none
 - `quantum_adversarial_stress` class=`deterministic_instrumented` learningMode=`shadow_experimental` current=`experimental_preprod` target=`production_experimental` automation=`experimental` data=`complete` audit=`complete` failureVisibility=`complete` learning=`experimental` authority=`correct` ready=`false` preprodBlockers=experimental_governance productionBlockers=experimental_governance gaps=none
 - `quantum_experimental` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `research_orchestration` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `signal_correlation_gate` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `strategy_lifecycle` class=`manual_gated` learningMode=`manual_gate_only` current=`active_preprod` target=`production_manual_gate` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
+- `synthetic_black_swan_survival` class=`deterministic_instrumented` learningMode=`shadow_experimental` current=`experimental_preprod` target=`production_experimental` automation=`experimental` data=`complete` audit=`complete` failureVisibility=`complete` learning=`experimental` authority=`correct` ready=`false` preprodBlockers=experimental_governance productionBlockers=experimental_governance gaps=none
 - `workflow_orchestration` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 
 ### Engine Subsystem Deep Scan
@@ -1399,6 +157,7 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `decay` owner=`compliance_governance` status=`runtime-proven` state=`active` gaps=none
 - `deepar_forecaster` owner=`deepar_regime` status=`runtime-proven` state=`active` gaps=none
 - `deepar_regime_classifier` owner=`deepar_regime` status=`runtime-proven` state=`active` gaps=none
+- `exits` owner=`context_execution` status=`runtime-proven` state=`active` gaps=none
 - `governor` owner=`compliance_governance` status=`runtime-proven` state=`active` gaps=none
 - `graveyard` owner=`strategy_lifecycle` status=`runtime-proven` state=`active` gaps=none
 - `macro_data` owner=`context_execution` status=`runtime-proven` state=`active` gaps=none
@@ -1418,11 +177,14 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `/api/admin`
 - `/api/adversarial-stress`
 - `/api/agent`
+- `/api/agents`
 - `/api/alerts`
 - `/api/anti-setups`
 - `/api/archetypes`
 - `/api/auditor`
 - `/api/backtests`
+- `/api/bias-decisions`
+- `/api/bias-state`
 - `/api/cloud-qmc`
 - `/api/compiler`
 - `/api/compliance`
@@ -1438,21 +200,26 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `/api/health`
 - `/api/indicators`
 - `/api/journal`
+- `/api/library-diversity`
 - `/api/macro`
 - `/api/metrics`
 - `/api/monte-carlo`
 - `/api/n8n`
+- `/api/nemo-scenarios`
 - `/api/openai-proxy`
 - `/api/openclaw/daily-report`
 - `/api/paper`
 - `/api/pine-export`
+- `/api/pine-export/recipient`
 - `/api/portfolio`
 - `/api/prevalidate`
+- `/api/production`
 - `/api/prop-firm`
 - `/api/quantum-mc`
 - `/api/quantum/cost`
 - `/api/quantum/pre-flight`
 - `/api/risk`
+- `/api/scout`
 - `/api/search`
 - `/api/shadow-rerun`
 - `/api/signal-correlation`
@@ -1460,12 +227,15 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `/api/skip`
 - `/api/sse`
 - `/api/strategies`
+- `/api/strategy-assignments`
 - `/api/strategy-names`
-- `/api/supadata`
 - `/api/survival`
+- `/api/synthetic-black-swan`
 - `/api/tournament`
+- `/api/tradingview`
 - `/api/validation`
 - `/api/validation-cadence`
+- `/api/volume-profile`
 
 ### Scheduler Jobs
 - `a-plus-auditor-scan`
@@ -1473,6 +243,11 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `anti-setup-effectiveness`
 - `anti-setup-mine`
 - `archetype-daily-classify`
+- `autonomous-scout-discovery`
+- `b14-priors-refit`
+- `bias-engine-refresh-10am-et`
+- `bias-engine-session-start`
+- `bitwarden-session-refresh-daily`
 - `c11-bls-release`
 - `c11-fred-daily`
 - `c11-h41-weekly`
@@ -1482,8 +257,11 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `compliance-rule-drift`
 - `contract-roll-sweep`
 - `critic-feedback`
+- `daily-reconciliation`
 - `data-integrity-suite`
 - `databento-weekly-refresh`
+- `dead-mans-heartbeat-check`
+- `dead-mans-heartbeat-write`
 - `decay-monitor`
 - `deepar-predict`
 - `deepar-train`
@@ -1493,21 +271,30 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `dlq-retry`
 - `drain-scouted-ideas-periodic`
 - `funnel-snapshot`
+- `graduated-strategy-drift-check`
 - `graveyard-pattern-extraction`
+- `harsh-regime-phase-activation-check`
 - `idempotency-cleanup`
 - `lifecycle-auto-check`
 - `macro-data-sync`
 - `meta-parameter-review`
 - `metrics-collector`
 - `metrics-heartbeat`
+- `n8n-data-backup-daily`
+- `n8n-drift-monthly`
+- `n8n-execution-scrape`
 - `n8n-health-check`
 - `n8n-workflow-sync`
+- `nemo-scenario-weekly`
+- `nightly-critique`
 - `paper-vs-backtest`
+- `pending-bucket-expiry`
 - `pipeline-resume-drain`
 - `portfolio-correlation`
 - `pre-market-prep`
 - `pre-trading-day-health-check`
 - `prompt-ab-resolution`
+- `prop-firm-cookie-refresh-daily`
 - `prop-firm-dashboard-snapshot`
 - `prop-firm-health-check`
 - `python-pool-saturation-check`
@@ -1516,15 +303,23 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `regret-score-fill`
 - `resource-snapshot`
 - `rolling-sharpe`
+- `scout-drain-stall-check`
+- `scout-reject-distribution-check`
+- `scout-reject-spike-check`
 - `session-analytics-rollup`
+- `single-mention-bucket-sweep`
 - `stale-pending-sweeper`
 - `stale-session-check`
+- `synthetic-regime-refresh`
+- `synthetic-tsgen-train`
 - `system-map-drift`
 - `tournament-staleness-check`
 - `validation-cadence-monthly`
+- `vp-daily-compute`
 - `w19-definition-pull`
 - `w19-imbalance-pull`
 - `w19-statistics-pull`
+- `weekly-drift-detection`
 
 ### Engine Subsystems
 - `anti_setups`
@@ -1537,6 +332,7 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `decay`
 - `deepar_forecaster`
 - `deepar_regime_classifier`
+- `exits`
 - `governor`
 - `graveyard`
 - `macro_data`
@@ -1584,6 +380,7 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 
 ### Database Tables
 - `a_plus_market_scans`
+- `account_strategy_assignments`
 - `adversarial_stress_runs`
 - `agent_health_reports`
 - `alerts`
@@ -1592,6 +389,11 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `backtest_provenance`
 - `backtest_trades`
 - `backtests`
+- `bias_ablation_results`
+- `bias_calibration_curves`
+- `bias_decisions`
+- `bias_state`
+- `broker_accounts`
 - `cloud_qmc_runs`
 - `compliance_drift_log`
 - `compliance_reviews`
@@ -1600,7 +402,9 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `contract_specs_authoritative`
 - `critic_candidates`
 - `critic_optimization_runs`
+- `daily_reconciliation`
 - `daily_statistics`
+- `daily_volume_profile_levels`
 - `data_integrity_findings`
 - `data_sync_jobs`
 - `day_archetypes`
@@ -1608,8 +412,11 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `deepar_forecasts`
 - `deepar_training_runs`
 - `exchange_outages`
+- `firm_adversarial_priors`
 - `frankenstein_test_runs`
+- `harsh_regime_phase`
 - `idempotency_keys`
+- `instance_config`
 - `lifecycle_transitions`
 - `llm_injection_attempts`
 - `macro_features`
@@ -1618,13 +425,16 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `monte_carlo_runs`
 - `mutation_outcomes`
 - `n8n_execution_log`
+- `nemo_scenario_bank`
 - `opening_auction_imbalance`
+- `operator_absent_periods`
 - `paper_positions`
 - `paper_session_feedback`
 - `paper_sessions`
 - `paper_signal_logs`
 - `paper_trades`
 - `pilot_sessions`
+- `production_trades`
 - `prompt_ab_tests`
 - `prompt_versions`
 - `prop_firm_health_checks`
@@ -1633,6 +443,7 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `quantum_run_costs`
 - `qubo_timing_runs`
 - `rl_training_runs`
+- `scout_drain_samples`
 - `shadow_rerun_findings`
 - `shadow_signals`
 - `skip_decisions`
@@ -1645,13 +456,606 @@ Updated automatically from the repo on `2026-05-03T08:12:51.982Z`.
 - `strategy_graveyard`
 - `strategy_lockouts`
 - `strategy_names`
+- `strategy_pending_buckets`
+- `strategy_pending_mentions`
 - `strategy_signal_vectors`
 - `stress_test_runs`
 - `subsystem_metrics`
+- `synthetic_black_swan_runs`
+- `synthetic_regime_bank`
+- `system_health_heartbeat`
 - `system_journal`
 - `system_parameter_history`
 - `system_parameters`
+- `system_state`
 - `tensor_predictions`
 - `tournament_results`
+- `tradingview_markers`
 - `walk_forward_windows`
+- `weekly_drift_reports`
 <!-- END GENERATED: topology -->
+
+---
+
+## §SSE Events Canonical Inventory
+
+> Added Wave 4 (2026-05-16). Source of truth: `src/server/routes/sse.ts` (emitter registry) +
+> `Trading_forge_frontend/amber-vision-main/src/types/sse-events.ts` (type union) +
+> `Trading_forge_frontend/amber-vision-main/src/hooks/useSSE.ts` (side-effect dispatch).
+>
+> Asymmetry policy: every emitted event is typed in the union. Emits without frontend
+> UX (operator-dashboard panels not yet built) are marked "Future dashboard panel."
+
+### lifecycle:gate_evaluated
+- **Emitter:** `src/server/services/lifecycle-service.ts:640,688,730,760,789,1721,1759,2249,2303,2348,2417`
+- **Payload shape:** `{ strategy_id: string, gate: "frankenstein"|"A7"|"pilot_auto_promotion", decision: "passed"|"failed"|"killed"|"promoted"|"deferred_*", ramp_up_mode?: boolean, correlation_id?: string|null }`
+- **Listeners:** `useSSE.ts:dispatchSideEffects` — toast on FAIL/KILL/PROMOTED; distinct ramp-up toast on A7 PASS with `ramp_up_mode:true`; silent for routine PASS. `DeployReady.tsx` subscribes.
+- **Purpose:** Every lifecycle gate evaluation (Frankenstein, A7 signal-correlation, PILOT auto-promotion sweep) emits this event so the operator has real-time visibility into gate decisions without polling.
+
+### lifecycle:promoted
+- **Emitter:** `src/server/services/lifecycle-service.ts:1141,1483,2262,2361,2430`
+- **Payload shape:** `{ strategyId, from, to, name?, forgeScore?, tier?, survivalRate? }`
+- **Listeners:** `useSSE.ts` → invalidates strategies + paper; toast `name from → to`
+- **Purpose:** State machine transition succeeded; strategy moved to next lifecycle state.
+
+### lifecycle:operator_absent_autopromoted
+- **Emitter:** `src/server/services/operator-absent-mode-service.ts:248`
+- **Payload shape:** `{ strategyId, from, to }`
+- **Listeners:** `useSSE.ts` → toast (info). Future: operator-absent dashboard panel.
+- **Purpose:** Tier-1 strategy auto-promoted while operator is in vacation mode.
+
+### lifecycle:auto-check
+- **Emitter:** `src/server/scheduler.ts:490`
+- **Payload shape:** `{ ... }`
+- **Listeners:** `useSSE.ts` → invalidates strategies.
+- **Purpose:** Lifecycle auto-check scheduler job completed.
+
+---
+
+### paper:session_start / paper:session_stop
+- **Emitter:** `src/server/routes/paper.ts:120,246`
+- **Payload shape:** `{ sessionId, strategyId? }`
+- **Listeners:** `useSSE.ts` → invalidates paper.
+- **Purpose:** Paper session lifecycle boundaries.
+
+### paper:trade / paper:pnl / paper:signal
+- **Emitter:** `src/server/services/paper-execution-service.ts`, `paper-signal-service.ts`
+- **Payload shape:** see interface definitions in `sse-events.ts`
+- **Listeners:** `PaperTrading.tsx` + `useSSE.ts`
+- **Purpose:** Intra-session trade fills, unrealized P&L ticks, and signal events.
+
+### paper:kill-switch-tripped
+- **Emitter:** `src/server/services/paper-execution-service.ts:981`
+- **Payload shape:** `{ sessionId, symbol?, reason, force_close?, correlationId? }`
+- **Listeners:** `KillSwitchBanner.tsx` (own EventSource) + `useSSE.ts` → invalidates paper+alerts.
+- **Purpose:** Kill switch triggered; all positions force-closed or entries blocked. `correlationId` added Wave 8 for audit reconstruction.
+
+### strategy:graveyard_burial
+- **Emitter:** `src/server/services/lifecycle-service.ts` (`buryInGraveyard()` — Wave 8)
+- **Payload shape:** `{ strategyId, name, failureModes: string[], deathReason, correlationId? }`
+- **Listeners:** `useSSE.ts` → error toast (`duration: 10s`) + invalidates strategies.
+- **Purpose:** Non-reversible terminal transition — strategy auto-buried due to gate failure or alpha decay. Error toast ensures operator sees graveyard burial regardless of active page.
+
+### paper:kill-switch-threshold-tripped
+- **Emitter:** `src/server/services/paper-execution-service.ts:993`
+- **Payload shape:** `{ sessionId, threshold }`
+- **Listeners:** `useSSE.ts` → warning toast + invalidates paper+alerts.
+- **Purpose:** 67% DLL reached; new entries blocked, existing positions held.
+
+### paper:exit:tp1_filled / paper:exit:tp2_filled / paper:exit:be_stop_moved / paper:exit:trail_tightened / paper:exit:time_stop_flattened / paper:exit:handler_error
+- **Emitter:** `src/server/services/paper-execution-service.ts` (PAPER_EXIT_EVENTS constants)
+- **Payload shape:** `{ position_id, strategy_id|null, decision_type, evidence, exit_style:"D"|"C", correlation_id }`
+- **Listeners:** `useSSE.ts` → invalidates paper. Future: per-position exit timeline panel.
+- **Purpose:** Style D/C exit handler milestones — TP fills, stop moves, trail tighten, time-stop flatten.
+
+### paper:auto_stopped / paper:auto_recovered / paper:session-feedback-computed
+- **Emitter:** `src/server/scheduler.ts:3879,3936,4029`
+- **Payload shape:** `{ sessionId, ... }`
+- **Listeners:** `useSSE.ts` → invalidates paper+alerts.
+- **Purpose:** Automated session management decisions.
+
+### paper:force-flatten-all
+- **Emitter:** `src/server/services/paper-execution-service.ts:3014`
+- **Payload shape:** `{ reason, count, errors }`
+- **Listeners:** `useSSE.ts` → error toast + invalidates paper+alerts.
+- **Purpose:** Production halt or DLL breach forced all positions closed.
+
+### paper:entry-blocked-production-halt / paper:order-blocked-outage / paper:order-blocked-suspension
+- **Emitter:** `src/server/services/paper-execution-service.ts:604,692,731`
+- **Payload shape:** `{ sessionId? }`
+- **Listeners:** `useSSE.ts` → invalidates paper+alerts. Future: real-time block indicator.
+- **Purpose:** Entry or order blocked by production mode halt, exchange outage, or firm suspension.
+
+---
+
+### backtest:completed / backtest:failed
+- **Emitter:** `src/server/services/backtest-service.ts`
+- **Payload shape:** `{ backtestId?, strategyId?, error? }`
+- **Listeners:** `Backtests.tsx` + `useSSE.ts`
+- **Purpose:** Backtest lifecycle outcomes.
+
+### backtest:scored
+- **Emitter:** `src/server/services/backtest-service.ts` (CF-3 fix, Wave 13 Track B)
+- **Payload shape:** `{ backtestId, strategyId, forgeScore, tier, gateRejected, correlationId? }`
+- **Listeners:** `useSSE.ts` → can invalidate strategies list to refresh forgeScore display
+- **Purpose:** Fired after every completed backtest, regardless of tier outcome.
+  `gateRejected=true` means the strategy will NOT auto-promote (tier=REJECTED or null).
+  Enables real-time dashboard update of `strategies.forgeScore` without waiting for lifecycle sweep.
+
+### backtest:matrix-progress / backtest:matrix-tier / backtest:matrix-completed / backtest:matrix-failed
+- **Emitter:** `src/server/services/matrix-backtest-service.ts`
+- **Payload shape:** see `BacktestMatrix*Data` interfaces
+- **Listeners:** `useSSE.ts` → invalidates backtests + toast on complete/fail.
+- **Purpose:** Matrix backtest (symbol × timeframe sweep) progress milestones.
+
+### mc:completed / mc:failed
+- **Emitter:** `src/server/services/monte-carlo-service.ts`
+- **Payload shape:** `{ mcRunId?, backtestId?, error? }`
+- **Listeners:** `useSSE.ts` → invalidates monte-carlo + backtests.
+- **Purpose:** Monte Carlo simulation outcomes.
+
+### walkforward:window_complete (W9-3, 2026-05-17)
+- **Emitter:** `src/server/services/backtest-service.ts:609` (post-commit, per OOS window).
+- **Payload shape:** `{ backtestId, strategyId, windowIndex, windowStart, windowEnd, oosSharpe, oosNetPnl, passed, correlationId, timestamp }`
+- **Listeners:** `useSSE.ts:788` → invalidates backtests + walkforward queries.
+- **Purpose:** Lets the operator track multi-window walk-forward jobs in real time without polling. Each window's OOS Sharpe + pass/fail surfaces as the engine progresses.
+
+---
+
+### critic:started / critic:evidence_collected / critic:evaluation_complete / critic:candidates_ready / critic:completed / critic:child_created / critic:replay_started / critic:replay_complete / critic:run-completed / critic:run-failed / critic:replay-completed
+- **Emitter:** `src/server/services/critic-optimizer-service.ts` (multiple)
+- **Payload shape:** see `Critic*Data` interfaces in `sse-events.ts`
+- **Listeners:** `useSSE.ts` → invalidates critic + strategies; toasts on key milestones.
+- **Purpose:** Critic optimizer loop lifecycle — evidence collection, candidate generation, replay ranking, survivor selection, child creation.
+
+---
+
+### strategy:created / strategy:promoted / strategy:deployed / strategy:decay-warning / strategy:decay-demotion / strategy:drift-alert / strategy:drift-demotion / strategy:evolved
+- **Emitter:** Various services (lifecycle, decay, drift, evolution)
+- **Payload shape:** see `Strategy*Data` interfaces
+- **Listeners:** `Strategies.tsx`, `Dashboard.tsx`, `DeployReady.tsx` + `useSSE.ts`
+- **Purpose:** Strategy library state changes. Toasts on decay demotions and deploy-ready.
+
+### strategy:deploy-ready
+- **Emitter:** `src/server/services/lifecycle-service.ts:1879`
+- **Payload shape:** `{ strategyId, name, symbol?, rollingSharpe?, tradingDays?, message? }`
+- **Listeners:** `useSSE.ts` → 10-second sticky success toast. Future: promotion queue badge.
+- **Purpose:** Strategy passed all promotion gates; awaiting operator approval to PILOT.
+
+### strategy:compliance_blocked
+- **Emitter:** `src/server/services/backtest-service.ts:1502`, `lifecycle-service.ts:1314,1345`
+- **Payload shape:** `{ strategyId, firm?, reasons? }`
+- **Listeners:** `useSSE.ts` → error toast + invalidates strategies+compliance.
+- **Purpose:** Strategy blocked at compliance gate during promotion.
+
+### strategy:exportability_blocked
+- **Emitter:** `src/server/services/backtest-service.ts:1555`, `lifecycle-service.ts:1461`
+- **Payload shape:** `{ strategyId, name?, fromState, toState, score?, band? }`
+- **Listeners:** `useSSE.ts` → warning toast.
+- **Purpose:** Pine exportability score below threshold — strategy blocked from PAPER promotion.
+
+### strategy:assignment_collision / strategy:assigned / strategy:unassigned
+- **Emitter:** `src/server/services/strategy-assignment-service.ts:291,391,447`
+- **Payload shape:** `{ strategyId, accountId }`
+- **Listeners:** `useSSE.ts` → error toast (collision); invalidates strategies+assignments.
+- **Purpose:** Family member strategy assignment management.
+
+---
+
+### compliance:violation_detected
+- **Emitter:** `src/server/routes/compliance.ts:560,636,722` (COMPLIANCE_EVENTS.VIOLATION_DETECTED)
+- **Payload shape:** `{ rule, strategy_id?, position_id?, firm, details, correlation_id? }`
+- **Listeners:** `Compliance.tsx` + `useSSE.ts` → invalidates compliance+alerts.
+- **Purpose:** 2026 MFFU compliance rule violation detected pre-order.
+
+### compliance:collaborative_trading_warning
+- **Emitter:** `src/server/services/strategy-assignment-service.ts:328`
+- **Payload shape:** `{ strategyId, accountIds }`
+- **Listeners:** `useSSE.ts` → 12-second error toast + invalidates compliance+alerts.
+- **Purpose:** MFFU collaborative-trading ban triggered — 2+ family members on same strategy.
+
+### compliance:drift_detected (W9-3, 2026-05-17)
+- **Emitter:** `src/server/services/compliance-refresh-service.ts:153` (after Discord notification).
+- **Payload shape:** `{ affectedFirms: string[], oldHash: string|null, newHash: string, affectedStrategyCount: number, severity: "warning"|"critical", correlationId, timestamp }`
+- **Listeners:** `useSSE.ts:798` → error toast (critical) / warning toast (warning) + invalidates compliance.
+- **Purpose:** Real-time signal when canonical `prop-firm-rules-2026-*.md` hash changes. Operator must re-validate PAPER/DEPLOYED strategies; severity flips to "critical" when affected count > 0.
+
+### compliance:cascade_revalidation
+- **Emitter:** `src/server/services/drift-detection-service.ts:255`
+- **Payload shape:** `{ firm, invalidatedReviews, pausedStrategies, affectedStrategyIds, severity, message, timestamp }`
+- **Listeners:** `useSSE.ts` → 12-second error toast + invalidates all compliance caches.
+- **Purpose:** Drift event requires all firm compliance reviews to be invalidated.
+
+### migration:legacy_firm_cleanup_complete / firm_count_changed
+- **Emitter:** `src/server/routes/compliance.ts` (COMPLIANCE_EVENTS constants)
+- **Payload shape:** see interface definitions
+- **Listeners:** `useSSE.ts` → invalidates compliance.
+- **Purpose:** Firm registry migration and count change notifications.
+
+---
+
+### broker:order_routed
+- **Emitter:** `src/server/services/broker-router.ts` (BROKER_ORDER_ROUTED_EVENT)
+- **Payload shape:** `{ success, reason?, correlationId?, ...result }`
+- **Listeners:** `useSSE.ts` → invalidates broker. Future: order audit trail panel.
+- **Purpose:** Every order routed through broker-router emits this for audit trail visibility.
+
+---
+
+### pine:export-completed / pine:export-failed / pine:export_completed (legacy)
+- **Emitter:** `src/server/services/pine-export-service.ts:543,614,812,868`
+- **Payload shape:** see `PineExport*Data` interfaces
+- **Listeners:** `useSSE.ts` → success/error toast + invalidates strategies+pine.
+- **Purpose:** Pine script compilation and export outcomes.
+
+### pine_export:hmac_persist_failed
+- **Emitter:** `src/server/services/pine-export-recipient-service.ts:169`
+- **Payload shape:** `{ assignmentId?, error? }`
+- **Listeners:** `useSSE.ts` → error toast. Future: Pine delivery health panel.
+- **Purpose:** HMAC secret DB write failed after Pine artifact generation (retry logic separate).
+
+### pine_export:failed (W9-2, 2026-05-17)
+- **Emitter:** `src/server/services/pine-export-recipient-service.ts:409,429,449,496` + `src/server/routes/pine-export.ts` catch.
+- **Payload shape:** `{ exportId: string|null, strategyId, accountId?, firmId?, errorCode: "pipeline_paused"|"strategy_not_found"|"account_not_found"|"compilation_failed"|"hmac_persist_failed"|"internal_error", errorMessage, correlationId, timestamp }`
+- **Listeners:** `useSSE.ts:775` → error toast + invalidates pine.
+- **Purpose:** Server-side Pine export failure visibility — closes the asymmetry where the success path emitted but the failure paths only logged. Operator now sees compilation/pipeline-pause/lookup failures in real time.
+
+### pine_export:recipient_generated / pine_export:delivered
+- **Emitter:** `src/server/services/pine-export-recipient-service.ts:459`, `pine-delivery-service.ts:229`
+- **Payload shape:** `{ assignmentId?, strategyId? }`
+- **Listeners:** `useSSE.ts` → invalidates pine.
+- **Purpose:** Per-recipient Pine generation and delivery milestones.
+
+---
+
+### alert:new / alert:triggered / alert:kill_switch_down / alert:compliance_gate_blocked / alert:compliance_guard_down / alert:calendar_guard_down / alert:ict_bridge_down
+- **Emitter:** `alert-service.ts`, `paper-execution-service.ts`, `paper-signal-service.ts`
+- **Payload shape:** see `Alert*Data` interfaces
+- **Listeners:** `Compliance.tsx` + `useSSE.ts` → invalidates alerts.
+- **Purpose:** System-wide alert bus; critical guard-down events surface as error toasts.
+
+---
+
+### n8n:health-alert / n8n:workflow-failed / n8n:tournament-stale
+- **Emitter:** `src/server/scheduler.ts`
+- **Payload shape:** see `N8n*Data` interfaces
+- **Listeners:** `useSSE.ts` → warning/error toasts + invalidates n8n.
+- **Purpose:** n8n workflow health surface — failing workflows and stale tournament results.
+
+---
+
+### scheduler:job-complete / scheduler:decay-sweep-complete / scheduler:pre-market-alert / scheduler:sharpe-updated / scheduler:regret-score-fill
+- **Emitter:** `src/server/scheduler.ts`
+- **Payload shape:** minimal job metadata
+- **Listeners:** `useSSE.ts` → invalidates strategies/alerts. Future: scheduler health panel.
+- **Purpose:** Scheduler job completion signals for housekeeping visibility.
+
+---
+
+### production:mode-changed / production:drift-detection-completed / production:reconciliation-completed
+- **Emitter:** `src/server/production/kill-switch.ts`, `drift-detector.ts`, `reconciliation-service.ts`
+- **Payload shape:** minimal mode/status data
+- **Listeners:** `useSSE.ts` → invalidates production caches. Future: production status panel.
+- **Purpose:** Production subsystem state transitions (kill-switch mode, drift, reconciliation).
+
+### compute:failover-state-change / network:failover-state-change
+- **Emitter:** `src/server/lib/compute-failover.ts`, `network-failover.ts`
+- **Payload shape:** `{ state, ... }`
+- **Listeners:** `useSSE.ts` → invalidates compute/network. Future: infra health panel.
+- **Purpose:** Compute (Ollama primary/fallback) and network path failover transitions.
+
+---
+
+### system:shutdown
+- **Emitter:** `src/server/index.ts:1302`
+- **Payload shape:** `{ reason, signal? }`
+- **Listeners:** `ServerStatusBanner.tsx` (connection-state hook) + `useSSE.ts` → warning toast.
+- **Purpose:** Server going offline; clients reconnect with exponential backoff.
+
+---
+
+### pending_bucket.updated / pending_bucket.graduated / pending_bucket.expired
+- **Emitter:** `src/server/routes/agent.ts`, `scheduler.ts`
+- **Payload shape:** see `PendingBucket*Data` interfaces
+- **Listeners:** `PendingValidationTab.tsx` + `useSSE.ts`
+- **Purpose:** Scout pending-bucket cross-validation lifecycle.
+
+---
+
+### agent:health_sweep / prompt-ab-test:resolved / prompt-evolution:complete / meta:parameter_review
+- **Emitter:** `agent-audit-service.ts`, `prompt-evolution-service.ts`, `meta-optimizer-service.ts`
+- **Listeners:** `useSSE.ts` → invalidates agents.
+- **Purpose:** Agent health and prompt evolution lifecycle events.
+
+---
+
+### deepar:training_complete / deepar:forecast_ready / deepar:weight_changed
+- **Emitter:** `src/server/services/deepar-service.ts`
+- **Listeners:** `useSSE.ts` → invalidates deepar; weight toast.
+- **Purpose:** DeepAR ML model training and inference lifecycle.
+
+---
+
+### windows:health-check-failed / windows:health-check-ram-warning / windows:real-reboot-pending
+- **Emitter:** `src/server/services/windows-health-check-service.ts`
+- **Listeners:** `useSSE.ts` → invalidates health. Future: operator health banner.
+- **Purpose:** Skytech tower Windows health — RAM pressure, reboot-pending state.
+
+---
+
+### prop-firm:suspension-detected / prop-firm:suspension-cleared / prop-firm:snapshot-captured
+- **Emitter:** `src/server/services/prop-firm-health-service.ts`, `dashboard-snapshot-service.ts`
+- **Listeners:** `useSSE.ts` → invalidates prop-firm.
+- **Purpose:** Prop firm suspension state transitions and balance snapshot captures.
+
+---
+
+### vp:levels-computed
+- **Emitter:** `src/server/services/volume-profile-service.ts:225`
+- **Payload shape:** `{ symbol, sessionDate, shape? }`
+- **Listeners:** `useSSE.ts` → invalidates volume-profile. Future: VP overlay panel.
+- **Purpose:** Volume profile VPOC/VAH/VAL levels computed for the session.
+
+---
+
+### auction:imbalance-updated
+- **Emitter:** `src/server/scheduler.ts:1320`
+- **Payload shape:** `{ symbol?, imbalance? }`
+- **Listeners:** `useSSE.ts` → invalidates auction. Future: pre-market imbalance widget.
+- **Purpose:** CME opening auction order imbalance data updated.
+
+---
+
+### scout-health:reject-spike / scout-health:no-strategies-today
+- **Emitter:** `src/server/services/agent-service.ts:86`, `strategy-production-check-service.ts:111`
+- **Listeners:** `useSSE.ts` → invalidates scout+alerts.
+- **Purpose:** Scout pipeline health — rejection rate spikes and zero-yield days.
+
+---
+
+### anti-setup:mined / anti-setup:blocked / anti-setup:effectiveness
+- **Emitter:** `src/server/scheduler.ts:640`, `paper-signal-service.ts`, `anti-setup-effectiveness-service.ts`
+- **Listeners:** `useSSE.ts` → invalidates anti-setup.
+- **Purpose:** Anti-setup pattern mining, real-time blocks, and effectiveness analysis.
+
+---
+
+### archetype:predicted / regime:state_updated
+- **Emitter:** `src/server/scheduler.ts`
+- **Listeners:** `useSSE.ts` → invalidates archetype/regime.
+- **Purpose:** ML archetype prediction and macro regime state transitions. (Wave 11 cleanup: `macro:regime-updated` removed — not present in SSEEvent union.)
+
+---
+
+### correlation:alert / portfolio:correlation_snapshot / drift:alert / strategy:drift-demotion
+- **Emitter:** `correlation-service.ts`, `portfolio-optimizer-service.ts`, `drift-detection-service.ts`
+- **Listeners:** `useSSE.ts` → invalidates portfolio/drift/alerts.
+- **Purpose:** Signal correlation alerts, portfolio risk snapshots, and drift detection.
+
+---
+
+### metrics:snapshot / metrics:trade-close / metrics:warmed-up
+- **Emitter:** `src/server/services/metrics-aggregator.ts`
+- **Listeners:** `useSSE.ts` → invalidates metrics.
+- **Purpose:** Rolling metrics updates, trade close costs, and post-boot warm-up completion.
+
+---
+
+### nemo:scenario-generated / nemo:scenario-error
+- **Emitter:** `src/server/services/nemo-scenario-service.ts`
+- **Listeners:** `useSSE.ts` → invalidates nemo.
+- **Purpose:** NEMO synthetic scenario generation lifecycle.
+
+---
+
+### a-plus-auditor:scan-complete
+- **Emitter:** `src/server/services/a-plus-auditor-service.ts:349`
+- **Listeners:** `useSSE.ts` → invalidates agents. Future: A+ auditor results panel.
+- **Purpose:** A+ signal noise auditor scan completed.
+
+---
+
+### pipeline:mode-change / pipeline:pause_snapshot / pipeline:resume_stale_positions / pipeline:drain-resume
+- **Emitter:** `src/server/services/pipeline-control-service.ts`
+- **Listeners:** `DataPipeline.tsx` + `useSSE.ts` → invalidates pipeline+paper.
+- **Purpose:** Pipeline pause/resume state transitions.
+
+---
+
+### Wave 11 Batch Additions (2026-05-17)
+
+> Added by Wave 11 SSE inventory drift checker (`buildSseInventoryDriftItems` in
+> `src/server/lib/system-topology.ts`). These events were already typed in the
+> SSEEvent union but missing from the inventory above. Each entry is condensed —
+> for full payload shape, see the interface in `sse-events.ts`.
+
+### backtest:complete
+- **Emitter:** `src/server/services/backtest-service.ts`
+- **Purpose:** Backtest run finished (success or failure).
+
+### compliance:drift_detected
+- **Emitter:** `src/server/services/compliance-refresh-service.ts` (Wave 9 W9-3)
+- **Purpose:** Compliance rule document drift detected; severity=critical when PAPER/PILOT/DEPLOYED strategies exist.
+
+### critic:evidence_collected_async
+- **Emitter:** `src/server/services/critic-optimizer-service.ts` (async path)
+- **Purpose:** Async critic evidence collection completed; mirrors `critic:evidence_collected`.
+
+### critic:evidence_source
+- **Emitter:** `src/server/services/critic-optimizer-service.ts`
+- **Purpose:** Identifies which evidence source produced the critic finding.
+
+### critic:started_async
+- **Emitter:** `src/server/services/critic-optimizer-service.ts` (async path)
+- **Purpose:** Async critic loop started; mirrors `critic:started`.
+
+### evolution:abort
+- **Emitter:** `src/server/services/evolution-service.ts`
+- **Purpose:** Strategy evolution loop aborted due to budget/guard violation.
+
+### nightly:review-complete
+- **Emitter:** `src/server/scheduler.ts` (nightly self-critique cron)
+- **Purpose:** Nightly review cycle finished writing critic findings.
+
+### paper:consistency-warning
+- **Emitter:** `src/server/services/paper-execution-service.ts`
+- **Purpose:** Paper-trading consistency check flagged anomaly (account balance vs trade ledger).
+
+### paper:decay-alert
+- **Emitter:** `src/server/services/paper-execution-service.ts`
+- **Purpose:** Strategy alpha decay detected at warning threshold during paper session.
+
+### paper:decay-warning
+- **Emitter:** `src/server/services/paper-execution-service.ts`
+- **Purpose:** Early decay signal — operator should review strategy soon.
+
+### paper:fill-miss
+- **Emitter:** `src/server/services/paper-execution-service.ts`
+- **Purpose:** Expected order fill did not arrive in window — broker or signal-routing issue.
+
+### paper:position-opened
+- **Emitter:** `src/server/services/paper-execution-service.ts`
+- **Purpose:** New paper position opened; full position state included in payload.
+
+### paper:roll-flatten / paper:roll-spread-applied / paper:roll-warning
+- **Emitter:** `src/server/services/paper-execution-service.ts` (futures roll handling)
+- **Purpose:** Futures contract roll lifecycle — flatten near expiry, spread cost applied, advance warning.
+
+### pine:export_completed
+- **Emitter:** `src/server/services/pine-export-service.ts`
+- **Purpose:** Pine export pipeline finished successfully — artifact persisted.
+
+### pine_export:failed
+- **Emitter:** `src/server/services/pine-export-recipient-service.ts` + `src/server/routes/pine-export.ts` (Wave 9 W9-2)
+- **Purpose:** Pine export failed; typed errorCode (pipeline_paused, strategy_not_found, account_not_found, compilation_failed, hmac_persist_failed, internal_error).
+
+### strategy:analysis-error
+- **Emitter:** `src/server/services/agent-service.ts`
+- **Purpose:** Strategy deep-analysis pipeline raised an error during run.
+
+### strategy:analyzed
+- **Emitter:** `src/server/services/agent-service.ts`
+- **Purpose:** Strategy deep-analysis pipeline completed; results persisted.
+
+### strategy:paper-vs-backtest-alert
+- **Emitter:** `src/server/scheduler.ts` (paper-vs-backtest cron)
+- **Purpose:** Live paper P&L diverged from backtest expectation beyond threshold.
+
+### walkforward:window_complete
+- **Emitter:** `src/server/services/backtest-service.ts` (Wave 9 W9-3)
+- **Purpose:** Walk-forward window finished; OOS Sharpe + net P&L per window; passed=true when OOS Sharpe ≥ 0.5.
+
+### bias_engine:strategy_selected
+- **Emitter:** `src/server/services/bias-state-service.ts` (Wave 23.C)
+- **Payload shape:** `{ sessionDate, regimeLabel, playbook, activeStrategyId, computedAt }`
+- **Purpose:** Daily bias engine decision persisted — regime + playbook + active strategy for the session.
+
+### signal:a_plus_rejected
+- **Emitter:** `src/server/services/paper-signal-service.ts` (Wave 23.C)
+- **Payload shape:** `{ sessionId, symbol, strategyId, satisfiedCount, minRequired, factorResults, timestamp }`
+- **Purpose:** A+ confluence gate blocked a signal entry; insufficient factors satisfied.
+
+---
+
+> **Coverage summary (Wave 4, 2026-05-16):**
+> Backend emitters: ~120 unique broadcastSSE calls across 28 files.
+> Distinct event names: 70+.
+> All events typed in `src/types/sse-events.ts` discriminated union.
+> All events handled in `useSSE.ts` dispatchSideEffects switch (exhaustiveness enforced by TypeScript).
+> Frontend subscriptions: 7 pages + 2 banner components.
+> Key Wire-up this wave: `lifecycle:gate_evaluated` subscribed on `DeployReady.tsx`; toasts on FAIL/KILL/A7-ramp-up.
+
+---
+
+## §2b Scout Architecture — Wave 23F Strategy Factory Upgrade (2026-05-19)
+
+Companion to CLAUDE.md §2b. The factory pipeline now emits Wave-23-shaped strategies end-to-end. Win rate remains an OBSERVED output — never a design target.
+
+### `strategies.symbols TEXT[]` column (migration 0111)
+- New nullable column added by `src/server/db/migrations/0111_strategies_symbols_array.sql` (idempotent: `ADD COLUMN IF NOT EXISTS`, backfill from legacy `symbol`, GIN index `idx_strategies_symbols_gin`).
+- Schema: `src/server/db/schema.ts` — `symbols: text("symbols").array()`.
+- Semantics: per-symbol routing for multi-market strategies. Discovery layer may emit MES/MNQ/MCL variants of the same concept.
+- Backward compat: legacy `symbol TEXT` column retained; drop scheduled W24 after 30-day soak.
+
+### `entry_quality` JSONB block (graduator emission)
+Emitted by `src/server/services/direct-bucket-graduator.ts:1460+` on every graduation. Fields:
+- `confluence_factors: string[]` — ordered confluence cues extracted from source claim.
+- `min_factors_satisfied: number` — A+ threshold count (default = `confluence_factors.length` when present).
+- `source_claim_win_rate: number | null` — INFORMATIONAL only, never gated against.
+- `source_claim_avg_r: number | null` — INFORMATIONAL only.
+- `extraction_provenance: string` — `"scout_extract"` when confluence present; `"legacy_no_confluence"` fallback when `confluence_factors` is empty. The fallback is the legal bypass path for pre-W23F strategies through the consumer A+ gate in `paper-signal-service.ts:2392-2436`.
+- Audit events: `graduation.entry_quality_attached`, `graduation.symbols_multi_market` (when `symbols.length > 1`).
+
+### Concept fingerprint key change (W23F.C)
+`src/server/services/strategy-fingerprint.ts::computeConceptFingerprintHash` now hashes `sha256(normalized_concept_name)` only — market argument dropped. Cross-symbol convergence: MES + MNQ + MCL instances of the same concept land in the same pending bucket. Pre-W23F.C buckets remain isolated by design; graveyard sweep handles legacy.
+
+### MES/MNQ/MCL discovery rotation
+`src/server/services/autonomous-scout-runner.ts` rotates 1/3 each per cycle. Cycle index = `audit_log` count of `autonomous_scout.cycle_started` rows (deterministic, persisted, restart-safe). Query templates: 83 MES + 23 MNQ + 22 MCL. Mentions tagged with `__scout_seeded_symbol` and surface on `extracted_idea.symbols`.
+
+### New SSE events (Wave 23F.G)
+- `factory:multi_market_bucket` — emitted when a pending bucket aggregates ≥2 distinct seeded symbols.
+- `factory:graduation_entry_quality` — emitted alongside lifecycle promotion when `entry_quality` is attached.
+- Trace helpers: `src/server/lib/wave23f-trace.ts` exports `traceWave23fCycle(correlationId)` and `summarizeWave23fCycle(correlationId)` for end-to-end cycle reconstruction across audit_log + SSE.
+
+### Correlation_id end-to-end (W23F.G-hotfix)
+`runAutonomousScoutCycle` → `postLayerMention` (sends `x-correlation-id` header at `autonomous-scout-runner.ts:539`) → `/scout-ideas/pending` (route reads via `getCorrelationId(req)`) → graduation audit rows. Verified by `wave23f-correlation-trace.test.ts`.
+
+### Re-overlay script for legacy strategies
+`scripts/wave23f-relegacy-overlay.ts` (idempotent) re-overlays the 2 pre-W23F strategies with `extraction_provenance: "legacy_no_confluence"`. Operator runs against live DB once consumer agent's Style C overlay flip lands.
+
+---
+
+## §2c Wave 23 Pass 1 — Spec Reset, Sizing Floor, Bias Engine, Promotion Gates (2026-05-19)
+
+Companion to CLAUDE.md §4 + §12. Pass 1 closed four tracks GREEN; this is the cross-cutting registration record.
+
+### Track 23.A — CLAUDE.md + AGENTS.md spec reset
+- CLAUDE.md §1 / §4 / §12 / §13 + AGENTS.md rewritten to remove all hit-rate target / band language. Win rate is now declared an OBSERVED output only.
+- Promotion gates documented as hit-rate-agnostic: `expectancy_per_trade >= 2.0R` (R-multiple) + `profit_factor >= 1.7` + `deflated_sharpe >= 1.5` + `regime_survival` across 4 harsh windows.
+- Documentation-only track; no code, schema, or contract surface changes.
+
+### Track 23.B — Pyramid floor 6/6/18 + HWM tracking (migration 0113)
+- **Sizing math:** pyramid floor recalibrated to `MES base 6 / MNQ base 6 / MCL base 18` with `+3` per `+$3,000` cumulative profit (preserves divisibility by 3 so Style C 33/33/33 partials are clean at every tier). Equalizes per-trade dollar risk to ~$420-$480 across the three micros at the 14-pt-MES / 40-pt-MNQ / 25-tick-MCL ceiling.
+- **Locked micro point values:** `MES = $5/pt`, `MNQ = $2/pt`, `MCL = $1/tick` in `firm-config.ts` + `firm_config.py` with `// Wave 23 LOCKED` comments.
+- **`paper_sessions.high_water_balance NUMERIC` column** added by `src/server/db/migrations/0113_wave23_hwm_tracking.sql` (idempotent; back-fills from `max(balance, starting_balance)` on existing rows). The Topstep trailing-DD math now reads `buffer = (balance - trailing_floor)` where `trailing_floor` is derived from HWM, not the simple balance proxy.
+- **`computeRiskDerivedContracts(input)`** signature extended additively in `src/server/lib/risk-sizing.ts` with optional `accountStartingFloor` + `hwm` params. Older callers continue to compile (additive-only change).
+- **`paper_session.hwm_updated`** audit action written whenever the HWM advances.
+- **Backfill:** `npm run db:migrate` applied 0113; backfill block touched 3 existing strategies (base 6 / tier_increment 3).
+
+### Track 23.C — Bias engine + A+ gate wiring (migration 0112)
+- **`bias_state` table** added by `src/server/db/migrations/0112_wave23_bias_state.sql`. One row per CME trading session (`UNIQUE(session_date)`); columns: `session_date DATE`, `regime_label TEXT`, `playbook TEXT`, `active_strategy_id UUID NULL FK->strategies`, `correlation_id TEXT`, `evidence JSONB`, `computed_at TIMESTAMPTZ`, `created_at TIMESTAMPTZ`. Distinct from `bias_decisions` (per-call shadow-calibration sink, migration 0095). `bias_state` is the per-session promotion-gate input read at signal time.
+- **Service:** `src/server/services/bias-state-service.ts` drives `compute_bias()` + `route_playbook()` at session-open (idempotent via `ON CONFLICT(session_date) DO UPDATE`). Failures are fail-open: a missed write does NOT block signal execution.
+- **Routes:** `/api/bias-state/today` + `/api/bias-state/history` mounted at `src/server/routes/bias-state.ts`. Registered in `/api/bias-state` route inventory above (line 187).
+- **A+ consumer gate:** `paper-signal-service.ts:2392-2436+` reads `entry_quality.{confluence_factors, min_factors_satisfied, source_claim_*, extraction_provenance}` from `strategies.config`. Behavior matrix:
+  - `extraction_provenance == "legacy_no_confluence"` or missing `entry_quality` -> bypass (audit: `signal.a_plus_bypassed_legacy` / `signal.a_plus_bypassed_no_entry_quality`).
+  - `satisfied_count < min_factors_satisfied` -> block (SSE: `signal:a_plus_rejected`, audit: `signal.a_plus_rejected`, paper_signal_logs row with `signalType: "a_plus_blocked"`).
+  - `satisfied_count >= min_factors_satisfied` -> pass (audit: `signal.a_plus_passed`; audit-only by design, no SSE).
+  - Strategy not selected for today's regime (`bias_state.active_strategy_id != strategyId`) -> block (audit: `signal.not_active_strategy_for_regime`; audit-only).
+- **SSE events (new this track):** `bias_engine:strategy_selected` (one per session-open) + `signal:a_plus_rejected` (per blocked signal). Typed in `Trading_forge_frontend/amber-vision-main/src/types/sse-events.ts` as `BiasEngineStrategySelectedData` + `SignalAPlusRejectedData`. The pass-through events (`signal.a_plus_passed`, `signal.not_active_strategy_for_regime`) are audit-log actions only — intentional asymmetry to avoid dashboard flood.
+
+### Track 23.D — Promotion gates (R-multiple expectancy + harsh-regime survival)
+- **`expectancy_per_trade >= 2.0R` HARD gate** at CANDIDATE -> TESTING in `lifecycle-service.ts` lines ~1151-1236 (W23-D.1 block). Replaces the legacy `$75/trade` dollar gate from `performance_gate.py:164-239`. Reads `backtests.gate_result.expectancy_r`. Permissive fallback for pre-W23 backtests missing `avg_trade_risk`.
+- **Harsh-regime survival SOFT advisory** at TESTING -> PAPER in `lifecycle-service.ts` lines ~1580-1686 (W23-D.2 block). Calls `src/engine/regime_survival.py` via `runPythonModule`. Phase 0 (advisory): `lifecycle.harsh_regime_advisory` audit row + SSE `lifecycle:gate_evaluated` with `gate: "harsh_regime_survival_w23", severity: "soft"` + Discord warning on fail; promotion never blocked. Phase upgrade controlled by `REGIME_SURVIVAL_PHASE` env var (default `"advisory"`).
+- **4 fixed harsh-regime windows:** `covid_2020`, `fed_pivot_2022`, `yen_carry_2024`, `apr_vol_spike_2025`. Per-regime stats are `expectancy_R` + `PF` + `Sharpe proxy` — fully hit-rate-agnostic.
+- **`backtester.py:2505-2528`** injects `avg_trade_risk` (dollar terms) into `_gate_stats` so the consumer gate can compute `actual_R = avg_trade_pnl / avg_trade_risk`. Cross-service contract preserved: Track 23.B's sizing changes do NOT break this metric — `avg_trade_risk` is computed per-trade from actual stop distance × point value × size, independent of pyramid floor / HWM.
+
+### Migrations applied (Pass 1)
+- `0112_wave23_bias_state.sql` — APPLIED via `npm run db:migrate`.
+- `0113_wave23_hwm_tracking.sql` — APPLIED via `npm run db:migrate`; backfill updated 3 strategies to base 6 / tier_increment 3.
+
+### Audit log actions added (Pass 1)
+- `bias_engine.strategy_selected` — `bias-state-service.ts` per session.
+- `signal.a_plus_passed` / `signal.a_plus_rejected` / `signal.a_plus_bypassed_legacy` / `signal.a_plus_bypassed_no_entry_quality` — `paper-signal-service.ts`.
+- `signal.not_active_strategy_for_regime` — `paper-signal-service.ts:2436`.
+- `lifecycle.gate_eval` — `lifecycle-service.ts` (R-multiple HARD path).
+- `lifecycle.harsh_regime_advisory` — `lifecycle-service.ts:1620+` (soft Phase 0 path).
+- `paper_session.hwm_updated` — `paper-signal-service.ts` (HWM advance).
+- `strategy.wave23_base_backfilled` — `0113_wave23_hwm_tracking.sql` backfill.
+- `db_migration.applied` — written by `npm run db:migrate` on each successful apply.
+
+### Cross-cutting contract verification (Pass 1, 2026-05-19)
+1. **entry_quality factory->consumer:** factory emits in `direct-bucket-graduator.ts:1460+`; consumer reads in `paper-signal-service.ts:2409-2492`. Field set matches end-to-end.
+2. **Sizing schema additive contract:** `computeRiskDerivedContracts()` extension is param-additive; no existing callers needed signature updates.
+3. **bias_state table:** schema columns match service writes; `lifecycle.gate_evaluated` audit row schema does NOT conflict (separate `entityType`).
+4. **R-multiple gate:** backtester injects `avg_trade_risk`; lifecycle reads `expectancy_r` from `backtests.gate_result`. Track 23.B sizing changes don't perturb this metric.
+5. **Frontend SSE types:** `BiasEngineStrategySelectedData` + `SignalAPlusRejectedData` added to discriminated union; exhaustiveness preserved.

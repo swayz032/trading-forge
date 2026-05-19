@@ -1,0 +1,464 @@
+{
+  "updatedAt": "2026-05-05T04:49:04.728Z",
+  "createdAt": "2026-04-29T07:39:47.041Z",
+  "id": "J8K0PfErL2v4W9Zw",
+  "name": "5O-supadata-transcript-pipeline",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "supadata",
+      "name": "POST /api/supadata/transcript",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/supadata/transcript",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ url: $json.url }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "error-alert",
+      "name": "POST workflow-errors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        540
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { workflowId: '5O-supadata-transcript-pipeline', workflowName: '5O Supadata Transcript Pipeline', executionId: $execution.id, nodeName: 'unknown', errorMessage: ($json.error?.message || 'unknown error').slice(0, 500), firstSeenAt: new Date().toISOString(), occurrenceCount: 1 } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "to-backend",
+      "name": "POST /api/agent/transcript-extract",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/transcript-extract",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ youtubeUrl: $('Execute Workflow Trigger').item.json.url, title: $('Execute Workflow Trigger').item.json.title || '', channel: $('Execute Workflow Trigger').item.json.creator || '', transcript: $json.text || '' }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "split-strategies",
+      "name": "Split Strategies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const strategies = $input.first().json.strategies;\nif (!Array.isArray(strategies) || strategies.length === 0) {\n  console.log('transcript-extract returned no strategies');\n  return [];\n}\nreturn strategies.map(s => ({ json: s }));"
+      }
+    },
+    {
+      "id": "post-scout",
+      "name": "POST scout-ideas/strict",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/scout-ideas/strict",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ideas: [{ thesis: $json.description || $json.thesis || $json.name || 'youtube-transcript-extracted strategy', market: ($json.symbol === 'MES' ? 'ES' : ($json.symbol === 'MNQ' ? 'NQ' : ($json.symbol === 'MCL' ? 'CL' : 'ES'))), timeframe: $json.timeframe || '15m', entry_rules: ($json.entry_condition || $json.entry_rules || '') + ' indicator:' + ($json.entry_indicator || 'unknown'), exit_rules: 'exit_type: ' + ($json.exit_type || 'atr_multiple') + '; stop ' + ($json.stop_loss_atr_multiple || 1.5) + 'x ATR', risk_rules: 'ATR-based stop at ' + ($json.stop_loss_atr_multiple || 1.5) + 'x ATR', source_url: $json.source_url, regime: $json.preferred_regime || 'TRENDING_UP', concept_name: $json.entry_indicator || $json.name || 'youtube_extracted', source_provider: 'manual', signal_type: 'strategy_candidate' }] }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "POST /api/supadata/transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "POST workflow-errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /api/supadata/transcript": {
+      "main": [
+        [
+          {
+            "node": "POST /api/agent/transcript-extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /api/agent/transcript-extract": {
+      "main": [
+        [
+          {
+            "node": "Split Strategies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Strategies": {
+      "main": [
+        [
+          {
+            "node": "POST scout-ideas/strict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "BbCvlV1ARyyvY3NI"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "c9c72520-87d7-4445-8b80-5e01363f7bec",
+  "activeVersionId": "c9c72520-87d7-4445-8b80-5e01363f7bec",
+  "versionCounter": 15,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-29T07:39:47.041Z",
+      "createdAt": "2026-04-29T07:39:47.041Z",
+      "role": "workflow:owner",
+      "workflowId": "J8K0PfErL2v4W9Zw",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-05-05T04:22:09.084Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-05-05",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-05T04:49:04.729Z",
+    "createdAt": "2026-05-05T04:49:04.729Z",
+    "versionId": "c9c72520-87d7-4445-8b80-5e01363f7bec",
+    "workflowId": "J8K0PfErL2v4W9Zw",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Execute Workflow Trigger",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          300
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "supadata",
+        "name": "POST /api/supadata/transcript",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/supadata/transcript",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ url: $json.url }) }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "error-trigger",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          540
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "error-alert",
+        "name": "POST workflow-errors",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          540
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { workflowId: '5O-supadata-transcript-pipeline', workflowName: '5O Supadata Transcript Pipeline', executionId: $execution.id, nodeName: 'unknown', errorMessage: ($json.error?.message || 'unknown error').slice(0, 500), firstSeenAt: new Date().toISOString(), occurrenceCount: 1 } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "to-backend",
+        "name": "POST /api/agent/transcript-extract",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/transcript-extract",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ youtubeUrl: $('Execute Workflow Trigger').item.json.url, title: $('Execute Workflow Trigger').item.json.title || '', channel: $('Execute Workflow Trigger').item.json.creator || '', transcript: $json.text || '' }) }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "split-strategies",
+        "name": "Split Strategies",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1200,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const strategies = $input.first().json.strategies;\nif (!Array.isArray(strategies) || strategies.length === 0) {\n  console.log('transcript-extract returned no strategies');\n  return [];\n}\nreturn strategies.map(s => ({ json: s }));"
+        }
+      },
+      {
+        "id": "post-scout",
+        "name": "POST scout-ideas/strict",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1520,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/scout-ideas/strict",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ ideas: [{ thesis: $json.description || $json.thesis || $json.name || 'youtube-transcript-extracted strategy', market: ($json.symbol === 'MES' ? 'ES' : ($json.symbol === 'MNQ' ? 'NQ' : ($json.symbol === 'MCL' ? 'CL' : 'ES'))), timeframe: $json.timeframe || '15m', entry_rules: ($json.entry_condition || $json.entry_rules || '') + ' indicator:' + ($json.entry_indicator || 'unknown'), exit_rules: 'exit_type: ' + ($json.exit_type || 'atr_multiple') + '; stop ' + ($json.stop_loss_atr_multiple || 1.5) + 'x ATR', risk_rules: 'ATR-based stop at ' + ($json.stop_loss_atr_multiple || 1.5) + 'x ATR', source_url: $json.source_url, regime: $json.preferred_regime || 'TRENDING_UP', concept_name: $json.entry_indicator || $json.name || 'youtube_extracted', source_provider: 'manual', signal_type: 'strategy_candidate' }] }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      }
+    ],
+    "connections": {
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "POST /api/supadata/transcript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "POST workflow-errors",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST /api/supadata/transcript": {
+        "main": [
+          [
+            {
+              "node": "POST /api/agent/transcript-extract",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST /api/agent/transcript-extract": {
+        "main": [
+          [
+            {
+              "node": "Split Strategies",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Strategies": {
+        "main": [
+          [
+            {
+              "node": "POST scout-ideas/strict",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-05T04:49:04.750Z",
+        "id": 1634,
+        "workflowId": "J8K0PfErL2v4W9Zw",
+        "versionId": "c9c72520-87d7-4445-8b80-5e01363f7bec",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

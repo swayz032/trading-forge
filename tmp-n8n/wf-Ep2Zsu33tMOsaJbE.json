@@ -1,0 +1,528 @@
+{
+  "updatedAt": "2026-05-05T04:49:53.635Z",
+  "createdAt": "2026-04-29T00:50:28.147Z",
+  "id": "Ep2Zsu33tMOsaJbE",
+  "name": "5J-unified-search-router-scout",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "cron",
+      "name": "Hourly Cron",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */6 * * *"
+            }
+          ]
+        }
+      },
+      "disabled": false
+    },
+    {
+      "id": "router-call",
+      "name": "POST /search/strategy-hunt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/search/strategy-hunt",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ intent: 'systematic-trading-strategy', query: 'futures trading strategy backtest results', maxResults: 15 }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "split",
+      "name": "Split Results",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "shape",
+      "name": "Shape to Strict Scout Schema",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst result = r.results?.[0] || r;\nconst snippet = (result.snippet || result.description || '').slice(0, 1500);\nconst title = (result.title || 'unknown').slice(0, 200);\nconst url = result.url || '';\nconst fusedScore = Number(result.fusedScore) || 0.5;\nconst sourceProvider = result.source || 'unified-search';\n\nconst combined = title + ' ' + snippet;\nconst instrumentMatches = combined.match(/(MES|MNQ|MCL|ES|NQ|CL)\\b/gi) || [];\nconst indicatorMatches = combined.match(/(VWAP|RSI|SMA|EMA|MACD|ATR|Bollinger|ORB|Order Block|FVG|ICT|SMC|Donchian|Keltner|Ichimoku|DEMA|ALMA)\\b/gi) || [];\nconst instruments = [...new Set(instrumentMatches.map(m => m.toUpperCase()))];\nconst indicators = [...new Set(indicatorMatches)];\n\nconst out = {\n  ideas: [{\n    source: 'unified-search-' + sourceProvider,\n    title: title,\n    description: snippet,\n    url: url,\n    source_quality: fusedScore >= 0.7 ? 'high' : fusedScore >= 0.4 ? 'medium' : 'low',\n    confidence_score: Math.min(1, Math.max(0, fusedScore)),\n    instruments: instruments,\n    indicators_mentioned: indicators,\n    signal_type: 'strategy_candidate',\n  }]\n};\nreturn [{ json: out }];"
+      }
+    },
+    {
+      "id": "post-strict",
+      "name": "POST /agent/scout-ideas (legacy)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ideas: ($json.ideas || []).map(i => ({ ...i, signal_type: i.signal_type || 'strategy_candidate' })) }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "id": "loop-back",
+      "name": "Loop Back",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        540
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "error-alert",
+      "name": "POST workflow-errors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        540
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/sse/broadcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { workflowId: '5J-unified-search-router-scout', workflowName: 'Unified Search Router Scout', executionId: $execution.id, nodeName: 'unknown', errorMessage: ($json.error?.message || 'unknown error').slice(0, 500), firstSeenAt: new Date().toISOString(), occurrenceCount: 1 } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    }
+  ],
+  "connections": {
+    "Hourly Cron": {
+      "main": [
+        [
+          {
+            "node": "POST /search/strategy-hunt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /search/strategy-hunt": {
+      "main": [
+        [
+          {
+            "node": "Split Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Results": {
+      "main": [
+        [
+          {
+            "node": "Loop Back",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Shape to Strict Scout Schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape to Strict Scout Schema": {
+      "main": [
+        [
+          {
+            "node": "POST /agent/scout-ideas (legacy)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /agent/scout-ideas (legacy)": {
+      "main": [
+        [
+          {
+            "node": "Split Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "POST workflow-errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/New_York",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "BbCvlV1ARyyvY3NI"
+  },
+  "staticData": {
+    "node:Hourly Cron": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": null,
+  "versionId": "73190e95-3835-4d77-9a79-745d9cbd8d64",
+  "activeVersionId": "73190e95-3835-4d77-9a79-745d9cbd8d64",
+  "versionCounter": 28,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-29T00:50:28.147Z",
+      "createdAt": "2026-04-29T00:50:28.147Z",
+      "role": "workflow:owner",
+      "workflowId": "Ep2Zsu33tMOsaJbE",
+      "projectId": "l9zgLNMKv7CjloiW",
+      "project": {
+        "updatedAt": "2026-02-19T03:51:50.171Z",
+        "createdAt": "2026-02-12T09:44:05.561Z",
+        "id": "l9zgLNMKv7CjloiW",
+        "name": "Tonio tonioswayz32@gmail.com <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-12T09:44:05.561Z",
+            "createdAt": "2026-02-12T09:44:05.561Z",
+            "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+            "projectId": "l9zgLNMKv7CjloiW",
+            "user": {
+              "updatedAt": "2026-05-05T04:22:09.084Z",
+              "createdAt": "2026-02-12T09:44:05.126Z",
+              "id": "4fd79e89-3017-4dbe-8cec-676fcab6f938",
+              "email": "tonioswayz32@gmail.com",
+              "firstName": "Tonio",
+              "lastName": "tonioswayz32@gmail.com",
+              "personalizationAnswers": null,
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "aDeQEKoBawhGdUtE",
+                "userActivatedAt": 1771445749501,
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-05-05",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-05T04:49:53.636Z",
+    "createdAt": "2026-05-05T04:49:53.636Z",
+    "versionId": "73190e95-3835-4d77-9a79-745d9cbd8d64",
+    "workflowId": "Ep2Zsu33tMOsaJbE",
+    "nodes": [
+      {
+        "id": "cron",
+        "name": "Hourly Cron",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          240,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 */6 * * *"
+              }
+            ]
+          }
+        },
+        "disabled": false
+      },
+      {
+        "id": "router-call",
+        "name": "POST /search/strategy-hunt",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/search/strategy-hunt",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ intent: 'systematic-trading-strategy', query: 'futures trading strategy backtest results', maxResults: 15 }) }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "split",
+        "name": "Split Results",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          880,
+          300
+        ],
+        "parameters": {
+          "batchSize": 1,
+          "options": {}
+        }
+      },
+      {
+        "id": "shape",
+        "name": "Shape to Strict Scout Schema",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1200,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const r = $input.first().json;\nconst result = r.results?.[0] || r;\nconst snippet = (result.snippet || result.description || '').slice(0, 1500);\nconst title = (result.title || 'unknown').slice(0, 200);\nconst url = result.url || '';\nconst fusedScore = Number(result.fusedScore) || 0.5;\nconst sourceProvider = result.source || 'unified-search';\n\nconst combined = title + ' ' + snippet;\nconst instrumentMatches = combined.match(/(MES|MNQ|MCL|ES|NQ|CL)\\b/gi) || [];\nconst indicatorMatches = combined.match(/(VWAP|RSI|SMA|EMA|MACD|ATR|Bollinger|ORB|Order Block|FVG|ICT|SMC|Donchian|Keltner|Ichimoku|DEMA|ALMA)\\b/gi) || [];\nconst instruments = [...new Set(instrumentMatches.map(m => m.toUpperCase()))];\nconst indicators = [...new Set(indicatorMatches)];\n\nconst out = {\n  ideas: [{\n    source: 'unified-search-' + sourceProvider,\n    title: title,\n    description: snippet,\n    url: url,\n    source_quality: fusedScore >= 0.7 ? 'high' : fusedScore >= 0.4 ? 'medium' : 'low',\n    confidence_score: Math.min(1, Math.max(0, fusedScore)),\n    instruments: instruments,\n    indicators_mentioned: indicators,\n    signal_type: 'strategy_candidate',\n  }]\n};\nreturn [{ json: out }];"
+        }
+      },
+      {
+        "id": "post-strict",
+        "name": "POST /agent/scout-ideas (legacy)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1520,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/agent/scout-ideas",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ ideas: ($json.ideas || []).map(i => ({ ...i, signal_type: i.signal_type || 'strategy_candidate' })) }) }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      },
+      {
+        "id": "loop-back",
+        "name": "Loop Back",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          1840,
+          300
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "error-trigger",
+        "name": "On Workflow Error",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          540
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "error-alert",
+        "name": "POST workflow-errors",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          540
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://host.docker.internal:4000/api/sse/broadcast",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ channel: 'alerts', event: 'workflow:error', payload: { workflowId: '5J-unified-search-router-scout', workflowName: 'Unified Search Router Scout', executionId: $execution.id, nodeName: 'unknown', errorMessage: ($json.error?.message || 'unknown error').slice(0, 500), firstSeenAt: new Date().toISOString(), occurrenceCount: 1 } }) }}",
+          "options": {
+            "timeout": 10000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2,
+        "waitBetweenTries": 1000
+      }
+    ],
+    "connections": {
+      "Hourly Cron": {
+        "main": [
+          [
+            {
+              "node": "POST /search/strategy-hunt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST /search/strategy-hunt": {
+        "main": [
+          [
+            {
+              "node": "Split Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Results": {
+        "main": [
+          [
+            {
+              "node": "Loop Back",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Shape to Strict Scout Schema",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Shape to Strict Scout Schema": {
+        "main": [
+          [
+            {
+              "node": "POST /agent/scout-ideas (legacy)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST /agent/scout-ideas (legacy)": {
+        "main": [
+          [
+            {
+              "node": "Split Results",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "On Workflow Error": {
+        "main": [
+          [
+            {
+              "node": "POST workflow-errors",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio tonioswayz32@gmail.com",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-05T04:49:53.657Z",
+        "id": 1636,
+        "workflowId": "Ep2Zsu33tMOsaJbE",
+        "versionId": "73190e95-3835-4d77-9a79-745d9cbd8d64",
+        "event": "activated",
+        "userId": "4fd79e89-3017-4dbe-8cec-676fcab6f938"
+      }
+    ]
+  }
+}

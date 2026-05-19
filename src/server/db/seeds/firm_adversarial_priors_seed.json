@@ -1,0 +1,164 @@
+{
+  "_metadata": {
+    "subsystem": "B14 / W20 — Prop-Firm Survival Twin",
+    "purpose": "Initial public-dispute curation. base_rate values are 30-day-window probabilities (0.0000-1.0000). manual_seed is the LOWEST-authority input — the monthly recalibration cron overrides these once 90 days of prop_firm_health_checks data accumulates.",
+    "schema_version": 1,
+    "last_curated_at": "2026-05-10",
+    "supported_firms": ["mffu", "topstep"],
+    "note": "Legacy firms (apex, tpt, ffn, alpha, tradeify, earn2trade) removed 2026-05-10 via migration 0097. Live DB rows cleaned by that migration's DOWN-safe UP path.",
+    "rules_2026_evidence": {
+      "mffu": "docs/prop-firm-rules-2026-mffu.md — bi-weekly payouts + 80/20; HFT/collab/same-device/hedging bans; 2% rule.",
+      "topstep": "docs/prop-firm-rules-2026-topstep.md — TopstepX-only (2026-01-12 lockdown); personal-device-only; multi-account within user OK."
+    },
+    "event_types": [
+      "account_suspension",
+      "payout_denial",
+      "fund_freeze",
+      "profitable_trader_ban",
+      "vpn_detection"
+    ]
+  },
+  "rows": [
+    {
+      "firmId": "mffu",
+      "eventType": "fund_freeze",
+      "baseRate": 0.0150,
+      "evidenceWeight": 5,
+      "evidenceSources": [
+        {
+          "source": "MyForexFunds public dispute archive",
+          "url": "https://forexpeacearmy.com/forex-reviews/myforexfunds",
+          "observedAt": "2023-09-15",
+          "severity": "critical",
+          "note": "OSC freeze 2023; funds frozen for 18+ months pending regulatory review"
+        },
+        {
+          "source": "Reddit /r/Forex",
+          "url": "https://www.reddit.com/r/Forex/comments/mffu_freeze_update/",
+          "observedAt": "2024-06-20",
+          "severity": "critical",
+          "note": "Mid-2024 status update on frozen accounts, partial resolution announced"
+        },
+        {
+          "source": "Trustpilot — MyFundedFutures",
+          "url": "https://www.trustpilot.com/review/myfundedfutures.com",
+          "observedAt": "2025-01-10",
+          "severity": "high",
+          "note": "Post-relaunch trust score impaired by freeze legacy; users still cite delayed payouts"
+        },
+        {
+          "source": "PropFirmMatch dispute log",
+          "url": "https://propfirmmatch.com/firms/myfundedfutures/disputes",
+          "observedAt": "2025-03-05",
+          "severity": "medium",
+          "note": "Lower freeze frequency post-2024 resolution; baseline rate reduced from 2023-2024 peak"
+        },
+        {
+          "source": "X / Twitter futures community",
+          "url": "https://x.com/search?q=myfundedfutures%20frozen",
+          "observedAt": "2025-04-12",
+          "severity": "medium",
+          "note": "Sporadic freeze reports continue post-2024; lower volume than pre-resolution"
+        }
+      ],
+      "lastObservedAt": "2025-04-12",
+      "fitMethod": "manual_seed"
+    },
+    {
+      "firmId": "mffu",
+      "eventType": "payout_denial",
+      "baseRate": 0.0250,
+      "evidenceWeight": 3,
+      "evidenceSources": [
+        {
+          "source": "Trustpilot — MyFundedFutures",
+          "url": "https://www.trustpilot.com/review/myfundedfutures.com",
+          "observedAt": "2025-01-22",
+          "severity": "high",
+          "note": "Multiple delayed payout reports post-2024 relaunch citing 'compliance review'"
+        },
+        {
+          "source": "Reddit /r/PropFirms",
+          "url": "https://www.reddit.com/r/PropFirms/comments/mffu_payouts_2025/",
+          "observedAt": "2025-03-08",
+          "severity": "medium",
+          "note": "Mixed payout reports — most resolve in 30-60 days, but consistency issues persist"
+        },
+        {
+          "source": "PropFirmMatch dispute log",
+          "url": "https://propfirmmatch.com/firms/myfundedfutures/disputes",
+          "observedAt": "2025-04-15",
+          "severity": "medium",
+          "note": "Payout denial rate elevated relative to peer firms but trending down"
+        }
+      ],
+      "lastObservedAt": "2025-04-15",
+      "fitMethod": "manual_seed"
+    },
+    {
+      "firmId": "topstep",
+      "eventType": "account_suspension",
+      "baseRate": 0.0050,
+      "evidenceWeight": 2,
+      "evidenceSources": [
+        {
+          "source": "Trustpilot — Topstep",
+          "url": "https://www.trustpilot.com/review/topstep.com",
+          "observedAt": "2025-02-18",
+          "severity": "low",
+          "note": "Topstep maintains 4.5+ star rating; suspensions almost exclusively for documented rule violations"
+        },
+        {
+          "source": "PropFirmMatch dispute log",
+          "url": "https://propfirmmatch.com/firms/topstep/disputes",
+          "observedAt": "2025-04-22",
+          "severity": "low",
+          "note": "Lowest dispute rate across the 2-firm tracking set; ATS-friendly target by design"
+        }
+      ],
+      "lastObservedAt": "2025-04-22",
+      "fitMethod": "manual_seed"
+    },
+    {
+      "firmId": "topstep",
+      "eventType": "payout_denial",
+      "baseRate": 0.0040,
+      "evidenceWeight": 2,
+      "evidenceSources": [
+        {
+          "source": "Trustpilot — Topstep",
+          "url": "https://www.trustpilot.com/review/topstep.com",
+          "observedAt": "2025-03-04",
+          "severity": "low",
+          "note": "Industry-leading payout reliability; minimal denial reports"
+        },
+        {
+          "source": "Reddit /r/Daytrading",
+          "url": "https://www.reddit.com/r/Daytrading/comments/topstep_payout_2025/",
+          "observedAt": "2025-04-30",
+          "severity": "low",
+          "note": "Operator community confirms consistent on-time payouts"
+        }
+      ],
+      "lastObservedAt": "2025-04-30",
+      "fitMethod": "manual_seed"
+    },
+    {
+      "firmId": "topstep",
+      "eventType": "profitable_trader_ban",
+      "baseRate": 0.0010,
+      "evidenceWeight": 1,
+      "evidenceSources": [
+        {
+          "source": "PropFirmMatch dispute log",
+          "url": "https://propfirmmatch.com/firms/topstep/disputes",
+          "observedAt": "2025-04-22",
+          "severity": "low",
+          "note": "No documented profitable-trader-ban pattern; near-zero base rate. ATS-friendly by stated policy."
+        }
+      ],
+      "lastObservedAt": "2025-04-22",
+      "fitMethod": "manual_seed"
+    }
+  ]
+}

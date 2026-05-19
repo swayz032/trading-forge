@@ -1,0 +1,142 @@
+[
+  {
+    "type": "updateNode",
+    "nodeName": "Log KILL Compilation Failed",
+    "updates": {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nreturn [{\n  json: {\n    verdict: 'KILL',\n    reason: 'Failed compilation',\n    compilerErrors: data.errors || data.message || 'Unknown compiler error',\n    strategyDSL: $('Parse Proposer Output').json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    }
+  },
+  {
+    "type": "updateNode",
+    "nodeName": "Graveyard Check",
+    "updates": {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/graveyard/check",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Parse Proposer Output').json.strategyDSL) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    }
+  },
+  {
+    "type": "updateNode",
+    "nodeName": "Log KILL Graveyard Match",
+    "updates": {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nreturn [{\n  json: {\n    verdict: 'KILL',\n    reason: 'Too similar to dead strategy',\n    similarity: data.similarity || data.score || 'unknown',\n    matchedStrategy: data.matched_strategy || data.match || 'unknown',\n    strategyDSL: $('Parse Proposer Output').json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    }
+  },
+  {
+    "type": "updateNode",
+    "nodeName": "Critic (deepseek-r1:14b)",
+    "updates": {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'deepseek-r1:14b', messages: [ { role: 'system', content: 'You are a critical analyst reviewing trading strategies. Your job is to find weaknesses, overfitting risks, regime dependencies, and practical problems. Be specific and quantitative. Rate the strategy 1-10 on robustness, simplicity, and edge quality.' }, { role: 'user', content: 'Review this strategy proposal:\\n\\nStrategy DSL:\\n' + JSON.stringify($('Parse Proposer Output').json.strategyDSL, null, 2) + '\\n\\nCompiler validation passed successfully.' } ], stream: false, options: { temperature: 0.3, num_predict: 2048 } }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    }
+  },
+  {
+    "type": "updateNode",
+    "nodeName": "Parse Critic Output",
+    "updates": {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet criticAnalysis = '';\nif (response.message && response.message.content) {\n  criticAnalysis = response.message.content;\n} else if (response.response) {\n  criticAnalysis = response.response;\n} else {\n  criticAnalysis = 'ERROR: Could not extract critic analysis from response';\n}\n\nreturn [{\n  json: {\n    criticAnalysis,\n    criticModel: 'deepseek-r1:14b',\n    strategyDSL: $('Parse Proposer Output').json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    }
+  },
+  {
+    "type": "updateNode",
+    "nodeName": "Parse Prosecutor Output",
+    "updates": {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet prosecutorFindings = '';\nif (response.message && response.message.content) {\n  prosecutorFindings = response.message.content;\n} else if (response.response) {\n  prosecutorFindings = response.response;\n} else {\n  prosecutorFindings = 'ERROR: Could not extract prosecutor findings from response';\n}\n\nreturn [{\n  json: {\n    prosecutorFindings,\n    prosecutorModel: 'deepseek-r1:14b',\n    criticAnalysis: $('Parse Critic Output').json.criticAnalysis,\n    strategyDSL: $('Parse Proposer Output').json.strategyDSL,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    }
+  },
+  {
+    "type": "updateNode",
+    "nodeName": "Parse Promoter Verdict",
+    "updates": {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst response = items[0].json;\n\nlet promoterOutput = '';\nif (response.message && response.message.content) {\n  promoterOutput = response.message.content;\n} else if (response.response) {\n  promoterOutput = response.response;\n} else {\n  promoterOutput = 'ERROR: Could not extract promoter decision';\n}\n\nconst upperOutput = promoterOutput.toUpperCase().trim();\nlet verdict = 'KILL';\nif (upperOutput.startsWith('PROMOTE') || upperOutput.includes('DECISION: PROMOTE') || upperOutput.includes('VERDICT: PROMOTE')) {\n  verdict = 'PROMOTE';\n} else if (upperOutput.startsWith('REVISE') || upperOutput.includes('DECISION: REVISE') || upperOutput.includes('VERDICT: REVISE')) {\n  verdict = 'REVISE';\n}\n\nreturn [{\n  json: {\n    verdict,\n    promoterOutput,\n    promoterModel: 'qwen3',\n    prosecutorFindings: $('Parse Prosecutor Output').json.prosecutorFindings,\n    criticAnalysis: $('Parse Critic Output').json.criticAnalysis,\n    strategyDSL: $('Parse Proposer Output').json.strategyDSL,\n    rawProposerOutput: $('Parse Proposer Output').json.rawProposerOutput,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    }
+  },
+  {
+    "type": "updateNode",
+    "nodeName": "Verdict is PROMOTE?",
+    "updates": {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "promote-check",
+              "leftValue": "={{ $('Parse Promoter Verdict').json.verdict }}",
+              "rightValue": "PROMOTE",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {
+          "typeValidation": "loose"
+        }
+      }
+    }
+  },
+  {
+    "type": "updateNode",
+    "nodeName": "Compile Strategy for Backtest",
+    "updates": {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/compiler/compile",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Parse Promoter Verdict').json.strategyDSL) }}",
+        "options": {
+          "timeout": 60000
+        }
+      }
+    }
+  },
+  {
+    "type": "updateNode",
+    "nodeName": "Queue Backtest",
+    "updates": {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:4000/api/backtests",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ strategyDSL: $('Parse Promoter Verdict').json.strategyDSL, compiledStrategy: $json, source: 'tournament', tournamentTimestamp: $('Parse Promoter Verdict').json.timestamp }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    }
+  }
+]

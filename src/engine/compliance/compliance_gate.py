@@ -495,6 +495,22 @@ KILL_REASON_CONSECUTIVE_LOSSES     = "consecutive_loss_limit"
 # Default limits
 DEFAULT_CONSECUTIVE_LOSS_LIMIT = 4
 
+# ─── DLL Kill Switch Thresholds ────────────────────────────────────────────────
+# These implement the funded-trader playbook:
+#   HALT (67%): stop new entries when daily loss reaches 67% of firm DLL.
+#   FORCE_CLOSE (95%): flatten all positions when daily loss reaches 95% of firm DLL.
+#
+# Previously: HALT=95%, FORCE_CLOSE=100% — left no buffer for next-day trading.
+# Now: HALT=67%, FORCE_CLOSE=95% — personal DLL is 67% of firm DLL, preserving
+#   a next-day trading buffer even on the worst days.
+#
+# Configurable via env vars DLL_HALT_PCT / DLL_FORCE_CLOSE_PCT.
+# Callers (paper-execution-service.ts) may also pass thresholds directly in config
+# so the Python layer and TypeScript layer stay in sync without process restart.
+import os as _os
+_DEFAULT_DLL_HALT_PCT        = float(_os.environ.get("DLL_HALT_PCT", "0.67"))
+_DEFAULT_DLL_FORCE_CLOSE_PCT = float(_os.environ.get("DLL_FORCE_CLOSE_PCT", "0.95"))
+
 
 def check_kill_switch(
     session_id: str,
@@ -505,19 +521,27 @@ def check_kill_switch(
     trades_today: int = 0,
     consecutive_losses: int = 0,
     consecutive_loss_limit: int = DEFAULT_CONSECUTIVE_LOSS_LIMIT,
+    halt_pct: float | None = None,
+    force_close_pct: float | None = None,
 ) -> dict[str, Any]:
     """
     Pre-order kill switch — runs BEFORE every order entry.
 
     Conditions evaluated in priority order (cheapest/most critical first):
       1. daily_loss_limit_breached  — actual breach (force_close=True)
-      2. approaching_daily_loss_limit — within 5% of breach
+      2. approaching_daily_loss_limit — personal DLL halt threshold reached
       3. max_trades_per_session — hard trade count cap
       4. consecutive_loss_limit — 4+ consecutive losses
 
     Fail-CLOSED by design: any missing or invalid numeric inputs result
     in tripped=True rather than letting a potentially blown account trade.
     Callers must pass valid floats; never supply None for P&L fields.
+
+    Threshold semantics (funded-trader playbook):
+      force_close_pct (default 0.95): force-flatten all positions at 95% of firm DLL.
+        Previously 1.00 (actual breach) — now forces action before full breach.
+      halt_pct (default 0.67): block new entries at 67% of firm DLL.
+        This is the personal DLL = 67% of firm DLL rule. Leaves a buffer for next-day.
 
     Args:
         session_id:             paper session UUID (for structured logging)
@@ -528,17 +552,26 @@ def check_kill_switch(
         trades_today:           number of trades taken today
         consecutive_losses:     number of consecutive losing trades this session
         consecutive_loss_limit: threshold before kill trips (default 4)
+        halt_pct:               fraction of DLL at which new entries are blocked
+                                (default: DLL_HALT_PCT env var, fallback 0.67)
+        force_close_pct:        fraction of DLL at which positions are force-closed
+                                (default: DLL_FORCE_CLOSE_PCT env var, fallback 0.95)
 
     Returns:
         {
             "tripped": bool,
-            "reason": str | None,       # KILL_REASON_* constant or None
-            "force_close": bool,        # True only on actual breach
+            "reason": str | None,         # KILL_REASON_* constant or None
+            "force_close": bool,          # True only when force_close_pct reached
             "session_id": str,
             "firm_key": str,
-            "daily_pnl_pct": float,     # current_daily_pnl / daily_loss_limit
+            "daily_pnl_pct": float,       # current_daily_pnl / daily_loss_limit
+            "halt_pct_used": float,       # effective halt threshold (for audit)
+            "force_close_pct_used": float,# effective force_close threshold (for audit)
         }
     """
+    effective_halt_pct        = halt_pct        if halt_pct        is not None else _DEFAULT_DLL_HALT_PCT
+    effective_force_close_pct = force_close_pct if force_close_pct is not None else _DEFAULT_DLL_FORCE_CLOSE_PCT
+
     # Guard: invalid daily_loss_limit makes the P&L check meaningless — fail closed
     if not isinstance(daily_loss_limit, (int, float)) or daily_loss_limit <= 0:
         return {
@@ -548,12 +581,14 @@ def check_kill_switch(
             "session_id": session_id,
             "firm_key": firm_key,
             "daily_pnl_pct": float("nan"),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
         }
 
     daily_pnl_pct = current_daily_pnl / daily_loss_limit  # negative when losing
 
-    # 1. Actual breach — force close existing positions
-    if daily_pnl_pct <= -1.00:
+    # 1. Force-close threshold — flatten all positions
+    if daily_pnl_pct <= -effective_force_close_pct:
         return {
             "tripped": True,
             "reason": KILL_REASON_DAILY_LOSS_BREACHED,
@@ -561,10 +596,12 @@ def check_kill_switch(
             "session_id": session_id,
             "firm_key": firm_key,
             "daily_pnl_pct": round(daily_pnl_pct, 4),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
         }
 
-    # 2. Approaching breach (within 5%) — stop new orders, don't force close
-    if daily_pnl_pct <= -0.95:
+    # 2. Halt threshold — stop new entries, don't force close existing positions
+    if daily_pnl_pct <= -effective_halt_pct:
         return {
             "tripped": True,
             "reason": KILL_REASON_APPROACHING_DAILY_LOSS,
@@ -572,6 +609,8 @@ def check_kill_switch(
             "session_id": session_id,
             "firm_key": firm_key,
             "daily_pnl_pct": round(daily_pnl_pct, 4),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
         }
 
     # 3. Max trades per session-day
@@ -583,6 +622,8 @@ def check_kill_switch(
             "session_id": session_id,
             "firm_key": firm_key,
             "daily_pnl_pct": round(daily_pnl_pct, 4),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
         }
 
     # 4. Consecutive loss limit
@@ -594,6 +635,8 @@ def check_kill_switch(
             "session_id": session_id,
             "firm_key": firm_key,
             "daily_pnl_pct": round(daily_pnl_pct, 4),
+            "halt_pct_used": effective_halt_pct,
+            "force_close_pct_used": effective_force_close_pct,
         }
 
     return {
@@ -603,6 +646,8 @@ def check_kill_switch(
         "session_id": session_id,
         "firm_key": firm_key,
         "daily_pnl_pct": round(daily_pnl_pct, 4),
+        "halt_pct_used": effective_halt_pct,
+        "force_close_pct_used": effective_force_close_pct,
     }
 
 
@@ -756,7 +801,7 @@ def check_correlated_position_guard(
             )
 
         if corr > threshold:
-            _logger.info(
+            _logger.warning(
                 "compliance.correlated_position_blocked symbol=%s open=%s correlation=%.3f threshold=%.3f",
                 symbol, pos_symbol, corr, threshold,
             )
@@ -776,6 +821,204 @@ def check_correlated_position_guard(
         "blocking_correlation": None,
         "threshold": threshold,
         "symbol": symbol,
+    }
+
+
+# ─── 2026 MFFU Hard Rules ───────────────────────────────────────────────
+# Canonical reference: docs/prop-firm-rules-2026-mffu.md
+#
+# These functions enforce MFFU 2026-specific compliance rules that don't fit
+# the legacy check_strategy_compliance shape. They are called from Python
+# subprocess entry points or directly from tests.
+#
+# Constants are imported from firm_config to keep the canonical doc parsed
+# by scripts/verify-2026-rules-compliance.mjs in sync with code.
+
+# Reasons for kill switch / blocked-order events
+KILL_REASON_TWO_PERCENT_RULE             = "two_percent_price_limit_breach"
+KILL_REASON_HFT_LIMIT                    = "hft_max_trades_per_day"
+KILL_REASON_SIMULTANEOUS_LIMIT_PRICE     = "simultaneous_limits_at_same_price"
+KILL_REASON_HEDGE_SAME_UNDERLYING        = "hedge_same_underlying"
+
+
+def check_two_percent_rule(
+    intended_max_loss_dollars: float,
+    account_balance_dollars: float,
+    pct_threshold: float = 0.02,
+) -> dict[str, Any]:
+    """
+    MFFU 2026 Rule 8: 2% price limit rule.
+
+    Pre-order check. Blocks any order whose intended max loss exceeds
+    `pct_threshold * account_balance_dollars`. For 50K MFFU at 0.02, that's
+    $1,000 max loss per trade.
+
+    Args:
+        intended_max_loss_dollars: positive dollar amount the strategy is
+            willing to lose on this entry (entry_price - stop_price) * tick_value * contracts.
+        account_balance_dollars:   current account balance (positive).
+        pct_threshold:             firm's per-trade loss cap as a fraction
+            of account balance. Default 0.02 (MFFU 2026).
+
+    Returns:
+        {
+            "allowed": bool,
+            "reason": KILL_REASON_TWO_PERCENT_RULE | None,
+            "intended_max_loss": float,
+            "limit_dollars": float,
+            "pct_threshold": float,
+        }
+
+    Fail-CLOSED: invalid inputs return allowed=False.
+    """
+    if not isinstance(intended_max_loss_dollars, (int, float)) or intended_max_loss_dollars < 0:
+        return {
+            "allowed": False,
+            "reason": KILL_REASON_TWO_PERCENT_RULE,
+            "intended_max_loss": float("nan"),
+            "limit_dollars": float("nan"),
+            "pct_threshold": pct_threshold,
+        }
+    if not isinstance(account_balance_dollars, (int, float)) or account_balance_dollars <= 0:
+        return {
+            "allowed": False,
+            "reason": KILL_REASON_TWO_PERCENT_RULE,
+            "intended_max_loss": intended_max_loss_dollars,
+            "limit_dollars": float("nan"),
+            "pct_threshold": pct_threshold,
+        }
+
+    limit = pct_threshold * account_balance_dollars
+    allowed = intended_max_loss_dollars <= limit
+
+    if not allowed:
+        _logger.warning(
+            "compliance.two_percent_rule_violation "
+            "intended_max_loss=%.2f limit_dollars=%.2f pct_threshold=%.4f account_balance=%.2f",
+            intended_max_loss_dollars, limit, pct_threshold, account_balance_dollars,
+        )
+
+    return {
+        "allowed": allowed,
+        "reason": None if allowed else KILL_REASON_TWO_PERCENT_RULE,
+        "intended_max_loss": round(float(intended_max_loss_dollars), 2),
+        "limit_dollars": round(float(limit), 2),
+        "pct_threshold": pct_threshold,
+    }
+
+
+def check_hft_limit(
+    trades_today: int,
+    max_trades_per_day: int = 500,
+) -> dict[str, Any]:
+    """
+    MFFU 2026 Rule 1: High-frequency trading not allowed.
+
+    Returns blocked when trades_today >= max_trades_per_day.
+
+    Args:
+        trades_today:        count of trades already taken in this session.
+        max_trades_per_day:  hard ceiling. Default 500 (MFFU 2026 HFT line).
+
+    Returns:
+        {
+            "allowed": bool,
+            "reason": KILL_REASON_HFT_LIMIT | None,
+            "trades_today": int,
+            "max_trades_per_day": int,
+        }
+    """
+    try:
+        trades = int(trades_today)
+        cap = int(max_trades_per_day)
+    except (TypeError, ValueError):
+        return {
+            "allowed": False,
+            "reason": KILL_REASON_HFT_LIMIT,
+            "trades_today": 0,
+            "max_trades_per_day": max_trades_per_day,
+        }
+    allowed = trades < cap
+    if not allowed:
+        _logger.warning(
+            "compliance.hft_limit_violation trades_today=%d cap=%d",
+            trades, cap,
+        )
+    return {
+        "allowed": allowed,
+        "reason": None if allowed else KILL_REASON_HFT_LIMIT,
+        "trades_today": trades,
+        "max_trades_per_day": cap,
+    }
+
+
+def check_simultaneous_limit_price(
+    proposed_symbol: str,
+    proposed_side: str,
+    proposed_price: float,
+    open_limit_orders: list[dict[str, Any]],
+    price_epsilon: float = 1e-6,
+) -> dict[str, Any]:
+    """
+    MFFU 2026 Rule 6: Simultaneous limits at same price prohibited.
+
+    Returns blocked when an open limit order matches (symbol, side, price)
+    within `price_epsilon`.
+
+    Args:
+        proposed_symbol:    symbol of the new limit order
+        proposed_side:      "buy" | "sell"
+        proposed_price:     limit price of new order
+        open_limit_orders:  list of dicts; each must have keys
+                            "symbol", "side", "price", "order_type" (= "limit")
+        price_epsilon:      float tolerance for price equality
+
+    Returns:
+        {
+            "allowed": bool,
+            "reason": KILL_REASON_SIMULTANEOUS_LIMIT_PRICE | None,
+            "conflicting_order_count": int,
+            "proposed": {symbol, side, price},
+        }
+    """
+    sym = (proposed_symbol or "").upper()
+    side = (proposed_side or "").lower()
+    try:
+        price = float(proposed_price)
+    except (TypeError, ValueError):
+        return {
+            "allowed": False,
+            "reason": KILL_REASON_SIMULTANEOUS_LIMIT_PRICE,
+            "conflicting_order_count": 0,
+            "proposed": {"symbol": sym, "side": side, "price": proposed_price},
+        }
+
+    conflicts = 0
+    for order in open_limit_orders or []:
+        if (order.get("order_type") or "").lower() != "limit":
+            continue
+        if (order.get("symbol") or "").upper() != sym:
+            continue
+        if (order.get("side") or "").lower() != side:
+            continue
+        try:
+            order_price = float(order.get("price"))
+        except (TypeError, ValueError):
+            continue
+        if abs(order_price - price) <= price_epsilon:
+            conflicts += 1
+
+    allowed = conflicts == 0
+    if not allowed:
+        _logger.warning(
+            "compliance.simultaneous_limit_price_violation symbol=%s side=%s price=%.6f conflicting_order_count=%d",
+            sym, side, price, conflicts,
+        )
+    return {
+        "allowed": allowed,
+        "reason": None if allowed else KILL_REASON_SIMULTANEOUS_LIMIT_PRICE,
+        "conflicting_order_count": conflicts,
+        "proposed": {"symbol": sym, "side": side, "price": price},
     }
 
 
@@ -846,6 +1089,8 @@ if __name__ == "__main__":
         new_content = config.get("new_content", "")
         result = detect_drift(stored_hash, new_content)
     elif action == "check_kill_switch":
+        _raw_halt_pct        = config.get("haltPct")
+        _raw_force_close_pct = config.get("forceClosePct")
         result = check_kill_switch(
             session_id=config.get("sessionId", "unknown"),
             firm_key=config.get("firmKey", firm),
@@ -855,6 +1100,8 @@ if __name__ == "__main__":
             trades_today=int(config.get("tradesToday", 0)),
             consecutive_losses=int(config.get("consecutiveLosses", 0)),
             consecutive_loss_limit=int(config.get("consecutiveLossLimit", DEFAULT_CONSECUTIVE_LOSS_LIMIT)),
+            halt_pct=float(_raw_halt_pct) if _raw_halt_pct is not None else None,
+            force_close_pct=float(_raw_force_close_pct) if _raw_force_close_pct is not None else None,
         )
     elif action == "check_strategy_compliance":
         # B5 — multi-firm promotion: per-firm eligibility check.
@@ -863,6 +1110,27 @@ if __name__ == "__main__":
         strategy_dict = config.get("strategy") or {}
         firm_rules_dict = config.get("firm_rules") or {}
         result = check_strategy_compliance(strategy_dict, firm_rules_dict)
+    elif action == "check_two_percent_rule":
+        # MFFU 2026 Rule 8 — pre-order 2% price-limit gate.
+        result = check_two_percent_rule(
+            intended_max_loss_dollars=float(config.get("intendedMaxLoss", 0)),
+            account_balance_dollars=float(config.get("accountBalance", 0)),
+            pct_threshold=float(config.get("pctThreshold", 0.02)),
+        )
+    elif action == "check_hft_limit":
+        # MFFU 2026 Rule 1 — pre-order HFT cap gate.
+        result = check_hft_limit(
+            trades_today=int(config.get("tradesToday", 0)),
+            max_trades_per_day=int(config.get("maxTradesPerDay", 500)),
+        )
+    elif action == "check_simultaneous_limit_price":
+        # MFFU 2026 Rule 6 — pre-order duplicate-limit-price gate.
+        result = check_simultaneous_limit_price(
+            proposed_symbol=str(config.get("proposedSymbol", "")),
+            proposed_side=str(config.get("proposedSide", "")),
+            proposed_price=float(config.get("proposedPrice", 0)),
+            open_limit_orders=config.get("openLimitOrders") or [],
+        )
     else:
         result = {
             "error": f"Unknown action: {action}",
@@ -873,6 +1141,9 @@ if __name__ == "__main__":
                 "detect_drift",
                 "check_kill_switch",
                 "check_strategy_compliance",
+                "check_two_percent_rule",
+                "check_hft_limit",
+                "check_simultaneous_limit_price",
             ],
         }
 

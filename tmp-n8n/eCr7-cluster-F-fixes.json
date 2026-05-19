@@ -1,0 +1,16 @@
+[
+  {
+    "id": "log-accepted",
+    "name": "Log Strategy to Journal",
+    "parameters": {
+      "method": "POST",
+      "url": "http://host.docker.internal:4000/api/journal",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ JSON.stringify({ event: 'strategy_accepted', strategy_name: $json.strategy_name || $('Parse AI Strategy Output').json.strategy_name, tier: $json.tier, backtest_id: $json.id || $json.backtestId, metrics: { sharpe: $json.sharpe, max_drawdown: $json.max_drawdown, total_return: $json.total_return }, source: 'n8n-strategy-generation-loop', timestamp: new Date().toISOString() }) }}",
+      "options": {
+        "timeout": 10000
+      }
+    }
+  }
+]

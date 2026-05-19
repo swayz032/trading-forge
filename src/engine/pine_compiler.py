@@ -573,7 +573,14 @@ bgcolor(state == 2 ? color.new(color.green, 92) : state == 4 ? color.new(color.r
 """
 
 
-def compile_strategy(strategy, firm_key: Optional[str] = None, risk_intelligence: Optional[dict] = None) -> CompilerResult:
+def compile_strategy(
+    strategy,
+    firm_key: Optional[str] = None,
+    risk_intelligence: Optional[dict] = None,
+    recipient_qty: Optional[int] = None,
+    recipient_label: Optional[str] = None,
+    hmac_secret: Optional[str] = None,
+) -> CompilerResult:
     """Compile a StrategyDSL (dict or Pydantic model) to Pine Script v5 artifacts.
 
     Args:
@@ -583,6 +590,15 @@ def compile_strategy(strategy, firm_key: Optional[str] = None, risk_intelligence
             Keys: breach_probability, ruin_probability, survival_rate,
             mc_sharpe_p50, quantum_estimate (all optional floats).
             Also accepts governance_label (str) for quantum_estimate annotation.
+        recipient_qty: Per-recipient contract count (Track 6 / Pass 2). When set,
+            the ATR qty block is annotated with a fixed override comment so the
+            Pine artifact reflects the recipient's actual contract allocation.
+            When None (default), ATR dynamic sizing is unchanged — backwards compatible.
+        recipient_label: Optional human-readable label embedded as Pine comment
+            (e.g. "alice_mffu_50k"). Surfaced in artifact header for operator reference.
+        hmac_secret: Per-recipient HMAC secret (64-char hex) for Track 8 marker
+            collection. Embedded in TradersPost webhook alert payload as "hmac" field.
+            When None, no HMAC is injected.
 
     Returns:
         CompilerResult with exportability score and Pine artifacts
@@ -670,6 +686,17 @@ def compile_strategy(strategy, firm_key: Optional[str] = None, risk_intelligence
     # Stage 8: Build alerts
     alert_pine, alerts_json = _build_alerts(strategy_name)
 
+    # T6: Inject per-recipient fields into alerts_json metadata.
+    # The HMAC secret is persisted in account_strategy_assignments.hmac_secret (migration 0100b).
+    # It is also embedded here so downstream consumers (TradersPost webhook, Track 8 collector)
+    # can match the originating recipient without a DB lookup.
+    if recipient_qty is not None:
+        alerts_json["recipient_qty"] = recipient_qty
+    if recipient_label:
+        alerts_json["recipient_label"] = recipient_label
+    if hmac_secret:
+        alerts_json["hmac_secret_ref"] = "present"  # Never embed raw secret in alerts_json metadata
+
     # Stage 8b: Resolve export type.
     # Valid values: "pine_indicator" (default), "pine_strategy", "alert_only".
     # "pine_indicator"  — indicator + alerts_json (+ strategy_shell when score >= 70)
@@ -685,13 +712,22 @@ def compile_strategy(strategy, firm_key: Optional[str] = None, risk_intelligence
 
     use_target = strategy.get("take_profit_atr_multiple") is not None
 
+    # T6: build per-recipient header lines (empty when no recipient context)
+    _recipient_header = ""
+    if recipient_label:
+        _recipient_header += f"// Recipient: {recipient_label}\n"
+    if recipient_qty is not None:
+        _recipient_header += f"// RecipientQty: {recipient_qty} contracts (profit-tier-aware override)\n"
+    if hmac_secret:
+        _recipient_header += f"// HMACSecretRef: present (embedded in webhook payload — do not share)\n"
+
     pine_code = f"""//@version=5
 indicator("{strategy_name}", overlay=true, max_labels_count=500)
 
 // ─── Inputs ─────────────────────────────────────────────────────
 // Auto-generated from StrategyDSL — {strategy.get('description', '')}
 // Symbol: {symbol} | Timeframe: {timeframe} | Direction: {strategy.get('direction', 'both')}
-"""
+{_recipient_header}"""
 
     # Add input parameters
     entry_params = strategy.get("entry_params", {})
@@ -737,6 +773,25 @@ target_distance = {tp_distance}
     pine_code += risk_intel_overlay
     # P0-1/2/3/4 blocks for legacy indicator path
     pine_code += _build_atr_qty_block(firm_key, atr_period)
+    # T6: Per-recipient qty override injection (Track 6 / Pass 2).
+    # When recipient_qty is set, append a Pine variable that overrides qty_final so the
+    # recipient's pre-calculated contract count is used instead of ATR dynamic sizing.
+    # This is a downstream comment + variable append — it does NOT break existing ATR
+    # logic; the qty_final override is declared AFTER the ATR block and shadows it.
+    if recipient_qty is not None:
+        _hmac_field = f', "hmac": "{hmac_secret}"' if hmac_secret else ""
+        pine_code += f"""
+// ─── Per-Recipient Override (Track 6 / Pass 2) ─────────────────
+// Recipient qty pre-calculated by pine-export-recipient-service (profit-tier-aware).
+// Overrides ATR dynamic qty_final for this specific account allocation.
+qty_final := {recipient_qty}  // recipient-specific contract count
+"""
+        if hmac_secret:
+            pine_code += f"""
+// HMAC secret is embedded in the alert JSON payload (see alert conditions below).
+// Do not modify or share this value — it is used by Track 8 marker collection for
+// webhook authentication. Regenerate via /api/pine-export/recipient if rotated.
+"""
     pine_code += _build_regime_block(strategy)
     pine_code += _build_event_blackout_block()
     pine_code += _build_anti_setup_block(strategy)
@@ -1461,6 +1516,9 @@ def compile_dual_artifacts(
     firm_key: Optional[str] = None,
     risk_intelligence: Optional[dict] = None,
     strategy_id: Optional[str] = None,
+    recipient_qty: Optional[int] = None,
+    recipient_label: Optional[str] = None,
+    hmac_secret: Optional[str] = None,
 ) -> DualArtifactResult:
     """Compile a StrategyDSL to BOTH Pine artifacts from the same logic.
 
@@ -1622,6 +1680,27 @@ def compile_dual_artifacts(
         firm_key=firm_key,
     )
 
+    # T6: Per-recipient header comment lines (prepended to both artifacts).
+    _recip_comments = ""
+    if recipient_label:
+        _recip_comments += f"// Recipient      : {recipient_label}\n"
+    if recipient_qty is not None:
+        _recip_comments += f"// Recipient Qty  : {recipient_qty} contracts (profit-tier-aware)\n"
+    if hmac_secret:
+        _recip_comments += f"// HMAC           : present — embedded in strategy webhook payload\n"
+
+    # T6: Per-recipient qty override block appended to shared preamble for both artifacts.
+    _recip_qty_block = ""
+    if recipient_qty is not None:
+        _recip_qty_block = f"""
+// ─── Per-Recipient Qty Override (Track 6) ───────────────────────────────
+// Profit-tier-aware contract count pre-calculated by pine-export-recipient-service.
+qty_final := {recipient_qty}
+"""
+        if hmac_secret:
+            _recip_qty_block += f"""// HMAC embedded in TradersPost webhook action payload (see alertcondition below).
+"""
+
     # Stage 7a: INDICATOR artifact
     indicator_code = _build_indicator_artifact(
         strategy_name=strategy_name,
@@ -1629,6 +1708,13 @@ def compile_dual_artifacts(
         strategy_id=sid,
         shared_preamble=shared,
     )
+    # T6: Inject recipient metadata into indicator artifact
+    if _recip_comments:
+        indicator_code = indicator_code.replace(
+            f'indicator("{strategy_name}"', _recip_comments + f'indicator("{strategy_name}"', 1
+        )
+    if _recip_qty_block:
+        indicator_code += _recip_qty_block
 
     # Stage 7b: STRATEGY artifact (commission from firm_key)
     commission = 0.62
@@ -1651,6 +1737,23 @@ def compile_dual_artifacts(
         use_target=use_target,
         manual_approval_firm=manual_approval_firm,
     )
+    # T6: Inject recipient metadata and qty override into strategy artifact
+    if _recip_comments:
+        strategy_code = strategy_code.replace(
+            f'strategy("{strategy_name}"', _recip_comments + f'strategy("{strategy_name}"', 1
+        )
+    if _recip_qty_block:
+        strategy_code += _recip_qty_block
+    # T6: Inject HMAC into TradersPost webhook message strings in the strategy artifact.
+    # Pattern: replace `"strategyId": "SID"}` with `"strategyId": "SID", "hmac": "SECRET"}`
+    # The artifact uses single-} in alertcondition message strings (they were emitted by
+    # _build_strategy_webhook_alerts which uses f-string `{{` → `{` escaping).
+    # This makes every live alertcondition message carry the HMAC for Track 8 validation.
+    if hmac_secret:
+        strategy_code = strategy_code.replace(
+            f'"strategyId": "{sid}"}}',
+            f'"strategyId": "{sid}", "hmac": "{hmac_secret}"}}',
+        )
 
     # Stage 8: Alerts JSON metadata (covers both delivery paths)
     tv_symbol = _TV_SYMBOL_MAP.get(symbol, f"{symbol}1!")
@@ -1696,6 +1799,19 @@ def compile_dual_artifacts(
             },
         },
     }
+
+    # T6: Inject per-recipient fields into dual alerts_json metadata.
+    if recipient_qty is not None:
+        alerts_json["recipient_qty"] = recipient_qty
+        # Embed qty into the sample_payload for downstream automation clarity
+        alerts_json["delivery_paths"]["strategy"]["sample_payload"]["quantity"] = recipient_qty
+    if recipient_label:
+        alerts_json["recipient_label"] = recipient_label
+    if hmac_secret:
+        # Embed HMAC in sample_payload for Track 8 marker collection authentication.
+        # The Pine webhook alertcondition emits this in the live alert message.
+        alerts_json["delivery_paths"]["strategy"]["sample_payload"]["hmac"] = hmac_secret
+        alerts_json["hmac_secret_ref"] = "present"
 
     # Stage 9: Content hash — hash of both Pine scripts concatenated
     content_hash = hashlib.sha256((indicator_code + strategy_code).encode()).hexdigest()
@@ -1773,9 +1889,20 @@ if __name__ == "__main__":
     strategy = config.get("strategy", config)
     firm_key = args.firm_key or config.get("firm_key")
     risk_intelligence = config.get("risk_intelligence")
+    # T6: Per-recipient params read from config JSON (injected by pine-export-recipient-service.ts)
+    recipient_qty: Optional[int] = config.get("recipient_qty")
+    recipient_label: Optional[str] = config.get("recipient_label")
+    hmac_secret: Optional[str] = config.get("hmac_secret")
 
     if args.dual:
-        dual_result = compile_dual_artifacts(strategy, firm_key, risk_intelligence=risk_intelligence, strategy_id=args.strategy_id)
+        dual_result = compile_dual_artifacts(
+            strategy, firm_key,
+            risk_intelligence=risk_intelligence,
+            strategy_id=args.strategy_id,
+            recipient_qty=recipient_qty,
+            recipient_label=recipient_label,
+            hmac_secret=hmac_secret,
+        )
         output = dual_result.model_dump()
         # Truncate artifact content for stdout readability
         for field in ("indicator_artifact", "strategy_artifact", "alerts_artifact"):
@@ -1783,7 +1910,13 @@ if __name__ == "__main__":
             if art and len(art.get("content", "")) > 500:
                 art["content"] = art["content"][:500] + f"... [{len(art['content'])} chars total]"
     else:
-        result = compile_strategy(strategy, firm_key, risk_intelligence=risk_intelligence)
+        result = compile_strategy(
+            strategy, firm_key,
+            risk_intelligence=risk_intelligence,
+            recipient_qty=recipient_qty,
+            recipient_label=recipient_label,
+            hmac_secret=hmac_secret,
+        )
         output = result.model_dump()
         for art in output.get("artifacts", []):
             content = art.get("content", "")

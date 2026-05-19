@@ -24,7 +24,7 @@ import { captureToDLQ } from "../lib/dlq-service.js";
 import { db } from "../db/index.js";
 import { tracer } from "../lib/tracing.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
-import { backtestRuns } from "../lib/metrics-registry.js";
+import { backtestRuns, backtestScoredTotal } from "../lib/metrics-registry.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
 import { computeResultHash, computeDataHash, computeStrategyHash } from "../lib/result-hasher.js";
 
@@ -276,24 +276,24 @@ interface RlTrainingResult {
 // 10 minutes max per backtest — prevents matrix from hanging on slow strategies
 const BACKTEST_TIMEOUT_MS = 10 * 60 * 1000;
 
-export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string) {
+export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string, actor: "operator" | "automated" = "automated") {
   // ─── Pipeline pause guard ─────────────────────────────────────
-  // Block new backtests when pipeline is PAUSED/VACATION. Defence-in-depth:
-  // upstream callers (runStrategy, route handlers) already gate, but any
-  // direct caller (tests, future code) hits this guard. We log + return
-  // before writing a backtests row so the DB doesn't accumulate orphaned
-  // pending entries while paused.
-  // The id is `null` — callers MUST check status before writing it as a FK
-  // (systemJournal.backtestId references backtests.id). The runStrategy
-  // path already gates upstream so this branch is rare-race-only.
-  if (!(await isPipelineActive())) {
+  // Pause stops the AUTOMATED engine (scout-fed flow, schedulers, n8n drains)
+  // from churning fresh candidates through backtest. It does NOT block the
+  // operator from running manual validation during dev/maintenance work —
+  // that's the whole point of backtest as a probe. Per AGENTS.md pause
+  // discipline, pause gates: drainScoutedIdeas(), pipelineGate()-wrapped
+  // scheduler crons, paper-engine entry, lifecycle promotion sweeps.
+  // Backtest is validation, not trading.
+  //
+  // actor="operator" bypasses the guard with audit row (POST /api/backtests
+  // route passes this). actor="automated" (default) preserves Wave 6 fix:
+  // returns { status:"skipped", id:null } so callers don't get ghost IDs.
+  if (actor !== "operator" && !(await isPipelineActive())) {
     logger.info(
-      { fn: "runBacktest", strategyId, symbol: config.strategy.symbol },
-      "Skipped: pipeline paused",
+      { fn: "runBacktest", strategyId, symbol: config.strategy.symbol, actor },
+      "Skipped: pipeline paused (automated caller)",
     );
-    // Cast to the success shape with id=null. The TypeScript widening here is
-    // acceptable: callers that ignore status="skipped" will see a null id which
-    // is allowed by the schema (backtestId is nullable in systemJournal).
     return { id: null as unknown as string, status: "skipped", error: "pipeline_paused" };
   }
 
@@ -595,6 +595,91 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       forgeScore: result.forge_score ?? null,
     });
 
+    // ─── CF-3 Fix: Sync forgeScore + tier onto strategies row unconditionally ──
+    // Previously, strategies.forgeScore was only updated inside the TIER_1/2/3
+    // auto-promote gate (lines below). REJECTED-tier strategies never had their
+    // forge_score reflected on the strategies row, so the UI showed 0/null and
+    // the lifecycle gate had no evidence of the actual computed score.
+    //
+    // Now: update strategies.forgeScore for ALL completed backtests, regardless of
+    // tier outcome. This lets operators see "REJECTED at 14/100" instead of "0",
+    // which is the actual signal for "how close is this to the 50-point gate?".
+    //
+    // We do NOT update strategies.lifecycleState here — that stays gated on the
+    // TIER_1/2/3 fast-track or lifecycle-service.checkAutoPromotions.
+    if (result.forge_score != null) {
+      await db
+        .update(strategies)
+        .set({ forgeScore: String(result.forge_score) })
+        .where(eq(strategies.id, strategyId));
+
+      // Broadcast backtest:scored so dashboards update immediately on completion.
+      broadcastSSE("backtest:scored", {
+        backtestId,
+        strategyId,
+        forgeScore: result.forge_score,
+        tier: result.tier ?? null,
+        gateRejected: result.tier === "REJECTED" || !result.tier,
+        correlationId: correlationId ?? null,
+      });
+
+      // Audit log: forge scoring outcome — structured evidence for promotion decisions.
+      // Non-transactional (fires outside the main tx) — failure is non-blocking.
+      await db.insert(auditLog).values({
+        action: "backtest.scored",
+        entityType: "backtest",
+        entityId: backtestId,
+        input: { strategyId, tier: result.tier ?? null },
+        result: {
+          forgeScore: result.forge_score,
+          tier: result.tier ?? null,
+          gateRejected: result.tier === "REJECTED" || !result.tier,
+          totalTrades: result.total_trades ?? null,
+          sharpeRatio: result.sharpe_ratio ?? null,
+          avgDailyPnl: result.avg_daily_pnl ?? null,
+        },
+        status: result.tier && ["TIER_1", "TIER_2", "TIER_3"].includes(result.tier) ? "success" : "failure",
+        decisionAuthority: "gate",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr) => {
+        logger.warn({ backtestId, strategyId, err: auditErr }, "backtest.scored audit_log write failed (non-blocking)");
+      });
+
+      // Prometheus counter for tier distribution monitoring
+      backtestScoredTotal.labels({ tier: result.tier ?? "null" }).inc();
+
+      logger.info(
+        { backtestId, strategyId, forgeScore: result.forge_score, tier: result.tier ?? null, gateRejected: result.tier === "REJECTED" || !result.tier },
+        "backtest.scored: strategies.forgeScore updated",
+      );
+    }
+
+    // W9-3: Broadcast per-window walk-forward progress SSE. Fires post-commit
+    // (same pattern as graveyard_burial) so events only emit on durable rows.
+    if (wfResults?.windows?.length) {
+      const ts = new Date().toISOString();
+      for (let idx = 0; idx < wfResults.windows.length; idx++) {
+        const w = wfResults.windows[idx] as Record<string, unknown>;
+        const oosMetrics = (w.oos_metrics as Record<string, unknown> | undefined) ?? null;
+        const oosSharpe = oosMetrics?.sharpe_ratio != null ? Number(oosMetrics.sharpe_ratio) : null;
+        const oosNetPnl = oosMetrics?.total_return != null ? Number(oosMetrics.total_return) : null;
+        // A window "passed" if OOS Sharpe >= 0.5 (minimum viable threshold)
+        const passed = oosSharpe != null ? oosSharpe >= 0.5 : false;
+        broadcastSSE("walkforward:window_complete", {
+          backtestId,
+          strategyId,
+          windowIndex: typeof w.window === "number" ? w.window : idx + 1,
+          windowStart: (w.oos_start as string | null) ?? null,
+          windowEnd: (w.oos_end as string | null) ?? null,
+          oosSharpe,
+          oosNetPnl,
+          passed,
+          correlationId: correlationId ?? null,
+          timestamp: ts,
+        });
+      }
+    }
+
     backtestRuns.labels({ status: "completed", mode, tier: result.tier ?? "none" }).inc();
 
     // ─── A2: Backtest Provenance Tracking (fire-and-forget) ──────────────────
@@ -692,6 +777,31 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         logger.warn(
           { backtestId, strategyId, err: sigVecErr },
           "A7: signal vector persistence failed (non-blocking — backtest is still completed)",
+        );
+      }
+    })();
+
+    // ─── A14: Synthetic Black Swan Survival evaluation (fire-and-forget) ──────
+    // Runs the synthetic regime evaluator AFTER backtest completion against the
+    // synthetic regime bank (W19 / Pass 4 wiring).
+    //
+    // Hard contract — DO NOT change:
+    //   - Fire-and-forget. NEVER awaited. NEVER affects backtest return value.
+    //   - Errors from runBlackSwanTest swallowed via .catch() with logger.error.
+    //   - Phase 0 advisory: lifecycle-service reads the latest run; promotion
+    //     never blocks on this evaluation.
+    //
+    // Pattern source: A7 signal-vector persistence block immediately above.
+    (async () => {
+      try {
+        const { runBlackSwanTest } = await import("./synthetic-black-swan-service.js");
+        runBlackSwanTest(backtestId, strategyId, { correlationId: correlationId ?? undefined })
+          .catch((err) => logger.error({ err, backtestId }, "synth_black_swan_eval_failed"));
+      } catch (importErr) {
+        // Dynamic import failure is non-blocking — backtest is still completed.
+        logger.warn(
+          { backtestId, strategyId, err: importErr },
+          "A14: synthetic black swan dynamic import failed (non-blocking — backtest still completed)",
         );
       }
     })();
