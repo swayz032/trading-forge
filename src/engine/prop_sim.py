@@ -13,17 +13,11 @@ Uses configs from prop_compliance.py and firm_config.py.
 
 from __future__ import annotations
 
-import math
 from typing import Optional
 
-from src.engine.config import CONTRACT_SPECS, MARGIN_EXPANSION_MULTIPLIER
+from src.engine.config import CONTRACT_SPECS
+from src.engine.firm_config import FIRM_COMMISSIONS, FIRM_RULES
 from src.engine.prop_compliance import FIRM_CONFIGS
-from src.engine.firm_config import FIRM_COMMISSIONS
-
-
-# Daily loss limits derived from firm_config.py FIRM_RULES (single source of truth)
-# None = no daily limit
-from src.engine.firm_config import FIRM_RULES
 
 DAILY_LOSS_LIMITS: dict[str, Optional[float]] = {
     key: rules.get("daily_loss_limit") for key, rules in FIRM_RULES.items()
@@ -204,9 +198,15 @@ def simulate_prop_firm(
             eval_passed = True
             days_to_pass_eval = day_idx + 1
 
+        # H3 FIX: gross_pnl was reconstructing "net + display_commission" where
+        # net_pnl already has the backtester's commission deducted, and display_comm
+        # uses the prop firm's commission rate — a different number.  The result
+        # was neither true gross nor true net, just a misleading in-between.
+        # Fix: emit true net_pnl only. Omit gross_pnl from the daily statement
+        # so callers don't rely on a number that's neither gross nor net.
+        # The "commission" field remains for display-only context.
         daily_statements.append({
             "date": date_str,
-            "gross_pnl": round(net_pnl + comm_cost, 2),  # Reconstruct for display
             "commission": round(comm_cost, 2),
             "net_pnl": round(net_pnl, 2),
             "balance": round(balance, 2),

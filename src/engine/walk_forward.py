@@ -607,6 +607,11 @@ def run_walk_forward_class(
     all_oos_pnls: list[float] = []
     all_oos_pnl_records: list[dict] = []
     all_oos_trades: list[dict] = []
+    # H5 FIX: Accumulate bar-level equity for intraday DD computation.
+    # The config-based WF path already does this; the class-based path was
+    # computing DD from EOD daily P&Ls only — hiding intraday breaches that
+    # would blow Topstep's trailing DD floor live.
+    all_oos_equity_bars_cls: list[float] = []
 
     for i, (is_data, oos_data) in enumerate(windows):
         print(f"  Window {i+1}/{len(windows)}: IS={len(is_data)} bars, OOS={len(oos_data)} bars", file=sys.stderr)
@@ -702,13 +707,22 @@ def run_walk_forward_class(
         _deduped_pnls_cls = [r.get("pnl", 0.0) for r in _deduped_cls]
         all_oos_pnls.extend(_deduped_pnls_cls if _deduped_cls else oos_result.get("daily_pnls", []))
         all_oos_trades.extend(oos_result.get("trades", []))
+        # H5 FIX: collect bar-level equity from class backtest result
+        all_oos_equity_bars_cls.extend(oos_result.get("equity_bars", []))
 
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates
     total_trades = len(all_oos_trades)
     total_return = float(sum(w["oos_metrics"]["total_return"] for w in window_results))  # Sum of dollar P&L across windows
 
-    # Continuous max DD: compute from concatenated OOS daily P&Ls (not per-window max)
-    if all_oos_pnls:
+    # H5 FIX: Prefer bar-level equity for max DD (captures intraday peaks).
+    # EOD daily P&L aggregation hides intraday breaches that blow Topstep
+    # trailing DD floor live — a strategy passes backtest but fails funded.
+    if all_oos_equity_bars_cls:
+        eq_arr = np.array(all_oos_equity_bars_cls, dtype=float)
+        running_peak = np.maximum.accumulate(eq_arr)
+        max_dd = float(np.max(running_peak - eq_arr))
+    elif all_oos_pnls:
+        # Fallback: compute from EOD daily P&Ls when no bar-level data available
         cum_pnl = np.cumsum(all_oos_pnls)
         running_peak = np.maximum.accumulate(cum_pnl)
         max_dd = float(np.max(running_peak - cum_pnl))

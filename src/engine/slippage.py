@@ -3,6 +3,10 @@
 Per CLAUDE.md: slippage is a function of volatility, not a constant.
 slippage_ticks = base_ticks * (ATR / median_ATR)
 slippage_dollars = slippage_ticks * tick_value
+
+C1 fix (2026-05-19): slippage_ticks is now rounded CONSERVATIVELY (ceiling on
+absolute value) so fractional ticks are never silently gifted to the trader.
+This prevents cumulative P&L inflation across thousands of trades.
 """
 
 from __future__ import annotations
@@ -11,6 +15,17 @@ import numpy as np
 import polars as pl
 
 from src.engine.config import ContractSpec
+
+
+def _ceil_ticks(ticks: np.ndarray) -> np.ndarray:
+    """Round ticks conservatively: ceiling on the absolute value, preserving sign.
+
+    Examples:
+        1.2 → 2.0   (long-side slippage: worse fill)
+        -1.2 → -2.0  (short-side slippage: worse fill)
+        1.0 → 1.0   (already integer — no change)
+    """
+    return np.sign(ticks) * np.ceil(np.abs(ticks))
 
 
 def compute_slippage(
@@ -33,6 +48,9 @@ def compute_slippage(
 
     Returns:
         numpy array of slippage in dollars per bar
+
+    C1: slippage_ticks is rounded conservatively (ceiling on abs value)
+    so fractional ticks are never gifted back to the trader.
     """
     atr_col = f"atr_{atr_period}"
     if atr_col not in df.columns:
@@ -47,11 +65,14 @@ def compute_slippage(
     median_atr = np.nanmedian(atr_values)
 
     if median_atr == 0 or np.isnan(median_atr):
-        # Fallback: constant slippage
+        # Fallback: constant slippage — 1 full tick, already integer
         return np.full(len(df), base_ticks * contract_spec.tick_value)
 
-    # Variable slippage: scale with ATR relative to median
-    slippage_ticks = base_ticks * (atr_values / median_atr)
+    # Variable slippage: scale with ATR relative to median.
+    # C1 FIX: round conservatively (ceiling on abs value) — fractional ticks
+    # must never be silently gifted back to the trader.
+    raw_ticks = base_ticks * (atr_values / median_atr)
+    slippage_ticks = _ceil_ticks(raw_ticks)
     slippage_dollars = slippage_ticks * contract_spec.tick_value
 
     # Order-type slippage modifier

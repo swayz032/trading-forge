@@ -8,8 +8,6 @@ from __future__ import annotations
 import logging
 import os
 
-from src.engine.survival.survival_scorer import survival_score as score_strategy_survival
-
 logger = logging.getLogger(__name__)
 
 # ── TF_SURVIVAL_IN_FORGE_SCORE ─────────────────────────────────────────────
@@ -381,11 +379,25 @@ def compute_forge_score(
         final_score = round(min(100, base_score), 1)
         passed = True  # score-based pass; caller also checks performance_gate separately
 
+    # M1 FIX: emit sharpe_per_contract companion metric for cross-strategy comparison.
+    # Dollar Sharpe is scale-dependent: a 6-contract strategy will show 6x higher
+    # dollar Sharpe than a 1-contract strategy with identical edge. Normalizing by
+    # base_contracts makes the metric honest for ranking strategies at different sizes.
+    base_contracts = int(stats.get("base_contracts", 1)) or 1
+    sharpe_raw = stats.get("sharpe_ratio", 0.0)
+    sharpe_per_contract = round(sharpe_raw / base_contracts, 4) if base_contracts > 0 else sharpe_raw
+
+    # L2 FIX: always emit forge_score_version so downstream comparators can detect
+    # version boundaries and avoid comparing scores across incompatible scoring modes.
+    forge_score_version = "v2.0-survival-shadow" if not _SURVIVAL_IN_FORGE_SCORE else "v2.0-survival-enforce"
+
     return {
         "score": final_score,
         "passed": passed,
         "crisis_veto": crisis_veto,
         "crisis_veto_reason": crisis_veto_reason,
+        "forge_score_version": forge_score_version,
+        "sharpe_per_contract": sharpe_per_contract,
         "components": {
             "earnings_power": round(earnings, 2),
             "daily_survival": round(daily_survival, 2),

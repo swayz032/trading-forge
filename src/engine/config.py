@@ -3,11 +3,13 @@
 Contract specs MUST match src/server/routes/risk.ts lines 6-15 exactly.
 """
 
-from __future__ import annotations
+from __future__ import annotations  # noqa: I001
 
+import os
 from dataclasses import dataclass
 from typing import Literal, Optional
-from pydantic import BaseModel, Field, field_validator
+
+from pydantic import BaseModel, field_validator, model_validator
 
 
 # ─── Contract Specs (mirrors risk.ts) ──────────────────────────────
@@ -172,6 +174,31 @@ class PositionSizeConfig(BaseModel):
                 "Must be a fraction of firm DLL, e.g. 0.67 = 67%."
             )
         return v
+
+    @model_validator(mode="after")
+    def validate_fixed_contracts_not_default(self) -> "PositionSizeConfig":
+        """H7 FIX: Fail-fast if fixed_contracts=1 (the default) is used without
+        an explicit override. A silent fixed_contracts=1 in production backtests
+        means every strategy silently trades 1 contract regardless of account size,
+        producing metrics that don't reflect actual risk exposure.
+
+        To suppress this check in tests: set env var TF_ALLOW_FIXED_1=true.
+        To suppress for a specific strategy: explicitly set fixed_contracts > 1.
+        """
+        if (
+            self.type == "fixed"
+            and self.fixed_contracts == 1
+            and os.environ.get("TF_ALLOW_FIXED_1", "false").lower() != "true"
+        ):
+            raise ValueError(
+                "position_size.fixed_contracts=1 detected with type='fixed'. "
+                "This is the default and is almost certainly a misconfiguration for "
+                "production backtests. Explicit sizing is required. "
+                "Set fixed_contracts to the intended value (e.g. 6 for MES base), "
+                "switch to type='risk_derived_pyramid', or set TF_ALLOW_FIXED_1=true "
+                "to allow this in unit tests only."
+            )
+        return self
 
 
 # ─── Strategy Config ──────────────────────────────────────────────

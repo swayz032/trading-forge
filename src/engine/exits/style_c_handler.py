@@ -25,15 +25,52 @@ from __future__ import annotations
 
 import logging
 import math
-from datetime import time
+import warnings
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from src.engine.config import TRACK3_CONFIG
 from src.engine.exits.style_d_handler import ExitDecision, _is_time_stop
 
 logger = logging.getLogger(__name__)
+
+
+def validate_style_c_base_contracts(base_contracts: int) -> int:
+    """H8 FIX: Enforce base_contracts % 3 == 0 for Style C 33/33/33 splits.
+
+    Style C splits: TP1=33%, TP2=33%, runner=34% — this requires a contract
+    count divisible by 3 so integer-lot exits are clean (e.g. 6 → 2+2+2, 9 → 3+3+3).
+    Non-divisible counts create fractional lots that can't be executed (e.g. 7 → 2.31+2.31+2.38).
+
+    Fix: ROUND DOWN to nearest multiple of 3 with a WARNING, emit audit field.
+
+    Args:
+        base_contracts: Proposed base contract count.
+
+    Returns:
+        Adjusted contract count (multiple of 3), always >= 3.
+
+    Raises:
+        ValueError: If base_contracts <= 0.
+    """
+    if base_contracts <= 0:
+        raise ValueError(f"base_contracts must be > 0, got {base_contracts}")
+    if base_contracts % 3 != 0:
+        adjusted = max(3, (base_contracts // 3) * 3)
+        warnings.warn(
+            f"Style C requires base_contracts divisible by 3 for clean 33/33/34 splits. "
+            f"Got {base_contracts}, rounding down to {adjusted}. "
+            f"Audit field: style_c_size_rounded=True.",
+            stacklevel=2,
+        )
+        logger.warning(
+            "style_c: base_contracts=%d not divisible by 3 → rounded to %d "
+            "[audit: style_c_size_rounded=True]",
+            base_contracts, adjusted,
+        )
+        return adjusted
+    return base_contracts
 
 # ─── Determinism anchor ───────────────────────────────────────────────────────
 HANDLER_VERSION = "style_c_v1.0.0"

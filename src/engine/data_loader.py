@@ -511,6 +511,13 @@ def load_ohlcv(
         if _should_write_cache:
             try:
                 cache_file.parent.mkdir(parents=True, exist_ok=True)
+                # M4 FIX: Atomic cache write — write to a PID-tagged temp file first,
+                # then os.replace() (atomic on both POSIX and Windows NTFS). This prevents
+                # two parallel WF workers from writing simultaneously and corrupting the
+                # shared cache file (race condition observed on Phase 14 stress tests).
+                # No external lock library needed — os.replace() is atomic by OS guarantee.
+                import os as _os_m4
+                tmp_cache = cache_file.with_suffix(f".tmp.{_os_m4.getpid()}")
                 # Re-fetch the FULL dataset (no date filter) for caching so future
                 # date-range requests (including crisis scenarios in stress_test.py
                 # that need 2008-2020 data) all hit the local cache.
@@ -518,14 +525,23 @@ def load_ohlcv(
                 try:
                     full_pdf = con.execute(full_sql).fetchdf()
                     full_df = pl.from_pandas(full_pdf)
-                    full_df.write_parquet(str(cache_file), compression="zstd")
+                    full_df.write_parquet(str(tmp_cache), compression="zstd")
                 except Exception:
                     # Fallback: cache the filtered slice (better than nothing)
-                    df.write_parquet(str(cache_file), compression="zstd")
+                    df.write_parquet(str(tmp_cache), compression="zstd")
+                # Atomic replace — other readers see either old or new, never partial write
+                _os_m4.replace(str(tmp_cache), str(cache_file))
                 size_kb = cache_file.stat().st_size / 1024
-                action = "refreshed" if cache_file.exists() else "auto-cached"
-                print(f"Cache {action}: {data_symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
+                print(f"Cache atomic-write: {data_symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
             except Exception as e:
+                # Clean up temp file if atomic replace failed
+                try:
+                    import os as _os_cleanup
+                    _tmp = cache_file.with_suffix(f".tmp.{_os_cleanup.getpid()}")
+                    if _tmp.exists():
+                        _tmp.unlink()
+                except Exception:
+                    pass
                 print(f"Auto-cache failed (non-fatal): {e}", file=sys.stderr)
 
     # ─── Convert UTC timestamps to ET for session logic ──────────
@@ -731,12 +747,17 @@ def flag_rollover_days(
     rollover_dates = compute_rollover_dates(symbol, first_year, last_year)
     rollover_strs = {d.isoformat() for d in rollover_dates}
 
-    # Extract calendar date from each bar's timestamp
-    # Use ts_event (UTC) consistently — rollover_strs are UTC dates from CME calendar
+    # Extract calendar date from each bar's timestamp.
+    # M5 FIX: Use ts_et (Eastern Time) not ts_event (UTC) — roll dates are
+    # calendar dates in ET (CME announces "March 13 rollover" meaning ET).
+    # With UTC timestamps, bars near midnight ET would be assigned the wrong
+    # roll date (e.g. 23:00 ET on March 12 = 04:00 UTC on March 13 — UTC date
+    # says March 13 but ET date is still March 12, causing premature suppression).
+    ts_date_col = "ts_et" if "ts_et" in df.columns else "ts_event"
     if ts.dtype == pl.Utf8:
-        date_col = pl.col("ts_event").str.slice(0, 10)
+        date_col = pl.col(ts_date_col).str.slice(0, 10)
     else:
-        date_col = pl.col("ts_event").dt.date().cast(pl.Utf8)
+        date_col = pl.col(ts_date_col).dt.date().cast(pl.Utf8)
 
     df = df.with_columns(
         date_col.is_in(list(rollover_strs)).alias("is_rollover_day")

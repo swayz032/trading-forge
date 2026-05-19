@@ -12,7 +12,7 @@ Wave 23 carry-forward (today every firm runs the same trade list at the
 same sizes — only pass/fail flags differ between Topstep and MFFU).
 """
 
-from __future__ import annotations
+from __future__ import annotations  # noqa: I001
 
 import math
 from typing import Optional
@@ -179,41 +179,63 @@ def _compute_net_daily_pnls(
     firm_key: str,
     symbol: str = "MES",
     avg_trades_per_day: float = 2.0,
+    backtester_commission_per_side: float = 0.62,
 ) -> list[float]:
-    """Adjust daily PnLs for firm-specific commissions.
+    """Adjust daily PnLs for the DELTA between backtester and firm-specific commissions.
+
+    H4 FIX: The daily_pnls from the backtester are ALREADY net of commission
+    (the backtester deducts commission_per_side when computing each trade's net P&L).
+    The old implementation re-deducted the FULL firm commission again, causing double
+    deduction and making every firm look worse than reality.
+
+    The correct adjustment is:
+        delta = firm_commission_per_side - backtester_commission_per_side
+        If delta > 0 → firm charges more than backtester assumed → further deduct.
+        If delta <= 0 → firm charges same or less → no adjustment needed.
 
     Args:
-        daily_pnls: Gross daily PnLs
-        firm_key: Firm identifier
-        symbol: Trading symbol
-        avg_trades_per_day: Average round-trip trades per day
+        daily_pnls: Net daily PnLs (already net of backtester's commission).
+        firm_key: Firm identifier.
+        symbol: Trading symbol.
+        avg_trades_per_day: Average round-trip trades per day.
+        backtester_commission_per_side: Commission rate already baked into daily_pnls.
 
     Returns:
-        Net daily PnLs after per-firm commissions
+        Daily PnLs adjusted for commission delta between backtester and firm rate.
     """
     if firm_key not in FIRM_COMMISSIONS:
         return daily_pnls
 
-    comm_per_side = FIRM_COMMISSIONS[firm_key].get(symbol, 2.52)
-    # Round-trip = 2 sides per trade
-    daily_comm = comm_per_side * 2 * avg_trades_per_day
-    return [pnl - daily_comm for pnl in daily_pnls]
+    firm_comm_per_side = FIRM_COMMISSIONS[firm_key].get(symbol, backtester_commission_per_side)
+    # Only apply the DELTA — avoid double deduction
+    delta_per_side = firm_comm_per_side - backtester_commission_per_side
+    if delta_per_side <= 0:
+        # Firm is cheaper or equal — no adjustment needed
+        return daily_pnls
+
+    # Round-trip = 2 sides per trade; multiply by avg daily trade count
+    daily_delta = delta_per_side * 2 * avg_trades_per_day
+    return [pnl - daily_delta for pnl in daily_pnls]
 
 
 def run_prop_compliance(
     daily_pnls: list[float],
     stats: dict,
+    backtester_commission_per_side: float = 0.62,
 ) -> dict[str, dict]:
-    """Simulate strategy against all 8 prop firms.
+    """Simulate strategy against all prop firms.
 
-    Uses per-firm net P&L (after firm-specific commissions) when symbol
+    Uses per-firm net P&L delta-adjusted from backtester commission when symbol
     and trade count data are available in stats. Also uses gap-adjusted
     drawdown when available for overnight strategies.
 
     Args:
-        daily_pnls: Array of daily P&L values
+        daily_pnls: Net daily P&L values (already net of backtester commission).
         stats: Strategy statistics including max_drawdown, trades_overnight,
-            symbol, total_trades, total_trading_days, gap_adjusted_drawdown
+            symbol, total_trades, total_trading_days, gap_adjusted_drawdown.
+        backtester_commission_per_side: The per-side commission the backtester
+            already deducted (default $0.62 = MES/micro baseline). Used to
+            compute only the DELTA when adjusting for per-firm rates (H4 fix).
 
     Returns:
         dict mapping firm_key → compliance result
@@ -236,9 +258,11 @@ def run_prop_compliance(
         passed = True
         failures: list[str] = []
 
-        # Compute net daily PnLs for this firm
+        # Compute firm-adjusted daily PnLs (delta-adjusted from backtester commission).
+        # H4 FIX: pass backtester_commission_per_side so only the delta is applied.
         net_pnls = _compute_net_daily_pnls(
             daily_pnls, firm_key, symbol, avg_trades_per_day,
+            backtester_commission_per_side=backtester_commission_per_side,
         )
 
         # Build net equity curve for this firm

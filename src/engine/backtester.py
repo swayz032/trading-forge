@@ -308,11 +308,20 @@ def _backtest_skip_signals_for_day(df, day_idx_start: int, day_idx_end: int) -> 
         if day_idx_end <= day_idx_start or day_idx_end > len(df):
             return {}
         close_np = df["close"].to_numpy()
-        prev_close = float(close_np[day_idx_start - 1]) if day_idx_start > 0 else float(close_np[day_idx_start])
+        # C5 FIX: when day_idx_start == 0, there is no prior bar — gap_atr is
+        # explicitly 0.0 (no gap possible at the start of the dataset).
+        # Previously this relied on the implicit fallback path (prev_close == day_open)
+        # which worked but was fragile if NaN slipped in.
+        if day_idx_start == 0:
+            gap_atr = 0.0
+        else:
+            prev_close = float(close_np[day_idx_start - 1])
+            day_open = float(close_np[day_idx_start])
+            atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else None
+            atr_at_open = float(atr_np[day_idx_start]) if atr_np is not None and not np.isnan(atr_np[day_idx_start]) else 1.0
+            gap_atr = abs(day_open - prev_close) / atr_at_open if atr_at_open > 0 else 0.0
+        # Suppress variable-already-defined warnings for the non-early-exit path
         day_open = float(close_np[day_idx_start])
-        atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else None
-        atr_at_open = float(atr_np[day_idx_start]) if atr_np is not None and not np.isnan(atr_np[day_idx_start]) else 1.0
-        gap_atr = abs(day_open - prev_close) / atr_at_open if atr_at_open > 0 else 0.0
         # Day of week from ts_et if present
         dow_str = "Monday"
         if "ts_et" in df.columns:
@@ -595,6 +604,8 @@ def _apply_trade_management(
     spec,
     htf_cache: Optional[dict],
     df,
+    open_np: Optional[np.ndarray] = None,
+    atr_stop_multiplier: float = 1.5,
 ) -> list[dict]:
     """Bar-by-bar trade management: 6pt max SL, structural TP, trailing stop.
 
@@ -628,7 +639,9 @@ def _apply_trade_management(
         is_short = "Short" in direction_str
 
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
-        risk_points = min(6.0, atr_at_entry * 2.0)
+        # L3 FIX: Use atr_stop_multiplier from config rather than hardcoded 2.0.
+        # The W23-D R-multiple gate depends on this matching the strategy's actual stop multiplier.
+        risk_points = min(6.0, atr_at_entry * atr_stop_multiplier)
         # Min breathing room: 2pt for MES/ES (tick_size=0.25), scaled for other instruments
         tick = spec.tick_size if spec else 0.25
         min_trail = max(2.0, tick * 8)  # 8 ticks minimum breathing room
@@ -682,25 +695,40 @@ def _apply_trade_management(
         exit_reason = "signal"
 
         # Bar-by-bar simulation
+        gap_through_stop_count = 0
         for bar in range(entry_idx + 1, original_exit_idx + 1):
             if bar >= len(high_np):
                 break
 
             bar_high = float(high_np[bar])
             bar_low = float(low_np[bar])
+            bar_open = float(open_np[bar]) if open_np is not None and bar < len(open_np) else bar_low
 
             # Conservative intra-bar ordering: check stop BEFORE advancing trail.
             # We cannot know if the high or low came first within a bar, so we
             # check stops against the CURRENT trail (not an advanced one).
 
             # 1. Check trailing/initial stop hit first (conservative)
+            # C2 FIX: If bar gapped through the stop (bar_open already past stop),
+            # fill at bar_open (worse for trader) rather than the stop price.
+            # This prevents silent P&L inflation on gap-down/gap-up bars.
             if not is_short and bar_low <= trail_stop:
-                exit_price = trail_stop
+                if bar_open < trail_stop:
+                    # Gap-down: opened below stop — fill at open (worse)
+                    exit_price = bar_open
+                    gap_through_stop_count += 1
+                else:
+                    exit_price = trail_stop
                 exit_reason = "trailing_stop" if trail_stop > initial_stop else "stop_loss"
                 exit_idx = bar
                 break
             elif is_short and bar_high >= trail_stop:
-                exit_price = trail_stop
+                if bar_open > trail_stop:
+                    # Gap-up: opened above stop — fill at open (worse)
+                    exit_price = bar_open
+                    gap_through_stop_count += 1
+                else:
+                    exit_price = trail_stop
                 exit_reason = "trailing_stop" if trail_stop < initial_stop else "stop_loss"
                 exit_idx = bar
                 break
@@ -745,6 +773,8 @@ def _apply_trade_management(
         managed["exit_idx"] = exit_idx
         managed["exit_reason"] = exit_reason
         managed["trail_stop_final"] = round(trail_stop, 4)
+        # C2: track how many times gap-through-stop fired for this trade
+        managed["gap_through_stop_count"] = gap_through_stop_count
         managed_trades.append(managed)
 
     return managed_trades
@@ -977,9 +1007,13 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
 
 
 # ─── Bar Count Validation ─────────────────────────────────────────
+# L1 FIX: Use Globex session bar counts (23h/day for E-mini futures).
+# RTH-only figures (390min = 78 5min bars) are wrong for futures which trade
+# nearly 24h. data_loader.py:323 uses 172 5min bars for Globex.
+# Aligned here to eliminate false "too few bars" warnings.
 BARS_PER_DAY = {
-    "1min": 390, "5min": 78, "15min": 26, "30min": 13,
-    "1hour": 7, "1h": 7, "4hour": 2, "4h": 2,
+    "1min": 1380, "5min": 172, "15min": 92, "30min": 46,
+    "1hour": 23, "1h": 23, "4hour": 6, "4h": 6,
     "daily": 1, "1D": 1,
 }
 
@@ -1191,6 +1225,8 @@ def _apply_dsl_stop_loss_and_time_stop(
     timestamps: list | np.ndarray,
     stop_multiplier: float = 1.5,
     symbol: str = "MES",
+    close_np: Optional[np.ndarray] = None,
+    ts_et_timestamps: Optional[list] = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict]:
     """Enforce ATR stop ceiling and 15:55 ET time-stop for DSL strategies.
 
@@ -1246,7 +1282,28 @@ def _apply_dsl_stop_loss_and_time_stop(
         stop_dist = stop_multiplier * atr
 
         # ── E.5: 15:55 ET time-stop ────────────────────────────────
-        is_1555 = "15:55" in ts_str
+        # H1 FIX: Use ts_et column for DST-safe time comparison when available.
+        # Falling back to string-searching ts_event (UTC) is fragile — ET offsets
+        # change between EST (UTC-5) and EDT (UTC-4), making "15:55" in UTC unreliable.
+        # With ts_et, 15:55 ET is always 15:55 in the string regardless of DST.
+        # HARD FAIL: if ts_et_timestamps was passed (signal that ts_et is available)
+        # but ts_et value is absent for bar i, raise ValueError — caller bug.
+        if ts_et_timestamps is not None:
+            if i < len(ts_et_timestamps) and ts_et_timestamps[i] is not None:
+                et_str = str(ts_et_timestamps[i])
+                is_1555 = "15:55" in et_str
+            elif i < len(ts_et_timestamps):
+                raise ValueError(
+                    f"H1: ts_et_timestamps was provided but bar {i} has None value. "
+                    f"ts_et column must be fully populated when supplied."
+                )
+            else:
+                # ts_et_timestamps shorter than signal array — defensive fallback
+                is_1555 = "15:55" in ts_str
+        else:
+            # Legacy path: ts_et not available, fall back to UTC string search.
+            # This is ambiguous across DST transitions but preserves backward compat.
+            is_1555 = "15:55" in ts_str
         if is_1555:
             if in_long:
                 exit_long_out[i] = True
@@ -1272,9 +1329,12 @@ def _apply_dsl_stop_loss_and_time_stop(
                     "ts": ts_str,
                 })
             else:
-                # Accept entry — record position state for ATR stop tracking
+                # Accept entry — record position state for ATR stop tracking.
+                # C3 FIX: use close_np[i] (bar close) as the entry reference price,
+                # NOT high_np[i]. The previous use of high_np inflated the stop price
+                # for longs, making breaches look wider than they were.
                 in_long = True
-                long_entry_price = float(high_np[i]) if not np.isnan(high_np[i]) else 0.0
+                long_entry_price = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
                 long_stop_price = long_entry_price - stop_dist
 
         # Check short entry
@@ -1290,8 +1350,9 @@ def _apply_dsl_stop_loss_and_time_stop(
                     "ts": ts_str,
                 })
             else:
+                # C3 FIX: use close_np[i] for short entry reference (mirror of long fix).
                 in_short = True
-                short_entry_price = float(low_np[i]) if not np.isnan(low_np[i]) else 0.0
+                short_entry_price = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
                 short_stop_price = short_entry_price + stop_dist
 
         # ── ATR stop fires: track when stop price is breached ───────
@@ -1378,6 +1439,10 @@ def _apply_dll_halt_to_entries(
         "dll_halt_sessions": [],
         "dll_force_close_sessions": [],
         "entries_suppressed": 0,
+        # L4: flag that DLL halt uses a conservative ATR-based estimate (not actual P&L).
+        # Downstream audit tools can use this to understand that DLL halt counts are
+        # conservative approximations — actual P&L-based DLL is enforced by paper/live engine.
+        "dll_halt_used_estimate": True,
     }
 
     n = len(long_out)
@@ -1575,38 +1640,36 @@ def run_backtest(
         # The mask only suppresses entry signals during the high-risk windows.
         _ts_series = df["ts_event"]
 
-        def _build_default_event_mask(ts_series: "pl.Series") -> "np.ndarray":
+        def _build_default_event_mask_et(ts_et_series: "pl.Series") -> "np.ndarray":
             """Return a bool mask: True = ALLOW trade, False = SIT_OUT.
 
             Blocks bars falling in 8:30-9:00 ET and 14:00-14:30 ET windows.
-            Uses UTC offsets: ET = UTC-5 (EST) or UTC-4 (EDT). We use the safe
-            conservative: check hour/minute in UTC and accept both offsets.
-            The 30-min window is wide enough that ±1h timezone ambiguity is tolerable.
+            M3 FIX: Uses ts_et directly (Eastern Time) — zero DST ambiguity.
+            8:30 ET is ALWAYS 08:30 in the ts_et string regardless of EST/EDT season.
             """
             import numpy as _np_ev
-            n = len(ts_series)
+            n = len(ts_et_series)
             mask = _np_ev.ones(n, dtype=bool)  # True = allow
 
             for i in range(n):
-                ts_val = ts_series[i]
+                ts_val = ts_et_series[i]
                 if ts_val is None:
                     continue
                 try:
                     ts_str = str(ts_val)
-                    # Extract time portion from ISO-like string "YYYY-MM-DDTHH:MM:SS..."
+                    # ts_et is in ET so HH:MM is directly ET time
+                    # Format: "YYYY-MM-DDTHH:MM:SS..." or "YYYY-MM-DD HH:MM:SS..."
                     time_part = ts_str[11:16] if len(ts_str) >= 16 else ""
                     if not time_part:
                         continue
                     h, m = int(time_part[:2]), int(time_part[3:5])
                     total_min = h * 60 + m
 
-                    # 8:30-9:00 ET = 13:30-14:00 UTC (EST) or 12:30-13:00 UTC (EDT)
-                    # Accept both: 12:30-14:00 UTC covers both seasons conservatively
-                    in_morning_window = (12 * 60 + 30) <= total_min < (14 * 60 + 0)
+                    # 8:30-9:00 ET — NFP/CPI/PPI releases (always 8:30 ET)
+                    in_morning_window = (8 * 60 + 30) <= total_min < (9 * 60 + 0)
 
-                    # 14:00-14:30 ET = 19:00-19:30 UTC (EST) or 18:00-18:30 UTC (EDT)
-                    # Accept both: 18:00-19:30 UTC
-                    in_fomc_window = (18 * 60 + 0) <= total_min < (19 * 60 + 30)
+                    # 14:00-14:30 ET — FOMC rate decisions (always 2:00 PM ET)
+                    in_fomc_window = (14 * 60 + 0) <= total_min < (14 * 60 + 30)
 
                     if in_morning_window or in_fomc_window:
                         mask[i] = False
@@ -1614,7 +1677,34 @@ def run_backtest(
                     continue
             return mask
 
-        event_mask = _build_default_event_mask(_ts_series)
+        # M3: Use ts_et when available (DST-safe); fall back to ts_event UTC math.
+        if "ts_et" in df.columns:
+            event_mask = _build_default_event_mask_et(df["ts_et"])
+        else:
+            # Legacy fallback — ts_et not available (should be rare post-data-loader fix)
+            def _build_default_event_mask_utc(ts_series: "pl.Series") -> "np.ndarray":
+                import numpy as _np_ev
+                n = len(ts_series)
+                mask = _np_ev.ones(n, dtype=bool)
+                for i in range(n):
+                    ts_val = ts_series[i]
+                    if ts_val is None:
+                        continue
+                    try:
+                        ts_str = str(ts_val)
+                        time_part = ts_str[11:16] if len(ts_str) >= 16 else ""
+                        if not time_part:
+                            continue
+                        h, m = int(time_part[:2]), int(time_part[3:5])
+                        total_min = h * 60 + m
+                        in_morning_window = (12 * 60 + 30) <= total_min < (14 * 60 + 0)
+                        in_fomc_window = (18 * 60 + 0) <= total_min < (19 * 60 + 30)
+                        if in_morning_window or in_fomc_window:
+                            mask[i] = False
+                    except Exception:
+                        continue
+                return mask
+            event_mask = _build_default_event_mask_utc(_ts_series)
         _masked_bars = int((~event_mask).sum())
         if _masked_bars > 0:
             print(
@@ -1955,6 +2045,35 @@ def run_backtest(
     avg_winner = 0.0
     avg_loser = 0.0
 
+    # C4 FIX: Apply _apply_trade_management to vectorbt trades so that stop/TP
+    # price overrides are used for P&L computation rather than vectorbt's bar-close
+    # exit prices. vectorbt fills all exits at bar close; our managed exit prices
+    # reflect the actual intraday stop/TP trigger price (or gap-open price for C2).
+    # Approach: Option 1 (bypass vectorbt for stop/TP fills) — use the managed
+    # exit_price for bar_dollar_pnls. This is cleaner than passing price= arrays
+    # to vbt.Portfolio.from_signals because our stop logic is already pre-computed
+    # in signal arrays and we own all P&L math.
+    vbt_managed_trades: list[dict] = []
+    vbt_open_np = df["open"].to_numpy() if "open" in df.columns else None
+    vbt_close_np = df["close"].to_numpy()
+    vbt_atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 1.0)
+    vbt_gap_through_count = 0
+    if trades_records is not None:
+        try:
+            vbt_managed_trades = _apply_trade_management(
+                trades_records, high_np, low_np, vbt_close_np, vbt_atr_np,
+                spec, None, df, open_np=vbt_open_np,
+            )
+            vbt_gap_through_count = sum(m.get("gap_through_stop_count", 0) for m in vbt_managed_trades)
+            if vbt_gap_through_count > 0:
+                print(
+                    f"[C4] vectorbt path: {vbt_gap_through_count} gap-through-stop fills overridden",
+                    file=sys.stderr,
+                )
+        except Exception as _c4_err:
+            print(f"[C4] _apply_trade_management failed (non-fatal, using vectorbt prices): {_c4_err}", file=sys.stderr)
+            vbt_managed_trades = []
+
     if trades_records is not None:
         # Compute correct dollar P&L per trade:
         #   gross = (exit - entry) × size × point_value  (long)
@@ -1964,24 +2083,43 @@ def run_backtest(
         #   net_pnl = gross - slippage - commission
         trade_pnls_list = []
 
-        for _, row in trades_records.iterrows():
+        for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
-            exit_p = float(row["Avg Exit Price"])
             size = float(row["Size"])
             direction = str(row["Direction"])
             entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
-            exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
+
+            # C4: Use managed exit price (correct intraday stop/TP price) when
+            # available; fall back to vectorbt's bar-close exit price otherwise.
+            if trade_i < len(vbt_managed_trades):
+                mgmt = vbt_managed_trades[trade_i]
+                exit_p = mgmt["exit_price"]
+                exit_idx = mgmt["exit_idx"]
+                exit_reason = mgmt.get("exit_reason", "signal")
+            else:
+                exit_p = float(row["Avg Exit Price"])
+                exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
+                exit_reason = "signal"
+
+            # H2 FIX: Real brokers charge per integer contract only.
+            # Fractional sizes (e.g. 4.3) from risk-derived sizing must be floored
+            # before computing both commission and P&L. Decision: FLOOR (not round)
+            # because a partial contract cannot be executed — flooring is conservative.
+            int_size = int(size)  # floor to tradeable contracts
+            if int_size < 1:
+                int_size = 1  # minimum 1 contract
 
             if "Short" in direction:
-                gross = (entry_p - exit_p) * size * spec.point_value
+                gross = (entry_p - exit_p) * int_size * spec.point_value
             else:
-                gross = (exit_p - entry_p) * size * spec.point_value
+                gross = (exit_p - entry_p) * int_size * spec.point_value
 
             # Per-trade friction: per-bar slippage at entry + exit bars
             entry_slip = float(slippage_clean[entry_idx]) if entry_idx < len(slippage_clean) else 0.0
             exit_slip = float(slippage_clean[exit_idx]) if exit_idx < len(slippage_clean) else 0.0
-            slip_cost = (entry_slip + exit_slip) * size
-            comm_cost = commission * size * 2
+            slip_cost = (entry_slip + exit_slip) * int_size
+            # H2 FIX: commission charged on integer contracts only.
+            comm_cost = commission * int_size * 2
             net_pnl = gross - slip_cost - comm_cost
 
             trade_pnls_list.append(net_pnl)
@@ -1995,6 +2133,8 @@ def run_backtest(
                     trade[col] = round(float(val), 4)
                 else:
                     trade[col] = val
+            trade["Avg Exit Price"] = round(exit_p, 4)
+            trade["exit_reason"] = exit_reason
             trade["PnL"] = round(net_pnl, 2)
             trade["GrossPnL"] = round(gross, 2)
             trade["SlippageCost"] = round(slip_cost, 2)
@@ -2002,9 +2142,11 @@ def run_backtest(
 
             # ─── Per-trade R:R (reward / risk) ─────────────────────
             # Risk = ATR at entry × atr_sl_mult × point_value (1R stop in $)
+            # L3 FIX: Read atr_multiplier from config instead of hardcoded 2.0.
+            # The W23-D R-multiple gate depends on this being correct.
             atr_col_name = "atr_14"
             atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
-            sl_mult = 2.0  # default ATR stop multiplier
+            sl_mult = float(config.stop_loss.multiplier) if hasattr(config, "stop_loss") and config.stop_loss else 1.5  # L3 fix: use config multiplier, fall back to 1.5
             risk_points = min(atr_at_entry * sl_mult, 6.0)  # 6pt max cap
             risk_dollars = risk_points * spec.point_value
             if risk_dollars > 0 and size > 0:
@@ -2496,6 +2638,15 @@ def run_backtest(
         # Determinism: fully determined by the same input data + config as all other
         # result fields. DETERMINISM_MODE=true produces bit-identical vectors.
         "signal_vector": signal_vector,
+        # Engine audit metadata — new fields from accuracy fix pass (2026-05-19).
+        # These fields let the operator audit how often each defensive path fired.
+        "engine_audit": {
+            "gap_through_stop_count": vbt_gap_through_count,
+            "tick_rounding_applied": True,  # C1: always applied post-fix
+            "integer_size_applied": True,   # H2: always applied post-fix
+            "dll_halt_used_estimate": True,  # L4: DLL halt uses ATR estimate
+            "forge_score_version": _full_forge_result.get("forge_score_version", "unknown"),
+        },
     }
 
     # E7.3 / P1-B: TF_VERIFY_DETERMINISM second-run check.
@@ -3161,20 +3312,27 @@ def run_class_backtest(
 
     # ─── Trade management: SL/TP/trailing applied bar-by-bar ──
     close_np = df["close"].to_numpy()
+    open_np_managed = df["open"].to_numpy() if "open" in df.columns else None
     atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 1.0)
     managed_trades = []
+    # L3: pass strategy's actual stop multiplier so risk_points is accurate
+    _cls_stop_mult = float(strategy.config.stop_loss.multiplier) if hasattr(strategy.config, "stop_loss") and strategy.config.stop_loss else 1.5
     if trades_records is not None:
         managed_trades = _apply_trade_management(
             trades_records, high_np, low_np, close_np, atr_np,
-            spec, htf_cache, df,
+            spec, htf_cache, df, open_np=open_np_managed,
+            atr_stop_multiplier=_cls_stop_mult,
         )
         {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
         sl_count = sum(1 for m in managed_trades if m["exit_reason"] == "stop_loss")
         trail_count = sum(1 for m in managed_trades if m["exit_reason"] == "trailing_stop")
+        # C2: aggregate gap-through-stop count for metadata/audit
+        total_gap_through = sum(m.get("gap_through_stop_count", 0) for m in managed_trades)
         print(
             f"Trade mgmt: {tp_count} TP, {sl_count} SL, {trail_count} trail, "
-            f"{len(managed_trades) - tp_count - sl_count - trail_count} signal exits",
+            f"{len(managed_trades) - tp_count - sl_count - trail_count} signal exits, "
+            f"{total_gap_through} gap-through-stop fills",
             file=sys.stderr,
         )
 
@@ -3207,16 +3365,23 @@ def run_class_backtest(
                 exit_reason = "signal"
                 risk_pts = min(float(atr_np[entry_idx]) * 2.0, 6.0) if entry_idx < len(atr_np) else 6.0
 
+            # H2 FIX (class path): Floor size to integer contracts — brokers charge
+            # per integer contract only. FLOOR is conservative (can't trade 0.3 contracts).
+            int_size = int(size)
+            if int_size < 1:
+                int_size = 1
+
             if "Short" in direction:
-                gross = (entry_p - exit_p) * size * spec.point_value
+                gross = (entry_p - exit_p) * int_size * spec.point_value
             else:
-                gross = (exit_p - entry_p) * size * spec.point_value
+                gross = (exit_p - entry_p) * int_size * spec.point_value
 
             # Per-trade friction: per-bar slippage at entry + exit bars
             entry_slip = float(slippage_clean[entry_idx]) if entry_idx < len(slippage_clean) else 0.0
             exit_slip = float(slippage_clean[exit_idx]) if exit_idx < len(slippage_clean) else 0.0
-            slip_cost = (entry_slip + exit_slip) * size
-            comm_cost = commission * size * 2
+            slip_cost = (entry_slip + exit_slip) * int_size
+            # H2 FIX: commission charged on integer contracts only.
+            comm_cost = commission * int_size * 2
             net_pnl = gross - slip_cost - comm_cost
 
             trade_pnls_list.append(net_pnl)
