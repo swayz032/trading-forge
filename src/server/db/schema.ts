@@ -36,6 +36,7 @@ import {
   uniqueIndex,
   customType,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // bytea type for compressed signal vectors
 const bytea = customType<{ data: Buffer; notNull: false; default: false }>({
@@ -48,6 +49,8 @@ export const strategies = pgTable("strategies", {
   name: text("name").notNull(),
   description: text("description"),
   symbol: text("symbol").notNull(),
+  // W23F.A (2026-05-19) — per-symbol routing array. Legacy `symbol` kept for backward compat; drop in W24.
+  symbols: text("symbols").array().notNull().default(sql`ARRAY['MES']::TEXT[]`),
   timeframe: text("timeframe").notNull(),
   config: jsonb("config").notNull(), // Full strategy definition JSON
   lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOY_READY | PILOT | DEPLOYED | DECLINING | RETIRED | GRAVEYARD

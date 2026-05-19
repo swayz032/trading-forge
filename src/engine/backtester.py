@@ -81,6 +81,19 @@ from src.engine.strategy_base import BaseStrategy
 #     already started. NautilusTrader, QuantConnect, Zipline, and Backtrader all
 #     default to next-bar fills.
 #   - Every result produced with same-bar fills is inflated by lookahead.
+#
+# ─── DSL Critic Contract (W23F.K live-fix 2026-05-19) ─────────────────
+# This shift makes bare `close > X`, `high > Y`, `low < Z` references in DSL
+# entry conditions SAFE — the engine handles next-bar timing automatically.
+# DSL authors do NOT need to write "next bar" qualifiers.
+#
+# The DSL quality critic MUST NOT reject strategies for bare close/high/low
+# references. See `src/agents/kb/anti-pattern-catalog.md` §3 for the narrow
+# rule that flags only impossible references (tomorrow, future_*, centered
+# windows, explicit same-bar opt-outs) — not the engine-handled bare cases.
+#
+# If you change this shift behavior, you MUST update anti-pattern-catalog.md §3
+# in the same commit. Cross-service contract — keep them in sync.
 # ─────────────────────────────────────────────────────────────────────
 
 # ─── Multi-TF Look-Ahead Prevention Convention ─────────────────────
