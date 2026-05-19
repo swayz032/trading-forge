@@ -106,10 +106,7 @@
         1768,
         568
       ],
-      "onError": "continueRegularOutput",
-      "retryOnFail": true,
-      "maxTries": 3,
-      "continueOnFail": true
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -141,10 +138,7 @@
         2216,
         568
       ],
-      "onError": "continueRegularOutput",
-      "retryOnFail": true,
-      "maxTries": 3,
-      "continueOnFail": true
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -198,10 +192,7 @@
         2664,
         160
       ],
-      "onError": "continueRegularOutput",
-      "retryOnFail": true,
-      "maxTries": 3,
-      "continueOnFail": true
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -578,10 +569,9 @@
         160
       ],
       "retryOnFail": true,
-      "maxTries": 3,
+      "maxTries": 2,
       "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput",
-      "continueOnFail": true
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -612,10 +602,9 @@
         664
       ],
       "retryOnFail": true,
-      "maxTries": 3,
+      "maxTries": 2,
       "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput",
-      "continueOnFail": true
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -702,11 +691,7 @@
         "options": {
           "timeout": 15000
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "onError": "continueRegularOutput",
-      "continueOnFail": true
+      }
     },
     {
       "id": "d75d2649-cfac-4b7d-8af6-67b529688c40",
@@ -726,11 +711,7 @@
         "options": {
           "timeout": 10000
         }
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "onError": "continueRegularOutput",
-      "continueOnFail": true
+      }
     },
     {
       "id": "6492e69d-ccdb-4795-8793-840f6db1107a",
@@ -1299,10 +1280,7 @@
           1768,
           568
         ],
-        "onError": "continueRegularOutput",
-        "retryOnFail": true,
-        "maxTries": 3,
-        "continueOnFail": true
+        "onError": "continueRegularOutput"
       },
       {
         "parameters": {
@@ -1334,10 +1312,7 @@
           2216,
           568
         ],
-        "onError": "continueRegularOutput",
-        "retryOnFail": true,
-        "maxTries": 3,
-        "continueOnFail": true
+        "onError": "continueRegularOutput"
       },
       {
         "parameters": {
@@ -1391,10 +1366,7 @@
           2664,
           160
         ],
-        "onError": "continueRegularOutput",
-        "retryOnFail": true,
-        "maxTries": 3,
-        "continueOnFail": true
+        "onError": "continueRegularOutput"
       },
       {
         "parameters": {
@@ -1771,10 +1743,9 @@
           160
         ],
         "retryOnFail": true,
-        "maxTries": 3,
+        "maxTries": 2,
         "waitBetweenTries": 3000,
-        "onError": "continueRegularOutput",
-        "continueOnFail": true
+        "onError": "continueRegularOutput"
       },
       {
         "parameters": {
@@ -1805,10 +1776,9 @@
           664
         ],
         "retryOnFail": true,
-        "maxTries": 3,
+        "maxTries": 2,
         "waitBetweenTries": 3000,
-        "onError": "continueRegularOutput",
-        "continueOnFail": true
+        "onError": "continueRegularOutput"
       },
       {
         "parameters": {
@@ -1895,11 +1865,7 @@
           "options": {
             "timeout": 15000
           }
-        },
-        "retryOnFail": true,
-        "maxTries": 3,
-        "onError": "continueRegularOutput",
-        "continueOnFail": true
+        }
       },
       {
         "id": "d75d2649-cfac-4b7d-8af6-67b529688c40",
@@ -1919,11 +1885,7 @@
           "options": {
             "timeout": 10000
           }
-        },
-        "retryOnFail": true,
-        "maxTries": 3,
-        "onError": "continueRegularOutput",
-        "continueOnFail": true
+        }
       },
       {
         "id": "6492e69d-ccdb-4795-8793-840f6db1107a",

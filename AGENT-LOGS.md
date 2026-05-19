@@ -49,6 +49,32 @@
 - Verification step E (progressive concurrency test 1→2→3→5 backtests) requires the server to be running with fresh code. Operator should pm2 reload and run the progressive test.
 - The 6 dead backtests (ema_9_21, orb_mes, orb_mnq, mcl_5m, bb_mes_5m, bb_mes_1d) should be re-fired after the server picks up new code — they will complete cleanly under the 3-concurrent cap.
 
+**Operator handoff — Windows service blocks code refresh (parent claude finding 2026-05-19 ~06:55 EDT):**
+
+After Phase 14 commit `4d5a7bb` was pushed, parent claude attempted `pm2 delete + pm2 start` to load the new code. The pm2-managed node (PID 26012) launched successfully but failed to bind port 4000. Investigation found:
+- **TradingForgeAPI Windows service** (auto-respawn) had taken port 4000 with PID 29320 (Session 0) at 06:43:56 EDT — moments after the Phase 13 OOM crash killed PID 29544
+- The service-spawned node runs STALE pre-Phase-14 code (no `backtestConcurrency` field in `/api/health`, confirming the old binary)
+- Non-admin `sc stop TradingForgeAPI` returns "Access Denied"
+- Non-admin `pkill` is unavailable on this Windows host
+- pm2 cannot take port 4000 while the service holds it
+
+**Operator action required to activate Phase 14 fixes:**
+```
+# From admin PowerShell or Services GUI:
+sc stop TradingForgeAPI
+sc config TradingForgeAPI start= demand   # optional: prevent auto-respawn
+
+# Then from user terminal:
+cd C:\Users\tonio\Projects\trading-forge\trading-forge
+pm2 start ecosystem.config.cjs --only trading-forge-api
+
+# Verify Phase 14 is live:
+curl http://localhost:4000/api/health
+# Expect: backtestConcurrency: {active: 0, cap: 3, saturated: false}
+```
+
+Once Phase 14 is live, re-fire 6 backtests in 2 waves of 3. Per-strategy wall-clock should be 60-90s. Total library validation: ~4-6 min for 6 strategies, well within production-grade lifecycle speed.
+
 ---
 
 ### Session Log — 2026-05-19 Parent Claude — Phase 13: Git object store corruption + 47-file recovery + production speed validation
