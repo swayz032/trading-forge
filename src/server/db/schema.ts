@@ -294,6 +294,35 @@ export const systemJournal = pgTable(
   ]
 );
 
+// ─── Production Mode type ─────
+export type ProductionMode = "HALT" | "PAPER" | "LIVE";
+
+// ─── System State (Production singleton — migration 0096 + 0101) ─────
+// Single source of truth for production trading mode. Singleton row id=1.
+// production_mode: 'HALT' | 'PAPER' | 'LIVE'
+// Only KillSwitch.setMode() may mutate. Every mutation writes an audit_log row + SSE.
+export const systemState = pgTable("system_state", {
+  id: integer("id").primaryKey().default(1),
+  productionMode: text("production_mode").notNull().default("HALT"),
+  killReason: text("kill_reason"),
+  setBy: text("set_by").notNull().default("system"),
+  setAt: timestamp("set_at", { withTimezone: true }).notNull().defaultNow(),
+  // Migration 0101 (autopilot): nullable column for vacation/operator-absent mode
+  operatorAbsentSince: timestamp("operator_absent_since", { withTimezone: true }),
+});
+
+// ─── Weekly Drift Reports ────────────────────────────────────
+// Auto-generated weekly metric drift reports (referenced by kill-switch + autopilot).
+export const weeklyDriftReports = pgTable("weekly_drift_reports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reportWeek: date("report_week").notNull(),
+  severity: text("severity"),
+  metrics: jsonb("metrics").notNull(),
+  driftDetected: boolean("drift_detected").notNull().default(false),
+  driftDetails: jsonb("drift_details"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ─── Audit Log (Trust Spine) ─────────────────────────────────
 export const auditLog = pgTable(
   "audit_log",
