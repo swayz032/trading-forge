@@ -631,6 +631,43 @@ export function initScheduler() {
     );
   });
 
+  // ─── W23F.U (2026-05-19) — Daily autonomous scout discovery cron ───
+  // Restored after the cron was dropped during W23F null-byte corruption
+  // recovery. Fires ONCE A DAY ONLY. Memory feedback (operator):
+  // "strategy generation should run ONCE A DAY not all day" — running every
+  // 4 hours burned ~600 LLM calls/day. Once-daily keeps token budget healthy
+  // (~150 calls/day, within the 2.5M token shared budget).
+  //
+  // Runs at 12:00 + 13:00 UTC tick (covers EDT 8 AM ET + EST 8 AM ET).
+  // markJobRun() inside the runner ensures only one fire per UTC day.
+  registerJob("autonomous-scout-discovery", 60 * 60 * 1000, async () => {
+    const nowUtc = new Date();
+    const hourUtc = nowUtc.getUTCHours();
+    // 8 AM ET = 12:00 UTC (EDT, Mar-Nov) or 13:00 UTC (EST, Nov-Mar)
+    if (hourUtc !== 12 && hourUtc !== 13) {
+      return; // skip — wait for the right hour
+    }
+    // Idempotency: skip if we already ran today (UTC date)
+    const todayKey = nowUtc.toISOString().slice(0, 10);
+    const { db } = await import("./db/index.js");
+    const { auditLog } = await import("./db/schema.js");
+    const { sql, and, gte } = await import("drizzle-orm");
+    const startOfDay = new Date(`${todayKey}T00:00:00Z`);
+    const todayCount = await db
+      .select({ n: sql<number>`COUNT(*)::int` })
+      .from(auditLog)
+      .where(and(sql`action = 'scout_cycle.started'`, gte(auditLog.createdAt, startOfDay)));
+    if ((todayCount[0]?.n ?? 0) > 0) {
+      logger.info({ todayCount: todayCount[0]?.n, todayKey }, "autonomous-scout-discovery: already ran today, skipping");
+      return;
+    }
+    logger.info({ todayKey, hourUtc }, "autonomous-scout-discovery: firing once-daily cycle");
+    const { runAutonomousScoutCycle } = await import("./services/autonomous-scout-runner.js");
+    runAutonomousScoutCycle()
+      .then((result) => logger.info({ result }, "autonomous-scout-discovery: cycle complete"))
+      .catch((err) => logger.error({ err: err instanceof Error ? err.message : String(err) }, "autonomous-scout-discovery: cycle failed"));
+  });
+
   // ─── M4 fix: drain scouted ideas every 10 minutes ────────────
   // Without this, n8n strict-scout entries would pile up in system_journal
   // forever — drainScoutedIdeas previously only fired on PAUSE→ACTIVE
