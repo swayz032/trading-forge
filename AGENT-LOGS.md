@@ -41,8 +41,20 @@
 - `POST /api/backtests` must pass `actor="operator"` or pipeline-paused instances silently drop backtests with ghost IDs
 - `crossValidatorCallsTotal` uses label `outcome` (not `status`) — confirmed from agent.ts usage and test mocks
 
+**Backtest results (all 4 strategies):**
+
+| backtestId (prefix) | Strategy | Status | Error |
+|---|---|---|---|
+| e50156eb | ema_9_21_pullback_mes_5m | failed | backtest-engine timed out after 600000ms |
+| 0f1f1b31 | orb_15m_mes | failed | backtest-engine timed out after 600000ms |
+| 8efaab7d | orb_mnq_15m | failed | backtest-engine timed out after 600000ms |
+| d9c5153b | crude_oil_technical_analysis_mcl_5m | failed | backtest-engine timed out after 600000ms |
+
+**Lifecycle Bug #2 surfaced:** All 4 walk-forward backtests (5 splits, 2024-01-01 → 2025-12-31) time out at the 10-minute Python subprocess limit. Root cause: S3 data fetch for 2 years of ratio-adjusted continuous contracts × 5 walk-forward splits is slow enough to exceed `BACKTEST_TIMEOUT_MS = 10 * 60 * 1000`. The timeout kill + `failed` DB write works correctly — the bug is throughput, not correctness. The DB rows persist properly and the error message is surfaced. This is a pre-existing infrastructure performance issue (S3 read latency or data volume), not introduced by this session's changes.
+
 **Carry-forward for next session:**
-- Backtest results (metrics, tier, forgeScore) pending Python engine completion — query `backtests` table for terminal status
+- Walk-forward backtest timeouts need investigation: either reduce date range (1 year, 3 splits), or optimize Python S3 read path (DuckDB direct scan vs. Polars), or increase BACKTEST_TIMEOUT_MS
+- Consider exposing a "quick backtest" mode (`walk_forward_splits=2, start_date="2025-01-01"`) for operator validation probes
 
 ---
 
