@@ -22,7 +22,7 @@
 | Max drawdown (also serves as buffer) | `$2,000` |
 | Trailing type | `eod` |
 | Daily loss limit | `null` (no separate DLL — drawdown is the cap) |
-| Max contracts | `15` |
+| Max contracts | `50` micros (or 5 minis — Core/Flex/Rapid plans; Pro plan is 60 micros) |
 | Min trading days | `5` |
 | Min payout days | `5` |
 | Consistency rule | `mffu_50pct` (best-day cannot exceed 50% of total P&L) |
@@ -46,7 +46,7 @@ activation_fee: 0
 ongoing_monthly_fee: 0
 profit_target: 3000
 max_drawdown: 2000
-max_contracts: 15
+max_contracts: 50  # micros at $50K Core/Flex/Rapid (5 minis × 10:1)
 trailing: eod
 payout_split: 0.80
 min_payout_days: 5

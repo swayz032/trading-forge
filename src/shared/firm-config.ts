@@ -1,14 +1,17 @@
 // ─── SINGLE SOURCE OF TRUTH for all prop firm data ──────────────────────────
 // Every TS file that needs firm rules imports from here. No duplicates.
-// ALL firms are 50K accounts only. No other account sizes.
+// Only Topstep (PRIMARY) + MFFU (secondary) per CLAUDE.md §6.
+// Legacy firms (TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade) removed 2026-05-19.
+// ALL firms are 50K accounts. We trade MICROS only (MES/MNQ/MCL).
 
 export interface FirmAccountConfig {
   accountSize: number;
   monthlyFee: number;
   activationFee: 0;              // ALWAYS $0 — all firms
-  ongoingMonthlyFee: number;     // Apex $85/mo, FFN $126/mo, others $0
+  ongoingMonthlyFee: number;
   profitTarget: number;
   maxDrawdown: number;            // Also serves as buffer amount
+  /** Max MICRO contracts at $50K (50 = 5 minis × 10:1 ratio). */
   maxContracts: number;
   trailing: "eod" | "realtime";
   payoutSplit: number;            // Initial split
@@ -51,7 +54,7 @@ export const FIRMS: Record<string, FirmConfig> = {
     accountTypes: {
       "50k": {
         accountSize: 50_000, monthlyFee: 77, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 50, trailing: "eod",
         payoutSplit: 0.80, minPayoutDays: 5, consistencyRule: 0.50, // Python: "mffu_50pct"
         dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
         minTradingDays: 5,
@@ -69,7 +72,7 @@ export const FIRMS: Record<string, FirmConfig> = {
     accountTypes: {
       "50k": {
         accountSize: 50_000, monthlyFee: 49, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 50, trailing: "eod",
         payoutSplit: 0.90, minPayoutDays: 5, consistencyRule: null,
         dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.37,
         minTradingDays: 5,
@@ -85,108 +88,8 @@ export const FIRMS: Record<string, FirmConfig> = {
     },
   },
 
-  tpt: {
-    name: "tpt",
-    displayName: "Take Profit Trader (TPT)",
-    evaluationType: "one_step",
-    accountTypes: {
-      "50k": {
-        accountSize: 50_000, monthlyFee: 170, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
-        payoutSplit: 0.80,
-        payoutSplitTiers: [{ threshold: 5000, split: 0.90 }],
-        minPayoutDays: 5, consistencyRule: 0.50, // Python: "tpt_50pct"
-        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
-        minTradingDays: 5,
-      },
-    },
-  },
-
-  apex: {
-    name: "apex",
-    displayName: "Apex Trader Funding",
-    evaluationType: "one_step",
-    accountTypes: {
-      "50k": {
-        accountSize: 50_000, monthlyFee: 99, activationFee: 0, ongoingMonthlyFee: 85,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
-        payoutSplit: 1.00,
-        payoutSplitTiers: [{ threshold: 25000, split: 0.90 }],
-        minPayoutDays: 1, consistencyRule: 0.50, // Python: "apex_50pct_funded"
-        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
-        minTradingDays: 1,
-      },
-    },
-  },
-
-  ffn: {
-    name: "ffn",
-    displayName: "Funded Futures Network (FFN)",
-    evaluationType: "two_step",
-    accountTypes: {
-      "50k": {
-        accountSize: 50_000, monthlyFee: 150, activationFee: 0, ongoingMonthlyFee: 126,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
-        payoutSplit: 0.80,
-        payoutSplitTiers: [{ threshold: 5000, split: 0.90 }],
-        minPayoutDays: 3, consistencyRule: 0.40, // Python: "ffn_40pct"
-        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
-        minTradingDays: 3,
-      },
-    },
-  },
-
-  alpha: {
-    name: "alpha",
-    displayName: "Alpha Futures",
-    evaluationType: "one_step",
-    accountTypes: {
-      "50k": {
-        accountSize: 50_000, monthlyFee: 99, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
-        payoutSplit: 0.70,
-        payoutSplitTiers: undefined,
-        payoutCountTiers: [
-          { payoutNumber: 1, split: 0.70 },
-          { payoutNumber: 2, split: 0.80 },
-          { payoutNumber: 3, split: 0.90 },  // 3rd+ payout
-        ],
-        minPayoutDays: 2, consistencyRule: 0.50, // Python: "alpha_50pct"
-        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.00,
-        minTradingDays: 2,
-      },
-    },
-  },
-
-  tradeify: {
-    name: "tradeify",
-    displayName: "Tradeify",
-    evaluationType: "one_step",
-    accountTypes: {
-      "50k": {
-        accountSize: 50_000, monthlyFee: 159, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 2500, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
-        payoutSplit: 0.90, minPayoutDays: 3, consistencyRule: 0.40, // Python: "tradeify_40pct"
-        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 1.29,
-        minTradingDays: 3,
-      },
-    },
-  },
-
-  earn2trade: {
-    name: "earn2trade",
-    displayName: "Earn2Trade",
-    evaluationType: "one_step",
-    accountTypes: {
-      "50k": {
-        accountSize: 50_000, monthlyFee: 170, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 15, trailing: "eod",
-        payoutSplit: 0.80, minPayoutDays: 10, consistencyRule: 0.50, // Python: "earn2trade_consistency"
-        dailyLossLimit: 1100, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
-        minTradingDays: 10,
-      },
-    },
-  },
+  // 6 legacy firms (TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade) removed
+  // 2026-05-19 per CLAUDE.md §6 — Topstep + MFFU only.
 };
 
 // ─── Contract Specs ─────────────────────────────────────────────────────────
@@ -198,9 +101,13 @@ export const CONTRACT_SPECS: Record<string, { tickSize: number; tickValue: numbe
 };
 
 // ─── Contract Cap Bounds (mirrors Python firm_config.py) ────────────────────
+// Micros at $50K Combine/Funded:
+//   Topstep:       50 micros (5 minis × 10:1 ratio) per scaling plan max tier
+//   MFFU Core:     50 micros (5 minis × 10:1)
+//   MFFU Pro:      60 micros (6 minis × 10:1)
 
-export const CONTRACT_CAP_MIN = 10;
-export const CONTRACT_CAP_MAX = 20;
+export const CONTRACT_CAP_MIN = 0;
+export const CONTRACT_CAP_MAX = 60;
 
 // ─── Defaults ───────────────────────────────────────────────────────────────
 
@@ -251,7 +158,7 @@ export function getTightestDrawdown(): { firm: string; maxDrawdown: number } | n
 
 // ─── Commission Helpers ──────────────────────────────────────────────────────
 
-/** Default commission per side when firmId is null/unknown. $0.62 = MFFU/TPT/Apex/FFN/Earn2Trade default. */
+/** Default commission per side when firmId is null/unknown. $0.62 = MFFU baseline (Topstep is lower at $0.37). */
 export const DEFAULT_COMMISSION_PER_SIDE = 0.62;
 
 /**

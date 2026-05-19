@@ -313,8 +313,8 @@ def _build_prop_overlay(firm_key: Optional[str]) -> str:
 // ─── Prop Risk Overlay (no firm selected) ───────────────────────
 var float max_drawdown_limit = 2000.0   // Default tightest
 var float daily_loss_limit = 1000.0     // Default tightest
-var int max_contracts = 15
-var float commission_per_side = 0.62
+var int max_contracts = 50           // 50 micros (5 minis × 10:1) at $50K, Topstep + MFFU
+var float commission_per_side = 0.62  // MFFU baseline; Topstep is lower at $0.37
 
 // risk_lockout placeholder — overridden by artifact-specific tracking block below
 var bool risk_lockout = false

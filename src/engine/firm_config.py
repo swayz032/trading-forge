@@ -26,17 +26,26 @@ FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
 }
 
 
-# ─── Per-Firm Contract Caps (max simultaneous contracts) ─────────
-# Contract caps: 10 min / 15 default / 20 max for all micro contracts.
+# ─── Per-Firm Contract Caps (max simultaneous MICRO contracts) ───
+# 2026 actual published rules (verified 2026-05-19 against Topstep + MFFU
+# help center pages, not stale internal docs):
+#
+#   Topstep $50K Combine + Funded:  5 minis OR 50 micros (10:1 ratio)
+#   MFFU $50K (Core / Flex / Rapid): 5 minis OR 50 micros
+#   MFFU $50K Pro:                   6 minis OR 60 micros
+#
+# We run MICRO contracts (MES/MNQ/MCL) only — the mini equivalents
+# (ES/NQ/CL) are deferred until single-account balance ≥ $200K per
+# CLAUDE.md §5 Phase 5. So the per-symbol cap is the micro cap.
 
 FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
-    "topstep_50k": {"MES": 15, "MNQ": 15, "MCL": 15},
-    "mffu_50k":    {"MES": 15, "MNQ": 15, "MCL": 15},
+    "topstep_50k": {"MES": 50, "MNQ": 50, "MCL": 50},
+    "mffu_50k":    {"MES": 50, "MNQ": 50, "MCL": 50},
 }
 
-# Hard bounds: min 10, max 20. ATR sizing is clamped to this range.
-CONTRACT_CAP_MIN = 10
-CONTRACT_CAP_MAX = 20
+# Hard bounds: min 0, max 60 (MFFU Pro). ATR sizing is clamped to this range.
+CONTRACT_CAP_MIN = 0
+CONTRACT_CAP_MAX = 60
 
 
 # ─── Scaling Plans (account upgrades after profit milestones) ─────
@@ -44,21 +53,24 @@ CONTRACT_CAP_MAX = 20
 # profit_threshold on the original 50K. All traders START at 50K.
 
 SCALING_PLANS: dict[str, list[dict]] = {
+    # max_contracts at each scaling tier = micro-contract cap (10:1 ratio).
+    # Topstep tiers: 50K→100K@$5K profit, 100K→150K@$10K profit.
+    # MFFU tiers (Core): 50K→100K@$5K, 100K→200K@$15K.
     "topstep_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 15},
-        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 4500, "max_contracts": 20},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 100},
+        {"profit_threshold": 10000, "new_account_size": 150000, "new_max_dd": 4500, "max_contracts": 150},
     ],
     "mffu_50k": [
-        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 15},
-        {"profit_threshold": 15000, "new_account_size": 200000, "new_max_dd": 5000, "max_contracts": 20},
+        {"profit_threshold": 5000,  "new_account_size": 100000, "new_max_dd": 3000, "max_contracts": 100},
+        {"profit_threshold": 15000, "new_account_size": 200000, "new_max_dd": 5000, "max_contracts": 200},
     ],
 }
 
 
 # ─── Initial Contract Caps (starting limits before scaling) ──────
 INITIAL_CONTRACT_CAPS: dict[str, int] = {
-    "topstep_50k": 15,
-    "mffu_50k": 15,
+    "topstep_50k": 50,  # 50 micros at $50K Combine + Funded
+    "mffu_50k": 50,     # 50 micros at $50K Core/Flex/Rapid
 }
 
 
@@ -75,7 +87,7 @@ FIRM_RULES: dict[str, dict] = {
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
-        "max_contracts": 15,
+        "max_contracts": 50,  # 50 micros (10:1 mini ratio) at $50K
         "trailing": "eod",
         "payout_split": 0.90,
         "min_payout_days": 5,
@@ -100,7 +112,7 @@ FIRM_RULES: dict[str, dict] = {
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
-        "max_contracts": 15,
+        "max_contracts": 50,  # 50 micros (10:1 mini ratio) at $50K
         "trailing": "eod",
         "payout_split": 0.80,
         "min_payout_days": 5,

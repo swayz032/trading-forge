@@ -22,7 +22,7 @@
 | Max drawdown (trailing) | `$2,000` |
 | Trailing type | `eod` (locks at HWM = starting balance) |
 | Daily loss limit | `$1,000` (opt-in at checkout per April 2026 update) |
-| Max contracts | `15` |
+| Max contracts | `50` micros (or 5 minis — TopstepX 10:1 ratio per scaling plan) |
 | Min trading days | `5` |
 | Min payout days | `5` |
 | Consistency rule | `null` (no consistency rule) |
@@ -45,7 +45,7 @@ activation_fee: 0
 ongoing_monthly_fee: 0
 profit_target: 3000
 max_drawdown: 2000
-max_contracts: 15
+max_contracts: 50  # micros at $50K Combine + Funded (5 minis × 10:1)
 trailing: eod
 payout_split: 0.90
 min_payout_days: 5

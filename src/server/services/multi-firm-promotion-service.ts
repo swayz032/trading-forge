@@ -159,8 +159,9 @@ async function buildStrategyComplianceInput(
         Object.keys((backtestData.contracts_per_symbol as Record<string, number>)).length === 0 &&
         strategy.symbol
       ) {
-        // Default: the latest backtest's max_contracts from firm config (15 for all 50K accounts)
-        backtestData.contracts_per_symbol = { [strategy.symbol]: 15 };
+        // Default: the firm's published micro contract cap at $50K (50 micros = 5 minis × 10:1
+        // ratio, for both Topstep Combine/Funded and MFFU Core/Flex/Rapid).
+        backtestData.contracts_per_symbol = { [strategy.symbol]: 50 };
       }
     }
   }
