@@ -492,16 +492,11 @@ def test_cat05_pnl_math():
             if not ok:
                 failures.append(f"TS {sym}.{fname} mismatch: got {actual}, expected {expected}")
 
-    # c) Per-firm commissions
+    # c) Per-firm commissions — 2026-05-19 phase19/phase20 stripped 6 legacy
+    # firms (TPT/Apex/FFN/Alpha/Tradeify/Earn2Trade). Topstep + MFFU only.
     expected_commissions = {
         "topstep_50k": 0.37,
         "mffu_50k": 0.62,
-        "tpt_50k": 0.62,
-        "apex_50k": 0.62,
-        "tradeify_50k": 1.29,
-        "alpha_50k": 0.00,
-        "ffn_50k": 0.62,
-        "earn2trade_50k": 0.62,
     }
     for firm, expected_per_side in expected_commissions.items():
         if firm not in FIRM_COMMISSIONS:
@@ -513,6 +508,13 @@ def test_cat05_pnl_math():
         findings.append(f"FIRM_COMMISSIONS[{firm}][MES] = ${actual:.2f} (expected ${expected_per_side:.2f}): {'OK' if ok else 'MISMATCH'}")
         if not ok:
             failures.append(f"{firm} commission mismatch: got ${actual:.2f}, expected ${expected_per_side:.2f}")
+
+    # Guard against silent legacy firm re-addition.
+    if len(FIRM_COMMISSIONS) != 2:
+        failures.append(f"FIRM_COMMISSIONS has {len(FIRM_COMMISSIONS)} entries; expected exactly 2 (Topstep + MFFU)")
+        findings.append(f"FIRM_COMMISSIONS firm count: {len(FIRM_COMMISSIONS)} != 2 (post-2026-05-19 purge)")
+    else:
+        findings.append("FIRM_COMMISSIONS firm count: OK (2 firms — Topstep + MFFU)")
 
     # d) PnL math uses point_value (not tick_value)
     bt = _read("src/engine/backtester.py")
@@ -902,16 +904,10 @@ def test_cat10_compliance_accuracy():
     findings = []
     failures = []
 
-    # a) Per-firm DLL
+    # a) Per-firm DLL — 2026-05-19 legacy purge: Topstep + MFFU only.
     expected_dll = {
         "topstep_50k": 1000,
         "mffu_50k": None,
-        "tpt_50k": None,
-        "ffn_50k": None,
-        "tradeify_50k": None,
-        "alpha_50k": None,
-        "apex_50k": 1000,
-        "earn2trade_50k": 1100,
     }
     for firm, expected in expected_dll.items():
         actual = FIRM_RULES.get(firm, {}).get("daily_loss_limit")
@@ -919,6 +915,13 @@ def test_cat10_compliance_accuracy():
         findings.append(f"FIRM_RULES[{firm}].daily_loss_limit = {actual} (expected {expected}): {'OK' if ok else 'MISMATCH'}")
         if not ok:
             failures.append(f"{firm} daily_loss_limit mismatch: got {actual}, expected {expected}")
+
+    # Guard: FIRM_RULES must contain exactly Topstep + MFFU.
+    if len(FIRM_RULES) != 2:
+        failures.append(f"FIRM_RULES has {len(FIRM_RULES)} entries; expected exactly 2 (Topstep + MFFU)")
+        findings.append(f"FIRM_RULES firm count: {len(FIRM_RULES)} != 2")
+    else:
+        findings.append("FIRM_RULES firm count: OK (2 firms — Topstep + MFFU)")
 
     # b) locks_at_start in prop_compliance
     prop_compliance = _read("src/engine/prop_compliance.py")
@@ -960,8 +963,9 @@ def test_cat10_compliance_accuracy():
     if not kill_switch_complete:
         failures.append("compliance_gate.check_kill_switch missing one of [DLL, consec_losses, max_trades]")
 
-    # e) Per-firm contract caps
-    for firm in ["topstep_50k", "mffu_50k", "apex_50k", "tradeify_50k"]:
+    # e) Per-firm contract caps — 2026-05-19 micros corrected to 50 (was 15).
+    EXPECTED_MICRO_CAP = 50
+    for firm in ["topstep_50k", "mffu_50k"]:
         if firm not in FIRM_CONTRACT_CAPS:
             failures.append(f"FIRM_CONTRACT_CAPS missing {firm}")
             findings.append(f"FIRM_CONTRACT_CAPS[{firm}]: MISSING")
@@ -970,6 +974,13 @@ def test_cat10_compliance_accuracy():
             if sym not in FIRM_CONTRACT_CAPS[firm]:
                 failures.append(f"FIRM_CONTRACT_CAPS[{firm}] missing {sym}")
                 findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}]: MISSING")
+                continue
+            actual_cap = FIRM_CONTRACT_CAPS[firm][sym]
+            if actual_cap != EXPECTED_MICRO_CAP:
+                failures.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap} (expected {EXPECTED_MICRO_CAP})")
+                findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap}: MISMATCH (expected {EXPECTED_MICRO_CAP})")
+            else:
+                findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap}: OK")
 
     # f) Soft finding: firm-config.ts marks ALL firms `trailing: "eod"` even though
     #    a) MFFU offers "Rapid" plan with intraday_trailing
