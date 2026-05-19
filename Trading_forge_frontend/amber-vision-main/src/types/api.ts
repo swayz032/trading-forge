@@ -49,6 +49,7 @@ export interface Backtest {
     decayDetected: boolean;
     signals: Record<string, any>;
   } | null;
+  resultExtras: Record<string, any> | null;
   errorMessage: string | null;
   executionTimeMs: number | null;
   createdAt: string;
@@ -69,6 +70,9 @@ export interface BacktestTrade {
   mae: string | null;
   mfe: string | null;
   holdDurationMs: number | null;
+  hourOfDay: number | null;
+  dayOfWeek: number | null;
+  sessionType: string | null;
 }
 
 export interface MonteCarloRun {

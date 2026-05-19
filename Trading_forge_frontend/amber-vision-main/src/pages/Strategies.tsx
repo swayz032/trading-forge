@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { ForgeScoreRing } from "@/components/forge/ForgeScoreRing";
 import { StatusBadge } from "@/components/forge/StatusBadge";
 import { Pagination } from "@/components/forge/Pagination";
-import { TrendingUp, TrendingDown, Calendar } from "lucide-react";
+import { EquityCurveSparkline } from "@/components/forge/EquityCurveSparkline";
+import { TrendingUp, TrendingDown, Calendar, Play, Sparkles } from "lucide-react";
 import { useStrategies } from "@/hooks/useStrategies";
 import { useBacktests } from "@/hooks/useBacktests";
 import { num, fmtCurrency, timeAgo } from "@/lib/utils";
@@ -66,6 +67,7 @@ export default function Strategies() {
       const trades = bt ? (bt.totalTrades ?? null) : null;
       const maxDD = bt ? num(bt.maxDrawdown) : null;
       const pnlPct = pnl !== null && pnl !== 0 ? pnl / 1000 : null;
+      const hasBacktest = bt != null;
       return {
         id: s.id,
         name: s.name,
@@ -80,6 +82,8 @@ export default function Strategies() {
         maxDD,
         description: s.description ?? "",
         lastTrade: bt ? timeAgo(bt.createdAt) : "--",
+        latestBacktestId: bt?.id,
+        hasBacktest,
       };
     });
   }, [rawStrategies, backtestByStrategy]);
@@ -181,28 +185,31 @@ export default function Strategies() {
       {/* Strategy Grid */}
       {paginatedStrategies.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[800px] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {paginatedStrategies.map((s, i) => (
               <motion.div
                 key={s.id}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.05 * i }}
-                className="forge-card p-5 cursor-pointer group"
+                className="forge-card p-5 cursor-pointer group min-h-[320px] flex flex-col ring-1 ring-white/5 hover:ring-primary/30 transition-all duration-300 relative overflow-hidden"
                 onClick={() => navigate(`/strategies/${s.id}`)}
               >
+                {/* Subtle gradient glow on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-transparent to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-500 pointer-events-none" />
+
                 {/* Header */}
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-4 relative">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-xs font-mono font-semibold text-primary">{s.instrument}</span>
+                      <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-primary">{s.instrument}</span>
                       <StatusBadge variant={statusVariant(s.status)} dot>{s.status}</StatusBadge>
                     </div>
                     <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                       {s.name}
                     </h3>
-                    <p className="text-[11px] text-text-muted mt-1 line-clamp-2 leading-relaxed">
-                      {s.description}
+                    <p className="text-[11px] text-text-muted mt-1 line-clamp-2 leading-relaxed min-h-[2.4em]">
+                      {s.description || "No description"}
                     </p>
                   </div>
                   <div className="ml-3 shrink-0">
@@ -210,41 +217,65 @@ export default function Strategies() {
                   </div>
                 </div>
 
-                {/* Metrics grid */}
-                <div className="grid grid-cols-4 gap-3 pt-3 border-t border-border/20">
+                {/* Equity sparkline OR empty-state CTA */}
+                <div className="mb-3 relative">
+                  {s.hasBacktest ? (
+                    <EquityCurveSparkline backtestId={s.latestBacktestId} height={56} />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/strategies/${s.id}?action=backtest`); }}
+                      className="w-full h-14 rounded-md border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all flex items-center justify-center gap-2 text-[11px] text-primary/80 hover:text-primary"
+                    >
+                      <Play className="w-3 h-3" />
+                      Run a backtest to see metrics
+                    </button>
+                  )}
+                </div>
+
+                {/* Metrics grid — only when we have data */}
+                <div className="grid grid-cols-4 gap-3 pt-3 border-t border-border/20 relative">
                   <div>
                     <span className="text-[10px] uppercase tracking-wider text-text-muted block mb-0.5">P&L</span>
-                    <span className={`text-xs font-mono font-semibold ${s.pnl !== null && s.pnl >= 0 ? "text-profit" : s.pnl !== null ? "text-loss" : "text-text-muted"}`}>
-                      {s.pnl !== null
-                        ? `${s.pnl >= 0 ? "+" : ""}$${(Math.abs(s.pnl) / 1000).toFixed(1)}k`
-                        : "--"}
-                    </span>
+                    {s.pnl !== null ? (
+                      <span className={`text-xs font-mono font-semibold ${s.pnl >= 0 ? "text-profit" : "text-loss"}`}>
+                        {s.pnl >= 0 ? "+" : ""}${(Math.abs(s.pnl) / 1000).toFixed(1)}k
+                      </span>
+                    ) : (
+                      <span className="text-xs font-mono text-text-muted/50">—</span>
+                    )}
                   </div>
                   <div>
                     <span className="text-[10px] uppercase tracking-wider text-text-muted block mb-0.5">Win%</span>
-                    <span className="text-xs font-mono font-semibold text-foreground">
-                      {s.winRate !== null ? `${s.winRate.toFixed(1)}%` : "--"}
-                    </span>
+                    {s.winRate !== null ? (
+                      <span className="text-xs font-mono font-semibold text-foreground">{s.winRate.toFixed(1)}%</span>
+                    ) : (
+                      <span className="text-xs font-mono text-text-muted/50">—</span>
+                    )}
                   </div>
                   <div>
                     <span className="text-[10px] uppercase tracking-wider text-text-muted block mb-0.5">Sharpe</span>
-                    <span className="text-xs font-mono font-semibold text-foreground">
-                      {s.sharpe !== null ? s.sharpe.toFixed(2) : "--"}
-                    </span>
+                    {s.sharpe !== null ? (
+                      <span className="text-xs font-mono font-semibold text-foreground">{s.sharpe.toFixed(2)}</span>
+                    ) : (
+                      <span className="text-xs font-mono text-text-muted/50">—</span>
+                    )}
                   </div>
                   <div>
                     <span className="text-[10px] uppercase tracking-wider text-text-muted block mb-0.5">Trades</span>
-                    <span className="text-xs font-mono font-semibold text-foreground">
-                      {s.trades !== null ? s.trades : "--"}
-                    </span>
+                    {s.trades !== null ? (
+                      <span className="text-xs font-mono font-semibold text-foreground">{s.trades}</span>
+                    ) : (
+                      <span className="text-xs font-mono text-text-muted/50">—</span>
+                    )}
                   </div>
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/10">
+                <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/10 relative">
                   <div className="flex items-center gap-1.5 text-[10px] text-text-muted">
                     <Calendar className="w-3 h-3" />
-                    Last backtest: {s.lastTrade}
+                    {s.hasBacktest ? `Last: ${s.lastTrade}` : "Never run"}
                   </div>
                   <div className="flex items-center gap-1">
                     {s.pnlPct !== null ? (
@@ -259,7 +290,7 @@ export default function Strategies() {
                         </span>
                       </>
                     ) : (
-                      <span className="text-[10px] font-mono text-text-muted">--</span>
+                      <span className="text-[10px] font-mono text-text-muted/50">—</span>
                     )}
                   </div>
                 </div>
@@ -277,9 +308,38 @@ export default function Strategies() {
         </>
       ) : (
         <div className="forge-card p-12 text-center">
-          <p className="text-sm text-text-muted">
-            {filter === "All" && symbolFilter === "All" ? "No strategies yet" : `No matching strategies`}
-          </p>
+          {filter === "All" && symbolFilter === "All" ? (
+            <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
+              <div className="w-12 h-12 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">No strategies yet</h3>
+                <p className="text-xs text-text-muted mt-1">
+                  Run the Strategy Scout to generate research-backed candidates,
+                  or import a strategy manually.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => navigate("/scout")}
+                  className="px-4 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition"
+                >
+                  Open Strategy Scout
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/strategies/new")}
+                  className="px-4 py-1.5 rounded-md border border-border/30 text-xs font-medium hover:bg-surface-2 transition"
+                >
+                  Import strategy
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-text-muted">No matching strategies — adjust filters.</p>
+          )}
         </div>
       )}
     </div>

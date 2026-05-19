@@ -22,6 +22,10 @@ import { useMonteCarlo, useMonteCarloRun, useRunMC } from "@/hooks/useMonteCarlo
 import { useStartPaperSession } from "@/hooks/usePaper";
 import { num, timeAgo } from "@/lib/utils";
 import type { BacktestTrade, Backtest } from "@/types/api";
+import { CodeTabs } from "@/components/strategy/CodeTabs";
+import { PropFirmModePanel } from "@/components/strategy/PropFirmModePanel";
+import { LongShortBreakdown } from "@/components/strategy/LongShortBreakdown";
+import { DayHourHeatmap } from "@/components/strategy/DayHourHeatmap";
 
 function computeFanFromPaths(rawPaths: number[][]): Record<string, number>[] {
   if (!rawPaths.length) return [];
@@ -361,7 +365,7 @@ export default function StrategyDetail() {
       >
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-surface-1 border border-border/20 p-1 rounded-lg">
-            {["Overview", "Backtests", "Monte Carlo", "Trades", "Config"].map((tab) => (
+            {["Overview", "Backtests", "Monte Carlo", "Trades", "Code", "Config"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab.toLowerCase().replace(" ", "-")}
@@ -413,6 +417,9 @@ export default function StrategyDetail() {
                 </span>
               </div>
             </div>
+
+            {/* Day × Hour P&L Heatmap (per QuantVue V2 deck page 14) */}
+            <DayHourHeatmap backtestId={latestBacktest?.id} />
           </TabsContent>
 
           {/* Backtests Tab */}
@@ -592,12 +599,25 @@ export default function StrategyDetail() {
           </TabsContent>
 
           {/* Trades Tab */}
-          <TabsContent value="trades">
+          <TabsContent value="trades" className="space-y-4">
             <StrategyTradesPanel trades={trades} tradeColumns={tradeColumns} />
+            <LongShortBreakdown
+              backtestId={latestBacktest?.id}
+              resultExtras={latestBacktest?.resultExtras as Record<string, unknown> | undefined}
+            />
+          </TabsContent>
+
+          {/* Code Tab — DSL / Pine / Python */}
+          <TabsContent value="code">
+            <CodeTabs strategyId={strategy.id} />
           </TabsContent>
 
           {/* Config Tab */}
-          <TabsContent value="config">
+          <TabsContent value="config" className="space-y-4">
+            <PropFirmModePanel
+              strategyId={strategy.id}
+              initialConfig={(strategy.config as Record<string, unknown>)?.prop_firm_mode as Record<string, unknown> | undefined}
+            />
             <div className="forge-card p-5">
               <h2 className="text-sm font-medium text-foreground mb-4">Strategy Parameters</h2>
               {configEntries.length > 0 ? (

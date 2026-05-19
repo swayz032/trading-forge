@@ -643,3 +643,79 @@ export const walkForwardWindows = pgTable(
         index("wf_windows_backtest_idx").on(table.backtestId),
     ]
 );
+
+// ─── Mutation Outcomes (Phase 2.2 — Mutation Impact Tracking) ─
+// Records the outcome of every LLM-proposed parameter mutation after
+// re-backtest completes. Enables the evolver to learn which mutation
+// types succeed per archetype / regime over time.
+export const mutationOutcomes = pgTable(
+  "mutation_outcomes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id),
+    parentArchetype: text("parent_archetype"),            // archetype tag from strategy.tags
+    mutationType: text("mutation_type"),                  // "param_shift" | "range_widen" | "regime_adjust"
+    paramName: text("param_name"),                        // which param changed most
+    direction: text("direction"),                         // "increase" | "decrease" | "widen" | "narrow"
+    magnitude: numeric("magnitude"),                      // fractional change (0.15 = 15%)
+    parentMetrics: jsonb("parent_metrics"),               // {sharpe, profitFactor, maxDrawdown}
+    childMetrics: jsonb("child_metrics"),                 // same shape as parentMetrics
+    improvement: numeric("improvement"),                  // childSharpe - parentSharpe
+    regime: text("regime"),                               // macroRegime active during decision
+    success: boolean("success"),                          // improvement > 0
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("mutation_outcomes_strategy_idx").on(table.strategyId),
+    index("mutation_outcomes_archetype_idx").on(table.parentArchetype),
+    index("mutation_outcomes_success_idx").on(table.success),
+    index("mutation_outcomes_mutation_type_idx").on(table.mutationType),
+  ]
+);
+
+// ─── DeepAR Forecasts (Phase 2.4 — Regret Scoring) ───────────
+// Stores pre-session probabilistic forecasts from the DeepAR model,
+// including post-hoc regret and magnitude-error columns filled nightly.
+export const deeparForecasts = pgTable(
+  "deepar_forecasts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    strategyId: uuid("strategy_id").references(() => strategies.id),
+    forecastDate: timestamp("forecast_date").notNull(),
+    symbol: text("symbol").notNull(),
+    predictedProbability: numeric("predicted_probability"),  // P(profitable session) 0-1
+    predictedDirection: text("predicted_direction"),          // "long" | "short" | "flat"
+    forecastHorizonMs: integer("forecast_horizon_ms"),        // how far ahead (ms)
+    forecastMetadata: jsonb("forecast_metadata"),             // raw model output / quantiles
+    actualOutcome: numeric("actual_outcome"),                 // 0 or 1 (was the session profitable?)
+    actualProbability: numeric("actual_probability"),         // realised probability from MC / population
+    magnitudeOfMove: numeric("magnitude_of_move"),            // realised session P&L magnitude
+    // Regret columns — filled by regret-score-fill job
+    regretScore: numeric("regret_score"),                     // abs(predictedProbability - actualOutcome) * magnitudeOfMove
+    magnitudeError: numeric("magnitude_error"),               // abs(predictedProbability - actualProbability)
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("deepar_forecasts_strategy_idx").on(table.strategyId),
+    index("deepar_forecasts_date_idx").on(table.forecastDate),
+    index("deepar_forecasts_symbol_idx").on(table.symbol),
+  ]
+);
+
+// ─── Skip Weight History (Phase 2.1 — Weight Trainer Feedback Loop) ─
+// Records every weight-retraining run. Persists the trained weights,
+// accuracy comparison, and status so the scheduler and UI can audit
+// which weights are active and trace every weight change over time.
+// The most recent row with status="ok" is the active weight set.
+export const skipWeightHistory = pgTable("skip_weight_history", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  trainedAt: timestamp("trained_at").defaultNow().notNull(),
+  windowDays: integer("window_days").notNull(),
+  sampleSize: integer("sample_size").notNull(),
+  weights: jsonb("weights").notNull(),
+  baselineAccuracy: numeric("baseline_accuracy"),
+  trainedAccuracy: numeric("trained_accuracy"),
+  status: text("status").notNull(),
+  message: text("message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

@@ -622,3 +622,223 @@ class TestPremarketAnalyzer:
             },
         )
         assert signals["portfolio_correlation"] == 0.8
+
+
+# ─── Weight Trainer Tests ─────────────────────────────────────────
+
+
+from src.engine.skip_engine.weight_trainer import (
+    train_weights,
+    BASE_WEIGHTS,
+    SIGNAL_KEYS,
+    MIN_DECISIONS,
+    WEIGHT_MULTIPLIER_MIN,
+    WEIGHT_MULTIPLIER_MAX,
+)
+
+
+def _make_decision(pnl: float, vix: float = 15.0, gap_atr: float = 0.3) -> dict:
+    """Helper: build a minimal resolved decision dict."""
+    return {
+        "signals": {
+            "vix": vix,
+            "overnight_gap_atr": gap_atr,
+            "premarket_volume_pct": 0.8,
+            "day_of_week": "Tuesday",
+            "consecutive_losses": 0,
+            "monthly_dd_usage_pct": 0.1,
+            "portfolio_correlation": 0.2,
+            "calendar": {
+                "holiday_proximity": 20,
+                "triple_witching": False,
+                "roll_week": False,
+            },
+        },
+        "actualPnl": pnl,
+        "decisionDate": "2026-01-15",
+    }
+
+
+def _make_decisions(n: int, loss_ratio: float = 0.5) -> list[dict]:
+    """
+    Build n decision dicts, with loss_ratio fraction being losses.
+    Losses use high-VIX signals; wins use clean signals.
+    """
+    decisions = []
+    n_losses = int(n * loss_ratio)
+    for i in range(n):
+        if i < n_losses:
+            decisions.append(_make_decision(pnl=-300.0, vix=35.0, gap_atr=2.0))
+        else:
+            decisions.append(_make_decision(pnl=200.0, vix=15.0, gap_atr=0.3))
+    return decisions
+
+
+class TestWeightTrainer:
+    def test_insufficient_data_returns_status(self):
+        """Fewer than MIN_DECISIONS resolved rows should return insufficient_data."""
+        decisions = _make_decisions(MIN_DECISIONS - 1)
+        result = train_weights(decisions)
+        assert result["status"] == "insufficient_data"
+        assert result["sampleSize"] == MIN_DECISIONS - 1
+        assert result["weights"] == {}
+        assert result["trainedAccuracy"] is None
+
+    def test_empty_decisions_returns_insufficient_data(self):
+        """Empty list should return insufficient_data, not crash."""
+        result = train_weights([])
+        assert result["status"] == "insufficient_data"
+        assert result["sampleSize"] == 0
+
+    def test_valid_training_returns_ok(self):
+        """Sufficient data with sklearn present should return status ok."""
+        try:
+            import sklearn  # noqa: F401
+        except ImportError:
+            pytest.skip("scikit-learn not installed")
+
+        decisions = _make_decisions(40)
+        result = train_weights(decisions)
+        assert result["status"] == "ok"
+        assert result["sampleSize"] == 40
+        assert result["trainedAccuracy"] is not None
+        assert result["baselineAccuracy"] is not None
+        assert isinstance(result["weights"], dict)
+
+    def test_weight_bounds_respected(self):
+        """All trained weight values must satisfy [BASE * MIN_MULT, BASE * MAX_MULT]."""
+        try:
+            import sklearn  # noqa: F401
+        except ImportError:
+            pytest.skip("scikit-learn not installed")
+
+        decisions = _make_decisions(50, loss_ratio=0.6)
+        result = train_weights(decisions)
+
+        if result["status"] != "ok":
+            pytest.skip(f"Training did not succeed: {result['status']}")
+
+        for key, weight in result["weights"].items():
+            base = BASE_WEIGHTS[key]
+            assert weight >= base * WEIGHT_MULTIPLIER_MIN - 1e-9, (
+                f"{key}: weight {weight} below min {base * WEIGHT_MULTIPLIER_MIN}"
+            )
+            assert weight <= base * WEIGHT_MULTIPLIER_MAX + 1e-9, (
+                f"{key}: weight {weight} above max {base * WEIGHT_MULTIPLIER_MAX}"
+            )
+
+    def test_all_signal_keys_present_in_weights(self):
+        """Trained weights dict must contain exactly the 9 canonical signal keys."""
+        try:
+            import sklearn  # noqa: F401
+        except ImportError:
+            pytest.skip("scikit-learn not installed")
+
+        decisions = _make_decisions(40)
+        result = train_weights(decisions)
+
+        if result["status"] != "ok":
+            pytest.skip(f"Training did not succeed: {result['status']}")
+
+        assert set(result["weights"].keys()) == set(SIGNAL_KEYS)
+
+    def test_excludes_rows_with_null_pnl(self):
+        """Rows with actualPnl=None must be excluded from the sample count gate."""
+        # 29 resolved + 10 unresolved = only 29 qualify → should be insufficient_data
+        decisions = _make_decisions(29)
+        unresolved = [
+            {
+                "signals": _make_decision(0.0)["signals"],
+                "actualPnl": None,
+                "decisionDate": "2026-01-20",
+            }
+            for _ in range(10)
+        ]
+        result = train_weights(decisions + unresolved)
+        assert result["status"] == "insufficient_data"
+        assert result["sampleSize"] == 29
+
+    def test_window_days_passed_through(self):
+        """windowDays in result must match what was passed in."""
+        decisions = _make_decisions(40)
+        result = train_weights(decisions, window_days=45)
+        assert result["windowDays"] == 45
+
+
+# ─── Learned Weights Integration Tests ────────────────────────────
+
+
+class TestClassifySessionLearnedWeights:
+    """Tests for classify_session() learned_weights= parameter."""
+
+    @pytest.fixture
+    def base_signals(self):
+        """Moderate signals: VIX just above 30, small gap. Normally REDUCE or light SKIP."""
+        return {
+            "vix": 31.0,           # 2.5 at base
+            "overnight_gap_atr": 0.3,
+            "premarket_volume_pct": 0.8,
+            "day_of_week": "Tuesday",
+            "consecutive_losses": 0,
+            "monthly_dd_usage_pct": 0.1,
+            "portfolio_correlation": 0.2,
+            "calendar": {
+                "holiday_proximity": 20,
+                "triple_witching": False,
+                "roll_week": False,
+            },
+        }
+
+    def test_learned_weights_override_changes_score(self, base_signals):
+        """
+        Providing learned_weights with a 2x vix_level multiplier should raise
+        the vix_level contribution and increase total score vs base.
+        """
+        base_result = classify_session(base_signals)
+
+        # Double the vix_level weight — all others unchanged
+        learned = dict(BASE_WEIGHTS)
+        learned["vix_level"] = BASE_WEIGHTS["vix_level"] * 2.0  # 5.0 instead of 2.5
+
+        learned_result = classify_session(base_signals, learned_weights=learned)
+
+        assert learned_result["score"] > base_result["score"], (
+            "Doubling vix_level weight must increase total score"
+        )
+        assert learned_result["signal_scores"]["vix_level"] == pytest.approx(
+            base_result["signal_scores"]["vix_level"] * 2.0, rel=1e-5
+        )
+
+    def test_partial_learned_weights_falls_back_to_base(self, base_signals):
+        """
+        If learned_weights only contains some keys, missing keys should use
+        their raw scorer output (equivalent to base weight, multiplier=1.0).
+        """
+        # Only override event_proximity; others should be unchanged
+        partial = {"event_proximity": BASE_WEIGHTS["event_proximity"] * 1.5}
+
+        base_result = classify_session(base_signals)
+        partial_result = classify_session(base_signals, learned_weights=partial)
+
+        # event_proximity is 0.0 in base_signals (no event), so both should
+        # produce identical scores regardless of its weight
+        assert partial_result["signal_scores"]["event_proximity"] == pytest.approx(0.0)
+
+        # Other signal scores should be identical to base (no rescaling applied)
+        for key in ["vix_level", "overnight_gap", "premarket_volume"]:
+            assert partial_result["signal_scores"][key] == pytest.approx(
+                base_result["signal_scores"][key], rel=1e-5
+            ), f"{key} should be unchanged when not in partial learned_weights"
+
+    def test_none_learned_weights_identical_to_base(self, base_signals):
+        """
+        learned_weights=None (the default) must produce exactly the same result
+        as calling classify_session without the parameter — no regression.
+        """
+        result_default = classify_session(base_signals)
+        result_none = classify_session(base_signals, learned_weights=None)
+
+        assert result_default["decision"] == result_none["decision"]
+        assert result_default["score"] == result_none["score"]
+        assert result_default["signal_scores"] == result_none["signal_scores"]
+        assert result_default["confidence"] == result_none["confidence"]

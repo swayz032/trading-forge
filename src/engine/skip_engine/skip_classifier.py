@@ -16,6 +16,7 @@ The 9 Skip Signals:
 
 from __future__ import annotations
 
+import sys
 from typing import Any
 
 # Signal weights for scoring
@@ -203,6 +204,7 @@ def _score_calendar_filter(signals: dict[str, Any]) -> float:
 def classify_session(
     signals: dict[str, Any],
     strategy_id: str | None = None,
+    learned_weights: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     """
     Main classification function. Takes pre-collected signals, returns decision.
@@ -220,6 +222,16 @@ def classify_session(
             "calendar": {"holiday_proximity": 0, "triple_witching": False, "roll_week": False},
         }
         strategy_id: Optional strategy identifier for strategy-specific rules.
+        learned_weights: Optional dict of learned per-signal weights produced by
+            weight_trainer.py. Keys match SIGNAL_WEIGHTS keys. When None (default),
+            behavior is identical to the base classifier — no breaking change.
+
+            Each scorer function returns a pre-weighted value calibrated against
+            BASE_WEIGHTS. To apply a learned weight without rewriting the scorer,
+            we rescale:
+                adjusted_score = raw_score * (learned_weight / base_weight)
+            This preserves the scorer logic and only stretches or compresses the
+            contribution of each signal based on what we observed empirically.
 
     Returns:
         {
@@ -232,8 +244,20 @@ def classify_session(
             "override_allowed": bool,  # True for REDUCE, False for SKIP on FOMC day
         }
     """
-    # Score each signal
-    signal_scores: dict[str, float] = {
+    # Log which weight set is in use
+    if learned_weights is not None:
+        print(
+            f"[skip_classifier] Using learned weights: {learned_weights}",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "[skip_classifier] Using base weights (no learned weights supplied).",
+            file=sys.stderr,
+        )
+
+    # Score each signal using the scorer functions
+    raw_scores: dict[str, float] = {
         "event_proximity": _score_event_proximity(signals),
         "vix_level": _score_vix_level(signals),
         "overnight_gap": _score_overnight_gap(signals),
@@ -244,6 +268,22 @@ def classify_session(
         "correlation_spike": _score_correlation_spike(signals),
         "calendar_filter": _score_calendar_filter(signals),
     }
+
+    # Apply learned weight rescaling if provided.
+    # Formula: adjusted = raw * (learned_weight / base_weight)
+    # If a key is missing from learned_weights, fall back to the base weight
+    # (i.e. multiplier = 1.0, no change for that signal).
+    if learned_weights is not None:
+        signal_scores: dict[str, float] = {}
+        for key, raw in raw_scores.items():
+            base_weight = SIGNAL_WEIGHTS[key]
+            lw = learned_weights.get(key)
+            if lw is not None and base_weight > 0:
+                signal_scores[key] = raw * (lw / base_weight)
+            else:
+                signal_scores[key] = raw
+    else:
+        signal_scores = raw_scores
 
     # Total weighted score
     total_score = sum(signal_scores.values())

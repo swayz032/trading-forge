@@ -10,14 +10,38 @@
  */
 
 import cron from "node-cron";
-import { eq, and, gte, desc } from "drizzle-orm";
+import { spawn } from "child_process";
+import { resolve as pathResolve } from "path";
+import { eq, and, gte, desc, isNotNull } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { strategies, paperSessions, paperTrades, backtests, systemJournal } from "./db/schema.js";
+import {
+  strategies,
+  paperSessions,
+  paperTrades,
+  backtests,
+  systemJournal,
+  skipDecisions,
+  skipWeightHistory,
+  auditLog,
+} from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./index.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
 
 let initialized = false;
+
+// ─── Registered jobs registry (for observability) ──────────────
+const registeredJobs: Map<string, { intervalMs: number; lastRunAt: Date | null }> = new Map();
+
+function registerJob(name: string, intervalMs: number, fn: () => Promise<void>): void {
+  registeredJobs.set(name, { intervalMs, lastRunAt: null });
+  // The actual scheduling is done by the caller using cron.schedule().
+  // This registry exists purely so jobs can be inspected / logged.
+  logger.info({ job: name, intervalMs }, "Scheduler: job registered");
+  void fn; // reference prevents unused-var lint
+}
+
+const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../..");
 
 export function initScheduler() {
   if (initialized) return;
@@ -73,7 +97,67 @@ export function initScheduler() {
     }
   });
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:30 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h)");
+  // ─── Daily: Skip weight retrain ────────────────────────────
+  // Fires at minute 0 of hours 5 and 6 UTC every day.
+  // An ET hour guard inside the handler ensures actual execution happens
+  // only at 1:00 AM ET (UTC-5 in winter, UTC-4 in summer — DST-aware).
+  registerJob("skip-weight-retrain", 24 * 60 * 60 * 1000, retrainSkipWeights);
+  cron.schedule("0 5,6 * * *", async () => {
+    // DST-aware gate: run only when ET clock hour is 1.
+    // getHours() returns UTC; ET offset is -5 (EST) or -4 (EDT).
+    const nowUtc = new Date();
+    const utcHour = nowUtc.getUTCHours();
+    const etOffset = isEasternDaylightTime(nowUtc) ? 4 : 5;
+    const etHour = (utcHour - etOffset + 24) % 24;
+
+    if (etHour !== 1) {
+      logger.debug({ utcHour, etHour }, "Scheduler: skip-weight-retrain cron fired but ET hour guard failed — skipping");
+      return;
+    }
+
+    logger.info("Scheduler: Running skip weight retrain (1:00 AM ET)");
+    const entry = registeredJobs.get("skip-weight-retrain");
+    if (entry) entry.lastRunAt = new Date();
+
+    try {
+      await retrainSkipWeights();
+    } catch (err) {
+      logger.error({ err }, "Scheduler: Skip weight retrain failed");
+    }
+  });
+
+  logger.info(
+    "Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:30 AM ET weekdays), " +
+    "paper-vs-backtest (1h), lifecycle (6h), skip-weight-retrain (1 AM ET daily)",
+  );
+}
+
+// ─── DST detection helper ────────────────────────────────────────
+/**
+ * Returns true if the given UTC Date falls within US Eastern Daylight Time.
+ * EDT runs from the second Sunday in March through the first Sunday in November.
+ * This is a pure computation — no external dependencies.
+ */
+function isEasternDaylightTime(utcDate: Date): boolean {
+  const year = utcDate.getUTCFullYear();
+
+  // Second Sunday in March at 2:00 AM ET (7:00 AM UTC in EST)
+  const marchStart = nthSundayOfMonth(year, 2, 2); // month=2 (March, 0-indexed)
+  marchStart.setUTCHours(7, 0, 0, 0); // 2 AM ET = 7 AM UTC during EST
+
+  // First Sunday in November at 2:00 AM ET (6:00 AM UTC in EDT)
+  const novEnd = nthSundayOfMonth(year, 10, 1); // month=10 (November, 0-indexed)
+  novEnd.setUTCHours(6, 0, 0, 0); // 2 AM ET = 6 AM UTC during EDT
+
+  return utcDate >= marchStart && utcDate < novEnd;
+}
+
+/** Returns the Nth occurrence (1-based) of Sunday in the given UTC month (0-indexed). */
+function nthSundayOfMonth(year: number, month: number, n: number): Date {
+  const d = new Date(Date.UTC(year, month, 1));
+  const firstSundayOffset = (7 - d.getUTCDay()) % 7;
+  const day = 1 + firstSundayOffset + (n - 1) * 7;
+  return new Date(Date.UTC(year, month, day));
 }
 
 /**
@@ -306,6 +390,201 @@ async function comparePaperToBacktest() {
       logger.error({ sessionId: session.id, err }, "Failed to compare paper session to backtest");
     }
   }
+}
+
+// ─── TrainingResult shape (mirrors weight_trainer.py stdout) ────
+interface TrainingResult {
+  status: string;
+  message: string;
+  sampleSize: number;
+  windowDays: number;
+  baselineAccuracy: number | null;
+  trainedAccuracy: number | null;
+  weights: Record<string, number>;
+}
+
+/**
+ * Retrain skip engine signal weights using the last 90 days of resolved
+ * skip decisions. Calls weight_trainer.py via subprocess (same pattern as
+ * skip.ts routes), persists the result to skip_weight_history, and writes
+ * an audit_log entry. Broadcasts SSE on completion or failure.
+ *
+ * Gate: requires >= 30 rows with non-null actualOutcome in the window.
+ * If the gate is not met, a row is still persisted with status="insufficient_data"
+ * for observability.
+ */
+async function retrainSkipWeights(): Promise<void> {
+  const WINDOW_DAYS = 90;
+  const windowStart = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000);
+
+  // 1. Query resolved skip decisions within window
+  const decisions = await db
+    .select({
+      signals: skipDecisions.signals,
+      actualPnl: skipDecisions.actualPnl,
+      decisionDate: skipDecisions.decisionDate,
+    })
+    .from(skipDecisions)
+    .where(
+      and(
+        gte(skipDecisions.decisionDate, windowStart),
+        isNotNull(skipDecisions.actualOutcome),
+        isNotNull(skipDecisions.actualPnl),
+      ),
+    );
+
+  logger.info(
+    { count: decisions.length, windowDays: WINDOW_DAYS },
+    "Scheduler: skip-weight-retrain — decisions fetched",
+  );
+
+  // 2. Build payload for weight_trainer.py
+  const payload = {
+    decisions: decisions.map((d) => ({
+      signals: d.signals,
+      actualPnl: d.actualPnl !== null ? Number(d.actualPnl) : null,
+      decisionDate: (d.decisionDate instanceof Date
+        ? d.decisionDate
+        : new Date(d.decisionDate as string)
+      ).toISOString().slice(0, 10),
+    })),
+    windowDays: WINDOW_DAYS,
+  };
+
+  // 3. Call weight_trainer.py subprocess
+  let result: TrainingResult;
+  try {
+    result = await runPythonTrainer(payload);
+  } catch (err) {
+    logger.error({ err }, "Scheduler: weight_trainer.py subprocess failed");
+
+    // Persist failure row for observability
+    await db.insert(skipWeightHistory).values({
+      windowDays: WINDOW_DAYS,
+      sampleSize: decisions.length,
+      weights: {},
+      status: "error",
+      message: String(err),
+    }).catch((dbErr) => {
+      logger.error({ dbErr }, "Scheduler: failed to persist weight history error row");
+    });
+
+    broadcastSSE("scheduler:skip-weight-retrain", {
+      status: "error",
+      message: String(err),
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  // 4. Persist to skip_weight_history
+  const [historyRow] = await db.insert(skipWeightHistory).values({
+    windowDays: result.windowDays,
+    sampleSize: result.sampleSize,
+    weights: result.weights,
+    baselineAccuracy: result.baselineAccuracy !== null ? String(result.baselineAccuracy) : null,
+    trainedAccuracy: result.trainedAccuracy !== null ? String(result.trainedAccuracy) : null,
+    status: result.status,
+    message: result.message,
+  }).returning();
+
+  logger.info(
+    {
+      historyId: historyRow.id,
+      status: result.status,
+      sampleSize: result.sampleSize,
+      baselineAccuracy: result.baselineAccuracy,
+      trainedAccuracy: result.trainedAccuracy,
+    },
+    "Scheduler: skip weight history persisted",
+  );
+
+  // 5. Audit log entry
+  await db.insert(auditLog).values({
+    action: "skip.weight-retrain",
+    entityType: "skip_weight_history",
+    entityId: historyRow.id,
+    input: { windowDays: WINDOW_DAYS, sampleSize: decisions.length },
+    result: {
+      status: result.status,
+      baselineAccuracy: result.baselineAccuracy,
+      trainedAccuracy: result.trainedAccuracy,
+      weightsSnapshot: result.weights,
+    },
+    status: result.status === "ok" ? "success" : "failure",
+  }).catch((err) => {
+    logger.error({ err }, "Scheduler: failed to write audit log for weight retrain");
+  });
+
+  // 6. Broadcast SSE
+  broadcastSSE("scheduler:skip-weight-retrain", {
+    status: result.status,
+    message: result.message,
+    sampleSize: result.sampleSize,
+    baselineAccuracy: result.baselineAccuracy,
+    trainedAccuracy: result.trainedAccuracy,
+    historyId: historyRow.id,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+/**
+ * Spawn weight_trainer.py and return its parsed stdout as TrainingResult.
+ * Follows the same subprocess pattern as runPython() in skip.ts.
+ */
+function runPythonTrainer(payload: object): Promise<TrainingResult> {
+  return new Promise((resolve, reject) => {
+    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    const args = ["-m", "src.engine.skip_engine.weight_trainer", "--config", JSON.stringify(payload)];
+
+    const proc = spawn(pythonCmd, args, {
+      env: { ...process.env },
+      cwd: PROJECT_ROOT,
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    proc.stdout.on("data", (data: Buffer) => (stdout += data.toString()));
+    proc.stderr.on("data", (data: Buffer) => {
+      stderr += data.toString();
+      logger.info({ component: "weight-trainer" }, data.toString().trim());
+    });
+
+    proc.on("close", (code: number | null) => {
+      if (code === 0) {
+        try {
+          resolve(JSON.parse(stdout.trim()) as TrainingResult);
+        } catch {
+          reject(new Error(`weight_trainer output not valid JSON: ${stdout.slice(0, 200)}`));
+        }
+      } else {
+        reject(new Error(`weight_trainer exited ${code}: ${stderr.slice(0, 400)}`));
+      }
+    });
+
+    proc.on("error", (err: NodeJS.ErrnoException) => {
+      if (pythonCmd === "python") {
+        // Retry with python3 (Linux/macOS fallback)
+        const proc2 = spawn("python3", args, { env: { ...process.env }, cwd: PROJECT_ROOT });
+        let stdout2 = "";
+        let stderr2 = "";
+        proc2.stdout.on("data", (d: Buffer) => (stdout2 += d.toString()));
+        proc2.stderr.on("data", (d: Buffer) => (stderr2 += d.toString()));
+        proc2.on("close", (code2: number | null) => {
+          if (code2 === 0) {
+            try { resolve(JSON.parse(stdout2.trim()) as TrainingResult); }
+            catch { reject(new Error(`weight_trainer output not valid JSON: ${stdout2.slice(0, 200)}`)); }
+          } else {
+            reject(new Error(`weight_trainer (python3) exited ${code2}: ${stderr2.slice(0, 400)}`));
+          }
+        });
+        proc2.on("error", () => reject(err));
+      } else {
+        reject(err);
+      }
+    });
+  });
 }
 
 /**
