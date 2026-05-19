@@ -28,7 +28,8 @@ import { db } from "../db/index.js";
 import { strategies, strategyPendingBuckets, auditLog, deadLetterQueue } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
 import { applyFrameworkOverlay } from "./framework-overlay.js";
-import { compileDslToEngine } from "../lib/dsl-compiler.js";
+import { compileDslToEngine, compileDslWithConfluence } from "../lib/dsl-compiler.js";
+import type { ConfirmingIndicator } from "../lib/dsl-compiler.js";
 import { runDslQualityCritic } from "./agent-service.js";
 
 /**
@@ -1249,12 +1250,44 @@ export async function graduateBucketDirectly(opts: {
     // Unknown value — default to both
     resolvedDirection = "both";
   }
+  // ─── W23G.11 (2026-05-19): Extract confluence + MTF fields from extractedIdea ─
+  // These are NEW optional fields — null/undefined on all 74 existing strategies
+  // (backward compat preserved). Only populated by LLM extractor v8+ (W23G.11).
+  const rawConfirmingIndicators = (extractedIdea as any)?.confirming_indicators;
+  const confirmingIndicators: ConfirmingIndicator[] | undefined =
+    Array.isArray(rawConfirmingIndicators) && rawConfirmingIndicators.length > 0
+      ? (rawConfirmingIndicators as ConfirmingIndicator[])
+      : undefined;
+
+  const rawMinFactors = (extractedIdea as any)?.min_factors_satisfied;
+  const minFactorsSatisfied: number | undefined =
+    typeof rawMinFactors === "number" ? rawMinFactors : undefined;
+
+  const biasTimeframe: string | null =
+    typeof (extractedIdea as any)?.bias_timeframe === "string"
+      ? (extractedIdea as any).bias_timeframe
+      : null;
+
+  const biasCondition: string | null =
+    typeof (extractedIdea as any)?.bias_condition === "string"
+      ? (extractedIdea as any).bias_condition
+      : null;
+
+  const isConfluenceStrategy = confirmingIndicators !== undefined && confirmingIndicators.length > 0;
+  const isMtfStrategy = biasTimeframe !== null;
+
   const compileInput = {
     entry_indicator: isArchetype && archetypeName ? `archetype:${archetypeName}` : entryIndicator,
     entry_params: derivedEntryParams,
     direction: resolvedDirection,
+    confirming_indicators: confirmingIndicators,
+    min_factors_satisfied: minFactorsSatisfied,
+    bias_timeframe: biasTimeframe,
+    bias_condition: biasCondition,
   };
-  const compiledEngine = compileDslToEngine(compileInput);
+  // W23G.11: use compileDslWithConfluence for all paths (backward compat — if no confluence fields,
+  // compileDslWithConfluence delegates to compileDslToEngine and returns unchanged base result).
+  const compiledEngine = compileDslWithConfluence(compileInput);
   if (!compiledEngine && !isArchetype) {
     logger.warn(
       { bucketId, strategyName, conceptName, entryIndicator, params: derivedEntryParams },
@@ -1291,6 +1324,8 @@ export async function graduateBucketDirectly(opts: {
         routing_mode: "structural_archetype",
       } : { routing_mode: "parametric_indicator" }),
       ...(compiledEngine ? { compile_notes: compiledEngine.compileNotes } : {}),
+      // W23G.11 — MTF unsupported flag (fail-CLOSED: bias not in grammar)
+      ...(compiledEngine?.mtfUnsupported ? { mtf_compile_status: "bias_omitted_engine_unsupported" } : {}),
     },
     ...(isArchetype && archetypeMeta ? { strategy_class: archetypeMeta.strategyClass } : {}),
     strategy: {
@@ -1309,6 +1344,8 @@ export async function graduateBucketDirectly(opts: {
     entry_type: entryType,
     exit_type: "trailing_stop",
     entry_indicator: entryIndicator,
+    // W23G.11 — primary_indicator alias (equals entry_indicator; explicit for confluence strategies)
+    primary_indicator: entryIndicator,
     entry_params: derivedEntryParams,
     exit_params: {},
     regime_gate: { enabled: regimeGateEnabled, preferred_regime: preferredRegime },
@@ -1317,6 +1354,16 @@ export async function graduateBucketDirectly(opts: {
     description: thesis,
     // Wave 15 — preserve original prose for human-readability and audit.
     entry_long_prose: entryRules,
+    // W23G.11 — Confluence + MTF fields (all nullable; undefined omits from config JSONB)
+    ...(isConfluenceStrategy ? {
+      confirming_indicators: confirmingIndicators,
+      min_factors_satisfied: minFactorsSatisfied ?? (1 + (confirmingIndicators?.length ?? 0)),
+    } : {}),
+    ...(isMtfStrategy ? {
+      bias_timeframe: biasTimeframe,
+      bias_condition: biasCondition,
+      execution_timeframe: timeframe,  // alias for existing timeframe field
+    } : {}),
   };
 
   // Apply framework overlay (Style D, time_stop, profit-tier, template-hole safety net)
@@ -1519,14 +1566,16 @@ export async function graduateBucketDirectly(opts: {
   const confluenceFactors: string[] = Array.isArray((extractedIdea as any)?.confluence_factors)
     ? (extractedIdea as any).confluence_factors
     : [];
-  const minFactorsSatisfied: number = typeof (extractedIdea as any)?.min_factors_satisfied === "number"
+  // W23F A+ gate: min_factors_satisfied for entry_quality block (how many confluence_factors must hold).
+  // Distinct from W23G.11 minFactorsSatisfied (which controls how many confirming_indicators must agree).
+  const entryQualityMinFactors: number = typeof (extractedIdea as any)?.min_factors_satisfied === "number"
     ? (extractedIdea as any).min_factors_satisfied
     : 2;
   const sourceClaimWinRate: number | null = (extractedIdea as any)?.source_claim_win_rate ?? null;
   const sourceClaimAvgR: number | null = (extractedIdea as any)?.source_claim_avg_r ?? null;
   const entryQualityBlock = {
     confluence_factors: confluenceFactors,
-    min_factors_satisfied: minFactorsSatisfied,
+    min_factors_satisfied: entryQualityMinFactors,
     source_claim_win_rate: sourceClaimWinRate,
     source_claim_avg_r: sourceClaimAvgR,
     // Empty confluence_factors → legacy_no_confluence so consumer A+ gate bypasses cleanly
@@ -1649,6 +1698,55 @@ export async function graduateBucketDirectly(opts: {
       } catch (sseErr) {
         logger.warn({ sseErr }, "direct-graduator: factory:multi_market_bucket SSE broadcast failed (non-blocking)");
       }
+    }
+
+    // ─── W23G.11 (2026-05-19): Confluence + MTF audit events ────────────────
+    // Emit graduation.confluence_strategy when confirming_indicators is non-empty.
+    // Emit graduation.mtf_strategy when bias_timeframe is non-null.
+    // Both are advisory (non-blocking). Failed audit writes never propagate.
+    if (isConfluenceStrategy && confirmingIndicators) {
+      await db.insert(auditLog).values({
+        action: "graduation.confluence_strategy",
+        entityType: "strategy",
+        entityId: inserted.id,
+        input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+        result: {
+          primary_indicator: entryIndicator,
+          confirming_indicators: confirmingIndicators.map((ci) => ci.indicator),
+          confirming_count: confirmingIndicators.length,
+          min_factors_satisfied: minFactorsSatisfied ?? (1 + confirmingIndicators.length),
+          entry_long_compiled: engineEntryLong.slice(0, 300),
+          mtf_unsupported: compiledEngine?.mtfUnsupported ?? false,
+        } as Record<string, unknown>,
+        status: "success",
+        decisionAuthority: "system",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) => logger.warn({ auditErr }, "direct-graduator: graduation.confluence_strategy audit write failed"));
+    }
+
+    if (isMtfStrategy && biasTimeframe) {
+      await db.insert(auditLog).values({
+        action: "graduation.mtf_strategy",
+        entityType: "strategy",
+        entityId: inserted.id,
+        input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+        result: {
+          bias_timeframe: biasTimeframe,
+          bias_condition: biasCondition,
+          execution_timeframe: timeframe,
+          // Honest: MTF bias gate was NOT compiled into grammar (engine unsupported)
+          bias_compiled_into_grammar: false,
+          mtf_compile_status: "bias_omitted_engine_unsupported",
+        } as Record<string, unknown>,
+        status: "success",
+        decisionAuthority: "system",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) => logger.warn({ auditErr }, "direct-graduator: graduation.mtf_strategy audit write failed"));
+
+      logger.warn(
+        { strategyId: inserted.id, strategyName, biasTimeframe, biasCondition },
+        "direct-graduator W23G.11: MTF strategy graduated — bias_timeframe preserved on config but NOT enforced in entry grammar (dsl_compiler.mtf_unsupported). Future engine pass needed.",
+      );
     }
 
     return { strategyId: inserted.id, strategyName };
