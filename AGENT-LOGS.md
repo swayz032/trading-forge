@@ -5562,6 +5562,38 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-20 Production-Grade Bug-Fix Sweep (Pass 1 + Pass 2 + Architect)
+
+**Mission:** Close 38 production-grade bugs from the 39-finding deep-scan audit across engine, Monte Carlo, and lifecycle subsystems. Pass 1 closed the 13 CRITICAL/HIGH-impact-now bugs; Pass 2 closed the 25 HIGH/MEDIUM bugs; architect closed the cross-cut + System Map sync.
+
+**Work completed:**
+- Pass 1 (commit `03675aa`): 13 CRITICAL/HIGH fixes — DSL guards (E.3/E.4/E.5) wired into `run_backtest()`, HTF cache for eligibility/structural-TP, stop-fill-on-signal-exit-bar fix, lifecycle promotion race guard (UPDATE...RETURNING), PILOT added to PROTECTED_LIFECYCLE_STATES, TESTING→PAPER truthiness gate (invariants.overall_passed=false BLOCKS, parity_shadow.passed=false WARNs), killSwitch first gate on 3 auto-check crons, BACKTEST_STALENESS_DAYS env, MC trade-level resample via `backtest_trades` table, PCG64DXSM RNG across all paths, both-mode granularity corrected to `trade`, Topstep EOD trailing HWM deferred post floor check.
+- Pass 2 (commit `fcc2dc2`): 25 HIGH/MEDIUM fixes — WF auto-reduction (BARS_PER_DAY × MIN_OOS_DAYS), Class WF per-window dates, equity int(t_size), deterministic recency cutoffs, max_trades_per_day off-by-one, parallel WF determinism, first-day P&L prepend, Class WF NotImplementedError, eligibility-gate dedup logging, MTF load warmup start, single-mode parity None-safe, MFFU 14-day sliding consistency, max_drawdown_p5 BCa CI positive sign, mc_provisional sentinel, return_bootstrap warn+cap (5× via MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION), MonteCarloRequest backtest_commission_rt + avg_trades_per_day fields, compute_drawdown_stats vectorization, PILOT→DEPLOYED all-sessions-Sharpe gate, Frankenstein rejection correlationId propagation, drift-check fail-closed on infra error, evolveStrategy blocks on PILOT/DEPLOYED parent, manual lifecycle/check runs checkPilotAutoPromotions, buryInGraveyard removed from DECLINING, CANDIDATE→PAPER fast-track fires Frankenstein.
+- Pass C (this commit): architect cross-cut. Verified end-to-end signal paths (A: backtest→invariants/parity→lifecycle gate; B: MC→trade-resample→firm survival→audit; C: race-block→audit_log). Confirmed all new audit-action emission sites grep-resolve (`lifecycle.race_blocked`, `lifecycle.invariant_blocked`, `lifecycle.parity_shadow_warn`, `lifecycle.backtest_stale`, `lifecycle.drift_check_infra_error`, `evolveStrategy.skipped_parent_active`). Added `MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION` to CLAUDE.md §14b env table (BACKTEST_STALENESS_DAYS already present; DLL_HALT_PCT already in §4). Re-ran `npm run system-map:sync` — clean regeneration of Trading Forge System Map v2.md + system-readiness.generated.json + system-topology.generated.json.
+
+**Verification:**
+- `npm run system-map:check` → **EXIT 0** ✅
+- `npm run check:production-isolation` → **CLEAN** (4 files, 0 violations) ✅
+- `npm run check:2026-compliance` → **OK** (MFFU + Topstep aligned with canonical 2026 docs) ✅
+- Path A verified: `lifecycle-service.ts:411` reads `backtests.resultExtras`; lines 640-700 implement the truthiness gate with invariant HARD block + parity_shadow ADVISORY warn; correlation_id propagation present.
+- Path B verified: `monte-carlo-service.ts:89-92` reads `backtestTrades.pnl` directly from DB; logs `monte_carlo.trades_fallback_used` SSE event when count < MIN_TRADE_COUNT.
+- Path C verified: race-blocked emission sites grep-confirmed in `lifecycle-service.ts` + `evolution-service.ts`; 4 dedicated test files exist (`test_lifecycle_race.test.ts`, `test_invariant_blocks_promotion.test.ts`, `test_backtest_staleness.test.ts`, `test_pass2c_lifecycle_fixes.test.ts`).
+- Audit-action registry: `audit_log.action` is a free-text string column with NO canonical enum (verified via `audit-log-helper.ts` — insertAuditRow accepts any action string). Subsystem registry (`docs/system-subsystem-registry.json`) tracks subsystems not individual actions. New action strings are documented in CLAUDE.md §12 (gates) + per-session AGENT-LOGS entries.
+- Env vars: `BACKTEST_STALENESS_DAYS` already in CLAUDE.md §14b. `DLL_HALT_PCT` already in §4. `MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION` added to §14b table this pass.
+
+**Known-facts updates:**
+- DSL backtests now enforce CLAUDE.md §4 trading framework (was silently ignored — `_apply_dsl_stop_loss_and_time_stop` + `_apply_dll_halt_to_entries` were dead code pre-Pass-1A).
+- Promotion gate now respects truthiness stack: `backtests.resultExtras.invariants.overall_passed === false` HARD-BLOCKS TESTING→PAPER promotion.
+- MC eval_pass_rate now uses real trade-level distribution (PCG64DXSM throughout) — distribution-collapse bias from daily aggregates eliminated.
+
+**Carry-forward for next session:**
+- F-8 follow-up: `lifecycle-service` should check `resultExtras.mc_provisional === true` and DEFER promotion rather than reading partial MC fields (separate pass — not blocking).
+- Race-block Discord alert: add rate alert if `lifecycle.race_blocked` > 3/hour (concurrent-mutation hot spot).
+- Frontend `BacktestDetail` truthiness badge component (backend emits SSE + JSONB ready; UI not built).
+- 2 pre-existing `wave6-lifecycle-correlation.test.ts` baseline failures (unrelated to Pass 1/2 — preserved per Wave 6 baseline contract).
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
@@ -5681,6 +5713,49 @@ When you see a 401 from a Tavily node in n8n, **do NOT tell the user the key is 
 4. **Credential reference rot** — the n8n credential entity may have been renamed or deleted while a node still holds the old internal reference.
 
 Only after all four are explicitly ruled out, **and the user has explicitly told you to rotate the key**, treat the key as needing rotation. The current key reference lives in `~/.claude/projects/C--Users-tonio-Projects-trading-forge/memory/reference_api_keys.md`.
+
+### DSL guards are now FIRING in run_backtest (pinned 2026-05-20, Pass 1A)
+
+Pre-Pass-1A, `_apply_dsl_stop_loss_and_time_stop` and `_apply_dll_halt_to_entries` were
+defined in `src/engine/backtester.py` but **never invoked from `run_backtest()`**. DSL
+backtests silently bypassed CLAUDE.md §4 framework guards:
+- E.3 ATR stop ceiling (14pt MES / 40pt MNQ / 25-tick MCL)
+- E.4 67% personal DLL halt
+- E.5 15:55 ET hard time-stop
+
+These wirings are now LIVE. Every DSL backtest emits
+`result["dsl_guards"] = {stop_ceiling_skips, time_stop_exits, dll_halt_blocks}` —
+observable in `backtests.resultExtras`.
+
+DO NOT revert the wiring "to simplify the test fixture" or "because the backtest
+returns fewer trades now". The reduced trade count is the framework working. Wave 23
+hit-rate-is-output principle applies: removing guards to inflate counts is regression.
+
+### Promotion truthiness HARD block (pinned 2026-05-20, Pass 1B)
+
+`backtests.resultExtras.invariants.overall_passed === false` HARD-BLOCKS
+TESTING→PAPER promotion via `lifecycle-service.ts:640-700`. Audit row written as
+`lifecycle.invariant_blocked`. **There is no override.** If you see "promotion
+blocked by invariants", the fix is NOT to flip the gate or amend the test — the
+fix is to investigate why the engine emitted `overall_passed: false`. Common
+causes: parity drift > tolerance, NaN P&L, monotonic-equity violations, or
+non-deterministic seed propagation.
+
+`parity_shadow.passed === false` (with archetype supported) emits
+`lifecycle.parity_shadow_warn` as ADVISORY ONLY — promotion continues. Investigate
+before live deployment but DO NOT block paper.
+
+### MC provisional sentinel = MC still running (pinned 2026-05-20, Pass 2B)
+
+`backtests.resultExtras.mc_provisional === true` is the explicit "Monte Carlo run
+in progress" sentinel set by Pass 2B F-8. Downstream consumers that read MC
+fields BEFORE this clears will see partial / stale data and may make wrong
+promotion decisions. Today the truthiness gate does not yet check this flag —
+follow-up work to make lifecycle-service defer promotion when sentinel is true
+is on the carry-forward list.
+
+DO NOT clear `mc_provisional` manually to "unblock a promotion". The
+sentinel exists precisely to prevent racy reads of an in-flight MC run.
 
 ---
 
