@@ -1848,6 +1848,95 @@ def run_backtest(
     df = generate_signals(df, config, fill_rate=fill_rate, event_mask=event_mask)
     range_pop()
 
+    # ─── W23H.3: Allowed entry windows mask ──────────────────
+    # Apply AFTER generate_signals() so the window check runs on the same signal
+    # population that the backtester will act on — identical to paper-signal-service
+    # behavior (gate at entry evaluation time, not indicator computation time).
+    # Empty list → no restriction (backward compatible).
+    skipped_outside_window_count = 0
+    _entry_windows_raw = getattr(config, "allowed_entry_windows", None)
+    if _entry_windows_raw:
+        from src.engine.entry_windows import parse_entry_windows, is_bar_in_any_window
+        import datetime as _dt
+
+        _entry_windows = parse_entry_windows(_entry_windows_raw)  # raises on malformed
+        _ts_col_ew = "ts_event" if "ts_event" in df.columns else None
+
+        if _ts_col_ew is None:
+            # No timestamp column — cannot apply window mask; log and skip
+            print(
+                "W23H.3 WARNING: allowed_entry_windows specified but no ts_event column found "
+                "— window mask skipped. Ensure data_loader provides ts_event.",
+                file=sys.stderr,
+            )
+        else:
+            _ts_series = df[_ts_col_ew].to_list()
+            _entry_long_arr = df["entry_long"].to_list()
+            _has_short = "entry_short" in df.columns
+            _entry_short_arr = df["entry_short"].to_list() if _has_short else None
+
+            _new_long: list[bool] = []
+            _new_short: list[bool] | None = [] if _has_short else None
+
+            for i, ts_val in enumerate(_ts_series):
+                el = bool(_entry_long_arr[i])
+                es = bool(_entry_short_arr[i]) if _has_short else False
+
+                if not (el or es):
+                    # No signal on this bar — no masking needed
+                    _new_long.append(el)
+                    if _new_short is not None:
+                        _new_short.append(es)
+                    continue
+
+                # Convert ts to UTC-aware datetime for window check
+                if isinstance(ts_val, str):
+                    # ISO string — parse to datetime
+                    ts_str = ts_val.replace("T", " ").replace("Z", "+00:00")
+                    try:
+                        bar_dt = _dt.datetime.fromisoformat(ts_str)
+                        if bar_dt.tzinfo is None:
+                            bar_dt = bar_dt.replace(tzinfo=_dt.timezone.utc)
+                    except Exception:
+                        # Unparseable timestamp — allow signal (fail-open)
+                        _new_long.append(el)
+                        if _new_short is not None:
+                            _new_short.append(es)
+                        continue
+                elif isinstance(ts_val, _dt.datetime):
+                    bar_dt = ts_val
+                    if bar_dt.tzinfo is None:
+                        bar_dt = bar_dt.replace(tzinfo=_dt.timezone.utc)
+                else:
+                    # Unknown type — allow signal (fail-open)
+                    _new_long.append(el)
+                    if _new_short is not None:
+                        _new_short.append(es)
+                    continue
+
+                in_any_window = is_bar_in_any_window(bar_dt, _entry_windows)
+                if not in_any_window:
+                    skipped_outside_window_count += (1 if el else 0) + (1 if es else 0)
+                    _new_long.append(False)
+                    if _new_short is not None:
+                        _new_short.append(False)
+                else:
+                    _new_long.append(el)
+                    if _new_short is not None:
+                        _new_short.append(es)
+
+            # Write masked arrays back into df
+            df = df.with_columns([pl.Series("entry_long", _new_long)])
+            if _has_short and _new_short is not None:
+                df = df.with_columns([pl.Series("entry_short", _new_short)])
+
+            if skipped_outside_window_count > 0:
+                print(
+                    f"W23H.3 entry windows: masked {skipped_outside_window_count} entry signals "
+                    f"outside windows {_entry_windows_raw}",
+                    file=sys.stderr,
+                )
+
     # ─── Suppress entries on rollover days (Task 7.1) ─────────
     if "is_rollover_day" in df.columns:
         rollover_mask = df["is_rollover_day"]
@@ -2775,6 +2864,8 @@ def run_backtest(
             "integer_size_applied": True,   # H2: always applied post-fix
             "dll_halt_used_estimate": True,  # L4: DLL halt uses ATR estimate
             "forge_score_version": _full_forge_result.get("forge_score_version", "unknown"),
+            # W23H.3: count of entry signals masked by allowed_entry_windows (0 when no windows configured)
+            "skipped_outside_window_count": skipped_outside_window_count,
         },
     }
 

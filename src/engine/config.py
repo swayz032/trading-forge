@@ -239,6 +239,14 @@ class StrategyConfig(BaseModel):
     bias_timeframe: Optional[str] = None
     bias_condition: Optional[str] = None
 
+    # W23H.3 — Allowed entry windows.
+    # When non-empty, entry signals are masked to bars that fall in at least one window.
+    # When None or [] (default), no time restriction is applied — backward compatible.
+    # Format: ["HH:MM-HH:MM TZ", ...] e.g. ["09:45-12:00 ET", "13:30-15:30 ET"].
+    # Validated at parse time by parse_entry_windows() — ValueError on malformed spec.
+    # Parity: mirrors paper-signal-service.ts window check and Pine time() emission.
+    allowed_entry_windows: Optional[list[str]] = None
+
     @field_validator("overnight_hold")
     @classmethod
     def reject_overnight(cls, v: bool) -> bool:

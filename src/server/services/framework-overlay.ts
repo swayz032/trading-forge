@@ -57,6 +57,24 @@ interface CompiledConfig {
    * Keys are confluence factor counts (1-4); values are multipliers (≥ 1.0).
    */
   confluence_size_multiplier?: Record<number, number>;
+  /**
+   * W23H.3 — Per-strategy entry time windows.
+   * When non-empty, entries are blocked outside ALL listed windows.
+   * When absent or empty (default), no time restriction is applied (current behavior preserved).
+   *
+   * Format: "HH:MM-HH:MM TZ"  — e.g. ["09:45-12:00 ET", "13:30-15:30 ET"]
+   * Supported TZ shorthands: ET, PT, CT, MT, UTC (plus any IANA name).
+   * Boundary: [start, end) — left-inclusive, right-exclusive.
+   *
+   * Enforced at three layers:
+   *   1. paper-signal-service.ts — signal-time gate (before Stage 1)
+   *   2. backtester.py — window mask applied to entry_long/entry_short after generate_signals()
+   *   3. pine_compiler.py — emits additional Pine time() conditions in _build_session_filter()
+   *
+   * Validated at config extraction time (parseEntryWindows throws on malformed spec).
+   * DO NOT silently skip malformed specs — fail loudly at config time.
+   */
+  allowed_entry_windows?: string[];
   [key: string]: unknown;
 }
 

@@ -531,22 +531,71 @@ alertcondition(risk_lockout and not risk_lockout[1], title="Risk Lockout", messa
     return pine_alerts, alerts_json
 
 
-def _build_session_filter(session_filter: Optional[str]) -> str:
-    """Generate Pine session time filter."""
+def _build_session_filter(
+    session_filter: Optional[str],
+    allowed_entry_windows: Optional[list[str]] = None,
+) -> str:
+    """Generate Pine session time filter.
+
+    W23H.3: when allowed_entry_windows is a non-empty list, additional Pine
+    time() conditions are emitted and AND-ed into the session check.
+
+    Boundary semantics on the Pine side: Pine's time() returns na when the bar
+    is OUTSIDE the window, so ``not na(time(...))`` is True only when the bar
+    is inside the window.  Multiple windows are OR-ed: a bar qualifies if it
+    falls in ANY window.  The result is then AND-ed with the base session filter.
+
+    Examples:
+        _build_session_filter("RTH_ONLY", ["09:45-12:00 ET", "13:30-15:30 ET"])
+        →
+        in_session = not na(time(timeframe.period, "0930-1600", "America/New_York"))
+        in_window = (not na(time(timeframe.period, "0945-1200", "America/New_York")))
+                 or (not na(time(timeframe.period, "1330-1530", "America/New_York")))
+        in_session := in_session and in_window
+    """
     if not session_filter or session_filter == "ALL_SESSIONS":
-        return "in_session = true"
+        base = "in_session = true"
+    else:
+        filters = {
+            "RTH_ONLY": 'in_session = not na(time(timeframe.period, "0930-1600", "America/New_York"))',
+            # P2-2: ETH window corrected — CME ETH is 18:00 prior day to ~08:30 next day.
+            # Using 1800-0900 ET as approximation (excludes 08:30-09:30 pre-RTH overlap).
+            # The old inverse-RTH approach was incorrect: na(RTH) includes non-CME hours.
+            "ETH_ONLY": 'in_session = not na(time(timeframe.period, "1800-0900", "America/New_York"))',
+            "LONDON": 'in_session = not na(time(timeframe.period, "0300-0800", "America/New_York"))',
+            "ASIA": 'in_session = not na(time(timeframe.period, "1900-0200", "America/New_York"))',
+        }
+        base = filters.get(session_filter, "in_session = true")
 
-    filters = {
-        "RTH_ONLY": 'in_session = not na(time(timeframe.period, "0930-1600", "America/New_York"))',
-        # P2-2: ETH window corrected — CME ETH is 18:00 prior day to ~08:30 next day.
-        # Using 1800-0900 ET as approximation (excludes 08:30-09:30 pre-RTH overlap).
-        # The old inverse-RTH approach was incorrect: na(RTH) includes non-CME hours.
-        "ETH_ONLY": 'in_session = not na(time(timeframe.period, "1800-0900", "America/New_York"))',
-        "LONDON": 'in_session = not na(time(timeframe.period, "0300-0800", "America/New_York"))',
-        "ASIA": 'in_session = not na(time(timeframe.period, "1900-0200", "America/New_York"))',
-    }
+    # W23H.3: apply allowed_entry_windows if provided
+    if not allowed_entry_windows:
+        return base
 
-    return filters.get(session_filter, "in_session = true")
+    # Import here to avoid circular deps at module load time; this module is
+    # imported by backtester.py which may run in a tight loop.
+    from src.engine.entry_windows import parse_entry_window, window_to_pine_time_string
+
+    window_conditions = []
+    for spec in allowed_entry_windows:
+        parsed = parse_entry_window(spec)  # raises ValueError on malformed — by design
+        pine_time_str = window_to_pine_time_string(parsed)
+        iana_tz = parsed.timezone
+        window_conditions.append(
+            f'(not na(time(timeframe.period, "{pine_time_str}", "{iana_tz}")))'
+        )
+
+    if not window_conditions:
+        return base
+
+    # Build multi-line in_window block — indented for Pine readability
+    first = window_conditions[0]
+    rest = "".join(
+        f"\n             or {cond}" for cond in window_conditions[1:]
+    )
+    in_window_line = f"in_window = {first}{rest}"
+    in_session_and = "in_session := in_session and in_window"
+
+    return f"{base}\n{in_window_line}\n{in_session_and}"
 
 
 def _build_visualization() -> str:
@@ -666,8 +715,12 @@ def compile_strategy(
     long_cond, short_cond = _build_entry_condition(strategy, indicator_vars)
     sl_distance, tp_distance = _build_exit_condition(strategy)
 
-    # Stage 4: Build session filter
-    session_line = _build_session_filter(strategy.get("session_filter"))
+    # Stage 4: Build session filter (W23H.3: pass allowed_entry_windows if present)
+    _allowed_windows = strategy.get("allowed_entry_windows") or None
+    session_line = _build_session_filter(
+        strategy.get("session_filter"),
+        allowed_entry_windows=_allowed_windows,
+    )
 
     # Stage 5: Build prop overlay
     prop_overlay = _build_prop_overlay(firm_key)
@@ -1621,8 +1674,12 @@ def compile_dual_artifacts(
     long_cond, short_cond = _build_entry_condition(strategy, indicator_vars)
     sl_distance, tp_distance = _build_exit_condition(strategy)
 
-    # Stage 4: Session filter (shared)
-    session_line = _build_session_filter(strategy.get("session_filter"))
+    # Stage 4: Session filter (shared, W23H.3: pass allowed_entry_windows if present)
+    _allowed_windows_2 = strategy.get("allowed_entry_windows") or None
+    session_line = _build_session_filter(
+        strategy.get("session_filter"),
+        allowed_entry_windows=_allowed_windows_2,
+    )
 
     # Stage 5: Prop overlay (shared)
     prop_overlay = _build_prop_overlay(firm_key)

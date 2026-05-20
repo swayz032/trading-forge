@@ -23,6 +23,8 @@ import { evaluateConfirmingIndicators, type ConfirmingIndicator } from "./confir
 import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-sizing.js";
 // W23H.4: audit row writer for sizing.confluence_multiplier_applied
 import { insertAuditRow } from "../lib/audit-log-helper.js";
+// W23H.3: per-strategy allowed_entry_windows time gates
+import { parseEntryWindows, isBarInAnyWindow } from "../lib/entry-windows.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -686,6 +688,8 @@ interface SignalLogEntry {
   exitSignal: boolean;
   stopHit: boolean;
   sessionFiltered: boolean;
+  /** W23H.3: true when bar is outside allowed_entry_windows (and list is non-empty). */
+  windowFiltered?: boolean;
   cooldownActive: boolean;
   riskGatePassed: boolean | null;
   action: "none" | "open" | "close_signal" | "close_stop" | "close_trail" | "close_time";
@@ -1472,6 +1476,7 @@ async function logSignal(entry: SignalLogEntry): Promise<void> {
         if (entry.fillMiss) reason = "fill_probability_miss";
         else if (entry.cooldownActive) reason = "cooldown";
         else if (entry.sessionFiltered) reason = "session_filter";
+        else if (entry.windowFiltered) reason = "window_filter";  // W23H.3
         else if (entry.riskGatePassed === false) reason = "risk_gate_rejected";
       }
       if (entry.action === "close_stop") reason = "stop_loss";
@@ -1881,6 +1886,48 @@ export async function evaluateSignals(
   // Session time filter
   const sessionFiltered = !isWithinSession(bar.timestamp, config.preferred_sessions);
 
+  // ─── W23H.3: Allowed entry windows gate ──────────────────────
+  // Checked before Stage 1 (same tier as session_filter — a signal outside the window
+  // is a non-event, not a gate rejection). Empty list = no restriction (backward compat).
+  // Fail-open: if window parsing throws at signal time, log warning and allow the signal.
+  // Note: malformed specs should be caught at config-extraction time — this is defense-in-depth.
+  let windowFiltered = false;
+  try {
+    const rawWindowSpecs = (sessionConfig.config as unknown as Record<string, unknown>).allowed_entry_windows;
+    const windowSpecs = Array.isArray(rawWindowSpecs) ? (rawWindowSpecs as string[]) : [];
+    if (windowSpecs.length > 0) {
+      const parsedWindows = parseEntryWindows(windowSpecs);
+      const barTsUtc = new Date(bar.timestamp);
+      const inAnyWindow = isBarInAnyWindow(barTsUtc, parsedWindows);
+      if (!inAnyWindow) {
+        windowFiltered = true;
+        span.setAttribute("entry_window_filtered", true);
+        span.setAttribute("entry_window_specs", windowSpecs.join("|"));
+        logger.info(
+          { sessionId, symbol, barTimestamp: bar.timestamp, windowsConfigured: windowSpecs },
+          "W23H.3: entry blocked — bar outside allowed_entry_windows",
+        );
+        // Emit audit event (aggregated per signal: one row per blocked bar)
+        db.insert(paperSignalLogs).values({
+          sessionId,
+          symbol,
+          direction: config.side,
+          signalType: "skipped_outside_window",
+          price: String(bar.close),
+          indicatorSnapshot: {
+            ...indicators,
+            _windows_configured: windowSpecs,
+            _bar_timestamp: bar.timestamp,
+          },
+          acted: false,
+          reason: `signal.skipped_outside_window: bar at ${bar.timestamp} not in windows [${windowSpecs.join(", ")}]`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist window-filtered signal log"));
+      }
+    }
+  } catch (windowErr) {
+    logger.warn({ err: windowErr, sessionId, symbol }, "W23H.3: entry window check error — fail-open, proceeding");
+  }
+
   // ─── 2.5: Calendar filter ────────────────────────────────────
   // Check holidays AND FOMC/CPI/NFP ±30min blackout.
   // Fix 3: results are cached per ET hour — at most 24 Python spawns/day instead of
@@ -2168,7 +2215,7 @@ export async function evaluateSignals(
       );
     }
     // Position still open: bars-held counter updated above; HWM updated inside checkTrailStop.
-  } else if (entrySignal && !sessionFiltered && !cooldownActive && !isShadow && !skipBlocked && !ictBridgeBlocked) {
+  } else if (entrySignal && !sessionFiltered && !windowFiltered && !cooldownActive && !isShadow && !skipBlocked && !ictBridgeBlocked) {
     // ─── No position: check for entry ───────────────��───────
 
     // ─── Tier 5.3: 24-hour lockout gate ─────────────────────────────────
@@ -3182,6 +3229,7 @@ export async function evaluateSignals(
     exitSignal,
     stopHit,
     sessionFiltered,
+    windowFiltered,  // W23H.3
     cooldownActive,
     riskGatePassed,
     action,
