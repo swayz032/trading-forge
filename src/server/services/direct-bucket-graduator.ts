@@ -125,7 +125,11 @@ const PARAM_RANGES: Record<string, Record<string, [number, number]>> = {
   ema_crossover: { fast_period: [5, 50], slow_period: [20, 200], confirmation_bars: [1, 5] },
   rsi_reversal: { period: [7, 21], oversold: [20, 40], overbought: [60, 80] },
   bollinger_breakout: { period: [10, 30], std_dev: [1.5, 3.0], confirmation_bars: [1, 3] },
-  atr_breakout: { period: [10, 30], multiplier: [1.0, 3.0] },
+  // W23H.1-postmortem (2026-05-20): expanded period floor from 10 → 5. Discovery
+  // cycle today rejected 8 strategies all using period=5 or period=7 — both are
+  // legitimate trader choices (5-period ATR for scalping, 7-period for short-term
+  // breakout). Engine pandas-ta atr() accepts any positive integer.
+  atr_breakout: { period: [5, 30], multiplier: [1.0, 3.0] },
   vwap_reversion: { deviation_threshold: [0.5, 3.0], confirmation_bars: [1, 5] },
   donchian_breakout: { period: [10, 55] },
   keltner_squeeze: { bb_period: [15, 25], kc_period: [15, 25], kc_multiplier: [1.0, 2.0] },

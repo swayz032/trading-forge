@@ -178,9 +178,18 @@ When you decide to KEEP a video that contains mixed instrument references, you m
 
 | Value | When to emit |
 |---|---|
-| `"futures_primary"` | Transcript is ≥70% futures-market content (MES/MNQ/MCL/ES/NQ/CL/S&P/Nasdaq/WTI and their synonyms). Normal case — most YouTube futures videos qualify. |
+| `"futures_primary"` | Transcript is ≥70% futures-market content. **Comprehensive futures synonym list** (treat ANY of these as futures): **S&P 500 / SPX / SPY / ES / MES / e-mini S&P / micro S&P**; **Nasdaq / NQ / MNQ / e-mini Nasdaq / micro Nasdaq / NDX / QQQ-as-proxy**; **Russell / Russell 2000 / RTY / M2K / RUT / IWM-as-proxy**; **Dow / DJI / YM / MYM / Dow Jones**; **Crude oil / WTI / CL / MCL / oil futures**; **Gold / GC / MGC**; **Treasury / ZN / ZB / yield**; plus generic "**futures**", "**mini**", "**micro**", "**e-mini**", "**index futures**", "**commodity futures**" terms. Normal case — most YouTube futures videos qualify. |
 | `"futures_with_forex_illustration"` | Transcript is futures-primary BUT briefly shows a forex/crypto/equity chart as an illustration (≤30% of content). The strategy is explained on futures; the non-futures chart is an example or analogy. KEEP and extract. |
-| `"non_futures_primary"` | ≥70% of the transcript is about non-futures markets (EURUSD, BTC, single stocks, gold, etc.). REJECT — emit `{strategies: [], empty_reason: "wrong_instrument", instrument_classification: "non_futures_primary"}`. |
+| `"non_futures_primary"` | ≥70% of the transcript is **dedicated to a non-futures market**: EURUSD, GBPUSD, BTC, ETH, single-name stocks (AAPL, TSLA, etc.), gold spot (XAUUSD — but GOLD FUTURES `GC` counts as futures!), or options-only strategies. REJECT — emit `{strategies: [], empty_reason: "wrong_instrument", instrument_classification: "non_futures_primary"}`. |
+
+**W23H-postmortem (2026-05-20) — anti-false-positive examples:**
+- ✅ "Russell setup on Simpler Trading" → **futures_primary** (Russell = RTY/M2K futures, not stocks)
+- ✅ "Trade Oil Futures EASY STRATEGY" → **futures_primary** (CL/MCL)
+- ✅ "Trading the Dow YM" → **futures_primary** (YM/MYM)
+- ✅ "MNQ confluence setup" → **futures_primary** (MNQ is micro Nasdaq futures)
+- ✅ "20 EMA strategy on the indices" → **futures_primary** (generic indices = US index futures)
+- ❌ "EURUSD breakout strategy" → **non_futures_primary** (forex pair, no futures reference)
+- ❌ "AAPL options income method" → **non_futures_primary** (single stock options)
 
 **Critical measurement heuristic:** You cannot count characters precisely, so estimate proportions by scanning the DENSITY of instrument-specific terminology. A 30-minute futures video that spends 2 minutes showing a forex chart = ~7% forex = keep. A forex education video that says "and this same RSI setup works on MES" once = ~95% forex = reject.
 

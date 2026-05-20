@@ -51,7 +51,11 @@ ENTRY_PATTERNS: dict[str, dict] = {
         "required_params": ["period", "multiplier"],
         "optional_params": [],
         "param_ranges": {
-            "period": (10, 30),
+            # W23H.1-postmortem (2026-05-20): expanded period floor 10 -> 5.
+            # Common trader choices: 5-period (scalping), 7-period (short-term
+            # breakout). pandas-ta atr() supports any positive integer.
+            # Must stay in lockstep with PARAM_RANGES in direct-bucket-graduator.ts.
+            "period": (5, 30),
             "multiplier": (1.0, 3.0),
         },
     },
