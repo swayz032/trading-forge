@@ -1602,6 +1602,15 @@ export async function graduateBucketDirectly(opts: {
         entry_quality: entryQualityBlock,
       },
       preferredRegime,
+      // W23H.B: also write the new array column so Pass 2 W23H.C picker
+      // (regime = ANY(preferred_regimes)) has data on every new graduation.
+      // Single-value array is the safe default; extractor v9 may emit a richer
+      // multi-regime array per archetype heuristic — when it does we trust it.
+      preferredRegimes:
+        Array.isArray((overlayed.config as Record<string, unknown>)?.preferred_regimes) &&
+        ((overlayed.config as Record<string, unknown>).preferred_regimes as unknown[]).length > 0
+          ? ((overlayed.config as Record<string, unknown>).preferred_regimes as string[])
+          : [preferredRegime],
       tags: strategyTags,
     }).returning({ id: strategies.id });
 
@@ -1645,6 +1654,32 @@ export async function graduateBucketDirectly(opts: {
       decisionAuthority: "system",
       correlationId: correlationId ?? null,
     }).catch((auditErr: unknown) => logger.warn({ auditErr }, "direct-graduator: entry_quality_attached audit write failed"));
+
+    // W23H.B (architect cleanup): audit emission for preferred_regimes write.
+    // Architect found this audit was spec'd but missing — closing the gap so
+    // Pass 2 picker has full forensic trail of regime decisions per graduation.
+    const persistedPreferredRegimes =
+      Array.isArray((overlayed.config as Record<string, unknown>)?.preferred_regimes) &&
+      ((overlayed.config as Record<string, unknown>).preferred_regimes as unknown[]).length > 0
+        ? ((overlayed.config as Record<string, unknown>).preferred_regimes as string[])
+        : [preferredRegime];
+    await db.insert(auditLog).values({
+      action: "strategy.preferred_regimes_set",
+      entityType: "strategy",
+      entityId: inserted.id,
+      input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+      result: {
+        strategy_id: inserted.id,
+        archetype: entryQualityBlock.extraction_provenance,
+        regimes: persistedPreferredRegimes,
+        regime_count: persistedPreferredRegimes.length,
+        legacy_preferred_regime: preferredRegime,
+        source: persistedPreferredRegimes.length > 1 ? "extractor_multi_regime" : "graduator_single_regime_fallback",
+      } as Record<string, unknown>,
+      status: "success",
+      decisionAuthority: "system",
+      correlationId: correlationId ?? null,
+    }).catch((auditErr: unknown) => logger.warn({ auditErr }, "direct-graduator: preferred_regimes_set audit write failed"));
 
     // Wave 23F Track G: SSE emission for graduation with entry_quality block.
     // Fires in parallel with the audit row — non-blocking, never throws.
