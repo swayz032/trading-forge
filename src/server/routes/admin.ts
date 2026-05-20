@@ -154,13 +154,39 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
         const conceptName = (idea.concept_name as string) || ideaName;
         const market = (idea.symbol as string) || (Array.isArray(idea.symbols) ? (idea.symbols[0] as string) : "MES");
 
+        // Schema enforces min-length on entry/exit/risk rules. When LLM idea is
+        // sparse (archetype with no entry_condition / no exit_params), pad with
+        // structured fallback so the pending route doesn't 400-reject silently.
+        const padRules = (s: string, min: number, fallback: string): string => {
+          const trimmed = (s ?? "").trim();
+          return trimmed.length >= min ? trimmed : (trimmed.length > 0 ? `${trimmed} | ${fallback}` : fallback);
+        };
+        const entryRulesRaw = (idea.entry_condition as string) || "";
+        const exitParamsStr = typeof idea.exit_params === "object" && idea.exit_params
+          ? JSON.stringify(idea.exit_params) : "";
         const baseBody = {
-          thesis: (idea.description as string) || `Operator-curated strategy: ${ideaName}`,
+          thesis: padRules(
+            (idea.description as string) || "",
+            20,
+            `Operator-curated strategy ${ideaName} extracted from ${title}`
+          ),
           market,
           timeframe: (idea.timeframe as string) || "5m",
-          entry_rules: (idea.entry_condition as string) || "",
-          exit_rules: typeof idea.exit_params === "object" ? JSON.stringify(idea.exit_params) : "",
-          risk_rules: `stop_atr=${idea.stop_loss_atr_multiple ?? "1.5"}, tp_atr=${idea.take_profit_atr_multiple ?? "2.0"}`,
+          entry_rules: padRules(
+            entryRulesRaw,
+            20,
+            `Indicator ${idea.entry_indicator ?? "structural"} fires entry per archetype handler`
+          ),
+          exit_rules: padRules(
+            exitParamsStr,
+            20,
+            `Style C exit applied: TP1 1R / TP2 2R / runner trail; framework-overlay authoritative`
+          ),
+          risk_rules: padRules(
+            `stop_atr=${idea.stop_loss_atr_multiple ?? 1.5} tp_atr=${idea.take_profit_atr_multiple ?? 2.0}`,
+            10,
+            "stop_atr=1.5 tp_atr=2.0 risk_pct=2"
+          ),
           source_url: `https://youtube.com/watch?v=${videoId}`,
           regime: (idea.preferred_regime as string) || "TRENDING",
           concept_name: conceptName,
@@ -197,7 +223,14 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
               signal: AbortSignal.timeout(30_000),
             });
             const j = await resp.json();
-            layerResults[layer] = { accepted: j.accepted, status: j.status, bucket_id: j.bucket_id };
+            // Surface real error if endpoint rejected (validation, etc.) so operator can see why
+            layerResults[layer] = {
+              accepted: Boolean(j.accepted),
+              status: j.status,
+              bucket_id: j.bucket_id,
+              http: resp.status,
+              ...(j.accepted ? {} : { error: j.error, details: Array.isArray(j.details) ? j.details.slice(0, 3) : undefined }),
+            };
           } catch (e) {
             layerResults[layer] = { accepted: false, error: (e as Error).message?.slice(0, 80) };
           }
