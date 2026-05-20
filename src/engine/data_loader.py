@@ -648,6 +648,64 @@ def load_ohlcv(
     return df
 
 
+# ─── Multi-Timeframe Loader ──────────────────────────────────────────
+
+def load_with_htf(
+    symbol: str,
+    exec_tf: str,
+    htf: str,
+    start: str,
+    end: str,
+    local_path: Optional[str] = None,
+    htf_local_path: Optional[str] = None,
+    adjusted: bool = True,
+) -> tuple[pl.DataFrame, pl.DataFrame]:
+    """Load exec-TF and HTF data for a symbol (sequential load_ohlcv calls).
+
+    This is a THIN WRAPPER over load_ohlcv(). The existing load_ohlcv() function
+    is called twice — once for the execution timeframe, once for the HTF. No
+    new loading logic; the wrapper exists so callers have a single import point
+    for multi-TF loading.
+
+    Both calls reuse the same singleton DuckDB connection and benefit from local
+    cache. The practical latency is the same as two sequential load_ohlcv() calls
+    (both typically cache hits after the first backtest).
+
+    Args:
+        symbol: Futures symbol (MES, MNQ, MCL, etc.)
+        exec_tf: Execution timeframe (e.g. '15m', '5m').
+        htf: Higher timeframe (e.g. '4h', '1d'). Must be higher than exec_tf.
+        start: Start date YYYY-MM-DD.
+        end: End date YYYY-MM-DD.
+        local_path: Optional local path for exec-TF data (for testing).
+        htf_local_path: Optional local path for HTF data (for testing).
+        adjusted: Use ratio-adjusted data (default True).
+
+    Returns:
+        Tuple (exec_df, htf_df) — both Polars DataFrames with ts_event column.
+
+    Raises:
+        ValueError: if either load_ohlcv() fails (no data found).
+    """
+    exec_df = load_ohlcv(
+        symbol=symbol,
+        timeframe=exec_tf,
+        start=start,
+        end=end,
+        local_path=local_path,
+        adjusted=adjusted,
+    )
+    htf_df = load_ohlcv(
+        symbol=symbol,
+        timeframe=htf,
+        start=start,
+        end=end,
+        local_path=htf_local_path,
+        adjusted=adjusted,
+    )
+    return exec_df, htf_df
+
+
 # ─── Rollover Day Detection (Task 7.1) ──────────────────────────────
 
 # Delivery months per symbol. Equity index futures roll quarterly;

@@ -226,6 +226,18 @@ class StrategyConfig(BaseModel):
     # but not yet wired through from StrategyConfig — see backtester.py TODO.
     fill_rate: Optional[float] = 1.0
     spread_multiplier: Optional[float] = 1.0
+    # W23H.1 — Multi-Timeframe fields.
+    # bias_timeframe: HTF used for trend-bias gating (e.g. '4h', '1d').
+    #   When non-null, run_backtest() loads this TF, computes HTF indicators with
+    #   suffix '_{bias_timeframe}', and joins them into exec_df before signal gen.
+    #   The compiled entry_long/entry_short grammar references these suffixed cols
+    #   (e.g. 'ema_50_4h > ema_200_4h') — signals.py evaluate_expression() handles
+    #   arbitrary column names, so no parser changes needed.
+    # bias_condition: raw bias condition string (e.g. 'ema_50_4h > ema_200_4h').
+    #   Stored for audit/debug. Not re-evaluated at backtest time — it is already
+    #   compiled into entry_long/entry_short by dsl-compiler.ts.
+    bias_timeframe: Optional[str] = None
+    bias_condition: Optional[str] = None
 
     @field_validator("overnight_hold")
     @classmethod

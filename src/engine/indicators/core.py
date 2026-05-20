@@ -335,3 +335,106 @@ def compute_indicators(
             ])
 
     return result
+
+
+def compute_htf_indicators(
+    htf_df: pl.DataFrame,
+    configs: list[IndicatorConfig],
+    suffix: str,
+) -> pl.DataFrame:
+    """Compute indicators on an HTF DataFrame and emit suffixed column names.
+
+    This is a COMPANION to compute_indicators() — it does NOT modify
+    compute_indicators() signature or behavior. Existing callers are unaffected.
+
+    Column naming: same primitives as compute_indicators() but with `suffix`
+    appended. E.g. suffix='_4h' → 'ema_50_4h', 'rsi_14_4h', 'atr_14_4h'.
+
+    Multi-column indicators (macd, bbands, opening_range_breakout) also get the
+    suffix on every sub-column (e.g. 'macd_line_4h', 'bb_upper_20_4h').
+
+    Args:
+        htf_df: Higher-timeframe OHLCV DataFrame (ts_event, open, high, low, close, volume).
+        configs: List of IndicatorConfig — same primitives as compute_indicators
+            supports (sma, ema, rsi, atr, macd, bbands, vwap, adx, adr,
+            opening_range_breakout).
+        suffix: String to append to every output column name.
+            Convention: '_{timeframe}' e.g. '_4h', '_1d'.
+
+    Returns:
+        htf_df with suffixed indicator columns added.
+
+    Raises:
+        ValueError: if suffix is empty (would silently overwrite LTF columns).
+    """
+    if not suffix:
+        raise ValueError(
+            "compute_htf_indicators: suffix must be non-empty to prevent "
+            "column name collisions with the exec-TF DataFrame."
+        )
+
+    result = htf_df.clone()
+
+    for cfg in configs:
+        if cfg.type == "sma":
+            col = compute_sma(htf_df["close"], cfg.period)
+            result = result.with_columns(col.alias(f"sma_{cfg.period}{suffix}"))
+
+        elif cfg.type == "ema":
+            col = compute_ema(htf_df["close"], cfg.period)
+            result = result.with_columns(col.alias(f"ema_{cfg.period}{suffix}"))
+
+        elif cfg.type == "rsi":
+            col = compute_rsi(htf_df["close"], cfg.period)
+            result = result.with_columns(col.alias(f"rsi_{cfg.period}{suffix}"))
+
+        elif cfg.type == "atr":
+            col = compute_atr(htf_df, cfg.period)
+            result = result.with_columns(col.alias(f"atr_{cfg.period}{suffix}"))
+
+        elif cfg.type == "macd":
+            fast = cfg.fast or 12
+            slow = cfg.slow or 26
+            signal = cfg.signal or 9
+            macd_line, signal_line, histogram = compute_macd(
+                htf_df["close"], fast, slow, signal
+            )
+            result = result.with_columns([
+                macd_line.alias(f"macd_line{suffix}"),
+                signal_line.alias(f"macd_signal{suffix}"),
+                histogram.alias(f"macd_hist{suffix}"),
+            ])
+
+        elif cfg.type == "bbands":
+            upper, middle, lower = compute_bbands(
+                htf_df["close"], cfg.period, cfg.std_dev
+            )
+            result = result.with_columns([
+                upper.alias(f"bb_upper_{cfg.period}{suffix}"),
+                middle.alias(f"bb_middle_{cfg.period}{suffix}"),
+                lower.alias(f"bb_lower_{cfg.period}{suffix}"),
+            ])
+
+        elif cfg.type == "vwap":
+            col = compute_vwap(htf_df)
+            result = result.with_columns(col.alias(f"vwap{suffix}"))
+
+        elif cfg.type == "adx":
+            col = compute_adx(htf_df, cfg.period)
+            result = result.with_columns(col.alias(f"adx_{cfg.period}{suffix}"))
+
+        elif cfg.type == "adr":
+            col = compute_adr(htf_df, cfg.period)
+            result = result.with_columns(col.alias(f"adr_{cfg.period}{suffix}"))
+
+        elif cfg.type == "opening_range_breakout":
+            range_min = cfg.range_minutes if cfg.range_minutes is not None else 15
+            session_start = cfg.session_start_et if cfg.session_start_et is not None else "09:30"
+            orh, orl, or_range = compute_opening_range_breakout(result, range_min, session_start)
+            result = result.with_columns([
+                orh.alias(f"orh_{range_min}m{suffix}"),
+                orl.alias(f"orl_{range_min}m{suffix}"),
+                or_range.alias(f"or_range_{range_min}m{suffix}"),
+            ])
+
+    return result

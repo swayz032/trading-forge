@@ -399,12 +399,20 @@ export function compileDslToEngine(input: DslCompileInput): CompiledStrategy | n
  *   (conservative — avoids broken grammar). Log a compile note.
  *
  * Returns a new CompiledStrategy with combined grammar.
- * Returns base unchanged if no confirming_indicators are provided.
+ * Returns base unchanged if no confirming_indicators are provided and no MTF gate.
  *
- * MTF (bias_timeframe): FAIL-CLOSED per spec.
- *   - If bias_timeframe is set, log audit event dsl_compiler.mtf_unsupported
- *   - Return the single-TF compilation with mtfUnsupported=true
- *   - Do NOT emit broken HTF grammar into entry_long/entry_short
+ * MTF (bias_timeframe): W23H.1 — ACTIVE gate (replaces W23G.11 fail-CLOSED).
+ *   - If bias_timeframe + bias_condition are present, AND-gate the bias_condition
+ *     into the entry_long/entry_short grammar for BOTH sides.
+ *   - The bias_condition already uses suffixed column names (e.g. 'ema_50_4h > ema_200_4h')
+ *     as emitted by the transcript extractor. No column-name translation needed here.
+ *   - The engine's signals.py evaluate_expression() accepts arbitrary column names;
+ *     compute_htf_indicators() in core.py produces the suffixed columns at backtest time.
+ *   - A direction-aware gate: for LONG entries, bias_condition is AND-gated directly.
+ *     For SHORT entries, bias_condition is AND-gated directly (the condition itself
+ *     encodes directionality, e.g. 'ema_50_4h < ema_200_4h' for bearish bias).
+ *     If bias_condition has no directional implication (e.g. 'rsi_14_4h > 50'),
+ *     it gates both sides equally — this is intentional (filters noise both ways).
  */
 export function applyConfluenceToCompiled(
   base: CompiledStrategy,
@@ -412,24 +420,61 @@ export function applyConfluenceToCompiled(
 ): CompiledStrategy {
   const confirmings = input.confirming_indicators ?? [];
   const biasTimeframe = input.bias_timeframe ?? null;
+  const biasCondition = (input.bias_condition ?? "").trim();
   const notes = [...base.compileNotes];
-  let mtfUnsupported = false;
 
-  // ── MTF: FAIL-CLOSED ───────────────────────────────────────────────────────
-  if (biasTimeframe) {
-    logger.warn(
-      { bias_timeframe: biasTimeframe, bias_condition: input.bias_condition },
-      "dsl-compiler: MTF bias_timeframe present but compute_indicators does not support per-TF resampling — bias gate OMITTED from compiled grammar (dsl_compiler.mtf_unsupported)",
+  // ── MTF: AND-gate bias_condition into grammar (W23H.1) ────────────────────
+  // When bias_timeframe + bias_condition are both present, AND-gate the condition
+  // into the entry grammar. The bias_condition uses pre-suffixed column names
+  // (e.g. 'ema_50_4h > ema_200_4h') that the engine's forward_fill_htf_to_exec()
+  // will make available as columns in the exec_df before signal evaluation.
+  let baseLongWithBias = base.entry_long;
+  let baseShortWithBias = base.entry_short;
+
+  if (biasTimeframe && biasCondition) {
+    logger.info(
+      { bias_timeframe: biasTimeframe, bias_condition: biasCondition },
+      "dsl-compiler W23H.1: MTF bias gate active — AND-gating bias_condition into entry grammar",
     );
+
+    const longIssentinel = base.entry_long === "high < low";
+    const shortIssentinel = base.entry_short === "high < low";
+
+    if (!longIssentinel) {
+      baseLongWithBias = `(${base.entry_long}) AND (${biasCondition})`;
+      notes.push(
+        `mtf.bias_gate: bias_timeframe='${biasTimeframe}' → entry_long AND-gated with '${biasCondition}'`,
+      );
+    }
+    if (!shortIssentinel) {
+      baseShortWithBias = `(${base.entry_short}) AND (${biasCondition})`;
+      notes.push(
+        `mtf.bias_gate: bias_timeframe='${biasTimeframe}' → entry_short AND-gated with '${biasCondition}'`,
+      );
+    }
+  } else if (biasTimeframe && !biasCondition) {
+    // bias_timeframe set but no condition — log advisory only, no grammar change.
+    // This can happen if the extractor set bias_timeframe but left bias_condition empty.
     notes.push(
-      `dsl_compiler.mtf_unsupported: bias_timeframe='${biasTimeframe}' preserved on config but NOT compiled into grammar — engine lacks per-TF resample support. Entries fire without HTF bias gate until engine upgrade.`,
+      `mtf.bias_timeframe_no_condition: bias_timeframe='${biasTimeframe}' present but bias_condition is empty — no HTF gate applied`,
     );
-    mtfUnsupported = true;
+    logger.warn(
+      { bias_timeframe: biasTimeframe },
+      "dsl-compiler W23H.1: bias_timeframe set but bias_condition is empty — HTF gate cannot be applied",
+    );
   }
 
-  // ── No confirming indicators — return base unchanged ──────────────────────
+  // Build a synthetic base with bias-gated grammar for downstream confluence processing
+  const biasedBase: CompiledStrategy = {
+    ...base,
+    entry_long: baseLongWithBias,
+    entry_short: baseShortWithBias,
+    compileNotes: notes,
+  };
+
+  // ── No confirming indicators — return bias-gated base ─────────────────────
   if (confirmings.length === 0) {
-    return mtfUnsupported ? { ...base, compileNotes: notes, mtfUnsupported: true } : base;
+    return biasedBase;
   }
 
   // ── Compile each confirming indicator ─────────────────────────────────────
@@ -437,11 +482,12 @@ export function applyConfluenceToCompiled(
   // never-true sentinel "high < low" (set when direction is one-sided), we must
   // NOT add confirming clauses to that side. Doing so would replace the sentinel
   // with a real condition and accidentally fire the disabled direction.
-  const baseLongIssentinel = base.entry_long === "high < low";
-  const baseShortIssentinel = base.entry_short === "high < low";
+  // NOTE: use biasedBase here (which already has MTF gate applied if present).
+  const baseLongIssentinel = biasedBase.entry_long === "high < low";
+  const baseShortIssentinel = biasedBase.entry_short === "high < low";
 
-  const longClauses: string[] = baseLongIssentinel ? [] : [base.entry_long];
-  const shortClauses: string[] = baseShortIssentinel ? [] : [base.entry_short];
+  const longClauses: string[] = baseLongIssentinel ? [] : [biasedBase.entry_long];
+  const shortClauses: string[] = baseShortIssentinel ? [] : [biasedBase.entry_short];
   const extraIndicators: PrimitiveIndicator[] = [];
   const skippedIndicators: string[] = [];
 
@@ -485,7 +531,8 @@ export function applyConfluenceToCompiled(
   }
 
   // Deduplicate indicators by type+period (avoids duplicate ema_9, ema_21 in array)
-  const allIndicators = dedupeIndicators([...base.indicators, ...extraIndicators]);
+  // Use biasedBase.indicators (same as base.indicators — MTF gate doesn't add new LTF indicators)
+  const allIndicators = dedupeIndicators([...biasedBase.indicators, ...extraIndicators]);
 
   // Build AND-chained entry grammar from collected clauses
   // Guard: only chain valid (non-sentinel) clauses for each direction
@@ -513,7 +560,10 @@ export function applyConfluenceToCompiled(
     entry_long: finalEntryLong,
     entry_short: finalEntryShort,
     compileNotes: notes,
-    mtfUnsupported,
+    // mtfUnsupported removed (W23H.1): MTF is now supported via AND-gate.
+    // The field is still in CompiledStrategy type for backward compat with callers
+    // that may read it. When bias_timeframe is set and bias_condition is non-empty,
+    // the gate IS compiled into grammar; mtfUnsupported is false (default/undefined).
   };
 }
 

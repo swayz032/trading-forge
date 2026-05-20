@@ -126,10 +126,11 @@ describe("W23G.11 confluence: ORB + RSI + VWAP (all 3 required)", () => {
   });
 });
 
-// ─── Test 3: MTF: bias_timeframe present → mtfUnsupported=true, base grammar intact ─
+// ─── Test 3: MTF W23H.1: bias_timeframe present → AND-gate bias_condition into grammar ─
+// Updated from W23G.11 fail-CLOSED to W23H.1 active gate.
 
-describe("W23G.11 MTF: bias_timeframe present", () => {
-  it("returns mtfUnsupported=true and preserves base grammar unchanged", () => {
+describe("W23H.1 MTF: bias_timeframe present → AND-gate active", () => {
+  it("AND-gates bias_condition into entry_long and entry_short grammar", () => {
     const compiled = compileDslWithConfluence({
       entry_indicator: "ema_crossover",
       entry_params: { fast_period: 9, slow_period: 21 },
@@ -139,17 +140,23 @@ describe("W23G.11 MTF: bias_timeframe present", () => {
     });
 
     expect(compiled).not.toBeNull();
-    expect(compiled!.mtfUnsupported).toBe(true);
-    // Base grammar preserved (HTF bias NOT in grammar — fail-CLOSED)
-    expect(compiled!.entry_long).toBe("ema_9 crosses_above ema_21");
-    expect(compiled!.entry_short).toBe("ema_9 crosses_below ema_21");
-    // Compile notes mention the MTF unsupported reason
+    // W23H.1: MTF is now ACTIVE — bias_condition is AND-gated into entry grammar
+    expect(compiled!.mtfUnsupported).toBeFalsy(); // no longer unsupported
+    // entry_long must contain BOTH the primary signal AND the bias condition
+    expect(compiled!.entry_long).toContain("ema_9 crosses_above ema_21");
+    expect(compiled!.entry_long).toContain("ema_50_4h > ema_200_4h");
+    expect(compiled!.entry_long).toContain("AND");
+    // entry_short must also contain the bias condition
+    expect(compiled!.entry_short).toContain("ema_9 crosses_below ema_21");
+    expect(compiled!.entry_short).toContain("ema_50_4h > ema_200_4h");
+    expect(compiled!.entry_short).toContain("AND");
+    // Compile notes mention the MTF gate was applied
     const noteText = compiled!.compileNotes.join(" ");
-    expect(noteText).toContain("dsl_compiler.mtf_unsupported");
+    expect(noteText).toContain("mtf.bias_gate");
     expect(noteText).toContain("bias_timeframe");
   });
 
-  it("MTF + confluence combined: bias omitted but confirming indicators compiled", () => {
+  it("MTF + confluence combined: bias_condition AND-gated AND confirming indicators AND-chained", () => {
     const compiled = compileDslWithConfluence({
       entry_indicator: "ema_crossover",
       entry_params: { fast_period: 9, slow_period: 21 },
@@ -162,13 +169,32 @@ describe("W23G.11 MTF: bias_timeframe present", () => {
     });
 
     expect(compiled).not.toBeNull();
-    expect(compiled!.mtfUnsupported).toBe(true);
-    // Confluence is still compiled even when MTF fails
-    expect(compiled!.entry_long).toContain("AND");
+    expect(compiled!.mtfUnsupported).toBeFalsy();
+    // All three conditions must appear in entry_long
     expect(compiled!.entry_long).toContain("ema_9 crosses_above ema_21");
     expect(compiled!.entry_long).toContain("rsi_14");
-    // No HTF clause in grammar
-    expect(compiled!.entry_long).not.toContain("_4h");
+    expect(compiled!.entry_long).toContain("ema_50_4h > ema_200_4h");
+    // AND must appear (multiple AND conditions)
+    expect(compiled!.entry_long).toContain("AND");
+    // HTF clause IS in grammar (W23H.1 active gate)
+    expect(compiled!.entry_long).toContain("_4h");
+  });
+
+  it("bias_timeframe set but empty bias_condition: no gate applied, no crash", () => {
+    const compiled = compileDslWithConfluence({
+      entry_indicator: "ema_crossover",
+      entry_params: { fast_period: 9, slow_period: 21 },
+      direction: "both",
+      bias_timeframe: "4h",
+      bias_condition: null, // empty
+    });
+
+    expect(compiled).not.toBeNull();
+    // No bias condition to apply → base grammar preserved
+    expect(compiled!.entry_long).toBe("ema_9 crosses_above ema_21");
+    expect(compiled!.entry_short).toBe("ema_9 crosses_below ema_21");
+    const noteText = compiled!.compileNotes.join(" ");
+    expect(noteText).toContain("mtf.bias_timeframe_no_condition");
   });
 });
 
@@ -259,7 +285,11 @@ describe("W23G.11 backward compat: archetype strategy", () => {
     expect(result!.entry_short).toBe("high < low");
   });
 
-  it("archetype with MTF flag still fails-CLOSED (mtfUnsupported=true)", () => {
+  it("archetype with MTF flag: W23H.1 applies bias_condition AND-gate to non-sentinel sides", () => {
+    // Archetype entry = sentinel "high < low" on both sides (engine handles the archetype).
+    // W23H.1: bias_condition is AND-gated BUT only on non-sentinel sides.
+    // Since archetypes produce "high < low" sentinels, the bias gate is NOT applied
+    // (would re-enable the disabled direction). Result: sentinel preserved.
     const result = compileDslWithConfluence({
       entry_indicator: "archetype:ict_silver_bullet_ny_am",
       entry_params: {},
@@ -269,7 +299,8 @@ describe("W23G.11 backward compat: archetype strategy", () => {
     });
 
     expect(result).not.toBeNull();
-    expect(result!.mtfUnsupported).toBe(true);
+    // mtfUnsupported is no longer set (W23H.1 — MTF is active)
+    expect(result!.mtfUnsupported).toBeFalsy();
   });
 });
 
@@ -344,10 +375,10 @@ describe("W23G.11 audit acceptance: confluence strategy config", () => {
   });
 });
 
-// ─── Test 10: Audit acceptance — MTF strategy ────────────────────────────────
+// ─── Test 10: Audit acceptance — MTF strategy (W23H.1: active gate) ─────────
 
-describe("W23G.11 audit acceptance: MTF strategy config", () => {
-  it("MTF strategy has valid single-TF grammar (bias omitted = still parseable)", () => {
+describe("W23H.1 audit acceptance: MTF strategy config (active gate)", () => {
+  it("MTF strategy grammar contains bias_condition AND-gated with primary signal", () => {
     const compiled = compileDslWithConfluence({
       entry_indicator: "rsi_reversal",
       entry_params: { period: 14, oversold: 30, overbought: 70 },
@@ -357,14 +388,15 @@ describe("W23G.11 audit acceptance: MTF strategy config", () => {
     });
 
     expect(compiled).not.toBeNull();
-    // Grammar is still single-TF (no _4h in grammar)
-    expect(compiled!.entry_long).not.toContain("_4h");
-    expect(compiled!.entry_short).not.toContain("_4h");
-    // Grammar is still valid
-    expect(compiled!.entry_long).toBe("rsi_14 < 30");
-    expect(compiled!.entry_short).toBe("rsi_14 > 70");
-    // mtfUnsupported flag is set (for observability)
-    expect(compiled!.mtfUnsupported).toBe(true);
+    // W23H.1: MTF gate active — bias_condition IS in grammar
+    expect(compiled!.entry_long).toContain("rsi_4h < 50");
+    expect(compiled!.entry_long).toContain("AND");
+    // Primary signal still present
+    expect(compiled!.entry_long).toContain("rsi_14 < 30");
+    // mtfUnsupported no longer set (W23H.1)
+    expect(compiled!.mtfUnsupported).toBeFalsy();
+    // Grammar is parseable (contains comparisons)
+    expect(compiled!.entry_long).toMatch(/crosses_above|crosses_below|>|<|>=|<=/);
   });
 });
 
