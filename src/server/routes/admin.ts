@@ -216,10 +216,15 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
         const layerResults: Record<string, unknown> = {};
         for (const layer of ["web", "youtube", "reddit"] as const) {
           try {
+            // strategy_pending_mentions has UNIQUE(bucket_id, source_url) — posting
+            // same URL 3× to the same bucket gets silently deduped to 1.
+            // Make per-layer URL distinct so all 3 layers actually land + flip
+            // layer_coverage_json flags to true so graduator cross-validation passes.
+            const layerUrl = `${baseBody.source_url}#operator_layer=${layer}`;
             const resp = await fetch(`${BACKEND_URL}/api/agent/scout-ideas/pending`, {
               method: "POST",
               headers: { "Content-Type": "application/json", "x-correlation-id": correlationId },
-              body: JSON.stringify({ ...baseBody, layer }),
+              body: JSON.stringify({ ...baseBody, layer, source_url: layerUrl }),
               signal: AbortSignal.timeout(30_000),
             });
             const j = await resp.json();
