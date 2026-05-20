@@ -56,7 +56,10 @@ export const strategies = pgTable("strategies", {
   config: jsonb("config").notNull(), // Full strategy definition JSON
   lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOY_READY | PILOT | DEPLOYED | DECLINING | RETIRED | GRAVEYARD
   lifecycleChangedAt: timestamp("lifecycle_changed_at").defaultNow(),
-  preferredRegime: text("preferred_regime"), // TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL
+  preferredRegime: text("preferred_regime"), // TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL (single — deprecated in W24)
+  // W23H.B: multi-regime array. Supersedes preferredRegime. Both readable; single deprecated in W24.
+  // NULL = eligible in all regimes. Values: TRENDING_UP | TRENDING_DOWN | RANGE_BOUND
+  preferredRegimes: text("preferred_regimes").array(),
   rollingSharpe30d: numeric("rolling_sharpe_30d"),
   forgeScore: numeric("forge_score"),
   tags: text("tags").array(),

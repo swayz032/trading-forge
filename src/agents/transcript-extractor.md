@@ -1,4 +1,4 @@
-<!-- PROMPT_VERSION: 8 -->
+<!-- PROMPT_VERSION: 9 -->
 # Trading Forge — Transcript Extractor
 
 ## Personality
@@ -341,6 +341,7 @@ Which of `["MES", "MNQ", "MCL"]` does the source describe the strategy working o
       "stop_loss_atr_multiple": 1.5,
       "take_profit_atr_multiple": 3.0,
       "preferred_regime": "TRENDING_UP",
+      "preferred_regimes": ["TRENDING_UP", "TRENDING_DOWN"],
       "session_filter": "RTH_ONLY",
       "max_contracts": 3,
       "source_url": "https://youtube.com/...",
@@ -354,6 +355,31 @@ Which of `["MES", "MNQ", "MCL"]` does the source describe the strategy working o
 }
 ```
 Note: `confirming_indicators`, `primary_indicator`, `bias_timeframe`, `bias_condition`, and `execution_timeframe` are all OPTIONAL (W23G.11). Omit them for single-indicator / single-TF strategies. `min_factors_satisfied` is required when `confirming_indicators` is non-empty; omit otherwise.
+
+**W23H.B — `preferred_regimes` array (v9, 2026-05-20):**
+Emit `preferred_regimes` as a JSON array of regime strings. Use the archetype default heuristic below ONLY when the LLM cannot determine it from the source. When the LLM can derive it from the source, emit what the source implies.
+
+**Archetype default heuristic** (use when source omits regime preference):
+
+| Entry indicator type | Default `preferred_regimes` |
+|---|---|
+| `ema_crossover`, `sma_crossover`, `macd_crossover`, `supertrend`, `ichimoku_cloud`, `donchian_breakout`, `atr_breakout` | `["TRENDING_UP", "TRENDING_DOWN"]` |
+| `rsi_reversal`, `bollinger_breakout`, `vwap_fade`, `vwap_reversion`, `keltner_squeeze` | `["RANGE_BOUND"]` |
+| `session_open_breakout`, `overnight_drift` | `["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"]` |
+| Structural archetypes: `ict_*`, `wyckoff_*`, `liquidity_sweep`, `order_block`, `fvg_retrace` | `["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"]` |
+
+**HARD RULES for `preferred_regimes`:**
+- Always emit as an array (never a string).
+- Valid values: `"TRENDING_UP"`, `"TRENDING_DOWN"`, `"RANGE_BOUND"`. No other values.
+- If source explicitly states "only in trending markets" → `["TRENDING_UP", "TRENDING_DOWN"]`. "Only in ranging / choppy markets" → `["RANGE_BOUND"]`. "Works in all conditions" → `["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"]`.
+- If source says nothing about market condition → use archetype default heuristic above.
+- The old `preferred_regime` single string field is still emitted for backward compat; set it to the FIRST value in `preferred_regimes` (e.g. if `["TRENDING_UP", "TRENDING_DOWN"]` → `preferred_regime: "TRENDING_UP"`).
+
+Example output with multi-regime:
+```json
+"preferred_regime": "TRENDING_UP",
+"preferred_regimes": ["TRENDING_UP", "TRENDING_DOWN"]
+```
 - `instrument_classification`: REQUIRED top-level field. One of `"futures_primary"` | `"futures_with_forex_illustration"` | `"non_futures_primary"`. See W23G.2 section above.
 - `strategies`: array, length 0–5
 - Empty array `{"strategies": []}` is the correct output when no complete strategy is described
