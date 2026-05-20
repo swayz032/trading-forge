@@ -327,6 +327,10 @@ function deriveEntryIndicator(conceptName: string, fallback: string | null): str
 
   // EMA crossover / moving-average crossover / pullback.
   if (/ema.cross|exponential_moving_average_cross|moving_average_cross|ma_cross|ema.pullback|pullback.ema/.test(cn)) return "ema_crossover";
+  // W23H-postmortem (2026-05-20): catch single-MA-pullback patterns without "cross" suffix.
+  // Many Linda Raschke / Bellafiore-style strategies use "20 moving average pullback" (no MA-vs-MA cross).
+  // Maps to ema_crossover archetype since engine compiles the same pattern.
+  if (/moving.average.pullback|ma.pullback|(\d+).{0,4}(ma|ema|sma).{0,8}pullback|pullback.{0,8}\d+.{0,4}(ma|ema|sma)/.test(cn)) return "ema_crossover";
   if (/(^|_)ema(_|$)/.test(cn)) return "ema_crossover";  // generic EMA → crossover
 
   // Opening-range / session-open breakout (ORB family).
@@ -354,6 +358,20 @@ function deriveEntryIndicator(conceptName: string, fallback: string | null): str
   if (/liquidity.sweep|liquidity.void|stop.hunt/.test(cn)) return "liquidity_sweep_breakout";
 
   if (/holy.grail|raschke/.test(cn)) return "ema_crossover";  // Raschke's setup IS 20-EMA pullback — valid
+
+  // W23H-postmortem (2026-05-20): multi-timeframe analysis WITHOUT a specific
+  // primary indicator is too generic to engine-route. Prefer the W23F.B bucket's
+  // entryArchetype (from confluence factor analysis) if available. Falls through
+  // to fallback path below if entryArchetype not set.
+  if (/multi.timeframe|multi.tf|mtf.analysis|htf.bias|higher.timeframe.bias/.test(cn)) {
+    if (fallback && ENTRY_INDICATOR_MAP[fallback]) return ENTRY_INDICATOR_MAP[fallback];
+    return "ema_crossover";  // sensible default — most MTF setups gate MA-based entries
+  }
+
+  // W23H-postmortem (2026-05-20): subreddit-name-as-concept indicates the LLM
+  // failed to extract a real strategy from a Reddit-sourced transcript and
+  // emitted the subreddit name. These should never graduate. Reject explicitly.
+  if (/^r_(daytrading|futurestrading|algotrading|trading|stocks|options)(_|$)/.test(cn)) return null;
 
   // Pivot points genuinely have no engine spec — these stay rejected until
   // engine work is done. Pass 21 v3 keeps the reject narrow.
