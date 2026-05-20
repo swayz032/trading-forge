@@ -2082,6 +2082,11 @@ export const biasState = pgTable(
     }),
     correlationId: text("correlation_id"),
     evidence: jsonb("evidence").notNull().default({}),
+    // W23H.E: set true on 10am refresh rows where the active strategy changed while
+    // a position on the PRIOR strategy is open.  Paper-signal-service reads this flag
+    // to block NEW entries on the new strategy until the prior position closes naturally.
+    // Cleared implicitly — next INSERT with FALSE takes over once position closes.
+    positionLockActive: boolean("position_lock_active").notNull().default(false),
     computedAt: timestamp("computed_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

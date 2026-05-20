@@ -58,6 +58,8 @@ interface CachedBiasDecision {
   activeStrategyId: string | null;
   evidence: Record<string, unknown>;
   computedAt: string;
+  /** W23H.E: true when this row was inserted by a 10am refresh that changed activeStrategyId. */
+  positionLockActive: boolean;
 }
 
 function cacheKey(sessionDate: string, symbol: string): string {
@@ -88,6 +90,8 @@ export interface BiasStateForSignal {
   regimeLabel: string;
   playbook: string;
   activeStrategyId: string | null;
+  /** W23H.E: true when this row was written by a 10am refresh that changed activeStrategyId. */
+  positionLockActive: boolean;
 }
 
 /**
@@ -101,6 +105,7 @@ function stubBiasState(sessionDate: string, symbol: string): BiasStateForSignal 
     regimeLabel: "UNKNOWN",
     playbook: "NO_TRADE",
     activeStrategyId: null,
+    positionLockActive: false,
   };
 }
 
@@ -277,6 +282,7 @@ export async function getOrComputeBiasStateForDay(
           computedAt: biasState.computedAt,
           evidence: biasState.evidence,
           symbol: biasState.symbol,
+          positionLockActive: biasState.positionLockActive,
         })
         .from(biasState)
         .where(and(eq(biasState.sessionDate, sessionDate), eq(biasState.symbol, sym)))
@@ -293,6 +299,7 @@ export async function getOrComputeBiasStateForDay(
           activeStrategyId: row.activeStrategyId ?? null,
           evidence: (row.evidence as Record<string, unknown>) ?? {},
           computedAt: row.computedAt.toISOString(),
+          positionLockActive: row.positionLockActive ?? false,
         };
         dailyBiasCache.set(key, decision);
         logger.info(
@@ -737,12 +744,25 @@ except Exception as primary_err:
     logger.warn({ err: stratErr, sessionDate, symbol: sym, regimeLabel }, "bias-state: strategy resolution failed — null");
   }
 
+  // W23H.E: detect 10am strategy change for position-lock flag
+  // Compare the in-process cache (9:30 row) to the newly computed strategy.
+  // positionLockActive = true when:
+  //   - this is a 10am refresh (isRefresh=true)
+  //   - the active strategy changed vs the 9:30 row
+  // Paper-signal-service reads this flag at signal time to block new entries
+  // on the new strategy while any position on the prior strategy is still open.
+  const priorDecisionForLock = dailyBiasCache.get(key);
+  const strategyChangedOnRefresh = isRefresh &&
+    priorDecisionForLock !== undefined &&
+    priorDecisionForLock.activeStrategyId !== activeStrategyId;
+  const positionLockActive = strategyChangedOnRefresh;
+
   // Persist to DB — always INSERT so the 9:30 row is preserved when the
   // 10am refresh fires. Readers pick MAX(computed_at) per (session_date, symbol).
   try {
     await db.execute(
       sql`
-        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, computed_at, created_at)
+        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, position_lock_active, computed_at, created_at)
         VALUES (
           ${sessionDate}::date,
           ${sym},
@@ -751,6 +771,7 @@ except Exception as primary_err:
           ${activeStrategyId}::uuid,
           ${correlationId ?? null},
           ${JSON.stringify(evidence)}::jsonb,
+          ${positionLockActive},
           ${computedAt}::timestamptz,
           NOW()
         )
@@ -758,6 +779,42 @@ except Exception as primary_err:
     );
   } catch (dbWriteErr) {
     logger.warn({ err: dbWriteErr, sessionDate, symbol: sym }, "bias-state: DB persist failed (fail-open, trading continues)");
+  }
+
+  // W23H.E: emit dedicated audit when 10am refresh locks position due to strategy change
+  if (strategyChangedOnRefresh) {
+    try {
+      await insertAuditRow({
+        action: "bias_engine.refresh_strategy_changed_position_locked",
+        entityType: "paper_session",
+        entityId: `${sessionDate}-${sym}`,
+        decisionAuthority: "system",
+        status: "info",
+        input: { sessionDate, symbol: sym, correlationId },
+        result: {
+          prior_strategy_id: priorDecisionForLock?.activeStrategyId ?? null,
+          new_strategy_id: activeStrategyId,
+          prior_regime: priorDecisionForLock?.regimeLabel ?? null,
+          new_regime: regimeLabel,
+          position_lock_active: true,
+        },
+        correlationId,
+      });
+    } catch (lockAuditErr) {
+      logger.warn({ err: lockAuditErr, sessionDate, symbol: sym }, "bias-state: position_lock audit write failed (non-blocking)");
+    }
+    logger.info(
+      {
+        sessionDate,
+        symbol: sym,
+        priorStrategyId: priorDecisionForLock?.activeStrategyId ?? null,
+        newStrategyId: activeStrategyId,
+        priorRegime: priorDecisionForLock?.regimeLabel ?? null,
+        newRegime: regimeLabel,
+        correlationId,
+      },
+      "bias-state W23H.E: 10am refresh changed active strategy — position_lock_active=true; open positions on prior strategy continue; new entries on new strategy blocked until prior position closes",
+    );
   }
 
   // Audit log
@@ -780,7 +837,7 @@ except Exception as primary_err:
         playbook,
         activeStrategyId,
         evidence,
-        ...(isRefresh ? { regimeChanged, strategyChanged } : {}),
+        ...(isRefresh ? { regimeChanged, strategyChanged, positionLockActive } : {}),
       },
       correlationId,
     });
@@ -826,6 +883,7 @@ except Exception as primary_err:
     activeStrategyId,
     evidence,
     computedAt,
+    positionLockActive,
   };
   // Always update cache with latest decision (whether session-start or refresh)
   dailyBiasCache.set(key, decision);

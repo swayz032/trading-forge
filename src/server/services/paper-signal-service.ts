@@ -6,7 +6,7 @@ import { evaluateContextGate } from "./context-gate-service.js";
 import { checkAntiSetupGate, type AntiSetupGateResult } from "./anti-setup-gate-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
-import { eq, and, isNull, gte, lte, desc } from "drizzle-orm";
+import { eq, and, isNull, ne, gte, lte, desc } from "drizzle-orm";
 import { tracer } from "../lib/tracing.js";
 import { isDSLStrategy, translateDSLToPaperConfig } from "./dsl-translator.js";
 import { getActiveLockout } from "./strategy-lockout-service.js";
@@ -2445,6 +2445,74 @@ export async function evaluateSignals(
             acted: false,
             reason: `signal.not_active_strategy_for_regime: active=${biasState.activeStrategyId} this=${sessionConfig.strategyId} regime=${biasState.regimeLabel}`,
           }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist bias stage1 block log"));
+        }
+      }
+
+      // ─── W23H.E: Position-lock gate (10am regime-flip policy) ────────────
+      // When the 10am refresh changed the active strategy (positionLockActive=true),
+      // AND this session IS running the NEW active strategy, AND a position on the
+      // PRIOR strategy is still open somewhere — block new entries on this session.
+      //
+      // The prior strategy's session continues to manage its open position normally
+      // (stop-loss, trailing stop, exit signals — managed in the position block above).
+      // Kill-switch override always supersedes this gate (kill switch fires first).
+      //
+      // Fail-open: DB query failure → no block (don't prevent trading on query errors).
+      if (!stage1Blocked && biasState?.positionLockActive && biasState.activeStrategyId === sessionConfig.strategyId) {
+        try {
+          // Check if any OTHER session has an open position on the prior strategy
+          // (prior strategy = any session NOT matching the new active strategy)
+          const openPositionsOnPriorStrategy = await db
+            .select({ id: paperPositions.id, symbol: paperPositions.symbol, sessionId: paperPositions.sessionId })
+            .from(paperPositions)
+            .innerJoin(paperSessions, eq(paperSessions.id, paperPositions.sessionId))
+            .where(
+              and(
+                isNull(paperPositions.closedAt),
+                // Session is running a strategy OTHER than the new active strategy
+                ne(paperSessions.strategyId, sessionConfig.strategyId),
+              ),
+            )
+            .limit(1);
+
+          if (openPositionsOnPriorStrategy.length > 0) {
+            const priorPosition = openPositionsOnPriorStrategy[0];
+            stage1Blocked = true;
+            span.setAttribute("position_lock_blocked", true);
+            span.setAttribute("position_lock_prior_position_id", priorPosition.id);
+            logger.info(
+              {
+                sessionId,
+                symbol,
+                strategyId: sessionConfig.strategyId,
+                priorPositionId: priorPosition.id,
+                priorPositionSessionId: priorPosition.sessionId,
+                newActiveStrategyId: biasState.activeStrategyId,
+              },
+              "W23H.E: entry blocked — position_lock_active: prior strategy has open position; blocking new entries until prior position closes",
+            );
+            db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "position_lock_blocked",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _prior_position_id: priorPosition.id,
+                _prior_session_id: priorPosition.sessionId,
+                _new_active_strategy_id: biasState.activeStrategyId,
+                _position_lock_active: true,
+              },
+              acted: false,
+              reason: `signal.blocked_position_lock_active: prior_position=${priorPosition.id} new_strategy=${biasState.activeStrategyId}`,
+            }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist position_lock block log"));
+          }
+          // else: no open positions on prior strategy → lock condition already cleared;
+          // standard Stage 1 behavior continues (no block from this gate).
+        } catch (lockGateErr) {
+          // Fail-open: never block trading due to query errors
+          logger.warn({ err: lockGateErr, sessionId, symbol }, "W23H.E: position_lock gate query failed — fail-open, proceeding");
         }
       }
 
