@@ -4,6 +4,28 @@
 
 ---
 
+### Session Log — 2026-05-20 paper-parity — Wave 23H Pass 4 (account-level safety: W23H.E + W23H.F + W23H.H)
+
+**Mission:** Ship W23H.E (10am regime-flip position lock), W23H.F (cross-symbol DLL coordinator + pre-market blackout consumption), and W23H.H (per-account symbol whitelist) — all touching paper-signal-service.ts, serialized in single agent.
+
+**Work completed:**
+- **W23H.E**: Migration 0122 `bias_state.position_lock_active BOOLEAN DEFAULT FALSE`; `bias-state-service.ts` sets flag on 10am INSERT when strategy changes; `BiasStateForSignal` extended with `positionLockActive`; Stage 1 gate in evaluateSignals checks flag and queries DB for open positions on prior strategy before blocking new entries; fail-open on errors; emit `bias_engine.refresh_strategy_changed_position_locked` + `signal.blocked_position_lock_active`
+- **W23H.F**: New `cross-symbol-pnl.ts` module with `getAccountSessionCumulativePnL()` (lazy DB imports for test isolation) + pure `evaluateCrossSymbolDll()` (67% halt, 95% force-close); pre-market blackout gate queries `pre_market_sessions.blackout_windows JSONB` at [start,end) boundary; emit `cross_symbol_dll_halt_triggered` / `cross_symbol_force_close_triggered` / `signal.skipped_pre_market_blackout`; force-close via dynamic import of `forceCloseAllPositions`
+- **W23H.H**: Migration 0123 `broker_accounts.enabled_symbols TEXT[] DEFAULT ARRAY['MES']`; Stage 0 gate in evaluateSignals entry block queries accounts for firmId; all 3 early gates (symbol whitelist + blackout + DLL) feed into `lockoutBlocked` short-circuit; admin route `PATCH /api/broker-accounts/:id/symbols` + `GET /api/broker-accounts`; emit `signal.blocked_symbol_not_enabled_for_account` + `broker_account.symbols_updated`
+- **Bonus fix**: 2026-compliance script now strips inline YAML comments before numeric coercion (pre-existing bug, value `50  # micros...` was comparing as string not number)
+
+**Verification:**
+- 374 vitest tests pass (21 wave23h test files, 0 regressions)
+- 3 new test files: wave23h-10am-flip-policy.test.ts (8), wave23h-cross-symbol-dll.test.ts (12), wave23h-per-account-symbols.test.ts (10)
+- `npm run check:production-isolation` — CLEAN
+- `npm run check:2026-compliance` — OK (after inline-comment fix)
+
+**Known-facts updates:** None new.
+
+**Carry-forward for next session:** Pass 4 observability cleanup (P4.A2) + architect sync (P4.A3) still pending; gate-nesting doc in MEMORY.md updated.
+
+---
+
 ### Session Log — 2026-05-20 Architect — Wave 23H Pass 2 close-out (smart picker + Stage 2 custom factors + confluence sizing)
 
 **Mission:** Architect cleanup for Wave 23H Pass 2 — verify audit coverage for 4 new events, trace cross-subsystem picker→Stage2→sizing chain, run System Map sync + CI hard gates per CLAUDE.md §10 + §11 Rule 3.
