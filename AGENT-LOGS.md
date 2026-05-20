@@ -5384,6 +5384,41 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-20 Wave 23H Pass 3 close-out (architect)
+
+**Mission:** Verify W23H.2 (pre-market routine) + W23H.3 (allowed_entry_windows) close cleanly; sync System Map; flag Pass 4 dependencies.
+
+**Work completed:**
+- Audited 5 audit events. All emit from the correct sites:
+  - `pre_market_routine.started` — scheduler.ts:2430 ✅
+  - `pre_market_routine.completed` — pre-market-routine.ts:493 ✅
+  - `pre_market_routine.skipped_already_ran_today` — scheduler.ts:2412 ✅
+  - `pre_market_routine.errored` — scheduler.ts:2451 ✅
+  - `signal.skipped_outside_window` — paper-signal-service.ts:1923 emits via `paperSignalLogs` with `signalType: "skipped_outside_window"` and reason string. Persisted per blocked bar. ✅
+- Cross-subsystem contract trace (W23H.3 parser parity):
+  - paper-signal-service.ts imports `parseEntryWindows` / `isBarInAnyWindow` from `src/server/lib/entry-windows.ts`
+  - backtester.py imports `parse_entry_windows` / `is_bar_in_any_window` from `src/engine/entry_windows.py`
+  - pine_compiler.py imports `parse_entry_window` / `window_to_pine_time_string` from same Python module — drives Pine `time()` filter
+  - Boundary semantics: TS + Py both document `[start, end)` left-inclusive / right-exclusive. Identical comment headers reference each other as mirrors. Single source of truth per layer; same window string → same boundary on all 3.
+- Pre-market state contract check: `pre_market_sessions` table is WRITE-ONLY today. No consumer in `services/` or `routes/` (other than the writer + GET-today route) reads from it yet. Bias engine does NOT consume overnight_range/vix_bucket/gap/levels yet — flagged Pass 4 follow-up.
+- System Map: `npm run system-map:sync` regenerated; `pre_market_sessions` appears 2× in `docs/system-topology.generated.json`; `npm run system-map:check` exit 0.
+- CI gates: `check:production-isolation` CLEAN (4 files, 0 violations); `check:2026-compliance` shows pre-existing MFFU/Topstep `max_contracts=50` drift (out of scope, pre-existed Pass 3).
+- Test fleet: wave23h vitest 18 files / 344 tests pass (incl. 67 pre-market + 68 entry-windows added in Pass 3). Broader `wave23*` glob: 740 pass / 2 fail — both failures in `wave23f-discovery-rotation.test.ts` (W23F query-template group sizes), unrelated to Pass 3 changes.
+
+**Verification:**
+- `npm run system-map:check` → exit 0
+- `npm run check:production-isolation` → CLEAN
+- `npx vitest run src/server/__tests__/wave23h` → 18/18 files, 344/344 tests pass
+- Audit-emission sites grep-verified against scheduler.ts, pre-market-routine.ts, paper-signal-service.ts
+- Entry-windows parser parity grep-verified across all 3 layers
+
+**Carry-forward for next session (Pass 4 dependencies):**
+- `blackout_windows` JSONB column on `pre_market_sessions` is populated but NOT consumed at signal time. **Recommendation: YES — Pass 4 cross-symbol DLL coordinator (W23H.F) should honor blackouts** as an additional pre-Stage-1 gate. The coordinator already touches paper-signal-service.ts Stage 1 region; piggybacking blackout consumption there keeps the change blast-radius bounded and closes the pre-market write → signal-time read loop in the same pass.
+- Bias engine consumption of overnight_range / vix_bucket / pdh/pdl/pwh/pwl / written_bias from `pre_market_sessions` is still unwired. Either fold into Pass 4 or schedule as W23H.G/H follow-up — operator decides.
+- W23F discovery-rotation test failures pre-existed Pass 3; track separately.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

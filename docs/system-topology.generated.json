@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-20T07:06:32.726Z",
+  "generatedAt": "2026-05-20T07:52:13.270Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,12 +15,12 @@
     ]
   },
   "counts": {
-    "routes": 62,
-    "schedulerJobs": 62,
+    "routes": 63,
+    "schedulerJobs": 63,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 26,
-    "databaseTables": 92,
+    "databaseTables": 93,
     "registrySubsystems": 21
   },
   "routes": [
@@ -62,6 +62,7 @@
     "/api/pine-export",
     "/api/pine-export/recipient",
     "/api/portfolio",
+    "/api/pre-market",
     "/api/prevalidate",
     "/api/production",
     "/api/prop-firm",
@@ -131,6 +132,7 @@
     "pipeline-resume-drain",
     "portfolio-correlation",
     "pre-market-prep",
+    "pre-market-routine",
     "pre-trading-day-health-check",
     "prompt-ab-resolution",
     "prop-firm-dashboard-snapshot",
@@ -789,6 +791,7 @@
     "paper_signal_logs",
     "paper_trades",
     "pilot_sessions",
+    "pre_market_sessions",
     "production_trades",
     "prompt_ab_tests",
     "prompt_versions",
@@ -882,10 +885,16 @@
       "engineSubsystems": 26,
       "databaseTables": 92
     },
-    "missingRoutes": [],
-    "missingSchedulerJobs": [],
+    "missingRoutes": [
+      "/api/pre-market"
+    ],
+    "missingSchedulerJobs": [
+      "pre-market-routine"
+    ],
     "missingEngineSubsystems": [],
-    "missingDatabaseTables": [],
+    "missingDatabaseTables": [
+      "pre_market_sessions"
+    ],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],

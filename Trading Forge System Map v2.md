@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-20T07:06:32.726Z`.
+Updated automatically from the repo on `2026-05-20T07:52:13.270Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,13 +11,13 @@ Updated automatically from the repo on `2026-05-20T07:06:32.726Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `operator-halt-only, tradingview_deploy`
-- API routes tracked: `62`
-- Scheduler jobs tracked: `62`
+- API routes tracked: `63`
+- Scheduler jobs tracked: `63`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `26`
-- Database tables tracked: `92`
+- Database tables tracked: `93`
 
 ### Subsystem Runtime States
 - `active`: `16`
@@ -53,10 +53,10 @@ Updated automatically from the repo on `2026-05-20T07:06:32.726Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `21`
-- Route coverage: `62/62`
-- Scheduler coverage: `62/62`
+- Route coverage: `62/63`
+- Scheduler coverage: `62/63`
 - Engine coverage: `26/26`
-- Database coverage: `92/92`
+- Database coverage: `92/93`
 - Autonomous subsystems with audit coverage: `21/21`
 - Autonomous subsystems with audit actions: `21/21`
 - Autonomous subsystems with telemetry evidence: `21/21`
@@ -213,6 +213,7 @@ Updated automatically from the repo on `2026-05-20T07:06:32.726Z`.
 - `/api/pine-export`
 - `/api/pine-export/recipient`
 - `/api/portfolio`
+- `/api/pre-market`
 - `/api/prevalidate`
 - `/api/production`
 - `/api/prop-firm`
@@ -282,6 +283,7 @@ Updated automatically from the repo on `2026-05-20T07:06:32.726Z`.
 - `pipeline-resume-drain`
 - `portfolio-correlation`
 - `pre-market-prep`
+- `pre-market-routine`
 - `pre-trading-day-health-check`
 - `prompt-ab-resolution`
 - `prop-firm-dashboard-snapshot`
@@ -415,6 +417,7 @@ Updated automatically from the repo on `2026-05-20T07:06:32.726Z`.
 - `paper_signal_logs`
 - `paper_trades`
 - `pilot_sessions`
+- `pre_market_sessions`
 - `production_trades`
 - `prompt_ab_tests`
 - `prompt_versions`
