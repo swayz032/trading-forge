@@ -2374,6 +2374,94 @@ export function initScheduler() {
     emitJobComplete("bias-engine-session-start", Date.now() - t0bias);
   });
 
+  // ─── W23H.2: Pre-market routine — 8:30 AM ET (12:00 UTC EDT / 13:00 UTC EST) ─
+  //
+  // Fires every hour; hour-gate restricts execution to UTC 12 or 13 only.
+  // W23F.U UTC-date idempotency: check audit_log for 'pre_market_routine.completed'
+  // rows with today's session_date prefix before running — skip if already ran.
+  // Per-symbol sequential execution to limit concurrent DB load.
+  // Fail-open: per-symbol errors logged + errored audit; other symbols proceed.
+  // NOT pipeline-gated: pre-market context is a safety/observability input.
+  registerJob("pre-market-routine", 60 * 60 * 1000, async () => {
+    const nowUtc = new Date();
+    const hourUtc = nowUtc.getUTCHours();
+    // 8:30 AM ET = 12:00 UTC (EDT, Mar-Nov) or 13:00 UTC (EST, Nov-Mar)
+    if (hourUtc !== 12 && hourUtc !== 13) {
+      return; // wrong hour — skip tick
+    }
+
+    const sessionDate = nowUtc.toISOString().slice(0, 10);
+    const correlationId = randomUUID();
+
+    // W23F.U-style UTC-date idempotency: skip if any symbol completed today
+    const startOfDay = new Date(`${sessionDate}T00:00:00Z`);
+    const { sql: _sql } = await import("drizzle-orm");
+    const alreadyRanCount = await db
+      .select({ n: _sql<number>`COUNT(*)::int` })
+      .from(auditLog)
+      .where(
+        and(
+          _sql`action = 'pre_market_routine.completed'`,
+          gte(auditLog.createdAt, startOfDay),
+          _sql`result->>'session_date' = ${sessionDate}`,
+        ),
+      );
+
+    if ((alreadyRanCount[0]?.n ?? 0) > 0) {
+      await db.insert(auditLog).values({
+        action: "pre_market_routine.skipped_already_ran_today",
+        entityId: null,
+        entityType: "pre_market_session",
+        result: { session_date: sessionDate, hour_utc: hourUtc },
+        status: "success",
+        decisionAuthority: "scheduler",
+        correlationId,
+      });
+      logger.info({ sessionDate, hourUtc, correlationId }, "pre-market-routine: already ran today — skipping");
+      return;
+    }
+
+    logger.info({ sessionDate, hourUtc, correlationId }, "pre-market-routine: firing once-daily run");
+
+    const { BIAS_SYMBOLS } = await import("./services/bias-state-service.js");
+    const { runPreMarketRoutine } = await import("./services/pre-market-routine.js");
+
+    await db.insert(auditLog).values({
+      action: "pre_market_routine.started",
+      entityId: null,
+      entityType: "pre_market_session",
+      result: { session_date: sessionDate, symbols: [...BIAS_SYMBOLS] },
+      status: "pending",
+      decisionAuthority: "scheduler",
+      correlationId,
+    });
+
+    // Sequential per-symbol execution to limit concurrent DB load
+    for (const symbol of BIAS_SYMBOLS) {
+      try {
+        const result = await runPreMarketRoutine(symbol, sessionDate, correlationId);
+        logger.info(
+          { symbol, sessionDate, rowId: result.rowId, fieldsPopulatedCount: result.fieldsPopulated.length },
+          "pre-market-routine: symbol completed",
+        );
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        logger.error({ err: errMsg, symbol, sessionDate, correlationId }, "pre-market-routine: symbol errored");
+        await db.insert(auditLog).values({
+          action: "pre_market_routine.errored",
+          entityId: null,
+          entityType: "pre_market_session",
+          result: { session_date: sessionDate, symbol, error: errMsg },
+          status: "failure",
+          errorMessage: errMsg,
+          decisionAuthority: "scheduler",
+          correlationId,
+        }).catch(() => { /* audit insert failure must not propagate */ });
+        // Fail-open: continue to next symbol
+      }
+    }
+  });
+
   // ─── Wave 23 Gap-Fix-B: Bias engine 10:00 AM ET refresh — weekdays ─────────
   //
   // DST-aware double-fire: 14:00 UTC (EDT) AND 15:00 UTC (EST).

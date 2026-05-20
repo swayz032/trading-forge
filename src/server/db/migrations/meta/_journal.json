@@ -869,6 +869,13 @@
       "when": 1747861200000,
       "tag": "0120_multi_regime_strategies",
       "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1747947600000,
+      "tag": "0121_pre_market_sessions",
+      "breakpoints": true
     }
   ]
 }

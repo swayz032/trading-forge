@@ -2531,3 +2531,34 @@ export const transcriptFetchOutcomes = pgTable(
   ],
 );
 
+// ─── Pre-Market Sessions (W23H.2) ─────────────────────────────────────────────
+// Persisted pre-market context computed each day at 8:30 AM ET for every symbol.
+// Fields mirror the NQ-style 8-item checklist: overnight range, VIX proxy,
+// economic calendar, gap, VWAP anchor, PDH/PDL, PWH/PWL, written bias.
+export const preMarketSessions = pgTable(
+  "pre_market_sessions",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    sessionDate: date("session_date").notNull(),
+    symbol: text("symbol").notNull(),
+    overnightRangePoints: numeric("overnight_range_points"),
+    vixBucket: text("vix_bucket"),
+    vixProxyAtrPercentile: numeric("vix_proxy_atr_percentile"),
+    economicCalendarClear: boolean("economic_calendar_clear"),
+    blackoutWindows: jsonb("blackout_windows"),
+    openingGapPct: numeric("opening_gap_pct"),
+    vwapAnchor: numeric("vwap_anchor"),
+    pdh: numeric("pdh"),
+    pdl: numeric("pdl"),
+    pwh: numeric("pwh"),
+    pwl: numeric("pwl"),
+    htfBias: text("htf_bias"),
+    writtenBias: text("written_bias"),
+    computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("pre_market_sessions_unique").on(table.sessionDate, table.symbol),
+    index("idx_pre_market_sessions_date").on(table.sessionDate),
+    index("idx_pre_market_sessions_symbol").on(table.symbol, table.sessionDate),
+  ],
+);
