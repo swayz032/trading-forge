@@ -91,8 +91,34 @@ def evaluate_expression(df: pl.DataFrame, expression: str) -> pl.Series:
     """Evaluate a boolean expression against DataFrame columns.
 
     Supports: AND, OR, NOT, comparisons, crosses_above, crosses_below.
+
+    Parentheses: outer parentheses around the entire expression are stripped before
+    evaluation. This enables grammar strings like '(ema_9 crosses_above ema_21) AND
+    (ema_50_4h > ema_200_4h)' produced by W23H.1 DSL compiler MTF AND-gate.
+    Inner parentheses within subexpressions are stripped recursively via the same
+    mechanism. Complex nested parentheses (e.g. NOT (A AND B)) are handled by the
+    NOT prefix stripping below, which recurses on the inner expression.
     """
     expression = expression.strip()
+
+    # W23H.1: Strip outer parentheses if the entire expression is wrapped.
+    # e.g. '(ema_9 crosses_above ema_21)' → 'ema_9 crosses_above ema_21'
+    # Guard: only strip if the opening '(' matches the closing ')' at the very end
+    # (not if they belong to different subexpressions).
+    if expression.startswith("(") and expression.endswith(")"):
+        # Walk through to find the matching close paren for the opening
+        depth = 0
+        for i, ch in enumerate(expression):
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+            if depth == 0:
+                # The opening paren closed at position i
+                if i == len(expression) - 1:
+                    # The entire expression was wrapped in one outer paren — strip it
+                    expression = expression[1:-1].strip()
+                break
 
     # Handle NOT
     if expression.startswith("NOT "):
