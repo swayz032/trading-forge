@@ -1643,11 +1643,32 @@ export async function graduateBucketDirectly(opts: {
       // (regime = ANY(preferred_regimes)) has data on every new graduation.
       // Single-value array is the safe default; extractor v9 may emit a richer
       // multi-regime array per archetype heuristic — when it does we trust it.
-      preferredRegimes:
-        Array.isArray((overlayed.config as Record<string, unknown>)?.preferred_regimes) &&
-        ((overlayed.config as Record<string, unknown>).preferred_regimes as unknown[]).length > 0
-          ? ((overlayed.config as Record<string, unknown>).preferred_regimes as string[])
-          : [preferredRegime],
+      // W23H-postmortem (2026-05-20): expanded preferred_regimes inference.
+      // When LLM emits a multi-regime array, use it as-is. When LLM emits only
+      // a single legacy preferred_regime, apply the archetype heuristic from
+      // W23H.B to ENRICH based on entry_indicator — structural archetypes
+      // (ICT/SMC/Wyckoff/CRT) work in ALL 3 regimes by design, breakout/ORB
+      // works trending+range, mean-reversion is range-only, trend indicators
+      // are trending-only. This prevents bidirectional archetype strategies
+      // from being narrowly filtered to a single regime.
+      preferredRegimes: (() => {
+        const cfg = overlayed.config as Record<string, unknown>;
+        const llmRegimes = Array.isArray(cfg?.preferred_regimes) ? cfg.preferred_regimes as string[] : null;
+        if (llmRegimes && llmRegimes.length > 1) return llmRegimes; // trust rich LLM emission
+        const ind = String(entryIndicator || "").toLowerCase();
+        // Archetype-based default heuristic — must stay in lockstep with
+        // transcript-extractor.md v9 W23H.B archetype heuristic section.
+        const STRUCTURAL_RX = /archetype:(ict_|wyckoff_|fvg|order_block|liquidity_sweep|judas|silver_bullet|breaker|turtle_soup|power_of_3|ote|smc|cisd|mss|bos|choch|change_of_character)/;
+        const BREAKOUT_RX = /^(opening_range_breakout|atr_breakout|donchian_breakout|bollinger_breakout|session_open_breakout)$/;
+        const MEAN_REV_RX = /^(rsi_reversal|vwap_reversion|connors_rsi2|vwap_fade|stochastic_rsi)$/;
+        const TREND_RX = /^(ema_crossover|sma_crossover|dema_crossover|macd_crossover|supertrend|ichimoku_cloud)$/;
+        if (STRUCTURAL_RX.test(ind)) return ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"];
+        if (BREAKOUT_RX.test(ind)) return ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"];
+        if (MEAN_REV_RX.test(ind)) return ["RANGE_BOUND"];
+        if (TREND_RX.test(ind)) return ["TRENDING_UP", "TRENDING_DOWN"];
+        // Unknown → preserve LLM emit (or single fallback)
+        return llmRegimes && llmRegimes.length > 0 ? llmRegimes : [preferredRegime];
+      })(),
       tags: strategyTags,
     }).returning({ id: strategies.id });
 
