@@ -210,11 +210,17 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     fallback: { provider: "ollama", model: "deepseek-r1:14b" },
   },
   // transcript_extractor — long-form output (multiple strategies per video).
+  // W23H-postmortem-4 (2026-05-20): bumped 4096 → 8192. Wave 23H v9 prompt
+  // emits confirming_indicators[] + bias_timeframe + preferred_regimes[] +
+  // entry_params per strategy; multi-strategy outputs were truncating at 4096
+  // (finishReason: "length"), producing malformed JSON that the route
+  // classified as model_unavailable. JackTrades 4H+15M (the canonical MTF
+  // target) failed for this reason. GPT-5-mini supports up to 16K output.
   transcript_extractor: {
     provider: "openai",
     model: "gpt-5-mini",
     temperature: 0.3,
-    maxTokens: 4096,
+    maxTokens: 8192,
     systemPromptPath: "src/agents/transcript-extractor.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
