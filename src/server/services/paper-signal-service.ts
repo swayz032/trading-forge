@@ -19,6 +19,10 @@ import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateFo
 import { getSessionShapeScore } from "./volume-profile-service.js";
 // Wave 23H.D: per-strategy confirming_indicators evaluator
 import { evaluateConfirmingIndicators, type ConfirmingIndicator } from "./confirming-indicator-evaluator.js";
+// W23H.4: confluence-weighted sizing — replaces legacy dynamic_atr block
+import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-sizing.js";
+// W23H.4: audit row writer for sizing.confluence_multiplier_applied
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -1565,6 +1569,8 @@ export async function evaluateSignals(
     // Wave 23.C C.6: HWM for risk-derived pyramid sizing
     highWaterBalance: paperSessions.highWaterBalance,
     currentEquity: paperSessions.currentEquity,
+    // W23H.4: needed for cumulativeProfit and accountStartingFloor
+    startingCapital: paperSessions.startingCapital,
   }).from(paperSessions).where(eq(paperSessions.id, sessionId));
 
   // Skip if session doesn't exist or is paused/stopped
@@ -2841,34 +2847,132 @@ export async function evaluateSignals(
     if (riskGatePassed) {
       // ─── Context Gate: TAKE/REDUCE/SKIP ───────────────────
 
-      // P1-6(b): Dynamic ATR sizing — mirrors backtester's compute_position_sizes().
-      // When config.position_size.type === "dynamic_atr", compute contracts as:
-      //   floor(target_risk_dollars / (atr * tick_value)), minimum 1.
-      // Falls back to config.contracts for fixed sizing or missing ATR.
-      const positionSizeCfg = (config as unknown as Record<string, unknown>).position_size as
-        | { type?: string; target_risk?: number; fixed_contracts?: number }
-        | undefined;
-      let baseContracts = config.contracts;
-      if (positionSizeCfg?.type === "dynamic_atr") {
-        const currentAtrForSizing = indicators["atr_14"];
-        const spec = CONTRACT_SPECS[symbol];
-        if (currentAtrForSizing && currentAtrForSizing > 0 && spec) {
-          const targetRisk = positionSizeCfg.target_risk ?? 200;
-          const _tickValue = spec.tickValue; // retained for reference; pointValue used below
-          const atrInPoints = currentAtrForSizing; // ATR is already in price points
-          // dollar risk per contract = atr_points * point_value = atr_ticks * tick_value
-          // Using tick_value matches sizing.py: raw = target_risk / (atr * point_value)
-          // but atr here is in points so: risk = atr * point_value
-          const riskPerContract = atrInPoints * spec.pointValue;
-          if (riskPerContract > 0) {
-            baseContracts = Math.max(1, Math.floor(targetRisk / riskPerContract));
-          }
-        }
-      }
+      // W23H.4: Risk-derived sizing — replaces legacy dynamic_atr block.
+      // Calls computeRiskDerivedContracts() with full account + confluence context.
+      // Firm cap and liquidity cap are enforced INSIDE the helper (not duplicated here).
+      // Backward compat: strategies with no entry_quality (legacy) get confluence_count=1
+      // → multiplier 1.0 → identical sizing to the prior dynamic_atr behavior when
+      // position_size.type === "risk_derived_pyramid".
+      // Strategies with old "dynamic_atr" type fall through to config.contracts (no change).
+      const rawPositionSize = (config as unknown as Record<string, unknown>).position_size as Record<string, unknown> | undefined;
 
-      // P1-6(a): Apply firm contract cap (clamped to [CONTRACT_CAP_MIN, CONTRACT_CAP_MAX])
+      // Parse account state from session row (numeric columns arrive as strings from Postgres/Drizzle)
+      const accountBalance = parseFloat(sessionRow.currentEquity as string) || 50_000;
+      const accountStartingFloor = parseFloat(sessionRow.startingCapital as string) || 50_000;
+      const highWaterBalance = parseFloat(sessionRow.highWaterBalance as string) || accountBalance;
+      // cumulativeProfit = how much the account has grown above starting capital.
+      // Safe default: 0 when starting capital is absent (conservative pyramid floor).
+      const cumulativeProfit = accountBalance - accountStartingFloor;
+
+      // ATR from indicators (same source as the legacy block)
+      const atrPoints = typeof indicators["atr_14"] === "number" ? indicators["atr_14"] : 0;
+      const spec = CONTRACT_SPECS[symbol];
+      const pointDollarValue = spec?.pointValue ?? 5; // MES default; unknown symbol → $5
+
+      // Stop multiplier from strategy stop_loss config; CLAUDE.md §4 floor = 1.5
+      const stopMultiplier = typeof config.stop_loss?.multiplier === "number"
+        ? config.stop_loss.multiplier
+        : 1.5;
+
+      // Firm contract cap from firm_config lookup (same as prior P1-6(a))
       const firmCap = getFirmContractCap(sessionRow.firmId, symbol);
-      baseContracts = Math.min(baseContracts, firmCap);
+
+      // W23H.4: confluence_count = confirming_indicators.length + 1 (primary always counts).
+      // Re-read entry_quality from config here because entryQuality is scoped inside the
+      // antiSetupBlocked else-block and not visible at this level. Same derivation as Stage 2.
+      const rawConfigForSizing = config as unknown as Record<string, unknown>;
+      const entryQualityForSizing = (
+        rawConfigForSizing.entry_quality ??
+        (rawConfigForSizing.strategy as Record<string, unknown> | undefined)?.entry_quality
+      ) as { confirming_indicators?: string[] } | undefined;
+      const confluenceCount = (entryQualityForSizing?.confirming_indicators?.length ?? 0) + 1;
+
+      // Per-strategy confluence_size_multiplier_map from config (set by framework-overlay W23H.4)
+      const confluenceSizeMultiplierMap = (rawPositionSize?.confluence_size_multiplier as Record<number, number> | undefined) ?? undefined;
+
+      let baseContracts: number;
+
+      if (rawPositionSize?.type === "risk_derived_pyramid") {
+        // Full risk-derived path: build positionSizeConfig from the compiled strategy config.
+        // Fields that may be absent on older strategy rows use framework-canonical defaults
+        // (see CLAUDE.md §4 sizing spec and framework-overlay.ts).
+        const positionSizeConfig: RiskSizingInputs["positionSizeConfig"] = {
+          type: "risk_derived_pyramid",
+          base_contracts: typeof rawPositionSize.base_contracts === "number" ? rawPositionSize.base_contracts : 6,
+          tier_increment: typeof rawPositionSize.tier_increment === "number" ? rawPositionSize.tier_increment : 3,
+          tier_threshold_dollars: typeof rawPositionSize.tier_threshold_dollars === "number" ? rawPositionSize.tier_threshold_dollars : 3000,
+          personal_dll_pct: typeof rawPositionSize.personal_dll_pct === "number" ? rawPositionSize.personal_dll_pct : 0.67,
+          max_risk_pct_per_trade: typeof rawPositionSize.max_risk_pct_per_trade === "number" ? rawPositionSize.max_risk_pct_per_trade : 0.02,
+          liquidity_comfort_cap: typeof rawPositionSize.liquidity_comfort_cap === "number" ? rawPositionSize.liquidity_comfort_cap : 100,
+          topstep_account_cap_override: typeof rawPositionSize.topstep_account_cap_override === "number" ? rawPositionSize.topstep_account_cap_override : null,
+          computed_at_signal_time: true,
+        };
+
+        const sizingInputs: RiskSizingInputs = {
+          positionSizeConfig,
+          accountBalance,
+          cumulativeProfit,
+          atrPoints,
+          stopMultiplier,
+          pointDollarValue,
+          firmContractCap: firmCap,
+          // Wave 22 firm-aware fields
+          firm: (sessionRow.firmId ?? "topstep") as "topstep" | "mffu",
+          // Topstep trailing-DD: default 2000 ($50K combine per docs/prop-firm-rules-2026-topstep.md).
+          // The helper uses HWM to compute buffer; MFFU path ignores this field.
+          trailingDD: 2000,
+          highWaterBalance,
+          accountStartingFloor,
+          // W23H.4: confluence-weighted sizing
+          confluence_count: confluenceCount,
+          confluence_size_multiplier_map: confluenceSizeMultiplierMap,
+        };
+
+        const sizingResult = computeRiskDerivedContracts(sizingInputs);
+        baseContracts = Math.max(1, sizingResult.finalContracts);
+
+        // W23H.4: emit confluence multiplier audit row (best-effort, non-blocking)
+        if (sizingResult.confluenceAudit) {
+          insertAuditRow({
+            action: "sizing.confluence_multiplier_applied",
+            entityType: "strategy",
+            entityId: sessionConfig.strategyId ?? "unknown",
+            input: { sessionId, symbol, signal_direction: config.side } as Record<string, unknown>,
+            result: sizingResult.confluenceAudit as unknown as Record<string, unknown>,
+            status: "success",
+            decisionAuthority: "system",
+            correlationId: correlationId ?? null,
+          }).catch((err: unknown) => logger.warn({ err, sessionId }, "sizing.confluence_multiplier_applied audit write failed"));
+        }
+
+        logger.debug(
+          {
+            sessionId,
+            symbol,
+            confluenceCount,
+            multiplier: sizingResult.confluenceAudit?.multiplier,
+            finalContracts: sizingResult.finalContracts,
+            bindingConstraint: sizingResult.confluenceAudit?.binding_constraint,
+            rejectionReason: sizingResult.rejectionReason,
+          },
+          "W23H.4: risk-derived sizing computed",
+        );
+      } else if (rawPositionSize?.type === "dynamic_atr") {
+        // Legacy dynamic_atr path — preserve prior behavior for strategies not yet overlaid.
+        // This branch is expected to be rare; framework-overlay normalizes to risk_derived_pyramid.
+        if (atrPoints > 0 && spec) {
+          const targetRisk = typeof rawPositionSize.target_risk === "number" ? rawPositionSize.target_risk : 200;
+          const riskPerContract = atrPoints * spec.pointValue;
+          baseContracts = riskPerContract > 0
+            ? Math.min(Math.max(1, Math.floor(targetRisk / riskPerContract)), firmCap)
+            : Math.min(config.contracts, firmCap);
+        } else {
+          baseContracts = Math.min(config.contracts, firmCap);
+        }
+      } else {
+        // Fixed contracts or unknown position_size type — clamp to firm cap
+        baseContracts = Math.min(config.contracts, firmCap);
+      }
 
       let contextContracts = skipReduce
         ? Math.max(1, Math.round(baseContracts / 2))
