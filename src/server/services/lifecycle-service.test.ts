@@ -217,15 +217,20 @@ describe("LifecycleService.promoteStrategy — B5 transactional integrity", () =
     mockDb.select.mockReturnValue(mockDb._selectChain);
     mockDb._txInner.select.mockReturnValue(mockDb._txInner._selectChain);
 
-    // Restore default update chain wiring
-    const updateChainDefault = {
+    // Restore default update chain wiring.
+    // CRITICAL #2: the writeBlock now calls .update().set().where().returning({id}).
+    // The where() mock must return a fluent object that has .returning(), not a resolved Promise.
+    // strategyNames update still uses .set().where().returning() for the retired-codename path.
+    const makeUpdateChain = () => ({
       set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue([]),
-        returning: vi.fn().mockResolvedValue([{ codename: "FORGE-001" }]),
+        where: vi.fn().mockReturnValue({
+          // Default: 1 row returned — simulates successful UPDATE (no race).
+          returning: vi.fn().mockResolvedValue([{ id: "strat-uuid-1", codename: "FORGE-001" }]),
+        }),
       }),
-    };
-    mockDb.update.mockReturnValue(updateChainDefault);
-    mockDb._txInner.update.mockReturnValue(updateChainDefault);
+    });
+    mockDb.update.mockReturnValue(makeUpdateChain());
+    mockDb._txInner.update.mockReturnValue(makeUpdateChain());
 
     // Restore default insert wiring
     mockDb.insert.mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
@@ -565,14 +570,19 @@ describe("LifecycleService.promoteStrategy — FIX 3: OTel span", () => {
     mockDb.select.mockReturnValue(mockDb._selectChain);
     mockDb._txInner.select.mockReturnValue(mockDb._txInner._selectChain);
 
-    const updateChain = {
+    // CRITICAL #2: .update().set().where().returning() — where must return a fluent
+    // object (not a Promise) so .returning() can be called on it.
+    // Default: returning([]) = empty = would trigger race_blocked path.
+    // Tests that need a successful update must override with returning([{ id: "..." }]).
+    const makeSpanUpdateChain = () => ({
       set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue([]),
-        returning: vi.fn().mockResolvedValue([]),
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: "strat-uuid-1" }]),
+        }),
       }),
-    };
-    mockDb.update.mockReturnValue(updateChain);
-    mockDb._txInner.update.mockReturnValue(updateChain);
+    });
+    mockDb.update.mockReturnValue(makeSpanUpdateChain());
+    mockDb._txInner.update.mockReturnValue(makeSpanUpdateChain());
     mockDb.insert.mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
     mockDb._txInner.insert.mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
 

@@ -695,8 +695,14 @@ def _apply_trade_management(
         exit_reason = "signal"
 
         # Bar-by-bar simulation
+        # F-3 FIX: loop is exclusive of original_exit_idx.
+        # On the final bar vectorbt already recorded an exit by signal; if we
+        # checked the stop there and it fired we would override a clean signal
+        # exit with a stop price — but the position is gone by signal. Use
+        # range(..., original_exit_idx) so the last bar is accepted as-is from
+        # vectorbt (signal exit price), which is always at the bar close.
         gap_through_stop_count = 0
-        for bar in range(entry_idx + 1, original_exit_idx + 1):
+        for bar in range(entry_idx + 1, original_exit_idx):
             if bar >= len(high_np):
                 break
 
@@ -2025,6 +2031,51 @@ def run_backtest(
     if spread_multiplier != 1.0:
         slippage_arr = slippage_arr * spread_multiplier
 
+    # ─── CRITICAL #4: Build HTF cache for eligibility gate + structural TP ───
+    # Mirrors the pattern in run_class_backtest() / run_walk_forward_class().
+    # Without this, apply_eligibility_gate() and _apply_trade_management() both
+    # receive htf_cache=None — passthrough no-op mode.  With the cache, the gate
+    # evaluates bias/playbook/location/structural-TP for every DSL signal.
+    _dsl_htf_cache: Optional[dict] = None
+    _dsl_strategy_name = getattr(config, "name", "") or ""
+    try:
+        _daily_data_for_htf = load_ohlcv(
+            config.symbol, "daily",
+            request.start_date, request.end_date,
+        )
+        if len(_daily_data_for_htf) >= 200:
+            from src.engine.context.htf_context import compute_htf_context
+            _dsl_htf_cache = {}
+            _htf_ts_col = "ts_et" if "ts_et" in _daily_data_for_htf.columns else "ts_event"
+            for _day_idx in range(200, len(_daily_data_for_htf)):
+                _bar_date = _daily_data_for_htf[_htf_ts_col][_day_idx]
+                _day_key = str(_bar_date)[:10]
+                _dsl_htf_cache[_day_key] = compute_htf_context(
+                    daily_df=_daily_data_for_htf.slice(0, _day_idx),
+                    four_h_df=None,
+                    one_h_df=None,
+                    current_price=float(_daily_data_for_htf["close"][_day_idx - 1]),
+                    bar_date=_bar_date,
+                )
+            print(
+                f"  DSL backtest: built HTF cache {len(_dsl_htf_cache)} days "
+                f"for eligibility gate + structural TP",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"  DSL backtest: daily bars={len(_daily_data_for_htf)} < 200 — "
+                f"HTF cache skipped (passthrough mode)",
+                file=sys.stderr,
+            )
+    except Exception as _htf_build_err:
+        print(
+            f"  DSL backtest: HTF cache build failed ({_htf_build_err!r}) — "
+            f"eligibility gate + structural TP run in passthrough mode",
+            file=sys.stderr,
+        )
+        _dsl_htf_cache = None
+
     # ─── Eligibility gate (Wave 2.8 integration point) ─────────
     entries_np = df["entry_long"].to_numpy()
     exits_np = df["exit_long"].to_numpy()
@@ -2033,6 +2084,8 @@ def run_backtest(
             entries_np, exits_np, df,
             direction="long", symbol=config.symbol,
             firm_key=request.firm_key,
+            htf_cache=_dsl_htf_cache,
+            strategy_name=_dsl_strategy_name,
         )
         # Update DataFrame with filtered signals
         df = df.with_columns([
@@ -2047,6 +2100,8 @@ def run_backtest(
                 short_entries_np, short_exits_np, df,
                 direction="short", symbol=config.symbol,
                 firm_key=request.firm_key,
+                htf_cache=_dsl_htf_cache,
+                strategy_name=_dsl_strategy_name,
             )
             df = df.with_columns([
                 pl.Series("entry_short", short_entries_np),
@@ -2194,6 +2249,125 @@ def run_backtest(
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
 
+    # ─── CRITICAL #1: Wire E.3/E.5/E.4 DSL guards ───────────────
+    # These functions are defined in this module and tested individually but were
+    # never called from run_backtest() — they fired in class-based paths only.
+    # Fix: apply them here, just before the vectorbt call, so DSL backtests
+    # honour CLAUDE.md §4:
+    #   E.3 — ATR stop ceiling (14pt MES / 40pt MNQ / 25-tick MCL)
+    #   E.5 — 15:55 ET hard time-stop
+    #   E.4 — 67% personal DLL halt + 95% force-close
+    #
+    # Inputs at this point are fully rolled (next-bar fill applied) and sized.
+    # We modify the pandas entry/exit Series in-place before vbt.Portfolio runs.
+    _dsl_guards_meta: dict = {
+        "stop_ceiling_skips": 0,
+        "time_stop_exits": 0,
+        "dll_halt_blocks": 0,
+    }
+    try:
+        _guard_atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 1.0)
+        _guard_close_np = df["close"].to_numpy()
+        _guard_high_np = df["high"].to_numpy() if "high" in df.columns else _guard_close_np
+        _guard_low_np = df["low"].to_numpy() if "low" in df.columns else _guard_close_np
+
+        # ts_et is preferred (DST-safe); fall back to ts_event UTC strings.
+        _guard_ts = df["ts_et"].to_list() if "ts_et" in df.columns else (
+            df["ts_event"].to_list() if "ts_event" in df.columns else None
+        )
+        _guard_ts_et = df["ts_et"].to_list() if "ts_et" in df.columns else None
+
+        _guard_entry_long = entries_pd.to_numpy().astype(bool)
+        _guard_exit_long = df["exit_long"].to_numpy().astype(bool)
+        _guard_entry_short = short_entries_pd.to_numpy().astype(bool)
+        _guard_exit_short = (
+            df["exit_short"].to_numpy().astype(bool)
+            if "exit_short" in df.columns
+            else np.zeros(len(_guard_entry_long), dtype=bool)
+        )
+
+        _guard_stop_mult = float(getattr(config.stop_loss, "multiplier", 1.5)) if hasattr(config, "stop_loss") and config.stop_loss else 1.5
+
+        # E.3 + E.5
+        (
+            _guard_entry_long,
+            _guard_exit_long,
+            _guard_entry_short,
+            _guard_exit_short,
+            _dsl_sl_meta,
+        ) = _apply_dsl_stop_loss_and_time_stop(
+            _guard_entry_long,
+            _guard_exit_long,
+            _guard_entry_short,
+            _guard_exit_short,
+            _guard_high_np,
+            _guard_low_np,
+            _guard_atr_np,
+            _guard_ts,
+            stop_multiplier=_guard_stop_mult,
+            symbol=config.symbol,
+            close_np=_guard_close_np,
+            ts_et_timestamps=_guard_ts_et,
+        )
+        _dsl_guards_meta["stop_ceiling_skips"] = len(_dsl_sl_meta.get("skipped_trades", []))
+        _dsl_guards_meta["time_stop_exits"] = _dsl_sl_meta.get("time_stop_exits", 0)
+
+        if _dsl_guards_meta["stop_ceiling_skips"] > 0 or _dsl_guards_meta["time_stop_exits"] > 0:
+            print(
+                f"[DSL guards] E.3 stop_ceiling_skips={_dsl_guards_meta['stop_ceiling_skips']} "
+                f"E.5 time_stop_exits={_dsl_guards_meta['time_stop_exits']}",
+                file=sys.stderr,
+            )
+
+        # E.4 — DLL halt.  Firm DLL comes from firm_config; default $1000 (Topstep).
+        _guard_firm_dll = 1000.0
+        if request.firm_key:
+            from src.engine.firm_config import FIRM_RULES as _guard_firm_rules
+            _guard_firm_dll = _guard_firm_rules.get(request.firm_key, {}).get("daily_loss_limit") or 1000.0
+        _guard_dll_pct = float(os.environ.get("DLL_HALT_PCT", "0.67"))
+
+        _guard_ts_arr = np.array(_guard_ts if _guard_ts is not None else [""] * len(_guard_entry_long))
+
+        _guard_entry_long, _guard_entry_short, _dll_meta = _apply_dll_halt_to_entries(
+            _guard_entry_long,
+            _guard_entry_short,
+            _guard_exit_long,
+            _guard_exit_short,
+            _guard_high_np,
+            _guard_low_np,
+            _guard_close_np,
+            _guard_atr_np,
+            _guard_ts_arr,
+            spec.point_value,
+            sizes_clean,
+            commission,
+            personal_dll_pct=_guard_dll_pct,
+            firm_dll=_guard_firm_dll,
+        )
+        _dsl_guards_meta["dll_halt_blocks"] = _dll_meta.get("entries_suppressed", 0)
+
+        if _dsl_guards_meta["dll_halt_blocks"] > 0:
+            print(
+                f"[DSL guards] E.4 dll_halt_blocks={_dsl_guards_meta['dll_halt_blocks']} "
+                f"(personal_dll={_guard_firm_dll * _guard_dll_pct:.0f})",
+                file=sys.stderr,
+            )
+
+        # Write guard-modified arrays back into the pandas Series that vectorbt reads.
+        entries_pd = pd.Series(_guard_entry_long, index=entries_pd.index)
+        exits_pd = pd.Series(_guard_exit_long, index=exits_pd.index)
+        if "entry_short" in df.columns:
+            short_entries_pd = pd.Series(_guard_entry_short, index=short_entries_pd.index)
+            short_exits_pd = pd.Series(_guard_exit_short, index=short_exits_pd.index)
+
+    except Exception as _dsl_guard_err:
+        # Guards are fail-safe: if anything goes wrong, log and continue without them.
+        # The backtest still runs; it just won't have E.3/E.4/E.5 enforcement.
+        print(
+            f"[DSL guards] ERROR — guards skipped (non-fatal): {_dsl_guard_err!r}",
+            file=sys.stderr,
+        )
+
     # ─── Run vectorbt Portfolio (long + short) ────────────────
     # vectorbt handles SIGNAL TIMING only — no slippage/fees.
     # We compute all P&L ourselves with correct futures math:
@@ -2280,7 +2454,7 @@ def run_backtest(
         try:
             vbt_managed_trades = _apply_trade_management(
                 trades_records, high_np, low_np, vbt_close_np, vbt_atr_np,
-                spec, None, df, open_np=vbt_open_np,
+                spec, _dsl_htf_cache, df, open_np=vbt_open_np,
             )
             vbt_gap_through_count = sum(m.get("gap_through_stop_count", 0) for m in vbt_managed_trades)
             if vbt_gap_through_count > 0:
@@ -2867,6 +3041,14 @@ def run_backtest(
             # W23H.3: count of entry signals masked by allowed_entry_windows (0 when no windows configured)
             "skipped_outside_window_count": skipped_outside_window_count,
         },
+        # CRITICAL #1 — DSL guard summary (E.3/E.4/E.5 enforcement).
+        # Additive field: downstream consumers that don't read it are unaffected.
+        # - stop_ceiling_skips: entries killed by ATR stop > ceiling (E.3)
+        # - time_stop_exits:    exits set by 15:55 ET hard-flat (E.5)
+        # - dll_halt_blocks:    entries suppressed by personal-DLL breach (E.4)
+        # All counts are 0 when guards are not applicable (e.g. unit-test data
+        # that has no 15:55 bar, or ATR always under ceiling).
+        "dsl_guards": _dsl_guards_meta,
     }
 
     # ─── Pass B-2: Invariant Harness (always runs — cheap pure validation) ───

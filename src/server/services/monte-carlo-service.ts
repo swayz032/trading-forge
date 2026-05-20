@@ -10,7 +10,7 @@
 
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { backtests, monteCarloRuns, auditLog, strategies, strategyExports } from "../db/schema.js";
+import { backtests, backtestTrades, monteCarloRuns, auditLog, strategies, strategyExports } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 import { runMatrix } from "./matrix-backtest-service.js";
@@ -67,7 +67,7 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
   mcSpan.setAttribute("backtestId", backtestId);
   mcSpan.setAttribute("numSimulations", options.numSimulations ?? 10_000);
 
-  // Fetch backtest data (trades, daily_pnls, equity_curve)
+  // Fetch backtest data (equity_curve, daily_pnls) + individual trades (separate table)
   const [bt] = await db
     .select()
     .from(backtests)
@@ -80,6 +80,41 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
 
   if (bt.status !== "completed") {
     throw new Error(`Backtest ${backtestId} is not completed (status: ${bt.status})`);
+  }
+
+  // Critical #5: query individual trade records (backtest_trades table) and extract pnl.
+  // Individual trades give the true bootstrap distribution.  Sending daily_pnls as
+  // "trades" collapses 180 trades → 60 daily aggregates, smoothing the distribution
+  // and systematically understating drawdowns.
+  const rawTrades = await db
+    .select({ pnl: backtestTrades.pnl })
+    .from(backtestTrades)
+    .where(eq(backtestTrades.backtestId, backtestId));
+
+  const tradePnls: number[] = rawTrades
+    .map((t) => (t.pnl != null ? Number(t.pnl) : null))
+    .filter((v): v is number => v !== null && isFinite(v));
+
+  // Fall back to daily_pnls when trade records are absent or too sparse (< 30).
+  // Emit a structured warning event so the operator can see this in SSE.
+  const MIN_TRADE_COUNT = 30;
+  let tradesForMC: number[];
+  let tradesFallbackUsed = false;
+  if (tradePnls.length >= MIN_TRADE_COUNT) {
+    tradesForMC = tradePnls;
+  } else {
+    tradesFallbackUsed = true;
+    tradesForMC = (bt.dailyPnls as number[] | null) ?? [];
+    logger.warn(
+      { backtestId, tradeCount: tradePnls.length, minRequired: MIN_TRADE_COUNT },
+      "monte_carlo.trades_fallback_used: backtest_trades too sparse — falling back to daily_pnls for MC bootstrap",
+    );
+    broadcastSSE("monte_carlo.trades_fallback_used", {
+      backtestId,
+      tradeCount: tradePnls.length,
+      minRequired: MIN_TRADE_COUNT,
+      message: "MC bootstrap using daily P&L aggregates (trade records absent or < 30). Drawdown estimates may be understated.",
+    });
   }
 
   // Insert pending MC row (use pre-generated ID if provided to avoid race conditions).
@@ -142,8 +177,11 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
       initial_capital: options.initialCapital ?? 50_000.0,
       max_paths_to_store: options.maxPathsToStore ?? 100,
       ruin_threshold: options.ruinThreshold ?? 0.0,
-      trades: bt.dailyPnls ?? [], // Daily P&Ls used as trade proxy if no individual trades
-      daily_pnls: bt.dailyPnls ?? [],
+      // Critical #5: send individual trade P&Ls (from backtest_trades table) not daily aggregates.
+      // Falls back to daily_pnls only when trade records are absent/sparse (< 30).
+      trades: tradesForMC,
+      trades_fallback_used: tradesFallbackUsed,
+      daily_pnls: (bt.dailyPnls as number[] | null) ?? [],
       // Normalize equity_curve: handle both flat number[] and {time,value}[] formats
       equity_curve: Array.isArray(bt.equityCurve)
         ? bt.equityCurve.map((pt: any) => typeof pt === "number" ? pt : pt.value ?? 0)
@@ -199,6 +237,9 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
         num_simulations: result.num_simulations,
         probability_of_ruin: result.risk_metrics.probability_of_ruin,
         gpu_accelerated: result.gpu_accelerated,
+        // Critical #5: record whether trade-level data was available.
+        trades_fallback_used: tradesFallbackUsed,
+        trade_count: tradePnls.length,
       },
       status: "success",
       durationMs: result.execution_time_ms,

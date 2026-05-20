@@ -29,6 +29,7 @@ import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
 import { strategyPromotions } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
+import { killSwitch } from "../production/kill-switch.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -407,6 +408,9 @@ export class LifecycleService {
         .select({
           id: backtests.id,
           forgeScore: backtests.forgeScore,
+          // CRITICAL #6: read resultExtras for invariants.overall_passed + parity_shadow.passed
+          resultExtras: backtests.resultExtras,
+          createdAt: backtests.createdAt,
         })
         .from(backtests)
         .where(
@@ -583,6 +587,126 @@ export class LifecycleService {
       logger.warn({ strategyId: id, err: evidenceErr }, "promoteStrategy: evidence lookup failed (audit row will lack backtestId/forgeScore/mcSurvivalRate)");
     }
 
+    // ── HIGH #14: Backtest staleness gate ───────────────────────────────────
+    // Promotion on a months-old backtest that doesn't reflect current market regime
+    // is a trust violation. Default BACKTEST_STALENESS_DAYS=30; env-configurable.
+    // Applied to all paths that consume a backtest (i.e., when promotionEvidence.backtestId exists).
+    if (promotionEvidence.backtestId) {
+      const stalenessDays = parseInt(process.env.BACKTEST_STALENESS_DAYS ?? "30", 10);
+      // latestBtEvidence.createdAt is available via the extended select above.
+      // We re-fetch from promotionEvidence which doesn't store createdAt — we need to
+      // carry the createdAt alongside. We stored it in latestBtEvidence but not promotionEvidence.
+      // Read it from the evidence again inline (cheap — single row by PK).
+      try {
+        const [btAge] = await (tx ?? db)
+          .select({ createdAt: backtests.createdAt })
+          .from(backtests)
+          .where(eq(backtests.id, promotionEvidence.backtestId))
+          .limit(1);
+
+        if (btAge) {
+          const ageMs = Date.now() - new Date(btAge.createdAt).getTime();
+          const ageDays = ageMs / (1000 * 60 * 60 * 24);
+          if (ageDays > stalenessDays) {
+            const error =
+              `lifecycle.backtest_stale: latest backtest for strategy ${id} is ${ageDays.toFixed(1)} days old ` +
+              `(limit: ${stalenessDays}d via BACKTEST_STALENESS_DAYS). Re-run backtest before promoting.`;
+            logger.warn({ strategyId: id, fromState, toState, ageDays: ageDays.toFixed(1), stalenessDays }, error);
+            insertAuditRow({
+              action: "lifecycle.backtest_stale",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "failure",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: {
+                reason: "backtest_too_old",
+                age_days: parseFloat(ageDays.toFixed(1)),
+                limit_days: stalenessDays,
+                backtest_created_at: btAge.createdAt,
+              } as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.backtest_stale audit row write failed"));
+            return { success: false, error };
+          }
+        }
+      } catch (stalenessErr) {
+        // Non-blocking infra failure: log and continue (fail-open; stale backtest is
+        // a quality gate, not a safety gate — don't block on DB read errors).
+        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: stalenessErr }, "lifecycle.backtest_stale: age check threw (non-blocking — promotion continues)");
+      }
+    }
+
+    // ── CRITICAL #6: Truthiness gate: resultExtras invariants + parity shadow ─
+    // Applies to TESTING → PAPER only (the trust boundary before paper trading).
+    // invariants.overall_passed=false → BLOCK (hard gate: curvefitting invariant harness)
+    // parity_shadow.passed=false     → ADVISORY WARN (env-gated; not all backtests have it)
+    if (fromState === "TESTING" && toState === "PAPER" && promotionEvidence.backtestId) {
+      try {
+        const [btExtras] = await (tx ?? db)
+          .select({ resultExtras: backtests.resultExtras })
+          .from(backtests)
+          .where(eq(backtests.id, promotionEvidence.backtestId))
+          .limit(1);
+
+        if (btExtras?.resultExtras) {
+          const extras = btExtras.resultExtras as Record<string, unknown>;
+
+          // Invariant harness (B-2): hard block if overall_passed=false
+          const invariants = extras.invariants as Record<string, unknown> | undefined;
+          if (invariants?.overall_passed === false) {
+            const criticalFailures = (invariants.critical_failures as unknown[]) ?? [];
+            const error =
+              `lifecycle.invariant_blocked: invariant harness FAILED for strategy ${id} — ` +
+              `promotion to PAPER blocked. Critical failures: ${JSON.stringify(criticalFailures)}`;
+            logger.warn({ strategyId: id, fromState, toState, criticalFailures }, error);
+            insertAuditRow({
+              action: "lifecycle.invariant_blocked",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "failure",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: {
+                reason: "invariant_harness_failed",
+                critical_failures: criticalFailures,
+                invariants_summary: invariants,
+              } as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.invariant_blocked audit row write failed"));
+            return { success: false, error };
+          }
+
+          // Parity shadow (B-1): advisory warn only (env-gated — not all backtests have it)
+          const parityShadow = extras.parity_shadow as Record<string, unknown> | undefined;
+          if (parityShadow && parityShadow.passed === false) {
+            logger.warn(
+              { strategyId: id, fromState, toState, parityShadow },
+              "lifecycle.parity_shadow_warn: parity shadow check reported passed=false — ADVISORY ONLY (promotion continues). Investigate paper/backtest drift before live deployment.",
+            );
+            insertAuditRow({
+              action: "lifecycle.parity_shadow_warn",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "success",  // advisory — not blocking
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: {
+                reason: "parity_shadow_failed_advisory",
+                parity_shadow: parityShadow,
+                note: "Parity shadow is env-gated; not all backtests have it. Investigate before live deployment.",
+              } as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.parity_shadow_warn audit row write failed"));
+          }
+        }
+      } catch (extrasErr) {
+        // Non-blocking: truthiness read failure must never abort a promotion.
+        // Log at WARN — this is a trust gate and missing data should be visible.
+        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: extrasErr }, "lifecycle.invariant_gate: resultExtras read failed (non-blocking — promotion continues)");
+      }
+    }
+
     // ── A4 Frankenstein Gate: TESTING → PAPER hard block ────────────────────
     // The Frankenstein test detects lookahead / future-data bugs by checking
     // whether the strategy shows edge on shuffled/GBM data. If it does, the
@@ -730,15 +854,39 @@ export class LifecycleService {
     // If a caller provided a tx we run inline against it (caller owns commit/rollback);
     // otherwise we open a fresh db.transaction() for these writes.
     const writeBlock = async (txCtx: typeof db): Promise<void> => {
-      // Update strategy lifecycle state
-      await txCtx
+      // CRITICAL #2: Add AND lifecycleState = fromState to the WHERE clause.
+      // Two concurrent callers (cron + manual API) can both pass the pre-tx state read
+      // and both attempt to UPDATE. With the state guard, only the first writer succeeds;
+      // the second gets back an empty RETURNING array and we roll back with a conflict error.
+      const updatedRows = await txCtx
         .update(strategies)
         .set({
           lifecycleState: toState,
           lifecycleChangedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(strategies.id, id));
+        .where(and(eq(strategies.id, id), eq(strategies.lifecycleState, fromState)))
+        .returning({ id: strategies.id });
+
+      if (!updatedRows || updatedRows.length === 0) {
+        // Another concurrent caller already transitioned this strategy out of fromState.
+        // Write a race_blocked audit row for observability then throw so the transaction rolls back.
+        await txCtx.insert(auditLog).values({
+          action: "lifecycle.race_blocked",
+          entityType: "strategy",
+          entityId: id,
+          input: { fromState, toState },
+          result: {
+            reason: "concurrent_promotion: strategy was no longer in fromState when UPDATE executed",
+            actor: options.actor ?? "system",
+            correlationId: options.correlationId ?? null,
+          },
+          status: "failure",
+          decisionAuthority: "gate",
+          correlationId: options.correlationId ?? null,
+        });
+        throw new Error(`lifecycle.race_blocked: strategy ${id} was no longer in '${fromState}' when the update executed — concurrent promotion detected`);
+      }
 
       // Retire Forge name when strategy transitions to RETIRED.
       // Must be inside the transaction so name-retire and lifecycle update commit together.
@@ -830,14 +978,26 @@ export class LifecycleService {
       }
     };
 
-    if (tx) {
-      // Caller owns the transaction — run inline, do not open a new tx.
-      await writeBlock(tx);
-    } else {
-      // Standalone path — open a transaction. On throw, the entire unit rolls back.
-      await db.transaction(async (innerTx) => {
-        await writeBlock(innerTx as unknown as typeof db);
-      });
+    try {
+      if (tx) {
+        // Caller owns the transaction — run inline, do not open a new tx.
+        await writeBlock(tx);
+      } else {
+        // Standalone path — open a transaction. On throw, the entire unit rolls back.
+        await db.transaction(async (innerTx) => {
+          await writeBlock(innerTx as unknown as typeof db);
+        });
+      }
+    } catch (writeErr) {
+      // CRITICAL #2: race_blocked is a clean conflict — surface as { success: false }
+      // rather than propagating an exception so callers can handle it gracefully.
+      const errMsg = writeErr instanceof Error ? writeErr.message : String(writeErr);
+      if (errMsg.startsWith("lifecycle.race_blocked:")) {
+        logger.warn({ strategyId: id, fromState, toState, correlationId: options.correlationId }, errMsg);
+        return { success: false, error: errMsg };
+      }
+      // All other transaction errors propagate normally (atomicity guarantee).
+      throw writeErr;
     }
 
     // ── Post-commit side effects ────────────────────────────────────────────
@@ -1029,6 +1189,14 @@ export class LifecycleService {
    */
   async checkAutoPromotions(context?: { correlationId?: string }): Promise<string[]> {
     const correlationId = context?.correlationId ?? null;
+
+    // HIGH #13: killSwitch is the FIRST gate on every lifecycle-mutating entry path.
+    // CLAUDE.md §12 mandates this; lifecycle mutations are entry paths.
+    if (await killSwitch.isHaltedForProduction()) {
+      logger.warn({ correlationId, fn: "checkAutoPromotions" }, "Skipping — killSwitch halted");
+      return [];
+    }
+
     const promoted: string[] = [];
 
     // ──────────────────────────────────────────────────────────────
@@ -1127,6 +1295,35 @@ export class LifecycleService {
 
         const tier = latestBt.tier;
         if (!tier || tier === "REJECTED") continue;
+
+        // HIGH #14: Backtest staleness gate — TESTING → PAPER auto-check path.
+        // Default BACKTEST_STALENESS_DAYS=30; env-configurable.
+        {
+          const stalenessDays = parseInt(process.env.BACKTEST_STALENESS_DAYS ?? "30", 10);
+          const ageMs = Date.now() - new Date(latestBt.createdAt).getTime();
+          const ageDays = ageMs / (1000 * 60 * 60 * 24);
+          if (ageDays > stalenessDays) {
+            logger.warn({ strategyId: s.id, ageDays: ageDays.toFixed(1), stalenessDays }, "TESTING → PAPER blocked (auto-check): backtest too old");
+            await db.insert(auditLog).values({
+              action: "lifecycle.backtest_stale",
+              entityType: "strategy",
+              entityId: s.id,
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: {
+                reason: "backtest_too_old",
+                age_days: parseFloat(ageDays.toFixed(1)),
+                limit_days: stalenessDays,
+                backtest_created_at: latestBt.createdAt,
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale auto-check audit insert failed (non-blocking)");
+            });
+            continue;
+          }
+        }
 
         // Check MC survival rate > 0.70
         const [mcRun] = await db
@@ -1480,7 +1677,7 @@ export class LifecycleService {
         // that no longer matches reality. Block until human revalidates.
         try {
           const [latestBt] = await db
-            .select({ propCompliance: backtests.propCompliance })
+            .select({ propCompliance: backtests.propCompliance, createdAt: backtests.createdAt })
             .from(backtests)
             .where(
               and(
@@ -1490,6 +1687,34 @@ export class LifecycleService {
             )
             .orderBy(desc(backtests.createdAt))
             .limit(1);
+
+          // HIGH #14: Backtest staleness gate — PAPER → DEPLOY_READY auto-check path.
+          if (latestBt) {
+            const stalenessDays = parseInt(process.env.BACKTEST_STALENESS_DAYS ?? "30", 10);
+            const ageMs = Date.now() - new Date(latestBt.createdAt).getTime();
+            const ageDays = ageMs / (1000 * 60 * 60 * 24);
+            if (ageDays > stalenessDays) {
+              logger.warn({ strategyId: s.id, ageDays: ageDays.toFixed(1), stalenessDays }, "PAPER → DEPLOY_READY blocked (auto-check): backtest too old");
+              await db.insert(auditLog).values({
+                action: "lifecycle.backtest_stale",
+                entityType: "strategy",
+                entityId: s.id,
+                status: "failure",
+                decisionAuthority: "gate",
+                input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                result: {
+                  reason: "backtest_too_old",
+                  age_days: parseFloat(ageDays.toFixed(1)),
+                  limit_days: stalenessDays,
+                  backtest_created_at: latestBt.createdAt,
+                },
+                correlationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale PAPER audit insert failed (non-blocking)");
+              });
+              continue;  // skip to next strategy — inside the outer try
+            }
+          }
 
           if (latestBt?.propCompliance) {
             const passingFirmNames = passingFirmNamesFromCompliance(latestBt.propCompliance);
@@ -1860,6 +2085,13 @@ export class LifecycleService {
    */
   async checkAutoDemotions(context?: { correlationId?: string }): Promise<string[]> {
     const correlationId = context?.correlationId;
+
+    // HIGH #13: killSwitch is the FIRST gate on every lifecycle-mutating entry path.
+    if (await killSwitch.isHaltedForProduction()) {
+      logger.warn({ correlationId, fn: "checkAutoDemotions" }, "Skipping — killSwitch halted");
+      return [];
+    }
+
     const demoted: string[] = [];
 
     const deployedStrategies = await db
@@ -1989,6 +2221,13 @@ export class LifecycleService {
     errors: number;
   }> {
     const correlationId = context?.correlationId;
+
+    // HIGH #13: killSwitch is the FIRST gate on every lifecycle-mutating entry path.
+    if (await killSwitch.isHaltedForProduction()) {
+      logger.warn({ correlationId, fn: "checkPilotAutoPromotions" }, "Skipping — killSwitch halted");
+      return { swept: 0, promoted: 0, killed: 0, pending: 0, errors: 0 };
+    }
+
     const PILOT_REQUIRED_SESSIONS = 5;
     const PILOT_MIN_SHARPE = 1.0;
 

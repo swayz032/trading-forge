@@ -495,6 +495,7 @@ npm run audit:n8n                        # n8n drift detector
 | `MAX_CONCURRENT_BACKTESTS` | `3` | POST /api/backtests returns HTTP 429 when this many are in-flight |
 | `WF_MAX_WORKERS` | `2` | Max parallel walk-forward windows per backtest subprocess |
 | `BACKTEST_TIMEOUT_MS` | `1800000` (30 min) | Individual backtest hard timeout |
+| `BACKTEST_STALENESS_DAYS` | `30` | Promotion blocked if latest backtest is older than this many days (lifecycle TESTING→PAPER and PAPER→DEPLOY_READY gates); write `lifecycle.backtest_stale` audit row and ask operator to re-run |
 
 **Load math:** 3 concurrent × 2 WF workers = 6 Python subprocesses. At ~400 MB each = ~2.4 GB for backtest workers — safe on the 16 GB Skytech tower.
 

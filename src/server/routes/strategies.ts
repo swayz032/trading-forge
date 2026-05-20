@@ -792,7 +792,9 @@ strategyRoutes.post("/lifecycle/check", async (req, res) => {
 //   ?bury=false   skip pre-delete graveyard burial for RETIRED/DECLINING
 //                 (default behaviour: bury before delete so failure modes
 //                 stay queryable for future scout/critic comparisons)
-const PROTECTED_LIFECYCLE_STATES: ReadonlyArray<string> = ["DEPLOYED", "PAPER", "DEPLOY_READY"];
+// CRITICAL #3: PILOT is a live 1-contract canary — deleting it leaves the account
+// with an open position and no controlling record. It MUST be in this set.
+const PROTECTED_LIFECYCLE_STATES: ReadonlyArray<string> = ["DEPLOYED", "PAPER", "DEPLOY_READY", "PILOT"];
 const BURY_BEFORE_DELETE_STATES: ReadonlyArray<string> = ["RETIRED", "DECLINING"];
 
 strategyRoutes.delete("/:id", async (req, res) => {

@@ -242,7 +242,8 @@ def block_bootstrap(
 
     n_trades = len(trades)
     p = 1.0 / expected_block_length
-    rng = np.random.default_rng(seed)
+    # F-1: Use PCG64DXSM (same family as every other MC path) instead of SFC64.
+    rng = create_authoritative_rng(seed)[0]
 
     # GPU path: use CuPy vectorized bootstrap when available
     if GPU_AVAILABLE and n_sims >= 1000:
@@ -358,7 +359,8 @@ def stress_test_trades(
         win_indices = np.where(wins_mask)[0]
         n_flip = int(len(win_indices) * win_rate_reduction)
         if n_flip > 0:
-            rng = np.random.default_rng(seed)
+            # F-2: Use PCG64DXSM for RNG family consistency across all MC paths.
+            rng = create_authoritative_rng(seed)[0]
             flip_indices = rng.choice(win_indices, size=n_flip, replace=False)
             # Flip to a loss equal to the median loss
             median_loss = np.median(trades[losses_mask]) if np.any(losses_mask) else -100.0
@@ -403,7 +405,8 @@ def inject_synthetic_stress(
         catastrophic_loss = min(catastrophic_loss, -max_loss_cap)
 
     # Determine injection points
-    rng = np.random.default_rng(seed)
+    # F-2: Use PCG64DXSM for RNG family consistency across all MC paths.
+    rng = create_authoritative_rng(seed)[0]
     n_events = rng.binomial(n_trades, frequency)
     if n_events > 0:
         injection_indices = rng.choice(n_trades, size=n_events, replace=False)
@@ -478,6 +481,7 @@ def simulate_firm_survival(
     max_dd = firm["max_drawdown"]
     profit_target = firm["profit_target"]
     is_realtime = firm["trailing"] == "realtime"
+    is_eod_trailing = firm["trailing"] == "eod"
     locks_at_start = firm.get("locks_at_start", False)
     # Map consistency rule to max single-day ratio
     _consistency_map = {
@@ -573,23 +577,48 @@ def simulate_firm_survival(
             substep_pnl = day_pnl / intraday_substeps
             for _sub in range(intraday_substeps):
                 balance += substep_pnl
-                peak_equity = max(peak_equity, balance)
 
-                # Trailing drawdown floor
-                if locks_at_start:
-                    floor = max(peak_equity - max_dd, account_size - max_dd)
+                # F-5: EOD trailing — floor must use the PRIOR day's EOD peak
+                # (peak_equity_prev_eod), NOT today's intra-step updated peak.
+                # Updating peak_equity before the floor check inflates the floor
+                # by the current day's gain, making the trailing DD appear more
+                # lenient than the actual Topstep rule.  We apply the HWM update
+                # after the breach check only when using EOD trailing.
+                if is_eod_trailing:
+                    # peak_equity holds the prev-EOD value; don't update yet.
+                    if locks_at_start:
+                        floor = max(peak_equity - max_dd, account_size - max_dd)
+                    else:
+                        floor = peak_equity - max_dd
+                    dd_from_peak = peak_equity - balance
+                    max_drawdowns_all[sim] = max(max_drawdowns_all[sim], dd_from_peak)
+                    if balance <= floor and not breached:
+                        breached = True
+                        breach_reason = "trailing_dd"
+                        if granularity == "day" and daily_loss_limit is not None and day_pnl <= -daily_loss_limit:
+                            breach_reason = "daily_loss_limit"
+                        break
+                    # Defer HWM ratchet to end-of-day (after floor check)
+                    peak_equity = max(peak_equity, balance)
                 else:
-                    floor = peak_equity - max_dd
+                    # Realtime / other trailing: ratchet HWM immediately (intraday)
+                    peak_equity = max(peak_equity, balance)
 
-                dd_from_peak = peak_equity - balance
-                max_drawdowns_all[sim] = max(max_drawdowns_all[sim], dd_from_peak)
+                    # Trailing drawdown floor
+                    if locks_at_start:
+                        floor = max(peak_equity - max_dd, account_size - max_dd)
+                    else:
+                        floor = peak_equity - max_dd
 
-                if balance <= floor and not breached:
-                    breached = True
-                    breach_reason = "trailing_dd"
-                    if granularity == "day" and daily_loss_limit is not None and day_pnl <= -daily_loss_limit:
-                        breach_reason = "daily_loss_limit"
-                    break
+                    dd_from_peak = peak_equity - balance
+                    max_drawdowns_all[sim] = max(max_drawdowns_all[sim], dd_from_peak)
+
+                    if balance <= floor and not breached:
+                        breached = True
+                        breach_reason = "trailing_dd"
+                        if granularity == "day" and daily_loss_limit is not None and day_pnl <= -daily_loss_limit:
+                            breach_reason = "daily_loss_limit"
+                        break
 
             if breached:
                 break
@@ -1034,7 +1063,11 @@ def run_monte_carlo(
     # 8.4 — Per-firm survival simulation
     firm_survival: Optional[dict[str, dict]] = None
     if request.firms:
-        granularity = "trade" if request.method == "trade_resample" else "day"
+        # F-4: "both" mode uses trade_paths (line 992), so granularity must be
+        # "trade" — not "day".  Passing "day" to simulate_firm_survival with
+        # trade-level paths causes daily-loss-limit enforcement per trade instead
+        # of per day, understating drawdown risk.
+        granularity = "trade" if request.method in ("trade_resample", "both") else "day"
         # Fix 4: propagate actual backtest commission (round-trip) to survival sim.
         # MonteCarloRequest.backtest_commission_rt is optional — getattr with None fallback
         # ensures backward compat if callers haven't updated to pass the new field yet.
