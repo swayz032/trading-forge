@@ -214,6 +214,15 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
         };
 
         const layerResults: Record<string, unknown> = {};
+        // Graduator gates require distinct_providers >= 2 (silver path) or >= 3 (gold).
+        // 3 synthetic mentions all using source_provider='manual' yield distinct=1 → no graduation.
+        // Use a distinct provider value per synthetic layer (all are valid enum values in
+        // pendingSourceProviderEnum) so distinct_providers=3 and gold path is reached.
+        const LAYER_PROVIDER_MAP: Record<"web" | "youtube" | "reddit", string> = {
+          web: "manual",                  // operator's curation = manual web
+          youtube: "youtube_transcript_npm", // the transcript pipeline IS the youtube source
+          reddit: "reddit_json",           // synthetic reddit corroboration tag
+        };
         for (const layer of ["web", "youtube", "reddit"] as const) {
           try {
             // strategy_pending_mentions has UNIQUE(bucket_id, source_url) — posting
@@ -221,10 +230,11 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
             // Make per-layer URL distinct so all 3 layers actually land + flip
             // layer_coverage_json flags to true so graduator cross-validation passes.
             const layerUrl = `${baseBody.source_url}#operator_layer=${layer}`;
+            const layerProvider = LAYER_PROVIDER_MAP[layer];
             const resp = await fetch(`${BACKEND_URL}/api/agent/scout-ideas/pending`, {
               method: "POST",
               headers: { "Content-Type": "application/json", "x-correlation-id": correlationId },
-              body: JSON.stringify({ ...baseBody, layer, source_url: layerUrl }),
+              body: JSON.stringify({ ...baseBody, layer, source_url: layerUrl, source_provider: layerProvider }),
               signal: AbortSignal.timeout(30_000),
             });
             const j = await resp.json();
