@@ -114,12 +114,67 @@ export interface PythonRunnerOptions {
   correlationId?: string;
 }
 
+// ─── Truthiness sentinel payloads ────────────────────────────────────────────
+// B-1 (parity-shadow) and B-2 (invariant-harness) emit structured sentinel
+// lines to stderr so the Node runner can capture and propagate them without
+// relying on Python modifying its stdout JSON contract.
+//
+// Format: "<PREFIX> <JSON>"
+// PREFIX must be one of the two constants below.
+//
+// Both are collected in truthinessEvents on the process-level accumulator and
+// returned by runPythonModule alongside the normal stdout result. backtest-service
+// consumes them to write audit_log rows and fire Discord alerts.
+
+export const PARITY_SHADOW_SENTINEL = "PARITY_SHADOW_DRIFT_JSON";
+export const INVARIANT_FAILURE_SENTINEL = "INVARIANT_FAILURE_JSON";
+
+export interface TruthinessSentinelEvent {
+  type: "parity_shadow_drift" | "invariant_failure";
+  payload: Record<string, unknown>;
+}
+
+/**
+ * Parse a single stderr line for a truthiness sentinel.
+ * Returns a structured event if the line matches, null otherwise.
+ */
+export function parseTruthinessSentinel(line: string): TruthinessSentinelEvent | null {
+  if (line.startsWith(PARITY_SHADOW_SENTINEL + " ")) {
+    try {
+      const json = line.slice(PARITY_SHADOW_SENTINEL.length + 1);
+      const payload = JSON.parse(json) as Record<string, unknown>;
+      return { type: "parity_shadow_drift", payload };
+    } catch {
+      logger.warn({ line: line.slice(0, 120) }, "python-runner: PARITY_SHADOW_DRIFT_JSON sentinel found but JSON parse failed");
+      return null;
+    }
+  }
+  if (line.startsWith(INVARIANT_FAILURE_SENTINEL + " ")) {
+    try {
+      const json = line.slice(INVARIANT_FAILURE_SENTINEL.length + 1);
+      const payload = JSON.parse(json) as Record<string, unknown>;
+      return { type: "invariant_failure", payload };
+    } catch {
+      logger.warn({ line: line.slice(0, 120) }, "python-runner: INVARIANT_FAILURE_JSON sentinel found but JSON parse failed");
+      return null;
+    }
+  }
+  return null;
+}
+
 /**
  * Robust Python subprocess runner for Trading Forge.
  * - Uses temporary files for JSON config (avoids CLI length limits on Windows).
  * - Uses robust JSON parsing (ignores logging noise).
  * - Automatic platform detection (python vs python3).
  * - Consistent timeout and process cleanup.
+ * - Captures PARITY_SHADOW_DRIFT_JSON / INVARIANT_FAILURE_JSON sentinel lines
+ *   from stderr and attaches them as _truthiness_events on the returned result
+ *   object so backtest-service can audit and alert without stdout contract changes.
+ *
+ * The return type is T (unchanged) — truthiness events are attached as a dynamic
+ * property and are accessible via `(result as Record<string,unknown>)._truthiness_events`.
+ * This avoids breaking callers that mockResolvedValue a plain object.
  */
 export async function runPythonModule<T = Record<string, unknown>>(
   options: PythonRunnerOptions
@@ -229,6 +284,9 @@ export async function runPythonModule<T = Record<string, unknown>>(
       let settled = false;
       let stdout = "";
       let stderr = "";
+      // Accumulate truthiness sentinel events parsed from stderr lines.
+      // These are emitted by B-1 (parity-shadow) and B-2 (invariant-harness).
+      const truthinessEvents: TruthinessSentinelEvent[] = [];
 
       let killTimer: ReturnType<typeof setTimeout> | null = null;
       const timer = setTimeout(() => {
@@ -244,15 +302,37 @@ export async function runPythonModule<T = Record<string, unknown>>(
 
       proc.stdout.on("data", (data) => (stdout += data.toString()));
       proc.stderr.on("data", (data) => {
-        const msg = data.toString().trim();
-        if (msg) {
-          stderr += msg + "\n";
-          // Log at warn so Python tracebacks are always visible in production (LOG_LEVEL=info).
-          // correlationId is included here so Python stderr lines are linkable to the HTTP request
-          // that spawned this subprocess. Python already emits the correlationId in its own prints
-          // (via _metadata.correlationId injected into the config), so this makes the Node side
-          // consistent with the Python side.
-          logger.warn({ component: componentName, module, correlationId }, msg);
+        const chunk = data.toString();
+        for (const line of chunk.split("\n")) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          stderr += trimmed + "\n";
+
+          // Check for truthiness sentinel lines BEFORE generic warn log.
+          // Sentinel lines carry structured evidence and are elevated to error
+          // so they surface above normal Python diagnostic noise.
+          const sentinel = parseTruthinessSentinel(trimmed);
+          if (sentinel) {
+            truthinessEvents.push(sentinel);
+            logger.error(
+              {
+                event: sentinel.type === "parity_shadow_drift"
+                  ? "backtest.parity_shadow_drift_detected"
+                  : "backtest.invariant_failure_detected",
+                sentinelType: sentinel.type,
+                component: componentName,
+                module,
+                correlationId,
+                payload: sentinel.payload,
+              },
+              `python-runner: truthiness sentinel captured — ${sentinel.type}`,
+            );
+          } else {
+            // Log at warn so Python tracebacks are always visible in production (LOG_LEVEL=info).
+            // correlationId is included here so Python stderr lines are linkable to the HTTP
+            // request that spawned this subprocess.
+            logger.warn({ component: componentName, module, correlationId }, trimmed);
+          }
         }
       });
 
@@ -264,7 +344,15 @@ export async function runPythonModule<T = Record<string, unknown>>(
 
         if (code === 0) {
           try {
-            resolve(parsePythonJson<T>(stdout));
+            const parsed = parsePythonJson<T>(stdout);
+            // Attach truthiness events as a dynamic property on the parsed result.
+            // We cast through Record<string,unknown> to avoid modifying the T signature
+            // so existing callers that mockResolvedValue a plain object are unaffected.
+            // backtest-service reads this via (result as Record<string,unknown>)._truthiness_events.
+            if (truthinessEvents.length > 0) {
+              (parsed as Record<string, unknown>)["_truthiness_events"] = truthinessEvents;
+            }
+            resolve(parsed);
           } catch (err) {
             reject(new Error(`Failed to parse ${componentName} output: ${err instanceof Error ? err.message : String(err)}`));
           }

@@ -1,6 +1,6 @@
 # A12 — 12-Category Code Audit Report
 
-**Generated:** 2026-05-03 05:44:25 UTC  
+**Generated:** 2026-05-20 01:20:07 UTC  
 **Auditor:** W12 Team B (trading-forge-architect)  
 **Plan:** PART A §A12 of `C:\Users\tonio\.claude\plans\reflective-dancing-moth.md`  
 **Scope:** Read-only static + numerical audit of existing Trading Forge code.  
@@ -125,12 +125,7 @@
   - TS CONTRACT_SPECS[MCL].pointValue = 100.0 (expected 100.0): OK
   - FIRM_COMMISSIONS[topstep_50k][MES] = $0.37 (expected $0.37): OK
   - FIRM_COMMISSIONS[mffu_50k][MES] = $0.62 (expected $0.62): OK
-  - FIRM_COMMISSIONS[tpt_50k][MES] = $0.62 (expected $0.62): OK
-  - FIRM_COMMISSIONS[apex_50k][MES] = $0.62 (expected $0.62): OK
-  - FIRM_COMMISSIONS[tradeify_50k][MES] = $1.29 (expected $1.29): OK
-  - FIRM_COMMISSIONS[alpha_50k][MES] = $0.00 (expected $0.00): OK
-  - FIRM_COMMISSIONS[ffn_50k][MES] = $0.62 (expected $0.62): OK
-  - FIRM_COMMISSIONS[earn2trade_50k][MES] = $0.62 (expected $0.62): OK
+  - FIRM_COMMISSIONS firm count: OK (2 firms — Topstep + MFFU)
   - Python backtester PnL uses spec.point_value: OK
   - TS paper service PnL uses spec.pointValue: OK
   - backtester.py adds slippage to PnL (wrong sign): no
@@ -208,16 +203,17 @@
 
 - FIRM_RULES[topstep_50k].daily_loss_limit = 1000 (expected 1000): OK
   - FIRM_RULES[mffu_50k].daily_loss_limit = None (expected None): OK
-  - FIRM_RULES[tpt_50k].daily_loss_limit = None (expected None): OK
-  - FIRM_RULES[ffn_50k].daily_loss_limit = None (expected None): OK
-  - FIRM_RULES[tradeify_50k].daily_loss_limit = None (expected None): OK
-  - FIRM_RULES[alpha_50k].daily_loss_limit = None (expected None): OK
-  - FIRM_RULES[apex_50k].daily_loss_limit = 1000 (expected 1000): OK
-  - FIRM_RULES[earn2trade_50k].daily_loss_limit = 1100 (expected 1100): OK
+  - FIRM_RULES firm count: OK (2 firms — Topstep + MFFU)
   - prop_compliance.py locks_at_start: OK
   - monte_carlo.py honors locks_at_start: OK
   - correlation_matrix threshold = 0.7 (expected 0.70): OK
   - check_kill_switch covers DLL/consec/max-trades: OK
+  - FIRM_CONTRACT_CAPS[topstep_50k][MES] = 50: OK
+  - FIRM_CONTRACT_CAPS[topstep_50k][MNQ] = 50: OK
+  - FIRM_CONTRACT_CAPS[topstep_50k][MCL] = 50: OK
+  - FIRM_CONTRACT_CAPS[mffu_50k][MES] = 50: OK
+  - FIRM_CONTRACT_CAPS[mffu_50k][MNQ] = 50: OK
+  - FIRM_CONTRACT_CAPS[mffu_50k][MCL] = 50: OK
   - (NOTE) src/shared/firm-config.ts marks ALL firms `trailing: "eod"`. MFFU "Rapid" plan and Apex "Intraday" 50K account both use intraday trailing per docs/prop-firm-rules.md. Acceptable for current trading (user only uses EOD plans) but flagged for future plan additions.
 
 ---
@@ -229,7 +225,7 @@
 **Evidence:**
 
 - critical PnL fields using numeric(): 19/19 OK
-  - schema.ts jsonb() usages: 112
+  - schema.ts jsonb() usages: 130
   - db-locks.ts uses pg_advisory_xact_lock: OK
   - paper-execution-service uses withSessionLock >=2 times: OK
   - migrations using float8/double precision: none

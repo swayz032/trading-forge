@@ -400,6 +400,7 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 | **Validation Cadence RED** | infra work approval | No new infra while panel RED |
 | **DSL Quality Critic (W23F.K + W23F.L)** | graduation | Anti-pattern matches; engine-aware look-ahead; factory conventions pre-filter |
 | **Auditor (W23F live-fix)** | graduation | Schema invariants; accepts both `risk_derived_pyramid` and legacy `profit_tier_pyramid` |
+| **Truthiness Check (B-3)** | post-backtest | Invariant harness (B-2) + parity shadow drift (B-1) — audit_log + Discord CRITICAL + SSE on failure |
 
 ---
 

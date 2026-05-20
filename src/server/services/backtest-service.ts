@@ -27,6 +27,8 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { backtestRuns, backtestScoredTotal } from "../lib/metrics-registry.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
 import { computeResultHash, computeDataHash, computeStrategyHash } from "../lib/result-hasher.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { notifyCritical } from "./notification-service.js";
 
 /**
  * Normalize gate_result from Python into a stable JSONB shape.
@@ -66,6 +68,9 @@ function buildResultExtras(result: BacktestResult): Record<string, unknown> | nu
     "recency_analysis",
     "statistical_warnings",
     "confidence_intervals",
+    // B-1 parity shadow + B-2 invariant harness truthiness fields
+    "parity_shadow",
+    "invariants",
   ] as const;
   let hasAny = false;
   for (const key of extraKeys) {
@@ -240,6 +245,31 @@ interface BacktestResult {
   n_splits?: number;
   param_stability?: Record<string, unknown>;
   error?: string;
+  // ─── Truthiness fields (B-1 + B-2, consumed post-transaction) ───────────
+  // B-1: parity_shadow — populated by parity_engine when both backtrader and
+  //   vectorbt are available for a given strategy archetype. `ran=false` with
+  //   `reason="strategy_archetype_not_supported"` is expected and not alerted.
+  parity_shadow?: {
+    enabled: boolean;
+    ran: boolean;
+    passed: boolean;
+    reason?: string;
+    vbt_total_pnl?: number;
+    bt_total_pnl?: number;
+    pnl_diff_pct?: number;
+    tolerance?: number;
+    [key: string]: unknown;
+  };
+  // B-2: invariants — populated by invariant_harness post-backtest.
+  //   overall_passed=false with critical_failures is the hard-fail condition.
+  invariants?: {
+    passed: boolean;
+    failed: Array<string>;
+    overall_passed: boolean;
+    critical_failures: Array<string>;
+    warnings: Array<string>;
+    [key: string]: unknown;
+  };
 }
 
 interface SqaOptimizationResult {
@@ -604,6 +634,183 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       tier: result.tier ?? null,
       forgeScore: result.forge_score ?? null,
     });
+
+    // ─── Truthiness Check (B-1 parity shadow + B-2 invariants) ──────────────
+    // Fires post-transaction (non-blocking fire-and-forget). Any truthiness
+    // failure is audited, Discord-alerted, and surfaced via SSE so the
+    // dashboard shows it without operator digging.
+    //
+    // Data sources (in priority order):
+    //   1. result.parity_shadow / result.invariants — embedded in Python stdout
+    //   2. result._truthiness_events — sentinel lines captured from Python stderr
+    //      by python-runner.ts (B-1 / B-2 sentinel parsing)
+    //
+    // Both sources are checked so neither integration path is missed.
+    (async () => {
+      try {
+        const resultRecord = result as unknown as Record<string, unknown>;
+
+        // Merge sentinel events from stderr side-channel into result-level fields.
+        // python-runner attaches _truthiness_events when it parsed sentinel lines.
+        const stderrEvents = (resultRecord._truthiness_events as Array<{ type: string; payload: Record<string, unknown> }> | undefined) ?? [];
+        for (const ev of stderrEvents) {
+          if (ev.type === "parity_shadow_drift" && !result.parity_shadow) {
+            result.parity_shadow = ev.payload as BacktestResult["parity_shadow"];
+          }
+          if (ev.type === "invariant_failure" && !result.invariants) {
+            result.invariants = ev.payload as BacktestResult["invariants"];
+          }
+        }
+
+        const parityShadow = result.parity_shadow;
+        const invariants = result.invariants;
+
+        // Evaluate failure conditions
+        const invariantFailed = invariants != null && invariants.overall_passed === false;
+        const invariantCritical = invariantFailed && (invariants.critical_failures?.length ?? 0) > 0;
+
+        // parityFailed = parity RAN and still disagreed (ran=true + passed=false).
+        // When ran=false with reason="strategy_archetype_not_supported" that is an
+        // expected skip — not a failure. When ran=false with any other reason that
+        // is an unexpected skip (engine crash / missing dep) captured by parityUnexpectedSkip.
+        const parityFailed = parityShadow != null && parityShadow.ran === true && parityShadow.passed === false;
+        const parityCatastrophic = parityFailed && (parityShadow.pnl_diff_pct ?? 0) > 1.0;
+
+        // parity ran=false is expected for unsupported archetypes — only alert on
+        // unexpected non-runs (e.g. parity was supposed to run but crashed silently).
+        const parityUnexpectedSkip =
+          parityShadow != null &&
+          parityShadow.ran === false &&
+          parityShadow.reason !== "strategy_archetype_not_supported";
+
+        const hasTruthinessFailure = invariantFailed || parityFailed || parityUnexpectedSkip;
+
+        if (!hasTruthinessFailure) {
+          // All checks passed — log a brief confirmation for queryability.
+          if (parityShadow != null || invariants != null) {
+            logger.info(
+              {
+                event: "backtest.truthiness_passed",
+                backtestId,
+                strategyId,
+                correlationId: correlationId ?? null,
+                parityRan: parityShadow?.ran ?? null,
+                invariantsChecked: invariants != null,
+              },
+              "backtest.truthiness: all checks passed",
+            );
+          }
+          return;
+        }
+
+        // ── Determine overall severity ──────────────────────────────────────
+        const severity = invariantCritical || parityCatastrophic ? "CRITICAL" : "WARNING";
+
+        // ── Build evidence summary ──────────────────────────────────────────
+        const evidenceParts: string[] = [];
+        if (invariantFailed) {
+          const critList = (invariants.critical_failures ?? []).join(", ") || "none listed";
+          const failList = (invariants.failed ?? []).join(", ") || "none listed";
+          evidenceParts.push(`invariants failed: critical=[${critList}] all=[${failList}]`);
+        }
+        if (parityFailed) {
+          const diff = parityShadow.pnl_diff_pct != null
+            ? `pnl_diff_pct=${(parityShadow.pnl_diff_pct * 100).toFixed(2)}%`
+            : "diff=unknown";
+          const vbt = parityShadow.vbt_total_pnl != null ? `vbt=$${parityShadow.vbt_total_pnl}` : "";
+          const bt = parityShadow.bt_total_pnl != null ? `bt=$${parityShadow.bt_total_pnl}` : "";
+          evidenceParts.push(`parity shadow drift: ${diff} ${vbt} ${bt}`.trim());
+        }
+        if (parityUnexpectedSkip) {
+          evidenceParts.push(`parity shadow skipped unexpectedly: reason=${parityShadow?.reason ?? "unknown"}`);
+        }
+        const evidenceSummary = evidenceParts.join(" | ");
+
+        // ── Audit log ────────────────────────────────────────────────────────
+        const auditAction = invariantFailed ? "backtest.invariants_failed" : "backtest.parity_shadow_drift";
+        await insertAuditRow({
+          action: auditAction,
+          entityType: "backtest",
+          entityId: backtestId,
+          input: {
+            strategyId,
+            symbol: config.strategy.symbol,
+            startDate: config.start_date,
+            endDate: config.end_date,
+          },
+          result: {
+            invariant_report: invariants ?? null,
+            parity_shadow_report: parityShadow ?? null,
+            severity,
+            evidence_summary: evidenceSummary,
+          },
+          status: "failure",
+          decisionAuthority: "system",
+          correlationId: correlationId ?? null,
+        });
+
+        logger.error(
+          {
+            event: auditAction,
+            backtestId,
+            strategyId,
+            symbol: config.strategy.symbol,
+            severity,
+            correlationId: correlationId ?? null,
+            invariant_report: invariants ?? null,
+            parity_shadow_report: parityShadow ?? null,
+          },
+          `backtest.truthiness: ${severity} failure — ${evidenceSummary}`,
+        );
+
+        // ── SSE — live dashboard surfacing ────────────────────────────────────
+        broadcastSSE("backtest:truthiness_failure", {
+          backtestId,
+          strategyId,
+          type: invariantFailed ? "invariant" : parityFailed ? "parity" : "parity_skip",
+          severity,
+          evidence: evidenceSummary,
+          invariant_report: invariants ?? null,
+          parity_shadow_report: parityShadow ?? null,
+          correlationId: correlationId ?? null,
+          timestamp: new Date().toISOString(),
+        });
+
+        // ── Discord alert (CRITICAL failures only) ────────────────────────────
+        if (severity === "CRITICAL") {
+          const strategySymbol = config.strategy.symbol;
+          const strategyName = config.strategy.name ?? strategyId;
+          const dateRange = `${config.start_date ?? "?"} → ${config.end_date ?? "?"}`;
+          const failureType = invariantFailed
+            ? (invariants.critical_failures?.[0] ?? "invariant_failure")
+            : "parity_drift";
+
+          notifyCritical(
+            "BACKTEST TRUTHINESS FAILURE",
+            [
+              `Backtest: ${backtestId}`,
+              `Strategy: ${strategyName} (${strategySymbol})`,
+              `Dates: ${dateRange}`,
+              `Failure type: ${failureType}`,
+              `Evidence: ${evidenceSummary}`,
+              `Severity: ${severity}`,
+            ].join("\n"),
+            {
+              backtestId,
+              strategyId,
+              symbol: strategySymbol,
+              correlationId: correlationId ?? null,
+            },
+          );
+        }
+      } catch (truthinessErr) {
+        // Non-blocking — truthiness audit/alert failure must never abort the backtest flow.
+        logger.warn(
+          { backtestId, strategyId, err: truthinessErr },
+          "backtest.truthiness: audit/alert block failed (non-blocking — backtest is still completed)",
+        );
+      }
+    })();
 
     // ─── CF-3 Fix: Sync forgeScore + tier onto strategies row unconditionally ──
     // Previously, strategies.forgeScore was only updated inside the TIER_1/2/3

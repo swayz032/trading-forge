@@ -1,0 +1,737 @@
+"""Trading Forge — Post-backtest Invariant Harness (Pass B-2).
+
+Independently recomputes key metrics from the raw trade list and asserts
+they match what the engine reported.  Runs ALWAYS after run_backtest(),
+never env-gated — it is cheap pure computation and serves as the authority
+layer between the engine and downstream consumers.
+
+Historical context
+------------------
+These invariants were designed to catch concrete bug classes found during
+the 2026-05-19 accuracy audit session (commits c7ac642 and b8a2140):
+
+  INV-1  balance_arithmetic
+         Would have caught: Topstep ending_balance +$7K on a losing strategy
+         (DLL-cap firing on EOD MTM swings inflated reported balance).
+
+  INV-2  trade_pnl_sum_matches_total_return
+         Would have caught: $1,320 drift between total_return and
+         ending_balance on the multi-trade BB-MES strategy.
+
+  INV-3  daily_pnl_sum_matches_total_return
+         Catches EOD-vs-trade-level drift; tolerates $5 rounding budget.
+
+  INV-4  long_short_split_matches_total
+         Long-only strategies that generated short P&L (direction bug)
+         would surface here via long_pnl + short_pnl != total_return.
+
+  INV-5  long_short_trade_counts_match_total_trades
+         Exact count consistency; catches direction misclassification.
+
+  INV-6  win_rate_in_range
+         Sanity gate: 0 <= win_rate <= 1.
+
+  INV-7  max_drawdown_non_negative
+         Drawdown must be a positive dollar loss figure.
+
+  INV-8  peak_equity_at_least_starting
+         Peak equity must be >= starting balance (unless always in loss from
+         bar 1, which is valid).
+
+  INV-9  sharpe_finite_if_trades       (WARNING)
+         NaN/inf Sharpe silently passes gates downstream.
+
+  INV-10 profit_factor_finite_if_trades (WARNING)
+         inf PF from zero gross loss inflates forge_score.
+
+  INV-11 avg_trade_pnl_consistent      (WARNING)
+         total_return / total_trades should match avg_trade_pnl.
+
+  INV-12 commission_per_trade_reasonable (WARNING)
+         Guards against commission model bugs ($3/rt max per contract).
+
+  INV-13 per_firm_endings_consistent   (WARNING)
+         For each firm in prop_compliance: firm.ending_balance_uncapped
+         should match starting_balance + total_return within $1.
+         (Uses ending_balance_uncapped — the DLL-sim-free figure.)
+
+  INV-14 equity_curve_monotone_or_continuous (WARNING)
+         Equity curve must have no NaN/null bars and must be non-empty
+         when trades exist.
+
+Severity semantics
+------------------
+CRITICAL  Any CRITICAL failure sets InvariantReport.overall_passed = False
+          and triggers a JSON error line on stderr so the orchestrator can
+          gate on it.
+
+WARNING   Logged for review; does not fail overall_passed.  Investigated
+          offline — common in degenerate-parameter runs.
+
+Tolerance design
+----------------
+$1 tolerances absorb per-trade rounding (round(..., 2) applied 500+ times).
+$5 for daily aggregation absorbs EOD-vs-trade-level timing differences.
+$0.50 for avg_trade_pnl absorbs the mean of the per-trade rounding errors.
+"""
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass, field
+
+# ─── Public dataclasses ──────────────────────────────────────────────────────
+
+
+@dataclass
+class InvariantCheck:
+    name: str
+    passed: bool
+    tolerance: str       # e.g. "$1.00", "0.5%", "exact"
+    expected: str        # expression description
+    actual: str          # formatted computed value
+    evidence: str        # human-readable explanation
+    severity: str        # "CRITICAL" | "WARNING"
+
+
+@dataclass
+class InvariantReport:
+    backtest_id: str
+    total_checks: int
+    passed: int
+    failed: int
+    critical_failures: list[InvariantCheck]
+    warnings: list[InvariantCheck]
+    all_checks: list[InvariantCheck]
+    overall_passed: bool   # False if any CRITICAL failed
+
+
+# ─── Internal helpers ────────────────────────────────────────────────────────
+
+_STARTING_BALANCE = 50_000.0   # matches backtester.py STARTING_CAPITAL
+
+
+def _is_finite(v) -> bool:
+    """Return True when v is a real, finite number."""
+    try:
+        return math.isfinite(float(v))
+    except (TypeError, ValueError):
+        return False
+
+
+def _safe_float(v, default: float = 0.0) -> float:
+    try:
+        f = float(v)
+        return f if math.isfinite(f) else default
+    except (TypeError, ValueError):
+        return default
+
+
+# ─── Individual invariant checks ─────────────────────────────────────────────
+
+
+def _check_balance_arithmetic(result: dict) -> InvariantCheck:
+    """INV-1 CRITICAL: ending_balance ≈ starting_balance + total_return."""
+    TOLERANCE = 1.0
+    starting = _safe_float(result.get("starting_balance", _STARTING_BALANCE))
+    total_return = _safe_float(result.get("total_return", 0.0))
+    ending = _safe_float(result.get("ending_balance", starting + total_return))
+
+    expected_ending = starting + total_return
+    diff = abs(ending - expected_ending)
+    passed = diff <= TOLERANCE
+
+    return InvariantCheck(
+        name="balance_arithmetic",
+        passed=passed,
+        tolerance=f"${TOLERANCE:.2f}",
+        expected=f"ending_balance ≈ {starting:.2f} + {total_return:.2f} = {expected_ending:.2f}",
+        actual=f"ending_balance = {ending:.2f}, diff = {diff:.4f}",
+        evidence=(
+            "ending_balance matches starting_balance + total_return within $1.00"
+            if passed else
+            f"ending_balance drifts by ${diff:.2f} from expected ${expected_ending:.2f}. "
+            "Possible DLL-cap inflation or MTM-swing accounting error."
+        ),
+        severity="CRITICAL",
+    )
+
+
+def _check_trade_pnl_sum(result: dict) -> InvariantCheck:
+    """INV-2 CRITICAL: sum(trade.PnL) ≈ total_return."""
+    TOLERANCE = 1.0
+    trades = result.get("trades", [])
+    total_return = _safe_float(result.get("total_return", 0.0))
+
+    pnl_sum = sum(_safe_float(t.get("PnL", t.get("pnl", 0.0))) for t in trades)
+    diff = abs(pnl_sum - total_return)
+    passed = diff <= TOLERANCE
+
+    return InvariantCheck(
+        name="trade_pnl_sum_matches_total_return",
+        passed=passed,
+        tolerance=f"${TOLERANCE:.2f}",
+        expected=f"sum(trade.PnL) ≈ total_return ({total_return:.2f})",
+        actual=f"sum = {pnl_sum:.2f}, diff = {diff:.4f}",
+        evidence=(
+            f"Trade P&L sum {pnl_sum:.2f} matches total_return within $1.00"
+            if passed else
+            f"${diff:.2f} drift between trade P&L sum ({pnl_sum:.2f}) and "
+            f"total_return ({total_return:.2f}). Likely equity-curve accounting mismatch."
+        ),
+        severity="CRITICAL",
+    )
+
+
+def _check_daily_pnl_sum(result: dict) -> InvariantCheck:
+    """INV-3 CRITICAL: sum(daily_pnls) ≈ total_return (tolerance $5 for EOD drift)."""
+    TOLERANCE = 5.0
+    daily_pnls = result.get("daily_pnls", [])
+    total_return = _safe_float(result.get("total_return", 0.0))
+
+    if not daily_pnls:
+        # No daily data — only check if there are also no trades.
+        total_trades = int(result.get("total_trades", 0))
+        passed = total_trades == 0
+        return InvariantCheck(
+            name="daily_pnl_sum_matches_total_return",
+            passed=passed,
+            tolerance=f"${TOLERANCE:.2f}",
+            expected="sum(daily_pnls) ≈ total_return",
+            actual="daily_pnls list is empty",
+            evidence=(
+                "No trades and no daily P&Ls — consistent zero-return case."
+                if passed else
+                f"daily_pnls list is empty but total_trades={total_trades}. "
+                "Daily aggregation may have failed silently."
+            ),
+            severity="CRITICAL",
+        )
+
+    daily_sum = sum(_safe_float(p) for p in daily_pnls)
+    diff = abs(daily_sum - total_return)
+    passed = diff <= TOLERANCE
+
+    return InvariantCheck(
+        name="daily_pnl_sum_matches_total_return",
+        passed=passed,
+        tolerance=f"${TOLERANCE:.2f}",
+        expected=f"sum({len(daily_pnls)} daily P&Ls) ≈ total_return ({total_return:.2f})",
+        actual=f"daily_sum = {daily_sum:.2f}, diff = {diff:.4f}",
+        evidence=(
+            f"Daily P&L sum {daily_sum:.2f} matches total_return within $5.00"
+            if passed else
+            f"${diff:.2f} drift between daily P&L sum ({daily_sum:.2f}) and "
+            f"total_return ({total_return:.2f}). Possible EOD-vs-trade-level timing issue."
+        ),
+        severity="CRITICAL",
+    )
+
+
+def _check_long_short_split_sum(result: dict) -> InvariantCheck:
+    """INV-4 CRITICAL: long_pnl + short_pnl ≈ total_return (tolerance $1)."""
+    TOLERANCE = 1.0
+    total_return = _safe_float(result.get("total_return", 0.0))
+    ls = result.get("long_short_split", {})
+
+    # Skip if no split data available
+    if not ls or "long" not in ls or "short" not in ls:
+        return InvariantCheck(
+            name="long_short_split_matches_total",
+            passed=True,
+            tolerance=f"${TOLERANCE:.2f}",
+            expected="long_pnl + short_pnl ≈ total_return",
+            actual="long_short_split field absent — check skipped",
+            evidence="No long_short_split data; invariant not applicable.",
+            severity="CRITICAL",
+        )
+
+    long_pnl = _safe_float(ls["long"].get("pnl", 0.0))
+    short_pnl = _safe_float(ls["short"].get("pnl", 0.0))
+    split_sum = long_pnl + short_pnl
+    diff = abs(split_sum - total_return)
+    passed = diff <= TOLERANCE
+
+    return InvariantCheck(
+        name="long_short_split_matches_total",
+        passed=passed,
+        tolerance=f"${TOLERANCE:.2f}",
+        expected=f"long_pnl ({long_pnl:.2f}) + short_pnl ({short_pnl:.2f}) ≈ total_return ({total_return:.2f})",
+        actual=f"split_sum = {split_sum:.2f}, diff = {diff:.4f}",
+        evidence=(
+            "Long + short P&L sums to total_return within $1.00"
+            if passed else
+            f"${diff:.2f} drift: long({long_pnl:.2f}) + short({short_pnl:.2f}) = {split_sum:.2f} "
+            f"vs total_return={total_return:.2f}. Direction misclassification or double-count."
+        ),
+        severity="CRITICAL",
+    )
+
+
+def _check_long_short_count(result: dict) -> InvariantCheck:
+    """INV-5 CRITICAL: long_count + short_count == total_trades (exact)."""
+    total_trades = int(result.get("total_trades", 0))
+    ls = result.get("long_short_split", {})
+
+    if not ls or "long" not in ls or "short" not in ls:
+        return InvariantCheck(
+            name="long_short_trade_counts_match_total_trades",
+            passed=True,
+            tolerance="exact",
+            expected="long_count + short_count == total_trades",
+            actual="long_short_split field absent — check skipped",
+            evidence="No long_short_split data; invariant not applicable.",
+            severity="CRITICAL",
+        )
+
+    long_count = int(ls["long"].get("trades", 0))
+    short_count = int(ls["short"].get("trades", 0))
+    split_total = long_count + short_count
+    passed = split_total == total_trades
+
+    return InvariantCheck(
+        name="long_short_trade_counts_match_total_trades",
+        passed=passed,
+        tolerance="exact",
+        expected=f"long_count ({long_count}) + short_count ({short_count}) == total_trades ({total_trades})",
+        actual=f"split_total = {split_total}",
+        evidence=(
+            f"Trade count splits correctly: {long_count}L + {short_count}S = {total_trades}"
+            if passed else
+            f"Count mismatch: {long_count}L + {short_count}S = {split_total} != total_trades={total_trades}. "
+            "Direction field misclassified or trade list incomplete."
+        ),
+        severity="CRITICAL",
+    )
+
+
+def _check_win_rate_in_range(result: dict) -> InvariantCheck:
+    """INV-6 CRITICAL: 0 <= win_rate <= 1."""
+    win_rate = _safe_float(result.get("win_rate", 0.0))
+    passed = 0.0 <= win_rate <= 1.0
+
+    return InvariantCheck(
+        name="win_rate_in_range",
+        passed=passed,
+        tolerance="exact",
+        expected="0 <= win_rate <= 1",
+        actual=f"win_rate = {win_rate:.6f}",
+        evidence=(
+            f"win_rate {win_rate:.4f} is within [0, 1]"
+            if passed else
+            f"win_rate {win_rate:.6f} is outside [0, 1]. Numerator/denominator inversion or division error."
+        ),
+        severity="CRITICAL",
+    )
+
+
+def _check_max_drawdown_non_negative(result: dict) -> InvariantCheck:
+    """INV-7 CRITICAL: max_drawdown >= 0 (stored as positive loss in dollars)."""
+    max_dd = _safe_float(result.get("max_drawdown", 0.0))
+    passed = max_dd >= 0.0
+
+    return InvariantCheck(
+        name="max_drawdown_non_negative",
+        passed=passed,
+        tolerance="exact",
+        expected="max_drawdown >= 0",
+        actual=f"max_drawdown = {max_dd:.4f}",
+        evidence=(
+            f"max_drawdown ${max_dd:.2f} is non-negative (positive loss figure)"
+            if passed else
+            f"max_drawdown {max_dd:.4f} is negative. Sign convention error — should be positive dollar loss."
+        ),
+        severity="CRITICAL",
+    )
+
+
+def _check_peak_equity_at_least_starting(result: dict) -> InvariantCheck:
+    """INV-8 CRITICAL: peak equity >= starting_balance.
+
+    If the strategy is always in drawdown from bar 1, peak = starting_balance
+    (the initial equity value itself).  We allow equality.
+    """
+    starting = _safe_float(result.get("starting_balance", _STARTING_BALANCE))
+    # Compute peak from equity_bars if available; fall back to equity_curve.
+    equity_bars = result.get("equity_bars", [])
+    if equity_bars:
+        peak_equity = max(_safe_float(v, starting) for v in equity_bars)
+    else:
+        equity_curve = result.get("equity_curve", [])
+        if equity_curve:
+            peak_equity = max(_safe_float(pt.get("value", starting) if isinstance(pt, dict) else pt, starting)
+                              for pt in equity_curve)
+        else:
+            peak_equity = starting   # no data — trivially pass
+
+    passed = peak_equity >= starting - 0.01   # allow $0.01 floating-point slack
+
+    return InvariantCheck(
+        name="peak_equity_at_least_starting",
+        passed=passed,
+        tolerance="$0.01 float slack",
+        expected=f"peak_equity >= starting_balance ({starting:.2f})",
+        actual=f"peak_equity = {peak_equity:.2f}",
+        evidence=(
+            f"Peak equity ${peak_equity:.2f} >= starting ${starting:.2f}"
+            if passed else
+            f"Peak equity ${peak_equity:.2f} < starting ${starting:.2f}. "
+            "Equity curve starts below starting_balance — likely a cumsum initialization bug."
+        ),
+        severity="CRITICAL",
+    )
+
+
+# ─── WARNING checks ──────────────────────────────────────────────────────────
+
+
+def _check_sharpe_finite(result: dict) -> InvariantCheck:
+    """INV-9 WARNING: sharpe_ratio is finite when total_trades > 0."""
+    total_trades = int(result.get("total_trades", 0))
+    sharpe = result.get("sharpe_ratio", 0.0)
+
+    if total_trades == 0:
+        return InvariantCheck(
+            name="sharpe_finite_if_trades",
+            passed=True,
+            tolerance="N/A",
+            expected="sharpe is N/A when 0 trades",
+            actual="total_trades = 0",
+            evidence="No trades — Sharpe not applicable.",
+            severity="WARNING",
+        )
+
+    finite = _is_finite(sharpe)
+    return InvariantCheck(
+        name="sharpe_finite_if_trades",
+        passed=finite,
+        tolerance="N/A",
+        expected="sharpe_ratio is finite when total_trades > 0",
+        actual=f"sharpe_ratio = {sharpe}",
+        evidence=(
+            f"Sharpe ratio {sharpe} is finite"
+            if finite else
+            f"Sharpe ratio is {sharpe} with {total_trades} trades. "
+            "Possible zero-variance daily P&L or division by zero in computation."
+        ),
+        severity="WARNING",
+    )
+
+
+def _check_profit_factor_finite(result: dict) -> InvariantCheck:
+    """INV-10 WARNING: profit_factor is finite when total_trades > 0."""
+    total_trades = int(result.get("total_trades", 0))
+    pf = result.get("profit_factor", 0.0)
+
+    if total_trades == 0:
+        return InvariantCheck(
+            name="profit_factor_finite_if_trades",
+            passed=True,
+            tolerance="N/A",
+            expected="PF is N/A when 0 trades",
+            actual="total_trades = 0",
+            evidence="No trades — PF not applicable.",
+            severity="WARNING",
+        )
+
+    # 999.99 is the engine's capped representation of inf — treat as non-finite for this check.
+    pf_val = _safe_float(pf, default=float("nan"))
+    finite = _is_finite(pf_val) and abs(pf_val) < 999.0
+
+    return InvariantCheck(
+        name="profit_factor_finite_if_trades",
+        passed=finite,
+        tolerance="< 999.0 sentinel",
+        expected="profit_factor is a finite real (not inf/nan/999.99 sentinel)",
+        actual=f"profit_factor = {pf}",
+        evidence=(
+            f"Profit factor {pf} is finite"
+            if finite else
+            f"Profit factor {pf} is not a usable real value with {total_trades} trades. "
+            "Zero gross losses (all winners) or computation error."
+        ),
+        severity="WARNING",
+    )
+
+
+def _check_avg_trade_pnl_consistent(result: dict) -> InvariantCheck:
+    """INV-11 WARNING: total_return / total_trades ≈ avg_trade_pnl."""
+    TOLERANCE = 0.50
+    total_trades = int(result.get("total_trades", 0))
+    total_return = _safe_float(result.get("total_return", 0.0))
+    avg_trade_pnl = _safe_float(result.get("avg_trade_pnl", 0.0))
+
+    if total_trades == 0:
+        return InvariantCheck(
+            name="avg_trade_pnl_consistent",
+            passed=True,
+            tolerance=f"${TOLERANCE:.2f}",
+            expected="avg_trade_pnl N/A for 0 trades",
+            actual="total_trades = 0",
+            evidence="No trades — avg_trade_pnl not applicable.",
+            severity="WARNING",
+        )
+
+    implied_avg = total_return / total_trades
+    diff = abs(implied_avg - avg_trade_pnl)
+    passed = diff <= TOLERANCE
+
+    return InvariantCheck(
+        name="avg_trade_pnl_consistent",
+        passed=passed,
+        tolerance=f"${TOLERANCE:.2f}",
+        expected=f"total_return / total_trades = {implied_avg:.4f} ≈ avg_trade_pnl ({avg_trade_pnl:.4f})",
+        actual=f"diff = {diff:.4f}",
+        evidence=(
+            f"avg_trade_pnl {avg_trade_pnl:.2f} consistent with total_return / trades = {implied_avg:.2f}"
+            if passed else
+            f"avg_trade_pnl {avg_trade_pnl:.2f} differs from total_return/trades = {implied_avg:.2f} "
+            f"by ${diff:.4f}. Possible winner/loser array filtering bug."
+        ),
+        severity="WARNING",
+    )
+
+
+def _check_commission_per_trade_reasonable(result: dict) -> InvariantCheck:
+    """INV-12 WARNING: total commission <= total_trades × 2 × 1.50 ($3/rt max)."""
+    # $3 roundtrip per contract is a conservative ceiling — Topstep charges ~$0.62/side = $1.24/rt.
+    MAX_COMMISSION_PER_TRADE = 3.0
+    trades = result.get("trades", [])
+    total_trades = int(result.get("total_trades", 0))
+
+    if total_trades == 0 or not trades:
+        return InvariantCheck(
+            name="commission_per_trade_reasonable",
+            passed=True,
+            tolerance=f"<= ${MAX_COMMISSION_PER_TRADE:.2f}/trade (1 contract roundtrip)",
+            expected="commission N/A for 0 trades",
+            actual="total_trades = 0",
+            evidence="No trades — commission check not applicable.",
+            severity="WARNING",
+        )
+
+    total_comm = sum(_safe_float(t.get("CommissionCost", 0.0)) for t in trades)
+    max_allowed = total_trades * MAX_COMMISSION_PER_TRADE
+    passed = total_comm <= max_allowed
+
+    per_trade_avg = total_comm / total_trades if total_trades > 0 else 0.0
+
+    return InvariantCheck(
+        name="commission_per_trade_reasonable",
+        passed=passed,
+        tolerance=f"<= ${MAX_COMMISSION_PER_TRADE:.2f} per trade (1-contract roundtrip ceiling)",
+        expected=f"total_commission <= {total_trades} trades × ${MAX_COMMISSION_PER_TRADE:.2f} = ${max_allowed:.2f}",
+        actual=f"total_commission = {total_comm:.2f}, avg = {per_trade_avg:.4f}/trade",
+        evidence=(
+            f"Total commission ${total_comm:.2f} within $3/trade ceiling (avg ${per_trade_avg:.2f}/trade)"
+            if passed else
+            f"Commission ${total_comm:.2f} exceeds ceiling ${max_allowed:.2f}. "
+            f"Average ${per_trade_avg:.2f}/trade — commission model may be charging per bar instead of per trade."
+        ),
+        severity="WARNING",
+    )
+
+
+def _check_per_firm_endings(result: dict) -> InvariantCheck:
+    """INV-13 WARNING: for each firm in prop_compliance, firm.ending_balance_uncapped ≈ starting + total_return."""
+    TOLERANCE = 1.0
+    total_return = _safe_float(result.get("total_return", 0.0))
+    prop_compliance = result.get("prop_compliance", {})
+
+    if not prop_compliance:
+        return InvariantCheck(
+            name="per_firm_endings_consistent",
+            passed=True,
+            tolerance=f"${TOLERANCE:.2f}",
+            expected="firm.ending_balance_uncapped ≈ starting + total_return for each firm",
+            actual="prop_compliance is empty — check skipped",
+            evidence="No prop_compliance data; invariant not applicable.",
+            severity="WARNING",
+        )
+
+    failures: list[str] = []
+    firms_checked = 0
+
+    for firm_key, firm_data in prop_compliance.items():
+        if not isinstance(firm_data, dict):
+            continue
+        starting = _safe_float(firm_data.get("starting_balance", _STARTING_BALANCE))
+        # Use ending_balance_uncapped — the DLL-cap-free figure.
+        # ending_balance is intentionally inflated by the DLL simulation.
+        uncapped = firm_data.get("ending_balance_uncapped")
+        if uncapped is None:
+            continue
+        uncapped = _safe_float(uncapped)
+        expected_end = starting + total_return
+        diff = abs(uncapped - expected_end)
+        firms_checked += 1
+        if diff > TOLERANCE:
+            failures.append(
+                f"{firm_key}: ending_balance_uncapped={uncapped:.2f} vs expected={expected_end:.2f} (diff ${diff:.2f})"
+            )
+
+    if firms_checked == 0:
+        return InvariantCheck(
+            name="per_firm_endings_consistent",
+            passed=True,
+            tolerance=f"${TOLERANCE:.2f}",
+            expected="firm.ending_balance_uncapped ≈ starting + total_return for each firm",
+            actual="No firms with ending_balance_uncapped — check skipped",
+            evidence="No checkable firm data found.",
+            severity="WARNING",
+        )
+
+    passed = len(failures) == 0
+    return InvariantCheck(
+        name="per_firm_endings_consistent",
+        passed=passed,
+        tolerance=f"${TOLERANCE:.2f}",
+        expected=f"All {firms_checked} firms: ending_balance_uncapped ≈ starting + total_return",
+        actual=f"{len(failures)} / {firms_checked} firms failed",
+        evidence=(
+            f"All {firms_checked} firm balances consistent with total_return"
+            if passed else
+            "Firm balance mismatches: " + "; ".join(failures[:3]) +
+            (" (truncated)" if len(failures) > 3 else "")
+        ),
+        severity="WARNING",
+    )
+
+
+def _check_equity_curve_continuous(result: dict) -> InvariantCheck:
+    """INV-14 WARNING: equity curve has no NaN/null bars; non-empty when trades > 0."""
+    total_trades = int(result.get("total_trades", 0))
+    equity_bars = result.get("equity_bars", [])
+    equity_curve = result.get("equity_curve", [])
+
+    # Use equity_bars (bar-level) if available; otherwise equity_curve (daily).
+    source = equity_bars if equity_bars else equity_curve
+    label = "equity_bars" if equity_bars else "equity_curve"
+
+    if total_trades == 0:
+        return InvariantCheck(
+            name="equity_curve_monotone_or_continuous",
+            passed=True,
+            tolerance="N/A",
+            expected="equity curve may be empty for 0 trades",
+            actual="total_trades = 0",
+            evidence="No trades — empty equity curve is acceptable.",
+            severity="WARNING",
+        )
+
+    if not source:
+        return InvariantCheck(
+            name="equity_curve_monotone_or_continuous",
+            passed=False,
+            tolerance="N/A",
+            expected=f"{label} must be non-empty when total_trades={total_trades}",
+            actual=f"{label} is empty",
+            evidence=f"Trades exist ({total_trades}) but equity curve is empty. Equity build loop may have failed.",
+            severity="WARNING",
+        )
+
+    # Count NaN/null values.
+    nan_count = 0
+    for pt in source:
+        if isinstance(pt, dict):
+            v = pt.get("value")
+        else:
+            v = pt
+        if v is None or (isinstance(v, float) and not math.isfinite(v)):
+            nan_count += 1
+
+    passed = nan_count == 0
+    return InvariantCheck(
+        name="equity_curve_monotone_or_continuous",
+        passed=passed,
+        tolerance="zero NaN/null bars",
+        expected=f"{label} has no NaN/null values ({len(source)} bars)",
+        actual=f"{nan_count} NaN/null bars out of {len(source)}",
+        evidence=(
+            f"Equity curve ({label}) is clean: {len(source)} bars, 0 NaN/null"
+            if passed else
+            f"{nan_count} NaN/null bars in {label}. Equity computation produced invalid values — "
+            "inspect bar_dollar_pnls for inf/nan inputs."
+        ),
+        severity="WARNING",
+    )
+
+
+# ─── Harness orchestrator ────────────────────────────────────────────────────
+
+# Ordered list of check functions: (critical checks first, then warnings).
+_CRITICAL_CHECKS = [
+    _check_balance_arithmetic,
+    _check_trade_pnl_sum,
+    _check_daily_pnl_sum,
+    _check_long_short_split_sum,
+    _check_long_short_count,
+    _check_win_rate_in_range,
+    _check_max_drawdown_non_negative,
+    _check_peak_equity_at_least_starting,
+]
+
+_WARNING_CHECKS = [
+    _check_sharpe_finite,
+    _check_profit_factor_finite,
+    _check_avg_trade_pnl_consistent,
+    _check_commission_per_trade_reasonable,
+    _check_per_firm_endings,
+    _check_equity_curve_continuous,
+]
+
+
+class InvariantHarness:
+    """Post-backtest invariant harness.
+
+    Usage::
+
+        harness = InvariantHarness()
+        report = harness.verify(result)
+        if not report.overall_passed:
+            ...
+    """
+
+    def verify(self, result: dict) -> InvariantReport:
+        """Run all 14 invariant checks against a backtest result dict.
+
+        Parameters
+        ----------
+        result:
+            The dict returned by run_backtest() or run_class_backtest().
+
+        Returns
+        -------
+        InvariantReport
+            Full report with per-check results and overall_passed flag.
+        """
+        backtest_id = str(result.get("backtest_id", ""))
+        all_checks: list[InvariantCheck] = []
+
+        for fn in _CRITICAL_CHECKS:
+            all_checks.append(fn(result))
+
+        for fn in _WARNING_CHECKS:
+            all_checks.append(fn(result))
+
+        passed_checks = [c for c in all_checks if c.passed]
+        failed_checks = [c for c in all_checks if not c.passed]
+        critical_failures = [c for c in failed_checks if c.severity == "CRITICAL"]
+        warnings = [c for c in failed_checks if c.severity == "WARNING"]
+
+        return InvariantReport(
+            backtest_id=backtest_id,
+            total_checks=len(all_checks),
+            passed=len(passed_checks),
+            failed=len(failed_checks),
+            critical_failures=critical_failures,
+            warnings=warnings,
+            all_checks=all_checks,
+            overall_passed=len(critical_failures) == 0,
+        )
+
+
+# ─── Module-level convenience function ───────────────────────────────────────
+
+def run_invariants(result: dict) -> InvariantReport:
+    """Run all invariant checks.  Convenience wrapper around InvariantHarness.verify()."""
+    return InvariantHarness().verify(result)

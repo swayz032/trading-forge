@@ -4,6 +4,79 @@
 
 ---
 
+### Session Log — 2026-05-19 Backtest Core — W23G.11: Multi-indicator confluence + multi-timeframe DSL
+
+**Mission:** Ship multi-indicator confluence + multi-timeframe DSL support end-to-end across schema, LLM extractor, DSL compiler, graduator, and tests. Heaviest track of Wave 23G.
+
+**Work completed:**
+- `src/server/db/migrations/0119_confluence_mtf_dsl.sql` — idempotent partial indexes for `confirming_indicators IS NOT NULL` and `bias_timeframe IS NOT NULL` observability
+- `src/server/db/migrations/meta/_journal.json` — idx=122 entry added for 0119
+- `src/agents/transcript-extractor.md` (v7 → v8) — Added W23G.11 section: confluence strategy extraction rules (`primary_indicator`, `confirming_indicators[]`, `min_factors_satisfied`); MTF extraction rules (`bias_timeframe`, `bias_condition`, `execution_timeframe`); updated output schema to show new fields; hard rules for fabrication prevention in both sections
+- `src/server/lib/dsl-compiler.ts` — Added `ConfirmingIndicator` type (exported); extended `DslCompileInput` with confluence + MTF fields; added `compileConfirmingIndicator()` helper (supports ema/sma crossover, rsi, vwap, ema/sma filter, macd, bbands, ORB confirming); added `applyConfluenceToCompiled()` function with direction-sentinel gating (doesn't re-enable disabled direction) + indicator deduplication; added `compileDslWithConfluence()` as preferred entry point; MTF FAIL-CLOSED: `mtfUnsupported=true`, `dsl_compiler.mtf_unsupported` note, NO bias grammar emitted
+- `src/server/services/direct-bucket-graduator.ts` — Import `compileDslWithConfluence` + `ConfirmingIndicator`; extract `confirming_indicators`, `min_factors_satisfied`, `bias_timeframe`, `bias_condition` from extractedIdea; renamed W23F `minFactorsSatisfied` to `entryQualityMinFactors` (naming collision fix); persist `confirming_indicators`, `min_factors_satisfied`, `primary_indicator`, `bias_timeframe`, `bias_condition`, `execution_timeframe` on config when present; emit `graduation.confluence_strategy` + `graduation.mtf_strategy` audit events post-INSERT (both non-blocking)
+- `src/server/__tests__/wave23g-confluence-dsl.test.ts` — 22 tests covering: 3-factor confluence, ORB+RSI+VWAP, MTF fail-CLOSED, MTF+confluence combined, min-factors conservative fallback, backward compat (3 variants), archetype compat, VWAP filter, unsupported confirming skipped, audit acceptance x2, graduator persistence mock, indicator deduplication, direction=short with confirming, min_factors explicit
+
+**Verification:**
+- `npx vitest run wave23g-confluence-dsl` → 22/22 pass
+- `npx vitest run audit-graduated-strategy-dsls-spec` → 32/32 pass (zero regression)
+- `npm run check:production-isolation` → CLEAN 0 violations
+- `tsc --noEmit` → zero new errors from modified files
+
+**Known-facts updates:**
+- `signals.py` AND/OR combinators confirmed present (lines 90-120) — engine natively evaluates `A AND B AND C` grammar
+- `compute_indicators` does NOT support per-TF resampling / `ema_50_4h`-style columns — MTF requires future engine pass
+- Direction-sentinel rule: when `compileDslToEngine` returns `"high < low"` for a disabled direction, `applyConfluenceToCompiled` must NOT push confirming clauses to that side (would re-enable disabled direction)
+
+**Carry-forward for next session:**
+- Engine MTF support: add per-TF resampling to `compute_indicators` + `_<tf>` column naming convention + remove `dsl_compiler.mtf_unsupported` fail-CLOSED path
+- W23G.12 (bidirectional backfill) — already shipped per MEMORY.md; verify it used `compileDslWithConfluence` after this change or remains on `compileDslToEngine`
+
+---
+
+### Session Log — 2026-05-19 Critic Optimizer — W23G.2 + W23G.7: wrong_instrument tightening + single-pass extraction
+
+**Mission:** Two atomic G-Beta tasks: (1) tighten wrong_instrument classifier so futures videos with brief forex illustrations are kept not rejected, and (2) expand first-pass extraction window from 8K to 12K with chunked fallback only firing on empty + long markdown.
+
+**Work completed:**
+- `src/agents/transcript-extractor.md` (v6 → v7) — Added `instrument_classification` field (REQUIRED top-level, values: `futures_primary` | `futures_with_forex_illustration` | `non_futures_primary`); tightened `wrong_instrument` empty_reason rule to ≥70% non-futures threshold with counter-rule for generic chart patterns; added W23G.2 classification section; updated Pipeline Context to reference 12K window; updated Output Schema and Output Discipline sections.
+- `src/server/routes/agent.ts` — First-pass window 8K → 12K (`FIRST_PASS_WINDOW = 12_000`); chunked fallback threshold changed from `> 4000` to `> CHUNKED_FALLBACK_THRESHOLD (12_000)`; added `extractionMode: "single_pass" | "chunked_fallback"` telemetry; `instrument_classification` captured from LLM response in `extractFromChunk`; W23G.2 audit event `scout.mixed_instrument_kept_futures` fires fire-and-forget when `instrument_classification === "futures_with_forex_illustration"`; success response now includes `extraction_mode`, `instrument_classification`, and `tokens_estimated` fields.
+- `src/server/__tests__/wave23g-extractor-tune.test.ts` — 6 new tests covering both tracks (W23G.2: 3 tests for futures_primary/futures_with_forex_illustration/non_futures_primary; W23G.7: 3 tests for single-pass 10K, chunked fallback 15K, telemetry field presence).
+
+**Verification:**
+- New tests: 6/6 pass
+- Baseline before changes: 111 failed / 2871 passed (full suite). After changes: 82 failed / 2900 passing. Net: 29 fewer failures, 29 more passing. Pre-existing scout-extract.test.ts + scout-extract-confluence.test.ts failures confirmed as W23G.9-era regression (not introduced here).
+
+**Known-facts updates:**
+- `extractFromChunk` in `src/server/routes/agent.ts` now captures `instrument_classification` from top-level LLM JSON. VALID_INSTRUMENT_CLASSIFICATIONS = `{futures_primary, futures_with_forex_illustration, non_futures_primary}`. First non-null wins (first pass is authoritative).
+- Chunked fallback threshold changed from `markdown.length > 4000` to `markdown.length > 12_000`. Old threshold was causing 3 extra LLM calls on any transcript over 4K even when the first pass succeeded.
+- `transcript-extractor.md` is now PROMPT_VERSION 7. The `instrument_classification` field is REQUIRED in every LLM response. Old v6 responses (no field) handled gracefully — route defaults to `"futures_primary"` when LLM omits it.
+
+**Carry-forward:** W23G.2 and W23G.7 complete. G-Beta remaining: W23G.3 (see previous log entry — already done). G-Beta done, ready for G-Gamma (W23G.4, W23G.5, W23G.6, W23G.8).
+
+---
+
+### Session Log — 2026-05-19 Backtest Core — W23G.3: Structural missing_params recovery (SMC/ICT/Wyckoff)
+
+**Mission:** Extend W23F.S missing_params recovery branch to handle structural archetypes (liquidity_sweep, order_block, fvg, wyckoff_spring, wyckoff_upthrust, judas_swing, silver_bullet, breaker_block) so LLM `reject: true, reason: missing_params` on structural transcripts produces a valid `archetype:<name>` stub DSL instead of a generic indicator stub.
+
+**Work completed:**
+- `src/server/routes/agent.ts` — extracted `detectStructuralArchetype()` as exported module-level helper (pure function, testable in isolation); replaced inline duplicate pattern table with call to helper; extended W23F.S branch: structural archetype scan runs FIRST, generic indicator fallback only fires if no archetype matched; emits `scout.structural_recovery` audit_log row (non-blocking .catch)
+- `src/server/services/direct-bucket-graduator.ts` — added 4 missing ARCHETYPE_REGISTRY short-form aliases: `fvg`, `judas_swing`, `silver_bullet`, `breaker_block` (map to same engine handlers as canonical equivalents); added 4 matching `prettifyConcept()` exact-name guards before the broader canonical patterns
+- `src/server/__tests__/wave23g-structural-recovery.test.ts` — 17 tests: 8 per-archetype detection fixtures, 2 negative tests, 3 priority/idempotency tests, 1 ARCHETYPE_REGISTRY completeness check, 3 stub DSL shape tests
+
+**Verification:**
+- `npm test -- wave23g-structural-recovery`: 17/17 pass
+- Full suite before changes: 32 failed / 169 passed; after: 30 failed / 171 passed. No regressions. 2 previously-failing tests unblocked by mock infrastructure improvements.
+
+**Known-facts updates:**
+- `detectStructuralArchetype()` is exported from `src/server/routes/agent.ts` — import it directly for unit tests without mocking the HTTP layer
+- ARCHETYPE_REGISTRY now has short-form aliases: `fvg`, `judas_swing`, `silver_bullet`, `breaker_block` (W23G.3). `prettifyConcept()` resolves exact short names to these aliases before checking broader canonical patterns.
+- Pattern priority in `STRUCTURAL_ARCHETYPE_PATTERNS`: liquidity_sweep → order_block → fvg → wyckoff_spring → wyckoff_upthrust → judas_swing → silver_bullet → breaker_block. Higher-priority patterns mask lower ones when multiple keywords appear in same transcript — by design.
+
+**Carry-forward for next session:** W23G.3 complete. Next is W23G.7 (single-pass extraction token savings) per G-Beta wave plan.
+
+---
+
 ### Session Log — 2026-05-19 Backtest Core Subagent — Phase 14: Production-grade concurrency hardening
 
 **Mission:** Fix server crash caused by Phase 13 firing 6 concurrent backtests × 4 WF parallel workers = 24 simultaneous Python subprocesses → OOM → pm2 restart → orphan-cleanup swept all 6 as failed.
@@ -5007,6 +5080,33 @@ prevents the next one is now hard-pinned in CLAUDE.md §11a + AGENTS.md §11.
 - Run `npx tsc --noEmit 2>&1 | grep TS2305 | grep -v "db/schema"` to enumerate the remaining cascade.
 - Once startup succeeds, confirm `GET /api/health` and `GET /api/production/status` return 200 with the kill-switch reading the `system_state` singleton (production_mode=HALT).
 - The other concurrent agent attempted a `drizzle-kit introspect` recovery and left malformed output in schema.ts (orphan `})\`),` lines + `smallint` / `check` references against unimported symbols). Their attempt was discarded in favor of the hand-rolled mirror that compiles cleanly.
+
+---
+
+### Session Log — 2026-05-19 Backtest Core — W23G.12: Bidirectional strategy backfill
+
+**Mission:** Ship backfill script + tests to promote 67 single-direction graduated strategies to `direction='both'` where the archetype is symmetric, verify Pine compiler already handles `direction='both'`, and confirm audit script stays clean.
+
+**Work completed:**
+- `scripts/backfill-bidirectional-strategies.ts` — idempotent backfill script with `--dry-run` (default) / `--apply` flag; reads actual indicator from `config.strategy.indicators[0].type` (top-level `entry_indicator` is empty for all 67 older strategies); name-based asymmetric guard blocks Connors RSI(2) + Raschke Holy Grail families; emits `audit_log` row per promotion with `strategy.bidirectional_backfilled`
+- `src/server/__tests__/wave23g-bidirectional-backfill.test.ts` — 54 tests: ORB/EMA/Bollinger promotions, connors_rsi2/raschke asymmetric blocks, idempotent skip, wyckoff/fvg archetype, buildPromotedConfig mutations, audit() passes on promoted configs, classifyIndicator canonical coverage
+- Pine compiler verified already correct: `pine_compiler.py:169-172` handles `direction='both'` via fall-through (both long/short conditions active). No change needed.
+- `dsl-compiler.ts` confirmed: already produces correct `entry_short` grammar for all symmetric indicator types when `direction='both'`
+
+**Key discovery — indicator field location:** `config.entry_indicator` is absent for older graduated strategies. The actual indicator lives in `config.strategy.indicators[0].type`. Backfill script reads both with fallback.
+
+**Dry-run results (real Railway DB, 67 single-direction strategies):**
+- Would promote to 'both': **60** (ORB x19, EMA crossover x24, Bollinger x5, VWAP fade x4, RSI reversal x6, ATR breakout x1, missing-entry_long x1)
+- Skipped asymmetric: **7** (connors_rsi2 x4, raschke/holy_grail x3)
+- Skipped unknown: 0
+
+**Verification:**
+- `vitest run wave23g-bidirectional-backfill.test.ts` → 54/54 pass
+- `vitest run audit-graduated-strategy-dsls-spec.test.ts` → 32/32 pass
+- `tsc --noEmit` → no new errors (TS6059 rootDir issue is pre-existing, shared with existing `audit-graduated-strategy-dsls-spec.test.ts`)
+- Dry-run script exits 0, connects to Railway DB, processes all 67 strategies correctly
+
+**Carry-forward for next session:** Operator runs `npx tsx scripts/backfill-bidirectional-strategies.ts --apply` to write 60 promotions. After apply: re-run audit script to verify 74/74 clean, then trigger backtest cycle for short-side trades on all promoted strategies.
 
 ---
 

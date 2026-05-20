@@ -2649,6 +2649,51 @@ def run_backtest(
         },
     }
 
+    # ─── Pass B-2: Invariant Harness (always runs — cheap pure validation) ───
+    # Runs AFTER result dict is fully assembled, BEFORE determinism check.
+    # Catches balance-arithmetic drift, P&L sum mismatches, metric corruption.
+    # Never env-gated: pure dict computation, no I/O, no new dependencies.
+    try:
+        from src.engine.invariant_harness import run_invariants
+        _inv_report = run_invariants(result)
+
+        def _serialize_inv_check(c) -> dict:
+            return {
+                "name": c.name,
+                "passed": c.passed,
+                "tolerance": c.tolerance,
+                "expected": c.expected,
+                "actual": c.actual,
+                "evidence": c.evidence,
+                "severity": c.severity,
+            }
+
+        result["invariants"] = {
+            "passed": _inv_report.passed,
+            "failed": _inv_report.failed,
+            "overall_passed": _inv_report.overall_passed,
+            "critical_failures": [_serialize_inv_check(c) for c in _inv_report.critical_failures],
+            "warnings": [_serialize_inv_check(c) for c in _inv_report.warnings],
+        }
+        if not _inv_report.overall_passed:
+            import json as _inv_json
+            _inv_payload = {
+                "event": "invariant_failure",
+                "backtest_id": str(result.get("backtest_id", "")),
+                "failed": _inv_report.failed,
+                "critical_count": len(_inv_report.critical_failures),
+                "critical_failures": [_serialize_inv_check(c) for c in _inv_report.critical_failures],
+            }
+            print(
+                f"INVARIANT_FAILURE_JSON {_inv_json.dumps(_inv_payload)}",
+                file=sys.stderr,
+            )
+    except Exception as _inv_err:
+        print(
+            json.dumps({"event": "invariants.error", "error": str(_inv_err)[:300]}),
+            file=sys.stderr,
+        )
+
     # E7.3 / P1-B: TF_VERIFY_DETERMINISM second-run check.
     # When TF_VERIFY_DETERMINISM=1, run the backtest a second time and compare
     # the JSON hash of both results (excluding timestamp_utc which varies by wall clock).
@@ -2681,6 +2726,27 @@ def run_backtest(
                 )
         except Exception as _det_exc:
             print(f"WARNING: determinism verification failed: {_det_exc}", file=sys.stderr)
+
+    # ─── Parity Shadow Pass ────────────────────────────────────────────
+    # Non-blocking cross-engine verification. Runs only when
+    # PARITY_SHADOW_ENABLED=true (default false). Never allowed to raise.
+    # Emits PARITY_SHADOW_DRIFT_JSON to stderr when drift is detected so
+    # server-side log capture picks it up for the observability layer.
+    if os.environ.get("PARITY_SHADOW_ENABLED", "false").lower() == "true":
+        try:
+            from src.engine.parity_engine.shadow_runner import run_parity_shadow
+            shadow_report = run_parity_shadow(request, result, df)
+            result["parity_shadow"] = shadow_report
+            if shadow_report.get("ran") and not shadow_report.get("passed", True):
+                print(
+                    f"PARITY_SHADOW_DRIFT_JSON {json.dumps(shadow_report)}",
+                    file=sys.stderr,
+                )
+        except Exception as e:
+            print(
+                json.dumps({"event": "parity_shadow.error", "error": str(e)[:300]}),
+                file=sys.stderr,
+            )
 
     return result
 
