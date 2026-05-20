@@ -98,6 +98,16 @@ class DailyBiasState:
     ib_status: Optional[str] = None          # 'IB_HOLD' | 'IB_EXTENSION_UP' | 'IB_EXTENSION_DOWN' | 'IB_EXTENSION_BOTH'
     open_classification: Optional[str] = None  # 'Open-In-Value' | 'Open-Outside-Value-*' | 'Open-Outside-Range'
     htf_aligned: bool = False                # True when net_bias and htf_trend agree directionally
+    # W23H.A — Range-bound eligibility flag.
+    # True when conditions suggest a RANGE_BOUND day rather than NO_TRADE or TREND:
+    #   - abs(net_bias) < 15 (no strong directional conviction)
+    #   - bias_confidence > 0.3 (some agreement among components, not full chaos)
+    #   - NOT in event blackout (active event within ±30 min)
+    #   - atr_percentile in [30, 70] (not crushed compression, not spike)
+    # When True, bias-state-service routes to RANGE_BOUND regime (with 2-day
+    # consecutive confirmation gate to prevent false positives).
+    # When False, NO_TRADE routing is unchanged.
+    range_bound_eligible: bool = False
 
 
 def _score_htf_trend(htf: HTFContext) -> int:
@@ -664,6 +674,17 @@ def compute_bias(
     # htf_aligned: True when net_bias direction agrees with HTF daily trend
     htf_aligned = (net_bias > 0 and direction_hint > 0) or (net_bias < 0 and direction_hint < 0)
 
+    # W23H.A — Range-bound eligibility.
+    # A range day is eligible when: weak directional bias + moderate confidence +
+    # no event blackout + ATR in the "normal" range (not extreme in either direction).
+    _event_in_blackout = event_active and abs(event_minutes) <= 30
+    range_bound_eligible: bool = (
+        abs(net_bias) < 15
+        and bias_confidence > 0.3
+        and not _event_in_blackout
+        and 30 <= htf.atr_percentile <= 70
+    )
+
     state = DailyBiasState(
         htf_context=htf,
         session_context=session,
@@ -695,6 +716,7 @@ def compute_bias(
         ib_status=vp_levels.ib_extension_status if vp_levels is not None else None,
         open_classification=vp_levels.open_classification if vp_levels is not None else None,
         htf_aligned=htf_aligned,
+        range_bound_eligible=range_bound_eligible,
     )
 
     # Track 5: SHADOW write — fire-and-forget persistence of bias decision.

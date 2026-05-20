@@ -312,12 +312,26 @@ export async function getOrComputeBiasStateForDay(
 import sys, json, os, datetime
 
 # ── Output helpers ──────────────────────────────────────────────────────────
+# W23H.A: Extended to cover all 9 playbook names from playbook_router.py.
+# Mean-reversion playbooks → RANGE_BOUND (new regime).
+# Legacy compat aliases (FULL_LONG/LEAN_LONG/etc.) preserved for any callers
+# still emitting the old playbook names from prior compute_bias() versions.
 PLAYBOOK_TO_REGIME = {
-    "FULL_LONG":  "TRENDING_UP",
-    "LEAN_LONG":  "TRENDING_UP",
-    "FULL_SHORT": "TRENDING_DOWN",
-    "LEAN_SHORT": "TRENDING_DOWN",
-    "NO_TRADE":   "NO_TRADE",
+    # 9-playbook router output names (W23H.A)
+    "NO_TRADE":                 "NO_TRADE",
+    "TREND_CONTINUATION_LONG":  "TRENDING_UP",
+    "TREND_CONTINUATION_SHORT": "TRENDING_DOWN",
+    "SWEEP_REVERSAL_LONG":      "TRENDING_UP",
+    "SWEEP_REVERSAL_SHORT":     "TRENDING_DOWN",
+    "MEAN_REVERSION_LONG":      "RANGE_BOUND",
+    "MEAN_REVERSION_SHORT":     "RANGE_BOUND",
+    "ORB_LONG":                 "TRENDING_UP",
+    "ORB_SHORT":                "TRENDING_DOWN",
+    # Legacy compat: old 5-playbook names from compute_bias() pre-W23H.A
+    "FULL_LONG":                "TRENDING_UP",
+    "LEAN_LONG":                "TRENDING_UP",
+    "FULL_SHORT":               "TRENDING_DOWN",
+    "LEAN_SHORT":               "TRENDING_DOWN",
 }
 
 def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, evidence, source):
@@ -423,10 +437,32 @@ try:
         vp_levels=vp_levels_obj,
     )
 
-    regime_label = PLAYBOOK_TO_REGIME.get(state.playbook, "UNKNOWN")
+    # W23H.A: Wire the dead 9-playbook router. route_playbook() replaces the direct
+    # state.playbook lookup with the full routing logic (SWEEP_REVERSAL, ORB, MEAN_REVERSION).
+    # Falls back gracefully if import fails (legacy PLAYBOOK_TO_REGIME still covers state.playbook).
+    try:
+        from src.engine.context.playbook_router import route_playbook as _route_playbook
+        _decision = _route_playbook(state, daily_loss_cap_near=False, max_trades_hit=False)
+        routed_playbook = _decision.playbook
+        allowed_strategies = _decision.allowed_strategies
+        allowed_setups = _decision.allowed_setups
+        # Emit audit event for playbook routing
+        print(f"AUDIT_EVENT_JSON {json.dumps({'event': 'playbook_router.routed', 'playbook': routed_playbook, 'regime': PLAYBOOK_TO_REGIME.get(routed_playbook, 'UNKNOWN'), 'allowed_strategies': allowed_strategies, 'allowed_setups': allowed_setups})}", file=sys.stderr)
+    except Exception as _route_err:
+        # Fail-open: router unavailable → fall back to legacy state.playbook
+        routed_playbook = state.playbook
+        allowed_strategies = []
+        allowed_setups = []
+        print(f"WARNING: route_playbook failed ({_route_err!r}), using legacy playbook", file=sys.stderr)
+
+    # W23H.A: Also emit range_bound_detected audit event when eligible
+    if getattr(state, 'range_bound_eligible', False):
+        print(f"AUDIT_EVENT_JSON {json.dumps({'event': 'bias_engine.range_bound_detected', 'net_bias': state.net_bias, 'confidence': state.bias_confidence, 'atr_percentile': state.htf_context.atr_percentile})}", file=sys.stderr)
+
+    regime_label = PLAYBOOK_TO_REGIME.get(routed_playbook, "UNKNOWN")
     emit(
         regime_label=regime_label,
-        playbook=state.playbook,
+        playbook=routed_playbook,
         net_bias=state.net_bias,
         bias_confidence=state.bias_confidence,
         no_trade_reasons=state.no_trade_reasons,
@@ -545,6 +581,76 @@ except Exception as primary_err:
       { sessionDate, symbol: sym, regimeLabel, playbook, isRefresh, correlationId },
       "bias-state: bias engine completed with REST-fallback (not primary compute_bias) — check DATA_ROOT + Parquet availability",
     );
+  }
+
+  // W23H.A — Range-bound 2-day consecutive confirmation gate.
+  // If the engine classified RANGE_BOUND, check that the previous trading session
+  // ALSO classified RANGE_BOUND. A single RANGE day is insufficient evidence —
+  // we need 2 consecutive days to confirm a genuine range regime.
+  // Single RANGE day → route to NO_TRADE with awaiting_confirmation reason.
+  // Two+ consecutive RANGE days → RANGE_BOUND activated.
+  if (regimeLabel === "RANGE_BOUND") {
+    try {
+      const priorRows = await db.execute(
+        sql`SELECT regime_label FROM bias_state WHERE symbol = ${sym} AND session_date < ${sessionDate}::date ORDER BY session_date DESC LIMIT 1`
+      );
+      const priorRegime: string | null = (priorRows.rows?.[0] as any)?.regime_label ?? null;
+      if (priorRegime !== "RANGE_BOUND") {
+        // Only 1 consecutive RANGE day → await confirmation, route NO_TRADE
+        logger.info(
+          { sessionDate, symbol: sym, priorRegime, correlationId },
+          "bias-state W23H.A: range_bound_awaiting_confirmation — single RANGE day detected, routing NO_TRADE until 2nd consecutive day",
+        );
+        try {
+          await insertAuditRow({
+            action: "bias_engine.range_bound_awaiting_confirmation",
+            entityType: "paper_session",
+            entityId: `${sessionDate}-${sym}`,
+            decisionAuthority: "system",
+            status: "info",
+            input: { sessionDate, symbol: sym, correlationId },
+            result: {
+              net_bias: evidence?.net_bias ?? null,
+              prior_day_regime: priorRegime,
+              range_bound_awaiting_confirmation: true,
+            },
+            correlationId,
+          });
+        } catch { /* audit non-blocking */ }
+        regimeLabel = "NO_TRADE";
+        playbook = "NO_TRADE";
+      } else {
+        // 2+ consecutive RANGE days → confirmed, emit audit
+        logger.info(
+          { sessionDate, symbol: sym, correlationId },
+          "bias-state W23H.A: range_bound confirmed (2+ consecutive days) — RANGE_BOUND activated",
+        );
+        try {
+          await insertAuditRow({
+            action: "bias_engine.range_bound_detected",
+            entityType: "paper_session",
+            entityId: `${sessionDate}-${sym}`,
+            decisionAuthority: "system",
+            status: "success",
+            input: { sessionDate, symbol: sym, correlationId },
+            result: {
+              net_bias: evidence?.net_bias ?? null,
+              consecutive_count: 2,
+              atr_percentile: evidence?.htf_atr_percentile ?? null,
+              range_bound_confirmed: true,
+            },
+            correlationId,
+          });
+        } catch { /* audit non-blocking */ }
+      }
+    } catch (gateErr) {
+      // DB query failure → fail-open: preserve RANGE_BOUND as classified
+      // (conservative: don't silently downgrade to NO_TRADE if we can't query prior day)
+      logger.warn(
+        { err: gateErr, sessionDate, symbol: sym, correlationId },
+        "bias-state W23H.A: range_bound confirmation gate DB query failed — RANGE_BOUND preserved (fail-open)",
+      );
+    }
   }
 
   // Resolve active strategy
