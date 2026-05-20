@@ -4,6 +4,47 @@
 
 ---
 
+### Session Log — 2026-05-20 Architect — Wave 23H Pass 1 close-out (cross-subsystem integrity + System Map sync)
+
+**Mission:** Final architect cleanup for Wave 23H Pass 1 — audit_log coverage check, cross-subsystem contract verification, System Map sync, CI hard gates per CLAUDE.md §10 + §11 Rule 3.
+
+**Audit_log coverage (10 events / 10):**
+- ✅ `backtest.mtf_join_completed` — `src/engine/backtester.py:1713`
+- ✅ `bias_engine.range_bound_detected` — `bias-state-service.ts:460` (Python AUDIT_EVENT_JSON) + `:630` (TS audit row)
+- ✅ `bias_engine.range_bound_awaiting_confirmation` — `bias-state-service.ts:606`
+- ✅ `playbook_router.routed` — `bias-state-service.ts:450`
+- ⚠️ `strategy.preferred_regimes_set` — **MISSING in code** (migration backfills the column but no emission of this action string in graduator / extractor write path). Spec'd in Pass 1 P1.A3 deliverables. Flag for Pass 2 P2.A4 sweep.
+- ✅ `signal.blocked_firm_id_lookup_failed` — `paper-execution-service.ts:737`
+- ✅ `c11_macro_gate.evaluation_failed_fail_closed` — `paper-signal-service.ts:2676` (in `reason` field of audit insert)
+- ✅ `lifecycle.frankenstein_rejected` — `lifecycle-service.ts:616 / 649 / 696 / 716` (4 rejection paths)
+- ✅ `kill_switch.c1_cme_outage_eval_failed` — `kill-switch.ts:344`
+- ✅ `kill_switch.c2_multi_firm_check` — `kill-switch.ts:393 / 414` (success + failure)
+
+**Cross-subsystem contract trace:**
+- ✅ DSL ↔ engine ↔ bias chain: `direct-bucket-graduator.ts:1267-1363` (writes `bias_timeframe` into config) → `dsl-compiler.ts:419-463` (AND-gates entry_long/short when both `bias_timeframe`+`bias_condition` present) → `signals.py:90-142` (paren-aware `evaluate_expression` handles AND/OR/NOT recursively, outer-paren strip applied) → `backtester.py:1598-1713` (loads HTF when `config.bias_timeframe` set, joins via `mtf_join.forward_fill_htf_to_exec`, emits audit). Chain INTACT.
+- ✅ Picker schema state (Pass 1 expected): `bias-state-service.ts:141` `resolveActiveStrategy` still filters on `strategies.preferredRegime` (single column). `preferredRegimes` array column added via migration 0120 + backfilled. Both columns coexist. This matches the Pass 2 W23H.C plan — picker upgrade is explicitly Pass 2 work.
+- ✅ 9-playbook router wiring: `route_playbook()` is now CALLED from `bias-state-service.ts:444-445` inline Python (was dead code pre-W23H.A). Fail-open fallback to `state.playbook` if router import fails.
+
+**System Map sync:**
+- `npm run system-map:sync` — completed, regenerated 3 files
+- `npm run system-map:check` — **GREEN** (`status: ok`, `driftItems: []`, `generatedSectionPresent: true`)
+- Counts: 62 routes / 62 scheduler jobs / 28 canonical workflows / 26 engine subsystems / 92 DB tables / 21 registry subsystems
+- New W23H fields (`preferred_regimes`, `range_bound_eligible`, `bias_timeframe`/MTF join) are NOT explicit nouns in `system-readiness.generated.json` or `system-topology.generated.json` because the generator indexes routes/jobs/tables/workflows, not column-level schema. Migration 0120 is the canonical record; system-map drift detector remained green because no architectural surface (route, job, subsystem boundary) changed.
+
+**CI hard gates:**
+- ✅ `check:production-isolation` — CLEAN, 4 files checked, 0 violations
+- ⚠️ `check:2026-compliance` — pre-existing comment-only `max_contracts` drift (MFFU + Topstep), value `50` matches numerically; canonical doc has trailing `# micros...` comment. Acceptable per task constraints; flagged for separate hardening ticket.
+- ✅ `system-map:check` — green (above)
+- ✅ `npx vitest run wave23h` — **123/123 pass** across 10 test files
+- ✅ `npx vitest run wave23g` — **167/167 pass** across 9 test files (no Wave 23G regression)
+
+**Carry-forward for next session:**
+- **Pass 2 P2.A4 must add `strategy.preferred_regimes_set` emission** in the graduator / extractor write path (currently absent). Schema is wired; audit instrumentation is the missing piece.
+- Pass 2 W23H.C picker upgrade still uses single `preferred_regime` column at `bias-state-service.ts:141` — switch to `'<regime>' = ANY(preferred_regimes)` per plan §Pass 2.
+- Pre-existing `firm_config` comment drift on `max_contracts: 50` line should be reconciled in a dedicated compliance sweep (out of Pass 1 scope).
+
+---
+
 ### Session Log — 2026-05-20 Backtest Core — W23H Pass 1 Tracks W23H.1 + W23H.A + W23H.B
 
 **Mission:** Ship W23H.1 (Engine MTF HTF column join), W23H.A (3-regime bias engine + dead playbook router wiring), W23H.B (multi-regime strategies schema) in one coherent agent invocation per Wave 23H Pass 1 plan.
