@@ -243,24 +243,35 @@ def compute_opening_range_breakout(
 
     # ── Apply lock mask: pre-lock rows get None ───────────────────────
     # A bar at lock_total_minutes or later is post-lock; earlier bars are null.
-    post_lock_mask = full["time_min"] >= lock_total_minutes
+    #
+    # PERFORMANCE FIX (2026-05-20): The original implementation used three Python
+    # list comprehensions iterating range(n) and accessing Polars Series via [i]
+    # scalar indexing. Each series[i] access crosses the Python/Rust boundary,
+    # making the total cost O(n) scalar extractions with high per-call overhead.
+    # At n=46K bars (MES 5m, 1 year) × 5 walk-forward windows this caused
+    # 23-minute runtimes on 3-month windows and 30-minute timeouts on full-year
+    # windows for ORB-MES-15m and CL-MCL-5m strategies.
+    #
+    # Fix: use pl.when().then().otherwise() — vectorized conditional executed
+    # entirely in the Polars Rust engine. Zero Python per-element overhead.
+    # Output semantics are IDENTICAL: pre-lock rows are null, post-lock rows
+    # carry the day's OR values. Column names, dtypes, and null patterns unchanged.
+    full = full.with_columns([
+        pl.when(pl.col("time_min") >= lock_total_minutes)
+          .then(pl.col("orh"))
+          .otherwise(None)
+          .alias("orh_locked"),
+        pl.when(pl.col("time_min") >= lock_total_minutes)
+          .then(pl.col("orl"))
+          .otherwise(None)
+          .alias("orl_locked"),
+    ]).with_columns([
+        (pl.col("orh_locked") - pl.col("orl_locked")).alias("or_range_locked"),
+    ])
 
-    orh_list = [
-        full["orh"][i] if post_lock_mask[i] else None
-        for i in range(n)
-    ]
-    orl_list = [
-        full["orl"][i] if post_lock_mask[i] else None
-        for i in range(n)
-    ]
-    or_range_list = [
-        (orh_list[i] - orl_list[i]) if (orh_list[i] is not None and orl_list[i] is not None) else None
-        for i in range(n)
-    ]
-
-    orh_series = pl.Series(orh_list, dtype=pl.Float64)
-    orl_series = pl.Series(orl_list, dtype=pl.Float64)
-    or_range_series = pl.Series(or_range_list, dtype=pl.Float64)
+    orh_series = full["orh_locked"].cast(pl.Float64)
+    orl_series = full["orl_locked"].cast(pl.Float64)
+    or_range_series = full["or_range_locked"].cast(pl.Float64)
 
     return orh_series, orl_series, or_range_series
 
