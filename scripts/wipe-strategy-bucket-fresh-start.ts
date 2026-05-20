@@ -241,16 +241,15 @@ export async function run(
   await sql.begin(async (tx) => {
     // Delete in FK-respecting order
 
-    // 1. strategy_pending_mentions (references strategy via bucket — not direct FK,
-    //    but semantically linked; wipe all to avoid orphaned mention rows)
-    await tx`DELETE FROM strategy_pending_mentions WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
-
-    // 2. strategy_pending_buckets — this table has no direct FK to strategies.
-    //    TRUNCATE the entire table so the bucket is clean for head-start populate.
-    await tx`TRUNCATE strategy_pending_buckets`;
+    // 1+2. TRUNCATE mentions + buckets together (PostgreSQL requires combined TRUNCATE
+    //      because strategy_pending_mentions has an FK to strategy_pending_buckets).
+    await tx`TRUNCATE strategy_pending_mentions, strategy_pending_buckets`;
 
     // 3. strategy_export_artifacts
-    await tx`DELETE FROM strategy_export_artifacts WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+    // Schema-truthful: strategy_export_artifacts joins via export_id → strategy_exports.
+    // Delete artifacts first, THEN the parent strategy_exports rows (FK order).
+    await tx`DELETE FROM strategy_export_artifacts WHERE export_id IN (SELECT id FROM strategy_exports WHERE strategy_id = ANY(${strategyIds}::uuid[]))`;
+    await tx`DELETE FROM strategy_exports WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
 
     // 4. account_strategy_assignments
     await tx`DELETE FROM account_strategy_assignments WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
@@ -258,11 +257,34 @@ export async function run(
     // 5. lifecycle_transitions
     await tx`DELETE FROM lifecycle_transitions WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
 
-    // 6. backtests (cascade should take backtest_trades, monte_carlo_runs, etc.)
+    // 6a. Clean NO_ACTION (RESTRICT) backtest-dependent tables BEFORE backtests deletion.
+    //     Verified 2026-05-20 against live Railway schema: these 6 tables have FK to
+    //     backtests with confdeltype='a' (NO ACTION) — must explicitly clean rows
+    //     belonging to wiped backtests, otherwise DELETE backtests fails.
+    //     Since all wiped strategies are non-PILOT/non-DEPLOYED and we delete all
+    //     associated backtests, we can scope by backtest_id IN (SELECT id FROM backtests WHERE strategy_id...).
+    const backtestIdSubquery = sql`SELECT id FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+    await tx`DELETE FROM backtest_provenance WHERE backtest_id IN (${backtestIdSubquery})`;
+    await tx`DELETE FROM adversarial_stress_runs WHERE backtest_id IN (${backtestIdSubquery})`;
+    await tx`DELETE FROM cloud_qmc_runs WHERE backtest_id IN (${backtestIdSubquery})`;
+    await tx`DELETE FROM frankenstein_test_runs WHERE backtest_id IN (${backtestIdSubquery})`;
+    await tx`DELETE FROM strategy_signal_vectors WHERE backtest_id IN (${backtestIdSubquery})`;
+    await tx`DELETE FROM shadow_rerun_findings WHERE backtest_id IN (${backtestIdSubquery})`;
+
+    // 6b. walk_forward_windows (CASCADE on FK, but explicit for clarity + count parity)
+    await tx`DELETE FROM walk_forward_windows WHERE backtest_id IN (SELECT id FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[]))`;
+
+    // 7. backtests (now safe — CASCADE handles backtest_trades, monte_carlo_runs, etc.)
     await tx`DELETE FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
 
-    // 7. walk_forward_windows
-    await tx`DELETE FROM walk_forward_windows WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+    // 7b. Clean NO_ACTION strategies-dependent tables BEFORE strategies deletion.
+    //     Verified 2026-05-20: 4 additional tables with confdeltype='a' that don't
+    //     overlap with the backtest cleanup above (strategy_lockouts, strategy_firm_eligibility,
+    //     strategy_dsl_features, tradingview_markers). strategy_pending_buckets already TRUNCATEd.
+    await tx`DELETE FROM strategy_lockouts WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+    await tx`DELETE FROM strategy_firm_eligibility WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+    await tx`DELETE FROM strategy_dsl_features WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+    await tx`DELETE FROM tradingview_markers WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
 
     // 8. bias_state rows referencing wiped strategies
     await tx`DELETE FROM bias_state WHERE active_strategy_id = ANY(${strategyIds}::uuid[])`;
@@ -323,13 +345,18 @@ export async function countDependentRows(
     biasRes,
     auditRes,
   ] = await Promise.all([
-    sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM strategy_pending_mentions WHERE strategy_id = ANY(${strategyIds}::uuid[])`,
+    // Schema-truthful queries (verified 2026-05-20 against live Railway DB).
+    // strategy_pending_mentions joins via bucket_id → strategy_pending_buckets.graduated_strategy_id.
+    // We TRUNCATE the entire mentions table downstream, so count is total rows.
+    sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM strategy_pending_mentions`,
     sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM strategy_pending_buckets`,
-    sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM strategy_export_artifacts WHERE strategy_id = ANY(${strategyIds}::uuid[])`,
+    // strategy_export_artifacts joins via export_id → strategy_exports.id → strategy_id.
+    sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM strategy_export_artifacts WHERE export_id IN (SELECT id FROM strategy_exports WHERE strategy_id = ANY(${strategyIds}::uuid[]))`,
     sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM account_strategy_assignments WHERE strategy_id = ANY(${strategyIds}::uuid[])`,
     sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM lifecycle_transitions WHERE strategy_id = ANY(${strategyIds}::uuid[])`,
     sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[])`,
-    sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM walk_forward_windows WHERE strategy_id = ANY(${strategyIds}::uuid[])`,
+    // walk_forward_windows joins via backtest_id → backtests.strategy_id.
+    sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM walk_forward_windows WHERE backtest_id IN (SELECT id FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[]))`,
     sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM bias_state WHERE active_strategy_id = ANY(${strategyIds}::uuid[])`,
     sql<[{ n: number }]>`SELECT COUNT(*)::int AS n FROM audit_log WHERE entity_type = 'strategy' AND entity_id = ANY(${strategyIds}::uuid[])`,
   ]);
