@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-20T07:52:13.270Z",
+  "generatedAt": "2026-05-20T08:16:51.102Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,7 +15,7 @@
     ]
   },
   "counts": {
-    "routes": 63,
+    "routes": 64,
     "schedulerJobs": 63,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
@@ -35,6 +35,7 @@
     "/api/backtests",
     "/api/bias-decisions",
     "/api/bias-state",
+    "/api/broker-accounts",
     "/api/cloud-qmc",
     "/api/compiler",
     "/api/compliance",
@@ -886,6 +887,7 @@
       "databaseTables": 92
     },
     "missingRoutes": [
+      "/api/broker-accounts",
       "/api/pre-market"
     ],
     "missingSchedulerJobs": [

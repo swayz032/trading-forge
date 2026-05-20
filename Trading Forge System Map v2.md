@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-20T07:52:13.270Z`.
+Updated automatically from the repo on `2026-05-20T08:16:51.102Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,7 +11,7 @@ Updated automatically from the repo on `2026-05-20T07:52:13.270Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `operator-halt-only, tradingview_deploy`
-- API routes tracked: `63`
+- API routes tracked: `64`
 - Scheduler jobs tracked: `63`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
@@ -53,7 +53,7 @@ Updated automatically from the repo on `2026-05-20T07:52:13.270Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `21`
-- Route coverage: `62/63`
+- Route coverage: `62/64`
 - Scheduler coverage: `62/63`
 - Engine coverage: `26/26`
 - Database coverage: `92/93`
@@ -186,6 +186,7 @@ Updated automatically from the repo on `2026-05-20T07:52:13.270Z`.
 - `/api/backtests`
 - `/api/bias-decisions`
 - `/api/bias-state`
+- `/api/broker-accounts`
 - `/api/cloud-qmc`
 - `/api/compiler`
 - `/api/compliance`

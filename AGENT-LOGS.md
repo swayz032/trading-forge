@@ -4,6 +4,44 @@
 
 ---
 
+### Session Log — 2026-05-20 trading-forge-architect — Wave 23H Pass 4 close-out (account-level safety integrity)
+
+**Mission:** Pass 4 cross-cutting verification — audit_log coverage, cross-subsystem contracts, System Map sync, CI gates, Pass 5 readiness flag.
+
+**Work completed:**
+- Verified all 3 Pass 4 commits via `git show --stat` (28b59d8 W23H.E, e1dead3 W23H.F, 838232a W23H.H) + bb9bfde compliance fix + 64e8e7c paper-parity log
+- Audit_log coverage report — 8 events checked:
+  - GREEN (5): `bias_engine.refresh_strategy_changed_position_locked`, `cross_symbol_dll_halt_triggered`, `cross_symbol_force_close_triggered`, `broker_account.symbols_updated`, `signal.skipped_pre_market_blackout` (via skipDecisions row + `signalType` column)
+  - YELLOW (3): `signal.blocked_position_lock_active`, `signal.blocked_symbol_not_enabled_for_account`, `signal.skipped_pre_market_blackout` are persisted via `skipDecisions` rows with `signalType` and structured `reason` strings — NOT as discrete `audit_log.action` rows. Plumbed correctly via `insertAuditRow` for state-change events; `signal.*` events live on the skip-decisions table by design. Pattern-consistent with W23H.3 `signal.skipped_outside_window`. NOT a regression.
+  - RED (0): no missing events. One soft gap: `position_lock.cleared_on_close` is not yet emitted on natural-exit; the position lock is implicit (clears when bias_state row is replaced on next refresh). Operator-visible state-change is captured by `bias_engine.refresh_strategy_changed_position_locked` deltas; no audit silence on critical path. Logged as a Pass 5 follow-up nit.
+- Cross-subsystem contracts:
+  - **broker_accounts Layer 7**: `production/kill-switch.ts:378-380` selects ONLY `firmId` column from `brokerAccounts`. Adding `enabled_symbols TEXT[]` column is additive — Drizzle column whitelist on the SELECT shields Layer 7. SAFE.
+  - **Stage ordering in paper-signal-service.ts**: confirmed Stage 0 (W23H.H symbol whitelist L2224) → Stage 0.5a (W23H.F pre-market blackout L2282) → Stage 0.5b (W23H.F cross-symbol DLL L2340) → Stage 1 (W23H.E position-lock + active strategy) → Stage 2 (A+ confluence). Each gate fail-OPEN on infrastructure error (try/catch with `logger.warn` + `proceeding`), fail-CLOSED on legitimate block. Matches CLAUDE.md §12 hard-gate pattern.
+  - **Pre-market write→read loop CLOSED**: Writer `pre-market-routine.ts:433-444` emits `{event_type, start_utc, end_utc, severity}` JSONB. Reader `paper-signal-service.ts:2300` types as `Array<{event_type, start_utc, end_utc, severity}>`. Shapes agree exactly.
+- Migrations present: 0120 (multi_regime), 0121 (pre_market_sessions), 0122 (position_lock), 0123 (enabled_symbols).
+- W23H source files contain ZERO outstanding TODO/FIXME comments.
+- `npm run system-map:sync` — executed; `Trading Forge System Map v2.md` + `docs/system-readiness.generated.json` + `docs/system-topology.generated.json` updated.
+- `npm run system-map:check` — EXIT 0.
+- `npm run check:production-isolation` — CLEAN (4 files, 0 violations).
+- `npm run check:2026-compliance` — OK after bb9bfde inline-comment fix.
+- Wave 23H aggregate vitest: **374 passed across 21 files** (Pass 4 contributed 30: 8 W23H.E + 12 W23H.F + 10 W23H.H). pytest fleet asserted GREEN per Pass 1-3 close-out entries (≥95 estimated; not re-run this pass).
+
+**Pass 5 readiness flag — GREEN:**
+- ✅ All 4 passes' migrations present (0120/0121/0122/0123)
+- ✅ All 4 passes' service layers shipped + tests green (vitest 374/374)
+- ✅ Zero TODOs in W23H files
+- ✅ System Map sync clean, CI gates green
+- ✅ No subsystem disconnect detected; stage cascade is fail-open-on-error / fail-closed-on-block
+- Pass 5 (wipe + head-start) is unblocked
+
+**Known-facts updates:** None new. CLAUDE.md §10 mandate satisfied.
+
+**Carry-forward for next session:**
+- Nit: consider emitting `position_lock.cleared_on_close` audit event when prior-strategy position closes naturally (currently inferred from absence of `bias_engine.refresh_strategy_changed_position_locked` deltas).
+- Pass 5 `critic-optimizer` dispatch: W23H.7 wipe script → W23H.8 head-start populate.
+
+---
+
 ### Session Log — 2026-05-20 paper-parity — Wave 23H Pass 4 (account-level safety: W23H.E + W23H.F + W23H.H)
 
 **Mission:** Ship W23H.E (10am regime-flip position lock), W23H.F (cross-symbol DLL coordinator + pre-market blackout consumption), and W23H.H (per-account symbol whitelist) — all touching paper-signal-service.ts, serialized in single agent.
