@@ -16,7 +16,7 @@
 
 import { Router, type Request, type Response } from "express";
 import { db } from "../db/index.js";
-import { dailyReconciliation, weeklyDriftReports } from "../db/schema.js";
+import { dailyReconciliation, paperSessions, weeklyDriftReports } from "../db/schema.js";
 import { desc, eq, gte, sql } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 import { killSwitch } from "../production/kill-switch.js";
@@ -161,15 +161,77 @@ async function buildPnlToday(): Promise<PnLStatus> {
   }
 }
 
+// Track A F-4: Wire drawdownDistance to actual session DLL state.
+// Per-firm DLL defaults (% of starting capital): Topstep trailing-DD uses
+// the equity HWM; MFFU uses a fixed 2% daily. We use a conservative 5%
+// firm DLL estimate when firmId is unknown (tightest safe default).
+const FIRM_DLL_PCT: Record<string, number> = {
+  mffu: 0.02,       // MFFU 2% daily loss limit
+  topstep: 0.05,    // Topstep trailing-DD buffer (conservative daily estimate)
+};
+const DEFAULT_DLL_PCT = 0.05; // Unknown firm — use tightest default
+
 async function buildDrawdownDistance(): Promise<DrawdownStatus> {
-  // Phase 4C will wire real drawdown from paper-execution-service DLL state.
-  // Until then, return null values — phase_4c_pending state.
-  return {
-    bufferRemaining: null,
-    firmLimit: null,
-    usedPct: null,
-    severity: "green", // Not halted → no data → assume safe
-  };
+  try {
+    const activeSessions = await db
+      .select({
+        id: paperSessions.id,
+        firmId: paperSessions.firmId,
+        startingCapital: paperSessions.startingCapital,
+        currentEquity: paperSessions.currentEquity,
+        dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
+      })
+      .from(paperSessions)
+      .where(eq(paperSessions.status, "active"))
+      .limit(10);
+
+    if (activeSessions.length === 0) {
+      // Operator must see the gap — yellow, not green
+      return {
+        bufferRemaining: null,
+        firmLimit: null,
+        usedPct: null,
+        severity: "yellow",
+      };
+    }
+
+    // Compute worst-case DLL usage across all active sessions
+    const todayUtcKey = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+    let worstUsedPct = 0;
+    let worstFirmLimit: number | null = null;
+    let worstBufferRemaining: number | null = null;
+
+    for (const session of activeSessions) {
+      const startingCapital = Number(session.startingCapital ?? 50000);
+      const dllPct = FIRM_DLL_PCT[session.firmId ?? ""] ?? DEFAULT_DLL_PCT;
+      const firmLimit = startingCapital * dllPct;
+
+      // Extract today's P&L from the JSON breakdown map
+      const breakdown = (session.dailyPnlBreakdown ?? {}) as Record<string, number>;
+      const dayPnl = breakdown[todayUtcKey] ?? 0;
+      const usedPct = Math.abs(dayPnl) / firmLimit;
+
+      if (usedPct > worstUsedPct) {
+        worstUsedPct = usedPct;
+        worstFirmLimit = firmLimit;
+        worstBufferRemaining = firmLimit - Math.abs(dayPnl);
+      }
+    }
+
+    let severity: OverallSeverity = "green";
+    if (worstUsedPct >= 0.5) severity = "yellow";
+    if (worstUsedPct >= 0.67) severity = "red";
+
+    return {
+      bufferRemaining: worstBufferRemaining !== null ? Math.round(worstBufferRemaining * 100) / 100 : null,
+      firmLimit: worstFirmLimit !== null ? Math.round(worstFirmLimit * 100) / 100 : null,
+      usedPct: Math.round(worstUsedPct * 1000) / 1000,
+      severity,
+    };
+  } catch (err) {
+    logger.warn({ err }, "production-status: drawdown distance query failed");
+    return { bufferRemaining: null, firmLimit: null, usedPct: null, severity: "yellow" };
+  }
 }
 
 async function buildLastCleanRecon(): Promise<ReconStatus> {

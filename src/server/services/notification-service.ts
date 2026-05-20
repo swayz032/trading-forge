@@ -20,6 +20,7 @@
  */
 
 import { logger } from "../lib/logger.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -144,7 +145,11 @@ function buildBatchEmbed(items: NotifyOptions[]): DiscordEmbed {
 
 // ─── Webhook call ─────────────────────────────────────────────────────────────
 
-async function sendWebhook(webhookUrl: string, payload: DiscordWebhookPayload): Promise<void> {
+async function sendWebhook(
+  webhookUrl: string,
+  payload: DiscordWebhookPayload,
+  opts?: { isCritical?: boolean; originalOpts?: NotifyOptions },
+): Promise<void> {
   if (!checkRateLimit()) {
     logger.warn(
       { rateLimit: RATE_LIMIT_MAX, windowMs: RATE_LIMIT_WINDOW_MS },
@@ -161,6 +166,49 @@ async function sendWebhook(webhookUrl: string, payload: DiscordWebhookPayload): 
     body: JSON.stringify(payload),
     signal: AbortSignal.timeout(10_000),
   });
+
+  // Track A F-3: Detect 429 (rate-limited by Discord) separately from other
+  // HTTP errors. Parse Retry-After from header or body. Write audit_log row so
+  // operators can detect sustained rate-limit pressure. Do NOT retry inline —
+  // caller is fire-and-forget and inline retry would block the event loop.
+  if (response.status === 429) {
+    let retryAfterSec: number | null = null;
+    const retryHeader = response.headers.get("retry-after");
+    if (retryHeader) {
+      retryAfterSec = parseFloat(retryHeader);
+    }
+    if (retryAfterSec === null) {
+      try {
+        const body = await response.json() as { retry_after?: number };
+        if (typeof body.retry_after === "number") {
+          retryAfterSec = body.retry_after;
+        }
+      } catch { /* body not JSON — ignore */ }
+    }
+
+    const title = opts?.originalOpts?.title ?? "(batch flush)";
+    const severity = opts?.originalOpts?.severity ?? "WARNING";
+
+    logger.warn(
+      { retryAfterSec, severity, title },
+      "NotificationService: Discord 429 rate-limited — message dropped",
+    );
+
+    // Fire-and-forget audit write — never let this block the caller
+    insertAuditRow({
+      action: "notification.discord_rate_limited",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { title, severity, retryAfterSec } as Record<string, unknown>,
+      result: { dropped: true } as Record<string, unknown>,
+      status: "warning",
+    }).catch((auditErr) => {
+      logger.warn({ auditErr }, "NotificationService: failed to write discord_rate_limited audit row");
+    });
+
+    return; // Drop — do not throw (caller is fire-and-forget)
+  }
 
   if (!response.ok) {
     const body = await response.text().catch(() => "(unreadable)");
@@ -198,7 +246,7 @@ async function flushWarningQueue(): Promise<void> {
 
   const embed = buildBatchEmbed(batch);
   try {
-    await sendWebhook(webhookUrl, { embeds: [embed] });
+    await sendWebhook(webhookUrl, { embeds: [embed] }, { isCritical: false });
     logger.info({ count: batch.length }, "NotificationService: warning batch sent");
   } catch (err) {
     logger.warn(
@@ -239,7 +287,7 @@ export function notify(opts: NotifyOptions): void {
 
   // CRITICAL and INFO are sent immediately, fire-and-forget
   const embed = buildEmbed(opts);
-  sendWebhook(webhookUrl, { embeds: [embed] }).then(() => {
+  sendWebhook(webhookUrl, { embeds: [embed] }, { isCritical: opts.severity === "CRITICAL", originalOpts: opts }).then(() => {
     logger.debug(
       { severity: opts.severity, title: opts.title },
       "NotificationService: notification sent",

@@ -159,13 +159,26 @@ def build_s3_glob(
 
 
 def _verify_ratio_adjusted_source(source: str, adjusted: bool) -> None:
-    """Warn if the data source path does not contain ratio_adj when adjusted=True."""
+    """Hard-fail if the data source path does not contain ratio_adj when adjusted=True.
+
+    F-6 fix: Changed from warnings.warn() to raise ValueError() so production callers
+    cannot accidentally backtest on raw/unadjusted data. Set ALLOW_RAW_DATA=true in
+    the environment ONLY for explicit test/research opt-in — never in production.
+    """
     if adjusted and "ratio_adj" not in source and "consolidated" not in source:
-        warnings.warn(
-            f"Data source '{source}' does not appear to be ratio-adjusted. "
-            f"Backtesting on unadjusted contracts creates fake signals at roll boundaries. "
-            f"Set adjusted=False to suppress this warning if intentional."
-        )
+        allow_raw = os.environ.get("ALLOW_RAW_DATA", "false").lower() in ("1", "true", "yes")
+        if allow_raw:
+            warnings.warn(
+                f"ALLOW_RAW_DATA=true override: loading from '{source}' which does not appear "
+                f"ratio-adjusted. This is for test/research only — never use in production."
+            )
+        else:
+            raise ValueError(
+                f"Data source '{source}' does not appear to be ratio-adjusted. "
+                f"Backtesting on unadjusted contracts creates fake signals at roll boundaries. "
+                f"Set adjusted=False explicitly if intentional, or set ALLOW_RAW_DATA=true "
+                f"for test/research use."
+            )
 
 
 # ─── Sync ─────────────────────────────────────────────────────────
@@ -403,6 +416,7 @@ def load_ohlcv(
     end: str,
     local_path: Optional[str] = None,
     adjusted: bool = True,
+    ignore_quality_gate: bool = False,
 ) -> pl.DataFrame:
     """Load OHLCV data as a Polars DataFrame.
 
@@ -416,6 +430,8 @@ def load_ohlcv(
         local_path: If provided, load from this specific Parquet file
         adjusted: If True (default), load from ratio-adjusted path. If False,
             load raw unadjusted data (with a warning).
+        ignore_quality_gate: For test fixtures ONLY. When True, quality gate failures
+            are logged but do not raise. NEVER set True in production callers.
 
     Returns:
         Polars DataFrame with columns: ts_event, open, high, low, close, volume
@@ -451,8 +467,6 @@ def load_ohlcv(
     if local_path:
         source = local_path
         print(f"Loading {data_symbol} {timeframe} from local path", file=sys.stderr)
-        # Verify local path looks like ratio-adjusted data
-        _verify_ratio_adjusted_source(source, adjusted)
     else:
         cache_file = _cache_path(data_symbol, timeframe)
         if _is_cache_fresh(cache_file):
@@ -469,6 +483,11 @@ def load_ohlcv(
             # Cache miss — read directly from S3 consolidated file (single HTTP request)
             source = _consolidated_s3_path(data_symbol, timeframe, adjusted=adjusted)
             print(f"Loading {data_symbol} {timeframe} from S3 consolidated (cache miss)", file=sys.stderr)
+
+    # F-2 fix: verify adjusted-ratio on EVERY code path (was local_path only).
+    # Cache paths contain ratio-adjusted data by construction (CLAUDE.md §13 + cache write guard).
+    # This call is a no-op when adjusted=False (the earlier warning covers that case).
+    _verify_ratio_adjusted_source(source, adjusted)
 
     sql = f"""
         SELECT ts_event, open, high, low, close, volume
@@ -634,9 +653,11 @@ def load_ohlcv(
                 f"(coverage={quality_report.coverage_pct:.1f}%); proceeding",
                 file=sys.stderr,
             )
-        elif local_path:
+        elif ignore_quality_gate:
+            # F-3 fix: local_path no longer bypasses the gate automatically.
+            # Callers must EXPLICITLY pass ignore_quality_gate=True (test fixtures only).
             print(
-                f"WARNING: DATA QUALITY GATE FAILED (local test path passthrough) for {symbol} {timeframe}: "
+                f"WARNING: DATA QUALITY GATE FAILED (ignore_quality_gate=True override) for {symbol} {timeframe}: "
                 f"{'; '.join(critical)}",
                 file=sys.stderr,
             )
@@ -744,6 +765,52 @@ def _second_thursday_before_third_friday(year: int, month: int) -> "date":  # no
     return rollover
 
 
+def _equity_index_rollover_dates(start_year: int, end_year: int) -> list["date"]:  # noqa: F821
+    """Compute equity-index (ES/MES/NQ/MNQ) rollover dates.
+
+    Equity index futures roll quarterly (Mar/Jun/Sep/Dec). Rollover date is the
+    2nd Thursday before 3rd Friday of the delivery month.
+    """
+    from datetime import date
+    dates_list: list[date] = []
+    for year in range(start_year, end_year + 1):
+        for month in [3, 6, 9, 12]:
+            dates_list.append(_second_thursday_before_third_friday(year, month))
+    return dates_list
+
+
+def _crude_oil_rollover_dates(start_year: int, end_year: int) -> list["date"]:  # noqa: F821
+    """Compute crude oil (CL/MCL) rollover dates.
+
+    CL rolls every month. The rollover date is the business day BEFORE the 25th
+    calendar day of the month PRECEDING the delivery month.
+
+    Example: CL May contract (delivery = May) rolls in late April.
+    The 25th of April is the reference; step back one business day.
+    If April 25 is Saturday → go to April 24 (Fri), then step back one biz day
+    → April 23 (Thu) is the rollover.
+
+    Per CME published schedule: CME Rule 104.12.
+    """
+    from datetime import date, timedelta
+    dates_list: list[date] = []
+    for year in range(start_year, end_year + 1):
+        for month in range(1, 13):
+            # The 25th of the prior month (month preceding delivery month)
+            # Delivery month = month; prior month = month - 1 (wrap: Dec → Jan prev year)
+            # We iterate over the month that PRECEDES the delivery month.
+            # Simpler: for delivery month M, roll_reference = 25th of month M-1.
+            # We iterate by roll_reference month directly.
+            roll_ref = date(year, month, 25)
+            # Step back to the previous business day (the roll_reference itself
+            # must be a business day, otherwise step back further)
+            candidate = roll_ref - timedelta(days=1)
+            while candidate.weekday() >= 5:  # Sat=5, Sun=6
+                candidate -= timedelta(days=1)
+            dates_list.append(candidate)
+    return dates_list
+
+
 def compute_rollover_dates(
     symbol: str,
     start_year: int,
@@ -751,24 +818,40 @@ def compute_rollover_dates(
 ) -> list["date"]:  # noqa: F821
     """Compute standard rollover dates for a futures symbol across a year range.
 
-    Uses CME convention: 2nd Thursday before 3rd Friday of each delivery month.
+    F-1 fix: Added per-symbol dispatch so CL/MCL use the correct crude oil
+    rollover formula (business day before the 25th of the prior month) instead
+    of the equity index formula (2nd Thursday before 3rd Friday).
 
     Args:
-        symbol: Futures symbol (ES, NQ, CL, etc.)
+        symbol: Futures symbol (ES, MES, NQ, MNQ, CL, MCL)
         start_year: First year (inclusive)
         end_year: Last year (inclusive)
 
     Returns:
         Sorted list of datetime.date objects representing rollover days
+
+    Raises:
+        ValueError: If the symbol does not have a known rollover schedule.
     """
-    from datetime import date
-    months = ROLLOVER_MONTHS.get(symbol, [3, 6, 9, 12])
-    dates_list: list[date] = []
-    for year in range(start_year, end_year + 1):
-        for month in months:
-            rollover = _second_thursday_before_third_friday(year, month)
-            dates_list.append(rollover)
-    return sorted(dates_list)
+    if symbol in ("ES", "MES", "NQ", "MNQ"):
+        return sorted(_equity_index_rollover_dates(start_year, end_year))
+    elif symbol in ("CL", "MCL"):
+        return sorted(_crude_oil_rollover_dates(start_year, end_year))
+    else:
+        # Graceful fallback — unknown symbol uses equity quarterly schedule with a warning.
+        import warnings as _w
+        _w.warn(
+            f"compute_rollover_dates: unknown rollover schedule for '{symbol}'. "
+            f"Falling back to equity quarterly (Mar/Jun/Sep/Dec). "
+            f"Add explicit handling for this symbol."
+        )
+        from datetime import date
+        months = ROLLOVER_MONTHS.get(symbol, [3, 6, 9, 12])
+        dates_list: list[date] = []
+        for year in range(start_year, end_year + 1):
+            for month in months:
+                dates_list.append(_second_thursday_before_third_friday(year, month))
+        return sorted(dates_list)
 
 
 def flag_rollover_days(

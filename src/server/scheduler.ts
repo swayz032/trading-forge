@@ -293,6 +293,68 @@ function markJobRun(name: string) {
   schedulerLastError[name] = null; // clear any previous error on successful run
 }
 
+// ─── Track C F-4: in-process lock to prevent concurrent tick stacking ─────
+// node-cron does NOT serialize ticks — if a previous tick is still running when
+// the next interval fires, both run concurrently. For long-running jobs (sweep,
+// scout discovery, suite runs) this stacks subprocesses and DB transactions.
+const _inFlightJobs = new Set<string>();
+function _tryAcquireJobLock(name: string): boolean {
+  if (_inFlightJobs.has(name)) {
+    logger.warn({ jobName: name }, "cron tick skipped — previous tick still in-flight");
+    return false;
+  }
+  _inFlightJobs.add(name);
+  return true;
+}
+function _releaseJobLock(name: string): void {
+  _inFlightJobs.delete(name);
+}
+
+// ─── Track C F-8: scheduled-jobs registry for boot-time drift detection ───
+// Each cron.schedule body adds its job name to this set. At end of initScheduler
+// we compare SCHEDULER_JOBS keys vs _scheduledJobs to detect registered-but-
+// unscheduled drift (Track C F-1/F-2 class of bug — dead-jobs that look healthy
+// in the registry but never fire).
+const _scheduledJobs = new Set<string>();
+
+// ─── Track C F-6: jobs that MUST fire even when pipeline is paused ────────
+// Heartbeat must alert operator even when pipeline gates research throughput.
+// pre-trading-day-health-check (C8 gate) is intentionally not gated — same
+// rationale.  metrics-heartbeat is observability infrastructure.
+const _PIPELINE_GATE_EXEMPT = new Set<string>([
+  "heartbeat-write",                 // F-3: must fire even when paused
+  "heartbeat-stale-check",           // F-3: must alert even when paused
+  "pre-trading-day-health-check",    // C8 gate — never gated
+  "metrics-heartbeat",               // Observability infrastructure
+  "stale-session-check",             // Safety: detects stuck paper sessions
+  "pipeline-resume-drain",           // Self-evident — must observe resume
+  "cme-status-poll",                 // Safety: outage detection
+  "contract-roll-sweep",             // Safety: expiry handling
+  "validation-cadence-monthly",      // Forcing function — can't be hidden
+  "bias-engine-session-start",       // Safety/observability input
+  "bias-engine-refresh-10am-et",     // Safety/observability input
+  "harsh-regime-phase-activation-check", // Safety — gate hardening
+]);
+
+function _validateAllJobsScheduled(): void {
+  const registered = new Set(Object.keys(SCHEDULER_JOBS));
+  const missing: string[] = [];
+  for (const job of registered) {
+    if (!_scheduledJobs.has(job)) missing.push(job);
+  }
+  if (missing.length > 0) {
+    logger.error(
+      { missing },
+      "SCHEDULER_DRIFT: jobs registered via registerJob but no matching cron.schedule call",
+    );
+    if (process.env.NODE_ENV !== "production") {
+      throw new Error(
+        `Scheduler drift: ${missing.join(", ")} registered but no cron.schedule()`,
+      );
+    }
+  }
+}
+
 // ─── Test seam ────────────────────────────────────────────────────────────────
 // Exported ONLY for regression tests (scheduler-reconcile-pipelinegate.test.ts).
 // Production code MUST NOT call _testOnly. The seam is intentionally minimal —
@@ -317,6 +379,20 @@ export const _testOnly = {
 export async function reconcileMissedRuns() {
   const now = Date.now();
   for (const [name, meta] of Object.entries(SCHEDULER_JOBS)) {
+    // Track C F-6: gate catchup runs through pipelineGate UNLESS exempt.
+    // Without this, reconcileMissedRuns on boot would fire research-side jobs
+    // (deepar-train, decay-monitor, etc.) even when the operator paused the
+    // pipeline before the restart — silently re-starting the very work the
+    // pause was meant to stop. Exempt jobs (heartbeat, C8, observability)
+    // bypass the gate.
+    const exempt = _PIPELINE_GATE_EXEMPT.has(name);
+    if (!exempt) {
+      const active = await pipelineGate(name);
+      if (!active) {
+        logger.info({ job: name }, "reconcileMissedRuns: skipped due to pipelineGate");
+        continue;
+      }
+    }
     if (!meta.lastRunAt) {
       // Never ran in this process lifetime — if interval < 24h, run immediately
       // to catch up after a restart
@@ -668,6 +744,26 @@ export function initScheduler() {
       .catch((err) => logger.error({ err: err instanceof Error ? err.message : String(err) }, "autonomous-scout-discovery: cycle failed"));
   });
 
+  // ─── Track C F-1: cron driver for autonomous-scout-discovery ────────────
+  // The registerJob above was historically present without a matching
+  // cron.schedule — the runner only fired via reconcileMissedRuns on each
+  // boot. Hourly UTC tick; the inner hour-gate restricts execution to
+  // 8 AM ET (UTC 12 or 13 depending on DST) and DB-level idempotency
+  // ensures at-most-one-fire-per-UTC-day.
+  cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("autonomous-scout-discovery")) return;
+    try {
+      if (!(await pipelineGate("autonomous-scout-discovery"))) return;
+      const t0 = Date.now();
+      await withRetry("autonomous-scout-discovery", SCHEDULER_JOBS["autonomous-scout-discovery"].run, 1);
+      markJobRun("autonomous-scout-discovery");
+      emitJobComplete("autonomous-scout-discovery", Date.now() - t0);
+    } finally {
+      _releaseJobLock("autonomous-scout-discovery");
+    }
+  });
+  _scheduledJobs.add("autonomous-scout-discovery");
+
   // ─── M4 fix: drain scouted ideas every 10 minutes ────────────
   // Without this, n8n strict-scout entries would pile up in system_journal
   // forever — drainScoutedIdeas previously only fired on PAUSE→ACTIVE
@@ -685,6 +781,47 @@ export function initScheduler() {
       );
     }
   });
+
+  // ─── Track C F-3: Dead-man's heartbeat — write every 15 min, check every 30 min ──
+  // The heartbeat service was deployed without a cron driver — registerJob never
+  // existed and no cron.schedule fired writeHeartbeat() / runHeartbeatStaleCheck().
+  // Operator-absent mode depends on this loop firing every 15 min during RTH so
+  // a backend hang generates a Discord/SMS alert within 30 min.
+  // NOT pipeline-gated: heartbeat must fire even when pipeline is PAUSED — the
+  // alert is the operator's only signal that the backend itself is alive.
+  registerJob("heartbeat-write", 15 * 60 * 1000, async () => {
+    const { writeHeartbeat } = await import("./services/dead-mans-heartbeat-service.js");
+    await writeHeartbeat();
+  });
+  cron.schedule("*/15 * * * *", async () => {
+    if (!_tryAcquireJobLock("heartbeat-write")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("heartbeat-write", SCHEDULER_JOBS["heartbeat-write"].run, 1);
+      markJobRun("heartbeat-write");
+      emitJobComplete("heartbeat-write", Date.now() - t0);
+    } finally {
+      _releaseJobLock("heartbeat-write");
+    }
+  });
+  _scheduledJobs.add("heartbeat-write");
+
+  registerJob("heartbeat-stale-check", 30 * 60 * 1000, async () => {
+    const { runHeartbeatStaleCheck } = await import("./services/dead-mans-heartbeat-service.js");
+    await runHeartbeatStaleCheck();
+  });
+  cron.schedule("*/30 * * * *", async () => {
+    if (!_tryAcquireJobLock("heartbeat-stale-check")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("heartbeat-stale-check", SCHEDULER_JOBS["heartbeat-stale-check"].run, 1);
+      markJobRun("heartbeat-stale-check");
+      emitJobComplete("heartbeat-stale-check", Date.now() - t0);
+    } finally {
+      _releaseJobLock("heartbeat-stale-check");
+    }
+  });
+  _scheduledJobs.add("heartbeat-stale-check");
 
   // ─── Phase 1.4: Metrics heartbeat every 60s ───────────────
   // Broadcasts rolling session metrics snapshot over SSE so the live
@@ -729,15 +866,35 @@ export function initScheduler() {
     });
   }
 
+  // Track C F-8: python-pool-saturation-check was registered but had no
+  // cron.schedule — the saturation alarm only fired via reconcileMissedRuns
+  // on each boot. Wire a proper 30s cron driver.
+  cron.schedule("*/30 * * * * *", async () => {
+    if (!_tryAcquireJobLock("python-pool-saturation-check")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("python-pool-saturation-check", SCHEDULER_JOBS["python-pool-saturation-check"].run, 1);
+      markJobRun("python-pool-saturation-check");
+      emitJobComplete("python-pool-saturation-check", Date.now() - t0);
+    } finally {
+      _releaseJobLock("python-pool-saturation-check");
+    }
+  });
+  _scheduledJobs.add("python-pool-saturation-check");
+
   // ─── Every 4 hours: Rolling Sharpe update ─────────────────
   cron.schedule("0 */4 * * *", async () => {
+    if (!_tryAcquireJobLock("rolling-sharpe")) return;
+    try {
     if (!(await pipelineGate("rolling-sharpe"))) return;
     logger.info("Scheduler: Running 4-hour rolling Sharpe update");
     const t0 = Date.now();
     await withRetry("rolling-sharpe", updateRollingSharpe);
     markJobRun("rolling-sharpe");
     emitJobComplete("rolling-sharpe", Date.now() - t0);
+  } finally { _releaseJobLock("rolling-sharpe"); }
   });
+  _scheduledJobs.add("rolling-sharpe");
 
   // ─── Daily at 6:05 AM ET: Pre-market prep (DST-aware) ────
   // Staggered to 6:05 AM ET (was 6:00 AM ET) to avoid competing with
@@ -745,6 +902,8 @@ export function initScheduler() {
   // Run at both 10:05 and 11:05 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // Check actual ET hour+minute before executing — only one will fire.
   cron.schedule("5 10,11 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("pre-market-prep")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -766,7 +925,9 @@ export function initScheduler() {
     await withRetry("pre-market-prep", preMarketPrep);
     markJobRun("pre-market-prep");
     emitJobComplete("pre-market-prep", Date.now() - t0premarket);
+  } finally { _releaseJobLock("pre-market-prep"); }
   });
+  _scheduledJobs.add("pre-market-prep");
 
   // ─── C8 (W17): Pre-Trading-Day Health Check at 8:00 AM ET, weekdays ─
   // Run at 12:00 and 13:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
@@ -778,6 +939,8 @@ export function initScheduler() {
   // job-health dashboard. The service itself short-circuits when there
   // is nothing to do (no pause-state mutation on healthy outcomes).
   cron.schedule("0 12,13 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("pre-trading-day-health-check")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -795,27 +958,48 @@ export function initScheduler() {
       );
       return;
     }
+    // Track C F-7: boot-loop guard. reconcileMissedRuns() at scheduler init
+    // will fire this job once on boot (interval ≤ 24h). If the operator just
+    // fixed a pause condition and restarted the server, the catchup tick +
+    // this 8 AM cron firing back-to-back can re-pause the pipeline before
+    // the fix has settled. Skip if we ran within the last 30 min.
+    const lastRun = SCHEDULER_JOBS["pre-trading-day-health-check"]?.lastRunAt;
+    if (lastRun && Date.now() - lastRun.getTime() < 30 * 60 * 1000) {
+      logger.info(
+        { lastRunAt: lastRun.toISOString(), ageMinutes: Math.floor((Date.now() - lastRun.getTime()) / 60000) },
+        "Scheduler: pre-trading-day-health-check ran <30 min ago — skipping to avoid boot-loop re-pause",
+      );
+      return;
+    }
     logger.info("Scheduler: Pre-trading-day health check (8:00 AM ET confirmed)");
     const t0hc = Date.now();
     await withRetry("pre-trading-day-health-check", SCHEDULER_JOBS["pre-trading-day-health-check"].run, 1);
     markJobRun("pre-trading-day-health-check");
     emitJobComplete("pre-trading-day-health-check", Date.now() - t0hc);
+  } finally { _releaseJobLock("pre-trading-day-health-check"); }
   });
+  _scheduledJobs.add("pre-trading-day-health-check");
 
   // ─── Every hour: Compare stopped paper sessions to backtest ─
   cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("paper-vs-backtest")) return;
+    try {
     if (!(await pipelineGate("paper-vs-backtest"))) return;
     logger.info("Scheduler: Running paper-vs-backtest comparison for recently stopped sessions");
     const t0pvb = Date.now();
     await withRetry("paper-vs-backtest", comparePaperToBacktest);
     markJobRun("paper-vs-backtest");
     emitJobComplete("paper-vs-backtest", Date.now() - t0pvb);
+  } finally { _releaseJobLock("paper-vs-backtest"); }
   });
+  _scheduledJobs.add("paper-vs-backtest");
 
   // ─── Daily at 2:00 AM ET: Decay monitor sweep (DST-aware) ────
   // Run at both 6:00 and 7:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // Check actual ET hour before executing — only one of the two will fire.
   cron.schedule("0 6,7 * * *", async () => {
+    if (!_tryAcquireJobLock("decay-monitor")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -836,33 +1020,47 @@ export function initScheduler() {
     await withRetry("decay-monitor", runDailyDecayMonitor);
     markJobRun("decay-monitor");
     emitJobComplete("decay-monitor", Date.now() - t0decay);
+  } finally { _releaseJobLock("decay-monitor"); }
   });
+  _scheduledJobs.add("decay-monitor");
 
   // ─── Every 6 hours: Lifecycle auto-promotions/demotions ────
   cron.schedule("0 */6 * * *", async () => {
+    if (!_tryAcquireJobLock("lifecycle-auto-check")) return;
+    try {
     if (!(await pipelineGate("lifecycle-auto-check"))) return;
     logger.info("Scheduler: Running lifecycle auto-checks");
     const t0lc = Date.now();
     await withRetry("lifecycle-auto-check", SCHEDULER_JOBS["lifecycle-auto-check"].run);
     markJobRun("lifecycle-auto-check");
     emitJobComplete("lifecycle-auto-check", Date.now() - t0lc);
+  } finally { _releaseJobLock("lifecycle-auto-check"); }
   });
+  _scheduledJobs.add("lifecycle-auto-check");
 
   // ─── Every 5 minutes: Stale paper session detection ─────────
   cron.schedule("*/5 * * * *", async () => {
+    if (!_tryAcquireJobLock("stale-session-check")) return;
+    try {
     const t0stale = Date.now();
     await withRetry("stale-session-check", SCHEDULER_JOBS["stale-session-check"].run);
     markJobRun("stale-session-check");
     emitJobComplete("stale-session-check", Date.now() - t0stale);
+  } finally { _releaseJobLock("stale-session-check"); }
   });
+  _scheduledJobs.add("stale-session-check");
 
   // ─── Every 60 seconds: Metrics heartbeat ─────────────────────
   cron.schedule("* * * * *", async () => {
+    if (!_tryAcquireJobLock("metrics-heartbeat")) return;
+    try {
     const t0mh = Date.now();
     await withRetry("metrics-heartbeat", SCHEDULER_JOBS["metrics-heartbeat"].run, 1);
     markJobRun("metrics-heartbeat");
     emitJobComplete("metrics-heartbeat", Date.now() - t0mh);
+  } finally { _releaseJobLock("metrics-heartbeat"); }
   });
+  _scheduledJobs.add("metrics-heartbeat");
 
   // ─── Pipeline resume-drain — every 30 seconds ────────────────
   // State-based polling: detects PAUSED/VACATION → ACTIVE transition and
@@ -958,26 +1156,36 @@ export function initScheduler() {
   });
 
   cron.schedule("*/30 * * * * *", async () => {
+    if (!_tryAcquireJobLock("pipeline-resume-drain")) return;
+    try {
     const t0drain = Date.now();
     await withRetry("pipeline-resume-drain", SCHEDULER_JOBS["pipeline-resume-drain"].run, 1);
     markJobRun("pipeline-resume-drain");
     emitJobComplete("pipeline-resume-drain", Date.now() - t0drain);
+  } finally { _releaseJobLock("pipeline-resume-drain"); }
   });
+  _scheduledJobs.add("pipeline-resume-drain");
 
   // ─── M4 fix: drain-scouted-ideas-periodic — every 10 minutes ───
   // Periodic drain so n8n strict-scout entries don't pile up forever.
   // pipeline-resume-drain only fires on PAUSE→ACTIVE transitions; this
   // covers the steady-state "pipeline is active and scouts are flowing" case.
   cron.schedule("*/10 * * * *", async () => {
+    if (!_tryAcquireJobLock("drain-scouted-ideas-periodic")) return;
+    try {
     const t0drainP = Date.now();
     await withRetry("drain-scouted-ideas-periodic", SCHEDULER_JOBS["drain-scouted-ideas-periodic"].run, 1);
     markJobRun("drain-scouted-ideas-periodic");
     emitJobComplete("drain-scouted-ideas-periodic", Date.now() - t0drainP);
+  } finally { _releaseJobLock("drain-scouted-ideas-periodic"); }
   });
+  _scheduledJobs.add("drain-scouted-ideas-periodic");
 
   // ─── DeepAR: Train daily at 2:30 AM ET (weekdays) ──────────
   // Run at both 6:30 and 7:30 UTC to cover EDT (UTC-4) and EST (UTC-5).
   cron.schedule("30 6,7 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("deepar-train")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -995,11 +1203,15 @@ export function initScheduler() {
     await withRetry("deepar-train", async () => { await trainDeepAR(); });
     markJobRun("deepar-train");
     emitJobComplete("deepar-train", Date.now() - t0dt);
+  } finally { _releaseJobLock("deepar-train"); }
   });
+  _scheduledJobs.add("deepar-train");
 
   // ─── DeepAR: Predict daily at 6:00 AM ET (weekdays) ───────
   // Run at both 10:00 and 11:00 UTC to cover EDT/EST.
   cron.schedule("0 10,11 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("deepar-predict")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1019,12 +1231,16 @@ export function initScheduler() {
     await withRetry("deepar-predict", SCHEDULER_JOBS["deepar-predict"].run);
     markJobRun("deepar-predict");
     emitJobComplete("deepar-predict", Date.now() - t0dp);
+  } finally { _releaseJobLock("deepar-predict"); }
   });
+  _scheduledJobs.add("deepar-predict");
 
   // ─── Loop 1: Macro regime daily sync — 5 AM ET (DST-aware) ──────
   // Runs BEFORE archetype classifier (6 AM) and DeepAR predict (6 AM)
   // so today's macro_regime is the freshest signal those jobs see.
   cron.schedule("0 9,10 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("macro-data-sync")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1042,7 +1258,9 @@ export function initScheduler() {
     await withRetry("macro-data-sync", SCHEDULER_JOBS["macro-data-sync"].run);
     markJobRun("macro-data-sync");
     emitJobComplete("macro-data-sync", Date.now() - t0macro);
+  } finally { _releaseJobLock("macro-data-sync"); }
   });
+  _scheduledJobs.add("macro-data-sync");
 
   // ─── C11: FRED daily macro ingestion — 4 PM ET (weekdays) ────────
   // Pulls T10Y2Y, DFF, USEPUINDXD, VIXCLS, DTWEXBGS, RRPONTSYD from FRED.
@@ -1060,6 +1278,8 @@ export function initScheduler() {
   });
 
   cron.schedule("0 20,21 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("c11-fred-daily")) return;
+    try {
     const now = new Date();
     const etHour = parseInt(
       now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
@@ -1071,7 +1291,9 @@ export function initScheduler() {
     await withRetry("c11-fred-daily", SCHEDULER_JOBS["c11-fred-daily"].run);
     markJobRun("c11-fred-daily");
     emitJobComplete("c11-fred-daily", Date.now() - t0);
+  } finally { _releaseJobLock("c11-fred-daily"); }
   });
+  _scheduledJobs.add("c11-fred-daily");
 
   // ─── C11: H.4.1 RRP/TGA ingestion — Friday 9 AM ET ─────────────
   // H.4.1 is published Thursday 4:30 PM ET; we pull Friday morning
@@ -1082,6 +1304,8 @@ export function initScheduler() {
   });
 
   cron.schedule("0 13,14 * * 5", async () => {
+    if (!_tryAcquireJobLock("c11-h41-weekly")) return;
+    try {
     // Friday only (day 5), 9 AM ET
     const now = new Date();
     const etHour = parseInt(
@@ -1094,7 +1318,9 @@ export function initScheduler() {
     await withRetry("c11-h41-weekly", SCHEDULER_JOBS["c11-h41-weekly"].run);
     markJobRun("c11-h41-weekly");
     emitJobComplete("c11-h41-weekly", Date.now() - t0);
+  } finally { _releaseJobLock("c11-h41-weekly"); }
   });
+  _scheduledJobs.add("c11-h41-weekly");
 
   // ─── C11: BLS release ingestion — 8:35 AM ET on release days ─────
   // NFP/CPI/PPI/JOLTS are published at 8:30 AM ET; we pull at 8:35 AM
@@ -1106,6 +1332,8 @@ export function initScheduler() {
   });
 
   cron.schedule("35 12,13 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("c11-bls-release")) return;
+    try {
     // 8:35 AM ET (UTC 12:35/13:35 for EDT/EST)
     const now = new Date();
     const etHourStr = now.toLocaleString("en-US", {
@@ -1121,7 +1349,9 @@ export function initScheduler() {
     await withRetry("c11-bls-release", SCHEDULER_JOBS["c11-bls-release"].run);
     markJobRun("c11-bls-release");
     emitJobComplete("c11-bls-release", Date.now() - t0);
+  } finally { _releaseJobLock("c11-bls-release"); }
   });
+  _scheduledJobs.add("c11-bls-release");
 
   // ─── C11: Treasury auction ingestion — daily 3 PM ET ─────────────
   // TreasuryDirect publishes auction results same-day. We poll daily at
@@ -1132,6 +1362,8 @@ export function initScheduler() {
   });
 
   cron.schedule("0 19,20 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("c11-treasury-auctions")) return;
+    try {
     // 3 PM ET (UTC 19:00/20:00 for EDT/EST)
     const now = new Date();
     const etHour = parseInt(
@@ -1144,7 +1376,9 @@ export function initScheduler() {
     await withRetry("c11-treasury-auctions", SCHEDULER_JOBS["c11-treasury-auctions"].run);
     markJobRun("c11-treasury-auctions");
     emitJobComplete("c11-treasury-auctions", Date.now() - t0);
+  } finally { _releaseJobLock("c11-treasury-auctions"); }
   });
+  _scheduledJobs.add("c11-treasury-auctions");
 
   // ─── W19 Schema 1: Definition pull — weekly Sunday 8 PM ET ─────────────────
   // Fetches CME contract specs from Databento Definition schema (FREE).
@@ -1164,6 +1398,8 @@ export function initScheduler() {
   // Sunday 8 PM ET = Monday 00:00 UTC (EDT) or 01:00 UTC (EST)
   // Fire at both 00:00 and 01:00 UTC on Sundays/Mondays and filter by ET hour
   cron.schedule("0 0,1 * * 0,1", async () => {
+    if (!_tryAcquireJobLock("w19-definition-pull")) return;
+    try {
     const now = new Date();
     const etHour = parseInt(
       now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
@@ -1177,7 +1413,9 @@ export function initScheduler() {
     await withRetry("w19-definition-pull", SCHEDULER_JOBS["w19-definition-pull"].run);
     markJobRun("w19-definition-pull");
     emitJobComplete("w19-definition-pull", Date.now() - t0);
+  } finally { _releaseJobLock("w19-definition-pull"); }
   });
+  _scheduledJobs.add("w19-definition-pull");
 
   // ─── W19 Schema 2: Statistics pull — daily 6 PM ET (weekdays) ──────────────
   // Fetches CME daily settlement price + open interest (FREE).
@@ -1201,6 +1439,8 @@ export function initScheduler() {
 
   // 6 PM ET = 22:00 UTC (EDT) or 23:00 UTC (EST)
   cron.schedule("0 22,23 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("w19-statistics-pull")) return;
+    try {
     const now = new Date();
     const etHour = parseInt(
       now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
@@ -1212,7 +1452,9 @@ export function initScheduler() {
     await withRetry("w19-statistics-pull", SCHEDULER_JOBS["w19-statistics-pull"].run);
     markJobRun("w19-statistics-pull");
     emitJobComplete("w19-statistics-pull", Date.now() - t0);
+  } finally { _releaseJobLock("w19-statistics-pull"); }
   });
+  _scheduledJobs.add("w19-statistics-pull");
 
   // ─── W19 Schema 3: Imbalance pull — weekdays 8:25 AM ET ─────────────────────
   // Fetches CME opening auction imbalance for ES + NQ (~$5/month).
@@ -1238,6 +1480,8 @@ export function initScheduler() {
 
   // 8:25 AM ET = 12:25 UTC (EDT) or 13:25 UTC (EST)
   cron.schedule("25 12,13 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("w19-imbalance-pull")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1252,7 +1496,9 @@ export function initScheduler() {
     await withRetry("w19-imbalance-pull", SCHEDULER_JOBS["w19-imbalance-pull"].run);
     markJobRun("w19-imbalance-pull");
     emitJobComplete("w19-imbalance-pull", Date.now() - t0);
+  } finally { _releaseJobLock("w19-imbalance-pull"); }
   });
+  _scheduledJobs.add("w19-imbalance-pull");
 
   // ─── C2: Day archetype classifier — daily at 6 AM ET (DST-aware) ───
   // Runs in parallel with deepar-predict.  Predicts today's day archetype
@@ -1260,6 +1506,8 @@ export function initScheduler() {
   // row per symbol into day_archetypes.  Strategy eligibility matrix
   // and skip classifier read from this table at evaluation time.
   cron.schedule("0 10,11 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("archetype-daily-classify")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1277,13 +1525,17 @@ export function initScheduler() {
     await withRetry("archetype-daily-classify", SCHEDULER_JOBS["archetype-daily-classify"].run);
     markJobRun("archetype-daily-classify");
     emitJobComplete("archetype-daily-classify", Date.now() - t0arch);
+  } finally { _releaseJobLock("archetype-daily-classify"); }
   });
+  _scheduledJobs.add("archetype-daily-classify");
 
   // ─── DeepAR: Validate at 6:35 AM ET (weekdays) ────────────
   // Staggered to 6:35 AM ET (was 6:30 AM ET) to give pre-market prep (6:05)
   // a 30-min window before a second Python-spawning cron hits the pool.
   // Run at both 10:35 and 11:35 UTC to cover EDT/EST.
   cron.schedule("35 10,11 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("deepar-validate")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1301,7 +1553,9 @@ export function initScheduler() {
     await withRetry("deepar-validate", async () => { await validatePastForecasts(); });
     markJobRun("deepar-validate");
     emitJobComplete("deepar-validate", Date.now() - t0dv);
+  } finally { _releaseJobLock("deepar-validate"); }
   });
+  _scheduledJobs.add("deepar-validate");
 
   // ─── Tier 3.3: A+ Market Auditor — daily at 8:00 AM ET (DST-aware) ─────────
   // Scores MES, MNQ, MCL via quantum MC + entropy filter + cross-market VQC.
@@ -1349,6 +1603,8 @@ export function initScheduler() {
   });
 
   cron.schedule("0 12,13 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("a-plus-auditor-scan")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1369,7 +1625,9 @@ export function initScheduler() {
     await withRetry("a-plus-auditor-scan", SCHEDULER_JOBS["a-plus-auditor-scan"].run);
     markJobRun("a-plus-auditor-scan");
     emitJobComplete("a-plus-auditor-scan", Date.now() - t0audit);
+  } finally { _releaseJobLock("a-plus-auditor-scan"); }
   });
+  _scheduledJobs.add("a-plus-auditor-scan");
 
   // ─── Tier 4.5: cloud-qmc-poll — every 5 min ─────────────────────────────────
   // Polls IBM pending jobs and updates cloud_qmc_runs with decoded syndrome results.
@@ -1398,6 +1656,23 @@ export function initScheduler() {
     }
   });
 
+  // Track C F-8: cloud-qmc-poll was registered but had no cron.schedule —
+  // the IBM Quantum job poller only fired via reconcileMissedRuns. Wire a
+  // proper 5-min cron driver. Inner guards (isPipelineActive, QUANTUM_CLOUD_ENABLED)
+  // keep it cheap when disabled.
+  cron.schedule("*/5 * * * *", async () => {
+    if (!_tryAcquireJobLock("cloud-qmc-poll")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("cloud-qmc-poll", SCHEDULER_JOBS["cloud-qmc-poll"].run, 1);
+      markJobRun("cloud-qmc-poll");
+      emitJobComplete("cloud-qmc-poll", Date.now() - t0);
+    } finally {
+      _releaseJobLock("cloud-qmc-poll");
+    }
+  });
+  _scheduledJobs.add("cloud-qmc-poll");
+
   // ─── Daily at 11:00 PM ET: Regret score fill ────────────────
   // Run at both 3:00 and 4:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // Fills regretScore / opportunityCost on skipDecisions rows that now have
@@ -1405,6 +1680,8 @@ export function initScheduler() {
   // post-processing ran before regret scoring was available.
   registerJob("regret-score-fill", 24 * 60 * 60 * 1000, fillRegretScores);
   cron.schedule("0 3,4 * * *", async () => {
+    if (!_tryAcquireJobLock("regret-score-fill")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1425,37 +1702,51 @@ export function initScheduler() {
     await withRetry("regret-score-fill", fillRegretScores);
     markJobRun("regret-score-fill");
     emitJobComplete("regret-score-fill", Date.now() - t0rs);
+  } finally { _releaseJobLock("regret-score-fill"); }
   });
+  _scheduledJobs.add("regret-score-fill");
 
   // ─── Every 2 hours: Agent health sweep ───────────────────
   cron.schedule("0 */2 * * *", async () => {
+    if (!_tryAcquireJobLock("agent-health-sweep")) return;
+    try {
     if (!(await pipelineGate("agent-health-sweep"))) return;
     logger.info("Scheduler: Running agent health sweep");
     const t0ahs = Date.now();
     await withRetry("agent-health-sweep", async () => { await runAgentHealthSweep(); });
     markJobRun("agent-health-sweep");
     emitJobComplete("agent-health-sweep", Date.now() - t0ahs);
+  } finally { _releaseJobLock("agent-health-sweep"); }
   });
+  _scheduledJobs.add("agent-health-sweep");
 
   // ─── Daily at midnight UTC: Portfolio correlation check ──
   cron.schedule("0 0 * * *", async () => {
+    if (!_tryAcquireJobLock("portfolio-correlation")) return;
+    try {
     if (!(await pipelineGate("portfolio-correlation"))) return;
     logger.info("Scheduler: Running portfolio correlation check");
     const t0pc = Date.now();
     await withRetry("portfolio-correlation", async () => { await runPortfolioCorrelationCheck(); });
     markJobRun("portfolio-correlation");
     emitJobComplete("portfolio-correlation", Date.now() - t0pc);
+  } finally { _releaseJobLock("portfolio-correlation"); }
   });
+  _scheduledJobs.add("portfolio-correlation");
 
   // ─── Monthly on 1st at 3:00 AM UTC: Meta parameter review ─
   cron.schedule("0 3 1 * *", async () => {
+    if (!_tryAcquireJobLock("meta-parameter-review")) return;
+    try {
     if (!(await pipelineGate("meta-parameter-review"))) return;
     logger.info("Scheduler: Running monthly meta parameter review");
     const t0mp = Date.now();
     await withRetry("meta-parameter-review", async () => { await runMetaParameterReview(30); });
     markJobRun("meta-parameter-review");
     emitJobComplete("meta-parameter-review", Date.now() - t0mp);
+  } finally { _releaseJobLock("meta-parameter-review"); }
   });
+  _scheduledJobs.add("meta-parameter-review");
 
   // ─── C7 (W16): Monthly on 1st at 3:30 AM UTC — Reality Check report ─
   // Compares backtested vs realized paper performance for all PAPER+
@@ -1465,17 +1756,23 @@ export function initScheduler() {
   // pausing the pipeline. The report informs whether to resume work, so the
   // gate would be self-defeating.
   cron.schedule("30 3 1 * *", async () => {
+    if (!_tryAcquireJobLock("validation-cadence-monthly")) return;
+    try {
     logger.info("Scheduler: Running monthly Reality Check report (validation cadence)");
     const t0rc = Date.now();
     await withRetry("validation-cadence-monthly", async () => { await runMonthlyRealityCheckReport(); });
     markJobRun("validation-cadence-monthly");
     emitJobComplete("validation-cadence-monthly", Date.now() - t0rc);
+  } finally { _releaseJobLock("validation-cadence-monthly"); }
   });
+  _scheduledJobs.add("validation-cadence-monthly");
 
   // ─── Weekly Monday 12 AM ET: Anti-setup mine + effectiveness ──
   // Run at 4:00 and 5:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // Only fires when the ET hour resolves to Monday 12:00 AM.
   cron.schedule("0 4,5 * * 1", async () => {
+    if (!_tryAcquireJobLock("anti-setup-mine")) return;
+    try {
     const now = new Date();
     const etStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1501,7 +1798,14 @@ export function initScheduler() {
     await withRetry("anti-setup-effectiveness", SCHEDULER_JOBS["anti-setup-effectiveness"].run);
     markJobRun("anti-setup-effectiveness");
     emitJobComplete("anti-setup-effectiveness", Date.now() - t0eff);
+  } finally { _releaseJobLock("anti-setup-mine"); }
   });
+  _scheduledJobs.add("anti-setup-mine");
+  // Track C F-8: anti-setup-effectiveness is driven by the anti-setup-mine cron
+  // above (same Monday 12 AM ET tick — mine runs first, effectiveness runs
+  // immediately after). It has no independent cron.schedule but IS reached by
+  // a tick, so mark it scheduled to avoid spurious drift detection.
+  _scheduledJobs.add("anti-setup-effectiveness");
 
   // ─── DLQ retry — every 15 minutes ─────────────────────────
   registerJob("dlq-retry", 15 * 60 * 1000, async () => {
@@ -1513,12 +1817,16 @@ export function initScheduler() {
   });
 
   cron.schedule("*/15 * * * *", async () => {
+    if (!_tryAcquireJobLock("dlq-retry")) return;
+    try {
     if (!(await pipelineGate("dlq-retry"))) return;
     const t0dlq = Date.now();
     await withRetry("dlq-retry", SCHEDULER_JOBS["dlq-retry"].run);
     markJobRun("dlq-retry");
     emitJobComplete("dlq-retry", Date.now() - t0dlq);
+  } finally { _releaseJobLock("dlq-retry"); }
   });
+  _scheduledJobs.add("dlq-retry");
 
   // ─── DLQ escalation — every hour ──────────────────────────
   registerJob("dlq-escalation", 60 * 60 * 1000, async () => {
@@ -1530,12 +1838,16 @@ export function initScheduler() {
   });
 
   cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("dlq-escalation")) return;
+    try {
     if (!(await pipelineGate("dlq-escalation"))) return;
     const t0esc = Date.now();
     await withRetry("dlq-escalation", SCHEDULER_JOBS["dlq-escalation"].run);
     markJobRun("dlq-escalation");
     emitJobComplete("dlq-escalation", Date.now() - t0esc);
+  } finally { _releaseJobLock("dlq-escalation"); }
   });
+  _scheduledJobs.add("dlq-escalation");
 
   // ─── Idempotency key cleanup — daily at 3 AM ET ──────────────
   registerJob("idempotency-cleanup", 24 * 60 * 60 * 1000, async () => {
@@ -1547,12 +1859,16 @@ export function initScheduler() {
   });
 
   cron.schedule("0 3 * * *", async () => {
+    if (!_tryAcquireJobLock("idempotency-cleanup")) return;
+    try {
     if (!(await pipelineGate("idempotency-cleanup"))) return;
     const t0idem = Date.now();
     await withRetry("idempotency-cleanup", SCHEDULER_JOBS["idempotency-cleanup"].run);
     markJobRun("idempotency-cleanup");
     emitJobComplete("idempotency-cleanup", Date.now() - t0idem);
+  } finally { _releaseJobLock("idempotency-cleanup"); }
   });
+  _scheduledJobs.add("idempotency-cleanup");
 
   // ─── Tier 1.4: Quantum cost row pruner — hourly ──────────────
   // quantum_run_costs rows start with status="pending" before the Python call.
@@ -1584,11 +1900,15 @@ export function initScheduler() {
   });
 
   cron.schedule("5 * * * *", async () => {
+    if (!_tryAcquireJobLock("quantum-cost-prune")) return;
+    try {
     const t0qcp = Date.now();
     await withRetry("quantum-cost-prune", SCHEDULER_JOBS["quantum-cost-prune"].run, 1);
     markJobRun("quantum-cost-prune");
     emitJobComplete("quantum-cost-prune", Date.now() - t0qcp);
+  } finally { _releaseJobLock("quantum-cost-prune"); }
   });
+  _scheduledJobs.add("quantum-cost-prune");
 
   // ─── G3.2: Stale-pending-row sweeper — every 5 min ───────────
   // Fire-and-forget async runs (MC, SQA, QUBO, Tensor, RL, Quantum MC, DeepAR
@@ -1717,12 +2037,16 @@ export function initScheduler() {
   });
 
   cron.schedule("*/5 * * * *", async () => {
+    if (!_tryAcquireJobLock("stale-pending-sweeper")) return;
+    try {
     if (!(await pipelineGate("stale-pending-sweeper"))) return;
     const t0sweep = Date.now();
     await withRetry("stale-pending-sweeper", SCHEDULER_JOBS["stale-pending-sweeper"].run);
     markJobRun("stale-pending-sweeper");
     emitJobComplete("stale-pending-sweeper", Date.now() - t0sweep);
+  } finally { _releaseJobLock("stale-pending-sweeper"); }
   });
+  _scheduledJobs.add("stale-pending-sweeper");
 
   // G6.4 note: contract-roll-sweep is already registered at the daily 4:30 PM
   // ET schedule below (calls runSessionEndRollSweep in paper-execution-service).
@@ -1764,6 +2088,8 @@ export function initScheduler() {
   // ─── Daily at 2:15 AM ET: n8n workflow sync (DST-aware) ──────
   // Run at 6:15 and 7:15 UTC to cover EDT (UTC-4) and EST (UTC-5).
   cron.schedule("15 6,7 * * *", async () => {
+    if (!_tryAcquireJobLock("n8n-workflow-sync")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1784,10 +2110,14 @@ export function initScheduler() {
     await withRetry("n8n-workflow-sync", SCHEDULER_JOBS["n8n-workflow-sync"].run);
     markJobRun("n8n-workflow-sync");
     emitJobComplete("n8n-workflow-sync", Date.now() - t0n8n);
+  } finally { _releaseJobLock("n8n-workflow-sync"); }
   });
+  _scheduledJobs.add("n8n-workflow-sync");
 
   // Run at 8:00 and 9:00 UTC to cover EDT (UTC-4) and EST (UTC-5) for 4 AM ET.
   cron.schedule("0 8,9 * * *", async () => {
+    if (!_tryAcquireJobLock("system-map-drift")) return;
+    try {
     const now = new Date();
     const etHour = Number(
       now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
@@ -1798,7 +2128,9 @@ export function initScheduler() {
     await withRetry("system-map-drift", SCHEDULER_JOBS["system-map-drift"].run);
     markJobRun("system-map-drift");
     emitJobComplete("system-map-drift", Date.now() - t0sm);
+  } finally { _releaseJobLock("system-map-drift"); }
   });
+  _scheduledJobs.add("system-map-drift");
 
   // ─── Compliance rule drift check — weekly Sunday midnight ET ──
   registerJob("compliance-rule-drift", 7 * 24 * 60 * 60 * 1000, async () => {
@@ -1811,6 +2143,8 @@ export function initScheduler() {
 
   // Run at 4:00 and 5:00 UTC on Sundays to cover EDT (UTC-4) and EST (UTC-5) for midnight ET.
   cron.schedule("0 4,5 * * 0", async () => {
+    if (!_tryAcquireJobLock("compliance-rule-drift")) return;
+    try {
     const now = new Date();
     const etStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1825,7 +2159,9 @@ export function initScheduler() {
     await withRetry("compliance-rule-drift", SCHEDULER_JOBS["compliance-rule-drift"].run);
     markJobRun("compliance-rule-drift");
     emitJobComplete("compliance-rule-drift", Date.now() - t0crd);
+  } finally { _releaseJobLock("compliance-rule-drift"); }
   });
+  _scheduledJobs.add("compliance-rule-drift");
 
   // ─── Disabled job probe — every 30 minutes ────────────────
   // Periodically probes disabled jobs with a test run. If a probe succeeds,
@@ -1870,11 +2206,15 @@ export function initScheduler() {
   });
 
   cron.schedule("*/30 * * * *", async () => {
+    if (!_tryAcquireJobLock("disabled-job-probe")) return;
+    try {
     const t0probe = Date.now();
     await withRetry("disabled-job-probe", SCHEDULER_JOBS["disabled-job-probe"].run, 1);
     markJobRun("disabled-job-probe");
     emitJobComplete("disabled-job-probe", Date.now() - t0probe);
+  } finally { _releaseJobLock("disabled-job-probe"); }
   });
+  _scheduledJobs.add("disabled-job-probe");
 
   // ─── Subsystem metrics collection — every 30 minutes ──────
   registerJob("metrics-collector", 30 * 60 * 1000, async () => {
@@ -1883,11 +2223,15 @@ export function initScheduler() {
   });
 
   cron.schedule("*/30 * * * *", async () => {
+    if (!_tryAcquireJobLock("metrics-collector")) return;
+    try {
     const t0metrics = Date.now();
     await withRetry("metrics-collector", SCHEDULER_JOBS["metrics-collector"].run);
     markJobRun("metrics-collector");
     emitJobComplete("metrics-collector", Date.now() - t0metrics);
+  } finally { _releaseJobLock("metrics-collector"); }
   });
+  _scheduledJobs.add("metrics-collector");
 
   // ─── Scout funnel snapshot — daily at 1 AM ET ────────────────
   registerJob("funnel-snapshot", 24 * 60 * 60 * 1000, async () => {
@@ -1896,12 +2240,16 @@ export function initScheduler() {
   });
 
   cron.schedule("0 1 * * *", async () => {
+    if (!_tryAcquireJobLock("funnel-snapshot")) return;
+    try {
     if (!(await pipelineGate("funnel-snapshot"))) return;
     const t0funnel = Date.now();
     await withRetry("funnel-snapshot", SCHEDULER_JOBS["funnel-snapshot"].run);
     markJobRun("funnel-snapshot");
     emitJobComplete("funnel-snapshot", Date.now() - t0funnel);
+  } finally { _releaseJobLock("funnel-snapshot"); }
   });
+  _scheduledJobs.add("funnel-snapshot");
 
   // ─── n8n health check — every 15 minutes ─────────────────────
   registerJob("n8n-health-check", 15 * 60 * 1000, async () => {
@@ -1927,11 +2275,15 @@ export function initScheduler() {
   });
 
   cron.schedule("*/15 * * * *", async () => {
+    if (!_tryAcquireJobLock("n8n-health-check")) return;
+    try {
     const t0n8nHealth = Date.now();
     await withRetry("n8n-health-check", SCHEDULER_JOBS["n8n-health-check"].run, 1);
     markJobRun("n8n-health-check");
     emitJobComplete("n8n-health-check", Date.now() - t0n8nHealth);
+  } finally { _releaseJobLock("n8n-health-check"); }
   });
+  _scheduledJobs.add("n8n-health-check");
 
   // ─── Resource utilization snapshot — every 5 minutes ──────
   registerJob("resource-snapshot", 5 * 60 * 1000, async () => {
@@ -1940,11 +2292,15 @@ export function initScheduler() {
   });
 
   cron.schedule("*/5 * * * *", async () => {
+    if (!_tryAcquireJobLock("resource-snapshot")) return;
+    try {
     const t0res = Date.now();
     await withRetry("resource-snapshot", SCHEDULER_JOBS["resource-snapshot"].run);
     markJobRun("resource-snapshot");
     emitJobComplete("resource-snapshot", Date.now() - t0res);
+  } finally { _releaseJobLock("resource-snapshot"); }
   });
+  _scheduledJobs.add("resource-snapshot");
 
   // ─── Session analytics nightly rollup — 11:45 PM ET daily ──
   registerJob("session-analytics-rollup", 24 * 60 * 60 * 1000, async () => {
@@ -1952,12 +2308,16 @@ export function initScheduler() {
     await recordSessionAnalyticsRollup();
   });
 
-  cron.schedule("45 3 * * *", async () => { // 3:45 AM UTC = 11:45 PM ET
+  cron.schedule("45 3 * * *", async () => {
+    if (!_tryAcquireJobLock("session-analytics-rollup")) return;
+    try { // 3:45 AM UTC = 11:45 PM ET
     const t0sa = Date.now();
     await withRetry("session-analytics-rollup", SCHEDULER_JOBS["session-analytics-rollup"].run);
     markJobRun("session-analytics-rollup");
     emitJobComplete("session-analytics-rollup", Date.now() - t0sa);
+  } finally { _releaseJobLock("session-analytics-rollup"); }
   });
+  _scheduledJobs.add("session-analytics-rollup");
 
   // ─── Weekly Sunday 9 PM ET: Graveyard failure pattern extraction ─
   // Run at 1:00 and 2:00 UTC on Mondays to cover EDT (UTC-4) and EST (UTC-5) for Sun 9 PM ET.
@@ -1970,6 +2330,8 @@ export function initScheduler() {
   });
 
   cron.schedule("0 1,2 * * 1", async () => {
+    if (!_tryAcquireJobLock("graveyard-pattern-extraction")) return;
+    try {
     const now = new Date();
     const etStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -1985,7 +2347,9 @@ export function initScheduler() {
     await withRetry("graveyard-pattern-extraction", SCHEDULER_JOBS["graveyard-pattern-extraction"].run);
     markJobRun("graveyard-pattern-extraction");
     emitJobComplete("graveyard-pattern-extraction", Date.now() - t0gpe);
+  } finally { _releaseJobLock("graveyard-pattern-extraction"); }
   });
+  _scheduledJobs.add("graveyard-pattern-extraction");
 
   // ─── Nightly critique — daily 11:30 PM ET ─────────────────────
   // Closes the AI self-learning loop: reads system_journal entries from the past
@@ -2004,6 +2368,8 @@ export function initScheduler() {
 
   // 03:30 + 04:30 UTC covers 11:30 PM ET in both EDT (UTC-4) and EST (UTC-5).
   cron.schedule("30 3,4 * * *", async () => {
+    if (!_tryAcquireJobLock("nightly-critique")) return;
+    try {
     const now = new Date();
     const etHour = Number(
       now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
@@ -2015,7 +2381,9 @@ export function initScheduler() {
     await withRetry("nightly-critique", SCHEDULER_JOBS["nightly-critique"].run);
     markJobRun("nightly-critique");
     emitJobComplete("nightly-critique", Date.now() - t0nc);
+  } finally { _releaseJobLock("nightly-critique"); }
   });
+  _scheduledJobs.add("nightly-critique");
 
   // ─── Critic feedback — weekly Sunday 1 AM ET ──────────────────
   registerJob("critic-feedback", 7 * 24 * 60 * 60 * 1000, async () => {
@@ -2025,6 +2393,8 @@ export function initScheduler() {
 
   // Run at 5:00 and 6:00 UTC on Sundays to cover EDT (UTC-4) and EST (UTC-5) for 1 AM ET.
   cron.schedule("0 5,6 * * 0", async () => {
+    if (!_tryAcquireJobLock("critic-feedback")) return;
+    try {
     const now = new Date();
     const etHour = Number(
       now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
@@ -2036,7 +2406,9 @@ export function initScheduler() {
     await withRetry("critic-feedback", SCHEDULER_JOBS["critic-feedback"].run);
     markJobRun("critic-feedback");
     emitJobComplete("critic-feedback", Date.now() - t0cf);
+  } finally { _releaseJobLock("critic-feedback"); }
   });
+  _scheduledJobs.add("critic-feedback");
 
   // ─── B4 W13: Regen auto-trigger daily sweep — 2 AM ET daily ─────────────
   // Sweeps all DECLINING strategies that have not had a regen attempt in the
@@ -2052,8 +2424,12 @@ export function initScheduler() {
     await checkDeclingAndTriggerRegen({ correlationId: randomUUID() });
   });
 
-  // Run at 6:00 and 7:00 UTC daily to cover EDT (UTC-4) and EST (UTC-5) for 2 AM ET.
-  cron.schedule("0 6,7 * * *", async () => {
+  // Run at 6:05 and 7:05 UTC daily to cover EDT (UTC-4) and EST (UTC-5) for 2:05 AM ET.
+  // Track C F-5: staggered by +5 min from decay-monitor (0 6,7) which fires at
+  // the top of the hour for 2:00 AM ET. Same fire-window, different minute.
+  cron.schedule("5 6,7 * * *", async () => {
+    if (!_tryAcquireJobLock("regen-declining-sweep")) return;
+    try {
     const now = new Date();
     const etHour = Number(
       now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
@@ -2065,7 +2441,9 @@ export function initScheduler() {
     await withRetry("regen-declining-sweep", SCHEDULER_JOBS["regen-declining-sweep"].run);
     markJobRun("regen-declining-sweep");
     emitJobComplete("regen-declining-sweep", Date.now() - t0regen);
+  } finally { _releaseJobLock("regen-declining-sweep"); }
   });
+  _scheduledJobs.add("regen-declining-sweep");
 
   // ─── Prompt A/B test resolution — weekly Sunday 11 PM ET ──
   registerJob("prompt-ab-resolution", 7 * 24 * 60 * 60 * 1000, async () => {
@@ -2074,12 +2452,16 @@ export function initScheduler() {
   });
 
   cron.schedule("0 23 * * 0", async () => {
+    if (!_tryAcquireJobLock("prompt-ab-resolution")) return;
+    try {
     if (!(await pipelineGate("prompt-ab-resolution"))) return;
     const t0pab = Date.now();
     await withRetry("prompt-ab-resolution", SCHEDULER_JOBS["prompt-ab-resolution"].run);
     markJobRun("prompt-ab-resolution");
     emitJobComplete("prompt-ab-resolution", Date.now() - t0pab);
+  } finally { _releaseJobLock("prompt-ab-resolution"); }
   });
+  _scheduledJobs.add("prompt-ab-resolution");
 
   // ─── B1 (W9): Databento weekly refresh — Sunday 9 PM ET ─────────────────
   // Incremental update of data_cache/<SYMBOL>/<timeframe>.parquet files.
@@ -2123,6 +2505,8 @@ export function initScheduler() {
 
   // Run at 1:00 and 2:00 UTC on Mondays to cover EDT/EST for Sunday 9 PM ET.
   cron.schedule("0 1,2 * * 1", async () => {
+    if (!_tryAcquireJobLock("databento-weekly-refresh")) return;
+    try {
     const now = new Date();
     const etStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -2138,7 +2522,9 @@ export function initScheduler() {
     await withRetry("databento-weekly-refresh", SCHEDULER_JOBS["databento-weekly-refresh"].run);
     markJobRun("databento-weekly-refresh");
     emitJobComplete("databento-weekly-refresh", Date.now() - t0dbr);
+  } finally { _releaseJobLock("databento-weekly-refresh"); }
   });
+  _scheduledJobs.add("databento-weekly-refresh");
 
   // ─── A8 (W11): Data Integrity Suite — 4:00 AM ET nightly ────────────────────
   // Runs two complementary check categories:
@@ -2181,7 +2567,11 @@ export function initScheduler() {
     }
   });
 
-  cron.schedule("0 8,9 * * *", async () => {
+  // Track C F-5: staggered to :07 past hour to avoid collision with
+  // system-map-drift (0 8,9) which also fires at the top of the hour at 4 AM ET.
+  cron.schedule("7 8,9 * * *", async () => {
+    if (!_tryAcquireJobLock("data-integrity-suite")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -2192,9 +2582,9 @@ export function initScheduler() {
     const [etHourStr, etMinStr] = etTimeStr.split(":");
     const etHour = parseInt(etHourStr, 10);
     const etMin = parseInt(etMinStr, 10);
-    // Only fire at exactly 4:00 AM ET
-    if (etHour !== 4 || etMin !== 0) {
-      logger.debug({ etHour, etMin }, "Scheduler: data-integrity-suite cron fired but not 4:00 AM ET — skipping");
+    // Only fire at exactly 4:07 AM ET (staggered from system-map-drift at 4:00)
+    if (etHour !== 4 || etMin !== 7) {
+      logger.debug({ etHour, etMin }, "Scheduler: data-integrity-suite cron fired but not 4:07 AM ET — skipping");
       return;
     }
     if (!(await pipelineGate("data-integrity-suite"))) return;
@@ -2203,7 +2593,9 @@ export function initScheduler() {
     await withRetry("data-integrity-suite", SCHEDULER_JOBS["data-integrity-suite"].run);
     markJobRun("data-integrity-suite");
     emitJobComplete("data-integrity-suite", Date.now() - t0di);
+  } finally { _releaseJobLock("data-integrity-suite"); }
   });
+  _scheduledJobs.add("data-integrity-suite");
 
   // ─── Wave D3: Contract roll sweep — 4:30 PM ET weekdays ──────
   // Runs at both 20:30 and 21:30 UTC to cover EDT (UTC-4) and EST (UTC-5).
@@ -2219,6 +2611,8 @@ export function initScheduler() {
   });
 
   cron.schedule("30 20,21 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("contract-roll-sweep")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -2241,7 +2635,9 @@ export function initScheduler() {
     await withRetry("contract-roll-sweep", SCHEDULER_JOBS["contract-roll-sweep"].run);
     markJobRun("contract-roll-sweep");
     emitJobComplete("contract-roll-sweep", Date.now() - t0roll);
+  } finally { _releaseJobLock("contract-roll-sweep"); }
   });
+  _scheduledJobs.add("contract-roll-sweep");
 
   // ─── Tournament staleness alarm — every 6 hours ──────────────
   // The 4-role tournament (Proposer → Critic → Prosecutor → Promoter) lives in
@@ -2253,12 +2649,18 @@ export function initScheduler() {
     await checkTournamentStaleness();
   });
 
-  cron.schedule("0 */6 * * *", async () => {
+  // Track C F-5: staggered to ":03" past every 6h to avoid colliding with
+  // lifecycle-auto-check (0 */6) which also fired at the same minute boundary.
+  cron.schedule("3 */6 * * *", async () => {
+    if (!_tryAcquireJobLock("tournament-staleness-check")) return;
+    try {
     const t0tourn = Date.now();
     await withRetry("tournament-staleness-check", SCHEDULER_JOBS["tournament-staleness-check"].run, 1);
     markJobRun("tournament-staleness-check");
     emitJobComplete("tournament-staleness-check", Date.now() - t0tourn);
+  } finally { _releaseJobLock("tournament-staleness-check"); }
   });
+  _scheduledJobs.add("tournament-staleness-check");
 
   // ─── C1 (W15): CME exchange status poll — every 60 seconds ─────────────────
   // Probes CME status endpoint every 60s. On outage: blocks new entries,
@@ -2272,11 +2674,15 @@ export function initScheduler() {
   });
 
   cron.schedule("* * * * *", async () => {
+    if (!_tryAcquireJobLock("cme-status-poll")) return;
+    try {
     const t0cme = Date.now();
     await withRetry("cme-status-poll", SCHEDULER_JOBS["cme-status-poll"].run, 1);
     markJobRun("cme-status-poll");
     emitJobComplete("cme-status-poll", Date.now() - t0cme);
+  } finally { _releaseJobLock("cme-status-poll"); }
   });
+  _scheduledJobs.add("cme-status-poll");
 
   // Startup: reconcile any outages that were active before restart
   setTimeout(() => {
@@ -2295,11 +2701,15 @@ export function initScheduler() {
   });
 
   cron.schedule("*/15 * * * *", async () => {
+    if (!_tryAcquireJobLock("prop-firm-health-check")) return;
+    try {
     const t0pfh = Date.now();
     await withRetry("prop-firm-health-check", SCHEDULER_JOBS["prop-firm-health-check"].run, 1);
     markJobRun("prop-firm-health-check");
     emitJobComplete("prop-firm-health-check", Date.now() - t0pfh);
+  } finally { _releaseJobLock("prop-firm-health-check"); }
   });
+  _scheduledJobs.add("prop-firm-health-check");
 
   // Startup: reconcile suspension state from DB
   setTimeout(() => {
@@ -2316,12 +2726,16 @@ export function initScheduler() {
     await runDashboardSnapshots();
   });
 
-  cron.schedule("5 * * * *", async () => { // 5 min past each hour to stagger from other hourly jobs
+  cron.schedule("5 * * * *", async () => {
+    if (!_tryAcquireJobLock("prop-firm-dashboard-snapshot")) return;
+    try { // 5 min past each hour to stagger from other hourly jobs
     const t0snap = Date.now();
     await withRetry("prop-firm-dashboard-snapshot", SCHEDULER_JOBS["prop-firm-dashboard-snapshot"].run, 1);
     markJobRun("prop-firm-dashboard-snapshot");
     emitJobComplete("prop-firm-dashboard-snapshot", Date.now() - t0snap);
+  } finally { _releaseJobLock("prop-firm-dashboard-snapshot"); }
   });
+  _scheduledJobs.add("prop-firm-dashboard-snapshot");
 
   // ─── Wave 23 Gap-Fix-B: Bias engine session-start — 9:30 AM ET weekdays ────
   //
@@ -2352,6 +2766,8 @@ export function initScheduler() {
 
   // 9:30 AM ET = 13:30 UTC (EDT) or 14:30 UTC (EST) — fire both, filter on ET
   cron.schedule("30 13,14 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("bias-engine-session-start")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -2372,7 +2788,9 @@ export function initScheduler() {
     await withRetry("bias-engine-session-start", SCHEDULER_JOBS["bias-engine-session-start"].run);
     markJobRun("bias-engine-session-start");
     emitJobComplete("bias-engine-session-start", Date.now() - t0bias);
+  } finally { _releaseJobLock("bias-engine-session-start"); }
   });
+  _scheduledJobs.add("bias-engine-session-start");
 
   // ─── W23H.2: Pre-market routine — 8:30 AM ET (12:00 UTC EDT / 13:00 UTC EST) ─
   //
@@ -2462,6 +2880,26 @@ export function initScheduler() {
     }
   });
 
+  // ─── Track C F-2: cron driver for pre-market-routine ───────────────────
+  // registerJob above was historically present without a matching
+  // cron.schedule — pre-market context only computed via reconcileMissedRuns
+  // on each boot. Hourly UTC tick; inner hour-gate (12 or 13 UTC) restricts
+  // execution to 8:30 AM ET (DST-aware); audit-log idempotency limits to one
+  // run per UTC day.
+  cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("pre-market-routine")) return;
+    try {
+      // NOT pipeline-gated: pre-market context is a safety/observability input
+      const t0 = Date.now();
+      await withRetry("pre-market-routine", SCHEDULER_JOBS["pre-market-routine"].run, 1);
+      markJobRun("pre-market-routine");
+      emitJobComplete("pre-market-routine", Date.now() - t0);
+    } finally {
+      _releaseJobLock("pre-market-routine");
+    }
+  });
+  _scheduledJobs.add("pre-market-routine");
+
   // ─── Wave 23 Gap-Fix-B: Bias engine 10:00 AM ET refresh — weekdays ─────────
   //
   // DST-aware double-fire: 14:00 UTC (EDT) AND 15:00 UTC (EST).
@@ -2506,6 +2944,8 @@ export function initScheduler() {
 
   // 10:00 AM ET = 14:00 UTC (EDT) or 15:00 UTC (EST) — fire both, filter on ET
   cron.schedule("0 14,15 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("bias-engine-refresh-10am-et")) return;
+    try {
     const now = new Date();
     const etTimeStr = now.toLocaleString("en-US", {
       timeZone: "America/New_York",
@@ -2526,7 +2966,9 @@ export function initScheduler() {
     await withRetry("bias-engine-refresh-10am-et", SCHEDULER_JOBS["bias-engine-refresh-10am-et"].run, 1);
     markJobRun("bias-engine-refresh-10am-et");
     emitJobComplete("bias-engine-refresh-10am-et", Date.now() - t0biasRefresh);
+  } finally { _releaseJobLock("bias-engine-refresh-10am-et"); }
   });
+  _scheduledJobs.add("bias-engine-refresh-10am-et");
 
   // ─── Wave 23D: Harsh-regime phase activation check — daily 03:00 UTC ────────
   //
@@ -2649,14 +3091,27 @@ export function initScheduler() {
   // Daily 03:00 UTC — NOT DST-sensitive (UTC-anchored deliberately, not ET)
   // NOT pipeline-gated (safety/observability — must run when paused)
   cron.schedule("0 3 * * *", async () => {
+    if (!_tryAcquireJobLock("harsh-regime-phase-activation-check")) return;
+    try {
     logger.info("Scheduler: Harsh-regime phase activation check (03:00 UTC daily)");
     const t0hrp = Date.now();
     await withRetry("harsh-regime-phase-activation-check", SCHEDULER_JOBS["harsh-regime-phase-activation-check"].run, 1);
     markJobRun("harsh-regime-phase-activation-check");
     emitJobComplete("harsh-regime-phase-activation-check", Date.now() - t0hrp);
+  } finally { _releaseJobLock("harsh-regime-phase-activation-check"); }
   });
+  _scheduledJobs.add("harsh-regime-phase-activation-check");
 
   logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated)");
+
+  // ─── Track C F-8: boot-time drift detection ────────────────
+  // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
+  // cron.schedule body). Catches the F-1/F-2 class of bug — a job registered
+  // via registerJob() but never wired to a cron driver. Throws in non-prod to
+  // fail-fast during development; logs an error in prod (operator escalation
+  // via Discord critical channel via existing notifyCritical path is not yet
+  // wired — TODO).
+  _validateAllJobsScheduled();
 
   // ─── Startup reconciliation: catch up missed jobs ─────────
   reconcileMissedRuns().then(() => {

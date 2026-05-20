@@ -16,7 +16,7 @@
  *
  * What this does:
  *   - Builds a minimal valid DSL from the mention's narrative + canonical fields
- *   - Runs the framework-overlay (CLAUDE.md §4 Style D defaults)
+ *   - Runs the framework-overlay (CLAUDE.md §4 Style C 33/33/33 canonical defaults)
  *   - Inserts directly into `strategies` with cross-validation tags
  *   - Returns the new strategy.id
  *
@@ -31,6 +31,11 @@ import { applyFrameworkOverlay } from "./framework-overlay.js";
 import { compileDslToEngine, compileDslWithConfluence } from "../lib/dsl-compiler.js";
 import type { ConfirmingIndicator } from "../lib/dsl-compiler.js";
 import { runDslQualityCritic } from "./agent-service.js";
+// Track A F-6: insertAuditRowSafe migrated for select call sites. Remaining
+// db.insert(auditLog) call sites retain raw pattern until incremental migration.
+// TODO: correlation_id not threaded through all call sites in this file.
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
 
 /**
  * Pass 21 v3 (2026-05-17) — STRUCTURAL ARCHETYPE REGISTRY.
@@ -111,34 +116,11 @@ const ARCHETYPE_REGISTRY: Record<string, { engineSpec: string; strategyClass: st
  * Module-scope so the prettifier + gate share the same source of truth.
  */
 
-/**
- * Pass 21 v3 corrected³ (2026-05-17) — TS mirror of pattern_library.py
- * ENTRY_PATTERNS.param_ranges so the graduator can hard-fail before INSERT
- * if any param is outside the canonical range. Without this, strategies
- * like Connors RSI-2 (period=2 vs canonical 7-21) pass my key-existence
- * check but get rejected at engine compile time.
- *
- * Keep in lockstep with src/engine/compiler/pattern_library.py.
- */
-const PARAM_RANGES: Record<string, Record<string, [number, number]>> = {
-  sma_crossover: { fast_period: [5, 50], slow_period: [20, 200], confirmation_bars: [1, 5] },
-  ema_crossover: { fast_period: [5, 50], slow_period: [20, 200], confirmation_bars: [1, 5] },
-  rsi_reversal: { period: [7, 21], oversold: [20, 40], overbought: [60, 80] },
-  bollinger_breakout: { period: [10, 30], std_dev: [1.5, 3.0], confirmation_bars: [1, 3] },
-  // W23H.1-postmortem (2026-05-20): expanded period floor from 10 → 5. Discovery
-  // cycle today rejected 8 strategies all using period=5 or period=7 — both are
-  // legitimate trader choices (5-period ATR for scalping, 7-period for short-term
-  // breakout). Engine pandas-ta atr() accepts any positive integer.
-  atr_breakout: { period: [5, 30], multiplier: [1.0, 3.0] },
-  vwap_reversion: { deviation_threshold: [0.5, 3.0], confirmation_bars: [1, 5] },
-  donchian_breakout: { period: [10, 55] },
-  keltner_squeeze: { bb_period: [15, 25], kc_period: [15, 25], kc_multiplier: [1.0, 2.0] },
-  session_open_breakout: { range_minutes: [5, 60], buffer_ticks: [1, 10] },
-  macd_crossover: { fast_period: [8, 16], slow_period: [20, 30], signal_period: [7, 12] },
-  vwap_fade: { atr_extension_threshold: [1.0, 3.0], confirmation_bars: [1, 5], vwap_touch_exit: [0, 1] },
-  event_driven_fade: { atr_move_threshold: [1.5, 4.0], event_window_minutes: [5, 30], confirmation_bars: [1, 3] },
-  overnight_drift: { drift_atr_threshold: [0.5, 2.0], asia_lookback_bars: [4, 24], min_drift_bars: [2, 12] },
-};
+// F-2 (2026-05-20): PARAM_RANGES is now the canonical source of truth from
+// src/server/lib/param-ranges.ts. Both the graduator and the dsl-sanitizer
+// import from that single module. Do NOT redefine ranges inline here.
+// Keep in lockstep with src/engine/compiler/pattern_library.py.
+const PARAM_RANGES = CANONICAL_PARAM_RANGES;
 
 /** Returns [] if all params in range, else array of error messages. */
 function validateParamRanges(indicator: string, params: Record<string, unknown>): string[] {
@@ -319,8 +301,15 @@ function deriveEntryIndicator(conceptName: string, fallback: string | null): str
   // Bollinger Bands (mean reversion + breakout).
   if (/bollinger/.test(cn)) return "bollinger_breakout";
 
+  // F-3 (2026-05-20): Connors RSI-2 is a distinct family — must be checked BEFORE
+  // the generic rsi_reversal line so period=2 is not rejected by the [7,21] range.
+  if (/connors.*rsi.?2|rsi.?2.*connors|rsi2.*connors|connors_rsi2/.test(cn)) return "connors_rsi2";
+  // Connors alone (without explicit RSI-2 qualifier) also maps to connors_rsi2 —
+  // Connors's canonical method is RSI-2; no other Connors strategy uses rsi_reversal.
+  if (/connors/.test(cn)) return "connors_rsi2";
+
   // RSI / Stochastic reversals (no dedicated stochastic pattern — uses RSI shape).
-  if (/(^|_)rsi(_|$)|stochastic|oversold|overbought|connors/.test(cn)) return "rsi_reversal";
+  if (/(^|_)rsi(_|$)|stochastic|oversold|overbought/.test(cn)) return "rsi_reversal";
 
   // SMA crossover (slower than EMA).
   if (/(^|_)sma_cross|simple_moving_average_cross/.test(cn)) return "sma_crossover";
@@ -502,14 +491,17 @@ function deriveEntryParams(conceptName: string, indicator: string | null): Recor
       params["slow_period"] = nums[1];
       if (indicator === "macd_crossover" && nums.length >= 3) params["signal_period"] = nums[2];
     }
+  } else if (indicator === "connors_rsi2") {
+    // F-3 (2026-05-20): Connors RSI-2 is a distinct indicator family with its
+    // own canonical ranges (period [2,5], oversold [3,10], overbought [90,97]).
+    // Routing here preserves period=2 which rsi_reversal [7,21] would reject.
+    params["period"] = 2;
+    params["oversold"] = 5;
+    params["overbought"] = 95;
+    // Allow concept-name overrides for the rare RSI-3/RSI-4 Connors variants.
+    if (nums.length >= 1 && nums[0] <= 5) params["period"] = nums[0];
   } else if (indicator === "rsi_reversal") {
     if (nums.length >= 1) params["period"] = nums[0];
-    // Connors RSI-2 has period=2, oversold=5, overbought=95 — special case.
-    if (/connors|rsi.?2/.test(cn)) {
-      params["period"] = 2;
-      params["oversold"] = 5;
-      params["overbought"] = 95;
-    }
   } else if (indicator === "bollinger_breakout") {
     if (nums.length >= 1) params["period"] = nums[0];
     if (nums.length >= 2) params["std_dev"] = nums[1] >= 10 ? 2.0 : nums[1];  // articles often write "20, 2" or "20, 2.0"
@@ -738,7 +730,8 @@ export async function graduateBucketDirectly(opts: {
         { bucketId, conceptName: bucketMeta.conceptName, srcUrl, pattern: String(pat) },
         `direct-graduator: REJECTED — source URL matches non-strategy pattern`,
       );
-      await db.insert(auditLog).values({
+      // Track A F-6: migrated to insertAuditRowSafe
+      await insertAuditRowSafe({
         action: "graduation.rejected_url_pattern",
         entityType: "strategy_pending_bucket",
         entityId: bucketId,
@@ -746,8 +739,8 @@ export async function graduateBucketDirectly(opts: {
         result: { reason: "source_url_matches_non_strategy_pattern", matched_pattern: String(pat) } as Record<string, unknown>,
         status: "rejected",
         decisionAuthority: "system",
-        correlationId: correlationId ?? null,
-      }).catch((auditErr: unknown) => logger.warn({ err: auditErr }, "audit_log write failed (non-blocking)"));
+        correlationId: correlationId ?? null, // TODO: correlation_id not threaded here
+      });
       return {
         strategyId: null,
         strategyName: bucketMeta.conceptName ?? "unknown",
@@ -1134,7 +1127,8 @@ export async function graduateBucketDirectly(opts: {
   // <engineSpec> to load engine/strategies/<engineSpec>.py.
   const compiledIndicator = isArchetype && archetypeMeta ? archetypeMeta.engineSpec : entryIndicator;
   const entryRules = String((extractedIdea as any)?.entry_rules ?? `Entry on ${compiledIndicator} signal per ${conceptName} setup; framework overlay applies risk management.`).slice(0, 2000);
-  const exitRules = String((extractedIdea as any)?.exit_rules ?? "Style D framework: 50% off at 1R, Chandelier(14,2) trail, BE+1tick, 15:55 ET hard flat.").slice(0, 2000);
+  // F-4 (2026-05-20): Style D is DEAD (W23F.N). Default is Style C 33/33/33.
+  const exitRules = String((extractedIdea as any)?.exit_rules ?? "Style C 33/33/33: TP1 33% @ 1R / TP2 33% @ 2R / runner 34% trails developing_session_poc (Chandelier(14,2) fallback). BE+1tick stop on TP1 fill. 15:55 ET hard flat.").slice(0, 2000);
   const riskRules = String((extractedIdea as any)?.risk_rules ?? "ATR 1.5x stop, structural 14pt ceiling MES, 67% personal DLL.").slice(0, 1000);
   const thesis = String((extractedIdea as any)?.thesis ?? `${conceptName} on ${market} ${timeframe} — cross-validated across ${distinctProviders} independent sources.`).slice(0, 500);
   // P2C (Wave 9, 2026-05-17): derive preferred_regime from indicator/archetype
@@ -1405,7 +1399,7 @@ export async function graduateBucketDirectly(opts: {
     } : {}),
   };
 
-  // Apply framework overlay (Style D, time_stop, profit-tier, template-hole safety net)
+  // Apply framework overlay (Style C 33/33/33, time_stop, risk-derived pyramid, template-hole safety net)
   const overlayed = applyFrameworkOverlay({
     compiled: compiled as any,
     source: "graduated_bucket",

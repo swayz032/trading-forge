@@ -163,9 +163,9 @@ vi.mock("../../shared/firm-config.js", () => ({
   DEFAULT_ACCOUNT_TYPE: "50k",
   DEFAULT_COMMISSION_PER_SIDE: 0.62,
   CONTRACT_SPECS: {
-    MES: { tickSize: 0.25, tickValue: 1.25, pointValue: 5 },
-    MNQ: { tickSize: 0.25, tickValue: 2.0, pointValue: 2 },
-    MCL: { tickSize: 0.01, tickValue: 10.0, pointValue: 1000 },
+    MES: { tickSize: 0.25, tickValue: 1.25,   pointValue: 5.00   },
+    MNQ: { tickSize: 0.25, tickValue: 0.50,   pointValue: 2.00   },  // F-7 fix: 0.50 not 2.0 (8 ticks/pt × $0.25 tickSize → $0.50/tick)
+    MCL: { tickSize: 0.01, tickValue: 1.00,   pointValue: 100.00 },  // F-5 fix: pointValue 100.0 not 1000
   },
   FIRMS: {},
 }));

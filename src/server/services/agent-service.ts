@@ -2,7 +2,10 @@ import { createHash, randomUUID } from "crypto";
 import { eq, and, gte, sql, desc, isNull, or } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, systemJournal, auditLog, backtests } from "../db/schema.js";
-import { insertAuditRow } from "../lib/audit-log-helper.js";
+// Track A F-6: insertAuditRowSafe added. Remaining db.insert(auditLog) call
+// sites in this file retain raw pattern until incremental migration completes.
+// TODO: correlation_id not threaded through all call sites in this file.
+import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { runBacktest } from "./backtest-service.js";
 import { OllamaClient } from "./ollama-client.js";
 import { GraveyardGate } from "./graveyard-gate.js";
@@ -718,8 +721,8 @@ export class AgentService {
       status: result.status === "completed" ? "tested" : "failed",
     });
 
-    // 5. Audit log
-    await db.insert(auditLog).values({
+    // 5. Audit log (Track A F-6: migrated to insertAuditRowSafe)
+    await insertAuditRowSafe({
       action: "agent.run-strategy",
       entityType: "strategy",
       entityId: strategyId,

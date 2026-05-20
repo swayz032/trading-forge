@@ -1,5 +1,12 @@
 import { db } from "../db/index.js";
 import { sql } from "drizzle-orm";
+import { logger } from "../lib/logger.js";
+
+// Track A F-8: Helper to distinguish "table does not exist yet" (42P01 — expected
+// during migration window) from unexpected DB errors (should not be silent-swallowed).
+function isTableMissing(err: unknown): boolean {
+  return typeof err === "object" && err !== null && (err as { code?: string }).code === "42P01";
+}
 
 export async function computeCosts(since?: Date) {
   const sinceDate = since ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days
@@ -13,7 +20,12 @@ export async function computeCosts(since?: Date) {
       WHERE created_at >= ${sinceDate}
     `);
     databentoCost = Number((ds as any)?.total ?? 0);
-  } catch { /* table/column may not exist yet */ }
+  } catch (err) {
+    if (!isTableMissing(err)) {
+      logger.warn({ err, query: "data_sync_jobs cost sum" }, "cost-tracker: query failed unexpectedly");
+    }
+    // 42P01 = table doesn't exist yet — silent skip OK
+  }
 
   // Quantum costs (AWS Braket) — quantumMcRuns.cloudCostDollars column
   let quantumCost = 0;
@@ -24,7 +36,11 @@ export async function computeCosts(since?: Date) {
       WHERE created_at >= ${sinceDate}
     `);
     quantumCost = Number((qc as any)?.total ?? 0);
-  } catch { /* table/column may not exist yet */ }
+  } catch (err) {
+    if (!isTableMissing(err)) {
+      logger.warn({ err, query: "quantum_mc_runs cost sum" }, "cost-tracker: query failed unexpectedly");
+    }
+  }
 
   // AI inference costs (estimate from tokens) — ai_inference_log may not exist yet
   let aiTokenCost = 0;
@@ -40,7 +56,11 @@ export async function computeCosts(since?: Date) {
     const completionTokens = Number((ai as any)?.total_completion ?? 0);
     // GPT-5-mini pricing estimate: $0.15/1M input, $0.60/1M output
     aiTokenCost = (promptTokens * 0.15 / 1_000_000) + (completionTokens * 0.60 / 1_000_000);
-  } catch { /* table may not exist yet */ }
+  } catch (err) {
+    if (!isTableMissing(err)) {
+      logger.warn({ err, query: "ai_inference_log token sum" }, "cost-tracker: query failed unexpectedly");
+    }
+  }
 
   // Compute hours (backtest execution time) — backtests.executionTimeMs column
   let computeHours = 0;
@@ -51,7 +71,11 @@ export async function computeCosts(since?: Date) {
       WHERE created_at >= ${sinceDate} AND status = 'completed'
     `);
     computeHours = Number((ch as any)?.total_ms ?? 0) / 3_600_000;
-  } catch { /* table may not exist yet */ }
+  } catch (err) {
+    if (!isTableMissing(err)) {
+      logger.warn({ err, query: "backtests execution_time_ms sum" }, "cost-tracker: query failed unexpectedly");
+    }
+  }
 
   return {
     period: { since: sinceDate.toISOString(), until: new Date().toISOString() },

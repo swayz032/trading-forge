@@ -69,6 +69,14 @@ P_TARGET_HIT_THRESHOLD: float = 0.75
 NOISE_SCORE_THRESHOLD: float = 0.50
 ENTANGLEMENT_STRENGTH_THRESHOLD: float = 0.70  # for lead-lag bonus signal
 
+# F-4(b): QCNN noise gate enforcement flag.
+# The QCNN weights are random-seed initialized and QUANTUM_NOISE_THRESHOLD=0.5
+# is uncalibrated.  Until 30 days of skip_decisions data are collected and the
+# threshold is empirically derived, the noise gate MUST NOT disqualify markets —
+# it logs a warning instead.  Set to True only after calibration is complete.
+# Governance: challenger_only; this flag controls an advisory gate, not execution.
+QCNN_NOISE_GATE_ENFORCED: bool = False
+
 # ─── Edge Score Weights ───────────────────────────────────────────────────────
 EDGE_SCORE_WEIGHTS: dict[str, float] = {
     "vol": 0.40,
@@ -415,7 +423,23 @@ def run_market_audit(
 
     # ── Gates ────────────────────────────────────────────────────────────────
     passes_p_target = p_target_hit > P_TARGET_HIT_THRESHOLD
-    passes_noise = (noise_score is None) or (noise_score < NOISE_SCORE_THRESHOLD)
+
+    # F-4(b): QCNN noise gate guard.
+    # QCNN weights are random-seed initialized; threshold is uncalibrated.
+    # While QCNN_NOISE_GATE_ENFORCED is False, the gate always passes and logs
+    # a warning when it WOULD have blocked (observation_mode shadow).
+    # This prevents an uncalibrated model from silently forcing observation_mode.
+    if not QCNN_NOISE_GATE_ENFORCED and noise_score is not None and noise_score >= NOISE_SCORE_THRESHOLD:
+        logger.warning(
+            "a_plus_market_auditor: quantum observation_mode override skipped "
+            "(uncalibrated QCNN) — noise_score=%.4f would have blocked market=%s "
+            "but QCNN_NOISE_GATE_ENFORCED=False; classical gate unaffected",
+            noise_score,
+            inp.market,
+        )
+        passes_noise = True
+    else:
+        passes_noise = (noise_score is None) or (noise_score < NOISE_SCORE_THRESHOLD)
 
     # ── Composite Edge Score ─────────────────────────────────────────────────
     composite = compute_edge_score(atr_ratio, p_target_hit, noise_score, entanglement_strength)

@@ -4,6 +4,10 @@ import { writeLockoutFromKillEvent } from "./strategy-lockout-service.js";
 import { eq, and, isNull, desc, sql, inArray } from "drizzle-orm";
 import { broadcastSSE, PAPER_EXIT_EVENTS } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
+// Track A F-6: insertAuditRowSafe migrated here. Remaining db.insert(auditLog)
+// call sites in this file retain the raw pattern until incremental migration completes.
+// TODO: correlation_id not threaded through most call sites in this file.
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { onPaperTradeClose } from "../scheduler.js";
 import { getFirmAccount, CONTRACT_SPECS, getCommissionPerSide } from "../../shared/firm-config.js";
 import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCache } from "./paper-risk-gate.js";
@@ -61,8 +65,8 @@ registerOutageChangeCallback(async (exchange: string, isActive: boolean, affecte
         "C1 CME outage: open positions held (NOT closed). New entries BLOCKED. Manual review required on resume.",
       );
 
-      // Write audit log for traceability
-      await db.insert(auditLog).values({
+      // Write audit log for traceability (Track A F-6: migrated to insertAuditRowSafe)
+      await insertAuditRowSafe({
         action: "exchange.outage_positions_logged",
         entityType: "system",
         entityId: null,
@@ -76,7 +80,7 @@ registerOutageChangeCallback(async (exchange: string, isActive: boolean, affecte
           autoReissue: false,
         } as Record<string, unknown>,
         status: "success",
-        correlationId: null,
+        correlationId: null, // TODO: correlation_id not threaded here
       });
     } catch (err) {
       logger.error({ err, exchange }, "C1 outage callback: failed to log open positions");

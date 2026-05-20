@@ -334,6 +334,29 @@ def run_quantum_entropy_filter(
     elapsed_ms = int((time.time() - t0) * 1000)
     hardware = "default.qubit" if PENNYLANE_AVAILABLE else "fallback_unavailable"
 
+    # F-4(a): governance dict must advertise calibration status so any downstream
+    # consumer can gate on advisory_only before acting on noise_score.
+    # QCNN weights are random-seed initialized; QUANTUM_NOISE_THRESHOLD = 0.5 is
+    # a placeholder pending 30-day calibration (see module docstring for plan).
+    # Callers MUST check governance["advisory_only"] before using noise_score to
+    # set observation_mode or skip trade decisions.
+    governance = {
+        **GOVERNANCE_LABELS,
+        "calibrated": False,
+        "advisory_only": True,
+        "decision_role": "challenger_only",
+        "reason": (
+            "QCNN weights are random-seed initialized; "
+            "QUANTUM_NOISE_THRESHOLD=0.5 is uncalibrated. "
+            "Calibrate after 30 days of skip_decisions data — "
+            "see module docstring for method."
+        ),
+        "noise_threshold": QUANTUM_NOISE_THRESHOLD,
+        "above_threshold": (
+            noise_score is not None and noise_score > QUANTUM_NOISE_THRESHOLD
+        ),
+    }
+
     return {
         "noise_score": noise_score,
         "execution_time_ms": elapsed_ms,
@@ -342,7 +365,7 @@ def run_quantum_entropy_filter(
         "n_qubits": N_QUBITS,
         "n_params": 2 * N_QUBITS + 4,
         "features_used": [k for k in FEATURE_KEYS if k in features],
-        "governance": GOVERNANCE_LABELS.copy(),
+        "governance": governance,
         "pennylane_available": PENNYLANE_AVAILABLE,
         "threshold": QUANTUM_NOISE_THRESHOLD,
     }

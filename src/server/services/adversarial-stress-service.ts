@@ -11,6 +11,11 @@
  *     for observation only — gate behavior is 100% classical.
  *   - Phase 1 (W7b Day 52): worst_case_breach_prob > 0.5 AND
  *     breach_minimal_n_trades < 4 blocks promotion IF QUANTUM_ADVERSARIAL_STRESS_ENABLED.
+ *     KNOWN GAP (F-1 2026-05-20): phase1BlockRecommended is produced and logged here, but
+ *     lifecycle-service.ts does NOT enforce it — the gate wire is absent. This service
+ *     produces the evidence; lifecycle-service owns the gate. Until lifecycle-service
+ *     adds the enforcement block (Track G, W7b Day 52), Phase 1 is ADVISORY ONLY.
+ *     Manual operator review is required to act on phase1BlockRecommended=true.
  *   - TIER gating: TIER_1 and TIER_2 only. TIER_3 strategies skip adversarial stress.
  *
  * Pending-row contract: status="pending" on insert, updated to

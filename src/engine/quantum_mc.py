@@ -17,8 +17,9 @@ import json
 import math
 import os
 import sys
+import threading
 import time
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -84,6 +85,91 @@ GOVERNANCE_LABELS = {
 _QUANTUM_CUQUANTUM_GPU_ENABLED: bool = (
     os.environ.get("QUANTUM_CUQUANTUM_GPU_ENABLED", "false").lower() == "true"
 )
+
+# ─── F-3: IAE watchdog interval ──────────────────────────────────────────────
+# IAE's estimate() is a blocking call — the cloud watchdog cannot interrupt it.
+# This wrapper runs IAE on a daemon thread and ticks the watchdog every N
+# seconds. If the watchdog signals cancel (budget exhausted), we log and let
+# the current IAE job finish — true mid-job cancellation is not possible at the
+# Qiskit API level, but we PREVENT new submissions after budget is consumed.
+_IAE_WATCHDOG_TICK_INTERVAL_SEC: int = 30
+_IAE_MAX_WAIT_SECONDS: int = 300  # 5-minute hard join timeout
+
+
+def _run_iae_with_watchdog(
+    iae: Any,
+    problem: Any,
+    cloud_backend_module: Any,
+    watchdog_interval: int = _IAE_WATCHDOG_TICK_INTERVAL_SEC,
+    max_wait: int = _IAE_MAX_WAIT_SECONDS,
+) -> Any:
+    """Run IAE.estimate() on a daemon thread, ticking cloud watchdog while waiting.
+
+    Authority: challenger-only. This function does NOT cancel IAE mid-job —
+    Qiskit IAE has no clean cancel API. It prevents ADDITIONAL cloud submissions
+    after budget is exhausted by propagating watchdog state to the caller.
+
+    Args:
+        iae:                 IterativeAmplitudeEstimation instance.
+        problem:             EstimationProblem to estimate.
+        cloud_backend_module: The cloud_backend module (for tick() access).
+                             Passed explicitly to allow mocking in tests.
+        watchdog_interval:   Seconds between watchdog ticks.
+        max_wait:            Maximum seconds to wait for IAE to complete.
+
+    Returns:
+        IAE result object (same as iae.estimate(problem)).
+
+    Raises:
+        Exception: propagated from the IAE thread if estimation fails.
+        TimeoutError: if IAE does not complete within max_wait seconds.
+    """
+    import logging as _logging
+    _log = _logging.getLogger(__name__)
+
+    result_container: dict = {}
+    stop_event = threading.Event()
+
+    def _iae_thread() -> None:
+        try:
+            result_container["result"] = iae.estimate(problem)
+        except Exception as exc:  # noqa: BLE001
+            result_container["error"] = exc
+        finally:
+            stop_event.set()
+
+    t = threading.Thread(target=_iae_thread, daemon=True, name="iae-estimate")
+    t.start()
+
+    while not stop_event.is_set():
+        # Tick watchdog: checks all in-flight cloud jobs against budget caps.
+        # Returns list of cancelled job_ids (empty for local-only runs).
+        if cloud_backend_module is not None:
+            try:
+                cancelled = cloud_backend_module.tick()
+                if cancelled:
+                    _log.warning(
+                        "quantum_mc: cloud watchdog cancelled %d job(s) %s — "
+                        "IAE estimate() will finish its current circuit batch; "
+                        "no new cloud submissions will be made after budget exhausted",
+                        len(cancelled),
+                        cancelled,
+                    )
+            except Exception as tick_exc:  # noqa: BLE001
+                _log.debug("quantum_mc: watchdog tick() raised (non-fatal): %s", tick_exc)
+        stop_event.wait(watchdog_interval)
+
+    t.join(timeout=max_wait)
+    if t.is_alive():
+        raise TimeoutError(
+            f"IAE estimate() did not complete within {max_wait}s — "
+            "circuit may be too deep for the selected backend"
+        )
+
+    if "error" in result_container:
+        raise result_container["error"]
+
+    return result_container.get("result")
 
 
 class QuantumRunConfig(BaseModel):
@@ -401,7 +487,14 @@ def _run_estimation(
                 sampler=sampler,
             )
 
-            iae_result = iae.estimate(problem)
+            # F-3: run IAE through watchdog wrapper when a cloud sampler is
+            # active so the watchdog can tick (check budget) while the blocking
+            # estimate() call runs on a daemon thread.  For local-only runs the
+            # wrapper is still used — tick() is a no-op on empty job registry.
+            _cloud_mod = None
+            if CLOUD_BACKEND_AVAILABLE:
+                import src.engine.cloud_backend as _cloud_mod  # noqa: PLC0415
+            iae_result = _run_iae_with_watchdog(iae, problem, _cloud_mod)
             quantum_estimate = float(iae_result.estimation)
             num_oracle_calls = int(getattr(iae_result, "num_oracle_queries", 0))
             classical_fallback = False

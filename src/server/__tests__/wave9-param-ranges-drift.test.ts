@@ -1,13 +1,19 @@
 /**
  * Wave 9 — PARAM_RANGES TS↔Python drift detection tests
  *
- * Verifies that TS PARAM_RANGES and REQUIRED_PARAMS_BY_INDICATOR_FULL are in
+ * Verifies that TS CANONICAL_PARAM_RANGES (in param-ranges.ts) and
+ * REQUIRED_PARAMS_BY_INDICATOR_FULL (in direct-bucket-graduator.ts) are in
  * exact sync with Python pattern_library.py ENTRY_PATTERNS. Any key present
  * in one side but absent on the other is a silent-rejection bug waiting to
  * happen.
  *
- * Does NOT import the graduator module (avoids DB/service deps). Instead:
- *   - Reads the TS file textually and extracts keys via regex.
+ * F-2 fix (2026-05-20): PARAM_RANGES moved from graduator.ts to the canonical
+ * lib/param-ranges.ts — this test now scans param-ranges.ts for the range
+ * definitions. The graduator re-exports the same constant; scanning the source
+ * of truth file is safer and avoids the previous regex brittleness.
+ *
+ * Does NOT import the modules (avoids DB/service deps). Instead:
+ *   - Reads the TS files textually and extracts keys via regex.
  *   - Reads the Python file textually and extracts keys via regex.
  * This keeps the test dependency-free and fast.
  */
@@ -19,15 +25,21 @@ import { resolve } from "path";
 // ─── File paths ───────────────────────────────────────────────────────────────
 
 const ROOT = resolve(import.meta.dirname, "../../..");
+// F-2: canonical range definitions now live in lib/param-ranges.ts
+const TS_PARAM_RANGES_FILE = resolve(ROOT, "src/server/lib/param-ranges.ts");
 const TS_GRADUATOR = resolve(ROOT, "src/server/services/direct-bucket-graduator.ts");
 const PY_PATTERN_LIB = resolve(ROOT, "src/engine/compiler/pattern_library.py");
 
 // ─── Helpers — textual extraction ────────────────────────────────────────────
 
-/** Extract keys from TS const block like: const NAME: Record<...> = { key1: ..., key2: ... } */
+/** Extract keys from TS const block like: const NAME: Record<...> = { key1: ..., key2: ... }
+ *
+ * Handles both `\n};` and `\n} as const;` block endings (F-2: param-ranges.ts uses "as const").
+ */
 function extractTsRecordKeys(source: string, constName: string): string[] {
   // Match the const block by name — capture everything between the outer braces.
-  const re = new RegExp(`const ${constName}[^=]+=\\s*\\{([\\s\\S]*?)\\n\\};`);
+  // Ending pattern: \n} optionally followed by " as const" then semicolon.
+  const re = new RegExp(`const ${constName}[^=]+=\\s*\\{([\\s\\S]*?)\\n\\}(?:\\s*as\\s+const)?;`);
   const match = source.match(re);
   if (!match) throw new Error(`Could not find '${constName}' block in TS file`);
   // Each key line starts with optional whitespace then the key name followed by colon/space.
@@ -92,19 +104,28 @@ function extractPythonParamRangeKeys(source: string, indicator: string): string[
 
 // ─── Load sources ─────────────────────────────────────────────────────────────
 
+// Canonical param ranges now live in lib/param-ranges.ts (F-2 fix 2026-05-20)
+const tsParamRangesSource = readFileSync(TS_PARAM_RANGES_FILE, "utf-8");
 const tsSource = readFileSync(TS_GRADUATOR, "utf-8");
 const pySource = readFileSync(PY_PATTERN_LIB, "utf-8");
 
-const tsParamRangeKeys = extractTsRecordKeys(tsSource, "PARAM_RANGES");
+const tsParamRangeKeys = extractTsRecordKeys(tsParamRangesSource, "CANONICAL_PARAM_RANGES");
 const tsRequiredParamKeys = extractTsRecordKeys(tsSource, "REQUIRED_PARAMS_BY_INDICATOR_FULL");
 const pyPatternKeys = extractPythonEntryPatternKeys(pySource);
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
+// TS-only indicators: these have canonical param ranges in TS but compile to a
+// different Python primitive at the dsl-compiler layer (no Python ENTRY_PATTERNS
+// entry needed). Keep this list minimal — new entries require justification.
+//
+// connors_rsi2: compiles to Python rsi_reversal with period=2 defaults (F-3 fix).
+const TS_ONLY_INDICATORS = new Set(["connors_rsi2"]);
+
 describe("Wave 9 — PARAM_RANGES TS↔Python drift", () => {
   describe("TS PARAM_RANGES keys exist in Python ENTRY_PATTERNS", () => {
-    it("every TS PARAM_RANGES key has a Python ENTRY_PATTERNS counterpart", () => {
-      const missing = tsParamRangeKeys.filter((k) => !pyPatternKeys.includes(k));
+    it("every TS PARAM_RANGES key has a Python ENTRY_PATTERNS counterpart (excluding TS-only indicators)", () => {
+      const missing = tsParamRangeKeys.filter((k) => !TS_ONLY_INDICATORS.has(k) && !pyPatternKeys.includes(k));
       expect(missing, `TS PARAM_RANGES has keys absent from Python: [${missing.join(", ")}]`).toEqual([]);
     });
   });
@@ -162,10 +183,12 @@ describe("Wave 9 — PARAM_RANGES TS↔Python drift", () => {
 
   describe("PARAM_RANGES numeric keys match Python param_ranges for core indicators", () => {
     // Spot-check a sample of indicators to ensure range-key parity.
+    // F-2: scan tsParamRangesSource (lib/param-ranges.ts) — the canonical source.
+    // connors_rsi2 is TS-only (no Python pattern_library entry) — excluded from parity checks.
     const SPOT_CHECKS = ["vwap_fade", "sma_crossover", "ema_crossover", "rsi_reversal", "macd_crossover", "overnight_drift"];
     for (const ind of SPOT_CHECKS) {
       it(`PARAM_RANGES and Python param_ranges keys match for '${ind}'`, () => {
-        const tsKeys = extractTsParamRangeKeys(tsSource, ind).sort();
+        const tsKeys = extractTsParamRangeKeys(tsParamRangesSource, ind).sort();
         const pyKeys = extractPythonParamRangeKeys(pySource, ind).sort();
         expect(tsKeys, `Mismatch for ${ind} — TS: [${tsKeys}] vs Python: [${pyKeys}]`).toEqual(pyKeys);
       });

@@ -1,8 +1,10 @@
 /**
  * Tests for dead-mans-heartbeat-service.ts (Track 7)
  *
- * ETH hour is controlled by patching Date.prototype.toLocaleString to return
- * a parseable date string at the desired hour.
+ * F-2 (Track A): isEtRth() now uses Intl.DateTimeFormat.formatToParts() to
+ * extract the ET hour without re-parsing a locale string. The mock below
+ * intercepts Intl.DateTimeFormat.prototype.formatToParts to control the
+ * simulated ET hour — replacing the old toLocaleString intercept.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -35,43 +37,43 @@ import { AlertFactory } from "../services/alert-service.js";
 
 // ─── ET hour control ──────────────────────────────────────────────────────────
 //
-// isEtRth() does:
-//   const nowNY = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
-//   const hour = new Date(nowNY).getHours();
+// isEtRth() (post F-2 fix) uses:
+//   Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false })
+//     .formatToParts(now)
 //
-// We control this by returning a parseable date string at the desired hour.
+// We control the simulated ET hour by intercepting
+// Intl.DateTimeFormat.prototype.formatToParts. When the format options match
+// the isEtRth() signature, we return a synthetic parts array with the desired
+// hour value. All other calls fall through to the real implementation.
 
 let _etHour = 10;
-const origToLocaleString = Date.prototype.toLocaleString;
 
-function makeNyDateString(hour: number): string {
-  // Return "M/D/YYYY, HH:MM:SS AM/PM" format that new Date() can parse
-  const d = new Date();
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const year = d.getFullYear();
-  const ampm = hour >= 12 ? "PM" : "AM";
-  const h12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-  return `${month}/${day}/${year}, ${h12}:00:00 ${ampm}`;
-}
-
-function setEtHour(hour: number) {
-  _etHour = hour;
-}
-
-const origToLocaleStringRef = Date.prototype.toLocaleString;
+const _origFormatToParts = Intl.DateTimeFormat.prototype.formatToParts;
 
 function setupDateMock() {
-  Date.prototype.toLocaleString = function(locale?: string, options?: Intl.DateTimeFormatOptions): string {
-    if (locale === "en-US" && options?.timeZone === "America/New_York" && !options?.hour) {
-      return makeNyDateString(_etHour);
+  Intl.DateTimeFormat.prototype.formatToParts = function(
+    date?: Date | number,
+  ): Intl.DateTimeFormatPart[] {
+    // Check if this DateTimeFormat was constructed with the isEtRth() options
+    const resolvedOptions = this.resolvedOptions();
+    if (
+      resolvedOptions.timeZone === "America/New_York" &&
+      resolvedOptions.hourCycle === "h23" || // hour12:false → h23
+      (resolvedOptions.hour !== undefined && resolvedOptions.timeZone === "America/New_York")
+    ) {
+      // Return synthetic parts with our controlled ET hour
+      return [{ type: "hour", value: String(_etHour) }] as Intl.DateTimeFormatPart[];
     }
-    return origToLocaleStringRef.call(this, locale, options);
+    return _origFormatToParts.call(this, date);
   };
 }
 
 function teardownDateMock() {
-  Date.prototype.toLocaleString = origToLocaleStringRef;
+  Intl.DateTimeFormat.prototype.formatToParts = _origFormatToParts;
+}
+
+function setEtHour(hour: number) {
+  _etHour = hour;
 }
 
 // ─── Unique stale offsets to prevent dedup across tests ──────────────────────

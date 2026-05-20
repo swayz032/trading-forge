@@ -740,12 +740,44 @@ if __name__ == "__main__":
         symbol = strategy_cfg.get("symbol", "MES")
         timeframe = strategy_cfg.get("timeframe", "daily")
 
-        # 2. Query regime bank (strategy_id + backtest_id seed deterministic sampling)
-        regime_records = _query_regime_bank(
-            symbol, timeframe, regime_count,
-            strategy_id=strategy_id,
-            backtest_id=backtest_id,
-        )
+        # 2. Query regime bank (strategy_id + backtest_id seed deterministic sampling).
+        # F-1 (2026-05-20): NEMO→A14→bank pipeline is structurally disconnected —
+        # nemo_scenario_designer.py produces scenarios in-memory but no DB insert path
+        # populates synthetic_regime_bank. Safe degradation: if the bank is empty or
+        # stale (>90 days since last insert), return advisory mode instead of crashing.
+        # TODO (NEMO wiring): wire populate_regime_bank_from_nemo() as a cron that:
+        #   1. calls NeMoScenarioDesigner.design_scenarios()
+        #   2. passes each scenario through nemo_a14_bridge.translate()
+        #   3. invokes synthetic_market_simulator.py in generate mode
+        #   4. inserts resulting OHLCV Parquet paths into synthetic_regime_bank
+        # Until that cron exists, the bank stays empty and this gate is advisory.
+        try:
+            regime_records = _query_regime_bank(
+                symbol, timeframe, regime_count,
+                strategy_id=strategy_id,
+                backtest_id=backtest_id,
+            )
+        except ValueError as bank_err:
+            # Bank is empty or has no stylized-fact-passing rows for this symbol/tf.
+            logger.warning(
+                "black_swan_evaluator: regime bank empty/stale for %s %s — returning advisory result. "
+                "Wire NEMO→A14→bank cron to populate. Error: %s",
+                symbol, timeframe, bank_err,
+            )
+            advisory_result = {
+                "num_regimes_tested": 0,
+                "num_regimes_survived": 0,
+                "survival_rate": None,
+                "worst_regime": None,
+                "worst_k": [],
+                "generator_model_version": _UNKNOWN_MODEL_VERSION,
+                "advisory": True,
+                "gate_passed": None,
+                "reason": "regime_bank_stale_or_empty",
+            }
+            print(json.dumps(advisory_result))
+            sys.exit(0)
+
         logger.info(
             "black_swan_evaluator: loaded %d regime records for %s %s",
             len(regime_records), symbol, timeframe,

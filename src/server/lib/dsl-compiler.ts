@@ -258,11 +258,20 @@ export function compileDslToEngine(input: DslCompileInput): CompiledStrategy | n
     };
   }
 
-  // ── rsi_reversal ────────────────────────────────────────────────────────
-  if (ind === "rsi_reversal" || ind === "rsi_divergence") {
-    const period = num(p.period, 14);
-    const oversold = num(p.oversold, 30);
-    const overbought = num(p.overbought, 70);
+  // ── rsi_reversal / connors_rsi2 ─────────────────────────────────────────
+  // F-3 (2026-05-20): connors_rsi2 compiles identically to rsi_reversal at the
+  // engine primitive level (both use the RSI indicator with period + thresholds).
+  // The distinction is only in the TS param-validation layer where connors_rsi2
+  // allows period=[2,5] / oversold=[3,10] / overbought=[90,97]. At compile time
+  // both become { type:"rsi", period } → rsi_<period> < oversold / > overbought.
+  if (ind === "rsi_reversal" || ind === "rsi_divergence" || ind === "connors_rsi2") {
+    // connors_rsi2 canonical defaults: period=2, oversold=5, overbought=95
+    const defaultPeriod = ind === "connors_rsi2" ? 2 : 14;
+    const defaultOversold = ind === "connors_rsi2" ? 5 : 30;
+    const defaultOverbought = ind === "connors_rsi2" ? 95 : 70;
+    const period = num(p.period, defaultPeriod);
+    const oversold = num(p.oversold, defaultOversold);
+    const overbought = num(p.overbought, defaultOverbought);
     notes.push(`${ind}{period=${period},over=${oversold}/${overbought}} → rsi_${period} thresholds`);
     return {
       indicators: [{ type: "rsi", period }],

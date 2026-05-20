@@ -197,9 +197,19 @@ class CloudBudgetTracker:
     # ── Usage recording (truthful) ───────────────────────────────────────────
 
     def record_ibm_usage(
-        self, seconds: float, job_id: str, backend_name: str
+        self,
+        seconds: float,
+        job_id: str,
+        backend_name: str,
+        pending_reconcile: bool = False,
     ) -> None:
-        """Record actual IBM runtime seconds consumed."""
+        """Record IBM runtime seconds consumed.
+
+        When pending_reconcile=True, the entry is flagged as an estimate
+        that will be corrected by reconcile_ibm_usage() once the job
+        completes and actual QPU seconds are known. The budget counter is
+        still debited immediately so guard checks remain pessimistic.
+        """
         self._data["ibm_seconds_used"] = (
             self._data.get("ibm_seconds_used", 0) + seconds
         )
@@ -210,9 +220,59 @@ class CloudBudgetTracker:
                 "job_id": job_id,
                 "backend_name": backend_name,
                 "seconds": seconds,
+                "pending_reconcile": pending_reconcile,
             }
         )
         self._save()
+
+    def reconcile_ibm_usage(
+        self, job_id: str, actual_seconds: float, delta: float
+    ) -> None:
+        """Reconcile a pending IBM budget entry with actual QPU seconds.
+
+        Finds the most recent pending_reconcile=True run row for job_id,
+        updates its seconds to actual_seconds, clears the pending_reconcile
+        flag, and adjusts the ibm_seconds_used counter by delta.
+
+        delta = actual_seconds - estimated_seconds (may be negative if
+        actual < estimated, which is the common case for short circuits).
+
+        If no pending row is found for job_id, logs a warning and returns
+        without error — this is safe because the estimated cost was already
+        recorded conservatively.
+        """
+        runs = self._data.setdefault("runs", [])
+        reconciled = False
+        for run in reversed(runs):
+            if (
+                run.get("provider") == "ibm"
+                and run.get("job_id") == job_id
+                and run.get("pending_reconcile", False)
+            ):
+                run["seconds"] = actual_seconds
+                run["pending_reconcile"] = False
+                run["reconciled_ts"] = datetime.now(timezone.utc).isoformat()
+                run["reconcile_delta"] = delta
+                reconciled = True
+                break
+
+        if reconciled:
+            current = self._data.get("ibm_seconds_used", 0)
+            self._data["ibm_seconds_used"] = max(0, current + delta)
+            self._save()
+            logger.info(
+                "cloud_budget: reconciled job_id=%s actual=%.2fs delta=%.2fs new_total=%.2fs",
+                job_id,
+                actual_seconds,
+                delta,
+                self._data["ibm_seconds_used"],
+            )
+        else:
+            logger.warning(
+                "cloud_budget: reconcile_ibm_usage called for job_id=%s "
+                "but no pending_reconcile row found — skipping (estimated cost stands)",
+                job_id,
+            )
 
     def record_braket_usage(
         self, cost: float, task_arn: str, device_name: str
@@ -1030,7 +1090,16 @@ def submit_surface_code_iae(
                 try_backend, job_id, enc.n_physical_qubits,
             )
 
-            tracker.record_ibm_usage(_IBM_ISING_ESTIMATED_RUN_SECONDS, job_id, try_backend)
+            # F-2: record estimated cost at submission time, tagged as pending
+            # reconcile.  poll_ibm_job() will call reconcile_ibm_usage() with
+            # the actual QPU seconds when the job completes, adjusting the
+            # counter by the delta (actual - estimated).
+            tracker.record_ibm_usage(
+                _IBM_ISING_ESTIMATED_RUN_SECONDS,
+                job_id,
+                try_backend,
+                pending_reconcile=True,
+            )
             cloud_job_registry.unregister_job(temp_job_id, _IBM_ISING_ESTIMATED_RUN_SECONDS)
             break
 
@@ -1150,6 +1219,19 @@ def poll_ibm_job(
                 qpu_seconds = metrics.get("usage", {}).get("seconds")
             except Exception:
                 pass
+
+            # F-2: reconcile the pending budget entry with the actual QPU seconds.
+            # If qpu_seconds is unavailable, fall back to the estimated value so
+            # the pending_reconcile flag is always cleared on completion.
+            actual_qpu = (
+                qpu_seconds
+                if qpu_seconds is not None
+                else _IBM_ISING_ESTIMATED_RUN_SECONDS
+            )
+            reconcile_delta = actual_qpu - _IBM_ISING_ESTIMATED_RUN_SECONDS
+            CloudBudgetTracker().reconcile_ibm_usage(
+                job_id, actual_qpu, reconcile_delta
+            )
 
             return {
                 "status": "completed",

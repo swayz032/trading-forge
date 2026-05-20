@@ -389,3 +389,176 @@ class TestPremarketIntegration:
         )
         # quantum_noise_score must NOT be present or must be None (not a non-None float)
         assert signals.get("quantum_noise_score") is None
+
+
+# ─── F-4: Governance calibration field tests ─────────────────────────────────
+
+class TestGovernanceCalibrationField:
+    """F-4(a): run_quantum_entropy_filter must emit calibration governance fields
+    so downstream consumers can distinguish uncalibrated advisory outputs from
+    calibrated, enforceable signals.
+    """
+
+    def test_governance_contains_calibrated_false(self):
+        """governance.calibrated must be False (QCNN weights are random-seed init)."""
+        import src.engine.quantum_entropy_filter as m
+        result = m.run_quantum_entropy_filter(VALID_FEATURES, seed=42)
+        gov = result["governance"]
+        assert "calibrated" in gov, "governance must include 'calibrated' field"
+        assert gov["calibrated"] is False, (
+            "calibrated must be False until 30-day calibration is complete"
+        )
+
+    def test_governance_contains_advisory_only_true(self):
+        """governance.advisory_only must be True — uncalibrated outputs are advisory."""
+        import src.engine.quantum_entropy_filter as m
+        result = m.run_quantum_entropy_filter(VALID_FEATURES, seed=42)
+        gov = result["governance"]
+        assert "advisory_only" in gov, "governance must include 'advisory_only' field"
+        assert gov["advisory_only"] is True
+
+    def test_governance_contains_decision_role_challenger_only(self):
+        """governance.decision_role must be 'challenger_only'."""
+        import src.engine.quantum_entropy_filter as m
+        result = m.run_quantum_entropy_filter(VALID_FEATURES, seed=42)
+        gov = result["governance"]
+        assert gov.get("decision_role") == "challenger_only"
+
+    def test_governance_contains_reason_string(self):
+        """governance.reason must be a non-empty string explaining uncalibrated state."""
+        import src.engine.quantum_entropy_filter as m
+        result = m.run_quantum_entropy_filter(VALID_FEATURES, seed=42)
+        gov = result["governance"]
+        assert "reason" in gov, "governance must include 'reason' field"
+        assert isinstance(gov["reason"], str) and len(gov["reason"]) > 10
+
+    def test_governance_above_threshold_reflects_score(self):
+        """governance.above_threshold must match noise_score > threshold comparison."""
+        import src.engine.quantum_entropy_filter as m
+        result = m.run_quantum_entropy_filter(VALID_FEATURES, seed=42)
+        gov = result["governance"]
+        assert "above_threshold" in gov
+        noise_score = result["noise_score"]
+        threshold = result["threshold"]
+        if noise_score is not None:
+            expected = noise_score > threshold
+            assert gov["above_threshold"] == expected, (
+                f"above_threshold mismatch: score={noise_score}, "
+                f"threshold={threshold}, got={gov['above_threshold']}"
+            )
+
+    def test_governance_above_threshold_false_when_score_is_none(self):
+        """When noise_score is None, above_threshold must be False (not an error)."""
+        import src.engine.quantum_entropy_filter as m
+        original_flag = m.PENNYLANE_AVAILABLE
+        try:
+            m.PENNYLANE_AVAILABLE = False
+            result = m.run_quantum_entropy_filter(VALID_FEATURES, seed=42)
+            gov = result["governance"]
+            assert result["noise_score"] is None
+            assert gov["above_threshold"] is False
+        finally:
+            m.PENNYLANE_AVAILABLE = original_flag
+
+    def test_schema_stability_governance_keys(self):
+        """All required governance keys must be present in every run output."""
+        import src.engine.quantum_entropy_filter as m
+        result = m.run_quantum_entropy_filter(VALID_FEATURES, seed=42)
+        gov = result["governance"]
+        required_keys = {
+            "experimental", "authoritative", "decision_role",
+            "calibrated", "advisory_only", "reason",
+            "noise_threshold", "above_threshold",
+        }
+        missing = required_keys - gov.keys()
+        assert not missing, f"Governance missing keys: {missing}"
+
+
+# ─── F-4(b): A+ Market Auditor noise gate guard ───────────────────────────────
+
+class TestAuditorNoiseGateGuard:
+    """F-4(b): observation_mode must not be set by uncalibrated QCNN noise output.
+
+    When QCNN_NOISE_GATE_ENFORCED=False (default, uncalibrated), the noise gate
+    must log a warning but NOT mark markets as failing the noise gate — observation
+    mode must not be silently forced by an uncalibrated signal.
+    """
+
+    def _make_audit_input(self, noise_override: float) -> Any:
+        from src.engine.a_plus_market_auditor import AuditInput
+        return AuditInput(
+            market="MES",
+            atr_5m=1.0,
+            atr_8yr_avg=1.0,
+            vix=20.0,
+            gap_atr=0.3,
+            spread=0.05,
+            p_target_hit_override=0.80,   # passes p_target gate
+            noise_score_override=noise_override,
+            seed=42,
+        )
+
+    def test_noise_above_threshold_does_not_block_when_unenforced(self, caplog):
+        """noise_score=0.9 (above 0.5 threshold) must NOT fail noise gate when
+        QCNN_NOISE_GATE_ENFORCED=False.
+        """
+        from src.engine.a_plus_market_auditor import run_market_audit
+        import src.engine.a_plus_market_auditor as aud
+        original = aud.QCNN_NOISE_GATE_ENFORCED
+        try:
+            aud.QCNN_NOISE_GATE_ENFORCED = False
+            inp = self._make_audit_input(noise_override=0.9)
+            import logging
+            with caplog.at_level(logging.WARNING, logger="src.engine.a_plus_market_auditor"):
+                ev = run_market_audit(inp, entanglement_strength=None)
+            assert ev.passes_noise_gate is True, (
+                "Uncalibrated QCNN must not force passes_noise_gate=False"
+            )
+        finally:
+            aud.QCNN_NOISE_GATE_ENFORCED = original
+
+    def test_warning_logged_when_noise_would_block(self, caplog):
+        """A warning must be logged when noise gate would have blocked but didn't."""
+        from src.engine.a_plus_market_auditor import run_market_audit
+        import src.engine.a_plus_market_auditor as aud
+        original = aud.QCNN_NOISE_GATE_ENFORCED
+        try:
+            aud.QCNN_NOISE_GATE_ENFORCED = False
+            inp = self._make_audit_input(noise_override=0.9)
+            import logging
+            with caplog.at_level(logging.WARNING, logger="src.engine.a_plus_market_auditor"):
+                run_market_audit(inp, entanglement_strength=None)
+            assert any(
+                "uncalibrated QCNN" in record.message
+                for record in caplog.records
+            ), "Warning about uncalibrated QCNN override must be emitted"
+        finally:
+            aud.QCNN_NOISE_GATE_ENFORCED = original
+
+    def test_noise_below_threshold_still_passes_when_unenforced(self):
+        """noise_score=0.2 (below 0.5 threshold) must pass gate regardless of flag."""
+        from src.engine.a_plus_market_auditor import run_market_audit
+        import src.engine.a_plus_market_auditor as aud
+        original = aud.QCNN_NOISE_GATE_ENFORCED
+        try:
+            aud.QCNN_NOISE_GATE_ENFORCED = False
+            inp = self._make_audit_input(noise_override=0.2)
+            ev = run_market_audit(inp, entanglement_strength=None)
+            assert ev.passes_noise_gate is True
+        finally:
+            aud.QCNN_NOISE_GATE_ENFORCED = original
+
+    def test_noise_gate_enforced_when_flag_true(self):
+        """When QCNN_NOISE_GATE_ENFORCED=True, high noise blocks the market (guard is live)."""
+        from src.engine.a_plus_market_auditor import run_market_audit
+        import src.engine.a_plus_market_auditor as aud
+        original = aud.QCNN_NOISE_GATE_ENFORCED
+        try:
+            aud.QCNN_NOISE_GATE_ENFORCED = True
+            inp = self._make_audit_input(noise_override=0.9)
+            ev = run_market_audit(inp, entanglement_strength=None)
+            assert ev.passes_noise_gate is False, (
+                "When QCNN_NOISE_GATE_ENFORCED=True, noise above threshold must fail gate"
+            )
+        finally:
+            aud.QCNN_NOISE_GATE_ENFORCED = original

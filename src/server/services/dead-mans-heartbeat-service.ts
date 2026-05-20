@@ -47,10 +47,30 @@ resetAlertDedup();
 // ─── ET hours helper ──────────────────────────────────────────────────────────
 
 function isEtRth(): boolean {
-  // ET offset: EDT = UTC-4, EST = UTC-5. Use "America/New_York" via toLocaleString trick.
-  const nowNY = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
-  const hour = new Date(nowNY).getHours();
+  // Track A F-2: Use Intl.DateTimeFormat.formatToParts() to extract the ET
+  // hour without re-parsing a locale string. The toLocaleString→new Date()
+  // round-trip re-parses in the *system* TZ on Windows (which is often UTC or
+  // a non-ET TZ), producing a wrong hour value. formatToParts gives us the
+  // numeric field directly — no string re-parse, no TZ ambiguity.
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    hour12: false,
+  }).formatToParts(now);
+  const hourPart = parts.find((p) => p.type === "hour");
+  // "24" is returned at midnight by some ICU builds — normalise to 0.
+  const hour = hourPart ? (Number(hourPart.value) % 24) : 0;
   return hour >= RTH_START_ET_HOUR && hour < RTH_END_ET_HOUR;
+}
+
+// ─── Schema-drift error code ──────────────────────────────────────────────────
+// PostgreSQL error code for "table does not exist" (relation_not_found).
+// Used to distinguish schema-drift (missing table) from transient write errors.
+const PG_RELATION_NOT_FOUND = "42P01";
+
+function isTableMissingError(err: unknown): boolean {
+  return typeof err === "object" && err !== null && (err as { code?: string }).code === PG_RELATION_NOT_FOUND;
 }
 
 // ─── WRITE: heartbeat insert ──────────────────────────────────────────────────
@@ -58,6 +78,10 @@ function isEtRth(): boolean {
 /**
  * Inserts a heartbeat row during RTH. No-op outside RTH.
  * Idempotent — multiple calls in the same minute are fine (each writes a row).
+ *
+ * Track A F-7: Distinguishes schema-drift (table missing, 42P01) from
+ * transient write errors. Table-missing fires a Discord CRITICAL so the operator
+ * knows the migration hasn't been applied. Transient errors rethrow as before.
  */
 export async function writeHeartbeat(): Promise<void> {
   if (!isEtRth()) {
@@ -71,7 +95,22 @@ export async function writeHeartbeat(): Promise<void> {
     );
     logger.debug("dead-mans-heartbeat: heartbeat written");
   } catch (err) {
-    // Fail loudly — a heartbeat write failure is itself a signal of backend trouble
+    if (isTableMissingError(err)) {
+      // Schema-drift: table hasn't been migrated yet. Fire Discord CRITICAL
+      // so operator knows to run the migration. Do NOT rethrow — this is
+      // recoverable once the migration runs; rethrowing would crash the cron.
+      logger.error(
+        { table: HEARTBEAT_TABLE, code: PG_RELATION_NOT_FOUND },
+        `dead-mans-heartbeat: SCHEMA DRIFT — table "${HEARTBEAT_TABLE}" does not exist. Run pending migration.`,
+      );
+      await notifyCritical(
+        "Heartbeat schema drift",
+        `Table "${HEARTBEAT_TABLE}" is missing. The dead-man's heartbeat cannot write. Apply the pending migration immediately.`,
+        { table: HEARTBEAT_TABLE, error_code: PG_RELATION_NOT_FOUND },
+      );
+      return; // Do not throw — schema drift is operator-actionable, not a crash
+    }
+    // Transient write error — fail loudly, a heartbeat write failure is itself a signal
     logger.error({ err }, "dead-mans-heartbeat: HEARTBEAT WRITE FAILED");
     throw err;
   }
@@ -82,6 +121,9 @@ export async function writeHeartbeat(): Promise<void> {
 /**
  * Returns the most recent heartbeat timestamp, or null if no rows exist.
  */
+// Track A F-7: getLastHeartbeatAt distinguishes "table missing" (schema drift,
+// operator-actionable) from "no rows" (ok — first RTH start) from transient query
+// failures. Returns null in all non-fatal cases; logs severity reflects the cause.
 export async function getLastHeartbeatAt(): Promise<Date | null> {
   try {
     const rows = await db.execute<{ ts: string }>(
@@ -89,10 +131,19 @@ export async function getLastHeartbeatAt(): Promise<Date | null> {
     );
     // postgres.js returns an array directly (RowList)
     const arr = Array.isArray(rows) ? rows : (rows as unknown as { rows: Array<{ ts: string }> }).rows;
+    // "no rows" = first RTH start this session — severity: ok, return null
     if (!arr || arr.length === 0) return null;
     return new Date((arr[0] as { ts: string }).ts);
   } catch (err) {
-    logger.warn({ err }, "dead-mans-heartbeat: last heartbeat query failed");
+    if (isTableMissingError(err)) {
+      // Schema drift — fire CRITICAL, not just a warn
+      logger.error(
+        { table: HEARTBEAT_TABLE, code: PG_RELATION_NOT_FOUND },
+        `dead-mans-heartbeat: SCHEMA DRIFT — table "${HEARTBEAT_TABLE}" missing during stale check`,
+      );
+    } else {
+      logger.warn({ err }, "dead-mans-heartbeat: last heartbeat query failed");
+    }
     return null;
   }
 }

@@ -27,7 +27,10 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { backtestRuns, backtestScoredTotal } from "../lib/metrics-registry.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
 import { computeResultHash, computeDataHash, computeStrategyHash } from "../lib/result-hasher.js";
-import { insertAuditRow } from "../lib/audit-log-helper.js";
+// Track A F-6: insertAuditRowSafe added. Remaining db.insert(auditLog) call
+// sites in this file retain raw pattern until incremental migration completes.
+// TODO: correlation_id not threaded through all call sites in this file.
+import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { notifyCritical } from "./notification-service.js";
 
 /**
@@ -842,7 +845,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
 
       // Audit log: forge scoring outcome — structured evidence for promotion decisions.
       // Non-transactional (fires outside the main tx) — failure is non-blocking.
-      await db.insert(auditLog).values({
+      // Track A F-6: migrated to insertAuditRowSafe (absorbs write failures without .catch chain)
+      await insertAuditRowSafe({
         action: "backtest.scored",
         entityType: "backtest",
         entityId: backtestId,
@@ -857,9 +861,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         },
         status: result.tier && ["TIER_1", "TIER_2", "TIER_3"].includes(result.tier) ? "success" : "failure",
         decisionAuthority: "gate",
-        correlationId: correlationId ?? null,
-      }).catch((auditErr) => {
-        logger.warn({ backtestId, strategyId, err: auditErr }, "backtest.scored audit_log write failed (non-blocking)");
+        correlationId: correlationId ?? null, // TODO: correlation_id not always threaded here
       });
 
       // Prometheus counter for tier distribution monitoring

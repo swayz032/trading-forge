@@ -22,6 +22,7 @@
  */
 
 import { logger } from "../index.js";
+import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
 
 interface PatternSpec {
   required: string[];
@@ -30,22 +31,28 @@ interface PatternSpec {
 }
 
 // Mirrors src/engine/compiler/pattern_library.py ENTRY_PATTERNS.
-// Keep these in sync — see scripts/sync-pattern-library.mjs (future) or
-// add a build-time check that diffs the two.
+// F-2 (2026-05-20): `ranges` fields now derive from CANONICAL_PARAM_RANGES
+// (src/server/lib/param-ranges.ts) — single source of truth. The required/optional
+// arrays remain inline here as they are sanitizer-specific (not in param-ranges).
+// F-3 (2026-05-20): connors_rsi2 added as a distinct indicator family.
+const R = CANONICAL_PARAM_RANGES;
 export const ENTRY_PATTERN_ALLOWLIST: Record<string, PatternSpec> = {
-  sma_crossover:        { required: ["fast_period", "slow_period"], optional: ["confirmation_bars"], ranges: { fast_period: [5, 50], slow_period: [20, 200], confirmation_bars: [1, 5] } },
-  ema_crossover:        { required: ["fast_period", "slow_period"], optional: ["confirmation_bars"], ranges: { fast_period: [5, 50], slow_period: [20, 200], confirmation_bars: [1, 5] } },
-  rsi_reversal:         { required: ["period", "oversold", "overbought"], optional: [], ranges: { period: [7, 21], oversold: [20, 40], overbought: [60, 80] } },
-  bollinger_breakout:   { required: ["period", "std_dev"], optional: ["confirmation_bars"], ranges: { period: [10, 30], std_dev: [1.5, 3.0], confirmation_bars: [1, 3] } },
-  atr_breakout:         { required: ["period", "multiplier"], optional: [], ranges: { period: [10, 30], multiplier: [1.0, 3.0] } },
-  vwap_reversion:       { required: ["deviation_threshold"], optional: ["confirmation_bars"], ranges: { deviation_threshold: [0.5, 3.0], confirmation_bars: [1, 5] } },
-  donchian_breakout:    { required: ["period"], optional: [], ranges: { period: [10, 55] } },
-  keltner_squeeze:      { required: ["bb_period", "kc_period", "kc_multiplier"], optional: [], ranges: { bb_period: [15, 25], kc_period: [15, 25], kc_multiplier: [1.0, 2.0] } },
-  session_open_breakout:{ required: ["range_minutes"], optional: ["buffer_ticks"], ranges: { range_minutes: [5, 60], buffer_ticks: [1, 10] } },
-  macd_crossover:       { required: ["fast_period", "slow_period", "signal_period"], optional: [], ranges: { fast_period: [8, 16], slow_period: [20, 30], signal_period: [7, 12] } },
-  vwap_fade:            { required: ["atr_extension_threshold"], optional: ["confirmation_bars", "vwap_touch_exit"], ranges: { atr_extension_threshold: [1.0, 3.0], confirmation_bars: [1, 5], vwap_touch_exit: [0, 1] } },
-  event_driven_fade:    { required: ["atr_move_threshold", "event_window_minutes"], optional: ["confirmation_bars"], ranges: { atr_move_threshold: [1.5, 4.0], event_window_minutes: [5, 30], confirmation_bars: [1, 3] } },
-  overnight_drift:      { required: ["drift_atr_threshold", "asia_lookback_bars"], optional: ["min_drift_bars"], ranges: { drift_atr_threshold: [0.5, 2.0], asia_lookback_bars: [4, 24], min_drift_bars: [2, 12] } },
+  sma_crossover:        { required: ["fast_period", "slow_period"], optional: ["confirmation_bars"], ranges: R.sma_crossover },
+  ema_crossover:        { required: ["fast_period", "slow_period"], optional: ["confirmation_bars"], ranges: R.ema_crossover },
+  rsi_reversal:         { required: ["period", "oversold", "overbought"], optional: [], ranges: R.rsi_reversal },
+  // connors_rsi2: distinct family with tight bands (period [2,5], oversold [3,10], overbought [90,97])
+  connors_rsi2:         { required: ["period", "oversold", "overbought"], optional: [], ranges: R.connors_rsi2 },
+  bollinger_breakout:   { required: ["period", "std_dev"], optional: ["confirmation_bars"], ranges: R.bollinger_breakout },
+  // atr_breakout floor is now 5 (from canonical ranges) — was 10 here before F-2 fix
+  atr_breakout:         { required: ["period", "multiplier"], optional: [], ranges: R.atr_breakout },
+  vwap_reversion:       { required: ["deviation_threshold"], optional: ["confirmation_bars"], ranges: R.vwap_reversion },
+  donchian_breakout:    { required: ["period"], optional: [], ranges: R.donchian_breakout },
+  keltner_squeeze:      { required: ["bb_period", "kc_period", "kc_multiplier"], optional: [], ranges: R.keltner_squeeze },
+  session_open_breakout:{ required: ["range_minutes"], optional: ["buffer_ticks"], ranges: R.session_open_breakout },
+  macd_crossover:       { required: ["fast_period", "slow_period", "signal_period"], optional: [], ranges: R.macd_crossover },
+  vwap_fade:            { required: ["atr_extension_threshold"], optional: ["confirmation_bars", "vwap_touch_exit"], ranges: R.vwap_fade },
+  event_driven_fade:    { required: ["atr_move_threshold", "event_window_minutes"], optional: ["confirmation_bars"], ranges: R.event_driven_fade },
+  overnight_drift:      { required: ["drift_atr_threshold", "asia_lookback_bars"], optional: ["min_drift_bars"], ranges: R.overnight_drift },
 };
 
 export interface SanitizeResult {

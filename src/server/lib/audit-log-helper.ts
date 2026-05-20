@@ -36,6 +36,43 @@ import { logger } from "./logger.js";
 /** Shape accepted by the audit_log table insert. Matches schema.$inferInsert. */
 export type AuditRowValues = typeof auditLog.$inferInsert;
 
+// Track A F-6: insertAuditRowSafe — drop-in replacement for the raw
+// `db.insert(auditLog).values(...)` pattern used at 130+ call sites.
+//
+// MIGRATION STRATEGY: migrate the 5 highest-volume callers first
+// (paper-execution-service 16, lifecycle-service 15, direct-bucket-graduator 13,
+// agent-service 10, backtest-service 9). Remaining sites carry a
+// // TODO: correlation_id not threaded here comment so future audits can find them.
+//
+// DIFFERENCES vs insertAuditRow:
+//   - Accepts the same raw `db.insert(auditLog)` value shape (AuditRowValues)
+//   - Wraps in try/catch and logs on failure instead of rethrowing
+//   - Returns true on success, false on failure (never throws)
+//   - Callers that need throw-on-failure should use insertAuditRow instead
+export async function insertAuditRowSafe(values: AuditRowValues): Promise<boolean> {
+  if (values.correlationId == null) {
+    logger.warn(
+      {
+        action: values.action,
+        entityId: values.entityId,
+        entityType: values.entityType,
+      },
+      "audit_log row written without correlation_id — context propagation gap",
+    );
+  }
+
+  try {
+    await db.insert(auditLog).values(values);
+    return true;
+  } catch (err) {
+    logger.error(
+      { err, action: values.action, entityId: values.entityId },
+      "insertAuditRowSafe: failed to write audit_log row — row dropped",
+    );
+    return false;
+  }
+}
+
 /**
  * insertAuditRow — drop-in wrapper over `db.insert(auditLog).values(values)`.
  *

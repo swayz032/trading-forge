@@ -36,8 +36,14 @@ import {
   index,
   uniqueIndex,
   customType,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type {
+  BacktestResultExtrasShape,
+  PaperSessionConfigShape,
+  PaperSessionGovernorStateShape,
+} from "./jsonb-shapes.js";
 
 // bytea type for compressed signal vectors
 const bytea = customType<{ data: Buffer; notNull: false; default: false }>({
@@ -64,7 +70,14 @@ export const strategies = pgTable("strategies", {
   forgeScore: numeric("forge_score"),
   tags: text("tags").array(),
   searchBudgetUsed: integer("search_budget_used"),  // Cumulative Optuna trials across all WF windows
-  parentStrategyId: uuid("parent_strategy_id"), // Self-evolution: links to parent strategy
+  // Track E F-1: self-referencing FK prevents orphan chains. ON DELETE SET NULL so
+  // deleting a parent does not cascade-delete children. Migration 0125b (Track B)
+  // applies the FOREIGN KEY constraint at the database level.
+  parentStrategyId: uuid("parent_strategy_id")
+    .references((): AnyPgColumn => strategies.id, { onDelete: "set null" }),
+  // Track E F-2: generation is capped at MAX_GENERATIONS (3) in service code.
+  // A DB CHECK constraint (generation >= 0 AND generation <= 3) is applied via
+  // migration 0125b (Track B) to enforce the cap at the database layer.
   generation: integer("generation").notNull().default(0), // Evolution generation (0 = original)
   source: text("source"), // Origin of the strategy: 'ollama' | 'openclaw' | 'manual' | 'n8n' | 'evolved' (added by migration 0045)
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -86,8 +99,10 @@ export const backtests = pgTable(
       .notNull(),
     symbol: text("symbol").notNull(),
     timeframe: text("timeframe").notNull(),
-    startDate: timestamp("start_date").notNull(),
-    endDate: timestamp("end_date").notNull(),
+    // F-5 (migration 0126): TIMESTAMPTZ — backtest date ranges crossed with
+    // ratio-adjusted continuous data must be TZ-aware.
+    startDate: timestamp("start_date", { withTimezone: true }).notNull(),
+    endDate: timestamp("end_date", { withTimezone: true }).notNull(),
     status: text("status").notNull().default("pending"), // pending | running | completed | failed
     totalReturn: numeric("total_return"),
     sharpeRatio: numeric("sharpe_ratio"),
@@ -111,7 +126,10 @@ export const backtests = pgTable(
     crossValidation: jsonb("cross_validation"),
     gateResult: jsonb("gate_result"),
     gateRejections: jsonb("gate_rejections"),
-    resultExtras: jsonb("result_extras"),   // Governor, analytics, long_short_split, bootstrap_ci_95, deflated_sharpe, recency_analysis, statistical_warnings, confidence_intervals (migration 0053)
+    // F-4 (migration 0125): TS-level shape via BacktestResultExtrasShape.
+    // Python writer must stamp `schema_version` (current: "v2_truthiness").
+    // Reader validates schema_version before consumption — refuse unknown.
+    resultExtras: jsonb("result_extras").$type<BacktestResultExtrasShape>(),   // Governor, analytics, long_short_split, bootstrap_ci_95, deflated_sharpe, recency_analysis, statistical_warnings, confidence_intervals (migration 0053)
     // B10: Minimum Regime Performance — worst per-regime Sharpe across macro regimes.
     // Computed post-backtest from backtestTrades.macroRegime groupings.
     // Soft gate: MRP > 0.5 advisory at PAPER → DEPLOY_READY; hard gate after 30 days data.
@@ -314,7 +332,9 @@ export const auditLog = pgTable(
     errorMessage: text("error_message"),
     decisionAuthority: text("decision_authority"), // "gate" | "human" | "agent" | "scheduler" | "n8n"
     correlationId: text("correlation_id"), // HTTP request correlation ID (req.id) — nullable for backward compat
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    // F-5 (migration 0126): TIMESTAMPTZ — audit replay across DST boundaries
+    // must be deterministic; bare TIMESTAMP loses the offset.
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
     index("audit_action_idx").on(table.action),
@@ -386,6 +406,10 @@ export const complianceRulesets = pgTable(
   (table) => [
     index("compliance_rulesets_firm_idx").on(table.firm),
     index("compliance_rulesets_status_idx").on(table.status),
+    // F-2 (migration 0125): one ruleset row per (firm, account_type).
+    // Prior absence allowed duplicate rows, with reads silently picking arbitrary
+    // versions and bypassing freshness/drift checks.
+    uniqueIndex("compliance_rulesets_firm_account_unique").on(table.firm, table.accountType),
   ]
 );
 
@@ -631,8 +655,9 @@ export const paperSessions = pgTable(
     status: text("status").notNull().default("active"), // active | stopped | paused
     mode: text("mode").notNull().default("paper"), // paper | shadow
     firmId: text("firm_id"),                          // e.g. "mffu", "topstep" — null = tightest defaults
-    startedAt: timestamp("started_at").defaultNow().notNull(),
-    stoppedAt: timestamp("stopped_at"),
+    // F-5 (migration 0126): TIMESTAMPTZ for session-boundary date math.
+    startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+    stoppedAt: timestamp("stopped_at", { withTimezone: true }),
     pausedAt: timestamp("paused_at"),                 // Gap 9: pause/resume
     startingCapital: numeric("starting_capital").notNull().default("50000"),
     currentEquity: numeric("current_equity").notNull().default("50000"),
@@ -646,18 +671,26 @@ export const paperSessions = pgTable(
     highWaterBalance: numeric("high_water_balance", { precision: 20, scale: 8 })
       .notNull()
       .default("50000"),
-    config: jsonb("config"),
+    // F-4 (migration 0125): TS-level shape via PaperSessionConfigShape.
+    config: jsonb("config").$type<PaperSessionConfigShape>(),
     lastSignalTime: timestamp("last_signal_time"),    // Gap 3: cooldown persistence
     cooldownUntil: timestamp("cooldown_until"),        // Gap 3: cooldown persistence
     dailyPnlBreakdown: jsonb("daily_pnl_breakdown").default({}), // Gap 4: consistency tracking
     metricsSnapshot: jsonb("metrics_snapshot").default({}),       // Gap 5: rolling Sharpe
     totalTrades: integer("total_trades").notNull().default(0),    // H3: trade counter for promotion inputs
-    governorState: jsonb("governor_state"),                        // P0-4: persisted governor state — { state, consecutiveLosses, sessionLossPct, lastUpdatedAt }
+    // F-4 (migration 0125): TS-level shape via PaperSessionGovernorStateShape.
+    governorState: jsonb("governor_state").$type<PaperSessionGovernorStateShape>(),                        // P0-4: persisted governor state — { state, consecutiveLosses, sessionLossPct, lastUpdatedAt }
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     index("paper_sessions_strategy_idx").on(table.strategyId),
     index("paper_sessions_status_idx").on(table.status),
+    // F-3 (migration 0125): exactly one ACTIVE paper session per strategy.
+    // Without this, concurrent SSE / lifecycle paths could spawn duplicate
+    // active sessions, fragmenting equity tracking and HWM math.
+    uniqueIndex("paper_sessions_one_active_per_strategy")
+      .on(table.strategyId)
+      .where(sql`status = 'active'`),
   ]
 );
 
@@ -689,6 +722,11 @@ export const paperPositions = pgTable(
   },
   (table) => [
     index("paper_positions_session_idx").on(table.sessionId),
+    // F-6 (migration 0125): hot-path partial index for open-position lookups
+    // (price-tick handler queries WHERE closed_at IS NULL on every bar).
+    index("paper_positions_open_idx")
+      .on(table.sessionId, table.symbol)
+      .where(sql`closed_at IS NULL`),
   ]
 );
 
@@ -708,8 +746,10 @@ export const paperTrades = pgTable(
     grossPnl: numeric("gross_pnl"),          // Gross P&L before commission (reference / audit)
     commission: numeric("commission", { precision: 12, scale: 4 }).default("0"), // Round-trip commission cost
     contracts: integer("contracts").notNull().default(1),
-    entryTime: timestamp("entry_time").notNull(),
-    exitTime: timestamp("exit_time").notNull(),
+    // F-5 (migration 0126): TIMESTAMPTZ. Cross-table date-boundary queries
+    // (session rollover, daily P&L grouping) require TZ-aware comparisons.
+    entryTime: timestamp("entry_time", { withTimezone: true }).notNull(),
+    exitTime: timestamp("exit_time", { withTimezone: true }).notNull(),
     slippage: numeric("slippage"),
     // ─── Phase 1.1: Journal Enrichment ──────────────────────
     mae: numeric("mae"),                              // Maximum Adverse Excursion — null until per-bar watermark tracking is implemented
@@ -1406,9 +1446,11 @@ export const promptAbTests = pgTable("prompt_ab_tests", {
 // to cloud_qmc_runs(id) is added in W4 (Tier 4.5) once that table lands.
 export const lifecycleTransitions = pgTable("lifecycle_transitions", {
   id: uuid("id").primaryKey().defaultRandom(),
+  // F-1 (migration 0125): onDelete: "set null" preserves audit-trail forensics.
+  // Prior CASCADE destroyed lifecycle history when strategies were archived.
+  // strategyId is nullable now; the index still uses it but tolerates NULL.
   strategyId: uuid("strategy_id")
-    .references(() => strategies.id, { onDelete: "cascade" })
-    .notNull(),
+    .references(() => strategies.id, { onDelete: "set null" }),
   fromState: text("from_state").notNull(),
   toState: text("to_state").notNull(),
   decisionAuthority: text("decision_authority").notNull(), // gate | human | scheduler | n8n | quantum_challenger
@@ -1422,7 +1464,8 @@ export const lifecycleTransitions = pgTable("lifecycle_transitions", {
   quantumFallbackTriggered: boolean("quantum_fallback_triggered").default(false),
   quantumClassicalDisagreementPct: numeric("quantum_classical_disagreement_pct"),
   cloudQmcRunId: uuid("cloud_qmc_run_id"), // Reserved for W4 cloud_qmc_runs FK
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  // F-5 (migration 0126): TIMESTAMPTZ for forensic replay determinism.
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 },
 (table) => [
   index("idx_lifecycle_transitions_strategy_created").on(table.strategyId, table.createdAt.desc()),

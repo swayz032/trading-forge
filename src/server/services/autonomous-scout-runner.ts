@@ -31,6 +31,10 @@ import { fetchRedditEnrichment } from "./reddit-cross-extract.js";
 import { eq, sql as drizzleSql, count as drizzleCount } from "drizzle-orm";
 import { canonicalConceptName } from "./strategy-fingerprint.js";
 import { randomUUID } from "crypto";
+// F-7 (2026-05-20): service-internal pipeline gate (defense-in-depth).
+// Track C adds the scheduler-level gate; this ensures the cron action itself
+// respects pause even when called directly (e.g. operator manual trigger, tests).
+import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 
 const BACKEND_URL = `http://localhost:${process.env.PORT ?? 4000}`;
 const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY || "";
@@ -1104,6 +1108,10 @@ interface CycleResult {
   errors: string[];
   symbolGroup?: SymbolGroup;  // W23F.E — which group was seeded this cycle
   cycleIndex?: number;        // W23F.E — rotation index
+  // F-7 (2026-05-20): pipeline pause defense-in-depth. Scheduler-level gate is
+  // Track C's responsibility; this is the service-internal gate.
+  skipped?: boolean;
+  reason?: string;
 }
 
 /**
@@ -1120,6 +1128,27 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
   let webMentions = 0;
   let youtubeMentions = 0;
   let redditMentions = 0;
+
+  // F-7 (2026-05-20): Service-internal pipeline gate (defense-in-depth).
+  // Track C adds the scheduler-level gate; this gate protects direct invocations
+  // (manual operator triggers, integration tests calling the function directly).
+  try {
+    const active = await isPipelineActive();
+    if (!active) {
+      logger.info("autonomous-scout: pipeline not ACTIVE — cycle skipped (pipeline_paused)");
+      return {
+        startedAt, finishedAt: new Date().toISOString(), durationMs: Date.now() - t0,
+        queriesRun: 0, conceptsDiscovered: 0, webMentions, youtubeMentions, redditMentions,
+        errors: [], skipped: true, reason: "pipeline_paused",
+      };
+    }
+  } catch (gateErr) {
+    // Gate check failure is non-fatal — log and proceed conservatively.
+    // If we can't check pipeline state, proceeding is safe: the scheduler-level
+    // gate (Track C) already blocks if paused. Fail-open here to avoid silently
+    // killing every scout cycle on a transient DB hiccup.
+    logger.warn({ err: gateErr }, "autonomous-scout: pipeline gate check failed — proceeding");
+  }
 
   if (!BRAVE_API_KEY) {
     return {
@@ -1246,7 +1275,8 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
       for (const q of redditQueries) {
         if (concepts.length >= TARGET_CONCEPTS) break outer;
         try {
-          const url = `https://www.reddit.com/r/${sub}/search.json?q=${encodeURIComponent(q)}&restrict_sr=1&sort=relevance&t=year&limit=15`;
+          // F-5 (2026-05-20): t=all per CLAUDE.md §2b pinned — t=year returns popular off-topic posts.
+          const url = `https://www.reddit.com/r/${sub}/search.json?q=${encodeURIComponent(q)}&restrict_sr=1&sort=relevance&t=all&limit=15`;
           const res = await fetch(url, {
             headers: { "User-Agent": "Mozilla/5.0 (compatible; TradingForge-Scout/1.0)" },
             signal: AbortSignal.timeout(20_000),

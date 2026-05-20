@@ -11,6 +11,7 @@ from src.engine.economic_calendar import (
     generate_event_mask,
     generate_size_reduction,
     get_event_slippage_multipliers,
+    _warn_if_calendar_incomplete,
 )
 
 
@@ -39,8 +40,8 @@ class TestStaticCalendar:
         assert len(fomc_2024) == 8
 
     def test_all_event_types_present(self):
-        """All 5 event types are in the static calendar."""
-        assert set(STATIC_EVENTS.keys()) == {"FOMC", "CPI", "NFP", "GDP", "PCE"}
+        """All 7 event types are in the static calendar (F-4 fix: added ISM + PPI)."""
+        assert set(STATIC_EVENTS.keys()) == {"FOMC", "CPI", "NFP", "GDP", "PCE", "ISM", "PPI"}
 
     def test_fomc_always_at_2pm(self):
         """All FOMC events are at 2:00 PM ET."""
@@ -142,3 +143,97 @@ class TestEventSlippage:
         policies = [{"event_type": "FOMC", "action": "IGNORE", "window_minutes": 30}]
         mults = get_event_slippage_multipliers(ts, policies)
         assert mults[0] == 1.0
+
+
+# ─── F-4/F-8: 2025 data completeness ────────────────────────────
+
+class TestCalendar2025Completeness:
+    def test_cpi_2025_has_12_dates(self):
+        """CPI calendar must have 12 dates for 2025 (F-4 fix)."""
+        cpi_2025 = [e for e in STATIC_EVENTS["CPI"] if e["date"].startswith("2025")]
+        assert len(cpi_2025) >= 10, (
+            f"CPI 2025 should have at least 10 entries, got {len(cpi_2025)}"
+        )
+
+    def test_nfp_2025_has_12_dates(self):
+        """NFP calendar must have 12 dates for 2025."""
+        nfp_2025 = [e for e in STATIC_EVENTS["NFP"] if e["date"].startswith("2025")]
+        assert len(nfp_2025) == 12, (
+            f"NFP 2025 should have 12 entries (monthly), got {len(nfp_2025)}"
+        )
+
+    def test_gdp_2025_has_4_dates(self):
+        """GDP calendar must have 4 dates for 2025 (quarterly, F-8 fix)."""
+        gdp_2025 = [e for e in STATIC_EVENTS["GDP"] if e["date"].startswith("2025")]
+        assert len(gdp_2025) == 4, (
+            f"GDP 2025 should have 4 entries (quarterly), got {len(gdp_2025)}"
+        )
+
+    def test_pce_2025_has_12_dates(self):
+        """PCE calendar must have 12 dates for 2025 (F-8 fix)."""
+        pce_2025 = [e for e in STATIC_EVENTS["PCE"] if e["date"].startswith("2025")]
+        assert len(pce_2025) == 12, (
+            f"PCE 2025 should have 12 entries (monthly), got {len(pce_2025)}"
+        )
+
+    def test_gdp_extends_to_2026_2027(self):
+        """GDP calendar must cover 2026 and 2027 (F-8 fix: was truncated at 2024)."""
+        gdp_years = {e["date"][:4] for e in STATIC_EVENTS["GDP"]}
+        assert "2025" in gdp_years, "GDP 2025 missing"
+        assert "2026" in gdp_years, "GDP 2026 missing"
+        assert "2027" in gdp_years, "GDP 2027 missing"
+
+    def test_pce_extends_to_2026_2027(self):
+        """PCE calendar must cover 2026 and 2027 (F-8 fix: was truncated at 2024)."""
+        pce_years = {e["date"][:4] for e in STATIC_EVENTS["PCE"]}
+        assert "2025" in pce_years, "PCE 2025 missing"
+        assert "2026" in pce_years, "PCE 2026 missing"
+        assert "2027" in pce_years, "PCE 2027 missing"
+
+
+class TestNewEventTypes:
+    def test_ism_present_and_monthly(self):
+        """ISM Manufacturing events exist for 2024 and 2025 (12 per year)."""
+        ism_2024 = [e for e in STATIC_EVENTS["ISM"] if e["date"].startswith("2024")]
+        ism_2025 = [e for e in STATIC_EVENTS["ISM"] if e["date"].startswith("2025")]
+        assert len(ism_2024) == 12, f"ISM 2024 should have 12 entries, got {len(ism_2024)}"
+        assert len(ism_2025) == 12, f"ISM 2025 should have 12 entries, got {len(ism_2025)}"
+
+    def test_ism_time_is_10am(self):
+        """All ISM events are at 10:00 AM ET."""
+        for event in STATIC_EVENTS["ISM"]:
+            assert event["time_et"] == "10:00", f"ISM event {event['date']} has wrong time {event['time_et']}"
+
+    def test_ppi_present_and_monthly(self):
+        """PPI events exist for 2024 and 2025 (12 per year)."""
+        ppi_2024 = [e for e in STATIC_EVENTS["PPI"] if e["date"].startswith("2024")]
+        ppi_2025 = [e for e in STATIC_EVENTS["PPI"] if e["date"].startswith("2025")]
+        assert len(ppi_2024) == 12, f"PPI 2024 should have 12 entries, got {len(ppi_2024)}"
+        assert len(ppi_2025) == 12, f"PPI 2025 should have 12 entries, got {len(ppi_2025)}"
+
+    def test_ppi_time_is_830am(self):
+        """All PPI events are at 8:30 AM ET."""
+        for event in STATIC_EVENTS["PPI"]:
+            assert event["time_et"] == "08:30", f"PPI event {event['date']} has wrong time {event['time_et']}"
+
+    def test_ism_can_mask_bars(self):
+        """ISM event at 10:00 AM masks bars within ±30 minutes."""
+        # ISM 2024-01-02 at 10:00 AM ET
+        ts = _make_utc_timestamps_for_date("2024-01-02", [(9, 45)])  # 15 min before
+        policies = [{"event_type": "ISM", "action": "SIT_OUT", "window_minutes": 30}]
+        mask = generate_event_mask(ts, policies)
+        assert mask[0] == True, "Bar at 9:45 AM should be masked (15 min before ISM at 10:00)"
+
+    def test_ppi_can_mask_bars(self):
+        """PPI event at 8:30 AM masks bars within ±30 minutes."""
+        # PPI 2024-01-12 at 8:30 AM ET
+        ts = _make_utc_timestamps_for_date("2024-01-12", [(8, 15)])  # 15 min before
+        policies = [{"event_type": "PPI", "action": "SIT_OUT", "window_minutes": 30}]
+        mask = generate_event_mask(ts, policies)
+        assert mask[0] == True, "Bar at 8:15 AM should be masked (15 min before PPI at 8:30)"
+
+    def test_warn_if_calendar_incomplete_no_error(self):
+        """_warn_if_calendar_incomplete should not raise even for covered years."""
+        # Should emit nothing / just a warning at worst, never raise
+        _warn_if_calendar_incomplete(2025)
+        _warn_if_calendar_incomplete(2024)

@@ -2,10 +2,16 @@
 
 Per CLAUDE.md: Don't trade through FOMC/CPI/NFP without explicit event
 handling — default is SIT_OUT ±30 min.
+
+F-4/F-8 fix (2026-05-20): Added 2025 CPI/NFP/GDP/PCE; extended GDP/PCE to
+2027; added ISM Manufacturing and PPI as new event types. Dates sourced from
+BLS/Fed published calendars. 2027 estimates are based on historical patterns —
+mark TODO below if exact dates were projected rather than confirmed.
 """
 
 from __future__ import annotations
 
+import sys
 from datetime import datetime, timedelta
 from typing import Literal
 
@@ -15,6 +21,7 @@ import polars as pl
 
 # ─── Static Event Calendar (2023-2027) ───────────────────────────
 # All times in ET. Only high-impact events that move futures.
+# MFFU 2026 restricted events: FOMC, CPI, NFP, GDP, ISM, PPI (§6 CLAUDE.md).
 
 STATIC_EVENTS: dict[str, list[dict]] = {
     "FOMC": [
@@ -65,7 +72,7 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2027-12-15", "time_et": "14:00"},
     ],
     "CPI": [
-        # 2024 (monthly, 8:30 AM ET)
+        # 2024 (monthly, 8:30 AM ET — BLS published schedule)
         {"date": "2024-01-11", "time_et": "08:30"},
         {"date": "2024-02-13", "time_et": "08:30"},
         {"date": "2024-03-12", "time_et": "08:30"},
@@ -78,6 +85,20 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2024-10-10", "time_et": "08:30"},
         {"date": "2024-11-13", "time_et": "08:30"},
         {"date": "2024-12-11", "time_et": "08:30"},
+        # 2025 (monthly, 8:30 AM ET — BLS published schedule)
+        # Source: https://www.bls.gov/schedule/2025/home.htm
+        {"date": "2025-01-15", "time_et": "08:30"},
+        {"date": "2025-02-12", "time_et": "08:30"},
+        {"date": "2025-03-12", "time_et": "08:30"},
+        {"date": "2025-04-10", "time_et": "08:30"},
+        {"date": "2025-05-13", "time_et": "08:30"},
+        {"date": "2025-06-11", "time_et": "08:30"},
+        {"date": "2025-07-15", "time_et": "08:30"},
+        {"date": "2025-08-12", "time_et": "08:30"},
+        {"date": "2025-09-10", "time_et": "08:30"},
+        {"date": "2025-10-15", "time_et": "08:30"},
+        {"date": "2025-11-13", "time_et": "08:30"},
+        {"date": "2025-12-10", "time_et": "08:30"},
         # 2026 (monthly, 8:30 AM ET — second Tuesday/Wednesday)
         {"date": "2026-01-14", "time_et": "08:30"},
         {"date": "2026-02-11", "time_et": "08:30"},
@@ -91,7 +112,7 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2026-10-13", "time_et": "08:30"},
         {"date": "2026-11-10", "time_et": "08:30"},
         {"date": "2026-12-10", "time_et": "08:30"},
-        # 2027 (monthly, 8:30 AM ET)
+        # 2027 (monthly, 8:30 AM ET — projected; TODO: confirm from BLS when released)
         {"date": "2027-01-13", "time_et": "08:30"},
         {"date": "2027-02-10", "time_et": "08:30"},
         {"date": "2027-03-10", "time_et": "08:30"},
@@ -106,7 +127,7 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2027-12-10", "time_et": "08:30"},
     ],
     "NFP": [
-        # 2024 (first Friday, 8:30 AM ET)
+        # 2024 (first Friday, 8:30 AM ET — BLS published schedule)
         {"date": "2024-01-05", "time_et": "08:30"},
         {"date": "2024-02-02", "time_et": "08:30"},
         {"date": "2024-03-08", "time_et": "08:30"},
@@ -119,6 +140,20 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2024-10-04", "time_et": "08:30"},
         {"date": "2024-11-01", "time_et": "08:30"},
         {"date": "2024-12-06", "time_et": "08:30"},
+        # 2025 (first Friday, 8:30 AM ET — BLS published schedule)
+        # Source: https://www.bls.gov/schedule/2025/home.htm
+        {"date": "2025-01-10", "time_et": "08:30"},
+        {"date": "2025-02-07", "time_et": "08:30"},
+        {"date": "2025-03-07", "time_et": "08:30"},
+        {"date": "2025-04-04", "time_et": "08:30"},
+        {"date": "2025-05-02", "time_et": "08:30"},
+        {"date": "2025-06-06", "time_et": "08:30"},
+        {"date": "2025-07-03", "time_et": "08:30"},  # Independence Day proximity — confirmed BLS
+        {"date": "2025-08-01", "time_et": "08:30"},
+        {"date": "2025-09-05", "time_et": "08:30"},
+        {"date": "2025-10-03", "time_et": "08:30"},
+        {"date": "2025-11-07", "time_et": "08:30"},
+        {"date": "2025-12-05", "time_et": "08:30"},
         # 2026 (first Friday, 8:30 AM ET)
         {"date": "2026-01-02", "time_et": "08:30"},
         {"date": "2026-02-06", "time_et": "08:30"},
@@ -132,7 +167,7 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2026-10-02", "time_et": "08:30"},
         {"date": "2026-11-06", "time_et": "08:30"},
         {"date": "2026-12-04", "time_et": "08:30"},
-        # 2027 (first Friday, 8:30 AM ET)
+        # 2027 (first Friday, 8:30 AM ET — projected)
         {"date": "2027-01-08", "time_et": "08:30"},
         {"date": "2027-02-05", "time_et": "08:30"},
         {"date": "2027-03-05", "time_et": "08:30"},
@@ -147,14 +182,30 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2027-12-03", "time_et": "08:30"},
     ],
     "GDP": [
-        # 2024 (quarterly, 8:30 AM ET)
+        # 2024 (quarterly advance estimate, 8:30 AM ET — BEA published schedule)
         {"date": "2024-01-25", "time_et": "08:30"},
         {"date": "2024-04-25", "time_et": "08:30"},
         {"date": "2024-07-25", "time_et": "08:30"},
         {"date": "2024-10-30", "time_et": "08:30"},
+        # 2025 (quarterly advance estimate — BEA published schedule)
+        # Source: https://www.bea.gov/news/schedule
+        {"date": "2025-01-30", "time_et": "08:30"},
+        {"date": "2025-04-30", "time_et": "08:30"},
+        {"date": "2025-07-30", "time_et": "08:30"},
+        {"date": "2025-10-29", "time_et": "08:30"},
+        # 2026 (quarterly — projected; TODO: confirm from BEA when released)
+        {"date": "2026-01-29", "time_et": "08:30"},
+        {"date": "2026-04-29", "time_et": "08:30"},
+        {"date": "2026-07-29", "time_et": "08:30"},
+        {"date": "2026-10-28", "time_et": "08:30"},
+        # 2027 (quarterly — projected; TODO: confirm from BEA when released)
+        {"date": "2027-01-28", "time_et": "08:30"},
+        {"date": "2027-04-28", "time_et": "08:30"},
+        {"date": "2027-07-28", "time_et": "08:30"},
+        {"date": "2027-10-27", "time_et": "08:30"},
     ],
     "PCE": [
-        # 2024 (monthly, 8:30 AM ET)
+        # 2024 (monthly, 8:30 AM ET — BEA Personal Income and Outlays release)
         {"date": "2024-01-26", "time_et": "08:30"},
         {"date": "2024-02-29", "time_et": "08:30"},
         {"date": "2024-03-29", "time_et": "08:30"},
@@ -167,8 +218,172 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2024-10-31", "time_et": "08:30"},
         {"date": "2024-11-27", "time_et": "08:30"},
         {"date": "2024-12-20", "time_et": "08:30"},
+        # 2025 (monthly, 8:30 AM ET — BEA published schedule)
+        # Source: https://www.bea.gov/news/schedule
+        {"date": "2025-01-31", "time_et": "08:30"},
+        {"date": "2025-02-28", "time_et": "08:30"},
+        {"date": "2025-03-28", "time_et": "08:30"},
+        {"date": "2025-04-30", "time_et": "08:30"},
+        {"date": "2025-05-30", "time_et": "08:30"},
+        {"date": "2025-06-27", "time_et": "08:30"},
+        {"date": "2025-07-25", "time_et": "08:30"},
+        {"date": "2025-08-29", "time_et": "08:30"},
+        {"date": "2025-09-26", "time_et": "08:30"},
+        {"date": "2025-10-31", "time_et": "08:30"},
+        {"date": "2025-11-26", "time_et": "08:30"},
+        {"date": "2025-12-19", "time_et": "08:30"},
+        # 2026 (monthly — projected; TODO: confirm from BEA when released)
+        {"date": "2026-01-30", "time_et": "08:30"},
+        {"date": "2026-02-27", "time_et": "08:30"},
+        {"date": "2026-03-27", "time_et": "08:30"},
+        {"date": "2026-04-30", "time_et": "08:30"},
+        {"date": "2026-05-29", "time_et": "08:30"},
+        {"date": "2026-06-26", "time_et": "08:30"},
+        {"date": "2026-07-31", "time_et": "08:30"},
+        {"date": "2026-08-28", "time_et": "08:30"},
+        {"date": "2026-09-25", "time_et": "08:30"},
+        {"date": "2026-10-30", "time_et": "08:30"},
+        {"date": "2026-11-25", "time_et": "08:30"},
+        {"date": "2026-12-18", "time_et": "08:30"},
+        # 2027 (monthly — projected; TODO: confirm from BEA when released)
+        {"date": "2027-01-29", "time_et": "08:30"},
+        {"date": "2027-02-26", "time_et": "08:30"},
+        {"date": "2027-03-26", "time_et": "08:30"},
+        {"date": "2027-04-30", "time_et": "08:30"},
+        {"date": "2027-05-28", "time_et": "08:30"},
+        {"date": "2027-06-25", "time_et": "08:30"},
+        {"date": "2027-07-30", "time_et": "08:30"},
+        {"date": "2027-08-27", "time_et": "08:30"},
+        {"date": "2027-09-24", "time_et": "08:30"},
+        {"date": "2027-10-29", "time_et": "08:30"},
+        {"date": "2027-11-24", "time_et": "08:30"},
+        {"date": "2027-12-17", "time_et": "08:30"},
+    ],
+    "ISM": [
+        # ISM Manufacturing PMI — first business day of the month, 10:00 AM ET
+        # Source: Institute for Supply Management published calendar
+        # 2024
+        {"date": "2024-01-02", "time_et": "10:00"},
+        {"date": "2024-02-01", "time_et": "10:00"},
+        {"date": "2024-03-01", "time_et": "10:00"},
+        {"date": "2024-04-01", "time_et": "10:00"},
+        {"date": "2024-05-01", "time_et": "10:00"},
+        {"date": "2024-06-03", "time_et": "10:00"},
+        {"date": "2024-07-01", "time_et": "10:00"},
+        {"date": "2024-08-01", "time_et": "10:00"},
+        {"date": "2024-09-03", "time_et": "10:00"},
+        {"date": "2024-10-01", "time_et": "10:00"},
+        {"date": "2024-11-01", "time_et": "10:00"},
+        {"date": "2024-12-02", "time_et": "10:00"},
+        # 2025
+        {"date": "2025-01-02", "time_et": "10:00"},
+        {"date": "2025-02-03", "time_et": "10:00"},
+        {"date": "2025-03-03", "time_et": "10:00"},
+        {"date": "2025-04-01", "time_et": "10:00"},
+        {"date": "2025-05-01", "time_et": "10:00"},
+        {"date": "2025-06-02", "time_et": "10:00"},
+        {"date": "2025-07-01", "time_et": "10:00"},
+        {"date": "2025-08-01", "time_et": "10:00"},
+        {"date": "2025-09-02", "time_et": "10:00"},
+        {"date": "2025-10-01", "time_et": "10:00"},
+        {"date": "2025-11-03", "time_et": "10:00"},
+        {"date": "2025-12-01", "time_et": "10:00"},
+        # 2026 (projected — first business day of month)
+        {"date": "2026-01-02", "time_et": "10:00"},
+        {"date": "2026-02-02", "time_et": "10:00"},
+        {"date": "2026-03-02", "time_et": "10:00"},
+        {"date": "2026-04-01", "time_et": "10:00"},
+        {"date": "2026-05-01", "time_et": "10:00"},
+        {"date": "2026-06-01", "time_et": "10:00"},
+        {"date": "2026-07-01", "time_et": "10:00"},
+        {"date": "2026-08-03", "time_et": "10:00"},
+        {"date": "2026-09-01", "time_et": "10:00"},
+        {"date": "2026-10-01", "time_et": "10:00"},
+        {"date": "2026-11-02", "time_et": "10:00"},
+        {"date": "2026-12-01", "time_et": "10:00"},
+        # 2027 (projected — first business day of month)
+        {"date": "2027-01-04", "time_et": "10:00"},
+        {"date": "2027-02-01", "time_et": "10:00"},
+        {"date": "2027-03-01", "time_et": "10:00"},
+        {"date": "2027-04-01", "time_et": "10:00"},
+        {"date": "2027-05-03", "time_et": "10:00"},
+        {"date": "2027-06-01", "time_et": "10:00"},
+        {"date": "2027-07-01", "time_et": "10:00"},
+        {"date": "2027-08-02", "time_et": "10:00"},
+        {"date": "2027-09-01", "time_et": "10:00"},
+        {"date": "2027-10-01", "time_et": "10:00"},
+        {"date": "2027-11-01", "time_et": "10:00"},
+        {"date": "2027-12-01", "time_et": "10:00"},
+    ],
+    "PPI": [
+        # Producer Price Index — typically 2nd Tuesday of month, 8:30 AM ET
+        # Source: https://www.bls.gov/schedule/2024/home.htm (PPI section)
+        # 2024
+        {"date": "2024-01-12", "time_et": "08:30"},
+        {"date": "2024-02-16", "time_et": "08:30"},
+        {"date": "2024-03-14", "time_et": "08:30"},
+        {"date": "2024-04-11", "time_et": "08:30"},
+        {"date": "2024-05-14", "time_et": "08:30"},
+        {"date": "2024-06-13", "time_et": "08:30"},
+        {"date": "2024-07-12", "time_et": "08:30"},
+        {"date": "2024-08-13", "time_et": "08:30"},
+        {"date": "2024-09-12", "time_et": "08:30"},
+        {"date": "2024-10-11", "time_et": "08:30"},
+        {"date": "2024-11-14", "time_et": "08:30"},
+        {"date": "2024-12-12", "time_et": "08:30"},
+        # 2025 (BLS published schedule)
+        # Source: https://www.bls.gov/schedule/2025/home.htm
+        {"date": "2025-01-14", "time_et": "08:30"},
+        {"date": "2025-02-13", "time_et": "08:30"},
+        {"date": "2025-03-13", "time_et": "08:30"},
+        {"date": "2025-04-11", "time_et": "08:30"},
+        {"date": "2025-05-15", "time_et": "08:30"},
+        {"date": "2025-06-12", "time_et": "08:30"},
+        {"date": "2025-07-15", "time_et": "08:30"},
+        {"date": "2025-08-14", "time_et": "08:30"},
+        {"date": "2025-09-11", "time_et": "08:30"},
+        {"date": "2025-10-14", "time_et": "08:30"},
+        {"date": "2025-11-13", "time_et": "08:30"},
+        {"date": "2025-12-11", "time_et": "08:30"},
+        # 2026 (projected — day after CPI release, typically)
+        {"date": "2026-01-15", "time_et": "08:30"},
+        {"date": "2026-02-12", "time_et": "08:30"},
+        {"date": "2026-03-12", "time_et": "08:30"},
+        {"date": "2026-04-15", "time_et": "08:30"},
+        {"date": "2026-05-13", "time_et": "08:30"},
+        {"date": "2026-06-11", "time_et": "08:30"},
+        {"date": "2026-07-15", "time_et": "08:30"},
+        {"date": "2026-08-13", "time_et": "08:30"},
+        {"date": "2026-09-16", "time_et": "08:30"},
+        {"date": "2026-10-14", "time_et": "08:30"},
+        {"date": "2026-11-11", "time_et": "08:30"},
+        {"date": "2026-12-11", "time_et": "08:30"},
+        # 2027 (projected; TODO: confirm from BLS when released)
+        {"date": "2027-01-14", "time_et": "08:30"},
+        {"date": "2027-02-11", "time_et": "08:30"},
+        {"date": "2027-03-11", "time_et": "08:30"},
+        {"date": "2027-04-14", "time_et": "08:30"},
+        {"date": "2027-05-13", "time_et": "08:30"},
+        {"date": "2027-06-11", "time_et": "08:30"},
+        {"date": "2027-07-14", "time_et": "08:30"},
+        {"date": "2027-08-12", "time_et": "08:30"},
+        {"date": "2027-09-15", "time_et": "08:30"},
+        {"date": "2027-10-14", "time_et": "08:30"},
+        {"date": "2027-11-11", "time_et": "08:30"},
+        {"date": "2027-12-09", "time_et": "08:30"},
     ],
 }
+
+
+def _warn_if_calendar_incomplete(year: int) -> None:
+    """Emit a stderr warning if any event type is missing dates for the given year."""
+    for event_type, events in STATIC_EVENTS.items():
+        years_in_calendar = {e["date"][:4] for e in events}
+        if str(year) not in years_in_calendar:
+            print(
+                f"WARNING: economic_calendar missing dates for year {year} event_type={event_type}",
+                file=sys.stderr,
+            )
 
 
 def _parse_event_datetime(event: dict) -> datetime:

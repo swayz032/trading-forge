@@ -24,15 +24,17 @@ import { logger } from "../lib/logger.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED, COOLDOWN_DAYS as _COOLDOWN_DAYS_SHARED } from "../lib/lifecycle-constants.js";
 // Dynamic import to avoid circular dependency (lifecycle-service imports evolution-service)
 async function getLifecycleService() {
   const { LifecycleService } = await import("./lifecycle-service.js");
   return new LifecycleService();
 }
 
-const MAX_GENERATIONS = 3;
+// Track E F-2: use shared constants — single source of truth across evolution + critic.
+const MAX_GENERATIONS = _MAX_GENERATIONS_SHARED;
 const IMPROVEMENT_THRESHOLD = 0.10; // 10% improvement required
-const COOLDOWN_DAYS = 7;
+const COOLDOWN_DAYS = _COOLDOWN_DAYS_SHARED;
 
 interface MutationResult {
   params: Record<string, number>;
@@ -119,7 +121,14 @@ export async function evolveStrategy(
     return { status: "retired", error: "Max evolution generations reached" };
   }
 
-  // Guardrail: cooldown — check if we evolved this lineage within 7 days
+  // Guardrail: cooldown — check if we evolved this lineage within 7 days.
+  // Track E F-6: current query only looks one level up (parentStrategyId = rootId).
+  // This means generation 2→3 mutations bypass cooldown because their parentStrategyId
+  // points to gen-1, not gen-0. Full fix requires a lineageRootId column (migration
+  // 0125b, Track B) so ALL children in a lineage inherit the root's ID and the
+  // WHERE clause can filter on lineageRootId. Until that column exists, this
+  // implementation catches the common case (gen 0→1 mutations) but NOT deeper chains.
+  // TODO: replace with lineageRootId filter after migration 0125b is applied.
   const rootId = strategy.parentStrategyId ?? strategyId;
   const recentEvolutions = await db
     .select()

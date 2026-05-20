@@ -20,7 +20,10 @@ import {
   agentHealthReports,
 } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
-import { logger } from "../index.js";
+// Track A F-5: Use leaf logger module, not ../index.js (Express bootstrap).
+// Importing from ../index.js drags the full route/service graph into test
+// isolation runs that mock db/schema.js partially, causing spurious failures.
+import { logger } from "../lib/logger.js";
 import { getSchedulerHealth } from "../scheduler.js";
 
 // ─── Domain Definitions ─────────────────────────────────────────────

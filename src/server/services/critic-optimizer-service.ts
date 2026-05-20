@@ -53,6 +53,7 @@ import { tracer } from "../lib/tracing.js";
 import { getDeepARWeight } from "./deepar-service.js";
 import { LifecycleService } from "./lifecycle-service.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED } from "../lib/lifecycle-constants.js";
 import { assertCrossValidatedSource } from "./agent-service.js";
 import { sqaRegistry } from "../lib/sqa-promise-registry.js";
 
@@ -98,14 +99,17 @@ const EVIDENCE_WAIT_MS = 5 * 60 * 1000; // 5 minutes
 const EVIDENCE_POLL_INTERVAL_MS = 10_000; // 10 seconds
 const CRITIC_TIMEOUT_MS = 300_000; // 5 minutes
 const RATE_LIMIT_HOURS = 24;
-const MAX_GENERATIONS = 3; // Hard cap on evolution depth
+// Track E F-2: use shared constant — single source of truth across evolution + critic.
+const MAX_GENERATIONS = _MAX_GENERATIONS_SHARED;
 const MC_GATE_WAIT_MS = 60_000; // Max wait for post-replay MC (60 s)
 const MC_SURVIVAL_THRESHOLD = 0.70; // Minimum MC survival rate required
 const EVIDENCE_COLLECTOR_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
 /**
- * Composite scoring weights — mirrors CriticScorer.WEIGHTS in critic_optimizer.py.
- * Kept in sync manually; update both locations together.
+ * Composite scoring weights — mirrors CriticScorer.WEIGHTS in critic_optimizer.py:35-48.
+ * Track E F-3: added decay_penalty, drift_penalty, live_sharpe_match to sync with Python.
+ * Sum of positive weights: 0.60. Sum of negative weights: -0.55. Net range approx [-0.55, 0.60].
+ * MUST stay in sync with critic_optimizer.py WEIGHTS dict. See composite-weights-parity.test.ts.
  */
 const COMPOSITE_WEIGHTS = {
   oos_return: 0.15,
@@ -117,6 +121,10 @@ const COMPOSITE_WEIGHTS = {
   param_instability: -0.10,
   regime_fragility: -0.05,
   timing_fragility: -0.05,
+  // Track E F-3: added to sync with Python critic_optimizer.py:35-48
+  decay_penalty: -0.05,
+  drift_penalty: -0.05,
+  live_sharpe_match: 0.05,
 };
 
 interface HistoricalRun {
@@ -1428,13 +1436,18 @@ async function collectEvidence(
       .orderBy(desc(alerts.createdAt))
       .limit(30);
 
+    // Track E F-8: exclude alerts that lack an explicit strategyId in metadata.
+    // Previously, alerts with no metadata (meta == null) or no strategyId key were
+    // included — these are system-wide noise (infra alerts, global drift events)
+    // that contaminate per-strategy evidence packets and skew composite scores.
     driftAlerts = rawAlerts
       .filter((a) => {
         const meta = a.metadata as Record<string, unknown> | null;
-        if (!meta) return true;
-        if (meta.strategyId === strategyId) return true;
-        if (meta.strategyId && meta.strategyId !== strategyId) return false;
-        return true;
+        if (!meta || !meta.strategyId) {
+          // Untagged alerts are system-wide noise — exclude from strategy drift evidence.
+          return false;
+        }
+        return meta.strategyId === strategyId;
       })
       .map((a) => ({
         id: a.id,
@@ -1706,53 +1719,59 @@ async function createChildStrategy(
     decisionAuthority: "system",
   }).catch(() => void 0);
 
-  const childId = crypto.randomUUID();
-  const [child] = await db
-    .insert(strategies)
-    .values({
-      id: childId,
-      name: parentStrategy.name,
-      description: parentStrategy.description ?? undefined,
-      symbol: parentStrategy.symbol,
-      timeframe: parentStrategy.timeframe,
-      config: mergedConfig,
-      lifecycleState: "CANDIDATE", // Will be promoted to TESTING via lifecycle service below
-      parentStrategyId: parentStrategy.id,
-      generation: parentGen + 1,
-      forgeScore: replayResult.forgeScore ?? undefined,
-      preferredRegime: parentStrategy.preferredRegime ?? undefined,
-      tags: childTags,
-    })
-    .returning({ id: strategies.id });
+  // Track E F-5: wrap insert + promotion in db.transaction() so that a promotion
+  // failure rolls back the child row. Without this, a failed promotion left an
+  // orphan CANDIDATE that would never advance through lifecycle.
+  const childId = await db.transaction(async (tx) => {
+    const newChildId = crypto.randomUUID();
+    const [child] = await tx
+      .insert(strategies)
+      .values({
+        id: newChildId,
+        name: parentStrategy.name,
+        description: parentStrategy.description ?? undefined,
+        symbol: parentStrategy.symbol,
+        timeframe: parentStrategy.timeframe,
+        config: mergedConfig,
+        lifecycleState: "CANDIDATE", // Will be promoted to TESTING via lifecycle service below
+        parentStrategyId: parentStrategy.id,
+        generation: parentGen + 1,
+        forgeScore: replayResult.forgeScore ?? undefined,
+        preferredRegime: parentStrategy.preferredRegime ?? undefined,
+        tags: childTags,
+      })
+      .returning({ id: strategies.id });
 
-  // Route through canonical lifecycle path to get audit + SSE broadcast.
-  // CANDIDATE → TESTING is a valid transition (lifecycle-service.ts VALID_TRANSITIONS line 44).
-  const lifecycle = new LifecycleService();
-  const promoteResult = await lifecycle.promoteStrategy(
-    child.id,
-    "CANDIDATE",
-    "TESTING",
-    { actor: "system", reason: "critic-replay-survivor" },
-  );
-  if (!promoteResult.success) {
-    logger.warn(
-      { runId, childId: child.id, error: promoteResult.error },
-      "Critic optimizer: lifecycle promotion CANDIDATE→TESTING failed (child remains CANDIDATE)",
+    // Route through canonical lifecycle path to get audit + SSE broadcast.
+    // CANDIDATE → TESTING is a valid transition (lifecycle-service.ts VALID_TRANSITIONS line 44).
+    // Pass tx so promotion participates in the same transaction and rolls back on failure.
+    const lifecycle = new LifecycleService();
+    const promoteResult = await lifecycle.promoteStrategy(
+      child.id,
+      "CANDIDATE",
+      "TESTING",
+      { actor: "system", reason: "critic-replay-survivor" },
+      tx as typeof db,
     );
-  }
+    if (!promoteResult.success) {
+      throw new Error(`Child promotion failed: ${promoteResult.error}`);
+    }
+
+    return child.id;
+  });
 
   logger.info(
     {
       runId,
       parentStrategyId: parentStrategy.id,
-      childStrategyId: child.id,
+      childStrategyId: childId,
       generation: parentGen + 1,
       tier: replayResult.tier,
     },
     "Critic optimizer: child strategy version created",
   );
 
-  return child.id;
+  return childId;
 }
 
 /**

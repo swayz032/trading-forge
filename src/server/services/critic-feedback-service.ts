@@ -102,6 +102,12 @@ export async function evaluateCriticAccuracy(): Promise<{
     },
   ]);
 
+  // Track E F-7: cap + floor prevent runaway threshold drift.
+  // Without bounds the threshold could ratchet above 85 (no strategy would pass)
+  // or never loosen when FPR recovered, starving the pipeline.
+  const CRITIC_FORGE_SCORE_MAX = 85; // threshold hard ceiling — above this, nothing passes
+  const CRITIC_FORGE_SCORE_MIN = 50; // threshold hard floor — below this, filter is useless
+
   // Auto-adjust critic thresholds if false positive rate is too high
   // Only trigger with sufficient sample size (10+ strategies)
   if (falsePositiveRate > 0.30 && total >= 10) {
@@ -110,7 +116,7 @@ export async function evaluateCriticAccuracy(): Promise<{
       "Critic false positive rate > 30% — auto-tightening thresholds",
     );
 
-    // Tighten the minimum forge score threshold by 5 points
+    // Tighten the minimum forge score threshold by 5 points (capped at MAX)
     try {
       const [current] = await db
         .select()
@@ -119,27 +125,64 @@ export async function evaluateCriticAccuracy(): Promise<{
         .limit(1);
 
       if (current) {
-        const newValue = (Number(current.currentValue) + 5).toString();
+        const currentValue = Number(current.currentValue);
+        const newValue = Math.min(currentValue + 5, CRITIC_FORGE_SCORE_MAX);
+        if (newValue > currentValue) {
+          await db.insert(systemParameterHistory).values({
+            paramId: current.id,
+            previousValue: current.currentValue,
+            newValue: newValue.toString(),
+            reason: "false_positive_rate > 30%",
+            source: "critic_feedback_auto_tighten",
+          });
 
-        await db.insert(systemParameterHistory).values({
-          paramId: current.id,
-          previousValue: current.currentValue,
-          newValue,
-          reason: "false_positive_rate > 30%",
-          source: "critic_feedback_auto_tighten",
-        });
+          await db
+            .update(systemParameters)
+            .set({ currentValue: newValue.toString(), updatedAt: new Date() })
+            .where(eq(systemParameters.id, current.id));
 
-        await db
-          .update(systemParameters)
-          .set({ currentValue: newValue, updatedAt: new Date() })
-          .where(eq(systemParameters.id, current.id));
-
-        logger.info({ oldValue: current.currentValue, newValue }, "Critic min forge score threshold increased by 5");
+          logger.warn({ from: currentValue, to: newValue }, "critic threshold tightened");
+        } else {
+          logger.warn({ currentValue, cap: CRITIC_FORGE_SCORE_MAX }, "critic threshold already at cap — skipping tighten");
+        }
       } else {
         logger.warn("critic_min_forge_score param not found — skipping auto-tighten");
       }
     } catch (err) {
-      logger.warn({ err }, "Could not auto-adjust critic threshold");
+      logger.warn({ err }, "Could not auto-adjust critic threshold (tighten)");
+    }
+  } else if (falsePositiveRate < 0.10 && total >= 20) {
+    // Track E F-7: auto-loosen when FPR is healthy — prevents threshold from staying
+    // elevated after a transient high-FPR period, which would starve the pipeline.
+    try {
+      const [current] = await db
+        .select()
+        .from(systemParameters)
+        .where(eq(systemParameters.paramName, "critic_min_forge_score"))
+        .limit(1);
+
+      if (current) {
+        const currentValue = Number(current.currentValue);
+        const newValue = Math.max(currentValue - 2, CRITIC_FORGE_SCORE_MIN);
+        if (newValue < currentValue) {
+          await db.insert(systemParameterHistory).values({
+            paramId: current.id,
+            previousValue: current.currentValue,
+            newValue: newValue.toString(),
+            reason: "false_positive_rate < 10%",
+            source: "critic_feedback_auto_loosen",
+          });
+
+          await db
+            .update(systemParameters)
+            .set({ currentValue: newValue.toString(), updatedAt: new Date() })
+            .where(eq(systemParameters.id, current.id));
+
+          logger.info({ from: currentValue, to: newValue }, "critic threshold loosened");
+        }
+      }
+    } catch (err) {
+      logger.warn({ err }, "Could not auto-adjust critic threshold (loosen)");
     }
   }
 

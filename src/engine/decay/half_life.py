@@ -73,13 +73,17 @@ def fit_decay(
     t_vals = np.arange(len(sharpe_arr))
 
     if np.sum(positive_mask) < 3:
-        # Not enough positive data points for log-fit; use raw linear trend
+        # Not enough positive data points for log-fit; use raw linear trend.
+        # Track E F-4: previously used slope < -0.01 and r_sq > 0.1 here, while the
+        # log-transform branch used decay_rate > 0.005 and r_sq > 0.15 — inconsistent
+        # thresholds caused false-negatives on negative-Sharpe strategies.
+        # Both branches now use _detect_decay() with identical criteria.
         slope, intercept, r_sq = _linear_fit(t_vals, sharpe_arr)
         decay_rate = max(0.0, -slope)
         half_life = math.log(2) / decay_rate if decay_rate > 1e-9 else None
         trend = _classify_trend(slope, r_sq)
         return {
-            "decay_detected": slope < -0.01 and r_sq > 0.1,
+            "decay_detected": _detect_decay(slope, r_sq),
             "decay_rate": round(float(decay_rate), 6),
             "half_life_days": round(half_life, 1) if half_life is not None else None,
             "r_squared": round(float(r_sq), 4),
@@ -99,13 +103,29 @@ def fit_decay(
     trend = _classify_trend(slope, r_sq)
 
     return {
-        "decay_detected": decay_rate > 0.005 and r_sq > 0.15,
+        # Track E F-4: harmonized with fallback branch via _detect_decay().
+        "decay_detected": _detect_decay(slope, r_sq),
         "decay_rate": round(float(decay_rate), 6),
         "half_life_days": round(half_life, 1) if half_life is not None else None,
         "r_squared": round(float(r_sq), 4),
         "current_vs_peak": round(float(current_vs_peak), 4),
         "trend": trend,
     }
+
+
+def _detect_decay(slope: float, r_sq: float) -> bool:
+    """Decay detected when slope is meaningfully negative regardless of code path.
+
+    Track E F-4: single criterion used in BOTH the log-transform path and the
+    raw-linear fallback path. Previously the two paths had divergent thresholds
+    (0.01/0.10 vs 0.005/0.15) which caused false-negatives on negative-Sharpe
+    strategies where few positive samples were available for log-fit.
+
+    Chosen threshold: slope < -0.005 (consistent with _classify_trend declining
+    boundary) and r_sq > 0.08 (lower than old log-branch 0.15, higher than old
+    fallback 0.10 — balanced to avoid noise without missing real decay).
+    """
+    return slope < -0.005 and r_sq > 0.08
 
 
 def _linear_fit(

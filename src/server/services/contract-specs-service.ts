@@ -23,16 +23,21 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 // ─── Hardcoded fallback values (from firm-config.ts CONTRACT_SPECS) ─────
 // These are the reference values. If Databento returns different values,
 // an alert fires and the operator must review.
+//
+// F-5 fix (2026-05-20): MCL pointValue corrected from 10.0 → 100.0.
+// MCL = Micro Crude Light; 1 tick = $0.01/bbl × 100 bbl = $1.00/tick.
+// 1 point = 100 ticks × $1.00 = $100/point. CLAUDE.md §4 is authoritative.
+// firm-config.ts CONTRACT_SPECS (the TRUE single source of truth) already had 100.0.
 export const CONTRACT_SPECS_HARDCODED: Record<string, {
   multiplier: number;
   tickSize: number;
   pointValue: number;
 }> = {
-  ES:  { multiplier: 50.0,  tickSize: 0.25, pointValue: 50.0 },
-  NQ:  { multiplier: 20.0,  tickSize: 0.25, pointValue: 20.0 },
-  MES: { multiplier: 5.0,   tickSize: 0.25, pointValue: 5.0  },
-  MNQ: { multiplier: 2.0,   tickSize: 0.25, pointValue: 2.0  },
-  MCL: { multiplier: 10.0,  tickSize: 0.01, pointValue: 10.0 },
+  ES:  { multiplier: 50.0,  tickSize: 0.25, pointValue: 50.0  },
+  NQ:  { multiplier: 20.0,  tickSize: 0.25, pointValue: 20.0  },
+  MES: { multiplier: 5.0,   tickSize: 0.25, pointValue: 5.0   },
+  MNQ: { multiplier: 2.0,   tickSize: 0.25, pointValue: 2.0   },
+  MCL: { multiplier: 100.0, tickSize: 0.01, pointValue: 100.0 },
 };
 
 export interface ContractSpec {

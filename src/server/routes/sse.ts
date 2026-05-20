@@ -109,7 +109,32 @@ export function broadcastSSE(event: string, data: unknown): void {
   const seq = ++eventSeq;
   pushToRingBuffer({ seq, event, data });
 
-  const message = `id: ${seq}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  // Track A F-1: Wrap JSON.stringify in try/catch to prevent non-serializable
+  // data (e.g. circular objects, BigInt values) from crashing the broadcast
+  // and leaving all clients without the event.
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(data);
+  } catch (serializeErr) {
+    const dataType = Object.prototype.toString.call(data);
+    logger.error(
+      { event, dataType, err: String(serializeErr) },
+      "broadcastSSE: data serialization failed — emitting sse_serialize_error event",
+    );
+    const errorPayload = JSON.stringify({
+      event: "sse_serialize_error",
+      reason: dataType,
+      caller: event,
+    });
+    const errorMessage = `id: ${seq}\nevent: sse_serialize_error\ndata: ${errorPayload}\n\n`;
+    for (const client of clients) {
+      if (client.writableEnded || client.destroyed) continue;
+      try { client.write(errorMessage); } catch { /* dead client — ignore */ }
+    }
+    return;
+  }
+
+  const message = `id: ${seq}\nevent: ${event}\ndata: ${serialized}\n\n`;
   const deadClients = new Set<Response>();
 
   for (const client of clients) {

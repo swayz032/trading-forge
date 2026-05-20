@@ -19,8 +19,12 @@ import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, life
 import { computeAgreement } from "../lib/quantum-agreement.js";
 import { getLatestAdversarialStressRun } from "./adversarial-stress-service.js";
 import { getLatestFrankensteinRun } from "./frankenstein-service.js";
-import { logger } from "../index.js";
-import { insertAuditRow } from "../lib/audit-log-helper.js";
+// Track A F-5 / F-6: Use leaf logger; add insertAuditRowSafe for migrated call sites.
+// Remaining db.insert(auditLog) call sites in this file retain the raw pattern
+// until incremental migration completes.
+// TODO: correlation_id not threaded through most call sites in this file.
+import { logger } from "../lib/logger.js";
+import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
 import { broadcastSSE } from "../routes/sse.js";
@@ -1160,7 +1164,8 @@ export class LifecycleService {
     });
 
     // Audit trail — graveyard burial is a non-reversible terminal transition
-    await db.insert(auditLog).values({
+    // Track A F-6: migrated to insertAuditRowSafe
+    await insertAuditRowSafe({
       action: "strategy.graveyard_burial",
       entityType: "strategy",
       entityId: strategyId,

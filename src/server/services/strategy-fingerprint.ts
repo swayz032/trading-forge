@@ -283,8 +283,10 @@ const NOISE_TOKENS: ReadonlySet<string> = new Set([
   // Reddit-thread cruft
   "reddit", "subreddit",
   "r", "z",  // leading "r_" prefix (e.g. r_daytrading) hits "r" as single token
-  // Misc structural
-  "min", "minute", "minutes", "hour", "hourly", "daily",
+  // Misc structural — NOTE: timeframe tokens ("min", "minute", "hour", "hourly",
+  // "daily") intentionally NOT in this list (F-6 fix 2026-05-20). These tokens
+  // distinguish strategy variants (4h vs 1h vs daily vs 5min are different edges).
+  // Stripping them caused "RSI-2 5-min" and "RSI-2 daily" to hash identically.
   "im", "ive", "youve", "didnt",
   "early", "late", "before", "after",
   "easy", "easy_money",
