@@ -124,8 +124,11 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-correlation-id": correlationId },
           body: JSON.stringify({
+            // sourceProvider enum is strict (brave/tavily/parallel/exa); use tavily as
+            // canonical for operator-curated YouTube content. The actual "operator_manual"
+            // provenance tag goes on the pending_mention below + audit row.
             markdown: transcript,
-            sourceProvider: "operator_manual",
+            sourceProvider: "tavily",
             sourceUrl: `https://youtube.com/watch?v=${videoId}`,
             title,
           }),
@@ -161,7 +164,7 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           source_url: `https://youtube.com/watch?v=${videoId}`,
           regime: (idea.preferred_regime as string) || "TRENDING",
           concept_name: conceptName,
-          source_provider: "operator_manual",
+          source_provider: "manual",
           is_cross_validation_result: false,
           entry_indicator: idea.entry_indicator,
           entry_archetype: idea.entry_archetype,
