@@ -49,6 +49,14 @@ interface CompiledConfig {
   regime_gate?: Record<string, unknown>;
   session_filter?: Record<string, unknown>;
   time_stop?: { type: string; flat_at: string };
+  /**
+   * W23H.4 — Per-strategy operator override for confluence → size multiplier lookup.
+   * When present in the compiled config, callers pass this map to
+   * computeRiskDerivedContracts() as confluence_size_multiplier_map.
+   * When absent (default), the canonical DEFAULT_CONFLUENCE_MULTIPLIER applies.
+   * Keys are confluence factor counts (1-4); values are multipliers (≥ 1.0).
+   */
+  confluence_size_multiplier?: Record<number, number>;
   [key: string]: unknown;
 }
 
@@ -111,6 +119,15 @@ const FRAMEWORK = {
   //   MCL: 20-80 at touch (mostly retail flow) → 30 prevents 1-2 tick slippage
   // W23F.N (2026-05-19) — per-symbol replaces single global cap.
   liquidityComfortCap: { MES: 100, MNQ: 50, MCL: 30 } as Record<string, number>,
+
+  // W23H.4 (2026-05-20) — Confluence-weighted sizing canonical defaults.
+  // 1 factor (primary only) → 1.0×; 2 factors (one confirming) → 1.0×;
+  // 3 factors (true confluence) → 1.5×; 4+ factors (extreme A+ setup) → 2.0×.
+  // Applied to pyramidTier + riskDerivedCap BEFORE min() against firmCap + liquidityCap.
+  // Operator can override per-strategy by setting confluence_size_multiplier in the
+  // compiled config — that map is forwarded to computeRiskDerivedContracts().
+  // When per-strategy map is absent, DEFAULT_CONFLUENCE_MULTIPLIER from risk-sizing.ts applies.
+  confluenceSizeMultiplier: { 1: 1.0, 2: 1.0, 3: 1.5, 4: 2.0 } as Record<number, number>,
 };
 
 interface OverlayInput {

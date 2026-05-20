@@ -17,6 +17,8 @@ import { CONTRACT_SPECS, CONTRACT_CAP_MIN, CONTRACT_CAP_MAX } from "../../shared
 // Wave 23.C: bias engine + A+ gate consumer wiring
 import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateForSignal } from "./bias-state-service.js";
 import { getSessionShapeScore } from "./volume-profile-service.js";
+// Wave 23H.D: per-strategy confirming_indicators evaluator
+import { evaluateConfirmingIndicators, type ConfirmingIndicator } from "./confirming-indicator-evaluator.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -2345,7 +2347,13 @@ export async function evaluateSignals(
       const entryQuality = (
         rawConfig.entry_quality ??
         (rawConfig.strategy as Record<string, unknown> | undefined)?.entry_quality
-      ) as { confluence_factors?: string[]; min_factors_satisfied?: number; extraction_provenance?: string } | undefined;
+      ) as {
+        confluence_factors?: string[];
+        min_factors_satisfied?: number;
+        extraction_provenance?: string;
+        /** W23G.11 per-strategy confirming indicators (W23H.D: evaluated at signal time) */
+        confirming_indicators?: ConfirmingIndicator[];
+      } | undefined;
 
       const isLegacyStrategy =
         !entryQuality ||
@@ -2387,13 +2395,20 @@ export async function evaluateSignals(
         }
       }
 
-      // ─── Wave 23.C Stage 2: A+ confluence gate ─────────────────────────────
-      // Evaluates each confluence_factor from entry_quality block.
-      // Legacy bypass: legacy_no_confluence provenance → no gate.
-      // Missing entry_quality → treat as legacy, bypass.
-      // Fail-open: each factor is fail-open individually; gate never throws.
+      // ─── Wave 23.C Stage 2 / Wave 23H.D: A+ confluence gate ───────────────
+      // W23H.D: when entry_quality.confirming_indicators[] is non-empty, evaluate
+      // THOSE per-strategy indicators (pure function, no DB/network).
+      // When confirming_indicators is absent/empty, fall back to canonical 5 factors
+      // (existing behavior preserved verbatim).
       //
-      // Factors evaluated:
+      // Legacy bypass: legacy_no_confluence provenance → no gate (unchanged).
+      // Missing entry_quality → treat as legacy, bypass (unchanged).
+      //
+      // factor_source audit tag:
+      //   'per_strategy'  — when confirming_indicators[] evaluated
+      //   'canonical_5'   — when canonical 5-factor list evaluated (fallback)
+      //
+      // Canonical 5 factors:
       //   regime_match        — activeStrategyId === null OR === thisStrategyId
       //   structural_setup    — always true (entry expression already satisfied)
       //   volume_confirmation — bar.volume > rolling_mean(volume,20) × 1.2
@@ -2401,6 +2416,7 @@ export async function evaluateSignals(
       //   vp_shape            — getSessionShapeScore() >= VP_SHAPE_SCORE_THRESHOLD (50)
       //
       // Audit: signal.a_plus_passed / signal.a_plus_rejected / signal.a_plus_bypassed_legacy
+      //        signal.a_plus_factor_evaluated (per-factor, with factor_source)
       // SSE: signal:a_plus_rejected on block
       let stage2Blocked = false;
       if (!stage1Blocked) {
@@ -2421,137 +2437,259 @@ export async function evaluateSignals(
             reason: "signal.a_plus_bypassed_legacy: no entry_quality block or legacy_no_confluence provenance",
           }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ bypass log"));
         } else if (entryQuality) {
-          // Run the A+ confluence gate
-          const factors = entryQuality.confluence_factors ?? [];
-          const minRequired = entryQuality.min_factors_satisfied ?? factors.length;
+          // ── W23H.D dispatcher: per-strategy vs canonical 5 ─────────────────
+          const customIndicators = entryQuality.confirming_indicators ?? [];
+          const usePerStrategy = customIndicators.length > 0;
+
+          // Determine signal direction from config.side for directional evaluation
+          const signalDir = (config.side === "short" ? "short" : "long") as "long" | "short";
+
+          // factorSource used in audit rows — callers can verify which path fired
+          const factorSource: "per_strategy" | "canonical_5" = usePerStrategy ? "per_strategy" : "canonical_5";
 
           // Evaluate each factor
           const factorResults: Array<{ factor: string; satisfied: boolean; reason: string }> = [];
 
-          for (const factor of factors) {
-            try {
-              let satisfied = true;
-              let reason = "unknown_factor_fail_open";
+          if (usePerStrategy) {
+            // ── Path A: per-strategy confirming_indicators[] ─────────────────
+            // Pure function — never throws. Unknown indicators → satisfied=false.
+            const minRequired = entryQuality.min_factors_satisfied ?? customIndicators.length;
 
-              if (factor === "regime_match") {
-                satisfied = biasState === null || biasState.activeStrategyId === null || biasState.activeStrategyId === sessionConfig.strategyId;
-                reason = satisfied ? "regime_matched" : "regime_mismatch";
-              } else if (factor === "structural_setup") {
-                satisfied = true;
-                reason = "entry_expression_true";
-              } else if (factor === "volume_confirmation") {
-                const volumeSeries = barBuffer.map((b) => b.volume).filter((v): v is number => Number.isFinite(v));
-                if (volumeSeries.length >= 20) {
-                  const rollingMean = volumeSeries.slice(-20).reduce((s, v) => s + v, 0) / 20;
-                  satisfied = bar.volume !== undefined && bar.volume > rollingMean * 1.2;
-                  reason = satisfied ? "volume_above_threshold" : "volume_insufficient";
-                } else {
-                  satisfied = true; // fail-open when insufficient history
-                  reason = "insufficient_history_fail_open";
-                }
-              } else if (factor === "macro_alignment") {
-                // Reuse calendarBlocked result (already computed above)
-                satisfied = !calendarBlocked;
-                reason = satisfied ? "no_event_blackout" : "event_blackout_active";
-              } else if (factor === "vp_shape") {
-                // Wave 23.C Gap A.1: real VP shape score from volume-profile-service
-                try {
-                  const sessionDateStr = barTimestampToTradingDay(bar.timestamp);
-                  const vpData = await getSessionShapeScore(symbol, sessionDateStr);
-                  if (!vpData.available) {
-                    satisfied = true; // fail-open when VP data unavailable
-                    reason = "vp_not_available_fail_open";
-                    logger.warn(
-                      { sessionId, symbol, sessionDate: sessionDateStr },
-                      "Wave 23.C vp_shape: VP shape data unavailable — fail-open (satisfied=true)",
-                    );
-                  } else {
-                    satisfied = vpData.score >= VP_SHAPE_SCORE_THRESHOLD;
-                    reason = satisfied
-                      ? `vp_shape_score_${vpData.score}_shape_${vpData.shape}`
-                      : `vp_shape_insufficient_${vpData.score}_lt_${VP_SHAPE_SCORE_THRESHOLD}`;
-                    logger.debug(
-                      { sessionId, symbol, score: vpData.score, shape: vpData.shape, confidence: vpData.confidence, satisfied },
-                      "Wave 23.C vp_shape factor evaluated",
-                    );
-                  }
-                } catch {
-                  satisfied = true; // fail-open on any VP error
-                  reason = "vp_shape_error_fail_open";
-                }
-              }
+            const rawResults = evaluateConfirmingIndicators(
+              customIndicators,
+              { open: bar.open, high: bar.high, low: bar.low, close: bar.close, volume: bar.volume ?? 0 },
+              indicators as Record<string, number | undefined>,
+              signalDir,
+            );
 
-              factorResults.push({ factor, satisfied, reason });
-            } catch {
-              // Per-factor fail-open: any evaluation error marks it satisfied
-              factorResults.push({ factor, satisfied: true, reason: "factor_eval_error_fail_open" });
+            for (const r of rawResults) {
+              factorResults.push(r);
+              // Per-factor audit row (W23H.D requirement)
+              db.insert(paperSignalLogs).values({
+                sessionId,
+                symbol,
+                direction: config.side,
+                signalType: "a_plus_factor_evaluated",
+                price: String(bar.close),
+                indicatorSnapshot: {
+                  ...indicators,
+                  _factor: r.factor,
+                  _factor_satisfied: r.satisfied,
+                  _factor_reason: r.reason,
+                  _factor_source: factorSource,
+                },
+                acted: r.satisfied,
+                reason: `signal.a_plus_factor_evaluated: factor=${r.factor} satisfied=${r.satisfied} source=${factorSource} reason=${r.reason}`,
+              }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist per-factor audit log"));
             }
-          }
 
-          const satisfiedCount = factorResults.filter((r) => r.satisfied).length;
-          const passed = satisfiedCount >= minRequired;
+            const satisfiedCount = factorResults.filter((r) => r.satisfied).length;
+            const passed = satisfiedCount >= minRequired;
 
-          span.setAttribute("a_plus_satisfied_count", satisfiedCount);
-          span.setAttribute("a_plus_min_required", minRequired);
-          span.setAttribute("a_plus_passed", passed);
+            span.setAttribute("a_plus_satisfied_count", satisfiedCount);
+            span.setAttribute("a_plus_min_required", minRequired);
+            span.setAttribute("a_plus_passed", passed);
+            span.setAttribute("a_plus_factor_source", factorSource);
 
-          if (!passed) {
-            stage2Blocked = true;
-            logger.info(
-              {
+            if (!passed) {
+              stage2Blocked = true;
+              logger.info(
+                { sessionId, symbol, satisfiedCount, minRequired, factorResults, factorSource, strategyId: sessionConfig.strategyId },
+                "Wave 23H.D Stage 2: A+ gate REJECTED — per-strategy indicators insufficient",
+              );
+              broadcastSSE("signal:a_plus_rejected", {
                 sessionId,
                 symbol,
                 satisfiedCount,
                 minRequired,
                 factorResults,
-                strategyId: sessionConfig.strategyId,
-              },
-              "Wave 23.C Stage 2: A+ gate REJECTED — insufficient confluence factors",
-            );
-            broadcastSSE("signal:a_plus_rejected", {
-              sessionId,
-              symbol,
-              satisfiedCount,
-              minRequired,
-              factorResults,
-              price: bar.close,
-              timestamp: bar.timestamp,
-            });
-            db.insert(paperSignalLogs).values({
-              sessionId,
-              symbol,
-              direction: config.side,
-              signalType: "a_plus_rejected",
-              price: String(bar.close),
-              indicatorSnapshot: {
-                ...indicators,
-                _a_plus_satisfied_count: satisfiedCount,
-                _a_plus_min_required: minRequired,
-                _a_plus_factor_results: factorResults,
-              },
-              acted: false,
-              reason: `signal.a_plus_rejected: ${satisfiedCount}/${minRequired} factors satisfied (${factorResults.filter((r) => !r.satisfied).map((r) => r.factor).join(", ")} failed)`,
-            }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist A+ rejected log"));
+                factorSource,
+                price: bar.close,
+                timestamp: bar.timestamp,
+              });
+              db.insert(paperSignalLogs).values({
+                sessionId,
+                symbol,
+                direction: config.side,
+                signalType: "a_plus_rejected",
+                price: String(bar.close),
+                indicatorSnapshot: {
+                  ...indicators,
+                  _a_plus_satisfied_count: satisfiedCount,
+                  _a_plus_min_required: minRequired,
+                  _a_plus_factor_results: factorResults,
+                  _a_plus_factor_source: factorSource,
+                },
+                acted: false,
+                reason: `signal.a_plus_rejected: source=${factorSource} ${satisfiedCount}/${minRequired} factors satisfied (${factorResults.filter((r) => !r.satisfied).map((r) => r.factor).join(", ")} failed)`,
+              }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist A+ rejected log"));
+            } else {
+              logger.debug(
+                { sessionId, symbol, satisfiedCount, minRequired, factorResults, factorSource },
+                "Wave 23H.D Stage 2: A+ gate PASSED — per-strategy indicators",
+              );
+              db.insert(paperSignalLogs).values({
+                sessionId,
+                symbol,
+                direction: config.side,
+                signalType: "a_plus_passed",
+                price: String(bar.close),
+                indicatorSnapshot: {
+                  ...indicators,
+                  _a_plus_satisfied_count: satisfiedCount,
+                  _a_plus_min_required: minRequired,
+                  _a_plus_factor_results: factorResults,
+                  _a_plus_factor_source: factorSource,
+                },
+                acted: true,
+                reason: `signal.a_plus_passed: source=${factorSource} ${satisfiedCount}/${minRequired} factors satisfied`,
+              }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ passed log"));
+            }
           } else {
-            logger.debug(
-              { sessionId, symbol, satisfiedCount, minRequired, factorResults },
-              "Wave 23.C Stage 2: A+ gate PASSED",
-            );
-            db.insert(paperSignalLogs).values({
-              sessionId,
-              symbol,
-              direction: config.side,
-              signalType: "a_plus_passed",
-              price: String(bar.close),
-              indicatorSnapshot: {
-                ...indicators,
-                _a_plus_satisfied_count: satisfiedCount,
-                _a_plus_min_required: minRequired,
-                _a_plus_factor_results: factorResults,
-              },
-              acted: true,
-              reason: `signal.a_plus_passed: ${satisfiedCount}/${minRequired} factors satisfied`,
-            }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ passed log"));
+            // ── Path B: canonical 5-factor list (existing behavior, verbatim) ─
+            const factors = entryQuality.confluence_factors ?? [];
+            const minRequired = entryQuality.min_factors_satisfied ?? factors.length;
+
+            for (const factor of factors) {
+              try {
+                let satisfied = true;
+                let reason = "unknown_factor_fail_open";
+
+                if (factor === "regime_match") {
+                  satisfied = biasState === null || biasState.activeStrategyId === null || biasState.activeStrategyId === sessionConfig.strategyId;
+                  reason = satisfied ? "regime_matched" : "regime_mismatch";
+                } else if (factor === "structural_setup") {
+                  satisfied = true;
+                  reason = "entry_expression_true";
+                } else if (factor === "volume_confirmation") {
+                  const volumeSeries = barBuffer.map((b) => b.volume).filter((v): v is number => Number.isFinite(v));
+                  if (volumeSeries.length >= 20) {
+                    const rollingMean = volumeSeries.slice(-20).reduce((s, v) => s + v, 0) / 20;
+                    satisfied = bar.volume !== undefined && bar.volume > rollingMean * 1.2;
+                    reason = satisfied ? "volume_above_threshold" : "volume_insufficient";
+                  } else {
+                    satisfied = true; // fail-open when insufficient history
+                    reason = "insufficient_history_fail_open";
+                  }
+                } else if (factor === "macro_alignment") {
+                  // Reuse calendarBlocked result (already computed above)
+                  satisfied = !calendarBlocked;
+                  reason = satisfied ? "no_event_blackout" : "event_blackout_active";
+                } else if (factor === "vp_shape") {
+                  // Wave 23.C Gap A.1: real VP shape score from volume-profile-service
+                  try {
+                    const sessionDateStr = barTimestampToTradingDay(bar.timestamp);
+                    const vpData = await getSessionShapeScore(symbol, sessionDateStr);
+                    if (!vpData.available) {
+                      satisfied = true; // fail-open when VP data unavailable
+                      reason = "vp_not_available_fail_open";
+                      logger.warn(
+                        { sessionId, symbol, sessionDate: sessionDateStr },
+                        "Wave 23.C vp_shape: VP shape data unavailable — fail-open (satisfied=true)",
+                      );
+                    } else {
+                      satisfied = vpData.score >= VP_SHAPE_SCORE_THRESHOLD;
+                      reason = satisfied
+                        ? `vp_shape_score_${vpData.score}_shape_${vpData.shape}`
+                        : `vp_shape_insufficient_${vpData.score}_lt_${VP_SHAPE_SCORE_THRESHOLD}`;
+                      logger.debug(
+                        { sessionId, symbol, score: vpData.score, shape: vpData.shape, confidence: vpData.confidence, satisfied },
+                        "Wave 23.C vp_shape factor evaluated",
+                      );
+                    }
+                  } catch {
+                    satisfied = true; // fail-open on any VP error
+                    reason = "vp_shape_error_fail_open";
+                  }
+                }
+
+                factorResults.push({ factor, satisfied, reason });
+
+                // Per-factor audit row — canonical_5 source tag
+                db.insert(paperSignalLogs).values({
+                  sessionId,
+                  symbol,
+                  direction: config.side,
+                  signalType: "a_plus_factor_evaluated",
+                  price: String(bar.close),
+                  indicatorSnapshot: {
+                    ...indicators,
+                    _factor: factor,
+                    _factor_satisfied: satisfied,
+                    _factor_reason: reason,
+                    _factor_source: factorSource,
+                  },
+                  acted: satisfied,
+                  reason: `signal.a_plus_factor_evaluated: factor=${factor} satisfied=${satisfied} source=${factorSource} reason=${reason}`,
+                }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist canonical factor audit log"));
+              } catch {
+                // Per-factor fail-open: any evaluation error marks it satisfied
+                factorResults.push({ factor, satisfied: true, reason: "factor_eval_error_fail_open" });
+              }
+            }
+
+            const satisfiedCount = factorResults.filter((r) => r.satisfied).length;
+            const passed = satisfiedCount >= minRequired;
+
+            span.setAttribute("a_plus_satisfied_count", satisfiedCount);
+            span.setAttribute("a_plus_min_required", minRequired);
+            span.setAttribute("a_plus_passed", passed);
+            span.setAttribute("a_plus_factor_source", factorSource);
+
+            if (!passed) {
+              stage2Blocked = true;
+              logger.info(
+                { sessionId, symbol, satisfiedCount, minRequired, factorResults, factorSource, strategyId: sessionConfig.strategyId },
+                "Wave 23.C Stage 2: A+ gate REJECTED — insufficient confluence factors",
+              );
+              broadcastSSE("signal:a_plus_rejected", {
+                sessionId,
+                symbol,
+                satisfiedCount,
+                minRequired,
+                factorResults,
+                factorSource,
+                price: bar.close,
+                timestamp: bar.timestamp,
+              });
+              db.insert(paperSignalLogs).values({
+                sessionId,
+                symbol,
+                direction: config.side,
+                signalType: "a_plus_rejected",
+                price: String(bar.close),
+                indicatorSnapshot: {
+                  ...indicators,
+                  _a_plus_satisfied_count: satisfiedCount,
+                  _a_plus_min_required: minRequired,
+                  _a_plus_factor_results: factorResults,
+                  _a_plus_factor_source: factorSource,
+                },
+                acted: false,
+                reason: `signal.a_plus_rejected: source=${factorSource} ${satisfiedCount}/${minRequired} factors satisfied (${factorResults.filter((r) => !r.satisfied).map((r) => r.factor).join(", ")} failed)`,
+              }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist A+ rejected log"));
+            } else {
+              logger.debug(
+                { sessionId, symbol, satisfiedCount, minRequired, factorResults, factorSource },
+                "Wave 23.C Stage 2: A+ gate PASSED",
+              );
+              db.insert(paperSignalLogs).values({
+                sessionId,
+                symbol,
+                direction: config.side,
+                signalType: "a_plus_passed",
+                price: String(bar.close),
+                indicatorSnapshot: {
+                  ...indicators,
+                  _a_plus_satisfied_count: satisfiedCount,
+                  _a_plus_min_required: minRequired,
+                  _a_plus_factor_results: factorResults,
+                  _a_plus_factor_source: factorSource,
+                },
+                acted: true,
+                reason: `signal.a_plus_passed: source=${factorSource} ${satisfiedCount}/${minRequired} factors satisfied`,
+              }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ passed log"));
+            }
           }
         }
       }

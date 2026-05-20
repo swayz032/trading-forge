@@ -61,6 +61,44 @@
 /** Firm identifier — only Topstep + MFFU supported (legacy firms removed 2026-05-10). */
 export type FirmId = "topstep" | "mffu";
 
+/**
+ * Canonical confluence-size multiplier map (operator defaults).
+ *
+ * W23H.4 — confluence count → position-size multiplier:
+ *   1 factor  (primary only)      → 1.0× base (unchanged baseline)
+ *   2 factors (one confirming)    → 1.0× base (one confirmation not enough to upsize)
+ *   3 factors (true confluence)   → 1.5× upsize 50%
+ *   4+ factors (extreme A+ setup) → 2.0× upsize 100%
+ *
+ * Counts ≤ 0 clamp to multiplier for 1 (1.0).
+ * Counts ≥ 5 clamp to multiplier for 4 (2.0).
+ *
+ * The multiplier is applied to pyramidTier and riskDerivedCap BEFORE the
+ * min() against firmCap and liquidityCap — so the upsize is always bounded
+ * by the per-symbol liquidity_comfort_cap.
+ *
+ * Operator can override per-strategy via framework-overlay.ts
+ * confluence_size_multiplier config field.
+ */
+export const DEFAULT_CONFLUENCE_MULTIPLIER: Record<number, number> = {
+  1: 1.0,
+  2: 1.0,
+  3: 1.5,
+  4: 2.0,
+};
+
+/**
+ * Resolve the confluence multiplier for a given count using the provided map
+ * (or the canonical default map). Clamps below-1 to 1.0 and above-4 to 2.0.
+ */
+export function resolveConfluenceMultiplier(
+  count: number,
+  map: Record<number, number> = DEFAULT_CONFLUENCE_MULTIPLIER,
+): number {
+  const clamped = Math.max(1, Math.min(4, count));
+  return map[clamped] ?? DEFAULT_CONFLUENCE_MULTIPLIER[clamped] ?? 1.0;
+}
+
 export interface RiskSizingInputs {
   positionSizeConfig: {
     type: "risk_derived_pyramid";
@@ -74,6 +112,21 @@ export interface RiskSizingInputs {
     topstep_account_cap_override: number | null;
     computed_at_signal_time: true;
   };
+
+  // ── W23H.4 confluence-weighted sizing ─────────────────────────────────────
+  /**
+   * Number of confluence factors satisfied at signal time.
+   * Formula: confirming_indicators.length + 1 (primary indicator always counts).
+   * Default: 1 (primary indicator only → multiplier 1.0, no behavior change).
+   * Callers without confluence data omit this field — backward compat preserved.
+   */
+  confluence_count?: number;
+  /**
+   * Per-operator override of the confluence → multiplier lookup table.
+   * When omitted, uses DEFAULT_CONFLUENCE_MULTIPLIER (canonical operator defaults).
+   * Operator can configure per-strategy via framework-overlay.ts confluence_size_multiplier.
+   */
+  confluence_size_multiplier_map?: Record<number, number>;
   /** Live account equity (from paper_sessions.current_equity). */
   accountBalance: number;
   /** Sum of realized P&L since the strategy's first trade (currentEquity - startingCapital). */
@@ -113,6 +166,23 @@ export interface RiskSizingInputs {
   accountStartingFloor?: number;
 }
 
+/**
+ * Audit payload emitted for W23H.4 confluence multiplier application.
+ * Callers forward this to their audit log via insertAuditRow() as:
+ *   action: "sizing.confluence_multiplier_applied"
+ *
+ * Present on every result (including early rejections) so callers have a
+ * consistent shape to forward. On rejections, contracts_before and
+ * contracts_after are both 0; binding_constraint is "rejection".
+ */
+export interface ConfluenceAuditPayload {
+  confluence_count: number;
+  multiplier: number;
+  contracts_before: number;
+  contracts_after: number;
+  binding_constraint: "pyramidTier" | "riskDerivedCap" | "firmCap" | "liquidityCap" | "pyramid_floor_override" | "rejection";
+}
+
 export interface RiskSizingResult {
   finalContracts: number;
   pyramidTier: number;
@@ -130,6 +200,9 @@ export interface RiskSizingResult {
   /** Account health ratio: currentBalance / startingCapital. Floor binds when >= 0.85. */
   accountHealthRatio: number;
   evidence: Record<string, number | string | null>;
+  // W23H.4 additions
+  /** Audit payload for sizing.confluence_multiplier_applied event. Forward to insertAuditRow(). */
+  confluenceAudit: ConfluenceAuditPayload;
 }
 
 /**
@@ -185,6 +258,12 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   const firm: FirmId = input.firm ?? "topstep";
   const liquidityCap = cfg.liquidity_comfort_cap;
 
+  // W23H.4: Resolve confluence multiplier.
+  // confluence_count defaults to 1 (primary indicator only) when omitted → multiplier 1.0.
+  // This preserves exact backward compatibility: callers without confluence_count get 1.0×.
+  const confluenceCount = input.confluence_count ?? 1;
+  const multiplier = resolveConfluenceMultiplier(confluenceCount, input.confluence_size_multiplier_map);
+
   // Pyramid tier (slow ramp-up)
   const profitFloor = Math.max(0, input.cumulativeProfit);
   const tiers = Math.floor(profitFloor / cfg.tier_threshold_dollars);
@@ -226,6 +305,13 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         accountHealthRatio,
         pyramidFloorApplied: false,
       },
+      confluenceAudit: {
+        confluence_count: confluenceCount,
+        multiplier,
+        contracts_before: 0,
+        contracts_after: 0,
+        binding_constraint: "rejection",
+      },
     };
   }
 
@@ -255,6 +341,13 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         firm,
         accountHealthRatio,
         pyramidFloorApplied: false,
+      },
+      confluenceAudit: {
+        confluence_count: confluenceCount,
+        multiplier,
+        contracts_before: 0,
+        contracts_after: 0,
+        binding_constraint: "rejection",
       },
     };
   }
@@ -307,6 +400,13 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
           accountHealthRatio,
           pyramidFloorApplied: false,
         },
+        confluenceAudit: {
+          confluence_count: confluenceCount,
+          multiplier,
+          contracts_before: 0,
+          contracts_after: 0,
+          binding_constraint: "rejection",
+        },
       };
     }
 
@@ -328,7 +428,10 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   // On drawdown accounts, this rejection holds (risk-cap protects the account).
   if (riskDerivedCap <= 0) {
     if (accountIsHealthy && cfg.base_contracts > 0) {
-      // Pyramid floor applies on healthy account — use base_contracts
+      // Pyramid floor applies on healthy account — use base_contracts.
+      // W23H.4: multiplier is NOT applied when riskDerivedCap <= 0 and floor kicks in,
+      // because the floor is the minimum viable contract count for Style C partials.
+      // Applying a multiplier here would inflate beyond what the risk math allows.
       const flooredContracts = cfg.base_contracts;
       return {
         finalContracts: flooredContracts,
@@ -362,6 +465,15 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
           bindingCap: "pyramid_floor_override",
           base_contracts: cfg.base_contracts,
           riskCapMethod,
+          confluenceCount,
+          confluenceMultiplier: multiplier,
+        },
+        confluenceAudit: {
+          confluence_count: confluenceCount,
+          multiplier,
+          contracts_before: pyramidTier,
+          contracts_after: flooredContracts,
+          binding_constraint: "pyramid_floor_override",
         },
       };
     }
@@ -395,6 +507,13 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         accountHealthRatio,
         pyramidFloorApplied: false,
       },
+      confluenceAudit: {
+        confluence_count: confluenceCount,
+        multiplier,
+        contracts_before: 0,
+        contracts_after: 0,
+        binding_constraint: "rejection",
+      },
     };
   }
 
@@ -404,10 +523,19 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       ? cfg.topstep_account_cap_override
       : (input.firmContractCap ?? null);
 
+  // W23H.4: Apply confluence multiplier to pyramidTier and riskDerivedCap
+  // BEFORE the min() against firmCap and liquidityCap. This ensures the upsize
+  // is always bounded by the per-symbol liquidity_comfort_cap (operator-canonical).
+  //
+  // contracts_before captures the unmultiplied pyramidTier for audit.
+  const contractsBefore = pyramidTier;
+  const pyramidTierMultiplied = Math.floor(pyramidTier * multiplier);
+  const riskDerivedCapMultiplied = Math.floor(riskDerivedCap * multiplier);
+
   // Final: compute the risk-capped minimum first, then apply pyramid floor.
-  // Step 1: min(pyramidTier, riskDerivedCap, firmCap, liquidityCap)
-  let finalContracts = Math.min(pyramidTier, riskDerivedCap, liquidityCap);
-  const firmCapApplied = effectiveFirmCap !== null && effectiveFirmCap < Math.min(pyramidTier, riskDerivedCap, liquidityCap);
+  // Step 1: min(pyramidTierMultiplied, riskDerivedCapMultiplied, firmCap, liquidityCap)
+  let finalContracts = Math.min(pyramidTierMultiplied, riskDerivedCapMultiplied, liquidityCap);
+  const firmCapApplied = effectiveFirmCap !== null && effectiveFirmCap < Math.min(pyramidTierMultiplied, riskDerivedCapMultiplied, liquidityCap);
   if (effectiveFirmCap !== null) {
     finalContracts = Math.min(finalContracts, effectiveFirmCap);
   }
@@ -419,23 +547,33 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   // buffer = low risk cap), which would break Style C 33/33/33 partials.
   // Rule: if account is healthy AND risk-cap produced fewer than base_contracts → use base_contracts.
   // On drawdown accounts (< 85%), risk-cap fully binds — floor does not override.
+  // NOTE: floor uses base_contracts (not multiplied base) — floor is a safety minimum,
+  // not an upsize trigger. Multiplier applies via pyramidTier, not the floor value.
   let pyramidFloorApplied = false;
   if (accountIsHealthy && finalContracts < cfg.base_contracts) {
     finalContracts = cfg.base_contracts;
     pyramidFloorApplied = true;
   }
 
-  // Which cap is binding?
+  // Which cap is binding? (Uses multiplied values for accurate attribution.)
   let bindingCap = "pyramid";
   if (pyramidFloorApplied) {
     bindingCap = "pyramid_floor_override";
-  } else if (riskDerivedCap <= pyramidTier && (effectiveFirmCap === null || riskDerivedCap <= effectiveFirmCap) && riskDerivedCap <= liquidityCap) {
+  } else if (riskDerivedCapMultiplied <= pyramidTierMultiplied && (effectiveFirmCap === null || riskDerivedCapMultiplied <= effectiveFirmCap) && riskDerivedCapMultiplied <= liquidityCap) {
     bindingCap = "risk_derived";
-  } else if (effectiveFirmCap !== null && effectiveFirmCap <= pyramidTier && effectiveFirmCap <= riskDerivedCap && effectiveFirmCap <= liquidityCap) {
+  } else if (effectiveFirmCap !== null && effectiveFirmCap <= pyramidTierMultiplied && effectiveFirmCap <= riskDerivedCapMultiplied && effectiveFirmCap <= liquidityCap) {
     bindingCap = "firm_cap";
-  } else if (liquidityCap <= pyramidTier && liquidityCap <= riskDerivedCap && (effectiveFirmCap === null || liquidityCap <= effectiveFirmCap)) {
+  } else if (liquidityCap <= pyramidTierMultiplied && liquidityCap <= riskDerivedCapMultiplied && (effectiveFirmCap === null || liquidityCap <= effectiveFirmCap)) {
     bindingCap = "liquidity_cap";
   }
+
+  // Map bindingCap → ConfluenceAuditPayload binding_constraint
+  const bindingConstraintForAudit: ConfluenceAuditPayload["binding_constraint"] =
+    bindingCap === "pyramid_floor_override" ? "pyramid_floor_override"
+    : bindingCap === "risk_derived"         ? "riskDerivedCap"
+    : bindingCap === "firm_cap"             ? "firmCap"
+    : bindingCap === "liquidity_cap"        ? "liquidityCap"
+    : "pyramidTier"; // "pyramid" = pyramidTier is binding
 
   return {
     finalContracts,
@@ -459,7 +597,9 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       riskDollars,
       ...(firm === "topstep" ? { trailingFloor, buffer, highWaterBalance, trailingDD, accountStartingFloor } : {}),
       pyramidTier,
+      pyramidTierMultiplied,
       riskDerivedCap,
+      riskDerivedCapMultiplied,
       firmCap: effectiveFirmCap,
       liquidityCap,
       finalContracts,
@@ -473,6 +613,15 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       riskCapMethod,
       accountHealthRatio,
       pyramidFloorApplied,
+      confluenceCount,
+      confluenceMultiplier: multiplier,
+    },
+    confluenceAudit: {
+      confluence_count: confluenceCount,
+      multiplier,
+      contracts_before: contractsBefore,
+      contracts_after: finalContracts,
+      binding_constraint: bindingConstraintForAudit,
     },
   };
 }
