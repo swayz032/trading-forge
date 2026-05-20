@@ -723,6 +723,43 @@ export async function openPosition(sessionId: string, params: {
       .from(paperSessions)
       .where(eq(paperSessions.id, sessionId));
     const firmIdForCheck = sessionForFirmCheck?.firmId;
+
+    // C2 null-guard: fail-CLOSED when firmId cannot be resolved.
+    // A missing firmId means the session row was not found, which is an integrity
+    // failure — we cannot verify firm suspension status, so we must block.
+    // (Wave 23H Fix 1: closes silent bypass discovered in gate-strength-audit-2026-05-20)
+    if (!firmIdForCheck) {
+      logger.error(
+        { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side },
+        "C2 firm suspension gate: firmId lookup returned null — blocking entry (fail-closed)",
+      );
+      db.insert(auditLog).values({
+        action: "signal.blocked_firm_id_lookup_failed",
+        entityType: "paper_session",
+        entityId: sessionId,
+        decisionAuthority: "system",
+        input: { sessionId, symbol: params.symbol, side: params.side } as Record<string, unknown>,
+        result: { reason: "firm_id_null", blocked: true } as Record<string, unknown>,
+        status: "failure",
+        correlationId,
+      }).catch((err) => logger.error({ err }, "C2: firm_id_null audit_log write failed"));
+      return {
+        position: null,
+        executionResult: {
+          positionId: "",
+          entryPrice: 0,
+          contracts: params.contracts,
+          slippage: 0,
+          expectedPrice: params.signalPrice,
+          actualPrice: 0,
+          arrivalPrice: params.signalPrice,
+          implementationShortfall: 0,
+          fillRatio: 0,
+          filled: false,
+        } satisfies ExecutionResult,
+      };
+    }
+
     if (firmIdForCheck && isFirmSuspended(firmIdForCheck)) {
       logger.warn(
         { fn: "openPosition", sessionId, firmId: firmIdForCheck, symbol: params.symbol },

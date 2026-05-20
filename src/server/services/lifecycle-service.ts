@@ -20,6 +20,7 @@ import { computeAgreement } from "../lib/quantum-agreement.js";
 import { getLatestAdversarialStressRun } from "./adversarial-stress-service.js";
 import { getLatestFrankensteinRun } from "./frankenstein-service.js";
 import { logger } from "../index.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
 import { broadcastSSE } from "../routes/sse.js";
@@ -610,6 +611,17 @@ export class LifecycleService {
               { strategyId: id, backtestId: promotionEvidence.backtestId, fromState, toState },
               error,
             );
+            // Wave 23H Fix 3: audit row on every rejection path (was logger.warn only)
+            insertAuditRow({
+              action: "lifecycle.frankenstein_rejected",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "failure",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: { decision: "missing_run", reason: "no completed Frankenstein test run found" } as Record<string, unknown>,
+              correlationId: null,
+            }).catch((err: unknown) => logger.error({ err, strategyId: id }, "A4: missing_run audit row write failed"));
             return { success: false, error };
           }
 
@@ -632,6 +644,28 @@ export class LifecycleService {
               },
               "Frankenstein gate: BLOCKED promotion — strategy failed randomization detection test",
             );
+            // Wave 23H Fix 3: audit row on every rejection path (was logger.warn only)
+            insertAuditRow({
+              action: "lifecycle.frankenstein_rejected",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "failure",
+              input: {
+                fromState, toState,
+                backtestId: promotionEvidence.backtestId,
+                frankRunId: frankResult.runId,
+              } as Record<string, unknown>,
+              result: {
+                decision: "failed",
+                n_shuffles: frankResult.nShuffles,
+                p_value_observed: frankResult.p95Sharpe,
+                p_value_threshold: 0.3,
+                median_pf: frankResult.medianPf,
+                reason: "strategy shows edge on randomized data",
+              } as Record<string, unknown>,
+              correlationId: null,
+            }).catch((err: unknown) => logger.error({ err, strategyId: id }, "A4: failed audit row write failed"));
             return { success: false, error };
           }
 
@@ -657,6 +691,17 @@ export class LifecycleService {
             { strategyId: id, backtestId: promotionEvidence.backtestId, err: frankErr },
             "Frankenstein gate: read error — blocking promotion (fail-closed)",
           );
+          // Wave 23H Fix 3: audit row on every rejection path (was logger.warn only)
+          insertAuditRow({
+            action: "lifecycle.frankenstein_rejected",
+            entityType: "strategy",
+            entityId: id,
+            decisionAuthority: "gate",
+            status: "failure",
+            input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+            result: { decision: "infrastructure_error", reason: msg } as Record<string, unknown>,
+            correlationId: null,
+          }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "A4: infra_error audit row write failed"));
           return { success: false, error };
         }
       } else {
@@ -666,6 +711,17 @@ export class LifecycleService {
           "Frankenstein gate: no backtest ID found in evidence — cannot verify Frankenstein test. " +
           "Run a backtest and Frankenstein test before promoting to PAPER.";
         logger.warn({ strategyId: id, fromState, toState }, error);
+        // Wave 23H Fix 3: audit row on every rejection path (was logger.warn only)
+        insertAuditRow({
+          action: "lifecycle.frankenstein_rejected",
+          entityType: "strategy",
+          entityId: id,
+          decisionAuthority: "gate",
+          status: "failure",
+          input: { fromState, toState, backtestId: null } as Record<string, unknown>,
+          result: { decision: "no_backtest_id", reason: "no backtest ID in promotion evidence" } as Record<string, unknown>,
+          correlationId: null,
+        }).catch((err: unknown) => logger.error({ err, strategyId: id }, "A4: no_backtest_id audit row write failed"));
         return { success: false, error };
       }
     }

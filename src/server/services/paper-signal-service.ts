@@ -2653,8 +2653,34 @@ export async function evaluateSignals(
           span.setAttribute("c11_fomc_contracts", fomcReducedContracts);
         }
       } catch (macroGateErr) {
-        logger.warn({ err: macroGateErr, sessionId, symbol }, "C11 macro gate check error — fail-open, proceeding");
+        // C11 fail-CLOSED: any infrastructure failure (DB down, import error, parse error)
+        // must block the entry — not silently allow it through.
+        // (Wave 23H Fix 2: closes silent fail-open discovered in gate-strength-audit-2026-05-20)
+        macroGateBlocked = true;
+        const errMsg = macroGateErr instanceof Error ? macroGateErr.message : String(macroGateErr);
+        logger.error(
+          { err: macroGateErr, sessionId, symbol },
+          "C11 macro gate evaluation FAILED — blocking entry (fail-closed)",
+        );
         span.setAttribute("macro_gate_error", true);
+        span.setAttribute("macro_gate_fail_closed", true);
+        // Audit row for every infrastructure failure
+        db.insert(paperSignalLogs).values({
+          sessionId,
+          symbol,
+          direction: "long", // direction may be unknown at this point; log best-effort
+          signalType: "c11_macro_gate_eval_failed",
+          price: String(bar.close),
+          indicatorSnapshot: { _macro_gate_error: errMsg } as Record<string, unknown>,
+          acted: false,
+          reason: `c11_macro_gate.evaluation_failed_fail_closed: ${errMsg}`,
+        }).catch((e: unknown) => logger.error({ err: e, sessionId }, "C11: eval_failed audit log write failed"));
+        // SSE so operator sees this on dashboard
+        broadcastSSE("signal:macro_gate_eval_failed", {
+          sessionId,
+          symbol,
+          error_message: errMsg,
+        });
       }
 
       if (macroGateBlocked) {
