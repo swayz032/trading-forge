@@ -1,12 +1,12 @@
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, strategies, paperSignalLogs, skipDecisions, shadowSignals } from "../db/schema.js";
+import { paperSessions, paperPositions, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions } from "../db/schema.js";
 import { openPosition, closePosition } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
 import { evaluateContextGate } from "./context-gate-service.js";
 import { checkAntiSetupGate, type AntiSetupGateResult } from "./anti-setup-gate-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
-import { eq, and, isNull, ne, gte, lte, desc } from "drizzle-orm";
+import { eq, and, isNull, ne, gte, lte, desc, sql } from "drizzle-orm";
 import { tracer } from "../lib/tracing.js";
 import { isDSLStrategy, translateDSLToPaperConfig } from "./dsl-translator.js";
 import { getActiveLockout } from "./strategy-lockout-service.js";
@@ -25,6 +25,9 @@ import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 // W23H.3: per-strategy allowed_entry_windows time gates
 import { parseEntryWindows, isBarInAnyWindow } from "../lib/entry-windows.js";
+// W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
+import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
+import { toFuturesTradingDayString } from "./paper-risk-gate.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -2216,14 +2219,153 @@ export async function evaluateSignals(
     }
     // Position still open: bars-held counter updated above; HWM updated inside checkTrailStop.
   } else if (entrySignal && !sessionFiltered && !windowFiltered && !cooldownActive && !isShadow && !skipBlocked && !ictBridgeBlocked) {
-    // ─── No position: check for entry ───────────────��───────
+    // ─── No position: check for entry ────────────────────────
+
+    // ─── W23H.F Stage 0.5a: Pre-market blackout window gate ──────────────────
+    // If today's pre_market_sessions row has blackout_windows JSONB and the
+    // current bar falls within any blackout window, block the entry signal.
+    // [start_utc, end_utc) boundary semantics — matching W23H.3 entry window convention.
+    // Fail-open: if no pre_market_sessions row exists, or query errors → no block.
+    let blackoutBlocked = false;
+    try {
+      const today = toFuturesTradingDayString(new Date(bar.timestamp));
+      const [pmSession] = await db
+        .select({ blackoutWindows: preMarketSessions.blackoutWindows })
+        .from(preMarketSessions)
+        .where(and(
+          eq(preMarketSessions.sessionDate, today),
+          eq(preMarketSessions.symbol, symbol),
+        ))
+        .limit(1);
+
+      if (pmSession?.blackoutWindows) {
+        const windows = pmSession.blackoutWindows as Array<{ event_type: string; start_utc: string; end_utc: string; severity: string }>;
+        if (Array.isArray(windows) && windows.length > 0) {
+          const barTs = new Date(bar.timestamp).getTime();
+          const matched = windows.find(
+            (w) => w.start_utc && w.end_utc &&
+              barTs >= new Date(w.start_utc).getTime() &&
+              barTs < new Date(w.end_utc).getTime(),
+          );
+          if (matched) {
+            blackoutBlocked = true;
+            span.setAttribute("pre_market_blackout_blocked", true);
+            span.setAttribute("pre_market_blackout_event", matched.event_type);
+            logger.info(
+              { sessionId, symbol, eventType: matched.event_type, severity: matched.severity, barTimestamp: bar.timestamp },
+              "W23H.F: entry blocked — bar falls within pre-market blackout window",
+            );
+            db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "skipped_pre_market_blackout",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _blackout_event_type: matched.event_type,
+                _blackout_start_utc: matched.start_utc,
+                _blackout_end_utc: matched.end_utc,
+                _blackout_severity: matched.severity,
+              },
+              acted: false,
+              reason: `signal.skipped_pre_market_blackout: event=${matched.event_type} severity=${matched.severity} window=[${matched.start_utc},${matched.end_utc})`,
+            }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist pre-market blackout block log"));
+          }
+        }
+      }
+    } catch (blackoutErr) {
+      // Fail-open: query/parse errors → no block
+      logger.warn({ err: blackoutErr, sessionId, symbol }, "W23H.F: pre-market blackout gate error — fail-open, proceeding");
+    }
+
+    // ─── W23H.F Stage 0.5b: Cross-symbol DLL coordinator ─────────────────────
+    // Aggregate realized + open MTM P&L across ALL symbols on this firmId.
+    // HALT new entries at 67% of personal DLL; FORCE-CLOSE all at 95%.
+    // Fail-open: query errors return zero P&L so trading is never blocked.
+    let dllHaltBlocked = blackoutBlocked;   // short-circuit if already blackout-blocked
+    let dllForceCloseTriggered = false;
+    if (!blackoutBlocked) {
+      try {
+        const firmId = sessionRow.firmId ?? "default";
+        const sessionDate = toFuturesTradingDayString(new Date(bar.timestamp));
+        const cumPnL = await getAccountSessionCumulativePnL(firmId, sessionDate);
+        const dllResult = evaluateCrossSymbolDll(cumPnL, DEFAULT_PERSONAL_DLL_DOLLARS);
+
+        if (dllResult.action === "force_close") {
+          dllForceCloseTriggered = true;
+          dllHaltBlocked = true;
+          span.setAttribute("cross_symbol_dll_force_close", true);
+          span.setAttribute("cross_symbol_dll_pct", dllResult.dllPct);
+          logger.warn(
+            { sessionId, symbol, firmId, combinedPnL: dllResult.combinedPnL, dllPct: dllResult.dllPct, bySymbol: dllResult.pnLBySymbol },
+            "W23H.F: cross-symbol DLL 95% threshold — FORCE-CLOSE all positions",
+          );
+          insertAuditRow({
+            action: "cross_symbol_force_close_triggered",
+            entityType: "paper_session",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            status: "warning",
+            input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
+            result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.forceCloseThreshold },
+          }).catch(() => {});
+          // Force-close path: trigger forceCloseAllPositions via dynamic import
+          // (same pattern as kill-switch.ts → paper-execution-service.ts).
+          // Fire-and-forget: new entry is already blocked; close completes async.
+          import("./paper-execution-service.js")
+            .then(({ forceCloseAllPositions }) =>
+              forceCloseAllPositions(`cross_symbol_dll_force_close:${firmId}:${dllResult.dllPct.toFixed(3)}`)
+            )
+            .catch((err: unknown) => logger.error({ err, sessionId, firmId }, "W23H.F: forceCloseAllPositions dynamic import failed"));
+        } else if (dllResult.action === "halt") {
+          dllHaltBlocked = true;
+          span.setAttribute("cross_symbol_dll_halt", true);
+          span.setAttribute("cross_symbol_dll_pct", dllResult.dllPct);
+          logger.warn(
+            { sessionId, symbol, firmId, combinedPnL: dllResult.combinedPnL, dllPct: dllResult.dllPct, bySymbol: dllResult.pnLBySymbol },
+            "W23H.F: cross-symbol DLL 67% threshold — HALTING new entries for this account",
+          );
+          insertAuditRow({
+            action: "cross_symbol_dll_halt_triggered",
+            entityType: "paper_session",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            status: "warning",
+            input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
+            result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.haltThreshold },
+          }).catch(() => {});
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "cross_symbol_dll_halt_blocked",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _combined_pnl: dllResult.combinedPnL,
+              _dll_pct: dllResult.dllPct,
+              _halt_threshold: dllResult.haltThreshold,
+              _by_symbol: JSON.stringify(dllResult.pnLBySymbol),
+            },
+            acted: false,
+            reason: `cross_symbol_dll_halt_triggered: combined_pnl=${dllResult.combinedPnL.toFixed(2)} dll_pct=${(dllResult.dllPct * 100).toFixed(1)}%`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist DLL halt log"));
+        }
+      } catch (dllErr) {
+        // Fail-open: never block trading due to DLL query errors
+        logger.warn({ err: dllErr, sessionId, symbol }, "W23H.F: cross-symbol DLL gate error — fail-open, proceeding");
+      }
+    }
 
     // ─── Tier 5.3: 24-hour lockout gate ─────────────────────────────────
     // Runs BEFORE anti-setup and risk gate. If a strategy lockout is active
     // (written by writeLockoutFromKillEvent on daily_loss_kill), block all
     // new entry signals until the lockout expires.
     // Fail-OPEN: lockout query errors return null so trading is not blocked.
-    let lockoutBlocked = false;
+    // W23H.F: pre-market blackout and DLL halt are also treated as early lockouts
+    // (same short-circuit pattern — downstream gates all check lockoutBlocked).
+    let lockoutBlocked = blackoutBlocked || dllHaltBlocked;
     try {
       const activeLockout = await getActiveLockout(sessionConfig.strategyId);
       if (activeLockout) {
