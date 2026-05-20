@@ -7,10 +7,23 @@ route_playbook() evaluates the current DailyBiasState and returns a PlaybookDeci
 """
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.engine.context.bias_engine import DailyBiasState
+
+# ---------------------------------------------------------------------------
+# Router provenance constants — imported by bias_engine for audit-row stamping.
+# ROUTER_VERSION: human-readable; bump on any routing logic change.
+# ROUTER_HASH:    first 16 hex chars of sha256(PLAYBOOK_ROUTING repr) — changes
+#                 automatically when routing logic changes, audit row captures
+#                 the exact version that produced each bias decision.
+# ---------------------------------------------------------------------------
+ROUTER_VERSION = "2026-05-20-w23h"
+# Hash is computed lazily at module load after PLAYBOOK_ROUTING is defined.
+# See _compute_router_hash() below.
+_ROUTER_HASH_CACHE: str = ""
 
 
 @dataclass
@@ -119,6 +132,20 @@ PLAYBOOK_ROUTING: Dict[str, Dict[str, Any]] = {
         "allowed_setups": ["opening_range_breakout", "opening_range_retest"],
     },
 }
+
+
+def _compute_router_hash() -> str:
+    """Compute a short hash of the routing table for audit provenance.
+
+    Hash changes whenever PLAYBOOK_ROUTING structure changes, ensuring that
+    bias_decisions rows carry the exact version of routing logic that produced them.
+    """
+    routing_repr = repr(sorted(PLAYBOOK_ROUTING.items()))
+    return hashlib.sha256(routing_repr.encode()).hexdigest()[:16]
+
+
+# Compute once at module load — deterministic, no side effects.
+ROUTER_HASH: str = _compute_router_hash()
 
 
 def _check_no_trade_conditions(

@@ -240,6 +240,47 @@ def _build_exit_signal_pine(strategy: dict) -> tuple[str, str]:
     return exit_long, exit_short
 
 
+def _build_time_stop_block() -> str:
+    """F-1: 15:55 ET hard-flatten block for compliance with Topstep + MFFU overnight ban.
+
+    For INDICATOR artifacts: emits an alertcondition so the trader / TradersPost
+    approval path can react to end-of-session.  No strategy.close_all() is
+    available in indicator() context.
+
+    For STRATEGY artifacts: emits strategy.close_all() directly.
+    Caller selects mode via is_strategy parameter.
+    """
+    return """
+// ─── 15:55 ET Time-Stop (F-1) ───────────────────────────────────
+// Hard flatten before session close — Topstep + MFFU overnight ban compliance.
+// DO NOT DISABLE: holding overnight on prop-firm accounts triggers immediate ban.
+// Pine time() returns na when outside the window; not na() means we ARE in window.
+time_to_close = not na(time(timeframe.period, "1555-1600", "America/New_York"))
+"""
+
+
+def _build_strategy_time_stop_close() -> str:
+    """F-1 (STRATEGY artifact): close_all block.  Called from _build_strategy_artifact."""
+    return """
+// 15:55 ET — flatten all positions (strategy artifact)
+if time_to_close and strategy.position_size != 0
+    strategy.close_all(comment="time_stop_1555_ET")
+"""
+
+
+def _build_indicator_time_stop_alert(strategy_name: str, strategy_id: str, symbol: str) -> str:
+    """F-1 (INDICATOR artifact): alertcondition for manual-approval / TradersPost approval path."""
+    tv_symbol = _TV_SYMBOL_MAP.get(symbol, f"{symbol}1!")
+    return f"""
+// 15:55 ET time-stop alert (indicator artifact — manual-approval / TradersPost path)
+// state != 0 means a position is being tracked by the state machine.
+alertcondition(time_to_close and state != 0, title="Time Stop 15:55 ET",
+    message='{{"action": "exit", "symbol": "{tv_symbol}", "strategyId": "{strategy_id}", "note": "TIME_STOP_1555_ET"}}')
+// PROP RISK: If you see this alert, close your position immediately.
+// Holding past 15:55 ET risks overnight position violation (Topstep/MFFU ban).
+"""
+
+
 def _build_state_machine() -> str:
     """Generate the Pine state machine logic."""
     return """
@@ -837,6 +878,7 @@ target_distance = {tp_distance}
 // ─── Per-Recipient Override (Track 6 / Pass 2) ─────────────────
 // Recipient qty pre-calculated by pine-export-recipient-service (profit-tier-aware).
 // Overrides ATR dynamic qty_final for this specific account allocation.
+// F-2: qty_final declared as var int in _build_atr_qty_block; := reassignment is valid Pine v5.
 qty_final := {recipient_qty}  // recipient-specific contract count
 """
         if hmac_secret:
@@ -1072,16 +1114,18 @@ def _build_strategy_webhook_alerts(strategy_name: str, symbol: str, strategy_id:
 // Configure each alert with "Once Per Bar Close" + webhook URL.
 // TradersPost routes directly to your broker — NO manual approval.
 // REQUIRED: Set alert message to exactly this JSON (do not modify).
-// FIX 2: alertcondition predicates now include all three gates —
+// FIX 2: alertcondition predicates include all three gates —
 // regime_match, not event_blackout, not anti_setup_blocked.
-// Without these gates TradersPost would route orders during FOMC/CPI/NFP events
-// and in unfavorable regime/anti-setup conditions, violating prop firm rules.
-// Variables regime_match, event_blackout, anti_setup_blocked are declared in the
-// shared preamble (_build_regime_block, _build_event_blackout_block, _build_anti_setup_block).
+// F-12: quantity now carries str.tostring(qty_final) — dynamic ATR-scaled / recipient-
+// overridden contract count replaces the previous hardcoded quantity:1.
+// alertcondition() message supports Pine string concatenation; qty_final is an int series
+// declared as var int above (F-2), so str.tostring(qty_final) is always valid Pine v5.
+// If TradersPost ignores the quantity field, set contract size in TradersPost account config
+// as a fallback — but the preferred path is quantity in the webhook payload.
 alertcondition(strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TP Long Entry",
-    message='{{"action": "buy", "symbol": "{tv_symbol}", "quantity": 1, "stopLoss": ' + str.tostring(close - stop_distance) + ', "takeProfit": ' + str.tostring(use_target ? close + target_distance : na) + ', "strategyId": "{strategy_id}"}}')
+    message='{{"action": "buy", "symbol": "{tv_symbol}", "quantity": ' + str.tostring(qty_final) + ', "stopLoss": ' + str.tostring(close - stop_distance) + ', "takeProfit": ' + str.tostring(use_target ? close + target_distance : na) + ', "strategyId": "{strategy_id}"}}')
 alertcondition(strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TP Short Entry",
-    message='{{"action": "sell", "symbol": "{tv_symbol}", "quantity": 1, "stopLoss": ' + str.tostring(close + stop_distance) + ', "takeProfit": ' + str.tostring(use_target ? close - target_distance : na) + ', "strategyId": "{strategy_id}"}}')
+    message='{{"action": "sell", "symbol": "{tv_symbol}", "quantity": ' + str.tostring(qty_final) + ', "stopLoss": ' + str.tostring(close + stop_distance) + ', "takeProfit": ' + str.tostring(use_target ? close - target_distance : na) + ', "strategyId": "{strategy_id}"}}')
 // PARITY NOTE: Exit alertconditions guarded with barstate.isconfirmed so they fire at
 // bar close — matching INDICATOR artifact state-machine exit timing.  Without this guard,
 // strategy.position_avg_price is evaluated intrabar and can fire on wicks that recover by
@@ -1095,6 +1139,9 @@ alertcondition(barstate.isconfirmed and strategy.position_size < 0 and (high >= 
     message='{{"action": "exit", "symbol": "{tv_symbol}", "strategyId": "{strategy_id}"}}')
 alertcondition(risk_lockout and not risk_lockout[1], title="TP Risk Lockout",
     message='{{"action": "cancel", "symbol": "{tv_symbol}", "strategyId": "{strategy_id}", "note": "RISK_LOCKOUT"}}')
+// F-1: Time-stop alert (15:55 ET) — also fires for TradersPost exit routing.
+alertcondition(time_to_close and strategy.position_size != 0, title="TP Time Stop 15:55 ET",
+    message='{{"action": "exit", "symbol": "{tv_symbol}", "strategyId": "{strategy_id}", "note": "TIME_STOP_1555_ET"}}')
 """
 
 
@@ -1123,13 +1170,17 @@ def _build_atr_qty_block(firm_key: Optional[str], atr_period: int) -> str:
 // P0-1: ATR-based qty replaces hardcoded qty=1.
 // contracts = target_risk / (ATR * pointvalue), clamped to firm max.
 // DEGRADATION: syminfo.pointvalue is instrument-specific — confirm chart symbol.
-atr_qty_period = input.int({atr_period}, "ATR Qty Period", minval=1, maxval=50)
+// F-7: Single ATR series shared by both stop sizing and qty sizing (atr_val).
+//      atr_qty_period input removed — qty uses same atr_val already declared above.
+//      This prevents stop ATR and sizing ATR from diverging when ATR swings mid-session.
 target_risk_usd = input.float(200.0, "Target Risk Per Trade ($)", minval=10.0, step=10.0)
-atr_qty_val = ta.atr(atr_qty_period)
 firm_max_contracts = {firm_cap}
 // pointvalue: dollar value per 1-point move (MES=$5, MNQ=$2, ES=$50, NQ=$20)
-contracts_atr = atr_qty_val > 0 ? math.max(1, math.floor(target_risk_usd / (atr_qty_val * syminfo.pointvalue))) : 1
-qty_final = math.min(contracts_atr, firm_max_contracts)
+contracts_atr = atr_val > 0 ? math.max(1, math.floor(target_risk_usd / (atr_val * syminfo.pointvalue))) : 1
+// F-2: Declare qty_final as var int so recipient override via := is valid Pine v5.
+// recipient_qty_override injected below (0 = no override, use ATR dynamic sizing).
+var int qty_final = 0
+qty_final := math.min(contracts_atr, firm_max_contracts)
 """
 
 
@@ -1244,7 +1295,9 @@ fomc_blackout = {fomc_chain}
 cpi_blackout = {cpi_chain}
 
 // NFP blackout: 8:30-9:00 ET, first Friday of month (dayofmonth <= 7)
-nfp_blackout = (dayofmonth <= 7 and dayofweek == dayofweek.friday and hour == 8 and minute < 60)
+// F-3: Corrected window — was 8:00-9:00 (full hour), now 8:30-9:00 (post-release cool-off only).
+// Matches CPI window style; pre-8:30 trading on NFP Friday is not restricted.
+nfp_blackout = (dayofmonth <= 7 and dayofweek == dayofweek.friday and hour == 8 and minute >= 30)
 
 event_blackout = fomc_blackout or cpi_blackout or nfp_blackout
 bgcolor(event_blackout ? color.new(color.orange, 80) : na, title="Event Blackout")
@@ -1382,6 +1435,8 @@ target_distance = {tp_distance}
     code += _build_event_blackout_block()
     # P0-4: Anti-setup gate
     code += _build_anti_setup_block(strategy)
+    # F-1: 15:55 ET time-stop variable (shared; close_all/alert injected per-artifact)
+    code += _build_time_stop_block()
     return code
 
 
@@ -1422,6 +1477,7 @@ indicator("{strategy_name}", overlay=true, max_labels_count=500)
         + _build_state_machine()
         + _build_visualization()
         + _build_indicator_alert_messages(strategy_name)
+        + _build_indicator_time_stop_alert(strategy_name, strategy_id, symbol)  # F-1: 15:55 ET alert
     )
 
 
@@ -1534,6 +1590,7 @@ if risk_lockout and strategy.position_size != 0
         + shared_preamble
         + _build_strategy_risk_tracking()
         + entry_exit_block
+        + _build_strategy_time_stop_close()          # F-1: 15:55 ET hard flatten
         + _build_strategy_webhook_alerts(strategy_name, symbol, strategy_id)
         + _build_visualization()
     )
@@ -1722,11 +1779,14 @@ def compile_dual_artifacts(
         _recip_comments += f"// HMAC           : present — embedded in strategy webhook payload\n"
 
     # T6: Per-recipient qty override block appended to shared preamble for both artifacts.
+    # F-2: qty_final is declared as `var int qty_final = 0` in _build_atr_qty_block above,
+    # so this := reassignment is valid Pine v5 (no re-declaration needed).
     _recip_qty_block = ""
     if recipient_qty is not None:
         _recip_qty_block = f"""
 // ─── Per-Recipient Qty Override (Track 6) ───────────────────────────────
 // Profit-tier-aware contract count pre-calculated by pine-export-recipient-service.
+// F-2: qty_final already declared as var int above; := is valid Pine v5.
 qty_final := {recipient_qty}
 """
         if hmac_secret:
@@ -1776,15 +1836,36 @@ qty_final := {recipient_qty}
         )
     if _recip_qty_block:
         strategy_code += _recip_qty_block
-    # T6: Inject HMAC into TradersPost webhook message strings in the strategy artifact.
-    # Pattern: replace `"strategyId": "SID"}` with `"strategyId": "SID", "hmac": "SECRET"}`
-    # The artifact uses single-} in alertcondition message strings (they were emitted by
-    # _build_strategy_webhook_alerts which uses f-string `{{` → `{` escaping).
-    # This makes every live alertcondition message carry the HMAC for Track 8 validation.
+    # F-4: HMAC secret handling — use input.string() so secret is NEVER embedded in .pine file.
+    # Old approach: injected 64-char hex HMAC directly into alertcondition message string.
+    # New approach: declare an input.string() at chart load; user pastes their HMAC secret once
+    # into TradingView's "Add to chart" / "Settings" panel.  The .pine file is safe to share
+    # within the family without exposing the secret.
+    # HMAC is returned out-of-band in the recipient export response (hmac_secret field in
+    # RecipientExportResult metadata) and in alerts_json.hmac_out_of_band — NOT embedded here.
+    # Trade-off: alertcondition() messages use the `hmac_input` Pine variable via str.tostring().
+    # Pine v5: alertcondition message strings DO support dynamic expressions via str.format().
+    # We inject the input var reference at the alertcondition call sites.
     if hmac_secret:
+        # Inject input.string() declaration at the top of strategy artifact (after header comment block)
+        hmac_input_decl = (
+            "\n// F-4: HMAC secret input — paste your HMAC into TradingView Settings panel.\n"
+            "// DO NOT embed the secret directly in this file. Delivered out-of-band.\n"
+            'hmac_input = input.string("", title="HMAC Secret (paste from operator)", confirm=true)\n'
+        )
+        # Insert after the strategy() declaration (before shared preamble body)
         strategy_code = strategy_code.replace(
-            f'"strategyId": "{sid}"}}',
-            f'"strategyId": "{sid}", "hmac": "{hmac_secret}"}}',
+            "// Generated by Trading Forge Pine Compiler v5\n",
+            "// Generated by Trading Forge Pine Compiler v5\n" + hmac_input_decl,
+            1,
+        )
+        # Replace static HMAC string in alertcondition messages with dynamic variable reference.
+        # _build_strategy_webhook_alerts emits: `"strategyId": "SID"}}`
+        # We extend that to include hmac_input variable via string concat.
+        # alertcondition() message supports Pine string concat via + operator.
+        strategy_code = strategy_code.replace(
+            f'"strategyId": "{sid}"}}\')',
+            f'"strategyId": "{sid}", \\"hmac\\": " + hmac_input + "}}"\')',
         )
 
     # Stage 8: Alerts JSON metadata (covers both delivery paths)
@@ -1840,10 +1921,13 @@ qty_final := {recipient_qty}
     if recipient_label:
         alerts_json["recipient_label"] = recipient_label
     if hmac_secret:
-        # Embed HMAC in sample_payload for Track 8 marker collection authentication.
-        # The Pine webhook alertcondition emits this in the live alert message.
-        alerts_json["delivery_paths"]["strategy"]["sample_payload"]["hmac"] = hmac_secret
-        alerts_json["hmac_secret_ref"] = "present"
+        # F-4: HMAC is delivered OUT-OF-BAND — NOT embedded in the .pine file.
+        # The .pine file uses input.string() so operator pastes HMAC at chart load.
+        # The actual secret is recorded here in alerts_json for the operator's reference
+        # but is NOT in the Pine artifact content.
+        alerts_json["hmac_out_of_band"] = hmac_secret  # operator copies this to TradingView Settings
+        alerts_json["hmac_secret_ref"] = "input_string_at_chart_load"
+        alerts_json["delivery_paths"]["strategy"]["sample_payload"]["hmac"] = "<paste_from_hmac_out_of_band>"
 
     # Stage 9: Content hash — hash of both Pine scripts concatenated
     content_hash = hashlib.sha256((indicator_code + strategy_code).encode()).hexdigest()

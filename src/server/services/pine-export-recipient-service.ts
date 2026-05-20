@@ -468,9 +468,39 @@ export async function generateRecipientExport(
 
   // ── 5. Compute profit-tier-aware qty ────────────────────────────────────
   // qtyOverride takes precedence when explicitly provided.
-  // Otherwise compute from sizing.py using account PnL from strategy config or 0.
+  // F-6: Previously accountPnlTotal was hardcoded 0 — pyramid never advanced.
+  // Now: query paper_trades for closed trades on this accountId to get real cumulative PnL.
+  // Fallback to 0 with audit warning when account has no closed trades yet.
   const baseContracts = (strategyConfig.max_contracts as number) ?? DEFAULT_BASE_CONTRACTS;
-  const accountPnlTotal = qtyOverride != null ? 0 : 0; // PnL injected at runtime by operator; default 0
+
+  let accountPnlTotal = 0;
+  if (qtyOverride == null) {
+    try {
+      // Sum net_pnl from paper_trades WHERE account_id = accountId AND status = 'closed'.
+      // Uses raw SQL: paper_trades table may not be in Drizzle schema (Track 3 territory).
+      const pnlRows = await db.execute<{ total_pnl: string | null }>(
+        `SELECT COALESCE(SUM(net_pnl), 0) AS total_pnl
+           FROM paper_trades
+          WHERE account_id = $1
+            AND status = 'closed'`,
+        [accountId],
+      );
+      const pnlRow = (pnlRows as unknown as { rows: Array<{ total_pnl: string | null }> }).rows?.[0];
+      if (pnlRow?.total_pnl != null) {
+        accountPnlTotal = parseFloat(pnlRow.total_pnl) || 0;
+      }
+    } catch (pnlErr) {
+      // paper_trades may not exist for accounts that haven't paper-traded yet.
+      // Default to 0 (base pyramid tier) — log warning so operator knows PnL wasn't used.
+      logger.warn(
+        { accountId, strategyId, pnlErr },
+        "pine-export-recipient: failed to read paper_trades PnL — defaulting to 0 (base pyramid tier). " +
+          "Profit-tier pyramid will not advance until paper_trades are available.",
+      );
+      accountPnlTotal = 0;
+    }
+  }
+
   const qty = qtyOverride ?? (await computeRecipientQty(symbol, baseContracts, accountPnlTotal));
 
   // ── 6. Get or create HMAC secret (idempotent) ───────────────────────────
@@ -518,9 +548,15 @@ export async function generateRecipientExport(
   // Find the strategy artifact row from the export result and build its URL.
   // The download route already exists: GET /api/pine-export/:id/artifacts/:artifactId/download
   const exportResultArtifacts = (exportResult as unknown as { artifacts?: { id: string; artifactType: string; fileName: string }[] }).artifacts ?? [];
-  // Prefer pine_strategy by artifactType, fall back to first .pine filename, then first artifact.
+  // F-5: compileDualPineExport stores the STRATEGY artifact with artifactType="dual_strategy".
+  // Previous code searched for "pine_strategy" first — which NEVER matched the dual path —
+  // causing fallback to the first .pine file (which is the INDICATOR, not the STRATEGY).
+  // Fix: prefer "dual_strategy" (dual export path), then "pine_strategy" (legacy compat),
+  // then file-name suffix as last resort.
   const strategyArtifactRow =
+    exportResultArtifacts.find((a) => a.artifactType === "dual_strategy") ??
     exportResultArtifacts.find((a) => a.artifactType === "pine_strategy") ??
+    exportResultArtifacts.find((a) => a.fileName.toUpperCase().endsWith("_STRATEGY.pine".toUpperCase())) ??
     exportResultArtifacts.find((a) => a.fileName.endsWith(".pine")) ??
     exportResultArtifacts[0] ??
     null;

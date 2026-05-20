@@ -17,15 +17,15 @@ import { eq, desc } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 import { notifyCritical } from "./notification-service.js";
 
+// F-5: Use lowercase firm IDs matching paper-execution-service queries.
+// Legacy firms (Apex, FFN, Alpha, Tradeify, Earn2Trade, TPT) were removed via
+// migration 0097 on 2026-05-10 per CLAUDE.md §6. Only Topstep + MFFU remain.
+// Previously "MFFU" / "Topstep" (Titlecase) were written here, while
+// paper-execution-service queried with lowercase — the case mismatch caused
+// compliance rulesets to never be found, silently bypassing MFFU 2% checks.
 const FIRMS = [
-  "MFFU",
-  "Topstep",
-  "TPT",
-  "Apex",
-  "FFN",
-  "Alpha",
-  "Tradeify",
-  "Earn2Trade",
+  "mffu",
+  "topstep",
 ] as const;
 
 export interface DriftCheckResult {

@@ -29,6 +29,12 @@ logger = logging.getLogger(__name__)
 #   - Historical forge_score comparisons are NOT valid across the mode boundary
 _SURVIVAL_IN_FORGE_SCORE = os.environ.get("TF_SURVIVAL_IN_FORGE_SCORE", "false").lower() == "true"
 
+# ── PF threshold — CLAUDE.md §1 canonical: PF ≥ 1.7 ─────────────────────────
+# Was hardcoded to 1.75 throughout this file (drift from spec), causing false
+# rejections of strategies with PF in [1.70, 1.75).  Fixed 2026-05-20.
+# Env override available for per-firm tightening (e.g. PERFORMANCE_GATE_PF_THRESHOLD=1.8).
+_PF_THRESHOLD = float(os.environ.get("PERFORMANCE_GATE_PF_THRESHOLD", "1.7"))
+
 
 # P2-G: Per-firm avg_daily_pnl threshold adjustments.
 # Commission ranges: Topstep $0.37/side, Alpha $0.00/side, Tradeify $1.29/side, others $0.62/side.
@@ -112,10 +118,10 @@ def check_performance_gate(stats: dict, firm_key: str | None = None) -> tuple[bo
             f"Minimum 10 required."
         )
 
-    # Profit factor
-    if stats["profit_factor"] < 1.75:
+    # Profit factor — threshold from _PF_THRESHOLD (default 1.7, CLAUDE.md §1)
+    if stats["profit_factor"] < _PF_THRESHOLD:
         rejections.append(
-            f"Profit factor {stats['profit_factor']:.2f} < 1.75 minimum."
+            f"Profit factor {stats['profit_factor']:.2f} < {_PF_THRESHOLD:.2f} minimum."
         )
 
     # Sharpe
@@ -318,8 +324,9 @@ def compute_forge_score(
         mc_survival = min(9, max(0, (survival_rate - 0.90) / 0.09 * 9))
 
         # Walk-forward OOS consistency (0-9): Sharpe + PF from stats
+        # PF baseline uses _PF_THRESHOLD (1.7) — consistent with pass gate.
         sharpe_wf = min(4.5, max(0, (stats["sharpe_ratio"] - 1.5) / 1.5 * 4.5))
-        pf_wf = min(4.5, max(0, (stats["profit_factor"] - 1.75) / 1.25 * 4.5))
+        pf_wf = min(4.5, max(0, (stats["profit_factor"] - _PF_THRESHOLD) / 1.25 * 4.5))
         wf_consistency = sharpe_wf + pf_wf
 
         # Sharpe stability (0-4): MC Sharpe spread (p95 - p5)
@@ -330,8 +337,9 @@ def compute_forge_score(
         consistency = mc_survival + wf_consistency + sharpe_stability
     else:
         # Backward compat: original Sharpe + PF method, scaled to 22 max
+        # PF baseline uses _PF_THRESHOLD (1.7) — consistent with pass gate.
         sharpe_part = min(11, max(0, (stats["sharpe_ratio"] - 1.5) / 1.5 * 11))
-        pf_part = min(11, max(0, (stats["profit_factor"] - 1.75) / 1.25 * 11))
+        pf_part = min(11, max(0, (stats["profit_factor"] - _PF_THRESHOLD) / 1.25 * 11))
         consistency = sharpe_part + pf_part
 
     # ── C4: Survival optimizer score (0-11)
@@ -418,7 +426,7 @@ def compute_forge_score(
 # TIER_3 minimums for reference (used by kill signal)
 _TIER3_MINS = {
     "sharpe_ratio": 1.5,
-    "profit_factor": 1.75,
+    "profit_factor": _PF_THRESHOLD,  # 1.7 per CLAUDE.md §1 (was 1.75 — drift fixed 2026-05-20)
     "avg_daily_pnl": 250,
     "win_rate": 0.60,
 }

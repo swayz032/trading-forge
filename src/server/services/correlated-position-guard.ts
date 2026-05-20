@@ -31,10 +31,15 @@ export interface CorrelatedPositionGuardResult {
   blockingCorrelation: number | null;
   threshold: number;
   symbol: string;
+  topstepExceptionApplied?: boolean;
 }
 
 interface OpenPositionSymbol {
   symbol: string;
+  // F-3: Topstep multi-account exception requires firm + userId + strategyId context
+  firmId?: string | null;
+  userId?: string | null;
+  strategyId?: string | null;
 }
 
 // ─── Matrix Loading ───────────────────────────────────────────────────────────
@@ -133,14 +138,21 @@ export function __resetCorrelationMatrixForTests(override?: CorrelationMatrix): 
 /**
  * Check whether a proposed new entry is blocked by an existing correlated position.
  *
- * @param symbol         Proposed entry symbol
- * @param openPositions  All currently open positions (any session). Only .symbol is read.
- * @param matrixOverride Inject a custom matrix (used in tests). If null, loads from YAML.
+ * @param symbol            Proposed entry symbol
+ * @param openPositions     All currently open positions (any session).
+ *                          May carry { firmId, userId, strategyId } for F-3 exception logic.
+ * @param matrixOverride    Inject a custom matrix (used in tests). If null, loads from YAML.
+ * @param proposedFirmId    FirmId of the new entry's session (used for F-3 Topstep exception).
+ * @param proposedUserId    UserId of the new entry's session (used for F-3 Topstep exception).
+ * @param proposedStrategyId StrategyId of the new entry's session (used for F-3 Topstep exception).
  */
 export function checkCorrelatedPositionGuard(
   symbol: string,
   openPositions: OpenPositionSymbol[],
   matrixOverride: CorrelationMatrix | null = null,
+  proposedFirmId?: string | null,
+  proposedUserId?: string | null,
+  proposedStrategyId?: string | null,
 ): CorrelatedPositionGuardResult {
   const matrix = matrixOverride ?? getCorrelationMatrix();
   const { correlations, threshold } = matrix;
@@ -175,6 +187,34 @@ export function checkCorrelatedPositionGuard(
     }
 
     if (corr > threshold) {
+      // ── F-3: Topstep multi-account exception ─────────────────────────────
+      // Per CLAUDE.md §6: same operator running the SAME strategy across their
+      // OWN Topstep accounts is ALLOWED. MFFU collaborative-trading ban always applies.
+      // Cross-firm (Topstep ↔ MFFU) correlated positions: always block.
+      const proposedIsTopstep = (proposedFirmId ?? "").toLowerCase() === "topstep";
+      const blockingIsTopstep = (pos.firmId ?? "").toLowerCase() === "topstep";
+      const sameUser     = proposedUserId != null && pos.userId != null && proposedUserId === pos.userId;
+      const sameStrategy = proposedStrategyId != null && pos.strategyId != null && proposedStrategyId === pos.strategyId;
+
+      if (proposedIsTopstep && blockingIsTopstep && sameUser && sameStrategy) {
+        // Topstep same-operator same-strategy multi-account: allow
+        logger.info(
+          {
+            symbol,
+            blockingSymbol: posSymbol,
+            correlation: corr,
+            threshold,
+            firmId: proposedFirmId,
+            userId: proposedUserId,
+            strategyId: proposedStrategyId,
+            action: "compliance.correlated_position_topstep_exception_applied",
+          },
+          "F-3: Topstep multi-account exception — correlated position ALLOWED (same user, same strategy)",
+        );
+        // Don't block — continue checking other positions
+        continue;
+      }
+
       logger.info(
         {
           symbol,

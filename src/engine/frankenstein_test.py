@@ -201,6 +201,232 @@ def _synthetic_gbm(
 
 # ─── Strategy Simulation on Shuffled Data ────────────────────────────────────
 
+# Supported entry_indicator dispatch map (option b fix — 2026-05-20).
+# Key: entry_indicator DSL string.  Value: callable(close, high, low, params) → signal array.
+# Signal array: 1 = long, -1 = short, 0 = flat; same length as close input.
+#
+# Adding a new indicator: implement _signal_<name>(close, high, low, params) and register it
+# in _INDICATOR_DISPATCH below.  Fallback SMA 50/200 fires when entry_indicator is
+# not in _INDICATOR_DISPATCH and emits a WARNING — this is intentional: an unrecognised
+# indicator should be loud, not silent.
+
+
+def _signal_ema_crossover(
+    close: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    params: dict[str, Any],
+) -> np.ndarray:
+    """EMA fast/slow crossover signal. Params: fast (int), slow (int)."""
+    fast_p = int(params.get("fast", params.get("fast_period", 9)))
+    slow_p = int(params.get("slow", params.get("slow_period", 21)))
+    n = len(close)
+
+    # Compute EMA via recursive formula (alpha = 2/(period+1))
+    def _ema(arr: np.ndarray, period: int) -> np.ndarray:
+        alpha = 2.0 / (period + 1)
+        result = np.empty(len(arr))
+        result[0] = arr[0]
+        for i in range(1, len(arr)):
+            result[i] = alpha * arr[i] + (1.0 - alpha) * result[i - 1]
+        return result
+
+    if n < slow_p + 1:
+        return np.zeros(n)
+
+    ema_fast = _ema(close, fast_p)
+    ema_slow = _ema(close, slow_p)
+    return np.sign(ema_fast - ema_slow)
+
+
+def _signal_atr_breakout(
+    close: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    params: dict[str, Any],
+) -> np.ndarray:
+    """ATR channel breakout signal. Params: period (int), multiplier (float)."""
+    period = int(params.get("period", params.get("atr_period", 14)))
+    mult = float(params.get("multiplier", params.get("atr_multiplier", 1.5)))
+    n = len(close)
+
+    if n < period + 2:
+        return np.zeros(n)
+
+    # True range
+    tr = np.maximum(high - low, np.maximum(
+        np.abs(high - np.roll(close, 1)),
+        np.abs(low - np.roll(close, 1)),
+    ))
+    tr[0] = high[0] - low[0]
+
+    # ATR via EMA
+    alpha = 2.0 / (period + 1)
+    atr = np.empty(n)
+    atr[0] = tr[0]
+    for i in range(1, n):
+        atr[i] = alpha * tr[i] + (1.0 - alpha) * atr[i - 1]
+
+    # Breakout: close > prev_close + mult*ATR → long; close < prev_close - mult*ATR → short
+    signal = np.zeros(n)
+    for i in range(1, n):
+        upper = close[i - 1] + mult * atr[i - 1]
+        lower = close[i - 1] - mult * atr[i - 1]
+        if close[i] > upper:
+            signal[i] = 1.0
+        elif close[i] < lower:
+            signal[i] = -1.0
+
+    return signal
+
+
+def _signal_bb_breakout(
+    close: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    params: dict[str, Any],
+) -> np.ndarray:
+    """Bollinger Band breakout signal. Params: period (int), std_dev (float)."""
+    period = int(params.get("period", params.get("bb_period", 20)))
+    std_dev = float(params.get("std_dev", params.get("bb_std", 2.0)))
+    n = len(close)
+
+    if n < period + 1:
+        return np.zeros(n)
+
+    signal = np.zeros(n)
+    for i in range(period, n):
+        window = close[i - period:i]
+        mid = np.mean(window)
+        band = std_dev * np.std(window)
+        upper = mid + band
+        lower = mid - band
+        if close[i] > upper:
+            signal[i] = 1.0
+        elif close[i] < lower:
+            signal[i] = -1.0
+
+    return signal
+
+
+def _signal_orb(
+    close: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    params: dict[str, Any],
+) -> np.ndarray:
+    """Opening Range Breakout signal.
+
+    On shuffled bars the session concept is meaningless, but we still need a
+    deterministic probe.  Approximation: use rolling n-bar high/low breakout
+    (equivalent to ORB with the "opening range" being the first n bars of each
+    rolling window).  Params: range_bars (int, default 4 = first 15 min of 5-min bars).
+    """
+    range_bars = int(params.get("range_bars", params.get("orb_bars", 4)))
+    n = len(close)
+
+    if n < range_bars + 2:
+        return np.zeros(n)
+
+    signal = np.zeros(n)
+    for i in range(range_bars, n):
+        orh = np.max(high[i - range_bars:i])
+        orl = np.min(low[i - range_bars:i])
+        if close[i] > orh:
+            signal[i] = 1.0
+        elif close[i] < orl:
+            signal[i] = -1.0
+
+    return signal
+
+
+def _signal_sma_crossover_fallback(
+    close: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    params: dict[str, Any],
+) -> np.ndarray:
+    """SMA 50/200 fallback — fires when entry_indicator is not in dispatch map.
+
+    WARNING: this probe tests the backtester's structural correctness, NOT the
+    strategy's actual edge.  If a new entry_indicator type is added to the scout
+    pipeline but not registered in _INDICATOR_DISPATCH, this fallback fires and
+    the Frankenstein gate will be weaker for that strategy type.  Register new
+    indicators in _INDICATOR_DISPATCH to fix this.
+    """
+    fast_p = int(params.get("fast", 50))
+    slow_p = int(params.get("slow", 200))
+    n = len(close)
+
+    if n < slow_p:
+        return np.zeros(n)
+
+    sma_fast = np.convolve(close, np.ones(fast_p) / fast_p, mode="valid")
+    sma_slow = np.convolve(close, np.ones(slow_p) / slow_p, mode="valid")
+    min_len = min(len(sma_fast), len(sma_slow))
+    sma_fast = sma_fast[-min_len:]
+    sma_slow = sma_slow[-min_len:]
+
+    # Pad head with zeros so output length matches close
+    pad = n - min_len
+    return np.concatenate([np.zeros(pad), np.sign(sma_fast - sma_slow)])
+
+
+# Registry: entry_indicator DSL name → signal function
+_INDICATOR_DISPATCH: dict[str, Any] = {
+    "ema_crossover": _signal_ema_crossover,
+    "ema_cross": _signal_ema_crossover,
+    "atr_breakout": _signal_atr_breakout,
+    "atr_channel_breakout": _signal_atr_breakout,
+    "bb_breakout": _signal_bb_breakout,
+    "bollinger_breakout": _signal_bb_breakout,
+    "opening_range_breakout": _signal_orb,
+    "session_open_breakout": _signal_orb,
+    "orb": _signal_orb,
+}
+
+
+def _build_signal(
+    close: np.ndarray,
+    high: np.ndarray,
+    low: np.ndarray,
+    strategy_config: dict[str, Any],
+) -> np.ndarray:
+    """Dispatch to the appropriate signal function based on strategy entry_indicator.
+
+    Falls back to SMA 50/200 with a WARNING if the indicator is not registered.
+    """
+    entry_indicator = strategy_config.get("entry_indicator", "")
+    # Also check indicators[0].type (compiler-internal name layer — W23F)
+    if not entry_indicator:
+        indicators = strategy_config.get("indicators", [])
+        if indicators and isinstance(indicators[0], dict):
+            entry_indicator = indicators[0].get("type", "")
+
+    entry_indicator = (entry_indicator or "").lower().strip()
+
+    # Extract indicator parameters from the first matching indicators entry
+    params: dict[str, Any] = {}
+    for ind in strategy_config.get("indicators", []):
+        if isinstance(ind, dict):
+            ind_type = (ind.get("type") or ind.get("name") or "").lower().strip()
+            if ind_type == entry_indicator or ind_type.replace("_", "") == entry_indicator.replace("_", ""):
+                params = ind.get("params", ind.get("parameters", {})) or {}
+                break
+
+    if entry_indicator in _INDICATOR_DISPATCH:
+        fn = _INDICATOR_DISPATCH[entry_indicator]
+        return fn(close, high, low, params)
+
+    # Unrecognised indicator — warn loudly, use SMA fallback
+    logger.warning(
+        "frankenstein_test: entry_indicator %r not in dispatch map — "
+        "falling back to SMA 50/200 proxy.  Add this indicator to "
+        "_INDICATOR_DISPATCH in frankenstein_test.py to fix.",
+        entry_indicator or "(not set)",
+    )
+    return _signal_sma_crossover_fallback(close, high, low, params)
+
 
 def _simulate_shuffled(
     strategy_config: dict[str, Any],
@@ -215,40 +441,43 @@ def _simulate_shuffled(
     need Sharpe and profit factor, not full walk-forward analysis. The goal is
     to detect HUGE anomalies (lookahead gives |Sharpe| > 2), not micro-edge.
 
-    Strategy: use 50/200 SMA crossover as a universal entry proxy for all
-    strategy types. This is intentional — the Frankenstein test is not testing
-    the strategy's specific edge, it's testing whether the backtester has a
-    structural lookahead bug. Any reasonable entry rule works as the probe.
+    Signal generation dispatches to the strategy's ACTUAL entry_indicator
+    (ema_crossover, atr_breakout, bb_breakout, orb) via _build_signal().
+    Previously used a hardcoded SMA 50/200 proxy regardless of strategy type,
+    which meant the gate only tested backtester structural lookahead (not
+    strategy-specific lookahead).  Both are now covered.
 
     Returns dict with keys: sharpe, profit_factor, total_trades, total_pnl
     """
     close = shuffled_bars[:, 3].astype(float)
+    high = shuffled_bars[:, 1].astype(float)
+    low = shuffled_bars[:, 2].astype(float)
     n = len(close)
 
     if n < 60:
         return {"sharpe": 0.0, "profit_factor": 1.0, "total_trades": 0, "total_pnl": 0.0}
 
-    # Fast SMA crossover signal (50/200)
-    sma_fast = np.convolve(close, np.ones(50) / 50, mode="valid")
-    sma_slow = np.convolve(close, np.ones(200) / 200, mode="valid")
-    min_len = min(len(sma_fast), len(sma_slow))
-    sma_fast = sma_fast[-min_len:]
-    sma_slow = sma_slow[-min_len:]
+    # Dispatch to strategy's actual indicator
+    raw_signal = _build_signal(close, high, low, strategy_config)
 
-    # Signal: 1 = long, -1 = short, 0 = flat
-    signal = np.sign(sma_fast - sma_slow)
+    # Align signal to close array length (some signal functions return shorter arrays)
+    if len(raw_signal) < n:
+        pad = n - len(raw_signal)
+        signal = np.concatenate([np.zeros(pad), raw_signal])
+    else:
+        signal = raw_signal[-n:]
+
+    # signal is pre-aligned to close (length == n); no price_offset needed.
 
     # Trade P&L: position changes
     trade_pnls: list[float] = []
     pos = 0.0
     entry_price = 0.0
-    n_s = len(signal)
-    price_offset = n - n_s  # align prices with signals
 
-    for i in range(1, n_s):
+    for i in range(1, n):
         prev_sig = signal[i - 1]
         curr_sig = signal[i]
-        curr_close = close[price_offset + i]
+        curr_close = close[i]
 
         if prev_sig != curr_sig and prev_sig != 0:
             # Close position
@@ -264,8 +493,8 @@ def _simulate_shuffled(
             entry_price = curr_close
 
     # Close any open position at last bar
-    if pos != 0 and n_s > 0:
-        final_price = close[price_offset + n_s - 1]
+    if pos != 0 and n > 0:
+        final_price = close[n - 1]
         pnl = pos * (final_price - entry_price) * contracts * tick_value
         pnl -= 2 * commission_per_side * contracts
         trade_pnls.append(pnl)

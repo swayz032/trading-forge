@@ -82,6 +82,50 @@ interface SignalCalendarCacheEntry {
 
 const signalCalendarCache = new Map<string, SignalCalendarCacheEntry>();
 
+// ─── Calendar gate failure tracker (F-2) ────────────────────────
+// Counts Python subprocess failures within a rolling 10-minute window.
+// If 3+ failures occur → fires a CRITICAL Discord alert.
+// Avoids re-spawning a Python process on every bar when the subprocess is down.
+interface CalendarFailRecord { ts: number }
+const _calendarFailLog: CalendarFailRecord[] = [];
+const CALENDAR_FAIL_WINDOW_MS  = 10 * 60 * 1000; // 10 minutes
+const CALENDAR_FAIL_ALERT_THRESHOLD = 3;
+
+function _recordCalendarFailure(err: unknown): void {
+  const now = Date.now();
+  _calendarFailLog.push({ ts: now });
+  // Prune records outside the window
+  while (_calendarFailLog.length > 0 && now - _calendarFailLog[0].ts > CALENDAR_FAIL_WINDOW_MS) {
+    _calendarFailLog.shift();
+  }
+  if (_calendarFailLog.length >= CALENDAR_FAIL_ALERT_THRESHOLD) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      { failureCount: _calendarFailLog.length, windowMs: CALENDAR_FAIL_WINDOW_MS, err },
+      "F-2: calendar-filter Python failures exceeded threshold — CRITICAL alert fired",
+    );
+    // Fire Discord CRITICAL alert (non-blocking)
+    import("../services/alert-service.js")
+      .then(({ AlertFactory }) =>
+        AlertFactory.systemError(
+          "calendar-filter-python-storm",
+          new Error(
+            `Calendar filter Python subprocess failed ${_calendarFailLog.length}+ times in 10 min. ` +
+            `Last error: ${errMsg}. Using safe-default (no blackout). Investigate Python worker.`,
+          ),
+        )
+      )
+      .catch(() => {/* non-blocking — swallow alert delivery failure */});
+    // Clear the log after alerting so we don't spam on every subsequent failure
+    _calendarFailLog.length = 0;
+  }
+}
+
+/** Test-only: reset the failure log between unit tests. */
+export function __resetCalendarFailLogForTests(): void {
+  _calendarFailLog.length = 0;
+}
+
 /**
  * Test-only: reset the signal calendar cache between unit tests so mocked
  * Python responses aren't masked by a previously-cached entry from an
@@ -189,6 +233,18 @@ function formatSignalEtHourKey(ts: string): string {
   return `${yyyy}-${mm}-${dd}-${hh}`;
 }
 
+// Safe-default sentinel returned when the Python subprocess is unavailable.
+// Fail-open: "no blackout" is the correct behaviour on infrastructure failure.
+// The operator is alerted via _recordCalendarFailure() → CRITICAL Discord alert.
+const CALENDAR_SAFE_DEFAULT: SignalCalendarCacheEntry = {
+  is_holiday: false,
+  is_triple_witching: false,
+  holiday_proximity: 999,
+  is_economic_event: false,
+  economic_event_name: "",
+  event_window_minutes: 0,
+};
+
 async function getCachedSignalCalendarStatus(
   barTimestamp: string,
 ): Promise<SignalCalendarCacheEntry> {
@@ -196,18 +252,30 @@ async function getCachedSignalCalendarStatus(
   const cached = signalCalendarCache.get(key);
   if (cached !== undefined) return cached;
 
-  const { runPythonModule } = await import("../lib/python-runner.js");
-  const result = await runPythonModule<SignalCalendarCacheEntry>({
-    module: "src.engine.skip_engine.calendar_filter",
-    config: {
-      date: barTimestamp.split("T")[0],
-      datetime: barTimestamp,
-    },
-    timeoutMs: 5_000,
-    componentName: "calendar-filter",
-  });
-  signalCalendarCache.set(key, result);
-  return result;
+  try {
+    const { runPythonModule } = await import("../lib/python-runner.js");
+    const result = await runPythonModule<SignalCalendarCacheEntry>({
+      module: "src.engine.skip_engine.calendar_filter",
+      config: {
+        date: barTimestamp.split("T")[0],
+        datetime: barTimestamp,
+      },
+      timeoutMs: 5_000,
+      componentName: "calendar-filter",
+    });
+    signalCalendarCache.set(key, result);
+    return result;
+  } catch (err) {
+    // F-2: subprocess failed — cache the safe-default for this hour so
+    // subsequent bars don't re-spawn Python until the cache key expires.
+    logger.error(
+      { err, barTimestamp, key },
+      "F-2: calendar-filter Python subprocess failed — caching safe-default for this hour",
+    );
+    _recordCalendarFailure(err);
+    signalCalendarCache.set(key, CALENDAR_SAFE_DEFAULT);
+    return CALENDAR_SAFE_DEFAULT;
+  }
 }
 
 // ─── Types ──────────────────────────────────────────────────

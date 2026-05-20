@@ -413,10 +413,20 @@ def check_violation(
       - household account cap exceeded (Apex 20-account cap)
 
     Args:
-        firm: firm key ("apex_trader_funding", "topstep", etc.)
+        firm: firm key ("mffu", "topstep")
         ruleset: parsed ruleset dict (typically from compliance_rulesets row)
-        strategy_state: optional runtime context — { automated: bool,
-            account_phase: 'eval'|'pa'|'live', host: str, pa_account_count: int }
+        strategy_state: optional runtime context — {
+            automated: bool,
+            account_phase: 'eval'|'pa'|'live',
+            host: str,
+            # MFFU per-trade 2% rule inputs:
+            intended_max_loss: float,    # stop_distance_pts × tick_value × contracts
+            account_balance: float,      # current account balance
+            # MFFU HFT limit:
+            trades_today: int,           # trades taken today across this firm's sessions
+            # MFFU hedging ban:
+            open_positions: list[dict],  # [{"symbol": "MES"}, ...] open across all sessions
+        }
 
     Returns:
         {
@@ -434,9 +444,8 @@ def check_violation(
     is_automated = bool(state.get("automated", False))
     account_phase = state.get("account_phase", "pa")  # default: pa/live (strictest)
     host = str(state.get("host", "unknown"))
-    pa_account_count = int(state.get("pa_account_count", 0))
 
-    # ── Automation policy (Apex 4.0, Tradeify, FundingPips) ──────
+    # ── Automation policy — MFFU + Topstep both have automation rules ─────────
     automation_banned = bool(rules.get("automation_banned", False))
     automation_banned_pa = bool(rules.get("automation_banned_pa_live", False))
     if is_automated and automation_banned:
@@ -458,13 +467,54 @@ def check_violation(
             f"originate from personal device (got host={host!r})."
         )
 
-    # ── Apex household 20-account cap ────────────────────────────
-    account_cap = rules.get("household_max_pa_accounts")
-    if account_cap is not None and pa_account_count > int(account_cap):
-        violations.append(
-            f"{firm}: household has {pa_account_count} PA accounts, "
-            f"exceeds cap of {account_cap}."
+    # ── MFFU 2026 Rule 8: 2% per-trade loss rule ─────────────────────────────
+    # Triggered only when strategy_state carries both intended_max_loss and
+    # account_balance (i.e. this is a pre-order check, not a strategy-level audit).
+    intended_max_loss = state.get("intended_max_loss")
+    account_balance = state.get("account_balance")
+    firm_lower = (firm or "").lower()
+    if firm_lower == "mffu" and intended_max_loss is not None and account_balance is not None:
+        two_pct = check_two_percent_rule(
+            intended_max_loss_dollars=float(intended_max_loss),
+            account_balance_dollars=float(account_balance),
         )
+        if not two_pct["allowed"]:
+            violations.append(
+                f"{firm}: MFFU 2% per-trade rule violated — "
+                f"max_loss=${intended_max_loss:.2f} exceeds 2% of "
+                f"account=${account_balance:.2f} (limit=${two_pct['limit_dollars']:.2f})."
+            )
+
+    # ── MFFU 2026 Rule 1: HFT limit (500 trades/day) ─────────────────────────
+    trades_today = state.get("trades_today")
+    if firm_lower == "mffu" and trades_today is not None:
+        hft = check_hft_limit(trades_today=int(trades_today))
+        if not hft["allowed"]:
+            violations.append(
+                f"{firm}: MFFU HFT limit reached — "
+                f"{trades_today} trades taken today (cap={hft['max_trades_per_day']})."
+            )
+
+    # ── MFFU 2026 hedging ban: MNQ+NQ, MES+ES, MCL+CL ───────────────────────
+    # Checks open positions to ensure the proposed symbol doesn't create a
+    # simultaneous position in the same underlying.
+    # Applies when strategy_state carries "open_positions" and "proposed_symbol".
+    proposed_symbol = (state.get("proposed_symbol") or "").upper()
+    open_positions_list: list[dict] = list(state.get("open_positions") or [])
+    if firm_lower == "mffu" and proposed_symbol:
+        HEDGE_PAIRS: dict[str, str] = {
+            "MNQ": "NQ",  "NQ": "MNQ",
+            "MES": "ES",  "ES": "MES",
+            "MCL": "CL",  "CL": "MCL",
+        }
+        counterpart = HEDGE_PAIRS.get(proposed_symbol)
+        if counterpart:
+            open_symbols = {str(p.get("symbol") or "").upper() for p in open_positions_list}
+            if counterpart in open_symbols:
+                violations.append(
+                    f"{firm}: MFFU hedging ban — cannot open {proposed_symbol} while "
+                    f"{counterpart} position is open (same underlying, Rule §hedging_ban)."
+                )
 
     if violations:
         return {

@@ -29,8 +29,8 @@
  */
 
 import { db } from "../db/index.js";
-import { systemState, auditLog, weeklyDriftReports, brokerAccounts, type ProductionMode } from "../db/schema.js";
-import { eq, desc } from "drizzle-orm";
+import { systemState, auditLog, weeklyDriftReports, brokerAccounts, paperSessions, type ProductionMode } from "../db/schema.js";
+import { eq, desc, and } from "drizzle-orm";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
@@ -38,6 +38,11 @@ import { AlertFactory } from "../services/alert-service.js";
 import { isExchangeHalted } from "../services/exchange-status-service.js";
 import { isFirmSuspended } from "../services/prop-firm-health-service.js";
 import { isConnectivityDegraded } from "../lib/network-failover.js";
+
+// ─── DLL / trailing-DD thresholds (match paper-execution-service) ─────────────
+const DLL_HALT_PCT        = parseFloat(process.env.DLL_HALT_PCT        ?? "0.67");
+const DLL_FORCE_CLOSE_PCT = parseFloat(process.env.DLL_FORCE_CLOSE_PCT ?? "0.95");
+const TRAILING_DD_BUFFER_DOLLARS = 200; // force-close trigger: $200 inside max drawdown
 
 // Lazy imports to avoid circular init issues. These services start their own
 // timers at module load; we only need their query functions here.
@@ -278,21 +283,105 @@ class KillSwitch {
       reason: l1Halted ? "production_mode=HALT" : undefined,
     });
 
-    // ── Layer 2: Daily loss ── (Phase 4C wires real PnL check)
-    layers.push({
-      layer: 2,
-      name: "daily_loss",
-      halted: false,
-      reason: "phase_4c_pending: paper-execution-service DLL check not yet wired to kill-switch",
-    });
+    // ── Layer 2: Daily loss ──
+    // Query all active sessions. If any session's today-P&L has exceeded
+    // DLL_HALT_PCT of its firm's daily loss limit → halt new entries.
+    // Fail-CLOSED: DB error → halted so a crashed DB cannot bypass the gate.
+    let l2Halted = false;
+    let l2Reason: string | undefined;
+    try {
+      const { getFirmAccount } = await import("../../shared/firm-config.js");
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD UTC
 
-    // ── Layer 3: Trailing drawdown ── (Phase 4C wires real drawdown check)
-    layers.push({
-      layer: 3,
-      name: "trailing_drawdown",
-      halted: false,
-      reason: "phase_4c_pending: drawdown distance check not yet wired to kill-switch",
-    });
+      const activeSessions = await db
+        .select({
+          id: paperSessions.id,
+          firmId: paperSessions.firmId,
+          dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
+        })
+        .from(paperSessions)
+        .where(eq(paperSessions.status, "active"));
+
+      for (const session of activeSessions) {
+        const firmId = session.firmId ?? "mffu";
+        let firmAccount: { dailyLossLimit?: number } | null = null;
+        try {
+          firmAccount = getFirmAccount(firmId) as { dailyLossLimit?: number };
+        } catch {
+          // unknown firmId — skip
+          continue;
+        }
+        const dll = firmAccount?.dailyLossLimit;
+        if (!dll || dll <= 0) continue;
+
+        // dailyPnlBreakdown is a JSON object keyed by trading-day string → number
+        const breakdown = session.dailyPnlBreakdown as Record<string, number> | null ?? {};
+        const dayPnl = breakdown[today] ?? 0;
+
+        // dayPnl is negative when losing; compare magnitude against DLL
+        if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_HALT_PCT * dll) {
+          l2Halted = true;
+          l2Reason = `dll_at_${Math.round(DLL_HALT_PCT * 100)}pct_personal_threshold: session=${session.id} firm=${firmId} day_pnl=${dayPnl.toFixed(2)} dll=${dll}`;
+          break;
+        }
+      }
+    } catch (l2Err) {
+      l2Halted = true; // fail-CLOSED
+      const errMsg = l2Err instanceof Error ? l2Err.message : String(l2Err);
+      logger.error({ err: l2Err }, "kill-switch L2: DLL check failed — blocking entries (fail-closed)");
+      l2Reason = `dll_check_failed (fail-closed): ${errMsg}`;
+    }
+    layers.push({ layer: 2, name: "daily_loss", halted: l2Halted, reason: l2Reason });
+
+    // ── Layer 3: Trailing drawdown ──
+    // Query all active sessions. If (realizedPeakEquity - currentEquity) is within
+    // $200 of the firm's maxDrawdown → trigger force-close (95% threshold).
+    // Fail-CLOSED: DB error → halted.
+    let l3Halted = false;
+    let l3Reason: string | undefined;
+    try {
+      const { getFirmAccount } = await import("../../shared/firm-config.js");
+
+      const activeSessions = await db
+        .select({
+          id: paperSessions.id,
+          firmId: paperSessions.firmId,
+          currentEquity: paperSessions.currentEquity,
+          realizedPeakEquity: paperSessions.realizedPeakEquity,
+        })
+        .from(paperSessions)
+        .where(eq(paperSessions.status, "active"));
+
+      for (const session of activeSessions) {
+        const firmId = session.firmId ?? "mffu";
+        let firmAccount: { maxDrawdown?: number; maxDailyDrawdown?: number } | null = null;
+        try {
+          firmAccount = getFirmAccount(firmId) as { maxDrawdown?: number; maxDailyDrawdown?: number };
+        } catch {
+          continue;
+        }
+        const maxDrawdown = firmAccount?.maxDrawdown ?? firmAccount?.maxDailyDrawdown;
+        if (!maxDrawdown || maxDrawdown <= 0) continue;
+
+        const currentEquity = parseFloat(String(session.currentEquity ?? "0"));
+        const peakEquity    = parseFloat(String(session.realizedPeakEquity ?? "0"));
+        const drawdown      = peakEquity - currentEquity;
+
+        // Trigger when drawdown has consumed 95%+ of the max-drawdown budget
+        // i.e. remaining buffer < $200 (TRAILING_DD_BUFFER_DOLLARS)
+        if (drawdown >= maxDrawdown - TRAILING_DD_BUFFER_DOLLARS) {
+          l3Halted = true;
+          l3Reason = `trailing_dd_force_close_at_95pct: session=${session.id} firm=${firmId} drawdown=${drawdown.toFixed(2)} max_dd=${maxDrawdown} buffer_remaining=${(maxDrawdown - drawdown).toFixed(2)}`;
+          break;
+        }
+      }
+    } catch (l3Err) {
+      l3Halted = true; // fail-CLOSED
+      const errMsg = l3Err instanceof Error ? l3Err.message : String(l3Err);
+      logger.error({ err: l3Err }, "kill-switch L3: trailing-DD check failed — blocking entries (fail-closed)");
+      l3Reason = `trailing_dd_check_failed (fail-closed): ${errMsg}`;
+    }
+    layers.push({ layer: 3, name: "trailing_drawdown", halted: l3Halted, reason: l3Reason });
 
     // ── Layer 4: Connectivity ──
     let l4Halted = false;

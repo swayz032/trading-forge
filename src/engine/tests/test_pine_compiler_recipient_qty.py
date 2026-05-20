@@ -89,9 +89,15 @@ def test_no_recipient_qty_preserves_atr_sizing():
         (a for a in result.artifacts if a.artifact_type == "indicator"), None
     )
     assert indicator_artifact is not None
-    # Must NOT contain a per-recipient override
-    assert "qty_final :=" not in indicator_artifact.content, (
-        "Without recipient_qty, Pine must not contain qty_final override"
+    # F-2: qty_final is now declared as 'var int qty_final = 0' and set via ':=' in the ATR
+    # sizing block — this is intentional valid Pine v5.  The test distinguishes between the
+    # ATR-block ':=' (always present) and the recipient-specific override block (only when
+    # recipient_qty is set).  Check for the recipient comment marker, not the ':=' operator.
+    assert "Per-Recipient Override" not in indicator_artifact.content, (
+        "Without recipient_qty, Pine must not contain Per-Recipient Override block"
+    )
+    assert "Per-Recipient Qty Override" not in indicator_artifact.content, (
+        "Without recipient_qty, Pine must not contain Per-Recipient Qty Override block"
     )
     # Must still contain ATR qty block
     assert "contracts_atr" in indicator_artifact.content or "qty_final" in indicator_artifact.content, (
@@ -108,17 +114,18 @@ def test_compute_profit_tier_mes_sample_pnl():
     assert qty_zero == 4
     assert grad_zero is False
 
-    # $3,000 profit = 1 tier = +2 = 6 contracts
+    # $3,000 profit = 1 tier = +2 = 6 contracts; graduation fires at PYRAMID_GRADUATION_PNL=$3K
     qty_tier1, grad_tier1 = compute_profit_tier_mes(3000.0, 4)
     assert qty_tier1 == 6
-    assert grad_tier1 is False
+    # graduation_signal fires when pnl >= PYRAMID_GRADUATION_PNL ($3K). At exactly $3K, grad=True.
+    assert grad_tier1 is True
 
-    # $9,000 profit = 3 tiers = +6 = 10 contracts
+    # $9,000 profit = 3 tiers = +6 = 10 contracts; grad=True because $9K >= PYRAMID_GRADUATION_PNL ($3K)
     qty_tier3, grad_tier3 = compute_profit_tier_mes(9000.0, 4)
     assert qty_tier3 == 10
-    assert grad_tier3 is False
+    assert grad_tier3 is True  # graduation fires at any pnl >= $3K
 
-    # $30,000 profit -> graduation signal fires
+    # $30,000 profit -> graduation signal fires (cap may bind)
     qty_big, grad_big = compute_profit_tier_mes(30000.0, 4)
     assert grad_big is True  # graduation trigger
     assert qty_big >= 4  # must not go below base
@@ -157,10 +164,12 @@ def test_recipient_label_embedded_in_pine_comment():
     )
 
 
-# ─── Test 5: HMAC secret injection ───────────────────────────────────────────
+# ─── Test 5: HMAC secret out-of-band delivery (F-4) ─────────────────────────
 
-def test_hmac_secret_embedded_in_strategy_artifact():
-    """hmac_secret appears in TradersPost webhook payload in strategy artifact."""
+def test_hmac_secret_out_of_band_not_embedded():
+    """F-4: HMAC secret must NOT be embedded in the .pine artifact content.
+    Instead: .pine uses input.string() so user pastes HMAC at chart load.
+    HMAC is returned out-of-band in alerts_json.hmac_out_of_band."""
     strategy = _base_strategy()
     fake_secret = "a" * 64  # 64-char hex placeholder
     result = compile_dual_artifacts(
@@ -175,26 +184,25 @@ def test_hmac_secret_embedded_in_strategy_artifact():
     assert result.strategy_artifact is not None
     assert result.alerts_artifact is not None
 
-    # HMAC must appear in the strategy artifact (embedded in webhook message)
-    assert fake_secret in result.strategy_artifact.content, (
-        "HMAC secret must be embedded in strategy artifact webhook payload"
+    # F-4: HMAC must NOT appear as plain text in the strategy artifact content.
+    # The artifact uses input.string() at chart load — secret stays out of file.
+    assert fake_secret not in result.strategy_artifact.content, (
+        "F-4: HMAC secret must NOT be embedded in strategy artifact — use input.string() instead"
     )
 
-    # alerts_json must reflect hmac_secret_ref (not the raw secret — security)
+    # The artifact MUST contain the input.string() declaration for HMAC
+    assert "hmac_input" in result.strategy_artifact.content, (
+        "F-4: strategy artifact must declare hmac_input = input.string() for HMAC entry"
+    )
+
+    # alerts_json must carry the HMAC out-of-band (operator reference, not in .pine)
     import json
     alerts_data = json.loads(result.alerts_artifact.content)
-    assert alerts_data.get("hmac_secret_ref") == "present", (
-        "alerts_json must have hmac_secret_ref='present' (not the raw secret)"
+    assert alerts_data.get("hmac_out_of_band") == fake_secret, (
+        "alerts_json must have hmac_out_of_band with the real secret for operator reference"
     )
-    # The raw HMAC IS permitted in alerts_json sample_payload (operator reference only).
-    # The security boundary is: hmac_secret_ref at top level must be 'present', not the secret.
-    # Verified above. The sample_payload is documentation, not a live webhook message.
-
-    # HMAC must appear in sample_payload for documentation
-    delivery = alerts_data.get("delivery_paths", {}).get("strategy", {})
-    sample = delivery.get("sample_payload", {})
-    assert sample.get("hmac") == fake_secret, (
-        "sample_payload must include hmac for operator reference"
+    assert alerts_data.get("hmac_secret_ref") == "input_string_at_chart_load", (
+        "alerts_json must have hmac_secret_ref='input_string_at_chart_load'"
     )
 
 
@@ -226,13 +234,21 @@ def test_existing_strategies_compile_without_recipient_qty(strategy_name, entry_
     # What matters: no Python exception is raised (compile_dual_artifacts never raises).
     assert result is not None, f"compile_dual_artifacts must return a result for {strategy_name}"
 
-    # If exportable, artifacts must be present and must NOT contain qty override
+    # If exportable, artifacts must be present and must NOT contain recipient qty override block.
+    # F-2: qty_final uses := in the base ATR block (valid Pine v5 — var int declaration above).
+    # The distinction: recipient override has "Per-Recipient" comment; base ATR block does not.
     if result.exportability.exportable:
         if result.indicator_artifact:
-            assert "qty_final :=" not in result.indicator_artifact.content, (
-                f"{strategy_name}: indicator artifact must not have qty_final override"
+            assert "Per-Recipient Override" not in result.indicator_artifact.content, (
+                f"{strategy_name}: indicator artifact must not have Per-Recipient Override block"
+            )
+            assert "Per-Recipient Qty Override" not in result.indicator_artifact.content, (
+                f"{strategy_name}: indicator artifact must not have Per-Recipient Qty Override block"
             )
         if result.strategy_artifact:
-            assert "qty_final :=" not in result.strategy_artifact.content, (
-                f"{strategy_name}: strategy artifact must not have qty_final override"
+            assert "Per-Recipient Override" not in result.strategy_artifact.content, (
+                f"{strategy_name}: strategy artifact must not have Per-Recipient Override block"
+            )
+            assert "Per-Recipient Qty Override" not in result.strategy_artifact.content, (
+                f"{strategy_name}: strategy artifact must not have Per-Recipient Qty Override block"
             )

@@ -52,6 +52,7 @@ S3 fetch path:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -474,6 +475,8 @@ def _query_regime_bank(
     symbol: str,
     timeframe: str,
     regime_count: int,
+    strategy_id: str = "",
+    backtest_id: str = "",
 ) -> list[RegimeRecord]:
     """Query the synthetic_regime_bank for passing regimes.
 
@@ -488,6 +491,8 @@ def _query_regime_bank(
         symbol: Futures symbol (MES, MNQ, MCL).
         timeframe: Bar timeframe (1min, 5min, daily, etc.).
         regime_count: Number of regimes to sample.
+        strategy_id: UUID string used to seed the sample deterministically.
+        backtest_id: UUID string used to seed the sample deterministically.
 
     Returns:
         List of RegimeRecord objects (without ohlcv pre-loaded — loaded lazily
@@ -497,6 +502,13 @@ def _query_regime_bank(
         ImportError: If psycopg2 is not installed.
         RuntimeError: If DATABASE_URL is not set.
         ValueError: If no passing regimes found for this symbol/timeframe.
+
+    Determinism note (2026-05-20):
+        Previously used bare ORDER BY random() which produced non-deterministic
+        samples across identical inputs, making black swan survival rates
+        irreproducible.  Fix: call PostgreSQL setseed() with a value derived
+        from (strategy_id, backtest_id, regime_count) before each label sample.
+        Two consecutive calls with identical arguments now produce identical rows.
     """
     try:
         import psycopg2
@@ -539,6 +551,19 @@ def _query_regime_bank(
         LIMIT %s
     """
 
+    # Compute a deterministic Postgres setseed() float in [0, 1) from the
+    # combination of (strategy_id, backtest_id, regime_count).  This makes
+    # ORDER BY random() reproducible: two calls with identical inputs yield
+    # identical samples.  The label index is mixed in so each label draws from
+    # a different (but still deterministic) position in the RNG stream.
+    _seed_key = f"{strategy_id}:{backtest_id}:{regime_count}"
+    _seed_base = int(hashlib.md5(_seed_key.encode()).hexdigest()[:8], 16)
+
+    def _pg_seed_for_label(label_idx: int) -> float:
+        """Return a Postgres-compatible setseed float in (-1, 1] for this label."""
+        mixed = (_seed_base + label_idx * 31337) % 10000
+        return mixed / 10000.0  # in [0, 1) — Postgres setseed accepts [-1, 1]
+
     records: list[RegimeRecord] = []
 
     try:
@@ -561,6 +586,9 @@ def _query_regime_bank(
 
                 for i, label in enumerate(labels):
                     n_this = per_label + (remainder if i == 0 else 0)
+                    # Seed Postgres RNG before the ORDER BY random() query so that
+                    # identical inputs always produce identical samples.
+                    cur.execute("SELECT setseed(%s)", (_pg_seed_for_label(i),))
                     cur.execute(sql_sample, (symbol, timeframe, label, n_this))
                     rows = cur.fetchall()
                     for row in rows:
@@ -712,8 +740,12 @@ if __name__ == "__main__":
         symbol = strategy_cfg.get("symbol", "MES")
         timeframe = strategy_cfg.get("timeframe", "daily")
 
-        # 2. Query regime bank
-        regime_records = _query_regime_bank(symbol, timeframe, regime_count)
+        # 2. Query regime bank (strategy_id + backtest_id seed deterministic sampling)
+        regime_records = _query_regime_bank(
+            symbol, timeframe, regime_count,
+            strategy_id=strategy_id,
+            backtest_id=backtest_id,
+        )
         logger.info(
             "black_swan_evaluator: loaded %d regime records for %s %s",
             len(regime_records), symbol, timeframe,

@@ -203,14 +203,20 @@ def _score_vwap_state(current_price: float, vwap: float) -> int:
 
 
 def _score_event_risk(event_active: bool, event_minutes: int = 0) -> int:
-    """Score event risk. Active events reduce bias confidence toward zero."""
+    """Score event risk. Active events reduce bias confidence toward zero.
+
+    Returns 0 on no-event days (neutral — event-risk component carries no
+    directional opinion).  The previous return of 50 on no-event days injected
+    a systematic +5 bullish bias into every normal trading day, inflating net_bias
+    by a fixed amount regardless of actual market conditions.  Fixed 2026-05-20.
+    """
     if event_active:
         # Within ±30 min of event: heavy dampening
         if abs(event_minutes) <= 30:
             return 0  # Effectively kills directional bias
         elif abs(event_minutes) <= 60:
             return 0  # Still cautious
-    return 50  # No event → slight positive (normal conditions)
+    return 0  # No event → neutral (no directional opinion from event-risk component)
 
 
 def _score_session_regime(htf: HTFContext) -> int:

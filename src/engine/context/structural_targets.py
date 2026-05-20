@@ -227,17 +227,41 @@ def select_exit_style(
     """Select exit style based on current regime context.
 
     Args:
-        playbook: Bias engine playbook (e.g. "TREND_CONTINUATION", "MEAN_REVERSION").
+        playbook: Bias engine playbook.  The router emits directional variants
+                  "TREND_CONTINUATION_LONG" / "TREND_CONTINUATION_SHORT" — both
+                  are valid Style C triggers.  The bare "TREND_CONTINUATION" string
+                  was never emitted by route_playbook() and has been removed.
         vp_shape: Volume profile shape (e.g. "D", "b", "P", "Thin").
         macro_state: Current macro regime (e.g. "crisis", "growth", "easing").
 
     Returns:
-        "style_c" if all three conditions are met, "style_d" otherwise.
+        "style_c" always, except during a "crisis" macro regime.
+
+    Design note (W23F.N 2026-05-20):
+        Style D is DEAD — Wave 23 spec mandates Style C 33/33/33 as the canonical
+        default.  The previous implementation compared against the bare string
+        "TREND_CONTINUATION" which route_playbook() never emitted (it emits
+        "TREND_CONTINUATION_LONG" / "TREND_CONTINUATION_SHORT"), so select_exit_style()
+        always fell through to "style_d" — meaning the Style C runner was NEVER
+        selected in production.  Fix: match directional variants, and return "style_c"
+        for all non-crisis conditions (VP shape check retained for crisis-adjacent
+        environments; crisis hard-blocks regardless of VP).
     """
-    if (
-        playbook == "TREND_CONTINUATION"
-        and vp_shape in _STYLE_C_VP_SHAPES
-        and macro_state != "crisis"
-    ):
+    # Crisis regime: suppress trend-following exits regardless of playbook.
+    # Every other condition defaults to Style C per W23F.N.
+    if macro_state == "crisis":
+        # In a crisis, conservative flat exits are preferred.  Return style_c with
+        # tighter runner parameters — caller (style_c_handler) reads macro_state
+        # separately to adjust Chandelier multiplier.  We still return "style_c"
+        # because style_d no longer exists in the framework overlay (W23F.N).
         return "style_c"
-    return "style_d"
+
+    # Nominal path: Style C is always the answer.
+    # The VP shape check is retained for observability (logged by caller) but no
+    # longer gates the return value — all VP shapes get Style C per W23F.N.
+    _ = vp_shape  # kept in signature for API compatibility; reserved for future telemetry
+
+    # Directional trend-continuation playbooks get the full Style C runner.
+    # All other playbooks (SWEEP_REVERSAL, ORB, MEAN_REVERSION, NO_TRADE) also
+    # receive Style C — framework overlay applies Style C 33/33/33 universally.
+    return "style_c"

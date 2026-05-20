@@ -264,3 +264,159 @@ def test_indicator_artifact_contains_risk_lockout_warning():
         "FIX 1: 'risk_lockout' variable missing from indicator artifact — "
         "state machine will fail to compile"
     )
+
+
+# ─── Test 7 — F-1: 15:55 ET time-stop present in both artifacts ─────────────
+
+def test_time_stop_1555_in_both_artifacts():
+    """F-1: Both indicator and strategy artifacts must contain 15:55 ET hard flatten.
+
+    STRATEGY artifact: strategy.close_all(comment='time_stop_1555_ET')
+    INDICATOR artifact: alertcondition(time_to_close ..., title='Time Stop 15:55 ET')
+    Shared: time_to_close variable computed from time() session check.
+    """
+    strategy = _base_strategy()
+    result = compile_dual_artifacts(strategy, firm_key="topstep_50k")
+    assert result.strategy_artifact is not None
+    assert result.indicator_artifact is not None
+
+    strat_pine = result.strategy_artifact.content
+    ind_pine = result.indicator_artifact.content
+
+    # time_to_close variable must be in both (shared preamble)
+    assert "time_to_close" in strat_pine, (
+        "F-1: 'time_to_close' variable missing from strategy artifact"
+    )
+    assert "time_to_close" in ind_pine, (
+        "F-1: 'time_to_close' variable missing from indicator artifact"
+    )
+
+    # Strategy artifact: strategy.close_all() at 15:55
+    assert 'strategy.close_all(comment="time_stop_1555_ET")' in strat_pine, (
+        "F-1: strategy artifact missing strategy.close_all(comment='time_stop_1555_ET')"
+    )
+
+    # Indicator artifact: alertcondition fires at 15:55
+    assert 'Time Stop 15:55 ET' in ind_pine, (
+        "F-1: indicator artifact missing 'Time Stop 15:55 ET' alertcondition"
+    )
+
+    # Strategy artifact also has TradersPost time-stop alert
+    assert 'TP Time Stop 15:55 ET' in strat_pine, (
+        "F-1: strategy artifact missing 'TP Time Stop 15:55 ET' TradersPost alertcondition"
+    )
+
+    # 1555-1600 session window
+    assert "1555-1600" in strat_pine, "F-1: 1555-1600 session window missing from strategy artifact"
+    assert "1555-1600" in ind_pine, "F-1: 1555-1600 session window missing from indicator artifact"
+
+
+# ─── Test 8 — F-2: qty_final declared var int, valid Pine v5 reassignment ────
+
+def test_qty_final_declared_as_var_int():
+    """F-2: qty_final must be declared as 'var int qty_final' so := reassignment
+    is valid Pine v5 syntax in both the base ATR block and recipient override block."""
+    strategy = _base_strategy()
+    result = compile_dual_artifacts(strategy, firm_key="topstep_50k")
+    assert result.strategy_artifact is not None
+    assert result.indicator_artifact is not None
+
+    for artifact, label in [
+        (result.strategy_artifact.content, "strategy"),
+        (result.indicator_artifact.content, "indicator"),
+    ]:
+        assert "var int qty_final" in artifact, (
+            f"F-2: {label} artifact missing 'var int qty_final' declaration — "
+            "qty_final := will be a Pine v5 syntax error without prior var declaration"
+        )
+        # The := assignment must appear at least once (the ATR block's own assignment)
+        assert "qty_final :=" in artifact, (
+            f"F-2: {label} artifact missing 'qty_final :=' assignment after var declaration"
+        )
+
+
+# ─── Test 9 — F-3: NFP blackout window 8:30-9:00 not 8:00-9:00 ─────────────
+
+def test_nfp_blackout_window_8_30_not_8_00():
+    """F-3: NFP blackout must cover 8:30-9:00 ET (post-release cool-off only).
+    Previous bug: hour==8 and minute<60 blocked the full 8:00-9:00 hour.
+    Correct: hour==8 and minute>=30 matches CPI window style."""
+    strategy = _base_strategy()
+    result = compile_dual_artifacts(strategy, firm_key="topstep_50k")
+    assert result.strategy_artifact is not None
+
+    pine = result.strategy_artifact.content
+    # NFP-specific line: must use minute >= 30 (8:30-9:00 cool-off window)
+    nfp_line = next(
+        (ln for ln in pine.splitlines() if "nfp_blackout" in ln and "minute" in ln),
+        None,
+    )
+    assert nfp_line is not None, "F-3: nfp_blackout assignment line not found in strategy artifact"
+    assert "minute >= 30" in nfp_line, (
+        f"F-3: NFP blackout line must use 'minute >= 30' (8:30-9:00 window), got: {nfp_line}"
+    )
+    assert "minute < 60" not in nfp_line, (
+        f"F-3: NFP blackout line still uses 'minute < 60' (full-hour block bug): {nfp_line}"
+    )
+
+
+# ─── Test 10 — F-7: single ATR declaration, no dual atr_qty_period ──────────
+
+def test_single_atr_declaration_no_atr_qty_period():
+    """F-7: Only one ATR series used for both stop sizing and position sizing.
+    atr_qty_period input must NOT appear — sizing uses the shared atr_val.
+    This prevents stop ATR and sizing ATR from drifting when ATR swings mid-session."""
+    strategy = _base_strategy()
+    result = compile_dual_artifacts(strategy, firm_key="topstep_50k")
+    assert result.strategy_artifact is not None
+
+    pine = result.strategy_artifact.content
+
+    # atr_qty_period input must not appear in EXECUTABLE code (F-7).
+    # Comments explaining its removal are acceptable.
+    executable_lines = [ln for ln in pine.splitlines() if ln.strip() and not ln.strip().startswith("//")]
+    atr_qty_in_executable = any("atr_qty_period" in ln for ln in executable_lines)
+    assert not atr_qty_in_executable, (
+        "F-7: atr_qty_period input still in executable code — sizing ATR has drifted from stop ATR. "
+        "Remove atr_qty_period; use shared atr_val for both."
+    )
+
+    # atr_val must be used in sizing block (atr_val referenced in contracts_atr formula)
+    assert "contracts_atr" in pine, "F-7: contracts_atr sizing expression missing"
+
+    # Exactly one ta.atr() declaration in shared preamble (not two)
+    atr_call_count = pine.count("ta.atr(")
+    assert atr_call_count == 1, (
+        f"F-7: Expected exactly 1 ta.atr() call (shared), found {atr_call_count}. "
+        "Dual ATR declarations allow stop and sizing ATR to drift."
+    )
+
+
+# ─── Test 11 — F-12: webhook quantity is dynamic qty_final, not hardcoded 1 ──
+
+def test_webhook_quantity_is_dynamic_not_hardcoded():
+    """F-12: TradersPost alertcondition message must carry str.tostring(qty_final),
+    not a hardcoded 'quantity': 1. Family members on different profit tiers
+    must get correct contract counts in their live orders."""
+    strategy = _base_strategy()
+    result = compile_dual_artifacts(strategy, firm_key="topstep_50k")
+    assert result.strategy_artifact is not None
+
+    pine = result.strategy_artifact.content
+
+    # Must contain dynamic quantity
+    assert "str.tostring(qty_final)" in pine, (
+        "F-12: alertcondition message must use str.tostring(qty_final) for dynamic quantity, "
+        "not hardcoded '1'"
+    )
+
+    # Must NOT contain hardcoded '"quantity": 1' in the alertcondition lines
+    # (quantity value 1 in alertcondition message means hardcoded — str.tostring gives the var)
+    long_entry_lines = [
+        ln for ln in pine.splitlines()
+        if "TP Long Entry" in ln and "alertcondition" in ln
+    ]
+    for ln in long_entry_lines:
+        assert '"quantity": 1' not in ln, (
+            f"F-12: TP Long Entry alertcondition still has hardcoded quantity=1: {ln[:120]}"
+        )
