@@ -60,13 +60,17 @@ def _make_range_bias_state(
         macro_time_active=False,
     )
 
+    # IMPORTANT: no_trade_reasons must be empty for strong bias (abs >= 15) so
+    # that route_playbook doesn't short-circuit to NO_TRADE.
+    # For weak bias (abs < 15), no_trade_reasons would be populated by compute_bias.
+    # Our test cases use net_bias=±25 which is clear enough to NOT trigger no_trade_reasons.
     state = DailyBiasState(
         htf_context=htf,
         session_context=session,
         net_bias=net_bias,
-        bias_confidence=0.4,  # > 0.3 but not high conviction
+        bias_confidence=0.4,  # > 0.3 but not high conviction (won't hit TREND_CONTINUATION)
         playbook="NO_TRADE",  # old playbook before routing
-        no_trade_reasons=["No directional conviction (|bias| < 15)"],
+        no_trade_reasons=[],  # Empty: abs(25) >= 15 so no "no conviction" reason
         range_bound_eligible=True,
     )
     return state
