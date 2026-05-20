@@ -89,7 +89,8 @@ function readCanonicalYaml(docPath) {
     const m = line.match(/^([a-z0-9_]+)\s*:\s*(.*)$/i);
     if (!m) continue;
     const key = m[1];
-    let val = m[2].trim();
+    // Strip trailing inline YAML comment (# ...) before type-coercing the value
+    let val = m[2].trim().replace(/\s+#.*$/, "").trim();
     if (val === "null") {
       out[key] = null;
     } else if (val === "true" || val === "false") {
