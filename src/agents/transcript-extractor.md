@@ -283,6 +283,76 @@ If the source describes a HIGHER timeframe for trend direction and a LOWER timef
 
 **IMPORTANT NOTE ON ENGINE SUPPORT:** The backtester currently does NOT enforce the HTF bias gate at execution time (engine limitation as of 2026-05-19). The fields are preserved on the strategy config for future use. Downstream systems will add enforcement once the engine supports per-TF resampling. You should still emit these fields accurately — they will be enforced once the engine upgrade ships.
 
+### W23H-POSTMORTEM (2026-05-20) — STRICT-FILL RULES (override permissive defaults above)
+
+Real-world operator audit found archetype-style strategies (ICT silver bullet, CRT, power of 3, FVG retrace, supply/demand, etc.) routinely graduating with empty `bias_timeframe` and `confirming_indicators[]` even when the source clearly described BOTH. The LLM was being too conservative.
+
+**New strict rules — these OVERRIDE the "only when explicit" guidance above:**
+
+**RULE 1 — bias_timeframe is REQUIRED when the source mentions ANY of these phrases:**
+- "higher timeframe" / "HTF" / "1H" / "4H" / "daily" / "weekly" used in CONTEXT OF ENTRY LOGIC (not just as a passing reference)
+- "[X-hour/minute] bias" / "[X-hour/minute] trend"
+- "use the [X] for direction" / "use the [X] for trend" / "look at [X] first"
+- "wait for the [HTF candle] to close" / "[HTF] candle confirms"
+- Any explicit two-timeframe workflow: "I check the [HTF] then I enter on the [LTF]"
+
+If the source describes a two-timeframe workflow, you MUST emit `bias_timeframe` AND `execution_timeframe`. Even if the precise HTF indicator condition is fuzzy, emit `bias_timeframe` and emit `bias_condition` as your best summary of the HTF rule.
+
+**RULE 2 — confirming_indicators[] is REQUIRED when the source describes ≥2 structural conditions for entry:**
+
+ICT-style sequential workflows count as confluence even though the speaker walks through them in order. Example: "wait for the 4H FVG to form, then look for a Power of 3 on the 1-minute, then enter on the IFVG close" = 3 confluence factors:
+```json
+"primary_indicator": "fvg_retrace",
+"confirming_indicators": [
+  { "indicator": "power_of_3", "params": {}, "direction": "agree" },
+  { "indicator": "ifvg_close", "params": {}, "direction": "agree" }
+],
+"min_factors_satisfied": 3
+```
+
+Same logic for Wyckoff (spring + secondary test + SOS), CRT (range candle + sweep + IFVG), order block + retest + reaction, etc. Sequential ICT/SMC/Wyckoff/CRT mechanics ARE confluence — emit them as confirming_indicators.
+
+**RULE 3 — preferred_regimes for archetype:* strategies MUST be multi-valued:**
+
+ICT/SMC/Wyckoff/CRT/order_block/FVG/liquidity_sweep mechanics are bidirectional + multi-regime by design. The detector handler emits long AND short signals AND works in trending and ranging markets.
+
+When `entry_indicator` starts with `archetype:`, you MUST emit `preferred_regimes` as one of:
+- `["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"]` (default — covers all 3 regimes)
+- A 2-element subset ONLY when source explicitly excludes one (e.g. "this is a trend-only setup, don't trade in chop" → omit `RANGE_BOUND`)
+
+NEVER emit a single-regime array for archetype:* strategies. That's an under-extraction error.
+
+**RULE 4 — direction='both' is default for archetype:* strategies:**
+
+ICT/SMC/Wyckoff/CRT detectors emit long AND short signals at runtime. The `direction` field is `"both"` by default for archetype:* strategies. Only emit `"long"` or `"short"` when the source explicitly describes a single-side mechanic (e.g. "I only short reversals after London raid").
+
+**Concrete example — JackTrades 4H Pattern (4H, 15M, 1M):**
+
+Source describes: "On the 4-hour, find the most recent candle's range. Drop to 15-minute and identify the nearest fair value gap. On 1-minute, wait for a Power of 3 (accumulation, manipulation, distribution) to tap into that 15-minute FVG. Enter on the inversion FVG close. Works both long and short."
+
+Correct emission:
+```json
+{
+  "entry_indicator": "archetype:fvg_retrace",
+  "primary_indicator": "fvg_retrace",
+  "entry_params": {},
+  "confirming_indicators": [
+    { "indicator": "power_of_3", "params": {}, "direction": "agree" },
+    { "indicator": "ifvg_close", "params": {}, "direction": "agree" }
+  ],
+  "min_factors_satisfied": 3,
+  "bias_timeframe": "4h",
+  "bias_condition": "4H candle range defined (high/low/body marked)",
+  "execution_timeframe": "1m",
+  "timeframe": "1m",
+  "direction": "both",
+  "preferred_regimes": ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"],
+  "preferred_regime": "TRENDING_UP"
+}
+```
+
+Note `bias_timeframe: "4h"` IS emitted even though the LLM is conservative — because the source clearly uses a 4H+15M+1M workflow.
+
 ## Wave 23F — A+ Confluence Gate Fields (2026-05-19)
 
 These 5 fields are consumed by the downstream A+ confluence gate at graduation time. They describe WHAT the source explicitly states — never inferred or invented.
