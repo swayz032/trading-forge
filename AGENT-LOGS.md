@@ -4,6 +4,52 @@
 
 ---
 
+### Session Log — 2026-05-20 Architect — Wave 23H Pass 2 close-out (smart picker + Stage 2 custom factors + confluence sizing)
+
+**Mission:** Architect cleanup for Wave 23H Pass 2 — verify audit coverage for 4 new events, trace cross-subsystem picker→Stage2→sizing chain, run System Map sync + CI hard gates per CLAUDE.md §10 + §11 Rule 3.
+
+**Commits reviewed:**
+- `41d30e8` wave23h-pass2-w23hc — smart picker composite score (equal-weight starter, +picker-metrics.ts, +440 vitest)
+- `d2e8660` wave23h-pass2-w23h4 — confluence-weighted sizing 1.0/1.5/2.0 + Stage 2 custom factor evaluator (+484+490 vitest)
+
+**Audit event coverage (verified by Grep):**
+- `bias_engine.strategy_selected` with `component_scores` JSONB — OK (`bias-state-service.ts:200,209`)
+- `signal.a_plus_factor_evaluated` with `factor_source: 'per_strategy' | 'canonical_5'` — OK (`paper-signal-service.ts:2472,2479,2613,2620`)
+- `signal.a_plus_rejected` with `_a_plus_factor_source` in result + reason includes `source=` — OK (`paper-signal-service.ts:2514,2521,2524,2659,2666,2669`)
+- `sizing.confluence_multiplier_applied` with `binding_constraint` — PARTIAL: the audit payload type + ConfluenceAuditPayload + binding_constraint field are defined and populated in `risk-sizing.ts:183,571,624` and the result returns `confluenceAudit`, but the audit row itself is NOT emitted to `audit_log` anywhere in production code because there is NO production caller of `computeRiskDerivedContracts()` (see CRITICAL GAP below). The payload is plumbed; the emission site does not yet exist.
+
+**Cross-subsystem trace:**
+- Eligibility filter (W23H.B array containment) — OK. `bias-state-service.ts:156` uses `${preferredRegimes} @> ARRAY[${regimeLabel}]::text[]` OR'd with legacy `eq(preferredRegime, regimeLabel)` (both branches present at lines 156-157).
+- Composite weight starter — OK. `picker-metrics.ts:125` `const COMPONENT_WEIGHT = 0.25`; comments confirm 0.25 × 4 equal-weight, no pre-tuning leaked.
+- Stage 2 fallback to canonical 5 — OK. `paper-signal-service.ts` emits both `factor_source: 'per_strategy'` (lines 2472, 2613) and the canonical path with `factor_source` tagged.
+
+**CRITICAL WIRING GAP (W23H.4):**
+`computeRiskDerivedContracts()` has ZERO production callers in `src/server/services/*`. Confirmed by `Grep computeRiskDerivedContracts\(` excluding `__tests__`:
+- `src/server/services/broker-router.ts:182` — comment explicitly says "we do NOT call computeRiskDerivedContracts() here"
+- `src/server/services/paper-signal-service.ts` — uses legacy `dynamic_atr` formula at line 2848-2867 (`baseContracts = floor(target_risk / (atr * point_value))`); applies firm cap at line 2871; never imports risk-sizing.ts
+- `src/server/services/framework-overlay.ts` — only references in comments; does not invoke the function
+- Python engine (`src/engine/sizing.py`) — owns BACKTEST sizing; correct path for backtest, but the SIGNAL-TIME / PAPER-TIME wiring step from the Pass 2 plan is not implemented
+
+Plan §W23H.4 said: "Signal-time wiring: `confluence_count = entry_quality.confirming_indicators.length + 1`". That wiring step **was not implemented**. The library function, types, defaults, test coverage (37 confluence-sizing tests + 25 Stage 2 tests) are correct; the consumer integration point in paper-signal-service was not added. Net effect: confluence-weighted sizing has no live behavior until a follow-up dispatch wires `computeRiskDerivedContracts` into `paper-signal-service.ts:~2851` (replacing the `dynamic_atr` block) with `confluence_count` derived from the active strategy's `entry_quality.confirming_indicators.length + 1`.
+
+**This was reported, not fixed (per architect read-only mandate). Follow-up fix-agent dispatch required.**
+
+**Verification:**
+- `npm run system-map:sync` — OK (counts: 62 routes / 62 jobs / 28 workflows / 26 engine subsystems / 92 tables / 21 registry subsystems)
+- `npm run system-map:check` — `"status": "ok"`, `driftItems: []`, exit 0
+- `npm run check:production-isolation` — CLEAN (4 files checked, 0 violations)
+- `npm run check:2026-compliance` — known pre-existing DRIFT on `max_contracts=50` for Topstep/MFFU (comment-only canonical-doc string mismatch; numeric value 50 is correct; pre-Pass-2 baseline)
+- Wave 23H Pass 2 vitest fleet — 78 tests pass across 3 suites (37 confluence-sizing + 25 stage2-custom-factors + 16 smart-picker)
+
+**Known-facts updates:** None — but a new project-memory pin would be warranted once the wiring fix lands: "W23H.4 confluence multiplier becomes ACTIVE when paper-signal-service replaces the dynamic_atr block with computeRiskDerivedContracts()."
+
+**Carry-forward for next session:**
+- Dispatch `paper-parity` subagent to replace `paper-signal-service.ts:2848-2871` `dynamic_atr` sizing block with `computeRiskDerivedContracts()` call; derive `confluence_count = entry_quality.confirming_indicators.length + 1` from active strategy row; emit `sizing.confluence_multiplier_applied` audit row from returned `confluenceAudit` payload
+- Confirm broker-router quantity-clamp drift audit doesn't fire post-wiring (would indicate sizing math mismatch between paper-signal and broker-router)
+- After wiring lands: re-run `wave23h-confluence-sizing` suite AGAINST paper-signal integration test (currently the integration test surface for the new code path is library-only)
+
+---
+
 ### Session Log — 2026-05-20 Architect — Wave 23H Pass 1 close-out (cross-subsystem integrity + System Map sync)
 
 **Mission:** Final architect cleanup for Wave 23H Pass 1 — audit_log coverage check, cross-subsystem contract verification, System Map sync, CI hard gates per CLAUDE.md §10 + §11 Rule 3.
