@@ -126,6 +126,42 @@ def _safe_float(v, default: float = 0.0) -> float:
         return default
 
 
+def _aggregate_metric_raw(result: dict, key: str, default=0.0):
+    """Return raw value at top-level OR nested under oos_metrics.
+
+    Unlike `_aggregate_metric`, this does NOT filter NaN/inf — used by the
+    finiteness checks (INV-9 sharpe_finite, INV-10 profit_factor_finite)
+    which must preserve NaN so they can detect it.
+    """
+    if key in result and result[key] is not None:
+        return result[key]
+    oos = result.get("oos_metrics") or {}
+    if isinstance(oos, dict) and key in oos and oos[key] is not None:
+        return oos[key]
+    return default
+
+
+def _aggregate_metric(result: dict, key: str, default: float = 0.0) -> float:
+    """Read an aggregate metric (total_return, total_trades, sharpe, etc.)
+    that may live at the top level OR nested under `oos_metrics`.
+
+    Pass D fix (2026-05-20): walk-forward results return the aggregate metrics
+    nested under `oos_metrics` (walk_forward.py:512-523). Single-window
+    backtests return them at the top level (backtester.py:2599+). The
+    invariant harness must handle BOTH layouts or it will false-positive
+    every walk-forward backtest with `metric == 0` failures.
+
+    Prefer top-level when present (single mode); fall back to oos_metrics
+    (walk-forward mode). Returns `default` (0) only when BOTH paths miss.
+    """
+    if key in result and result[key] is not None:
+        return _safe_float(result[key], default)
+    oos = result.get("oos_metrics") or {}
+    if isinstance(oos, dict) and key in oos and oos[key] is not None:
+        return _safe_float(oos[key], default)
+    return default
+
+
 # ─── Individual invariant checks ─────────────────────────────────────────────
 
 
@@ -133,7 +169,7 @@ def _check_balance_arithmetic(result: dict) -> InvariantCheck:
     """INV-1 CRITICAL: ending_balance ≈ starting_balance + total_return."""
     TOLERANCE = 1.0
     starting = _safe_float(result.get("starting_balance", _STARTING_BALANCE))
-    total_return = _safe_float(result.get("total_return", 0.0))
+    total_return = _aggregate_metric(result, "total_return", 0.0)
     ending = _safe_float(result.get("ending_balance", starting + total_return))
 
     expected_ending = starting + total_return
@@ -160,7 +196,7 @@ def _check_trade_pnl_sum(result: dict) -> InvariantCheck:
     """INV-2 CRITICAL: sum(trade.PnL) ≈ total_return."""
     TOLERANCE = 1.0
     trades = result.get("trades", [])
-    total_return = _safe_float(result.get("total_return", 0.0))
+    total_return = _aggregate_metric(result, "total_return", 0.0)
 
     pnl_sum = sum(_safe_float(t.get("PnL", t.get("pnl", 0.0))) for t in trades)
     diff = abs(pnl_sum - total_return)
@@ -186,11 +222,11 @@ def _check_daily_pnl_sum(result: dict) -> InvariantCheck:
     """INV-3 CRITICAL: sum(daily_pnls) ≈ total_return (tolerance $5 for EOD drift)."""
     TOLERANCE = 5.0
     daily_pnls = result.get("daily_pnls", [])
-    total_return = _safe_float(result.get("total_return", 0.0))
+    total_return = _aggregate_metric(result, "total_return", 0.0)
 
     if not daily_pnls:
         # No daily data — only check if there are also no trades.
-        total_trades = int(result.get("total_trades", 0))
+        total_trades = int(_aggregate_metric(result, "total_trades", 0))
         passed = total_trades == 0
         return InvariantCheck(
             name="daily_pnl_sum_matches_total_return",
@@ -230,7 +266,7 @@ def _check_daily_pnl_sum(result: dict) -> InvariantCheck:
 def _check_long_short_split_sum(result: dict) -> InvariantCheck:
     """INV-4 CRITICAL: long_pnl + short_pnl ≈ total_return (tolerance $1)."""
     TOLERANCE = 1.0
-    total_return = _safe_float(result.get("total_return", 0.0))
+    total_return = _aggregate_metric(result, "total_return", 0.0)
     ls = result.get("long_short_split", {})
 
     # Skip if no split data available
@@ -269,7 +305,7 @@ def _check_long_short_split_sum(result: dict) -> InvariantCheck:
 
 def _check_long_short_count(result: dict) -> InvariantCheck:
     """INV-5 CRITICAL: long_count + short_count == total_trades (exact)."""
-    total_trades = int(result.get("total_trades", 0))
+    total_trades = int(_aggregate_metric(result, "total_trades", 0))
     ls = result.get("long_short_split", {})
 
     if not ls or "long" not in ls or "short" not in ls:
@@ -306,7 +342,7 @@ def _check_long_short_count(result: dict) -> InvariantCheck:
 
 def _check_win_rate_in_range(result: dict) -> InvariantCheck:
     """INV-6 CRITICAL: 0 <= win_rate <= 1."""
-    win_rate = _safe_float(result.get("win_rate", 0.0))
+    win_rate = _aggregate_metric(result, "win_rate", 0.0)
     passed = 0.0 <= win_rate <= 1.0
 
     return InvariantCheck(
@@ -326,7 +362,7 @@ def _check_win_rate_in_range(result: dict) -> InvariantCheck:
 
 def _check_max_drawdown_non_negative(result: dict) -> InvariantCheck:
     """INV-7 CRITICAL: max_drawdown >= 0 (stored as positive loss in dollars)."""
-    max_dd = _safe_float(result.get("max_drawdown", 0.0))
+    max_dd = _aggregate_metric(result, "max_drawdown", 0.0)
     passed = max_dd >= 0.0
 
     return InvariantCheck(
@@ -386,8 +422,8 @@ def _check_peak_equity_at_least_starting(result: dict) -> InvariantCheck:
 
 def _check_sharpe_finite(result: dict) -> InvariantCheck:
     """INV-9 WARNING: sharpe_ratio is finite when total_trades > 0."""
-    total_trades = int(result.get("total_trades", 0))
-    sharpe = result.get("sharpe_ratio", 0.0)
+    total_trades = int(_aggregate_metric(result, "total_trades", 0))
+    sharpe = _aggregate_metric_raw(result, "sharpe_ratio", 0.0)
 
     if total_trades == 0:
         return InvariantCheck(
@@ -419,8 +455,8 @@ def _check_sharpe_finite(result: dict) -> InvariantCheck:
 
 def _check_profit_factor_finite(result: dict) -> InvariantCheck:
     """INV-10 WARNING: profit_factor is finite when total_trades > 0."""
-    total_trades = int(result.get("total_trades", 0))
-    pf = result.get("profit_factor", 0.0)
+    total_trades = int(_aggregate_metric(result, "total_trades", 0))
+    pf = _aggregate_metric_raw(result, "profit_factor", 0.0)
 
     if total_trades == 0:
         return InvariantCheck(
@@ -456,9 +492,9 @@ def _check_profit_factor_finite(result: dict) -> InvariantCheck:
 def _check_avg_trade_pnl_consistent(result: dict) -> InvariantCheck:
     """INV-11 WARNING: total_return / total_trades ≈ avg_trade_pnl."""
     TOLERANCE = 0.50
-    total_trades = int(result.get("total_trades", 0))
-    total_return = _safe_float(result.get("total_return", 0.0))
-    avg_trade_pnl = _safe_float(result.get("avg_trade_pnl", 0.0))
+    total_trades = int(_aggregate_metric(result, "total_trades", 0))
+    total_return = _aggregate_metric(result, "total_return", 0.0)
+    avg_trade_pnl = _aggregate_metric(result, "avg_trade_pnl", 0.0)
 
     if total_trades == 0:
         return InvariantCheck(
@@ -496,7 +532,7 @@ def _check_commission_per_trade_reasonable(result: dict) -> InvariantCheck:
     # $3 roundtrip per contract is a conservative ceiling — Topstep charges ~$0.62/side = $1.24/rt.
     MAX_COMMISSION_PER_TRADE = 3.0
     trades = result.get("trades", [])
-    total_trades = int(result.get("total_trades", 0))
+    total_trades = int(_aggregate_metric(result, "total_trades", 0))
 
     if total_trades == 0 or not trades:
         return InvariantCheck(
@@ -534,7 +570,7 @@ def _check_commission_per_trade_reasonable(result: dict) -> InvariantCheck:
 def _check_per_firm_endings(result: dict) -> InvariantCheck:
     """INV-13 WARNING: for each firm in prop_compliance, firm.ending_balance_uncapped ≈ starting + total_return."""
     TOLERANCE = 1.0
-    total_return = _safe_float(result.get("total_return", 0.0))
+    total_return = _aggregate_metric(result, "total_return", 0.0)
     prop_compliance = result.get("prop_compliance", {})
 
     if not prop_compliance:
@@ -599,7 +635,7 @@ def _check_per_firm_endings(result: dict) -> InvariantCheck:
 
 def _check_equity_curve_continuous(result: dict) -> InvariantCheck:
     """INV-14 WARNING: equity curve has no NaN/null bars; non-empty when trades > 0."""
-    total_trades = int(result.get("total_trades", 0))
+    total_trades = int(_aggregate_metric(result, "total_trades", 0))
     equity_bars = result.get("equity_bars", [])
     equity_curve = result.get("equity_curve", [])
 
