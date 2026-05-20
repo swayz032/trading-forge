@@ -35,8 +35,9 @@ import { biasState, strategies } from "../db/schema.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
-import { and, eq, isNotNull, desc, sql } from "drizzle-orm";
+import { and, eq, isNotNull, desc, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { computePickerScores } from "./picker-metrics.js";
 
 // ─── Active symbols ───────────────────────────────────────────────────────────
 export const BIAS_SYMBOLS = ["MES", "MNQ", "MCL"] as const;
@@ -106,47 +107,122 @@ function stubBiasState(sessionDate: string, symbol: string): BiasStateForSignal 
 /**
  * Resolve the best matching active strategy for today's regime.
  *
- * Match criteria (in priority order):
+ * W23H.C — composite-score picker (replaces naive MAX(forge_score)).
+ *
+ * Match criteria:
  *   1. strategy.lifecycle_state IN (CANDIDATE, TESTING, PAPER)
- *   2. strategy.preferred_regime == regimeLabel (or regimeLabel == 'UNKNOWN')
- *   3. Highest forge_score; tie-break by created_at ASC (oldest first)
+ *   2. Regime eligibility (W23H.B array-aware):
+ *      - preferred_regimes @> ARRAY[regimeLabel]  (new column, array containment)
+ *      - OR preferred_regime = regimeLabel         (fallback for pre-W23H.B rows)
+ *      - When regimeLabel is 'UNKNOWN' → skip regime filter (fallback mode)
+ *   3. Composite score (equal-weight 0.25 × 4) ranks candidates:
+ *      - rolling_30d_deflated_sharpe  (out-of-sample quality)
+ *      - regime_conditional_pf        (regime-specific edge)
+ *      - recency_penalty              (anti-recency-bias rotation)
+ *      - diversification_score        (anti-archetype concentration)
+ *   4. Tie-break: created_at ASC (oldest first — stable determinism)
  *
  * When regimeLabel is 'NO_TRADE' → no strategy is active (null).
- * When regimeLabel is 'UNKNOWN'  → any strategy may match (fallback mode).
+ * When no eligible strategies exist → null.
+ *
+ * Audit event: bias_engine.strategy_selected with full component breakdown.
  */
-async function resolveActiveStrategy(regimeLabel: string): Promise<string | null> {
+async function resolveActiveStrategy(
+  regimeLabel: string,
+  correlationId?: string,
+): Promise<string | null> {
   if (regimeLabel === "NO_TRADE") return null;
 
-  const eligibleLifecycleStates = ["CANDIDATE", "TESTING", "PAPER"];
+  // ── Step 1: fetch eligible candidate ids ────────────────────────────────────
+  let eligibleRows: { id: string; createdAt: Date }[];
 
-  // Build query dynamically: if regime is UNKNOWN, skip regime filter
-  let rows: { id: string; forgeScore: string | null }[];
+  const lifecycleFilter = sql`${strategies.lifecycleState} = ANY(ARRAY['CANDIDATE','TESTING','PAPER']::text[])`;
 
   if (regimeLabel === "UNKNOWN") {
-    rows = await db
-      .select({ id: strategies.id, forgeScore: strategies.forgeScore })
+    // UNKNOWN = fallback mode, no regime filtering
+    eligibleRows = await db
+      .select({ id: strategies.id, createdAt: strategies.createdAt })
       .from(strategies)
-      .where(
-        sql`${strategies.lifecycleState} = ANY(ARRAY['CANDIDATE','TESTING','PAPER']::text[])`,
-      )
-      .orderBy(desc(strategies.forgeScore), strategies.createdAt)
-      .limit(1);
+      .where(lifecycleFilter);
   } else {
-    rows = await db
-      .select({ id: strategies.id, forgeScore: strategies.forgeScore })
+    // Array-containment check (W23H.B) OR single-value fallback (pre-W23H.B rows)
+    eligibleRows = await db
+      .select({ id: strategies.id, createdAt: strategies.createdAt })
       .from(strategies)
       .where(
         and(
-          sql`${strategies.lifecycleState} = ANY(ARRAY['CANDIDATE','TESTING','PAPER']::text[])`,
-          eq(strategies.preferredRegime, regimeLabel),
+          lifecycleFilter,
+          or(
+            sql`${strategies.preferredRegimes} @> ARRAY[${regimeLabel}]::text[]`,
+            eq(strategies.preferredRegime, regimeLabel),
+          ),
         ),
-      )
-      .orderBy(desc(strategies.forgeScore), strategies.createdAt)
-      .limit(1);
+      );
   }
 
-  if (!rows.length) return null;
-  return rows[0].id;
+  if (!eligibleRows.length) return null;
+
+  const eligibleIds = eligibleRows.map((r) => r.id);
+  const createdAtById = new Map(eligibleRows.map((r) => [r.id, r.createdAt]));
+
+  // ── Step 2: compute composite scores ────────────────────────────────────────
+  let scoreMap: Map<string, { composite: number; rolling_30d_deflated_sharpe: number; regime_conditional_pf: number; recency_penalty: number; diversification_score: number }>;
+
+  try {
+    scoreMap = await computePickerScores(eligibleIds, regimeLabel);
+  } catch (err) {
+    // computePickerScores is fail-open: log and fall back to forge_score ordering
+    logger.warn({ err, regimeLabel, eligiblePoolSize: eligibleIds.length },
+      "resolveActiveStrategy: computePickerScores failed — falling back to forge_score order");
+    // Return first by created_at (deterministic fallback, not null — system stays alive)
+    const sorted = eligibleRows.slice().sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    return sorted[0]?.id ?? null;
+  }
+
+  // ── Step 3: sort by composite DESC, tie-break createdAt ASC ─────────────────
+  const ranked = eligibleIds.slice().sort((a, b) => {
+    const ca = scoreMap.get(a)?.composite ?? 0;
+    const cb = scoreMap.get(b)?.composite ?? 0;
+    if (cb !== ca) return cb - ca; // higher composite first
+    // Tie-break: older strategy first (stable, deterministic)
+    const ta = createdAtById.get(a)?.getTime() ?? 0;
+    const tb = createdAtById.get(b)?.getTime() ?? 0;
+    return ta - tb;
+  });
+
+  const selectedId = ranked[0];
+  if (!selectedId) return null;
+
+  // ── Step 4: emit audit event with full component breakdown ──────────────────
+  const components = scoreMap.get(selectedId);
+  try {
+    await insertAuditRow({
+      action: "bias_engine.strategy_selected",
+      entityId: selectedId,
+      entityType: "strategy",
+      status: "success",
+      decisionAuthority: "system",
+      correlationId: correlationId ?? null,
+      result: {
+        strategy_id: selectedId,
+        composite_score: components?.composite ?? 0,
+        component_scores: {
+          deflated_sharpe: components?.rolling_30d_deflated_sharpe ?? 0,
+          regime_pf: components?.regime_conditional_pf ?? 0,
+          recency: components?.recency_penalty ?? 0,
+          diversification: components?.diversification_score ?? 0,
+        },
+        eligible_pool_size: eligibleIds.length,
+        regime_label: regimeLabel,
+      } as Record<string, unknown>,
+    });
+  } catch (auditErr) {
+    // Audit failure must never block strategy selection
+    logger.warn({ auditErr, selectedId, regimeLabel },
+      "resolveActiveStrategy: audit row insert failed — selection proceeds");
+  }
+
+  return selectedId;
 }
 
 /**
@@ -656,7 +732,7 @@ except Exception as primary_err:
   // Resolve active strategy
   let activeStrategyId: string | null = null;
   try {
-    activeStrategyId = await resolveActiveStrategy(regimeLabel);
+    activeStrategyId = await resolveActiveStrategy(regimeLabel, correlationId);
   } catch (stratErr) {
     logger.warn({ err: stratErr, sessionDate, symbol: sym, regimeLabel }, "bias-state: strategy resolution failed — null");
   }
