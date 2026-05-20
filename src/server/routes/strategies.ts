@@ -768,12 +768,16 @@ strategyRoutes.post("/lifecycle/check", async (req, res) => {
   try {
     // P11: thread req.id so lifecycle audit rows from this manual trigger carry
     // the same correlationId as the inbound HTTP request.
+    // F-10 FIX: checkPilotAutoPromotions was omitted from manual trigger, causing
+    // manual POST /lifecycle/check to be inconsistent with the cron sweep. Manual
+    // trigger must be functionally identical to the scheduled cron.
     const correlationId = req.id;
-    const [promotions, demotions] = await Promise.all([
+    const [promotions, demotions, pilotPromotions] = await Promise.all([
       lifecycleService.checkAutoPromotions({ correlationId }),
       lifecycleService.checkAutoDemotions({ correlationId }),
+      lifecycleService.checkPilotAutoPromotions({ correlationId }),
     ]);
-    res.json({ promotions, demotions });
+    res.json({ promotions, demotions, pilotPromotions });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

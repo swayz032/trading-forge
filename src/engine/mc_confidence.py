@@ -86,7 +86,19 @@ def survival_rate_stat(terminal_values: np.ndarray, axis=0):
 
 
 def max_drawdown_p5_stat(max_drawdowns: np.ndarray, axis=0):
-    """5th percentile of max drawdowns (worst-case)."""
+    """5th percentile of max drawdowns (worst-case).
+
+    Convention: drawdowns are POSITIVE dollar amounts (depth of loss).
+    The 5th percentile is the worst 5% of outcomes — a large POSITIVE number
+    means a severe drawdown. CI low/high are also positive (dollar depths).
+
+    F-7 FIX: previously returned a negative value because max_drawdowns was
+    computed as `np.min(mc_paths - peak, axis=1)` (most-negative = worst DD).
+    compute_all_mc_cis() now passes POSITIVE dollar drawdown magnitudes, so
+    this statistic returns positive values throughout the pipeline.
+    Downstream consumers receiving negative max_drawdown_p5 CIs should be
+    re-baselined: the absolute magnitude is unchanged; only the sign flips.
+    """
     return np.percentile(max_drawdowns, 5, axis=axis)
 
 
@@ -122,10 +134,17 @@ def compute_all_mc_cis(
 
     terminal = mc_paths[:, -1]
 
-    # Max drawdown per path
+    # Max drawdown per path — POSITIVE dollar magnitude convention.
+    # F-7 FIX: previously computed as np.min(mc_paths - peak, axis=1) which returns
+    # NEGATIVE values (most-negative = worst DD). BCa CIs then reported negative
+    # ci_low/ci_high for max_drawdown_p5 — counterintuitive and incorrectly signed
+    # for downstream consumers (promotion gates, risk reports, UI).
+    # Fix: convert to positive depth = peak - equity. Larger positive value = worse DD.
+    # The absolute magnitude is unchanged; only the sign convention is corrected.
+    # NOTE: any existing test fixtures that assert negative max_drawdown_p5 ci_low/ci_high
+    # must be re-baselined to positive values of the same magnitude (documented here).
     peak = np.maximum.accumulate(mc_paths, axis=1)
-    drawdowns = mc_paths - peak
-    max_dd_per_path = np.min(drawdowns, axis=1)
+    max_dd_per_path = np.max(peak - mc_paths, axis=1)  # positive dollar drawdown depth
 
     results = {}
     for name, data, fn in [

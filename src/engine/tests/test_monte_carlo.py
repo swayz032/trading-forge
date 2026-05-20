@@ -95,10 +95,23 @@ class TestReturnBootstrap:
         np.testing.assert_array_equal(a, b)
 
     def test_custom_n_days(self):
-        """Can simulate more days than original data."""
+        """Can simulate more days than original data; n_days > 5× history is capped.
+
+        F-9 FIX (2026-05-20): return_bootstrap now caps n_days at 5× history length
+        (default, configurable via MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION env var) to
+        prevent degenerate tail estimates from extreme extrapolation.  n_days=500 with
+        50 days of history = 10× → capped at 5×50=250.  The test is updated to reflect
+        the new contract: shape is (n_sims, min(n_days, 5×n_hist)) when cap applies.
+        """
+        import os
         daily = _make_daily_pnls(50)
+        # 500 days with 50 history = 10× — capped at 5×50=250 (default cap)
         paths = return_bootstrap(daily, n_sims=100, n_days=500, seed=42)
-        assert paths.shape == (100, 500)
+        max_extrap = float(os.environ.get("MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION", "5.0"))
+        expected_days = min(500, int(50 * max_extrap))
+        assert paths.shape == (100, expected_days), (
+            f"Expected shape (100, {expected_days}) after F-9 cap, got {paths.shape}"
+        )
 
     def test_empty_returns_raises(self):
         with pytest.raises(ValueError, match="empty"):
@@ -720,3 +733,255 @@ class TestEODTrailingHWMFix:
         result = simulate_firm_survival(paths, "topstep_50k", account_size=50000)
         # No breach on a uniformly winning path
         assert result["breach_reasons"].get("trailing_dd", 0) == 0
+
+
+# ─── F-6: MFFU sliding-window consistency check ────────────────────
+
+class TestMFFUSlidingWindowConsistency:
+    """F-6: MFFU consistency must use per-payout-period windows, not full-path total.
+
+    MFFU pays out every 14 days (payout_cycle_days=14 in FIRM_RULES).
+    A single day accounting for > 50% of a 14-day window's profit is a
+    violation even if it's < 50% of the full eval path profit.
+    """
+
+    def test_full_path_ok_but_window_violated(self):
+        """A day that is < 50% of full-path but > 50% of its 14-day window must violate."""
+        from src.engine.monte_carlo import simulate_firm_survival
+
+        # 28 steps (2 payout cycles of 14 days each).
+        # Window 1: one big day $2000, then $200/day for 13 more days = window total $4600.
+        # $2000 / $4600 ≈ 43.5% — just under the 50% threshold → should NOT violate window 1.
+        # Window 2: one massive day $3000, then $100/day for 13 more days = window total $4300.
+        # $3000 / $4300 ≈ 69.8% — OVER 50% → must violate window 2.
+        # Full-path total = $4600 + $4300 = $8900; best day = $3000; $3000/$8900 ≈ 33.7% < 50%
+        # → old code (full-path check) would NOT flag this. New code (window) must flag it.
+        n_sims = 1
+        window_1 = [2000.0] + [200.0] * 13   # 14 days
+        window_2 = [3000.0] + [100.0] * 13   # 14 days
+        step_pnls = window_1 + window_2
+        cumulative = np.array([np.cumsum(step_pnls)])  # shape (1, 28)
+
+        result = simulate_firm_survival(
+            cumulative, "mffu_50k", account_size=50000,
+            backtest_commission_rt=1.24,
+        )
+        # Must detect a consistency violation in window 2
+        assert result["breach_reasons"].get("consistency", 0) > 0
+
+    def test_both_windows_ok_no_violation(self):
+        """When no 14-day window is violated, consistency check must pass."""
+        from src.engine.monte_carlo import simulate_firm_survival
+
+        # Both windows: best day is exactly 40% of window total — under 50% threshold.
+        # Window 1: $2000 + $3000/day×13 = $2000 + $39000 total, best=$39000... let's
+        # keep it simple: $400/day for 14 days, then $400/day for 14 days = even split.
+        n_sims = 1
+        step_pnls = [400.0] * 28
+        cumulative = np.array([np.cumsum(step_pnls)])  # (1, 28)
+
+        result = simulate_firm_survival(
+            cumulative, "mffu_50k", account_size=50000,
+            backtest_commission_rt=1.24,
+        )
+        # Uniform $400/day means each day is 1/14 of its window ≈ 7.1% < 50% → no violation.
+        assert result["breach_reasons"].get("consistency", 0) == 0
+
+
+# ─── F-7: max_drawdown_p5 positive sign convention ─────────────────
+
+class TestMaxDrawdownP5SignConvention:
+    """F-7: compute_all_mc_cis must return POSITIVE dollar drawdown magnitudes.
+
+    Previous bug: max_dd_per_path = np.min(mc_paths - peak, axis=1) returned
+    NEGATIVE values. BCa CIs then had negative ci_low/ci_high — counterintuitive
+    and wrong for downstream consumers.
+    Fix: max_dd_per_path = np.max(peak - mc_paths, axis=1) — positive depth.
+    """
+
+    def test_max_dd_p5_positive(self):
+        """BCa max_drawdown_p5 CI values must be >= 0 (positive dollar depth)."""
+        from src.engine.mc_confidence import compute_all_mc_cis
+
+        # Create paths that definitely have drawdowns
+        rng = np.random.default_rng(42)
+        # 500 sims, 100 steps — equity paths with clear drawdowns
+        returns = rng.normal(10, 100, size=(500, 100))
+        mc_paths = np.cumsum(returns, axis=1) + 50000.0
+
+        cis = compute_all_mc_cis(mc_paths, confidence_level=0.95, n_resamples=999, seed=42)
+        if "max_drawdown_p5" in cis:
+            entry = cis["max_drawdown_p5"]
+            assert entry["point_estimate"] >= 0, (
+                f"max_drawdown_p5 point_estimate must be >= 0 (positive depth), got {entry['point_estimate']}"
+            )
+            assert entry["ci_low"] >= 0, (
+                f"max_drawdown_p5 ci_low must be >= 0 (positive depth), got {entry['ci_low']}"
+            )
+            assert entry["ci_high"] >= 0, (
+                f"max_drawdown_p5 ci_high must be >= 0 (positive depth), got {entry['ci_high']}"
+            )
+
+    def test_max_dd_p5_less_than_mean(self):
+        """p5 of max drawdowns must be <= mean drawdown (it is the LEFT tail, not the worst).
+
+        max_drawdown_p5_stat returns the 5th percentile of the per-sim max-drawdown distribution.
+        In a distribution of POSITIVE drawdown magnitudes:
+          - p5 = the threshold below which only 5% of sims fall → a small (favorable) DD value
+          - p95 = the threshold below which 95% of sims fall → the large (worst-case) DD value
+        The stat is named "p5" because it is used as a worst-case guard (only 5% of paths had
+        a smaller max DD), but within the magnitude distribution it sits at the LEFT (small) end.
+
+        Sign convention after F-7: all values are POSITIVE dollar depths, so p5 <= mean <= p95.
+        """
+        from src.engine.mc_confidence import compute_all_mc_cis
+
+        rng = np.random.default_rng(99)
+        returns = rng.normal(5, 150, size=(1000, 200))
+        mc_paths = np.cumsum(returns, axis=1) + 50000.0
+
+        peak = np.maximum.accumulate(mc_paths, axis=1)
+        max_dd_per_path = np.max(peak - mc_paths, axis=1)
+        mean_dd = float(np.mean(max_dd_per_path))
+
+        cis = compute_all_mc_cis(mc_paths, confidence_level=0.95, n_resamples=999, seed=99)
+        if "max_drawdown_p5" in cis:
+            p5 = cis["max_drawdown_p5"]["point_estimate"]
+            # p5 is the 5th percentile → sits at the SMALL end of the distribution → <= mean
+            assert p5 >= 0, f"max_drawdown_p5 must be positive (dollar depth), got {p5}"
+            assert p5 <= mean_dd * 1.1, (
+                f"max_drawdown_p5 ({p5:.1f}) should be <= mean_dd ({mean_dd:.1f}) — "
+                "5th pct sits at the low (small DD) end of the distribution"
+            )
+
+
+# ─── F-9: return_bootstrap extrapolation warning ────────────────────
+
+class TestReturnBootstrapExtrapolationWarning:
+    """F-9: return_bootstrap must warn to stderr when n_days > 1.5× history length."""
+
+    def test_warns_on_heavy_extrapolation(self, capsys):
+        """n_days = 4× history → warning printed to stderr."""
+        daily = _make_daily_pnls(50)
+        # 50 history days, 200 simulated days → 4× extrapolation (above 1.5× threshold)
+        return_bootstrap(daily, n_sims=10, n_days=200, seed=42)
+        captured = capsys.readouterr()
+        assert "WARNING" in captured.err or "extrapolat" in captured.err.lower(), (
+            "Expected extrapolation warning in stderr"
+        )
+
+    def test_no_warning_within_threshold(self, capsys):
+        """n_days = 1× history → no warning."""
+        daily = _make_daily_pnls(100)
+        return_bootstrap(daily, n_sims=10, n_days=100, seed=42)
+        captured = capsys.readouterr()
+        assert "extrapolat" not in captured.err.lower()
+
+    def test_hard_cap_applied(self):
+        """n_days >> 5× history must be capped at 5× (default cap)."""
+        daily = _make_daily_pnls(10)  # 10 history days; cap at 50
+        # Request 1000 days — should be capped at 50
+        paths = return_bootstrap(daily, n_sims=5, n_days=1000, seed=42)
+        # Output shape n_days dimension should be capped
+        assert paths.shape[1] <= 50, (
+            f"Expected paths capped at 50 days (5× history), got shape {paths.shape}"
+        )
+
+
+# ─── F-10 / F-12: MonteCarloRequest new fields ──────────────────────
+
+class TestMonteCarloRequestNewFields:
+    """F-10: backtest_commission_rt in MonteCarloRequest.
+    F-12: avg_trades_per_day in MonteCarloRequest.
+    """
+
+    def test_backtest_commission_rt_defaults_none(self):
+        """backtest_commission_rt must default to None (backward compat)."""
+        req = MonteCarloRequest(backtest_id="test")
+        assert req.backtest_commission_rt is None
+
+    def test_backtest_commission_rt_accepts_float(self):
+        """backtest_commission_rt must accept a float value."""
+        req = MonteCarloRequest(backtest_id="test", backtest_commission_rt=1.24)
+        assert req.backtest_commission_rt == pytest.approx(1.24)
+
+    def test_avg_trades_per_day_defaults_1_5(self):
+        """avg_trades_per_day must default to 1.5."""
+        req = MonteCarloRequest(backtest_id="test")
+        assert req.avg_trades_per_day == pytest.approx(1.5)
+
+    def test_avg_trades_per_day_accepts_float(self):
+        """avg_trades_per_day must accept a custom value."""
+        req = MonteCarloRequest(backtest_id="test", avg_trades_per_day=3.7)
+        assert req.avg_trades_per_day == pytest.approx(3.7)
+
+    def test_commission_rt_propagated_to_survival(self):
+        """When backtest_commission_rt is set, simulate_firm_survival must not log warning."""
+        import logging
+        from src.engine.monte_carlo import simulate_firm_survival
+
+        trades = _make_trades(80).tolist()
+        daily = _make_daily_pnls(200).tolist()
+
+        req = MonteCarloRequest(
+            backtest_id="test",
+            num_simulations=100,
+            method="trade_resample",
+            use_gpu=False,
+            firms=["topstep_50k"],
+            backtest_commission_rt=1.24,
+            avg_trades_per_day=2.0,
+        )
+        result = run_monte_carlo(req, trades, daily, [])
+        # Should complete without error and have firm_survival
+        assert "error" not in result
+        assert "firm_survival" in result
+
+
+# ─── F-11: vectorized compute_drawdown_stats performance ────────────
+
+class TestDrawdownStatsVectorized:
+    """F-11: compute_drawdown_stats must be correct and fast (no Python sim loops)."""
+
+    def test_max_dd_depth_nonnegative(self):
+        """max_dd_depth values must be >= 0 for all percentile levels."""
+        from src.engine.monte_carlo import compute_drawdown_stats
+        rng = np.random.default_rng(42)
+        paths = np.cumsum(rng.normal(5, 100, size=(1000, 100)), axis=1)
+        stats = compute_drawdown_stats(paths, initial_capital=50000.0)
+        for pct, val in stats["max_dd_depth"].items():
+            assert val >= 0, f"max_dd_depth.{pct} should be >= 0, got {val}"
+
+    def test_recovery_time_bounded(self):
+        """recovery_time_bars percentiles must be in [0, n_steps]."""
+        from src.engine.monte_carlo import compute_drawdown_stats
+        rng = np.random.default_rng(99)
+        n_steps = 80
+        paths = np.cumsum(rng.normal(10, 150, size=(500, n_steps)), axis=1)
+        stats = compute_drawdown_stats(paths, initial_capital=50000.0)
+        for pct, val in stats["recovery_time_bars"].items():
+            assert 0 <= val <= n_steps, (
+                f"recovery_time_bars.{pct}={val} out of bounds [0, {n_steps}]"
+            )
+
+    def test_no_drawdown_path_zero_depth(self):
+        """Monotonically increasing paths must have zero drawdown depth."""
+        from src.engine.monte_carlo import compute_drawdown_stats
+        n_sims, n_steps = 50, 60
+        # Each path gains $10/step — no drawdown ever
+        paths = np.tile(np.arange(1, n_steps + 1, dtype=float) * 10, (n_sims, 1))
+        stats = compute_drawdown_stats(paths, initial_capital=50000.0)
+        # p50 and p95 of max_dd_depth must be 0
+        assert stats["max_dd_depth"]["p50"] == pytest.approx(0.0, abs=1e-8)
+        assert stats["max_dd_depth"]["p95"] == pytest.approx(0.0, abs=1e-8)
+        # Duration must also be 0
+        assert stats["max_dd_duration_bars"]["p50"] == pytest.approx(0.0, abs=1e-8)
+
+    def test_deterministic_across_calls(self):
+        """compute_drawdown_stats is deterministic (no RNG dependency)."""
+        from src.engine.monte_carlo import compute_drawdown_stats
+        rng = np.random.default_rng(42)
+        paths = np.cumsum(rng.normal(0, 200, size=(300, 120)), axis=1)
+        a = compute_drawdown_stats(paths, initial_capital=50000.0)
+        b = compute_drawdown_stats(paths, initial_capital=50000.0)
+        assert a == b

@@ -279,7 +279,21 @@ def apply_eligibility_gate(
             else:
                 gate_stats["take"] += 1
 
-        except Exception:
+        except Exception as exc:
+            # F-13 FIX: Log gate exceptions so silent kills are visible in stderr.
+            # Dedupe by error type per bar to avoid log explosion on systematic failures.
+            # seen_errors is captured from the outer function scope (closure).
+            exc_type_key = type(exc).__name__
+            if not hasattr(_apply_eligibility_gate, "_seen_errors"):
+                _apply_eligibility_gate._seen_errors = set()
+            error_bar_key = (exc_type_key, int(idx))
+            if error_bar_key not in _apply_eligibility_gate._seen_errors:
+                _apply_eligibility_gate._seen_errors.add(error_bar_key)
+                import traceback as _tb
+                print(
+                    f"eligibility_gate_error bar={idx}: {exc_type_key}: {exc}",
+                    file=sys.stderr,
+                )
             # Context computation failed for this bar — skip conservatively
             filtered[idx] = False
             gate_stats["skip"] += 1
@@ -849,12 +863,18 @@ def _extract_atr_period(config: StrategyConfig) -> int:
     return 14
 
 
-def _compute_daily_pnls(equity: np.ndarray, index=None) -> list[dict]:
+def _compute_daily_pnls(equity: np.ndarray, index=None, starting_capital: float = 50_000.0) -> list[dict]:
     """Compute daily P&L from equity curve, aggregated by calendar day.
 
     For intraday data (e.g. 15min), multiple bars share the same calendar
     date. We take the last equity value per day and diff between consecutive
     days to get true daily P&L.
+
+    F-11 FIX: The original loop started at range(1, ...) which dropped the first
+    day's P&L entirely. For a 1-year backtest, day 0 P&L was always zero in the
+    records even if trades fired. Fix: prepend the first day's P&L computed as
+    (first_day_equity - starting_capital), where starting_capital is the equity
+    value before any bar touches the equity curve.
 
     Returns:
         list of {"date": "YYYY-MM-DD", "pnl": float} dicts
@@ -874,10 +894,17 @@ def _compute_daily_pnls(equity: np.ndarray, index=None) -> list[dict]:
         daily[day_str] = float(v)
 
     sorted_days = sorted(daily.items())
-    if len(sorted_days) < 2:
+    if len(sorted_days) < 1:
         return []
 
     pnls = []
+    # F-11 FIX: Prepend first day's P&L anchored to starting_capital baseline.
+    # Previously range(1, ...) silently dropped this entry; day 0 trades were invisible
+    # in daily analytics, Sharpe, and recency scoring.
+    first_date_str = sorted_days[0][0]
+    first_day_pnl = sorted_days[0][1] - starting_capital
+    pnls.append({"date": first_date_str, "pnl": round(first_day_pnl, 2)})
+
     for i in range(1, len(sorted_days)):
         date_str = sorted_days[i][0]
         pnl = sorted_days[i][1] - sorted_days[i - 1][1]
@@ -1167,21 +1194,29 @@ def _apply_max_trades_per_day(
 
         count = daily_counts.get(day_key, 0)
 
+        # F-9 FIX: Both long and short branches were writing daily_counts independently,
+        # causing a double-write when both signals fire on the same bar (same-bar L+S).
+        # Pattern before: long writes count+1, then short sees the old local `count`
+        # and also writes count+1 — net result: two fills counted as one.
+        # Fix: accumulate in local var and write ONCE after both branches.
+        new_count = count
+
         if has_long:
-            if count < max_trades:
-                daily_counts[day_key] = count + 1
-                count += 1
+            if new_count < max_trades:
+                new_count += 1
             else:
                 filtered_long[i] = False
                 suppressed += 1
 
         if has_short:
-            if count < max_trades:
-                daily_counts[day_key] = count + 1
-                count += 1
+            if new_count < max_trades:
+                new_count += 1
             else:
                 filtered_short[i] = False
                 suppressed += 1
+
+        # Single write after both branches so same-bar L+S is counted correctly.
+        daily_counts[day_key] = new_count
 
     if suppressed > 0:
         print(
@@ -1621,10 +1656,26 @@ def run_backtest(
                 f"(exec_tf={config.timeframe})",
                 file=sys.stderr,
             )
+            # F-14 FIX: When warmup_data is present, extend the HTF load start
+            # to cover warmup bars so that HTF columns are non-null for IS rows.
+            # Previously the HTF load used request.start_date which is the OOS window
+            # start — warmup bars fell before that date and got null HTF columns.
+            # Now: if warmup is provided, start HTF load from the earliest warmup bar.
+            if warmup_data is not None and len(warmup_data) > 0:
+                _wm_ts_col = "ts_event" if "ts_event" in warmup_data.columns else (
+                    "ts_et" if "ts_et" in warmup_data.columns else None
+                )
+                if _wm_ts_col:
+                    _wm_start = str(warmup_data[_wm_ts_col][0])[:10]
+                else:
+                    _wm_start = request.start_date
+                mtf_start = _wm_start
+            else:
+                mtf_start = request.start_date
             htf_df_raw = load_ohlcv(
                 config.symbol,
                 htf_tf,
-                request.start_date,
+                mtf_start,
                 request.end_date,
             )
             htf_bars_loaded = len(htf_df_raw)
@@ -2601,7 +2652,14 @@ def run_backtest(
             t_exit_idx = int(trade.get("Exit Idx", t_entry_idx + 1))
             t_entry_p = float(trade.get("Avg Entry Price", 0))
             t_exit_p = float(trade.get("Avg Exit Price", 0))
-            t_size = float(trade.get("Size", 1))
+            # F-6 FIX: Use int() to match the integer contract count used in P&L
+            # computation. float(Size) was correct today (sizes are integer-valued
+            # floats) but would silently misreconcile if fractional-Kelly sizing is
+            # ever introduced. Both paths must agree: int(size) floors to tradeable
+            # contracts, consistent with H2 FIX in the P&L loop above.
+            t_size = int(trade.get("Size", 1))
+            if t_size < 1:
+                t_size = 1
             t_dir = str(trade.get("Direction", "Long"))
             is_short = "Short" in t_dir
             sign = -1.0 if is_short else 1.0
@@ -2655,7 +2713,8 @@ def run_backtest(
                 f"Results are untrustworthy."
             )
 
-    daily_pnl_records = _compute_daily_pnls(equity, equity_index)
+    # F-11 FIX: pass STARTING_CAPITAL so the first day's P&L is correctly anchored.
+    daily_pnl_records = _compute_daily_pnls(equity, equity_index, starting_capital=STARTING_CAPITAL)
     daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
 
     winning_days = sum(1 for p in daily_pnl_values if p > 0)
@@ -3311,8 +3370,15 @@ def compute_recency_weighted_score(
 
     full_score = _compute_forge_score(sharpe, max_dd, profit_factor, win_rate, avg_daily_pnl)
 
-    # Split records by recency
-    now = datetime.now()
+    # F-8 FIX: Anchor cutoff dates to the last date in daily_pnl_records so
+    # recency scoring is deterministic and replay-stable across run times.
+    # Falls back to datetime.now() only when records are empty (edge case).
+    dated_records = [r for r in daily_pnl_records if r.get("date")]
+    if dated_records:
+        last_date_str = sorted(r["date"] for r in dated_records)[-1]
+        now = datetime.strptime(last_date_str, "%Y-%m-%d")
+    else:
+        now = datetime.now()
     cutoff_2y = (now - timedelta(days=730)).strftime("%Y-%m-%d")
     cutoff_5y = (now - timedelta(days=1825)).strftime("%Y-%m-%d")
 
@@ -3934,7 +4000,12 @@ def run_class_backtest(
             t_exit_idx = int(trade.get("Exit Idx", t_entry_idx + 1))
             t_entry_p = float(trade.get("Avg Entry Price", 0))
             t_exit_p = float(trade.get("Avg Exit Price", 0))
-            t_size = float(trade.get("Size", 1))
+            # F-6 FIX (class path): Use int() to match the P&L loop's int(size)
+            # contract floor. float(Size) was a dormant mismatch — integer-valued
+            # today but would break reconciliation if fractional-Kelly sizing lands.
+            t_size = int(trade.get("Size", 1))
+            if t_size < 1:
+                t_size = 1
             t_dir = str(trade.get("Direction", "Long"))
             is_short = "Short" in t_dir
             sign = -1.0 if is_short else 1.0
@@ -3985,7 +4056,8 @@ def run_class_backtest(
                 f"Results are untrustworthy."
             )
 
-    daily_pnl_records = _compute_daily_pnls(equity, equity_index)
+    # F-11 FIX: pass STARTING_CAPITAL so the first day's P&L is correctly anchored.
+    daily_pnl_records = _compute_daily_pnls(equity, equity_index, starting_capital=STARTING_CAPITAL)
     daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
 
     winning_days = sum(1 for p in daily_pnl_values if p > 0)
@@ -4420,6 +4492,12 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
         except Exception as e:
             print(json.dumps({"error": f"Invalid config: {e}"}))
             sys.exit(1)
+
+        # F-15 FIX: Initialize _preloaded_data to None so single-mode doesn't
+        # NameError when the parity shadow block below reads it unconditionally.
+        # WF mode sets this to the loaded DataFrame; single mode passes None to
+        # run_parity_shadow() which treats None as "parity not supported → ran=False".
+        _preloaded_data: Optional[pl.DataFrame] = None
 
         # ─── Phase 12: per-stage timing ──────────────────────────────
         _t0 = time.perf_counter()

@@ -201,3 +201,93 @@ class TestEmbargo:
             is_last = is_data["ts_event"][-1]
             oos_first = oos_data["ts_event"][0]
             assert is_last < oos_first
+
+
+# ─── Pass 2A — F-2, F-5, F-12 tests ──────────────────────────────
+
+class TestF2BarsPerDayInAutoReduce:
+    """F-2: WF auto-reduction must use BARS_PER_DAY × MIN_OOS_DAYS, not bare MIN_OOS_DAYS."""
+
+    def test_intraday_requires_more_bars_than_daily(self):
+        """For 5min data, required_bars_per_split must be > 60 (not = 60)."""
+        from src.engine.backtester import BARS_PER_DAY
+        from src.engine.walk_forward import MIN_OOS_DAYS
+        bars_per_day_5min = BARS_PER_DAY.get("5min", 1)
+        assert bars_per_day_5min > 1, "5min BARS_PER_DAY must be > 1"
+        min_bars_5min = MIN_OOS_DAYS * bars_per_day_5min
+        min_bars_daily = MIN_OOS_DAYS * BARS_PER_DAY.get("daily", 1)
+        assert min_bars_5min > min_bars_daily, (
+            f"5min minimum OOS bars ({min_bars_5min}) must exceed daily minimum ({min_bars_daily})"
+        )
+
+    def test_daily_data_not_over_reduced(self):
+        """Daily data (BARS_PER_DAY=1) should use MIN_OOS_DAYS as threshold (same as before fix)."""
+        from src.engine.backtester import BARS_PER_DAY
+        from src.engine.walk_forward import MIN_OOS_DAYS
+        bars_per_day_daily = BARS_PER_DAY.get("daily", 1)
+        assert bars_per_day_daily == 1, f"Expected 1 bars/day for 'daily', got {bars_per_day_daily}"
+        expected_min = MIN_OOS_DAYS * 1  # = MIN_OOS_DAYS, same as before fix
+        assert expected_min == MIN_OOS_DAYS
+
+
+class TestF12ClassWFOptimizeGuard:
+    """F-12: run_walk_forward_class must raise NotImplementedError when optimize=True."""
+
+    def test_optimize_true_raises(self):
+        """Calling with optimize=True must raise NotImplementedError."""
+        from src.engine.walk_forward import run_walk_forward_class
+        from src.engine.strategy_base import BaseStrategy
+        import polars as pl
+
+        class _DummyStrategy(BaseStrategy):
+            name = "dummy"
+            symbol = "MES"
+            timeframe = "daily"
+            def compute(self, df: pl.DataFrame) -> pl.DataFrame:
+                return df.with_columns([
+                    pl.lit(False).alias("entry_long"),
+                    pl.lit(False).alias("entry_short"),
+                    pl.lit(False).alias("exit_long"),
+                    pl.lit(False).alias("exit_short"),
+                ])
+
+        strategy = _DummyStrategy()
+        with pytest.raises(NotImplementedError, match="Wave 24"):
+            run_walk_forward_class(
+                strategy=strategy,
+                start_date="2023-01-01",
+                end_date="2023-12-31",
+                optimize=True,
+            )
+
+    def test_optimize_false_does_not_raise_not_implemented(self):
+        """optimize=False (default) must not raise NotImplementedError with Wave 24."""
+        from src.engine.walk_forward import run_walk_forward_class
+        from src.engine.strategy_base import BaseStrategy
+        import polars as pl
+
+        # We only test that the error is NOT a NotImplementedError from the guard.
+        # The function may still raise other errors (data load, etc.) — that's OK.
+        class _DummyStrategy(BaseStrategy):
+            name = "dummy"
+            symbol = "MES"
+            timeframe = "daily"
+            def compute(self, df: pl.DataFrame) -> pl.DataFrame:
+                return df.with_columns([
+                    pl.lit(False).alias("entry_long"),
+                    pl.lit(False).alias("entry_short"),
+                    pl.lit(False).alias("exit_long"),
+                    pl.lit(False).alias("exit_short"),
+                ])
+
+        strategy = _DummyStrategy()
+        try:
+            run_walk_forward_class(
+                strategy=strategy,
+                start_date="2023-01-01",
+                end_date="2023-12-31",
+                optimize=False,
+            )
+        except NotImplementedError as e:
+            if "Wave 24" in str(e):
+                pytest.fail(f"F-12 guard fired when optimize=False: {e}")

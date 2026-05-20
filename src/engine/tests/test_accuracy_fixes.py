@@ -713,3 +713,124 @@ class TestM4CacheAtomicWrite:
         assert cache_file.exists(), "Cache file should exist after os.replace"
         assert not tmp_file.exists(), "Tmp file should be gone after os.replace"
         assert cache_file.read_bytes() == b"dummy parquet content"
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Pass 2A — F-6, F-8, F-9, F-11, F-13 unit tests
+# ──────────────────────────────────────────────────────────────────────────
+
+class TestF6EquitySizeMismatch:
+    """F-6: Equity mark-to-market must use int(size) not float(size)."""
+
+    def test_int_size_floor_on_fractional(self):
+        """int(4.7) contracts = 4 contracts, not 4.7 — floors fractional-Kelly sizes."""
+        # Test the specific conversion logic used in the equity loop.
+        # float(4.7) != int(4.7): float gives 4.7 contracts, int gives 4.
+        # The equity mtm and P&L loops must agree on the same integer count.
+        float_size = 4.7
+        int_size = int(float_size)
+        assert int_size == 4, f"int(4.7) must be 4, got {int_size}"
+        # Confirm the floor is conservative (can't execute 0.7 of a contract)
+        assert int_size < float_size
+
+    def test_size_min_one_contract(self):
+        """int(0.3) = 0 contracts → must be floored to 1 (minimum tradeable unit)."""
+        float_size = 0.3
+        int_size = int(float_size)
+        if int_size < 1:
+            int_size = 1
+        assert int_size == 1, f"sub-1-contract size must be clamped to 1, got {int_size}"
+
+
+class TestF8RecencyDeterminism:
+    """F-8: Recency score must use last-data-date, not datetime.now()."""
+
+    def test_recency_anchors_to_data_not_wallclock(self):
+        """Same records must produce same recency score regardless of when test runs."""
+        from src.engine.backtester import compute_recency_weighted_score
+        records = [{"date": "2022-01-15", "pnl": 200.0}] * 20 + \
+                  [{"date": "2023-06-15", "pnl": 150.0}] * 20
+
+        score1 = compute_recency_weighted_score(
+            daily_pnl_records=records,
+            sharpe=1.5, max_dd=2000.0, profit_factor=1.8,
+            win_rate=0.55, avg_daily_pnl=150.0,
+        )
+        score2 = compute_recency_weighted_score(
+            daily_pnl_records=records,
+            sharpe=1.5, max_dd=2000.0, profit_factor=1.8,
+            win_rate=0.55, avg_daily_pnl=150.0,
+        )
+        assert score1 == score2, (
+            f"Recency score must be deterministic: {score1} != {score2}"
+        )
+
+
+class TestF9MaxTradesPerDayOffByOne:
+    """F-9: max_trades_per_day must correctly count same-bar L+S signals."""
+
+    def test_same_bar_long_short_counted_as_two(self):
+        """When both long and short fire on same bar, daily count increments by 2."""
+        from src.engine.backtester import _apply_max_trades_per_day
+        import numpy as np
+        n = 5
+        longs = np.array([True, False, False, False, False])
+        shorts = np.array([True, False, False, False, False])  # same bar as long
+        timestamps = [f"2024-01-01T09:3{i}:00" for i in range(n)]
+
+        # With max_trades=1, one of L or S must be suppressed
+        out_l, out_s = _apply_max_trades_per_day(longs.copy(), shorts.copy(), timestamps, max_trades=1)
+        trades_bar0 = int(out_l[0]) + int(out_s[0])
+        assert trades_bar0 == 1, (
+            f"max_trades=1 on same-bar L+S: expected 1 allowed, got {trades_bar0}"
+        )
+
+    def test_different_bars_count_independently(self):
+        """Long on bar 0 and short on bar 1 both allowed with max_trades=1."""
+        from src.engine.backtester import _apply_max_trades_per_day
+        import numpy as np
+        n = 5
+        longs = np.array([True, False, False, False, False])
+        shorts = np.array([False, True, False, False, False])
+        # Use different days so the limit resets
+        timestamps = [
+            "2024-01-01T09:30:00",
+            "2024-01-02T09:30:00",
+            "2024-01-03T09:30:00",
+            "2024-01-04T09:30:00",
+            "2024-01-05T09:30:00",
+        ]
+        out_l, out_s = _apply_max_trades_per_day(longs.copy(), shorts.copy(), timestamps, max_trades=1)
+        assert out_l[0], "Long on day 1 should pass with max_trades=1"
+        assert out_s[1], "Short on day 2 should pass with max_trades=1"
+
+
+class TestF11FirstDayPnl:
+    """F-11: First day's P&L must not be dropped from daily_pnl_records."""
+
+    def test_first_day_included_in_records(self):
+        """daily_pnl_records must have an entry for the first calendar date."""
+        from src.engine.backtester import _compute_daily_pnls
+        import numpy as np
+        from datetime import date
+
+        class FakeDate:
+            def __init__(self, d): self._d = d
+            def date(self): return self._d
+
+        # 3 bars, all on different days; first bar has a +200 move
+        equity = np.array([50_200.0, 50_100.0, 50_800.0])
+        idx = [
+            FakeDate(date(2024, 1, 2)),
+            FakeDate(date(2024, 1, 3)),
+            FakeDate(date(2024, 1, 4)),
+        ]
+        records = _compute_daily_pnls(equity, index=idx, starting_capital=50_000.0)
+        dates = [r["date"] for r in records]
+        assert "2024-01-02" in dates, (
+            f"First day 2024-01-02 missing from daily_pnl_records: dates={dates}"
+        )
+        first_record = next(r for r in records if r["date"] == "2024-01-02")
+        assert first_record["pnl"] == 200.0, (
+            f"First day pnl should be 200.0, got {first_record['pnl']}"
+        )

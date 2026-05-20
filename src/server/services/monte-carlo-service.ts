@@ -168,6 +168,24 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
 
   mcSpan.setAttribute("mcId", mcId);
 
+  // F-8 FIX: stamp mc_provisional=true on the backtest row while MC is in-flight.
+  // Promotion gates (lifecycle-service.ts) must check this sentinel before reading
+  // MC results — a NULL mc_completed_at or mc_provisional=true means MC output is
+  // not yet reliable.  We set it to false atomically on MC completion (below).
+  // This is additive to resultExtras; existing fields are preserved via JSON merge.
+  try {
+    const existingExtras = (bt.resultExtras as Record<string, unknown> | null) ?? {};
+    await db
+      .update(backtests)
+      .set({
+        resultExtras: { ...existingExtras, mc_provisional: true, mc_completed_at: null },
+      })
+      .where(eq(backtests.id, backtestId));
+  } catch (stampErr) {
+    // Non-blocking — log but don't abort the MC run
+    logger.warn({ backtestId, err: stampErr }, "F-8: failed to stamp mc_provisional=true on backtest row (non-blocking)");
+  }
+
   try {
     const config = {
       backtest_id: backtestId,
@@ -191,6 +209,23 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
       run_permutation_test: options.runPermutationTest ?? false,
       permutation_n: options.permutationN ?? 1000,
       n_variants: options.nVariants ?? 1,
+      // F-10: pass actual round-trip commission so simulate_firm_survival uses correct delta.
+      // commission_per_side is the backtest default (e.g. 0.62 MES); *2 = round-trip.
+      backtest_commission_rt: typeof bt.config === "object" && bt.config !== null
+        ? ((bt.config as Record<string, unknown>).commission_per_side != null
+          ? Number((bt.config as Record<string, unknown>).commission_per_side) * 2
+          : 1.24)
+        : 1.24,
+      // F-12: pass observed avg trades per day so commission delta uses real frequency.
+      // totalTrades / totalTradingDays — both fields come from the backtest result.
+      avg_trades_per_day: (() => {
+        const totalTrades = typeof (bt as any).totalTrades === "number" ? (bt as any).totalTrades : null;
+        const totalDays = typeof (bt as any).totalTradingDays === "number" ? (bt as any).totalTradingDays : null;
+        if (totalTrades != null && totalDays != null && totalDays > 0) {
+          return Math.max(1.0, totalTrades / totalDays);
+        }
+        return 1.5; // safe fallback (1 A+ trade/day system design)
+      })(),
     };
 
     const result = await runPythonModule<MCResult>({
@@ -226,6 +261,21 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
         gpuAccelerated: result.gpu_accelerated,
       })
       .where(eq(monteCarloRuns.id, mcId));
+
+    // F-8 FIX: clear mc_provisional sentinel now that MC is complete and results are persisted.
+    // Promotion gates can now safely read MC output from the monteCarloRuns row.
+    try {
+      const latestExtras = (bt.resultExtras as Record<string, unknown> | null) ?? {};
+      const completedAt = new Date().toISOString();
+      await db
+        .update(backtests)
+        .set({
+          resultExtras: { ...latestExtras, mc_provisional: false, mc_completed_at: completedAt },
+        })
+        .where(eq(backtests.id, backtestId));
+    } catch (clearErr) {
+      logger.warn({ backtestId, err: clearErr }, "F-8: failed to clear mc_provisional on backtest row (non-blocking)");
+    }
 
     // Audit log
     await db.insert(auditLog).values({

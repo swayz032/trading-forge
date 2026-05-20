@@ -30,7 +30,7 @@ from typing import Optional
 import numpy as np
 import polars as pl
 
-from src.engine.backtester import run_backtest, run_class_backtest
+from src.engine.backtester import BARS_PER_DAY, run_backtest, run_class_backtest
 from src.engine.config import BacktestRequest
 from src.engine.cross_validation import run_cross_validation
 from src.engine.nvtx_markers import range_pop, range_push
@@ -58,10 +58,20 @@ def _run_wf_window(args: tuple) -> dict:
         oos_result dict from run_backtest()
     """
     window_index, oos_request, oos_data, is_data, window_seed = args
+    effective_seed = window_seed + window_index
     # Apply per-window seed offset so each worker has deterministic but distinct RNG
-    os.environ["BACKTEST_WINDOW_SEED"] = str(window_seed + window_index)
-    # Re-seed numpy for this worker process
-    np.random.seed(window_seed + window_index)
+    os.environ["BACKTEST_WINDOW_SEED"] = str(effective_seed)
+    # F-10 FIX: Call enable_determinism() from the determinism module so that
+    # BLAS/LAPACK threadpoolctl limits and per-generator seeds are applied in the
+    # worker process, not just the global numpy RNG. This prevents nondeterminism
+    # when threadpoolctl or mkl uses internal RNG state.
+    # Keep np.random.seed() for backward compat with any code using global RNG.
+    try:
+        from src.engine.determinism import enable_determinism as _worker_det
+        _worker_det(seed=effective_seed)
+    except Exception:
+        pass  # Never let a determinism helper failure kill a WF window
+    np.random.seed(effective_seed)
     result = run_backtest(oos_request, data=oos_data, warmup_data=is_data)
     return result
 
@@ -154,13 +164,16 @@ def run_walk_forward(
             request.start_date, request.end_date,
         )
 
-    # Auto-reduce n_splits if data is too short for meaningful OOS windows.
-    # Each OOS window needs at least MIN_OOS_DAYS calendar days of data.
-    # Rough estimate: each bar ~= 1 day for daily data; for intraday, assume
-    # ~80 bars/day (15min × 6.5h RTH). Scale accordingly.
+    # F-2 FIX: Auto-reduce n_splits using timeframe-aware bar count.
+    # Previous formula used MIN_OOS_DAYS bare (60 bars) which is correct for daily
+    # data but massively undershoots for intraday: 60 bars of 15min = ~1 day, not 60.
+    # Fix: multiply MIN_OOS_DAYS by BARS_PER_DAY[timeframe] to get the true minimum
+    # bar count required per OOS window. BARS_PER_DAY uses Globex figures from
+    # backtester.py (5min=172, 15min=92, 1hour=23, daily=1, etc.).
     total_bars = len(data)
     oos_fraction = 1.0 - is_ratio
-    min_oos_bars = MIN_OOS_DAYS  # Conservative: at least MIN_OOS_DAYS bars per OOS fold
+    bars_per_day = BARS_PER_DAY.get(config.timeframe, 1)
+    min_oos_bars = MIN_OOS_DAYS * bars_per_day  # true bar count for MIN_OOS_DAYS of data
     required_bars_per_split = int(min_oos_bars / oos_fraction)
 
     original_splits = n_splits
@@ -170,7 +183,9 @@ def run_walk_forward(
     if n_splits < original_splits:
         print(
             f"Walk-forward: auto-reduced n_splits from {original_splits} to {n_splits} "
-            f"(data too short for {original_splits} meaningful OOS windows)",
+            f"(data too short for {original_splits} meaningful OOS windows; "
+            f"need {required_bars_per_split} bars/split for {MIN_OOS_DAYS}d OOS "
+            f"at {config.timeframe}={bars_per_day} bars/day)",
             file=sys.stderr,
         )
 
@@ -544,12 +559,27 @@ def run_walk_forward_class(
     n_splits: int = 8,
     is_ratio: float = 0.5,
     embargo_bars: int = 20,
+    optimize: bool = False,
 ) -> dict:
     """Walk-forward validation for class-based (BaseStrategy) strategies.
 
     Same windowing logic as run_walk_forward(), but each OOS window calls
     run_class_backtest() instead of run_backtest().
+
+    Args:
+        optimize: If True, raise NotImplementedError (Wave 24 carry-forward).
+            Class-based strategies do not yet support per-window Optuna tuning.
+            Callers must not silently fall through to fixed-param OOS — fail loudly.
     """
+    # F-12 FIX: Fail loudly if caller requests optimization on class strategies.
+    # Previously the function ran silently with fixed params when optimize was not even
+    # a parameter — callers who expected optimization got unreproduced results.
+    if optimize:
+        raise NotImplementedError(
+            "Class strategy Optuna optimization not yet supported — Wave 24 carry-forward. "
+            "Use run_walk_forward() with a DSL config for optimization, or set optimize=False."
+        )
+
     start_time = time.time()
     symbol = strategy.symbol
     timeframe = strategy.timeframe
@@ -584,10 +614,12 @@ def run_walk_forward_class(
             )
         print(f"Walk-forward: built HTF cache with {len(htf_cache)} days", file=sys.stderr)
 
-    # Auto-reduce splits if data too short
+    # F-2 FIX: Auto-reduce splits using timeframe-aware bar count (class path).
+    # Same fix as run_walk_forward — MIN_OOS_DAYS bare is wrong for intraday.
     total_bars = len(data)
     oos_fraction = 1.0 - is_ratio
-    min_oos_bars = MIN_OOS_DAYS
+    bars_per_day_cls = BARS_PER_DAY.get(timeframe, 1)
+    min_oos_bars = MIN_OOS_DAYS * bars_per_day_cls
     required_bars_per_split = int(min_oos_bars / oos_fraction)
 
     original_splits = n_splits
@@ -596,7 +628,9 @@ def run_walk_forward_class(
 
     if n_splits < original_splits:
         print(
-            f"Walk-forward (class): auto-reduced n_splits from {original_splits} to {n_splits}",
+            f"Walk-forward (class): auto-reduced n_splits from {original_splits} to {n_splits} "
+            f"(need {required_bars_per_split} bars/split for {MIN_OOS_DAYS}d OOS "
+            f"at {timeframe}={bars_per_day_cls} bars/day)",
             file=sys.stderr,
         )
 
@@ -626,10 +660,29 @@ def run_walk_forward_class(
         # in backtests kills 90%+ of signals, producing statistically meaningless
         # results (4-122 trades over 2 years). Gate will be re-enabled when
         # the bias engine and context layer are properly calibrated.
+        # F-5 FIX: Derive OOS window date boundaries from oos_data timestamps so that
+        # run_class_backtest's bar-count validation and any internal date-range logic
+        # reference the WINDOW range, not the full backtest range.
+        # Previously start_date/end_date (full range) were passed — causing
+        # _validate_bar_count to expect 2-year worth of bars for a 7-month OOS window.
+        def _ts_col_wf(df: pl.DataFrame) -> str:
+            for col in ("ts_event", "ts_et"):
+                if col in df.columns:
+                    return col
+            return ""
+
+        _oos_ts_c = _ts_col_wf(oos_data)
+        if _oos_ts_c and len(oos_data) > 0:
+            oos_start_dt_wf = str(oos_data[_oos_ts_c][0])[:10]
+            oos_end_dt_wf = str(oos_data[_oos_ts_c][-1])[:10]
+        else:
+            oos_start_dt_wf = start_date
+            oos_end_dt_wf = end_date
+
         oos_result = run_class_backtest(
             strategy=strategy,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=oos_start_dt_wf,
+            end_date=oos_end_dt_wf,
             slippage_ticks=slippage_ticks,
             commission_per_side=commission_per_side,
             firm_key=firm_key,

@@ -419,6 +419,14 @@ class MonteCarloRequest(BaseModel):
     run_permutation_test: bool = False
     permutation_n: int = 1000
     n_variants: int = 1  # Number of strategy variants tested (for Bonferroni/DSR correction)
+    # F-10 FIX: actual round-trip commission used in the backtest (both sides, $).
+    # Pass bt.config.commission_per_side * 2 from the TS bridge.
+    # When None, simulate_firm_survival falls back to $1.24 default and emits a warning.
+    backtest_commission_rt: Optional[float] = None
+    # F-12 FIX: observed avg trades per day from the backtest.
+    # Pass bt.totalTrades / bt.totalTradingDays from the TS bridge.
+    # Consumed by simulate_firm_survival as daily_trades_per_day for commission delta math.
+    avg_trades_per_day: float = 1.5
 
     @field_validator("num_simulations")
     @classmethod

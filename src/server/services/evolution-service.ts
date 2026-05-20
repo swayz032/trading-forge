@@ -75,6 +75,38 @@ export async function evolveStrategy(
     return { status: "failed", error: "Strategy not found" };
   }
 
+  // F-9 FIX: Guard against evolving a strategy whose parent is still active (PILOT/DEPLOYED).
+  // Evolution is only valid post-DECLINING — a strategy in PILOT or DEPLOYED is a live
+  // canary or production deployment. Mutating it while it's active would create a competing
+  // lineage branch from a strategy that hasn't failed yet, which undermines the promotion gate
+  // (evolution is a recovery path, not an optimization path for live strategies).
+  //
+  // Conservative: PILOT and DEPLOYED are the live states where mutation is never appropriate.
+  // Post-DECLINING, the strategy's lineage has been marked as underperforming — evolution
+  // is then the correct recovery action.
+  const ACTIVE_STATES_BLOCK_EVOLUTION = ["PILOT", "DEPLOYED"] as const;
+  if (ACTIVE_STATES_BLOCK_EVOLUTION.includes(strategy.lifecycleState as typeof ACTIVE_STATES_BLOCK_EVOLUTION[number])) {
+    logger.info(
+      { fn: "evolveStrategy", strategyId, lifecycleState: strategy.lifecycleState },
+      "Skipped: parent strategy is active (PILOT/DEPLOYED) — evolution only valid post-DECLINING",
+    );
+    await db.insert(auditLog).values({
+      action: "evolveStrategy.skipped_parent_active",
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "success",
+      decisionAuthority: "gate",
+      input: { lifecycleState: strategy.lifecycleState },
+      result: {
+        reason: "parent_active",
+        note: "Evolution skipped: strategy is in an active live state. Only valid post-DECLINING.",
+        allowed_post_states: ["DECLINING"],
+      },
+      correlationId: correlationId ?? null,
+    }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId }, "evolveStrategy.skipped_parent_active audit row write failed"));
+    return { status: "skipped", error: "parent_active" };
+  }
+
   // Guardrail: max generations
   if (strategy.generation >= MAX_GENERATIONS) {
     logger.info({ strategyId, generation: strategy.generation }, "Evolution: max generations reached, retiring");

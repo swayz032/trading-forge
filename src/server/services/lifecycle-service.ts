@@ -707,7 +707,7 @@ export class LifecycleService {
       }
     }
 
-    // ── A4 Frankenstein Gate: TESTING → PAPER hard block ────────────────────
+    // ── A4 Frankenstein Gate: TESTING → PAPER and CANDIDATE → PAPER hard block ─
     // The Frankenstein test detects lookahead / future-data bugs by checking
     // whether the strategy shows edge on shuffled/GBM data. If it does, the
     // backtester has a structural bug that invalidates all metrics.
@@ -721,7 +721,13 @@ export class LifecycleService {
     // If no Frankenstein run exists yet: promotion is BLOCKED with a clear
     // message asking the operator to run the Frankenstein test first.
     // This forces the test to be run before any strategy can enter paper trading.
-    if (fromState === "TESTING" && toState === "PAPER") {
+    //
+    // F-12 FIX: Gate applies to CANDIDATE → PAPER as well as TESTING → PAPER.
+    // CANDIDATE → PAPER is a valid fast-track (VALID_TRANSITIONS allows it) but
+    // MUST still pass A4 — the fast-track bypasses TESTING iteration, not the
+    // structural integrity test. Without this, a CANDIDATE with a lookahead bug
+    // could skip directly into live paper trading.
+    if ((fromState === "TESTING" || fromState === "CANDIDATE") && toState === "PAPER") {
       if (promotionEvidence.backtestId) {
         try {
           const frankResult = await getLatestFrankensteinRun(promotionEvidence.backtestId);
@@ -744,7 +750,7 @@ export class LifecycleService {
               status: "failure",
               input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
               result: { decision: "missing_run", reason: "no completed Frankenstein test run found" } as Record<string, unknown>,
-              correlationId: null,
+              correlationId: options.correlationId ?? null,
             }).catch((err: unknown) => logger.error({ err, strategyId: id }, "A4: missing_run audit row write failed"));
             return { success: false, error };
           }
@@ -788,7 +794,7 @@ export class LifecycleService {
                 median_pf: frankResult.medianPf,
                 reason: "strategy shows edge on randomized data",
               } as Record<string, unknown>,
-              correlationId: null,
+              correlationId: options.correlationId ?? null,
             }).catch((err: unknown) => logger.error({ err, strategyId: id }, "A4: failed audit row write failed"));
             return { success: false, error };
           }
@@ -824,7 +830,7 @@ export class LifecycleService {
             status: "failure",
             input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
             result: { decision: "infrastructure_error", reason: msg } as Record<string, unknown>,
-            correlationId: null,
+            correlationId: options.correlationId ?? null,
           }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "A4: infra_error audit row write failed"));
           return { success: false, error };
         }
@@ -844,7 +850,7 @@ export class LifecycleService {
           status: "failure",
           input: { fromState, toState, backtestId: null } as Record<string, unknown>,
           result: { decision: "no_backtest_id", reason: "no backtest ID in promotion evidence" } as Record<string, unknown>,
-          correlationId: null,
+          correlationId: options.correlationId ?? null,
         }).catch((err: unknown) => logger.error({ err, strategyId: id }, "A4: no_backtest_id audit row write failed"));
         return { success: false, error };
       }
@@ -1008,9 +1014,12 @@ export class LifecycleService {
       logger.info({ strategyId: id, codename: retiredCodename }, "Forge name retired with strategy");
     }
 
-    // Fire-and-forget burial for DECLINING/RETIRED. The pending audit row written
-    // inside the tx is the durable record; this call is opportunistic.
-    if (toState === "DECLINING" || toState === "RETIRED") {
+    // F-11 FIX: Only bury on truly terminal states (GRAVEYARD, RETIRED).
+    // DECLINING is retry-eligible per VALID_TRANSITIONS (DECLINING → TESTING/RETIRED/GRAVEYARD)
+    // and must NOT be buried — burial here would create a graveyard record for a strategy
+    // that may still be promoted via checkDeclingAndTriggerRegen(). Burial on DECLINING
+    // was causing premature graveyard records that blocked re-entry into TESTING.
+    if (toState === "GRAVEYARD" || toState === "RETIRED") {
       this.buryInGraveyard(id, strategy, options.correlationId).catch((buryErr) => {
         logger.warn(
           { strategyId: id, toState, err: buryErr },
@@ -1746,13 +1755,33 @@ export class LifecycleService {
             }
           }
         } catch (driftCheckErr) {
-          // Drift-check infrastructure failure is informational. Failing closed
-          // here would block every PAPER→DEPLOY_READY when compliance_rulesets
-          // table is unhealthy; the human can still revalidate manually.
+          // F-6 FIX: Drift-check infrastructure failure must fail-CLOSED, symmetric
+          // with TESTING→PAPER (A7 gate at lines ~1888-1910 fail-closed on infra error).
+          // A broken drift check on a promotion-gate boundary is NOT informational —
+          // promoting a strategy whose compliance ruleset we cannot verify could send
+          // live orders against stale firm rules. Operator manual override required.
+          const errMsg = driftCheckErr instanceof Error ? driftCheckErr.message : String(driftCheckErr);
           logger.warn(
             { strategyId: s.id, err: driftCheckErr },
-            "PAPER → DEPLOY_READY drift-check threw (non-blocking, promotion continues)",
+            "PAPER → DEPLOY_READY drift-check threw — blocking promotion (fail-closed, manual override required)",
           );
+          await db.insert(auditLog).values({
+            action: "lifecycle.drift_check_infra_error",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: {
+              reason: "drift_check_infrastructure_error",
+              error: errMsg,
+              note: "Manual operator override required — cannot verify compliance ruleset integrity",
+            },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.drift_check_infra_error audit insert failed (non-blocking)");
+          });
+          continue;
         }
 
         // ── B10: MRP Soft Gate: PAPER → DEPLOY_READY advisory ────────────────
@@ -2293,18 +2322,25 @@ export class LifecycleService {
 
         // All 5 sessions completed — evaluate promotion criteria
         const allCompliant = completedSessions.every((ps) => ps.compliancePassed === true);
+        // F-4 FIX: ALL sessions must have rollingSharpeFinal >= PILOT_MIN_SHARPE.
+        // Previously only the last session was checked, allowing strategies with
+        // early sub-threshold Sharpe sessions (e.g. [0.4, 0.3, 0.5, 0.6, 1.1]) to
+        // promote. Promotion gate is the trust boundary before live deployment —
+        // every session in the canary window must demonstrate quality.
+        const allSharpePassed = completedSessions.every(
+          (ps) =>
+            ps.rollingSharpeFinal != null &&
+            parseFloat(String(ps.rollingSharpeFinal)) >= PILOT_MIN_SHARPE,
+        );
         const lastSession = completedSessions[completedSessions.length - 1];
-        const lastSharpePassed =
-          lastSession?.rollingSharpeFinal != null &&
-          parseFloat(String(lastSession.rollingSharpeFinal)) >= PILOT_MIN_SHARPE;
 
-        if (allCompliant && lastSharpePassed) {
+        if (allCompliant && allSharpePassed) {
           // PILOT → DEPLOYED: automatic promotion after successful canary
           logger.info(
             {
               strategyId: s.id,
               sessions: completedSessions.length,
-              lastSharpe: lastSession?.rollingSharpeFinal,
+              allSharpes: completedSessions.map((ps) => ps.rollingSharpeFinal),
               allCompliant,
             },
             "PILOT auto-promote: 5 sessions passed — promoting to DEPLOYED",
@@ -2341,7 +2377,8 @@ export class LifecycleService {
             {
               strategyId: s.id,
               allCompliant,
-              lastSharpe: lastSession?.rollingSharpeFinal,
+              allSharpePassed,
+              allSharpes: completedSessions.map((ps) => ps.rollingSharpeFinal),
               failureReason,
             },
             "PILOT criteria not met — promoting to GRAVEYARD",
