@@ -380,11 +380,25 @@ export function applyFrameworkOverlay(input: OverlayInput): OverlayResult {
   if (cfg.direction === "both" && cfg.strategy) {
     const el = String(cfg.strategy.entry_long ?? "").trim();
     const es = String(cfg.strategy.entry_short ?? "").trim();
-    if (el && es && el === es) {
+    // W23H-postmortem (2026-05-20): Archetype strategies (ICT silver bullet,
+    // CRT, power of 3, FVG, order_block, liquidity_sweep, etc.) use the
+    // intentional sentinel "high < low" for BOTH entry_long and entry_short
+    // because the strategy is handler-driven, not grammar-driven (see CLAUDE.md
+    // §2b pinned facts). The structural-detector handler emits the actual long
+    // AND short signals at runtime. Duplicate-sentinel must NOT be treated as
+    // "duplicate L/S text" — that downgrade would mask real bidirectional
+    // archetype strategies as long-only.
+    const isArchetypeSentinel = (el === "high < low" && es === "high < low");
+    const entryIndicatorIsArchetype = typeof cfg.entry_indicator === "string" &&
+      cfg.entry_indicator.startsWith("archetype:");
+    if (el && es && el === es && !isArchetypeSentinel && !entryIndicatorIsArchetype) {
       warnings.push("entry_long === entry_short with direction='both' — backtester ambiguity. Defaulting to direction='long' with original entry_condition. Manually flip to 'short' or split entry texts to fire both sides.");
       cfg.direction = "long";
       if (cfg.strategy) cfg.strategy.entry_short = "";
       applied.push("direction='both' with duplicate L/S text → coerced to 'long'");
+    } else if (isArchetypeSentinel || entryIndicatorIsArchetype) {
+      // Explicitly note we preserved bidirectional for archetype path
+      applied.push("direction='both' preserved (archetype handler emits L/S signals — sentinel 'high < low' is by design)");
     }
   }
 
