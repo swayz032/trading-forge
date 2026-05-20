@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-19T10:49:47.788Z`.
+Updated automatically from the repo on `2026-05-20T01:34:47.346Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,12 +12,12 @@ Updated automatically from the repo on `2026-05-19T10:49:47.788Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `operator-halt-only, tradingview_deploy`
 - API routes tracked: `62`
-- Scheduler jobs tracked: `61`
+- Scheduler jobs tracked: `62`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
-- Engine subsystems tracked: `25`
-- Database tables tracked: `91`
+- Engine subsystems tracked: `26`
+- Database tables tracked: `92`
 
 ### Subsystem Runtime States
 - `active`: `16`
@@ -54,9 +54,9 @@ Updated automatically from the repo on `2026-05-19T10:49:47.788Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `21`
 - Route coverage: `62/62`
-- Scheduler coverage: `61/61`
-- Engine coverage: `25/25`
-- Database coverage: `91/91`
+- Scheduler coverage: `62/62`
+- Engine coverage: `26/26`
+- Database coverage: `92/92`
 - Autonomous subsystems with audit coverage: `21/21`
 - Autonomous subsystems with audit actions: `21/21`
 - Autonomous subsystems with telemetry evidence: `21/21`
@@ -160,6 +160,7 @@ Updated automatically from the repo on `2026-05-19T10:49:47.788Z`.
 - `exits` owner=`context_execution` status=`runtime-proven` state=`active` gaps=none
 - `governor` owner=`compliance_governance` status=`runtime-proven` state=`active` gaps=none
 - `graveyard` owner=`strategy_lifecycle` status=`runtime-proven` state=`active` gaps=none
+- `invariant_harness` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
 - `macro_data` owner=`context_execution` status=`runtime-proven` state=`active` gaps=none
 - `monte_carlo` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
 - `parameter_evolver` owner=`critic_evolution` status=`runtime-proven` state=`active` gaps=none
@@ -243,6 +244,7 @@ Updated automatically from the repo on `2026-05-19T10:49:47.788Z`.
 - `anti-setup-effectiveness`
 - `anti-setup-mine`
 - `archetype-daily-classify`
+- `autonomous-scout-discovery`
 - `bias-engine-refresh-10am-et`
 - `bias-engine-session-start`
 - `c11-bls-release`
@@ -314,6 +316,7 @@ Updated automatically from the repo on `2026-05-19T10:49:47.788Z`.
 - `exits`
 - `governor`
 - `graveyard`
+- `invariant_harness`
 - `macro_data`
 - `monte_carlo`
 - `parameter_evolver`
@@ -447,6 +450,7 @@ Updated automatically from the repo on `2026-05-19T10:49:47.788Z`.
 - `tensor_predictions`
 - `tournament_results`
 - `tradingview_markers`
+- `transcript_fetch_outcomes`
 - `walk_forward_windows`
 - `weekly_drift_reports`
 <!-- END GENERATED: topology -->

@@ -86,7 +86,8 @@
       "strategy_pending_buckets",
       "strategy_pending_mentions",
       "system_journal",
-      "tournament_results"
+      "tournament_results",
+      "transcript_fetch_outcomes"
     ],
     "learning_from": [
       "system_journal",
@@ -269,6 +270,8 @@
     ],
     "audit_actions": [
       "backtest.run",
+      "backtest.invariants_failed",
+      "backtest.parity_shadow_drift",
       "mc.run",
       "compiler.compile",
       "compiler.validate"
@@ -279,6 +282,7 @@
     "telemetry_sources": [
       "/api/health/dashboard",
       "backtest:* SSE",
+      "backtest:truthiness_failure SSE",
       "mc:* SSE"
     ],
     "scheduler_jobs": [],
@@ -295,6 +299,7 @@
       "anti_setups",
       "archetypes",
       "backtester",
+      "invariant_harness",
       "monte_carlo",
       "parity_engine",
       "survival",
@@ -328,6 +333,8 @@
     "freshness_signals": [
       "/api/health/dashboard",
       "audit_log:backtest.run",
+      "audit_log:backtest.invariants_failed",
+      "audit_log:backtest.parity_shadow_drift",
       "backtests:recent-completion"
     ],
     "evidence_queries": [

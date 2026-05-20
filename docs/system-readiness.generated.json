@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-19T10:49:47.788Z",
+  "generatedAt": "2026-05-20T01:34:47.346Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -56,9 +56,14 @@
       "blockers": [],
       "requiredEvidence": [
         "/api/health/dashboard",
+        "audit_log:backtest.invariants_failed",
+        "audit_log:backtest.parity_shadow_drift",
         "audit_log:backtest.run",
         "backtest-table-writes",
         "backtest:* SSE",
+        "backtest:truthiness_failure SSE",
+        "backtest.invariants_failed",
+        "backtest.parity_shadow_drift",
         "backtest.run",
         "backtests:recent-completion",
         "compiler.compile",

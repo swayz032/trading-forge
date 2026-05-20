@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-19T10:49:47.788Z",
+  "generatedAt": "2026-05-20T01:34:47.346Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,11 +16,11 @@
   },
   "counts": {
     "routes": 62,
-    "schedulerJobs": 61,
+    "schedulerJobs": 62,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
-    "engineSubsystems": 25,
-    "databaseTables": 91,
+    "engineSubsystems": 26,
+    "databaseTables": 92,
     "registrySubsystems": 21
   },
   "routes": [
@@ -93,6 +93,7 @@
     "anti-setup-effectiveness",
     "anti-setup-mine",
     "archetype-daily-classify",
+    "autonomous-scout-discovery",
     "bias-engine-refresh-10am-et",
     "bias-engine-session-start",
     "c11-bls-release",
@@ -719,6 +720,7 @@
     "exits",
     "governor",
     "graveyard",
+    "invariant_harness",
     "macro_data",
     "monte_carlo",
     "parameter_evolver",
@@ -822,6 +824,7 @@
     "tensor_predictions",
     "tournament_results",
     "tradingview_markers",
+    "transcript_fetch_outcomes",
     "walk_forward_windows",
     "weekly_drift_reports"
   ],
@@ -875,9 +878,9 @@
     ],
     "coveredCounts": {
       "routes": 62,
-      "schedulerJobs": 61,
-      "engineSubsystems": 25,
-      "databaseTables": 91
+      "schedulerJobs": 62,
+      "engineSubsystems": 26,
+      "databaseTables": 92
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -1126,8 +1129,13 @@
         ],
         "runtimeEvidence": [
           "/api/health/dashboard",
+          "audit_log:backtest.invariants_failed",
+          "audit_log:backtest.parity_shadow_drift",
           "audit_log:backtest.run",
           "backtest:* SSE",
+          "backtest:truthiness_failure SSE",
+          "backtest.invariants_failed",
+          "backtest.parity_shadow_drift",
           "backtest.run",
           "backtests:recent-completion",
           "compiler.compile",
@@ -1171,9 +1179,14 @@
         ],
         "requiredEvidence": [
           "/api/health/dashboard",
+          "audit_log:backtest.invariants_failed",
+          "audit_log:backtest.parity_shadow_drift",
           "audit_log:backtest.run",
           "backtest-table-writes",
           "backtest:* SSE",
+          "backtest:truthiness_failure SSE",
+          "backtest.invariants_failed",
+          "backtest.parity_shadow_drift",
           "backtest.run",
           "backtests:recent-completion",
           "compiler.compile",
@@ -1198,6 +1211,8 @@
         "freshnessSignals": [
           "/api/health/dashboard",
           "audit_log:backtest.run",
+          "audit_log:backtest.invariants_failed",
+          "audit_log:backtest.parity_shadow_drift",
           "backtests:recent-completion"
         ],
         "evidenceQueries": [
@@ -2714,7 +2729,8 @@
           "strategy_pending_buckets",
           "strategy_pending_mentions",
           "system_journal",
-          "tournament_results"
+          "tournament_results",
+          "transcript_fetch_outcomes"
         ],
         "closedLoopStatus": "learning_active",
         "learningMode": "active_learning",
@@ -3345,6 +3361,18 @@
         "coverageGaps": []
       },
       {
+        "id": "invariant_harness",
+        "ownerSubsystemId": "backtest_qualification",
+        "ownerDomain": "qualification",
+        "runtimeState": "active",
+        "proofStatus": "runtime-proven",
+        "manualGate": "none",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "criticality": "critical",
+        "coverageGaps": []
+      },
+      {
         "id": "macro_data",
         "ownerSubsystemId": "context_execution",
         "ownerDomain": "execution",
@@ -3615,8 +3643,13 @@
       ],
       "runtimeEvidence": [
         "/api/health/dashboard",
+        "audit_log:backtest.invariants_failed",
+        "audit_log:backtest.parity_shadow_drift",
         "audit_log:backtest.run",
         "backtest:* SSE",
+        "backtest:truthiness_failure SSE",
+        "backtest.invariants_failed",
+        "backtest.parity_shadow_drift",
         "backtest.run",
         "backtests:recent-completion",
         "compiler.compile",
@@ -3660,9 +3693,14 @@
       ],
       "requiredEvidence": [
         "/api/health/dashboard",
+        "audit_log:backtest.invariants_failed",
+        "audit_log:backtest.parity_shadow_drift",
         "audit_log:backtest.run",
         "backtest-table-writes",
         "backtest:* SSE",
+        "backtest:truthiness_failure SSE",
+        "backtest.invariants_failed",
+        "backtest.parity_shadow_drift",
         "backtest.run",
         "backtests:recent-completion",
         "compiler.compile",
@@ -3687,6 +3725,8 @@
       "freshnessSignals": [
         "/api/health/dashboard",
         "audit_log:backtest.run",
+        "audit_log:backtest.invariants_failed",
+        "audit_log:backtest.parity_shadow_drift",
         "backtests:recent-completion"
       ],
       "evidenceQueries": [
@@ -5203,7 +5243,8 @@
         "strategy_pending_buckets",
         "strategy_pending_mentions",
         "system_journal",
-        "tournament_results"
+        "tournament_results",
+        "transcript_fetch_outcomes"
       ],
       "closedLoopStatus": "learning_active",
       "learningMode": "active_learning",
@@ -5830,6 +5871,18 @@
       "manualGate": "tradingview_deploy",
       "learningMode": "manual_gate_only",
       "operatingClass": "manual_gated",
+      "criticality": "critical",
+      "coverageGaps": []
+    },
+    {
+      "id": "invariant_harness",
+      "ownerSubsystemId": "backtest_qualification",
+      "ownerDomain": "qualification",
+      "runtimeState": "active",
+      "proofStatus": "runtime-proven",
+      "manualGate": "none",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
       "criticality": "critical",
       "coverageGaps": []
     },

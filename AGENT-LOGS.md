@@ -5110,7 +5110,156 @@ prevents the next one is now hard-pinned in CLAUDE.md §11a + AGENTS.md §11.
 
 ---
 
+### Session Log — 2026-05-19 Truthiness Stack (Pass A-C) — backtest enterprise verification
+
+**Mission:** Build enterprise-grade backtest truthiness verification — every
+backtest gets independent metric reconciliation (B-2 invariant harness) +
+parity-engine cross-check (B-1 shadow) + audit-trailed failure surfacing
+(B-3 observability). End state: no backtest leaves the engine without an
+internal-consistency receipt; any drift between vectorbt and reference
+backtrader is captured before downstream consumers (lifecycle gate,
+promotion, family Pine export) can act on a bad number.
+
+**Work completed:**
+- Pass A: A12 audit Cat 5/10 stale-assertion fixes (commit e82cca8)
+- Pass B-1: parity engine shadow runner — non-blocking post-backtest wrapper
+  around `run_parity_diff`; env-gated `PARITY_SHADOW_ENABLED`; tolerances
+  0.10% PnL / 1 trade / 0.05 Sharpe; emits `PARITY_SHADOW_DRIFT_JSON`
+  sentinel to stderr (commit ad6873f)
+- Pass B-2: 14-check invariant harness — always-on; CRITICAL checks
+  (balance_arithmetic, trade_pnl_sum, daily_pnl_sum, long_short_split,
+  trade_counts, win_rate range, max_dd non-negative, peak_equity floor)
+  + WARNING checks (sharpe/PF finite, avg_trade consistent, commission
+  reasonable, per-firm endings, equity_curve continuity); emits
+  `INVARIANT_FAILURE_JSON` sentinel (commit ad6873f)
+- Pass B-3: observability wiring — `parseTruthinessSentinel()` in
+  python-runner.ts captures stderr sentinels; backtest-service.ts writes
+  `audit_log` rows (`backtest.invariants_failed`, `backtest.parity_shadow_drift`),
+  fires Discord CRITICAL via `notifyCritical()`, broadcasts SSE
+  `backtest:truthiness_failure`; persists `parity_shadow` + `invariants`
+  to `backtests.resultExtras` (JSONB — no migration) (commit ad6873f)
+- Pass C: architect cross-cut — registry sync, system-map convergence,
+  end-to-end signal-path verification (this commit)
+
+**Verification:**
+- pytest test_invariant_harness.py: 58/58 PASS (Pass B)
+- pytest test_audit_a12.py: 12/12 PASS (Pass A)
+- pytest test_shadow_runner.py: smoke OK; full pending vectorbt import
+- backtest-truthiness-emit.test.ts: present (573 lines) — tests SSE
+  broadcast, audit-row write, Discord, and pass-path silence
+- parse-truthiness-sentinel.test.ts: present (71 lines)
+- DLL-cap bug class (b8a2140 regression) verified caught by
+  `balance_arithmetic` CRITICAL: ending=$56,928 vs expected $48,101
+  → diff=$8,827 flagged
+- Pass C path A (stderr sentinel): VERIFIED end-to-end —
+  `parseTruthinessSentinel` → `_truthiness_events` accumulator →
+  `backtest-service.ts` lines 655-663 merge stderr events into
+  `result.parity_shadow` / `result.invariants` before evaluation
+- Pass C path B (stdout JSON): VERIFIED — `buildResultExtras` includes
+  `"parity_shadow"` and `"invariants"` in `extraKeys` (lines 71-73);
+  `backtests.resultExtras` is `jsonb()` (schema.ts:111); GET
+  /api/backtests/:id returns full row including resultExtras
+  (routes/backtests.ts:443-466)
+- Registry coverage: `invariant_harness` added to `backtest_qualification`
+  entry's `engine_subsystems`; new audit_actions
+  (`backtest.invariants_failed`, `backtest.parity_shadow_drift`) +
+  freshness_signals + telemetry_source `backtest:truthiness_failure SSE`
+  registered
+- Pre-existing scout drift closed in same sync pass:
+  `transcript_fetch_outcomes` added to research/strategy_factory entry
+- `npm run system-map:sync`: EXIT 0 (regenerated map + readiness +
+  topology JSONs)
+- `npm run system-map:check`: EXIT 0 — status:"ok", driftItems:[]
+- `npm run check:production-isolation`: EXIT 0 — CLEAN, 4 files, 0 violations
+- `npm run check:2026-compliance`: EXIT 1 — PRE-EXISTING drift on
+  `max_contracts` micro caps in firm_config.{py,ts}; last touched
+  phase21 commit c7ac642; unrelated to truthiness stack. Owner:
+  whoever lands the next firm-config sweep.
+
+**Contract surfaces touched:**
+- `audit_log.action` (text column, free-form) — two new values:
+  `backtest.invariants_failed`, `backtest.parity_shadow_drift`
+- SSE event registry — `backtest:truthiness_failure` (string event; no
+  enforced registry, follows precedent of `backtest:completed`/`backtest:failed`)
+- `backtests.resultExtras` (jsonb) — two new keys: `parity_shadow`,
+  `invariants` (no migration needed — JSONB)
+- Python stdout result dict — two new keys: `parity_shadow`, `invariants`
+- Python stderr — two new sentinel prefixes: `PARITY_SHADOW_DRIFT_JSON`,
+  `INVARIANT_FAILURE_JSON` (parsed by python-runner.ts; do NOT rename
+  without updating both ends)
+- Registry: `docs/system-subsystem-registry.json` —
+  `backtest_qualification` entry gains `invariant_harness` engine
+  subsystem + audit actions + freshness signals; `strategy_factory`-style
+  research entry gains `transcript_fetch_outcomes` db table
+
+**Risks flagged for follow-up:**
+- `audit_log` volume from truthiness events: on a clean-running engine
+  these fire only on actual drift, so background rate ≈ zero. If a bug
+  class lands that emits per-trade or per-bar, the row velocity could
+  blow up. Add metric alert if `backtest.invariants_failed` count over
+  1h > 100.
+- Parity tolerance (0.10% PnL) is calibrated for ema_crossover +
+  atr_breakout. Other supported archetypes should re-tune on first
+  shadow run with real data; current code returns `ran=false` for
+  unsupported archetypes (NOT a false positive `passed:true`).
+- 2026-compliance gate RED is unrelated to this stack; do not block
+  truthiness work, but Pass D should be scoped to address it cleanly.
+
+**Known-facts updates:** Added 3 truthiness pins (see Known-Facts Pin
+section below): always-on invariant block, parity ran=false semantics,
+sentinel rename hazard.
+
+**Carry-forward for next session (Pass D):**
+- Fire 7-strategy library sweep through new harness to populate first
+  baseline of `resultExtras.invariants` across the library — establishes
+  zero-failure baseline before further engine changes
+- Frontend `BacktestDetail` truthiness badge component (backend
+  emits SSE + JSONB ready; UI not yet built)
+- Tier 2 synthetic golden fixtures (deferred — separate phase)
+- Tier 5 property-based fuzz tests (deferred)
+- Tier 6 Pine ↔ backtest parity (requires per-recipient export pipeline
+  — deferred until family distribution Phase 5 kicks off)
+- 2026-compliance drift closure — separate ticket, not Pass D scope
+  unless operator scopes it
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
+
+`result["invariants"]` is ALWAYS present after `src/engine/backtester.py`
+runs — the hook at line 2657 emits the block unconditionally. If a
+backtest result returns from Python WITHOUT an `invariants` key, that
+indicates the engine errored BEFORE the invariant block ran (early
+return, exception, missing data) — investigate the engine path, not
+the harness. Do not "patch" backtest-service by treating absence as
+"all passed".
+
+### Parity shadow `ran:false` is NOT a failure (pinned 2026-05-19, Pass C)
+
+`parity_shadow.ran === false` with
+`reason: "strategy_archetype_not_supported"` is the EXPECTED skip
+signal for archetypes outside the parity engine's supported list
+(today: `ema_crossover`, `atr_breakout`). It is NOT a parity failure
+and must NOT be alerted on. backtest-service.ts:681-684 explicitly
+exempts this reason. Any OTHER `ran:false` reason IS alerted as
+"unexpected skip" (e.g. parity supposed to run but crashed).
+
+### Truthiness sentinels — both-ends contract (pinned 2026-05-19, Pass C)
+
+`PARITY_SHADOW_DRIFT_JSON` and `INVARIANT_FAILURE_JSON` are stderr
+sentinel prefixes with dedicated parsing in
+`src/server/lib/python-runner.ts:141-163` (`parseTruthinessSentinel`).
+Format: `<PREFIX> <JSON>` on a single stderr line. If you rename either
+prefix on the Python side without updating the TS parser, the events
+are silently dropped — Python still emits them, Node still logs them
+as plain warn-level Python noise, but the audit/Discord/SSE chain
+DOES NOT FIRE. Both ends must change in the same commit. Constants
+exported as `PARITY_SHADOW_SENTINEL` and `INVARIANT_FAILURE_SENTINEL`
+from python-runner.ts.
+
+---
 
 ### Library graveyard sweep is operator-triggered (pinned 2026-05-19)
 
