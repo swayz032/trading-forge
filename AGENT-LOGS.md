@@ -43,6 +43,8 @@
 - Python import overhead on this Windows machine is ~20 minutes per pytest invocation (polars/vectorbt/duckdb chain). This is expected — not a bug.
 - `bias_condition` from extractor already uses pre-suffixed column names (`ema_50_4h > ema_200_4h`). DSL compiler does NOT need to translate them — they pass through verbatim to signals.py.
 - MTF fail-CLOSED (W23G.11) is now dead code — W23H.1 replaced it with active AND-gate. The `mtfUnsupported` field on `CompiledStrategy` is now always falsy when `bias_timeframe` + `bias_condition` are both present.
+- `signals.py evaluate_expression()` now strips outer parentheses from sub-expressions (added by W23H.1 fix in commit 75c89d8). Grammar `(A) AND (B)` is now parseable — the AND splitter produces `(A)` and `(B)`, and the outer-paren stripping reduces them to `A` and `B` before `_eval_simple_expr`. This was a silent engine gap before W23H.1.
+- `playbook_router._check_no_trade_conditions()` only extends `bias.no_trade_reasons` from state — it does NOT re-check `abs(net_bias) < 15`. Test fixtures that build `DailyBiasState` manually must set `no_trade_reasons=[]` for states with `abs(net_bias) >= 15` or the router will silently NO_TRADE.
 
 **Carry-forward for next session:**
 - `test_mtf_strategy_e2e.py` and `test_bias_engine_range_bound.py` are running but expected to pass (logic verified manually; import-only failures would have shown earlier)
