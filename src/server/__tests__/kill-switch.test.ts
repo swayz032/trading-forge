@@ -27,9 +27,20 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("../db/index.js", () => ({
   db: {
+    // select() is used by both system_state (with .limit()) and broker_accounts (without .limit()).
+    // The where() result is thenable (supports direct await) AND has .limit() for the
+    // system_state query path.
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
+          // Direct await path: broker_accounts query returns [] by default
+          then(
+            resolve: (v: unknown[]) => unknown,
+            reject?: (err: unknown) => unknown,
+          ) {
+            return Promise.resolve([]).then(resolve, reject);
+          },
+          // .limit() path: system_state query returns default HALT row
           limit: vi.fn().mockResolvedValue([
             {
               productionMode: "HALT",
@@ -38,6 +49,10 @@ vi.mock("../db/index.js", () => ({
               setAt: new Date("2026-05-09T00:00:00Z"),
             },
           ]),
+        }),
+        // orderBy chain for drift query (Layer 5)
+        orderBy: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([]),
         }),
       }),
     }),
@@ -59,6 +74,10 @@ vi.mock("../db/schema.js", () => ({
     severity: "severity",
     reportWeek: "report_week",
     ranAt: "ran_at",
+  },
+  brokerAccounts: {
+    firmId: "firm_id",
+    enabled: "enabled",
   },
   ProductionMode: undefined,
 }));
@@ -107,6 +126,10 @@ vi.mock("../services/windows-health-check-service.js", () => ({
   runPreTradingDayHealthCheck: vi.fn().mockResolvedValue({ status: "healthy" }),
 }));
 
+vi.mock("../lib/audit-log-helper.js", () => ({
+  insertAuditRow: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ─── Imports after mocks ──────────────────────────────────────────────────────
 
 import { killSwitch } from "../production/kill-switch.js";
@@ -119,19 +142,31 @@ import { isConnectivityDegraded } from "../lib/network-failover.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Override the DB select mock to return a specific production_mode */
+/**
+ * Override the DB select mock to return a specific production_mode for the
+ * system_state query. The where() result is thenable (direct-await returns [])
+ * AND has .limit() that returns the state row (for system_state queries).
+ */
 function mockProductionMode(mode: string, killReason: string = "test") {
+  const stateRow = {
+    productionMode: mode,
+    killReason,
+    setBy: "test",
+    setAt: new Date("2026-05-09T00:00:00Z"),
+  };
   vi.mocked(db.select).mockReturnValue({
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
-        limit: vi.fn().mockResolvedValue([
-          {
-            productionMode: mode,
-            killReason,
-            setBy: "test",
-            setAt: new Date("2026-05-09T00:00:00Z"),
-          },
-        ]),
+        then(
+          resolve: (v: unknown[]) => unknown,
+          reject?: (err: unknown) => unknown,
+        ) {
+          return Promise.resolve([]).then(resolve, reject);
+        },
+        limit: vi.fn().mockResolvedValue([stateRow]),
+      }),
+      orderBy: vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue([]),
       }),
     }),
   } as ReturnType<typeof db.select>);
@@ -142,7 +177,18 @@ function mockDbError() {
   vi.mocked(db.select).mockReturnValue({
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
+        then(
+          _resolve: (v: unknown[]) => unknown,
+          reject?: (err: unknown) => unknown,
+        ) {
+          const err = new Error("DB connection lost");
+          if (reject) return reject(err);
+          return Promise.reject(err);
+        },
         limit: vi.fn().mockRejectedValue(new Error("DB connection lost")),
+      }),
+      orderBy: vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue([]),
       }),
     }),
   } as ReturnType<typeof db.select>);
@@ -280,7 +326,32 @@ describe("KillSwitch — Phase 4A Production Hardening", () => {
   });
 
   it("getKillSwitchStatus() reflects firm suspension on layer 7", async () => {
+    // Layer 7 now queries broker_accounts first — provide at least one firm
+    // so isFirmSuspended() is actually called.
     vi.mocked(isFirmSuspended).mockReturnValue(true);
+    // Override db.select so broker_accounts returns one enabled firm ("mffu")
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          then(
+            resolve: (v: unknown[]) => unknown,
+            reject?: (err: unknown) => unknown,
+          ) {
+            return Promise.resolve([{ firmId: "mffu" }]).then(resolve, reject);
+          },
+          limit: vi.fn().mockResolvedValue([
+            {
+              productionMode: "HALT",
+              killReason: "test",
+              setBy: "test",
+              setAt: new Date(),
+            },
+          ]),
+        }),
+        orderBy: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }),
+      }),
+    } as ReturnType<typeof db.select>);
+
     const report = await killSwitch.getKillSwitchStatus();
     const layer7 = report.layers.find((l) => l.layer === 7)!;
     expect(layer7.halted).toBe(true);

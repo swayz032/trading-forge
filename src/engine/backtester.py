@@ -1595,6 +1595,135 @@ def run_backtest(
             file=sys.stderr,
         )
 
+    # ─── W23H.1: Load HTF data and join into exec_df when bias_timeframe present ─
+    # This block runs BEFORE compute_indicators so that HTF columns are present in
+    # the exec_df when indicator and signal computation happens.
+    #
+    # No-look-ahead guarantee: forward_fill_htf_to_exec uses Polars join_asof with
+    # strategy='backward'. Each exec bar gets the most recently CLOSED HTF bar value.
+    # See src/engine/indicators/mtf_join.py module docstring for the invariant.
+    mtf_join_meta: dict = {}
+    if getattr(config, "bias_timeframe", None):
+        htf_tf = config.bias_timeframe
+        htf_suffix = f"_{htf_tf}"
+        try:
+            from src.engine.indicators.mtf_join import forward_fill_htf_to_exec
+            from src.engine.indicators.core import compute_htf_indicators as _compute_htf_ind
+
+            print(
+                f"  MTF: loading HTF {htf_tf} data for bias gating "
+                f"(exec_tf={config.timeframe})",
+                file=sys.stderr,
+            )
+            htf_df_raw = load_ohlcv(
+                config.symbol,
+                htf_tf,
+                request.start_date,
+                request.end_date,
+            )
+            htf_bars_loaded = len(htf_df_raw)
+
+            # Determine HTF indicator configs from bias_condition.
+            # The bias_condition string (e.g. 'ema_50_4h > ema_200_4h') names the
+            # HTF columns. We parse the indicator types from the suffixed col names.
+            # Convention: '{indicator}_{period}_{tf}' or '{indicator}_{tf}'.
+            # We compute the same indicators[] as the exec-TF plus any EMA/SMA periods
+            # referenced by bias_condition.
+            htf_indicator_configs: list[IndicatorConfig] = []
+            bias_cond = getattr(config, "bias_condition", None) or ""
+
+            # Parse indicator names from bias_condition (e.g. 'ema_50_4h > ema_200_4h')
+            # Supports: ema_N, sma_N, rsi_N, atr_N referenced with suffix stripped
+            import re as _re
+            col_tokens = _re.findall(r'[a-z]+_\d+(?:_[a-z0-9]+)*', bias_cond)
+            for token in col_tokens:
+                # Strip the HTF suffix if present: 'ema_50_4h' → 'ema_50'
+                base = token.replace(htf_suffix, "")
+                parts = base.split("_")
+                if len(parts) >= 2 and parts[-1].isdigit():
+                    ind_type = parts[0]
+                    period = int(parts[-1])
+                    if ind_type in ("ema", "sma", "rsi", "atr", "adx"):
+                        htf_indicator_configs.append(
+                            IndicatorConfig(type=ind_type, period=period)
+                        )
+
+            # Deduplicate configs (same type+period might appear twice)
+            seen_htf = set()
+            deduped_htf_configs = []
+            for ic in htf_indicator_configs:
+                key = (ic.type, ic.period)
+                if key not in seen_htf:
+                    seen_htf.add(key)
+                    deduped_htf_configs.append(ic)
+
+            # Always include ATR on HTF for potential future slippage/stop use
+            if not any(ic.type == "atr" for ic in deduped_htf_configs):
+                deduped_htf_configs.append(IndicatorConfig(type="atr", period=atr_period))
+
+            htf_df_with_ind = _compute_htf_ind(
+                htf_df_raw, deduped_htf_configs, suffix=htf_suffix
+            )
+            htf_bars_loaded = len(htf_df_with_ind)
+
+            # HTF value columns = all columns except ts_event and OHLCV base cols
+            _ohlcv_base = {"ts_event", "ts_et", "open", "high", "low", "close", "volume",
+                           "is_rollover_day"}
+            htf_value_cols = [
+                c for c in htf_df_with_ind.columns
+                if c not in _ohlcv_base and c.endswith(htf_suffix)
+            ]
+
+            exec_bars_before = len(data)
+            data = forward_fill_htf_to_exec(data, htf_df_with_ind, htf_value_cols)
+            exec_bars_after = len(data)
+
+            # Forward-fill percentage: how many exec bars have non-null HTF values
+            if htf_value_cols:
+                _first_htf_col = htf_value_cols[0]
+                if _first_htf_col in data.columns:
+                    non_null = data[_first_htf_col].is_not_null().sum()
+                    forward_fill_pct = round(non_null / max(exec_bars_after, 1) * 100, 1)
+                else:
+                    forward_fill_pct = 0.0
+            else:
+                forward_fill_pct = 0.0
+
+            mtf_join_meta = {
+                "exec_tf": config.timeframe,
+                "htf": htf_tf,
+                "htf_bars_loaded": htf_bars_loaded,
+                "exec_bars_loaded": exec_bars_before,
+                "forward_fill_pct": forward_fill_pct,
+                "htf_indicator_configs": [
+                    {"type": ic.type, "period": ic.period} for ic in deduped_htf_configs
+                ],
+                "htf_value_cols_added": htf_value_cols,
+            }
+
+            print(
+                f"  MTF: join complete — {htf_bars_loaded} HTF bars × {exec_bars_after} exec bars, "
+                f"forward_fill={forward_fill_pct}%",
+                file=sys.stderr,
+            )
+
+            # Emit audit event via JSON to stderr (server captures structured stderr)
+            import json as _json_mtf
+            print(
+                f"AUDIT_EVENT_JSON {_json_mtf.dumps({'event': 'backtest.mtf_join_completed', **mtf_join_meta})}",
+                file=sys.stderr,
+            )
+
+        except Exception as _mtf_err:
+            # MTF load failure is non-fatal: log, strip HTF fields, proceed without bias gate.
+            # Backtest runs on exec-TF only — same as pre-W23H.1 behavior.
+            print(
+                f"  MTF WARNING: HTF load failed ({_mtf_err!r}); "
+                f"proceeding without bias gate (degraded mode)",
+                file=sys.stderr,
+            )
+            mtf_join_meta = {"error": str(_mtf_err), "degraded": True}
+
     # ─── Compute indicators ───────────────────────────────────
     # Ensure ATR is included for sizing/slippage
     indicator_configs = list(config.indicators)
@@ -4133,6 +4262,71 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
 
     if backtest_id:
         result["backtest_id"] = backtest_id
+
+    # ─── Pass D fix (2026-05-20): truthiness stack hooks at CLI level ──
+    # Hooks must fire for BOTH single and walk-forward modes. Previously
+    # added to run_backtest() at line ~2657/2737 — but walk_forward.py
+    # uses its own result-construction path and never returned through
+    # run_backtest(). Default mode is walkforward → hooks never fired →
+    # production resultExtras had no `invariants` / `parity_shadow` keys.
+    # Moving to main() guarantees both code paths emit the truthiness blocks.
+    if "error" not in result:
+        # Invariant harness — always runs (cheap pure computation).
+        try:
+            from src.engine.invariant_harness import run_invariants
+            _inv_report = run_invariants(result)
+            crit_serial = [
+                {"name": c.name, "expected": c.expected, "actual": c.actual,
+                 "tolerance": c.tolerance, "severity": c.severity, "evidence": c.evidence}
+                for c in _inv_report.critical_failures
+            ]
+            warn_serial = [
+                {"name": w.name, "expected": w.expected, "actual": w.actual,
+                 "tolerance": w.tolerance, "severity": w.severity, "evidence": w.evidence}
+                for w in _inv_report.warnings
+            ]
+            result["invariants"] = {
+                "passed": _inv_report.passed,
+                "failed": _inv_report.failed,
+                "overall_passed": _inv_report.overall_passed,
+                "critical_failures": crit_serial,
+                "warnings": warn_serial,
+                "total_checks": _inv_report.total_checks,
+            }
+            if not _inv_report.overall_passed:
+                _payload = {
+                    "event": "invariant_failure",
+                    "backtest_id": backtest_id or "cli",
+                    "report": result["invariants"],
+                }
+                print(f"INVARIANT_FAILURE_JSON {json.dumps(_payload)}", file=sys.stderr)
+        except Exception as _inv_err:
+            print(
+                json.dumps({"event": "invariants.error", "error": str(_inv_err)[:300]}),
+                file=sys.stderr,
+            )
+
+        # Parity shadow — env-gated, only fires when PARITY_SHADOW_ENABLED=true.
+        if os.environ.get("PARITY_SHADOW_ENABLED", "false").lower() == "true":
+            try:
+                from src.engine.parity_engine.shadow_runner import run_parity_shadow
+                shadow_report = run_parity_shadow(request, result, _preloaded_data)
+                result["parity_shadow"] = shadow_report
+                if shadow_report.get("ran") and not shadow_report.get("passed", True):
+                    _shadow_payload = {
+                        "event": "parity_shadow_drift",
+                        "backtest_id": backtest_id or "cli",
+                        "report": shadow_report,
+                    }
+                    print(
+                        f"PARITY_SHADOW_DRIFT_JSON {json.dumps(_shadow_payload)}",
+                        file=sys.stderr,
+                    )
+            except Exception as _ps_err:
+                print(
+                    json.dumps({"event": "parity_shadow.error", "error": str(_ps_err)[:300]}),
+                    file=sys.stderr,
+                )
 
     print(json.dumps(result))
 

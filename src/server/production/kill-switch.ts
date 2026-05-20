@@ -29,8 +29,9 @@
  */
 
 import { db } from "../db/index.js";
-import { systemState, auditLog, weeklyDriftReports, type ProductionMode } from "../db/schema.js";
+import { systemState, auditLog, weeklyDriftReports, brokerAccounts, type ProductionMode } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "../services/alert-service.js";
@@ -326,11 +327,38 @@ class KillSwitch {
     layers.push({ layer: 5, name: "drift", halted: l5Halted, reason: l5Reason });
 
     // ── Layer 6: CME outage ──
+    // C1 fail-CLOSED: if isExchangeHalted() throws (poller crash, import error),
+    // we cannot determine outage status → block entries (Wave 23H Fix 1).
     let l6Halted = false;
     try {
       l6Halted = isExchangeHalted("CME");
-    } catch {
-      l6Halted = false;
+    } catch (l6Err) {
+      l6Halted = true; // fail-CLOSED: unknown outage state = halt
+      const errMsg = l6Err instanceof Error ? l6Err.message : String(l6Err);
+      logger.error(
+        { err: l6Err },
+        "C1 CME outage eval FAILED — blocking entries (fail-closed, Layer 6)",
+      );
+      // Audit row — fire-and-forget (non-blocking)
+      insertAuditRow({
+        action: "kill_switch.c1_cme_outage_eval_failed",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { error_message: errMsg, layer: 6 } as Record<string, unknown>,
+        result: { l6Halted: true } as Record<string, unknown>,
+        status: "failure",
+        correlationId: null,
+      }).catch((auditErr) =>
+        logger.error({ err: auditErr }, "kill-switch L6: audit_log write failed (non-blocking)"),
+      );
+      // SSE so dashboard surfaces the eval failure immediately
+      broadcastSSE("kill_switch:c1_cme_eval_failed", {
+        error_message: errMsg,
+        layer: 6,
+        halted: true,
+        timestamp: new Date().toISOString(),
+      });
     }
     layers.push({
       layer: 6,
@@ -340,18 +368,60 @@ class KillSwitch {
     });
 
     // ── Layer 7: Firm suspension ──
-    // Check for the primary firm (MFFU). Phase 4C can expand to check all active firms.
+    // C2 multi-firm: query ALL enabled broker_accounts and check each firmId.
+    // If ANY firm is suspended → halt. Fail-CLOSED on DB error so a crashed
+    // DB cannot be used to bypass the suspension gate (Wave 23H Fix 2).
     let l7Halted = false;
     let l7Reason: string | undefined;
     try {
-      // Check the primary trading firm
-      const primaryFirm = process.env["PRIMARY_PROP_FIRM_ID"] ?? "mffu";
-      if (isFirmSuspended(primaryFirm)) {
+      const enabledAccounts = await db
+        .select({ firmId: brokerAccounts.firmId })
+        .from(brokerAccounts)
+        .where(eq(brokerAccounts.enabled, true));
+
+      // Deduplicate firm IDs (one firm may have multiple accounts)
+      const firmsChecked = [...new Set(enabledAccounts.map((r) => r.firmId))];
+      const suspendedFirms = firmsChecked.filter((firmId) => isFirmSuspended(firmId));
+
+      if (suspendedFirms.length > 0) {
         l7Halted = true;
-        l7Reason = `prop-firm-health: ${primaryFirm} suspended`;
+        l7Reason = `prop-firm-health: suspended firms: ${suspendedFirms.join(", ")}`;
       }
-    } catch {
-      l7Halted = false;
+
+      // Audit row for every evaluation (non-blocking)
+      insertAuditRow({
+        action: "kill_switch.c2_multi_firm_check",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { firms_checked: firmsChecked } as Record<string, unknown>,
+        result: { suspended_firms: suspendedFirms, halted: l7Halted } as Record<string, unknown>,
+        status: "success",
+        correlationId: null,
+      }).catch((auditErr) =>
+        logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
+      );
+    } catch (l7Err) {
+      // Fail-CLOSED: DB unavailable = we cannot verify suspension state → halt
+      l7Halted = true;
+      const errMsg = l7Err instanceof Error ? l7Err.message : String(l7Err);
+      logger.error(
+        { err: l7Err },
+        "C2 multi-firm suspension check FAILED — blocking entries (fail-closed, Layer 7)",
+      );
+      l7Reason = `prop-firm-health: multi-firm check failed (fail-closed): ${errMsg}`;
+      insertAuditRow({
+        action: "kill_switch.c2_multi_firm_check",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { error_message: errMsg, layer: 7 } as Record<string, unknown>,
+        result: { suspended_firms: [], halted: true, eval_failed: true } as Record<string, unknown>,
+        status: "failure",
+        correlationId: null,
+      }).catch((auditErr) =>
+        logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
+      );
     }
     layers.push({ layer: 7, name: "firm_suspension", halted: l7Halted, reason: l7Reason });
 
