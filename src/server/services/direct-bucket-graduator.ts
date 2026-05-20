@@ -1013,7 +1013,11 @@ export async function graduateBucketDirectly(opts: {
     ict_turtle_soup: { identifier: /turtle.soup|equal.high|equal.low|eqh|eql/i, context: [/sweep|failure|reversal/i] },
     ict_midnight_open: { identifier: /midnight|00[:.]00|ndog|nwog|new.day.opening.gap/i, context: [/mean.reversion|return/i] },
     fvg_retrace: { identifier: /fvg|fair.value.gap/i, context: [/retrace|return|fill/i] },
-    order_block: { identifier: /order.block|ob|last.opposite/i, context: [/retest|return/i] },
+    // W23H-postmortem (2026-05-20): "supply & demand" is the operator-canonical
+    // synonym for "order block" — same mechanic, different vocabulary (Sam Seiden
+    // / IBLV / Trade with Pat / Brooks call them supply/demand zones; ICT calls
+    // them order blocks). Both must satisfy the archetype identifier check.
+    order_block: { identifier: /order.block|(^|\s)ob(\s|$)|last.opposite|supply.{0,3}(and.{0,3})?demand|demand.zone|supply.zone|institutional.zone|institutional.supply|institutional.demand/i, context: [/retest|return|reject|bounce/i] },
     liquidity_sweep: { identifier: /sweep|stop.hunt|bsl|ssl|liquidity.grab|liquidity.raid/i, context: [/reversal|reclaim|reject/i] },
     wyckoff_spring: { identifier: /spring|false.breakdown|reclaim/i, context: [/accumulation|support|secondary.test/i] },
     wyckoff_upthrust: { identifier: /upthrust|utad|false.breakout/i, context: [/distribution|resistance|secondary.test/i] },
