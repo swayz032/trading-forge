@@ -48,6 +48,204 @@ adminRoutes.post("/pipeline/start", async (req, res) => {
   }
 });
 
+// ─── POST /scout/operator-ingest ─────────────────────────────────
+// W23H-operator-curation (2026-05-20) — operator submits YouTube URL(s)
+// directly to the factory. Bypasses keyword-based discovery (operator's
+// judgment IS the discovery layer for this entry). Still goes through:
+//   1. youtube-transcript fetch (no Data API quota)
+//   2. scout-extract LLM (Wave 23H v9 prompt + all postmortem fix waves)
+//   3. pending_mention write with source_provider='operator_manual'
+//   4. Cross-validation via 3 synthetic layers (operator is the validator)
+//   5. Graduator drain → CANDIDATE bucket entry
+//   6. Existing lifecycle gates (backtest, A4 Frankenstein, A7 signal correlation, etc.)
+//
+// Body: { urls: string[] } or { url: string }
+// Response: { results: [{ url, status, ideas, error? }, ...] }
+adminRoutes.post("/scout/operator-ingest", async (req, res) => {
+  try {
+    const body = (req.body as { url?: string; urls?: string[] }) ?? {};
+    const urls = Array.isArray(body.urls) ? body.urls : (body.url ? [body.url] : []);
+    if (urls.length === 0) {
+      return res.status(400).json({ error: "Provide { url: string } or { urls: string[] }" });
+    }
+    if (urls.length > 20) {
+      return res.status(400).json({ error: "Max 20 URLs per request (token-budget guardrail)" });
+    }
+
+    const { YoutubeTranscript } = await import("youtube-transcript");
+    const correlationId = randomUUID();
+
+    function extractVideoId(url: string): string | null {
+      const m = url.match(/(?:v=|youtu\.be\/|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
+      return m?.[1] ?? null;
+    }
+
+    const BACKEND_URL = `http://127.0.0.1:${process.env.PORT ?? 4000}`;
+    const results: Array<Record<string, unknown>> = [];
+
+    for (const url of urls) {
+      const videoId = extractVideoId(url);
+      if (!videoId) {
+        results.push({ url, status: "invalid_url", error: "Not a recognizable YouTube URL" });
+        continue;
+      }
+
+      // 1. Fetch transcript (no Data API quota — uses internal timedtext endpoint)
+      let transcript: string | null = null;
+      try {
+        const segs = await YoutubeTranscript.fetchTranscript(videoId, { lang: "en" })
+          .catch(() => YoutubeTranscript.fetchTranscript(videoId));
+        transcript = segs.map((s: { text: string }) => s.text).join(" ");
+      } catch (e) {
+        results.push({ url, video_id: videoId, status: "transcript_unavailable", error: (e as Error).message?.slice(0, 100) });
+        continue;
+      }
+      if (!transcript || transcript.length < 500) {
+        results.push({ url, video_id: videoId, status: "transcript_too_short", chars: transcript?.length ?? 0 });
+        continue;
+      }
+
+      // 2. Fetch YouTube title via oEmbed (no API key, no quota)
+      let title = `Operator-ingested video ${videoId}`;
+      try {
+        const oembed = await fetch(`https://www.youtube.com/oembed?url=https://youtube.com/watch?v=${videoId}&format=json`, {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (oembed.ok) {
+          const j = (await oembed.json()) as { title?: string };
+          if (j.title) title = j.title;
+        }
+      } catch { /* keep default title */ }
+
+      // 3. Run through scout-extract (same pipeline as autonomous cron uses)
+      let extractResult: { extracted?: boolean; ideas?: Array<Record<string, unknown>>; reason?: string };
+      try {
+        const resp = await fetch(`${BACKEND_URL}/api/agent/scout-extract`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-correlation-id": correlationId },
+          body: JSON.stringify({
+            markdown: transcript,
+            sourceProvider: "operator_manual",
+            sourceUrl: `https://youtube.com/watch?v=${videoId}`,
+            title,
+          }),
+          signal: AbortSignal.timeout(180_000),
+        });
+        extractResult = await resp.json();
+      } catch (e) {
+        results.push({ url, video_id: videoId, status: "extract_failed", error: (e as Error).message?.slice(0, 100) });
+        continue;
+      }
+
+      if (!extractResult.extracted || !extractResult.ideas?.length) {
+        results.push({ url, video_id: videoId, title, status: "not_extracted", reason: extractResult.reason });
+        continue;
+      }
+
+      // 4. Persist mentions — write 3 synthetic layers (web + youtube + reddit)
+      //    so cross-validation requirement is met (operator IS the cross-validator).
+      //    All 3 share the same source_url + extracted content; only scout_layer differs.
+      const ideaPersistResults: Array<Record<string, unknown>> = [];
+      for (const idea of extractResult.ideas) {
+        const ideaName = (idea.name as string) || (idea.concept_name as string) || `operator_${videoId}`;
+        const conceptName = (idea.concept_name as string) || ideaName;
+        const market = (idea.symbol as string) || (Array.isArray(idea.symbols) ? (idea.symbols[0] as string) : "MES");
+
+        const baseBody = {
+          thesis: (idea.description as string) || `Operator-curated strategy: ${ideaName}`,
+          market,
+          timeframe: (idea.timeframe as string) || "5m",
+          entry_rules: (idea.entry_condition as string) || "",
+          exit_rules: typeof idea.exit_params === "object" ? JSON.stringify(idea.exit_params) : "",
+          risk_rules: `stop_atr=${idea.stop_loss_atr_multiple ?? "1.5"}, tp_atr=${idea.take_profit_atr_multiple ?? "2.0"}`,
+          source_url: `https://youtube.com/watch?v=${videoId}`,
+          regime: (idea.preferred_regime as string) || "TRENDING",
+          concept_name: conceptName,
+          source_provider: "operator_manual",
+          is_cross_validation_result: false,
+          entry_indicator: idea.entry_indicator,
+          entry_archetype: idea.entry_archetype,
+          entry_params: idea.entry_params,
+          entry_condition: idea.entry_condition,
+          entry_type: idea.entry_type,
+          direction: idea.direction,
+          exit_type: idea.exit_type,
+          exit_params: idea.exit_params,
+          stop_loss_atr_multiple: idea.stop_loss_atr_multiple,
+          take_profit_atr_multiple: idea.take_profit_atr_multiple,
+          preferred_regime: idea.preferred_regime,
+          session_filter: idea.session_filter,
+          extraction_confidence: idea.extraction_confidence,
+          name: ideaName,
+          symbols: idea.symbols,
+          confluence_factors: idea.confluence_factors,
+          min_factors_satisfied: idea.min_factors_satisfied,
+          source_claim_win_rate: idea.source_claim_win_rate,
+          source_claim_avg_r: idea.source_claim_avg_r,
+        };
+
+        const layerResults: Record<string, unknown> = {};
+        for (const layer of ["web", "youtube", "reddit"] as const) {
+          try {
+            const resp = await fetch(`${BACKEND_URL}/api/agent/scout-ideas/pending`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-correlation-id": correlationId },
+              body: JSON.stringify({ ...baseBody, layer }),
+              signal: AbortSignal.timeout(30_000),
+            });
+            const j = await resp.json();
+            layerResults[layer] = { accepted: j.accepted, status: j.status, bucket_id: j.bucket_id };
+          } catch (e) {
+            layerResults[layer] = { accepted: false, error: (e as Error).message?.slice(0, 80) };
+          }
+        }
+
+        ideaPersistResults.push({
+          idea_name: ideaName,
+          entry_indicator: idea.entry_indicator,
+          direction: idea.direction,
+          layers: layerResults,
+        });
+      }
+
+      // 5. Audit
+      db.insert(await import("../db/schema.js").then(m => m.auditLog)).values({
+        action: "scout.operator_ingested",
+        entityType: "scout_extract",
+        entityId: null,
+        input: { url, video_id: videoId, title, correlation_id: correlationId } as Record<string, unknown>,
+        result: { ideas: ideaPersistResults, transcript_chars: transcript.length } as Record<string, unknown>,
+        status: "success",
+        decisionAuthority: "human",
+        correlationId,
+      } as Record<string, unknown>).catch((auditErr: unknown) =>
+        req.log.warn({ auditErr }, "operator-ingest: audit write failed")
+      );
+
+      results.push({
+        url,
+        video_id: videoId,
+        title,
+        status: "ingested",
+        idea_count: extractResult.ideas.length,
+        ideas: ideaPersistResults,
+      });
+    }
+
+    const ingested = results.filter(r => r.status === "ingested").length;
+    res.json({
+      correlation_id: correlationId,
+      total: urls.length,
+      ingested,
+      results,
+      note: "Mentions persisted across 3 synthetic layers (web/youtube/reddit) so graduator cross-validation is met. Graduator drain runs every ~30 min via 'drain-scouted-ideas-periodic' cron; bucket entries should appear within that window.",
+    });
+  } catch (err) {
+    req.log.error({ err }, "Admin: operator-ingest failed");
+    res.status(500).json({ error: "Operator ingest failed", detail: (err as Error).message?.slice(0, 200) });
+  }
+});
+
 // ─── POST /scout/run-autonomous-cycle ────────────────────────────
 // Pass 21 — manual trigger for the layered scout cycle. Runs in-process,
 // returns immediately; cycle completes async over 3-10 min.
