@@ -357,6 +357,23 @@ function deriveEntryIndicator(conceptName: string, fallback: string | null): str
   // engine's compile target for sweep/raid concepts (see KB catalog).
   if (/liquidity.sweep|liquidity.void|stop.hunt/.test(cn)) return "liquidity_sweep_breakout";
 
+  // W23H-postmortem-3 (2026-05-20): broader Fibonacci catch.
+  // Operator screenshots showed "4H & 15M Fibonacci Step by Step" (99K views) +
+  // similar. Engine routes Fibonacci-based retraces through ict_ote (62-79% fib
+  // entry zone is the canonical engine archetype).
+  if (/fibonacci|(^|_)fib(_|$)|fib.retrace|fib.level|fib.zone|golden.ratio.entry/.test(cn)) return "archetype:ict_ote";
+
+  // W23H-postmortem-3: Candle Range Theory (CRT) — popularized by ICT-adjacent
+  // creators (The Soup Room, JackTrades). 4H CRT model = identify range candle,
+  // wait for sweep + reversal on LTF. Engine analog is turtle_soup (range
+  // breakout reversal).
+  if (/candle.range.theory|(^|_)crt(_|$)|crt.model|candle.range.trading|range.candle.theory/.test(cn)) return "archetype:ict_turtle_soup";
+
+  // W23H-postmortem-3: Supply & Demand zones — institutional zone trading.
+  // Engine analog is order_block (same concept: institutional resting orders
+  // at supply/demand zones; W23G.3 already registered).
+  if (/supply.demand|supply.and.demand|institutional.supply|institutional.demand|demand.zone|supply.zone/.test(cn)) return "archetype:order_block";
+
   if (/holy.grail|raschke/.test(cn)) return "ema_crossover";  // Raschke's setup IS 20-EMA pullback — valid
 
   // W23H-postmortem (2026-05-20): multi-timeframe analysis WITHOUT a specific
