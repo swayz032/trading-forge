@@ -213,6 +213,16 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           source_claim_avg_r: idea.source_claim_avg_r,
         };
 
+        // Drop null/undefined fields before posting — pending schema rejects null
+        // for optional fields (zod expects either valid type or field absent).
+        // First ingest passed because LLM populated all fields; later ingests
+        // returned LLM responses with null on optional fields (session_filter, etc.).
+        for (const k of Object.keys(baseBody) as Array<keyof typeof baseBody>) {
+          if (baseBody[k] === null || baseBody[k] === undefined) {
+            delete (baseBody as Record<string, unknown>)[k];
+          }
+        }
+
         const layerResults: Record<string, unknown> = {};
         // Graduator gates require distinct_providers >= 2 (silver path) or >= 3 (gold).
         // 3 synthetic mentions all using source_provider='manual' yield distinct=1 → no graduation.
