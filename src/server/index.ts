@@ -79,6 +79,7 @@ import { shadowRerunRoutes } from "./routes/shadow-rerun.js";
 import { scoutHealthRoutes } from "./routes/scout-health.js";
 import { tradingViewWebhookRoutes } from "./routes/tradingview-webhook.js";
 import { preMarketRoutes } from "./routes/pre-market.js";
+import { brokerAccountRoutes } from "./routes/broker-accounts.js";
 
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard
@@ -500,6 +501,9 @@ app.use("/api/tradingview", tradingViewWebhookRoutes);
 
 // W23H.2: Pre-market routine state — daily 8:30 AM ET pre-market context per symbol
 app.use("/api/pre-market", preMarketRoutes);
+
+// W23H.H: Per-account symbol whitelist — GET list + PATCH enabled_symbols
+app.use("/api/broker-accounts", brokerAccountRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {

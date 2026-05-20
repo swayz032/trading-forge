@@ -2310,6 +2310,11 @@ export const brokerAccounts = pgTable(
     apiKeyVaultRef: text("api_key_vault_ref"),
     accountIdExternal: text("account_id_external"),
     enabled: boolean("enabled").notNull().default(true),
+    // W23H.H: per-account symbol whitelist.
+    // Default = ['MES'] — operator must opt-in to add MNQ or MCL.
+    // Prevents accidental correlated-equity drawdown on a Topstep/MFFU Combine
+    // where MES+MNQ together can exceed trailing DD in minutes.
+    enabledSymbols: text("enabled_symbols").array().notNull().default(sql`ARRAY['MES']`),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

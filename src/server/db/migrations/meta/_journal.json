@@ -883,6 +883,13 @@
       "when": 1748034000000,
       "tag": "0122_bias_state_position_lock",
       "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1748120400000,
+      "tag": "0123_broker_account_enabled_symbols",
+      "breakpoints": true
     }
   ]
 }

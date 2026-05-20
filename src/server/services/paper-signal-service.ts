@@ -1,5 +1,5 @@
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions } from "../db/schema.js";
+import { paperSessions, paperPositions, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts } from "../db/schema.js";
 import { openPosition, closePosition } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
 import { evaluateContextGate } from "./context-gate-service.js";
@@ -2221,6 +2221,64 @@ export async function evaluateSignals(
   } else if (entrySignal && !sessionFiltered && !windowFiltered && !cooldownActive && !isShadow && !skipBlocked && !ictBridgeBlocked) {
     // ─── No position: check for entry ────────────────────────
 
+    // ─── W23H.H Stage 0: Per-account symbol whitelist ────────────────────────
+    // Block entry if the symbol is not in broker_accounts.enabled_symbols for
+    // this session's firmId. Default is ['MES'] — operator must opt-in to add
+    // MNQ or MCL per account (Combine safety: prevents correlated equity drawdown).
+    //
+    // Strategy: check ALL active accounts for this firmId. If ANY enabled account
+    // includes the symbol → allow. If no accounts found → fail-open.
+    // Fail-open: DB errors → no block (don't prevent trading on query failure).
+    let symbolWhitelistBlocked = false;
+    try {
+      const firmId = sessionRow.firmId;
+      if (firmId) {
+        const accounts = await db
+          .select({ enabledSymbols: brokerAccounts.enabledSymbols })
+          .from(brokerAccounts)
+          .where(and(
+            eq(brokerAccounts.firmId, firmId),
+            eq(brokerAccounts.enabled, true),
+          ));
+
+        if (accounts.length > 0) {
+          // Check if any account for this firm enables the symbol
+          const symbolEnabled = accounts.some(
+            (acct) => Array.isArray(acct.enabledSymbols) && (acct.enabledSymbols as string[]).includes(symbol),
+          );
+          if (!symbolEnabled) {
+            symbolWhitelistBlocked = true;
+            span.setAttribute("symbol_whitelist_blocked", true);
+            span.setAttribute("symbol_whitelist_firm", firmId);
+            logger.info(
+              { sessionId, symbol, firmId, accounts: accounts.map((a) => a.enabledSymbols) },
+              "W23H.H: entry blocked — symbol not in enabled_symbols for this account",
+            );
+            db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "symbol_not_enabled_for_account",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _firm_id: firmId,
+                _enabled_symbols: JSON.stringify(accounts.map((a) => a.enabledSymbols)),
+                _blocked_symbol: symbol,
+              },
+              acted: false,
+              reason: `signal.blocked_symbol_not_enabled_for_account: symbol=${symbol} firmId=${firmId}`,
+            }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist symbol whitelist block log"));
+          }
+        }
+        // If no accounts found → fail-open (no block)
+      }
+      // If no firmId on session → fail-open (legacy sessions without firm context)
+    } catch (whitelistErr) {
+      // Fail-open: DB errors never block trading
+      logger.warn({ err: whitelistErr, sessionId, symbol }, "W23H.H: symbol whitelist gate error — fail-open, proceeding");
+    }
+
     // ─── W23H.F Stage 0.5a: Pre-market blackout window gate ──────────────────
     // If today's pre_market_sessions row has blackout_windows JSONB and the
     // current bar falls within any blackout window, block the entry signal.
@@ -2363,9 +2421,9 @@ export async function evaluateSignals(
     // (written by writeLockoutFromKillEvent on daily_loss_kill), block all
     // new entry signals until the lockout expires.
     // Fail-OPEN: lockout query errors return null so trading is not blocked.
-    // W23H.F: pre-market blackout and DLL halt are also treated as early lockouts
-    // (same short-circuit pattern — downstream gates all check lockoutBlocked).
-    let lockoutBlocked = blackoutBlocked || dllHaltBlocked;
+    // W23H.H/F: symbol whitelist, pre-market blackout, and DLL halt are treated as
+    // early lockouts (same short-circuit pattern — downstream gates all check lockoutBlocked).
+    let lockoutBlocked = symbolWhitelistBlocked || blackoutBlocked || dllHaltBlocked;
     try {
       const activeLockout = await getActiveLockout(sessionConfig.strategyId);
       if (activeLockout) {
