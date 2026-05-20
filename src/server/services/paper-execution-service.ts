@@ -188,24 +188,24 @@ export function clearKillSwitchCache(): void {
 }
 
 // ─── Compliance Gate cache (B4.4 / C5) ──────────────────────────
-// Cache the full check result per firm for 60s so we don't spawn a
+// Cache the FRESHNESS check result per firm for 60s so we don't spawn a
 // Python subprocess on every bar / signal.  The cache key is firmId;
-// invalidation happens automatically on TTL expiry (no event-bus hook
-// because compliance_rulesets are written by a separate service and
-// freshness is itself the freshness check).
+// invalidation happens automatically on TTL expiry.
 //
-// Each entry stores BOTH the freshness result AND the violation result
-// so a single Python call covers both checks.  If freshness fails the
-// violation step is skipped (stale rules can't be trusted to evaluate).
+// IMPORTANT: The VIOLATION check is NOT cached — it depends on dynamic
+// per-order state (trades_today, open_positions, account_balance,
+// intended_max_loss, proposed_symbol) that changes every call.  Caching
+// the violation result would cause the MFFU 2% rule, HFT limit, and
+// hedging-ban checks to be evaluated against stale data.
+//
+// Split: freshness is stable (ruleset changes rarely → safe to cache).
+//        violation is dynamic (order-level state → always fresh).
 interface ComplianceCacheEntry {
   fresh: boolean;
   freshnessStatus: string;
   freshnessMessage: string;
   driftDetected: boolean;
-  violation: boolean;
-  violationStatus: string;
-  violationMessage: string;
-  violations: string[];
+  rulesetPayload: Record<string, unknown>;
   cachedAt: number;
 }
 const COMPLIANCE_CACHE_TTL_MS = 60_000;
@@ -1142,6 +1142,7 @@ export async function openPosition(sessionId: string, params: {
   }
 
   try {
+    // ── Stage 1: freshness (cached per firmKey for 60s) ────────────────────
     if (!cached) {
       // Fetch latest ruleset row for this firm so the Python module can
       // evaluate against actual rule data (not a synthetic stale stub).
@@ -1176,7 +1177,6 @@ export async function openPosition(sessionId: string, params: {
 
       const { runPythonModule } = await import("../lib/python-runner.js");
 
-      // Stage 1: freshness
       const freshnessResult = await runPythonModule<{
         fresh: boolean;
         status: string;
@@ -1194,60 +1194,18 @@ export async function openPosition(sessionId: string, params: {
         componentName: "compliance-gate-paper-freshness",
       });
 
-      let violationResult: {
-        violation: boolean;
-        status: string;
-        message: string;
-        violations: string[];
-      } = {
-        violation: false,
-        status: "skipped_stale",
-        message: "skipped — freshness failed",
-        violations: [],
-      };
-
-      // Stage 2: only run violation check if rules are fresh AND we have data
-      if (freshnessResult.fresh && Object.keys(rulesetPayload).length > 0) {
-        const strategyState = {
-          automated: true, // paper executor is autonomous
-          account_phase: (sessionConfigForCompliance?.account_phase as string) ?? "pa",
-          host: (sessionConfigForCompliance?.host as string) ?? process.env.TF_HOST_TAG ?? "local",
-          pa_account_count: (sessionConfigForCompliance?.pa_account_count as number) ?? 1,
-        };
-
-        violationResult = await runPythonModule<{
-          violation: boolean;
-          status: string;
-          message: string;
-          violations: string[];
-        }>({
-          module: "src.engine.compliance.compliance_gate",
-          config: {
-            action: "check_violation",
-            firm: firmKey,
-            ruleset: rulesetPayload,
-            strategy_state: strategyState,
-          },
-          timeoutMs: 3_000,
-          componentName: "compliance-gate-paper-violation",
-        });
-      }
-
       cached = {
         fresh: freshnessResult.fresh,
         freshnessStatus: freshnessResult.status,
         freshnessMessage: freshnessResult.message,
         driftDetected: !!freshnessResult.drift_detected,
-        violation: violationResult.violation,
-        violationStatus: violationResult.status,
-        violationMessage: violationResult.message,
-        violations: violationResult.violations ?? [],
+        rulesetPayload,
         cachedAt: Date.now(),
       };
       complianceCache.set(complianceCacheKey, cached);
     }
 
-    // Block on freshness OR violation
+    // Block on stale / drifted ruleset before running violation check.
     if (!cached.fresh) {
       logger.error(
         { sessionId, symbol: params.symbol, status: cached.freshnessStatus, message: cached.freshnessMessage },
@@ -1292,49 +1250,147 @@ export async function openPosition(sessionId: string, params: {
       };
     }
 
-    if (cached.violation) {
-      logger.error(
-        { sessionId, symbol: params.symbol, status: cached.violationStatus, violations: cached.violations },
-        "Compliance gate (C5): BLOCKING order — hard violation detected",
-      );
-      broadcastSSE("alert:compliance_gate_blocked", {
-        sessionId,
-        symbol: params.symbol,
-        firm: firmKey,
-        stage: "violation",
-        status: cached.violationStatus,
-        message: cached.violationMessage,
-        violations: cached.violations,
-      });
-      db.insert(auditLog).values({
-        action: "compliance.gate_blocked",
-        entityType: "paper_session",
-        entityId: sessionId,
-        decisionAuthority: "system",
-        input: { firm: firmKey, reason: cached.violationMessage, symbol: params.symbol } as Record<string, unknown>,
-        result: { blocked_at: new Date().toISOString() } as Record<string, unknown>,
-        status: "blocked",
-        correlationId,
-      }).catch((err) => logger.error({ err }, "compliance_gate_blocked audit insert failed (non-blocking)"));
-      openSpan.setAttribute("compliance_blocked", true);
-      openSpan.setAttribute("compliance_stage", "violation");
-      openSpan.setAttribute("compliance_status", cached.violationStatus);
-      openSpan.end();
-      return {
-        position: null,
-        executionResult: {
-          positionId: "",
-          entryPrice: 0,
-          contracts: params.contracts,
-          slippage: 0,
-          expectedPrice: arrivalPrice,
-          actualPrice: 0,
-          arrivalPrice,
-          implementationShortfall: 0,
-          fillRatio: 0,
-          filled: false,
-        } satisfies ExecutionResult,
+    // ── Stage 2: violation check — ALWAYS run fresh (never cached) ────────
+    // Dynamic per-order fields (trades_today, open_positions, account_balance,
+    // intended_max_loss, proposed_symbol) change every call.  Caching these
+    // would allow MFFU 2% rule / HFT limit / hedging-ban checks to silently
+    // bypass on subsequent orders within the same 60s window.
+    if (Object.keys(cached.rulesetPayload).length > 0) {
+      // ── Compute strategyState fields ────────────────────────────────────
+      // intended_max_loss: stop_distance × contracts × pointValue
+      // Use ATR-based stop if ATR is available; fall back to firm ceiling (conservative).
+      const specForStop = CONTRACT_SPECS[params.symbol as keyof typeof CONTRACT_SPECS];
+      const pointValue = specForStop?.pointValue ?? 5;
+      // Firm stop ceiling per CLAUDE.md §4 and framework-overlay conventions
+      const STOP_CEILING_POINTS: Record<string, number> = { MES: 14, MNQ: 40, MCL: 25 };
+      const stopCeilingPts = STOP_CEILING_POINTS[params.symbol] ?? 14;
+      // If ATR is provided: stop distance = 1.5 × ATR (floor per §4), capped at ceiling.
+      // If ATR is absent: use ceiling as conservative upper bound.
+      const stopDistancePts = params.atr
+        ? Math.min(1.5 * params.atr, stopCeilingPts)
+        : stopCeilingPts;
+      const intendedMaxLoss = stopDistancePts * params.contracts * pointValue;
+
+      // account_balance: current session equity; fall back to startingCapital
+      const accountBalance = session.currentEquity != null
+        ? Number(session.currentEquity)
+        : Number(session.startingCapital ?? 50000);
+
+      // trades_today: trades opened (entryTime) by ANY paper_trades row joined
+      // to paper_sessions WHERE firmId matches AND entryTime >= start of CME day (UTC).
+      // CME day starts 17:00 ET prior evening = today 21:00 UTC (22:00 UTC during DST).
+      // Use toFuturesTradingDayString() + the same +7h shift logic used by the kill switch
+      // to count only today's CME-day trades.
+      const { toFuturesTradingDayString: getTodayKey } = await import("./paper-risk-gate.js");
+      const todayKey = getTodayKey();
+      const [tradesTodayFirmRow] = await dbConn
+        .select({ count: sql<number>`count(*)::int` })
+        .from(paperTrades)
+        .innerJoin(paperSessions, eq(paperTrades.sessionId, paperSessions.id))
+        .where(and(
+          eq(paperSessions.firmId, firmKey),
+          sql`to_char(${paperTrades.entryTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${todayKey}`,
+        ));
+      const tradesToday = tradesTodayFirmRow?.count ?? 0;
+
+      // open_positions: all open positions across all sessions of this firm.
+      // Used by hedging-ban check (counterpart instrument detection).
+      const openPositionsRaw = await dbConn
+        .select({
+          symbol: paperPositions.symbol,
+          side: paperPositions.side,
+          contracts: paperPositions.contracts,
+        })
+        .from(paperPositions)
+        .innerJoin(paperSessions, eq(paperPositions.sessionId, paperSessions.id))
+        .where(and(
+          eq(paperSessions.firmId, firmKey),
+          isNull(paperPositions.closedAt),
+        ));
+      const openPositionsList = openPositionsRaw.map(p => ({
+        symbol: p.symbol,
+        side: p.side,
+        contracts: p.contracts,
+      }));
+
+      const strategyState = {
+        automated: true,
+        account_phase: (sessionConfigForCompliance?.account_phase as string) ?? "pa",
+        host: (sessionConfigForCompliance?.host as string) ?? process.env.TF_HOST_TAG ?? "local",
+        pa_account_count: (sessionConfigForCompliance?.pa_account_count as number) ?? 1,
+        // MFFU 2% per-trade rule
+        intended_max_loss: intendedMaxLoss,
+        account_balance: accountBalance,
+        // MFFU HFT limit (500 trades/day, firm-level)
+        trades_today: tradesToday,
+        // MFFU hedging ban
+        open_positions: openPositionsList,
+        proposed_symbol: params.symbol,
       };
+
+      const { runPythonModule } = await import("../lib/python-runner.js");
+
+      const violationResult = await runPythonModule<{
+        violation: boolean;
+        status: string;
+        message: string;
+        violations: string[];
+      }>({
+        module: "src.engine.compliance.compliance_gate",
+        config: {
+          action: "check_violation",
+          firm: firmKey,
+          ruleset: cached.rulesetPayload,
+          strategy_state: strategyState,
+        },
+        timeoutMs: 3_000,
+        componentName: "compliance-gate-paper-violation",
+      });
+
+      if (violationResult.violation) {
+        logger.error(
+          { sessionId, symbol: params.symbol, status: violationResult.status, violations: violationResult.violations },
+          "Compliance gate (C5): BLOCKING order — hard violation detected",
+        );
+        broadcastSSE("alert:compliance_gate_blocked", {
+          sessionId,
+          symbol: params.symbol,
+          firm: firmKey,
+          stage: "violation",
+          status: violationResult.status,
+          message: violationResult.message,
+          violations: violationResult.violations,
+        });
+        db.insert(auditLog).values({
+          action: "compliance.gate_blocked",
+          entityType: "paper_session",
+          entityId: sessionId,
+          decisionAuthority: "system",
+          input: { firm: firmKey, reason: violationResult.message, symbol: params.symbol } as Record<string, unknown>,
+          result: { blocked_at: new Date().toISOString() } as Record<string, unknown>,
+          status: "blocked",
+          correlationId,
+        }).catch((err) => logger.error({ err }, "compliance_gate_blocked audit insert failed (non-blocking)"));
+        openSpan.setAttribute("compliance_blocked", true);
+        openSpan.setAttribute("compliance_stage", "violation");
+        openSpan.setAttribute("compliance_status", violationResult.status);
+        openSpan.end();
+        return {
+          position: null,
+          executionResult: {
+            positionId: "",
+            entryPrice: 0,
+            contracts: params.contracts,
+            slippage: 0,
+            expectedPrice: arrivalPrice,
+            actualPrice: 0,
+            arrivalPrice,
+            implementationShortfall: 0,
+            fillRatio: 0,
+            filled: false,
+          } satisfies ExecutionResult,
+        };
+      }
     }
   } catch (complianceErr) {
     // Compliance guard DOWN — log at error so operator sees it; proceed fail-open.

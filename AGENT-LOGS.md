@@ -5594,6 +5594,35 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-20 Pass 3 follow-up: MFFU compliance gate strategy_state wiring
+
+**Mission:** Wire the 5 required MFFU strategy_state fields into `openPosition()`'s `check_violation` subprocess call so MFFU 2% rule, HFT limit, and hedging ban actually execute.
+
+**Work completed:**
+- `paper-execution-service.ts`: Split compliance cache — freshness is cached (stable), violation is always computed fresh per order (dynamic fields change per-call)
+- `ComplianceCacheEntry` interface updated: removed `violation/violationStatus/violationMessage/violations` fields, added `rulesetPayload` for reuse in fresh violation calls
+- Violation block now computes 5 fields fresh per `openPosition()` call:
+  - `intended_max_loss` = `min(1.5×ATR, stop_ceiling_pts) × contracts × CONTRACT_SPECS[symbol].pointValue`; falls back to firm ceiling when ATR absent
+  - `account_balance` = `session.currentEquity` (falls back to `startingCapital`)
+  - `trades_today` = firm-level count via `paperTrades INNER JOIN paperSessions WHERE firmId = firmKey AND entryTime >= today CME-day`
+  - `open_positions` = open positions across ALL firm sessions via `paperPositions INNER JOIN paperSessions WHERE firmId = firmKey AND closedAt IS NULL`
+  - `proposed_symbol` = `params.symbol`
+- New test file: `src/server/__tests__/check-violation-strategy-state.test.ts` — 6 tests covering 2% BLOCK/PASS, hedging ban BLOCK, HFT 501 BLOCK, HFT 499 PASS, firm-level trades_today wiring
+
+**Verification:**
+- `git diff HEAD --name-only`: `src/server/services/paper-execution-service.ts`
+- New test: `src/server/__tests__/check-violation-strategy-state.test.ts` (untracked — 6/6 pass)
+- `npm test -- --run -t "compliance|paper-execution|paper-signal|check-violation"`: 108 passed / 1 failed (wave11 pre-existing) vs baseline 102 passed / 7 failed — net +6 tests
+- Full suite: 75 failed / 3505 passed vs baseline 81 failed / 3499 passed — 0 regressions
+
+**Known-facts updates:** None
+
+**Carry-forward for next session:**
+- Kill switch Python call is only made when `dailyLossLimit > 0 || maxTradesPerSession > 0` — important for future test mock sequencing
+- The compliance cache now caches freshness only; violation always runs fresh — this is intentional and load-bearing for MFFU correctness
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
