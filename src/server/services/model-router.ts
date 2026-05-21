@@ -466,20 +466,21 @@ function exampleMatchesSignal(raw: unknown, target: string): boolean {
 }
 
 function formatFewShot(parsed: unknown): string {
-  if (
-    typeof parsed === "object" &&
-    parsed !== null &&
-    "input" in parsed &&
-    "output" in parsed
-  ) {
-    const obj = parsed as { input: unknown; output: unknown };
-    const inputStr =
-      typeof obj.input === "string" ? obj.input : JSON.stringify(obj.input, null, 2);
-    const outputStr =
-      typeof obj.output === "string"
-        ? obj.output
-        : JSON.stringify(obj.output, null, 2);
-    return `INPUT: ${inputStr}\n→ OUTPUT: ${outputStr}`;
+  if (typeof parsed === "object" && parsed !== null && "input" in parsed) {
+    const obj = parsed as Record<string, unknown>;
+    // Accept both `output` and `expected_output` keys (authoring convention drift).
+    // W23H-postmortem-fix16 (2026-05-21): transcript-extractor + scout-auditor +
+    // dsl-quality-critic + strategy-proposer use `expected_output`. Previously
+    // these silently fell through to the raw JSON dump path, losing the
+    // INPUT/OUTPUT framing that teaches the LLM the example pattern.
+    const outputKey = "output" in obj ? "output" : "expected_output" in obj ? "expected_output" : null;
+    if (outputKey) {
+      const inputStr =
+        typeof obj.input === "string" ? obj.input : JSON.stringify(obj.input, null, 2);
+      const out = obj[outputKey];
+      const outputStr = typeof out === "string" ? out : JSON.stringify(out, null, 2);
+      return `INPUT: ${inputStr}\n→ OUTPUT: ${outputStr}`;
+    }
   }
   return JSON.stringify(parsed, null, 2);
 }
