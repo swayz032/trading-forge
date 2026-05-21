@@ -728,7 +728,77 @@ export async function loadStrictSchemaForRole(role: ModelRole): Promise<unknown 
         const fs = await import("fs/promises");
         const fullPath = resolve(PROJECT_ROOT, "src/agents/kb/strategy-schema-snapshot.json");
         const raw = await fs.readFile(fullPath, "utf-8");
-        return JSON.parse(raw);
+        const base = JSON.parse(raw);
+
+        // W23H-postmortem (2026-05-20): the v9 prompt asks for these fields but
+        // the LLM was omitting them. JSON-Schema-enforced strict mode FORCES
+        // emission. Each field is nullable (LLM emits null when truly N/A) so
+        // the schema is satisfied without fabrication.
+        const w23hExtensions = {
+          bias_timeframe: {
+            type: ["string", "null"],
+            description: "Higher timeframe used for trend bias (e.g. '4h', '1h', '1d'). Required field — emit null if strategy is single-timeframe with no HTF bias reference.",
+          },
+          bias_condition: {
+            type: ["string", "null"],
+            description: "Plain-English summary of the HTF rule (e.g. 'ema_50_4h > ema_200_4h', '4H candle range defined'). Required field — emit null if bias_timeframe is null.",
+          },
+          execution_timeframe: {
+            type: ["string", "null"],
+            description: "Lower timeframe for actual entry signals — typically equals 'timeframe'. Required field — emit null when single-TF.",
+          },
+          primary_indicator: {
+            type: ["string", "null"],
+            description: "For confluence strategies — alias of entry_indicator. Required field — may equal entry_indicator or be null for single-indicator strategies.",
+          },
+          confirming_indicators: {
+            type: ["array", "null"],
+            description: "For multi-step strategies (ICT/SMC/Wyckoff/CRT) and confluence strategies, list each subsidiary structural mechanic. Required field — emit null only for TRULY single-step single-condition strategies (rare).",
+            items: {
+              type: "object",
+              properties: {
+                indicator: { type: "string" },
+                params: { type: "object", additionalProperties: true },
+                direction: { type: "string", enum: ["agree", "disagree", "either"] },
+              },
+              required: ["indicator", "params", "direction"],
+              additionalProperties: true,
+            },
+          },
+          min_factors_satisfied: {
+            type: ["integer", "null"],
+            description: "How many of (1 primary + N confirming) must fire. Required when confirming_indicators is non-empty; emit null otherwise.",
+          },
+          preferred_regimes: {
+            type: ["array", "null"],
+            description: "Regimes in which the strategy is allowed to fire. Multi-valued array of {TRENDING_UP, TRENDING_DOWN, RANGE_BOUND}. Required field — for archetype:* strategies, default to all 3 unless source explicitly narrows. Emit null only when truly undetermined.",
+            items: { type: "string", enum: ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"] },
+          },
+          confluence_factors: {
+            type: ["array", "null"],
+            description: "Subset of W23F.B enum: regime_match, structural_setup, volume_confirmation, macro_alignment, vp_shape. Emit only tokens source explicitly mentions; null/empty if none.",
+            items: { type: "string", enum: ["regime_match", "structural_setup", "volume_confirmation", "macro_alignment", "vp_shape"] },
+          },
+          source_claim_win_rate: {
+            type: ["number", "null"],
+            description: "When source EXPLICITLY states a win rate %, emit as float 0-1. Emit null if not stated. NEVER fabricate.",
+          },
+          source_claim_avg_r: {
+            type: ["number", "null"],
+            description: "When source EXPLICITLY states avg R, emit float. Emit null if not stated. NEVER fabricate.",
+          },
+        };
+
+        // Inject extensions into properties + required arrays.
+        // OpenAI strict mode requires ALL properties to be in required (use null for N/A).
+        const mergedProps = { ...(base.properties ?? {}), ...w23hExtensions };
+        const newRequired = Array.from(new Set([...(base.required ?? []), ...Object.keys(w23hExtensions)]));
+        return {
+          ...base,
+          properties: mergedProps,
+          required: newRequired,
+          additionalProperties: false,
+        };
       } catch (err) {
         logger.debug({ role, err }, "loadStrictSchemaForRole: snapshot read failed, falling back to json_object");
         return null;
@@ -814,6 +884,7 @@ async function callChatCompletions(
   config: ModelConfig,
   systemPrompt: string,
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+  role?: ModelRole,
 ): Promise<ParsedLLMResponse | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
@@ -825,6 +896,24 @@ async function callChatCompletions(
     ? [{ role: "system" as const, content: systemPrompt }, ...messages]
     : messages;
 
+  // W23H-postmortem (2026-05-20): wire strict JSON schema (structured outputs)
+  // for roles that have one. Prompt-only directives weren't enough — LLM kept
+  // omitting fields. JSON-Schema-enforced strict mode forces emission.
+  let responseFormat: Record<string, unknown> | undefined;
+  if (role && config.responseFormat === "json") {
+    const schema = await loadStrictSchemaForRole(role);
+    if (schema) {
+      responseFormat = {
+        type: "json_schema",
+        json_schema: { name: `${role}_output`, strict: true, schema },
+      };
+    } else {
+      responseFormat = { type: "json_object" };
+    }
+  } else if (config.responseFormat === "json") {
+    responseFormat = { type: "json_object" };
+  }
+
   const isGpt5 = config.model.startsWith("gpt-5");
   const response = await client.chat.completions.create({
     model: config.model,
@@ -832,7 +921,7 @@ async function callChatCompletions(
     ...(isGpt5
       ? { max_completion_tokens: config.maxTokens }
       : { max_tokens: config.maxTokens, temperature: config.temperature }),
-    ...(config.responseFormat === "json" ? { response_format: { type: "json_object" } } : {}),
+    ...(responseFormat ? { response_format: responseFormat as never } : {}),
   });
 
   return parseChatCompletionsResponse(response);
@@ -955,7 +1044,7 @@ export async function callOpenAI(
         if (useResponsesApi) {
           return await callResponsesApi(role, config, systemPrompt, messages);
         }
-        return await callChatCompletions(config, systemPrompt, messages);
+        return await callChatCompletions(config, systemPrompt, messages, role);
       } catch (innerErr: any) {
         // Pass 21 — Trading Forge daily-budget gate returns 429 with
         // type='daily_budget_exceeded'. This is an EXPECTED control-plane
