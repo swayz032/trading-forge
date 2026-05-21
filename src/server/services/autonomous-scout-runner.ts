@@ -332,6 +332,15 @@ const REDDIT_SUBS = ["FuturesTrading", "Daytrading", "algotrading"];
 const POSITIVE_TITLE = /(how to|step by step|the rules|complete guide|tutorial|setup|strategy guide|backtested|exact rules|entry and exit|playbook|breaking down|explained|template|blueprint|profitable)/i;
 const NEGATIVE_TITLE = /(why .* lose|why .* fail|don.t work|doesn.t work|warning|exposed|scam|truth about|reaction|podcast|interview|q.a|news|recap|vlog|motivation|mindset|story time)/i;
 
+// W23H-postmortem-fix18 (2026-05-21) — operator: "WE NOT SWING TRADERS WE
+// DAY TRADERS. SWING TRADERS NEEDS TO BE BAN AS A TERM AND THE SCREENSHOT
+// VIDEOS". This is a HARD REJECT (not just a score penalty) — Trading
+// Forge is intraday-only (4H bias + 15M/5M/1M execution), MFFU/Topstep
+// EOD trailing drawdowns make multi-day holds incompatible with the
+// risk model. Screenshot-only videos are also rejected — they show
+// past trades without the rule-set that generated them.
+const HARD_REJECT_TITLE = /\b(swing trad(?:er|ers|ing)|swing setup|hold(?:ing)? overnight|multi.?day hold|weekly chart strategy|monthly chart strategy|long.?term hold|position trad(?:er|ing)|screenshot(?:s)?|trade recap|my best trades|my trades this week|my trades today|recap of (?:my|this) trades|trade screenshots)\b/i;
+
 // W23F.S (2026-05-19) — clickbait downweight + indicator-name upweight.
 // E2E test discovered title scorer was favoring CLICKBAIT ("Make $500 a Day") over
 // PARAMETRIC content ("Liquidity Sweep Strategy by BrandonTrades"). Direct fixes:
@@ -422,7 +431,13 @@ export function checkTranscriptQuality(transcript: string): TranscriptQualityChe
  * Exported for testing. DO NOT change this function's signature or behavior —
  * W23G.10 tests (wave23g-title-scorer-clickbait-tune.test.ts) import it directly.
  */
-export function scoreVideoTitle(title: string): { score: number; positiveHit: boolean; negativeHit: boolean; numericHit: boolean; clickbaitHit: boolean; indicatorHit: boolean } {
+export function scoreVideoTitle(title: string): { score: number; positiveHit: boolean; negativeHit: boolean; numericHit: boolean; clickbaitHit: boolean; indicatorHit: boolean; hardRejectHit?: boolean } {
+  // W23H-postmortem-fix18: hard-reject swing-trader + screenshot-recap videos.
+  // Returns score=-99 (below any eligibility threshold) and hardRejectHit=true.
+  // Day-trader-only mandate — see CLAUDE.md §4 (4H bias + intraday execution).
+  if (HARD_REJECT_TITLE.test(title)) {
+    return { score: -99, positiveHit: false, negativeHit: false, numericHit: false, clickbaitHit: false, indicatorHit: false, hardRejectHit: true };
+  }
   let score = 0;
   const positiveHit = POSITIVE_TITLE.test(title);
   const negativeHit = NEGATIVE_TITLE.test(title);

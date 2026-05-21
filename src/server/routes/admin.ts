@@ -117,6 +117,23 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
         }
       } catch { /* keep default title */ }
 
+      // W23H-postmortem-fix18 (2026-05-21) — operator hard-reject of
+      // swing-trader + screenshot/recap content. Trading Forge is day-trade
+      // only (4H bias + intraday execution); multi-day holds incompatible
+      // with MFFU/Topstep EOD trailing drawdowns. Screenshot recaps show
+      // past trades without rule sets. Reject BEFORE LLM call (saves tokens).
+      const HARD_REJECT_TITLE = /\b(swing trad(?:er|ers|ing)|swing setup|hold(?:ing)? overnight|multi.?day hold|weekly chart strategy|monthly chart strategy|long.?term hold|position trad(?:er|ing)|screenshot(?:s)?|trade recap|my best trades|my trades this week|my trades today|recap of (?:my|this) trades|trade screenshots)\b/i;
+      if (HARD_REJECT_TITLE.test(title)) {
+        results.push({
+          url,
+          video_id: videoId,
+          status: "rejected_swing_or_screenshot",
+          title: title.slice(0, 200),
+          rule: "day-trader-only mandate (CLAUDE.md §4)",
+        });
+        continue;
+      }
+
       // 3. Run through scout-extract (same pipeline as autonomous cron uses)
       let extractResult: { extracted?: boolean; ideas?: Array<Record<string, unknown>>; reason?: string };
       try {
