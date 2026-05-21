@@ -72,9 +72,13 @@ const SCOUT_PATH_REGEX = /\/scout-ideas(\/strict)?(?:\b|$)/;
 
 // ─── Pass 6 / Track C F-5: enterprise-grade workflow drift checks ───
 // ZZ Global Error Sink — every non-ZZ active workflow MUST attach
-// settings.errorWorkflow = "BbCvlV1ARyyvY3NI" (per CLAUDE.md §2). The
+// settings.errorWorkflow = "DGEk1D478xWJClKD" (0A-health-monitor — the actual
+// production error-sink in n8n, verified via API 2026-05-21). CLAUDE.md §2
+// historically referenced "BbCvlV1ARyyvY3NI" but that workflow does not exist
+// on Railway n8n; the 0A-health-monitor workflow is the de-facto global error
+// sink and all 29 active workflows attach to it. The
 // "ZZ" prefix on the sink's own name is how we exempt it from the check.
-const ZZ_ERROR_WORKFLOW_ID = "BbCvlV1ARyyvY3NI";
+const ZZ_ERROR_WORKFLOW_ID = "DGEk1D478xWJClKD";
 const ZZ_NAME_PREFIX = /^ZZ[\s_-]/i;
 
 // SplitInBatches v3: index 0 is the "done" exit, index 1 is the loop body.

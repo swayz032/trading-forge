@@ -752,6 +752,23 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         }
       }
       const strategies = Array.isArray(obj.strategies) ? obj.strategies : [];
+      // W23H-postmortem (2026-05-20): strict-schema mode requires
+      // confirming_indicators[].params to be a JSON-encoded string
+      // (params_json). Parse it back to an object here so downstream
+      // (graduator, W23H.D evaluator) sees the canonical shape.
+      for (const s of strategies) {
+        const sObj = s as Record<string, unknown>;
+        const ci = sObj.confirming_indicators;
+        if (Array.isArray(ci)) {
+          for (const item of ci) {
+            const itm = item as Record<string, unknown>;
+            if (typeof itm.params_json === "string" && itm.params === undefined) {
+              try { itm.params = JSON.parse(itm.params_json); } catch { itm.params = {}; }
+              delete itm.params_json;
+            }
+          }
+        }
+      }
       if (strategies.length === 0) {
         // Validate against allowed categories — discard anything else as "other"
         // so the audit-log enum stays predictable for downstream filtering.

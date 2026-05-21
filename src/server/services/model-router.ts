@@ -753,16 +753,16 @@ export async function loadStrictSchemaForRole(role: ModelRole): Promise<unknown 
           },
           confirming_indicators: {
             type: ["array", "null"],
-            description: "For multi-step strategies (ICT/SMC/Wyckoff/CRT) and confluence strategies, list each subsidiary structural mechanic. Required field — emit null only for TRULY single-step single-condition strategies (rare).",
+            description: "For multi-step strategies (ICT/SMC/Wyckoff/CRT) and confluence strategies, list each subsidiary structural mechanic. Required field — emit null only for TRULY single-step single-condition strategies (rare). params_json is a JSON-encoded string of indicator parameters (e.g. '{\"period\":14}') to satisfy strict-mode constraints — emit '{}' if no params.",
             items: {
               type: "object",
               properties: {
                 indicator: { type: "string" },
-                params: { type: "object", additionalProperties: true },
+                params_json: { type: "string", description: "JSON-encoded params object as string. Use '{}' for no params." },
                 direction: { type: "string", enum: ["agree", "disagree", "either"] },
               },
-              required: ["indicator", "params", "direction"],
-              additionalProperties: true,
+              required: ["indicator", "params_json", "direction"],
+              additionalProperties: false,
             },
           },
           min_factors_satisfied: {
@@ -790,15 +790,58 @@ export async function loadStrictSchemaForRole(role: ModelRole): Promise<unknown 
         };
 
         // Inject extensions into properties + required arrays.
-        // OpenAI strict mode requires ALL properties to be in required (use null for N/A).
         const mergedProps = { ...(base.properties ?? {}), ...w23hExtensions };
         const newRequired = Array.from(new Set([...(base.required ?? []), ...Object.keys(w23hExtensions)]));
-        return {
+        const merged = {
           ...base,
           properties: mergedProps,
           required: newRequired,
           additionalProperties: false,
         };
+
+        // W23H-postmortem (2026-05-20): OpenAI strict-mode constraints are
+        // unforgiving. Recursively enforce them on every object node:
+        //   1. additionalProperties: false (mandatory at every level)
+        //   2. ALL properties must appear in required[] (use nullable type
+        //      to allow LLM to emit null when N/A).
+        //   3. Strip $defs (snapshot has a couple of incompatible defs that
+        //      OpenAI's validator chokes on; refs are inlined elsewhere).
+        const normalizeStrict = (node: unknown): unknown => {
+          if (Array.isArray(node)) return node.map(normalizeStrict);
+          if (node === null || typeof node !== "object") return node;
+          const obj = node as Record<string, unknown>;
+          // Recurse into all values first
+          for (const k of Object.keys(obj)) obj[k] = normalizeStrict(obj[k]);
+          // Apply strict-mode normalization to object schemas
+          const isObjectSchema =
+            (obj.type === "object" || (Array.isArray(obj.type) && (obj.type as unknown[]).includes("object"))) &&
+            obj.properties && typeof obj.properties === "object";
+          if (isObjectSchema) {
+            obj.additionalProperties = false;
+            const propKeys = Object.keys(obj.properties as Record<string, unknown>);
+            // Ensure ALL properties are required + their types allow null
+            // (so the LLM can satisfy the schema by emitting null for
+            // properties it wasn't going to populate)
+            obj.required = [...propKeys];
+            for (const pk of propKeys) {
+              const prop = (obj.properties as Record<string, unknown>)[pk] as Record<string, unknown>;
+              if (prop && typeof prop === "object" && prop.type) {
+                if (typeof prop.type === "string" && prop.type !== "null") {
+                  prop.type = [prop.type, "null"];
+                } else if (Array.isArray(prop.type) && !prop.type.includes("null")) {
+                  prop.type = [...prop.type, "null"];
+                }
+              }
+            }
+          }
+          return obj;
+        };
+
+        const normalized = normalizeStrict(JSON.parse(JSON.stringify(merged))) as Record<string, unknown>;
+        // Keep $defs (refs need them) — normalizer already cleaned the def
+        // bodies. Drop $schema as OpenAI rejects unknown top-level keys.
+        delete normalized.$schema;
+        return normalized;
       } catch (err) {
         logger.debug({ role, err }, "loadStrictSchemaForRole: snapshot read failed, falling back to json_object");
         return null;
