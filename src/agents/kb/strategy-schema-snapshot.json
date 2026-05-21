@@ -298,6 +298,94 @@
     },
     "timeframe": {
       "$ref": "#/$defs/Timeframe"
+    },
+    "bias_timeframe": {
+      "anyOf": [{ "$ref": "#/$defs/Timeframe" }, { "type": "null" }],
+      "default": null,
+      "description": "W23G.11 / W23H.1 — Higher timeframe used for trend bias (e.g. '4h', '1h', '1d'). REQUIRED for any strategy whose source describes ANY specific HTF reference for entry logic (e.g. JackTrades 4H+15M+1M, ICT/Power-of-3/CRT workflows). Emit null ONLY for truly single-timeframe strategies with zero HTF references.",
+      "title": "Bias Timeframe"
+    },
+    "bias_condition": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "default": null,
+      "description": "W23G.11 / W23H.1 — Plain-English summary of the HTF rule (e.g. 'ema_50_4h > ema_200_4h', '4H candle range defined', 'price > prior_4H_high'). REQUIRED when bias_timeframe is non-null.",
+      "title": "Bias Condition"
+    },
+    "execution_timeframe": {
+      "anyOf": [{ "$ref": "#/$defs/Timeframe" }, { "type": "null" }],
+      "default": null,
+      "description": "W23H.1 — Lower timeframe for actual entry signals (typically equals 'timeframe' field). Emit when strategy uses MTF — e.g. JackTrades 4H bias + 15M execution.",
+      "title": "Execution Timeframe"
+    },
+    "primary_indicator": {
+      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "default": null,
+      "description": "W23G.11 — For confluence strategies, alias of entry_indicator (the main trigger). May equal entry_indicator; null for single-indicator strategies.",
+      "title": "Primary Indicator"
+    },
+    "confirming_indicators": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "indicator": { "type": "string", "description": "Indicator name or archetype:* token" },
+              "params": { "type": "object", "additionalProperties": true, "description": "Indicator parameters (e.g. {period:14}) — use {} when no params" },
+              "direction": { "type": "string", "enum": ["agree", "disagree", "either"], "description": "Must this confirmation agree (same direction), disagree (opposite), or either with primary?" }
+            },
+            "required": ["indicator", "params", "direction"]
+          }
+        },
+        { "type": "null" }
+      ],
+      "default": null,
+      "description": "W23G.11 / W23H.D — For multi-step/confluence strategies (ICT/SMC/Wyckoff/CRT, ORB+VWAP, EMA-cross+RSI, etc.) list each subsidiary structural mechanic or indicator confirmation. Each item is {indicator, params, direction}. REQUIRED when source describes ≥2 entry conditions OR for any archetype:* strategy with subsidiary mechanics. Emit null ONLY for truly single-step single-condition strategies (rare in practice).",
+      "title": "Confirming Indicators"
+    },
+    "min_factors_satisfied": {
+      "anyOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }],
+      "default": null,
+      "description": "W23H.D — How many of (1 primary + N confirming) must fire before entry. REQUIRED when confirming_indicators is non-empty. Defaults: 2 for 2 confirming, 3 for 3+ confirming.",
+      "title": "Min Factors Satisfied"
+    },
+    "preferred_regimes": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": { "type": "string", "enum": ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"] },
+          "minItems": 1
+        },
+        { "type": "null" }
+      ],
+      "default": null,
+      "description": "W23H.B — Regimes in which the strategy is allowed to fire. Multi-valued array. Decision tree: for archetype:* (ICT/SMC/Wyckoff/CRT/FVG/order_block/silver_bullet/turtle_soup/power_of_3/ote/breaker) default to ALL 3 ['TRENDING_UP','TRENDING_DOWN','RANGE_BOUND'] unless source explicitly narrows. For mean-reversion → ['RANGE_BOUND']. For trend-following/breakout → ['TRENDING_UP','TRENDING_DOWN']. REQUIRED — emit null only when truly undetermined.",
+      "title": "Preferred Regimes"
+    },
+    "confluence_factors": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": { "type": "string", "enum": ["regime_match", "structural_setup", "volume_confirmation", "macro_alignment", "vp_shape"] }
+        },
+        { "type": "null" }
+      ],
+      "default": null,
+      "description": "W23F.B — Subset of canonical 5 confluence factors the source explicitly references. Emit only tokens source explicitly mentions; null or empty if none referenced.",
+      "title": "Confluence Factors"
+    },
+    "source_claim_win_rate": {
+      "anyOf": [{ "type": "number", "minimum": 0, "maximum": 1 }, { "type": "null" }],
+      "default": null,
+      "description": "W23F.B — When source EXPLICITLY states a win rate %, emit as float 0-1 (e.g. 0.65 for 65%). Emit null if not stated. NEVER fabricate.",
+      "title": "Source Claim Win Rate"
+    },
+    "source_claim_avg_r": {
+      "anyOf": [{ "type": "number" }, { "type": "null" }],
+      "default": null,
+      "description": "W23F.B — When source EXPLICITLY states avg R, emit float (e.g. 2.1 for 2.1R avg). Emit null if not stated. NEVER fabricate.",
+      "title": "Source Claim Avg R"
     }
   },
   "required": [
