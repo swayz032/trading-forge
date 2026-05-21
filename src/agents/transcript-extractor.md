@@ -236,12 +236,13 @@ If the source describes multiple indicators that must ALL (or N-of-M) agree for 
 
 `min_factors_satisfied`: integer — how many of (1 primary + N confirming) must be true. If source says "all must agree", set to total count. If source says "need at least 2 of 3", set to 2. Default: total count (all must agree).
 
-**HARD RULES for confluence:**
-- Only emit `confirming_indicators` when the source EXPLICITLY describes multiple conditions. Do NOT invent.
+**HARD RULES for confluence (W23H-postmortem-strict — 2026-05-20):**
+- Emit `confirming_indicators[]` whenever the source describes ≥2 entry conditions, INCLUDING sequential multi-step structural workflows (ICT/SMC/Wyckoff/CRT). The chain "wait for 4H FVG → drop to 15M for setup → enter on 1M IFVG close" IS confluence: emit each step as a confirming indicator.
+- For archetype:* strategies, the structural detector is the primary; subsidiary mechanics (power_of_3, ifvg_close, ote_zone, sweep, mss, bos, sos, sot, retest, etc.) are confirming_indicators.
 - Max 5 params per confirming indicator (CLAUDE.md §13).
-- If a confirming indicator has params not stated by source → omit it from the list (same fabrication rule as primary).
-- For single-indicator strategies, omit `confirming_indicators` entirely (or empty array). The `primary_indicator` field simply mirrors `entry_indicator`.
-- `entry_condition` must describe ALL conditions (primary + confirming) in plain English — this is the human-readable version.
+- If a confirming indicator has params not stated by source → emit it WITHOUT params (`"params": {}`) — the structural detector handles param inference. This is NOT fabrication; the existence of the structural step IS source-explicit.
+- For TRULY single-step single-condition strategies (e.g. "buy when 9 EMA crosses 21 EMA, period"), omit `confirming_indicators` entirely. These are rare; multi-step ICT/SMC/Wyckoff are the common case.
+- `entry_condition` must describe ALL conditions (primary + confirming) in plain English.
 
 **Example — 3-factor confluence:**
 Speaker says: "I enter long only when the 9 EMA is above the 21 EMA AND RSI is above 50 AND price is above VWAP."
@@ -273,13 +274,13 @@ If the source describes a HIGHER timeframe for trend direction and a LOWER timef
 `bias_condition`: express the HTF condition in plain indicator terms: `"ema_50_4h > ema_200_4h"`, `"close_4h > sma_200_4h"`, `"rsi_4h > 50"`. Use the `_<tf>` suffix convention.
 `execution_timeframe`: the lower timeframe for actual entry signals — equals the existing `timeframe` field. Emit both for explicit clarity.
 
-**HARD RULES for MTF:**
-- Only emit `bias_timeframe` + `bias_condition` when the source EXPLICITLY describes using a higher timeframe for trend bias. Do NOT invent.
-- If the source mentions "higher timeframe" in general terms without specifying which TF or which condition → SKIP (no fabrication).
+**HARD RULES for MTF (W23H-postmortem-strict — 2026-05-20):**
+- Emit `bias_timeframe` WHENEVER the source uses ANY specific HTF reference for entry logic. Trigger phrases include: "1H", "4H", "daily", "weekly", "higher timeframe", "HTF", "use the X-hour chart", "look at the X first", "wait for the X candle to close", "X-hour bias", "X-hour trend".
+- ICT/CRT/Power-of-3 workflows ALWAYS use HTF + LTF. JackTrades-style "4H pattern + 15M FVG + 1M PO3" REQUIRES `bias_timeframe: "4h"` + `execution_timeframe: "1m"` (or "15m").
 - `timeframe` (execution) remains REQUIRED on every strategy. It must be the LOWER timeframe.
 - `bias_timeframe` MUST be higher than `timeframe`. If speaker says "I use 15m for trend, 1m for entry" → `bias_timeframe: "15m"`, `timeframe: "1m"`.
-- `bias_condition` is optional but strongly preferred. If you cannot derive the HTF condition from the transcript, omit `bias_condition` but still emit `bias_timeframe`.
-- If no HTF bias is described, omit both `bias_timeframe` and `bias_condition` entirely.
+- `bias_condition` is optional but strongly preferred. If you cannot derive the HTF condition from the transcript, emit `bias_condition` as your best plain-English summary of the HTF rule ("4H candle range defined", "daily trend is up", "HTF in discount zone") rather than omitting.
+- ONLY omit `bias_timeframe` when the source describes a single-timeframe-only strategy with no HTF reference at all (e.g. "5-minute scalp using ORB" — single TF, omit).
 
 **IMPORTANT NOTE ON ENGINE SUPPORT:** The backtester currently does NOT enforce the HTF bias gate at execution time (engine limitation as of 2026-05-19). The fields are preserved on the strategy config for future use. Downstream systems will add enforcement once the engine supports per-TF resampling. You should still emit these fields accurately — they will be enforced once the engine upgrade ships.
 
