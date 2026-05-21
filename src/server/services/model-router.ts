@@ -812,8 +812,29 @@ export async function loadStrictSchemaForRole(role: ModelRole): Promise<unknown 
           const obj = node as Record<string, unknown>;
           // Strip keywords OpenAI strict mode does not support
           delete obj.default;
+          // $ref cannot have sibling keywords in strict mode — strip everything else
+          if (typeof obj.$ref === "string") {
+            for (const k of Object.keys(obj)) if (k !== "$ref") delete obj[k];
+            return obj;
+          }
           // Recurse into all values first
           for (const k of Object.keys(obj)) obj[k] = normalizeStrict(obj[k]);
+          // Free-form object detection: strict mode forbids "type:'object'" without
+          // explicit properties. Convert to JSON-encoded string. The scout-extract
+          // route handler parses the string back to an object for downstream code.
+          const isFreeFormObject =
+            (obj.type === "object" || (Array.isArray(obj.type) && (obj.type as unknown[]).includes("object"))) &&
+            (!obj.properties || (typeof obj.properties === "object" && Object.keys(obj.properties as object).length === 0));
+          if (isFreeFormObject) {
+            const desc = typeof obj.description === "string"
+              ? `${obj.description} (emit as JSON-encoded string, e.g. '{"period":14}')`
+              : 'JSON-encoded object as string (e.g. \'{"period":14}\')';
+            // Erase object-typed fields and replace with nullable string
+            for (const k of Object.keys(obj)) delete obj[k];
+            obj.type = ["string", "null"];
+            obj.description = desc;
+            return obj;
+          }
           // Apply strict-mode normalization to object schemas
           const isObjectSchema =
             (obj.type === "object" || (Array.isArray(obj.type) && (obj.type as unknown[]).includes("object"))) &&

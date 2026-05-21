@@ -752,12 +752,23 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         }
       }
       const strategies = Array.isArray(obj.strategies) ? obj.strategies : [];
-      // W23H-postmortem (2026-05-20): strict-schema mode requires
-      // confirming_indicators[].params to be a JSON-encoded string
-      // (params_json). Parse it back to an object here so downstream
-      // (graduator, W23H.D evaluator) sees the canonical shape.
+      // W23H-postmortem (2026-05-20): strict-schema mode requires free-form
+      // object schemas to be JSON-encoded strings. Parse them back to objects
+      // here so downstream (graduator, W23H.D evaluator) sees the canonical
+      // shape: entry_params/exit_params (top-level) and
+      // confirming_indicators[].params (via params_json).
+      const parseJsonField = (obj: Record<string, unknown>, key: string) => {
+        const v = obj[key];
+        if (typeof v === "string") {
+          try { obj[key] = JSON.parse(v); } catch { obj[key] = {}; }
+        } else if (v === null || v === undefined) {
+          obj[key] = {};
+        }
+      };
       for (const s of strategies) {
         const sObj = s as Record<string, unknown>;
+        parseJsonField(sObj, "entry_params");
+        parseJsonField(sObj, "exit_params");
         const ci = sObj.confirming_indicators;
         if (Array.isArray(ci)) {
           for (const item of ci) {
