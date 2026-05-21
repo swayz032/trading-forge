@@ -1468,12 +1468,21 @@ const trailStopHWM = new Map<string, number>();
 
 const positionBarsHeld = new Map<string, number>();
 
+// ─── C-3: Style C TP1 BE-stop tracking ──────────────────────
+// When price crosses TP1 (+1R), the stop is moved to break-even + 1 tick.
+// This map stores the BE+1tick stop LEVEL (not distance) per position ID.
+// NULL = TP1 not yet crossed. Populated on TP1 cross, cleared on position close.
+// Persisted to DB via paper_positions.tp1_filled_at (migration 0130).
+// Contract reduction (33% partial close) is carry-forward:
+// see docs/style-c-partials-carry-forward.md for TP2+runner implementation plan.
+const tp1BeStopMap = new Map<string, number>();
+
 /**
  * Restore in-memory position state after a server restart.
  * Called by the scheduler during paper session resume.
  */
 export function restorePositionState(
-  positions: { id: string; trailHwm: string | null; barsHeld: number }[],
+  positions: { id: string; trailHwm: string | null; barsHeld: number; tp1FilledAt?: Date | null }[],
 ): void {
   for (const pos of positions) {
     if (pos.trailHwm != null) {
@@ -1482,6 +1491,10 @@ export function restorePositionState(
     if (pos.barsHeld > 0) {
       positionBarsHeld.set(pos.id, pos.barsHeld);
     }
+    // C-3: tp1_filled_at in DB signals TP1 was already crossed before restart.
+    // We cannot reconstruct the exact BE stop level without the entry price here,
+    // so we leave tp1BeStopMap unset; the next bar's TP1 check will re-detect it
+    // from tp1FilledAt on the position row. See evaluateSignals TP1 logic.
   }
 }
 
@@ -2203,6 +2216,165 @@ export async function evaluateSignals(
   if (openPos && !isShadow) {
     // ─── Position open: check for exit signal or stop-loss ──
 
+    // ─── C-2 FIX: 15:55 ET hard time-stop (Style C canonical, CLAUDE.md §4) ──
+    // Flatten any open position when wall-clock ET reaches 15:55 or RTH is closed
+    // (etHour>=16). Idempotent — position closedAt guard ensures double-close is
+    // impossible. Uses bar.timestamp as the clock source so replay/backfill works
+    // identically to live. Falls back to wall-clock new Date() when bar.timestamp
+    // is unavailable (should never happen in normal flow).
+    //
+    // NOTE: we check BEFORE stop/trail/max-hold so that time-stop is the highest
+    // priority forced exit — matches backtester.py convention (time exits first).
+    {
+      const barDate = bar.timestamp ? new Date(bar.timestamp) : new Date();
+      const etFmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: false,
+      });
+      const etParts = etFmt.formatToParts(barDate);
+      const etHour = parseInt(etParts.find(p => p.type === "hour")?.value ?? "0", 10);
+      const etMin  = parseInt(etParts.find(p => p.type === "minute")?.value ?? "0", 10);
+      const isAfterTimeStop = etHour > 15 || (etHour === 15 && etMin >= 55);
+
+      if (isAfterTimeStop) {
+        positionBarsHeld.delete(openPos.id);
+        trailStopHWM.delete(openPos.id);
+        const barTs = new Date(bar.timestamp);
+        await closePosition(openPos.id, bar.close, currentAtr, { correlationId, barTimestamp: barTs });
+        await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
+        logger.info(
+          { sessionId, symbol, reason: "time_stop_1555_et", etHour, etMin, barTimestamp: bar.timestamp },
+          "Paper position closed — 15:55 ET hard time-stop (Style C canonical)",
+        );
+        span.setAttribute("time_stop_1555_et", true);
+        action = "close_time";
+        // Log to signal journal before early return so the close is fully auditable
+        await logSignal({
+          sessionId,
+          symbol,
+          timestamp: bar.timestamp,
+          entrySignal,
+          exitSignal,
+          stopHit,
+          sessionFiltered,
+          windowFiltered,
+          cooldownActive,
+          riskGatePassed,
+          action,
+          indicators,
+          barClose: bar.close,
+          strategySide: config.side,
+          fillMiss,
+        }).catch((err: unknown) => logger.warn({ err }, "Failed to log time-stop signal entry"));
+        span.end();
+        return;
+      }
+    }
+
+    // ─── C-3: Style C TP1 detection — BE+1 tick stop move ──────────────────
+    // Canonical per CLAUDE.md §4: when price crosses +1R (TP1), move stop to
+    // BE+1 tick. Contract reduction (33% partial close) is carry-forward —
+    // see docs/style-c-partials-carry-forward.md for TP2+runner implementation.
+    //
+    // TP1 check runs AFTER time-stop and BEFORE trail/fixed stop so that a
+    // position that hits TP1 and the time-stop in the same bar gets time-stopped
+    // (already returned above). The BE-stop only activates for the NEXT bar.
+    //
+    // We only apply this for positions where exit_params.style === "c" (i.e.,
+    // strategies that have been processed by framework-overlay).
+    {
+      const rawCfg = config as unknown as Record<string, unknown>;
+      const exitParams = rawCfg.exit_params as Record<string, unknown> | undefined;
+      const isStyleC = exitParams?.style === "c";
+
+      if (isStyleC && !tp1BeStopMap.has(openPos.id)) {
+        // TP1 not yet triggered — check if price has crossed +1R this bar.
+        const tp1AtR = (exitParams?.tp1_at_r as number | undefined) ?? 1.0;
+        const entryPrice = Number(openPos.entryPrice);
+        const side = openPos.side;
+
+        // Compute the initial risk (R unit) using the same logic as checkStopLoss
+        let initialRiskPoints = 0;
+        const stopCfg = config.stop_loss;
+        if (stopCfg) {
+          if (stopCfg.type === "atr") {
+            const atrPeriod = stopCfg.atr_period ?? 14;
+            const atrVal = indicators[`atr_${atrPeriod}`] ?? indicators["atr_14"] ?? 0;
+            initialRiskPoints = atrVal * (stopCfg.multiplier ?? 1.5);
+          } else {
+            initialRiskPoints = stopCfg.amount ?? 0;
+          }
+        }
+
+        if (initialRiskPoints > 0) {
+          const tp1Target = side === "long"
+            ? entryPrice + tp1AtR * initialRiskPoints
+            : entryPrice - tp1AtR * initialRiskPoints;
+
+          const tp1Crossed = side === "long"
+            ? bar.high >= tp1Target
+            : bar.low <= tp1Target;
+
+          if (tp1Crossed) {
+            // Move stop to BE + 1 tick (conservative: 1 tick ABOVE entry for long,
+            // BELOW for short, so a reversal to entry doesn't trigger BE flush).
+            const tickSize = TICK_SIZES[symbol] ?? 0.25;
+            const beStop = side === "long"
+              ? entryPrice + tickSize
+              : entryPrice - tickSize;
+
+            tp1BeStopMap.set(openPos.id, beStop);
+
+            // Persist tp1_filled_at to DB so restart correctly identifies TP1-filled positions.
+            const nowTs = new Date();
+            db.update(paperPositions)
+              .set({ tp1FilledAt: nowTs })
+              .where(eq(paperPositions.id, openPos.id))
+              .catch((err: unknown) => logger.warn({ err, positionId: openPos.id }, "C-3: Failed to persist tp1_filled_at to DB"));
+
+            logger.info(
+              {
+                sessionId,
+                symbol,
+                positionId: openPos.id,
+                side,
+                entryPrice,
+                tp1Target,
+                beStop,
+                tp1AtR,
+                initialRiskPoints,
+              },
+              "Style C TP1 crossed — stop moved to BE+1 tick. Partial contract close (33%) is carry-forward (see docs/style-c-partials-carry-forward.md).",
+            );
+            span.setAttribute("style_c_tp1_crossed", true);
+            span.setAttribute("style_c_be_stop", beStop);
+          }
+        }
+      }
+
+      // If TP1 has been crossed (either this bar or a prior bar), override the
+      // fixed stop with the BE+1tick level so checkStopLoss uses it correctly.
+      // We do this by checking the DB tp1_filled_at if memory state was lost on restart.
+      if (isStyleC) {
+        const beStop = tp1BeStopMap.get(openPos.id);
+        if (beStop === undefined && openPos.tp1FilledAt != null) {
+          // Restart scenario: tp1_filled_at is in DB but memory was cleared.
+          // Reconstruct BE stop from entryPrice + 1 tick (same logic as above).
+          const tickSize = TICK_SIZES[symbol] ?? 0.25;
+          const beStopRestored = openPos.side === "long"
+            ? Number(openPos.entryPrice) + tickSize
+            : Number(openPos.entryPrice) - tickSize;
+          tp1BeStopMap.set(openPos.id, beStopRestored);
+          logger.info(
+            { sessionId, positionId: openPos.id, beStop: beStopRestored },
+            "C-3: Restored tp1BeStopMap from DB tp1_filled_at after restart",
+          );
+        }
+      }
+    }
+
     // ─── 2.4: Time-based exit — max hold bars ───────────────
     // Increment bars-held counter.  Force-close when limit reached.
     // H2: persist the new value to DB so restarts don't reset the counter.
@@ -2238,8 +2410,15 @@ export async function evaluateSignals(
       }
     }
 
-    // Fixed stop-loss check
-    const stopResult = checkStopLoss(openPos, bar, config.stop_loss, indicators);
+    // Fixed stop-loss check.
+    // C-3: When Style C TP1 has been crossed, override the stop config with the
+    // BE+1tick level stored in tp1BeStopMap. This ensures the risk guarantee
+    // (stop moves to break-even after TP1 fills) is honored every bar.
+    const tp1BeStop = tp1BeStopMap.get(openPos.id);
+    const effectiveStopConfig: StopLossConfig | undefined = tp1BeStop != null
+      ? { type: "fixed", amount: Math.abs(Number(openPos.entryPrice) - tp1BeStop) }
+      : config.stop_loss;
+    const stopResult = checkStopLoss(openPos, bar, effectiveStopConfig, indicators);
     stopHit = stopResult.hit;
 
     // Priority order: fixed stop > trail stop > time exit > exit signal
@@ -2250,6 +2429,7 @@ export async function evaluateSignals(
       action = "close_stop";
       positionBarsHeld.delete(openPos.id);
       trailStopHWM.delete(openPos.id);
+      tp1BeStopMap.delete(openPos.id);
       await closePosition(openPos.id, stopResult.stopPrice, currentAtr, { correlationId, barTimestamp: barTs });
       await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
       logger.info(
@@ -2260,6 +2440,7 @@ export async function evaluateSignals(
       action = "close_trail";
       positionBarsHeld.delete(openPos.id);
       trailStopHWM.delete(openPos.id);
+      tp1BeStopMap.delete(openPos.id);  // C-3: clear BE stop state on close
       await closePosition(openPos.id, trailResult.stopPrice, currentAtr, { correlationId, barTimestamp: barTs });
       await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
       logger.info(
@@ -2270,6 +2451,7 @@ export async function evaluateSignals(
       action = "close_time";
       positionBarsHeld.delete(openPos.id);
       trailStopHWM.delete(openPos.id);
+      tp1BeStopMap.delete(openPos.id);  // C-3: clear BE stop state on close
       await closePosition(openPos.id, bar.close, currentAtr, { correlationId, barTimestamp: barTs });
       await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
       logger.info(
@@ -2280,6 +2462,7 @@ export async function evaluateSignals(
       action = "close_signal";
       positionBarsHeld.delete(openPos.id);
       trailStopHWM.delete(openPos.id);
+      tp1BeStopMap.delete(openPos.id);  // C-3: clear BE stop state on close
       await closePosition(openPos.id, bar.close, currentAtr, { correlationId, barTimestamp: barTs });
       await setCooldown(sessionId, sessionConfig, config.cooldown_bars ?? 4);
       logger.info(

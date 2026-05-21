@@ -719,6 +719,20 @@ export const paperPositions = pgTable(
     mae: numeric("mae"),                                     // Maximum Adverse Excursion ($) — per-bar watermark, accumulated by updatePositionPrices (migration 0034)
     mfe: numeric("mfe"),                                     // Maximum Favorable Excursion ($) — per-bar watermark, accumulated by updatePositionPrices (migration 0034)
     previousUnrealizedPnl: numeric("previous_unrealized_pnl").default("0"), // FIX 2 (B1): last committed unrealized P&L — enables delta-only SQL-atomic equity update
+    // C-3 (migration 0130): Style C 33/33/33 partial-fill tracking columns.
+    // tp1FilledAt/tp2FilledAt: timestamps when TP levels were first crossed in evaluateSignals() (BE-stop move path).
+    // tp1Filled/tp2Filled:    boolean idempotency flags for Python exit handler (callExitHandler() path).
+    // beStopApplied:           set when MOVE_STOP_TO_BE decision is applied by exit handler.
+    // currentExitStyle:        which exit handler is active ("C" or "D"); NULL defaults to "D".
+    // lastHandlerEvalAt:       last time Python exit handler ran for this position (circuit-breaker / audit).
+    tp1FilledAt:        timestamp("tp1_filled_at", { withTimezone: true }),
+    tp2FilledAt:        timestamp("tp2_filled_at", { withTimezone: true }),
+    tp1Filled:          boolean("tp1_filled").notNull().default(false),
+    tp2Filled:          boolean("tp2_filled").notNull().default(false),
+    beStopApplied:      boolean("be_stop_applied").notNull().default(false),
+    currentExitStyle:   text("current_exit_style"),       // "C" | "D" | null (null → "D")
+    currentTrailMethod: text("current_trail_method"),     // Python exit handler trail method name
+    lastHandlerEvalAt:  timestamp("last_handler_eval_at", { withTimezone: true }),
   },
   (table) => [
     index("paper_positions_session_idx").on(table.sessionId),

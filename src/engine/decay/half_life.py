@@ -6,6 +6,7 @@ Half-life = ln(2) / lambda
 import math
 import os
 from datetime import datetime, timezone
+from typing import Callable, Optional
 
 import numpy as np
 
@@ -16,9 +17,35 @@ import numpy as np
 DECAY_GRACE_DAYS: int = int(os.environ.get("DECAY_GRACE_DAYS", "14"))
 
 
-def _within_grace_period(promoted_at: datetime | str | None) -> bool:
-    """Return True if promoted_at is within DECAY_GRACE_DAYS of now."""
-    if promoted_at is None or DECAY_GRACE_DAYS <= 0:
+def _within_grace_period(
+    promoted_at: datetime | str | None,
+    strategy_id: Optional[str] = None,
+    promoted_at_lookup: Optional[Callable[[str], Optional[datetime | str]]] = None,
+) -> bool:
+    """Return True if promoted_at is within DECAY_GRACE_DAYS of now.
+
+    F-4 (Pass 6 / Track A 2026-05-21): the ``strategies.promoted_at`` column
+    does not exist in the schema, so callers can pass ``promoted_at=None`` and
+    a ``strategy_id`` + ``promoted_at_lookup`` callback that fetches the most
+    recent DEPLOYED transition timestamp from ``lifecycle_transitions``.
+
+    Backwards compatible: if ``promoted_at`` is supplied, it wins. If
+    ``promoted_at`` is None AND a strategy_id+lookup pair is supplied, the
+    lookup is invoked. If neither resolves to a timestamp, returns False
+    (no grace period — same as the prior behaviour for None).
+    """
+    if DECAY_GRACE_DAYS <= 0:
+        return False
+    # F-4: if promoted_at is None but the caller gave us a lookup hook, resolve
+    # it from lifecycle_transitions (the authoritative source post-Pass 6).
+    if promoted_at is None and strategy_id is not None and promoted_at_lookup is not None:
+        try:
+            promoted_at = promoted_at_lookup(strategy_id)
+        except Exception:
+            # Lookup failures must NEVER crash the decay computation — fall back
+            # to "no grace period" so the gate still runs on observable P&L.
+            return False
+    if promoted_at is None:
         return False
     if isinstance(promoted_at, str):
         try:
@@ -36,6 +63,8 @@ def fit_decay(
     daily_pnls: list[float],
     window: int = 60,
     promoted_at: datetime | str | None = None,
+    strategy_id: Optional[str] = None,
+    promoted_at_lookup: Optional[Callable[[str], Optional[datetime | str]]] = None,
 ) -> dict:
     """
     Fit exponential decay to rolling performance metrics.
@@ -55,7 +84,9 @@ def fit_decay(
     """
     # F-2: short-circuit decay verdict during grace period so freshly-promoted
     # strategies are not quarantined before enough live P&L has accumulated.
-    if _within_grace_period(promoted_at):
+    # F-4: lookup hook resolves promoted_at from lifecycle_transitions when the
+    # caller cannot pre-fetch it (the strategies table has no promoted_at column).
+    if _within_grace_period(promoted_at, strategy_id, promoted_at_lookup):
         return {
             "decay_detected": False,
             "decay_rate": 0.0,

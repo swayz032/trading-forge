@@ -323,6 +323,7 @@ export async function compileDualPineExport(
   recipientQty?: number,
   recipientLabel?: string,
   hmacSecret?: string,
+  accountId?: string,
 ) {
   // FIX 4: track wall-clock duration for audit_log
   const startMs = Date.now();
@@ -444,6 +445,9 @@ export async function compileDualPineExport(
     // T6: Per-recipient params — injected into config JSON for Python subprocess
     if (recipientQty != null) config.recipient_qty = recipientQty;
     if (recipientLabel) config.recipient_label = recipientLabel;
+    // BUG-1 fix: inject account_id so Python compile_dual_artifacts can emit the
+    // marker alertcondition block (requires both account_id AND hmac_secret).
+    if (accountId) config.account_id = accountId;
     if (hmacSecret) {
       config.hmac_secret = hmacSecret;
       // Track 8: inject Trading Forge webhook URL so Pine alert payload includes

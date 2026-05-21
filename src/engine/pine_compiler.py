@@ -38,6 +38,9 @@ from pydantic import BaseModel, Field
 
 from src.engine.exportability import score_exportability, ExportabilityResult
 from src.engine.firm_config import FIRM_COMMISSIONS, FIRM_CONTRACT_CAPS, FIRM_RULES
+# F-10: canonical marker HMAC strings — single source of truth for the
+# Pine→backend contract. TypeScript mirror at src/shared/marker-contract.ts.
+from src.engine.marker_contract import build_export_canonical as _marker_build_export_canonical
 
 
 # ─── DSL → Pine Indicator Mapping ──────────────────────────────────
@@ -1139,12 +1142,15 @@ alertcondition(
     (strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked) or
     (barstate.isconfirmed and strategy.position_size != 0 and (time_to_close or risk_lockout)),
     title="TF Marker",
-    message='{{"strategy_id":"{strategy_id}","account_id":"{account_id}","bar_timestamp":"' + str.format_time(time, "yyyy-MM-dd\\'T\\'HH:mm:ssXXX", "UTC") + '","signal":' + (long_signal ? "1" : short_signal ? "-1" : "0") + ',"secret_check":"{secret_check}"}}'
+    message='{{"strategy_id":"{strategy_id}","account_id":"{account_id}","bar_timestamp":' + str.tostring(time) + ',"signal":' + (long_signal ? "1" : short_signal ? "-1" : "0") + ',"secret_check":"{secret_check}"}}'
 )
+// BUG-5 fix: str.format_time() does not exist in Pine v5. Using str.tostring(time) which
+// returns Unix milliseconds (integer). Backend markerPayloadSchema must accept numeric millis
+// in addition to ISO-8601 strings for bar_timestamp validation.
 """
 
 
-def _build_strategy_webhook_alerts(strategy_name: str, symbol: str, strategy_id: str) -> str:
+def _build_strategy_webhook_alerts(strategy_name: str, symbol: str, strategy_id: str, hmac_input_var: Optional[str] = None) -> str:
     """Pine alertcondition() block for STRATEGY artifact.
 
     Alert messages are TradersPost JSON webhook payloads — routed automatically
@@ -1164,8 +1170,30 @@ def _build_strategy_webhook_alerts(strategy_name: str, symbol: str, strategy_id:
     Semantic note: TradersPost routes "buy" -> broker long entry, "sell" ->
     broker short entry, "exit" -> flatten position.  This maps 1:1 to our
     strategy.entry/exit() calls in the strategy block below.
+
+    BUG-3 fix: HMAC is injected at GENERATION TIME via hmac_input_var parameter
+    (a Pine variable name, e.g. "hmac_input"), not via post-hoc string replacement.
+    Pine v5 string concatenation with + is used directly in the message expression.
+    This produces valid Pine v5 syntax — no double-backslash escaping required.
+    When hmac_input_var is None (non-recipient compiles), alerts are unchanged.
     """
     tv_symbol = _TV_SYMBOL_MAP.get(symbol, f"{symbol}1!")
+
+    # BUG-3 fix: build the HMAC suffix inline at generation time.
+    # When hmac_input_var is set (e.g. "hmac_input"), entry alerts append:
+    #   ', "hmac": ' + hmac_input
+    # before the closing `}}'.  Pine v5 string concat with + is valid here.
+    # Exit/cancel alerts do NOT carry HMAC — they don't need per-recipient identity.
+    if hmac_input_var:
+        hmac_suffix_entry = f' + \',"hmac":"\' + {hmac_input_var} + \'"'
+        hmac_note = (
+            "// F-4/BUG-3: HMAC appended via Pine string concat — hmac_input variable\n"
+            "// is declared as input.string() above (user pastes at chart load).\n"
+        )
+    else:
+        hmac_suffix_entry = ""
+        hmac_note = ""
+
     return f"""
 // ─── Webhook Alerts (STRATEGY path — TradersPost ATS) ──────────────
 // Configure each alert with "Once Per Bar Close" + webhook URL.
@@ -1179,10 +1207,10 @@ def _build_strategy_webhook_alerts(strategy_name: str, symbol: str, strategy_id:
 // declared as var int above (F-2), so str.tostring(qty_final) is always valid Pine v5.
 // If TradersPost ignores the quantity field, set contract size in TradersPost account config
 // as a fallback — but the preferred path is quantity in the webhook payload.
-alertcondition(strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TP Long Entry",
-    message='{{"action": "buy", "symbol": "{tv_symbol}", "quantity": ' + str.tostring(qty_final) + ', "stopLoss": ' + str.tostring(close - stop_distance) + ', "takeProfit": ' + str.tostring(use_target ? close + target_distance : na) + ', "strategyId": "{strategy_id}"}}')
+{hmac_note}alertcondition(strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TP Long Entry",
+    message='{{"action":"buy","symbol":"{tv_symbol}","quantity":' + str.tostring(qty_final) + ',"stopLoss":' + str.tostring(close - stop_distance) + ',"takeProfit":' + str.tostring(use_target ? close + target_distance : na) + ',"strategyId":"{strategy_id}"{hmac_suffix_entry}}}')
 alertcondition(strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TP Short Entry",
-    message='{{"action": "sell", "symbol": "{tv_symbol}", "quantity": ' + str.tostring(qty_final) + ', "stopLoss": ' + str.tostring(close + stop_distance) + ', "takeProfit": ' + str.tostring(use_target ? close - target_distance : na) + ', "strategyId": "{strategy_id}"}}')
+    message='{{"action":"sell","symbol":"{tv_symbol}","quantity":' + str.tostring(qty_final) + ',"stopLoss":' + str.tostring(close + stop_distance) + ',"takeProfit":' + str.tostring(use_target ? close - target_distance : na) + ',"strategyId":"{strategy_id}"{hmac_suffix_entry}}}')
 // PARITY NOTE: Exit alertconditions guarded with barstate.isconfirmed so they fire at
 // bar close — matching INDICATOR artifact state-machine exit timing.  Without this guard,
 // strategy.position_avg_price is evaluated intrabar and can fire on wicks that recover by
@@ -1191,14 +1219,14 @@ alertcondition(strategy.position_size == 0 and short_signal and regime_match and
 // the stop price intrabar; INDICATOR exits at bar close.  That is an unavoidable Pine
 // strategy() vs indicator() semantic gap — alertcondition timing is now consistent.
 alertcondition(barstate.isconfirmed and strategy.position_size > 0 and (low <= strategy.position_avg_price - stop_distance or (use_target and high >= strategy.position_avg_price + target_distance)), title="TP Long Exit",
-    message='{{"action": "exit", "symbol": "{tv_symbol}", "strategyId": "{strategy_id}"}}')
+    message='{{"action":"exit","symbol":"{tv_symbol}","strategyId":"{strategy_id}"}}')
 alertcondition(barstate.isconfirmed and strategy.position_size < 0 and (high >= strategy.position_avg_price + stop_distance or (use_target and low <= strategy.position_avg_price - target_distance)), title="TP Short Exit",
-    message='{{"action": "exit", "symbol": "{tv_symbol}", "strategyId": "{strategy_id}"}}')
+    message='{{"action":"exit","symbol":"{tv_symbol}","strategyId":"{strategy_id}"}}')
 alertcondition(risk_lockout and not risk_lockout[1], title="TP Risk Lockout",
-    message='{{"action": "cancel", "symbol": "{tv_symbol}", "strategyId": "{strategy_id}", "note": "RISK_LOCKOUT"}}')
+    message='{{"action":"cancel","symbol":"{tv_symbol}","strategyId":"{strategy_id}","note":"RISK_LOCKOUT"}}')
 // F-1: Time-stop alert (15:55 ET) — also fires for TradersPost exit routing.
 alertcondition(time_to_close and strategy.position_size != 0, title="TP Time Stop 15:55 ET",
-    message='{{"action": "exit", "symbol": "{tv_symbol}", "strategyId": "{strategy_id}", "note": "TIME_STOP_1555_ET"}}')
+    message='{{"action":"exit","symbol":"{tv_symbol}","strategyId":"{strategy_id}","note":"TIME_STOP_1555_ET"}}')
 """
 
 
@@ -1548,6 +1576,7 @@ def _build_strategy_artifact(
     tp_distance: str,
     use_target: bool,
     manual_approval_firm: bool = False,
+    hmac_input_var: Optional[str] = None,
 ) -> str:
     """Wrap shared logic in strategy() declaration for ATS firms.
 
@@ -1642,13 +1671,15 @@ if risk_lockout and strategy.position_size != 0
 """
     # FIX 1: append strategy-specific bar-by-bar risk tracking after shared preamble
     # (shared preamble declares risk_lockout=false as a placeholder; this block overrides it)
+    # BUG-3 fix: pass hmac_input_var so HMAC is emitted at generation time in the alert message,
+    # not via post-hoc string replacement which produced invalid Pine v5 syntax.
     return (
         header
         + shared_preamble
         + _build_strategy_risk_tracking()
         + entry_exit_block
         + _build_strategy_time_stop_close()          # F-1: 15:55 ET hard flatten
-        + _build_strategy_webhook_alerts(strategy_name, symbol, strategy_id)
+        + _build_strategy_webhook_alerts(strategy_name, symbol, strategy_id, hmac_input_var=hmac_input_var)
         + _build_visualization()
     )
 
@@ -1876,6 +1907,12 @@ qty_final := {recipient_qty}
     # so callers and UIs can surface a hard warning and prevent accidental TradersPost setup.
     manual_approval_firm = firm_key in MANUAL_APPROVAL_FIRMS
 
+    # BUG-3 fix: pass hmac_input_var at GENERATION TIME so HMAC concat is emitted inline
+    # in alertcondition messages via _build_strategy_webhook_alerts — eliminates the broken
+    # post-hoc str.replace approach which produced invalid Pine v5 syntax.
+    # When hmac_secret is present, alert messages reference `hmac_input` directly via Pine + concat.
+    _hmac_input_var_name: Optional[str] = "hmac_input" if hmac_secret else None
+
     strategy_code = _build_strategy_artifact(
         strategy_name=strategy_name,
         symbol=symbol,
@@ -1886,6 +1923,7 @@ qty_final := {recipient_qty}
         tp_distance=tp_distance,
         use_target=use_target,
         manual_approval_firm=manual_approval_firm,
+        hmac_input_var=_hmac_input_var_name,
     )
     # T6: Inject recipient metadata and qty override into strategy artifact
     if _recip_comments:
@@ -1895,40 +1933,15 @@ qty_final := {recipient_qty}
     if _recip_qty_block:
         strategy_code += _recip_qty_block
 
-    # F-1 (Pass 6 / Track A 2026-05-20): emit Track 8 marker alertcondition.
-    # Computed export-time signature ties the Pine file to (account, strategy).
-    # The backend recomputes the same signature on receipt — proves origin.
-    # Only emitted when both account_id (recipient) AND hmac_secret are present.
-    # Legacy compiles without recipient metadata silently skip the marker
-    # alertcondition (no-op) so the existing pine_strategy export path is
-    # unchanged for non-recipient compiles.
-    if account_id and hmac_secret:
-        import hmac as _hmac_mod  # local import — keep top-of-file imports unchanged
-        _secret_check = _hmac_mod.new(
-            hmac_secret.encode("utf-8"),
-            f"{sid}|{account_id}|marker_export".encode("utf-8"),
-            hashlib.sha256,
-        ).hexdigest()
-        _marker_block = _build_marker_alertcondition(
-            strategy_id=sid,
-            account_id=account_id,
-            secret_check=_secret_check,
-        )
-        if _marker_block:
-            strategy_code += _marker_block
-
     # F-4: HMAC secret handling — use input.string() so secret is NEVER embedded in .pine file.
-    # Old approach: injected 64-char hex HMAC directly into alertcondition message string.
-    # New approach: declare an input.string() at chart load; user pastes their HMAC secret once
-    # into TradingView's "Add to chart" / "Settings" panel.  The .pine file is safe to share
-    # within the family without exposing the secret.
+    # The input.string() declaration is injected ONCE into the strategy artifact header.
+    # alertcondition() messages reference hmac_input via Pine string concat (BUG-3 fix —
+    # now done at generation time in _build_strategy_webhook_alerts, not via str.replace).
     # HMAC is returned out-of-band in the recipient export response (hmac_secret field in
     # RecipientExportResult metadata) and in alerts_json.hmac_out_of_band — NOT embedded here.
-    # Trade-off: alertcondition() messages use the `hmac_input` Pine variable via str.tostring().
-    # Pine v5: alertcondition message strings DO support dynamic expressions via str.format().
-    # We inject the input var reference at the alertcondition call sites.
     if hmac_secret:
-        # Inject input.string() declaration at the top of strategy artifact (after header comment block)
+        # Inject input.string() declaration at the top of strategy artifact (after header comment block).
+        # hmac_input is the Pine variable name referenced in alertcondition messages.
         hmac_input_decl = (
             "\n// F-4: HMAC secret input — paste your HMAC into TradingView Settings panel.\n"
             "// DO NOT embed the secret directly in this file. Delivered out-of-band.\n"
@@ -1940,14 +1953,30 @@ qty_final := {recipient_qty}
             "// Generated by Trading Forge Pine Compiler v5\n" + hmac_input_decl,
             1,
         )
-        # Replace static HMAC string in alertcondition messages with dynamic variable reference.
-        # _build_strategy_webhook_alerts emits: `"strategyId": "SID"}}`
-        # We extend that to include hmac_input variable via string concat.
-        # alertcondition() message supports Pine string concat via + operator.
-        strategy_code = strategy_code.replace(
-            f'"strategyId": "{sid}"}}\')',
-            f'"strategyId": "{sid}", \\"hmac\\": " + hmac_input + "}}"\')',
+
+    # F-1 (Pass 6 / Track A 2026-05-20): emit Track 8 marker alertcondition.
+    # Computed export-time signature ties the Pine file to (account, strategy).
+    # The backend recomputes the same signature on receipt — proves origin.
+    # Only emitted when both account_id (recipient) AND hmac_secret are present.
+    # Legacy compiles without recipient metadata silently skip the marker
+    # alertcondition (no-op) so the existing pine_strategy export path is
+    # unchanged for non-recipient compiles.
+    if account_id and hmac_secret:
+        import hmac as _hmac_mod  # local import — keep top-of-file imports unchanged
+        # F-10: canonical export string sourced from src/engine/marker_contract.py
+        # (mirrored in src/shared/marker-contract.ts). NEVER inline the format here.
+        _secret_check = _hmac_mod.new(
+            hmac_secret.encode("utf-8"),
+            _marker_build_export_canonical(sid, account_id).encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        _marker_block = _build_marker_alertcondition(
+            strategy_id=sid,
+            account_id=account_id,
+            secret_check=_secret_check,
         )
+        if _marker_block:
+            strategy_code += _marker_block
 
     # Stage 8: Alerts JSON metadata (covers both delivery paths)
     tv_symbol = _TV_SYMBOL_MAP.get(symbol, f"{symbol}1!")
@@ -2073,6 +2102,9 @@ if __name__ == "__main__":
     parser.add_argument("--firm-key", default=None, help="Firm key for prop overlay (e.g., topstep_50k)")
     parser.add_argument("--dual", action="store_true", help="Emit dual artifacts (indicator + strategy)")
     parser.add_argument("--strategy-id", type=str, default=None, help="DB UUID of strategy — embedded in TradersPost webhook payloads")
+    # BUG-10 fix: --print-summary truncates artifact content for human-readable CLI inspection.
+    # Without this flag, full artifact content is emitted to stdout for the TS subprocess to parse.
+    parser.add_argument("--print-summary", action="store_true", help="Truncate artifact content to 500 chars for interactive CLI inspection. Never use in subprocess mode.")
     args = parser.parse_args()
 
     # Support both inline JSON and file path
@@ -2090,6 +2122,8 @@ if __name__ == "__main__":
     recipient_qty: Optional[int] = config.get("recipient_qty")
     recipient_label: Optional[str] = config.get("recipient_label")
     hmac_secret: Optional[str] = config.get("hmac_secret")
+    # BUG-1 fix: read account_id from config so marker alertcondition block is emitted
+    account_id: Optional[str] = config.get("account_id")
 
     if args.dual:
         dual_result = compile_dual_artifacts(
@@ -2099,13 +2133,19 @@ if __name__ == "__main__":
             recipient_qty=recipient_qty,
             recipient_label=recipient_label,
             hmac_secret=hmac_secret,
+            account_id=account_id,
         )
         output = dual_result.model_dump()
-        # Truncate artifact content for stdout readability
-        for field in ("indicator_artifact", "strategy_artifact", "alerts_artifact"):
-            art = output.get(field)
-            if art and len(art.get("content", "")) > 500:
-                art["content"] = art["content"][:500] + f"... [{len(art['content'])} chars total]"
+        # BUG-10 fix: truncation is CLI/print-summary only — NEVER applied to the default
+        # JSON output consumed by the TS subprocess.  Unconditional truncation was cutting
+        # artifact content to 500 chars before the TS caller received it, causing empty/broken
+        # Pine artifacts to be persisted to the DB.
+        # Only truncate when --print-summary flag is supplied (interactive CLI inspection).
+        if getattr(args, "print_summary", False):
+            for field in ("indicator_artifact", "strategy_artifact", "alerts_artifact"):
+                art = output.get(field)
+                if art and len(art.get("content", "")) > 500:
+                    art["content"] = art["content"][:500] + f"... [{len(art['content'])} chars total]"
     else:
         result = compile_strategy(
             strategy, firm_key,
@@ -2115,9 +2155,11 @@ if __name__ == "__main__":
             hmac_secret=hmac_secret,
         )
         output = result.model_dump()
-        for art in output.get("artifacts", []):
-            content = art.get("content", "")
-            if len(content) > 500:
-                art["content"] = content[:500] + f"... [{len(content)} chars total]"
+        # BUG-10 fix: same guard for single-artifact path
+        if getattr(args, "print_summary", False):
+            for art in output.get("artifacts", []):
+                content = art.get("content", "")
+                if len(content) > 500:
+                    art["content"] = content[:500] + f"... [{len(content)} chars total]"
 
     print(json.dumps(output, indent=2))

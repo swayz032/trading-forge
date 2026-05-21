@@ -30,9 +30,31 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { evolveStrategy } from "./evolution-service.js";
 
 /**
- * Evaluate critic accuracy by comparing approved strategies' paper performance
- * with their actual lifecycle outcomes.
+ * M-7: TESTING→DECLINING fast-failure blind spot.
+ *
+ * The FPR lookback window (default 30 days) may miss strategies that fail quickly:
+ * - A strategy that enters TESTING, fails within 3-7 days, and goes DECLINING will
+ *   appear in the query ONLY if its lifecycle_changed_at is > 30 days ago.
+ * - Fast-failing strategies (TESTING → DECLINING within the first week) are
+ *   EXCLUDED from the FPR calculation during the 30-day window. This understates
+ *   the true false-positive rate during high-churn periods.
+ *
+ * Mitigation: set CRITIC_FPR_LOOKBACK_DAYS=60 (or higher) in the environment to
+ * widen the lookback window and capture more fast-failure events. A wider window
+ * also makes the auto-tighten trigger more responsive to structural FPR problems
+ * (vs. noise from a single bad strategy).
+ *
+ * The trade-off: a longer window reduces recency (tightening reacts to older data).
+ * 30 days is a reasonable default for a daily strategy cadence; 60 days is
+ * recommended if the scout pipeline produces >5 new strategies per week.
+ *
+ * Tracked as M-7 (Pass 7 / Track H). Revisit if fast-failure rate > 15%.
  */
+const CRITIC_FPR_LOOKBACK_DAYS =
+  process.env.CRITIC_FPR_LOOKBACK_DAYS != null
+    ? Math.max(7, Math.min(180, Number(process.env.CRITIC_FPR_LOOKBACK_DAYS)))
+    : 30;
+
 export async function evaluateCriticAccuracy(): Promise<{
   totalEvaluated: number;
   maintained: number;
@@ -40,8 +62,9 @@ export async function evaluateCriticAccuracy(): Promise<{
   accuracy: number;
   falsePositiveRate: number;
 }> {
-  // Find strategies that were critic-approved and entered PAPER at least 30 days ago
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // Find strategies that were critic-approved and entered PAPER at least LOOKBACK days ago.
+  // Default is 30 days; extend via CRITIC_FPR_LOOKBACK_DAYS env (see M-7 comment above).
+  const thirtyDaysAgo = new Date(Date.now() - CRITIC_FPR_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
 
   // Get strategies that went through PAPER stage (lifecycle_changed_at < 30d ago
   // means they've had time to prove themselves)

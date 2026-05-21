@@ -186,6 +186,7 @@ class QuantumRunConfig(BaseModel):
 
 class QuantumRunResult(BaseModel):
     """Result of a quantum MC estimation."""
+    schema_version: str = "v1_challenger"  # F-4 (2026-05-21): schema version for downstream critic
     estimated_value: float
     confidence_interval: dict  # {lower, upper, confidence_level}
     num_oracle_calls: int = 0
@@ -533,6 +534,7 @@ def _run_estimation(
                 execution_time_ms=execution_time_ms,
                 reproducibility_hash=repro_hash,
                 raw_result={
+                    "schema_version": "v1_challenger",  # F-4 (2026-05-21)
                     "method": "iae",
                     "classical_fallback": classical_fallback,
                     "n_bins": len(probs),
@@ -556,9 +558,18 @@ def _run_estimation(
                 quantum_result_cache.put(algorithm="qmc", params=_cache_key, result=_result_dict)
             return _qmc_result
         except Exception as exc:
-            # IAE failed (circuit too deep, version mismatch, hardware unavailable).
-            # Fall through to classical fallback and surface the reason.
-            _iae_failure_reason = str(exc)  # noqa: F841 — read in fallback block below
+            # IAE failed — classify the failure so benchmark records carry correct provenance.
+            # F-7 (2026-05-21): distinguish iae_watchdog_timeout vs iae_circuit_error vs
+            # version_mismatch so downstream records are auditable.
+            exc_str = str(exc)
+            exc_type = type(exc).__name__
+            if isinstance(exc, TimeoutError) or "did not complete within" in exc_str:
+                _iae_failure_reason = f"iae_watchdog_timeout:{exc_str}"
+            elif "import" in exc_str.lower() or "version" in exc_str.lower() or "no module" in exc_str.lower():
+                _iae_failure_reason = f"version_mismatch:{exc_str}"
+            else:
+                _iae_failure_reason = f"iae_circuit_error:{exc_str}"
+            # noqa: F841 — _iae_failure_reason read in fallback block below
 
     # Classical fallback — Qiskit unavailable or IAE circuit execution failed
 
@@ -581,8 +592,11 @@ def _run_estimation(
         execution_time_ms=execution_time_ms,
         reproducibility_hash=repro_hash,
         raw_result={
+            "schema_version": "v1_challenger",  # F-4 (2026-05-21)
             "method": "classical_fallback",
             "classical_fallback": True,
+            # F-7 (2026-05-21): reason distinguishes iae_watchdog_timeout / iae_circuit_error
+            # / version_mismatch / Qiskit not available for correct benchmark provenance
             "reason": fallback_reason,
         },
     )

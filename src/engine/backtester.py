@@ -887,10 +887,36 @@ def _compute_daily_pnls(equity: np.ndarray, index=None, starting_capital: float 
         pnls = np.diff(equity)
         return [{"date": None, "pnl": round(float(p), 2)} for p in pnls]
 
-    # Group equity by calendar date — take last value per day
+    # Group equity by CME trading day — take last value per trading day.
+    # C-7 FIX: CME futures trade on a 5 PM ET → 5 PM ET cycle. Using UTC calendar
+    # date misattributes bars timestamped 5 PM–midnight ET to the wrong session date.
+    # For example, a 5:30 PM ET bar belongs to the NEXT CME trading day, not today.
+    #
+    # Rule: if bar's ET hour >= 17, it belongs to the NEXT calendar day's session.
+    # Implementation: try to use pandas tz_convert("America/New_York") when the
+    # index has timezone info. Fall back to UTC calendar date when tz info is absent
+    # (e.g. daily data, synthetic test data) to preserve backward compatibility.
+    from datetime import timedelta as _td
     daily: dict[str, float] = {}
     for i, v in enumerate(equity):
-        day_str = str(index[i].date()) if hasattr(index[i], "date") else str(index[i])
+        ts = index[i]
+        try:
+            # Attempt CME trading-day calculation using ET timezone.
+            if hasattr(ts, "tz_convert") and ts.tzinfo is not None:
+                et_ts = ts.tz_convert("America/New_York")
+                if et_ts.hour >= 17:
+                    trading_day = (et_ts + _td(days=1)).date()
+                else:
+                    trading_day = et_ts.date()
+                day_str = str(trading_day)
+            elif hasattr(ts, "date"):
+                # No timezone info — fall back to UTC calendar date (daily data path).
+                day_str = str(ts.date())
+            else:
+                day_str = str(ts)
+        except Exception:
+            # Defensive fallback: any conversion failure reverts to UTC string slice.
+            day_str = str(ts)[:10] if len(str(ts)) >= 10 else str(ts)
         daily[day_str] = float(v)
 
     sorted_days = sorted(daily.items())
@@ -1374,9 +1400,35 @@ def _apply_dsl_stop_loss_and_time_stop(
                 # C3 FIX: use close_np[i] (bar close) as the entry reference price,
                 # NOT high_np[i]. The previous use of high_np inflated the stop price
                 # for longs, making breaches look wider than they were.
-                in_long = True
-                long_entry_price = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
-                long_stop_price = long_entry_price - stop_dist
+                _long_ep = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
+                _long_sp = _long_ep - stop_dist
+                # C-6 FIX: gap-down bars can produce a phantom entry that immediately
+                # stops out on the same bar. If the bar's low already violates the
+                # computed stop level, skip the entry entirely — entering a position
+                # that breaches its own stop on the entry bar is not a valid fill.
+                _bar_low_l = float(low_np[i]) if not np.isnan(low_np[i]) else float("inf")
+                if _bar_low_l < _long_sp:
+                    entry_long_out[i] = False
+                    metadata["skipped_trades"].append({
+                        "bar": i,
+                        "direction": "long",
+                        "stop_dist": round(stop_dist, 4),
+                        "ceiling": ceiling,
+                        "reason": "entry_skipped_intrabar_stop_breach",
+                        "entry_price": round(_long_ep, 4),
+                        "stop_price": round(_long_sp, 4),
+                        "bar_low": round(_bar_low_l, 4),
+                        "ts": ts_str,
+                    })
+                    print(
+                        f"AUDIT entry_skipped_intrabar_stop_breach bar={i} dir=long "
+                        f"low={_bar_low_l:.4f} < stop={_long_sp:.4f} ts={ts_str}",
+                        file=sys.stderr,
+                    )
+                else:
+                    in_long = True
+                    long_entry_price = _long_ep
+                    long_stop_price = _long_sp
 
         # Check short entry
         if bool(entry_short_out[i]) and not in_short:
@@ -1392,9 +1444,33 @@ def _apply_dsl_stop_loss_and_time_stop(
                 })
             else:
                 # C3 FIX: use close_np[i] for short entry reference (mirror of long fix).
-                in_short = True
-                short_entry_price = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
-                short_stop_price = short_entry_price + stop_dist
+                _short_ep = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
+                _short_sp = _short_ep + stop_dist
+                # C-6 FIX: mirror of long phantom-entry guard.
+                # Gap-up bars can fire a short entry that immediately stops out.
+                _bar_high_s = float(high_np[i]) if not np.isnan(high_np[i]) else 0.0
+                if _bar_high_s > _short_sp:
+                    entry_short_out[i] = False
+                    metadata["skipped_trades"].append({
+                        "bar": i,
+                        "direction": "short",
+                        "stop_dist": round(stop_dist, 4),
+                        "ceiling": ceiling,
+                        "reason": "entry_skipped_intrabar_stop_breach",
+                        "entry_price": round(_short_ep, 4),
+                        "stop_price": round(_short_sp, 4),
+                        "bar_high": round(_bar_high_s, 4),
+                        "ts": ts_str,
+                    })
+                    print(
+                        f"AUDIT entry_skipped_intrabar_stop_breach bar={i} dir=short "
+                        f"high={_bar_high_s:.4f} > stop={_short_sp:.4f} ts={ts_str}",
+                        file=sys.stderr,
+                    )
+                else:
+                    in_short = True
+                    short_entry_price = _short_ep
+                    short_stop_price = _short_sp
 
         # ── ATR stop fires: track when stop price is breached ───────
         if in_long and not bool(exit_long_out[i]):
@@ -3209,7 +3285,53 @@ def run_backtest(
                 file=sys.stderr,
             )
 
+    # C-1 FIX: validate result_extras on EVERY call path (WF workers call run_backtest()
+    # directly — they never go through main() which had the only validation block before).
+    # Calling _emit_validated_result() here ensures result_extras is stamped for all
+    # WF windows, class backtests called from run_walk_forward_class, and CLI.
+    if "error" not in result:
+        _emit_validated_result(result)
+
     return result
+
+
+def _emit_validated_result(result: dict) -> None:
+    """Stamp result_extras with Pydantic-validated JSONB contract.
+
+    Called from run_backtest() (all direct callers including WF workers) AND
+    from main() after the truthiness/invariant hooks so that CLI output also
+    validates. Idempotent: if result already has a non-None result_extras this
+    is a no-op (avoids double-stamping on the CLI path).
+
+    C-1 FIX: Previously this validation only ran inside main(), so the
+    BacktestResultExtras B-2 truthiness gate was dead for every WF-promoted
+    strategy (walk_forward.py workers call run_backtest() directly, never main()).
+    """
+    # Already stamped — skip (CLI path calls both run_backtest and main)
+    if result.get("result_extras") is not None:
+        return
+    try:
+        from src.engine.jsonb_contracts import BacktestResultExtras, RESULT_EXTRAS_VERSION
+        extras_raw = {
+            "schema_version": RESULT_EXTRAS_VERSION,
+            "invariants": result.get("invariants"),
+            "parity_shadow": result.get("parity_shadow"),
+            "metric_drift": result.get("metric_drift"),
+        }
+        extras_filtered = {k: v for k, v in extras_raw.items() if v is not None}
+        if len(extras_filtered) > 1:  # >1 because schema_version is always present
+            validated = BacktestResultExtras(**extras_filtered).model_dump(mode="json", exclude_none=True)
+            result["result_extras"] = validated
+    except ImportError:
+        pass  # pydantic or jsonb_contracts not available in this env — skip
+    except Exception as _validation_err:
+        import json as _jc
+        import sys as _sysc
+        print(
+            _jc.dumps({"event": "result_extras.validation_failed", "error": str(_validation_err)[:500]}),
+            file=_sysc.stderr,
+        )
+        raise
 
 
 def _compute_recovery_days_from_max_dd(daily_pnl_records: list[dict]) -> int:
@@ -3600,7 +3722,12 @@ def run_class_backtest(
             file=sys.stderr,
         )
 
-    # Ensure ATR column exists for sizing/slippage
+    # Ensure ATR column exists for sizing/slippage.
+    # C-4 VERIFIED: run_class_backtest routes through compute_atr() from
+    # indicators/core.py, which applies the Wilder RMA fix (Pass 5 Track B).
+    # The strategy.compute() call above may have already populated atr_14 via
+    # compute_indicators(); if so, this block is a no-op. Both paths use the
+    # same compute_atr() function — no independent ATR computation exists here.
     if "atr_14" not in df.columns:
         atr = compute_atr(df, 14)
         df = df.with_columns(atr.alias("atr_14"))
@@ -4679,32 +4806,10 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                     file=sys.stderr,
                 )
 
-    # Pass 5 Track A F-8: validate JSONB extras through the canonical pydantic
-    # contract before emitting. Fail-CLOSED on validation error so wrong-shape
-    # writes never land in the DB. Stamps schema_version automatically.
-    try:
-        from src.engine.jsonb_contracts import BacktestResultExtras, RESULT_EXTRAS_VERSION
-        extras_raw = {
-            "schema_version": RESULT_EXTRAS_VERSION,
-            "invariants": result.get("invariants"),
-            "parity_shadow": result.get("parity_shadow"),
-            "metric_drift": result.get("metric_drift"),
-        }
-        # Drop None values; the pydantic model treats missing as "not present"
-        extras_filtered = {k: v for k, v in extras_raw.items() if v is not None}
-        if len(extras_filtered) > 1:  # >1 because schema_version is always present
-            validated = BacktestResultExtras(**extras_filtered).model_dump(mode="json", exclude_none=True)
-            result["result_extras"] = validated
-    except ImportError:
-        # pydantic missing or jsonb_contracts not importable in this env — skip
-        pass
-    except Exception as _validation_err:
-        # Validation failure: fail-CLOSED. Emit a structured error and raise.
-        print(
-            json.dumps({"event": "result_extras.validation_failed", "error": str(_validation_err)[:500]}),
-            file=sys.stderr,
-        )
-        raise
+    # C-1 FIX: Use shared _emit_validated_result() so main() and run_backtest()
+    # both go through the same Pydantic validation path. The idempotency guard in
+    # _emit_validated_result() prevents double-stamping when both paths run (CLI).
+    _emit_validated_result(result)
 
     print(json.dumps(result))
 

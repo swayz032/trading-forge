@@ -84,6 +84,7 @@ class SessionBlock(BaseModel):
 
 class TimingSchedule(BaseModel):
     """Optimized trade/no-trade schedule."""
+    schema_version: str = "v1_challenger"  # F-4 (2026-05-21): schema version for downstream critic
     blocks: list[SessionBlock]
     total_blocks: int
     active_blocks: int
@@ -219,8 +220,10 @@ def solve_timing(
     # QUBO timing is seeded and deterministic — safe to cache.
     _qubo_cache_key: Optional[dict] = None
     if _qubo_cache is not None:
+        # F-8 (2026-05-21): use json.dumps with sorted key pairs for stable, unambiguous
+        # serialization. str(tuple) is unstable across Python versions and dict ordering.
         _qubo_cache_key = {
-            "qubo": {str(k): v for k, v in qubo.items()},
+            "qubo": json.dumps(sorted([(list(k), v) for k, v in qubo.items()])),
             "n_blocks": n_blocks,
             "num_reads": num_reads,
             "num_sweeps": num_sweeps,

@@ -98,10 +98,17 @@ setInterval(() => {
 //     constant-time equality. Replay-resistance is provided by the existing
 //     10-minute bar_timestamp window (line ~259) plus the unique-index dedupe
 //     on (account_id, strategy_id, bar_timestamp, signal).
+// BUG-5 fix: bar_timestamp accepts either ISO-8601 string OR numeric Unix milliseconds integer.
+// Pine v5 str.tostring(time) returns Unix millis (integer series); str.format_time() does not
+// exist in Pine v5. The schema coerces numeric millis to ISO-8601 string via transform so
+// all downstream code (replay window check, DB insert) works with a consistent string type.
 const markerPayloadSchema = z.object({
   strategy_id:    z.string().uuid("strategy_id must be a UUID"),
   account_id:     z.string().uuid("account_id must be a UUID"),
-  bar_timestamp:  z.string().datetime({ message: "bar_timestamp must be ISO 8601" }),
+  bar_timestamp:  z.union([
+    z.string().datetime({ message: "bar_timestamp must be ISO 8601 or Unix millis integer" }),
+    z.number().int().positive().transform((ms) => new Date(ms).toISOString()),
+  ]),
   signal:         z.union([z.literal(-1), z.literal(0), z.literal(1)]),
   hmac:           z.string().min(1).optional(),     // F-1: optional legacy
   secret_check:   z.string().min(1).optional(),     // F-1: export-time anti-tamper signature

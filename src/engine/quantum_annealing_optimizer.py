@@ -61,6 +61,7 @@ class QUBOFormulation(BaseModel):
 
 class SQAResult(BaseModel):
     """Result from SQA optimization."""
+    schema_version: str = "v1_challenger"  # F-4 (2026-05-21): schema version for downstream critic
     best_params: dict[str, float]
     best_energy: float
     best_objective_value: float
@@ -71,6 +72,7 @@ class SQAResult(BaseModel):
     n_params: int = 0
     total_bits: int = 0
     method: str = "sqa"
+    notes: str = ""  # F-6 (2026-05-21): documents QUBO intent for critic consumers
     governance: dict = Field(default_factory=lambda: {
         "experimental": True,
         "authoritative": False,
@@ -199,8 +201,10 @@ def run_sqa_optimization(
     # SQA runs are deterministic (seeded) — safe to cache.
     _sqa_cache_key: Optional[dict] = None
     if _sqa_cache is not None:
+        # F-8 (2026-05-21): stable QUBO cache key using sorted json.dumps —
+        # str(tuple) is unstable across Python versions and dict ordering.
         _sqa_cache_key = {
-            "qubo": {str(k): v for k, v in qubo.items()},
+            "qubo": json.dumps(sorted([(list(k), v) for k, v in qubo.items()])),
             "param_ranges": [pr.model_dump() for pr in param_ranges],
             "num_reads": num_reads,
             "num_sweeps": num_sweeps,
@@ -272,6 +276,19 @@ def run_sqa_optimization(
         n_reads=num_reads,
         n_params=len(param_ranges),
         total_bits=total_bits,
+        # F-6 (2026-05-21): build_parameter_qubo accepts objective_values but does NOT
+        # consume them — the QUBO encodes a structural prior only (mid-range preference
+        # + weak inter-param coupling). SQA vs Optuna comparison is therefore illustrative,
+        # not evidence that SQA found a better objective-value-weighted region.
+        # To consume objective_values, bias linear terms toward known-good regions using
+        # Q[(b,b)] -= objective_values[param_combo] * scale (deferred: F-6 future work).
+        notes=(
+            "QUBO is structural-prior-only: linear terms encode mid-range preference, "
+            "quadratic terms encode weak parameter coupling. objective_values arg accepted "
+            "by build_parameter_qubo but NOT consumed — SQA vs Optuna energy comparison "
+            "is illustrative, not objective-value-evidence. Treat as plateau-detection "
+            "signal only."
+        ),
     )
     # Cache seeded SQA results (deterministic when NEAL_AVAILABLE and seed fixed)
     if _sqa_cache is not None and _sqa_cache_key is not None:

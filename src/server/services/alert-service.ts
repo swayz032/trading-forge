@@ -159,4 +159,85 @@ export const AlertFactory = {
         `different code, identical signals. Review before allowing deployment.`,
       metadata: { strategyIdA, strategyIdB, similarity, threshold },
     }),
+
+  // Track 7: Dead-man's heartbeat stale alert.
+  // Fires when the backend has been silent for > 2h during RTH and SMS is unavailable.
+  // backendRestartedAt (M-8): ISO timestamp of when the backend process started this cycle.
+  // Allows operators to correlate a stale alert with a recent restart-and-silent condition.
+  notifyHeartbeatStale: (lastAt: Date | null, minutesSince: number, backendRestartedAt?: string) =>
+    createAlert({
+      type: "system",
+      severity: "critical",
+      title: "Dead-man heartbeat: backend silent",
+      message:
+        `Backend heartbeat is stale. Last heartbeat: ${lastAt ? lastAt.toISOString() : "never"}. ` +
+        `Silence duration: ${minutesSince} minutes. ` +
+        (backendRestartedAt ? `Backend last restarted: ${backendRestartedAt}. ` : "") +
+        `Verify the backend process is running on the Skytech tower.`,
+      metadata: {
+        lastHeartbeatAt: lastAt ? lastAt.toISOString() : null,
+        minutesSince,
+        backendRestartedAt: backendRestartedAt ?? null,
+        event: "heartbeat_stale",
+      },
+    }),
+
+  // C6: Bitwarden session expiring soon alert.
+  // Fires when the BW_SESSION token will expire within `hoursRemaining` hours.
+  notifyBwSessionExpiringSoon: (hoursRemaining: number) =>
+    createAlert({
+      type: "system",
+      severity: hoursRemaining <= 1 ? "critical" : "warning",
+      title: `Bitwarden session expiring in ${hoursRemaining}h`,
+      message:
+        `The Bitwarden vault session token will expire in approximately ${hoursRemaining} hour(s). ` +
+        `The daily session refresh cron should renew it automatically. If this alert persists, ` +
+        `run 'bw login' manually on the Skytech tower and update BW_SESSION in the .env file.`,
+      metadata: {
+        hoursRemaining,
+        event: "bw_session_expiring_soon",
+      },
+    }),
+
+  // Track 7: Prop-firm cookie refresh failed alert.
+  // Fires when automated Playwright cookie refresh fails for a firm, meaning session cookies
+  // will go stale and the dashboard snapshot / login sequence will break.
+  notifyCookieRefreshFailed: (firmId: string, error: string) =>
+    createAlert({
+      type: "system",
+      severity: "critical",
+      title: `Cookie refresh failed: ${firmId}`,
+      message:
+        `Automated session cookie refresh for firm "${firmId}" failed. ` +
+        `Dashboard snapshots and authenticated actions for this firm will degrade until cookies are renewed. ` +
+        `Error: ${error}`,
+      metadata: {
+        firmId,
+        error,
+        event: "cookie_refresh_failed",
+      },
+    }),
+
+  // H-4: Reconciliation mismatch alert (first-class method).
+  // Fires when daily reconciliation detects count or PnL mismatches across sources.
+  criticalReconciliationMismatch: (
+    reconDate: string,
+    mismatchCount: number,
+    details: Array<{ source: string; expected: number | string; actual: number | string; delta?: number }>,
+  ) =>
+    createAlert({
+      type: "system",
+      severity: "critical",
+      title: `Reconciliation mismatch: ${reconDate} (${mismatchCount} check${mismatchCount !== 1 ? "s" : ""} failed)`,
+      message:
+        `Daily reconciliation for ${reconDate} found ${mismatchCount} mismatch(es). ` +
+        `Sources: ${details.map((d) => d.source).join(", ")}. ` +
+        `Investigate production_trades vs TradersPost vs Tradovate vs MFFU dashboard.`,
+      metadata: {
+        reconDate,
+        mismatchCount,
+        details,
+        event: "reconciliation_mismatch",
+      },
+    }),
 };

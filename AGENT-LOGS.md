@@ -4,6 +4,29 @@
 
 ---
 
+### Session Log — 2026-05-21 pine-export — Pass 7/Track D: 4 CRITICAL export bugs fixed
+
+**Mission:** Fix BUG-1 (account_id not threaded to Pine compiler), BUG-3 (HMAC Pine v5 syntax broken), BUG-5 (str.format_time non-existent in Pine v5), BUG-10 (unconditional stdout truncation corrupting DB artifacts).
+
+**Work completed:**
+- **BUG-1 (account_id threading):** `compileDualPineExport` in `pine-export-service.ts` now accepts `accountId?: string` as 9th param. Config dict includes `config.account_id = accountId`. `pine-export-recipient-service.ts` passes `accountId` through. Python `__main__` reads `account_id` from config and forwards to `compile_dual_artifacts`. Track 8 marker alertcondition now emitted for recipient exports.
+- **BUG-3 (HMAC Pine syntax):** Replaced broken post-hoc `str.replace` approach with generation-time injection. `_build_strategy_webhook_alerts` now accepts `hmac_input_var: Optional[str]`. Entry alert messages include `+ ',"hmac":"' + hmac_input + '"'` at GENERATION TIME — valid Pine v5 string concat. No more double-backslash escape issues. `input.string()` declaration still injected via safe single-occurrence str.replace.
+- **BUG-5 (str.format_time):** Replaced `str.format_time(time, "yyyy-MM-dd'T'HH:mm:ssXXX", "UTC")` with `str.tostring(time)` in `_build_marker_alertcondition`. `markerPayloadSchema` in `tradingview-webhook.ts` updated to `z.union([z.string().datetime(), z.number().int().positive().transform(ms => new Date(ms).toISOString())])` — accepts both ISO-8601 and Unix millis.
+- **BUG-10 (stdout truncation):** `__main__` truncation block now gated behind `--print-summary` argparse flag. Default path emits full artifact content to stdout for TS subprocess. `--print-summary` truncates to 500 chars for interactive CLI inspection.
+
+**Verification:**
+- Python: 11 pytest pass (test_pine_compiler.py), zero regressions.
+- Vitest tradingview-webhook.test.ts: 5 failed / 4 passed — identical to pre-change baseline (pre-existing failures unrelated to BUG-5 change).
+- End-to-end compile test: STRATEGY artifact 23,795 chars (>>500), INDICATOR 18,489 chars. Both artifacts contain TradersPost alerts, marker alertcondition, hmac_input declaration, no str.format_time in non-comment code.
+
+**Files changed:** `src/engine/pine_compiler.py`, `src/server/services/pine-export-service.ts`, `src/server/services/pine-export-recipient-service.ts`, `src/server/routes/tradingview-webhook.ts`
+
+**Known remaining limitations:** The tradingview-webhook.test.ts pre-existing 5 failures relate to HMAC validation mock mismatch (test uses JSON.stringify canonical, route uses buildWebhookCanonical) — not introduced by this session.
+
+**Carry-forward:** None. All 4 BUGs are fixed and verified.
+
+---
+
 ### Session Log — 2026-05-20 backtest-core — 7-CRITICAL factory + promotion bug sweep
 
 **Mission:** Fix 7 CRITICAL bugs in strategy-factory + promotion pipeline (F-1 through F-7). Parallel with 6 other agents. File ownership: graduator, dsl-sanitizer, strategy-fingerprint, autonomous-scout-runner, black_swan_evaluator, nemo_a14_bridge.
@@ -5650,6 +5673,65 @@ sentinel rename hazard.
 **Carry-forward for next session:**
 - Kill switch Python call is only made when `dailyLossLimit > 0 || maxTradesPerSession > 0` — important for future test mock sequencing
 - The compliance cache now caches freshness only; violation always runs fresh — this is intentional and load-bearing for MFFU correctness
+
+---
+
+### Session Log — 2026-05-21 Pass 7 Track E — Production reliability fixes (3 CRITICAL + 5 HIGH/MEDIUM)
+
+**Mission:** Fix all 8 observability/reliability issues across alert-service, reconciliation-service, dashboard-snapshot-service, sse.ts, and dead-mans-heartbeat-service without touching business logic.
+
+**Work completed:**
+- **C-1** Added 3 missing AlertFactory methods (`notifyHeartbeatStale`, `notifyBwSessionExpiringSoon`, `notifyCookieRefreshFailed`) that were being called at production callsites but had no definition — silent no-ops at runtime
+- **C-2** Replaced the no-op `setTimeout`-only recon timeout with `AbortController` + `controller.abort(new Error("recon_timeout"))`. Signal threaded into `fetchMffuDashboardPnl`. Post-Promise.all abort check guards DB queries that don't natively honour AbortSignal
+- **C-3** Generated `reconRunId = randomUUID()` at top of `runDailyReconciliation`; threaded as `correlationId` through both `writeReconRow` calls, replacing the hardcoded `correlationId: null`
+- **H-4** Promoted `criticalReconciliationMismatch` into AlertFactory as a first-class method. Deleted the `declare module` augmentation + dynamic side-effect attachment from reconciliation-service
+- **H-5** Removed `apex` entry from `FIRM_DASHBOARDS` in dashboard-snapshot-service (Apex removed in migration 0097, 2026-05-10)
+- **H-6** Added `sse:replay_gap` signal on reconnect when ring buffer does not cover the gap. Frontend receives `{lastSeenSeq, currentSeq, message:"replay_buffer_does_not_cover_gap"}` and must refetch state rather than assuming SSE continuity
+- **M-7** Consolidated 3 identical SQL queries into one `fetchProxyCountsFromProductionTrades` + proxy wrappers. Added `INDEPENDENT_SOURCE_COUNT=2` / `MIN_INDEPENDENT_SOURCES_FOR_RED=3` exported constants; severity capped at "yellow" when independent sources < 3 (degraded-reconciliation mode)
+- **M-8** Added module-level `_processStartTime = Date.now()` to dead-mans-heartbeat-service; passed as `backendRestartedAt` ISO string to `notifyHeartbeatStale` so operators can correlate stale alerts with recent restarts
+
+**Verification:**
+- `tsc --noEmit`: 0 new errors in touched files (1 pre-existing `db.execute` 2-arg error at reconciliation-service:285 confirmed pre-existing via git stash check)
+- `grep "notifyHeartbeatStale\b" alert-service.ts`: matches
+- `grep "AbortController" reconciliation-service.ts`: matches
+- `grep "apex" dashboard-snapshot-service.ts`: 0 lines
+- Vitest: 86 failures pre-existing, 0 regressions from my changes (wave6-cron-correlation 7 tests pass)
+
+**Known-facts updates:** None new.
+
+**Carry-forward for next session:**
+- Phase 4C: When `traderspost_webhook_id` and `tradovate_fill_id` columns are wired, `INDEPENDENT_SOURCE_COUNT` should be raised to 3+ and the severity cap removed
+- `fetchMffuDashboardPnl` honours AbortSignal pre-Playwright, but Playwright itself does not natively abort mid-navigation; set `page.setDefaultTimeout(RECON_TIMEOUT_MS - 30000)` when PnL extraction is wired in Phase 4C
+- SSE `sse:replay_gap` event needs frontend handler to trigger a REST state refetch on gap detection
+
+---
+
+### Session Log — 2026-05-21 Pass 7 Track C: 4 CRITICAL Paper Engine Fixes
+
+**Mission:** Fix 4 safety-critical paper engine gaps: D6 force_close not closing positions, 15:55 ET time-stop missing, Style C TP1 BE-move absent, CME day key mismatch in kill-switch Layer 2.
+
+**Work completed:**
+- **C-1**: `paper-execution-service.ts` — D6 kill switch `force_close=true` now calls `forceCloseAllPositions("dll_95_force_close")` after logging+SSE, wrapped in try/catch (CRITICAL log on failure, rejection still returned)
+- **C-2**: `paper-signal-service.ts` — 15:55 ET hard time-stop added at top of `openPos && !isShadow` block, using `bar.timestamp` as clock source via `Intl.DateTimeFormat("en-US", { timeZone: "America/New_York" })`. Priority: fires BEFORE trail/fixed stops. `logSignal` called before early return for journal completeness.
+- **C-3**: `paper-signal-service.ts` — Style C TP1 detection + BE+1tick stop move wired. `tp1BeStopMap` Map tracks per-position BE stop level. On TP1 cross: persists `tp1_filled_at` to DB, stores `entryPrice ± 1tick` in map, overrides `effectiveStopConfig` in `checkStopLoss`. Restart recovery reads `tp1FilledAt` from DB. Cleanup on all 5 close paths. TP2 partial close + contract reduction documented as carry-forward.
+- **C-4**: `kill-switch.ts` — Layer 2 daily loss check now uses CME trading-day key (inlined `+7h` shift with `en-CA/America/New_York` formatter) instead of UTC ISO date. Dynamic import avoided (causes test timeout).
+- **Migration 0130**: Added 8 columns to `paper_positions`: `tp1_filled_at`, `tp2_filled_at`, `tp1_filled`, `tp2_filled`, `be_stop_applied`, `current_exit_style`, `current_trail_method`, `last_handler_eval_at`. These also fixed pre-existing TS errors from `callExitHandler()` code that referenced columns never added to schema.
+- **`docs/style-c-partials-carry-forward.md`**: Documents TP2/runner partial close implementation plan.
+
+**Verification:**
+- Mandatory greps all pass: `forceCloseAllPositions` in D6 branch, `time_stop_1555_et` in paper-signal-service, `_cmeEtFormatter` in kill-switch.ts
+- `paper-execution-style-exit.test.ts`: 14/14 PASS (schema column test fixed by migration 0130)
+- `kill-switch.test.ts`: 8/8 PASS (timeout fixed by inlining CME formatter instead of dynamic import)
+- `test_kill_switch_blocks_cron.test.ts`: 1 FAIL (pre-existing, verified by git stash test)
+- TS errors in our target files reduced to 2 pre-existing lines in kill-switch.ts:52-53 (`evaluateMacroGates` signature drift — not from this pass)
+
+**Known-facts updates:** None (no new invariants pinned)
+
+**Carry-forward for next session:**
+- TP2 partial close (33% contract reduction at +2R) requires `closePartialPosition()` function — see `docs/style-c-partials-carry-forward.md`
+- Runner (34%) trailing stop after TP2 — same
+- Pre-existing TS errors in `kill-switch.ts:52-53` (`evaluateMacroGates` wrong arg count + `crisisGateTriggered` property) — different subagent scope
+- `test_kill_switch_blocks_cron.test.ts` "killSwitch halted" warn log test — pre-existing, needs investigation
 
 ---
 

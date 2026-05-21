@@ -69,17 +69,39 @@ router.get("/events", (req: Request, res: Response) => {
   const lastEventIdHeader = req.headers["last-event-id"];
   const lastSeenSeq = lastEventIdHeader ? parseInt(String(lastEventIdHeader), 10) : NaN;
 
-  if (!isNaN(lastSeenSeq) && ringBuffer.length > 0) {
-    const missed = ringBuffer.filter((e) => e.seq > lastSeenSeq);
-    for (const entry of missed) {
-      // F-10: serialized form already in buffer — no JSON.stringify on replay.
-      res.write(`id: ${entry.seq}\nevent: ${entry.event}\ndata: ${entry.serialized}\n\n`);
-    }
-    if (missed.length > 0) {
-      logger.info(
-        { lastSeenSeq, replayed: missed.length },
-        "SSE replay: delivered missed events to reconnecting client",
+  if (!isNaN(lastSeenSeq) && lastSeenSeq > 0) {
+    // Detect replay gap: buffer is empty OR the oldest buffered seq does not cover
+    // the client's last-seen position. In either case we cannot guarantee continuity.
+    const bufferEmpty = ringBuffer.length === 0;
+    const oldestSeq   = bufferEmpty ? -1 : ringBuffer[0].seq;
+    const hasGap      = bufferEmpty || oldestSeq > lastSeenSeq + 1;
+
+    if (hasGap) {
+      // H-6: Signal replay gap so the frontend can refetch authoritative state
+      // instead of assuming the SSE stream is continuous.
+      const gapPayload = JSON.stringify({
+        lastSeenSeq,
+        currentSeq: eventSeq,
+        message: "replay_buffer_does_not_cover_gap",
+      });
+      res.write(`id: 0\nevent: sse:replay_gap\ndata: ${gapPayload}\n\n`);
+      logger.warn(
+        { lastSeenSeq, currentSeq: eventSeq, oldestBufferedSeq: oldestSeq, bufferEmpty },
+        "SSE replay: gap detected — client must refetch state",
       );
+    } else {
+      // Buffer covers the gap — replay only the missed events.
+      const missed = ringBuffer.filter((e) => e.seq > lastSeenSeq);
+      for (const entry of missed) {
+        // F-10: serialized form already in buffer — no JSON.stringify on replay.
+        res.write(`id: ${entry.seq}\nevent: ${entry.event}\ndata: ${entry.serialized}\n\n`);
+      }
+      if (missed.length > 0) {
+        logger.info(
+          { lastSeenSeq, replayed: missed.length },
+          "SSE replay: delivered missed events to reconnecting client",
+        );
+      }
     }
   } else {
     // Fresh connection — send connected sentinel (no id needed, not buffered)

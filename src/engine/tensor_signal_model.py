@@ -99,6 +99,7 @@ class MPSModelConfig(BaseModel):
 
 class MPSPrediction(BaseModel):
     """Prediction output from MPS model."""
+    schema_version: str = "v1_challenger"  # F-4 (2026-05-21): schema version for downstream critic
     probability_profitable: float
     confidence: float  # How far from 0.5
     signal: str  # "bullish" | "bearish" | "neutral"
@@ -112,6 +113,7 @@ class MPSPrediction(BaseModel):
 
 class TrainResult(BaseModel):
     """Training result."""
+    schema_version: str = "v1_challenger"  # F-4 (2026-05-21): schema version for downstream critic
     train_accuracy: float
     val_accuracy: float
     train_loss_history: list[float] = Field(default_factory=list)
@@ -723,7 +725,35 @@ if __name__ == "__main__":
             print(json.dumps(result, indent=2))
             sys.exit(0)
 
-        model = load_mps(args.model_path)
+        # F-5 (2026-05-21): catch FileNotFoundError from load_mps so callers that
+        # race against model training don't crash with an unhandled traceback.
+        # Return the governance-labelled skipped_no_model shape identical to the
+        # no-model_path branch above.
+        try:
+            model = load_mps(args.model_path)
+        except FileNotFoundError:
+            import logging as _logging
+            _logging.getLogger(__name__).info(
+                "Tensor model file not found at %s — returning no-op (probability=None). "
+                "Train the model first via --mode train.",
+                args.model_path,
+            )
+            result = {
+                "probability": None,
+                "confidence": 0.0,
+                "signal": "no_model",
+                "model_hash": "no_model",
+                "fragility_score": 0.0,
+                "regime_breakdown": {},
+                "governance": {
+                    "experimental": True,
+                    "authoritative": False,
+                    "decision_role": "challenger_only",
+                    "skipped_reason": "model_file_not_found",
+                },
+            }
+            print(json.dumps(result, indent=2))
+            sys.exit(0)
         features = np.array(config["features"], dtype=float)
         predictions = predict_trade_outcome(model, features)
 

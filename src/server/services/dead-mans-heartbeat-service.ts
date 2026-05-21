@@ -31,17 +31,98 @@ const RTH_START_ET_HOUR = 9;   // 9:30 AM ET (we check >= 9 for safety)
 const RTH_END_ET_HOUR = 16;    // 4:00 PM ET
 const STALE_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
 
+// ─── Process start time (M-8) ─────────────────────────────────────────────────
+// Module-level timestamp capturing when the process loaded this module.
+// Included in stale-heartbeat alerts so operators can correlate a stale
+// alert with a recent backend restart.
+const _processStartTime = Date.now();
+
 // ─── Stale-alert dedup ────────────────────────────────────────────────────────
 // Track the last heartbeat timestamp we fired an alert for to avoid spam.
 let _lastAlertedForTs: Date | null = null;
 let _alertFiredAt: Date | null = null;
 
-// ─── Schema-drift read-path dedup (F-5) ──────────────────────────────────────
-// The write-path already fires notifyCritical on table-missing. The read-path
-// (getLastHeartbeatAt) must do the same, but needs its own dedup so repeated
-// stale checks don't spam Discord every 30 minutes.
-// Value = UTC calendar date string ("2026-05-20") of last read-path schema alert.
+// ─── Schema-drift read-path dedup (F-3, was F-5 in Pass 6 Track C) ───────────
+// Originally an in-process variable, but pm2 reload reset the var and caused
+// duplicate Discord alerts. F-3 (Pass 6 / Track A 2026-05-21) moves the dedup
+// to the audit_log table: we check whether an audit row with
+//   action='dead_mans_heartbeat.schema_drift_alerted'
+// already exists for today_et BEFORE firing notifyCritical. The audit row is
+// the single source of truth; the in-process variable is kept as a fast-path
+// cache (avoids one DB query per 30-min check inside a single process lifetime)
+// but is NEVER trusted alone.
 let _lastSchemaDriftReadAlertAt: string | null = null;
+
+/**
+ * Compute today's calendar date in America/New_York (ET) as "YYYY-MM-DD".
+ * Used as the dedup key in audit_log — one schema-drift alert per ET day.
+ */
+function todayEtDateString(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const y = parts.find((p) => p.type === "year")?.value ?? "0000";
+  const m = parts.find((p) => p.type === "month")?.value ?? "01";
+  const d = parts.find((p) => p.type === "day")?.value ?? "01";
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * DB-backed check: has the schema-drift read-path alert already fired today
+ * (ET calendar)? Returns true if a prior audit row exists. Returns false on
+ * lookup error (fail-open — better to risk one duplicate alert than to skip
+ * a critical schema-drift notification entirely).
+ */
+async function hasSchemaDriftAlertedToday(): Promise<boolean> {
+  const today = todayEtDateString();
+  try {
+    // Lazy import to keep this module importable when db/schema are partially
+    // mocked in unit tests (matches the helper-logger contract from CLAUDE.md).
+    const { auditLog } = await import("../db/schema.js");
+    const { and, eq, gte, lt } = await import("drizzle-orm");
+    // ET day boundary in UTC: ET is UTC-4 (DST) or UTC-5 (standard). Use the
+    // worst-case earliest-start / latest-end so we never miss a row that landed
+    // on the ET calendar day under either DST regime.
+    const todayStart = new Date(`${today}T00:00:00-05:00`);
+    const todayEnd = new Date(`${today}T23:59:59-04:00`);
+    const rows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, "dead_mans_heartbeat.schema_drift_alerted"),
+          gte(auditLog.createdAt, todayStart),
+          lt(auditLog.createdAt, todayEnd),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch (err) {
+    logger.warn({ err }, "dead-mans-heartbeat: schema-drift dedup lookup failed (fail-open — may double-alert)");
+    return false;
+  }
+}
+
+async function recordSchemaDriftAlert(): Promise<void> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    await db.insert(auditLog).values({
+      action: "dead_mans_heartbeat.schema_drift_alerted",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { table: HEARTBEAT_TABLE, path: "read", todayEt: todayEtDateString() } as Record<string, unknown>,
+      result: { alerted: true } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    });
+  } catch (err) {
+    logger.warn({ err }, "dead-mans-heartbeat: schema-drift audit row insert failed (non-blocking)");
+  }
+}
 
 function resetAlertDedup(): void {
   _lastAlertedForTs = null;
@@ -143,24 +224,34 @@ export async function getLastHeartbeatAt(): Promise<Date | null> {
     return new Date((arr[0] as { ts: string }).ts);
   } catch (err) {
     if (isTableMissingError(err)) {
-      // F-5: Schema drift on the READ path — fire notifyCritical (same as
-      // write-path) so the operator is alerted regardless of which path detects
-      // the missing table first. Dedup once per calendar day to avoid spam on
-      // the 30-min stale check cadence (up to 48 calls per RTH day).
-      const todayUtc = new Date().toISOString().slice(0, 10);
+      // F-3: Schema drift on the READ path — fire notifyCritical, but dedup via
+      // audit_log so pm2 reload (which resets in-process state) does not cause a
+      // duplicate alert. We still keep the in-process variable as a fast-path
+      // cache so a single process doesn't query audit_log 48 times per RTH day.
+      const todayEt = todayEtDateString();
       logger.error(
         { table: HEARTBEAT_TABLE, code: PG_RELATION_NOT_FOUND },
         `dead-mans-heartbeat: SCHEMA DRIFT — table "${HEARTBEAT_TABLE}" missing during stale check`,
       );
-      if (_lastSchemaDriftReadAlertAt !== todayUtc) {
-        _lastSchemaDriftReadAlertAt = todayUtc;
-        // notifyCritical returns void (fire-and-forget) — matches write-path pattern.
-        notifyCritical(
-          "Heartbeat schema drift (read-path)",
-          `Table "${HEARTBEAT_TABLE}" is missing during the stale heartbeat check. ` +
-            `The dead-man's heartbeat cannot verify backend liveness. Apply the pending migration immediately.`,
-          { table: HEARTBEAT_TABLE, error_code: PG_RELATION_NOT_FOUND, path: "read" },
-        );
+      if (_lastSchemaDriftReadAlertAt !== todayEt) {
+        // Cache miss — consult audit_log before alerting.
+        const alreadyAlerted = await hasSchemaDriftAlertedToday();
+        if (alreadyAlerted) {
+          // Another process (e.g. before pm2 reload) already alerted today;
+          // refresh the in-process cache and skip the notify.
+          _lastSchemaDriftReadAlertAt = todayEt;
+        } else {
+          _lastSchemaDriftReadAlertAt = todayEt;
+          // Record FIRST so a concurrent process sees the row even if notify
+          // takes time. notifyCritical is fire-and-forget (matches write-path).
+          await recordSchemaDriftAlert();
+          notifyCritical(
+            "Heartbeat schema drift (read-path)",
+            `Table "${HEARTBEAT_TABLE}" is missing during the stale heartbeat check. ` +
+              `The dead-man's heartbeat cannot verify backend liveness. Apply the pending migration immediately.`,
+            { table: HEARTBEAT_TABLE, error_code: PG_RELATION_NOT_FOUND, path: "read" },
+          );
+        }
       }
     } else {
       logger.warn({ err }, "dead-mans-heartbeat: last heartbeat query failed");
@@ -262,7 +353,10 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
   // Try Twilio first, fall back to Discord critical
   const smsSent = await sendSmsStalert(minutesSince, lastAt);
   if (!smsSent) {
-    await AlertFactory.notifyHeartbeatStale(lastAt, minutesSince).catch((err) => {
+    // M-8: Include backend_restarted_at so operators can correlate stale alerts
+    // with a recent restart (process started but heartbeat writes haven't fired yet).
+    const backendRestartedAt = new Date(_processStartTime).toISOString();
+    await AlertFactory.notifyHeartbeatStale(lastAt, minutesSince, backendRestartedAt).catch((err) => {
       logger.error({ err }, "dead-mans-heartbeat: Discord alert also failed");
     });
   }

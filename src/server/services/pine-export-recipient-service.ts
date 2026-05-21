@@ -562,6 +562,9 @@ export async function generateRecipientExport(
   const firmKey = firmId === "mffu" ? "mffu_50k" : "topstep_50k";
 
   // ── 8. Compile dual Pine artifact (per-recipient params injected) ────────
+  // BUG-1 fix: pass accountId so the Python subprocess injects it into compile_dual_artifacts,
+  // enabling the marker alertcondition block (Track 8) to be emitted when both account_id
+  // and hmac_secret are present. Previously account_id was never forwarded to the compiler.
   const exportResult = await compileDualPineExport(
     strategyId,
     firmKey,
@@ -571,6 +574,7 @@ export async function generateRecipientExport(
     qty,
     recipientLabel,
     hmacSecret,
+    accountId,
   );
 
   if (exportResult.status === "failed") {

@@ -2,7 +2,8 @@ import { Router } from "express";
 import { desc, sql, gte, eq } from "drizzle-orm";
 import { createHmac, timingSafeEqual } from "crypto";
 import { db } from "../db/index.js";
-import { n8nExecutionLog } from "../db/schema.js";
+import { n8nExecutionLog, auditLog } from "../db/schema.js";
+import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "./sse.js";
 
 export const n8nTrackingRoutes = Router();
@@ -48,15 +49,63 @@ function verifyN8nHmac(headerValue: string | undefined, body: unknown): { ok: tr
   }
 }
 
+// ─── F-2 (Pass 6 / Track A 2026-05-21): HMAC enforcement-mode transition ─────
+// The HMAC verify gate was added in Pass 6 but n8n workflows have not all been
+// updated to sign their requests. Forcing "enforce" immediately would 401 every
+// live caller. We add a transition window:
+//   N8N_HMAC_ENFORCE_MODE = "warn"    → log+accept unsigned/invalid (default)
+//   N8N_HMAC_ENFORCE_MODE = "enforce" → 401 on missing/invalid signature
+// Default is "warn" for the next 7 days. Operator flips to "enforce" after all
+// n8n workflows have been audited to attach a signed header. Every accept-
+// without-signature in "warn" mode writes an audit_log row so the operator can
+// query who is still sending unsigned traffic before the flip.
+type HmacEnforceMode = "warn" | "enforce";
+
+function getHmacEnforceMode(): HmacEnforceMode {
+  const raw = (process.env["N8N_HMAC_ENFORCE_MODE"] ?? "warn").toLowerCase().trim();
+  return raw === "enforce" ? "enforce" : "warn";
+}
+
 // ─── POST /api/n8n/execution-log — n8n calls this at end of each workflow ──
 n8nTrackingRoutes.post("/execution-log", async (req, res) => {
   // Pass 6 / Track C F-3: HMAC verify BEFORE touching the DB
   const sig = req.header("x-n8n-signature");
   const verified = verifyN8nHmac(sig, req.body);
+  const enforceMode = getHmacEnforceMode();
   if (!verified.ok) {
-    req.log.warn({ reason: verified.reason }, "n8n execution-log: HMAC verification failed");
-    res.status(401).json({ error: "unauthorized", reason: verified.reason });
-    return;
+    if (enforceMode === "enforce") {
+      req.log.warn(
+        { reason: verified.reason, mode: enforceMode },
+        "n8n execution-log: HMAC verification failed — rejecting (enforce mode)",
+      );
+      res.status(401).json({ error: "unauthorized", reason: verified.reason });
+      return;
+    }
+    // F-2 warn mode: log + audit + accept, continue to the rest of the handler.
+    // This preserves observability of unsigned callers without blocking them
+    // during the transition window.
+    req.log.warn(
+      { reason: verified.reason, mode: enforceMode },
+      "n8n execution-log: HMAC verification failed — accepting (warn mode, transition window)",
+    );
+    db.insert(auditLog)
+      .values({
+        action: "n8n_tracking.unsigned_accepted",
+        entityType: "n8n_workflow",
+        entityId: null,
+        decisionAuthority: "system",
+        input: {
+          workflowId: (req.body as { workflowId?: unknown })?.workflowId ?? null,
+          reason: verified.reason,
+          mode: enforceMode,
+        } as Record<string, unknown>,
+        result: { accepted: true, reason: verified.reason } as Record<string, unknown>,
+        status: "success",
+        correlationId: null,
+      })
+      .catch((auditErr: unknown) => {
+        logger.error({ auditErr }, "n8n-tracking: audit_log write failed for unsigned accept (non-blocking)");
+      });
   }
 
   const { workflowId, workflowName, executionId, status, startedAt, finishedAt, durationMs, errorMessage, triggerType, metadata } = req.body;
@@ -148,13 +197,35 @@ n8nTrackingRoutes.get("/execution-log/health", async (req, res) => {
   // F-8: a workflow with no completed non-manual runs in the window is NOT
   // "unhealthy" — it's "no_data". Only flag rows that actually have evidence
   // of underperformance (status=ok AND (successRate<0.9 OR failures>0)).
-  const unhealthy = workflows.filter((w) =>
+  //
+  // F-7 (Pass 6 / Track A 2026-05-21): stale detection. If a workflow
+  // has data but its lastExecution timestamp is older than STALE_THRESHOLD_MS
+  // (default 2h — appropriate for hourly-scheduled scout/audit workflows),
+  // promote status from "ok" to "stale". This distinguishes "the workflow runs
+  // hourly and one cycle missed" (stale) from "the workflow has never run in
+  // the window" (no_data). Operator alerting can page on "stale" without
+  // false-positiving on cold-start "no_data".
+  const STALE_THRESHOLD_MS = Number(process.env["N8N_STALE_THRESHOLD_MS"] ?? 2 * 60 * 60 * 1000);
+  const nowMs = Date.now();
+  const enrichedWorkflows = workflows.map((w) => {
+    if (w.status !== "ok" || !w.lastExecution) return w;
+    const lastMs = new Date(w.lastExecution).getTime();
+    if (Number.isFinite(lastMs) && nowMs - lastMs > STALE_THRESHOLD_MS) {
+      return { ...w, status: "stale" };
+    }
+    return w;
+  });
+
+  const unhealthy = enrichedWorkflows.filter((w) =>
     w.status === "ok" && ((w.successRate ?? 1) < 0.9 || w.failures > 0)
   );
+  const stale = enrichedWorkflows.filter((w) => w.status === "stale");
 
   res.json({
-    data: workflows,
+    data: enrichedWorkflows,
     unhealthy: unhealthy.map((w) => w.workflowName),
+    stale: stale.map((w) => w.workflowName),
+    staleThresholdMs: STALE_THRESHOLD_MS,
     since: since.toISOString(),
     days,
   });

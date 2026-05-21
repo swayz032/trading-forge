@@ -1043,6 +1043,26 @@ export async function openPosition(sessionId: string, params: {
             openSpan.setAttribute("kill_switch_tripped", true);
             openSpan.setAttribute("kill_switch_reason", killResult.reason ?? "");
             openSpan.end();
+
+            // C-1 FIX: When force_close===true (95% DLL threshold), flatten all
+            // open positions AFTER logging+SSE and BEFORE returning the rejection.
+            // Wrap in try/catch — if forceClose throws, log CRITICAL but still
+            // return the rejection (never swallow the close failure silently).
+            if (killResult.force_close) {
+              try {
+                logger.error(
+                  { sessionId, firmKey, reason: killResult.reason },
+                  "Kill switch (D6): force_close=true — calling forceCloseAllPositions(dll_95_force_close)",
+                );
+                await forceCloseAllPositions("dll_95_force_close");
+              } catch (forceCloseErr) {
+                logger.error(
+                  { sessionId, firmKey, err: forceCloseErr },
+                  "CRITICAL: Kill switch (D6) forceCloseAllPositions threw — positions may remain open. Manual flatten required.",
+                );
+              }
+            }
+
             return {
               position: null,
               executionResult: {

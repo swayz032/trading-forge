@@ -291,7 +291,18 @@ class KillSwitch {
     let l2Reason: string | undefined;
     try {
       const { getFirmAccount } = await import("../../shared/firm-config.js");
-      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD UTC
+      // C-4 FIX: Use CME trading-day key (5pm ET cutoff, +7h shift) so Layer 2
+      // DLL check matches the key written by paper-execution-service.ts:874 via
+      // toFuturesTradingDayString(). UTC ISO date diverges on CME overnight sessions
+      // (e.g. 4:59 PM ET → UTC date is already "next day" but CME session boundary
+      // is at exactly 5:00 PM ET, so the key would be wrong). Inline the same
+      // +7h shift to avoid a dynamic import that causes test-environment hangs
+      // (paper-risk-gate module load triggers DB connections in unit test scope).
+      //
+      // Algorithm matches paper-risk-gate.ts:toFuturesTradingDayString() exactly:
+      //   shifted = now + 7h  →  17:00 ET + 7h = 00:00 next-day ET (en-CA YYYY-MM-DD)
+      const _cmeEtFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
+      const today = _cmeEtFormatter.format(new Date(Date.now() + 7 * 3_600_000));
 
       const activeSessions = await db
         .select({

@@ -305,7 +305,12 @@ const ALL_EVIDENCE_SOURCES: EvidenceSource[] = ["sqa", "mc", "quantum_mc", "qubo
 // optional — the critic can proceed without them and will pass null for any
 // optional source that hasn't arrived when MC completes.
 const REQUIRED_SOURCES: EvidenceSource[] = ["mc"];
-const OPTIONAL_SOURCES: EvidenceSource[] = ["sqa", "qubo", "tensor", "rl", "quantum_mc"];
+// M-9: deepar is sync-collected inside collectEvidence() (reads deeparForecasts table
+// directly). It is never pushed via addEvidence() because the DeepAR worker does not
+// call getEvidenceCollector() — it writes to its own table and collectEvidence reads
+// it. Adding deepar here makes OPTIONAL_SOURCES consistent with ALL_EVIDENCE_SOURCES
+// and ensures _settled_with_sources audit comparisons account for it correctly.
+const OPTIONAL_SOURCES: EvidenceSource[] = ["sqa", "qubo", "tensor", "rl", "quantum_mc", "deepar"];
 
 /**
  * EvidenceCollector replaces synchronous polling with event-driven collection.
@@ -460,6 +465,18 @@ export async function triggerCriticOptimizerAsync(
   context?: { correlationId?: string },
 ): Promise<{ runId: string; status: string }> {
   const correlationId = context?.correlationId;
+
+  // H-10: Pipeline-pause guard. Check BEFORE inserting a criticOptimizationRuns row
+  // and BEFORE consuming the rate limit token — a paused pipeline must not leave
+  // persistent artifacts or count toward the 24h rate limit.
+  if (!(await isPipelineActive())) {
+    logger.info(
+      { strategyId, backtestId, fn: "triggerCriticOptimizerAsync" },
+      "Async critic optimizer skipped — pipeline paused",
+    );
+    return { runId: "", status: "skipped_pipeline_paused" };
+  }
+
   // Rate limit check
   const recentRun = await db
     .select({ id: criticOptimizationRuns.id })
@@ -1258,6 +1275,15 @@ async function collectEvidence(
   const entryIndicatorKey: string | undefined = stratConfig.entry_indicator ?? undefined;
   const canonicalForEntry = entryIndicatorKey ? (CANONICAL_PARAM_RANGES[entryIndicatorKey] ?? null) : null;
 
+  // H-5: when entry_indicator is set but has no canonical match, log WARN once
+  // so the bypass is observable. Behavior is unchanged (bounds proceed unclamped).
+  if (entryIndicatorKey && canonicalForEntry === null) {
+    logger.warn(
+      { strategyId, entryIndicator: entryIndicatorKey },
+      "critic-optimizer: entry_indicator has no canonical param ranges — param bounds will be unclamped (add to CANONICAL_PARAM_RANGES to enable clamping)",
+    );
+  }
+
   for (const ind of stratConfig.indicators ?? []) {
     if (ind.period) {
       const paramName = `${ind.type}_period`;
@@ -1268,6 +1294,13 @@ async function collectEvidence(
       if (canonical) {
         min_val = Math.max(min_val, canonical[0]);
         max_val = Math.min(max_val, canonical[1]);
+      } else if (canonicalForEntry !== null) {
+        // H-5: canonical table exists for this entry_indicator but this specific
+        // param has no entry — log per-param WARN so the gap is surfaced.
+        logger.warn(
+          { strategyId, entryIndicator: entryIndicatorKey, paramName },
+          "critic-optimizer: indicator param has no canonical range entry — bounds unclamped",
+        );
       }
       paramRanges.push({ name: paramName, min_val, max_val, n_bits: 4 });
     }
@@ -1302,6 +1335,13 @@ async function collectEvidence(
         if (canonical) {
           min_val = Math.max(min_val, canonical[0]);
           max_val = Math.min(max_val, canonical[1]);
+        } else if (canonicalForEntry !== null) {
+          // H-5: canonical table exists for this entry_indicator but this top-level
+          // param has no entry — log per-param WARN so the bypass is observable.
+          logger.warn(
+            { strategyId, entryIndicator: entryIndicatorKey, paramName: key },
+            "critic-optimizer: top-level numeric param has no canonical range entry — bounds unclamped",
+          );
         }
         paramRanges.push({ name: key, min_val, max_val, n_bits: 4 });
       }
@@ -1891,6 +1931,70 @@ async function replayCandidatesAsync(
   // can be negative or >1). strat.forgeScore is always 0-100, matching replayForgeScore.
   const parentForgeScore = Number(strat.forgeScore ?? 0);
 
+  // ─── C-3: Evidence drift audit ─────────────────────────────────────────────
+  // Read _settled_with_sources from the persisted evidence packet on this run.
+  // Compare against the current collector's source set (if still active).
+  // Non-blocking: drift is recorded in audit_log for forensic comparison but
+  // does NOT abort the replay. Both source sets are preserved in the audit row.
+  try {
+    const [runRow] = await db
+      .select({ evidencePacket: criticOptimizationRuns.evidencePacket })
+      .from(criticOptimizationRuns)
+      .where(eq(criticOptimizationRuns.id, runId))
+      .limit(1);
+
+    const persistedSources: string[] = (runRow?.evidencePacket as any)?._settled_with_sources ?? [];
+    const activeCollector = getEvidenceCollector(runId);
+    // Use the public hasSource() API — collected is private.
+    // This yields the subset of ALL_EVIDENCE_SOURCES that have reported to the collector.
+    const currentSources: string[] = activeCollector
+      ? ALL_EVIDENCE_SOURCES.filter((s) => activeCollector.hasSource(s)).sort()
+      : [];
+
+    // Determine if there's meaningful drift (only relevant when collector is still live).
+    if (activeCollector && persistedSources.length > 0) {
+      const added = currentSources.filter((s) => !persistedSources.includes(s));
+      const removed = persistedSources.filter((s) => !currentSources.includes(s));
+
+      if (added.length > 0 || removed.length > 0) {
+        logger.warn(
+          {
+            runId,
+            strategyId,
+            persistedSources,
+            currentSources,
+            sourcesAdded: added,
+            sourcesRemoved: removed,
+          },
+          "C-3 evidence drift: source set changed between settlement and replay — both recorded for forensics",
+        );
+        await logAudit(
+          "critic-optimizer.evidence_drift",
+          "critic_optimization",
+          runId,
+          { persisted_sources: persistedSources, current_sources: currentSources },
+          {
+            sources_added: added,
+            sources_removed: removed,
+            drift_detected: true,
+            replay_action: "continued_non_blocking",
+          },
+          correlationId,
+        );
+      }
+    }
+  } catch (evidenceDriftErr) {
+    // Evidence drift check must never abort the replay — log and continue.
+    logger.warn({ runId, err: evidenceDriftErr }, "C-3 evidence drift check failed — proceeding with replay");
+  }
+
+  // ─── Resolve canonical param ranges for H-8 bounds gate ───────────────────
+  const replayStratConfig = (strat.config ?? originalConfig) as any;
+  const replayEntryIndicator: string | undefined = replayStratConfig.entry_indicator ?? undefined;
+  const replayCanonicalRanges = replayEntryIndicator
+    ? (CANONICAL_PARAM_RANGES[replayEntryIndicator] ?? null)
+    : null;
+
   try {
     // ─── Replay each candidate sequentially ───────────────────────────
     for (const candidate of candidates) {
@@ -1901,9 +2005,43 @@ async function replayCandidatesAsync(
           .where(eq(criticCandidates.id, candidate.id));
         broadcastSSE("critic:replay_started", { runId, candidateId: candidate.id, rank: candidate.rank });
 
+        // H-8: Pre-replay bounds check — skip any candidate whose changedParams fall
+        // outside canonical ranges. Without this check, an out-of-range candidate would
+        // run a full walk-forward backtest and potentially produce misleading results.
+        // Only applied when canonical ranges are available for this entry_indicator.
+        const changedParamsRaw = candidate.changedParams as Record<string, number>;
+        if (replayCanonicalRanges) {
+          const outOfBoundsParams: Array<{ param: string; value: number; min: number; max: number }> = [];
+          for (const [paramName, paramValue] of Object.entries(changedParamsRaw)) {
+            const range = replayCanonicalRanges[paramName] ?? null;
+            if (range && (paramValue < range[0] || paramValue > range[1])) {
+              outOfBoundsParams.push({ param: paramName, value: paramValue, min: range[0], max: range[1] });
+            }
+          }
+          if (outOfBoundsParams.length > 0) {
+            logger.warn(
+              { runId, candidateId: candidate.id, strategyId, outOfBoundsParams },
+              "H-8: candidate changedParams outside canonical bounds — skipping (skipped_out_of_bounds)",
+            );
+            await db
+              .update(criticCandidates)
+              .set({
+                replayStatus: "skipped_out_of_bounds",
+                governanceLabels: {
+                  ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
+                  out_of_bounds_params: outOfBoundsParams,
+                  skip_reason: "skipped_out_of_bounds",
+                } as any,
+              })
+              .where(eq(criticCandidates.id, candidate.id));
+            broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_out_of_bounds" });
+            continue;
+          }
+        }
+
         // Clone strategy config and apply changed params using generic deep-merge (Fix 1).
         const replayConfig = JSON.parse(JSON.stringify(baseConfig));
-        const changedParams = candidate.changedParams as Record<string, number>;
+        const changedParams = changedParamsRaw;
 
         const unappliedParamKeys = applyAllParamChanges(replayConfig, changedParams);
 

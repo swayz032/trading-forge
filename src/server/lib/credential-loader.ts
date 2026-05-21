@@ -34,6 +34,14 @@
 
 import { execFileSync, ExecFileSyncOptions } from "child_process";
 import { logger as rootLogger } from "./logger.js";
+// F-9 (Pass 6 / Track A 2026-05-21): hoist the three previously-lazy imports
+// in loadBrokerCredentials. The lazy imports were a holdover from a circular
+// dep that no longer exists — verified: credential-loader does not import db,
+// and db does not import credential-loader. Hoisting removes per-call dynamic
+// import overhead and makes the import graph statically analyzable.
+import { db as _hoistedDb } from "../db/index.js";
+import { brokerAccounts as _hoistedBrokerAccounts } from "../db/schema.js";
+import { eq as _hoistedEq } from "drizzle-orm";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -493,19 +501,19 @@ export function getVaultHealth(): {
 export async function loadBrokerCredentials(
   accountId: string,
 ): Promise<{ apiKey: string }> {
-  // Lazy import to avoid circular dependency at module-load time.
-  // credential-loader.ts must remain importable without db being initialized.
-  const { db: dbInstance } = await import("../db/index.js");
-  const { brokerAccounts } = await import("../db/schema.js");
-  const { eq } = await import("drizzle-orm");
-
-  const rows = await dbInstance
+  // F-9: previously these were lazy `await import(...)` calls inside the
+  // function body — a holdover from a circular-dep that no longer exists.
+  // We hoisted them to top-of-file static imports. Verified safe:
+  //   - credential-loader.ts does NOT import db/index.ts at module-init.
+  //   - db/index.ts does NOT import credential-loader.ts (no cycle).
+  // The aliased names (_hoistedDb, etc.) avoid shadowing local symbols.
+  const rows = await _hoistedDb
     .select({
-      apiKeyVaultRef: brokerAccounts.apiKeyVaultRef,
-      firmId: brokerAccounts.firmId,
+      apiKeyVaultRef: _hoistedBrokerAccounts.apiKeyVaultRef,
+      firmId: _hoistedBrokerAccounts.firmId,
     })
-    .from(brokerAccounts)
-    .where(eq(brokerAccounts.accountId, accountId))
+    .from(_hoistedBrokerAccounts)
+    .where(_hoistedEq(_hoistedBrokerAccounts.accountId, accountId))
     .limit(1);
 
   const row = rows[0];

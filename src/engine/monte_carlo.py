@@ -580,6 +580,11 @@ def simulate_firm_survival(
         pass_step: Optional[int] = None
         breach_reason: Optional[str] = None
         best_day_pnl = 0.0
+        # C-8 FIX: collect commission+DLL-adjusted step P&Ls so the sliding-window
+        # consistency check can reuse them directly instead of re-applying adjustments
+        # from raw step_pnl (which caused double-deduction when the consistency check
+        # was rebuilding sim_pnls by subtracting comm_adj_day a second time).
+        _adjusted_step_pnls: list[float] = []
 
         for step in range(n_steps):
             day_pnl = float(step_pnl[sim, step])
@@ -594,6 +599,8 @@ def simulate_firm_survival(
             # Daily loss limit enforcement — only when granularity is "day"
             if granularity == "day" and daily_loss_limit is not None and day_pnl < -daily_loss_limit:
                 day_pnl = -daily_loss_limit
+
+            _adjusted_step_pnls.append(day_pnl)
 
             # Track best day for consistency check
             if day_pnl > best_day_pnl:
@@ -676,24 +683,17 @@ def simulate_firm_survival(
             _payout_cycle = _firm_rules_all.get(firm_key, {}).get("payout_cycle_days", None)
 
             if _payout_cycle is not None and _payout_cycle > 0:
-                # Sliding-window consistency: any 14-day window where
+                # Sliding-window consistency: any payout-cycle window where
                 # best_day / window_total > ratio triggers a violation.
-                # step_pnl rows are already commission-adjusted above.
-                # Re-derive raw step P&Ls for this sim (un-adjusted because
-                # we already applied the delta in the main loop — use stored step_pnl
-                # values but note they're pre-adjustment here; the daily adjustments
-                # are small vs the consistency check threshold, so we use the
-                # commission-adjusted step_pnl for accuracy).
-                sim_pnls = []
-                for _d in range(n_steps):
-                    _dp = float(step_pnl[sim, _d])
-                    if granularity == "day":
-                        _dp -= comm_adj_day
-                    else:
-                        _dp -= comm_adj_trade
-                    if granularity == "day" and daily_loss_limit is not None and _dp < -daily_loss_limit:
-                        _dp = -daily_loss_limit
-                    sim_pnls.append(_dp)
+                # C-8 FIX: Use _adjusted_step_pnls (collected during the main sim loop,
+                # already commission-delta-adjusted and DLL-capped) instead of
+                # re-deriving from raw step_pnl[sim] with another comm_adj subtraction.
+                # The previous code subtracted comm_adj_day from step_pnl (raw) which
+                # is correct, BUT the original comment claimed step_pnl was "already
+                # commission-adjusted" — causing confusion and a potential future
+                # regression. Using the already-adjusted list eliminates ambiguity and
+                # ensures consistency check operates on the same P&Ls as the main loop.
+                sim_pnls = _adjusted_step_pnls
 
                 _violated = False
                 for _w_start in range(0, n_steps, _payout_cycle):
@@ -1055,8 +1055,26 @@ def run_monte_carlo(
         paths = trade_resample(trades_arr, request.num_simulations, seed=request.seed, xp=xp)
 
     elif request.method == "return_bootstrap":
+        # C-5 FIX: Decouple bootstrap horizon from firm-survival projection length.
+        # Previously n_days was used both as the bootstrap path length AND as the
+        # funded-survival check horizon. This caused short backtests (e.g. 30 days)
+        # to also run only 30 bars of firm-survival simulation — far too short to
+        # catch 126-bar (6-month) funded-survival breaches.
+        #
+        # Fix: bootstrap path length stays as data length (data-driven, no extrapolation
+        # beyond history). Firm-survival uses max(126, n_days) so funded-survival
+        # projections always cover at least the 6-month funded window, capped at the
+        # MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION env limit (default 5x history).
+        # The return_bootstrap() function already caps at max_extrap — we just ensure
+        # the survival projection is at minimum 126 bars.
         n_days = len(daily_pnls)
-        paths = return_bootstrap(daily_arr, request.num_simulations, n_days, seed=request.seed, xp=xp)
+        _max_extrap = float(_os.environ.get("MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION", "5.0"))
+        _bootstrap_horizon = n_days  # Path length = observed history (no extrapolation)
+        _survival_horizon = min(
+            max(126, n_days),                    # At least 126 bars for 6-month funded check
+            int(len(daily_pnls) * _max_extrap),  # Hard cap to prevent degenerate extrapolation
+        )
+        paths = return_bootstrap(daily_arr, request.num_simulations, _survival_horizon, seed=request.seed, xp=xp)
 
     elif request.method == "block_bootstrap":
         computed_block_len = optimal_block_length(trades_arr)

@@ -49,12 +49,18 @@ export function StrategySpotlight({ row, backtest, trades }: Props) {
 
   const dailyPnlBars = useMemo(() => {
     if (!row) return [];
+    // F-8 (Pass 6 / Track A 2026-05-21): dollarsToPoints returns number|null.
+    // Filter null entries (unknown symbol = no chartable data) instead of
+    // silently coercing to 0 — a 0-pts bar would mis-represent missing data.
     if (!trades.length) {
       if (backtest?.dailyPnls && Array.isArray(backtest.dailyPnls)) {
-        return backtest.dailyPnls.slice(-30).map((pnl: number, i: number) => ({
-          day: `D${i + 1}`,
-          pts: dollarsToPoints(pnl, symbol, 1),
-        }));
+        return backtest.dailyPnls
+          .slice(-30)
+          .map((pnl: number, i: number) => ({
+            day: `D${i + 1}`,
+            pts: dollarsToPoints(pnl, symbol, 1),
+          }))
+          .filter((b): b is { day: string; pts: number } => b.pts !== null);
       }
       return [];
     }
@@ -69,7 +75,8 @@ export function StrategySpotlight({ row, backtest, trades }: Props) {
       .map(([date, dollarPnl]) => ({
         day: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         pts: dollarsToPoints(dollarPnl, symbol, 1),
-      }));
+      }))
+      .filter((b): b is { day: string; pts: number } => b.pts !== null);
   }, [trades, backtest, symbol, row]);
 
   const firmGrid = useMemo(() => {

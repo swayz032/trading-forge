@@ -35,6 +35,8 @@ export type DefectCode =
   | "B4_TIME_STOP_MISSING"
   | "B6_MAX_CONTRACTS_BAKED"
   | "B6_MES_CAP_EXCEEDED"
+  | "B6_MNQ_CAP_EXCEEDED"
+  | "B6_MCL_CAP_EXCEEDED"
   | "B7_MINI_WITHOUT_FLAG"
   | "C1_DUPLICATE_FINGERPRINT"
   | "D1_GENERIC_NAME"
@@ -48,7 +50,12 @@ export type WarningCode =
   | "B1_STOP_MULTIPLIER_HIGH"
   | "B2_STOP_MULTIPLIER_LOW"
   | "B5_PERSONAL_DLL_DRIFT"
-  | "B6_BASE_CONTRACTS_NON_4"
+  /**
+   * B6_BASE_CONTRACTS_NON_CANONICAL: base_contracts doesn't match Wave 23 canonical
+   * values (MES=6, MNQ=6, MCL=18) or the legacy Wave 22 values (MES=4, MNQ=1, MCL=1).
+   * Replaces the deprecated B6_BASE_CONTRACTS_NON_4 code (Wave 22-era, no longer emitted).
+   */
+  | "B6_BASE_CONTRACTS_NON_CANONICAL"
   | "E1_NO_PREFERRED_REGIME"
   | "E2_SESSION_FILTER_NOT_RTH";
 
@@ -215,6 +222,30 @@ export function auditGraduatedConfig(input: AuditInput): AuditResult {
         code: "B6_MAX_CONTRACTS_BAKED",
         message: `max_contracts=${cap} baked in config (Wave 10: must be computed at signal time, not graduation)`,
       });
+    }
+
+    // H-6: Per-symbol liquidity comfort cap checks (CLAUDE.md §4 — Wave 23).
+    // MES=100, MNQ=50, MCL=30. These are hard ceilings; exceeding them implies
+    // the config is overriding the per-symbol liquidity cap without evidence.
+    // Only fires when max_contracts IS baked in (cap > 0) — zero means "not set"
+    // and is handled by B6_MAX_CONTRACTS_BAKED (cap > 100).
+    if (cap > 0) {
+      if (market === "MES" && cap > 100) {
+        defects.push({
+          code: "B6_MES_CAP_EXCEEDED",
+          message: `max_contracts=${cap} for MES exceeds liquidity comfort cap of 100 (CLAUDE.md §4)`,
+        });
+      } else if (market === "MNQ" && cap > 50) {
+        defects.push({
+          code: "B6_MNQ_CAP_EXCEEDED",
+          message: `max_contracts=${cap} for MNQ exceeds liquidity comfort cap of 50 (CLAUDE.md §4)`,
+        });
+      } else if (market === "MCL" && cap > 30) {
+        defects.push({
+          code: "B6_MCL_CAP_EXCEEDED",
+          message: `max_contracts=${cap} for MCL exceeds liquidity comfort cap of 30 (CLAUDE.md §4)`,
+        });
+      }
     }
   }
 

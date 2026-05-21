@@ -34,6 +34,35 @@ import { killSwitch } from "../production/kill-switch.js";
 import { getEnabledFirms } from "./strategy-assignment-service.js";
 import { getFirmLimit, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
 
+// ─── F-5: killSwitch import verification (module-load time) ───────────────────
+// killSwitch is exported as a named `const killSwitch = new KillSwitch()` from
+// ../production/kill-switch.js. If that file ever migrates to a default export
+// or a different shape, this assertion-style log makes the breakage obvious at
+// startup instead of failing silently inside the first routeOrder() call.
+if (typeof killSwitch?.isHaltedForProduction !== "function") {
+  // Log loudly — this is a production-safety regression we cannot recover from.
+  logger.error(
+    {
+      hasKillSwitch: typeof killSwitch,
+      hasMethod: typeof killSwitch?.isHaltedForProduction,
+    },
+    "broker-router: killSwitch.isHaltedForProduction is NOT a function — kill-switch gate will fail-CLOSED on every call",
+  );
+} else {
+  logger.info(
+    { killSwitchMethod: "isHaltedForProduction" },
+    "broker-router: killSwitch import verified (F-5)",
+  );
+}
+
+// ─── F-6: enabled_firms canonical fallback ──────────────────────────────────
+// If getEnabledFirms() returns an empty array, broker-router would silently
+// block ALL routing — appearing as "every order rejected by enabled_firms" in
+// audit_log. That failure mode is hard to diagnose and trips on misconfigured
+// instance_config rows. We fall back to the CLAUDE.md §6 canonical default
+// (Topstep + MFFU) with a WARN log so the operator sees the fallback in logs.
+const ENABLED_FIRMS_FALLBACK = ["topstep", "mffu"] as const;
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type BrokerResultReason =
@@ -124,8 +153,16 @@ export async function routeOrder(
   let halted: boolean;
   try {
     halted = await killSwitch.isHaltedForProduction();
-  } catch {
+  } catch (killSwitchErr) {
     // Fail-CLOSED: if the check itself throws, treat as halted.
+    // F-5: surface the error so silent halts are visible. Without this, every
+    // order silently rejects with reason="production_halt" but no log trail
+    // explains WHY the kill-switch evaluation failed — an extremely hard bug
+    // to root-cause post-hoc.
+    logger.error(
+      { err: killSwitchErr, accountId, correlationId },
+      "broker-router: killSwitch.isHaltedForProduction() threw — fail-CLOSED halt active (F-5)",
+    );
     halted = true;
   }
   if (halted) {
@@ -226,7 +263,18 @@ export async function routeOrder(
   // fail-open contract as compliance-gate-service — avoids blocking all orders
   // on a transient DB error during a read-only config check).
   try {
-    const enabledFirms = await getEnabledFirms();
+    let enabledFirms = await getEnabledFirms();
+    // F-6: empty-array guard. A misconfigured instance_config.enabled_firms row
+    // would silently block ALL routing. Fall back to CLAUDE.md §6 canonical
+    // default (Topstep + MFFU) with a WARN log so the operator sees the
+    // fallback in logs instead of debugging a silent block.
+    if (!Array.isArray(enabledFirms) || enabledFirms.length === 0) {
+      logger.warn(
+        { accountId, firmId: account.firmId, correlationId },
+        "broker-router: getEnabledFirms() returned empty — falling back to canonical default ['topstep','mffu'] (F-6)",
+      );
+      enabledFirms = [...ENABLED_FIRMS_FALLBACK];
+    }
     const normalizedFirmId = (account.firmId ?? "").toLowerCase().replace(/_\d+k$/, "");
     if (!enabledFirms.includes(account.firmId) && !enabledFirms.includes(normalizedFirmId)) {
       const result: BrokerResult = {

@@ -35,6 +35,21 @@ from src.engine.quantum_adversarial_stress import (
 
 import random
 
+# ─── Module-level flag enablement ─────────────────────────────────────────────
+# F-1 (2026-05-21): run_adversarial_stress now gates on QUANTUM_ADVERSARIAL_STRESS_ENABLED.
+# All existing tests that exercise actual execution paths must patch the flag to True.
+# The dedicated TestFeatureFlag class tests the disabled (skipped_disabled) path explicitly.
+
+@pytest.fixture(autouse=True)
+def enable_adversarial_stress(monkeypatch):
+    """Patch the module-level flag to True for all tests in this file that exercise
+    real execution paths. Tests in TestFeatureFlag explicitly override this fixture."""
+    monkeypatch.setattr(
+        "src.engine.quantum_adversarial_stress.QUANTUM_ADVERSARIAL_STRESS_ENABLED",
+        True,
+    )
+
+
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 def _make_trades(pnls: list[float]) -> list[TradeRecord]:
@@ -391,3 +406,59 @@ class TestGovernanceBoundary:
         # JSON-serializable
         dumped = result.model_dump_json()
         assert len(dumped) > 0
+
+    def test_schema_version_field_present(self):
+        """F-4: schema_version must be v1_challenger on all outputs."""
+        trades = _make_trades([100.0, -200.0])
+        result = run_adversarial_stress(trades, _standard_rules(), seed=42)
+        assert result.schema_version == "v1_challenger"
+
+
+# ─── 8. Feature flag tests ────────────────────────────────────────────────────
+
+class TestFeatureFlag:
+    """F-1 (2026-05-21): QUANTUM_ADVERSARIAL_STRESS_ENABLED=false must return
+    skipped_disabled immediately — no Grover circuits must be constructed."""
+
+    def test_disabled_returns_skipped(self, monkeypatch):
+        """When flag is false, status must be skipped_disabled — not completed/aborted."""
+        monkeypatch.setattr(
+            "src.engine.quantum_adversarial_stress.QUANTUM_ADVERSARIAL_STRESS_ENABLED",
+            False,
+        )
+        trades = _make_trades([100.0, -200.0, 300.0])
+        result = run_adversarial_stress(trades, _standard_rules(), seed=42)
+        assert result.status == "skipped_disabled"
+        assert result.worst_case_breach_prob is None
+
+    def test_disabled_no_grover_calls(self, monkeypatch):
+        """When flag is false, _run_grover must never be called."""
+        monkeypatch.setattr(
+            "src.engine.quantum_adversarial_stress.QUANTUM_ADVERSARIAL_STRESS_ENABLED",
+            False,
+        )
+        with patch("src.engine.quantum_adversarial_stress._run_grover") as mock_grover:
+            trades = _make_trades([-300.0, -400.0, -200.0, -500.0])
+            run_adversarial_stress(trades, _standard_rules(500.0), seed=42)
+            mock_grover.assert_not_called()
+
+    def test_disabled_schema_version_present(self, monkeypatch):
+        """F-4: skipped_disabled result still carries schema_version."""
+        monkeypatch.setattr(
+            "src.engine.quantum_adversarial_stress.QUANTUM_ADVERSARIAL_STRESS_ENABLED",
+            False,
+        )
+        trades = _make_trades([100.0, -200.0])
+        result = run_adversarial_stress(trades, _standard_rules(), seed=42)
+        assert result.schema_version == "v1_challenger"
+
+    def test_disabled_governance_labels_present(self, monkeypatch):
+        """Governance labels must be present even on skipped_disabled result."""
+        monkeypatch.setattr(
+            "src.engine.quantum_adversarial_stress.QUANTUM_ADVERSARIAL_STRESS_ENABLED",
+            False,
+        )
+        trades = _make_trades([100.0, -200.0])
+        result = run_adversarial_stress(trades, _standard_rules(), seed=42)
+        assert result.governance_labels["authoritative"] is False
+        assert result.governance_labels["decision_role"] == "challenger_only"

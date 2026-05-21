@@ -8,7 +8,7 @@
  */
 
 import { Router, type Request, type Response, type NextFunction } from "express";
-import { timingSafeEqual } from "crypto";
+import { timingSafeEqual, randomBytes } from "crypto";
 import { compilePineExport, compileDualPineExport, getExport, getExportArtifacts, getArtifact } from "../services/pine-export-service.js";
 import { pineCompileRequestSchema } from "../lib/pine-artifact-schema.js";
 import { db } from "../db/index.js";
@@ -25,8 +25,42 @@ export const pineExportRoutes = Router();
 //
 // The Pine artifacts contain per-recipient HMAC secret references and routing
 // metadata — leaking them to an anonymous caller compromises the marker collector.
+// F-1 (Pass 6 / Track A 2026-05-21): dev-mode auto-generated key.
+//
+// Previously, when OPERATOR_API_KEY was unset in dev, EVERY pine-export route
+// returned 401 unless PINE_EXPORT_ALLOW_UNAUTH=true was also set — a footgun
+// for local smoke tests where the operator just wants to curl an artifact.
+//
+// We now auto-generate a per-process dev key on first import IF:
+//   - NODE_ENV !== "production"
+//   - OPERATOR_API_KEY is unset OR shorter than 16 chars
+// The generated key is printed ONCE to stdout/logger.warn so the operator can
+// paste it into a curl command. Production behaviour is unchanged: missing key
+// → HTTP 503, never auto-generated. The dev key lives only in memory and dies
+// with the process; pm2 reload regenerates a new one (acceptable in dev).
+const DEV_AUTO_KEY: string | null = (() => {
+  if (process.env.NODE_ENV === "production") return null;
+  const existing = process.env.OPERATOR_API_KEY;
+  if (existing && existing.length >= 16) return null;
+  const key = `dev_${randomBytes(24).toString("hex")}`;
+  // Single stdout line so it's easy to grep from a long log file.
+  // eslint-disable-next-line no-console
+  console.warn(
+    `\n[pine-export] DEV MODE — OPERATOR_API_KEY not set. Auto-generated per-process key:\n  ${key}\n` +
+      `Use it as: Authorization: Bearer ${key}\n` +
+      `In production, set OPERATOR_API_KEY explicitly; auto-generation is disabled when NODE_ENV=production.\n`,
+  );
+  logger.warn(
+    { devKeyLength: key.length },
+    "pine-export: auto-generated dev OPERATOR_API_KEY (in-memory, per-process); see stdout for the value",
+  );
+  return key;
+})();
+
 function requireOperatorApiKey(req: Request, res: Response, next: NextFunction): void {
-  const expected = process.env.OPERATOR_API_KEY;
+  // Effective expected key: prefer explicit env var, fall back to per-process
+  // dev key (only populated when NODE_ENV !== "production").
+  const expected = process.env.OPERATOR_API_KEY || DEV_AUTO_KEY || "";
   if (!expected || expected.length < 16) {
     // Refuse to serve when the gate itself is not configured. In production
     // this prevents accidental "open by default" deployments.
@@ -35,7 +69,8 @@ function requireOperatorApiKey(req: Request, res: Response, next: NextFunction):
       res.status(503).json({ error: "operator_api_key_not_configured" });
       return;
     }
-    // Dev/test: allow only when explicit opt-out flag is set, otherwise still fail.
+    // Dev/test: only path that can land here is if randomBytes is unavailable
+    // (extremely rare). Keep the explicit opt-out for parity with prior behaviour.
     if (process.env.PINE_EXPORT_ALLOW_UNAUTH !== "true") {
       res.status(401).json({ error: "unauthorized" });
       return;

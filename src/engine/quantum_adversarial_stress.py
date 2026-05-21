@@ -87,6 +87,7 @@ class AdversarialStressResult(BaseModel):
     All fields needed to populate adversarial_stress_runs and
     lifecycle_transitions. Governance labels always present.
     """
+    schema_version: str = "v1_challenger"  # F-4 (2026-05-21): schema version for downstream critic
     worst_case_breach_prob: Optional[float] = None   # [0, 1] — None on failure
     breach_minimal_n_trades: Optional[int] = None    # Smallest N consecutive that can breach
     worst_sequence_examples: list[dict] = Field(default_factory=list)  # top-K orderings
@@ -334,7 +335,10 @@ def _run_grover(
     if not loss_amounts:
         return 0.0, [], None, n_qubits, "local_simulator"
 
-    # Pre-sample to estimate M (number of breach states)
+    # Pre-sample to estimate M (number of breach states).
+    # F-2 (2026-05-21): use positional consecutive-loss-idx (i % len(loss_amounts))
+    # to match the oracle in _grover_circuit and the classical fallback _check_ordering.
+    # Previously used rng.randint per bit which diverged from both paths.
     rng = random.Random(seed)
     sample_count = min(200, 2 ** n_qubits)
     breach_in_sample = 0
@@ -342,12 +346,15 @@ def _run_grover(
         bits = [rng.randint(0, 1) for _ in range(n_qubits)]
         running = 0.0
         worst = 0.0
+        consecutive_loss_idx = 0
         for bit in bits:
             if bit == 1:
-                l_idx = rng.randint(0, len(loss_amounts) - 1)
+                l_idx = consecutive_loss_idx % len(loss_amounts)
                 running += loss_amounts[l_idx]
+                consecutive_loss_idx += 1
             else:
                 running = 0.0
+                consecutive_loss_idx = 0
             worst = max(worst, running)
         if worst >= daily_loss_limit:
             breach_in_sample += 1
@@ -463,6 +470,19 @@ def run_adversarial_stress(
 
     AUTHORITY BOUNDARY: output is advisory only. Must never gate lifecycle.
     """
+    # F-1 (2026-05-21): gate at function entry — no Grover circuits run when flag is false.
+    if not QUANTUM_ADVERSARIAL_STRESS_ENABLED:
+        import logging as _logging
+        _logging.getLogger(__name__).info(
+            "quantum_adversarial_stress: QUANTUM_ADVERSARIAL_STRESS_ENABLED=false — "
+            "returning skipped_disabled result. Set env flag to true to enable Grover runs."
+        )
+        return AdversarialStressResult(
+            status="skipped_disabled",
+            error_message="QUANTUM_ADVERSARIAL_STRESS_ENABLED env flag is false",
+            governance_labels=GOVERNANCE_LABELS.copy(),
+        )
+
     start_ms = int(time.time() * 1000)
     n = len(trades)
 

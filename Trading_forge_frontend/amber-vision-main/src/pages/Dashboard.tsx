@@ -96,13 +96,17 @@ export default function Dashboard() {
     const profitFactor = num(bt.profitFactor);
     const sharpe = num(bt.sharpeRatio);
     const maxDdDollars = Math.abs(num(bt.maxDrawdown));
-    const maxDdPts = maxDdDollars > 0 ? dollarsToPoints(maxDdDollars, symbol, 1) : 0;
+    // F-8 (Pass 6 / Track A 2026-05-21): dollarsToPoints returns number|null
+    // post Pass 6 (fail-closed on unknown symbol). Preserve null through to
+    // consumers — never coerce to 0 because that silently mis-renders "—" as
+    // "0 pts" for unknown-symbol strategies. Consumers below use ?? "—" guards.
+    const maxDdPts: number | null = maxDdDollars > 0 ? dollarsToPoints(maxDdDollars, symbol, 1) : 0;
     const expectancyDollars = num(bt.avgTradePnl);
-    const expectancyPts = expectancyDollars !== 0 ? dollarsToPoints(expectancyDollars, symbol, 1) : 0;
+    const expectancyPts: number | null = expectancyDollars !== 0 ? dollarsToPoints(expectancyDollars, symbol, 1) : 0;
 
     // Compute net P&L from totalReturn or sum of trades
     const totalReturnDollars = num(bt.totalReturn);
-    const netPnlPts = totalReturnDollars !== 0
+    const netPnlPts: number | null = totalReturnDollars !== 0
       ? dollarsToPoints(totalReturnDollars, symbol, 1)
       : 0;
 
@@ -168,8 +172,9 @@ export default function Dashboard() {
     const symbol = selectedRow.symbol || "MES";
     const lifecycle = strategies?.find((s) => s.id === selectedRow.strategyId)?.lifecycleState ?? "CANDIDATE";
 
-    // Backtest stage (dollarsToPoints returns null for unknown symbols — render "—")
-    const btNetPnl = bt ? dollarsToPoints(num(bt.totalReturn), symbol, 1) : 0;
+    // F-8: dollarsToPoints returns null for unknown symbols — preserve null
+    // through to the journey panel which renders "—" via ?? guard at L424.
+    const btNetPnl: number | null = bt ? dollarsToPoints(num(bt.totalReturn), symbol, 1) : 0;
     const btTotalTrades = bt?.totalTrades ?? 0;
     const btWinRate = num(bt?.winRate) * 100;
     const btForgeScore = num(bt?.forgeScore);

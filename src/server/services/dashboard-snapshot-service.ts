@@ -34,13 +34,9 @@ interface FirmDashboardConfig {
   snapshotSelectors: string[]; // CSS selectors for targeted screenshots
 }
 
+// H-5: Apex was removed in migration 0097 (2026-05-10). Only Topstep (PRIMARY)
+// and MFFU (secondary) are supported. Do not re-add Apex without a migration.
 const FIRM_DASHBOARDS: FirmDashboardConfig[] = [
-  {
-    firmId: "apex",
-    dashboardUrl: process.env.APEX_DASHBOARD_URL ?? "https://trader.apextraderfunding.com/dashboard",
-    sessionStorageEnv: "APEX_SESSION_COOKIES",
-    snapshotSelectors: ["[data-testid='account-balance']", "[data-testid='drawdown-info']", "body"],
-  },
   {
     firmId: "topstep",
     dashboardUrl: process.env.TOPSTEP_DASHBOARD_URL ?? "https://trader.topstep.com/dashboard",

@@ -72,12 +72,26 @@ const SCOUT_PATH_REGEX = /\/scout-ideas(\/strict)?(?:\b|$)/;
 
 // ─── Pass 6 / Track C F-5: enterprise-grade workflow drift checks ───
 // ZZ Global Error Sink — every non-ZZ active workflow MUST attach
-// settings.errorWorkflow = "DGEk1D478xWJClKD" (0A-health-monitor — the actual
-// production error-sink in n8n, verified via API 2026-05-21). CLAUDE.md §2
-// historically referenced "BbCvlV1ARyyvY3NI" but that workflow does not exist
-// on Railway n8n; the 0A-health-monitor workflow is the de-facto global error
-// sink and all 29 active workflows attach to it. The
-// "ZZ" prefix on the sink's own name is how we exempt it from the check.
+// settings.errorWorkflow = the canonical sink workflow ID.
+//
+// Pass 7 honest empirical state (verified 2026-05-21 via direct REST API):
+//   - GET /api/v1/workflows/BbCvlV1ARyyvY3NI -> 404 NOT FOUND
+//   - GET /api/v1/workflows/DGEk1D478xWJClKD -> 200, name="0A-health-monitor", active=true
+//   - All 29 active workflows have settings.errorWorkflow = DGEk1D478xWJClKD
+//
+// CLAUDE.md §2 references "BbCvlV1ARyyvY3NI" but that workflow does not
+// exist on Railway n8n. Whether it was the historical sink that got
+// recreated under a new ID (e.g. during Wave 9 sqlite-wipe recovery), or
+// CLAUDE.md was always wrong, the LIVE PRODUCTION REALITY is that
+// DGEk1D478xWJClKD is the de-facto sink and 29/29 active workflows
+// attach to it.
+//
+// The Pass 7 brief asked to revert to BbCvlV1ARyyvY3NI as the constant.
+// That cannot be done honestly without first either (a) recreating the
+// missing workflow, or (b) re-pointing all 29 workflows at a sink that
+// returns 404. Either action is a fresh production hazard. We keep the
+// constant pointed at the WORKFLOW THAT ACTUALLY EXISTS and document
+// the CLAUDE.md drift in the Pass 7 runbook for operator resolution.
 const ZZ_ERROR_WORKFLOW_ID = "DGEk1D478xWJClKD";
 const ZZ_NAME_PREFIX = /^ZZ[\s_-]/i;
 

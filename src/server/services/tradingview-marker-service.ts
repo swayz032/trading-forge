@@ -20,6 +20,13 @@ import { db } from "../db/index.js";
 import { tradingviewMarkers } from "../db/schema.js";
 import { and, gte, lt, count, eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
+// F-10: canonical marker HMAC strings — single source of truth shared with
+// the Python emitter (src/engine/marker_contract.py).
+import { buildWebhookCanonical } from "../../shared/marker-contract.js";
+
+// Re-export the export-time canonical helper so test fixtures and audit tools
+// can verify producer/consumer agreement without inlining the format.
+export { buildExportCanonical } from "../../shared/marker-contract.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,7 +75,9 @@ export function buildHmacCanonical(
   barTimestamp: string,
   signal: number,
 ): string {
-  return `${strategyId}|${accountId}|${barTimestamp}|${signal}`;
+  // F-10: delegate to shared/marker-contract — Python mirror at
+  // src/engine/marker_contract.py uses the byte-identical formatter.
+  return buildWebhookCanonical(strategyId, accountId, barTimestamp, signal);
 }
 
 /**

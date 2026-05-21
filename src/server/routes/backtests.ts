@@ -36,8 +36,23 @@ function _acquireBacktestSlot(): boolean {
   return true;
 }
 
-/** Release a backtest slot. Called in finally block of fire-and-forget. */
+/** Release a backtest slot.
+ *
+ * C-2 FIX: Always called from the finally block of the fire-and-forget promise
+ * chain so async exceptions can never leak a slot. Includes an overflow guard:
+ * if count somehow exceeds cap+1 (impossible under correct acquire/release pairs
+ * but defensive against a future code path that acquires without going through
+ * _acquireBacktestSlot), we log CRITICAL and reset to 0.
+ */
 function _releaseBacktestSlot(): void {
+  if (_concurrentBacktestCount > MAX_CONCURRENT_BACKTESTS + 1) {
+    console.error(
+      `[CRITICAL] _concurrentBacktestCount=${_concurrentBacktestCount} exceeds cap+1=${MAX_CONCURRENT_BACKTESTS + 1}. ` +
+      "Resetting to 0. This indicates an acquire/release imbalance — audit callers.",
+    );
+    _concurrentBacktestCount = 0;
+    return;
+  }
   _concurrentBacktestCount = Math.max(0, _concurrentBacktestCount - 1);
 }
 
@@ -49,6 +64,15 @@ export function getBacktestConcurrencyStats(): { active: number; cap: number; sa
     saturated: _concurrentBacktestCount >= MAX_CONCURRENT_BACKTESTS,
   };
 }
+
+// C-2 FIX: Startup heartbeat — logs concurrency count every 5 minutes.
+// Leaked slots become visible before they cause a 429 storm or OOM.
+setInterval(() => {
+  console.log(
+    `[backtest-concurrency] active=${_concurrentBacktestCount}/${MAX_CONCURRENT_BACKTESTS} ` +
+    `saturated=${_concurrentBacktestCount >= MAX_CONCURRENT_BACKTESTS}`,
+  );
+}, 5 * 60 * 1000).unref(); // .unref() so the interval doesn't prevent graceful shutdown
 
 export const backtestRoutes = Router();
 

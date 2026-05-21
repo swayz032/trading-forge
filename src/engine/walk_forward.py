@@ -422,7 +422,23 @@ def run_walk_forward(
         all_oos_equity.extend(oos_result.get("equity_curve", []))
         # WF Fix 1: collect raw bar-level equity for accurate intraday max DD.
         # equity_bars is a list[float] of bar-level equity values from the backtest result.
-        all_oos_equity_bars.extend(oos_result.get("equity_bars", []))
+        # C-3 FIX: adjacent windows with embargo=0 share a boundary bar. Dedup by
+        # dropping the last bar of window N when it equals the first bar of window N+1
+        # (comparison by value). This mirrors the daily_pnl_records dedup above and
+        # prevents the max-drawdown calculation from double-counting the boundary equity
+        # level, which can artificially inflate or suppress the measured drawdown.
+        _new_equity_bars = oos_result.get("equity_bars", [])
+        if all_oos_equity_bars and _new_equity_bars:
+            # Drop the overlapping boundary bar from the EXISTING tail if the new
+            # window's first bar has the same value (same equity state at boundary).
+            if abs(all_oos_equity_bars[-1] - _new_equity_bars[0]) < 1e-6:
+                all_oos_equity_bars.pop()
+                print(
+                    f"  Walk-forward dedup: dropped duplicate boundary equity bar "
+                    f"at window {i+1} boundary (value={_new_equity_bars[0]:.2f}).",
+                    file=sys.stderr,
+                )
+        all_oos_equity_bars.extend(_new_equity_bars)
         all_oos_trades.extend(oos_result.get("trades", []))
 
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates

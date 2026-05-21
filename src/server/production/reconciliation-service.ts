@@ -27,6 +27,7 @@
  *   RECON_TIMEOUT_MS        = 300_000  (5-minute hard wall-clock)
  */
 
+import { randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
 import {
   dailyReconciliation,
@@ -138,9 +139,13 @@ async function fetchExpectedPnl(date: Date): Promise<number> {
 }
 
 /**
- * Count distinct TradersPost webhook IDs logged in production_trades for the date.
- * This is the proxy for "TradersPost log count" — production_trades must record
- * the webhook ID when a signal is sent.
+ * Fetch traderspost and tradovate proxy counts for the given date.
+ *
+ * M-7 CONSOLIDATION: Both sources currently read production_trades row count (1:1
+ * proxy) because independent APIs are not yet wired (see F-7 GAP below).
+ * Running a single SQL query avoids redundant DB round-trips while maintaining
+ * semantic separation: once Phase 4C wires real webhook-confirm IDs and fill IDs,
+ * the two functions below can query distinct columns independently.
  *
  * F-7 GAP: TradersPost does not expose a public order-status polling API.
  * Order confirmation is delivered as a webhook callback (TradersPost → Trading Forge),
@@ -159,11 +164,17 @@ async function fetchExpectedPnl(date: Date): Promise<number> {
  *     Migration needed: production_trades.traderspost_confirmed_at (nullable timestamptz)
  *
  * Until Option B is implemented, traderspostLogCount === productionTradesCount (1:1 proxy).
- * This is safe because broker-router.ts is the only code path that writes to
- * production_trades and also calls submitWebhookOrder() — they are atomic at the
- * process level (no async gap between write and send within the same request).
+ * checkCoverage tracks how many of the 5 recon sources have INDEPENDENT data — right now
+ * only 2 are independent (productionTrades DB + MFFU snapshot). When < 3 independent
+ * sources are available, severity is floored at "yellow" (degraded reconciliation mode).
  */
-async function fetchTraderspostLogCount(date: Date): Promise<number> {
+
+/** How many of the 5 recon sources have truly independent data backing them. */
+export const INDEPENDENT_SOURCE_COUNT = 2; // productionTrades + MFFU snapshot
+/** Minimum independent sources before severity is clamped to at most "yellow". */
+export const MIN_INDEPENDENT_SOURCES_FOR_RED = 3;
+
+async function fetchProxyCountsFromProductionTrades(date: Date): Promise<number> {
   const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
 
@@ -177,31 +188,30 @@ async function fetchTraderspostLogCount(date: Date): Promise<number> {
       )
     );
 
-  // When traderspost_webhook_id is populated by Phase 4C paper-execution wiring,
-  // this will count non-null webhook IDs. Until then, equals productionTradesCount.
   return Number(rows[0]?.cnt ?? 0);
 }
 
 /**
- * Count distinct Tradovate fill IDs in production_trades for the date.
- * When Phase 4C wires fills, tradovate_fill_id is populated; until then
- * this falls through to productionTradesCount (assumes 1:1).
+ * Proxy for TradersPost log count. Until Phase 4C wires traderspost_webhook_id,
+ * returns the same productionTrades count (re-uses the shared query result supplied
+ * by the caller).
  */
-async function fetchTradovateFillsCount(date: Date): Promise<number> {
-  const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
+async function fetchTraderspostLogCount(date: Date, sharedCount: number): Promise<number> {
+  // When traderspost_webhook_id is populated, query that column instead.
+  // For now, return the pre-fetched shared count to avoid a duplicate SQL round-trip.
+  void date; // date retained in signature for Phase 4C wiring
+  return sharedCount;
+}
 
-  const rows = await db
-    .select({ cnt: count() })
-    .from(productionTrades)
-    .where(
-      and(
-        gte(productionTrades.barTimestamp, dayStart),
-        lt(productionTrades.barTimestamp, dayEnd)
-      )
-    );
-
-  return Number(rows[0]?.cnt ?? 0);
+/**
+ * Proxy for Tradovate fills count. Until Phase 4C wires tradovate_fill_id,
+ * returns the same productionTrades count (re-uses the shared query result supplied
+ * by the caller).
+ */
+async function fetchTradovateFillsCount(date: Date, sharedCount: number): Promise<number> {
+  // When tradovate_fill_id is populated, query that column instead.
+  void date;
+  return sharedCount;
 }
 
 /**
@@ -211,11 +221,18 @@ async function fetchTradovateFillsCount(date: Date): Promise<number> {
  * In Phase 4B, we read the snapshot directory for the most recent MFFU capture.
  * In a future phase, the snapshot service can extract structured PnL from the
  * screenshot metadata. Until then, returns null (mismatch against null is skipped).
+ *
+ * The AbortSignal is passed from runDailyReconciliation's AbortController so the
+ * 5-minute recon wall-clock can interrupt the Playwright session if it hangs.
  */
-async function fetchMffuDashboardPnl(date: Date): Promise<number | null> {
+async function fetchMffuDashboardPnl(date: Date, signal?: AbortSignal): Promise<number | null> {
   // Attempt to trigger a fresh snapshot capture; if Playwright is unavailable,
   // fall back gracefully (returns null — mismatch against null is skipped).
   try {
+    // Honour abort before launching Playwright.
+    if (signal?.aborted) {
+      throw signal.reason ?? new Error("recon_timeout");
+    }
     const results = await runDashboardSnapshots();
     const mffuResult = results.find((r) => r.firmId === "mffu");
 
@@ -295,21 +312,22 @@ export async function runDailyReconciliation(
   reconDate: Date = todayEt()
 ): Promise<ReconciliationResult> {
   const startedAt = Date.now();
+  const reconRunId = randomUUID();
   const reconDateStr = reconDate.toISOString().slice(0, 10);
 
   logger.info(
-    { reconDate: reconDateStr },
+    { reconDate: reconDateStr, reconRunId },
     "reconciliation: starting daily recon"
   );
 
-  // ── 5-minute hard timeout ────────────────────────────────────────────────
+  // ── 5-minute hard timeout (AbortController) ─────────────────────────────
+  const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     logger.error(
       { reconDate: reconDateStr, timeoutMs: RECON_CONFIG.RECON_TIMEOUT_MS },
       "reconciliation: TIMEOUT — recon exceeded 5-minute wall-clock limit"
     );
-    // Throw is not reachable here (async context), but the warning fires.
-    // Phase 4C can wire a proper AbortController if needed.
+    controller.abort(new Error("recon_timeout"));
   }, RECON_CONFIG.RECON_TIMEOUT_MS);
 
   try {
@@ -322,22 +340,40 @@ export async function runDailyReconciliation(
     let tradingviewMarkerCount: number | null;
 
     try {
+      // M-7: fetchProductionTradesCount is the single SQL query that backs both
+      // the traderspost proxy and the tradovate proxy until Phase 4C wires real
+      // IDs. The shared count is fetched once and passed to both proxy functions.
+      let sharedProductionCount: number;
       [
-        productionTradesCount,
-        traderspostLogCount,
-        tradovateFillsCount,
+        sharedProductionCount,
         mffuDashboardPnl,
         expectedPnl,
         tradingviewMarkerCount,
       ] = await Promise.all([
-        fetchProductionTradesCount(reconDate),
-        fetchTraderspostLogCount(reconDate),
-        fetchTradovateFillsCount(reconDate),
-        fetchMffuDashboardPnl(reconDate),
+        fetchProxyCountsFromProductionTrades(reconDate),
+        fetchMffuDashboardPnl(reconDate, controller.signal),
         fetchExpectedPnl(reconDate),
         fetchTradingviewMarkerCount(reconDate),
       ]);
+      productionTradesCount = sharedProductionCount;
+      traderspostLogCount = await fetchTraderspostLogCount(reconDate, sharedProductionCount);
+      tradovateFillsCount = await fetchTradovateFillsCount(reconDate, sharedProductionCount);
+
+      // If abort fired while Promise.all was in flight but didn't propagate
+      // (DB queries don't honor AbortSignal), check now and bail cleanly.
+      if (controller.signal.aborted) {
+        throw controller.signal.reason ?? new Error("recon_timeout");
+      }
     } catch (fetchErr) {
+      // Re-classify timeout aborts so the fail-CLOSED path can log them accurately.
+      const isTimeout =
+        fetchErr instanceof Error && fetchErr.message === "recon_timeout";
+      if (isTimeout) {
+        logger.error(
+          { reconDate: reconDateStr, timeoutMs: RECON_CONFIG.RECON_TIMEOUT_MS },
+          "reconciliation: aborted by timeout signal — writing fail-CLOSED red row"
+        );
+      }
       // Fail-CLOSED: data fetch error → write severity=red row
       logger.error(
         { err: fetchErr, reconDate: reconDateStr },
@@ -363,6 +399,7 @@ export async function runDailyReconciliation(
         severity: "red",
         alertFired: true,
         startedAt,
+        correlationId: reconRunId,
       });
 
       await AlertFactory.criticalReconciliationMismatch(reconDateStr, 1, [
@@ -474,6 +511,27 @@ export async function runDailyReconciliation(
       severity = "red";
     }
 
+    // M-7: Degraded-reconciliation mode — when fewer than MIN_INDEPENDENT_SOURCES_FOR_RED
+    // independent data sources are available, we cannot be confident that a "red"
+    // verdict reflects genuine mismatches rather than proxy-count tautologies.
+    // Cap severity at "yellow" so operators see degraded mode, not a false red alarm.
+    if (
+      INDEPENDENT_SOURCE_COUNT < MIN_INDEPENDENT_SOURCES_FOR_RED &&
+      severity === "red"
+    ) {
+      severity = "yellow";
+      logger.warn(
+        {
+          reconDate: reconDateStr,
+          independentSourceCount: INDEPENDENT_SOURCE_COUNT,
+          minRequired: MIN_INDEPENDENT_SOURCES_FOR_RED,
+          originalSeverity: "red",
+          downgradedSeverity: "yellow",
+        },
+        "reconciliation: degraded mode — insufficient independent sources; severity capped at yellow"
+      );
+    }
+
     const alertFired = mismatchCount > 0;
 
     // ── Write daily_reconciliation row ─────────────────────────────────────
@@ -490,6 +548,7 @@ export async function runDailyReconciliation(
       severity,
       alertFired,
       startedAt,
+      correlationId: reconRunId,
     });
 
     // ── Fire alert on mismatch ─────────────────────────────────────────────
@@ -529,6 +588,8 @@ interface WriteReconRowParams {
   severity: ReconSeverity;
   alertFired: boolean;
   startedAt: number;
+  // Correlation ID linking all audit rows for this recon run.
+  correlationId: string;
 }
 
 async function writeReconRow(params: WriteReconRowParams): Promise<ReconciliationResult> {
@@ -588,7 +649,7 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
       } as Record<string, unknown>,
       status: params.severity === "red" ? "failure" : "success",
       durationMs,
-      correlationId: null,
+      correlationId: params.correlationId,
     })
     .catch((err) =>
       logger.error({ err }, "reconciliation: audit_log write failed (non-blocking)")
@@ -667,27 +728,5 @@ export async function getDailyReconciliationStatus(
   };
 }
 
-// ─── AlertFactory extension (local — keeps isolation) ─────────────────────────
-// We extend AlertFactory in-line rather than modifying alert-service.ts
-// to avoid coupling the shared service to production-path specifics.
-
-declare module "../services/alert-service.js" {
-  interface AlertFactoryType {
-    criticalReconciliationMismatch(
-      reconDate: string,
-      mismatchCount: number,
-      details: MismatchDetail[]
-    ): Promise<unknown>;
-  }
-}
-
-// Attach the method to AlertFactory at module load (safe in ESM singleton context).
-(AlertFactory as Record<string, unknown>)["criticalReconciliationMismatch"] = (
-  reconDate: string,
-  mismatchCount: number,
-  details: MismatchDetail[]
-) =>
-  (AlertFactory as unknown as { criticalAlert: (c: string, m: Record<string, unknown>) => Promise<unknown> }).criticalAlert(
-    `daily-reconciliation:${reconDate}`,
-    { reconDate, mismatchCount, details, severity: mismatchCount >= RECON_CONFIG.RED_MISMATCH_COUNT ? "red" : "yellow" }
-  );
+// AlertFactory.criticalReconciliationMismatch is now a first-class method on
+// AlertFactory in alert-service.ts (H-4 fix). No dynamic attachment needed.

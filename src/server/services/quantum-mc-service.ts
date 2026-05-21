@@ -167,11 +167,15 @@ export async function runQuantumMC(
 
     // Cloud config passthrough — only attached when caller opts in
     if (options.optInCloud) {
+      // F-3 (2026-05-21): gate ibm_token on QUANTUM_CLOUD_ENABLED as defense-in-depth.
+      // Python's resolve_backend already blocks cloud calls when opt_in_cloud is false,
+      // but we avoid writing the token to the temp JSON file at all when cloud is disabled.
+      const cloudEnabled = process.env.QUANTUM_CLOUD_ENABLED === "true";
       config.cloud_config = {
         provider: options.cloudProvider ?? null,
         backend_name: options.cloudBackend ?? null,
         opt_in_cloud: true,
-        ibm_token: process.env.IBM_QUANTUM_TOKEN ?? null,
+        ...(cloudEnabled ? { ibm_token: process.env.IBM_QUANTUM_TOKEN ?? null } : {}),
         ibm_instance: process.env.IBM_QUANTUM_INSTANCE ?? "open-instance",
         braket_region: process.env.BRAKET_REGION ?? "us-east-1",
         braket_s3_bucket: process.env.BRAKET_S3_BUCKET ?? "amazon-braket-trading-forge",

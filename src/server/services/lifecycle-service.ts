@@ -2464,3 +2464,41 @@ export class LifecycleService {
     );
   }
 }
+
+// ─── F-4: promoted_at backfill from lifecycle_transitions ────────────────────
+// The schema has no `strategies.promoted_at` column. Python decay computations
+// need the strategy's most-recent DEPLOYED transition timestamp to short-circuit
+// the decay verdict during the grace window. This helper queries
+// lifecycle_transitions for the latest row with to_state='DEPLOYED' for the
+// given strategy and returns an ISO string (the format the Python helper
+// `_within_grace_period()` accepts as a string).
+//
+// Returns null when:
+//   - the strategy has never been promoted to DEPLOYED
+//   - the lookup throws (caller treats null as "no grace period")
+export async function getPromotedAtFromTransitions(
+  strategyId: string,
+): Promise<string | null> {
+  try {
+    const rows = await db
+      .select({ createdAt: lifecycleTransitions.createdAt })
+      .from(lifecycleTransitions)
+      .where(
+        and(
+          eq(lifecycleTransitions.strategyId, strategyId),
+          eq(lifecycleTransitions.toState, "DEPLOYED"),
+        ),
+      )
+      .orderBy(desc(lifecycleTransitions.createdAt))
+      .limit(1);
+    const row = rows[0];
+    if (!row || !row.createdAt) return null;
+    return new Date(row.createdAt).toISOString();
+  } catch (err) {
+    logger.warn(
+      { err, strategyId },
+      "lifecycle-service: getPromotedAtFromTransitions failed — returning null (no grace period)",
+    );
+    return null;
+  }
+}
