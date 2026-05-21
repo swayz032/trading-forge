@@ -199,7 +199,7 @@ export interface RiskSizingResult {
   pyramidFloorApplied: boolean;
   /** Account health ratio: currentBalance / startingCapital. Floor binds when >= 0.85. */
   accountHealthRatio: number;
-  evidence: Record<string, number | string | null>;
+  evidence: Record<string, number | string | boolean | null>;
   // W23H.4 additions
   /** Audit payload for sizing.confluence_multiplier_applied event. Forward to insertAuditRow(). */
   confluenceAudit: ConfluenceAuditPayload;
@@ -428,21 +428,30 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   // On drawdown accounts, this rejection holds (risk-cap protects the account).
   if (riskDerivedCap <= 0) {
     if (accountIsHealthy && cfg.base_contracts > 0) {
-      // Pyramid floor applies on healthy account — use base_contracts.
-      // W23H.4: multiplier is NOT applied when riskDerivedCap <= 0 and floor kicks in,
-      // because the floor is the minimum viable contract count for Style C partials.
-      // Applying a multiplier here would inflate beyond what the risk math allows.
-      const flooredContracts = cfg.base_contracts;
+      // Pyramid floor applies on healthy account.
+      // Pass 5 Track C F-7: floor must STILL be clamped by firmCap and liquidityCap.
+      // Returning unbounded base_contracts allows a misconfigured strategy
+      // (or overlay drift writing oversized base) to bypass firm/book limits.
+      const effectiveFirmCapForFloor: number | null =
+        typeof cfg.topstep_account_cap_override === "number"
+          ? cfg.topstep_account_cap_override
+          : (input.firmContractCap ?? null);
+      const flooredCandidates: number[] = [cfg.base_contracts, liquidityCap];
+      if (effectiveFirmCapForFloor !== null) flooredCandidates.push(effectiveFirmCapForFloor);
+      const flooredContracts = Math.min(...flooredCandidates);
+      const firmCapAppliedAtFloor =
+        effectiveFirmCapForFloor !== null && effectiveFirmCapForFloor === flooredContracts &&
+        effectiveFirmCapForFloor < cfg.base_contracts;
       return {
         finalContracts: flooredContracts,
         pyramidTier,
         riskDerivedCap,
-        firmCap: null,
+        firmCap: effectiveFirmCapForFloor,
         liquidityCap,
         rejectionReason: null,  // not a rejection — floor overrides
         firm,
         riskCapMethod,
-        firmCapApplied: false,
+        firmCapApplied: firmCapAppliedAtFloor,
         pyramidFloorApplied: true,
         accountHealthRatio,
         evidence: {
@@ -455,7 +464,7 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
           ...(firm === "topstep" ? { trailingFloor, buffer, highWaterBalance, trailingDD, accountStartingFloor } : {}),
           pyramidTier,
           riskDerivedCap,
-          firmCap: null,
+          firmCap: effectiveFirmCapForFloor,
           liquidityCap,
           finalContracts: flooredContracts,
           rejectionReason: null,

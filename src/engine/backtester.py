@@ -4679,6 +4679,33 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                     file=sys.stderr,
                 )
 
+    # Pass 5 Track A F-8: validate JSONB extras through the canonical pydantic
+    # contract before emitting. Fail-CLOSED on validation error so wrong-shape
+    # writes never land in the DB. Stamps schema_version automatically.
+    try:
+        from src.engine.jsonb_contracts import BacktestResultExtras, RESULT_EXTRAS_VERSION
+        extras_raw = {
+            "schema_version": RESULT_EXTRAS_VERSION,
+            "invariants": result.get("invariants"),
+            "parity_shadow": result.get("parity_shadow"),
+            "metric_drift": result.get("metric_drift"),
+        }
+        # Drop None values; the pydantic model treats missing as "not present"
+        extras_filtered = {k: v for k, v in extras_raw.items() if v is not None}
+        if len(extras_filtered) > 1:  # >1 because schema_version is always present
+            validated = BacktestResultExtras(**extras_filtered).model_dump(mode="json", exclude_none=True)
+            result["result_extras"] = validated
+    except ImportError:
+        # pydantic missing or jsonb_contracts not importable in this env — skip
+        pass
+    except Exception as _validation_err:
+        # Validation failure: fail-CLOSED. Emit a structured error and raise.
+        print(
+            json.dumps({"event": "result_extras.validation_failed", "error": str(_validation_err)[:500]}),
+            file=sys.stderr,
+        )
+        raise
+
     print(json.dumps(result))
 
 

@@ -13,12 +13,15 @@ const clients: Set<Response> = new Set();
 let eventSeq = 0;
 
 // ─── In-memory ring buffer (last 100 events) ─────────────────
-// Stores { seq, event, data } so missed events can be replayed on reconnect.
+// Pass 5 Track A F-10: stores SERIALIZED strings so replay on reconnect
+// cannot crash on unserializable payloads (BigInt, circular refs). The
+// live-broadcast path stringifies first; only the serialized form ever
+// enters the buffer. Replay reads entry.serialized directly.
 const RING_BUFFER_SIZE = 100;
 interface BufferedEvent {
   seq: number;
   event: string;
-  data: unknown;
+  serialized: string;
 }
 const ringBuffer: BufferedEvent[] = [];
 
@@ -69,7 +72,8 @@ router.get("/events", (req: Request, res: Response) => {
   if (!isNaN(lastSeenSeq) && ringBuffer.length > 0) {
     const missed = ringBuffer.filter((e) => e.seq > lastSeenSeq);
     for (const entry of missed) {
-      res.write(`id: ${entry.seq}\nevent: ${entry.event}\ndata: ${JSON.stringify(entry.data)}\n\n`);
+      // F-10: serialized form already in buffer — no JSON.stringify on replay.
+      res.write(`id: ${entry.seq}\nevent: ${entry.event}\ndata: ${entry.serialized}\n\n`);
     }
     if (missed.length > 0) {
       logger.info(
@@ -107,11 +111,11 @@ router.get("/events", (req: Request, res: Response) => {
 // broadcast entirely, leaving other clients without the event.
 export function broadcastSSE(event: string, data: unknown): void {
   const seq = ++eventSeq;
-  pushToRingBuffer({ seq, event, data });
 
-  // Track A F-1: Wrap JSON.stringify in try/catch to prevent non-serializable
-  // data (e.g. circular objects, BigInt values) from crashing the broadcast
-  // and leaving all clients without the event.
+  // Pass 5 Track A F-10: SERIALIZE FIRST. Push the serialized string into the
+  // ring buffer so reconnect-replay cannot crash on unserializable payloads.
+  // If serialization fails, buffer a safe sse_serialize_error sentinel under
+  // the same seq so the gap-replay sequencing is preserved.
   let serialized: string;
   try {
     serialized = JSON.stringify(data);
@@ -126,6 +130,7 @@ export function broadcastSSE(event: string, data: unknown): void {
       reason: dataType,
       caller: event,
     });
+    pushToRingBuffer({ seq, event: "sse_serialize_error", serialized: errorPayload });
     const errorMessage = `id: ${seq}\nevent: sse_serialize_error\ndata: ${errorPayload}\n\n`;
     for (const client of clients) {
       if (client.writableEnded || client.destroyed) continue;
@@ -133,6 +138,8 @@ export function broadcastSSE(event: string, data: unknown): void {
     }
     return;
   }
+
+  pushToRingBuffer({ seq, event, serialized });
 
   const message = `id: ${seq}\nevent: ${event}\ndata: ${serialized}\n\n`;
   const deadClients = new Set<Response>();

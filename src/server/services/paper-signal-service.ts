@@ -1,5 +1,5 @@
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts } from "../db/schema.js";
+import { paperSessions, paperPositions, paperTrades, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts } from "../db/schema.js";
 import { openPosition, closePosition } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
 import { evaluateContextGate } from "./context-gate-service.js";
@@ -13,7 +13,15 @@ import { getActiveLockout } from "./strategy-lockout-service.js";
 import { checkCorrelatedPositionGuard, KILL_REASON_CORRELATED_POSITION_OPEN } from "./correlated-position-guard.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
-import { CONTRACT_SPECS, CONTRACT_CAP_MIN, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
+import {
+  CONTRACT_SPECS,
+  CONTRACT_CAP_MIN,
+  CONTRACT_CAP_MAX,
+  getFirmLimit,
+  LIQUIDITY_COMFORT_CAPS,
+  LIQUIDITY_COMFORT_CAP_DEFAULT,
+  TOPSTEP_TRAILING_DD_BY_SIZE,
+} from "../../shared/firm-config.js";
 // Wave 23.C: bias engine + A+ gate consumer wiring
 import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateForSignal } from "./bias-state-service.js";
 import { getSessionShapeScore } from "./volume-profile-service.js";
@@ -38,31 +46,22 @@ const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 // Thin@100%=100, b/P@100%=50 (meets threshold exactly), D=always 0 (never satisfies).
 const VP_SHAPE_SCORE_THRESHOLD = 50;
 
-// ─── P1-6: Firm Contract Cap Lookup ─────────────────────────────────────────
-// TS mirror of firm_config.py::FIRM_CONTRACT_CAPS.
-// All firms allow the same per-symbol caps (10 min, 15 default, 20 max).
-// getFirmContractCap() is a pure lookup — no Python subprocess needed.
-
-// Only Topstep + MFFU per CLAUDE.md §6 (legacy firms removed 2026-05-19).
-const FIRM_CONTRACT_CAPS_TS: Record<string, Record<string, number>> = {
-  topstep_50k: { MES: 15, MNQ: 15, MCL: 15 },
-  mffu_50k:    { MES: 15, MNQ: 15, MCL: 15 },
-  // Aliases for firmIds without _50k suffix (matches session.firmId values)
-  topstep:     { MES: 15, MNQ: 15, MCL: 15 },
-  mffu:        { MES: 15, MNQ: 15, MCL: 15 },
-};
-
+// ─── Pass 5 Track C F-1: Firm Contract Cap from canonical single source ─────
+// Was: hardcoded 15 across all firms — paper systematically undersized for
+// healthy accounts that exceeded the stale cap.
+// Now: reads getFirmLimit().maxContracts from firm-config.ts — Topstep/MFFU
+// $50K returns 50 per the canonical FIRMS table.
 /**
  * Returns the firm contract cap for a given firmKey + symbol.
- * Clamped to [CONTRACT_CAP_MIN, CONTRACT_CAP_MAX] per firm_config.py.
- * Falls back to CONTRACT_CAP_MAX (15) when firmKey or symbol is unknown.
+ * Resolved via getFirmLimit() (canonical source). Strips `_50k` suffix.
+ * Falls back to CONTRACT_CAP_MAX when firmKey is unknown.
  */
-function getFirmContractCap(firmKey: string | null | undefined, symbol: string): number {
+function getFirmContractCap(firmKey: string | null | undefined, _symbol: string): number {
   if (!firmKey) return CONTRACT_CAP_MAX;
-  const caps = FIRM_CONTRACT_CAPS_TS[firmKey.toLowerCase()];
-  if (!caps) return CONTRACT_CAP_MAX;
-  const raw = caps[symbol.toUpperCase()] ?? CONTRACT_CAP_MAX;
-  return Math.max(CONTRACT_CAP_MIN, Math.min(raw, CONTRACT_CAP_MAX));
+  const normalized = firmKey.toLowerCase().replace(/_50k$/, "");
+  const limit = getFirmLimit(normalized);
+  if (!limit) return CONTRACT_CAP_MAX;
+  return Math.max(CONTRACT_CAP_MIN, Math.min(limit.maxContracts, CONTRACT_CAP_MAX));
 }
 
 // ─── Calendar Filter Cache (Fix 3) ──────────────────────────────
@@ -1643,7 +1642,10 @@ export async function evaluateSignals(
     firmId: paperSessions.firmId,
     config: paperSessions.config,
     // Wave 23.C C.6: HWM for risk-derived pyramid sizing
+    // Pass 5 Track C F-2: read realizedPeakEquity — kept current atomically
+    // by closePosition; highWaterBalance is MTM-stale and oscillates.
     highWaterBalance: paperSessions.highWaterBalance,
+    realizedPeakEquity: paperSessions.realizedPeakEquity,
     currentEquity: paperSessions.currentEquity,
     // W23H.4: needed for cumulativeProfit and accountStartingFloor
     startingCapital: paperSessions.startingCapital,
@@ -3242,10 +3244,27 @@ export async function evaluateSignals(
       // Parse account state from session row (numeric columns arrive as strings from Postgres/Drizzle)
       const accountBalance = parseFloat(sessionRow.currentEquity as string) || 50_000;
       const accountStartingFloor = parseFloat(sessionRow.startingCapital as string) || 50_000;
-      const highWaterBalance = parseFloat(sessionRow.highWaterBalance as string) || accountBalance;
-      // cumulativeProfit = how much the account has grown above starting capital.
-      // Safe default: 0 when starting capital is absent (conservative pyramid floor).
-      const cumulativeProfit = accountBalance - accountStartingFloor;
+      // Pass 5 Track C F-2: prefer realizedPeakEquity (atomic close-time HWM)
+      // over highWaterBalance (MTM-oscillating). Fall back to legacy column then to balance.
+      const highWaterBalance =
+        parseFloat(sessionRow.realizedPeakEquity as string) ||
+        parseFloat(sessionRow.highWaterBalance as string) ||
+        accountBalance;
+      // Pass 5 Track C F-4: cumulativeProfit must be REALIZED-only for pyramid tier math.
+      // Using currentEquity (MTM) inflates tier mid-trade when winners are open.
+      // Backtester uses realized P&L (sizing.py:846); paper must match.
+      let realizedProfit = 0;
+      try {
+        const realizedRow = await db
+          .select({ total: sql<string>`COALESCE(SUM(${paperTrades.pnl}), 0)` })
+          .from(paperTrades)
+          .where(eq(paperTrades.sessionId, sessionId));
+        realizedProfit = parseFloat(realizedRow[0]?.total ?? "0") || 0;
+      } catch {
+        // Fail-open: fall back to balance-based estimate if the query fails
+        realizedProfit = accountBalance - accountStartingFloor;
+      }
+      const cumulativeProfit = realizedProfit;
 
       // ATR from indicators (same source as the legacy block)
       const atrPoints = typeof indicators["atr_14"] === "number" ? indicators["atr_14"] : 0;
@@ -3286,7 +3305,9 @@ export async function evaluateSignals(
           tier_threshold_dollars: typeof rawPositionSize.tier_threshold_dollars === "number" ? rawPositionSize.tier_threshold_dollars : 3000,
           personal_dll_pct: typeof rawPositionSize.personal_dll_pct === "number" ? rawPositionSize.personal_dll_pct : 0.67,
           max_risk_pct_per_trade: typeof rawPositionSize.max_risk_pct_per_trade === "number" ? rawPositionSize.max_risk_pct_per_trade : 0.02,
-          liquidity_comfort_cap: typeof rawPositionSize.liquidity_comfort_cap === "number" ? rawPositionSize.liquidity_comfort_cap : 100,
+          liquidity_comfort_cap: typeof rawPositionSize.liquidity_comfort_cap === "number"
+            ? rawPositionSize.liquidity_comfort_cap
+            : (LIQUIDITY_COMFORT_CAPS[symbol.toUpperCase()] ?? LIQUIDITY_COMFORT_CAP_DEFAULT),
           topstep_account_cap_override: typeof rawPositionSize.topstep_account_cap_override === "number" ? rawPositionSize.topstep_account_cap_override : null,
           computed_at_signal_time: true,
         };
@@ -3301,9 +3322,15 @@ export async function evaluateSignals(
           firmContractCap: firmCap,
           // Wave 22 firm-aware fields
           firm: (sessionRow.firmId ?? "topstep") as "topstep" | "mffu",
-          // Topstep trailing-DD: default 2000 ($50K combine per docs/prop-firm-rules-2026-topstep.md).
-          // The helper uses HWM to compute buffer; MFFU path ignores this field.
-          trailingDD: 2000,
+          // Topstep trailing-DD: resolution order per Pass 5 Track C F-5.
+          // 1. session.config.trailing_dd_amount (operator override)
+          // 2. TOPSTEP_TRAILING_DD_BY_SIZE[accountStartingFloor] (firm tier)
+          // 3. fallback 2000 ($50K combine default)
+          trailingDD: (() => {
+            const cfg = sessionRow.config as { trailing_dd_amount?: number } | null;
+            if (cfg && typeof cfg.trailing_dd_amount === "number") return cfg.trailing_dd_amount;
+            return TOPSTEP_TRAILING_DD_BY_SIZE[accountStartingFloor] ?? 2000;
+          })(),
           highWaterBalance,
           accountStartingFloor,
           // W23H.4: confluence-weighted sizing
