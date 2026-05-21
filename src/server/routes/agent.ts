@@ -1154,6 +1154,38 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         ? (s.symbols as unknown[]).filter((sym): sym is string => typeof sym === "string" && VALID_SYMBOLS.has(sym))
         : undefined;
 
+      // W23H/W23G.11 (2026-05-21) — bias-MTF + confluence indicator fields.
+      // Forward from LLM extraction so downstream graduator can populate
+      // entry_quality.confirming_indicators + preferred_regimes[] +
+      // bias_timeframe. Without these forwards the LLM output is silently
+      // dropped at the route boundary even when correctly emitted.
+      const VALID_TIMEFRAMES = new Set(["1m", "5m", "15m", "30m", "1h", "4h", "1d"]);
+      const biasTimeframe = typeof s.bias_timeframe === "string" && VALID_TIMEFRAMES.has(s.bias_timeframe)
+        ? s.bias_timeframe : (s.bias_timeframe === null ? null : undefined);
+      const biasCondition = typeof s.bias_condition === "string"
+        ? s.bias_condition.slice(0, 500)
+        : (s.bias_condition === null ? null : undefined);
+      const executionTimeframe = typeof s.execution_timeframe === "string" && VALID_TIMEFRAMES.has(s.execution_timeframe)
+        ? s.execution_timeframe : (s.execution_timeframe === null ? null : undefined);
+      const primaryIndicator = typeof s.primary_indicator === "string"
+        ? s.primary_indicator.slice(0, 100)
+        : (s.primary_indicator === null ? null : undefined);
+      const VALID_DIRECTIONS = new Set(["agree", "disagree", "either"]);
+      const confirmingIndicators = Array.isArray(s.confirming_indicators)
+        ? (s.confirming_indicators as unknown[])
+            .filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+            .map((it) => ({
+              indicator: typeof it.indicator === "string" ? it.indicator : "",
+              params: it.params && typeof it.params === "object" ? it.params : {},
+              direction: typeof it.direction === "string" && VALID_DIRECTIONS.has(it.direction) ? it.direction : "agree",
+            }))
+            .filter((it) => it.indicator.length > 0)
+        : (s.confirming_indicators === null ? null : undefined);
+      const VALID_REGIMES = new Set(["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"]);
+      const preferredRegimes = Array.isArray(s.preferred_regimes)
+        ? (s.preferred_regimes as unknown[]).filter((r): r is string => typeof r === "string" && VALID_REGIMES.has(r))
+        : (s.preferred_regimes === null ? null : undefined);
+
       ideas.push({
         thesis,
         market,
@@ -1192,6 +1224,13 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         ...(sourceClaimWinRate !== undefined  && { source_claim_win_rate:    sourceClaimWinRate }),
         ...(sourceClaimAvgR !== undefined     && { source_claim_avg_r:       sourceClaimAvgR }),
         ...(extractedSymbols !== undefined    && { symbols:                  extractedSymbols }),
+        // W23H/W23G.11 (2026-05-21) — bias-MTF + confluence indicator fields
+        ...(biasTimeframe !== undefined        && { bias_timeframe:           biasTimeframe }),
+        ...(biasCondition !== undefined        && { bias_condition:           biasCondition }),
+        ...(executionTimeframe !== undefined   && { execution_timeframe:      executionTimeframe }),
+        ...(primaryIndicator !== undefined     && { primary_indicator:        primaryIndicator }),
+        ...(confirmingIndicators !== undefined && { confirming_indicators:    confirmingIndicators }),
+        ...(preferredRegimes !== undefined     && { preferred_regimes:        preferredRegimes }),
       });
     }
 
