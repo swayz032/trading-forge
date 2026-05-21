@@ -14,11 +14,11 @@
  * y-position lerp on press. Materials use emissiveIntensity (no shader work).
  */
 
-import { useRef } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
-import { usePipelineMode, type PipelineMode } from "@/hooks/usePipelineMode";
+import { usePipelineMode, type PipelineModeOrUnknown } from "@/hooks/usePipelineMode";
 
 interface PauseButtonProps {
   /** World position of the button base centre. */
@@ -27,18 +27,44 @@ interface PauseButtonProps {
   rotationY?: number;
 }
 
-const STATE_COLOURS: Record<PipelineMode, { dome: string; ring: string; emit: number }> = {
-  ACTIVE: { dome: "#5b1212", ring: "#10B981", emit: 1.4 },
-  PAUSED: { dome: "#dc2626", ring: "#1f2937", emit: 2.4 },
+/** Window (ms) within which a second click confirms the pause action.
+ *  Long enough to let the operator read "CONFIRM PAUSE" but short enough that
+ *  an accidental double-click cannot trip it. */
+const CONFIRM_WINDOW_MS = 3000;
+
+const STATE_COLOURS: Record<PipelineModeOrUnknown, { dome: string; ring: string; emit: number }> = {
+  ACTIVE:   { dome: "#5b1212", ring: "#10B981", emit: 1.4 },
+  PAUSED:   { dome: "#dc2626", ring: "#1f2937", emit: 2.4 },
   VACATION: { dome: "#f59e0b", ring: "#1f2937", emit: 1.8 },
+  // UNKNOWN: dim amber. Fail-closed visual — operator must not mistake this
+  // for ACTIVE. Matches the "STATUS UNKNOWN — RETRYING" pill convention.
+  UNKNOWN:  { dome: "#78350f", ring: "#f59e0b", emit: 0.6 },
 };
 
 export function PauseButton({ position = [0, 1.4, -7.4], rotationY = 0 }: PauseButtonProps) {
   const { invalidate } = useThree();
-  const { mode, isPending, isActive, toggle } = usePipelineMode();
+  const { mode, isPending, isActive, isUnknown, toggle } = usePipelineMode();
   const domeRef = useRef<THREE.Mesh>(null!);
   const pressed = useRef(0);
   const colours = STATE_COLOURS[mode];
+
+  // 2-step confirmation gate. First click on an ACTIVE button arms the
+  // confirmation state for CONFIRM_WINDOW_MS; second click within the window
+  // actually pauses. Resume (PAUSED → ACTIVE) is one-click.
+  const [armed, setArmed] = useState(false);
+  const armTimer = useRef<number | null>(null);
+
+  const clearArmTimer = useCallback(() => {
+    if (armTimer.current !== null) {
+      window.clearTimeout(armTimer.current);
+      armTimer.current = null;
+    }
+  }, []);
+
+  const disarm = useCallback(() => {
+    clearArmTimer();
+    setArmed(false);
+  }, [clearArmTimer]);
 
   useFrame(() => {
     if (!domeRef.current) return;
@@ -52,10 +78,30 @@ export function PauseButton({ position = [0, 1.4, -7.4], rotationY = 0 }: PauseB
 
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    if (isPending) return;
+    if (isPending || isUnknown) return;
     pressed.current = 12; // ~12 frames of press animation
-    toggle();
     invalidate();
+
+    if (isActive) {
+      // Two-step pause: arm on first click, fire on second click within window.
+      if (!armed) {
+        setArmed(true);
+        clearArmTimer();
+        armTimer.current = window.setTimeout(() => {
+          armTimer.current = null;
+          setArmed(false);
+          invalidate();
+        }, CONFIRM_WINDOW_MS);
+        return;
+      }
+      disarm();
+      toggle();
+      return;
+    }
+
+    // Resume (PAUSED → ACTIVE / VACATION → ACTIVE) is one-click; no confirm.
+    disarm();
+    toggle();
   };
 
   const onOver = (e: ThreeEvent<PointerEvent>) => {
@@ -127,12 +173,37 @@ export function PauseButton({ position = [0, 1.4, -7.4], rotationY = 0 }: PauseB
         }}
       >
         <div>
-          <div style={{ color: isActive ? "#10B981" : "#ef4444", fontWeight: 700 }}>
-            {mode === "PAUSED" ? "PAUSED" : mode === "VACATION" ? "VACATION" : "ACTIVE"}
+          <div
+            style={{
+              color: armed
+                ? "#f59e0b"
+                : isUnknown
+                  ? "#f59e0b"
+                  : isActive
+                    ? "#10B981"
+                    : "#ef4444",
+              fontWeight: 700,
+            }}
+          >
+            {armed
+              ? "CONFIRM PAUSE"
+              : isUnknown
+                ? "STATUS UNKNOWN"
+                : mode === "PAUSED"
+                  ? "PAUSED"
+                  : mode === "VACATION"
+                    ? "VACATION"
+                    : "ACTIVE"}
           </div>
           <div>TRADING FORGE</div>
           <div style={{ marginTop: 2, opacity: 0.6 }}>
-            {isActive ? "click to pause" : "click to resume"}
+            {armed
+              ? `click again within ${Math.round(CONFIRM_WINDOW_MS / 1000)}s`
+              : isUnknown
+                ? "retrying…"
+                : isActive
+                  ? "click to pause"
+                  : "click to resume"}
           </div>
         </div>
       </Html>

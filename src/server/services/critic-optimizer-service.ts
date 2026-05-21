@@ -56,6 +56,7 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED } from "../lib/lifecycle-constants.js";
 import { assertCrossValidatedSource } from "./agent-service.js";
 import { sqaRegistry } from "../lib/sqa-promise-registry.js";
+import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
 
@@ -182,6 +183,12 @@ interface EvidencePacket {
     tensor?: string[];
     rl?: string[];
   };
+  /**
+   * F-5: Sorted list of evidence source keys present at settlement time.
+   * Python critic records this in the audit row so replay can verify
+   * "same sources → same ranking". Populated by EvidenceCollector.settle().
+   */
+  _settled_with_sources?: string[];
 }
 
 interface CriticResult {
@@ -1247,14 +1254,22 @@ async function collectEvidence(
   // Build param ranges from strategy config
   const paramRanges: Array<{ name: string; min_val: number; max_val: number; n_bits: number }> = [];
   const stratConfig = (strat?.config ?? config.strategy ?? {}) as any;
+  // F-1: resolve entry_indicator so we can clamp against CANONICAL_PARAM_RANGES.
+  const entryIndicatorKey: string | undefined = stratConfig.entry_indicator ?? undefined;
+  const canonicalForEntry = entryIndicatorKey ? (CANONICAL_PARAM_RANGES[entryIndicatorKey] ?? null) : null;
+
   for (const ind of stratConfig.indicators ?? []) {
     if (ind.period) {
-      paramRanges.push({
-        name: `${ind.type}_period`,
-        min_val: Math.max(1, Math.round(ind.period * 0.5)),
-        max_val: Math.round(ind.period * 2.0),
-        n_bits: 4,
-      });
+      const paramName = `${ind.type}_period`;
+      let min_val = Math.max(1, Math.round(ind.period * 0.5));
+      let max_val = Math.round(ind.period * 2.0);
+      // F-1: clamp computed bounds against canonical floor/ceiling.
+      const canonical = canonicalForEntry?.[paramName] ?? canonicalForEntry?.["period"] ?? null;
+      if (canonical) {
+        min_val = Math.max(min_val, canonical[0]);
+        max_val = Math.min(max_val, canonical[1]);
+      }
+      paramRanges.push({ name: paramName, min_val, max_val, n_bits: 4 });
     }
   }
   if (stratConfig.stop_loss?.multiplier) {
@@ -1272,19 +1287,23 @@ async function collectEvidence(
   // Uses symmetric ±50% bounds as a safe default floor — Python can tighten
   // these once walk-forward or SQA data is available.
   // Skips keys already covered above (indicators is an array, stop_loss is an object).
-  const ALREADY_COVERED = new Set(["indicators", "stop_loss"]);
+  // F-1: also clamp top-level param bounds against canonical ranges.
+  const ALREADY_COVERED = new Set(["indicators", "stop_loss", "entry_indicator"]);
   for (const [key, val] of Object.entries(stratConfig)) {
     if (ALREADY_COVERED.has(key)) continue;
     if (typeof val === "number" && isFinite(val) && val !== 0) {
       // Only add if not already present from indicators loop
       const alreadyPresent = paramRanges.some((p) => p.name === key);
       if (!alreadyPresent) {
-        paramRanges.push({
-          name: key,
-          min_val: val * 0.5,
-          max_val: val * 1.5,
-          n_bits: 4,
-        });
+        let min_val = val * 0.5;
+        let max_val = val * 1.5;
+        // F-1: clamp against canonical if this param is known for the entry indicator.
+        const canonical = canonicalForEntry?.[key] ?? null;
+        if (canonical) {
+          min_val = Math.max(min_val, canonical[0]);
+          max_val = Math.min(max_val, canonical[1]);
+        }
+        paramRanges.push({ name: key, min_val, max_val, n_bits: 4 });
       }
     }
   }
@@ -1521,13 +1540,23 @@ async function collectEvidence(
           // can build optuna_ranges. Without these, optuna_ranges stays empty and candidate
           // generation collapses. Use mean±std as a conservative robust interval when
           // actual per-window min/max aren't individually tracked.
+          // F-7: clamp robust_min/robust_max against canonical floor/ceiling to prevent
+          // underflow below 1 (or below the canonical floor for known parameters).
+          // Canonical lookup: entryIndicatorKey is resolved earlier in collectEvidence.
+          const canonicalForParam = canonicalForEntry?.[paramName] ?? null;
+          const rawRobustMin = mean - std;
+          const rawRobustMax = mean + std;
           reconstructedStability[paramName] = {
             mean,
             std,
             range,
             n_windows: values.length,
-            robust_min: mean - std,
-            robust_max: mean + std,
+            robust_min: canonicalForParam
+              ? Math.max(rawRobustMin, canonicalForParam[0])
+              : Math.max(rawRobustMin, 1),
+            robust_max: canonicalForParam
+              ? Math.min(rawRobustMax, canonicalForParam[1])
+              : rawRobustMax,
           };
         }
 
@@ -1631,6 +1660,22 @@ async function collectEvidence(
       rl: rl?.id ? [rl.id] : undefined,
       wf: undefined, // walk-forward windows are identified by backtestId
     },
+    // F-5: sorted list of source keys present at settlement time.
+    // Python critic records this in the audit row so replay can assert
+    // "same sources in → same ranking out" (determinism guard).
+    _settled_with_sources: [
+      mcResult ? "mc" : null,
+      sqaResult ? "sqa" : null,
+      qmc ? "quantum_mc" : null,
+      qubo ? "qubo" : null,
+      tensor ? "tensor" : null,
+      rl ? "rl" : null,
+      walkForwardEvidence ? "walk_forward" : null,
+      decayAnalysis ? "decay_analysis" : null,
+      driftAlerts.length > 0 ? "drift_alerts" : null,
+      liveRollingSharpe != null ? "live_sharpe" : null,
+      deeparEvidence ? "deepar" : null,
+    ].filter((s): s is string => s !== null).sort(),
   };
 }
 
@@ -1702,27 +1747,42 @@ async function createChildStrategy(
   // P2D (Wave 9, 2026-05-17): propagate cross-validation provenance from parent.
   // Critic-refined children inherit parent's cross-validated tag if present.
   const parentTags: string[] = parentStrategy.tags ?? [];
+  // F-3: both ternary branches previously produced identical results — the
+  // non-cross-validated branch now strips the tag before appending "critic-refined"
+  // to avoid accidentally propagating a stale cross-validated label.
   const childTags = parentTags.includes("cross-validated")
     ? [...parentTags, "critic-refined"]
-    : [...parentTags, "critic-refined"];
-  if (!parentTags.includes("cross-validated")) {
+    : [...parentTags.filter((t) => t !== "cross-validated"), "critic-refined"];
+  // F-3: assertCrossValidatedSource is only meaningful when the parent IS
+  // cross-validated (it verifies source provenance). Calling it on a non-cross-
+  // validated parent was a no-op at best and a misleading audit trail at worst.
+  if (parentTags.includes("cross-validated")) {
     assertCrossValidatedSource(parentStrategy.source ?? "critic_refined", childTags);
   }
-  // Audit lineage propagation
-  await db.insert(auditLog).values({
-    action: "strategies.evolved_from_parent",
-    entityType: "strategy",
-    entityId: parentStrategy.id,
-    input: { parent_strategy_id: parentStrategy.id, parent_source: parentStrategy.source, parent_tags: parentTags, critic_run_id: runId } as Record<string, unknown>,
-    result: { child_tags: childTags, cross_validated_propagated: parentTags.includes("cross-validated"), via: "critic_optimizer" } as Record<string, unknown>,
-    status: "accepted",
-    decisionAuthority: "system",
-  }).catch(() => void 0);
-
+  // F-8: lineage audit insert moved INSIDE the transaction so it rolls back
+  // atomically with the child row if the insert or promotion fails.
+  // Previously this was outside the transaction with a silent .catch(() => void 0),
+  // meaning audit rows could be written even when the child strategy was never
+  // persisted (or vice-versa). Now both succeed or both roll back together.
   // Track E F-5: wrap insert + promotion in db.transaction() so that a promotion
   // failure rolls back the child row. Without this, a failed promotion left an
   // orphan CANDIDATE that would never advance through lifecycle.
   const childId = await db.transaction(async (tx) => {
+    // F-8: lineage audit inside transaction — atomic with child row.
+    await tx.insert(auditLog).values({
+      action: "strategies.evolved_from_parent",
+      entityType: "strategy",
+      entityId: parentStrategy.id,
+      input: { parent_strategy_id: parentStrategy.id, parent_source: parentStrategy.source, parent_tags: parentTags, critic_run_id: runId } as Record<string, unknown>,
+      result: { child_tags: childTags, cross_validated_propagated: parentTags.includes("cross-validated"), via: "critic_optimizer" } as Record<string, unknown>,
+      status: "accepted",
+      decisionAuthority: "system",
+    }).catch((err: unknown) => {
+      // Log the failure but allow the transaction to continue — audit loss is
+      // recoverable; child strategy creation is not. The outer transaction will
+      // still roll back if the child insert itself fails.
+      logger.warn({ err, strategyId: parentStrategy.id, parentId: parentStrategy.id, runId }, "createChildStrategy: lineage audit insert failed inside transaction");
+    });
     const newChildId = crypto.randomUUID();
     const [child] = await tx
       .insert(strategies)

@@ -15,6 +15,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export type PipelineMode = "ACTIVE" | "PAUSED" | "VACATION";
 
+/** Sentinel returned by the hook BEFORE the first successful status fetch (or
+ *  while the fetch is in-flight/erroring). Consumers must render this distinctly
+ *  — typically as a dim/amber "STATUS UNKNOWN — RETRYING" pill — so the operator
+ *  cannot mistake "we don't know" for "we're running". Fail-closed per
+ *  CLAUDE.md §2/§13: never default the live trading status to ACTIVE while
+ *  ground-truth is unknown.
+ */
+export type PipelineModeOrUnknown = PipelineMode | "UNKNOWN";
+
 export interface PipelineStatus {
   mode: PipelineMode;
   subsystems: {
@@ -79,14 +88,21 @@ export function usePipelineMode() {
     },
   });
 
-  const mode: PipelineMode = status.data?.mode ?? "ACTIVE";
+  // Fail-closed: until we hear ACTIVE from the backend, the UI must surface
+  // "UNKNOWN" — never silently assume the bot is running.
+  const mode: PipelineModeOrUnknown = status.data?.mode ?? "UNKNOWN";
   const isActive = mode === "ACTIVE";
   const isPaused = mode === "PAUSED";
   const isVacation = mode === "VACATION";
+  const isUnknown = mode === "UNKNOWN";
   const isPending = pause.isPending || start.isPending;
 
   const toggle = () => {
     if (isPending) return;
+    // Fail-closed: don't dispatch state-mutating calls while UNKNOWN —
+    // operator must wait for status to resolve, otherwise we could pause a
+    // bot that's already paused or resume one that's intentionally halted.
+    if (isUnknown) return;
     if (isActive) {
       pause.mutate("Command Room red button");
     } else {
@@ -99,6 +115,7 @@ export function usePipelineMode() {
     isActive,
     isPaused,
     isVacation,
+    isUnknown,
     isLoading: status.isLoading,
     isPending,
     error: status.error ?? pause.error ?? start.error,

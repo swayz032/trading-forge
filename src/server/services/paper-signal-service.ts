@@ -3253,6 +3253,20 @@ export async function evaluateSignals(
       // Pass 5 Track C F-4: cumulativeProfit must be REALIZED-only for pyramid tier math.
       // Using currentEquity (MTM) inflates tier mid-trade when winners are open.
       // Backtester uses realized P&L (sizing.py:846); paper must match.
+      //
+      // F-10 (Pass 6 / Track A — VERIFIED FALSE POSITIVE 2026-05-20):
+      // The Pass 5 audit flagged this query for missing a `exitTime IS NOT NULL`
+      // filter, claiming partial-fill / open-position rows would contaminate the
+      // realized total. We re-verified the schema (src/server/db/schema.ts
+      // paperTrades, lines 743-752): both `entryPrice`/`exitPrice`/`entryTime`/
+      // `exitTime`/`pnl` are declared `.notNull()`. A paperTrades row CANNOT be
+      // inserted without both entry and exit set — every row is, by construction,
+      // a closed round-trip. Style C 33/33/33 partials produce MULTIPLE closed
+      // rows (one per partial), each a finished slice with its own pnl.
+      // Conclusion: no `isNotNull(exitTime)` filter is needed. The query is
+      // correct as-is. Do NOT add a redundant filter — it would silently mask
+      // a future schema regression (if exitTime ever becomes nullable, the
+      // missing rows would vanish from the realized sum without an error).
       let realizedProfit = 0;
       try {
         const realizedRow = await db

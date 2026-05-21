@@ -104,11 +104,26 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       qc.invalidateQueries({ queryKey: ["strategies"] });
       break;
 
-    case "paper:kill-switch-tripped":
+    case "paper:kill-switch-tripped": {
       qc.invalidateQueries({ queryKey: ["paper"] });
       qc.invalidateQueries({ queryKey: ["paper", "sessions"] });
       qc.invalidateQueries({ queryKey: ["alerts"] });
+      // F-8 fix: surface a sticky, important error toast so the operator
+      // can't miss a kill-switch trip even if they're on another page.
+      // Mirrors the pattern used for `paper:force-flatten-all` below.
+      const data = event.data as SSEEventData<"paper:kill-switch-tripped">;
+      const sessionId = (data as { sessionId?: unknown })?.sessionId;
+      const reason = (data as { reason?: unknown })?.reason;
+      const symbol = (data as { symbol?: unknown })?.symbol;
+      const shortSession = typeof sessionId === "string" ? sessionId.slice(0, 8) : "?";
+      const reasonStr = typeof reason === "string" && reason.length > 0 ? reason : "kill switch tripped";
+      const symbolStr = typeof symbol === "string" && symbol.length > 0 ? ` · ${symbol}` : "";
+      toast.error(
+        `KILL SWITCH TRIPPED — session ${shortSession}${symbolStr} · ${reasonStr}`,
+        { duration: Infinity, important: true },
+      );
       break;
+    }
 
     case "alert:kill_switch_down":
       qc.invalidateQueries({ queryKey: ["paper"] });
@@ -867,4 +882,19 @@ export function useSSE(eventTypes: string[], onEvent?: SSEHandler): void {
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subscriptionKey, qc]);
+
+  // Reconnect bridge: after a successful reconnect, the React Query caches
+  // for live-trading-critical surfaces (paper, alerts, strategies, production)
+  // may have drifted while the SSE connection was down. Invalidate them so
+  // the next render reflects ground truth from the API rather than stale
+  // pre-outage data. F-4 fix.
+  useEffect(() => {
+    const handleReconnect = () => {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["production"] });
+    };
+    return sseClient.setReconnectHandler(handleReconnect);
+  }, [qc]);
 }

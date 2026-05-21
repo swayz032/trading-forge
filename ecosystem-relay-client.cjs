@@ -21,7 +21,9 @@ module.exports = {
       cwd: "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge",
       autorestart: true,
       restart_delay: 3000,
-      max_restarts: 9999,
+      max_restarts: 20,
+      min_uptime: "10s",
+      exp_backoff_restart_delay: 2000,
       env: {
         RELAY_SERVER: "wss://tf-relay-production.up.railway.app/__relay",
         RELAY_TOKEN,

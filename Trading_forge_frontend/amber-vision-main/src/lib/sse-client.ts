@@ -46,6 +46,12 @@ interface Subscriber {
 export type ConnectionState = "open" | "closed";
 type ConnectionListener = (state: ConnectionState) => void;
 
+/** Fired AFTER a successful reconnect (i.e. when `onopen` lands and we had
+ *  previously been disconnected). Consumers use this to invalidate React Query
+ *  caches that may have gone stale during the outage. NOT fired on the
+ *  very first open of the EventSource — only on actual reconnections. */
+type ReconnectListener = () => void;
+
 class SSEClient {
   private eventSource: EventSource | null = null;
   private readonly subscribers = new Map<number, Subscriber>();
@@ -58,6 +64,9 @@ class SSEClient {
 
   /** Connection-state listeners (open/closed transitions). */
   private connectionListeners = new Set<ConnectionListener>();
+
+  /** Reconnect listeners — fired after a successful reconnect (not first open). */
+  private reconnectListeners = new Set<ReconnectListener>();
 
   private readonly url: string;
 
@@ -125,11 +134,18 @@ class SSEClient {
     this.nativeListeners.clear();
 
     this.eventSource.onopen = () => {
+      const wasReconnect = this.reconnectAttempts > 0;
       this.reconnectAttempts = 0;
       if (import.meta.env.DEV) {
-        console.info("[sse-client] connected");
+        console.info(`[sse-client] connected${wasReconnect ? " (reconnect)" : ""}`);
       }
       this.notifyConnectionState("open");
+      // After a reconnect we must assume the React Query cache went stale
+      // during the outage. Fire reconnect listeners so an outer hook can
+      // invalidate the relevant query keys.
+      if (wasReconnect) {
+        this.notifyReconnect();
+      }
     };
 
     this.eventSource.onerror = () => {
@@ -249,12 +265,42 @@ class SSEClient {
   forceClose(): void {
     this.subscribers.clear();
     this.connectionListeners.clear();
+    this.reconnectListeners.clear();
     if (this.reconnectTimer !== null) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
     this.reconnectAttempts = 0;
     this.disconnect();
+  }
+
+  /** Register a callback that fires after every successful RECONNECT (not on
+   *  the first open). Typical use: invalidate React Query caches that may have
+   *  drifted during the outage. Returns an unsubscribe function. */
+  onReconnect(listener: ReconnectListener): () => void {
+    this.reconnectListeners.add(listener);
+    return () => {
+      this.reconnectListeners.delete(listener);
+    };
+  }
+
+  /** Convenience alias used by the React-side reconnect bridge. Same semantics
+   *  as `onReconnect` but expressed as a setter for a single primary handler
+   *  (handy when wiring once at app boot). Returns an unsubscribe function. */
+  setReconnectHandler(fn: ReconnectListener): () => void {
+    return this.onReconnect(fn);
+  }
+
+  private notifyReconnect(): void {
+    for (const listener of this.reconnectListeners) {
+      try {
+        listener();
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.error("[sse-client] reconnect listener threw:", err);
+        }
+      }
+    }
   }
 
   /**

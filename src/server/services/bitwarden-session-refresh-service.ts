@@ -16,7 +16,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
@@ -24,6 +24,10 @@ import { notifyCritical } from "./notification-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 const execAsync = promisify(exec);
+// F-3 / F-6: execFileAsync avoids spawning a shell, so:
+//   • The passphrase never appears in /proc/<pid>/cmdline or `ps aux` output.
+//   • No shell injection surface — args are passed as an array, not a string.
+const execFileAsync = promisify(execFile);
 
 // Bitwarden session lifetime is ~30 days (~2,592,000 seconds).
 // We treat anything ≤ 72h remaining as "near-expiry".
@@ -81,9 +85,13 @@ export async function refreshBwSession(): Promise<string> {
     throw new Error("BW_VAULT_PASSPHRASE not set — cannot refresh BW_SESSION");
   }
 
-  // bw unlock --raw emits ONLY the new session token on stdout
-  const { stdout } = await execAsync(`bw unlock --raw`, {
-    env: { ...process.env, BW_PASSWORD: passphrase },
+  // F-3 / F-6: Use execFile (no shell) so:
+  //   • BW_VAULT_PASSPHRASE is in the child env only, not in the shell command string.
+  //   • The passphrase is never visible in process listings or shell history.
+  // The Bitwarden CLI reads its vault password from the env var named by --passwordenv.
+  // bw unlock --raw emits ONLY the new session token on stdout.
+  const { stdout } = await execFileAsync("bw", ["unlock", "--raw", "--passwordenv", "BW_VAULT_PASSPHRASE"], {
+    env: { ...process.env, BW_VAULT_PASSPHRASE: passphrase },
     timeout: 30_000,
   });
 

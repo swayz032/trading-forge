@@ -131,12 +131,22 @@ def _compute_breach_prob_classical(
     breach_minimal_n: Optional[int] = None
 
     def _check_ordering(ordering: list[int]) -> Optional[float]:
-        """Return worst rolling loss sum for this trade ordering (loss=1, win=0)."""
+        """Return worst rolling loss sum for this trade ordering (loss=1, win=0).
+
+        F-8 fix (2026-05-20): bit position is now the index into loss_amounts
+        (positional). Previously we sampled a random loss per bit via
+        rng.randint, which diverged from the Grover oracle in _grover_circuit
+        (which uses positional `loss_amounts[i]` per bit b[i]=1). Parity
+        between classical fallback and quantum path is mandatory — the
+        breach probabilities must be comparable for governance.
+        """
         worst = 0.0
         running = 0.0
-        for bit in ordering:
+        for i, bit in enumerate(ordering):
             if bit == 1:
-                loss_idx = rng.randint(0, len(loss_amounts) - 1)
+                # Positional indexing (parity with Grover oracle).
+                # Bound by len(loss_amounts) when ordering has more bits than losses.
+                loss_idx = i % len(loss_amounts)
                 running += loss_amounts[loss_idx]
             else:
                 running = 0.0  # day resets on a win (simplified model)

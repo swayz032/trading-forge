@@ -472,6 +472,63 @@ export function getVaultHealth(): {
   };
 }
 
+// ─── Broker credential loader ─────────────────────────────────────────────────
+
+/**
+ * Load broker credentials for a specific broker_accounts row.
+ *
+ * Vault mode (TF_VAULT_MODE=bitwarden): uses the already-loaded process.env
+ * entry that was hydrated by loadCredentials() at startup. The apiKeyVaultRef
+ * column stores the Bitwarden field name which was mapped to process.env on
+ * startup — so in both modes we read process.env[apiKeyVaultRef].
+ *
+ * Env mode: process.env[apiKeyVaultRef] is read directly from .env.
+ *
+ * Fail-CLOSED: missing credential throws — broker-router.ts catches this and
+ * calls notifyCritical() + returns { success: false, reason: "credential_load_error" }.
+ *
+ * @param accountId - UUID from broker_accounts.account_id
+ * @returns { apiKey: string } — the broker API key for this account
+ */
+export async function loadBrokerCredentials(
+  accountId: string,
+): Promise<{ apiKey: string }> {
+  // Lazy import to avoid circular dependency at module-load time.
+  // credential-loader.ts must remain importable without db being initialized.
+  const { db: dbInstance } = await import("../db/index.js");
+  const { brokerAccounts } = await import("../db/schema.js");
+  const { eq } = await import("drizzle-orm");
+
+  const rows = await dbInstance
+    .select({
+      apiKeyVaultRef: brokerAccounts.apiKeyVaultRef,
+      firmId: brokerAccounts.firmId,
+    })
+    .from(brokerAccounts)
+    .where(eq(brokerAccounts.accountId, accountId))
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) {
+    throw new Error(`broker_account not found: ${accountId}`);
+  }
+
+  // apiKeyVaultRef holds the env var name (env mode) or Bitwarden field name
+  // (vault mode — already hydrated into process.env by loadCredentials() at startup).
+  const envKey = row.apiKeyVaultRef ?? `${row.firmId.toUpperCase()}_API_KEY`;
+  const apiKey = process.env[envKey];
+
+  if (!apiKey) {
+    throw new Error(
+      `Broker credentials missing for account ${accountId} (firm: ${row.firmId}). ` +
+        `Expected env var: ${envKey}. ` +
+        `Vault mode: ${getActiveVaultMode()}.`,
+    );
+  }
+
+  return { apiKey };
+}
+
 /**
  * TEST HELPER ONLY — resets internal state between test cases.
  * Never call from production code.

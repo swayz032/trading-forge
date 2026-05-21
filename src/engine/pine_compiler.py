@@ -1087,6 +1087,63 @@ alertcondition(risk_lockout and not risk_lockout[1], title="Risk Lockout",
 """
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# F-1 (Pass 6 / Track A 2026-05-20) — Marker alertcondition contract
+# ──────────────────────────────────────────────────────────────────────────────
+# Track 8's TradingView Marker Collector lives at POST /api/tradingview/marker.
+# It expects a SEPARATE alert from the TradersPost one with these fields:
+#   { strategy_id, account_id, bar_timestamp, signal, secret_check }
+#
+# Pine cannot compute HMAC-SHA256 natively. Instead of trying to inject a
+# per-bar HMAC (impossible without a server roundtrip), the compiler embeds
+# `secret_check` — a static export-time signature of a FIXED payload:
+#   secret_check = HMAC_SHA256(per_account_secret, "{strategy_id}|{account_id}|marker_export")
+# This proves the Pine file came from a trusted compile and ties it to a
+# specific (account, strategy) pair. The backend (tradingview-webhook.ts) accepts
+# the payload, looks up the same secret server-side, recomputes the signature
+# and compares constant-time. Replay attacks are bounded by the existing
+# 10-minute bar_timestamp window and the unique-index dedupe on
+# (account_id, strategy_id, bar_timestamp, signal).
+#
+# CONTRACT POINTS (any change here MUST update tradingview-webhook.ts in lock-step):
+#   - Field names: strategy_id, account_id, bar_timestamp, signal, secret_check
+#   - signal encoding: 1 = long entry, -1 = short entry, 0 = exit
+#   - bar_timestamp: ISO-8601 from Pine's {{timenow}} placeholder
+#   - account_id MUST be the broker_accounts.account_id (UUID), not the
+#     family-member label; it is injected at recipient export time.
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _build_marker_alertcondition(
+    strategy_id: str,
+    account_id: Optional[str],
+    secret_check: Optional[str],
+) -> str:
+    """Emit the Track 8 marker alertcondition() block.
+
+    Returns "" when account_id or secret_check are absent (legacy compile path —
+    the per-recipient export pipeline supplies both). The block is appended to
+    the strategy artifact only; INDICATOR artifacts do not feed the marker
+    collector because they require manual approval and have no machine-driven
+    fill timing to reconcile against.
+    """
+    if not account_id or not secret_check:
+        return ""
+    return f"""
+// ─── Marker Alert (Track 8 — POST /api/tradingview/marker) ──────────
+// F-1: SEPARATE alertcondition from TradersPost — fires the marker payload
+// for the reconciliation collector. secret_check is the export-time signature
+// of "{strategy_id}|{account_id}|marker_export" using the per-account HMAC
+// secret; backend re-computes it server-side. DO NOT modify message JSON.
+alertcondition(
+    (strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked) or
+    (strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked) or
+    (barstate.isconfirmed and strategy.position_size != 0 and (time_to_close or risk_lockout)),
+    title="TF Marker",
+    message='{{"strategy_id":"{strategy_id}","account_id":"{account_id}","bar_timestamp":"' + str.format_time(time, "yyyy-MM-dd\\'T\\'HH:mm:ssXXX", "UTC") + '","signal":' + (long_signal ? "1" : short_signal ? "-1" : "0") + ',"secret_check":"{secret_check}"}}'
+)
+"""
+
+
 def _build_strategy_webhook_alerts(strategy_name: str, symbol: str, strategy_id: str) -> str:
     """Pine alertcondition() block for STRATEGY artifact.
 
@@ -1604,6 +1661,7 @@ def compile_dual_artifacts(
     recipient_qty: Optional[int] = None,
     recipient_label: Optional[str] = None,
     hmac_secret: Optional[str] = None,
+    account_id: Optional[str] = None,
 ) -> DualArtifactResult:
     """Compile a StrategyDSL to BOTH Pine artifacts from the same logic.
 
@@ -1836,6 +1894,29 @@ qty_final := {recipient_qty}
         )
     if _recip_qty_block:
         strategy_code += _recip_qty_block
+
+    # F-1 (Pass 6 / Track A 2026-05-20): emit Track 8 marker alertcondition.
+    # Computed export-time signature ties the Pine file to (account, strategy).
+    # The backend recomputes the same signature on receipt — proves origin.
+    # Only emitted when both account_id (recipient) AND hmac_secret are present.
+    # Legacy compiles without recipient metadata silently skip the marker
+    # alertcondition (no-op) so the existing pine_strategy export path is
+    # unchanged for non-recipient compiles.
+    if account_id and hmac_secret:
+        import hmac as _hmac_mod  # local import — keep top-of-file imports unchanged
+        _secret_check = _hmac_mod.new(
+            hmac_secret.encode("utf-8"),
+            f"{sid}|{account_id}|marker_export".encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        _marker_block = _build_marker_alertcondition(
+            strategy_id=sid,
+            account_id=account_id,
+            secret_check=_secret_check,
+        )
+        if _marker_block:
+            strategy_code += _marker_block
+
     # F-4: HMAC secret handling — use input.string() so secret is NEVER embedded in .pine file.
     # Old approach: injected 64-char hex HMAC directly into alertcondition message string.
     # New approach: declare an input.string() at chart load; user pastes their HMAC secret once

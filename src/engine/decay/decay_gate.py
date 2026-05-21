@@ -74,6 +74,7 @@ def evaluate_decay_gate(
     current_regime: str = "",
     regime_history: list[dict] | None = None,
     half_life_window: int = 60,
+    promoted_at=None,
 ) -> dict:
     """
     Combined decay gate: runs half-life fitting, composite sub-signals, and
@@ -91,15 +92,18 @@ def evaluate_decay_gate(
         }
     """
     # 1. Fit exponential decay to rolling Sharpe
-    half_life = fit_decay(daily_pnls, window=half_life_window)
+    # F-2: pass promoted_at so fit_decay can short-circuit during grace period.
+    half_life = fit_decay(daily_pnls, window=half_life_window, promoted_at=promoted_at)
 
     # 2. Compute composite decay score from 6 sub-signals
+    # F-2: pass promoted_at so composite_decay_score can short-circuit during grace period.
     sub_signals = composite_decay_score(
         daily_pnls=daily_pnls,
         trades=trades,
         strategy_regime=strategy_regime,
         current_regime=current_regime,
         regime_history=regime_history,
+        promoted_at=promoted_at,
     )
     composite = sub_signals["composite_score"]
 
@@ -149,11 +153,14 @@ def evaluate_decay_gate(
     # 3. Evaluate quarantine level transition
     # SHADOW: uses composite (existing behavior).
     # ENFORCE: uses effective_composite (may be floored by critical signals).
+    # F-2: pass promoted_at so evaluate_quarantine can suppress escalation during
+    # the grace period without needing to re-check the timestamp itself.
     quarantine = evaluate_quarantine(
         current_level=current_quarantine_level,
         decay_score=effective_composite,
         days_at_current_level=days_at_current_level,
         improving_days=improving_days,
+        promoted_at=promoted_at,
     )
 
     new_level = quarantine["new_level"]

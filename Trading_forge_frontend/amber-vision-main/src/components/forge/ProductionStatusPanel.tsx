@@ -16,7 +16,7 @@
  * Visual identity: emerald (#10B981) on near-black, glassy 3D floating cards.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
@@ -277,10 +277,28 @@ function OverallBadge({ overall, mode }: { overall: OverallSeverity; mode: strin
 
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
+/** Threshold (ms) beyond which the last-successful payload is considered stale
+ *  and the panel switches to amber-overlay mode. 30s matches the 10s polling
+ *  cadence × 3 — a single dropped poll is fine; three in a row is suspicious. */
+const STALENESS_THRESHOLD_MS = 30_000;
+
+function formatAge(ageMs: number): string {
+  const sec = Math.max(0, Math.round(ageMs / 1000));
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  return `${min}m ${sec % 60}s`;
+}
+
 export function ProductionStatusPanel() {
   const [data, setData] = useState<ProductionStatusResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  /** Wall-clock of the most recent SUCCESSFUL fetch. Drives the staleness
+   *  overlay independently of `data.generatedAt` (which can lag the cache). */
+  const [lastSuccessAt, setLastSuccessAt] = useState<number | null>(null);
+  /** Force a re-render every second so the staleness badge ticks even when
+   *  no new data arrives — otherwise an outage would freeze the age string. */
+  const [now, setNow] = useState<number>(() => Date.now());
 
   useEffect(() => {
     let cancelled = false;
@@ -289,11 +307,16 @@ export function ProductionStatusPanel() {
       try {
         const res = await api.get<ProductionStatusResponse>("/production/status");
         if (!cancelled) {
+          // F-6 fix: keep last successful data on transient failure. We only
+          // overwrite `data` on success — never null it out on error.
           setData(res);
           setError(null);
+          setLastSuccessAt(Date.now());
         }
       } catch (err) {
         if (!cancelled) {
+          // Surface the error but DO NOT clear `data` — the operator must
+          // keep seeing the last-known-good snapshot with a stale overlay.
           setError(err instanceof Error ? err.message : String(err));
         }
       } finally {
@@ -303,13 +326,38 @@ export function ProductionStatusPanel() {
 
     fetchStatus();
     const iv = setInterval(fetchStatus, 10_000); // 10-second polling
+    // Tick once per second so staleness UI stays live.
+    const tickIv = setInterval(() => {
+      if (!cancelled) setNow(Date.now());
+    }, 1000);
     return () => {
       cancelled = true;
       clearInterval(iv);
+      clearInterval(tickIv);
     };
   }, []);
 
-  if (loading) {
+  const generatedAtMs = useMemo(() => {
+    if (!data?.generatedAt) return null;
+    const t = new Date(data.generatedAt).getTime();
+    return Number.isFinite(t) ? t : null;
+  }, [data?.generatedAt]);
+
+  // Staleness derived from BOTH (a) the server-reported generatedAt and (b)
+  // wall-clock since our last successful fetch. Whichever is older wins —
+  // catches both backend cache freezes and frontend network outages.
+  const ageMs = useMemo(() => {
+    const candidates: number[] = [];
+    if (generatedAtMs !== null) candidates.push(now - generatedAtMs);
+    if (lastSuccessAt !== null) candidates.push(now - lastSuccessAt);
+    if (candidates.length === 0) return 0;
+    return Math.max(...candidates);
+  }, [now, generatedAtMs, lastSuccessAt]);
+
+  const isStale = ageMs > STALENESS_THRESHOLD_MS;
+
+  // Initial loading state — no data yet, nothing to show under an overlay.
+  if (loading && !data) {
     return (
       <div className="forge-card p-5">
         <div className="flex items-center gap-2 text-text-muted">
@@ -320,7 +368,8 @@ export function ProductionStatusPanel() {
     );
   }
 
-  if (error || !data) {
+  // Never recovered (first fetch failed and no cached data) — explicit error.
+  if (!data) {
     return (
       <div className="forge-card p-5 border-loss/40">
         <div className="flex items-center gap-2 text-loss">
@@ -332,15 +381,17 @@ export function ProductionStatusPanel() {
   }
 
   const q = data.sixQuestions;
+  const staleCardBorder = isStale ? "ring-1 ring-primary/40" : "";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="forge-card p-5 space-y-4"
+      className={`forge-card p-5 space-y-4 relative ${isStale ? "border-primary/40" : ""}`}
       data-testid="production-status-panel"
       data-overall={data.overall}
+      data-stale={isStale ? "true" : "false"}
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
@@ -354,16 +405,36 @@ export function ProductionStatusPanel() {
         <OverallBadge overall={data.overall} mode={data.productionMode} />
       </div>
 
-      {/* 6 Questions — 2-column grid on wide, 1-column on narrow */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <TradingStatusCard q={q.areWeTrading} />
-        <PnLCard q={q.pnlToday} />
-        <DrawdownCard q={q.drawdownDistance} />
-        <ReconCard q={q.lastCleanReconciliation} />
-        <div className="md:col-span-2">
+      {/* Stale overlay — amber banner shown when last-successful fetch / generatedAt
+          is older than threshold. Operator sees last-known-good with a clear
+          "this may not reflect reality" cue. F-6 fix. */}
+      {isStale && (
+        <div
+          role="status"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/30 text-primary text-xs"
+          data-testid="production-status-stale-banner"
+        >
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <span className="font-semibold tracking-wide">STALE</span>
+          <span className="text-text-muted">
+            last update {formatAge(ageMs)} ago
+            {error ? ` · ${error}` : ""}
+          </span>
+        </div>
+      )}
+
+      {/* 6 Questions — 2-column grid on wide, 1-column on narrow.
+          Each card gets a subtle amber ring when stale, so the staleness cue
+          is visible even if the operator scrolled past the header banner. */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${staleCardBorder ? "[&>*]:" + staleCardBorder : ""}`}>
+        <div className={staleCardBorder}><TradingStatusCard q={q.areWeTrading} /></div>
+        <div className={staleCardBorder}><PnLCard q={q.pnlToday} /></div>
+        <div className={staleCardBorder}><DrawdownCard q={q.drawdownDistance} /></div>
+        <div className={staleCardBorder}><ReconCard q={q.lastCleanReconciliation} /></div>
+        <div className={`md:col-span-2 ${staleCardBorder}`}>
           <KillSwitchCard q={q.killSwitchLayers} />
         </div>
-        <div className="md:col-span-2">
+        <div className={`md:col-span-2 ${staleCardBorder}`}>
           <AlertingCard q={q.alertingStatus} />
         </div>
       </div>

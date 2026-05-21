@@ -7,7 +7,8 @@
  * Mismatch returns 403 — no content is served.
  */
 
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
+import { timingSafeEqual } from "crypto";
 import { compilePineExport, compileDualPineExport, getExport, getExportArtifacts, getArtifact } from "../services/pine-export-service.js";
 import { pineCompileRequestSchema } from "../lib/pine-artifact-schema.js";
 import { db } from "../db/index.js";
@@ -15,6 +16,50 @@ import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 
 export const pineExportRoutes = Router();
+
+// F-2 (Pass 6 / Track A 2026-05-20): operator API-key gate.
+// Previous code derived `principal` from `req.headers.authorization ? "operator" : "unauthenticated"`
+// which accepted ANY non-empty Authorization header — effectively unauthenticated.
+// We now validate the bearer token against process.env.OPERATOR_API_KEY using a
+// constant-time comparison. Missing or wrong → 401. Fail-CLOSED in production.
+//
+// The Pine artifacts contain per-recipient HMAC secret references and routing
+// metadata — leaking them to an anonymous caller compromises the marker collector.
+function requireOperatorApiKey(req: Request, res: Response, next: NextFunction): void {
+  const expected = process.env.OPERATOR_API_KEY;
+  if (!expected || expected.length < 16) {
+    // Refuse to serve when the gate itself is not configured. In production
+    // this prevents accidental "open by default" deployments.
+    if (process.env.NODE_ENV === "production") {
+      logger.error("pine-export: OPERATOR_API_KEY not set in production — refusing requests");
+      res.status(503).json({ error: "operator_api_key_not_configured" });
+      return;
+    }
+    // Dev/test: allow only when explicit opt-out flag is set, otherwise still fail.
+    if (process.env.PINE_EXPORT_ALLOW_UNAUTH !== "true") {
+      res.status(401).json({ error: "unauthorized" });
+      return;
+    }
+    next();
+    return;
+  }
+
+  const header = req.headers["authorization"];
+  if (typeof header !== "string" || !header.toLowerCase().startsWith("bearer ")) {
+    res.status(401).json({ error: "unauthorized" });
+    return;
+  }
+  const provided = header.slice("bearer ".length).trim();
+  const a = Buffer.from(provided, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    res.status(401).json({ error: "unauthorized" });
+    return;
+  }
+  next();
+}
+
+pineExportRoutes.use(requireOperatorApiKey);
 
 // POST /api/pine-export/compile — Compile strategy to Pine artifacts
 pineExportRoutes.post("/compile", async (req, res) => {
@@ -69,9 +114,10 @@ pineExportRoutes.get("/:id/artifacts", async (req, res) => {
 pineExportRoutes.get("/:id/artifacts/:artifactId/download", async (req, res) => {
   const exportId = req.params.id;
   const artifactId = req.params.artifactId;
-  // Principal is the operator API key — single-user system. Identify by presence of
-  // Authorization header (auth middleware already validated it upstream).
-  const principal = req.headers["authorization"] ? "operator" : "unauthenticated";
+  // F-2: principal is "operator" — requireOperatorApiKey middleware already
+  // validated the bearer token in constant time, so any request reaching here
+  // is authenticated.
+  const principal = "operator";
 
   // 1. Fetch the artifact
   const artifact = await getArtifact(artifactId);

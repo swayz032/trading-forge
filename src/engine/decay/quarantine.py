@@ -4,6 +4,7 @@ Escalates based on composite decay score and duration.
 """
 
 from enum import Enum
+from .half_life import _within_grace_period
 
 
 class QuarantineLevel(str, Enum):
@@ -50,6 +51,7 @@ def evaluate_quarantine(
     decay_score: float,
     days_at_current_level: int,
     improving_days: int = 0,
+    promoted_at=None,
 ) -> dict:
     """
     Evaluate whether quarantine level should change.
@@ -64,6 +66,28 @@ def evaluate_quarantine(
             "recommendation": str,
         }
     """
+    # F-2: freshly-promoted strategies are immune to quarantine escalation.
+    # A strategy that was just promoted to DEPLOYED has not yet accumulated
+    # enough live P&L for decay signals to be meaningful. Short-circuit here
+    # to prevent premature quarantine escalation. DECAY_GRACE_DAYS is
+    # configurable via env var (default 14). Recovery transitions are still
+    # evaluated so a grace-period strategy can de-escalate if currently at Watch.
+    if _within_grace_period(promoted_at):
+        try:
+            level = QuarantineLevel(current_level.lower())
+        except ValueError:
+            level = QuarantineLevel.HEALTHY
+        multiplier = SIZE_MULTIPLIERS.get(level, 1.0)
+        return {
+            "current_level": level.value,
+            "new_level": level.value,
+            "changed": False,
+            "reason": "Grace period active — decay escalation suppressed for freshly-promoted strategy",
+            "size_multiplier": multiplier,
+            "recommendation": "Strategy is within grace period. Normal operation.",
+            "_grace_period_active": True,
+        }
+
     try:
         level = QuarantineLevel(current_level.lower())
     except ValueError:

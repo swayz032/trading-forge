@@ -1,0 +1,105 @@
+-- 0129_hmac_rotation_runbook.sql — Pass 6 / Track A F-4 (2026-05-20)
+--
+-- HMAC ENCRYPTION-KEY ROTATION RUNBOOK
+--
+-- This migration is INTENTIONALLY EMPTY at the schema level. It exists as a
+-- versioned, source-controlled operator runbook for rotating the symmetric
+-- key used by migration 0128 (HMAC secret encryption-at-rest via pgcrypto's
+-- pgp_sym_encrypt / pgp_sym_decrypt over account_strategy_assignments.hmac_secret_encrypted).
+--
+-- ──────────────────────────────────────────────────────────────────────────
+-- WHY THIS IS A RUNBOOK, NOT AN AUTO-EXECUTED MIGRATION
+-- ──────────────────────────────────────────────────────────────────────────
+-- Rotating the symmetric key requires:
+--   1. Decrypting every existing hmac_secret_encrypted with the OLD key
+--   2. Re-encrypting it with the NEW key
+--   3. Atomic switchover of process.env.HMAC_ENCRYPTION_KEY across all
+--      services (Express API, n8n workflows, tower-relay).
+-- Running this automatically on `npm run db:migrate` would leak both keys
+-- into the migration history and risk a partial-rotation incident if the
+-- migration crashes mid-row. Rotation MUST be operator-driven and audited.
+--
+-- ──────────────────────────────────────────────────────────────────────────
+-- PRE-ROTATION CHECKLIST
+-- ──────────────────────────────────────────────────────────────────────────
+--  [ ] No live paper sessions in WAITING_FOR_ENTRY state (markers would 401
+--      mid-rotation otherwise — confirm via SELECT FROM paper_sessions
+--      WHERE status = 'active' AND open_position_id IS NOT NULL)
+--  [ ] Pipeline paused via POST /api/pipeline/pause (operator UI)
+--  [ ] Full DB snapshot taken (Railway dashboard → Postgres → Snapshot)
+--  [ ] Both OLD and NEW key stored in Bitwarden vault under separate items
+--  [ ] All services that read HMAC_ENCRYPTION_KEY are inventoried:
+--        - Express API (Skytech NSSM TradingForgeAPI)
+--        - n8n workflows (Railway) — search for HMAC_ENCRYPTION_KEY usage
+--        - tower-relay-client (if any) — typically does not need this key
+--
+-- ──────────────────────────────────────────────────────────────────────────
+-- ROTATION COMMANDS — RUN MANUALLY UNDER OPERATOR SUPERVISION
+-- ──────────────────────────────────────────────────────────────────────────
+-- Replace <OLD_KEY> and <NEW_KEY> with the values from Bitwarden.
+-- Both keys MUST be quoted single-quote strings; psql will not expand env vars.
+--
+-- 1. Open a transaction explicitly so a crash rolls back the whole table:
+--
+--    BEGIN;
+--
+-- 2. Re-encrypt every row in one statement (idempotent if re-run with the
+--    same key pair on already-rotated rows — pgp_sym_decrypt with the new
+--    key on freshly-encrypted-with-new-key bytes will succeed):
+--
+--    UPDATE account_strategy_assignments
+--    SET hmac_secret_encrypted = pgp_sym_encrypt(
+--      pgp_sym_decrypt(hmac_secret_encrypted, '<OLD_KEY>'),
+--      '<NEW_KEY>'
+--    )
+--    WHERE hmac_secret_encrypted IS NOT NULL;
+--
+-- 3. Spot-check a single row with the NEW key — must return the original
+--    plaintext 64-char hex secret:
+--
+--    SELECT account_id, strategy_id,
+--           pgp_sym_decrypt(hmac_secret_encrypted, '<NEW_KEY>') AS roundtrip
+--    FROM account_strategy_assignments
+--    LIMIT 1;
+--
+-- 4. If roundtrip is correct, COMMIT. Otherwise ROLLBACK and investigate.
+--
+--    COMMIT;  -- or ROLLBACK;
+--
+-- 5. Update HMAC_ENCRYPTION_KEY env var across all services in this order:
+--      a. Set NEW key in Railway dashboard for n8n + tf-relay
+--      b. Set NEW key in Skytech tower .env file
+--      c. Restart NSSM TradingForgeAPI (`nssm restart TradingForgeAPI`)
+--      d. Restart n8n service in Railway
+--
+-- 6. Smoke-test marker reception: send a test TradingView marker through
+--    one paper account; confirm 200 OK + audit_log row 'tradingview_marker.received'
+--    with hmacValidated=true.
+--
+-- 7. Write audit_log row documenting the rotation:
+--
+--    INSERT INTO audit_log (action, entity_type, entity_id, decision_authority,
+--                           input, result, status, correlation_id)
+--    VALUES ('hmac_encryption_key.rotated', 'system', null, 'human',
+--            '{"rotated_at":"<UTC_ISO>","operator":"swayz032"}'::jsonb,
+--            '{"rows_re_encrypted":<COUNT>}'::jsonb, 'success', null);
+--
+-- 8. Resume pipeline via POST /api/pipeline/resume.
+--
+-- ──────────────────────────────────────────────────────────────────────────
+-- ROLLBACK (if rotation step 6 smoke test fails)
+-- ──────────────────────────────────────────────────────────────────────────
+--   1. Revert HMAC_ENCRYPTION_KEY env var to <OLD_KEY> across all services
+--      in the same order as step 5.
+--   2. Restart services.
+--   3. Run the inverse UPDATE swapping <OLD_KEY> and <NEW_KEY>.
+--   4. Verify smoke test passes with the OLD key restored.
+--   5. Write audit_log row 'hmac_encryption_key.rotation_rolled_back'.
+--
+-- ──────────────────────────────────────────────────────────────────────────
+-- This migration MUST be idempotent on apply (it is — it does nothing).
+-- The drizzle migrator will mark it applied; the runbook above is the
+-- operator-side work.
+-- ──────────────────────────────────────────────────────────────────────────
+
+SELECT 1 WHERE FALSE;  -- no-op so the file is non-empty for migrator tooling

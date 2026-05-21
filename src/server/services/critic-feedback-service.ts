@@ -67,10 +67,31 @@ export async function evaluateCriticAccuracy(): Promise<{
     ["PAPER", "DEPLOY_READY", "DEPLOYED"].includes(s.lifecycleState),
   ).length;
 
-  // Demoted = went to a failure state (DECLINING, RETIRED, GRAVEYARD)
+  // Demoted = went to a failure state (DECLINING, RETIRED, GRAVEYARD).
+  // F-6: TESTING rows are intentionally EXCLUDED from the query (the WHERE clause
+  // above does not include TESTING). Rationale: a strategy in TESTING has not yet
+  // completed paper evaluation — including it in the FPR numerator would penalise
+  // the critic for normal lifecycle progression rather than for genuine false
+  // positives. Strategies that regress from TESTING directly to DECLINING/RETIRED
+  // (bypassing PAPER) appear here only if their lifecycle_state is already one of
+  // the failure states listed in the query. This is intentional: such strategies
+  // arrive via normal demotion paths and are already captured as demoted.
+  // If the deliberate exclusion of TESTING ever needs revisiting, extend the WHERE
+  // clause above — but document the rationale change in AGENT-LOGS.md.
   const demoted = paperStrategies.filter((s) =>
     ["DECLINING", "RETIRED", "GRAVEYARD"].includes(s.lifecycleState),
   ).length;
+
+  // Sanity check: maintained + demoted should equal total (all 6 states in the
+  // WHERE clause map to one of the two buckets). Log a warning if they diverge
+  // so we notice if new states are added to the query without updating buckets.
+  const uncategorized = paperStrategies.length - maintained - demoted;
+  if (uncategorized !== 0) {
+    logger.warn(
+      { maintained, demoted, total: paperStrategies.length, uncategorized },
+      "critic-feedback: uncategorized strategies detected — maintained + demoted != total; update bucket lists to match WHERE clause states",
+    );
+  }
 
   const total = paperStrategies.length;
   const accuracy = total > 0 ? maintained / total : 0;

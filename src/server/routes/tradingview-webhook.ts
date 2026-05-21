@@ -86,12 +86,25 @@ setInterval(() => {
 
 // ─── Request schema ───────────────────────────────────────────────────────────
 
+// F-1 (Pass 6 / Track A 2026-05-20): Pine cannot compute HMAC-SHA256 natively.
+// Old contract required runtime `hmac` field signed over canonical bar payload —
+// impossible from Pine. New contract:
+//   - `hmac` is OPTIONAL (legacy clients still validated when present).
+//   - `secret_check` is REQUIRED — export-time signature emitted by pine_compiler
+//     proving the Pine file came from a trusted artifact. Computed over a FIXED
+//     payload at compile-time (e.g. "{strategy_id}|{account_id}|export") and
+//     embedded as a Pine string literal. The backend re-computes the same
+//     signature using the per-(account, strategy) secret and compares with
+//     constant-time equality. Replay-resistance is provided by the existing
+//     10-minute bar_timestamp window (line ~259) plus the unique-index dedupe
+//     on (account_id, strategy_id, bar_timestamp, signal).
 const markerPayloadSchema = z.object({
   strategy_id:    z.string().uuid("strategy_id must be a UUID"),
   account_id:     z.string().uuid("account_id must be a UUID"),
   bar_timestamp:  z.string().datetime({ message: "bar_timestamp must be ISO 8601" }),
   signal:         z.union([z.literal(-1), z.literal(0), z.literal(1)]),
-  hmac:           z.string().min(1, "hmac is required"),
+  hmac:           z.string().min(1).optional(),     // F-1: optional legacy
+  secret_check:   z.string().min(1).optional(),     // F-1: export-time anti-tamper signature
   correlation_id: z.string().uuid().optional().nullable(),
 }).passthrough(); // allow extra fields to be stored in pine_alert_payload
 
@@ -172,6 +185,7 @@ tradingViewWebhookRoutes.post(
       bar_timestamp,
       signal,
       hmac,
+      secret_check,
       correlation_id,
       ...extraFields
     } = parsed.data;
@@ -229,12 +243,39 @@ tradingViewWebhookRoutes.post(
       return;
     }
 
-    // 6. Validate HMAC (constant-time)
-    const isValid = validateHmac(req.body as Record<string, unknown>, hmac, secret);
+    // 6. Validate authenticity (constant-time).
+    // F-1 (Pass 6 / Track A 2026-05-20): two acceptable proofs of origin.
+    //   (a) Legacy: payload includes `hmac` covering canonical fields. We still
+    //       honor it for backwards-compat with previously-exported Pine files
+    //       that pasted a pre-computed HMAC string. Validates via validateHmac().
+    //   (b) Preferred: payload includes `secret_check` — the export-time
+    //       signature of a FIXED payload computed by pine_compiler. We
+    //       re-compute the same signature on the server with the stored
+    //       per-account secret and compare in constant time.
+    // At least ONE of the two MUST be present and valid, else 401.
+    let isValid = false;
+    let proofMode: "hmac_canonical" | "secret_check" | "none" = "none";
+    if (typeof hmac === "string" && hmac.length > 0) {
+      isValid = validateHmac(req.body as Record<string, unknown>, hmac, secret);
+      proofMode = "hmac_canonical";
+    } else if (typeof secret_check === "string" && secret_check.length > 0) {
+      // Export-time signature over the fixed marker payload. MUST match the
+      // value emitted by pine_compiler's `_build_marker_alert()`. Format:
+      // expected = HMAC_SHA256(secret, "{strategy_id}|{account_id}|marker_export").
+      const { createHmac, timingSafeEqual } = await import("crypto");
+      const expected = createHmac("sha256", secret)
+        .update(`${strategy_id}|${account_id}|marker_export`, "utf8")
+        .digest("hex");
+      const a = Buffer.from(expected, "utf8");
+      const b = Buffer.from(secret_check, "utf8");
+      isValid = a.length === b.length && timingSafeEqual(a, b);
+      proofMode = "secret_check";
+    }
+
     if (!isValid) {
       logger.warn(
-        { accountId: account_id, strategyId: strategy_id, correlationId },
-        "tradingview-webhook: HMAC validation failed"
+        { accountId: account_id, strategyId: strategy_id, correlationId, proofMode },
+        "tradingview-webhook: authentication failed (neither hmac nor secret_check valid)"
       );
       await writeAuditRow({
         action: "tradingview_marker.hmac_invalid",
@@ -242,7 +283,7 @@ tradingViewWebhookRoutes.post(
         accountId: account_id,
         correlationId,
         status: "failure",
-        result: { reason: "hmac_mismatch" },
+        result: { reason: "hmac_mismatch", proofMode },
         durationMs: Date.now() - startedAt,
       });
       res.status(401).json({ error: "hmac_invalid" });

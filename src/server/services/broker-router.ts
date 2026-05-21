@@ -6,10 +6,13 @@
  * path actually fires; TopstepX returns a clear "not configured" stub.
  *
  * Fail-CLOSED contract:
+ *   - Production halted        → { success: false, reason: "production_halt" }
  *   - Account not found        → { success: false, reason: "account_not_found" }
  *   - broker_type unknown      → { success: false, reason: "unknown_broker_type" }
  *   - Credential vault error   → { success: false, reason: "credential_load_error" }
  *   - Pipeline paused          → { success: false, reason: "pipeline_paused" }
+ *   - Firm not enabled         → { success: false, reason: "account_not_found" }
+ *   - Compliance violation     → { success: false, reason: "compliance_violation" }
  *   - Any unexpected error     → { success: false, reason: "internal_error" }
  *
  * Every route attempt (success or failure) writes one audit_log row and emits
@@ -27,6 +30,9 @@ import { submitWebhookOrder } from "../integrations/traderspost/client.js";
 import { buildWebhookPayload } from "../integrations/traderspost/webhook-builder.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
 import { notifyCritical } from "./notification-service.js";
+import { killSwitch } from "../production/kill-switch.js";
+import { getEnabledFirms } from "./strategy-assignment-service.js";
+import { getFirmLimit, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -35,6 +41,8 @@ export type BrokerResultReason =
   | "unknown_broker_type"
   | "credential_load_error"
   | "pipeline_paused"
+  | "production_halt"
+  | "compliance_violation"
   | "topstepx_not_configured"
   | "internal_error"
   | "routed";
@@ -109,6 +117,44 @@ export async function routeOrder(
   signal: WebhookSignal,
   correlationId?: string | null,
 ): Promise<BrokerResult> {
+  // ── F-2: Kill switch supremacy — FIRST gate, no exceptions ─────────────────
+  // isHaltedForProduction() is fail-CLOSED: DB error → returns true → blocks.
+  // This gate fires BEFORE pipeline check, account lookup, or anything else.
+  // It is the unconditional production safety interlock for live order routing.
+  let halted: boolean;
+  try {
+    halted = await killSwitch.isHaltedForProduction();
+  } catch {
+    // Fail-CLOSED: if the check itself throws, treat as halted.
+    halted = true;
+  }
+  if (halted) {
+    const result: BrokerResult = {
+      success: false,
+      reason: "production_halt",
+      accountId,
+      error: "killswitch_halt",
+    };
+    logger.error(
+      { accountId, correlationId },
+      "broker-router: BLOCKED — production halt active (kill switch FIRST gate)",
+    );
+    await db.insert(auditLog).values({
+      action: "broker_router.route_rejected",
+      entityType: "broker_account",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { accountId, ticker: signal.ticker, action: signal.action } as Record<string, unknown>,
+      result: { reason: "production_halt", error: "killswitch_halt" } as Record<string, unknown>,
+      status: "blocked",
+      correlationId: correlationId ?? null,
+    }).catch((err: unknown) => {
+      logger.error({ err }, "broker-router: kill-switch audit_log write failed (non-blocking)");
+    });
+    broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+    return result;
+  }
+
   // ── Pipeline pause guard ────────────────────────────────────────────────────
   const active = await isPipelineActive().catch(() => false);
   if (!active) {
@@ -171,6 +217,42 @@ export async function routeOrder(
     return result;
   }
 
+  // ── F-3: Enabled-firms enforcement ─────────────────────────────────────────
+  // instance_config.enabled_firms controls which firms this deployment allows.
+  // A firm not in that list is blocked here — prevents accidental routing to a
+  // firm that is disabled at the instance level (e.g. during firm suspension,
+  // multi-firm compliance pause, or operator reconfiguration).
+  // Fail-open on read error: if getEnabledFirms() throws, we proceed (same
+  // fail-open contract as compliance-gate-service — avoids blocking all orders
+  // on a transient DB error during a read-only config check).
+  try {
+    const enabledFirms = await getEnabledFirms();
+    const normalizedFirmId = (account.firmId ?? "").toLowerCase().replace(/_\d+k$/, "");
+    if (!enabledFirms.includes(account.firmId) && !enabledFirms.includes(normalizedFirmId)) {
+      const result: BrokerResult = {
+        success: false,
+        reason: "account_not_found",
+        accountId,
+        firmId: account.firmId,
+        brokerType: account.brokerType,
+        error: `firm ${account.firmId} not in instance enabled_firms`,
+      };
+      logger.warn(
+        { accountId, firmId: account.firmId, enabledFirms, correlationId },
+        "broker-router: firm not in enabled_firms — blocked (F-3)",
+      );
+      broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+      await writeAuditLog(accountId, signal, result, correlationId);
+      return result;
+    }
+  } catch (enabledFirmsErr) {
+    // Fail-open: log and proceed — read-only config check must not block orders
+    logger.warn(
+      { err: enabledFirmsErr, accountId, firmId: account.firmId, correlationId },
+      "broker-router: getEnabledFirms() failed — proceeding (fail-open for config read)",
+    );
+  }
+
   // ── Wave 10 Task 3C: Route-time safety clamp ─────────────────────────────────
   // Last-line defense: clamp signal.quantity to the firm's per-symbol contract
   // cap. paper-signal-service already applies this upstream, but any other code
@@ -184,14 +266,12 @@ export async function routeOrder(
   // The firm-cap ceiling is the minimum safe guard we can enforce unconditionally.
   if (signal.quantity !== undefined && signal.quantity !== null && typeof signal.quantity === "number") {
     try {
-      // Derive a per-firm cap. Firm contract caps: Topstep=15, MFFU=15 per docs.
-      // Liquid micro default = 20 (CONTRACT_CAP_MAX from firm-config.ts).
-      const ROUTE_FIRM_CAPS: Record<string, number> = {
-        topstep: 15, topstep_50k: 15, topstep_100k: 15, topstep_150k: 15,
-        mffu: 15, mffu_50k: 15,
-      };
-      const routeFirmKey = (account.firmId ?? "").toLowerCase();
-      const routeFirmCap = ROUTE_FIRM_CAPS[routeFirmKey] ?? 20; // 20 = safe default
+      // F-4: Derive per-firm cap from getFirmLimit() (canonical source).
+      // Strips account-tier suffixes (e.g. _50k, _100k) to match firm-config keys.
+      // Falls back to CONTRACT_CAP_MAX when firm is unknown.
+      const routeFirmKey = (account.firmId ?? "").toLowerCase().replace(/_\d+k$/, "");
+      const firmLimitData = getFirmLimit(routeFirmKey);
+      const routeFirmCap = firmLimitData?.maxContracts ?? CONTRACT_CAP_MAX;
 
       if (signal.quantity > routeFirmCap) {
         const originalQty = signal.quantity;
@@ -219,6 +299,113 @@ export async function routeOrder(
     } catch (clampErr) {
       // Firm-cap clamp failure is non-fatal — log and proceed
       logger.error({ err: clampErr, accountId, correlationId }, "broker-router: route-time cap clamp failed — proceeding without clamp");
+    }
+  }
+
+  // ── F-5: MFFU 2026 compliance gate (route-time defense-in-depth) ───────────
+  // paper-execution-service runs this gate with full context (account_balance,
+  // trades_today, open_positions). Here we run it as a last-line guard with the
+  // subset of context available at route time. This catches:
+  //   - Quantity exceeding firm contract cap (already clamped above, audited here)
+  //   - Automated trading flag (always true at route time)
+  // Checks requiring account balance / open positions / trades_today are richer
+  // upstream in paper-execution-service; this layer adds broker-route audit trail.
+  // Fail-open: if runPythonModule throws, we log and proceed to avoid blocking
+  // all live orders on a transient Python subprocess failure.
+  if (account.firmId) {
+    try {
+      const { runPythonModule } = await import("../lib/python-runner.js");
+      const routeComplianceFirmKey = account.firmId.toLowerCase().replace(/_\d+k$/, "");
+      const routeViolationResult = await runPythonModule<{
+        violation: boolean;
+        status: string;
+        message: string;
+        violations: string[];
+      }>({
+        module: "src.engine.compliance.compliance_gate",
+        config: {
+          action: "check_violation",
+          firm: routeComplianceFirmKey,
+          // Minimal strategy_state available at route time.
+          // Full context (account_balance, trades_today, open_positions) is
+          // enforced upstream by paper-execution-service — this is defense-in-depth.
+          strategy_state: {
+            automated: true,
+            account_phase: "pa",
+            host: process.env["TF_HOST_TAG"] ?? "local",
+            pa_account_count: 1,
+            // Quantity-derived intended_max_loss approximation:
+            // Conservative estimate using firm's per-contract daily loss limit.
+            // Real check done upstream with actual account balance.
+            intended_max_loss: null,
+            account_balance: null,
+            trades_today: null,
+            open_positions: [],
+            proposed_symbol: signal.ticker,
+          },
+        },
+        timeoutMs: 3_000,
+        componentName: "compliance-gate-broker-router",
+      });
+
+      if (routeViolationResult.violation) {
+        const result: BrokerResult = {
+          success: false,
+          reason: "compliance_violation",
+          accountId,
+          firmId: account.firmId,
+          brokerType: account.brokerType,
+          error: routeViolationResult.message,
+        };
+        logger.error(
+          {
+            accountId,
+            firmId: account.firmId,
+            symbol: signal.ticker,
+            status: routeViolationResult.status,
+            violations: routeViolationResult.violations,
+            correlationId,
+          },
+          "broker-router: BLOCKED — compliance gate violation (F-5)",
+        );
+        await db.insert(auditLog).values({
+          action: "broker_router.compliance_rejected",
+          entityType: "broker_account",
+          entityId: null,
+          decisionAuthority: "system",
+          input: {
+            accountId,
+            firmId: account.firmId,
+            ticker: signal.ticker,
+            violations: routeViolationResult.violations,
+          } as Record<string, unknown>,
+          result: {
+            status: routeViolationResult.status,
+            message: routeViolationResult.message,
+            blocked: true,
+          } as Record<string, unknown>,
+          status: "blocked",
+          correlationId: correlationId ?? null,
+        }).catch((err: unknown) => {
+          logger.error({ err }, "broker-router: compliance audit_log write failed (non-blocking)");
+        });
+        broadcastSSE("compliance:rejected", {
+          firmId: account.firmId,
+          symbol: signal.ticker,
+          reason: routeViolationResult.message,
+          correlationId: correlationId ?? null,
+        });
+        broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+        await writeAuditLog(accountId, signal, result, correlationId);
+        return result;
+      }
+    } catch (routeComplianceErr) {
+      // Fail-open: log warning, proceed — broker-router compliance gate is
+      // defense-in-depth; upstream paper-execution-service is the primary gate.
+      logger.warn(
+        { err: routeComplianceErr, accountId, firmId: account.firmId, correlationId },
+        "broker-router: compliance gate subprocess failed — proceeding (fail-open, primary gate is paper-execution-service)",
+      );
     }
   }
 
@@ -256,7 +443,8 @@ export async function routeOrder(
 
     // ── Build + submit webhook ────────────────────────────────────────────────
     const payload = buildWebhookPayload(apiKey, signal);
-    const submitResult = await submitWebhookOrder(payload);
+    // F-6: pass correlationId so client can build a stable idempotency key
+    const submitResult = await submitWebhookOrder(payload, correlationId);
 
     const result: BrokerResult = {
       success: submitResult.success,

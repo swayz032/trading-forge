@@ -20,9 +20,31 @@ const WebSocket = require("ws");
 const http = require("http");
 const { URL } = require("url");
 
+// ─── Singleton enforcement ────────────────────────────────────────────────────
+// Prevents two concurrent WebSocket connections from the same client process.
+// On reconnect, the previous socket is closed with code 4001 ("superseded")
+// before a new connection is opened. The relay server additionally enforces
+// singleton at the server side via req.headers["sec-websocket-protocol"].
+let currentWs = null;
+
 const SERVER = process.env.RELAY_SERVER;
 const TOKEN = process.env.RELAY_TOKEN;
 const BACKEND = process.env.RELAY_BACKEND || "http://localhost:4000";
+
+// Pass 6 / Track C F-7: per-request timeout. Without this, a hung backend
+// (stalled Ollama inference, deadlocked Express handler, blocked DB query)
+// holds a relay socket open indefinitely — eventually starving the WS
+// connection. Default 120s lets Ollama inference complete; faster paths
+// (Express /api/* defaults) can override via RELAY_FAST_TIMEOUT_MS.
+const RELAY_BACKEND_TIMEOUT_MS = parseInt(process.env.RELAY_BACKEND_TIMEOUT_MS || "120000", 10);
+const RELAY_FAST_TIMEOUT_MS = parseInt(process.env.RELAY_FAST_TIMEOUT_MS || "30000", 10);
+
+// Per-route timeout map. Ollama (port 11434) needs the full 120s for LLM
+// generations; everything else gets the faster timeout.
+function resolveTimeoutMs(backendUrl) {
+  if (backendUrl.includes(":11434")) return RELAY_BACKEND_TIMEOUT_MS;
+  return RELAY_FAST_TIMEOUT_MS;
+}
 
 // Path-prefix → backend URL. Longest-prefix wins. Strip the prefix before
 // forwarding (so `/__ollama/api/tags` → `http://localhost:11434/api/tags`).
@@ -54,12 +76,42 @@ if (!SERVER || !TOKEN) {
   process.exit(1);
 }
 
-const wsUrl = `${SERVER}?token=${encodeURIComponent(TOKEN)}`;
+// ─── F-1: Token transmitted via WebSocket subprotocol, NOT URL query string ──
+// Passing the token in the URL query string exposes it in:
+//   • process-list (`ps aux`, pm2 logs with wsUrl)
+//   • TLS termination proxy access logs
+//   • Railway request logs
+//
+// Instead, pass TOKEN as the first element of the WebSocket subprotocols array.
+// The relay SERVER must accept it via:
+//   req.headers["sec-websocket-protocol"]   (primary — this client)
+//   ?token=... query string                 (fallback — for transition; server-side only)
+//
+// COORDINATION REQUIREMENT (not this file): railway-relay/server.js must be
+// updated to read the token from req.headers["sec-websocket-protocol"] as
+// primary and the URL ?token= param as a transition fallback. Both must be
+// compared with a constant-time comparison (crypto.timingSafeEqual).
+//
+// Client side: we connect to SERVER (no token in URL) and pass TOKEN only in
+// the subprotocol header. Never log TOKEN or the full connection URL with token.
+
 let backoffMs = 1000;
 
 function connect() {
+  // F-7: Close any existing open connection before opening a new one (singleton).
+  if (currentWs && currentWs.readyState === WebSocket.OPEN) {
+    console.warn(`[${new Date().toISOString()}] singleton: closing superseded connection`);
+    currentWs.close(4001, "superseded");
+  }
+
+  // Log SERVER only — never log TOKEN or a URL that contains it.
   console.log(`[${new Date().toISOString()}] connecting to ${SERVER}`);
-  const ws = new WebSocket(wsUrl, { perMessageDeflate: false });
+
+  // Pass the relay token via the WebSocket subprotocol header (Sec-WebSocket-Protocol).
+  // The "ws" library sends whatever is in the protocols array as that header value.
+  // SERVER has NO token in the query string.
+  const ws = new WebSocket(SERVER, [TOKEN], { perMessageDeflate: false });
+  currentWs = ws;
 
   ws.on("open", () => {
     console.log(`[${new Date().toISOString()}] connected`);
@@ -74,6 +126,12 @@ function connect() {
   });
 
   ws.on("close", (code, reason) => {
+    // F-7: Code 4001 = this connection was superseded by a newer call to connect().
+    // Do NOT schedule a reconnect — the newer connection owns the session.
+    if (code === 4001) {
+      console.warn(`[${new Date().toISOString()}] connection superseded (code=4001) — no reconnect`);
+      return;
+    }
     console.log(`[${new Date().toISOString()}] disconnected code=${code} reason=${reason}; reconnecting in ${backoffMs}ms`);
     setTimeout(connect, backoffMs);
     backoffMs = Math.min(backoffMs * 2, 30000);
@@ -109,6 +167,15 @@ function proxyRequest(ws, msg) {
       const body = chunks.length ? Buffer.concat(chunks).toString("base64") : null;
       sendResponse(ws, msg.id, res.statusCode, res.headers, body);
     });
+  });
+
+  // Pass 6 / Track C F-7: per-request timeout. setTimeout() arms the
+  // socket timer; the callback fires once after the configured idle period
+  // and we destroy the request so the WS frame is freed and the relay
+  // doesn't hold the slot forever waiting on a dead backend.
+  const timeoutMs = resolveTimeoutMs(resolved.backend);
+  req.setTimeout(timeoutMs, () => {
+    req.destroy(new Error(`relay backend timeout after ${timeoutMs}ms (${resolved.backend})`));
   });
 
   req.on("error", (e) => {

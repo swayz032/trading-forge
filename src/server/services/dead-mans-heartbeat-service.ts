@@ -36,6 +36,13 @@ const STALE_THRESHOLD_MS = 2 * 60 * 60 * 1000; // 2 hours
 let _lastAlertedForTs: Date | null = null;
 let _alertFiredAt: Date | null = null;
 
+// ─── Schema-drift read-path dedup (F-5) ──────────────────────────────────────
+// The write-path already fires notifyCritical on table-missing. The read-path
+// (getLastHeartbeatAt) must do the same, but needs its own dedup so repeated
+// stale checks don't spam Discord every 30 minutes.
+// Value = UTC calendar date string ("2026-05-20") of last read-path schema alert.
+let _lastSchemaDriftReadAlertAt: string | null = null;
+
 function resetAlertDedup(): void {
   _lastAlertedForTs = null;
   _alertFiredAt = null;
@@ -136,11 +143,25 @@ export async function getLastHeartbeatAt(): Promise<Date | null> {
     return new Date((arr[0] as { ts: string }).ts);
   } catch (err) {
     if (isTableMissingError(err)) {
-      // Schema drift — fire CRITICAL, not just a warn
+      // F-5: Schema drift on the READ path — fire notifyCritical (same as
+      // write-path) so the operator is alerted regardless of which path detects
+      // the missing table first. Dedup once per calendar day to avoid spam on
+      // the 30-min stale check cadence (up to 48 calls per RTH day).
+      const todayUtc = new Date().toISOString().slice(0, 10);
       logger.error(
         { table: HEARTBEAT_TABLE, code: PG_RELATION_NOT_FOUND },
         `dead-mans-heartbeat: SCHEMA DRIFT — table "${HEARTBEAT_TABLE}" missing during stale check`,
       );
+      if (_lastSchemaDriftReadAlertAt !== todayUtc) {
+        _lastSchemaDriftReadAlertAt = todayUtc;
+        // notifyCritical returns void (fire-and-forget) — matches write-path pattern.
+        notifyCritical(
+          "Heartbeat schema drift (read-path)",
+          `Table "${HEARTBEAT_TABLE}" is missing during the stale heartbeat check. ` +
+            `The dead-man's heartbeat cannot verify backend liveness. Apply the pending migration immediately.`,
+          { table: HEARTBEAT_TABLE, error_code: PG_RELATION_NOT_FOUND, path: "read" },
+        );
+      }
     } else {
       logger.warn({ err }, "dead-mans-heartbeat: last heartbeat query failed");
     }

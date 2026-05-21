@@ -199,31 +199,6 @@ def _split_at_depth0(expression: str, keyword: str) -> list[str]:
     return parts if len(parts) > 1 else [expression]
 
 
-def _split_at_depth0(expression, keyword):
-    """Split on ' keyword ' at paren-depth 0 only. F-5 fix 2026-05-20."""
-    kw = f' {keyword} '
-    kw_len = len(kw)
-    parts = []
-    depth = 0
-    last_cut = 0
-    i = 0
-    n = len(expression)
-    while i < n:
-        ch = expression[i]
-        if ch == '(':
-            depth += 1; i += 1
-        elif ch == ')':
-            depth -= 1; i += 1
-        elif depth == 0 and expression[i:i + kw_len] == kw:
-            parts.append(expression[last_cut:i].strip())
-            i += kw_len
-            last_cut = i
-        else:
-            i += 1
-    parts.append(expression[last_cut:].strip())
-    return parts if len(parts) > 1 else [expression]
-
-
 def evaluate_expression(df: pl.DataFrame, expression: str) -> pl.Series:
     """Evaluate a boolean expression against DataFrame columns.
 

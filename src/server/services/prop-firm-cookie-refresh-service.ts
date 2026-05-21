@@ -14,9 +14,16 @@
  *   MFFU_DASHBOARD_URL                 — defaults to https://app.myforexfunds.com
  *   TOPSTEP_DASHBOARD_URL              — defaults to https://trader.topstep.com
  *
- * Env vars written:
+ * Env vars written (CREDENTIAL-CLASS — see safety note below):
  *   MFFU_SESSION_COOKIES    — JSON cookie array for C2 snapshot service
  *   TOPSTEP_SESSION_COOKIES — JSON cookie array for C2 snapshot service
+ *
+ * ─── F-8: CREDENTIAL-CLASS env var safety note ────────────────────────────────
+ * MFFU_SESSION_COOKIES and TOPSTEP_SESSION_COOKIES written to process.env are
+ * CREDENTIAL-CLASS values. They must NEVER be logged, even in debug mode.
+ * Any future debug path that dumps process.env MUST call redactSensitiveEnv()
+ * before logging (exported from this module for shared use).
+ * ──────────────────────────────────────────────────────────────────────────────
  *
  * Pipeline-pause guard: BYPASSED (safety signal — matches C1/C2/C8 pattern).
  */
@@ -25,6 +32,40 @@ import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
+
+// ─── F-8: Credential redaction helper ─────────────────────────────────────────
+// Keys whose values must never appear in any log output.
+const SENSITIVE_ENV_KEYS = new Set([
+  "MFFU_SESSION_COOKIES",
+  "TOPSTEP_SESSION_COOKIES",
+  "MFFU_PASSWORD",
+  "TOPSTEP_PASSWORD",
+  "BW_VAULT_PASSPHRASE",
+  "BW_SESSION",
+  "RELAY_TOKEN",
+]);
+
+/**
+ * Returns a copy of the given env object with credential-class keys redacted.
+ * Use this before passing any process.env snapshot to a logger or diagnostic dump.
+ *
+ * @example
+ *   logger.debug({ env: redactSensitiveEnv(process.env) }, "debug: env dump");
+ */
+export function redactSensitiveEnv(
+  env: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = {};
+  for (const [k, v] of Object.entries(env)) {
+    out[k] = SENSITIVE_ENV_KEYS.has(k) ? "[REDACTED]" : v;
+  }
+  return out;
+}
+
+// ─── F-4: Once-per-day dedup for playwright_unavailable skip alerts ───────────
+// Keyed by firmId. Value = UTC calendar date string ("2026-05-20") of last alert.
+// Prevents spamming Discord every 24h cycle when Playwright is persistently absent.
+const _lastSkipAlertAt: Map<string, string> = new Map();
 
 interface FirmConfig {
   firmId: "mffu" | "topstep";
@@ -106,7 +147,6 @@ async function refreshFirmCookies(firm: FirmConfig): Promise<FirmRefreshResult> 
   }
 
   // Lazy Playwright import — not installed in all environments
-   
   let chromium: any;
   try {
     // Dynamic import avoids type dependency on @playwright/test or playwright packages
@@ -115,6 +155,22 @@ async function refreshFirmCookies(firm: FirmConfig): Promise<FirmRefreshResult> 
   } catch {
     logger.warn({ firmId: firm.firmId }, "prop-firm-cookie-refresh: Playwright not available — skipping");
     _cookieStatus[firm.firmId] = "stale";
+
+    // F-4: Alert once per calendar day when Playwright is unavailable so the
+    // operator knows cookies are going stale (not silently ignored).
+    const todayUtc = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+    if (_lastSkipAlertAt.get(firm.firmId) !== todayUtc) {
+      _lastSkipAlertAt.set(firm.firmId, todayUtc);
+      await AlertFactory.notifyCookieRefreshFailed(
+        firm.firmId,
+        "playwright_unavailable — Playwright is not installed on this host. " +
+          "Session cookies for this firm will go stale. Install Playwright or " +
+          "manually supply fresh cookies via the dashboard.",
+      ).catch((alertErr: unknown) => {
+        logger.warn({ alertErr, firmId: firm.firmId }, "prop-firm-cookie-refresh: skip alert send failed");
+      });
+    }
+
     return { firmId: firm.firmId, status: "skipped_playwright_unavailable" };
   }
 

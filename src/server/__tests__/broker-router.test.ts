@@ -59,6 +59,25 @@ vi.mock("../services/pipeline-control-service.js", () => ({
   isActive: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock("../production/kill-switch.js", () => ({
+  killSwitch: {
+    isHaltedForProduction: vi.fn().mockResolvedValue(false),
+  },
+}));
+
+vi.mock("../services/strategy-assignment-service.js", () => ({
+  getEnabledFirms: vi.fn().mockResolvedValue(["mffu", "topstep"]),
+}));
+
+vi.mock("../../shared/firm-config.js", () => ({
+  getFirmLimit: vi.fn().mockReturnValue({ maxContracts: 50 }),
+  CONTRACT_CAP_MAX: 60,
+}));
+
+vi.mock("../lib/python-runner.js", () => ({
+  runPythonModule: vi.fn().mockResolvedValue({ violation: false, status: "ok", message: "", violations: [] }),
+}));
+
 vi.mock("../lib/credential-loader.js", () => ({
   loadBrokerCredentials: vi.fn().mockResolvedValue({ apiKey: "test-api-key-abc123" }),
 }));
@@ -85,6 +104,8 @@ import { loadBrokerCredentials } from "../lib/credential-loader.js";
 import { submitWebhookOrder } from "../integrations/traderspost/client.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { db } from "../db/index.js";
+import { killSwitch } from "../production/kill-switch.js";
+import { getEnabledFirms } from "../services/strategy-assignment-service.js";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -131,8 +152,10 @@ function mockSelectReturning(accounts: unknown[]) {
 describe("broker-router", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: pipeline active, traderspost account found
+    // Default: pipeline active, kill switch off, traderspost account found, all firms enabled
     vi.mocked(isPipelineActive).mockResolvedValue(true);
+    vi.mocked(killSwitch.isHaltedForProduction).mockResolvedValue(false);
+    vi.mocked(getEnabledFirms).mockResolvedValue(["mffu", "topstep"]);
     mockSelectReturning([TRADERSPOST_ACCOUNT]);
     vi.mocked(db.insert).mockReturnValue({
       values: vi.fn().mockResolvedValue([{ id: "test-audit-id" }]),
@@ -251,6 +274,39 @@ describe("broker-router", () => {
 
     expect(result.success).toBe(false);
     expect(result.reason).toBe("account_not_found");
+    expect(submitWebhookOrder).not.toHaveBeenCalled();
+  });
+
+  // ─── Test 9 (F-2): Kill switch is FIRST gate ──────────────────────────────
+
+  it("F-2: returns production_halt when kill switch is active — FIRST gate, before pipeline check", async () => {
+    vi.mocked(killSwitch.isHaltedForProduction).mockResolvedValue(true);
+    // Even if pipeline is active and account exists, kill switch wins
+    vi.mocked(isPipelineActive).mockResolvedValue(true);
+    mockSelectReturning([TRADERSPOST_ACCOUNT]);
+
+    const result = await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-123");
+
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe("production_halt");
+    expect(result.error).toBe("killswitch_halt");
+    // Must NOT have proceeded to account lookup or order submission
+    expect(submitWebhookOrder).not.toHaveBeenCalled();
+    expect(loadBrokerCredentials).not.toHaveBeenCalled();
+  });
+
+  // ─── Test 10 (F-3): Enabled-firms enforcement ─────────────────────────────
+
+  it("F-3: returns account_not_found when firm is not in enabled_firms", async () => {
+    // Disable mffu at the instance level
+    vi.mocked(getEnabledFirms).mockResolvedValue(["topstep"]);
+    mockSelectReturning([TRADERSPOST_ACCOUNT]); // firmId=mffu
+
+    const result = await routeOrder("test-account-uuid-1234", TEST_SIGNAL);
+
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe("account_not_found");
+    expect(result.error).toMatch(/not in instance enabled_firms/);
     expect(submitWebhookOrder).not.toHaveBeenCalled();
   });
 });

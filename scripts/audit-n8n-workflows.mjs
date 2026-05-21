@@ -70,6 +70,40 @@ const TYPE_VERSION_FLOORS = {
 // ─── Scout endpoints that REQUIRE signal_type ───────────────────────
 const SCOUT_PATH_REGEX = /\/scout-ideas(\/strict)?(?:\b|$)/;
 
+// ─── Pass 6 / Track C F-5: enterprise-grade workflow drift checks ───
+// ZZ Global Error Sink — every non-ZZ active workflow MUST attach
+// settings.errorWorkflow = "BbCvlV1ARyyvY3NI" (per CLAUDE.md §2). The
+// "ZZ" prefix on the sink's own name is how we exempt it from the check.
+const ZZ_ERROR_WORKFLOW_ID = "BbCvlV1ARyyvY3NI";
+const ZZ_NAME_PREFIX = /^ZZ[\s_-]/i;
+
+// SplitInBatches v3: index 0 is the "done" exit, index 1 is the loop body.
+// Downstream work wired ONLY to index 0 silently runs zero iterations
+// (pinned-fact violation per CLAUDE.md §2b — "Weekly Strategy Hunt"
+// regression was caught here). The check enforces: a SplitInBatches v3
+// node must have either (a) a populated index-1 array in its outgoing
+// connections, OR (b) no index-0 wiring at all (so the operator was forced
+// to wire the body to index 1). Empty connections object on the node is
+// allowed — that's a deliberately-terminated branch.
+const SPLIT_BATCHES_TYPE = "n8n-nodes-base.splitInBatches";
+
+// Webhook trigger nodes must use authentication. n8n exposes this via
+// parameters.authentication ∈ { "headerAuth", "basicAuth", "jwtAuth", ... }.
+// "none" or empty string fails. The check skips webhooks that act purely
+// as internal MCP plumbing (notes contain `# n8n-drift-allowed`).
+const WEBHOOK_TYPE = "n8n-nodes-base.webhook";
+
+// External HTTP calls need retry config. We flag httpRequest nodes that
+// look outbound (URL host is not localhost / host.docker.internal / 127.*)
+// when retryOnFail !== true. An inbound /api/* call on tower relay is
+// internal traffic, so we whitelist those host patterns.
+const INTERNAL_HOST_PATTERNS = [
+  /^https?:\/\/localhost(:|\/|$)/i,
+  /^https?:\/\/127\.\d+\.\d+\.\d+/i,
+  /^https?:\/\/host\.docker\.internal/i,
+  /^=?\{\{\s*\$env\.(TF_BACKEND|RAILWAY_RELAY|RELAY_BACKEND)/i,
+];
+
 async function fetchWorkflows(baseUrl, apiKey) {
   const all = [];
   let cursor;
@@ -222,6 +256,82 @@ function findOutdatedTypeVersions(workflowJson) {
   return violations;
 }
 
+// ─── F-5a: ZZ error sink attached on every active non-ZZ workflow ───
+function findMissingErrorWorkflow(workflowJson) {
+  const violations = [];
+  if (ZZ_NAME_PREFIX.test(workflowJson.name ?? "")) return violations;
+  if (workflowJson.id === ZZ_ERROR_WORKFLOW_ID) return violations;
+  const attached = workflowJson?.settings?.errorWorkflow;
+  if (attached !== ZZ_ERROR_WORKFLOW_ID) {
+    violations.push({
+      workflowName: workflowJson.name,
+      attached: attached ?? null,
+      expected: ZZ_ERROR_WORKFLOW_ID,
+    });
+  }
+  return violations;
+}
+
+// ─── F-5b: SplitInBatches v3 wired to index 1 (loop), not index 0 ───
+function findSplitBatchesMisWired(workflowJson) {
+  const violations = [];
+  const conns = workflowJson.connections ?? {};
+  for (const node of workflowJson.nodes ?? []) {
+    if (node.type !== SPLIT_BATCHES_TYPE) continue;
+    if ((node.typeVersion ?? 0) < 3) continue;
+    const out = conns[node.name]?.main ?? [];
+    const idx0 = Array.isArray(out[0]) ? out[0] : [];
+    const idx1 = Array.isArray(out[1]) ? out[1] : [];
+    if (idx0.length === 0 && idx1.length === 0) continue;
+    if (idx1.length === 0) {
+      violations.push({
+        nodeName: node.name,
+        reason: "SplitInBatches v3 loop body wired to index 0 (done) instead of index 1 (loop)",
+        idx0_targets: idx0.length,
+        idx1_targets: idx1.length,
+      });
+    }
+  }
+  return violations;
+}
+
+// ─── F-5c: webhook trigger nodes must set authentication ────────────
+function findUnauthenticatedWebhooks(workflowJson) {
+  const violations = [];
+  for (const node of workflowJson.nodes ?? []) {
+    if (node.type !== WEBHOOK_TYPE) continue;
+    if (isAllowed(node)) continue;
+    const auth = node.parameters?.authentication;
+    if (!auth || auth === "none" || auth === "") {
+      violations.push({
+        nodeName: node.name,
+        authentication: auth ?? null,
+        path: node.parameters?.path ?? null,
+      });
+    }
+  }
+  return violations;
+}
+
+// ─── F-5d: external HTTP calls must have retryOnFail ────────────────
+function findHttpMissingRetry(workflowJson) {
+  const violations = [];
+  for (const node of workflowJson.nodes ?? []) {
+    const type = String(node.type ?? "");
+    if (!/httpRequest/i.test(type)) continue;
+    const url = String(node.parameters?.url ?? "");
+    if (!url) continue;
+    if (INTERNAL_HOST_PATTERNS.some((re) => re.test(url))) continue;
+    if (node.retryOnFail === true) continue;
+    violations.push({
+      nodeName: node.name,
+      url,
+      retryOnFail: node.retryOnFail ?? false,
+    });
+  }
+  return violations;
+}
+
 // ─── Report writer ──────────────────────────────────────────────────
 function renderReport(byWorkflow) {
   const lines = [];
@@ -236,6 +346,10 @@ function renderReport(byWorkflow) {
     ["scout_signal_type", "Scout POSTs missing `signal_type`"],
     ["port_4100_alert", "Dead port-4100 /alert/* endpoints"],
     ["typeversion", "Outdated typeVersions"],
+    ["error_workflow", "Missing ZZ Global Error Sink attachment"],
+    ["split_batches", "SplitInBatches v3 mis-wired (loop body on index 0)"],
+    ["webhook_auth", "Webhook trigger missing authentication"],
+    ["http_retry", "External HTTP request missing retryOnFail"],
   ];
 
   let totalViolations = 0;
@@ -296,6 +410,11 @@ async function main() {
       scout_signal_type: findScoutMissingSignalType(detail),
       port_4100_alert: findPort4100AlertRefs(detail),
       typeversion: findOutdatedTypeVersions(detail),
+      // Pass 6 / Track C F-5 — production-hardening checks
+      error_workflow: findMissingErrorWorkflow(detail),
+      split_batches: findSplitBatchesMisWired(detail),
+      webhook_auth: findUnauthenticatedWebhooks(detail),
+      http_retry: findHttpMissingRetry(detail),
     };
     byWorkflow.push({ id: w.id, name: w.name, violations: v });
   }

@@ -49,6 +49,8 @@ import { runAuctionImbalancePull } from "./services/opening-auction-service.js";
 // W23D / Wave 23 Gap-Fix-B: bias engine + harsh-regime phase activation
 import { computeBiasForAllSymbols } from "./services/bias-state-service.js";
 import { getPhase, flipPhaseToHard } from "./services/harsh-regime-phase-service.js";
+// Pass 6 / Track C F-6: n8n execution telemetry scraper (observability — never gated)
+import { runN8nExecutionScrape } from "./services/n8n-execution-scraper-service.js";
 
 let initialized = false;
 
@@ -250,7 +252,13 @@ async function withRetry(
 // ─── Pipeline gate — always-run jobs bypass the check ────────
 // pipeline-resume-drain MUST run when paused so it can detect the transition
 // back to ACTIVE; it has its own internal mode-change detector.
-const ALWAYS_RUN_JOBS = new Set(["metrics-heartbeat", "stale-session-check", "pipeline-resume-drain"]);
+const ALWAYS_RUN_JOBS = new Set([
+  "metrics-heartbeat",
+  "stale-session-check",
+  "pipeline-resume-drain",
+  // Pass 6 / Track C F-6: observability scraper — never gate
+  "n8n-execution-scrape",
+]);
 
 // ─── Pipeline mode tracker (drives resume-drain) ─────────────
 // Records the last-observed pipeline mode so we can detect transitions back
@@ -334,6 +342,7 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   "bias-engine-session-start",       // Safety/observability input
   "bias-engine-refresh-10am-et",     // Safety/observability input
   "harsh-regime-phase-activation-check", // Safety — gate hardening
+  "n8n-execution-scrape",                // F-6: observability — must scrape even when paused
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -822,6 +831,28 @@ export function initScheduler() {
     }
   });
   _scheduledJobs.add("heartbeat-stale-check");
+
+  // ─── Pass 6 / Track C F-6: n8n execution-log scraper every 5 min ───
+  // Pulls execution telemetry from n8n on Railway via REST API and writes
+  // it into n8n_execution_log so the health/stats endpoints have data.
+  // Observability infrastructure — NEVER pipeline-gated; must run even
+  // when the trading pipeline is PAUSED so we still detect workflow
+  // failures during downtime windows.
+  registerJob("n8n-execution-scrape", 5 * 60 * 1000, async () => {
+    await runN8nExecutionScrape();
+  });
+  cron.schedule("*/5 * * * *", async () => {
+    if (!_tryAcquireJobLock("n8n-execution-scrape")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("n8n-execution-scrape", SCHEDULER_JOBS["n8n-execution-scrape"].run, 1);
+      markJobRun("n8n-execution-scrape");
+      emitJobComplete("n8n-execution-scrape", Date.now() - t0);
+    } finally {
+      _releaseJobLock("n8n-execution-scrape");
+    }
+  });
+  _scheduledJobs.add("n8n-execution-scrape");
 
   // ─── Phase 1.4: Metrics heartbeat every 60s ───────────────
   // Broadcasts rolling session metrics snapshot over SSE so the live

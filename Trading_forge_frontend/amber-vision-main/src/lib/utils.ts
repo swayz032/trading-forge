@@ -24,25 +24,36 @@ export function fmtPct(v: number): string {
   return `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
 }
 
-/** Futures contract specifications — point values for P&L conversion */
+/** Futures contract specifications — point values for P&L conversion.
+ *  CLAUDE.md §13 anti-pattern pin: micro/mini conversion is 10× — flipping the
+ *  wrong spec causes silent risk inflation. Canonical Wave 23 symbols are
+ *  MES / MNQ / MCL (micros). ES/NQ/CL minis kept for legacy reads only.
+ */
 export const CONTRACT_SPECS: Record<string, { tickSize: number; tickValue: number; pointValue: number }> = {
   ES:  { tickSize: 0.25, tickValue: 12.50, pointValue: 50.00 },
   NQ:  { tickSize: 0.25, tickValue: 5.00,  pointValue: 20.00 },
   CL:  { tickSize: 0.01, tickValue: 10.00, pointValue: 1000.00 },
   MES: { tickSize: 0.25, tickValue: 1.25,  pointValue: 5.00 },
   MNQ: { tickSize: 0.25, tickValue: 0.50,  pointValue: 2.00 },
+  MCL: { tickSize: 0.01, tickValue: 0.50,  pointValue: 100.00 },
 };
 
-/** Convert dollar P&L to points for a given symbol and contract count */
-export function dollarsToPoints(dollarPnl: number, symbol: string, contracts: number = 1): number {
-  const spec = CONTRACT_SPECS[symbol.toUpperCase()] ?? CONTRACT_SPECS["ES"];
+/** Convert dollar P&L to points for a given symbol and contract count.
+ *  Returns null when the symbol has no spec — callers MUST render "—" on null
+ *  rather than fall back to a different contract (fail-closed; never silently
+ *  inflate / deflate using the wrong point value). See CLAUDE.md §13.
+ */
+export function dollarsToPoints(dollarPnl: number, symbol: string, contracts: number = 1): number | null {
+  const spec = CONTRACT_SPECS[symbol.toUpperCase()] ?? null;
+  if (spec === null) return null;
   if (contracts === 0) return 0;
   return dollarPnl / (spec.pointValue * contracts);
 }
 
-/** Convert points to dollars */
-export function pointsToDollars(points: number, symbol: string, contracts: number = 1): number {
-  const spec = CONTRACT_SPECS[symbol.toUpperCase()] ?? CONTRACT_SPECS["ES"];
+/** Convert points to dollars. Returns null when symbol is unknown. */
+export function pointsToDollars(points: number, symbol: string, contracts: number = 1): number | null {
+  const spec = CONTRACT_SPECS[symbol.toUpperCase()] ?? null;
+  if (spec === null) return null;
   return points * spec.pointValue * contracts;
 }
 

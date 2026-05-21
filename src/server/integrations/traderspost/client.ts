@@ -26,14 +26,27 @@ const SUBMIT_TIMEOUT_MS = 10_000; // 10 s — broker webhook must respond prompt
 /**
  * Submit a webhook order to TradersPost.
  *
- * @param payload - Complete webhook payload (apiKey must be included).
+ * @param payload       - Complete webhook payload (apiKey must be included).
+ * @param correlationId - Optional trace ID propagated from the caller. Used to
+ *                        construct the X-Idempotency-Key header so duplicate
+ *                        submissions (retries, network blips) are deduplicated
+ *                        by TradersPost. Falls back to strategyId+ticker+action
+ *                        when correlationId is not provided.
  * @returns TradersPostSubmitResult — success flag + raw response info.
  */
 export async function submitWebhookOrder(
   payload: TradersPostWebhookPayload,
+  correlationId?: string | null,
 ): Promise<TradersPostSubmitResult> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
+
+  // F-6: Idempotency key — prevents duplicate fills on retry/network blips.
+  // Prefer correlationId (trace-safe, globally unique per bar-signal pair).
+  // Fallback: strategyId-ticker-action (stable for same signal, no timestamp drift).
+  const idempotencyKey =
+    correlationId ??
+    [payload.strategyId ?? "tf", payload.ticker, payload.action].join("-");
 
   try {
     logger.debug(
@@ -43,13 +56,19 @@ export async function submitWebhookOrder(
         orderType: payload.orderType,
         positionType: payload.positionType,
         strategyId: payload.strategyId,
+        idempotencyKey,
       },
       "traderspost:client: submitting webhook order",
     );
 
     const response = await fetch(TRADERSPOST_WEBHOOK_BASE_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        // Idempotency key — TradersPost deduplicates on this value.
+        // Stable for the same logical signal; unique across different signals.
+        "X-Idempotency-Key": idempotencyKey,
+      },
       // Never log the full payload — it contains the api key
       body: JSON.stringify(payload),
       signal: controller.signal,

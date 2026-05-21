@@ -87,7 +87,8 @@ export default function Dashboard() {
     if (!selectedRow || !selectedBacktest) return null;
 
     const bt = selectedBacktest;
-    const symbol = selectedRow.symbol || "ES";
+    // CLAUDE.md §4 canonical: MES is the default micro futures symbol.
+    const symbol = selectedRow.symbol || "MES";
     const trades = selectedTrades ?? [];
 
     const totalTrades = bt.totalTrades ?? 0;
@@ -119,6 +120,9 @@ export default function Dashboard() {
       for (const t of trades) {
         const pnlDollars = num(t.pnl);
         const pnlPts = dollarsToPoints(pnlDollars, symbol, t.contracts || 1);
+        // Skip trades for unknown symbols (null) — fail-closed, never silently
+        // bucket into ES fallback (CLAUDE.md §13 micro/mini inflation pin).
+        if (pnlPts === null) continue;
         if (pnlPts >= 0) {
           winners.push(pnlPts);
         } else {
@@ -160,10 +164,11 @@ export default function Dashboard() {
     if (!selectedRow) return null;
 
     const bt = selectedBacktest;
-    const symbol = selectedRow.symbol || "ES";
+    // CLAUDE.md §4 canonical: MES is the default micro futures symbol.
+    const symbol = selectedRow.symbol || "MES";
     const lifecycle = strategies?.find((s) => s.id === selectedRow.strategyId)?.lifecycleState ?? "CANDIDATE";
 
-    // Backtest stage
+    // Backtest stage (dollarsToPoints returns null for unknown symbols — render "—")
     const btNetPnl = bt ? dollarsToPoints(num(bt.totalReturn), symbol, 1) : 0;
     const btTotalTrades = bt?.totalTrades ?? 0;
     const btWinRate = num(bt?.winRate) * 100;
@@ -300,8 +305,8 @@ export default function Dashboard() {
                 <StatTile label="Total Trades" value={tradeStats.totalTrades > 0 ? tradeStats.totalTrades.toLocaleString() : "--"} />
                 <StatTile
                   label="Net P&L"
-                  value={tradeStats.netPnlPts !== 0 ? fmtPoints(tradeStats.netPnlPts) : "--"}
-                  color={tradeStats.netPnlPts > 0 ? "text-profit" : tradeStats.netPnlPts < 0 ? "text-loss" : undefined}
+                  value={tradeStats.netPnlPts !== null && tradeStats.netPnlPts !== 0 ? fmtPoints(tradeStats.netPnlPts) : "—"}
+                  color={tradeStats.netPnlPts !== null && tradeStats.netPnlPts > 0 ? "text-profit" : tradeStats.netPnlPts !== null && tradeStats.netPnlPts < 0 ? "text-loss" : undefined}
                 />
                 <StatTile
                   label="Win Rate"
@@ -315,12 +320,12 @@ export default function Dashboard() {
                 />
                 <StatTile
                   label="Expectancy"
-                  value={tradeStats.expectancyPts !== 0 ? `${tradeStats.expectancyPts >= 0 ? "+" : ""}${tradeStats.expectancyPts.toFixed(1)} pts/trade` : "--"}
-                  color={tradeStats.expectancyPts > 0 ? "text-profit" : tradeStats.expectancyPts < 0 ? "text-loss" : undefined}
+                  value={tradeStats.expectancyPts !== null && tradeStats.expectancyPts !== 0 ? `${tradeStats.expectancyPts >= 0 ? "+" : ""}${tradeStats.expectancyPts.toFixed(1)} pts/trade` : "—"}
+                  color={tradeStats.expectancyPts !== null && tradeStats.expectancyPts > 0 ? "text-profit" : tradeStats.expectancyPts !== null && tradeStats.expectancyPts < 0 ? "text-loss" : undefined}
                 />
                 <StatTile
                   label="Max DD"
-                  value={tradeStats.maxDdPts > 0 ? `-${tradeStats.maxDdPts.toFixed(1)} pts` : "--"}
+                  value={tradeStats.maxDdPts !== null && tradeStats.maxDdPts > 0 ? `-${tradeStats.maxDdPts.toFixed(1)} pts` : "—"}
                   color="text-loss"
                 />
                 <StatTile
@@ -416,7 +421,7 @@ export default function Dashboard() {
                 label="BACKTEST"
                 status={journeyStages.backtest.status === "passed" ? "green" : journeyStages.backtest.status === "running" ? "amber" : "grey"}
                 items={journeyStages.backtest.status !== "not_started" ? [
-                  { label: "Net P&L", value: journeyStages.backtest.netPnl !== 0 ? fmtPoints(journeyStages.backtest.netPnl) : "--" },
+                  { label: "Net P&L", value: journeyStages.backtest.netPnl !== null && journeyStages.backtest.netPnl !== 0 ? fmtPoints(journeyStages.backtest.netPnl) : "—" },
                   { label: "Trades", value: journeyStages.backtest.totalTrades > 0 ? journeyStages.backtest.totalTrades.toLocaleString() : "--" },
                   { label: "Win Rate", value: journeyStages.backtest.winRate > 0 ? `${journeyStages.backtest.winRate.toFixed(0)}%` : "--" },
                   { label: "Forge Score", value: journeyStages.backtest.forgeScore > 0 ? journeyStages.backtest.forgeScore.toFixed(0) : "--" },

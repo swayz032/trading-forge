@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertOctagon, X } from "lucide-react";
+import { sseClient } from "@/lib/sse-client";
+import type { SSEEvent } from "@/types/sse-events";
 
 type KillEvent = {
   sessionId: string;
@@ -11,6 +13,23 @@ type KillEvent = {
 
 const SHOW_FOR_MS = 30 * 60 * 1000; // 30 minutes
 const STORAGE_KEY = "tf:kill-switch-event";
+/** Max size we'll ever persist to localStorage for a single kill event.
+ *  Caps any pathological payload (e.g. multi-KB reason string) from
+ *  ballooning the storage quota. 2 KB is plenty for {sessionId, reason, …}. */
+const MAX_STORAGE_BYTES = 2048;
+/** Defensive caps on string fields so a hostile/malformed event can't blow up
+ *  the banner UI or localStorage. */
+const MAX_REASON_LEN = 256;
+const MAX_SYMBOL_LEN = 16;
+const MAX_SESSION_ID_LEN = 64;
+
+function isNonEmptyString(v: unknown): v is string {
+  return typeof v === "string" && v.length > 0;
+}
+
+function clampString(v: string, max: number): string {
+  return v.length > max ? v.slice(0, max) : v;
+}
 
 function loadStored(): KillEvent | null {
   try {
@@ -31,41 +50,51 @@ function loadStored(): KillEvent | null {
 export function KillSwitchBanner() {
   const [event, setEvent] = useState<KillEvent | null>(() => loadStored());
   const [dismissed, setDismissed] = useState(false);
-  const sourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    const es = new EventSource("/api/sse/events");
-    sourceRef.current = es;
+    // F-5 fix: route through the shared sseClient singleton instead of opening
+    // a second EventSource. Multiplexed across all subscribers; respects the
+    // per-domain connection cap; inherits reconnect/backoff.
+    const handler = (e: SSEEvent) => {
+      if (e.type !== "paper:kill-switch-tripped") return;
+      const data = e.data as Record<string, unknown> | null | undefined;
+      if (!data || typeof data !== "object") return;
 
-    const handler = (e: MessageEvent) => {
+      // Validate required string fields BEFORE persisting to localStorage.
+      // Fail-closed: bail entirely on malformed payloads rather than write
+      // "unknown" placeholders that mask backend bugs.
+      const sessionIdRaw = (data as { sessionId?: unknown }).sessionId;
+      const reasonRaw = (data as { reason?: unknown }).reason;
+      const symbolRaw = (data as { symbol?: unknown }).symbol;
+      const forceCloseRaw = (data as { force_close?: unknown }).force_close;
+
+      if (!isNonEmptyString(sessionIdRaw)) return;
+      if (!isNonEmptyString(reasonRaw)) return;
+      if (symbolRaw !== undefined && !isNonEmptyString(symbolRaw)) return;
+
+      const ev: KillEvent = {
+        sessionId: clampString(sessionIdRaw, MAX_SESSION_ID_LEN),
+        reason: clampString(reasonRaw, MAX_REASON_LEN),
+        symbol: isNonEmptyString(symbolRaw) ? clampString(symbolRaw, MAX_SYMBOL_LEN) : undefined,
+        force_close: typeof forceCloseRaw === "boolean" ? forceCloseRaw : undefined,
+        receivedAt: Date.now(),
+      };
+
       try {
-        const data = JSON.parse(e.data);
-        const ev: KillEvent = {
-          sessionId: data?.sessionId ?? "unknown",
-          symbol: data?.symbol,
-          reason: data?.reason ?? "Kill switch tripped",
-          force_close: data?.force_close,
-          receivedAt: Date.now(),
-        };
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(ev));
-        } catch {
-          // ignore storage failure
+        const serialized = JSON.stringify(ev);
+        // Cap storage entry size — refuse to persist anything pathological.
+        if (serialized.length <= MAX_STORAGE_BYTES) {
+          localStorage.setItem(STORAGE_KEY, serialized);
         }
-        setEvent(ev);
-        setDismissed(false);
       } catch {
-        // malformed payload — ignore
+        // ignore storage failure (quota exceeded, private mode, etc.)
       }
+      setEvent(ev);
+      setDismissed(false);
     };
 
-    es.addEventListener("paper:kill-switch-tripped", handler as EventListener);
-
-    return () => {
-      es.removeEventListener("paper:kill-switch-tripped", handler as EventListener);
-      es.close();
-      sourceRef.current = null;
-    };
+    const unsubscribe = sseClient.subscribe(["paper:kill-switch-tripped"], handler);
+    return unsubscribe;
   }, []);
 
   // Auto-hide after 30 min

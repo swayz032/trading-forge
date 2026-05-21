@@ -941,7 +941,16 @@ def compute_position_sizes(
         pv = contract_spec.point_value
         # risk_dollars extracted from evidence (set by compute_risk_derived_contracts)
         risk_dollars_scalar = float(sizing_result.evidence.get("risk_dollars", account_balance * config.max_risk_pct_per_trade))
-        effective_firm_cap_bar = int(sizing_result.firm_cap) if sizing_result.firm_cap is not None else int(max_contracts)
+        # F-7 fix (2026-05-20): when firm_cap AND max_contracts are both None
+        # (legacy strategies, no firm metadata) int(None) raised TypeError. Use a
+        # sentinel "no cap" value (1e9 contracts — well above any liquidity cap
+        # so this branch never binds) so the min() below still computes correctly.
+        if sizing_result.firm_cap is not None:
+            effective_firm_cap_bar = int(sizing_result.firm_cap)
+        elif max_contracts is not None:
+            effective_firm_cap_bar = int(max_contracts)
+        else:
+            effective_firm_cap_bar = 10**9
         liquidity_cap_bar = int(config.liquidity_comfort_cap)
         pyramid_tier_bar = int(sizing_result.pyramid_tier)
         base_contr = int(config.base_contracts)

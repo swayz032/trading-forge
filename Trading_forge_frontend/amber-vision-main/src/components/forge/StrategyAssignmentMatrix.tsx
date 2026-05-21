@@ -237,11 +237,39 @@ export function StrategyAssignmentMatrix() {
     }
   };
 
+  /** F-7: typed-name confirmation before unassign. Operator must type the
+   *  family-member label exactly to confirm. Fail-closed: any non-match (or
+   *  missing label) aborts the delete entirely. */
   const handleUnassign = async (assignmentId: number) => {
+    // Resolve the expected confirmation string from current state.
+    const target = assignments.find((a) => a.id === assignmentId);
+    if (!target) {
+      setError("Assignment not found");
+      return;
+    }
+    const account = accounts.find((a) => a.accountId === target.accountId);
+    const expectedName =
+      target.familyMemberLabel
+      ?? account?.label
+      ?? account?.accountIdExternal
+      ?? target.accountId.slice(0, 8);
+
+    // Browser-native typed-confirmation prompt. Returns null on cancel.
+    const typed = window.prompt(
+      `UNASSIGN confirmation\n\nThis removes the strategy from "${expectedName}".\nType the name exactly to confirm:`,
+      "",
+    );
+    if (typed === null) return; // operator cancelled
+    if (typed.trim() !== expectedName) {
+      setError(`Unassign aborted — typed name did not match "${expectedName}"`);
+      return;
+    }
+
     setActionLoading(true);
     try {
       await api.del(`/strategy-assignments/${assignmentId}`);
       setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to unassign strategy");
     } finally {

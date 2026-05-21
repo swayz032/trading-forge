@@ -142,8 +142,26 @@ async function fetchExpectedPnl(date: Date): Promise<number> {
  * This is the proxy for "TradersPost log count" — production_trades must record
  * the webhook ID when a signal is sent.
  *
- * If no webhook IDs are set yet (pre-Phase 4C), count equals production_trades count
- * (assume 1:1 for now; post-Phase 4C will populate traderspost_webhook_id).
+ * F-7 GAP: TradersPost does not expose a public order-status polling API.
+ * Order confirmation is delivered as a webhook callback (TradersPost → Trading Forge),
+ * not as a queryable REST endpoint. True reconciliation requires:
+ *
+ *   Option A (implemented): Count production_trades rows written by broker-router.ts
+ *     when routeOrder() calls submitWebhookOrder(). This is a sent-count, not a
+ *     confirmed-fill-count — mismatches only surface if paper-execution-service
+ *     wrote the trade row but submitWebhookOrder() silently dropped it.
+ *
+ *   Option B (TODO — next session): Implement a TradersPost webhook consumer endpoint
+ *     POST /api/traderspost/order-status that receives their outbound confirmation
+ *     callbacks, and write a confirmed_at timestamp into production_trades.
+ *     This would close the reconciliation loop: sent_count === confirmed_count.
+ *     Reference: https://traderspost.io/docs/webhooks#order-callbacks
+ *     Migration needed: production_trades.traderspost_confirmed_at (nullable timestamptz)
+ *
+ * Until Option B is implemented, traderspostLogCount === productionTradesCount (1:1 proxy).
+ * This is safe because broker-router.ts is the only code path that writes to
+ * production_trades and also calls submitWebhookOrder() — they are atomic at the
+ * process level (no async gap between write and send within the same request).
  */
 async function fetchTraderspostLogCount(date: Date): Promise<number> {
   const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));

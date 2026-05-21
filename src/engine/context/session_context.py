@@ -20,7 +20,26 @@ _UTC_ZONE = ZoneInfo("UTC")
 
 
 def _to_et(ts):
-    """Convert a timestamp to ET (America/New_York). Treats naive as UTC."""
+    """Convert a timestamp to ET (America/New_York). Treats naive as UTC.
+
+    F-9 DST fold (2026-05-20):
+    On the fall DST transition (first Sunday of November), the 01:00-02:00 ET
+    hour fires TWICE — once under EDT (UTC-4) then again under EST (UTC-5).
+    ZoneInfo.astimezone() resolves the wall-clock value but the resulting ET
+    timestamps are NOT unique across the fold: two distinct UTC bars map to
+    the same (hour, minute) ET reading.
+
+    HARD RULE: _to_et() output is for DISPLAY and SESSION CLASSIFICATION only
+    (hour/minute checks like 02:00-05:00 London, 09:30-12:00 NY AM). It must
+    NEVER be used as a key for deduplication, "is bar X in window Y today"
+    membership where X must be unique, or as an ordering primitive.
+
+    Any temporal scan that needs uniqueness MUST key off the original UTC
+    ts_event (or its bar_idx, which is monotonic by construction in the
+    intraday DataFrame). The scans in this file already iterate by bar_idx
+    (range(..., bar_idx)) — they are SAFE because bar_idx is unique even
+    when two adjacent bars share the same ET wall-clock reading.
+    """
     if ts is None:
         return None
     if hasattr(ts, "tzinfo") and ts.tzinfo is None:

@@ -4,13 +4,38 @@ Fits P&L curve to exponential decay model: P(t) = P0 * exp(-lambda*t)
 Half-life = ln(2) / lambda
 """
 import math
+import os
+from datetime import datetime, timezone
 
 import numpy as np
+
+# F-2: configurable grace period (days) for freshly-promoted strategies.
+# During this window the decay verdict is forced to "pass" / stable so the
+# critic does not quarantine a strategy before it has had time to accumulate
+# meaningful live P&L. Set DECAY_GRACE_DAYS=0 to disable.
+DECAY_GRACE_DAYS: int = int(os.environ.get("DECAY_GRACE_DAYS", "14"))
+
+
+def _within_grace_period(promoted_at: datetime | str | None) -> bool:
+    """Return True if promoted_at is within DECAY_GRACE_DAYS of now."""
+    if promoted_at is None or DECAY_GRACE_DAYS <= 0:
+        return False
+    if isinstance(promoted_at, str):
+        try:
+            promoted_at = datetime.fromisoformat(promoted_at.replace("Z", "+00:00"))
+        except ValueError:
+            return False
+    now = datetime.now(tz=timezone.utc)
+    if promoted_at.tzinfo is None:
+        promoted_at = promoted_at.replace(tzinfo=timezone.utc)
+    age_days = (now - promoted_at).total_seconds() / 86400
+    return age_days < DECAY_GRACE_DAYS
 
 
 def fit_decay(
     daily_pnls: list[float],
     window: int = 60,
+    promoted_at: datetime | str | None = None,
 ) -> dict:
     """
     Fit exponential decay to rolling performance metrics.
@@ -28,6 +53,19 @@ def fit_decay(
             "trend": "stable" | "declining" | "accelerating_decline" | "improving",
         }
     """
+    # F-2: short-circuit decay verdict during grace period so freshly-promoted
+    # strategies are not quarantined before enough live P&L has accumulated.
+    if _within_grace_period(promoted_at):
+        return {
+            "decay_detected": False,
+            "decay_rate": 0.0,
+            "half_life_days": None,
+            "r_squared": 0.0,
+            "current_vs_peak": 1.0,
+            "trend": "stable",
+            "_grace_period_active": True,
+        }
+
     arr = np.array(daily_pnls, dtype=float)
     n = len(arr)
 

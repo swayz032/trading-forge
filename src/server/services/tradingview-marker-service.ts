@@ -312,9 +312,28 @@ export async function lookupHmacSecret(
 
     return row.resolved_secret ?? null;
   } catch (err) {
-    // If pgp_sym_decrypt is unavailable (pgcrypto not installed) or the encrypted column
-    // doesn't exist yet (migration 0128 not applied), fall back to plaintext query.
-    logger.warn({ accountId, strategyId, err }, "tradingview-marker: encrypted hmac lookup failed — retrying with plaintext");
+    // F-3 (Pass 6 / Track A 2026-05-20): the previous catch returned the plaintext
+    // hmac_secret unconditionally — including in production. That defeats migration
+    // 0128 (HMAC encryption-at-rest) on every transient pgcrypto error. Now we
+    // FAIL CLOSED in production: log at ERROR and return null so the marker route
+    // emits 401 and the operator is alerted. Plaintext fallback is permitted only
+    // when NODE_ENV is dev/test AND the explicit feature flag HMAC_PLAINTEXT_FALLBACK
+    // is set to "true" (e.g. local debugging before migration 0128 is applied).
+    const isProd = process.env.NODE_ENV === "production";
+    const plaintextFallbackAllowed =
+      !isProd && process.env.HMAC_PLAINTEXT_FALLBACK === "true";
+
+    logger.error(
+      { accountId, strategyId, err, isProd, plaintextFallbackAllowed },
+      "tradingview-marker: encrypted hmac lookup failed — " +
+      (plaintextFallbackAllowed
+        ? "falling back to plaintext (DEV ONLY)"
+        : "refusing plaintext fallback (fail-closed)"),
+    );
+
+    if (!plaintextFallbackAllowed) {
+      return null;
+    }
 
     try {
       const fallback = await db.execute(

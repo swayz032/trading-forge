@@ -5,6 +5,7 @@ Each signal independently detects a specific type of strategy degradation.
 import math
 
 import numpy as np
+from .half_life import _within_grace_period
 
 
 def sharpe_decay(daily_pnls: list[float], window: int = 30) -> dict:
@@ -258,6 +259,7 @@ def composite_decay_score(
     strategy_regime: str = "",
     current_regime: str = "",
     regime_history: list[dict] | None = None,
+    promoted_at=None,
 ) -> dict:
     """
     Combine all 6 sub-signals into a composite decay score (0-100).
@@ -271,6 +273,20 @@ def composite_decay_score(
     - regime_mismatch: 0.15
     - fill_rate_decay: 0.10
     """
+    # F-2: freshly-promoted strategies get a zero composite score so the
+    # quarantine gate sees no decay during the grace window.
+    if _within_grace_period(promoted_at):
+        empty_signals = {
+            name: {"signal": name, "score": 0.0, "detail": "Grace period active"}
+            for name in SIGNAL_WEIGHTS
+        }
+        return {
+            "composite_score": 0.0,
+            "signals": empty_signals,
+            "weights": SIGNAL_WEIGHTS,
+            "_grace_period_active": True,
+        }
+
     signals: dict[str, dict] = {}
 
     signals["sharpe_decay"] = sharpe_decay(daily_pnls)
