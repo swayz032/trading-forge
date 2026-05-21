@@ -29,7 +29,7 @@ All build phases are done. **No new subsystems for 90 days.** The only work is p
 - **Lifecycle production** — every state transition atomic + audited via `audit_log` and `lifecycle_transitions`
 - **Bug tracing** — correlation_id propagates end-to-end (bar → handler → DB → SSE → audit_log) so any 90-day-old trade can be reconstructed
 - **Bugs / errors / disconnects / incidents** — fix them where they live; root cause, not workaround
-- **n8n enterprise grade** — every workflow has retry + idempotency + `errorWorkflow` attached to `BbCvlV1ARyyvY3NI` (ZZ global error sink) + dedupe. Drift detector cron runs monthly.
+- **n8n enterprise grade** — every workflow has retry + idempotency + `errorWorkflow` attached to `DGEk1D478xWJClKD` (`0A-health-monitor`, the live global error sink — verified via REST API 2026-05-21; pre-Wave-9 referenced `BbCvlV1ARyyvY3NI` which no longer exists on Railway) + dedupe. Drift detector cron runs monthly.
 - **Bottlenecks blocking lifecycle flow** — anything stopping CANDIDATE from reaching DEPLOYED is the priority
 - **Systems live together** — Node ↔ Python ↔ n8n ↔ Postgres ↔ frontend must agree on contracts. No silent drift.
 - **System Map sync mandatory** — after every architectural change, run `npm run system-map:sync` and keep `system-map:check` green
