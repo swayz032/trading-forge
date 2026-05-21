@@ -810,6 +810,8 @@ export async function loadStrictSchemaForRole(role: ModelRole): Promise<unknown 
           if (Array.isArray(node)) return node.map(normalizeStrict);
           if (node === null || typeof node !== "object") return node;
           const obj = node as Record<string, unknown>;
+          // Strip keywords OpenAI strict mode does not support
+          delete obj.default;
           // Recurse into all values first
           for (const k of Object.keys(obj)) obj[k] = normalizeStrict(obj[k]);
           // Apply strict-mode normalization to object schemas
