@@ -25,6 +25,18 @@
         "stop_loss_atr_multiple": 1.5,
         "take_profit_atr_multiple": 2.0,
         "preferred_regime": "RANGE_BOUND",
+        "bias_timeframe": null,
+        "bias_condition": null,
+        "execution_timeframe": "5m",
+        "primary_indicator": "vwap_fade",
+        "confirming_indicators": [
+          { "indicator": "adx", "params": { "period": 14, "threshold": 22 }, "direction": "agree" }
+        ],
+        "min_factors_satisfied": 2,
+        "preferred_regimes": ["RANGE_BOUND"],
+        "confluence_factors": ["regime_match"],
+        "source_claim_win_rate": 0.6,
+        "source_claim_avg_r": null,
         "session_filter": "RTH_ONLY",
         "max_contracts": 5,
         "tags": ["vwap-fade", "mnq", "youtube-extracted", "algorithmic-edge"]
