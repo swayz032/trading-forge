@@ -2,7 +2,8 @@ import { db } from "../db/index.js";
 import { paperTrades } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { broadcastSSE } from "../routes/sse.js";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
+import { A7_CORRELATION_THRESHOLD } from "../lib/correlation-constants.js";
 
 export interface CorrelationResult {
   strategy1: string;
@@ -65,21 +66,28 @@ export async function calculateCorrelation(sessionId1: string, sessionId2: strin
   const correlation = Math.round(pearsonCorrelation(pnl1, pnl2) * 1000) / 1000;
   const absCorr = Math.abs(correlation);
 
+  // A7 threshold from shared constant \u2014 CLAUDE.md \u00a712 canonical value 0.70
+  const highThreshold = A7_CORRELATION_THRESHOLD;       // 0.70 \u2014 A7 hard gate
+  const moderateThreshold = A7_CORRELATION_THRESHOLD * 0.5; // 0.35 \u2014 advisory only
+
   const result: CorrelationResult = {
     strategy1: sessionId1,
     strategy2: sessionId2,
     correlation,
-    status: absCorr > 0.5 ? "high" : absCorr > 0.3 ? "moderate" : "uncorrelated",
-    recommendation: absCorr > 0.5
-      ? "Treat as one strategy for position sizing \u2014 combined heat exceeds independent risk"
-      : absCorr > 0.3
+    status: absCorr > highThreshold ? "high" : absCorr > moderateThreshold ? "moderate" : "uncorrelated",
+    recommendation: absCorr > highThreshold
+      ? `Treat as one strategy for position sizing \u2014 combined heat exceeds independent risk (A7 threshold: ${highThreshold})`
+      : absCorr > moderateThreshold
         ? "Moderate correlation \u2014 monitor during volatility events"
         : "Good diversification \u2014 strategies are sufficiently uncorrelated",
   };
 
-  if (absCorr > 0.5) {
+  if (absCorr > highThreshold) {
+    logger.warn(
+      { ...result, a7_threshold: highThreshold },
+      "A7: high correlation detected between strategies",
+    );
     broadcastSSE("correlation:alert", result);
-    logger.warn(result, "High correlation detected between strategies");
   }
 
   return result;

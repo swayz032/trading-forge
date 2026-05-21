@@ -86,9 +86,29 @@ function setupMockStrategy(overrides: Record<string, unknown> = {}) {
   ]);
 }
 
+/** Extract SQL text from drizzleSql template object or raw string for test assertions. */
+function extractQueryText(sqlArg: unknown): string {
+  if (typeof sqlArg === "string") return sqlArg;
+  if (sqlArg && typeof sqlArg === "object" && "queryChunks" in sqlArg) {
+    const chunks = (sqlArg as { queryChunks: Array<{ value?: string[] } | string> }).queryChunks;
+    return chunks
+      .map((c) => {
+        if (typeof c === "string") return c;
+        if (c && typeof c === "object" && "value" in c && Array.isArray(c.value)) {
+          return c.value.join("");
+        }
+        return "";
+      })
+      .join(" ");
+  }
+  return JSON.stringify(sqlArg);
+}
+
 function setupMockBrokerAccount(firmId = "mffu") {
-  vi.mocked(db.execute).mockImplementation(async (sql: unknown, params: unknown[]) => {
-    const query = String(sql);
+  vi.mocked(db.execute).mockImplementation(async (sql: unknown) => {
+    // Support both raw SQL strings (legacy) and drizzleSql template objects (new form).
+    const query = extractQueryText(sql);
+
     if (query.includes("broker_accounts")) {
       return {
         rows: [
@@ -98,12 +118,23 @@ function setupMockBrokerAccount(firmId = "mffu") {
             account_id_external: "EXT-001",
           },
         ],
+        rowCount: 1,
       };
     }
     if (query.includes("account_strategy_assignments")) {
-      return { rows: [{ hmac_secret: null }] };
+      if (query.includes("UPDATE")) {
+        return { rows: [], rowCount: 1 };
+      }
+      if (query.includes("INSERT")) {
+        return { rows: [], rowCount: 1 };
+      }
+      // SELECT — row with no existing secret
+      return { rows: [{ hmac_secret: null, hmac_secret_encrypted: null, resolved_secret: null }], rowCount: 1 };
     }
-    return { rows: [] };
+    if (query.includes("paper_trades")) {
+      return { rows: [{ total_pnl: "0" }], rowCount: 1 };
+    }
+    return { rows: [], rowCount: 0 };
   });
 }
 
@@ -240,18 +271,13 @@ describe("pine-export-recipient-service", () => {
   // ── Test 5: Legacy-firm account rejection ─────────────────────────────────
 
   it("rejects account_id with legacy firm (not mffu or topstep)", async () => {
-    // Simulate broker_accounts returning a legacy firm (should not happen post-0097,
-    // but we test the guard regardless)
+    // Simulate broker_accounts returning no rows (account not found).
     vi.mocked(db.execute).mockImplementation(async (sql: unknown) => {
-      const query = String(sql);
+      const query = extractQueryText(sql);
       if (query.includes("broker_accounts")) {
-        // Return a legacy firm — ALLOWED_FIRM_IDS check should reject
-        // Actually, migration 0098 has a CHECK constraint, so this row can't exist.
-        // The guard at the service level is defense-in-depth.
-        // Simulate account_not_found (no rows):
-        return { rows: [] };
+        return { rows: [], rowCount: 0 };
       }
-      return { rows: [] };
+      return { rows: [], rowCount: 0 };
     });
 
     await expect(

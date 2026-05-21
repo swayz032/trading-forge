@@ -447,8 +447,10 @@ app.use("/api/prop-firm", propFirmRoutes);
 app.use("/api/portfolio", portfolioRoutes);
 app.use("/api/context", contextRoutes);
 app.use("/api/validation", validationRoutes);
-app.use("/api/pine-export", pineExportRoutes);
+// F-4: /api/pine-export/recipient MUST be mounted BEFORE /api/pine-export
+// so Express does not shadow the more-specific path with the /:id wildcard.
 app.use("/api/pine-export/recipient", pineExportRecipientRoutes);
+app.use("/api/pine-export", pineExportRoutes);
 app.use("/api/quantum-mc", strictRateLimit, quantumMcRoutes);
 // Tier 6: Quantum pre-flight — cache-READ-ONLY lookup for n8n workflows.
 // NOT rate-limited at strict tier because it is read-only and called per

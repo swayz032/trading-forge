@@ -1,7 +1,10 @@
-"""Signal generation — expression evaluator for strategy entry/exit rules.
+"""Signal generation -- expression evaluator for strategy entry/exit rules.
 
 Supports: AND, OR, NOT, comparisons (<, >, <=, >=, ==),
 crosses_above, crosses_below, numeric literals.
+
+F-4 fix (2026-05-20): Chained comparisons (a > b > c) now raise ValueError.
+F-5 fix (2026-05-20): AND/OR splitting is paren-depth-aware (_split_at_depth0).
 """
 
 from __future__ import annotations
@@ -13,9 +16,16 @@ import polars as pl
 
 from src.engine.config import StrategyConfig
 
+# Token-aware regex: longest operators first.
+_CMP_PATTERN = re.compile(r'\s*(>=|<=|==|!=|>|<)\s*')
+
+# Token-aware comparison operator regex: matches operator with surrounding context.
+# Longest operators listed first (>= before >, <= before <).
+_CMP_PATTERN = re.compile(r'\s*(>=|<=|==|!=|>|<)\s*')
+
 
 def _resolve_operand(df: pl.DataFrame, token: str) -> pl.Series:
-    """Resolve a token to a Polars Series — either a column name or numeric literal."""
+    """Resolve a token to a Polars Series -- either a column name or numeric literal."""
     # Try numeric literal first
     try:
         val = float(token)
@@ -58,33 +68,160 @@ _COMPARISON_OPS = {
 }
 
 
+def _count_cmp_operators_at_depth0(expr: str) -> int:
+    """Count comparison operators at paren-depth-0 in expr.
+
+    F-4 helper: detects chained comparisons like 'a > b > c'.
+    crosses_above / crosses_below are NOT comparison operators for this purpose.
+    """
+    depth = 0
+    count = 0
+    i = 0
+    while i < len(expr):
+        ch = expr[i]
+        if ch == "(":
+            depth += 1
+            i += 1
+        elif ch == ")":
+            depth -= 1
+            i += 1
+        elif depth == 0:
+            # Try two-char operators first (>=, <=, ==, !=)
+            matched = False
+            for op in (">=", "<=", "==", "!="):
+                if expr[i:i + 2] == op:
+                    count += 1
+                    i += 2
+                    matched = True
+                    break
+            if not matched and ch in (">", "<") and expr[i:i + 2] not in (">=", "<="):
+                count += 1
+                i += 1
+            else:
+                if not matched:
+                    i += 1
+        else:
+            i += 1
+    return count
+
+
 def _eval_simple_expr(df: pl.DataFrame, expr: str) -> pl.Series:
-    """Evaluate a single comparison expression (no AND/OR/NOT)."""
+    """Evaluate a single comparison expression (no AND/OR/NOT).
+
+    F-4 fix (2026-05-20): Added arity validation that counts comparison operators
+    at paren-depth-0 before splitting. If >1 operator is found, raises ValueError
+    with a clear message rather than silently producing a wrong result.
+    """
     expr = expr.strip()
 
-    # Check for crosses_above / crosses_below
+    # Check for crosses_above / crosses_below first (not subject to arity check)
     if "crosses_above" in expr:
         parts = expr.split("crosses_above")
+        if len(parts) != 2:
+            raise ValueError(f"Expected exactly one 'crosses_above' in: '{expr}'")
         a = _resolve_operand(df, parts[0].strip())
         b = _resolve_operand(df, parts[1].strip())
         return _crosses_above(a, b)
 
     if "crosses_below" in expr:
         parts = expr.split("crosses_below")
+        if len(parts) != 2:
+            raise ValueError(f"Expected exactly one 'crosses_below' in: '{expr}'")
         a = _resolve_operand(df, parts[0].strip())
         b = _resolve_operand(df, parts[1].strip())
         return _crosses_below(a, b)
 
-    # Standard comparisons — try longest operators first
-    for op_str, op_fn in _COMPARISON_OPS.items():
-        if op_str in expr:
-            parts = expr.split(op_str, 1)
-            a = _resolve_operand(df, parts[0].strip())
-            b = _resolve_operand(df, parts[1].strip())
-            result = op_fn(a, b)
-            return result.fill_null(False)
+    # F-4: Arity check -- chained comparisons like 'a > b > c' must be rejected.
+    op_count = _count_cmp_operators_at_depth0(expr)
+    if op_count > 1:
+        raise ValueError(
+            f"Chained comparisons not supported: '{expr}'. "
+            f"Found {op_count} comparison operators at depth-0. "
+            f"Use AND/OR to combine conditions: e.g. 'a > b AND b > c'."
+        )
+
+    # Standard comparisons -- use token-aware regex (longest operators first).
+    match = _CMP_PATTERN.search(expr)
+    if match:
+        op_str = match.group(1)
+        op_fn = _COMPARISON_OPS.get(op_str)
+        if op_fn is None:
+            raise ValueError(f"Unknown comparison operator '{op_str}' in: '{expr}'")
+        left = expr[:match.start()].strip()
+        right = expr[match.end():].strip()
+        a = _resolve_operand(df, left)
+        b = _resolve_operand(df, right)
+        result = op_fn(a, b)
+        return result.fill_null(False)
 
     raise ValueError(f"Cannot parse expression: '{expr}'")
+
+
+def _split_at_depth0(expression: str, keyword: str) -> list[str]:
+    """Split `expression` on ` keyword ` tokens that are at paren-depth 0.
+
+    F-5 fix (2026-05-20): replaces re.split() which was not paren-depth-aware.
+
+    Algorithm: walk the string char-by-char, tracking paren depth.
+    Split only when ' keyword ' is matched at depth == 0.
+
+    Examples:
+      _split_at_depth0('a AND b', 'AND') -> ['a', 'b']
+      _split_at_depth0('(a OR b) AND c', 'OR') -> ['(a OR b) AND c']  (no depth-0 OR)
+      _split_at_depth0('(a OR b) AND c', 'AND') -> ['(a OR b)', 'c']
+      _split_at_depth0('(a crosses_above b) AND (c > d OR c > e)', 'AND')
+          -> ['(a crosses_above b)', '(c > d OR c > e)']
+    """
+    kw = f" {keyword} "
+    kw_len = len(kw)
+    parts: list[str] = []
+    depth = 0
+    last_cut = 0
+    i = 0
+    n = len(expression)
+
+    while i < n:
+        ch = expression[i]
+        if ch == "(":
+            depth += 1
+            i += 1
+        elif ch == ")":
+            depth -= 1
+            i += 1
+        elif depth == 0 and expression[i:i + kw_len] == kw:
+            parts.append(expression[last_cut:i].strip())
+            i += kw_len
+            last_cut = i
+        else:
+            i += 1
+
+    parts.append(expression[last_cut:].strip())
+    return parts if len(parts) > 1 else [expression]
+
+
+def _split_at_depth0(expression, keyword):
+    """Split on ' keyword ' at paren-depth 0 only. F-5 fix 2026-05-20."""
+    kw = f' {keyword} '
+    kw_len = len(kw)
+    parts = []
+    depth = 0
+    last_cut = 0
+    i = 0
+    n = len(expression)
+    while i < n:
+        ch = expression[i]
+        if ch == '(':
+            depth += 1; i += 1
+        elif ch == ')':
+            depth -= 1; i += 1
+        elif depth == 0 and expression[i:i + kw_len] == kw:
+            parts.append(expression[last_cut:i].strip())
+            i += kw_len
+            last_cut = i
+        else:
+            i += 1
+    parts.append(expression[last_cut:].strip())
+    return parts if len(parts) > 1 else [expression]
 
 
 def evaluate_expression(df: pl.DataFrame, expression: str) -> pl.Series:
@@ -98,15 +235,16 @@ def evaluate_expression(df: pl.DataFrame, expression: str) -> pl.Series:
     Inner parentheses within subexpressions are stripped recursively via the same
     mechanism. Complex nested parentheses (e.g. NOT (A AND B)) are handled by the
     NOT prefix stripping below, which recurses on the inner expression.
+
+    F-5 fix (2026-05-20): AND/OR splitting is now paren-depth-aware via
+    _split_at_depth0(), replacing the previous re.split() that was not.
     """
     expression = expression.strip()
 
     # W23H.1: Strip outer parentheses if the entire expression is wrapped.
-    # e.g. '(ema_9 crosses_above ema_21)' → 'ema_9 crosses_above ema_21'
-    # Guard: only strip if the opening '(' matches the closing ')' at the very end
-    # (not if they belong to different subexpressions).
+    # e.g. '(ema_9 crosses_above ema_21)' -> 'ema_9 crosses_above ema_21'
+    # Guard: only strip if the opening '(' matches the closing ')' at the very end.
     if expression.startswith("(") and expression.endswith(")"):
-        # Walk through to find the matching close paren for the opening
         depth = 0
         for i, ch in enumerate(expression):
             if ch == "(":
@@ -114,9 +252,7 @@ def evaluate_expression(df: pl.DataFrame, expression: str) -> pl.Series:
             elif ch == ")":
                 depth -= 1
             if depth == 0:
-                # The opening paren closed at position i
                 if i == len(expression) - 1:
-                    # The entire expression was wrapped in one outer paren — strip it
                     expression = expression[1:-1].strip()
                 break
 
@@ -125,17 +261,16 @@ def evaluate_expression(df: pl.DataFrame, expression: str) -> pl.Series:
         inner = expression[4:]
         return ~evaluate_expression(df, inner)
 
-    # Split on AND/OR (respecting precedence: AND binds tighter)
-    # Process OR first (lower precedence)
-    or_parts = re.split(r'\s+OR\s+', expression)
+    # F-5 fix: split on AND/OR using paren-depth-aware scanner.
+    # OR has lower precedence than AND, so check OR first (outer), AND second (inner).
+    or_parts = _split_at_depth0(expression, "OR")
     if len(or_parts) > 1:
         result = evaluate_expression(df, or_parts[0])
         for part in or_parts[1:]:
             result = result | evaluate_expression(df, part)
         return result
 
-    # Then AND
-    and_parts = re.split(r'\s+AND\s+', expression)
+    and_parts = _split_at_depth0(expression, "AND")
     if len(and_parts) > 1:
         result = evaluate_expression(df, and_parts[0])
         for part in and_parts[1:]:

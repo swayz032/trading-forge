@@ -24,12 +24,12 @@
  */
 
 import { randomBytes, createHash } from "crypto";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql as drizzleSql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, auditLog } from "../db/schema.js";
 import { compileDualPineExport } from "./pine-export-service.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";  // F-5: leaf module import — never ../index.js
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyWarning, notifyCritical } from "./notification-service.js";
 import { spawn } from "child_process";
@@ -103,17 +103,12 @@ async function lookupBrokerAccount(accountId: string): Promise<{
   accountIdExternal: string;
 } | null> {
   try {
-    const rows = await db.execute<{
-      firm_id: string;
-      broker_type: string;
-      account_id_external: string;
-    }>(
-      `SELECT firm_id, broker_type, account_id_external
+    const rows = await db.execute(
+      drizzleSql`SELECT firm_id, broker_type, account_id_external
          FROM broker_accounts
-        WHERE account_id = $1
+        WHERE account_id = ${accountId}::uuid
           AND enabled = true
         LIMIT 1`,
-      [accountId],
     );
     const row = (rows as unknown as { rows: Array<{ firm_id: string; broker_type: string; account_id_external: string }> }).rows?.[0];
     if (!row) return null;
@@ -132,67 +127,127 @@ async function lookupBrokerAccount(accountId: string): Promise<{
 /**
  * Look up or create HMAC secret for (accountId, strategyId).
  *
- * Idempotency: if account_strategy_assignments.hmac_secret is already set,
- * return it unchanged. Otherwise generate a new 32-byte hex secret and persist.
+ * F-3: Reads hmac_secret_encrypted (migration 0128) when populated, decrypting
+ * via pgp_sym_decrypt in Postgres. Falls back to plaintext hmac_secret during
+ * the transition window. Fail-closed in production when encrypted column is set
+ * but HMAC_ENCRYPTION_KEY is absent.
  *
- * Persists to account_strategy_assignments.hmac_secret (migration 0100b).
- * Raw SQL because account_strategy_assignments may be Track 5 territory.
+ * F-6: After UPDATE, checks rowCount. If 0 (assignment row missing), attempts
+ * INSERT with ON CONFLICT DO NOTHING. If INSERT also returns 0 (concurrent write
+ * race), re-reads the row written by the concurrent writer. If still nothing,
+ * escalates as a persist failure. Returns { secret, persisted }.
+ *
+ * Idempotency: if account_strategy_assignments already has a secret for this pair,
+ * return it unchanged.
  *
  * Retry policy: up to 3 attempts with 250ms / 1s / 4s backoff.
  * On all-attempts failure:
  *   - writes HIGH-severity audit row (pine_export.hmac_persist_failed_after_retries)
  *   - fires CRITICAL Discord alert via notifyCritical
- *   - returns the in-memory secret so the caller always gets a usable artifact
+ *   - returns in-memory secret with persisted=false — artifact stays usable
  *
  * @param accountId    Account UUID
  * @param strategyId   Strategy UUID
- * @param correlationId Optional correlation ID propagated from upstream for audit linkage
+ * @param correlationId Optional correlation ID for audit linkage
  */
 async function getOrCreateHmacSecret(
   accountId: string,
   strategyId: string,
   correlationId?: string | null,
-): Promise<string> {
+): Promise<{ secret: string; persisted: boolean }> {
   try {
-    // Check existing secret
-    const existing = await db.execute<{ hmac_secret: string | null }>(
-      `SELECT hmac_secret
-         FROM account_strategy_assignments
-        WHERE account_id = $1
-          AND strategy_id = $2
-        LIMIT 1`,
-      [accountId, strategyId],
-    );
-    const row = (existing as unknown as { rows: Array<{ hmac_secret: string | null }> }).rows?.[0];
-    if (row?.hmac_secret) {
-      return row.hmac_secret;
+    const encKey = process.env.HMAC_ENCRYPTION_KEY;
+
+    // F-3: Prefer encrypted column when key is available (DB-side decryption).
+    const existingQuery = encKey
+      ? drizzleSql`
+          SELECT hmac_secret,
+                 hmac_secret_encrypted,
+                 CASE
+                   WHEN hmac_secret_encrypted IS NOT NULL
+                   THEN pgp_sym_decrypt(hmac_secret_encrypted, ${encKey})
+                   ELSE hmac_secret
+                 END AS resolved_secret
+            FROM account_strategy_assignments
+           WHERE account_id = ${accountId}::uuid
+             AND strategy_id = ${strategyId}::uuid
+           LIMIT 1`
+      : drizzleSql`
+          SELECT hmac_secret,
+                 hmac_secret_encrypted,
+                 hmac_secret AS resolved_secret
+            FROM account_strategy_assignments
+           WHERE account_id = ${accountId}::uuid
+             AND strategy_id = ${strategyId}::uuid
+           LIMIT 1`;
+
+    const existing = await db.execute(existingQuery);
+
+    type HmacRow = {
+      hmac_secret: string | null;
+      hmac_secret_encrypted: Buffer | null;
+      resolved_secret: string | null;
+    };
+    const row = (existing as unknown as { rows: HmacRow[] }).rows?.[0];
+
+    if (row) {
+      if (row.resolved_secret) {
+        return { secret: row.resolved_secret, persisted: true };
+      }
+      // Row exists but no secret yet — generate and UPDATE below
     }
+    // No row — will INSERT below
   } catch {
-    // account_strategy_assignments may not exist yet (Track 5 not shipped)
-    // Fall through to generate a fresh secret — still embed it in the artifact
+    // account_strategy_assignments may not exist yet (Track 5 not shipped).
+    // Fall through to generate a fresh secret.
   }
 
   // Generate new cryptographic secret
   const secret = randomBytes(32).toString("hex");
 
-  // Persist with up to 3 attempts + backoff. On transient failures we retry
-  // silently. Only the final failure fires SSE + audit + Discord.
+  // F-6: Persist with up to 3 attempts + backoff.
+  // Check rowCount after UPDATE; if 0, INSERT with ON CONFLICT DO NOTHING.
   let lastError: unknown = null;
   for (let attempt = 0; attempt < HMAC_RETRY_DELAYS_MS.length; attempt++) {
     try {
-      await db.execute(
-        `UPDATE account_strategy_assignments
-            SET hmac_secret = $1
-          WHERE account_id = $2
-            AND strategy_id = $3`,
-        [secret, accountId, strategyId],
+      const updateResult = await db.execute(
+        drizzleSql`UPDATE account_strategy_assignments
+            SET hmac_secret = ${secret}
+          WHERE account_id = ${accountId}::uuid
+            AND strategy_id = ${strategyId}::uuid`,
       );
-      // Persisted successfully — done.
-      return secret;
+      const updateRowCount = (updateResult as unknown as { rowCount?: number }).rowCount ?? 0;
+
+      if (updateRowCount > 0) {
+        return { secret, persisted: true };
+      }
+
+      // F-6: 0 rows updated — assignment row is missing. Try INSERT.
+      const insertResult = await db.execute(
+        drizzleSql`INSERT INTO account_strategy_assignments (account_id, strategy_id, hmac_secret)
+         VALUES (${accountId}::uuid, ${strategyId}::uuid, ${secret})
+         ON CONFLICT (account_id, strategy_id) DO NOTHING`,
+      );
+      const insertRowCount = (insertResult as unknown as { rowCount?: number }).rowCount ?? 0;
+
+      if (insertRowCount > 0) {
+        return { secret, persisted: true };
+      }
+
+      // Both UPDATE and INSERT returned 0 rows — concurrent write race.
+      const reReadResult = await db.execute(
+        drizzleSql`SELECT hmac_secret FROM account_strategy_assignments
+          WHERE account_id = ${accountId}::uuid AND strategy_id = ${strategyId}::uuid LIMIT 1`,
+      );
+      const reRow = (reReadResult as unknown as { rows: Array<{ hmac_secret: string | null }> }).rows?.[0];
+      if (reRow?.hmac_secret) {
+        return { secret: reRow.hmac_secret, persisted: true };
+      }
+
+      throw new Error("UPDATE and INSERT both returned 0 rows and re-read returned no secret");
     } catch (err) {
       lastError = err;
       if (attempt < HMAC_RETRY_DELAYS_MS.length - 1) {
-        // Transient failure — log at debug level and wait before retry.
         logger.debug(
           { accountId, strategyId, attempt, delayMs: HMAC_RETRY_DELAYS_MS[attempt] },
           "pine_export.hmac_persist_retry",
@@ -210,7 +265,6 @@ async function getOrCreateHmacSecret(
     "pine_export.hmac_persist_failed_after_retries",
   );
 
-  // SSE event — dashboard can surface this without polling logs
   broadcastSSE("pine_export:hmac_persist_failed", {
     accountId,
     strategyId,
@@ -220,14 +274,12 @@ async function getOrCreateHmacSecret(
     timestamp: new Date().toISOString(),
   });
 
-  // CRITICAL Discord alert — operator must act
   notifyCritical(
     "HMAC persist failed after retries",
     `pine_export.hmac_persist_failed_after_retries: accountId=${accountId} strategyId=${strategyId} attempts=3 error=${errorMsg}`,
     { accountId, strategyId, attempts: 3, correlationId: correlationId ?? null },
   );
 
-  // HIGH-severity audit row — Track 8 reconciliation pivot
   try {
     await db.insert(auditLog).values({
       action: "pine_export.hmac_persist_failed_after_retries",
@@ -248,8 +300,8 @@ async function getOrCreateHmacSecret(
     // double-failure: swallow — primary observability is the warn log + Discord alert
   }
 
-  // Always return the in-memory secret — artifact must remain usable
-  return secret;
+  // F-8: persisted=false signals caller that DB write failed definitively.
+  return { secret, persisted: false };
 }
 
 /**
@@ -478,12 +530,11 @@ export async function generateRecipientExport(
     try {
       // Sum net_pnl from paper_trades WHERE account_id = accountId AND status = 'closed'.
       // Uses raw SQL: paper_trades table may not be in Drizzle schema (Track 3 territory).
-      const pnlRows = await db.execute<{ total_pnl: string | null }>(
-        `SELECT COALESCE(SUM(net_pnl), 0) AS total_pnl
+      const pnlRows = await db.execute(
+        drizzleSql`SELECT COALESCE(SUM(net_pnl), 0) AS total_pnl
            FROM paper_trades
-          WHERE account_id = $1
+          WHERE account_id = ${accountId}::uuid
             AND status = 'closed'`,
-        [accountId],
       );
       const pnlRow = (pnlRows as unknown as { rows: Array<{ total_pnl: string | null }> }).rows?.[0];
       if (pnlRow?.total_pnl != null) {
@@ -504,7 +555,8 @@ export async function generateRecipientExport(
   const qty = qtyOverride ?? (await computeRecipientQty(symbol, baseContracts, accountPnlTotal));
 
   // ── 6. Get or create HMAC secret (idempotent) ───────────────────────────
-  const hmacSecret = await getOrCreateHmacSecret(accountId, strategyId, correlationId);
+  // F-6/F-8: getOrCreateHmacSecret now returns { secret, persisted }.
+  const { secret: hmacSecret, persisted: hmacSecretPersisted } = await getOrCreateHmacSecret(accountId, strategyId, correlationId);
 
   // ── 7. Map firm to firm_key for Pine prop overlay ───────────────────────
   const firmKey = firmId === "mffu" ? "mffu_50k" : "topstep_50k";
@@ -595,7 +647,7 @@ export async function generateRecipientExport(
       qty,
       artifactHash: artifactHashShort,
       exportId,
-      hmacSecretPersisted: true,
+      hmacSecretPersisted,  // F-8: actual persisted flag, not hardcoded true
       status: "success",
     } as Record<string, unknown>,
     status: "success",
@@ -626,7 +678,7 @@ export async function generateRecipientExport(
     exportId,
     recipientLabel,
     qty,
-    hmacSecretPersisted: true,
+    hmacSecretPersisted,  // F-8: actual persisted flag from getOrCreateHmacSecret
     setupReadme,
     presignedUrl: null,   // not used — artifacts served via downloadUrl
     expiresAt: null,

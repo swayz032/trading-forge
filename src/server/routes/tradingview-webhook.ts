@@ -249,6 +249,46 @@ tradingViewWebhookRoutes.post(
       return;
     }
 
+    // F-2: Replay prevention — reject stale payloads outside 10-minute window.
+    // bar_timestamp is the close time of the TradingView bar that triggered the alert.
+    // Legitimate TradingView webhook delivery is near-instant (< 30s typical).
+    // 10 minutes is generous enough to handle TradingView server-side retry storms
+    // while closing the replay window to an operationally safe bound.
+    // NOTE: this check is AFTER HMAC validation — never timestamp-check before auth
+    // (would leak timing info about secret validity if ordered before HMAC).
+    const REPLAY_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+    const barTimestampMs = new Date(bar_timestamp).getTime();
+    const nowMs = Date.now();
+    if (Math.abs(nowMs - barTimestampMs) > REPLAY_WINDOW_MS) {
+      logger.warn(
+        {
+          accountId: account_id,
+          strategyId: strategy_id,
+          correlationId,
+          barTimestamp: bar_timestamp,
+          nowMs,
+          deltaMs: nowMs - barTimestampMs,
+        },
+        "tradingview-webhook: stale payload rejected — bar_timestamp outside 10-minute window"
+      );
+      await writeAuditRow({
+        action: "tradingview_marker.stale_payload",
+        strategyId: strategy_id,
+        accountId: account_id,
+        correlationId,
+        status: "failure",
+        result: {
+          reason: "stale_payload",
+          barTimestamp: bar_timestamp,
+          deltaMs: nowMs - barTimestampMs,
+          windowMs: REPLAY_WINDOW_MS,
+        },
+        durationMs: Date.now() - startedAt,
+      });
+      res.status(401).json({ error: "stale_payload" });
+      return;
+    }
+
     // 7. Insert marker row (hmac_validated=true)
     // Build the full payload object to store (includes extra fields)
     const pineAlertPayload = {

@@ -136,9 +136,12 @@ class TestAntiSetupMiner:
         assert len(results) == 0
 
     def test_respects_min_failure_rate(self, clustered_losing_trades):
-        # Set failure rate so high nothing qualifies
+        # Use 1.01 -- strictly above the maximum possible failure rate (1.0).
+        # The fixture has legitimate 100% failure-rate streak groups (30 consecutive
+        # Jan-14:30 losses), so 0.99 would correctly find them. 1.01 is provably
+        # unreachable and tests that the gate filters correctly.
         results = mine_anti_setups(
-            clustered_losing_trades, bars=[], min_sample_size=5, min_failure_rate=0.99,
+            clustered_losing_trades, bars=[], min_sample_size=5, min_failure_rate=1.01,
         )
         assert len(results) == 0
 

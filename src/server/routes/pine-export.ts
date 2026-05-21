@@ -1,6 +1,18 @@
+/**
+ * pine-export.ts — Pine Export Routes
+ *
+ * F-1 (security): The artifact download handler verifies artifact ownership
+ * (artifact.exportId must match :id URL param) before serving content.
+ * Every download is written to audit_log with principal context.
+ * Mismatch returns 403 — no content is served.
+ */
+
 import { Router } from "express";
 import { compilePineExport, compileDualPineExport, getExport, getExportArtifacts, getArtifact } from "../services/pine-export-service.js";
 import { pineCompileRequestSchema } from "../lib/pine-artifact-schema.js";
+import { db } from "../db/index.js";
+import { auditLog } from "../db/schema.js";
+import { logger } from "../lib/logger.js";
 
 export const pineExportRoutes = Router();
 
@@ -48,11 +60,87 @@ pineExportRoutes.get("/:id/artifacts", async (req, res) => {
 });
 
 // GET /api/pine-export/:id/artifacts/:artifactId/download — Download .pine file
+//
+// F-1: Ownership check — artifact.exportId must match :id URL param.
+// Without this check, any authenticated caller could download any artifact by
+// guessing/enumerating artifact UUIDs, bypassing the export-level access boundary.
+// Mismatch → 403 (not 404 — avoids leaking whether the artifact exists at all).
+// Every download (success AND rejection) is written to audit_log.
 pineExportRoutes.get("/:id/artifacts/:artifactId/download", async (req, res) => {
-  const artifact = await getArtifact(req.params.artifactId);
+  const exportId = req.params.id;
+  const artifactId = req.params.artifactId;
+  // Principal is the operator API key — single-user system. Identify by presence of
+  // Authorization header (auth middleware already validated it upstream).
+  const principal = req.headers["authorization"] ? "operator" : "unauthenticated";
+
+  // 1. Fetch the artifact
+  const artifact = await getArtifact(artifactId);
   if (!artifact) {
     res.status(404).json({ error: "Artifact not found" });
     return;
+  }
+
+  // 2. F-1: Ownership check — artifact must belong to the requested export.
+  if (artifact.exportId !== exportId) {
+    logger.warn(
+      { artifactId, exportId, actualExportId: artifact.exportId, principal },
+      "pine-export: artifact ownership mismatch — access denied",
+    );
+    // Audit log the rejection — operator can investigate misuse patterns.
+    try {
+      await db.insert(auditLog).values({
+        action: "pine_export.artifact_download_rejected",
+        entityType: "strategy_export_artifact",
+        entityId: artifactId,
+        decisionAuthority: "system",
+        input: { exportId, artifactId, principal } as Record<string, unknown>,
+        result: {
+          reason: "ownership_mismatch",
+          actualExportId: artifact.exportId,
+          requestedExportId: exportId,
+        } as Record<string, unknown>,
+        status: "failure",
+        correlationId: null,
+      });
+    } catch (auditErr) {
+      logger.error({ auditErr }, "pine-export: audit_log write failed for ownership rejection");
+    }
+    // Return 403, not 404 — do not reveal whether artifact exists under other export IDs.
+    res.status(403).json({ error: "forbidden" });
+    return;
+  }
+
+  // 3. Fetch parent export to verify it exists (defense-in-depth).
+  const parentExport = await getExport(exportId);
+  if (!parentExport) {
+    // Artifact exists but parent export is orphaned — data integrity issue.
+    logger.warn(
+      { artifactId, exportId, principal },
+      "pine-export: parent export not found for artifact — possible orphan",
+    );
+    res.status(404).json({ error: "Export not found" });
+    return;
+  }
+
+  // 4. Audit log successful download.
+  try {
+    await db.insert(auditLog).values({
+      action: "pine_export.artifact_downloaded",
+      entityType: "strategy_export_artifact",
+      entityId: artifactId,
+      decisionAuthority: "human",
+      input: { exportId, artifactId, principal } as Record<string, unknown>,
+      result: {
+        fileName: artifact.fileName,
+        artifactType: artifact.artifactType,
+        strategyId: parentExport.strategyId,
+      } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    });
+  } catch (auditErr) {
+    // Non-blocking — serve the file even if audit write fails.
+    logger.error({ auditErr, artifactId, exportId }, "pine-export: audit_log write failed for download (non-blocking)");
   }
 
   const contentType = artifact.fileName.endsWith(".json")

@@ -20,6 +20,28 @@
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+import { logger } from "../lib/logger.js";
+
+/**
+ * Warn at strategy-load time when confirming_indicators contains ATR or ADR without
+ * a threshold. These always return satisfied=false at signal time (F-7 fix).
+ */
+export function warnMissingThresholds(
+  strategyId: string,
+  confirmingIndicators: ConfirmingIndicator[],
+): void {
+  for (const ci of confirmingIndicators) {
+    if ((ci.indicator === "atr" || ci.indicator === "adr") &&
+        ci.threshold_gt === undefined &&
+        ci.threshold_lt === undefined) {
+      logger.warn(
+        { strategyId, indicator: ci.indicator },
+        `confirming-indicator-evaluator: ${ci.indicator} without threshold will ALWAYS block trades`,
+      );
+    }
+  }
+}
+
 export interface ConfirmingIndicator {
   indicator: string;
   params: Record<string, number>;
@@ -308,8 +330,8 @@ export function evaluateConfirmingIndicator(
           : `atr_${period}_${atrVal.toFixed(4)}_not_lt_${confirming.threshold_lt}`,
       };
     }
-    // No threshold specified — ATR present = satisfied (existence check)
-    return { factor: ind, satisfied: true, reason: `atr_${period}_present_${atrVal.toFixed(4)}` };
+    // No threshold specified -- fail-closed (F-7). ATR without threshold is misconfigured.
+    return { factor: ind, satisfied: false, reason: 'atr_no_threshold_specified' };
   }
 
   // ── ADX — trend strength threshold ───────────────────────────────────────
@@ -346,7 +368,8 @@ export function evaluateConfirmingIndicator(
           : `adr_${adrVal.toFixed(2)}_not_gt_${confirming.threshold_gt}`,
       };
     }
-    return { factor: ind, satisfied: true, reason: `adr_present_${adrVal.toFixed(2)}` };
+    // No threshold specified -- fail-closed (F-7). ADR without threshold is misconfigured.
+    return { factor: ind, satisfied: false, reason: 'adr_no_threshold_specified' };
   }
 
   // ── ORB / session_open_breakout ──────────────────────────────────────────

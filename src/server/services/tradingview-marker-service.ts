@@ -19,7 +19,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { db } from "../db/index.js";
 import { tradingviewMarkers } from "../db/schema.js";
 import { and, gte, lt, count, eq, sql } from "drizzle-orm";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -47,16 +47,37 @@ export interface MarkerMismatch {
 // ─── HMAC Validation ─────────────────────────────────────────────────────────
 
 /**
+ * Build the canonical HMAC signing string (F-7).
+ *
+ * Canonical form: "<strategy_id>|<account_id>|<bar_timestamp>|<signal>"
+ *
+ * This replaces the previous JSON.stringify(sortedKeys) approach which was
+ * ambiguous — extra passthrough fields in the payload changed the signing body.
+ *
+ * CARRY-FORWARD (CARRY-FORWARD-F7-PINE-SIGNER): Pine alertcondition() embeds
+ * HMAC via input.string() pasted by the user at chart load. The user must
+ * pre-compute the HMAC from this canonical form before pasting. A future helper
+ * script would compute it automatically.
+ *
+ * Feature flag: HMAC_CANONICAL_V2=false reverts to legacy JSON.stringify during
+ * emergency rollback. Default: new canonical form is active.
+ */
+export function buildHmacCanonical(
+  strategyId: string,
+  accountId: string,
+  barTimestamp: string,
+  signal: number,
+): string {
+  return `${strategyId}|${accountId}|${barTimestamp}|${signal}`;
+}
+
+/**
  * Validate the HMAC-SHA256 signature on a TradingView webhook payload.
  *
- * Algorithm:
- *   1. Serialize payload WITHOUT the `hmac` field (deterministic JSON)
- *   2. Compute HMAC-SHA256(secret, serialized_body) → hex digest
- *   3. Compare using timingSafeEqual to prevent timing oracle attacks
+ * F-7: Uses explicit fixed-field canonical form instead of JSON.stringify.
+ * Canonical string: "<strategy_id>|<account_id>|<bar_timestamp>|<signal>"
  *
  * SECURITY: uses crypto.timingSafeEqual — mandatory for secrets.
- * A timing difference on string comparison would leak secret characters
- * at ~0.3ns/byte resolution on modern CPUs (timing-side-channel attacks).
  *
  * @param payload - full webhook body as parsed object
  * @param providedHmac - hex string from the `hmac` field of the payload
@@ -69,23 +90,32 @@ export function validateHmac(
   secret: string
 ): boolean {
   try {
-    // Build canonical body: payload without the hmac field, sorted keys
-    const bodyForSigning = { ...payload };
-    delete bodyForSigning["hmac"];
-    const serialized = JSON.stringify(bodyForSigning, Object.keys(bodyForSigning).sort());
+    let serialized: string;
+
+    const useNewCanonical = process.env.HMAC_CANONICAL_V2 !== "false";
+
+    if (useNewCanonical) {
+      // F-7: Explicit fixed-field canonical form — unambiguous, immune to extra fields.
+      const strategyId = String(payload["strategy_id"] ?? "");
+      const accountId  = String(payload["account_id"] ?? "");
+      const barTimestamp = String(payload["bar_timestamp"] ?? "");
+      const signal     = Number(payload["signal"] ?? 0);
+      serialized = buildHmacCanonical(strategyId, accountId, barTimestamp, signal);
+    } else {
+      // Legacy: JSON.stringify sorted keys (emergency rollback path).
+      const bodyForSigning = { ...payload };
+      delete bodyForSigning["hmac"];
+      serialized = JSON.stringify(bodyForSigning, Object.keys(bodyForSigning).sort());
+    }
 
     const expectedHmac = createHmac("sha256", secret)
       .update(serialized, "utf8")
       .digest("hex");
 
-    // Both must be the same length for timingSafeEqual — pad if needed
-    // (hex strings from SHA256 are always 64 chars, so this is just safety)
     const expectedBuf = Buffer.from(expectedHmac, "utf8");
     const providedBuf = Buffer.from(providedHmac, "utf8");
 
     if (expectedBuf.length !== providedBuf.length) {
-      // Different lengths → definitely invalid; still takes constant time
-      // relative to length of expectedBuf to avoid length oracle
       return false;
     }
 
@@ -226,24 +256,76 @@ export async function reconcileMarkersVsFills(
  * Fetch HMAC secret for (accountId, strategyId) from account_strategy_assignments.
  * Returns null when no assignment row exists or secret is unset.
  *
- * Raw SQL: account_strategy_assignments may not be in Drizzle snapshot.
+ * F-3: Prefers hmac_secret_encrypted (migration 0128) when populated and
+ * HMAC_ENCRYPTION_KEY is set. Falls back to plaintext hmac_secret during the
+ * transition window. Fail-closed in production when encrypted column is set
+ * but key is absent.
+ *
+ * Raw SQL via sql tagged template — account_strategy_assignments may not be
+ * in Drizzle snapshot.
  */
 export async function lookupHmacSecret(
   accountId: string,
   strategyId: string
 ): Promise<string | null> {
   try {
-    const rows = await db.execute(
-      sql`SELECT hmac_secret
-            FROM account_strategy_assignments
-           WHERE account_id = ${accountId}::uuid
-             AND strategy_id = ${strategyId}::uuid
-           LIMIT 1`
-    );
-    const row = (rows as unknown as { rows: Array<{ hmac_secret: string | null }> }).rows?.[0];
-    return row?.hmac_secret ?? null;
+    const encKey = process.env.HMAC_ENCRYPTION_KEY;
+
+    // F-3: Prefer DB-decrypted value when key is available.
+    const query = encKey
+      ? sql`
+          SELECT
+            CASE
+              WHEN hmac_secret_encrypted IS NOT NULL
+              THEN pgp_sym_decrypt(hmac_secret_encrypted, ${encKey}::text)
+              ELSE hmac_secret
+            END AS resolved_secret
+          FROM account_strategy_assignments
+          WHERE account_id = ${accountId}::uuid
+            AND strategy_id = ${strategyId}::uuid
+          LIMIT 1`
+      : sql`
+          SELECT
+            hmac_secret AS resolved_secret,
+            (hmac_secret_encrypted IS NOT NULL) AS has_encrypted
+          FROM account_strategy_assignments
+          WHERE account_id = ${accountId}::uuid
+            AND strategy_id = ${strategyId}::uuid
+          LIMIT 1`;
+
+    const rows = await db.execute(query);
+    const row = (rows as unknown as {
+      rows: Array<{ resolved_secret: string | null; has_encrypted?: boolean }>;
+    }).rows?.[0];
+
+    if (!row) return null;
+
+    // F-3: fail-closed in production if encrypted column is set but no key.
+    if (!encKey && row.has_encrypted && process.env.NODE_ENV === "production") {
+      logger.error(
+        { accountId, strategyId },
+        "tradingview-marker: hmac_secret_encrypted is set but HMAC_ENCRYPTION_KEY is missing — " +
+        "refusing to fall back to plaintext in production. Set HMAC_ENCRYPTION_KEY and restart.",
+      );
+      return null;
+    }
+
+    return row.resolved_secret ?? null;
   } catch (err) {
-    logger.warn({ accountId, strategyId, err }, "tradingview-marker: hmac_secret lookup failed");
-    return null;
+    // If pgp_sym_decrypt is unavailable (pgcrypto not installed) or the encrypted column
+    // doesn't exist yet (migration 0128 not applied), fall back to plaintext query.
+    logger.warn({ accountId, strategyId, err }, "tradingview-marker: encrypted hmac lookup failed — retrying with plaintext");
+
+    try {
+      const fallback = await db.execute(
+        sql`SELECT hmac_secret FROM account_strategy_assignments
+            WHERE account_id = ${accountId}::uuid AND strategy_id = ${strategyId}::uuid LIMIT 1`
+      );
+      const fallbackRow = (fallback as unknown as { rows: Array<{ hmac_secret: string | null }> }).rows?.[0];
+      return fallbackRow?.hmac_secret ?? null;
+    } catch (fallbackErr) {
+      logger.warn({ accountId, strategyId, fallbackErr }, "tradingview-marker: hmac_secret fallback lookup also failed");
+      return null;
+    }
   }
 }

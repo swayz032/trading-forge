@@ -86,6 +86,8 @@ VALID_INDICATOR_TYPES = {
     # in indicators/core.py and the dispatcher branch in compute_indicators().
     # Emits orh_{range_minutes}m, orl_{range_minutes}m, or_range_{range_minutes}m columns.
     "opening_range_breakout",
+    # F-7 fix (2026-05-20): donchian channel
+    "donchian",
 }
 
 

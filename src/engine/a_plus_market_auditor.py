@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import logging
 import math
+import sys
 import time
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -561,7 +562,7 @@ def _cli_main() -> None:
     if args.input_json:
         payload = json.loads(args.input_json)
     else:
-        payload = json.loads(sys.stdin.read())  # type: ignore[name-defined]
+        payload = json.loads(sys.stdin.read())
 
     # Parse market_inputs
     market_inputs: dict[str, AuditInput] = {}
@@ -600,10 +601,8 @@ def _cli_main() -> None:
         "hardware": result.hardware,
         "seed": result.seed,
     }
-    import sys as _sys
-    _sys.stdout.write(json.dumps(output) + "\n")
+    sys.stdout.write(json.dumps(output) + "\n")
 
 
 if __name__ == "__main__":
-    import sys
     _cli_main()

@@ -226,16 +226,18 @@ def _grover_circuit(
         bits = [(state_idx >> q) & 1 for q in range(n_qubits)]
         running = 0.0
         worst = 0.0
+        consecutive_loss_idx = 0
         for bit in bits:
             if bit == 1:
-                # Use per-qubit loss if available, else mean loss
                 if loss_amounts:
-                    l_idx = min(len(loss_amounts) - 1, bits.count(1) - 1)
+                    l_idx = min(len(loss_amounts) - 1, consecutive_loss_idx)
                     running += loss_amounts[l_idx]
                 else:
                     running += 1.0
+                consecutive_loss_idx += 1
             else:
                 running = 0.0
+                consecutive_loss_idx = 0
             worst = max(worst, running)
         if worst >= daily_loss_limit:
             marked.add(state_idx)
@@ -365,12 +367,15 @@ def _run_grover(
         bits_check = [(state_idx >> q) & 1 for q in range(n_qubits)]
         running = 0.0
         worst = 0.0
+        consecutive_loss_idx = 0
         for bit in bits_check:
             if bit == 1:
-                l_idx = min(len(loss_amounts) - 1, bits_check.count(1) - 1)
+                l_idx = min(len(loss_amounts) - 1, consecutive_loss_idx)
                 running += loss_amounts[l_idx]
+                consecutive_loss_idx += 1
             else:
                 running = 0.0
+                consecutive_loss_idx = 0
             worst = max(worst, running)
         if worst >= daily_loss_limit:
             marked_set.add(state_idx)
@@ -394,12 +399,15 @@ def _run_grover(
         # Recompute loss_sum for display
         running = 0.0
         worst_loss = 0.0
+        consecutive_loss_idx = 0
         for bit in bits:
             if bit == 1:
-                l_idx = min(len(loss_amounts) - 1, bits.count(1) - 1)
+                l_idx = min(len(loss_amounts) - 1, consecutive_loss_idx)
                 running += loss_amounts[l_idx]
+                consecutive_loss_idx += 1
             else:
                 running = 0.0
+                consecutive_loss_idx = 0
             worst_loss = max(worst_loss, running)
 
         examples.append({

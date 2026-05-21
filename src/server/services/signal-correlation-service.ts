@@ -39,9 +39,20 @@ import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 
-/** Correlation threshold above which two strategies are flagged as duplicates. */
-export const SIGNAL_CORRELATION_THRESHOLD =
-  parseFloat(process.env.SIGNAL_CORRELATION_THRESHOLD ?? "0.85");
+import { A7_CORRELATION_THRESHOLD } from "../lib/correlation-constants.js";
+
+/**
+ * Correlation threshold above which two strategies are flagged as duplicates.
+ * Single source of truth: correlation-constants.ts (0.70). CLAUDE.md §12 canonical.
+ */
+export const SIGNAL_CORRELATION_THRESHOLD: number = (() => {
+  const envVal = process.env.SIGNAL_CORRELATION_THRESHOLD;
+  if (envVal !== undefined) {
+    const parsed = parseFloat(envVal);
+    if (Number.isFinite(parsed) && parsed > 0 && parsed <= 1) return parsed;
+  }
+  return A7_CORRELATION_THRESHOLD;
+})();
 
 // ─── Compression helpers ────────────────────────────────────────────────────
 

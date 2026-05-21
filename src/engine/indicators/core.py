@@ -8,6 +8,7 @@ Column naming convention:
 
 from __future__ import annotations
 
+import numpy as np
 import polars as pl
 
 from src.engine.config import IndicatorConfig
@@ -23,23 +24,52 @@ def compute_ema(series: pl.Series, period: int) -> pl.Series:
     return series.ewm_mean(span=period)
 
 
+
+def _wilder_rma(values, period):
+    """Wilder RMA: seed=SMA(first period), recur=(rma*(p-1)+v)/p. F-1/F-2 2026-05-20."""
+    n = len(values)
+    out = np.full(n, np.nan, dtype=np.float64)
+    seed_start = 0
+    while seed_start < n and np.isnan(values[seed_start]):
+        seed_start += 1
+    seed_end = seed_start + period
+    if seed_end > n:
+        return out
+    seed_slice = values[seed_start:seed_end]
+    if np.any(np.isnan(seed_slice)):
+        return out
+    rma = float(np.mean(seed_slice))
+    out[seed_end - 1] = rma
+    for i in range(seed_end, n):
+        v = values[i]
+        if np.isnan(v):
+            out[i] = np.nan
+        else:
+            rma = (rma * (period - 1) + v) / period
+            out[i] = rma
+    return out
+
 def compute_rsi(series: pl.Series, period: int) -> pl.Series:
-    """Relative Strength Index using EWM gains/losses."""
+    """RSI via Wilder RMA. F-1+F-3 fix 2026-05-20.
+
+    F-1: Wilder RMA instead of EWM (matches TradingView).
+    F-3: warmup=NaN (no fill_nan(50)). NaN comparisons -> False in signals.
+    np.where(NaN>0)=False => gains[0]=losses[0]=0.0, first RSI at period-1.
+    """
     delta = series.diff()
-    gains = delta.clip(lower_bound=0.0)
-    losses = (-delta).clip(lower_bound=0.0)
-
-    avg_gain = gains.ewm_mean(alpha=1.0 / period, adjust=False)
-    avg_loss = losses.ewm_mean(alpha=1.0 / period, adjust=False)
-
-    rs = avg_gain / avg_loss
-    # Guard: flat market → avg_loss=0 → rs=inf → rsi=100; both=0 → rs=NaN → fill with 50 (neutral)
+    delta_np = delta.to_numpy().astype(np.float64)
+    gains_np = np.where(delta_np > 0, delta_np, 0.0)
+    losses_np = np.where(delta_np < 0, -delta_np, 0.0)
+    avg_gain = _wilder_rma(gains_np, period)
+    avg_loss = _wilder_rma(losses_np, period)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        rs = avg_gain / avg_loss
     rsi = 100.0 - (100.0 / (1.0 + rs))
-    return rsi.fill_nan(50.0)
+    return pl.Series(series.name or 'rsi', rsi, dtype=pl.Float64)
 
 
 def compute_atr(df: pl.DataFrame, period: int) -> pl.Series:
-    """Average True Range using EWM."""
+    """ATR via Wilder RMA. F-2 fix 2026-05-20. Matches TradingView ta.atr()."""
     high = df["high"]
     low = df["low"]
     prev_close = df["close"].shift(1)
@@ -51,8 +81,18 @@ def compute_atr(df: pl.DataFrame, period: int) -> pl.Series:
     # True range = max of the three components
     true_range = pl.DataFrame({"tr1": tr1, "tr2": tr2, "tr3": tr3}).max_horizontal()
 
-    return true_range.ewm_mean(alpha=1.0 / period, adjust=False)
+    tr_np = true_range.to_numpy().astype(np.float64)
+    atr_np = _wilder_rma(tr_np, period)
+    return pl.Series("atr", atr_np, dtype=pl.Float64)
 
+
+def compute_donchian(df: pl.DataFrame, period: int):
+    """Donchian channel upper/lower with shift(1) to prevent lookahead.
+    F-7 fix 2026-05-20. Emits donchian_upper_{N}, donchian_lower_{N}.
+    """
+    upper = df["high"].rolling_max(window_size=period).shift(1)
+    lower = df["low"].rolling_min(window_size=period).shift(1)
+    return upper, lower
 
 def compute_adx(df: pl.DataFrame, period: int = 14) -> pl.Series:
     """Average Directional Index: measures trend strength (0-100).
@@ -345,6 +385,14 @@ def compute_indicators(
                 or_range.alias(f"or_range_{range_min}m"),
             ])
 
+        elif cfg.type == "donchian":
+            # F-7 fix 2026-05-20: honest donchian (replaces SMA approximation)
+            upper, lower = compute_donchian(df, cfg.period)
+            result = result.with_columns([
+                upper.alias(f"donchian_upper_{cfg.period}"),
+                lower.alias(f"donchian_lower_{cfg.period}"),
+            ])
+
     return result
 
 
@@ -448,4 +496,12 @@ def compute_htf_indicators(
                 or_range.alias(f"or_range_{range_min}m{suffix}"),
             ])
 
+        elif cfg.type == "donchian":
+            upper, lower = compute_donchian(htf_df, cfg.period)
+            result = result.with_columns([
+                upper.alias(f"donchian_upper_{cfg.period}{suffix}"),
+                lower.alias(f"donchian_lower_{cfg.period}{suffix}"),
+            ])
+
     return result
+# test_append

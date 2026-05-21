@@ -52,7 +52,7 @@
 import { logger } from "./logger.js";
 
 export interface PrimitiveIndicator {
-  type: "sma" | "ema" | "rsi" | "atr" | "macd" | "bbands" | "vwap" | "adx" | "adr" | "opening_range_breakout";
+  type: "sma" | "ema" | "rsi" | "atr" | "macd" | "bbands" | "vwap" | "adx" | "adr" | "opening_range_breakout" | "donchian";
   period?: number;
   fast?: number;
   slow?: number;
@@ -309,34 +309,35 @@ export function compileDslToEngine(input: DslCompileInput): CompiledStrategy | n
   }
 
   // ── atr_breakout ────────────────────────────────────────────────────────
+  // F-6 fix (2026-05-20): atr_breakout is UNSUPPORTED -- emit null.
+  // True formula: close > prev_close + mult*ATR requires shift(1) on close,
+  // which signals.py does not support. Previous code silently substituted
+  // close > vwap -- a DIFFERENT strategy. Never silently wrong.
   if (ind === "atr_breakout" || ind === "atr_trailing_stop") {
     const period = num(p.period ?? p.atr_period, 14);
     const mult = num(p.multiplier, 1.5);
-    notes.push(`${ind}{period=${period},mult=${mult}} → close > close.shift(1) + ${mult}*atr_${period} (approx via close > atr_${period}*${mult})`);
-    // True ATR breakout = close > prev_close + N*ATR. Our grammar doesn't support
-    // shift(1) on close directly. Approximation: use close > high.shift(1) which
-    // the runtime can compute. For now use a simpler proxy: close > vwap + mult*atr.
-    // TODO Wave 15.1 — extend signals.py to support shift(1).
-    return {
-      indicators: [{ type: "atr", period }, { type: "vwap" }],
-      entry_long:  dir === "short" ? "high < low" : `close > vwap`,
-      entry_short: dir === "long"  ? "high < low" : `close < vwap`,
-      compileNotes: [...notes, "ATR breakout approximated via close-vs-vwap until grammar supports shift()"],
-    };
+    logger.warn(
+      { indicator: ind, period, multiplier: mult },
+      "dsl-compiler F-6: atr_breakout unsupported -- shift() not in signals.py. Returning null.",
+    );
+    return null;
   }
 
   // ── donchian_breakout ───────────────────────────────────────────────────
+  // F-7 fix (2026-05-20): donchian_breakout now compiles honestly.
+  // compute_donchian() added to core.py: rolling_max/min with shift(1) no-lookahead.
+  // Previous code substituted close > sma_N -- wrong (mean filter != channel breakout).
   if (ind === "donchian_breakout") {
     const period = num(p.period, 20);
-    notes.push(`donchian_breakout{period=${period}} → close > donchian_upper_${period}`);
-    // compute_indicators doesn't have donchian; we approximate via highest-close-N
-    // using close vs sma_period (mean) — crude but lets the strategy compile.
-    // TODO Wave 15.1 — add donchian computation to indicators/core.py.
+    notes.push(
+      `donchian_breakout{period=${period}} -> donchian_upper_${period}/donchian_lower_${period}. ` +
+      "F-7 fix: compute_donchian() in core.py (rolling_max/min shift(1), no lookahead).",
+    );
     return {
-      indicators: [{ type: "sma", period }],
-      entry_long:  dir === "short" ? "high < low" : `close > sma_${period}`,
-      entry_short: dir === "long"  ? "high < low" : `close < sma_${period}`,
-      compileNotes: [...notes, "donchian approximated via close-vs-sma until indicator added"],
+      indicators: [{ type: "atr" as any, period: 14 }, { type: "donchian" as any, period }],
+      entry_long:  dir === "short" ? "high < low" : `close > donchian_upper_${period}`,
+      entry_short: dir === "long"  ? "high < low" : `close < donchian_lower_${period}`,
+      compileNotes: notes,
     };
   }
 

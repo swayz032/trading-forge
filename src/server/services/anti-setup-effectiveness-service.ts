@@ -2,14 +2,20 @@
  * Anti-Setup Effectiveness Service — Weekly analysis of whether anti-setups help or hurt.
  *
  * Reads shadow_signals (blocked trades) and paper_signal_logs (anti_setup_blocked entries),
- * computes hypothetical P&L for each blocked trade using actual market data,
- * and produces effectiveness scores per anti-setup rule.
+ * then computes per-rule effectiveness by comparing:
+ *   - Hit rate of ACTUAL trades that satisfied the anti-setup condition (rule OFF)
+ *   - vs hit rate of ACTUAL trades that did NOT satisfy the condition
  *
- * Key questions answered:
- *   - For each anti-setup rule: how many trades were blocked?
- *   - What was the hypothetical P&L of those blocked trades?
- *   - If hypothetical P&L > 0 (blocked would-be winners), the rule is suspect.
- *   - If hypothetical P&L < 0 (blocked losers), the rule is working.
+ * When insufficient comparison data exists, the rule is marked UNSCORED / INCONCLUSIVE.
+ * No hypothetical P&L is fabricated. Only ACTUAL outcomes from completed trades are used.
+ *
+ * Verdict logic:
+ *   EFFECTIVE   — condition_on_hit_rate meaningfully LOWER than condition_off_hit_rate
+ *                 (blocking those trades would have prevented losers)
+ *   SUSPECT     — condition_on_hit_rate meaningfully HIGHER than condition_off_hit_rate
+ *                 (blocking those trades would have blocked winners)
+ *   INCONCLUSIVE — not enough data, difference not meaningful, or comparison class empty
+ *   UNSCORED    — no actual trade outcomes found for comparison at all
  *
  * Results are stored in audit_log for querying and in the anti-setup effectiveness
  * SSE broadcast for dashboard visibility.
@@ -21,19 +27,26 @@ import { eq, and, gte, inArray, isNotNull, desc } from "drizzle-orm";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 
-// ─── Types ──────────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────
 
 export interface AntiSetupEffectivenessScore {
   rule: string;
   strategyId: string;
   strategyName: string;
   tradesBlocked: number;
-  hypotheticalPnlSum: number;      // negative = anti-setup saved money, positive = blocked winners
-  hypotheticalPnlAvg: number;
-  wouldHaveWonCount: number;        // trades that would have been profitable
-  wouldHaveLostCount: number;       // trades that would have been losers
-  effectiveness: number;            // 0-1 score: higher = better (more losers blocked)
-  verdict: "EFFECTIVE" | "SUSPECT" | "INCONCLUSIVE";
+  /** Hit rate of actual trades that satisfied the anti-setup condition (condition=ON). */
+  conditionOnHitRate: number | null;
+  /** Hit rate of actual trades that did NOT satisfy the anti-setup condition (condition=OFF). */
+  conditionOffHitRate: number | null;
+  /** Number of actual trades in the condition-ON comparison class. */
+  conditionOnSampleSize: number;
+  /** Number of actual trades in the condition-OFF comparison class. */
+  conditionOffSampleSize: number;
+  /** Hit-rate difference: conditionOffHitRate - conditionOnHitRate. Positive = blocking helped. */
+  hitRateDelta: number | null;
+  effectiveness: number;            // 0-1 score derived from hit-rate delta; 0.5 when UNSCORED
+  verdict: "EFFECTIVE" | "SUSPECT" | "INCONCLUSIVE" | "UNSCORED";
+  verdictReason: string;
   analyzedPeriod: { from: string; to: string };
 }
 
@@ -41,21 +54,30 @@ export interface EffectivenessReport {
   analyzedAt: string;
   periodDays: number;
   totalTradesBlocked: number;
-  totalHypotheticalPnl: number;
   ruleScores: AntiSetupEffectivenessScore[];
   suspectRules: AntiSetupEffectivenessScore[];  // rules that may be blocking winners
+  unscoredRules: AntiSetupEffectivenessScore[]; // rules lacking real comparison data
 }
 
-// ─── Hypothetical P&L computation ───────────────────────────
-// For each blocked signal, look at what the market did during the next N bars
-// after the blocked entry. Use actual paper trades from the same session
-// to estimate typical hold duration and direction-appropriate P&L.
+// ─── Minimum thresholds for statistical meaningfulness ───────────
+
+/** Minimum actual-trade sample size in each comparison class before we score a rule. */
+const MIN_COMPARISON_SAMPLE = 5;
+
+/**
+ * Minimum hit-rate delta to declare EFFECTIVE or SUSPECT.
+ * Below this, the difference is not meaningfully different → INCONCLUSIVE.
+ */
+const MIN_HIT_RATE_DELTA = 0.10;
+
+// ─── Main analysis ───────────────────────────────────────────────
 
 /**
  * Run the weekly anti-setup effectiveness analysis.
  *
- * Looks back `lookbackDays` days, finds all anti-setup blocked signals,
- * computes hypothetical P&L for each, and stores results.
+ * Looks back `lookbackDays` days. For each anti-setup rule, compares ACTUAL
+ * win rates of trades that were inside the anti-setup condition vs outside it.
+ * No hypothetical P&L is fabricated.
  */
 export async function runAntiSetupEffectivenessAnalysis(
   lookbackDays: number = 7,
@@ -91,9 +113,9 @@ export async function runAntiSetupEffectivenessAnalysis(
       analyzedAt: now.toISOString(),
       periodDays: lookbackDays,
       totalTradesBlocked: 0,
-      totalHypotheticalPnl: 0,
       ruleScores: [],
       suspectRules: [],
+      unscoredRules: [],
     };
     logger.info("Anti-setup effectiveness: no blocked trades found in period");
     return report;
@@ -119,8 +141,10 @@ export async function runAntiSetupEffectivenessAnalysis(
     : [];
   const strategyNameMap = new Map(strategyRows.map((s) => [s.id, s.name]));
 
-  // 4. Get actual trades from the same sessions during the same period to estimate
-  //    typical trade duration and outcome patterns for hypothetical P&L
+  // 4. Get ALL actual completed trades in the same sessions over the lookback period.
+  //    These are the comparison class: trades where the rule was NOT active (rule OFF).
+  //    We also use the indicator snapshot on each blocked log to identify which trades
+  //    match the same anti-setup condition, so we can split into ON vs OFF groups.
   const actualTrades = await db
     .select({
       sessionId: paperTrades.sessionId,
@@ -131,6 +155,7 @@ export async function runAntiSetupEffectivenessAnalysis(
       pnl: paperTrades.pnl,
       entryTime: paperTrades.entryTime,
       exitTime: paperTrades.exitTime,
+      indicatorSnapshot: paperTrades.indicatorSnapshot,
     })
     .from(paperTrades)
     .where(
@@ -138,50 +163,18 @@ export async function runAntiSetupEffectivenessAnalysis(
         inArray(paperTrades.sessionId, sessionIds),
         gte(paperTrades.createdAt, cutoff),
         isNotNull(paperTrades.exitTime),
+        isNotNull(paperTrades.pnl),
       ),
     );
 
-  // Compute average hold duration per session (in ms)
-  const sessionHoldDurations = new Map<string, number>();
-  const sessionTradesBySession = new Map<string, typeof actualTrades>();
-  for (const trade of actualTrades) {
-    if (!sessionTradesBySession.has(trade.sessionId)) {
-      sessionTradesBySession.set(trade.sessionId, []);
-    }
-    sessionTradesBySession.get(trade.sessionId)!.push(trade);
-    if (trade.entryTime && trade.exitTime) {
-      const dur = new Date(trade.exitTime).getTime() - new Date(trade.entryTime).getTime();
-      const existing = sessionHoldDurations.get(trade.sessionId);
-      if (existing) {
-        sessionHoldDurations.set(trade.sessionId, (existing + dur) / 2);
-      } else {
-        sessionHoldDurations.set(trade.sessionId, dur);
-      }
-    }
-  }
-
-  // 5. For each blocked signal, compute hypothetical P&L
-  //    We look at the shadow_signals table which stores the expectedEntry.
-  //    Since we can't know the exact exit price, we use the average trade P&L
-  //    from the same session as a proxy for what a typical trade would have done.
-  //    Better: if we have subsequent bar data, we simulate what would have happened.
-  //
-  //    For now, use a simpler approach: look at actual trades that occurred
-  //    within a similar time window and compute the average P&L per trade
-  //    in that session as the hypothetical.
-
-  // Group blocked logs by anti-setup rule
+  // 5. Group blocked logs by anti-setup rule (key = strategyId::rule)
   const ruleGroups = new Map<string, {
     rule: string;
     strategyId: string;
     strategyName: string;
-    entries: Array<{
-      price: number;
-      direction: string;
-      sessionId: string;
-      timestamp: Date;
-      indicators: Record<string, unknown>;
-    }>;
+    blockedCount: number;
+    conditionOnTrades: typeof actualTrades;
+    conditionOffTrades: typeof actualTrades;
   }>();
 
   for (const log of blockedLogs) {
@@ -193,87 +186,128 @@ export async function runAntiSetupEffectivenessAnalysis(
     const key = `${strategyId}::${rule}`;
 
     if (!ruleGroups.has(key)) {
-      ruleGroups.set(key, { rule, strategyId, strategyName, entries: [] });
+      ruleGroups.set(key, {
+        rule,
+        strategyId,
+        strategyName,
+        blockedCount: 0,
+        conditionOnTrades: [],
+        conditionOffTrades: [],
+      });
     }
-    ruleGroups.get(key)!.entries.push({
-      price: parseFloat(log.price ?? "0"),
-      direction: log.direction,
-      sessionId: log.sessionId,
-      timestamp: log.createdAt,
-      indicators: snapshot,
-    });
+    ruleGroups.get(key)!.blockedCount++;
   }
 
-  // 6. Compute hypothetical P&L per rule
-  //    Strategy: For each blocked trade, look at what actual trades in the same
-  //    session close to that time did. If there are no actual trades nearby,
-  //    use the session's average trade P&L as a proxy.
+  // 6. Split actual trades into condition-ON vs condition-OFF for each rule.
+  for (const [, group] of ruleGroups) {
+    const strategySessionIds = [...sessionMap.entries()]
+      .filter(([, s]) => s.strategyId === group.strategyId)
+      .map(([id]) => id);
+
+    const strategyTrades = actualTrades.filter((t) =>
+      strategySessionIds.includes(t.sessionId),
+    );
+
+    for (const trade of strategyTrades) {
+      const tradeSnap = (trade.indicatorSnapshot ?? {}) as Record<string, unknown>;
+      const tradeRule = tradeSnap._anti_setup_rule as string | undefined;
+      if (tradeRule === group.rule) {
+        group.conditionOnTrades.push(trade);
+      } else {
+        group.conditionOffTrades.push(trade);
+      }
+    }
+  }
+
+  // 7. Compute hit-rate comparison per rule
   const ruleScores: AntiSetupEffectivenessScore[] = [];
 
   for (const [, group] of ruleGroups) {
-    let hypotheticalPnlSum = 0;
-    let wouldHaveWonCount = 0;
-    let wouldHaveLostCount = 0;
+    const onTrades = group.conditionOnTrades;
+    const offTrades = group.conditionOffTrades;
 
-    for (const entry of group.entries) {
-      // Find actual trades in the same session within +/- 2 hours of the blocked signal
-      const sessionTrades = sessionTradesBySession.get(entry.sessionId) ?? [];
-      const windowMs = 2 * 60 * 60 * 1000; // 2 hours
-      const nearbyTrades = sessionTrades.filter((t) => {
-        if (!t.entryTime) return false;
-        const diff = Math.abs(new Date(t.entryTime).getTime() - entry.timestamp.getTime());
-        return diff < windowMs;
-      });
+    const onCount = onTrades.length;
+    const offCount = offTrades.length;
 
-      let estimatedPnl: number;
-      if (nearbyTrades.length > 0) {
-        // Use the average P&L of nearby trades as the hypothetical
-        const totalPnl = nearbyTrades.reduce((sum, t) => sum + Number(t.pnl ?? 0), 0);
-        estimatedPnl = totalPnl / nearbyTrades.length;
-      } else if (sessionTrades.length > 0) {
-        // Fallback: use the session's average trade P&L
-        const totalPnl = sessionTrades.reduce((sum, t) => sum + Number(t.pnl ?? 0), 0);
-        estimatedPnl = totalPnl / sessionTrades.length;
-      } else {
-        // No trade data at all — mark as inconclusive
-        estimatedPnl = 0;
-      }
+    const onWins = onTrades.filter((t) => Number(t.pnl ?? 0) > 0).length;
+    const offWins = offTrades.filter((t) => Number(t.pnl ?? 0) > 0).length;
 
-      hypotheticalPnlSum += estimatedPnl;
-      if (estimatedPnl > 0) wouldHaveWonCount++;
-      else if (estimatedPnl < 0) wouldHaveLostCount++;
+    const conditionOnHitRate = onCount > 0 ? onWins / onCount : null;
+    const conditionOffHitRate = offCount > 0 ? offWins / offCount : null;
+
+    const hitRateDelta =
+      conditionOnHitRate !== null && conditionOffHitRate !== null
+        ? conditionOffHitRate - conditionOnHitRate
+        : null;
+
+    let effectiveness = 0.5;
+    if (hitRateDelta !== null) {
+      effectiveness = Math.round(((hitRateDelta + 1) / 2) * 100) / 100;
     }
 
-    const tradesBlocked = group.entries.length;
-    const hypotheticalPnlAvg = tradesBlocked > 0 ? hypotheticalPnlSum / tradesBlocked : 0;
+    let verdict: "EFFECTIVE" | "SUSPECT" | "INCONCLUSIVE" | "UNSCORED";
+    let verdictReason: string;
 
-    // Effectiveness: proportion of blocked trades that would have lost money
-    const totalWithOutcome = wouldHaveWonCount + wouldHaveLostCount;
-    const effectiveness = totalWithOutcome > 0 ? wouldHaveLostCount / totalWithOutcome : 0.5;
-
-    // Verdict: EFFECTIVE if blocking mostly losers, SUSPECT if blocking mostly winners
-    let verdict: "EFFECTIVE" | "SUSPECT" | "INCONCLUSIVE";
-    if (tradesBlocked < 3 || totalWithOutcome === 0) {
+    if (hitRateDelta === null) {
+      verdict = "UNSCORED";
+      verdictReason =
+        onCount === 0 && offCount === 0
+          ? "no_actual_trade_outcomes_found_for_comparison"
+          : onCount === 0
+            ? `condition_on_sample_empty_off_n=${offCount}`
+            : `condition_off_sample_empty_on_n=${onCount}`;
+      logger.debug(
+        { rule: group.rule, strategyId: group.strategyId, onCount, offCount },
+        "Anti-setup effectiveness: UNSCORED — insufficient comparison data",
+      );
+    } else if (onCount < MIN_COMPARISON_SAMPLE || offCount < MIN_COMPARISON_SAMPLE) {
       verdict = "INCONCLUSIVE";
-    } else if (effectiveness >= 0.6) {
+      verdictReason =
+        `sample_too_small: condition_on_n=${onCount} condition_off_n=${offCount} ` +
+        `min_required=${MIN_COMPARISON_SAMPLE}`;
+    } else if (Math.abs(hitRateDelta) < MIN_HIT_RATE_DELTA) {
+      verdict = "INCONCLUSIVE";
+      verdictReason =
+        `hit_rate_delta_${hitRateDelta.toFixed(3)}_below_min_${MIN_HIT_RATE_DELTA}`;
+    } else if (hitRateDelta >= MIN_HIT_RATE_DELTA) {
       verdict = "EFFECTIVE";
-    } else if (wouldHaveWonCount > wouldHaveLostCount) {
-      verdict = "SUSPECT";
+      verdictReason =
+        `condition_on_hit_rate=${conditionOnHitRate!.toFixed(3)} ` +
+        `condition_off_hit_rate=${conditionOffHitRate!.toFixed(3)} ` +
+        `delta=${hitRateDelta.toFixed(3)}`;
     } else {
-      verdict = "INCONCLUSIVE";
+      verdict = "SUSPECT";
+      verdictReason =
+        `condition_on_hit_rate=${conditionOnHitRate!.toFixed(3)} ` +
+        `condition_off_hit_rate=${conditionOffHitRate!.toFixed(3)} ` +
+        `delta=${hitRateDelta.toFixed(3)}_rule_may_be_blocking_winners`;
+      logger.warn(
+        {
+          rule: group.rule,
+          strategy: group.strategyName,
+          conditionOnHitRate,
+          conditionOffHitRate,
+          hitRateDelta,
+          onSample: onCount,
+          offSample: offCount,
+        },
+        "Anti-setup effectiveness: SUSPECT rule — condition-ON trades outperform condition-OFF",
+      );
     }
 
     ruleScores.push({
       rule: group.rule,
       strategyId: group.strategyId,
       strategyName: group.strategyName,
-      tradesBlocked,
-      hypotheticalPnlSum: Math.round(hypotheticalPnlSum * 100) / 100,
-      hypotheticalPnlAvg: Math.round(hypotheticalPnlAvg * 100) / 100,
-      wouldHaveWonCount,
-      wouldHaveLostCount,
-      effectiveness: Math.round(effectiveness * 100) / 100,
+      tradesBlocked: group.blockedCount,
+      conditionOnHitRate: conditionOnHitRate !== null ? Math.round(conditionOnHitRate * 1000) / 1000 : null,
+      conditionOffHitRate: conditionOffHitRate !== null ? Math.round(conditionOffHitRate * 1000) / 1000 : null,
+      conditionOnSampleSize: onCount,
+      conditionOffSampleSize: offCount,
+      hitRateDelta: hitRateDelta !== null ? Math.round(hitRateDelta * 1000) / 1000 : null,
+      effectiveness,
       verdict,
+      verdictReason,
       analyzedPeriod: {
         from: cutoff.toISOString(),
         to: now.toISOString(),
@@ -281,27 +315,29 @@ export async function runAntiSetupEffectivenessAnalysis(
     });
   }
 
-  // Sort: suspect rules first so they're immediately visible
+  const verdictOrder = { SUSPECT: 0, EFFECTIVE: 1, INCONCLUSIVE: 2, UNSCORED: 3 };
   ruleScores.sort((a, b) => {
-    if (a.verdict === "SUSPECT" && b.verdict !== "SUSPECT") return -1;
-    if (b.verdict === "SUSPECT" && a.verdict !== "SUSPECT") return 1;
-    return b.hypotheticalPnlSum - a.hypotheticalPnlSum; // highest blocked P&L first
+    const vDiff = (verdictOrder[a.verdict] ?? 3) - (verdictOrder[b.verdict] ?? 3);
+    if (vDiff !== 0) return vDiff;
+    const aDelta = a.hitRateDelta !== null ? Math.abs(a.hitRateDelta) : 0;
+    const bDelta = b.hitRateDelta !== null ? Math.abs(b.hitRateDelta) : 0;
+    return bDelta - aDelta;
   });
 
   const suspectRules = ruleScores.filter((r) => r.verdict === "SUSPECT");
+  const unscoredRules = ruleScores.filter((r) => r.verdict === "UNSCORED");
   const totalBlocked = ruleScores.reduce((sum, r) => sum + r.tradesBlocked, 0);
-  const totalHypotheticalPnl = ruleScores.reduce((sum, r) => sum + r.hypotheticalPnlSum, 0);
 
   const report: EffectivenessReport = {
     analyzedAt: now.toISOString(),
     periodDays: lookbackDays,
     totalTradesBlocked: totalBlocked,
-    totalHypotheticalPnl: Math.round(totalHypotheticalPnl * 100) / 100,
     ruleScores,
     suspectRules,
+    unscoredRules,
   };
 
-  // 7. Persist to audit_log for queryable history
+  // 8. Persist to audit_log for queryable history
   try {
     await db.insert(auditLog).values({
       action: "anti_setup.effectiveness_analysis",
@@ -315,36 +351,47 @@ export async function runAntiSetupEffectivenessAnalysis(
     logger.error({ err }, "Failed to persist anti-setup effectiveness report to audit_log");
   }
 
-  // 8. Broadcast results via SSE for dashboard
+  // 9. Broadcast results via SSE for dashboard
   broadcastSSE("anti-setup:effectiveness", {
     totalBlocked,
-    totalHypotheticalPnl: report.totalHypotheticalPnl,
     suspectCount: suspectRules.length,
+    unscoredCount: unscoredRules.length,
     ruleCount: ruleScores.length,
   });
 
-  // 9. Log suspect rules at warn level so they're visible in logs
+  // 10. Log SUSPECT rules at warn level
   if (suspectRules.length > 0) {
     logger.warn(
       {
         suspectRules: suspectRules.map((r) => ({
           rule: r.rule,
           strategy: r.strategyName,
-          blockedWinners: r.wouldHaveWonCount,
-          hypotheticalPnl: r.hypotheticalPnlSum,
+          conditionOnHitRate: r.conditionOnHitRate,
+          conditionOffHitRate: r.conditionOffHitRate,
+          hitRateDelta: r.hitRateDelta,
+          onSample: r.conditionOnSampleSize,
+          offSample: r.conditionOffSampleSize,
         })),
       },
       "Anti-setup effectiveness: SUSPECT rules found — these may be blocking profitable trades",
     );
   }
 
+  if (unscoredRules.length > 0) {
+    logger.info(
+      { unscoredRules: unscoredRules.map((r) => ({ rule: r.rule, strategy: r.strategyName, blocked: r.tradesBlocked })) },
+      "Anti-setup effectiveness: UNSCORED rules — no actual comparison trade data yet; " +
+      "these will score once real trades exist in both condition-ON and condition-OFF classes",
+    );
+  }
+
   logger.info(
     {
       totalBlocked,
-      totalHypotheticalPnl: report.totalHypotheticalPnl,
       effectiveRules: ruleScores.filter((r) => r.verdict === "EFFECTIVE").length,
       suspectRules: suspectRules.length,
       inconclusiveRules: ruleScores.filter((r) => r.verdict === "INCONCLUSIVE").length,
+      unscoredRules: unscoredRules.length,
     },
     "Anti-setup effectiveness analysis complete",
   );

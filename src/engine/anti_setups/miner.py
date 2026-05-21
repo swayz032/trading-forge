@@ -1,5 +1,5 @@
 """
-Anti-Setup Miner — discovers conditions where strategy setups consistently fail.
+Anti-Setup Miner -- discovers conditions where strategy setups consistently fail.
 Mines historical losing trades to find common environmental conditions.
 """
 
@@ -9,6 +9,29 @@ import math
 import statistics
 from typing import Any
 
+# --- Multiple-testing correction (Bonferroni) ---
+# We run 8 independent miners against the same trade population.
+# Bonferroni correction: alpha_corrected = 0.05 / N_miners = 0.00625 -> z ~= 2.73
+# This keeps family-wise error rate at 5% across all 8 miners.
+
+_NUM_MINERS: int = 8  # Must match len(miners) list in mine_anti_setups.
+
+
+def _z_for_bonferroni(n_miners: int = _NUM_MINERS, alpha: float = 0.05) -> float:
+    """Return Bonferroni-corrected z-score for the Wilson score lower bound."""
+    alpha_corrected = alpha / n_miners
+    p = 1.0 - alpha_corrected / 2.0
+    if p >= 1.0:
+        return 4.0
+    t = math.sqrt(-2.0 * math.log(1.0 - p))
+    c0, c1, c2 = 2.515517, 0.802853, 0.010328
+    d1, d2, d3 = 1.432788, 0.189269, 0.001308
+    z = t - (c0 + c1 * t + c2 * t * t) / (1.0 + d1 * t + d2 * t * t + d3 * t * t * t)
+    return round(z, 4)
+
+
+_BONFERRONI_Z: float = _z_for_bonferroni(_NUM_MINERS)
+
 
 def mine_anti_setups(
     trades: list[dict],
@@ -16,23 +39,20 @@ def mine_anti_setups(
     min_sample_size: int = 20,
     min_failure_rate: float = 0.65,
 ) -> list[dict]:
-    """
-    Discover conditions that are anti-setups (predict failure).
+    """Discover conditions that are anti-setups (predict failure).
 
-    Scans losing trades for common conditions:
-    1. Time-of-day clustering (e.g., trades entered 14:00-15:00 lose 70%)
-    2. Volatility context (e.g., ATR > 2x mean -> 68% losers)
-    3. Volume context (e.g., below-avg volume -> 72% losers)
-    4. Day-of-week (e.g., Monday entries lose 65%)
-    5. Regime mismatch (e.g., entries during RANGE when strategy prefers TREND)
-    6. Archetype mismatch (e.g., entries on REVERSAL_DAY when strategy needs trends)
-    7. Proximity to events (e.g., within 2 days of FOMC -> 70% losers)
-    8. Streak context (e.g., after 2 consecutive winners -> 66% next trade loses)
+    Contract: trades MUST be in chronological entry order.
+    Re-sorts by entry_time to enforce this before any miner runs.
+    The streak miner depends on chronological ordering.
+    Uses Bonferroni-corrected z (alpha=0.05/8=0.00625, z~=2.73) in _confidence().
 
     Returns list of anti-setup conditions, sorted by failure rate descending.
     """
     if not trades:
         return []
+
+    # Enforce chronological order (F-4 fix)
+    trades = sorted(trades, key=lambda t: t.get("entry_time", t.get("entryTime", "")))
 
     anti_setups: list[dict] = []
 
@@ -46,6 +66,11 @@ def mine_anti_setups(
         _mine_event_proximity,
         _mine_streak,
     ]
+
+    assert len(miners) == _NUM_MINERS, (
+        f"_NUM_MINERS={_NUM_MINERS} does not match miners list length={len(miners)}. "
+        f"Update _NUM_MINERS when adding/removing miners."
+    )
 
     for miner_fn in miners:
         results = miner_fn(trades, bars, min_sample_size, min_failure_rate)
@@ -71,11 +96,13 @@ def _avg_loss(group: list[dict]) -> float:
 
 
 def _confidence(failure_rate: float, sample_size: int) -> float:
-    """Simple confidence based on failure rate consistency and sample size."""
+    """Wilson score lower bound with Bonferroni-corrected z (~=2.73 for 8 miners).
+
+    Prevents spurious anti-setup discovery from multiple-testing inflation.
+    """
     if sample_size == 0:
         return 0.0
-    # Wilson score lower bound approximation
-    z = 1.96  # 95% confidence
+    z = _BONFERRONI_Z  # Bonferroni-corrected: ~=2.73 for 8 miners
     n = sample_size
     p = failure_rate
     denominator = 1 + z * z / n
@@ -103,7 +130,7 @@ def _get_hour(trade: dict) -> int | None:
             return int(time_part.split(":")[0])
         parts = str(entry_time).split(":")
         if len(parts) >= 2:
-            return int(parts[0][-2:])  # last 2 chars before first colon
+            return int(parts[0][-2:])
     except (ValueError, IndexError):
         return None
     return None
@@ -129,9 +156,6 @@ def _get_day_of_week(trade: dict) -> int | None:
     return trade.get("day_of_week")
 
 
-# ─── Condition Miners ────────────────────────────────────────────
-
-
 def _mine_time_of_day(
     trades: list[dict],
     bars: list[dict],
@@ -145,7 +169,7 @@ def _mine_time_of_day(
     for t in trades:
         h = _get_hour(t)
         if h is not None:
-            bucket = (h // 2) * 2  # 2-hour windows
+            bucket = (h // 2) * 2
             hour_buckets.setdefault(bucket, []).append(t)
 
     for bucket_start, group in hour_buckets.items():
@@ -175,7 +199,6 @@ def _mine_volatility(
     results: list[dict] = []
     atr_values = [t.get("atr") for t in trades if t.get("atr") is not None]
     if not atr_values or len(atr_values) < min_sample:
-        # Try getting ATR from bars
         bar_atrs = [b.get("atr") for b in bars if b.get("atr") is not None]
         if bar_atrs:
             mean_atr = statistics.mean(bar_atrs)
@@ -184,7 +207,6 @@ def _mine_volatility(
     else:
         mean_atr = statistics.mean(atr_values)
 
-    # High ATR bucket: > 1.5x mean
     thresholds = [
         ("high_atr", 1.5, None),
         ("very_high_atr", 2.0, None),
@@ -240,7 +262,6 @@ def _mine_volume(
     if mean_vol == 0:
         return results
 
-    # Low volume: below mean
     low_vol = [t for t in trades if t.get("volume") is not None and t["volume"] < mean_vol]
     if len(low_vol) >= min_sample:
         fr = _failure_rate(low_vol)
@@ -255,7 +276,6 @@ def _mine_volume(
                 "impact_if_filtered": _pnl_impact(low_vol),
             })
 
-    # Very low volume: below 50% of mean
     very_low = [t for t in trades if t.get("volume") is not None and t["volume"] < mean_vol * 0.5]
     if len(very_low) >= min_sample:
         fr = _failure_rate(very_low)
@@ -378,7 +398,6 @@ def _mine_event_proximity(
 ) -> list[dict]:
     """Check if trades near economic events fail more often."""
     results: list[dict] = []
-    # Check trades with days_to_event field
     proximity_thresholds = [
         ("near_event_1d", 0, 1),
         ("near_event_2d", 0, 2),
@@ -413,10 +432,11 @@ def _mine_streak(
     min_sample: int,
     min_fail: float,
 ) -> list[dict]:
-    """Check if trades after winning/losing streaks fail more often."""
-    results: list[dict] = []
+    """Check if trades after winning/losing streaks fail more often.
 
-    # Annotate trades with preceding streak
+    Requires trades in chronological order -- mine_anti_setups() enforces this.
+    """
+    results: list[dict] = []
     streak_groups: dict[str, list[dict]] = {}
     win_streak = 0
     loss_streak = 0

@@ -180,8 +180,9 @@ describe("cosineSimilarity", () => {
   });
 
   // 5. Threshold
-  it("SIGNAL_CORRELATION_THRESHOLD defaults to 0.85", () => {
-    expect(SIGNAL_CORRELATION_THRESHOLD).toBe(0.85);
+  it("SIGNAL_CORRELATION_THRESHOLD canonical value is 0.70 (A7_CORRELATION_THRESHOLD)", () => {
+    // F-3 fix: canonical A7 threshold is 0.70 per CLAUDE.md §12
+    expect(SIGNAL_CORRELATION_THRESHOLD).toBe(0.70);
   });
 
   // 11. Verification: identical strategies → > 0.95
