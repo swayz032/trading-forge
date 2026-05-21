@@ -200,6 +200,11 @@ def compute_single_tp(
         if atr > 0:
             candidates.append(entry_price - atr * 3.0)
 
+    # F-7: Sort candidates by distance from entry (nearest first) so we
+    # return the NEAREST level that satisfies >= 2R, not the first by
+    # insertion priority order.
+    candidates.sort(key=lambda tp: abs(tp - entry_price))
+
     for tp in candidates:
         if abs(tp - entry_price) >= min_tp_distance:
             return tp

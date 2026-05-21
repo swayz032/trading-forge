@@ -190,6 +190,30 @@ export function getTotalHurdle(firmName: string, _accountType: string = "50k"): 
   return acct.profitTarget + acct.maxDrawdown;
 }
 
+// ─── Liquidity Comfort Caps (F-3) ───────────────────────────────────────────
+// Per-symbol book-depth ceiling for paper + backtest sizing.
+// Wave 23 canonical per CLAUDE.md §4: MES=100, MNQ=50, MCL=30.
+// Paper-signal-service and risk-sizing.ts use these as fallback when
+// position_size.liquidity_comfort_cap is absent from the DSL config.
+export const LIQUIDITY_COMFORT_CAPS: Record<string, number> = {
+  MES: 100,
+  MNQ: 50,
+  MCL: 30,
+} as const;
+/** Fallback when symbol not in LIQUIDITY_COMFORT_CAPS (conservative mid-range). */
+export const LIQUIDITY_COMFORT_CAP_DEFAULT = 50;
+
+// ─── Topstep Trailing-DD by Account Size (F-5) ──────────────────────────────
+// Trailing drawdown amounts indexed by account starting floor ($).
+// Source: docs/prop-firm-rules-2026-topstep.md §Trailing Drawdown.
+// Resolution order for paper-signal-service:
+//   session.config.trailing_dd_amount → this table → 2000 (50K default)
+export const TOPSTEP_TRAILING_DD_BY_SIZE: Record<number, number> = {
+  50000: 2000,
+  100000: 3000,
+  150000: 4500,
+} as const;
+
 // ─── MFFU 2026 named constants (no magic numbers in compliance code) ─────────
 // Canonical source: docs/prop-firm-rules-2026-mffu.md §§1,7,8,9
 // These must stay in sync with the `mffu["50k"]` entry in FIRMS above.

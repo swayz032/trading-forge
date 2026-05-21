@@ -114,8 +114,10 @@ def backtest_governor(
         governed_max_dd = max(governed_max_dd, dd)
         trades_taken += 1
 
-        # Feed actual (unadjusted) outcome to governor for state tracking
-        result = gov.on_trade(pnl, mae)
+        # F-8: Feed adj_pnl (executed P&L) to governor, not full-size pnl.
+        # Position executed at reduced size; governor session_pnl must track
+        # the P&L that actually occurred, not the theoretical full-size P&L.
+        result = gov.on_trade(adj_pnl, mae)
         state_history.append({
             "event": "trade",
             "original_pnl": pnl,

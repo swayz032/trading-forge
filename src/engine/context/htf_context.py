@@ -5,11 +5,14 @@ Today's daily bar is NOT available until 16:00 ET close.
 """
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
 import polars as pl
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -103,15 +106,20 @@ def compute_htf_context(
     prev_day_low = float(lows[-1])
     prev_day_close = float(closes[-1])
 
-    # Weekly high/low (last 5 trading days)
-    weekly_high = float(np.max(highs[-5:]))
-    weekly_low = float(np.min(lows[-5:]))
+    # ------------------------------------------------------------------
+    # F-1: Weekly high/low — ISO-week grouping, NOT rolling last 5 bars.
+    # Filter to the PREVIOUS completed ISO week relative to bar_date.
+    # Falls back to last 5 bars if no prior-week data exists.
+    # ------------------------------------------------------------------
+    weekly_high, weekly_low = _compute_weekly_range(d, bar_date, highs, lows)
 
     # ADR (20-day average daily range)
     daily_ranges = highs[-20:] - lows[-20:]
     adr = float(np.mean(daily_ranges))
 
     # ATR percentile (14-day ATR vs 60-day window)
+    # F-10: highs/lows/closes here are slices of the already-filtered `d`
+    # so bar_date filtering at the top of this function prevents lookahead.
     if len(d) >= 60:
         # Simple ATR: average of true ranges
         tr = np.maximum(
@@ -187,3 +195,79 @@ def compute_htf_context(
         atr_percentile=atr_percentile,
         adx=adx,
     )
+
+
+def _compute_weekly_range(
+    d: pl.DataFrame,
+    bar_date: object,
+    highs: "np.ndarray",
+    lows: "np.ndarray",
+) -> tuple:
+    """Compute weekly high/low using ISO-week grouping.
+
+    Returns the high/low of the PREVIOUS completed ISO week relative to
+    bar_date. If bar_date is None or no ts_event column, or no prior-week
+    data exists, falls back to last 5 bars with a warning log.
+
+    Returns:
+        (weekly_high, weekly_low)
+    """
+    fallback_high = float(np.max(highs[-5:]))
+    fallback_low = float(np.min(lows[-5:]))
+
+    if bar_date is None or "ts_event" not in d.columns:
+        logger.warning("htf_context: bar_date not provided; weekly range falls back to last 5 bars")
+        return fallback_high, fallback_low
+
+    try:
+        # Determine current bar's ISO week from bar_date
+        import datetime as _dt
+        if hasattr(bar_date, "isocalendar"):
+            bar_iso = bar_date.isocalendar()
+        elif hasattr(bar_date, "date"):
+            bar_iso = bar_date.date().isocalendar()
+        else:
+            # Try parsing string
+            bar_dt = _dt.date.fromisoformat(str(bar_date)[:10])
+            bar_iso = bar_dt.isocalendar()
+
+        bar_iso_year = bar_iso[0]
+        bar_iso_week = bar_iso[1]
+
+        # Compute previous week
+        if bar_iso_week == 1:
+            prev_iso_year = bar_iso_year - 1
+            # ISO weeks in the previous year
+            dec_28 = _dt.date(prev_iso_year, 12, 28)
+            prev_iso_week = dec_28.isocalendar()[1]
+        else:
+            prev_iso_year = bar_iso_year
+            prev_iso_week = bar_iso_week - 1
+
+        # Add iso_week + iso_year columns to filter
+        weekly_d = (
+            d
+            .with_columns([
+                pl.col("ts_event").dt.week().alias("_iso_week"),
+                pl.col("ts_event").dt.iso_year().alias("_iso_year"),
+            ])
+            .filter(
+                (pl.col("_iso_year") == prev_iso_year) &
+                (pl.col("_iso_week") == prev_iso_week)
+            )
+        )
+
+        if len(weekly_d) == 0:
+            logger.warning(
+                "htf_context: no bars found for ISO week %d-%d; falling back to last 5 bars",
+                prev_iso_year, prev_iso_week,
+            )
+            return fallback_high, fallback_low
+
+        wh = float(weekly_d["high"].max())
+        wl = float(weekly_d["low"].min())
+        return wh, wl
+
+    except Exception as exc:
+        logger.warning("htf_context: ISO-week weekly range failed (%s); falling back to last 5 bars", exc)
+        return fallback_high, fallback_low

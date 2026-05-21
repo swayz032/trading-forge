@@ -27,6 +27,7 @@ import { getLastHeartbeatAt } from "../services/dead-mans-heartbeat-service.js";
 import { getCookieStatus } from "../services/prop-firm-cookie-refresh-service.js";
 import { getDiscordWebhookHealth } from "../services/discord-fanout-audit-service.js";
 import type { DiscordWebhookHealth } from "../services/discord-fanout-audit-service.js";
+import { toFuturesTradingDayString } from "../services/paper-risk-gate.js";
 
 export const productionStatusRoutes = Router();
 
@@ -118,8 +119,12 @@ async function buildAreWeTrading(ksReport: KillSwitchStatusReport): Promise<SixQ
 
 async function buildPnlToday(): Promise<PnLStatus> {
   try {
+    // F-2 fix: use CME-futures-trading-day key (rolls at 17:00 ET), not UTC
+    // calendar day. `dailyReconciliation.reconDate` is the futures trading day —
+    // a UTC slice causes a 5h misalignment from 19:00–23:59 UTC where the UTC
+    // date already advanced but the CME trading day hasn't rolled.
     const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10);
+    const dateStr = toFuturesTradingDayString(today);
 
     const rows = await db
       .select({

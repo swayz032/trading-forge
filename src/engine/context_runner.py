@@ -46,17 +46,23 @@ def run_bias(config: dict) -> dict:
     daily_loss_cap_near = config.get("daily_loss_cap_near", False)
     max_trades_hit = config.get("max_trades_hit", False)
 
+    # F-5: Read bar_date once and pass to BOTH compute_htf_context calls.
+    # Without bar_date the filter `d.filter(pl.col("ts_event") < bar_date)`
+    # in compute_htf_context never fires and today's daily bar leaks in.
+    bar_date = config.get("bar_date")
+
     # Load bar data
     daily_df = _load_bars(config.get("daily_bars", []))
     four_h_df = _load_bars(config.get("four_h_bars", [])) if config.get("four_h_bars") else None
     one_h_df = _load_bars(config.get("one_h_bars", [])) if config.get("one_h_bars") else None
 
-    # Layer 0: HTF Context
+    # Layer 0: HTF Context — F-5: pass bar_date
     htf = compute_htf_context(
         daily_df=daily_df,
         four_h_df=four_h_df,
         one_h_df=one_h_df,
         current_price=current_price,
+        bar_date=bar_date,
     )
 
     # Layer 0: Session Context
@@ -152,7 +158,10 @@ def run_evaluate(config: dict) -> dict:
     one_h_df = _load_bars(config.get("one_h_bars", [])) if config.get("one_h_bars") else None
     current_price = config["current_price"]
 
-    htf = compute_htf_context(daily_df, four_h_df, one_h_df, current_price)
+    # F-5: pass bar_date to this second compute_htf_context call too.
+    # Both calls must receive bar_date so the lookahead filter fires consistently.
+    bar_date = config.get("bar_date")
+    htf = compute_htf_context(daily_df, four_h_df, one_h_df, current_price, bar_date=bar_date)
 
     intraday_bars_raw = config.get("intraday_bars", [])
     intraday_df = _load_bars(intraday_bars_raw)

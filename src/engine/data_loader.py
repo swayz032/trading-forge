@@ -158,13 +158,21 @@ def build_s3_glob(
     return f"s3://{s3_bucket}/futures/{symbol}/{prefix}/{timeframe}/*/*/*.parquet"
 
 
-def _verify_ratio_adjusted_source(source: str, adjusted: bool) -> None:
+def _verify_ratio_adjusted_source(source: str, adjusted: bool, from_cache: bool = False) -> None:
     """Hard-fail if the data source path does not contain ratio_adj when adjusted=True.
 
     F-6 fix: Changed from warnings.warn() to raise ValueError() so production callers
     cannot accidentally backtest on raw/unadjusted data. Set ALLOW_RAW_DATA=true in
     the environment ONLY for explicit test/research opt-in — never in production.
+
+    Pass 5 Track A F-1: from_cache=True bypasses the substring check for paths under
+    CACHE_DIR. Cache files are ratio-adjusted by construction (sync_from_s3 only writes
+    consolidated/ratio_adj data into the cache), but the local cache path strings do
+    not contain "ratio_adj" or "consolidated" — without this bypass every cache-hit
+    load raises ValueError, killing the entire backtest pipeline on the hot path.
     """
+    if from_cache:
+        return
     if adjusted and "ratio_adj" not in source and "consolidated" not in source:
         allow_raw = os.environ.get("ALLOW_RAW_DATA", "false").lower() in ("1", "true", "yes")
         if allow_raw:
@@ -487,7 +495,9 @@ def load_ohlcv(
     # F-2 fix: verify adjusted-ratio on EVERY code path (was local_path only).
     # Cache paths contain ratio-adjusted data by construction (CLAUDE.md §13 + cache write guard).
     # This call is a no-op when adjusted=False (the earlier warning covers that case).
-    _verify_ratio_adjusted_source(source, adjusted)
+    # Pass 5 Track A F-1: pass from_cache=True so cache-rooted paths bypass the substring check.
+    _from_cache = source.startswith(str(CACHE_DIR))
+    _verify_ratio_adjusted_source(source, adjusted, from_cache=_from_cache)
 
     sql = f"""
         SELECT ts_event, open, high, low, close, volume
