@@ -722,8 +722,16 @@ export function parseResponsesApiResponse(raw: any): ParsedLLMResponse {
  */
 export async function loadStrictSchemaForRole(role: ModelRole): Promise<unknown | null> {
   switch (role) {
-    case "strategy_proposer":
-    case "transcript_extractor": {
+    // W23H-postmortem-fix13 (2026-05-21): transcript_extractor reverted to
+    // json_object mode. Strict schema with 35 required fields made GPT-5-mini
+    // emit `strategies: []` rather than try to satisfy. Direct A/B proved
+    // json_object + v9 prompt produces every W23H field (bias_timeframe,
+    // confirming_indicators, preferred_regimes) on JackTrades transcript;
+    // strict mode produced empty across all 5 test transcripts.
+    // strategy_proposer kept on strict (separate SLO + smaller surface).
+    case "transcript_extractor":
+      return null;
+    case "strategy_proposer": {
       try {
         const fs = await import("fs/promises");
         const fullPath = resolve(PROJECT_ROOT, "src/agents/kb/strategy-schema-snapshot.json");
