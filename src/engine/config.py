@@ -337,6 +337,15 @@ class BacktestRequest(BaseModel):
     firm_key: Optional[str] = None
     event_calendar: Optional[EventCalendarConfig] = None
     fill_model: Optional[FillProbabilityConfig] = None
+    # Wave 24 Pass 2 — vol-scale + liquidity-haircut parity with paper engine.
+    # vix_now: spot VIX at backtest run time (scalar, not time-series).
+    #   None → vol-scale = 1.0 (fail-open). Emits parity_warn.no_vix_in_backtest.
+    # top3_depth_ratio: currentTop3Depth / baseline20dMedianTop3Depth pre-computed
+    #   by the caller. None → liquidity-haircut = 1.0 (fail-open). Historical
+    #   book-depth series are not available in Parquet; caller provides a scalar ratio
+    #   or omits it. Parity gap is documented in result["parity_metadata"] when absent.
+    vix_now: Optional[float] = None
+    top3_depth_ratio: Optional[float] = None  # currentTop3Depth / baseline20dMedian
 
 
 # ─── Backtest Result ──────────────────────────────────────────────

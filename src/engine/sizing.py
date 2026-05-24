@@ -70,6 +70,8 @@ from typing import Optional
 import numpy as np
 import polars as pl
 
+import os
+
 from src.engine.config import ContractSpec, PositionSizeConfig, TRACK3_CONFIG
 from src.engine.firm_config import CONTRACT_CAP_MAX, CONTRACT_CAP_MIN
 
@@ -78,6 +80,49 @@ MES_PYRAMID_CAP: int = TRACK3_CONFIG.MES_PYRAMID_CAP          # 30 micros
 PYRAMID_GRADUATION_PNL: float = TRACK3_CONFIG.PYRAMID_GRADUATION_PNL  # $30K trigger
 
 logger = logging.getLogger(__name__)
+
+# ── Wave 24 Pass 2 — Vol-scale + liquidity-haircut (backtest parity) ──────────
+# Mirror of risk-sizing.ts: computeVolScale() + computeLiquidityHaircut().
+# Identical math, identical env-var thresholds, identical fail-open semantics.
+# These run in the sizing pass of the backtester so backtest decisions match paper.
+
+_RISK_VIX_TARGET    = float(os.environ.get("RISK_VIX_TARGET",    "18"))
+_RISK_VOL_SCALE_MIN = float(os.environ.get("RISK_VOL_SCALE_MIN", "0.5"))
+_RISK_VOL_SCALE_MAX = float(os.environ.get("RISK_VOL_SCALE_MAX", "1.5"))
+
+
+def compute_vol_scale(vix_now: Optional[float]) -> float:
+    """VIX-driven vol scale on max_risk_pct_per_trade — Python port of computeVolScale().
+
+    scale = clamp(vixTarget / vixNow, VOL_SCALE_MIN, VOL_SCALE_MAX).
+    Returns 1.0 (no-op / fail-open) when vix_now is None, NaN, or <= 0.
+
+    At VIX=18 (target): scale=1.0.  VIX=36: scale=0.5 (floor).  VIX=9: scale=1.5 (ceil).
+    Env vars: RISK_VIX_TARGET (18), RISK_VOL_SCALE_MIN (0.5), RISK_VOL_SCALE_MAX (1.5).
+    """
+    if vix_now is None or math.isnan(float(vix_now)) or float(vix_now) <= 0:
+        return 1.0
+    raw = _RISK_VIX_TARGET / float(vix_now)
+    return max(_RISK_VOL_SCALE_MIN, min(_RISK_VOL_SCALE_MAX, raw))
+
+
+def compute_liquidity_haircut(
+    current_top3_depth: Optional[float],
+    baseline_20d_median_top3_depth: Optional[float],
+) -> float:
+    """Dynamic liquidity haircut on per-symbol caps — Python port of computeLiquidityHaircut().
+
+    haircut = min(1.0, currentTop3Depth / baseline20dMedianTop3Depth).
+    Returns 1.0 (no-op / fail-open) when either input is missing.
+
+    CME Liberation Day 2025-04-02 reference: -27% top-3 depth collapse.
+    Static caps flood thinned books during liquidity events — haircut prevents this.
+    """
+    if not current_top3_depth or not baseline_20d_median_top3_depth:
+        return 1.0
+    if float(baseline_20d_median_top3_depth) <= 0:
+        return 1.0
+    return min(1.0, float(current_top3_depth) / float(baseline_20d_median_top3_depth))
 
 
 # ─── Wave 21: Risk-Derived Pyramid (E.2) ─────────────────────────────────────

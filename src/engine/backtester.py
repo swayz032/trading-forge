@@ -29,6 +29,8 @@ import time
 from pathlib import Path
 from typing import Optional
 
+import math
+
 import click
 import numpy as np
 import pandas as pd
@@ -2115,9 +2117,57 @@ def run_backtest(
         from src.engine.firm_config import get_contract_cap
         max_contracts = get_contract_cap(request.firm_key, config.symbol)
 
-    # ─── Position sizing ──────────────────────────────────────
+    # ─── Position sizing — Wave 24 Pass 2: vol-scale + liquidity-haircut ─────
+    # Mirror paper-engine parity: apply the same vol-scale and liquidity-haircut
+    # that computeRiskDerivedContracts() applies on the paper side (risk-sizing.ts).
+    # This closes the paper-vs-backtest sizing gap in high-VIX environments.
+    from src.engine.sizing import compute_vol_scale, compute_liquidity_haircut
+
+    _vol_scale = compute_vol_scale(getattr(request, "vix_now", None))
+    # top3_depth_ratio is pre-computed by caller (currentTop3Depth / baseline20d).
+    # Historical book-depth series are absent from Parquet — caller provides scalar or None.
+    _depth_ratio = getattr(request, "top3_depth_ratio", None)
+    # Synthesise two-argument form for compute_liquidity_haircut from ratio.
+    # When caller passes top3_depth_ratio, treat it as current / baseline = ratio / 1.
+    _liq_haircut = compute_liquidity_haircut(_depth_ratio, 1.0) if _depth_ratio is not None else 1.0
+
+    # Parity metadata — what adjustments are active for this backtest run.
+    _parity_metadata: dict = {
+        "vol_scale_applied": _vol_scale != 1.0,
+        "vol_scale": _vol_scale,
+        "liquidity_haircut_applied": _liq_haircut != 1.0,
+        "liquidity_haircut": _liq_haircut,
+        "parity_warn": [],
+    }
+    if getattr(request, "vix_now", None) is None:
+        _parity_metadata["parity_warn"].append("parity_warn.no_vix_in_backtest")
+        print("[parity] vix_now absent — vol_scale=1.0 (no vol adjustment)", file=sys.stderr)
+    if _depth_ratio is None:
+        _parity_metadata["parity_warn"].append("parity_warn.no_depth_ratio_in_backtest")
+        _parity_metadata["parity_warn"].append(
+            "parity_note.depth_data_absent — historical book-depth not in Parquet; "
+            "caller must provide top3_depth_ratio scalar for full parity"
+        )
+
+    # Apply vol-scale + liquidity-haircut to position_size config (immutable copy).
+    _raw_max_risk = config.position_size.max_risk_pct_per_trade
+    _raw_liq_cap  = config.position_size.liquidity_comfort_cap
+    _sized_config  = config.position_size
+    _size_adjusted = False
+    if _raw_max_risk is not None and _vol_scale != 1.0:
+        _new_risk_pct = max(1e-6, _raw_max_risk * _vol_scale)  # never drive to exactly 0
+        _sized_config = _sized_config.model_copy(update={"max_risk_pct_per_trade": _new_risk_pct})
+        _size_adjusted = True
+    if _raw_liq_cap is not None and _liq_haircut != 1.0:
+        _new_liq_cap = max(1, int(math.floor(_raw_liq_cap * _liq_haircut)))
+        _sized_config = _sized_config.model_copy(update={"liquidity_comfort_cap": _new_liq_cap})
+        _size_adjusted = True
+    if _size_adjusted:
+        _parity_metadata["adjusted_max_risk_pct"] = _sized_config.max_risk_pct_per_trade
+        _parity_metadata["adjusted_liquidity_cap"] = _sized_config.liquidity_comfort_cap
+
     sizes, over_risk = compute_position_sizes(
-        df, config.position_size, spec, atr_period,
+        df, _sized_config, spec, atr_period,
         max_contracts=max_contracts,
     )
     # Defense-in-depth: replace any inf/nan sizes with 1 contract
@@ -3277,9 +3327,19 @@ def run_backtest(
         # - stop_ceiling_skips: entries killed by ATR stop > ceiling (E.3)
         # - time_stop_exits:    exits set by 15:55 ET hard-flat (E.5)
         # - dll_halt_blocks:    entries suppressed by personal-DLL breach (E.4)
+        # - vol_scale_applied:  True when VIX-driven vol scale != 1.0 (Wave 24 Pass 2)
+        # - liquidity_haircut_applied: True when depth-ratio haircut != 1.0 (Wave 24 Pass 2)
         # All counts are 0 when guards are not applicable (e.g. unit-test data
         # that has no 15:55 bar, or ATR always under ceiling).
-        "dsl_guards": _dsl_guards_meta,
+        "dsl_guards": {
+            **_dsl_guards_meta,
+            "vol_scale_applied": _parity_metadata["vol_scale_applied"],
+            "liquidity_haircut_applied": _parity_metadata["liquidity_haircut_applied"],
+        },
+        # Wave 24 Pass 2 — parity metadata: documents the adjustments applied
+        # to align backtest sizing with paper-engine sizing. Enables operator to
+        # see at a glance whether the backtest ran with or without VIX scaling.
+        "parity_metadata": _parity_metadata,
     }
 
     # ─── Pass B-2: Invariant Harness (always runs — cheap pure validation) ───
