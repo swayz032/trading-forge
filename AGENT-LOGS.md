@@ -6135,6 +6135,36 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-23 Wave 24 Pass 2.5 — Architect master close-out
+
+**Mission:** Close Wave 24 GREEN. Sync System Map with Pass 2 surfaces (boot-migration, sweep-aware stop buffer, HMM overlay, migration 0132). Aggregate test counts. Write `wave.24_master_closed` audit row. 23 of 24 items shipped; defer #24 (HVN-snap TP2 + crypto-grade audit-log hash chain) as Wave 25 candidate.
+
+**Work completed:**
+- `npm run system-map:sync` regenerated `Trading Forge System Map v2.md`, `docs/system-readiness.generated.json`, `docs/system-topology.generated.json`.
+- Appended new §2d "Wave 24 — Master Close-out (2026-05-23)" to System Map: tracks shipped, migrations applied, routes/tables/columns/jobs/audit-actions registered, full 14-env-var table, cross-cutting contract verification, verification matrix.
+- Updated CLAUDE.md §2 to declare Wave 24 closed with link to System Map §2d.
+- `scripts/finalize-wave24-master-closeout.mjs` runs idempotently: writes single `wave.24_master_closed` audit row with all 9 commit refs, migrations, env vars, routes, tables, jobs, columns, test counts.
+- Memory updates: new `project_wave24_complete_2026_05_23.md`; `MEMORY.md` index pointer added.
+
+**Verification:**
+- `npm run system-map:check` EXIT 0 (pre + post sync + post manual §2d edit)
+- `npm run check:production-isolation` EXIT 0 (4 files, 0 violations)
+- `npm run check:2026-compliance` EXIT 0
+- `npx vitest run wave24` → 19 files / 182 tests GREEN (counted from terminal output)
+- `npx tsc --noEmit` → 231 errors all in `src/server/services/volume-profile-service.ts` (pre-existing from null-byte recovery commit `410b75c`, NOT introduced by Wave 24). Zero new tsc errors from Wave 24 work.
+- Pytest blocked on Windows AppControl DLL (documented pre-existing; close-out not gated on it per task spec).
+- `wave.24_master_closed` audit_log row written: id `5d73d303-d382-4217-b77c-092db7d828e5`.
+
+**Known-facts updates:** None new; Wave 24 §2d in System Map is the canonical record.
+
+**Carry-forward for next session:**
+- Item #24 (HVN-snap TP2 + crypto-grade audit-log hash chain) → Wave 25 candidate. No payout-denial / safety implication; pure hardening v2.
+- 231 pre-existing tsc errors in `volume-profile-service.ts` from null-byte recovery — separate cleanup pass (not Wave 24 scope).
+- Pytest Windows AppControl DLL blocker — pre-existing; resolution outside Wave 24 mandate.
+- Background agent `a11759a99495bd43f` (from prior session) — status not re-checked this session.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

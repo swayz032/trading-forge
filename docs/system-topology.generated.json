@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T02:22:53.831Z",
+  "generatedAt": "2026-05-24T02:40:23.122Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -890,18 +890,14 @@
     ],
     "coveredCounts": {
       "routes": 64,
-      "schedulerJobs": 69,
+      "schedulerJobs": 70,
       "engineSubsystems": 26,
-      "databaseTables": 93
+      "databaseTables": 94
     },
     "missingRoutes": [],
-    "missingSchedulerJobs": [
-      "hmm-regime-weekly-refit"
-    ],
+    "missingSchedulerJobs": [],
     "missingEngineSubsystems": [],
-    "missingDatabaseTables": [
-      "regime_hmm_models"
-    ],
+    "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],
@@ -1587,6 +1583,7 @@
           "portfolio_snapshots",
           "pre_market_sessions",
           "prop_firm_health_checks",
+          "regime_hmm_models",
           "session context",
           "shadow_signals",
           "skip_decisions",
@@ -1669,7 +1666,8 @@
           "vp-daily-compute",
           "w19-definition-pull",
           "w19-imbalance-pull",
-          "w19-statistics-pull"
+          "w19-statistics-pull",
+          "hmm-regime-weekly-refit"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -4128,6 +4126,7 @@
         "portfolio_snapshots",
         "pre_market_sessions",
         "prop_firm_health_checks",
+        "regime_hmm_models",
         "session context",
         "shadow_signals",
         "skip_decisions",
@@ -4210,7 +4209,8 @@
         "vp-daily-compute",
         "w19-definition-pull",
         "w19-imbalance-pull",
-        "w19-statistics-pull"
+        "w19-statistics-pull",
+        "hmm-regime-weekly-refit"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [

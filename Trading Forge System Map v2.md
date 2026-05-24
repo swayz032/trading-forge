@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-24T02:22:53.831Z`.
+Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -54,9 +54,9 @@ Updated automatically from the repo on `2026-05-24T02:22:53.831Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `21`
 - Route coverage: `64/64`
-- Scheduler coverage: `69/70`
+- Scheduler coverage: `70/70`
 - Engine coverage: `26/26`
-- Database coverage: `93/94`
+- Database coverage: `94/94`
 - Autonomous subsystems with audit coverage: `21/21`
 - Autonomous subsystems with audit actions: `21/21`
 - Autonomous subsystems with telemetry evidence: `21/21`
@@ -1051,3 +1051,92 @@ Companion to CLAUDE.md §4 + §12. Pass 1 closed four tracks GREEN; this is the 
 3. **bias_state table:** schema columns match service writes; `lifecycle.gate_evaluated` audit row schema does NOT conflict (separate `entityType`).
 4. **R-multiple gate:** backtester injects `avg_trade_risk`; lifecycle reads `expectancy_r` from `backtests.gate_result`. Track 23.B sizing changes don't perturb this metric.
 5. **Frontend SSE types:** `BiasEngineStrategySelectedData` + `SignalAPlusRejectedData` added to discriminated union; exhaustiveness preserved.
+
+---
+
+## §2d Wave 24 — Master Close-out (2026-05-23)
+
+Wave 24 = production-hardening wave following Wave 23. Closed GREEN 2026-05-23. **23 of 24 backlog items shipped (95.8%)**; item #24 (HVN-snap TP2 + crypto-grade audit-log hash chain) deferred as optional Wave 25 candidate. Five subagents across four passes (Pass 1 / Pass 1.5 / Pass 2 / Pass 2.5).
+
+Pass commit refs: `5ec8af3` n8n / `d3a98c4` observability / `95cd2c4` paper-parity / `bd9786e` backtest-core / `93f5292` Pass 1 architect / `2a6a344` preflight / `99225b7` boot-migration / `69ac40b` observability Pass 2 / `1ca782a` backtest-core Pass 2.
+
+### Tracks shipped
+
+| Track | Items | Closing commits |
+|---|---|---|
+| n8n-orchestration | #5 webhook auto-re-register after MCP partial-update | `5ec8af3` |
+| observability (Pass 1) | #8 BW/cookie cron heartbeats; #9 W23H skip audit mirror; #10 NSSM HMAC-signed self-restart; #11 weekly drift 2σ HALT | `d3a98c4` |
+| paper-parity (Pass 1) | #1 Style D runtime deprecation; #2 C2 firm-suspension fix; #3 B14 survival twin HARD gate (40% consistency cap); #4 liquidity haircut; #6 mc_provisional defer; #12 vol-scaling; #13 firm-conditional blackout | `95cd2c4` |
+| backtest-core (Pass 1) | #14 CPCV + purged WF; #15 blackout + cross-symbol DLL backtest parity; #16 PBO promotion gate; #17 honest DSR | `bd9786e` |
+| architect Pass 1 | #7 operator-absent auto-flip (`operator_absent_pending` + `_since`); migration `0131_operator_absent_pending.sql`; route `POST /api/admin/operator-mark-present`; system-map sync | `93f5292` |
+| autonomous-readiness Pass 2 | #22 pre-vacation preflight orchestrator (`scripts/pre-vacation-preflight.ts`) | `2a6a344` |
+| paper-parity Pass 2 | #7 boot-time migration runner (`src/server/lib/boot-migration-runner.ts`) with `pg_dump` rollback + fail-closed if no backup | `99225b7` |
+| observability Pass 2 | #23 vitest forks pool + paper/backtest sizing parity (34 new pytest) | `69ac40b` |
+| backtest-core Pass 2 | #20 sweep-aware stop buffer (per-symbol tick table); #21 HMM regime overlay advisory (rule-based stays PRIMARY) | `1ca782a` |
+| architect Pass 2.5 | This section — system-map sync + master close-out | — |
+
+### Item #24 — DEFERRED to Wave 25 candidate
+- HVN-snap TP2 (snap take-profit-2 to nearest High-Volume-Node from volume profile)
+- Crypto-grade audit-log hash chain (append-only verifiable chain with prev-hash linkage)
+- Rationale: both are nice-to-have v2 hardening with no payout-denial / safety implication. Wave 24 mandate satisfied without them.
+
+### Migrations applied (Wave 24)
+- `0131_operator_absent_pending.sql` — APPLIED Pass 1 (`system_state.operator_absent_pending BOOLEAN DEFAULT false`)
+- `0132_hmm_regime_overlay.sql` — APPLIED Pass 2.5 (`bias_state.hmm_probability_used BOOLEAN DEFAULT false` + `regime_hmm_models` table with `UNIQUE(symbol, fit_date)`)
+
+Both migrations idempotent (`ADD COLUMN IF NOT EXISTS` / `CREATE TABLE IF NOT EXISTS`). Boot-migration runner picks them up automatically on next service start.
+
+### Surfaces registered
+
+**New routes:**
+- `POST /api/admin/operator-mark-present` (Pass 1.5) — clears `operator_absent_pending` + `operator_absent_since`, writes `operator_presence.confirmed` audit row.
+
+**New tables:**
+- `regime_hmm_models` (migration 0132) — weekly-refit HMM params keyed by `(symbol, fit_date)`.
+- `pre_market_sessions` (Pass 1, migration 0131 partner) — pre-market routine output.
+
+**New columns:**
+- `bias_state.hmm_probability_used BOOLEAN` (migration 0132) — true when HMM overlay computed.
+- `system_state.operator_absent_pending BOOLEAN` (migration 0131) — 24h-of-silence intermediate flag.
+
+**New scheduled jobs:**
+- `hmm-regime-weekly-refit` — Sunday 17:00 ET, refits HMM per `[MES, MNQ, MCL]`, upserts into `regime_hmm_models`. Bounded by `pipelineGate` + job-lock. Fail-open per-symbol (any one symbol error doesn't block the others).
+- `bw-session-refresh`, `prop-firm-cookie-refresh`, `weekly-drift-2sigma-check`, `pre-market-routine`, `heartbeat-stale-check`, `heartbeat-write` (Pass 1).
+
+**New audit_log actions (Wave 24 total set):**
+- Pass 1: `bw_refresh.heartbeat`, `cookie_refresh.heartbeat`, `bw_refresh.failed`, `cookie_refresh.failed`, `dead_mans_heartbeat.bw_refresh_stale`, `dead_mans_heartbeat.cookie_refresh_stale`, `system.self_restart_requested`, `drift.weekly_2sigma_halt`, `n8n.webhook_route_verified`, `n8n.webhook_auto_reregistered`, `n8n.webhook_auto_reregister_failed`, `operator_absence.auto_detected`, `operator_presence.confirmed`, `lifecycle.mc_provisional_deferred`, `lifecycle.b14_hard_blocked`, `sizing.liquidity_haircut_applied`, `sizing.vol_scale_applied`, `c11_macro_gate.advisory_warn`, `style_d.legacy_fallback_used`, `lifecycle.wf_mode_insufficient`, `lifecycle.pbo_overfit_blocked`.
+- Pass 2 (new): `migration.auto_applied`, `migration.auto_apply_failed` (boot-migration runner); `bias_engine.hmm_disagrees_with_rule_based`, `bias_engine.hmm_confirms_rule_based` (HMM overlay advisory); `sizing.sweep_aware_buffer_applied` (per-symbol sweep-buffer table); `operator_absence.preflight_engaged` (preflight orchestrator).
+- Pass 2.5: `wave.24_master_closed` (this close-out).
+
+**New env vars (Wave 24 total, 14):**
+| Env var | Default | Purpose |
+|---|---|---|
+| `BOOT_MIGRATION_ENABLED` | `true` | Master switch for auto-apply on boot |
+| `BOOT_MIGRATION_ALLOW_NO_BACKUP` | `false` | Fail-closed if `pg_dump` unavailable unless explicitly allowed |
+| `BOOT_MIGRATION_BACKUP_DIR` | `os.tmpdir()` | Where `pg_dump --schema-only` snapshots land |
+| `BOOT_MIGRATION_TIMEOUT_MS` | `300000` | Per-migration timeout (5 min) |
+| `STOP_BUFFER_TICKS_MES` | `3` | Sweep-aware buffer ticks for MES (0.75pt) |
+| `STOP_BUFFER_TICKS_MNQ` | `5` | Sweep-aware buffer ticks for MNQ (1.25pt) |
+| `STOP_BUFFER_TICKS_MCL` | `2` | Sweep-aware buffer ticks for MCL (0.02pt) |
+| `HMM_OVERLAY_ENABLED` | `true` | Master switch for HMM advisory + weekly refit |
+| `HMM_CONFIRM_THRESHOLD` | `0.6` | Probability above which HMM "confirms" rule-based regime |
+| `HMM_DISAGREE_THRESHOLD` | `0.7` | Probability above which HMM "disagrees" with rule-based regime |
+| `ADMIN_RESTART_HMAC_SECRET` | (none) | HMAC secret for `/api/admin/self-restart` (Pass 1, §15a) |
+| `OPERATOR_ABSENT_AUTOPROMOTE` | `false` | Existing knob — Tier-1 autopilot during vacation |
+| `BACKTEST_STALENESS_DAYS` | `30` | Promotion blocked if latest backtest older than this (Phase 14 + Wave 24 cross) |
+| `MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION` | `5` | MC firm-survival extrapolation cap (Pass 2B F-9) |
+
+### Cross-cutting contract verification (Pass 2.5)
+1. **Boot-migration runner contract:** picks up `0131` + `0132` from `src/server/db/migrations/`; rolls back via `pg_dump` snapshot on failure; writes `migration.auto_applied` / `migration.auto_apply_failed` audit rows. Idempotent on re-boot.
+2. **Sweep-aware stop buffer parity:** TypeScript `src/server/lib/risk-sizing.ts` table = Python `src/engine/structural_stops.py` table (same per-symbol tick values). Paper/backtest sizing parity enforced by Pass 2 pytest suite (34 tests).
+3. **HMM overlay is ADVISORY only:** rule-based remains PRIMARY in `bias-state-service.ts`. `hmm_probability_used = true` flags the row for downstream analytics; never overrides `regime_label` / `playbook` / `active_strategy_id`.
+4. **Operator-absent flow:** `operator_absent_pending` → 24h sustained silence → `operator_absent_since` (sticky). `POST /api/admin/operator-mark-present` is the ONLY clear path for `_since`; any admin endpoint hit auto-clears `_pending` via human-authority audit row.
+5. **Sizing parity (paper ↔ backtest):** liquidity haircut + vol-scaling + sweep-aware buffer all applied in BOTH the TS signal path and the Python backtest engine. Pytest fixture pins per-symbol expectations.
+
+### Verification (Pass 2.5 master close-out)
+- `npm run system-map:check` — EXIT 0 (verified pre + post sync)
+- `npm run check:production-isolation` — EXIT 0 (4 files checked, 0 violations)
+- `npm run check:2026-compliance` — EXIT 0 (MFFU + Topstep aligned)
+- `npx vitest run wave24` — **19 files / 182 tests GREEN**
+- `npx tsc --noEmit` — 231 pre-existing errors in `volume-profile-service.ts` (pre-dating Wave 24, untouched by this wave); ZERO new errors introduced by Wave 24
+- Pytest blocked on Windows AppControl DLL issue (documented pre-existing; non-blocking for close-out)

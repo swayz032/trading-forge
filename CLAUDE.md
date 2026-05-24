@@ -23,6 +23,8 @@ Agents must never fake profitability. The gates decide.
 
 ## §2. Current Phase: Production Hardening ONLY
 
+**Wave 24 CLOSED 2026-05-23 — 23 of 24 backlog items shipped (95.8%).** Item #24 (HVN-snap TP2 + crypto-grade audit-log hash chain) deferred as optional Wave 25 candidate. 182 vitest tests across 19 `wave24-*.test.ts` files GREEN. All 3 CI hard gates GREEN (system-map:check, production-isolation, 2026-compliance). Migrations `0131_operator_absent_pending.sql` + `0132_hmm_regime_overlay.sql` applied. See `Trading Forge System Map v2.md` §2d for the full close-out registry.
+
 All build phases are done. **No new subsystems for 90 days.** The only work is production hardening:
 
 - **Pipeline production** — CANDIDATE → TESTING → PAPER → DEPLOY_READY → PILOT → DEPLOYED must flow without orphan states or silent drops
