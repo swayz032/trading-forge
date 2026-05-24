@@ -5735,6 +5735,131 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-23 autonomous-readiness — 30-day unattended / 14-day vacation audit
+
+**Mission:** Score Trading Forge against the institutional bar: can it run unattended for 30+ days, including a 14-day operator vacation, with ZERO operator intervention? Evaluate the 10 known carry-forwards from the audit prompt + enumerate any new RED items found in code.
+
+**Verdict:** **FAIL.** Two CATASTROPHIC autonomy gaps make the 14-day vacation scenario unsafe; multiple RED-severity infrastructure dependencies remain.
+
+**Top findings (full report returned to parent agent):**
+
+1. **CATASTROPHIC — BW + cookie refresh services are dead code.** `runBwSessionRefreshCheck` (bitwarden-session-refresh-service.ts:127) and `runPropFirmCookieRefresh` (prop-firm-cookie-refresh-service.ts:234) have ZERO production callers. Grep against `src/server/scheduler.ts` (74 registered cron jobs) returns zero matches for `bitwarden|cookie|vault`. CLAUDE.md §3 explicitly promises these run automatically during vacation; they do not. BW session lifetime ≈ 7 days, prop firm cookies ≈ 24-72h — during a 14-day vacation, secrets WILL expire silently and the operator only finds out when an order fails or n8n stalls.
+2. **CATASTROPHIC — `operator_absent_since` is read-only.** `operatorAbsentSince` is read in `operator-absent-mode-service.ts:40` but NEVER written from any production code path. Dead-man's heartbeat alerts (`dead-mans-heartbeat-service.ts`) do NOT auto-flip operator-absent mode. Operator must SET `OPERATOR_ABSENT_AUTOPROMOTE=true` manually before vacation — and getting it set requires an env var change + service restart (which itself is blocked by NSSM, see #3).
+3. **RED — NSSM TradingForgeAPI blocks all code refresh.** Verified at `AGENT-LOGS.md:481-495` and `:5177`. Every deployment requires admin `sc stop TradingForgeAPI`. There is no autonomous redeploy path. A bug shipped during vacation cannot be hot-deployed.
+4. **RED — Migration runner is broken.** `0075`/`0076` SQL files explicitly state "Apply via Railway direct SQL (drizzle-kit migrate is broken per W10/W11 audits)." No boot-time pending-migration sweep exists. Migration `0106` from Wave 6 + the W23H series (0120-0123) require operator apply.
+5. **RED — `mc_provisional` sentinel still un-checked.** Confirmed: `grep mc_provisional src/server/services/lifecycle-service.ts` returns zero. Race condition allows promotion on partial MC data — pinned 2026-05-20 Pass 2B F-8 carry-forward remains live.
+6. **RED — n8n webhook routes don't auto-register** after MCP partial-update (pinned fact, CLAUDE.md §2b). No retry/probe loop exists to detect + force-re-register.
+7. **RED — Blackout backtest parity gap.** `grep blackout src/engine/` returns zero matches. Backtester does not honor `pre_market_sessions.blackout_windows` — silent expectancy distortion on FOMC/CPI days vs paper.
+8. **RED — Cross-symbol DLL backtest parity gap.** Paper-side only; backtester treats each symbol as isolated. Same parity-drift shape.
+9. **YELLOW — Vitest tinypool OOM on full-fleet runs.** Windows-specific; AGENT-LOGS Wave 23H confirms. Family-deployment auto-promotion gates depend on green CI; flaky CI breaks autonomous promotion.
+10. **YELLOW — `position_lock.cleared_on_close` not emitted as discrete audit event** — confirmed via grep. Soft observability gap.
+11. **GREEN (closed since audit prompt) — W23H.4 confluence sizing wiring.** `computeRiskDerivedContracts` IS now called at `paper-signal-service.ts:3538` with audit emission at :3543. The carry-forward listed in the audit prompt has been closed by a later commit.
+12. **NEW RED — `bulk_strategy_wipe` Pass 5 7-step operator action list** has zero auto-execution path. Pre-vacation operator must manually run DB restore → audit → DRY-RUN → APPLY → NSSM restart → head-start → audit. None of this is parameterised as a single self-orchestrating script with safety rails.
+
+**Verification commands run:**
+- `grep -rn "runBwSessionRefreshCheck|runPropFirmCookieRefresh" src/server/ | grep -v __tests__` → only the export definitions, zero callers
+- `grep "registerJob" src/server/scheduler.ts | wc -l` → 74; `grep -iE "bitwarden|cookie|vault|secret"` → 0
+- `grep -rn "operatorAbsentSince" src/server/` → only one read in operator-absent-mode-service.ts:40, no writes outside tests
+- `grep -rn "computeRiskDerivedContracts" src/server/services/ | grep -v __tests__` → confirmed live at paper-signal-service.ts:3538 (audit prompt's "ZERO production callers" carry-forward is OUT OF DATE)
+- `grep blackout src/engine/` → 0 matches (backtest parity gap confirmed)
+- `grep -rn "mc_provisional" src/server/services/lifecycle-service.ts` → 0 matches (sentinel check still missing)
+
+**Known-facts updates:** No new pins. Two existing pins should be re-verified by the next agent: (a) the audit prompt's "W23H.4 has ZERO production callers" is stale, the wiring landed; (b) the CLAUDE.md §3 claim "BW vault auto-refresh keeps secrets fresh (if TF_VAULT_MODE=bitwarden)" is FALSE today — the service exists but is not scheduled.
+
+**Carry-forward for next session:** Per the report — Owner: `observability-reliability` to wire both refresh services to `registerJob` (P0). Owner: `trading-forge-architect` to implement dead-man's-heartbeat → auto-flip `operator_absent_since` via a heartbeat-stale → 4-hour confirm window → DB write path. Owner: `paper-parity` to ship boot-time migration runner OR explicit operator-required-tag with auto-Discord-alert until applied. Owner: parent claude to consolidate the Pass 5 7-step operator runbook into a single `scripts/pre-vacation-preflight.ts` orchestrator with audit + rollback.
+
+---
+
+### Session Log — 2026-05-23 institutional-edge-researcher 10-dimension audit
+
+**Mission:** Audit Trading Forge against 2025-2026 institutional futures-desk references across 10 dimensions (stops, exits, sizing, gates, regime, prop-firm rules, CME microstructure, macro gates, infra, missing-edges).
+
+**Work completed:**
+- Multi-source fresh-evidence research via `scripts/institutional-research.mjs` (Brave + Exa + Tavily + YouTube + Reddit) across all 10 dimensions, hard-filtered to ≥2025-01-01 publication dates.
+- Triangulated each finding across ≥3 independent sources before scoring.
+- Produced executive verdict per dimension (RED/YELLOW/GREEN), per-dimension findings with full citations, top-10 missing edges, top-10 pitfalls, and quarterly/annual refresh cadence — returned in-session to parent agent (not written as .md per agent instructions).
+
+**Key surprises against current Trading Forge spec (CLAUDE.md §4 / §12):**
+1. Topstep news-trading policy as of April 2026 publishes NO hard blackout (proptradingvibes.com 2026-04-28) — TF's C11 Macro Gates blocking FOMC/CPI/NFP is MORE conservative than Topstep requires, which is correct for MFFU but a YELLOW competitive-edge note for Topstep-primary strategies.
+2. CME Liberation-Day (April 2025) book-depth collapse: -27% in top-3 levels at the open window (CME Group 2025 paper). TF's static liquidity caps (MES 100/MNQ 50/MCL 30) are NOT regime-aware. RED gap vs institutional dynamic-depth-aware sizing.
+3. CPCV (Combinatorial Purged Cross-Validation) is now the institutional default per arxiv 2512.12924 (Dec 2025), SSRN 5520741 (Mar 2026 Lopez de Prado/Lipton/Zoonekynd), and quantbeckman 2025-09. TF's 5-split walk-forward without purging/embargo is RED gap.
+4. Reddit r/algotrading r/quant 2025-11 consensus + arxiv 2508.16598: fractional Kelly (¼ to ½) with VIX-scaling is the 2026 standard for prop accounts. TF's hard 2% max_risk + pyramid is YELLOW — safe but leaves growth on the table vs vol-adjusted sizing.
+5. TopstepX live consistency-rule enforcement: 40% single-day cap on payout windows (Topstep Help Center; quantvps 2026; propscorer.com 2026-03 "40K Ban Cases"). TF's Survival Twin B14 is Phase 0 advisory — should be HARD gate before any payout claim.
+
+**Verification:**
+- 9 background research jobs all completed exit 0
+- ≥40 distinct ≥2025-dated sources triangulated; no pre-2025 fallbacks
+- Findings cross-checked against `CLAUDE.md §4/§6/§12` to map gaps to specific Trading Forge subsystems
+
+**Known-facts updates:** None (audit findings are recommendations, not pinned invariants)
+
+**Carry-forward for next session:**
+- Implement CPCV (purged + embargoed) as additive 3rd walk-forward mode behind feature flag — owner: `backtest-core`
+- Add Liberation-Day-style regime-aware liquidity cap haircut (apply 0.5× cap multiplier when VIX > 25 or top-3 book-depth < 50% of trailing 20-day median) — owner: `paper-parity` + `observability-reliability`
+- Promote B14 Survival Twin from Phase 0 advisory to HARD gate before first Topstep live payout — owner: `paper-parity`
+- Evidence library: 10-dimension institutional-evidence files should be created under `docs/institutional-evidence/<subsystem>.md` on next pass (skipped this session per agent instruction "do not write report .md files")
+
+---
+
+### Session Log — 2026-05-23 accuracy-validator truth audit (Wave 23H close-out claims)
+
+**Mission:** Independently verify the 15 named claims from the architect's Wave 23H FINAL close-out + adjacent pinned facts. Surface silent disagreements as CRITICAL.
+
+**Work completed:**
+- Re-ran `npm run check:2026-compliance` → GREEN, confirms architect's Pass FINAL claim.
+- Re-ran `npm run check:production-isolation` → CLEAN, 0 violations.
+- Re-ran `npm run system-map:check` → RED (exit 1, `status:"drift"`). 4 drift items: stale generated topology, 2 missing routes (`/api/broker-accounts`, `/api/pre-market`), 3 missing scheduler jobs (`heartbeat-stale-check`, `heartbeat-write`, `pre-market-routine`), 1 missing table (`pre_market_sessions`). At least 4 of these are NEW W23H surface area, NOT "pre-existing infra-noise" as the architect's FINAL described.
+- Re-ran `npx vitest run wave23h` → 396 pass / 1 fail / 23 files. Architect's claim was 374 pass / 21 files. Discrepancy: +22 tests pass + ONE failing test at `wave23h-c2-multi-firm.test.ts:185` ("Layer 7: 3 enabled firms, none suspended → l7Halted=false" — `report.overall_halted` is true when expected false).
+- Hit live `/api/health` on tower port 4000 → uptime 11h, `backtestConcurrency:{active:0,cap:3,saturated:false}` LIVE, scheduler shows `pre-market-routine` and `heartbeat-*` running. Phase 14 code IS the running binary today — pinned "NSSM still on stale code" concern is FALSE today.
+- Verified `computeRiskDerivedContracts` wired in `src/server/services/paper-signal-service.ts:3538` (call site) and `:3544` (audit emit) — Pass-2 wiring gap CLOSED.
+- Verified migrations 0120–0123 present in `src/server/db/migrations/`, all registered in `_journal.json`, all idempotent (`IF NOT EXISTS` guards).
+- Verified DSL guards wired at `src/engine/backtester.py:2425` (`_apply_dsl_stop_loss_and_time_stop`) and `:2458` (`_apply_dll_halt_to_entries`).
+- Verified lifecycle truthiness HARD block at `src/server/services/lifecycle-service.ts:661` (`if (invariants?.overall_passed === false) … return { success:false }`).
+- Verified `framework-overlay.ts` has no `styleD` key BUT discovered `src/server/services/paper-execution-service.ts:2214` still defaults `exitStyle = "D"` and routes to `src.engine.exits.style_d_handler` at :2232. "Style D is dead" claim is FALSE at the runtime exit handler layer — only true at the overlay-default layer. Either rename the claim or remove the runtime path.
+- Verified `winRate` is NOT used as a hard gate in promotion path; only as graveyard failure-mode tagging at lifecycle:1135 and as critic/agent telemetry. `source_claim_win_rate` is written by graduator but NEVER read by lifecycle/critic/auditor — pin VERIFIED.
+- Verified micro point-value lock: no non-doc/non-test refs to `MES $50` / `MNQ $20` / `MCL $10` in production code.
+- Verified 4 W23H skip events FIRE in `paper-signal-service.ts` (lines 2009, 2523, 2583, 2961) but they write to `signalsLog` with `reason:` prefix, not to a `skip_decisions` table or `insertAuditRow` with a matching `action:` field. Architect's "covered" claim is partially correct (events are persisted), but the table/mechanism differs from architect's description.
+- Verified pine_compiler.py BUG-5 fix at line 1147–1148 (str.format_time removed, str.tostring(time) returning unix millis, backend `markerPayloadSchema` updated).
+
+**Verification:** 4 of 15 named claims confirmed clean; 4 confirmed with caveats; 3 surfaced as CRITICAL silent disagreements (Style D handler still routable, system-map gate currently RED with W23H-attributable drift, 1 wave23h vitest failure). See final response to parent for the full scorecard.
+
+**Known-facts updates:** None — existing pins remain accurate. Recommend new pin: "system-map:check has been RED since W23H Pass 2 — `/api/pre-market`, `pre-market-routine` job, and `pre_market_sessions` table need registration in System Map v2."
+
+**Carry-forward for next session:**
+- Register W23H new surfaces in System Map (`/api/pre-market`, `/api/broker-accounts`, `pre-market-routine`, `heartbeat-stale-check`, `heartbeat-write`, `pre_market_sessions`) and run `npm run system-map:sync` to clear the RED gate.
+- Fix or quarantine `wave23h-c2-multi-firm.test.ts:185` failure — the kill-switch overall_halted is firing in a test that expects it OFF.
+- Decide: either delete `style_d_handler.py` + remove the `currentExitStyle ?? "D"` default in `paper-execution-service.ts:2214`, OR update the "Style D is dead" claim to "Style D is no longer the framework-overlay default" (more accurate scope).
+- Re-confirm graveyard-tag `low_win_rate` (lifecycle:1135) is purely post-mortem categorization and not used to bias any downstream gate — surface in docs that it is telemetry-only.
+
+---
+
+### Session Log — 2026-05-23 wave24-pass1 n8n webhook auto-re-register after MCP partial-update (Item 13)
+
+**Mission:** Close one of the catastrophic vacation-breakers from the autonomous-readiness audit — n8n 2.10.3 partial-update API leaves webhook routes unregistered until an operator manually toggles Active OFF/ON in the n8n UI. Any auto-deployed workflow change during a 14-day operator vacation = silent 404.
+
+**Work completed:**
+- New service `src/server/services/n8n-workflow-deployer.ts` exporting `N8nWorkflowDeployer` class + `getN8nWorkflowDeployer()` singleton.
+- Wrapper `updatePartialWorkflow(workflowId, partialUpdate, correlationId?)` flow: apply partial update → fetch workflow → enumerate `n8n-nodes-base.webhook` nodes → probe `${N8N_BASE_URL}/webhook/${path}` → on 404, force-cycle (POST `/deactivate`, sleep 2s, POST `/activate`) → re-probe → on still-404, emit CRITICAL audit + Discord notify.
+- Audit actions emitted: `n8n.webhook_route_verified` (first-probe success), `n8n.webhook_auto_reregistered` (force-cycle succeeded), `n8n.webhook_auto_reregister_failed` (still 404 → operator-needed).
+- All audits use `entityType: "n8n_workflow"`, `decisionAuthority: "n8n"`, `correlationId` propagated; n8n workflow IDs are not UUIDs so `entityId` is null and the workflowId carries in `result`.
+- Discord CRITICAL via `notifyCritical()` from `notification-service.ts` when human intervention required.
+- Inputs are injectable (`partialUpdate`, `getWorkflow`, `setActive`, `fetchFn`, `sleepFn`) — default implementations call the n8n REST API (`PATCH/GET /api/v1/workflows/:id`, `POST /api/v1/workflows/:id/activate|deactivate`) using `X-N8N-API-KEY` from `N8N_BASE_URL` + `TF_N8N_API_KEY`/`RAILWAY_N8N_API_KEY`. Same auth pattern as `n8n-execution-scraper-service.ts`.
+- Tests `src/server/__tests__/wave24-n8n-webhook-auto-reregister.test.ts` — 6 cases: first-probe 200, first-probe 404 → recycle 200, first-probe 404 → still 404, no-webhooks, multi-webhook (mixed outcomes), webhook missing path.
+
+**Verification:**
+- `npx vitest run wave24-n8n-webhook-auto-reregister` → 6/6 GREEN (392ms).
+- `npx tsc --noEmit` → no errors on changed files.
+- `npm run check:production-isolation` → CLEAN (0 violations).
+- Grep `n8n_update_partial_workflow` in `src/` → 1 hit (the wrapper itself). Zero pre-existing application callers to refactor — the partial-update API is currently only invoked interactively by agents via the n8n MCP tool. Wrapper is in place for future programmatic use AND agents can be directed to call the wrapper instead of raw MCP whenever they touch webhook-containing workflows.
+
+**Known-facts updates:** none new — the underlying webhook-route bug is already pinned in CLAUDE.md §2b. This wrapper is the remediation, not a new fact.
+
+**Carry-forward for next session:**
+- Update agent runbooks (`skills/` or operator-facing docs) to direct future MCP-based partial-update flows through this wrapper before touching webhook-containing workflows. Without that runbook update, agents will keep calling raw `n8n_update_partial_workflow` and bypass the auto-re-register path.
+- Optional Pass 2 follow-up: add a periodic sweeper that probes every active workflow's webhook routes (not just after a partial update) — catches drift introduced via the n8n UI, restored backups, or migrations. Out of scope for Item 13.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
