@@ -133,10 +133,15 @@ function _toDateString(d: Date): string {
  *   - open positions for unrealized projection on today
  *
  * asOf defaults to now. Pass a Date to enable time-travel (tests, simulation).
+ *
+ * @param dryRun - When true, suppresses audit_log writes and Discord notifications
+ *   (notifyWarning / notifyCritical). The computed ConsistencyState is still returned
+ *   so callers can inspect gate thresholds. Pass 2 replay-grading uses this path.
  */
 export async function getConsistencyState(
   accountId: string,
   asOf: Date = new Date(),
+  dryRun: boolean = false,
 ): Promise<ConsistencyState> {
   // Cache check first
   const cached = _getCached(accountId);
@@ -275,28 +280,30 @@ export async function getConsistencyState(
     computedAt: asOf.toISOString(),
   };
 
-  // ─── Emit audit + alerts ───────────────────────────────────────────────────────
+  // ─── Emit audit + alerts (suppressed in dry-run) ──────────────────────────────
 
-  if (gateState === "block_50") {
-    await _handleBlock50(state, correlationId);
-  } else if (gateState === "warn_40") {
-    await _handleWarn40(state, correlationId);
-  } else if (gateState === "ok" && currentConcentrationPct < WARN_THRESHOLD_PCT) {
-    // Gate cleared (may have been triggered previously)
-    await insertAuditRowSafe({
-      action: "consistency.gate_cleared",
-      entityType: "broker_account",
-      entityId: accountId,
-      result: {
-        currentConcentrationPct,
-        cycleCumulativeProfit,
-        highestDayProfit,
-        cycleDay,
-      },
-      status: "success",
-      decisionAuthority: "system",
-      correlationId,
-    });
+  if (!dryRun) {
+    if (gateState === "block_50") {
+      await _handleBlock50(state, correlationId);
+    } else if (gateState === "warn_40") {
+      await _handleWarn40(state, correlationId);
+    } else if (gateState === "ok" && currentConcentrationPct < WARN_THRESHOLD_PCT) {
+      // Gate cleared (may have been triggered previously)
+      await insertAuditRowSafe({
+        action: "consistency.gate_cleared",
+        entityType: "broker_account",
+        entityId: accountId,
+        result: {
+          currentConcentrationPct,
+          cycleCumulativeProfit,
+          highestDayProfit,
+          cycleDay,
+        },
+        status: "success",
+        decisionAuthority: "system",
+        correlationId,
+      });
+    }
   }
 
   _setCache(accountId, state);

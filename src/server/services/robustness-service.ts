@@ -4,7 +4,7 @@
 
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
 import { runPythonModule } from "../lib/python-runner.js";
 
 export interface RobustnessResult {
@@ -67,45 +67,56 @@ async function runPythonRobustness(configJson: string): Promise<RobustnessResult
   }
 }
 
+/**
+ * @param dryRun - When true, suppresses audit_log writes. The Python subprocess
+ *   still fires (it is the compute; its own side effects cannot be dry-run here —
+ *   callers must handle subprocess isolation if needed). Result is returned normally.
+ *   Pass 2 replay-grading uses this path.
+ */
 export async function runRobustnessTest(
   strategyId: string,
   configJson: string,
+  dryRun: boolean = false,
 ): Promise<RobustnessResult> {
   const startTime = Date.now();
 
   try {
     const result = await runPythonRobustness(configJson);
 
-    await db.insert(auditLog).values({
-      action: "agent.robustness",
-      entityType: "strategy",
-      entityId: strategyId,
-      input: { strategyId },
-      result: {
-        is_robust: result.robustness.is_robust,
-        best_score: result.best_score,
-        n_trials: result.n_trials,
-      },
-      status: "success",
-      durationMs: Date.now() - startTime,
-      decisionAuthority: "agent",
-    });
+    if (!dryRun) {
+      await db.insert(auditLog).values({
+        action: "agent.robustness",
+        entityType: "strategy",
+        entityId: strategyId,
+        input: { strategyId },
+        result: {
+          is_robust: result.robustness.is_robust,
+          best_score: result.best_score,
+          n_trials: result.n_trials,
+        },
+        status: "success",
+        durationMs: Date.now() - startTime,
+        decisionAuthority: "agent",
+      });
+    }
 
     return result;
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
 
-    await db.insert(auditLog).values({
-      action: "agent.robustness",
-      entityType: "strategy",
-      entityId: strategyId,
-      input: { strategyId },
-      result: { error: errorMsg },
-      status: "failure",
-      durationMs: Date.now() - startTime,
-      decisionAuthority: "agent",
-      errorMessage: errorMsg,
-    });
+    if (!dryRun) {
+      await db.insert(auditLog).values({
+        action: "agent.robustness",
+        entityType: "strategy",
+        entityId: strategyId,
+        input: { strategyId },
+        result: { error: errorMsg },
+        status: "failure",
+        durationMs: Date.now() - startTime,
+        decisionAuthority: "agent",
+        errorMessage: errorMsg,
+      });
+    }
 
     throw err;
   }

@@ -364,10 +364,15 @@ async function writeAudit(
  *
  * Returns early with status="queued_deferred" when MAX_CONCURRENT_CRITIQUES is saturated.
  * Idempotent: if a critique already exists for this positionId within 5 minutes, returns it.
+ *
+ * @param dryRun - When true, suppresses all DB writes (audit_log, system_parameters,
+ *   trade_critique INSERT) and Discord notifications. LLM call still fires so callers
+ *   can inspect/grade the result. Pass 2 replay-grading uses this path.
  */
 export async function runTradeCritique(
   positionId: string,
   correlationId?: string,
+  dryRun: boolean = false,
 ): Promise<TradeCritiqueResult> {
   // ─── Idempotency: skip if critique already written in last 5 min ───
   const idempotentCutoff = new Date(Date.now() - IDEMPOTENCY_WINDOW_MS);
@@ -408,19 +413,21 @@ export async function runTradeCritique(
       { positionId, active: _activeCritiques, cap: _maxConcurrent() },
       "trade_critique: saturated — deferring",
     );
-    await writeAudit(
-      "trade_critique.deferred_saturation",
-      positionId,
-      "info",
-      { active: _activeCritiques, cap: _maxConcurrent(), reason: "concurrency_cap_reached" },
-      correlationId,
-    );
+    if (!dryRun) {
+      await writeAudit(
+        "trade_critique.deferred_saturation",
+        positionId,
+        "info",
+        { active: _activeCritiques, cap: _maxConcurrent(), reason: "concurrency_cap_reached" },
+        correlationId,
+      );
+    }
     return { status: "queued_deferred", positionId };
   }
 
   _activeCritiques++;
   try {
-    return await _runCritiqueInternal(positionId, correlationId);
+    return await _runCritiqueInternal(positionId, correlationId, dryRun);
   } finally {
     _activeCritiques--;
   }
@@ -429,6 +436,7 @@ export async function runTradeCritique(
 async function _runCritiqueInternal(
   positionId: string,
   correlationId?: string,
+  dryRun: boolean = false,
 ): Promise<TradeCritiqueResult> {
   // ─── 1. Read position row ────────────────────────────────────────
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -564,50 +572,52 @@ async function _runCritiqueInternal(
   }
 
   if (!rawJson) {
-    // Both providers failed — track consecutive failures
-    const strikes = await incrementConsecutiveFailures();
-    logger.error({ positionId, strikes }, "trade_critique: all providers failed");
+    // Both providers failed — track consecutive failures (skipped in dry-run)
+    logger.error({ positionId, dryRun }, "trade_critique: all providers failed");
+    if (!dryRun) {
+      const strikes = await incrementConsecutiveFailures();
 
-    await writeAudit(
-      "trade_critique.failed",
-      positionId,
-      "failed",
-      {
-        reason: "all_providers_failed",
-        strikes,
-        sessionId: session?.id ?? null,
-        strategyId,
-        correlationId: correlationId ?? null,
-      },
-      correlationId,
-    );
-
-    if (strikes >= STRIKE_THRESHOLD) {
-      notifyWarning(
-        "Trade Critique — 3 Consecutive Failures",
-        `The trade critique service has failed ${strikes} times in a row. ` +
-        `Last failed position: ${positionId}. ` +
-        `Check OPENAI_API_KEY, Ollama connectivity, and model availability. ` +
-        `Trading Forge continues to operate normally — critique is observability-only.`,
-        {
-          positionId,
-          strikes,
-          strategyId: strategyId ?? "unknown",
-          action: "investigate_llm_connectivity",
-        },
-      );
       await writeAudit(
-        "trade_critique.consecutive_failure_alert",
+        "trade_critique.failed",
         positionId,
         "failed",
         {
+          reason: "all_providers_failed",
           strikes,
-          alert_sent: true,
-          threshold: STRIKE_THRESHOLD,
+          sessionId: session?.id ?? null,
+          strategyId,
           correlationId: correlationId ?? null,
         },
         correlationId,
       );
+
+      if (strikes >= STRIKE_THRESHOLD) {
+        notifyWarning(
+          "Trade Critique — 3 Consecutive Failures",
+          `The trade critique service has failed ${strikes} times in a row. ` +
+          `Last failed position: ${positionId}. ` +
+          `Check OPENAI_API_KEY, Ollama connectivity, and model availability. ` +
+          `Trading Forge continues to operate normally — critique is observability-only.`,
+          {
+            positionId,
+            strikes,
+            strategyId: strategyId ?? "unknown",
+            action: "investigate_llm_connectivity",
+          },
+        );
+        await writeAudit(
+          "trade_critique.consecutive_failure_alert",
+          positionId,
+          "failed",
+          {
+            strikes,
+            alert_sent: true,
+            threshold: STRIKE_THRESHOLD,
+            correlationId: correlationId ?? null,
+          },
+          correlationId,
+        );
+      }
     }
 
     return { status: "failed", positionId };
@@ -619,86 +629,95 @@ async function _runCritiqueInternal(
     parsed = JSON.parse(rawJson);
   } catch (parseErr) {
     logger.error({ positionId, rawLength: rawJson.length, err: parseErr }, "trade_critique: JSON parse failed");
-    await incrementConsecutiveFailures();
-    await writeAudit(
-      "trade_critique.failed",
-      positionId,
-      "failed",
-      { reason: "json_parse_error", provider: usedProvider, model: usedModel, correlationId: correlationId ?? null },
-      correlationId,
-    );
+    if (!dryRun) {
+      await incrementConsecutiveFailures();
+      await writeAudit(
+        "trade_critique.failed",
+        positionId,
+        "failed",
+        { reason: "json_parse_error", provider: usedProvider, model: usedModel, correlationId: correlationId ?? null },
+        correlationId,
+      );
+    }
     return { status: "failed", positionId };
   }
 
   const validation = validateCritiqueOutput(parsed);
   if (!validation.valid) {
     logger.error({ positionId, reason: validation.reason }, "trade_critique: schema validation failed");
-    await incrementConsecutiveFailures();
-    await writeAudit(
-      "trade_critique.failed",
-      positionId,
-      "failed",
-      { reason: "schema_validation_failed", detail: validation.reason, provider: usedProvider, model: usedModel, correlationId: correlationId ?? null },
-      correlationId,
-    );
+    if (!dryRun) {
+      await incrementConsecutiveFailures();
+      await writeAudit(
+        "trade_critique.failed",
+        positionId,
+        "failed",
+        { reason: "schema_validation_failed", detail: validation.reason, provider: usedProvider, model: usedModel, correlationId: correlationId ?? null },
+        correlationId,
+      );
+    }
     return { status: "failed", positionId };
   }
 
-  // ─── 7. Persist critique row ─────────────────────────────────────
-  const [row] = await db
-    .insert(tradeCritique)
-    .values({
+  // ─── 7. Persist critique row (skipped in dry-run) ───────────────
+  let persistedId: string | undefined;
+  if (!dryRun) {
+    const [row] = await db
+      .insert(tradeCritique)
+      .values({
+        positionId,
+        sessionId:           session?.id ?? null,
+        accountId:           null,  // paper positions don't have direct account_id today
+        strategyId:          strategyId ?? null,
+        grade:               validation.pes.grade,
+        technicalDiagnosis:  validation.td as unknown as Record<string, unknown>,
+        plainEnglishSummary: validation.pes as unknown as Record<string, unknown>,
+        dataCompleteness,
+        missingFields,
+        provider:            usedProvider,
+        model:               usedModel,
+        correlationId:       correlationId ?? null,
+      })
+      .returning({ id: tradeCritique.id });
+    persistedId = row.id;
+
+    // ─── 8. Reset consecutive failure counter on success ──────────
+    await resetConsecutiveFailures();
+
+    // ─── 9. Write audit row ────────────────────────────────────────
+    const auditAction =
+      dataCompleteness !== "full"
+        ? "trade_critique.partial_data"
+        : "trade_critique.completed";
+
+    await writeAudit(
+      auditAction,
       positionId,
-      sessionId:           session?.id ?? null,
-      accountId:           null,  // paper positions don't have direct account_id today
-      strategyId:          strategyId ?? null,
-      grade:               validation.pes.grade,
-      technicalDiagnosis:  validation.td as unknown as Record<string, unknown>,
-      plainEnglishSummary: validation.pes as unknown as Record<string, unknown>,
-      dataCompleteness,
-      missingFields,
-      provider:            usedProvider,
-      model:               usedModel,
-      correlationId:       correlationId ?? null,
-    })
-    .returning({ id: tradeCritique.id });
-
-  // ─── 8. Reset consecutive failure counter on success ────────────
-  await resetConsecutiveFailures();
-
-  // ─── 9. Write audit row ──────────────────────────────────────────
-  const auditAction =
-    dataCompleteness !== "full"
-      ? "trade_critique.partial_data"
-      : "trade_critique.completed";
-
-  await writeAudit(
-    auditAction,
-    positionId,
-    "success",
-    {
-      critiqueId:       row.id,
-      grade:            validation.pes.grade,
-      dataCompleteness,
-      missingFields,
-      provider:         usedProvider,
-      model:            usedModel,
-      entry_quality:    validation.td.entry_quality_score,
-      regime_mismatch:  validation.td.regime_mismatch,
-      realized_r:       realizedR,
-      correlationId:    correlationId ?? null,
-    },
-    correlationId,
-  );
+      "success",
+      {
+        critiqueId:       persistedId,
+        grade:            validation.pes.grade,
+        dataCompleteness,
+        missingFields,
+        provider:         usedProvider,
+        model:            usedModel,
+        entry_quality:    validation.td.entry_quality_score,
+        regime_mismatch:  validation.td.regime_mismatch,
+        realized_r:       realizedR,
+        correlationId:    correlationId ?? null,
+      },
+      correlationId,
+    );
+  }
 
   logger.info(
     {
       positionId,
-      critiqueId: row.id,
+      critiqueId: persistedId,
       grade: validation.pes.grade,
       dataCompleteness,
       provider: usedProvider,
       model: usedModel,
+      dryRun,
     },
     "trade_critique: completed",
   );
@@ -706,7 +725,7 @@ async function _runCritiqueInternal(
   return {
     status: dataCompleteness !== "full" ? "partial_data" : "completed",
     positionId,
-    critiqueId: row.id,
+    critiqueId: persistedId,
     grade: validation.pes.grade,
     dataCompleteness,
     provider: usedProvider,

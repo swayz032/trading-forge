@@ -93,8 +93,12 @@ interface CritiqueSummaryRow {
  *  8. Start A/B test vs current active version (replicated from prompt-evolution-service)
  *  9. Update appendix cache via setAppendixCache() so buildPromptSync picks it up now
  * 10. Audit row
+ *
+ * @param dryRun - When true, suppresses prompt_versions INSERT, A/B test row creation,
+ *   and audit_log writes. setAppendixCache() STILL fires (in-memory only — safe for
+ *   replay). LLM call still fires; result returned for inspection. Pass 2 replay uses this.
  */
-export async function runPatternAggregator(): Promise<PatternAggregatorResult> {
+export async function runPatternAggregator(dryRun: boolean = false): Promise<PatternAggregatorResult> {
   const startTime = Date.now();
 
   const empty: PatternAggregatorResult = {
@@ -113,7 +117,7 @@ export async function runPatternAggregator(): Promise<PatternAggregatorResult> {
   const killSwitchValue = await _readKillSwitch();
   if (killSwitchValue === false) {
     logger.info("Pattern aggregator: kill switch engaged — skipping");
-    await _audit("auto_patch.loop_halted_skip", "success", { reason: "kill_switch" });
+    if (!dryRun) await _audit("auto_patch.loop_halted_skip", "success", { reason: "kill_switch" });
     return { ...empty, status: "halted", durationMs: Date.now() - startTime };
   }
 
@@ -133,7 +137,7 @@ export async function runPatternAggregator(): Promise<PatternAggregatorResult> {
     rows = rawRows as CritiqueSummaryRow[];
   } catch (err) {
     logger.error({ err }, "Pattern aggregator: failed to read trade_critique rows");
-    await _audit("pattern_aggregator.failed", "failure", { reason: "db_read_error", error: String(err) });
+    if (!dryRun) await _audit("pattern_aggregator.failed", "failure", { reason: "db_read_error", error: String(err) });
     return { ...empty, status: "failed", durationMs: Date.now() - startTime };
   }
 
@@ -143,7 +147,7 @@ export async function runPatternAggregator(): Promise<PatternAggregatorResult> {
       { rowCount: rows.length, minRequired: MIN_CRITIQUES },
       "Pattern aggregator: insufficient samples — skipping",
     );
-    await _audit("pattern_aggregator.insufficient_samples", "success", {
+    if (!dryRun) await _audit("pattern_aggregator.insufficient_samples", "success", {
       rows_found: rows.length,
       min_required: MIN_CRITIQUES,
     });
@@ -194,7 +198,7 @@ export async function runPatternAggregator(): Promise<PatternAggregatorResult> {
 
   if (!llmOutput) {
     logger.error("Pattern aggregator: both providers failed — aborting");
-    await _audit("pattern_aggregator.failed", "failure", {
+    if (!dryRun) await _audit("pattern_aggregator.failed", "failure", {
       critiques_reviewed: rows.length,
       reason: "all_providers_failed",
     });
@@ -206,7 +210,7 @@ export async function runPatternAggregator(): Promise<PatternAggregatorResult> {
   // ── Step 6: NO_CHANGE path ─────────────────────────────────────────────────
   if (trimmedOutput === "NO_CHANGE" || trimmedOutput.startsWith("NO_CHANGE")) {
     logger.info({ critiquesReviewed: rows.length }, "Pattern aggregator: LLM found no robust patterns — no_change");
-    await _audit("pattern_aggregator.no_change", "success", {
+    if (!dryRun) await _audit("pattern_aggregator.no_change", "success", {
       critiques_reviewed: rows.length,
       provider: usedProvider,
       durationMs: Date.now() - startTime,
@@ -220,20 +224,22 @@ export async function runPatternAggregator(): Promise<PatternAggregatorResult> {
     };
   }
 
-  // ── Step 7 + 8: Persist prompt_versions + A/B test ────────────────────────
+  // ── Step 7 + 8: Persist prompt_versions + A/B test (skipped in dry-run) ─────
   let newVersionId: string | null = null;
   let abTestId: string | null = null;
 
-  try {
-    const result = await _storeVersionAndABTest(PROMPT_TYPE, trimmedOutput);
-    newVersionId = result.versionId;
-    abTestId = result.abTestId;
-  } catch (err) {
-    logger.error({ err }, "Pattern aggregator: failed to persist prompt_versions — continuing without persistence");
-    // Non-fatal: still update the in-memory cache below
+  if (!dryRun) {
+    try {
+      const result = await _storeVersionAndABTest(PROMPT_TYPE, trimmedOutput);
+      newVersionId = result.versionId;
+      abTestId = result.abTestId;
+    } catch (err) {
+      logger.error({ err }, "Pattern aggregator: failed to persist prompt_versions — continuing without persistence");
+      // Non-fatal: still update the in-memory cache below
+    }
   }
 
-  // ── Step 9: Update appendix cache immediately ──────────────────────────────
+  // ── Step 9: Update appendix cache immediately (always fires — in-memory, safe) ──
   setAppendixCache(PROMPT_TYPE, trimmedOutput);
   logger.info(
     { promptType: PROMPT_TYPE, contentLength: trimmedOutput.length },
@@ -246,14 +252,16 @@ export async function runPatternAggregator(): Promise<PatternAggregatorResult> {
   // Extract bullet hints for structured result (best-effort parse)
   const paramHints = _extractBulletPoints(trimmedOutput);
 
-  await _audit("pattern_aggregator.completed", "success", {
-    critiques_reviewed: rows.length,
-    new_prompt_version_id: newVersionId,
-    ab_test_id: abTestId,
-    provider: usedProvider,
-    appendix_length: trimmedOutput.length,
-    durationMs,
-  });
+  if (!dryRun) {
+    await _audit("pattern_aggregator.completed", "success", {
+      critiques_reviewed: rows.length,
+      new_prompt_version_id: newVersionId,
+      ab_test_id: abTestId,
+      provider: usedProvider,
+      appendix_length: trimmedOutput.length,
+      durationMs,
+    });
+  }
 
   logger.info(
     { critiquesReviewed: rows.length, provider: usedProvider, versionId: newVersionId, durationMs },
