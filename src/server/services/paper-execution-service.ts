@@ -30,6 +30,9 @@ import { isFirmSuspended, registerSuspensionChangeCallback } from "./prop-firm-h
 import { isConnectivityDegraded } from "../lib/network-failover.js";
 // Track 5: strategy assignment check — if accountId is provided, verify an active assignment exists
 import { getActiveAssignment } from "./strategy-assignment-service.js";
+// Wave 25.5 Track 1: adaptive exit plan wiring
+import { computeExitPlan, type ExitPlan } from "./adaptive-exit-engine.js";
+import type { ExitPlanWithRuntimeState } from "../db/jsonb-shapes.js";
 export { CONTRACT_SPECS };
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
@@ -542,6 +545,17 @@ export async function openPosition(sessionId: string, params: {
   atr?: number;
   barVolume?: number;
   medianBarVolume?: number;
+  // ── Wave 25.5 Track 1: adaptive exit plan wiring ──────────────────────────
+  // When exit_style="adaptive", callers supply these to enable computeExitPlan().
+  // All optional — absent → falls back to static_styleC (fail-soft, never blocks).
+  /** Strategy metadata needed for computeExitPlan(). Requires id + exit_plan_config. */
+  adaptiveExitInput?: {
+    strategy: { id: string; exit_plan_config?: import("../db/jsonb-shapes.js").ExitPlanConfig | null };
+    entry: { stop: number };  // stop price at entry (structural stop derived before calling openPosition)
+    bar: { close: number; high: number; low: number; volume: number };
+    marketState: { regime: string; narrativePhase: string | null };
+    weightedScore?: import("./confluence-score.js").WeightedScoreResult;
+  };
 }, context?: { correlationId?: string; accountId?: string }) {
   const correlationId = context?.correlationId ?? null;
 
@@ -1534,6 +1548,97 @@ export async function openPosition(sessionId: string, params: {
   }
   const implementationShortfall = Math.abs(actualEntry - arrivalPrice) * spec.pointValue * params.contracts;
 
+  // ── Wave 25.5 Track 1 Gap A: compute adaptive exit plan before INSERT ────────
+  // If exit_style="adaptive" and adaptiveExitInput is provided, compute and persist
+  // the ExitPlan in the exit_plan column at INSERT time. Fail-soft: any error falls
+  // back to static_styleC for this position (never blocks the trade).
+  let exitPlanForInsert: ExitPlanWithRuntimeState | null = null;
+  const adaptiveInput = params.adaptiveExitInput;
+  const exitStyle = adaptiveInput?.strategy?.exit_plan_config?.exit_style ?? "static_styleC";
+
+  if (exitStyle === "adaptive" && adaptiveInput != null) {
+    try {
+      const exitPlanRaw: ExitPlan = await computeExitPlan({
+        strategy: {
+          id: adaptiveInput.strategy.id,
+          // Satisfy ExitPlanInput.strategy.exit_plan_config: ExitPlanConfig | null | undefined
+          exit_plan_config: adaptiveInput.strategy.exit_plan_config ?? null,
+        },
+        entry: {
+          price: actualEntry,
+          stop: adaptiveInput.entry.stop,
+          direction: params.side,
+          timestamp: params.barTimestamp ?? new Date(),
+        },
+        symbol: params.symbol,
+        bar: {
+          close: adaptiveInput.bar.close,
+          high: adaptiveInput.bar.high,
+          low: adaptiveInput.bar.low,
+          volume: adaptiveInput.bar.volume,
+          ts_event: params.barTimestamp ?? new Date(),
+        },
+        marketState: {
+          regime: adaptiveInput.marketState.regime,
+          narrativePhase: adaptiveInput.marketState.narrativePhase,
+          atr: params.atr ?? 0,
+        },
+        weightedScore: adaptiveInput.weightedScore,
+        correlationId: correlationId ?? undefined,
+      });
+
+      // Extend ExitPlan with empty runtime_state for per-bar trail updates (Gap C)
+      exitPlanForInsert = {
+        ...exitPlanRaw,
+        runtime_state: {},
+      } as ExitPlanWithRuntimeState;
+
+      // Audit: signal.exit_plan_persisted (§10b mandate)
+      db.insert(auditLog).values({
+        action: "signal.exit_plan_persisted",
+        entityType: "paper_position",
+        entityId: null, // position id not yet known at compute time
+        decisionAuthority: "system",
+        input: {
+          sessionId,
+          strategy_id: adaptiveInput.strategy.id,
+          symbol: params.symbol,
+        } as Record<string, unknown>,
+        result: {
+          tp1_source: exitPlanRaw.tp1.source,
+          tp1_level_type: exitPlanRaw.tp1.level_type ?? null,
+          runner_trail_method: exitPlanRaw.runner.trail_method,
+          scaling: {
+            tp1_pct: exitPlanRaw.scaling.tp1_pct,
+            tp2_pct: exitPlanRaw.scaling.tp2_pct,
+            runner_pct: exitPlanRaw.scaling.runner_pct,
+          },
+        } as Record<string, unknown>,
+        status: "success",
+        correlationId,
+      }).catch((err) => logger.warn({ err }, "signal.exit_plan_persisted audit write failed (non-blocking)"));
+    } catch (exitPlanErr) {
+      // Fail-soft: computeExitPlan threw (e.g. liquidity service unavailable).
+      // Log + fall through to static_styleC for this position.
+      const reason = exitPlanErr instanceof Error ? exitPlanErr.message : String(exitPlanErr);
+      logger.warn(
+        { sessionId, symbol: params.symbol, side: params.side, err: reason },
+        "Wave25.5: computeExitPlan threw — falling back to static_styleC for this position (fail-soft)",
+      );
+      db.insert(auditLog).values({
+        action: "signal.exit_plan_fallback_static",
+        entityType: "paper_position",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { sessionId, symbol: params.symbol } as Record<string, unknown>,
+        result: { reason, fallback: "static_styleC" } as Record<string, unknown>,
+        status: "failure",
+        correlationId,
+      }).catch((err) => logger.warn({ err }, "signal.exit_plan_fallback_static audit write failed (non-blocking)"));
+      exitPlanForInsert = null;
+    }
+  }
+
   const [position] = await dbConn.insert(paperPositions).values({
     sessionId,
     symbol: params.symbol,
@@ -1546,6 +1651,8 @@ export async function openPosition(sessionId: string, params: {
     implementationShortfall: String(implementationShortfall),
     fillRatio: "1.0",
     fillProbability: capturedFillProbability !== null ? String(capturedFillProbability) : null,
+    // Wave 25.5 Track 1: persist adaptive exit plan when available
+    exitPlan: exitPlanForInsert ?? undefined,
   }).returning();
 
   const executionResult: ExecutionResult = {
@@ -2647,6 +2754,176 @@ export async function updatePositionPrices(
     totalUnrealizedPnl += unrealizedPnl;
     totalUnrealizedDelta += unrealizedDelta;
     positionsUpdated++;
+
+    // ── Wave 25.5 Track 1 Gap C: Adaptive runner trail execution ─────────────
+    // For positions with exit_plan.runner.trail_method set, compute the
+    // adaptive trail stop and tighten trailHwm if the new value is tighter.
+    // The Python style_c_handler still handles TP1/TP2/BE/TIME_STOP invariants.
+    // This block only updates the TRAIL level — all other exit decisions remain
+    // with the Python handler below (unchanged).
+    //
+    // HARD INVARIANTS (preserved — this block CANNOT override):
+    //   - 15:55 ET hard flatten: TIME_STOP_FLATTEN decision made by Python handler
+    //   - BE+1 tick on TP1 fill: MOVE_STOP_TO_BE decision made by Python handler
+    //   - 67% DLL halt: enforced upstream in openPosition (not in trail logic)
+    //   - Per-symbol liquidity caps: enforced upstream in openPosition
+    //
+    // Fallback: any error in adaptive trail computation → skip trail update for
+    // this bar (HOLD trail, Python handler still decides TP/BE/TIME_STOP).
+    if (exitBarContext && pos.exitPlan != null) {
+      try {
+        const exitPlanRow = pos.exitPlan as ExitPlanWithRuntimeState;
+        const trailMethod = exitPlanRow.runner?.trail_method;
+        const atrAtEntry = exitBarContext.atr14[pos.symbol] ?? 0;
+        const ATR_TRAIL_CUSHION_MULTIPLIER = 1.0; // named constant per CLAUDE.md §13 no-magic-numbers
+        let computedTrail: number | null = null;
+        let updatedRuntimeState: ExitPlanWithRuntimeState["runtime_state"] | null = null;
+
+        switch (trailMethod) {
+          case "anchored_vwap": {
+            // Per-position running ΣP·V / ΣV from entry timestamp.
+            // State: exit_plan.runtime_state.{ sum_pv, sum_v }
+            // Trail = anchored VWAP - (ATR_TRAIL_CUSHION_MULTIPLIER × atrAtEntry) for longs
+            //        anchored VWAP + cushion for shorts
+            const prevState = exitPlanRow.runtime_state ?? {};
+            const prevSumPv = prevState.sum_pv ?? 0;
+            const prevSumV  = prevState.sum_v  ?? 0;
+            // bar volume from exitBarContext (not available in existing interface — use ATR proxy)
+            // NOTE: volume is not in StyleExitBarContext; use midpoint price × 1 vol unit as a fallback
+            // until callers wire volume. The AVWAP degrades to a price-only trail when volume absent.
+            const barVol = 1; // fallback; callers should add volume to StyleExitBarContext in Wave 26
+            const barMid = currentPrice;
+            const newSumPv = prevSumPv + barMid * barVol;
+            const newSumV  = prevSumV  + barVol;
+            const avwap = newSumV > 0 ? newSumPv / newSumV : currentPrice;
+            const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+            computedTrail = pos.side === "long" ? avwap - cushion : avwap + cushion;
+            updatedRuntimeState = { ...prevState, sum_pv: newSumPv, sum_v: newSumV, avwap };
+            break;
+          }
+
+          case "developing_poc": {
+            // Style C legacy behavior — developingSessionPoc from exitBarContext.
+            // This is the SAME logic as the Python style_c_handler POC trail.
+            // By mapping this case to the existing POC data, we preserve exact parity.
+            const poc = exitBarContext.developingSessionPoc?.[pos.symbol] ?? null;
+            if (poc != null) {
+              const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+              computedTrail = pos.side === "long" ? poc - cushion : poc + cushion;
+            }
+            // No runtime_state needed for developing_poc (stateless)
+            break;
+          }
+
+          case "chandelier": {
+            // Chandelier(14, 2.0) — uses highSinceEntry/lowSinceEntry from exitBarContext.
+            // For longs: trail = highSinceEntry - (2.0 × atrAtEntry)
+            // For shorts: trail = lowSinceEntry + (2.0 × atrAtEntry)
+            const CHANDELIER_MULTIPLIER = 2.0;
+            const highSince = exitBarContext.highSinceEntry?.[pos.symbol] ?? currentPrice;
+            const lowSince  = exitBarContext.lowSinceEntry?.[pos.symbol]  ?? currentPrice;
+            computedTrail = pos.side === "long"
+              ? highSince - CHANDELIER_MULTIPLIER * atrAtEntry
+              : lowSince  + CHANDELIER_MULTIPLIER * atrAtEntry;
+            break;
+          }
+
+          case "structure_trail": {
+            // Per-position swing-low/high tracker.
+            // For longs:  trail = current_swing_low - (ATR_TRAIL_CUSHION_MULTIPLIER × atr)
+            // For shorts: trail = current_swing_high + cushion
+            // State: exit_plan.runtime_state.{ current_swing_low, current_swing_high }
+            // We update the swing tracker using last2barSwingLow/High from exitBarContext.
+            const prevState = exitPlanRow.runtime_state ?? {};
+            const entryPx   = Number(pos.entryPrice);
+
+            if (pos.side === "long") {
+              const newSwingLow = exitBarContext.last2barSwingLow?.[pos.symbol] ?? null;
+              // Only track swing lows BELOW the entry (otherwise it's not a valid stop level)
+              const prevSwingLow = prevState.current_swing_low ?? entryPx;
+              const trackedSwingLow = newSwingLow != null && newSwingLow < currentPrice
+                ? Math.max(prevSwingLow, newSwingLow) // use highest (most recent) valid swing low
+                : prevSwingLow;
+              const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+              computedTrail = trackedSwingLow - cushion;
+              updatedRuntimeState = { ...prevState, current_swing_low: trackedSwingLow };
+            } else {
+              const newSwingHigh = exitBarContext.last2barSwingHigh?.[pos.symbol] ?? null;
+              const prevSwingHigh = prevState.current_swing_high ?? entryPx;
+              const trackedSwingHigh = newSwingHigh != null && newSwingHigh > currentPrice
+                ? Math.min(prevSwingHigh, newSwingHigh)
+                : prevSwingHigh;
+              const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+              computedTrail = trackedSwingHigh + cushion;
+              updatedRuntimeState = { ...prevState, current_swing_high: trackedSwingHigh };
+            }
+            break;
+          }
+
+          default:
+            // Unknown trail_method → fallback to Style C POC trail (developingSessionPoc)
+            {
+              const poc = exitBarContext.developingSessionPoc?.[pos.symbol] ?? null;
+              if (poc != null) {
+                computedTrail = poc - ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+              }
+            }
+        }
+
+        // Tighten trailHwm if computedTrail is tighter than current (ratchet-only).
+        if (computedTrail != null) {
+          const currentTrailHwm = pos.trailHwm != null ? Number(pos.trailHwm) : null;
+          const isTighter = currentTrailHwm == null || (
+            pos.side === "long"
+              ? computedTrail > currentTrailHwm  // long: higher stop = tighter
+              : computedTrail < currentTrailHwm  // short: lower stop = tighter
+          );
+
+          if (isTighter) {
+            // Build updated exit_plan with new runtime_state
+            const updatedExitPlan: ExitPlanWithRuntimeState = {
+              ...exitPlanRow,
+              runtime_state: updatedRuntimeState ?? exitPlanRow.runtime_state ?? {},
+            };
+            await db.update(paperPositions).set({
+              trailHwm: String(computedTrail),
+              currentTrailMethod: trailMethod ?? "adaptive",
+              exitPlan: updatedExitPlan,
+            }).where(eq(paperPositions.id, pos.id));
+
+            logger.debug(
+              {
+                positionId: pos.id, sessionId, trailMethod, computedTrail,
+                oldTrail: currentTrailHwm, atrAtEntry, correlationId,
+              },
+              "wave25.5: adaptive trail tightened",
+            );
+            broadcastSSE(PAPER_EXIT_EVENTS.TRAIL_TIGHTENED, {
+              position_id: pos.id,
+              decision_type: "TIGHTEN_TRAIL_TO_X",
+              evidence: { trail_method: trailMethod, new_stop: computedTrail, source: "adaptive" },
+              correlation_id: correlationId ?? null,
+            });
+          } else if (updatedRuntimeState != null) {
+            // Trail not tighter but runtime_state changed — persist state update only
+            const updatedExitPlan: ExitPlanWithRuntimeState = {
+              ...exitPlanRow,
+              runtime_state: updatedRuntimeState,
+            };
+            await db.update(paperPositions).set({
+              exitPlan: updatedExitPlan,
+            }).where(eq(paperPositions.id, pos.id));
+          }
+        }
+      } catch (adaptiveTrailErr) {
+        // Fail-soft: adaptive trail error does not block position management.
+        // Python handler below still fires TP/BE/TIME_STOP decisions.
+        logger.warn(
+          { positionId: pos.id, sessionId, err: String(adaptiveTrailErr), correlationId },
+          "wave25.5: adaptive trail computation failed — HOLD trail, Python handler proceeds",
+        );
+      }
+    }
 
     // ── Track 3: Style D/C exit handler dispatch ─────────────────────────────
     // Only dispatched when the caller supplies exitBarContext. Legacy callers

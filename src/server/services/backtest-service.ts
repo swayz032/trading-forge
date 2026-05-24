@@ -374,6 +374,39 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
 
   try {
     const mode = config.mode ?? "single";
+
+    // ── Wave 25 Gap B: Adaptive exit context injection ─────────────────────
+    // When exit_engine="adaptive", populate config.adaptive_exit_context with
+    // a liquidity snapshot so the Python backtest path has real levels to work with.
+    //
+    // Contract (from src/engine/config.py AdaptiveExitContext):
+    //   adaptive_exit_context.liquidity_snapshot: list of {level_type, price,
+    //     htf_significance, sweep_probability} — intraday-only levels for the symbol.
+    //   adaptive_exit_context.regime_at_entry: string | null — regime fallback.
+    //   adaptive_exit_context.pre_lunch_threshold_r: float (default 0.3)
+    //   adaptive_exit_context.delta_div_threshold: float (default 0.6)
+    //
+    // This stub populates an EMPTY snapshot (length 0) which causes the Python
+    // adaptive path to fall back to R-multiple targets (+1R / +2R) — still
+    // divergent from Style C because the regime-dependent scaling and trail method
+    // ARE applied regardless of liquidity snapshot availability.
+    //
+    // TODO (Wave 26): Call getNearestLiquidity(symbol, ...) here to populate
+    // real levels. Tracked as adaptive_exit_liquidity_wiring in known-gaps.
+    // Operator runs: ADAPTIVE_WIRED=true python -m scripts.wave25_exit_engine_ab_report
+    //   --days 30 --strategies silver_bullet,power_of_3
+    // to validate the A/B harness produces non-zero deltas.
+    const exitEngine = (config as Record<string, unknown>)["exit_engine"];
+    if (exitEngine === "adaptive" && !(config as Record<string, unknown>)["adaptive_exit_context"]) {
+      const exitPlanConfig = (config.strategy as Record<string, unknown>)?.["exit_plan_config"] as Record<string, unknown> | null | undefined;
+      (config as Record<string, unknown>)["adaptive_exit_context"] = {
+        liquidity_snapshot: [],  // TODO W26: fill from getNearestLiquidity()
+        regime_at_entry: null,   // Python backtester uses per-bar classify_institutional_regime
+        pre_lunch_threshold_r: (exitPlanConfig?.["pre_lunch_threshold_r"] as number | null) ?? 0.3,
+        delta_div_threshold: (exitPlanConfig?.["delta_div_threshold"] as number | null) ?? 0.6,
+      };
+    }
+
     const result = await CircuitBreakerRegistry.get("python-backtest").call(() =>
       runPythonModule<BacktestResult>({
         module: "src.engine.backtester",

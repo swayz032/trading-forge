@@ -1030,6 +1030,13 @@
       "when": 1779786400000,
       "tag": "0144_strategies_adaptive_exits",
       "breakpoints": true
+    },
+    {
+      "idx": 147,
+      "version": "7",
+      "when": 1779872800000,
+      "tag": "0145_paper_positions_exit_plan",
+      "breakpoints": true
     }
   ]
 }

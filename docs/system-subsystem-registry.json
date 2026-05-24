@@ -3136,11 +3136,11 @@
     "id": "adaptive_exit_engine",
     "domain": "exit_management",
     "owner_surface": "node",
-    "automation_mode": "scaffold_only",
-    "manual_gate": "wave_25_5_wiring_required",
-    "runtime_state": "scaffold",
+    "automation_mode": "production",
+    "manual_gate": "operator_opt_in_per_strategy",
+    "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 7 (SCAFFOLD) — pure-function adaptive exit engine in src/server/services/adaptive-exit-engine.ts. computeExitPlan() composes 5 sub-tracks: W25.12 liquidity-mapped TP (intraday DOL only — PWH/PWL/PMH/PML excluded per day-trader mandate; +1R/+2R fallback), W25.13 regime-dependent scaling (TRENDING 20/30/50, RANGE 50/30/20, MACRO 60/30/10, CHOP 50/50/0), W25.14 delta-divergence early-exit (≥0.6 cumulative-delta div + ≥0.5R favor → 25% partial; prop-firm-safe, never flips), W25.15 AVWAP runner trail selection (anchored_vwap / developing_poc / chandelier / structure_trail), W25.16 pre-lunch harvest (RANGE/CHOP/COMPRESSION at 11:30 ET ≥0.3R → 50% partial + BE+0.5R). framework-overlay.ts gains exit_plan_config.exit_style switch (default 'static_styleC' backward-compat; 'adaptive' valid but scaffold-only). Migration 0144 idx 146 (strategies.exit_plan_config JSONB). 47 vitest green. **3 wiring gaps deferred to Wave 25.5: (A) paper-signal-service.ts position-open call site, (B) backtester._apply_trade_management exit_engine='adaptive' branching, (C) updatePositionPrices runner trail execution by trail_method.** 15:55 ET hard flatten INVARIANT preserved as engine constant. Style C 33/33/34 remains LIVE default until Wave 25.5 wiring ships.",
+    "automation_scope": "Wave 25 Pass 7 + Wave 25.5 wiring LIVE 2026-05-24. computeExitPlan() composes 5 sub-tracks: W25.12 liquidity-mapped TP (intraday DOL only — PWH/PWL/PMH/PML excluded per day-trader mandate; +1R/+2R fallback), W25.13 regime-dependent scaling (TRENDING 20/30/50, RANGE 50/30/20, MACRO 60/30/10, CHOP 50/50/0), W25.14 delta-divergence early-exit (≥0.6 cumulative-delta div + ≥0.5R favor → 25% partial; prop-firm-safe, never flips), W25.15 AVWAP runner trail selection (anchored_vwap / developing_poc / chandelier / structure_trail), W25.16 pre-lunch harvest (RANGE/CHOP/COMPRESSION at 11:30 ET ≥0.3R → 50% partial + BE+0.5R). Wave 25.5 closed 3 wiring gaps: (Gap A) paper-execution-service.ts openPosition wires computeExitPlan + paper_positions.exit_plan JSONB persistence via migration 0145 idx 147 + fail-soft fallback to static_styleC, (Gap B) backtester._apply_trade_management() routes to _apply_adaptive_management when exit_engine='adaptive' + adaptive_ctx provided via src/engine/exits/adaptive_exits.py Python mirror, (Gap C) updatePositionPrices branches on runner_trail_method for 4 methods (anchored_vwap with unit-vol fallback / developing_poc preserved / chandelier preserved / structure_trail per-position swing). framework-overlay.ts exit_plan_config.exit_style switch operator-controlled (default 'static_styleC' backward-compat; 'adaptive' opt-in per strategy via scripts/wave25-pass7-adaptive-opt-in.ts --apply). 15:55 ET hard flatten + BE+1 TP1 INVARIANTS preserved in BOTH engines. 123 new tests green across Wave 25.5 (18 paper-parity + 105 backtest-core). TS canonical, Python mirror; parity contract documented in src/engine/exits/adaptive_exits.py module docstring.",
     "data_sources": [
       "liquidity_levels",
       "bias_state.regime",
@@ -3155,7 +3155,9 @@
       "audit_log"
     ],
     "audit_actions": [
-      "strategy.wave25_pass7_adaptive_opt_in"
+      "strategy.wave25_pass7_adaptive_opt_in",
+      "signal.exit_plan_persisted",
+      "signal.exit_plan_fallback_static"
     ],
     "metrics_surfaces": [],
     "telemetry_sources": [],
@@ -3163,32 +3165,43 @@
     "routes": [],
     "engine_subsystems": [
       "src/server/services/adaptive-exit-engine.ts",
-      "src/server/services/framework-overlay.ts"
+      "src/server/services/framework-overlay.ts",
+      "src/server/services/paper-execution-service.ts",
+      "src/engine/exits/adaptive_exits.py",
+      "src/engine/backtester.py"
     ],
     "database_tables": [
-      "strategies"
+      "strategies",
+      "paper_positions"
     ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
     "failure_visibility": [
       "audit_log",
-      "logger:adaptive-exit-engine"
+      "logger:adaptive-exit-engine",
+      "logger:paper-execution-service"
     ],
     "recovery_mode": "fail-open-to-style-c-static",
     "health_check": "/api/health",
-    "status": "scaffold",
+    "status": "active",
     "self_evolving": false,
-    "proof_mode": "scaffold-pre-wiring",
+    "proof_mode": "wave_25_5_wired_2026_05_24",
     "freshness_signals": [
-      "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in"
+      "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in",
+      "audit_log:signal.exit_plan_persisted:per-position-open",
+      "audit_log:signal.exit_plan_fallback_static:on-engine-error"
     ],
     "evidence_queries": [
-      "wave25-adaptive-exit-engine.test.ts"
+      "wave25-adaptive-exit-engine.test.ts",
+      "wave25-5-track1-position-open-wiring.test.ts",
+      "src/engine/tests/test_apply_trade_management_branching.py",
+      "src/engine/tests/test_adaptive_exits_python.py",
+      "src/engine/tests/test_adaptive_exits_parity.py"
     ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
-    "deployment_authority": "wave_25_5_wiring_required",
+    "deployment_authority": "production",
     "criticality": "important"
   },
   {
@@ -3196,10 +3209,10 @@
     "domain": "validation",
     "owner_surface": "python-node",
     "automation_mode": "manual_invoke",
-    "manual_gate": "wave_25_5_backtester_branching_required",
-    "runtime_state": "scaffold",
+    "manual_gate": "operator_invoke_for_cohort_validation",
+    "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 7 (SCAFFOLD) — backtest A/B harness scaffolding for adaptive exit engine validation. New BacktestRequest field 'exit_engine' (values: 'static_styleC' | 'adaptive') plumbed through src/engine/config.py + src/engine/backtester.py + scripts/wave25_exit_engine_ab_report.py. 34 pytest green (test_exit_engine_ab.py). 3-rule non-regression gate scaffold (avg-R delta, PF delta, deflated Sharpe delta). **Until Wave 25.5 wires backtester._apply_trade_management() to branch on exit_engine='adaptive', both branches of the A/B harness produce identical results (Style C path).** A/B harness output written to docs/wave25-exit-engine-ab-report.md. Consumed by Wave 25.5 promotion gate work and by operator decision on adaptive→live opt-in.",
+    "automation_scope": "Wave 25 Pass 7 + Wave 25.5 wiring LIVE 2026-05-24. backtest A/B harness for adaptive exit engine validation. BacktestRequest field 'exit_engine' (values: 'static_styleC' | 'adaptive') + AdaptiveExitContext + LiquidityLevelSnapshot plumbed through src/engine/config.py + src/engine/backtester.py + scripts/wave25_exit_engine_ab_report.py. Wave 25.5 Gap B closed: _apply_trade_management() now routes to _apply_adaptive_management when exit_engine='adaptive' + adaptive_ctx provided; static_styleC path preserved verbatim as backward-compat fallback. With ADAPTIVE_WIRED=true the A/B harness produces real divergent results (TP1/TP2 from liquidity snapshot, regime-scaling, pre-lunch partial, delta-div early-exit). Without ADAPTIVE_WIRED both branches collapse to static_styleC (compatibility mode). 34 pytest scaffold + 105 Wave 25.5 wiring tests green. 3-rule non-regression gate (avg-R delta, PF delta, deflated Sharpe delta). A/B harness output written to docs/wave25-exit-engine-ab-report.md. Consumed by operator cohort opt-in decision (recommend 1-2 CANDIDATE strategies, 7-14 day audit_log instrumentation before broader opt-in).",
     "data_sources": [
       "backtest_results"
     ],
@@ -3220,6 +3233,7 @@
     "engine_subsystems": [
       "src/engine/backtester.py",
       "src/engine/config.py",
+      "src/engine/exits/adaptive_exits.py",
       "scripts/wave25_exit_engine_ab_report.py"
     ],
     "database_tables": [],
@@ -3232,18 +3246,21 @@
     ],
     "recovery_mode": "fail-open-no-promotion-decision",
     "health_check": "/api/health",
-    "status": "scaffold",
+    "status": "active",
     "self_evolving": false,
-    "proof_mode": "scaffold-pre-wiring",
+    "proof_mode": "wave_25_5_wired_2026_05_24",
     "freshness_signals": [
       "manual-invocation:scripts/wave25_exit_engine_ab_report.py"
     ],
     "evidence_queries": [
-      "src/engine/tests/test_exit_engine_ab.py"
+      "src/engine/tests/test_exit_engine_ab.py",
+      "src/engine/tests/test_apply_trade_management_branching.py",
+      "src/engine/tests/test_adaptive_exits_python.py",
+      "src/engine/tests/test_adaptive_exits_parity.py"
     ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
-    "deployment_authority": "wave_25_5_wiring_required",
+    "deployment_authority": "production",
     "criticality": "important"
   }
 ]

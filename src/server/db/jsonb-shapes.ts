@@ -92,6 +92,84 @@ export type RegimeScalingTuple = [number, number, number];
  *   - Per-symbol liquidity caps (MES 100 / MNQ 50 / MCL 30) preserved
  *   - TP targets restricted to intraday DOL only (no PWH/PWL/monthly)
  */
+// ─── Adaptive Exit Plan Runtime State (Wave 25.5 Track 1) ───────────────────
+
+/**
+ * Per-bar mutable runtime state for adaptive runner trail methods.
+ * Stored inside the exit_plan JSONB (paper_positions.exit_plan) to avoid
+ * adding raw SQL columns for every new trail method.
+ *
+ * Updated in-place by updatePositionPrices on each bar for positions with
+ * exit_style="adaptive". Never populated for static_styleC positions.
+ *
+ * anchored_vwap state:
+ *   sum_pv  — running sum of (price × volume) since entry bar
+ *   sum_v   — running sum of volume since entry bar
+ *   avwap   — current anchored VWAP = sum_pv / sum_v (cached, avoids re-division)
+ *
+ * structure_trail state:
+ *   current_swing_low  — lowest swing low seen since entry (long trails)
+ *   current_swing_high — highest swing high seen since entry (short trails)
+ */
+export interface ExitPlanRuntimeState {
+  // anchored_vwap
+  sum_pv?: number;
+  sum_v?: number;
+  avwap?: number;
+  // structure_trail
+  current_swing_low?: number;
+  current_swing_high?: number;
+}
+
+/**
+ * ExitPlan extended with per-bar mutable runtime state.
+ * This is the shape stored in paper_positions.exit_plan JSONB.
+ *
+ * The base ExitPlan (from adaptive-exit-engine.ts) is a compute-time snapshot.
+ * runtime_state is appended at INSERT and updated in-place on each updatePositionPrices call.
+ *
+ * Import: ExitPlan is from adaptive-exit-engine.ts (server-side service).
+ * We avoid a circular import by declaring the base fields inline here.
+ * jsonb-shapes.ts is DB-layer only — it must NOT import from server services.
+ */
+export interface ExitPlanWithRuntimeState {
+  /** Verbatim ExitPlan shape from adaptive-exit-engine.ts::computeExitPlan() */
+  tp1: {
+    source: string;
+    price: number;
+    level_type?: string;
+    htf_significance?: number;
+    r_multiple: number;
+  };
+  tp2: {
+    source: string;
+    price: number;
+    level_type?: string;
+    htf_significance?: number;
+    r_multiple: number;
+  };
+  runner: {
+    trail_method: RunnerTrailMethod;
+    trail_anchor_value: number;
+    regime_source: string;
+    method_source: string;
+  };
+  scaling: {
+    tp1_pct: number;
+    tp2_pct: number;
+    runner_pct: number;
+    regime_source: string;
+    schedule_source: string;
+  };
+  early_exit_threshold_delta_div: number;
+  early_exit_partial_pct: number;
+  pre_lunch_threshold_r: number;
+  pre_lunch_partial_pct: number;
+  audit_payload: Record<string, unknown>;
+  /** Per-bar mutable runner trail state. Appended at INSERT (may be empty object). */
+  runtime_state: ExitPlanRuntimeState;
+}
+
 export interface ExitPlanConfig {
   /**
    * Which exit engine to use for this strategy.

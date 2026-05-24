@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T11:48:53.496Z",
+  "generatedAt": "2026-05-24T13:37:16.932Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -866,15 +866,14 @@
     "selfEvolvingSubsystems": 8,
     "proofStatusCounts": {
       "runtime-proven": 33,
-      "partially-proven": 2,
+      "partially-proven": 0,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 0
+      "drifted": 2
     },
     "runtimeStateCounts": {
-      "active": 33,
-      "experimental": 5,
-      "scaffold": 2
+      "active": 35,
+      "experimental": 5
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
@@ -907,10 +906,10 @@
     },
     "manualGates": [
       "kill_switch",
+      "operator_invoke_for_cohort_validation",
+      "operator_opt_in_per_strategy",
       "operator-halt-only",
-      "tradingview_deploy",
-      "wave_25_5_backtester_branching_required",
-      "wave_25_5_wiring_required"
+      "tradingview_deploy"
     ],
     "coveredCounts": {
       "routes": 70,
@@ -1019,8 +1018,10 @@
       "staleWorkflowBlockers": [],
       "runtimeControlBlockers": [],
       "blockers": [
-        "adaptive_exit_engine:manual_gate:wave_25_5_wiring_required",
-        "exit_engine_ab_harness:manual_gate:wave_25_5_backtester_branching_required",
+        "adaptive_exit_engine:invalid-active-proof-mode",
+        "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
+        "exit_engine_ab_harness:invalid-active-proof-mode",
+        "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "production_hardening:manual_gate:operator-halt-only",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
@@ -1037,9 +1038,11 @@
       "launchReady": false,
       "blockers": [
         "a_plus_market_auditor:experimental_governance",
-        "adaptive_exit_engine:manual_gate:wave_25_5_wiring_required",
+        "adaptive_exit_engine:invalid-active-proof-mode",
+        "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
         "cloud_qmc_ising:experimental_governance",
-        "exit_engine_ab_harness:manual_gate:wave_25_5_backtester_branching_required",
+        "exit_engine_ab_harness:invalid-active-proof-mode",
+        "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "production_hardening:manual_gate:operator-halt-only",
         "prop_firm_survival_twin:experimental_governance",
@@ -1248,23 +1251,23 @@
         "id": "adaptive_exit_engine",
         "domain": "exit_management",
         "ownerSurface": "node",
-        "runtimeState": "scaffold",
-        "automationMode": "scaffold_only",
+        "runtimeState": "active",
+        "automationMode": "production",
         "decisionAuthority": "system",
-        "manualGate": "wave_25_5_wiring_required",
+        "manualGate": "operator_opt_in_per_strategy",
         "selfEvolving": false,
-        "proofMode": "scaffold-pre-wiring",
-        "proofStatus": "partially-proven",
+        "proofMode": "wave_25_5_wired_2026_05_24",
+        "proofStatus": "drifted",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
-        "deploymentAuthority": "wave_25_5_wiring_required",
+        "deploymentAuthority": "production",
         "criticality": "important",
         "currentState": "active_preprod",
         "launchTargetState": "runtime_proven_autonomous",
         "productionTargetState": "production_autonomous",
         "authoritativeRuntime": "node-python",
         "activationBlockers": [
-          "manual_gate:wave_25_5_wiring_required"
+          "manual_gate:operator_opt_in_per_strategy"
         ],
         "activationCriteria": [
           "failure visibility wired",
@@ -1272,7 +1275,11 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:signal.exit_plan_fallback_static:on-engine-error",
+          "audit_log:signal.exit_plan_persisted:per-position-open",
           "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in",
+          "signal.exit_plan_fallback_static",
+          "signal.exit_plan_persisted",
           "strategy.wave25_pass7_adaptive_opt_in"
         ],
         "dataCollectionCoverage": [
@@ -1280,6 +1287,7 @@
           "bias_state.regime",
           "cumulative_delta",
           "liquidity_levels",
+          "paper_positions",
           "strategies",
           "structure_state",
           "vwap_anchored"
@@ -1294,9 +1302,10 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "partially-proven",
+        "preprodProofStatus": "drifted",
         "productionBlockers": [
-          "manual_gate:wave_25_5_wiring_required"
+          "invalid-active-proof-mode",
+          "manual_gate:operator_opt_in_per_strategy"
         ],
         "productionCriteria": [
           "authority boundary remains enforced",
@@ -1305,8 +1314,16 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:signal.exit_plan_fallback_static:on-engine-error",
+          "audit_log:signal.exit_plan_persisted:per-position-open",
           "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in",
+          "signal.exit_plan_fallback_static",
+          "signal.exit_plan_persisted",
+          "src/engine/tests/test_adaptive_exits_parity.py",
+          "src/engine/tests/test_adaptive_exits_python.py",
+          "src/engine/tests/test_apply_trade_management_branching.py",
           "strategy.wave25_pass7_adaptive_opt_in",
+          "wave25-5-track1-position-open-wiring.test.ts",
           "wave25-adaptive-exit-engine.test.ts"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
@@ -1314,12 +1331,20 @@
         "schedulerJobs": [],
         "healthCheck": "/api/health",
         "freshnessSignals": [
-          "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in"
+          "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in",
+          "audit_log:signal.exit_plan_persisted:per-position-open",
+          "audit_log:signal.exit_plan_fallback_static:on-engine-error"
         ],
         "evidenceQueries": [
-          "wave25-adaptive-exit-engine.test.ts"
+          "wave25-adaptive-exit-engine.test.ts",
+          "wave25-5-track1-position-open-wiring.test.ts",
+          "src/engine/tests/test_apply_trade_management_branching.py",
+          "src/engine/tests/test_adaptive_exits_python.py",
+          "src/engine/tests/test_adaptive_exits_parity.py"
         ],
-        "coverageGaps": []
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
       },
       {
         "id": "backtest_qualification",
@@ -2355,23 +2380,23 @@
         "id": "exit_engine_ab_harness",
         "domain": "validation",
         "ownerSurface": "python-node",
-        "runtimeState": "scaffold",
+        "runtimeState": "active",
         "automationMode": "manual_invoke",
         "decisionAuthority": "system",
-        "manualGate": "wave_25_5_backtester_branching_required",
+        "manualGate": "operator_invoke_for_cohort_validation",
         "selfEvolving": false,
-        "proofMode": "scaffold-pre-wiring",
-        "proofStatus": "partially-proven",
+        "proofMode": "wave_25_5_wired_2026_05_24",
+        "proofStatus": "drifted",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
-        "deploymentAuthority": "wave_25_5_wiring_required",
+        "deploymentAuthority": "production",
         "criticality": "important",
         "currentState": "active_preprod",
         "launchTargetState": "runtime_proven_autonomous",
         "productionTargetState": "production_autonomous",
         "authoritativeRuntime": "node-python",
         "activationBlockers": [
-          "manual_gate:wave_25_5_backtester_branching_required"
+          "manual_gate:operator_invoke_for_cohort_validation"
         ],
         "activationCriteria": [
           "failure visibility wired",
@@ -2396,9 +2421,10 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "partially-proven",
+        "preprodProofStatus": "drifted",
         "productionBlockers": [
-          "manual_gate:wave_25_5_backtester_branching_required"
+          "invalid-active-proof-mode",
+          "manual_gate:operator_invoke_for_cohort_validation"
         ],
         "productionCriteria": [
           "authority boundary remains enforced",
@@ -2409,6 +2435,9 @@
         "requiredEvidence": [
           "backtest.exit_engine_ab_run",
           "manual-invocation:scripts/wave25_exit_engine_ab_report.py",
+          "src/engine/tests/test_adaptive_exits_parity.py",
+          "src/engine/tests/test_adaptive_exits_python.py",
+          "src/engine/tests/test_apply_trade_management_branching.py",
           "src/engine/tests/test_exit_engine_ab.py"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
@@ -2419,9 +2448,14 @@
           "manual-invocation:scripts/wave25_exit_engine_ab_report.py"
         ],
         "evidenceQueries": [
-          "src/engine/tests/test_exit_engine_ab.py"
+          "src/engine/tests/test_exit_engine_ab.py",
+          "src/engine/tests/test_apply_trade_management_branching.py",
+          "src/engine/tests/test_adaptive_exits_python.py",
+          "src/engine/tests/test_adaptive_exits_parity.py"
         ],
-        "coverageGaps": []
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
       },
       {
         "id": "frankenstein_randomization_gate",
@@ -5345,23 +5379,23 @@
       "id": "adaptive_exit_engine",
       "domain": "exit_management",
       "ownerSurface": "node",
-      "runtimeState": "scaffold",
-      "automationMode": "scaffold_only",
+      "runtimeState": "active",
+      "automationMode": "production",
       "decisionAuthority": "system",
-      "manualGate": "wave_25_5_wiring_required",
+      "manualGate": "operator_opt_in_per_strategy",
       "selfEvolving": false,
-      "proofMode": "scaffold-pre-wiring",
-      "proofStatus": "partially-proven",
+      "proofMode": "wave_25_5_wired_2026_05_24",
+      "proofStatus": "drifted",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
-      "deploymentAuthority": "wave_25_5_wiring_required",
+      "deploymentAuthority": "production",
       "criticality": "important",
       "currentState": "active_preprod",
       "launchTargetState": "runtime_proven_autonomous",
       "productionTargetState": "production_autonomous",
       "authoritativeRuntime": "node-python",
       "activationBlockers": [
-        "manual_gate:wave_25_5_wiring_required"
+        "manual_gate:operator_opt_in_per_strategy"
       ],
       "activationCriteria": [
         "failure visibility wired",
@@ -5369,7 +5403,11 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:signal.exit_plan_fallback_static:on-engine-error",
+        "audit_log:signal.exit_plan_persisted:per-position-open",
         "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in",
+        "signal.exit_plan_fallback_static",
+        "signal.exit_plan_persisted",
         "strategy.wave25_pass7_adaptive_opt_in"
       ],
       "dataCollectionCoverage": [
@@ -5377,6 +5415,7 @@
         "bias_state.regime",
         "cumulative_delta",
         "liquidity_levels",
+        "paper_positions",
         "strategies",
         "structure_state",
         "vwap_anchored"
@@ -5391,9 +5430,10 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "partially-proven",
+      "preprodProofStatus": "drifted",
       "productionBlockers": [
-        "manual_gate:wave_25_5_wiring_required"
+        "invalid-active-proof-mode",
+        "manual_gate:operator_opt_in_per_strategy"
       ],
       "productionCriteria": [
         "authority boundary remains enforced",
@@ -5402,8 +5442,16 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:signal.exit_plan_fallback_static:on-engine-error",
+        "audit_log:signal.exit_plan_persisted:per-position-open",
         "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in",
+        "signal.exit_plan_fallback_static",
+        "signal.exit_plan_persisted",
+        "src/engine/tests/test_adaptive_exits_parity.py",
+        "src/engine/tests/test_adaptive_exits_python.py",
+        "src/engine/tests/test_apply_trade_management_branching.py",
         "strategy.wave25_pass7_adaptive_opt_in",
+        "wave25-5-track1-position-open-wiring.test.ts",
         "wave25-adaptive-exit-engine.test.ts"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
@@ -5411,12 +5459,20 @@
       "schedulerJobs": [],
       "healthCheck": "/api/health",
       "freshnessSignals": [
-        "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in"
+        "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in",
+        "audit_log:signal.exit_plan_persisted:per-position-open",
+        "audit_log:signal.exit_plan_fallback_static:on-engine-error"
       ],
       "evidenceQueries": [
-        "wave25-adaptive-exit-engine.test.ts"
+        "wave25-adaptive-exit-engine.test.ts",
+        "wave25-5-track1-position-open-wiring.test.ts",
+        "src/engine/tests/test_apply_trade_management_branching.py",
+        "src/engine/tests/test_adaptive_exits_python.py",
+        "src/engine/tests/test_adaptive_exits_parity.py"
       ],
-      "coverageGaps": []
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
     },
     {
       "id": "backtest_qualification",
@@ -6452,23 +6508,23 @@
       "id": "exit_engine_ab_harness",
       "domain": "validation",
       "ownerSurface": "python-node",
-      "runtimeState": "scaffold",
+      "runtimeState": "active",
       "automationMode": "manual_invoke",
       "decisionAuthority": "system",
-      "manualGate": "wave_25_5_backtester_branching_required",
+      "manualGate": "operator_invoke_for_cohort_validation",
       "selfEvolving": false,
-      "proofMode": "scaffold-pre-wiring",
-      "proofStatus": "partially-proven",
+      "proofMode": "wave_25_5_wired_2026_05_24",
+      "proofStatus": "drifted",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
-      "deploymentAuthority": "wave_25_5_wiring_required",
+      "deploymentAuthority": "production",
       "criticality": "important",
       "currentState": "active_preprod",
       "launchTargetState": "runtime_proven_autonomous",
       "productionTargetState": "production_autonomous",
       "authoritativeRuntime": "node-python",
       "activationBlockers": [
-        "manual_gate:wave_25_5_backtester_branching_required"
+        "manual_gate:operator_invoke_for_cohort_validation"
       ],
       "activationCriteria": [
         "failure visibility wired",
@@ -6493,9 +6549,10 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "partially-proven",
+      "preprodProofStatus": "drifted",
       "productionBlockers": [
-        "manual_gate:wave_25_5_backtester_branching_required"
+        "invalid-active-proof-mode",
+        "manual_gate:operator_invoke_for_cohort_validation"
       ],
       "productionCriteria": [
         "authority boundary remains enforced",
@@ -6506,6 +6563,9 @@
       "requiredEvidence": [
         "backtest.exit_engine_ab_run",
         "manual-invocation:scripts/wave25_exit_engine_ab_report.py",
+        "src/engine/tests/test_adaptive_exits_parity.py",
+        "src/engine/tests/test_adaptive_exits_python.py",
+        "src/engine/tests/test_apply_trade_management_branching.py",
         "src/engine/tests/test_exit_engine_ab.py"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
@@ -6516,9 +6576,14 @@
         "manual-invocation:scripts/wave25_exit_engine_ab_report.py"
       ],
       "evidenceQueries": [
-        "src/engine/tests/test_exit_engine_ab.py"
+        "src/engine/tests/test_exit_engine_ab.py",
+        "src/engine/tests/test_apply_trade_management_branching.py",
+        "src/engine/tests/test_adaptive_exits_python.py",
+        "src/engine/tests/test_adaptive_exits_parity.py"
       ],
-      "coverageGaps": []
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
     },
     {
       "id": "frankenstein_randomization_gate",
@@ -9266,9 +9331,9 @@
   ],
   "manualGates": [
     "kill_switch",
+    "operator_invoke_for_cohort_validation",
+    "operator_opt_in_per_strategy",
     "operator-halt-only",
-    "tradingview_deploy",
-    "wave_25_5_backtester_branching_required",
-    "wave_25_5_wiring_required"
+    "tradingview_deploy"
   ]
 }

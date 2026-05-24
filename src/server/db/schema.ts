@@ -44,6 +44,7 @@ import type {
   PaperSessionConfigShape,
   PaperSessionGovernorStateShape,
   ExitPlanConfig,
+  ExitPlanWithRuntimeState,
 } from "./jsonb-shapes.js";
 
 // bytea type for compressed signal vectors
@@ -750,6 +751,11 @@ export const paperPositions = pgTable(
     currentExitStyle:   text("current_exit_style"),       // "C" | "D" | null (null → "D")
     currentTrailMethod: text("current_trail_method"),     // Python exit handler trail method name
     lastHandlerEvalAt:  timestamp("last_handler_eval_at", { withTimezone: true }),
+    // Wave 25.5 Track 1 — Gap A: adaptive exit plan persisted at position open.
+    // NULL for static_styleC positions (exit_style="static_styleC" or unset — backward-compat).
+    // Contains ExitPlan + runtime_state for per-bar runner trail state.
+    // Migration: 0145_paper_positions_exit_plan.sql (idx 147).
+    exitPlan: jsonb("exit_plan").$type<ExitPlanWithRuntimeState>(),
   },
   (table) => [
     index("paper_positions_session_idx").on(table.sessionId),

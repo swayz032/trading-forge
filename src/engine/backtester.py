@@ -23,13 +23,12 @@ else:
     import src.engine.determinism  # noqa: F401 — side-effect: sets env vars
 
 import json
+import math
 import os
 import sys
 import time
 from pathlib import Path
 from typing import Optional
-
-import math
 
 import click
 import numpy as np
@@ -40,8 +39,10 @@ import vectorbt as vbt
 from src.engine.analytics import compute_full_analytics
 from src.engine.config import (
     CONTRACT_SPECS,
+    AdaptiveExitContext,
     BacktestRequest,
     IndicatorConfig,
+    LiquidityLevelSnapshot,
     StrategyConfig,
 )
 from src.engine.cross_validation import run_cross_validation
@@ -621,8 +622,59 @@ def _apply_trade_management(
     df,
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
+    exit_engine: str = "static_styleC",
+    adaptive_ctx=None,  # type: Optional[AdaptiveExitContext]
 ) -> list[dict]:
-    """Bar-by-bar trade management: 6pt max SL, structural TP, trailing stop.
+    """Bar-by-bar trade management dispatcher.
+
+    Wave 25 Gap B: branches on exit_engine to route to either the static Style C
+    path (existing, unchanged) or the new adaptive path (Python mirror of TS engine).
+
+    Routing:
+      exit_engine="static_styleC" (default) → _apply_static_styleC_management()
+        Existing behavior: 6pt max SL, structural TP via DOL, BE+trail progression.
+        Preserved verbatim — no changes.
+      exit_engine="adaptive" + adaptive_ctx provided → _apply_adaptive_management()
+        Adaptive exits: liquidity-mapped TP1/TP2, regime-scaling, pre-lunch partial,
+        delta-div early-exit, 15:55 ET hard flatten.
+      exit_engine="adaptive" + adaptive_ctx=None → graceful fallback to static_styleC.
+
+    Hard invariants (CLAUDE.md §4 — both paths):
+      - 15:55 ET hard flatten ALWAYS applies (static: enforced by time_stop logic
+        in _apply_static_styleC_management; adaptive: enforced in _apply_adaptive_management)
+      - BE+1 on TP1 fill (adaptive: applied when tp1 is hit)
+
+    Returns list of managed trade dicts with updated exit_price, exit_idx, exit_reason.
+    """
+    # Gap B: branch on exit_engine
+    if exit_engine == "adaptive" and adaptive_ctx is not None:
+        return _apply_adaptive_management(
+            trades_records, high_np, low_np, close_np, atr_np,
+            spec, df, adaptive_ctx, open_np=open_np,
+            atr_stop_multiplier=atr_stop_multiplier,
+        )
+
+    # Default / fallback: static Style C (existing path, unchanged)
+    return _apply_static_styleC_management(
+        trades_records, high_np, low_np, close_np, atr_np,
+        spec, htf_cache, df, open_np=open_np,
+        atr_stop_multiplier=atr_stop_multiplier,
+    )
+
+
+def _apply_static_styleC_management(
+    trades_records,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    atr_np: np.ndarray,
+    spec,
+    htf_cache: Optional[dict],
+    df,
+    open_np: Optional[np.ndarray] = None,
+    atr_stop_multiplier: float = 1.5,
+) -> list[dict]:
+    """Style C static trade management — PRESERVED VERBATIM from original _apply_trade_management.
 
     Rules:
     - Stop loss: max 6 points from entry
@@ -796,6 +848,288 @@ def _apply_trade_management(
         managed["trail_stop_final"] = round(trail_stop, 4)
         # C2: track how many times gap-through-stop fired for this trade
         managed["gap_through_stop_count"] = gap_through_stop_count
+        managed_trades.append(managed)
+
+    return managed_trades
+
+
+# ─── Adaptive management helper (Wave 25 Gap B) ───────────────────────────────
+
+def _apply_adaptive_management(
+    trades_records,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    atr_np: np.ndarray,
+    spec,
+    df,
+    adaptive_ctx,   # AdaptiveExitContext — required (caller already checked not None)
+    open_np: Optional[np.ndarray] = None,
+    atr_stop_multiplier: float = 1.5,
+) -> list[dict]:
+    """Adaptive exit management — Wave 25 Gap B Python implementation.
+
+    Mirrors the TS adaptive-exit-engine.ts semantics for the backtest path.
+    Reads exit plans from compute_exit_plan_python() (pure function, no I/O).
+    Applies TP1/TP2/runner logic per-bar from the pre-computed ExitPlan.
+
+    Sub-tracks applied:
+      W25.12: Liquidity-mapped TP1/TP2 (or R-multiple fallback)
+      W25.13: Regime-dependent scaling schedule
+      W25.15: Runner trail method from regime (anchored_vwap/developing_poc/chandelier/structure_trail)
+      W25.14: Delta-divergence early-exit (25% partial close) — not per-bar in backtest;
+              delta feed not available; recorded as delta_div_skipped in managed trade.
+      W25.16: Pre-lunch partial (50% at 11:30 ET on RANGE/LOW_LIQ_CHOP/COMPRESSION
+              if profit >= threshold_r)
+
+    Hard invariants (CLAUDE.md §4):
+      - 15:55 ET hard flatten ALWAYS applies (checked per bar via _is_time_stop)
+      - BE+1 tick on TP1 fill ALWAYS applies
+
+    Backtest simplifications vs paper path:
+      - Delta-divergence: not computable without live delta feed; always skipped.
+        Recorded as delta_div_skipped=True in managed trade audit.
+      - Developing POC / VWAP trail: falls back to structure trail in backtest
+        because bar-level VP / VWAP computation is not wired through here.
+        Recorded as adaptive_runner_fallback=True in managed trade audit.
+      - Multi-leg P&L: blended into a single synthetic exit price for metric
+        accuracy (tp1_pct @ tp1_price + tp2_pct @ tp2_price + runner_pct @ trail).
+
+    Returns list of managed trade dicts matching _apply_static_styleC_management schema.
+    """
+    from datetime import datetime as _dt
+    from datetime import timezone as _tz
+
+    from src.engine.exits.adaptive_exits import (
+        PRE_LUNCH_TRIGGER_REGIMES,
+        _is_at_or_after_pre_lunch_et,
+        compute_exit_plan_python,
+    )
+    from src.engine.exits.style_d_handler import _is_time_stop
+
+    managed_trades = []
+    ts_col = "ts_event"
+    has_ts = ts_col in df.columns
+
+    liquidity_snapshot = list(adaptive_ctx.liquidity_snapshot) if adaptive_ctx.liquidity_snapshot else []
+    regime_default = (adaptive_ctx.regime_at_entry or "UNKNOWN")
+    pre_lunch_threshold_r = adaptive_ctx.pre_lunch_threshold_r
+    delta_div_threshold = adaptive_ctx.delta_div_threshold
+
+    def _get_bar_ts(bar: int):
+        """Return bar timestamp as datetime (UTC) or None."""
+        if not has_ts or bar >= len(df):
+            return None
+        try:
+            raw = df[ts_col][bar]
+            if isinstance(raw, _dt):
+                return raw
+            return _dt.fromisoformat(str(raw))
+        except Exception:
+            return None
+
+    def _bar_et_str(bar_ts_val: _dt) -> str:
+        """Convert UTC datetime to 'HH:MM' ET string for _is_time_stop()."""
+        try:
+            if bar_ts_val.tzinfo is not None:
+                utc_dt = bar_ts_val.astimezone(_tz.utc)
+            else:
+                utc_dt = bar_ts_val
+            # EDT = UTC-4; conservative offset
+            et_hour = (utc_dt.hour - 4) % 24
+            return f"{et_hour:02d}:{utc_dt.minute:02d}"
+        except Exception:
+            return "00:00"
+
+    for _, row in trades_records.iterrows():
+        entry_p = float(row["Avg Entry Price"])
+        original_exit_p = float(row["Avg Exit Price"])
+        size = float(row["Size"])
+        direction_str = str(row["Direction"])
+        entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
+        original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
+
+        # Safety cap (same as static_styleC)
+        MAX_HOLD_BARS = 200
+        if original_exit_idx - entry_idx > MAX_HOLD_BARS:
+            original_exit_idx = entry_idx + MAX_HOLD_BARS
+        is_short = "Short" in direction_str
+        direction = "short" if is_short else "long"
+
+        atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
+        risk_points = min(6.0, atr_at_entry * atr_stop_multiplier)
+        tick = spec.tick_size if spec else 0.25
+
+        # Initial stop price
+        stop_p = entry_p + risk_points if is_short else entry_p - risk_points
+
+        # ── Compute exit plan once at position open ─────────────────────
+        entry_ts = _get_bar_ts(entry_idx) or _dt(2025, 1, 1)
+        exit_plan = compute_exit_plan_python(
+            entry_price=entry_p,
+            stop_price=stop_p,
+            direction=direction,
+            symbol="MES",   # symbol not available on spec; use MES as backtest default
+            bar_ts=entry_ts,
+            atr=atr_at_entry,
+            regime=regime_default,
+            liquidity_snapshot=liquidity_snapshot,
+            pre_lunch_threshold_r=pre_lunch_threshold_r,
+            delta_div_threshold=delta_div_threshold,
+        )
+
+        tp1_price = exit_plan.tp1.price
+        tp2_price = exit_plan.tp2.price
+        scaling = exit_plan.scaling
+
+        # Simulation state
+        tp1_filled = False
+        tp2_filled = False
+        pre_lunch_fired = False
+        exit_price = original_exit_p
+        exit_idx = original_exit_idx
+        exit_reason = "signal"
+        trail_stop = stop_p
+        gap_through_stop_count = 0
+        min_trail = max(2.0, tick * 8)
+
+        # ── Bar-by-bar simulation ───────────────────────────────────────
+        for bar in range(entry_idx + 1, original_exit_idx):
+            if bar >= len(high_np):
+                break
+
+            bar_high = float(high_np[bar])
+            bar_low = float(low_np[bar])
+            bar_open = float(open_np[bar]) if open_np is not None and bar < len(open_np) else (
+                bar_low if not is_short else bar_high
+            )
+            bar_ts_val = _get_bar_ts(bar)
+
+            # ── INVARIANT: 15:55 ET hard flatten ──────────────────────
+            if bar_ts_val is not None and _is_time_stop(_bar_et_str(bar_ts_val)):
+                exit_price = float(close_np[bar]) if bar < len(close_np) else bar_open
+                exit_reason = "time_stop"
+                exit_idx = bar
+                break
+
+            # ── Stop loss / trailing stop ──────────────────────────────
+            if not is_short and bar_low <= trail_stop:
+                exit_price = bar_open if bar_open < trail_stop else trail_stop
+                if bar_open < trail_stop:
+                    gap_through_stop_count += 1
+                exit_reason = "trailing_stop" if trail_stop > stop_p else "stop_loss"
+                exit_idx = bar
+                break
+            elif is_short and bar_high >= trail_stop:
+                exit_price = bar_open if bar_open > trail_stop else trail_stop
+                if bar_open > trail_stop:
+                    gap_through_stop_count += 1
+                exit_reason = "trailing_stop" if trail_stop < stop_p else "stop_loss"
+                exit_idx = bar
+                break
+
+            # ── TP1 fill ───────────────────────────────────────────────
+            if not tp1_filled:
+                tp1_hit = (not is_short and bar_high >= tp1_price) or (is_short and bar_low <= tp1_price)
+                if tp1_hit:
+                    tp1_filled = True
+                    # INVARIANT: BE+1 tick on TP1 fill
+                    be_offset = tick
+                    if not is_short:
+                        trail_stop = max(trail_stop, entry_p + be_offset)
+                    else:
+                        trail_stop = min(trail_stop, entry_p - be_offset)
+
+            # ── TP2 fill ───────────────────────────────────────────────
+            if tp1_filled and not tp2_filled:
+                tp2_hit = (not is_short and bar_high >= tp2_price) or (is_short and bar_low <= tp2_price)
+                if tp2_hit:
+                    tp2_filled = True
+
+            # ── Pre-lunch partial (W25.16) ─────────────────────────────
+            if (
+                not pre_lunch_fired
+                and bar_ts_val is not None
+                and regime_default in PRE_LUNCH_TRIGGER_REGIMES
+                and _is_at_or_after_pre_lunch_et(bar_ts_val)
+            ):
+                # Measure current max favorable excursion for this bar
+                mfe_points = (bar_high - entry_p) if not is_short else (entry_p - bar_low)
+                pnl_r = mfe_points / max(risk_points, 0.01)
+                if pnl_r >= pre_lunch_threshold_r:
+                    pre_lunch_fired = True
+                    # In backtest: 50% partial is approximated; position continues
+                    # trailing with tighter stop (BE + 0.5R per W25.16)
+                    half_r_offset = risk_points * 0.5
+                    if not is_short:
+                        new_trail = entry_p + half_r_offset
+                        trail_stop = max(trail_stop, new_trail)
+                    else:
+                        new_trail = entry_p - half_r_offset
+                        trail_stop = min(trail_stop, new_trail)
+
+            # ── Advance runner trail after TP2 ─────────────────────────
+            if tp2_filled:
+                # Structure trail: below most recent swing low (longs) / above high (shorts)
+                # In backtest: use bar_low / bar_high as proxy for swing level
+                if not is_short:
+                    new_trail = bar_high - max(risk_points, min_trail)
+                    trail_stop = max(trail_stop, new_trail)
+                else:
+                    new_trail = bar_low + max(risk_points, min_trail)
+                    trail_stop = min(trail_stop, new_trail)
+
+        # ── Blended exit price ──────────────────────────────────────────
+        # Multi-leg scaling: approximate P&L from separate lot fills.
+        if exit_reason in ("stop_loss", "trailing_stop", "time_stop"):
+            # Stop / time-stop always overrides scale-out — single price
+            final_exit = exit_price
+        elif tp1_filled and tp2_filled:
+            runner_exit = float(close_np[exit_idx]) if exit_idx < len(close_np) else tp2_price
+            final_exit = (
+                scaling.tp1_pct * tp1_price
+                + scaling.tp2_pct * tp2_price
+                + scaling.runner_pct * runner_exit
+            )
+            exit_reason = "take_profit"
+        elif tp1_filled:
+            runner_exit = float(close_np[exit_idx]) if exit_idx < len(close_np) else exit_price
+            final_exit = (
+                scaling.tp1_pct * tp1_price
+                + (scaling.tp2_pct + scaling.runner_pct) * runner_exit
+            )
+            exit_reason = "take_profit"
+        else:
+            final_exit = exit_price
+
+        managed = {
+            "entry_idx": entry_idx,
+            "entry_price": entry_p,
+            "original_exit_idx": original_exit_idx,
+            "original_exit_price": original_exit_p,
+            "size": size,
+            "direction": direction_str,
+            "risk_points": round(risk_points, 2),
+            "exit_price": final_exit,
+            "exit_idx": exit_idx,
+            "exit_reason": exit_reason,
+            "trail_stop_final": round(trail_stop, 4),
+            "gap_through_stop_count": gap_through_stop_count,
+            # Adaptive-specific metadata (audit trail)
+            "adaptive_exit_engine": True,
+            "adaptive_tp1_price": tp1_price,
+            "adaptive_tp2_price": tp2_price,
+            "adaptive_tp1_source": exit_plan.tp1.source,
+            "adaptive_tp2_source": exit_plan.tp2.source,
+            "adaptive_tp1_filled": tp1_filled,
+            "adaptive_tp2_filled": tp2_filled,
+            "adaptive_regime": regime_default,
+            "adaptive_scaling": f"{scaling.tp1_pct:.0%}/{scaling.tp2_pct:.0%}/{scaling.runner_pct:.0%}",
+            "adaptive_runner_method": exit_plan.runner_trail_method,
+            "adaptive_runner_fallback": True,  # developing_poc/VWAP not wired in backtest
+            "adaptive_pre_lunch_fired": pre_lunch_fired,
+            "delta_div_skipped": True,   # delta-divergence requires live delta feed
+        }
         managed_trades.append(managed)
 
     return managed_trades
@@ -2121,7 +2455,7 @@ def run_backtest(
     # Mirror paper-engine parity: apply the same vol-scale and liquidity-haircut
     # that computeRiskDerivedContracts() applies on the paper side (risk-sizing.ts).
     # This closes the paper-vs-backtest sizing gap in high-VIX environments.
-    from src.engine.sizing import compute_vol_scale, compute_liquidity_haircut
+    from src.engine.sizing import compute_liquidity_haircut, compute_vol_scale
 
     _vol_scale = compute_vol_scale(getattr(request, "vix_now", None))
     # top3_depth_ratio is pre-computed by caller (currentTop3Depth / baseline20d).
@@ -3841,6 +4175,7 @@ def run_class_backtest(
     use_performance_gate: bool = True,
     warmup_data: Optional[pl.DataFrame] = None,
     exit_engine: str = "static_styleC",
+    adaptive_ctx=None,  # type: Optional[AdaptiveExitContext] — Wave 25 Gap B
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -4260,6 +4595,8 @@ def run_class_backtest(
             trades_records, high_np, low_np, close_np, atr_np,
             spec, htf_cache, df, open_np=open_np_managed,
             atr_stop_multiplier=_cls_stop_mult,
+            exit_engine=exit_engine,
+            adaptive_ctx=adaptive_ctx,
         )
         {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
@@ -4905,6 +5242,36 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
             # Attach run receipt for walk-forward (single backtests attach it themselves)
             result["run_receipt"] = _build_run_receipt(config, dataset_hash="wf-aggregate")
         else:
+            # Wave 25 Gap B: deserialize adaptive_exit_context from JSON config
+            _adaptive_ctx = None
+            if exit_engine == "adaptive" and config.get("adaptive_exit_context"):
+                _raw_ctx = config["adaptive_exit_context"]
+                try:
+                    _snapshots = [
+                        LiquidityLevelSnapshot(
+                            level_type=lvl.get("level_type", ""),
+                            price=float(lvl.get("price", 0)),
+                            htf_significance=int(lvl.get("htf_significance", 1)),
+                            sweep_probability=lvl.get("sweep_probability"),
+                        )
+                        for lvl in _raw_ctx.get("liquidity_snapshot", [])
+                        if isinstance(lvl, dict) and lvl.get("level_type") and lvl.get("price")
+                    ]
+                    _adaptive_ctx = AdaptiveExitContext(
+                        liquidity_snapshot=_snapshots,
+                        regime_at_entry=_raw_ctx.get("regime_at_entry"),
+                        pre_lunch_threshold_r=float(_raw_ctx.get("pre_lunch_threshold_r", 0.3)),
+                        delta_div_threshold=float(_raw_ctx.get("delta_div_threshold", 0.6)),
+                    )
+                    print(
+                        f"[adaptive_exit] loaded {len(_snapshots)} liquidity levels, "
+                        f"regime_at_entry={_adaptive_ctx.regime_at_entry}, "
+                        f"pre_lunch_threshold_r={_adaptive_ctx.pre_lunch_threshold_r}",
+                        file=sys.stderr,
+                    )
+                except Exception as _ctx_err:
+                    print(f"[adaptive_exit] WARNING: could not parse adaptive_exit_context ({_ctx_err}); falling back to static_styleC", file=sys.stderr)
+                    _adaptive_ctx = None
             result = run_class_backtest(
                 strategy=strategy,
                 start_date=config.get("start_date", "2010-01-01"),
@@ -4914,6 +5281,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 firm_key=config.get("firm_key"),
                 skip_eligibility_gate=False,
                 exit_engine=exit_engine,
+                adaptive_ctx=_adaptive_ctx,
             )
     else:
         # DSL expression-based strategy path (original)

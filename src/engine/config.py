@@ -333,6 +333,61 @@ class FillProbabilityConfig(BaseModel):
         return v
 
 
+# ─── Adaptive Exit Context (Wave 25 Gap B) ───────────────────────
+#
+# TS → Python liquidity transport contract.
+#
+# At backtest run launch (when TS calls backtester.py for a strategy with
+# exit_style="adaptive"), the TS launch helper:
+#   1. Queries liquidity_levels for the strategy's symbol (intraday-only, ranked)
+#   2. Snapshots a list of LiquidityLevelSnapshot rows
+#   3. Bakes them into BacktestRequest.adaptive_exit_context.liquidity_snapshot
+#
+# Python backtester.py reads this list at run start.
+# NO DB calls inside Python at signal time — pure snapshot replay.
+#
+# Backward compat: missing field → None → adaptive path bails to static_styleC.
+# This is documented as the Gap B contract between TS and Python.
+
+
+@dataclass
+class LiquidityLevelSnapshot:
+    """A single liquidity level from the liquidity_levels table.
+
+    Mirrors the TS RankedLevel shape from liquidity-map-service.ts.
+    level_type must be one of INTRADAY_ALLOWED_LEVEL_TYPES in adaptive_exits.py.
+    """
+    level_type: str          # 'pdh'|'pdl'|'asian_high'|'asian_low'|'london_high'|'london_low'
+                             # |'naked_poc'|'untouched_fvg'|'untouched_ob'|'eqh'|'eql'|'hod'|'lod'
+    price: float
+    htf_significance: int    # 1-5 (5 = highest significance)
+    sweep_probability: Optional[float] = None   # [0,1] or None if not yet computed
+
+
+@dataclass
+class AdaptiveExitContext:
+    """Config snapshot for the adaptive exit path in Python backtester.
+
+    Populated by the TS launch helper at run start and passed into
+    _apply_adaptive_management() via BacktestRequest.adaptive_exit_context.
+
+    Fields:
+        liquidity_snapshot: Intraday liquidity levels for the strategy's symbol,
+            pre-filtered + ranked by the TS launch helper.
+        regime_at_entry: Institutional regime string (fallback for tests when
+            bias_engine is not in scope). The backtester overwrites this with
+            the per-bar classify_institutional_regime() result in production.
+        pre_lunch_threshold_r: Minimum profit R for pre-lunch partial to fire
+            (default 0.3 per W25.16).
+        delta_div_threshold: Cumulative-delta divergence threshold for 25% early
+            partial close (default 0.6 per W25.14).
+    """
+    liquidity_snapshot: list  # list[LiquidityLevelSnapshot] — list for JSON serializability
+    regime_at_entry: Optional[str] = None
+    pre_lunch_threshold_r: float = 0.3
+    delta_div_threshold: float = 0.6
+
+
 # ─── Backtest Request ─────────────────────────────────────────────
 
 class BacktestRequest(BaseModel):
@@ -359,9 +414,14 @@ class BacktestRequest(BaseModel):
     top3_depth_ratio: Optional[float] = None  # currentTop3Depth / baseline20dMedian
     # W25.17 A/B flag — which exit engine to use for this run.
     # "static_styleC"  → existing Style C 33/33/34 TP1/TP2/runner path (default, backward-compat).
-    # "adaptive"       → adaptive exit engine (P7.A1+A2 TS path; Python harness stubs until wired).
+    # "adaptive"       → adaptive exit engine (Wave 25 Gap B — Python mirror of adaptive-exit-engine.ts).
     # Downstream: run_class_backtest() reads this; framework-overlay.ts respects it via compile config.
     exit_engine: Literal["static_styleC", "adaptive"] = "static_styleC"
+    # Wave 25 Gap B — TS → Python liquidity transport contract.
+    # Populated by the TS launch helper when exit_engine="adaptive".
+    # None → adaptive path bails gracefully to static_styleC (backward compat).
+    # See AdaptiveExitContext dataclass above for full contract documentation.
+    adaptive_exit_context: Optional[object] = None  # type: Optional[AdaptiveExitContext]
 
 
 # ─── Backtest Result ──────────────────────────────────────────────
