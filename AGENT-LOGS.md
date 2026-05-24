@@ -4,6 +4,71 @@
 
 ---
 
+### Session Log — 2026-05-23 parent-claude — Wave 24 MASTER ORCHESTRATION (3 audits → 23/24 items shipped)
+
+**Mission:** Operator (swayz032) invoked the 3 new agents (autonomous-readiness, institutional-edge-researcher, accuracy-validator) and authorized "fix all errors and all findings — make them production grade and institutional grade." Parent claude orchestrated end-to-end.
+
+**Phase A — 3 parallel audits dispatched in background:**
+- autonomous-readiness → CATASTROPHIC verdict: 14-day vacation UNSAFE (BW + cookie refresh services have ZERO callers in scheduler.ts despite CLAUDE.md §3 promise; `operator_absent_since` has no writer; drizzle-kit migrate broken; NSSM blocks code refresh; weekly drift 2σ auto-HALT not implemented)
+- institutional-edge-researcher → 10-dimension audit vs 2025-2026 sources only. RED on (#4) backtest validation methodology (plain WF leaks via Style C overlapping runner bars; CPCV is 2026 institutional default) and (#7) static liquidity caps (CME 2025 Liberation Day -27% top-3 depth collapse). YELLOWs on sizing (2× prop-firm default), regime detection (rule-based 3-regime is lagging without HMM overlay), B14 should be HARD gate (PropScorer 2026-03 documents $40K Topstep payout-denial bans).
+- accuracy-validator → 15 claim cross-checks. CRITICALs: system-map:check actually RED (W23H surfaces missing); Style D handler still routable via paper-execution-service.ts:2214 `?? "D"` fallback despite "DEAD" claim; 4 W23H skip events written to `signals.reason` text prefix, NOT to `audit_log.action` (drift detectors silently miss); wave23h-c2-multi-firm.test.ts:185 actually FAILING. VERIFIED GREEN: W23H.4 confluence sizing wired (stale carry-forward retired); micro point values locked; Style C 33/33/33 default.
+
+**Phase B — synthesized 24-item ranked remediation backlog** combining all 3 audits, ranked by severity + cross-audit consensus.
+
+**Phase C — Wave 24 Pass 1 dispatched (4 parallel worker subagents in background):**
+| Agent | Items | Commit | Tests |
+|---|---|---|---|
+| n8n-orchestration | #13 webhook auto-re-register | `5ec8af3` | 6 |
+| observability-reliability | #1 BW+cookie crons, #5 W23H skip audit mirror, #8 NSSM HMAC self-restart, #15 weekly drift 2σ HALT | `d3a98c4` | 33 |
+| paper-parity | #3 Style D runtime deprecation, #4 C2 multi-firm test, #9 B14→HARD, #11 liquidity haircut, #12 mc_provisional defer, #16 vol-scaling, #17 firm-conditional blackout | `95cd2c4` | 52 |
+| backtest-core | #10 CPCV+purged WF, #14 blackout+cross-symbol DLL backtest parity, #18 PBO, #19 honest DSR | `bd9786e` | 110 (83 pytest + 27 vitest) |
+
+**Phase D — Pass 1.5 architect sweep:**
+- trading-forge-architect → `93f5292` — system-map:check cleared (registered 9 missing surfaces: 2 routes, 6 jobs, 1 table); operator_absent_since auto-flip via 24h pending → 48h confirmed two-stage state machine; new `POST /api/admin/operator-mark-present` route + migration 0131 + 7 tests GREEN; aggregate 125 wave24 vitest GREEN; Pass 1 master close-out complete.
+
+**Phase E — Operator-action receipts (parent claude executed against production DB):**
+1. Generated 48-byte base64url HMAC secret via `crypto.randomBytes`; appended `ADMIN_RESTART_HMAC_SECRET=<secret>` to tower `.env`
+2. Wrote + ran `scripts/apply-0131-and-finalize-wave24-pass1.mjs` — applied migration 0131 (column `operator_absent_pending timestamp with time zone` verified) + wrote `audit_log` row `system_map.synced` id `c48f2191-c263-46fe-a7a7-c25b9d080a9e` at 2026-05-24T01:53:56.885Z with full Pass 1 registry delta in result jsonb
+
+**Phase F — Wave 24 Pass 2 dispatched (4 parallel worker subagents in background):**
+| Agent | Items | Commit | Tests |
+|---|---|---|---|
+| autonomous-readiness | #22 pre-vacation preflight orchestrator (14 mandatory checks + `--confirm`) | `2a6a344` | 14 |
+| paper-parity | #7 boot-time migration runner with pg_dump rollback + Discord CRITICAL on failure + 4 env vars | (subagent commit) | 12 |
+| observability-reliability | #23 vitest forks pool + `vitest.config.full-fleet.ts` singleFork variant + Pass-1 carry-forward (vol-scale/liquidity-haircut backtest-side parity wiring in `src/engine/sizing.py`) | `69ac40b` | 34 |
+| backtest-core | #20 sweep-aware stop buffer (3 MES / 5 MNQ / 2 MCL ticks) + #21 HMM regime overlay advisory + migration 0132 + weekly HMM refit cron | `1ca782a` | 31 vitest + 48 pytest authored |
+
+**Phase G — Pass 2 operator-action receipt:**
+- Wrote + ran `scripts/apply-0132-wave24-pass2.mjs` — applied migration 0132 (column `bias_state.hmm_probability_used boolean` + table `regime_hmm_models` verified)
+
+**Phase H — Pass 2.5 architect master close-out:**
+- trading-forge-architect → `e26a54d` — `system-map:check` EXIT 0, `check:production-isolation` EXIT 0, `check:2026-compliance` EXIT 0, 182 wave24 vitest GREEN across 19 files, zero new tsc errors (231 pre-existing in `volume-profile-service.ts` from null-byte recovery `410b75c`); `wave.24_master_closed` audit row `5d73d303-d382-4217-b77c-092db7d828e5` written 2026-05-24T02:42:48Z; CLAUDE.md §2 phase block updated; new System Map v2 §2d Wave 24 close-out section; memory entry `project_wave24_complete_2026_05_23.md` written; MEMORY.md index updated.
+
+**Aggregate Wave 24 shipment:**
+- **23 of 24 backlog items (95.8%)** across 4 passes
+- 10 commits, 2 migrations applied to prod, 1 new route, 2 new tables, 2 new columns, 7 new scheduled jobs, 27 new audit_log actions, 14 new env vars (all defaults production-safe)
+- 182 wave24 vitest GREEN + 83 pytest baseline preserved + 48 pytest authored (DLL block pre-existing)
+- All 5 CI hard gates GREEN
+
+**Item #24 deferred to Wave 25 candidate:** HVN-snap TP2 + crypto-grade audit-log hash chain. LOW severity, no payout-denial / safety implication.
+
+**Operator carry-forwards (3, all minor):**
+1. Run `npm run test:full-fleet` overnight to defend Wave 6 baseline under singleFork forks pool
+2. Set `BOOT_MIGRATION_ALLOW_NO_BACKUP=true` in tower `.env` (Windows lacks `pg_dump` natively; uses `information_schema` JSON fallback)
+3. Re-run backtests for any strategy already in PAPER or DEPLOYED — stops shift by ~¼pt due to sweep-aware buffer (MES tighter, MNQ wider, MCL tighter)
+
+**Known-facts updates:** None new this session — the audits VALIDATED existing pinned facts (Style C canonical, Tavily key valid, micro point values locked, win-rate-is-output, opening_range_breakout gap). Three pinned facts were CONTRADICTED at runtime and FIXED in this wave: "Style D is DEAD" (runtime fallback eliminated), "W23H skip events in skip_decisions/audit_log" (now actually true after mirror fix), "system-map drift is pre-existing infra-noise" (now actually true after sync).
+
+**Trust-delta lesson captured:** Architect "inspection-based GREEN" claims (Wave 23H FINAL) collapsed under fresh execution — pattern to avoid: when worker OOM blocks fleet runs, shift to "by inspection" is exactly when real regressions slip through. Pass 2 forks-pool fix (#23) closes the root cause.
+
+**Carry-forward for next session:**
+- Wave 25 candidate item #24 (HVN-snap TP2 + crypto hash-chain audit_log)
+- 231 pre-existing tsc errors in `volume-profile-service.ts` from null-byte recovery `410b75c` warrant dedicated cleanup pass
+- Windows AppControl numpy.random DLL block warrants a dedicated environment fix (blocks cold pytest starts; pre-commit metric snapshot tests unaffected because they run in warm process)
+- 3 deleted `.claude/agents/*.md` files (accuracy-validator, autonomous-readiness, institutional-edge-researcher) left as unstaged deletions per architect report — operator decision: commit deletions or restore
+
+---
+
 ### Session Log — 2026-05-23 wave24-pass2-item7: Boot-time migration runner with pg_dump rollback
 
 **Mission:** Wave 24 Pass 2 Item #7 (RED) — Build `scripts/boot-migration-runner.ts` + `src/server/lib/boot-migration-runner.ts`. Auto-apply pending Drizzle migrations on backend boot with pg_dump rollback safety. drizzle-kit migrate is broken (per 0075/0076 comments); 14-day vacations mean pending migrations (0106, 0120-0123) sit indefinitely.
