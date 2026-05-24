@@ -6014,6 +6014,46 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-23 autonomous-readiness — Wave 24 Pass 2 Item #22: pre-vacation preflight orchestrator
+
+**Mission:** Replace the prose-only Vacation Mode preparation checklist (CLAUDE.md §3) with a one-shot CLI that runs every readiness check the operator used to do mentally and — with `--confirm` — engages vacation mode atomically.
+
+**Work completed:**
+- `scripts/pre-vacation-preflight.ts` (TS, `tsx`-runnable). 14 mandatory checks each returning `CheckResult{name,status,detail,remediation?}`:
+  - `bw_refresh_heartbeat_fresh` (<13h cadence×2)
+  - `cookie_refresh_heartbeat_fresh_per_firm` (per-firm via `getCookieLastRefreshedAt()` from `prop-firm-cookie-refresh-service`, <2.5h each)
+  - `n8n_error_workflow_attached` (every active workflow → `DGEk1D478xWJClKD` via n8n REST API)
+  - `reconciliation_clean_24h` (no `reconciliation.critical_mismatch` audit row in last 24h)
+  - `weekly_drift_pass` (no `drift.weekly_2sigma_halt` last 7d AND latest `weekly_drift_reports.severity` not halt/critical/red)
+  - `no_pending_migrations` (`__drizzle_migrations` count == `meta/_journal.json` entries count)
+  - `nssm_service_running` (`sc query TradingForgeAPI` parses RUNNING; non-Windows → WARN-skip)
+  - `pm2_not_running_on_4000` (no pm2 entry with PORT=4000; pm2 missing → WARN-skip)
+  - `production_mode_active` (system_state.production_mode === 'ACTIVE')
+  - `tower_relay_recent` (log mtime <5 min; uses `TOWER_RELAY_LOG_PATH` env override then default `C:\Users\tonio\bin\tower-relay-client.log`)
+  - `operator_absent_since_currently_null` (WARN when already set — engagement step idempotency takes over)
+  - `kill_switch_not_halted` (`killSwitch.isHaltedForProduction()` false)
+  - `phase14_concurrency_alive` (`/api/health` returns `backtestConcurrency` field — proves Phase 14 binary live)
+  - `admin_restart_hmac_configured` (ADMIN_RESTART_HMAC_SECRET present, ≥32 chars else WARN)
+- Engagement behavior: with `--confirm` and all PASS (WARN allowed, FAIL blocks): writes `system_state.operator_absent_since = NOW()`, inserts audit row `operator_absence.preflight_engaged` (decision_authority='human'), fires Discord info "Operator engaged vacation mode via preflight at <ts>". Idempotent — re-run when `operator_absent_since` set is a no-op with `engagementSkippedReason='already_engaged'`.
+- Without `--confirm`: prints summary with "Run with --confirm to engage vacation mode" line. On any FAIL: exit 1, never engages, prints per-check remediation steps.
+- Dependency-injected (`PreflightDeps` interface) so tests never hit DB/HTTP/sc.exe/pm2/FS. Production `makeProductionDeps()` wires real services.
+- npm script: `"preflight:vacation": "tsx scripts/pre-vacation-preflight.ts"` (insert above `forge`).
+
+**Tests:** `src/server/__tests__/wave24-pre-vacation-preflight.test.ts` — 14 tests covering: 14-check inventory, happy-path no-confirm + no engage, happy-path with-confirm engages+audit+Discord, single FAIL (kill switch) blocks engagement even with --confirm + remediation surfaced in formatter, already-engaged --confirm idempotent no-op, WARN doesn't block engagement (non-Windows + no-pm2), n8n offender detection, per-firm cookie stale (only topstep stale → FAIL only mentions topstep), migration drift (applied<journal), `/api/health` missing backtestConcurrency, BW heartbeat stale, missing HMAC secret, CheckResult structural conformance, formatter renders status tags+remediation.
+
+**Verification:**
+- `npx vitest run wave24-pre-vacation-preflight` → 14/14 GREEN (~7ms).
+- `npm run check:production-isolation` → CLEAN (0 violations).
+- `npx tsc --noEmit` → no NEW errors from my files. Only the standard `rootDir`/scripts violation that every script-importing test in the repo already produces (`wave23h-headstart-populate.test.ts`, `wave23g-bidirectional-backfill.test.ts`, etc. — same pattern, pre-existing baseline).
+
+**Known-facts updates:** None — preflight composes existing services + audit-log conventions.
+
+**Carry-forward for next session:**
+- This script lives in `scripts/`, so test-time imports trip the existing `rootDir: src` tsc constraint. A repo-wide fix (add `scripts/**` to tsconfig include or move scripts under src/) would clean the noise but is out of scope here.
+- Discord engagement notification uses `notifyInfo`; the matching `notifyVacationDisengaged` (when operator marks present) already exists in the auto-flip Pass 1.5 path. No symmetry gap.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

@@ -20,12 +20,14 @@
     "check:production-isolation": "node scripts/check-production-isolation.mjs",
     "check:2026-compliance": "node scripts/verify-2026-rules-compliance.mjs",
     "audit:n8n": "node scripts/audit-n8n-workflows.mjs",
+    "preflight:vacation": "tsx scripts/pre-vacation-preflight.ts",
     "forge": "tsx scripts/cli.ts",
     "discord": "tsx src/discord/bot.ts",
     "discord:dev": "tsx watch src/discord/bot.ts",
     "test:metrics": "python -m pytest src/engine/tests/test_metric_snapshot.py src/engine/tests/test_golden_fixtures.py src/engine/tests/test_frankenstein.py src/engine/tests/test_cross_engine_parity.py -v --tb=short",
     "test:metrics:fast": "python -m pytest src/engine/tests/test_metric_snapshot.py::TestSnapshotPerfect src/engine/tests/test_metric_snapshot.py::TestSnapshotMarginal src/engine/tests/test_metric_snapshot.py::TestSnapshotFeesKiller src/engine/tests/test_metric_snapshot.py::TestSnapshotConsistency -q --tb=short",
-    "test:metrics:update-snapshots": "SNAPSHOT_UPDATE=1 python -m pytest src/engine/tests/test_metric_snapshot.py -v --tb=short"
+    "test:metrics:update-snapshots": "SNAPSHOT_UPDATE=1 python -m pytest src/engine/tests/test_metric_snapshot.py -v --tb=short",
+    "test:full-fleet": "vitest run --config vitest.config.full-fleet.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1005.0",
