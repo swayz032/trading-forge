@@ -2144,6 +2144,9 @@ export const biasState = pgTable(
     // to block NEW entries on the new strategy until the prior position closes naturally.
     // Cleared implicitly — next INSERT with FALSE takes over once position closes.
     positionLockActive: boolean("position_lock_active").notNull().default(false),
+    // W24-P2 Item 21: true when HMM overlay was computed for this row (advisory only).
+    // Rule-based regime label is ALWAYS authoritative. HMM never overrides.
+    hmmProbabilityUsed: boolean("hmm_probability_used").notNull().default(false),
     computedAt: timestamp("computed_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -2162,6 +2165,31 @@ export const biasState = pgTable(
 
 export type BiasStateRow = typeof biasState.$inferSelect;
 export type BiasStateInsert = typeof biasState.$inferInsert;
+
+// ─── Regime HMM Models (W24-P2 Item 21) ───────────────────────────────────────
+// Serialised HmmRegimeModel params fitted weekly (Sunday 17:00 ET).
+// Keyed by (symbol, fit_date) — UNIQUE constraint prevents duplicates.
+// JSON blob: {means, covars, transmat, startprob, label_map, n_states}.
+export const regimeHmmModels = pgTable(
+  "regime_hmm_models",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    symbol: text("symbol").notNull(),
+    fitDate: date("fit_date").notNull(),
+    nStates: integer("n_states").notNull().default(3),
+    paramsJson: jsonb("params_json").notNull(),
+    barCount: integer("bar_count"),
+    fitDurationMs: integer("fit_duration_ms"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("regime_hmm_models_symbol_idx").on(table.symbol, table.fitDate.desc()),
+    uniqueIndex("regime_hmm_models_symbol_fit_date_uq").on(table.symbol, table.fitDate),
+  ],
+);
+
+export type RegimeHmmModelRow = typeof regimeHmmModels.$inferSelect;
+export type RegimeHmmModelInsert = typeof regimeHmmModels.$inferInsert;
 
 // ─── Harsh-Regime Phase (Wave 23D Carry-Forward) ───────────────────────────
 // Singleton table (id=1 always). Tracks whether the harsh-regime survival gate

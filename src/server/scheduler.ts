@@ -11,7 +11,7 @@
 
 import cron from "node-cron";
 import { randomUUID } from "crypto";
-import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min } from "drizzle-orm";
+import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
 import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
@@ -2198,6 +2198,139 @@ export function initScheduler() {
   } finally { _releaseJobLock("compliance-rule-drift"); }
   });
   _scheduledJobs.add("compliance-rule-drift");
+
+  // ─── W24-P2 Item 21: HMM regime weekly refit — Sunday 17:00 ET ───────────────
+  // Fires before the weekly drift halt at 18:00 ET so the freshly-fitted model
+  // is available for Monday session-start bias computation.
+  // HMM_OVERLAY_ENABLED=false skips entirely.
+  registerJob("hmm-regime-weekly-refit", 7 * 24 * 60 * 60 * 1000, async () => {
+    if ((process.env.HMM_OVERLAY_ENABLED ?? "true").toLowerCase() === "false"
+        || process.env.HMM_OVERLAY_ENABLED === "0") {
+      logger.info("hmm-regime-weekly-refit: HMM_OVERLAY_ENABLED=false — skipping");
+      return;
+    }
+
+    const { runPythonModule } = await import("./lib/python-runner.js");
+    const symbols = ["MES", "MNQ", "MCL"];
+
+    for (const sym of symbols) {
+      try {
+        const refitResult = await runPythonModule<{
+          symbol: string;
+          fit_date: string;
+          bar_count: number;
+          fit_duration_ms: number;
+          params_json: Record<string, unknown>;
+          error?: string;
+        }>({
+          scriptCode: `
+import sys, json, os, time, datetime
+sys.path.insert(0, "src")
+
+# Symbol inlined by TS (avoids env var dependency)
+symbol = ${JSON.stringify(sym)}
+n_states = int(os.environ.get("HMM_N_STATES", "3"))
+fit_date = datetime.date.today().isoformat()
+t0 = time.time()
+
+try:
+    import polars as pl
+    from src.engine.context.hmm_regime import fit_hmm_regimes
+
+    data_root = os.environ.get("DATA_ROOT", "data")
+    # Load continuous daily OHLCV for the symbol
+    path = f"{data_root}/ratio_adj/{symbol}/daily.parquet"
+    df = pl.read_parquet(path)
+    if "close" not in df.columns:
+        raise ValueError(f"No 'close' column in {path}")
+    bar_count = len(df)
+    model = fit_hmm_regimes(df, n_states=n_states)
+    elapsed_ms = int((time.time() - t0) * 1000)
+    print(json.dumps({
+        "symbol": symbol,
+        "fit_date": fit_date,
+        "bar_count": bar_count,
+        "fit_duration_ms": elapsed_ms,
+        "params_json": model.to_dict(),
+    }))
+except Exception as e:
+    print(json.dumps({"error": str(e)[:300], "symbol": symbol, "fit_date": fit_date,
+                      "bar_count": 0, "fit_duration_ms": 0, "params_json": {}}))
+`,
+          timeoutMs: 120_000,
+          componentName: "hmm-regime-weekly-refit",
+        });
+
+        if (refitResult.error) {
+          logger.warn({ symbol: sym, error: refitResult.error }, "hmm-regime-weekly-refit: Python refit errored — skipping DB upsert");
+          continue;
+        }
+
+        // Upsert into regime_hmm_models (UNIQUE on symbol + fit_date)
+        await db.execute(
+          sql`
+            INSERT INTO regime_hmm_models (symbol, fit_date, n_states, params_json, bar_count, fit_duration_ms, created_at)
+            VALUES (
+              ${sym},
+              ${refitResult.fit_date}::date,
+              ${3},
+              ${JSON.stringify(refitResult.params_json)}::jsonb,
+              ${refitResult.bar_count},
+              ${refitResult.fit_duration_ms},
+              NOW()
+            )
+            ON CONFLICT (symbol, fit_date) DO UPDATE
+              SET params_json = EXCLUDED.params_json,
+                  bar_count   = EXCLUDED.bar_count,
+                  fit_duration_ms = EXCLUDED.fit_duration_ms
+          `,
+        );
+
+        await insertAuditRow({
+          action: "hmm_regime.model_refitted",
+          entityType: "regime_hmm_model",
+          entityId: `${sym}-${refitResult.fit_date}`,
+          decisionAuthority: "system",
+          status: "success",
+          result: {
+            symbol: sym,
+            fit_date: refitResult.fit_date,
+            bar_count: refitResult.bar_count,
+            fit_duration_ms: refitResult.fit_duration_ms,
+          },
+        });
+
+        logger.info(
+          { symbol: sym, fitDate: refitResult.fit_date, barCount: refitResult.bar_count, durationMs: refitResult.fit_duration_ms },
+          "hmm-regime-weekly-refit: model saved",
+        );
+      } catch (symErr) {
+        logger.warn({ symbol: sym, err: symErr }, "hmm-regime-weekly-refit: symbol failed — skipping (fail-open)");
+      }
+    }
+  });
+
+  // Sunday 17:00 ET = 21:00 or 22:00 UTC (EDT/EST); fire at both UTC hours on Sunday.
+  cron.schedule("0 21,22 * * 0", async () => {
+    if (!_tryAcquireJobLock("hmm-regime-weekly-refit")) return;
+    try {
+    const now = new Date();
+    const etStr = now.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      hour12: false,
+      weekday: "short",
+    });
+    if (!etStr.startsWith("Sun") || !etStr.includes("17")) return;
+    if (!(await pipelineGate("hmm-regime-weekly-refit"))) return;
+    logger.info("Scheduler: HMM regime weekly refit (Sunday 17:00 ET)");
+    const t0hmm = Date.now();
+    await withRetry("hmm-regime-weekly-refit", SCHEDULER_JOBS["hmm-regime-weekly-refit"].run);
+    markJobRun("hmm-regime-weekly-refit");
+    emitJobComplete("hmm-regime-weekly-refit", Date.now() - t0hmm);
+  } finally { _releaseJobLock("hmm-regime-weekly-refit"); }
+  });
+  _scheduledJobs.add("hmm-regime-weekly-refit");
 
   // ─── Disabled job probe — every 30 minutes ────────────────
   // Periodically probes disabled jobs with a test run. If a probe succeeds,

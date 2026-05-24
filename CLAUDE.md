@@ -124,11 +124,24 @@ Data sources: Raschke, Grimes, Bellafiore, SMB consensus; Topstep funded-trader 
 
 ### Stop Loss — structural, NEVER fixed-point
 ```
-stop_distance = invalidation_swing + 1pt buffer
+stop_distance = invalidation_swing + sweep_buffer (per-symbol tick count)
 floor   = 1.5 × current-timeframe ATR
 ceiling = 14pts MES   (≈ 40pts MNQ, ≈ 25 ticks MCL)
 If structural distance > ceiling → SKIP TRADE
 ```
+
+**Sweep-aware buffer (W24-P2, 2026-05-23)** — replaces old flat +1pt.
+1pt on MES sits inside the empirical sweep zone (r/FuturesTrading 2025-05 analysis,
+2026 funded-trader consensus). Per-symbol values:
+
+| Symbol | Ticks | Points | Env var override |
+|---|---|---|---|
+| MES | 3 ticks | 0.75pt | `STOP_BUFFER_TICKS_MES=3` |
+| MNQ | 5 ticks | 1.25pt | `STOP_BUFFER_TICKS_MNQ=5` |
+| MCL | 2 ticks | 0.02pt | `STOP_BUFFER_TICKS_MCL=2` |
+
+Unknown symbols fall back to legacy `max(tick_size, ATR×0.10)` with a warning.
+Backtest engine and structural_stops.py use the same table — parity is mandatory.
 
 ### Take Profit — Style C default (Wave 23 canonical, W23F.N)
 **Style C is the ONLY default exit. Style D is DEAD.**

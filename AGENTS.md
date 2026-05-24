@@ -98,11 +98,13 @@ Every strategy that graduates MUST satisfy these invariants:
 
 ### Stop = structural with ATR bounds
 ```
-stop_distance = invalidation_swing + 1pt buffer
+stop_distance = invalidation_swing + sweep_buffer (per-symbol ticks: MES=3t, MNQ=5t, MCL=2t)
 floor   = 1.5 × current-timeframe ATR
 ceiling = 14pts MES / 40pts MNQ / 25 ticks MCL
 If structural > ceiling → SKIP TRADE
 ```
+W24-P2 (2026-05-23): +1pt replaced by tick-aware buffer. Override via env:
+STOP_BUFFER_TICKS_MES / _MNQ / _MCL.
 
 ### TP = Style C 33/33/33 (NEVER Style D — W23F.N)
 - TP1: 33% off at +1.0R, move stop to BE+1

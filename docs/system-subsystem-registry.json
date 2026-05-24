@@ -736,7 +736,8 @@
       "vp-daily-compute",
       "w19-definition-pull",
       "w19-imbalance-pull",
-      "w19-statistics-pull"
+      "w19-statistics-pull",
+      "hmm-regime-weekly-refit"
     ],
     "routes": [
       "/api/context",
@@ -787,6 +788,7 @@
       "portfolio_snapshots",
       "pre_market_sessions",
       "prop_firm_health_checks",
+      "regime_hmm_models",
       "shadow_signals",
       "skip_decisions",
       "strategy_lockouts",

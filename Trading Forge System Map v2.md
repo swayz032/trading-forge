@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-24T01:42:31.045Z`.
+Updated automatically from the repo on `2026-05-24T02:22:53.831Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,12 +12,12 @@ Updated automatically from the repo on `2026-05-24T01:42:31.045Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `operator-halt-only, tradingview_deploy`
 - API routes tracked: `64`
-- Scheduler jobs tracked: `69`
+- Scheduler jobs tracked: `70`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `26`
-- Database tables tracked: `93`
+- Database tables tracked: `94`
 
 ### Subsystem Runtime States
 - `active`: `16`
@@ -54,9 +54,9 @@ Updated automatically from the repo on `2026-05-24T01:42:31.045Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `21`
 - Route coverage: `64/64`
-- Scheduler coverage: `69/69`
+- Scheduler coverage: `69/70`
 - Engine coverage: `26/26`
-- Database coverage: `93/93`
+- Database coverage: `93/94`
 - Autonomous subsystems with audit coverage: `21/21`
 - Autonomous subsystems with audit actions: `21/21`
 - Autonomous subsystems with telemetry evidence: `21/21`
@@ -274,6 +274,7 @@ Updated automatically from the repo on `2026-05-24T01:42:31.045Z`.
 - `harsh-regime-phase-activation-check`
 - `heartbeat-stale-check`
 - `heartbeat-write`
+- `hmm-regime-weekly-refit`
 - `idempotency-cleanup`
 - `lifecycle-auto-check`
 - `macro-data-sync`
@@ -433,6 +434,7 @@ Updated automatically from the repo on `2026-05-24T01:42:31.045Z`.
 - `quantum_mc_runs`
 - `quantum_run_costs`
 - `qubo_timing_runs`
+- `regime_hmm_models`
 - `rl_training_runs`
 - `scout_drain_samples`
 - `shadow_rerun_findings`

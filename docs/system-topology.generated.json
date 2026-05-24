@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T01:42:31.045Z",
+  "generatedAt": "2026-05-24T02:22:53.831Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,11 +16,11 @@
   },
   "counts": {
     "routes": 64,
-    "schedulerJobs": 69,
+    "schedulerJobs": 70,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 26,
-    "databaseTables": 93,
+    "databaseTables": 94,
     "registrySubsystems": 21
   },
   "routes": [
@@ -123,6 +123,7 @@
     "harsh-regime-phase-activation-check",
     "heartbeat-stale-check",
     "heartbeat-write",
+    "hmm-regime-weekly-refit",
     "idempotency-cleanup",
     "lifecycle-auto-check",
     "macro-data-sync",
@@ -807,6 +808,7 @@
     "quantum_mc_runs",
     "quantum_run_costs",
     "qubo_timing_runs",
+    "regime_hmm_models",
     "rl_training_runs",
     "scout_drain_samples",
     "shadow_rerun_findings",
@@ -893,9 +895,13 @@
       "databaseTables": 93
     },
     "missingRoutes": [],
-    "missingSchedulerJobs": [],
+    "missingSchedulerJobs": [
+      "hmm-regime-weekly-refit"
+    ],
     "missingEngineSubsystems": [],
-    "missingDatabaseTables": [],
+    "missingDatabaseTables": [
+      "regime_hmm_models"
+    ],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],

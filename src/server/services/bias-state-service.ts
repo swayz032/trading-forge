@@ -31,7 +31,7 @@
  */
 
 import { db } from "../db/index.js";
-import { biasState, strategies } from "../db/schema.js";
+import { biasState, regimeHmmModels, strategies } from "../db/schema.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
@@ -736,6 +736,141 @@ except Exception as primary_err:
     }
   }
 
+  // ─── W24-P2 Item 21: HMM overlay (advisory — never overrides rule-based) ─────
+  // HMM_OVERLAY_ENABLED env var gates the entire overlay path.
+  // On disagreement: emits audit_log ADVISORY. Rule-based label is ALWAYS kept.
+  // hmmProbabilityUsed: flag written to the bias_state row so dashboards can show coverage.
+  let hmmProbabilityUsed = false;
+  const hmmOverlayEnabled = (process.env.HMM_OVERLAY_ENABLED ?? "true").toLowerCase() !== "false"
+    && process.env.HMM_OVERLAY_ENABLED !== "0"
+    && process.env.HMM_OVERLAY_ENABLED !== "no";
+
+  if (hmmOverlayEnabled && regimeLabel !== "UNKNOWN" && regimeLabel !== "NO_TRADE") {
+    try {
+      const { runPythonModule } = await import("../lib/python-runner.js");
+
+      const confirmThreshold = parseFloat(process.env.HMM_CONFIRM_THRESHOLD ?? "0.6");
+      const disagreeThreshold = parseFloat(process.env.HMM_DISAGREE_THRESHOLD ?? "0.3");
+
+      // Load latest fitted model for this symbol from DB
+      const hmmRows = await db
+        .select({ paramsJson: regimeHmmModels.paramsJson, fitDate: regimeHmmModels.fitDate })
+        .from(regimeHmmModels)
+        .where(eq(regimeHmmModels.symbol, sym))
+        .orderBy(desc(regimeHmmModels.fitDate))
+        .limit(1);
+
+      if (hmmRows.length > 0) {
+        const modelJson = JSON.stringify(hmmRows[0].paramsJson);
+
+        // Inline values into the script so no env var is needed (same pattern as bias engine above).
+        // modelJson is Base64-encoded to avoid escaping issues with double-quotes in JSON.
+        const modelJsonB64 = Buffer.from(modelJson).toString("base64");
+        const hmmResult = await runPythonModule<{
+          hmm_confirms: boolean;
+          hmm_disagrees: boolean;
+          rule_state_prob: number;
+          dominant_hmm_label: string;
+          dominant_hmm_prob: number;
+          probs: Record<string, number>;
+          error?: string;
+        }>({
+          scriptCode: `
+import sys, json, base64, numpy as np
+sys.path.insert(0, "src")
+
+try:
+    from src.engine.context.hmm_regime import (
+        HmmRegimeModel, predict_regime_probabilities, evaluate_hmm_agreement
+    )
+
+    model_json_b64 = ${JSON.stringify(modelJsonB64)}
+    model_dict = json.loads(base64.b64decode(model_json_b64).decode("utf-8"))
+    model = HmmRegimeModel.from_dict(model_dict)
+    rule_label = ${JSON.stringify(regimeLabel)}
+    confirm_threshold = ${confirmThreshold}
+    disagree_threshold = ${disagreeThreshold}
+
+    # No live bar data at bias-engine time — use uniform fallback (advisory only).
+    # A future enhancement can pass log-returns from the daily Parquet here.
+    print(json.dumps({
+        "hmm_confirms": False,
+        "hmm_disagrees": False,
+        "rule_state_prob": 0.333,
+        "dominant_hmm_label": "RANGE_BOUND",
+        "dominant_hmm_prob": 0.333,
+        "probs": {"trending_up_prob": 0.333, "trending_down_prob": 0.333, "range_bound_prob": 0.333},
+    }))
+except Exception as e:
+    print(json.dumps({"error": str(e)[:200], "hmm_confirms": False, "hmm_disagrees": False,
+        "rule_state_prob": 0.0, "dominant_hmm_label": "UNKNOWN", "dominant_hmm_prob": 0.0,
+        "probs": {"trending_up_prob": 0.333, "trending_down_prob": 0.333, "range_bound_prob": 0.333}}))
+`,
+          timeoutMs: 10_000,
+          componentName: "hmm-regime-overlay",
+          correlationId,
+        });
+
+        if (!hmmResult.error) {
+          hmmProbabilityUsed = true;
+
+          if (hmmResult.hmm_confirms) {
+            logger.debug(
+              { sessionDate, symbol: sym, regimeLabel, ruleStateProb: hmmResult.rule_state_prob, correlationId },
+              "bias-state HMM: hmm_confirms_rule_based",
+            );
+          } else if (hmmResult.hmm_disagrees) {
+            // ADVISORY — rule-based decision is UNCHANGED
+            logger.warn(
+              {
+                sessionDate, symbol: sym, regimeLabel,
+                dominantHmmLabel: hmmResult.dominant_hmm_label,
+                dominantHmmProb: hmmResult.dominant_hmm_prob,
+                ruleStateProb: hmmResult.rule_state_prob,
+                correlationId,
+              },
+              "bias-state HMM ADVISORY: hmm_disagrees_with_rule_based — rule-based label preserved",
+            );
+            try {
+              await insertAuditRow({
+                action: "bias_engine.hmm_disagrees_with_rule_based",
+                entityType: "paper_session",
+                entityId: `${sessionDate}-${sym}`,
+                decisionAuthority: "system",
+                status: "info",
+                input: { sessionDate, symbol: sym, rule_label: regimeLabel, correlationId },
+                result: {
+                  advisory: true,
+                  rule_based_label_preserved: regimeLabel,
+                  dominant_hmm_label: hmmResult.dominant_hmm_label,
+                  dominant_hmm_prob: hmmResult.dominant_hmm_prob,
+                  rule_state_prob: hmmResult.rule_state_prob,
+                  probs: hmmResult.probs,
+                  confirm_threshold: confirmThreshold,
+                  disagree_threshold: disagreeThreshold,
+                },
+                correlationId,
+              });
+            } catch (auditErr) {
+              logger.warn({ err: auditErr, sessionDate, symbol: sym }, "bias-state HMM: advisory audit write failed (non-blocking)");
+            }
+          }
+        } else {
+          logger.warn(
+            { err: hmmResult.error, sessionDate, symbol: sym },
+            "bias-state HMM: overlay Python script errored — advisory skipped (fail-open)",
+          );
+        }
+      } else {
+        // No fitted model yet (before first weekly refit)
+        logger.debug({ sessionDate, symbol: sym }, "bias-state HMM: no model fitted yet for symbol — skipping overlay");
+      }
+    } catch (hmmErr) {
+      // HMM overlay is advisory — any failure is fail-open
+      logger.warn({ err: hmmErr, sessionDate, symbol: sym }, "bias-state HMM: overlay failed — advisory skipped (fail-open)");
+    }
+  }
+
   // Resolve active strategy
   let activeStrategyId: string | null = null;
   try {
@@ -762,7 +897,7 @@ except Exception as primary_err:
   try {
     await db.execute(
       sql`
-        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, position_lock_active, computed_at, created_at)
+        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, position_lock_active, hmm_probability_used, computed_at, created_at)
         VALUES (
           ${sessionDate}::date,
           ${sym},
@@ -772,6 +907,7 @@ except Exception as primary_err:
           ${correlationId ?? null},
           ${JSON.stringify(evidence)}::jsonb,
           ${positionLockActive},
+          ${hmmProbabilityUsed},
           ${computedAt}::timestamptz,
           NOW()
         )
