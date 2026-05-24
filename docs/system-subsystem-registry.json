@@ -2622,16 +2622,22 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 5 (P5.A1) — VWAP with 1σ + 2σ bands plus anchored VWAP. compute_vwap_with_bands() in src/engine/indicators/core.py returns 5 columns (vwap, vwap_band_1s_upper/lower, vwap_band_2s_upper/lower) with Globex 18:00 ET session-resetting variance accumulation. compute_anchored_vwap() returns deterministic column name anchored_vwap_<iso> for per-strategy anchor timestamps (IndicatorConfig.anchor_ts). Powers 2 new DSL archetypes: vwap_band_reject (1σ band fade) and anchored_vwap_retest (event-anchored confluence). Backtest engine populates VWAP band columns into bar context; paper-signal-service feeds same columns to confluence-score evalVwapAlignment.",
+    "automation_scope": "Wave 25 Pass 5 (P5.A1) — VWAP with 1σ + 2σ bands plus anchored VWAP. compute_vwap_with_bands() in src/engine/indicators/core.py returns 5 columns (vwap, vwap_band_1s_upper/lower, vwap_band_2s_upper/lower) with Globex 18:00 ET session-resetting variance accumulation. compute_anchored_vwap() returns deterministic column name anchored_vwap_<iso> for per-strategy anchor timestamps (IndicatorConfig.anchor_ts). Powers 2 new DSL archetypes: vwap_band_reject (1σ band fade) and anchored_vwap_retest (event-anchored confluence). Backtest engine populates VWAP band columns into bar context; paper-signal-service feeds same columns to confluence-score evalVwapAlignment. Failure surface proxied through confluence_score_engine audit events (a_plus_factor_evaluated emits per-factor decision rows naming this engine as the source for vwap_alignment factor).",
     "data_sources": [
       "ratio_adj_parquet_bars"
     ],
     "reads_from": [],
     "writes_to": [],
-    "audit_tables": [],
-    "audit_actions": [],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "a_plus_factor_evaluated"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": [],
+    "telemetry_sources": [
+      "audit_log:a_plus_factor_evaluated:vwap_alignment"
+    ],
     "scheduler_jobs": [],
     "routes": [],
     "engine_subsystems": [
@@ -2641,13 +2647,18 @@
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": [],
+    "failure_visibility": [
+      "audit_log:a_plus_factor_evaluated",
+      "logger:backtester"
+    ],
     "recovery_mode": "pure-function-no-failure-path",
     "health_check": "/api/health",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
-    "freshness_signals": [],
+    "freshness_signals": [
+      "audit_log:a_plus_factor_evaluated:per-bar"
+    ],
     "evidence_queries": [
       "test_vwap_bands.py",
       "test_anchored_vwap.py",
@@ -2666,17 +2677,23 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 5 (P5.A2) — continuous [0,1] SMT (Smart Money Tool) ES↔NQ divergence score. compute_smt_divergence(es_bars, nq_bars) in src/engine/indicators/smt_divergence.py produces 4-component weighted formula (magnitude × time_synced × structure_quality × displacement_confirmation) with smt_score + smt_direction (bullish_es_strong/bullish_nq_strong/bearish_es_strong/bearish_nq_strong) per bar. Closes GPT critique #7 (binary SMT → continuous). Confluence decay engine (Pass 4) consumes smt_age_bars on top (multiplied). Backtest engine populates ctx.smt_score directly; live paper bridge DEFERRED to Wave 26 (paper-signal-service.ts continues fail-open with reason='smt_unavailable' for live signals).",
+    "automation_scope": "Wave 25 Pass 5 (P5.A2) — continuous [0,1] SMT (Smart Money Tool) ES↔NQ divergence score. compute_smt_divergence(es_bars, nq_bars) in src/engine/indicators/smt_divergence.py produces 4-component weighted formula (magnitude × time_synced × structure_quality × displacement_confirmation) with smt_score + smt_direction (bullish_es_strong/bullish_nq_strong/bearish_es_strong/bearish_nq_strong) per bar. Closes GPT critique #7 (binary SMT → continuous). Confluence decay engine (Pass 4) consumes smt_age_bars on top (multiplied). Backtest engine populates ctx.smt_score directly; live paper bridge DEFERRED to Wave 26 (paper-signal-service.ts continues fail-open with reason='smt_unavailable' for live signals). Failure surface proxied through confluence_score_engine audit events (a_plus_factor_evaluated emits per-factor decision rows naming this engine as the source for smt_confirmation factor).",
     "data_sources": [
       "ratio_adj_parquet_bars_es",
       "ratio_adj_parquet_bars_nq"
     ],
     "reads_from": [],
     "writes_to": [],
-    "audit_tables": [],
-    "audit_actions": [],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "a_plus_factor_evaluated"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": [],
+    "telemetry_sources": [
+      "audit_log:a_plus_factor_evaluated:smt_confirmation"
+    ],
     "scheduler_jobs": [],
     "routes": [],
     "engine_subsystems": [
@@ -2686,13 +2703,18 @@
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": [],
+    "failure_visibility": [
+      "audit_log:a_plus_factor_evaluated",
+      "logger:backtester"
+    ],
     "recovery_mode": "pure-function-no-failure-path",
     "health_check": "/api/health",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
-    "freshness_signals": [],
+    "freshness_signals": [
+      "audit_log:a_plus_factor_evaluated:per-bar"
+    ],
     "evidence_queries": [
       "test_smt_divergence.py"
     ],
@@ -2762,5 +2784,352 @@
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
     "criticality": "critical"
+  },
+  {
+    "id": "institutional_regime_classifier",
+    "domain": "context_engine",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 25 Pass 6 W25.10 — 5-regime institutional expansion. classify_institutional_regime() in src/engine/context/bias_engine.py runs BEFORE classic 3-regime logic with 4-arm priority classifier (HIGH_VOL_MACRO → LOW_LIQ_CHOP → EXPANSION → COMPRESSION → _PASS_THROUGH). 4 new playbook arms in src/engine/context/playbook_router.py (DISPLACEMENT_CONTINUATION / BREAKOUT_PREP / REDUCED_SIZING / NO_TRADE). RegimeEvidence dataclass captures ATR percentile / volume ratio / range vs ATR / macro event / session health / primary driver — persisted to bias_state.regime_evidence JSONB via bias-state-service.ts (migration 0142 idx 144). Forensic replay: any historical regime decision can be reconstructed without re-running the engine. HIGH_VOL_MACRO + LOW_LIQ_CHOP force playbook = NO_TRADE.",
+    "data_sources": [
+      "htf_context",
+      "session_context",
+      "daily_bars",
+      "atr_percentile",
+      "volume_ratio"
+    ],
+    "reads_from": [],
+    "writes_to": [
+      "bias_state"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "bias_state"
+    ],
+    "audit_actions": [
+      "bias_engine.regime_classified"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:bias_engine.regime_classified"
+    ],
+    "scheduler_jobs": [
+      "bias-engine-session-start",
+      "bias-engine-10am-refresh"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "src/engine/context/bias_engine.py",
+      "src/engine/context/playbook_router.py"
+    ],
+    "database_tables": [
+      "bias_state"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "logger:bias-state-service"
+    ],
+    "recovery_mode": "fail-open-to-classic-3-regime",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:bias_engine.regime_classified:per-session"
+    ],
+    "evidence_queries": [
+      "src/engine/tests/test_regime_5way.py",
+      "src/engine/tests/test_playbook_router_5regimes.py",
+      "wave25-regime-evidence-persistence.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "narrative_state_machine",
+    "domain": "context_engine",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 25 Pass 6 W25.11 — A/M/E narrative continuity state machine. computeNarrativeState() + persistNarrativeState() + loadLatestNarrativeState() in src/server/services/narrative-state-service.ts. 5-phase pure-functional state machine: NEUTRAL → ACCUMULATION → MANIPULATION → DISTRIBUTION → REVERSAL_FORMING. Deterministic for replay (no Date.now, no I/O in compute). Persists into bias_state.narrative_state JSONB (migration 0143 idx 145) via UPDATE on the latest row for the (session_date, symbol) pair. narrative-state-tracker cron fires every 5 min during RTH (pipeline-gate exempt). audit event narrative.phase_transition fires ONLY on phase change (idempotent). confluence-score.ts evalMarketStructureAligned extended with CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE env gate (default OFF — backward compat: institutional desks only enter during DISTRIBUTION when toggled ON).",
+    "data_sources": [
+      "htf_narrative",
+      "structure_state",
+      "liquidity_levels",
+      "current_bar"
+    ],
+    "reads_from": [
+      "bias_state"
+    ],
+    "writes_to": [
+      "bias_state"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "bias_state"
+    ],
+    "audit_actions": [
+      "narrative.phase_transition"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:narrative.phase_transition"
+    ],
+    "scheduler_jobs": [
+      "narrative-state-tracker"
+    ],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [
+      "bias_state"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "logger:narrative-state-service"
+    ],
+    "recovery_mode": "fail-open-to-neutral",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:narrative.phase_transition:on-change",
+      "scheduler:narrative-state-tracker:5min-rth"
+    ],
+    "evidence_queries": [
+      "wave25-narrative-state.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "trade_critique_service",
+    "domain": "post_trade_learning",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 26 Phase 1 Pass 1 — event-driven trade critique service. Fires on every paper_position close via GPT-5.4 strict dual-output schema (plain-English block + technical attribution block). 250-line institutional rubric. 3-strike Ollama fallback. MAX_CONCURRENT=3 backpressure. Idempotent per position_id (trade_critique.idempotent_skip). Wave 25 missingness handling: when smt_score / institutional context unavailable, data_completeness='minimal' with missingFields[] populated rather than blocking. Persisted to trade_critique table (migration 0141 idx 143).",
+    "data_sources": [
+      "paper_positions",
+      "bias_state",
+      "audit_log"
+    ],
+    "reads_from": [
+      "paper_positions",
+      "bias_state"
+    ],
+    "writes_to": [
+      "trade_critique"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "trade_critique"
+    ],
+    "audit_actions": [
+      "trade_critique.completed",
+      "trade_critique.failed",
+      "trade_critique.idempotent_skip",
+      "trade_critique.consecutive_failure_alert"
+    ],
+    "metrics_surfaces": [
+      "/api/trade-journal/stats"
+    ],
+    "telemetry_sources": [
+      "audit_log:trade_critique.completed",
+      "audit_log:trade_critique.failed"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/trade-journal"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "trade_critique"
+    ],
+    "learning_from": [
+      "paper_positions",
+      "bias_state"
+    ],
+    "learning_assets": [
+      "trade_critique"
+    ],
+    "learning_writes_to": [
+      "trade_critique"
+    ],
+    "failure_visibility": [
+      "audit_log",
+      "discord:warn",
+      "logger:trade-critique-service"
+    ],
+    "recovery_mode": "fail-open-with-ollama-fallback",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:trade_critique.completed:per-trade-close"
+    ],
+    "evidence_queries": [
+      "wave26-trade-critique-service.test.ts",
+      "wave26-trade-journal-route.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_and_strategy_proposer",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "consistency_tracker_service",
+    "domain": "compliance",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 26 Phase 1 Pass 6 — Topstep concentration tracker + 40/50% gates. shouldBlockNewEntry() evaluates projected single-day P&L vs Topstep 50% consistency ceiling. ≥50% BLOCK / ≥40% WARN. False-positive guard downgrades 50% block to WARN when offending strategy has clean recent history in trending regime. Daily 17:00 ET digest cron consistency-tracker-daily-digest. NOT YET wired into paper-signal-service.ts entry-gate — deferred to coordination pass after Wave 25 Pass 7 merge.",
+    "data_sources": [
+      "paper_positions",
+      "broker_accounts"
+    ],
+    "reads_from": [
+      "paper_positions",
+      "broker_accounts"
+    ],
+    "writes_to": [],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "consistency.50pct_blocked",
+      "consistency.40pct_warned",
+      "consistency.false_positive_suspected",
+      "consistency.gate_cleared"
+    ],
+    "metrics_surfaces": [
+      "/api/consistency"
+    ],
+    "telemetry_sources": [
+      "audit_log:consistency.50pct_blocked",
+      "audit_log:consistency.40pct_warned"
+    ],
+    "scheduler_jobs": [
+      "consistency-tracker-daily-digest"
+    ],
+    "routes": [
+      "/api/consistency"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "discord:family-grade"
+    ],
+    "recovery_mode": "fail-closed-on-blocking-gate",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:consistency.gate_cleared:per-entry-eval",
+      "scheduler:consistency-tracker-daily-digest:21,22-utc"
+    ],
+    "evidence_queries": [
+      "wave26-consistency-tracker.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "pattern_aggregator_service",
+    "domain": "post_trade_learning",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "kill_switch",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 26 Phase 1 Pass 4 — closes the trade-critique feedback loop. 4h pattern-aggregator cron aggregates last-N trade_critique rows into strategy_proposer appendix updates via prompt_versions A/B test gate. MIN_CRITIQUES_FOR_AGGREGATION=10 (pattern_aggregator.insufficient_samples). auto_patch_loop_enabled flag (default true) gates LLM call — when false emits auto_patch.loop_halted_skip. Architectural fix: buildPromptSync retains synchronous contract via appendixCache pre-warm pattern. Successful appendix application emits pattern_evolution.applied; no-op runs emit pattern_aggregator.no_change.",
+    "data_sources": [
+      "trade_critique",
+      "prompt_versions"
+    ],
+    "reads_from": [
+      "trade_critique",
+      "prompt_versions"
+    ],
+    "writes_to": [
+      "prompt_versions"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "pattern_aggregator.insufficient_samples",
+      "pattern_aggregator.no_change",
+      "pattern_aggregator.failed",
+      "pattern_evolution.applied",
+      "auto_patch.loop_halted_skip"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:pattern_evolution.applied",
+      "audit_log:pattern_aggregator.failed"
+    ],
+    "scheduler_jobs": [
+      "pattern-aggregator"
+    ],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [],
+    "learning_from": [
+      "trade_critique"
+    ],
+    "learning_assets": [
+      "prompt_versions"
+    ],
+    "learning_writes_to": [
+      "prompt_versions"
+    ],
+    "failure_visibility": [
+      "audit_log",
+      "discord:on-failure"
+    ],
+    "recovery_mode": "kill-switch-disable-via-auto_patch_loop_enabled",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "scheduler:pattern-aggregator:4h",
+      "audit_log:pattern_aggregator.no_change:per-run"
+    ],
+    "evidence_queries": [
+      "wave26-pattern-aggregator.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "strategy_proposer_prompt_appendix",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
   }
 ]

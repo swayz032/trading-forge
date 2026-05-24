@@ -1,9 +1,22 @@
 """Playbook Router — Maps bias state to allowed playbook and strategy families.
 
-Routes: bias + confidence + conditions -> one of 9 playbooks -> allowed strategies.
+Routes: bias + confidence + conditions -> one of 13 playbooks -> allowed strategies.
 
 PLAYBOOK_ROUTING contains the declarative spec for each playbook.
 route_playbook() evaluates the current DailyBiasState and returns a PlaybookDecision.
+
+W25.10 — 5-Regime Institutional Expansion:
+    4 new playbooks added for the 4 new institutional regime labels:
+      DISPLACEMENT_CONTINUATION — EXPANSION regime (directional breakout)
+      BREAKOUT_PREP             — COMPRESSION regime (pre-breakout candidates)
+      REDUCED_SIZING            — HIGH_VOL_MACRO (proceed with 0.5× contract cap)
+      NO_TRADE (LOW_LIQ_CHOP)   — LOW_LIQ_CHOP forces NO_TRADE (separate reason)
+
+    Routing evaluation order is UNCHANGED for existing 9 playbooks; the 4
+    institutional arms are checked first using DailyBiasState.institutional_regime
+    BEFORE the classic net_bias arms run. This preserves backward compatibility:
+    strategies that never see EXPANSION/COMPRESSION/HIGH_VOL_MACRO/LOW_LIQ_CHOP
+    use the same routing logic as before.
 """
 from __future__ import annotations
 
@@ -20,7 +33,7 @@ from src.engine.context.bias_engine import DailyBiasState
 #                 automatically when routing logic changes, audit row captures
 #                 the exact version that produced each bias decision.
 # ---------------------------------------------------------------------------
-ROUTER_VERSION = "2026-05-20-w23h"
+ROUTER_VERSION = "2026-05-24-w25.10"
 # Hash is computed lazily at module load after PLAYBOOK_ROUTING is defined.
 # See _compute_router_hash() below.
 _ROUTER_HASH_CACHE: str = ""
@@ -131,6 +144,46 @@ PLAYBOOK_ROUTING: Dict[str, Dict[str, Any]] = {
         "allowed_strategies": ORB_STRATS,
         "allowed_setups": ["opening_range_breakout", "opening_range_retest"],
     },
+    # ── W25.10 — Institutional regime playbooks ──────────────────────────────
+    # These are matched via DailyBiasState.institutional_regime, not net_bias.
+    # They run BEFORE the classic arms inside route_playbook().
+    "DISPLACEMENT_CONTINUATION": {
+        # EXPANSION regime: directional move already underway; ride continuation.
+        "institutional_regime": "EXPANSION",
+        "confidence_min": None,
+        "requires": ["institutional_regime_expansion"],
+        "allowed_strategies": CONTINUATION_STRATS,
+        "allowed_setups": [
+            "displacement_retest",
+            "fvg_continuation",
+            "ob_retest",
+            "breakout_pullback",
+        ],
+    },
+    "BREAKOUT_PREP": {
+        # COMPRESSION regime: low ATR, tight bars — load ORB / breakout candidates.
+        "institutional_regime": "COMPRESSION",
+        "confidence_min": None,
+        "requires": ["institutional_regime_compression"],
+        "allowed_strategies": ORB_STRATS + CONTINUATION_STRATS,
+        "allowed_setups": [
+            "opening_range_breakout",
+            "opening_range_retest",
+            "compression_squeeze_breakout",
+        ],
+    },
+    "REDUCED_SIZING": {
+        # HIGH_VOL_MACRO: signals can proceed but contract cap is halved by framework.
+        # The 0.5× multiplier is applied by framework-overlay.ts (not here).
+        "institutional_regime": "HIGH_VOL_MACRO",
+        "confidence_min": None,
+        "requires": ["institutional_regime_high_vol_macro"],
+        "allowed_strategies": CONTINUATION_STRATS,
+        "allowed_setups": [
+            "breakout_pullback",
+            "fvg_continuation",
+        ],
+    },
 }
 
 
@@ -190,7 +243,12 @@ def route_playbook(
     """Route bias state to the best playbook.
 
     Evaluation order:
-    1. NO_TRADE hard blockers (checked first — safety always wins)
+    0. Institutional regime routing (W25.10, checked FIRST):
+       - LOW_LIQ_CHOP    → NO_TRADE
+       - HIGH_VOL_MACRO  → REDUCED_SIZING
+       - EXPANSION       → DISPLACEMENT_CONTINUATION
+       - COMPRESSION     → BREAKOUT_PREP
+    1. NO_TRADE hard blockers (any single blocker kills — safety always wins)
     2. TREND_CONTINUATION (strong aligned bias >= |40|, confidence >= 0.6)
     3. SWEEP_REVERSAL (moderate bias after liquidity sweep)
     4. ORB (opening range breakout with directional bias)
@@ -200,6 +258,53 @@ def route_playbook(
     nb = bias.net_bias
     conf = bias.bias_confidence
     session = bias.session_context
+
+    # ------------------------------------------------------------------
+    # 0. Institutional regime routing (W25.10) — checked BEFORE classic
+    #    no-trade and bias arms. institutional_regime is None for callers
+    #    that don't supply exec_bars/htf data — backward compat preserved.
+    # ------------------------------------------------------------------
+    inst_regime = getattr(bias, "institutional_regime", None)
+
+    # LOW_LIQ_CHOP → force NO_TRADE (no strategy eligible)
+    if inst_regime == "LOW_LIQ_CHOP":
+        return PlaybookDecision(
+            playbook="NO_TRADE",
+            allowed_strategies=[],
+            allowed_setups=[],
+            confidence_modifier=0.0,
+            no_trade_reasons=["LOW_LIQ_CHOP regime — between sessions or holiday window"],
+        )
+
+    # HIGH_VOL_MACRO → REDUCED_SIZING (signals proceed; framework halves contracts)
+    if inst_regime == "HIGH_VOL_MACRO":
+        spec = PLAYBOOK_ROUTING["REDUCED_SIZING"]
+        return PlaybookDecision(
+            playbook="REDUCED_SIZING",
+            allowed_strategies=spec["allowed_strategies"],
+            allowed_setups=spec["allowed_setups"],
+            confidence_modifier=0.6,  # reduced conviction in macro spike
+        )
+
+    # EXPANSION → DISPLACEMENT_CONTINUATION
+    if inst_regime == "EXPANSION":
+        spec = PLAYBOOK_ROUTING["DISPLACEMENT_CONTINUATION"]
+        return PlaybookDecision(
+            playbook="DISPLACEMENT_CONTINUATION",
+            allowed_strategies=spec["allowed_strategies"],
+            allowed_setups=spec["allowed_setups"],
+            confidence_modifier=1.0,
+        )
+
+    # COMPRESSION → BREAKOUT_PREP
+    if inst_regime == "COMPRESSION":
+        spec = PLAYBOOK_ROUTING["BREAKOUT_PREP"]
+        return PlaybookDecision(
+            playbook="BREAKOUT_PREP",
+            allowed_strategies=spec["allowed_strategies"],
+            allowed_setups=spec["allowed_setups"],
+            confidence_modifier=0.8,
+        )
 
     # ------------------------------------------------------------------
     # 1. NO_TRADE conditions (checked first — any single blocker kills)

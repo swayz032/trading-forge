@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T10:53:40.070Z",
+  "generatedAt": "2026-05-24T11:13:29.830Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -21,7 +21,7 @@
     "canonicalWorkflows": 28,
     "engineSubsystems": 26,
     "databaseTables": 96,
-    "registrySubsystems": 33
+    "registrySubsystems": 38
   },
   "routes": [
     "/api/admin",
@@ -861,98 +861,75 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 33,
-    "autonomousSubsystems": 33,
-    "selfEvolvingSubsystems": 7,
+    "registryEntries": 38,
+    "autonomousSubsystems": 38,
+    "selfEvolvingSubsystems": 8,
     "proofStatusCounts": {
-      "runtime-proven": 26,
+      "runtime-proven": 33,
       "partially-proven": 0,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 2
+      "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 28,
+      "active": 33,
       "experimental": 5
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 28,
+      "active_preprod": 33,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 26,
+      "runtime_proven_autonomous": 31,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 22,
+      "not_collecting": 26,
       "collecting_only": 0,
-      "learning_active": 6,
+      "learning_active": 7,
       "learning_blocked": 0,
       "shadow_experimental": 5
     },
     "learningModeCounts": {
-      "active_learning": 5,
-      "deterministic_instrumented": 21,
+      "active_learning": 6,
+      "deterministic_instrumented": 25,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
-      "adaptive": 5,
-      "deterministic_instrumented": 26,
+      "adaptive": 6,
+      "deterministic_instrumented": 30,
       "manual_gated": 2
     },
     "manualGates": [
+      "kill_switch",
       "operator-halt-only",
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 68,
-      "schedulerJobs": 79,
+      "routes": 70,
+      "schedulerJobs": 82,
       "engineSubsystems": 26,
-      "databaseTables": 95
+      "databaseTables": 96
     },
-    "missingRoutes": [
-      "/api/consistency",
-      "/api/trade-journal"
-    ],
-    "missingSchedulerJobs": [
-      "consistency-tracker-daily-digest",
-      "narrative-state-tracker",
-      "pattern-aggregator"
-    ],
+    "missingRoutes": [],
+    "missingSchedulerJobs": [],
     "missingEngineSubsystems": [],
-    "missingDatabaseTables": [
-      "trade_critique"
-    ],
-    "subsystemsMissingAudit": [
-      "smt_divergence_engine",
-      "vwap_bands_engine"
-    ],
-    "subsystemsMissingAuditActions": [
-      "smt_divergence_engine",
-      "vwap_bands_engine"
-    ],
+    "missingDatabaseTables": [],
+    "subsystemsMissingAudit": [],
+    "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],
-    "subsystemsMissingTelemetrySources": [
-      "smt_divergence_engine",
-      "vwap_bands_engine"
-    ],
+    "subsystemsMissingTelemetrySources": [],
     "subsystemsMissingLearning": [],
     "subsystemsMissingLearningPersistence": [],
     "subsystemsMissingDecisionAuthority": [],
-    "subsystemsMissingFailureVisibility": [
-      "smt_divergence_engine",
-      "vwap_bands_engine"
-    ],
+    "subsystemsMissingFailureVisibility": [],
     "subsystemsMissingRecoveryMode": [],
     "subsystemsMissingProofMode": [],
-    "subsystemsMissingFreshnessSignals": [
-      "smt_divergence_engine",
-      "vwap_bands_engine"
-    ],
+    "subsystemsMissingFreshnessSignals": [],
     "subsystemsMissingEvidenceQueries": [],
     "subsystemsMissingOwnershipBoundary": [],
     "subsystemsMissingLearningBoundary": [],
@@ -960,22 +937,19 @@
     "subsystemsMissingCriticality": [],
     "manualGateViolations": [],
     "preprodIntegrity": {
-      "status": "incomplete",
-      "automationComplete": 28,
-      "dataCollectionComplete": 33,
-      "auditabilityComplete": 31,
-      "failureVisibilityComplete": 31,
-      "authorityCorrect": 33,
-      "learningActive": 6,
-      "incompleteSubsystems": [
-        "smt_divergence_engine",
-        "vwap_bands_engine"
-      ]
+      "status": "complete",
+      "automationComplete": 33,
+      "dataCollectionComplete": 38,
+      "auditabilityComplete": 38,
+      "failureVisibilityComplete": 38,
+      "authorityCorrect": 38,
+      "learningActive": 7,
+      "incompleteSubsystems": []
     },
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 26,
+        "production_autonomous": 31,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -987,14 +961,17 @@
         "compliance_governance",
         "confluence_decay_engine",
         "confluence_score_engine",
+        "consistency_tracker_service",
         "context_execution",
         "critic_evolution",
         "deepar_regime",
         "frankenstein_randomization_gate",
         "htf_narrative_engine",
+        "institutional_regime_classifier",
         "liquidity_map_service",
         "market_internals_service",
         "naked_poc_persistence_bridge",
+        "narrative_state_machine",
         "observability_reliability",
         "operator_absent_autopilot",
         "parameter_robustness_gate",
@@ -1004,13 +981,15 @@
         "quantum_experimental",
         "research_orchestration",
         "signal_correlation_gate",
+        "smt_divergence_engine",
         "strategy_lifecycle",
+        "trade_critique_service",
+        "vwap_bands_engine",
         "workflow_orchestration"
       ],
       "blockedSubsystems": [
-        "production_hardening",
-        "smt_divergence_engine",
-        "vwap_bands_engine"
+        "pattern_aggregator_service",
+        "production_hardening"
       ],
       "experimentalSubsystems": [
         "a_plus_market_auditor",
@@ -1032,19 +1011,8 @@
       "staleWorkflowBlockers": [],
       "runtimeControlBlockers": [],
       "blockers": [
+        "pattern_aggregator_service:manual_gate:kill_switch",
         "production_hardening:manual_gate:operator-halt-only",
-        "smt_divergence_engine:missing-audit-actions",
-        "smt_divergence_engine:missing-audit-tables",
-        "smt_divergence_engine:missing-failure-visibility",
-        "smt_divergence_engine:missing-freshness-signals",
-        "smt_divergence_engine:missing-runtime-evidence",
-        "smt_divergence_engine:missing-telemetry-sources",
-        "vwap_bands_engine:missing-audit-actions",
-        "vwap_bands_engine:missing-audit-tables",
-        "vwap_bands_engine:missing-failure-visibility",
-        "vwap_bands_engine:missing-freshness-signals",
-        "vwap_bands_engine:missing-runtime-evidence",
-        "vwap_bands_engine:missing-telemetry-sources",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -1060,22 +1028,11 @@
       "blockers": [
         "a_plus_market_auditor:experimental_governance",
         "cloud_qmc_ising:experimental_governance",
+        "pattern_aggregator_service:manual_gate:kill_switch",
         "production_hardening:manual_gate:operator-halt-only",
         "prop_firm_survival_twin:experimental_governance",
         "quantum_adversarial_stress:experimental_governance",
-        "smt_divergence_engine:missing-audit-actions",
-        "smt_divergence_engine:missing-audit-tables",
-        "smt_divergence_engine:missing-failure-visibility",
-        "smt_divergence_engine:missing-freshness-signals",
-        "smt_divergence_engine:missing-runtime-evidence",
-        "smt_divergence_engine:missing-telemetry-sources",
         "synthetic_black_swan_survival:experimental_governance",
-        "vwap_bands_engine:missing-audit-actions",
-        "vwap_bands_engine:missing-audit-tables",
-        "vwap_bands_engine:missing-failure-visibility",
-        "vwap_bands_engine:missing-freshness-signals",
-        "vwap_bands_engine:missing-runtime-evidence",
-        "vwap_bands_engine:missing-telemetry-sources",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -1088,12 +1045,11 @@
       "launchBlockedSubsystems": [
         "a_plus_market_auditor",
         "cloud_qmc_ising",
+        "pattern_aggregator_service",
         "production_hardening",
         "prop_firm_survival_twin",
         "quantum_adversarial_stress",
-        "smt_divergence_engine",
-        "synthetic_black_swan_survival",
-        "vwap_bands_engine"
+        "synthetic_black_swan_survival"
       ],
       "inactiveByDesignSubsystems": [],
       "collectingOnlySubsystems": [],
@@ -1840,6 +1796,95 @@
         "coverageGaps": []
       },
       {
+        "id": "consistency_tracker_service",
+        "domain": "compliance",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "critical",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "/api/consistency",
+          "audit_log:consistency.40pct_warned",
+          "audit_log:consistency.50pct_blocked",
+          "audit_log:consistency.gate_cleared:per-entry-eval",
+          "consistency.40pct_warned",
+          "consistency.50pct_blocked",
+          "consistency.false_positive_suspected",
+          "consistency.gate_cleared",
+          "scheduler:consistency-tracker-daily-digest:21,22-utc"
+        ],
+        "dataCollectionCoverage": [
+          "broker_accounts",
+          "paper_positions"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/consistency",
+          "audit_log:consistency.40pct_warned",
+          "audit_log:consistency.50pct_blocked",
+          "audit_log:consistency.gate_cleared:per-entry-eval",
+          "consistency.40pct_warned",
+          "consistency.50pct_blocked",
+          "consistency.false_positive_suspected",
+          "consistency.gate_cleared",
+          "scheduler:consistency-tracker-daily-digest:21,22-utc",
+          "wave26-consistency-tracker.test.ts"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/consistency"
+        ],
+        "schedulerJobs": [
+          "consistency-tracker-daily-digest"
+        ],
+        "healthCheck": "/api/health",
+        "freshnessSignals": [
+          "audit_log:consistency.gate_cleared:per-entry-eval",
+          "scheduler:consistency-tracker-daily-digest:21,22-utc"
+        ],
+        "evidenceQueries": [
+          "wave26-consistency-tracker.test.ts"
+        ],
+        "coverageGaps": []
+      },
+      {
         "id": "context_execution",
         "domain": "execution",
         "ownerSurface": "python-node",
@@ -2381,6 +2426,88 @@
         "coverageGaps": []
       },
       {
+        "id": "institutional_regime_classifier",
+        "domain": "context_engine",
+        "ownerSurface": "python-node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "critical",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log:bias_engine.regime_classified",
+          "audit_log:bias_engine.regime_classified:per-session",
+          "bias_engine.regime_classified"
+        ],
+        "dataCollectionCoverage": [
+          "atr_percentile",
+          "bias_state",
+          "daily_bars",
+          "htf_context",
+          "session_context",
+          "volume_ratio"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:bias_engine.regime_classified",
+          "audit_log:bias_engine.regime_classified:per-session",
+          "bias_engine.regime_classified",
+          "src/engine/tests/test_playbook_router_5regimes.py",
+          "src/engine/tests/test_regime_5way.py",
+          "wave25-regime-evidence-persistence.test.ts"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "bias-engine-session-start",
+          "bias-engine-10am-refresh"
+        ],
+        "healthCheck": "/api/health",
+        "freshnessSignals": [
+          "audit_log:bias_engine.regime_classified:per-session"
+        ],
+        "evidenceQueries": [
+          "src/engine/tests/test_regime_5way.py",
+          "src/engine/tests/test_playbook_router_5regimes.py",
+          "wave25-regime-evidence-persistence.test.ts"
+        ],
+        "coverageGaps": []
+      },
+      {
         "id": "liquidity_map_service",
         "domain": "signal_generation",
         "ownerSurface": "node",
@@ -2621,6 +2748,85 @@
         "evidenceQueries": [
           "test_extract_naked_pocs.py",
           "wave25-naked-pocs-batch-endpoint.test.ts"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "narrative_state_machine",
+        "domain": "context_engine",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log:narrative.phase_transition",
+          "audit_log:narrative.phase_transition:on-change",
+          "narrative.phase_transition",
+          "scheduler:narrative-state-tracker:5min-rth"
+        ],
+        "dataCollectionCoverage": [
+          "bias_state",
+          "current_bar",
+          "htf_narrative",
+          "liquidity_levels",
+          "structure_state"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:narrative.phase_transition",
+          "audit_log:narrative.phase_transition:on-change",
+          "narrative.phase_transition",
+          "scheduler:narrative-state-tracker:5min-rth",
+          "wave25-narrative-state.test.ts"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "narrative-state-tracker"
+        ],
+        "healthCheck": "/api/health",
+        "freshnessSignals": [
+          "audit_log:narrative.phase_transition:on-change",
+          "scheduler:narrative-state-tracker:5min-rth"
+        ],
+        "evidenceQueries": [
+          "wave25-narrative-state.test.ts"
         ],
         "coverageGaps": []
       },
@@ -2966,6 +3172,98 @@
         "evidenceQueries": [
           "b15-battery-coverage",
           "b15-deployed-passing-rate"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "pattern_aggregator_service",
+        "domain": "post_trade_learning",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "kill_switch",
+        "selfEvolving": true,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "strategy_proposer_prompt_appendix",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "manual_gate:kill_switch"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "learning loop affects downstream behavior",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log:pattern_aggregator.failed",
+          "audit_log:pattern_aggregator.no_change:per-run",
+          "audit_log:pattern_evolution.applied",
+          "auto_patch.loop_halted_skip",
+          "pattern_aggregator.failed",
+          "pattern_aggregator.insufficient_samples",
+          "pattern_aggregator.no_change",
+          "pattern_evolution.applied",
+          "scheduler:pattern-aggregator:4h"
+        ],
+        "dataCollectionCoverage": [
+          "prompt_versions",
+          "trade_critique"
+        ],
+        "closedLoopStatus": "learning_active",
+        "learningMode": "active_learning",
+        "operatingClass": "adaptive",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "active",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [
+          "manual_gate:kill_switch"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "learning loop remains bounded to pre-deploy authority",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:pattern_aggregator.failed",
+          "audit_log:pattern_aggregator.no_change:per-run",
+          "audit_log:pattern_evolution.applied",
+          "auto_patch.loop_halted_skip",
+          "pattern_aggregator.failed",
+          "pattern_aggregator.insufficient_samples",
+          "pattern_aggregator.no_change",
+          "pattern_evolution.applied",
+          "scheduler:pattern-aggregator:4h",
+          "wave26-pattern-aggregator.test.ts"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "pattern-aggregator"
+        ],
+        "healthCheck": "/api/health",
+        "freshnessSignals": [
+          "scheduler:pattern-aggregator:4h",
+          "audit_log:pattern_aggregator.no_change:per-run"
+        ],
+        "evidenceQueries": [
+          "wave26-pattern-aggregator.test.ts"
         ],
         "coverageGaps": []
       },
@@ -3857,7 +4155,7 @@
         "manualGate": "none",
         "selfEvolving": false,
         "proofMode": "active-runtime",
-        "proofStatus": "drifted",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -3872,7 +4170,11 @@
           "freshness signals available",
           "runtime evidence persisted"
         ],
-        "runtimeEvidence": [],
+        "runtimeEvidence": [
+          "a_plus_factor_evaluated",
+          "audit_log:a_plus_factor_evaluated:per-bar",
+          "audit_log:a_plus_factor_evaluated:smt_confirmation"
+        ],
         "dataCollectionCoverage": [
           "ratio_adj_parquet_bars_es",
           "ratio_adj_parquet_bars_nq"
@@ -3880,22 +4182,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
-        "auditabilityStatus": "incomplete",
-        "failureVisibilityStatus": "incomplete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "missing-audit-actions",
-          "missing-audit-tables",
-          "missing-failure-visibility",
-          "missing-freshness-signals",
-          "missing-runtime-evidence",
-          "missing-telemetry-sources"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -3903,24 +4198,22 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "a_plus_factor_evaluated",
+          "audit_log:a_plus_factor_evaluated:per-bar",
+          "audit_log:a_plus_factor_evaluated:smt_confirmation",
           "test_smt_divergence.py"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [],
         "schedulerJobs": [],
         "healthCheck": "/api/health",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:a_plus_factor_evaluated:per-bar"
+        ],
         "evidenceQueries": [
           "test_smt_divergence.py"
         ],
-        "coverageGaps": [
-          "missing-audit-actions",
-          "missing-audit-tables",
-          "missing-failure-visibility",
-          "missing-freshness-signals",
-          "missing-runtime-evidence",
-          "missing-telemetry-sources"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "strategy_lifecycle",
@@ -4135,6 +4428,93 @@
         "coverageGaps": []
       },
       {
+        "id": "trade_critique_service",
+        "domain": "post_trade_learning",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_and_strategy_proposer",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "/api/trade-journal/stats",
+          "audit_log:trade_critique.completed",
+          "audit_log:trade_critique.completed:per-trade-close",
+          "audit_log:trade_critique.failed",
+          "trade_critique.completed",
+          "trade_critique.consecutive_failure_alert",
+          "trade_critique.failed",
+          "trade_critique.idempotent_skip"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "bias_state",
+          "paper_positions",
+          "trade_critique"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/trade-journal/stats",
+          "audit_log:trade_critique.completed",
+          "audit_log:trade_critique.completed:per-trade-close",
+          "audit_log:trade_critique.failed",
+          "trade_critique.completed",
+          "trade_critique.consecutive_failure_alert",
+          "trade_critique.failed",
+          "trade_critique.idempotent_skip",
+          "wave26-trade-critique-service.test.ts",
+          "wave26-trade-journal-route.test.ts"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/trade-journal"
+        ],
+        "schedulerJobs": [],
+        "healthCheck": "/api/health",
+        "freshnessSignals": [
+          "audit_log:trade_critique.completed:per-trade-close"
+        ],
+        "evidenceQueries": [
+          "wave26-trade-critique-service.test.ts",
+          "wave26-trade-journal-route.test.ts"
+        ],
+        "coverageGaps": []
+      },
+      {
         "id": "vwap_bands_engine",
         "domain": "indicator_engine",
         "ownerSurface": "python",
@@ -4144,7 +4524,7 @@
         "manualGate": "none",
         "selfEvolving": false,
         "proofMode": "active-runtime",
-        "proofStatus": "drifted",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -4159,29 +4539,26 @@
           "freshness signals available",
           "runtime evidence persisted"
         ],
-        "runtimeEvidence": [],
+        "runtimeEvidence": [
+          "a_plus_factor_evaluated",
+          "audit_log:a_plus_factor_evaluated:per-bar",
+          "audit_log:a_plus_factor_evaluated:vwap_alignment"
+        ],
         "dataCollectionCoverage": [
           "ratio_adj_parquet_bars"
         ],
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
-        "auditabilityStatus": "incomplete",
-        "failureVisibilityStatus": "incomplete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "missing-audit-actions",
-          "missing-audit-tables",
-          "missing-failure-visibility",
-          "missing-freshness-signals",
-          "missing-runtime-evidence",
-          "missing-telemetry-sources"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -4189,6 +4566,9 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "a_plus_factor_evaluated",
+          "audit_log:a_plus_factor_evaluated:per-bar",
+          "audit_log:a_plus_factor_evaluated:vwap_alignment",
           "test_anchored_vwap.py",
           "test_archetype_vwap_band_reject.py",
           "test_vwap_bands.py"
@@ -4197,20 +4577,15 @@
         "routes": [],
         "schedulerJobs": [],
         "healthCheck": "/api/health",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:a_plus_factor_evaluated:per-bar"
+        ],
         "evidenceQueries": [
           "test_vwap_bands.py",
           "test_anchored_vwap.py",
           "test_archetype_vwap_band_reject.py"
         ],
-        "coverageGaps": [
-          "missing-audit-actions",
-          "missing-audit-tables",
-          "missing-failure-visibility",
-          "missing-freshness-signals",
-          "missing-runtime-evidence",
-          "missing-telemetry-sources"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "workflow_orchestration",
@@ -5369,6 +5744,95 @@
       "coverageGaps": []
     },
     {
+      "id": "consistency_tracker_service",
+      "domain": "compliance",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "critical",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "/api/consistency",
+        "audit_log:consistency.40pct_warned",
+        "audit_log:consistency.50pct_blocked",
+        "audit_log:consistency.gate_cleared:per-entry-eval",
+        "consistency.40pct_warned",
+        "consistency.50pct_blocked",
+        "consistency.false_positive_suspected",
+        "consistency.gate_cleared",
+        "scheduler:consistency-tracker-daily-digest:21,22-utc"
+      ],
+      "dataCollectionCoverage": [
+        "broker_accounts",
+        "paper_positions"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/consistency",
+        "audit_log:consistency.40pct_warned",
+        "audit_log:consistency.50pct_blocked",
+        "audit_log:consistency.gate_cleared:per-entry-eval",
+        "consistency.40pct_warned",
+        "consistency.50pct_blocked",
+        "consistency.false_positive_suspected",
+        "consistency.gate_cleared",
+        "scheduler:consistency-tracker-daily-digest:21,22-utc",
+        "wave26-consistency-tracker.test.ts"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/consistency"
+      ],
+      "schedulerJobs": [
+        "consistency-tracker-daily-digest"
+      ],
+      "healthCheck": "/api/health",
+      "freshnessSignals": [
+        "audit_log:consistency.gate_cleared:per-entry-eval",
+        "scheduler:consistency-tracker-daily-digest:21,22-utc"
+      ],
+      "evidenceQueries": [
+        "wave26-consistency-tracker.test.ts"
+      ],
+      "coverageGaps": []
+    },
+    {
       "id": "context_execution",
       "domain": "execution",
       "ownerSurface": "python-node",
@@ -5910,6 +6374,88 @@
       "coverageGaps": []
     },
     {
+      "id": "institutional_regime_classifier",
+      "domain": "context_engine",
+      "ownerSurface": "python-node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "critical",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log:bias_engine.regime_classified",
+        "audit_log:bias_engine.regime_classified:per-session",
+        "bias_engine.regime_classified"
+      ],
+      "dataCollectionCoverage": [
+        "atr_percentile",
+        "bias_state",
+        "daily_bars",
+        "htf_context",
+        "session_context",
+        "volume_ratio"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:bias_engine.regime_classified",
+        "audit_log:bias_engine.regime_classified:per-session",
+        "bias_engine.regime_classified",
+        "src/engine/tests/test_playbook_router_5regimes.py",
+        "src/engine/tests/test_regime_5way.py",
+        "wave25-regime-evidence-persistence.test.ts"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "bias-engine-session-start",
+        "bias-engine-10am-refresh"
+      ],
+      "healthCheck": "/api/health",
+      "freshnessSignals": [
+        "audit_log:bias_engine.regime_classified:per-session"
+      ],
+      "evidenceQueries": [
+        "src/engine/tests/test_regime_5way.py",
+        "src/engine/tests/test_playbook_router_5regimes.py",
+        "wave25-regime-evidence-persistence.test.ts"
+      ],
+      "coverageGaps": []
+    },
+    {
       "id": "liquidity_map_service",
       "domain": "signal_generation",
       "ownerSurface": "node",
@@ -6150,6 +6696,85 @@
       "evidenceQueries": [
         "test_extract_naked_pocs.py",
         "wave25-naked-pocs-batch-endpoint.test.ts"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "narrative_state_machine",
+      "domain": "context_engine",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log:narrative.phase_transition",
+        "audit_log:narrative.phase_transition:on-change",
+        "narrative.phase_transition",
+        "scheduler:narrative-state-tracker:5min-rth"
+      ],
+      "dataCollectionCoverage": [
+        "bias_state",
+        "current_bar",
+        "htf_narrative",
+        "liquidity_levels",
+        "structure_state"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:narrative.phase_transition",
+        "audit_log:narrative.phase_transition:on-change",
+        "narrative.phase_transition",
+        "scheduler:narrative-state-tracker:5min-rth",
+        "wave25-narrative-state.test.ts"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "narrative-state-tracker"
+      ],
+      "healthCheck": "/api/health",
+      "freshnessSignals": [
+        "audit_log:narrative.phase_transition:on-change",
+        "scheduler:narrative-state-tracker:5min-rth"
+      ],
+      "evidenceQueries": [
+        "wave25-narrative-state.test.ts"
       ],
       "coverageGaps": []
     },
@@ -6495,6 +7120,98 @@
       "evidenceQueries": [
         "b15-battery-coverage",
         "b15-deployed-passing-rate"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "pattern_aggregator_service",
+      "domain": "post_trade_learning",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "kill_switch",
+      "selfEvolving": true,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "strategy_proposer_prompt_appendix",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "manual_gate:kill_switch"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "learning loop affects downstream behavior",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log:pattern_aggregator.failed",
+        "audit_log:pattern_aggregator.no_change:per-run",
+        "audit_log:pattern_evolution.applied",
+        "auto_patch.loop_halted_skip",
+        "pattern_aggregator.failed",
+        "pattern_aggregator.insufficient_samples",
+        "pattern_aggregator.no_change",
+        "pattern_evolution.applied",
+        "scheduler:pattern-aggregator:4h"
+      ],
+      "dataCollectionCoverage": [
+        "prompt_versions",
+        "trade_critique"
+      ],
+      "closedLoopStatus": "learning_active",
+      "learningMode": "active_learning",
+      "operatingClass": "adaptive",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "active",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [
+        "manual_gate:kill_switch"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "learning loop remains bounded to pre-deploy authority",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:pattern_aggregator.failed",
+        "audit_log:pattern_aggregator.no_change:per-run",
+        "audit_log:pattern_evolution.applied",
+        "auto_patch.loop_halted_skip",
+        "pattern_aggregator.failed",
+        "pattern_aggregator.insufficient_samples",
+        "pattern_aggregator.no_change",
+        "pattern_evolution.applied",
+        "scheduler:pattern-aggregator:4h",
+        "wave26-pattern-aggregator.test.ts"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "pattern-aggregator"
+      ],
+      "healthCheck": "/api/health",
+      "freshnessSignals": [
+        "scheduler:pattern-aggregator:4h",
+        "audit_log:pattern_aggregator.no_change:per-run"
+      ],
+      "evidenceQueries": [
+        "wave26-pattern-aggregator.test.ts"
       ],
       "coverageGaps": []
     },
@@ -7386,7 +8103,7 @@
       "manualGate": "none",
       "selfEvolving": false,
       "proofMode": "active-runtime",
-      "proofStatus": "drifted",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -7401,7 +8118,11 @@
         "freshness signals available",
         "runtime evidence persisted"
       ],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "a_plus_factor_evaluated",
+        "audit_log:a_plus_factor_evaluated:per-bar",
+        "audit_log:a_plus_factor_evaluated:smt_confirmation"
+      ],
       "dataCollectionCoverage": [
         "ratio_adj_parquet_bars_es",
         "ratio_adj_parquet_bars_nq"
@@ -7409,22 +8130,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
-      "auditabilityStatus": "incomplete",
-      "failureVisibilityStatus": "incomplete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-failure-visibility",
-        "missing-freshness-signals",
-        "missing-runtime-evidence",
-        "missing-telemetry-sources"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -7432,24 +8146,22 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "a_plus_factor_evaluated",
+        "audit_log:a_plus_factor_evaluated:per-bar",
+        "audit_log:a_plus_factor_evaluated:smt_confirmation",
         "test_smt_divergence.py"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [],
       "schedulerJobs": [],
       "healthCheck": "/api/health",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:a_plus_factor_evaluated:per-bar"
+      ],
       "evidenceQueries": [
         "test_smt_divergence.py"
       ],
-      "coverageGaps": [
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-failure-visibility",
-        "missing-freshness-signals",
-        "missing-runtime-evidence",
-        "missing-telemetry-sources"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "strategy_lifecycle",
@@ -7664,6 +8376,93 @@
       "coverageGaps": []
     },
     {
+      "id": "trade_critique_service",
+      "domain": "post_trade_learning",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_and_strategy_proposer",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "/api/trade-journal/stats",
+        "audit_log:trade_critique.completed",
+        "audit_log:trade_critique.completed:per-trade-close",
+        "audit_log:trade_critique.failed",
+        "trade_critique.completed",
+        "trade_critique.consecutive_failure_alert",
+        "trade_critique.failed",
+        "trade_critique.idempotent_skip"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "bias_state",
+        "paper_positions",
+        "trade_critique"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/trade-journal/stats",
+        "audit_log:trade_critique.completed",
+        "audit_log:trade_critique.completed:per-trade-close",
+        "audit_log:trade_critique.failed",
+        "trade_critique.completed",
+        "trade_critique.consecutive_failure_alert",
+        "trade_critique.failed",
+        "trade_critique.idempotent_skip",
+        "wave26-trade-critique-service.test.ts",
+        "wave26-trade-journal-route.test.ts"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/trade-journal"
+      ],
+      "schedulerJobs": [],
+      "healthCheck": "/api/health",
+      "freshnessSignals": [
+        "audit_log:trade_critique.completed:per-trade-close"
+      ],
+      "evidenceQueries": [
+        "wave26-trade-critique-service.test.ts",
+        "wave26-trade-journal-route.test.ts"
+      ],
+      "coverageGaps": []
+    },
+    {
       "id": "vwap_bands_engine",
       "domain": "indicator_engine",
       "ownerSurface": "python",
@@ -7673,7 +8472,7 @@
       "manualGate": "none",
       "selfEvolving": false,
       "proofMode": "active-runtime",
-      "proofStatus": "drifted",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -7688,29 +8487,26 @@
         "freshness signals available",
         "runtime evidence persisted"
       ],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "a_plus_factor_evaluated",
+        "audit_log:a_plus_factor_evaluated:per-bar",
+        "audit_log:a_plus_factor_evaluated:vwap_alignment"
+      ],
       "dataCollectionCoverage": [
         "ratio_adj_parquet_bars"
       ],
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
-      "auditabilityStatus": "incomplete",
-      "failureVisibilityStatus": "incomplete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-failure-visibility",
-        "missing-freshness-signals",
-        "missing-runtime-evidence",
-        "missing-telemetry-sources"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -7718,6 +8514,9 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "a_plus_factor_evaluated",
+        "audit_log:a_plus_factor_evaluated:per-bar",
+        "audit_log:a_plus_factor_evaluated:vwap_alignment",
         "test_anchored_vwap.py",
         "test_archetype_vwap_band_reject.py",
         "test_vwap_bands.py"
@@ -7726,20 +8525,15 @@
       "routes": [],
       "schedulerJobs": [],
       "healthCheck": "/api/health",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:a_plus_factor_evaluated:per-bar"
+      ],
       "evidenceQueries": [
         "test_vwap_bands.py",
         "test_anchored_vwap.py",
         "test_archetype_vwap_band_reject.py"
       ],
-      "coverageGaps": [
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-failure-visibility",
-        "missing-freshness-signals",
-        "missing-runtime-evidence",
-        "missing-telemetry-sources"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "workflow_orchestration",
@@ -8159,6 +8953,7 @@
     }
   ],
   "manualGates": [
+    "kill_switch",
     "operator-halt-only",
     "tradingview_deploy"
   ]

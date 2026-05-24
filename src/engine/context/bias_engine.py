@@ -11,9 +11,20 @@ Synthetic Order Flow (Wave F2):
     real feed is wired, swap the four helper functions and the output dict
     shape stays identical. Downstream consumers (playbook router, eligibility
     gate) require no changes.
+
+W25.10 — 5-Regime Institutional Expansion:
+    Adds 4 new institutional regime labels computed BEFORE the existing 3-regime
+    logic. Classification arms (priority order):
+      HIGH_VOL_MACRO  — post-event spike (ATR > 90th pct AND macro event day)
+      LOW_LIQ_CHOP    — between sessions / holiday (volume ratio < 0.3 OR Globex/holiday)
+      EXPANSION       — displacement regime (ATR > 75th pct AND price move > 2.5×ATR)
+      COMPRESSION     — breakout prep (ATR < 30th pct AND bar range < 0.8×ATR)
+    The existing TRENDING_UP / TRENDING_DOWN / RANGE_BOUND / NO_TRADE arms are
+    unchanged. RegimeEvidence captures the raw metrics for forensic replay.
 """
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -22,6 +33,288 @@ import polars as pl
 
 from src.engine.context.htf_context import HTFContext
 from src.engine.context.session_context import SessionContext
+
+
+# ---------------------------------------------------------------------------
+# W25.10 — Institutional regime vocabulary
+# ---------------------------------------------------------------------------
+
+#: All valid regime tokens recognised by the system.
+#: Ordered: institutional early-exits first, then classic 3-regime, then sentinel.
+REGIME_VALUES = [
+    "TRENDING_UP",
+    "TRENDING_DOWN",
+    "RANGE_BOUND",
+    "EXPANSION",
+    "COMPRESSION",
+    "HIGH_VOL_MACRO",
+    "LOW_LIQ_CHOP",
+    "NO_TRADE",
+]
+
+
+@dataclass
+class RegimeEvidence:
+    """Raw metrics that drove the institutional regime classification.
+
+    Persisted to bias_state.regime_evidence JSONB (migration 0142).
+    All fields are primitives so dataclasses.asdict() round-trips cleanly
+    through JSON without custom serialisers.
+    """
+    atr_percentile_vs_30d: float        # [0,100] — ATR rank vs 30-bar lookback
+    volume_ratio_vs_session_avg: float  # current-bar volume / session-avg volume
+    range_size_vs_atr: float            # bar range / current ATR (tight if < 0.8)
+    is_macro_event_day: bool            # from skipDecisions / event_active flag
+    session_health: str                 # "rth_open"|"rth_lunch"|"rth_close"|"globex"|"holiday"
+    primary_driver: str                 # which metric triggered the classification
+
+
+def _compute_session_health(session: SessionContext) -> str:
+    """Derive session_health label from SessionContext.
+
+    Returns one of: "rth_open", "rth_lunch", "rth_close", "globex", "holiday".
+    """
+    cs = getattr(session, "current_session", "rth")
+    # Globex / overnight session — explicit label
+    if cs in ("globex", "overnight", "asia", "london_pre"):
+        return "globex"
+    # Holiday is surfaced when session = "holiday" or a dedicated flag
+    if cs == "holiday":
+        return "holiday"
+    # Within RTH — no sub-phase granularity from SessionContext yet; default open
+    return "rth_open"
+
+
+def _compute_atr_percentile_from_bars(
+    bars: Optional[pl.DataFrame],
+    lookback: int = 30,
+) -> Optional[float]:
+    """Compute ATR percentile of the last bar vs the prior `lookback` bars.
+
+    Returns None when bars is insufficient. Uses a simple range proxy
+    (high - low) as the per-bar ATR approximation for speed; callers that
+    have a proper ATR column should pass htf.atr_percentile directly instead.
+    """
+    if bars is None or len(bars) < lookback + 1:
+        return None
+    required_cols = {"high", "low"}
+    if not required_cols.issubset(set(bars.columns)):
+        return None
+
+    high = bars["high"].cast(pl.Float64).to_numpy()
+    low = bars["low"].cast(pl.Float64).to_numpy()
+    bar_ranges = high - low
+
+    last_range = bar_ranges[-1]
+    prior_ranges = bar_ranges[-(lookback + 1):-1]
+    if prior_ranges.max() == 0:
+        return 50.0  # degenerate; return median
+    pct = float(np.sum(prior_ranges <= last_range) / len(prior_ranges) * 100.0)
+    return round(pct, 1)
+
+
+def _compute_volume_ratio(
+    bars: Optional[pl.DataFrame],
+    lookback: int = 30,
+) -> Optional[float]:
+    """Compute ratio of last-bar volume to rolling mean of prior `lookback` bars.
+
+    Returns None when bars is insufficient or volume column absent.
+    """
+    if bars is None or len(bars) < lookback + 1:
+        return None
+    if "volume" not in bars.columns:
+        return None
+
+    vol = bars["volume"].cast(pl.Float64).to_numpy()
+    last_vol = vol[-1]
+    prior_vol = vol[-(lookback + 1):-1]
+    avg = float(np.mean(prior_vol))
+    if avg <= 0:
+        return 1.0
+    return round(float(last_vol / avg), 4)
+
+
+def _compute_range_vs_atr(
+    bars: Optional[pl.DataFrame],
+    atr_value: Optional[float] = None,
+) -> Optional[float]:
+    """Compute ratio of last-bar range to a reference ATR value.
+
+    If atr_value is provided (from htf.atr_percentile context), use it.
+    Otherwise compute a simple 14-bar rolling mean range as ATR proxy.
+    Returns None when bars insufficient.
+    """
+    if bars is None or len(bars) < 2:
+        return None
+    required_cols = {"high", "low"}
+    if not required_cols.issubset(set(bars.columns)):
+        return None
+
+    high = bars["high"].cast(pl.Float64).to_numpy()
+    low = bars["low"].cast(pl.Float64).to_numpy()
+    bar_ranges = high - low
+    last_range = bar_ranges[-1]
+
+    if atr_value is not None and atr_value > 0:
+        ref_atr = atr_value
+    else:
+        window = min(14, len(bar_ranges) - 1)
+        prior = bar_ranges[-window - 1:-1]
+        ref_atr = float(np.mean(prior)) if len(prior) > 0 else 0.0
+
+    if ref_atr <= 0:
+        return None
+    return round(float(last_range / ref_atr), 4)
+
+
+def _compute_price_displacement(
+    bars: Optional[pl.DataFrame],
+    lookback_bars: int = 5,
+    atr_value: Optional[float] = None,
+) -> Optional[float]:
+    """Compute |close[-1] - close[-lookback]| / ATR as displacement multiple.
+
+    Used to detect EXPANSION regime (displacement > 2.5×ATR).
+    Returns None when bars insufficient.
+    """
+    if bars is None or len(bars) < lookback_bars + 1:
+        return None
+    if "close" not in bars.columns:
+        return None
+
+    close = bars["close"].cast(pl.Float64).to_numpy()
+    price_move = abs(float(close[-1]) - float(close[-lookback_bars - 1]))
+
+    if atr_value is not None and atr_value > 0:
+        ref_atr = atr_value
+    else:
+        if not {"high", "low"}.issubset(set(bars.columns)):
+            return None
+        high = bars["high"].cast(pl.Float64).to_numpy()
+        low = bars["low"].cast(pl.Float64).to_numpy()
+        bar_ranges = high - low
+        window = min(14, len(bar_ranges) - 1)
+        prior = bar_ranges[-window - 1:-1]
+        ref_atr = float(np.mean(prior)) if len(prior) > 0 else 0.0
+
+    if ref_atr <= 0:
+        return None
+    return round(float(price_move / ref_atr), 4)
+
+
+def classify_institutional_regime(
+    htf: HTFContext,
+    session: SessionContext,
+    event_active: bool = False,
+    bars: Optional[pl.DataFrame] = None,
+    volume_ratio_override: Optional[float] = None,
+) -> tuple[str, RegimeEvidence]:
+    """Classify current bar into one of the 8 institutional regime labels.
+
+    Evaluation order (first match wins):
+      1. HIGH_VOL_MACRO  — ATR > 90th pct AND macro event day
+      2. LOW_LIQ_CHOP    — volume ratio < 0.3 OR Globex/holiday session
+      3. EXPANSION       — ATR > 75th pct AND price displacement > 2.5×ATR
+      4. COMPRESSION     — ATR < 30th pct AND range < 0.8×ATR
+      5. (fall through to existing TRENDING_UP/DOWN/RANGE_BOUND/NO_TRADE logic
+         in compute_bias() — this function does NOT decide those labels)
+
+    Args:
+        htf:                    HTFContext for ATR percentile.
+        session:                SessionContext for session health and or_broken.
+        event_active:           True when a macro event (FOMC/CPI/NFP) is active.
+        bars:                   Optional OHLCV DataFrame for volume + range calcs.
+                                When None, evidence fields fall back to defaults.
+        volume_ratio_override:  Pre-computed volume ratio (skips bar calculation).
+                                Used by callers that already computed this.
+
+    Returns:
+        (regime_label, RegimeEvidence) — or ("_PASS_THROUGH", evidence) when
+        none of the 4 institutional arms fire (caller must apply classic logic).
+    """
+    atr_pct: float = float(htf.atr_percentile)
+    session_health = _compute_session_health(session)
+
+    # Volume ratio — prefer override, then compute from bars, then default 1.0
+    if volume_ratio_override is not None:
+        vol_ratio: float = float(volume_ratio_override)
+    else:
+        computed_vol_ratio = _compute_volume_ratio(bars, lookback=30)
+        vol_ratio = computed_vol_ratio if computed_vol_ratio is not None else 1.0
+
+    # Range vs ATR
+    range_vs_atr = _compute_range_vs_atr(bars)
+    range_vs_atr_val: float = range_vs_atr if range_vs_atr is not None else 1.0
+
+    # Price displacement (for EXPANSION arm)
+    displacement = _compute_price_displacement(bars, lookback_bars=5)
+    displacement_val: float = displacement if displacement is not None else 0.0
+
+    # ── Arm 1: HIGH_VOL_MACRO ────────────────────────────────────────────────
+    # ATR in the top decile AND today is a macro event day (FOMC/CPI/NFP/GDP)
+    if atr_pct > 90.0 and event_active:
+        evidence = RegimeEvidence(
+            atr_percentile_vs_30d=atr_pct,
+            volume_ratio_vs_session_avg=vol_ratio,
+            range_size_vs_atr=range_vs_atr_val,
+            is_macro_event_day=True,
+            session_health=session_health,
+            primary_driver="atr_pct>90+macro_event",
+        )
+        return "HIGH_VOL_MACRO", evidence
+
+    # ── Arm 2: LOW_LIQ_CHOP ─────────────────────────────────────────────────
+    # Overnight/Globex session OR holiday window OR very thin volume
+    is_low_liq_session = session_health in ("globex", "holiday")
+    if is_low_liq_session or vol_ratio < 0.30:
+        primary = "globex_or_holiday_session" if is_low_liq_session else "volume_ratio<0.30"
+        evidence = RegimeEvidence(
+            atr_percentile_vs_30d=atr_pct,
+            volume_ratio_vs_session_avg=vol_ratio,
+            range_size_vs_atr=range_vs_atr_val,
+            is_macro_event_day=event_active,
+            session_health=session_health,
+            primary_driver=primary,
+        )
+        return "LOW_LIQ_CHOP", evidence
+
+    # ── Arm 3: EXPANSION ────────────────────────────────────────────────────
+    # ATR above 75th percentile AND strong directional displacement
+    if atr_pct > 75.0 and displacement_val > 2.5:
+        evidence = RegimeEvidence(
+            atr_percentile_vs_30d=atr_pct,
+            volume_ratio_vs_session_avg=vol_ratio,
+            range_size_vs_atr=range_vs_atr_val,
+            is_macro_event_day=event_active,
+            session_health=session_health,
+            primary_driver=f"atr_pct>75+displacement={displacement_val:.2f}x",
+        )
+        return "EXPANSION", evidence
+
+    # ── Arm 4: COMPRESSION ──────────────────────────────────────────────────
+    # ATR below 30th percentile AND bars are tight (range < 80% of ATR)
+    if atr_pct < 30.0 and range_vs_atr_val < 0.80:
+        evidence = RegimeEvidence(
+            atr_percentile_vs_30d=atr_pct,
+            volume_ratio_vs_session_avg=vol_ratio,
+            range_size_vs_atr=range_vs_atr_val,
+            is_macro_event_day=event_active,
+            session_health=session_health,
+            primary_driver=f"atr_pct<30+range_vs_atr={range_vs_atr_val:.2f}",
+        )
+        return "COMPRESSION", evidence
+
+    # ── Pass-through — classic TRENDING/RANGE_BOUND logic applies ───────────
+    evidence = RegimeEvidence(
+        atr_percentile_vs_30d=atr_pct,
+        volume_ratio_vs_session_avg=vol_ratio,
+        range_size_vs_atr=range_vs_atr_val,
+        is_macro_event_day=event_active,
+        session_health=session_health,
+        primary_driver="classic_logic",
+    )
+    return "_PASS_THROUGH", evidence
 
 
 BIAS_WEIGHTS = {
@@ -118,6 +411,15 @@ class DailyBiasState:
     # None when intraday_bars not provided (back-compat: all existing callers unaffected).
     # Serialised to bias_state.htf_narrative JSONB by bias-state-service.ts (migration 0137).
     htf_narrative: Optional["HtfNarrative"] = None
+    # W25.10 — Institutional regime label (one of REGIME_VALUES).
+    # "NO_TRADE" when bias is flat/blocked; "_PASS_THROUGH" is never stored —
+    # it is collapsed to the classic label derived from net_bias at assembly time.
+    # None when classify_institutional_regime() was not called (back-compat).
+    institutional_regime: Optional[str] = None
+    # W25.10 — Evidence dict that drove the institutional regime classification.
+    # Serialised to bias_state.regime_evidence JSONB (migration 0142).
+    # None for pre-Wave-25.10 rows.
+    regime_evidence: Optional["RegimeEvidence"] = None
 
 
 def _score_htf_trend(htf: HTFContext) -> int:
@@ -703,6 +1005,44 @@ def compute_bias(
     # when bars=None so existing callers see no behavior change.
     of_features = _compute_order_flow_features(bars, session)
 
+    # W25.10: Institutional regime classification — runs BEFORE playbook assignment.
+    # Fail-open: any exception falls back to None (never blocks compute_bias).
+    institutional_regime_label: Optional[str] = None
+    institutional_regime_evidence: Optional["RegimeEvidence"] = None
+    try:
+        raw_regime_label, raw_evidence = classify_institutional_regime(
+            htf=htf,
+            session=session,
+            event_active=event_active,
+            bars=bars,
+        )
+        institutional_regime_evidence = raw_evidence
+        if raw_regime_label == "_PASS_THROUGH":
+            # Derive institutional_regime from the classic playbook label
+            if no_trade_reasons:
+                institutional_regime_label = "NO_TRADE"
+            elif net_bias >= 15:
+                institutional_regime_label = "TRENDING_UP"
+            elif net_bias <= -15:
+                institutional_regime_label = "TRENDING_DOWN"
+            else:
+                institutional_regime_label = "RANGE_BOUND"
+        else:
+            institutional_regime_label = raw_regime_label
+            # HIGH_VOL_MACRO and LOW_LIQ_CHOP should force NO_TRADE playbook
+            # when they haven't already been forced above by no_trade_reasons.
+            if raw_regime_label in ("HIGH_VOL_MACRO", "LOW_LIQ_CHOP"):
+                if not no_trade_reasons:
+                    no_trade_reasons.append(
+                        f"Institutional regime {raw_regime_label} — no entries"
+                    )
+                # Reset playbook to NO_TRADE (may have been set above)
+                playbook = "NO_TRADE"
+    except Exception:  # noqa: BLE001
+        # Never let regime classification break compute_bias()
+        institutional_regime_label = None
+        institutional_regime_evidence = None
+
     # W25.5: HTF Narrative state (Asian/London/NY + dealing range quadrant).
     # Fail-open: if intraday_bars is None or compute throws → None.
     # Existing callers that don't pass intraday_bars see no behavior change.
@@ -790,6 +1130,8 @@ def compute_bias(
         range_bound_eligible=range_bound_eligible,
         structure_state=structure_state_result,
         htf_narrative=htf_narrative_result,
+        institutional_regime=institutional_regime_label,
+        regime_evidence=institutional_regime_evidence,
     )
 
     # Track 5: SHADOW write — fire-and-forget persistence of bias decision.

@@ -1,21 +1,10 @@
 {
-  "generatedAt": "2026-05-24T10:53:40.070Z",
+  "generatedAt": "2026-05-24T11:13:29.830Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
+    "pattern_aggregator_service:manual_gate:kill_switch",
     "production_hardening:manual_gate:operator-halt-only",
-    "smt_divergence_engine:missing-audit-actions",
-    "smt_divergence_engine:missing-audit-tables",
-    "smt_divergence_engine:missing-failure-visibility",
-    "smt_divergence_engine:missing-freshness-signals",
-    "smt_divergence_engine:missing-runtime-evidence",
-    "smt_divergence_engine:missing-telemetry-sources",
-    "vwap_bands_engine:missing-audit-actions",
-    "vwap_bands_engine:missing-audit-tables",
-    "vwap_bands_engine:missing-failure-visibility",
-    "vwap_bands_engine:missing-freshness-signals",
-    "vwap_bands_engine:missing-runtime-evidence",
-    "vwap_bands_engine:missing-telemetry-sources",
     "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
     "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
     "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -26,9 +15,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 33,
-    "ready": 23,
-    "blocked": 3,
+    "total": 38,
+    "ready": 29,
+    "blocked": 2,
     "manualGated": 2,
     "experimental": 5
   },
@@ -216,6 +205,29 @@
       ]
     },
     {
+      "id": "consistency_tracker_service",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "/api/consistency",
+        "audit_log:consistency.40pct_warned",
+        "audit_log:consistency.50pct_blocked",
+        "audit_log:consistency.gate_cleared:per-entry-eval",
+        "consistency.40pct_warned",
+        "consistency.50pct_blocked",
+        "consistency.false_positive_suspected",
+        "consistency.gate_cleared",
+        "scheduler:consistency-tracker-daily-digest:21,22-utc",
+        "wave26-consistency-tracker.test.ts"
+      ]
+    },
+    {
       "id": "context_execution",
       "status": "ready",
       "productionTargetState": "production_autonomous",
@@ -327,6 +339,25 @@
       ]
     },
     {
+      "id": "institutional_regime_classifier",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:bias_engine.regime_classified",
+        "audit_log:bias_engine.regime_classified:per-session",
+        "bias_engine.regime_classified",
+        "src/engine/tests/test_playbook_router_5regimes.py",
+        "src/engine/tests/test_regime_5way.py",
+        "wave25-regime-evidence-persistence.test.ts"
+      ]
+    },
+    {
       "id": "liquidity_map_service",
       "status": "ready",
       "productionTargetState": "production_autonomous",
@@ -383,6 +414,24 @@
         "liquidity_map.naked_pocs_batched",
         "test_extract_naked_pocs.py",
         "wave25-naked-pocs-batch-endpoint.test.ts"
+      ]
+    },
+    {
+      "id": "narrative_state_machine",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:narrative.phase_transition",
+        "audit_log:narrative.phase_transition:on-change",
+        "narrative.phase_transition",
+        "scheduler:narrative-state-tracker:5min-rth",
+        "wave25-narrative-state.test.ts"
       ]
     },
     {
@@ -471,6 +520,31 @@
         "b15.battery_failed",
         "backtests:b15_battery_recent",
         "lifecycle.gate_blocked_b15_robustness"
+      ]
+    },
+    {
+      "id": "pattern_aggregator_service",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "kill_switch",
+      "selfEvolving": true,
+      "learningMode": "active_learning",
+      "operatingClass": "adaptive",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "manual_gate:kill_switch"
+      ],
+      "requiredEvidence": [
+        "audit_log:pattern_aggregator.failed",
+        "audit_log:pattern_aggregator.no_change:per-run",
+        "audit_log:pattern_evolution.applied",
+        "auto_patch.loop_halted_skip",
+        "pattern_aggregator.failed",
+        "pattern_aggregator.insufficient_samples",
+        "pattern_aggregator.no_change",
+        "pattern_evolution.applied",
+        "scheduler:pattern-aggregator:4h",
+        "wave26-pattern-aggregator.test.ts"
       ]
     },
     {
@@ -680,22 +754,18 @@
     },
     {
       "id": "smt_divergence_engine",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
-      "blockers": [
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-failure-visibility",
-        "missing-freshness-signals",
-        "missing-runtime-evidence",
-        "missing-telemetry-sources"
-      ],
+      "blockers": [],
       "requiredEvidence": [
+        "a_plus_factor_evaluated",
+        "audit_log:a_plus_factor_evaluated:per-bar",
+        "audit_log:a_plus_factor_evaluated:smt_confirmation",
         "test_smt_divergence.py"
       ]
     },
@@ -747,23 +817,42 @@
       ]
     },
     {
-      "id": "vwap_bands_engine",
-      "status": "blocked",
+      "id": "trade_critique_service",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
-      "blockers": [
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-failure-visibility",
-        "missing-freshness-signals",
-        "missing-runtime-evidence",
-        "missing-telemetry-sources"
-      ],
+      "blockers": [],
       "requiredEvidence": [
+        "/api/trade-journal/stats",
+        "audit_log:trade_critique.completed",
+        "audit_log:trade_critique.completed:per-trade-close",
+        "audit_log:trade_critique.failed",
+        "trade_critique.completed",
+        "trade_critique.consecutive_failure_alert",
+        "trade_critique.failed",
+        "trade_critique.idempotent_skip",
+        "wave26-trade-critique-service.test.ts",
+        "wave26-trade-journal-route.test.ts"
+      ]
+    },
+    {
+      "id": "vwap_bands_engine",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "a_plus_factor_evaluated",
+        "audit_log:a_plus_factor_evaluated:per-bar",
+        "audit_log:a_plus_factor_evaluated:vwap_alignment",
         "test_anchored_vwap.py",
         "test_archetype_vwap_band_reject.py",
         "test_vwap_bands.py"

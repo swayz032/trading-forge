@@ -277,6 +277,24 @@ export interface SignalContext {
    * Used by deriveFactorDecay for cross_asset_aligned.
    */
   cross_asset_age_hours?: number | null;
+
+  // ─── W25.11 Pass 6: Narrative continuity ────────────────────────────────────
+  /**
+   * HTF narrative state from Pass 2 bias_state.htf_narrative.
+   * null until htf_narrative.py publishes or when 5-TF unavailable.
+   * Consumed by narrative-state-service.ts to compute NarrativeState.
+   */
+  htfNarrative?: import("./bias-state-service.js").HtfNarrative | null;
+
+  /**
+   * Narrative continuity state from narrative-state-service.ts (W25.11).
+   * null until the narrative-state-tracker cron fires or when htfNarrative unavailable.
+   * Consumed by evalMarketStructureAligned() when
+   * CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE=true to require institutional bots
+   * only enter DURING distribution (not accumulation or manipulation).
+   * Backward-compat: null here → no additional gate applied.
+   */
+  narrativeState?: import("./narrative-state-service.js").NarrativeState | null;
 }
 
 /**
@@ -422,6 +440,13 @@ function resolveWeights(strategy: ScoringStrategy): {
  * This means the factor always fails until Pass 2 (W25.2) ships — which is correct:
  * strategies opting into weighted scoring before the structure engine is live will
  * not pass the default 0.72 threshold on this factor alone.
+ *
+ * W25.11 Pass 6 extension:
+ * When env var CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE=true, also requires
+ * narrativeState.phase === "DISTRIBUTION". Default false for backward compat.
+ * Operators flip this on after 30-day instrumentation confirms reliable phase detection.
+ * When narrativeState is null and the flag is true, the factor returns unsatisfied
+ * with reason="narrative_unavailable" (conservative / fail-closed for this gate).
  */
 function evalMarketStructureAligned(
   ctx: SignalContext,
@@ -436,17 +461,54 @@ function evalMarketStructureAligned(
     (ctx.structureState.choch_recent === true ||
       ctx.structureState.mss_recent === true ||
       ctx.structureState.bos_recent === true);
-  const satisfied =
+  const structureSatisfied =
     typeof ctx.structureState.market_structure_aligned === "boolean"
       ? ctx.structureState.market_structure_aligned
       : derived;
+
+  if (!structureSatisfied) {
+    return {
+      satisfied: false,
+      reason: `structure_not_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}_mss=${ctx.structureState.mss_recent}`,
+    };
+  }
+
+  // W25.11: optional DISTRIBUTION phase gate
+  const requireDistribution =
+    (process.env["CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE"] ?? "false").toLowerCase() === "true";
+
+  if (requireDistribution) {
+    const narrativePhase = ctx.narrativeState?.phase ?? null;
+    if (narrativePhase === null) {
+      return { satisfied: false, reason: "narrative_unavailable" };
+    }
+    if (narrativePhase !== "DISTRIBUTION") {
+      return {
+        satisfied: false,
+        reason: `narrative_phase_not_distribution_phase=${narrativePhase}`,
+      };
+    }
+    return {
+      satisfied: true,
+      reason: `structure_aligned_and_distribution_phase_htf=${ctx.structureState.htf_bias_aligned}_mss=${ctx.structureState.mss_recent}`,
+    };
+  }
+
   return {
-    satisfied,
-    reason: satisfied
-      ? `structure_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}_mss=${ctx.structureState.mss_recent}`
-      : `structure_not_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}_mss=${ctx.structureState.mss_recent}`,
+    satisfied: true,
+    reason: `structure_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}_mss=${ctx.structureState.mss_recent}`,
   };
 }
+
+/**
+ * W25.11: Test-only re-export of evalMarketStructureAligned.
+ * Allows wave25-narrative-state.test.ts to exercise the DISTRIBUTION phase gate
+ * without importing the full evaluateWeightedConfluence pipeline.
+ * Named with _TEST_ONLY suffix to flag non-production callers in code review.
+ *
+ * DO NOT call from production code — use evaluateWeightedConfluence() instead.
+ */
+export const evalMarketStructureAligned_TEST_ONLY = evalMarketStructureAligned;
 
 /**
  * liquidity_target_clear — Pass 3, W25.6.

@@ -2175,6 +2175,20 @@ export const biasState = pgTable(
     //   computed_at_bar_idx }
     // Strategies without 5-TF hierarchy leave this NULL; fail-open contract.
     htfNarrative: jsonb("htf_narrative"),
+    // W25.11 Pass 6 (migration 0143): JSON-serialised NarrativeState from narrative-state-service.ts.
+    // NULL for pre-Pass-6 rows and when htf_narrative / structure_state unavailable.
+    // Shape: { phase, phase_started_at, accumulation_range:{high,low},
+    //          manipulation_swept:{which,price}, displacement_confirmed,
+    //          expansion_target, computed_at_bar_idx }
+    // Consumed by confluence-score.ts evalMarketStructureAligned() (opt-in via
+    // CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE=true) and by narrative-state-tracker cron.
+    narrativeState: jsonb("narrative_state"),
+    // W25.10 P6 (migration 0142): JSON-serialised RegimeEvidence from bias_engine.py.
+    // NULL for pre-Pass-6 rows and when classify_institutional_regime() not called.
+    // Shape: { atr_percentile_vs_30d, volume_ratio_vs_session_avg, range_size_vs_atr,
+    //          is_macro_event_day, session_health, primary_driver }
+    // Consumed forensically — enables replay of regime classification without re-running engine.
+    regimeEvidence: jsonb("regime_evidence"),
     computedAt: timestamp("computed_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

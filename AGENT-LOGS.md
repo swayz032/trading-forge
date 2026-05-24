@@ -4,6 +4,49 @@
 
 ---
 
+### Session Log — 2026-05-24 backtest-core — Wave 25 Pass 6 W25.10: 5-Regime Institutional Expansion
+
+**Mission:** Extend bias_engine regime vocabulary from 3 to 7 active labels + NO_TRADE sentinel; add forensic RegimeEvidence; extend playbook_router with 4 new institutional arms.
+
+**Work completed:**
+- Migration `0142_regime_expansion.sql` (idx=144) — idempotent; adds `bias_state.regime_evidence JSONB` + 2 functional indexes on session_health and primary_driver; `regime_label` column stays free-form TEXT (no CHECK constraint change needed for 4 new token values)
+- `_journal.json` — reserved idx=144 for `0142_regime_expansion`
+- `src/engine/context/bias_engine.py` — added:
+  - `REGIME_VALUES` constant (8 values: existing 4 + EXPANSION + COMPRESSION + HIGH_VOL_MACRO + LOW_LIQ_CHOP)
+  - `RegimeEvidence` dataclass (6 primitive fields; `dataclasses.asdict()` → JSON-safe)
+  - `classify_institutional_regime()` — 4-arm priority classifier (HIGH_VOL_MACRO→LOW_LIQ_CHOP→EXPANSION→COMPRESSION→_PASS_THROUGH); pure function, no side effects
+  - Helper pure functions: `_compute_session_health()`, `_compute_atr_percentile_from_bars()`, `_compute_volume_ratio()`, `_compute_range_vs_atr()`, `_compute_price_displacement()`
+  - `DailyBiasState.institutional_regime` + `.regime_evidence` optional fields (backward-compat: existing callers see None)
+  - `compute_bias()` wired to call `classify_institutional_regime()` after order-flow features; fail-open (exception → None); `_PASS_THROUGH` collapsed to TRENDING_UP/DOWN/RANGE_BOUND/NO_TRADE before storage
+  - HIGH_VOL_MACRO and LOW_LIQ_CHOP arms append to `no_trade_reasons` + force playbook to NO_TRADE
+- `src/engine/context/playbook_router.py` — added:
+  - 3 new playbook entries in PLAYBOOK_ROUTING: DISPLACEMENT_CONTINUATION (EXPANSION), BREAKOUT_PREP (COMPRESSION), REDUCED_SIZING (HIGH_VOL_MACRO)
+  - LOW_LIQ_CHOP handled inline in `route_playbook()` (no playbook needed, always NO_TRADE)
+  - 4 new evaluation arms in `route_playbook()` (step 0, before classic no-trade check)
+  - ROUTER_VERSION bumped to "2026-05-24-w25.10"
+- `src/server/db/schema.ts` — additive: `regimeEvidence: jsonb("regime_evidence")` on `biasState` table with shape comment
+- `src/engine/tests/test_regime_5way.py` — 35 new tests across 9 test classes (all scenarios, backward compat, JSONB round-trip, priority ordering, edge cases) — **35/35 PASSED**
+- `src/engine/tests/test_playbook_router_5regimes.py` — 26 new tests across 6 test classes (4 new arms, existing arms unchanged, PlaybookDecision fields, institutional bypass behavior) — **26/26 PASSED**
+
+**Verification:**
+- `python -m pytest src/engine/tests/test_regime_5way.py src/engine/tests/test_playbook_router_5regimes.py -v` → **61/61 PASSED**
+- `npm run check:production-isolation` → **CLEAN (4 files, 0 violations)**
+- Pre-existing failures confirmed unchanged (not introduced by this work):
+  - `test_playbook_router_hysteresis.py` — imports `HYSTERESIS_THRESHOLD` that never existed
+  - `test_playbook_router_vp.py` (5 tests) — pre-existing test authoring bug: wrong `pd_location` default
+  - `test_hmm_regime.py` — `hmmlearn` module not installed in dev env
+- Existing bias_engine + range_bound + VP integration + regime tests: all GREEN
+
+**Known-facts updates:** None (bias_engine + playbook_router extensions follow established patterns)
+
+**Carry-forward for next session:**
+- `regime_evidence` column needs to be populated by `bias-state-service.ts` when persisting bias rows (currently Python-side only)
+- strategies.preferred_regimes column accepts new regime tokens at runtime — no migration needed; direct-bucket-graduator.ts allowlist should be extended to include the 4 new token values
+- Downstream: `regime_match` confluence factor in confluence-score.ts should recognize the 4 new regime tokens when matching against strategy.preferred_regimes
+- Pre-existing test failures in test_playbook_router_vp.py / test_playbook_router_hysteresis.py are backlog cleanup items (not introduced by W25.10)
+
+---
+
 ### Session Log — 2026-05-24 paper-parity — Wave 26 Pass 2: Trade Journal frontend repurpose
 
 **Mission:** Repurpose Journal.tsx from system_journal (research log) to paper_positions + trade_critique (trade autopsy layer); add GET /api/trade-journal route.
@@ -7235,6 +7278,45 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 - `shouldBlockNewEntry()` not yet integrated into `paper-signal-service.ts` entry-gate — Wave 25 collision zone, deferred to coordination pass after W25 P7
 - Live-paper SMT bridge (Wave 25 carry-forward) — `ctx.smt_score` not yet populated in `paper-signal-service` for live signals; `trade_critique` correctly degrades via missingFields
 - `system-subsystem-registry.json` curation for the 3 new Wave 26 services (above) — bundle with Wave 25 registry additions
+
+---
+
+### Session Log — 2026-05-24 Wave 25 Pass 6 — regime 3→5 + narrative continuity
+
+**Mission:** Expand regime classification from 3 to 5+ (institutional vocabulary). Add A/M/E narrative state machine across sessions. Close GPT critique #6 + biggest missing concept. P6.A3+A4 combined obs review + architect close-out.
+
+**Work completed:**
+- bias_engine.py classify_institutional_regime() — 4 new arms (HIGH_VOL_MACRO/LOW_LIQ_CHOP/EXPANSION/COMPRESSION) running BEFORE classic 3-regime logic (P6.A1)
+- RegimeEvidence dataclass for forensic reconstruction (ATR pct, volume ratio, range vs ATR, macro flag, session health, primary_driver) (P6.A1)
+- playbook_router.py — 4 new playbook routes (DISPLACEMENT_CONTINUATION/BREAKOUT_PREP/REDUCED_SIZING/NO_TRADE) (P6.A1)
+- Migration 0142 idx 144 + bias_state.regime_evidence JSONB (P6.A1)
+- narrative-state-service.ts — 5-phase state machine (NEUTRAL/ACCUMULATION/MANIPULATION/DISTRIBUTION/REVERSAL_FORMING) — pure compute + idempotent persistence (P6.A2)
+- Migration 0143 idx 145 + bias_state.narrative_state JSONB (P6.A2)
+- narrative-state-tracker cron (5 min RTH) — pipeline-gate exempt (P6.A2)
+- evalMarketStructureAligned + CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE env gate (default off — backward compat) (P6.A2)
+- **P6.A3+A4 architect close (this pass):** wired Python-side `state.regime_evidence` + `state.institutional_regime` into bias-state-service.ts inline Python emit shape (extended `emit()` signature + serialization via `dataclasses.asdict()`)
+- **P6.A3+A4 carry-forward close:** added `regimeEvidenceJson` + `institutionalRegimeLabel` captures from biasResult; persisted `regime_evidence` JSONB into bias_state INSERT (column added in migration 0142, was previously dormant)
+- **P6.A3+A4 audit emit:** new `bias_engine.regime_classified` audit event with full evidence payload (atr_percentile_vs_30d, volume_ratio_vs_session_avg, range_size_vs_atr, is_macro_event_day, session_health, primary_driver) + correlation_id per §10b reconstruction mandate; fail-open guard on `institutionalRegimeLabel != null && regimeEvidenceJson != null` so pre-Wave-25.10 callers + engine-exception paths skip the row
+- **System Map sync:** added 2 new Pass 6 registry entries (`institutional_regime_classifier`, `narrative_state_machine`). Closed Wave 25 Pass 5 carry-forward by patching `smt_divergence_engine` + `vwap_bands_engine` entries with audit/telemetry/freshness proxy fields (failure surface via confluence_score_engine `a_plus_factor_evaluated`). Closed Wave 26 Phase 1 carry-forward by adding 3 new entries (`trade_critique_service`, `consistency_tracker_service`, `pattern_aggregator_service`) covering `/api/consistency` + `/api/trade-journal` routes, `consistency-tracker-daily-digest` + `pattern-aggregator` jobs, and `trade_critique` table — drift went from 8 items to 0
+- 1 new architect-pass test file: `wave25-regime-evidence-persistence.test.ts` (7 contract tests — Python emit shape, TS capture, SQL INSERT shape, audit emit shape, null guard, RegimeEvidence primitive shape)
+
+**Verification:**
+- `npx vitest run src/server/__tests__/wave25-regime-evidence-persistence.test.ts` → 7/7 PASS
+- `npx vitest run src/server/__tests__/wave25-narrative-state.test.ts` → 17/17 PASS (regression check)
+- `npm run check:production-isolation` → CLEAN (4 files, 0 violations)
+- `npm run check:2026-compliance` → OK (MFFU + Topstep aligned with canonical 2026 docs)
+- `npm run system-map:sync` then `npm run system-map:check` → **status: ok, driftItems: []** (GREEN)
+- Total Pass 6 new tests: 78 (P6.A1 61 + P6.A2 17) + 7 P6.A3+A4 = **85 GREEN**
+
+**Known-facts updates:**
+- `regime_match` factor STAYS binary (NO_DECAY_FACTORS) — narrative phase is its OWN gate via env-toggle `CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE`. Pinned in CLAUDE.md §2b decay footnote.
+- HtfNarrative 4 sub-dataclasses NOT mutated — narrative_state is a parallel field per Pass 2 cross-pass contract.
+- `bias_engine.regime_classified` is now the canonical audit action for institutional regime decisions (parallel to `bias_engine.htf_narrative_computed` from Pass 2).
+
+**Carry-forward for next session (Pass 7 + Wave 26 follow-up):**
+- Pass 7 (adaptive exits) — consume regime + narrative_state.phase for runner-trail selection (e.g. trail tighter in COMPRESSION; flatten on REVERSAL_FORMING).
+- Wave 26 candidates: (1) live SMT bridge (Pass 5 deferred), (2) narrative cron path needs real bar data for sweep detection (currently only phase continuity), (3) flip CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE=true after 30-day instrumentation.
+- `direct-bucket-graduator.ts` allowlist should be extended to recognise the 4 new regime tokens (EXPANSION/COMPRESSION/HIGH_VOL_MACRO/LOW_LIQ_CHOP) when validating `preferred_regimes` arrays — currently passes silently because column is unconstrained TEXT[].
 
 ---
 

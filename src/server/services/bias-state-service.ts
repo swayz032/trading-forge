@@ -419,6 +419,10 @@ export async function getOrComputeBiasStateForDay(
   let evidence: Record<string, unknown> = {};
   let structureStateJson: Record<string, unknown> | null = null;
   let htfNarrativeJson: Record<string, unknown> | null = null;
+  // P6.A3+A4 carry-forward close: capture Python-side regime_evidence + institutional_regime
+  // for persistence into bias_state.regime_evidence JSONB (migration 0142) + audit emit.
+  let regimeEvidenceJson: Record<string, unknown> | null = null;
+  let institutionalRegimeLabel: string | null = null;
   const computedAt = new Date().toISOString();
   const isRefresh = forceRefresh;
 
@@ -495,6 +499,10 @@ export async function getOrComputeBiasStateForDay(
       structure_state: Record<string, unknown> | null;
       /** P2.A3 W25.5: HTF narrative JSONB blob (null when 5-TF unavailable). */
       htf_narrative: Record<string, unknown> | null;
+      /** P6.A1 W25.10: Institutional regime label from classify_institutional_regime() (one of REGIME_VALUES). */
+      institutional_regime: string | null;
+      /** P6.A1 W25.10: RegimeEvidence dataclass after dataclasses.asdict() — persisted to bias_state.regime_evidence JSONB. */
+      regime_evidence: Record<string, unknown> | null;
     }>({
       scriptCode: `
 import sys, json, os, datetime
@@ -522,7 +530,7 @@ PLAYBOOK_TO_REGIME = {
     "LEAN_SHORT":               "TRENDING_DOWN",
 }
 
-def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, evidence, source, structure_state=None, htf_narrative=None):
+def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, evidence, source, structure_state=None, htf_narrative=None, institutional_regime=None, regime_evidence=None):
     print(json.dumps({
         "regime_label": regime_label,
         "playbook": playbook,
@@ -533,6 +541,8 @@ def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, ev
         "source": source,
         "structure_state": structure_state,
         "htf_narrative": htf_narrative,
+        "institutional_regime": institutional_regime,
+        "regime_evidence": regime_evidence,
     }))
 
 # ── Attempt Primary: compute_bias() from live OHLCV + HTF/session context ──
@@ -641,6 +651,15 @@ try:
         import dataclasses as _dc2
         htf_narrative_dict = _dc2.asdict(state.htf_narrative)
 
+    # P6.A1 W25.10: Serialise regime_evidence + institutional_regime for TS persistence.
+    # Carry-forward closed by P6.A3+A4 — persist into bias_state.regime_evidence JSONB
+    # column (migration 0142) + emit bias_engine.regime_classified audit event.
+    regime_evidence_dict = None
+    if getattr(state, 'regime_evidence', None) is not None:
+        import dataclasses as _dc3
+        regime_evidence_dict = _dc3.asdict(state.regime_evidence)
+    institutional_regime_label = getattr(state, 'institutional_regime', None)
+
     # W23H.A: Wire the dead 9-playbook router. route_playbook() replaces the direct
     # state.playbook lookup with the full routing logic (SWEEP_REVERSAL, ORB, MEAN_REVERSION).
     # Falls back gracefully if import fails (legacy PLAYBOOK_TO_REGIME still covers state.playbook).
@@ -690,6 +709,8 @@ try:
         source="compute_bias_primary",
         structure_state=structure_state_dict,
         htf_narrative=htf_narrative_dict,
+        institutional_regime=institutional_regime_label,
+        regime_evidence=regime_evidence_dict,
     )
     primary_ok = True
 
@@ -748,6 +769,10 @@ except Exception as primary_err:
     structureStateJson = biasResult.structure_state ?? null;
     // P2.A3 W25.5: capture htf_narrative from Python emit (null when 5-TF unavailable)
     htfNarrativeJson = biasResult.htf_narrative ?? null;
+    // P6.A3+A4 W25.10: capture regime_evidence + institutional_regime from Python emit
+    // (null when classify_institutional_regime() raised — back-compat fail-open).
+    regimeEvidenceJson = biasResult.regime_evidence ?? null;
+    institutionalRegimeLabel = biasResult.institutional_regime ?? null;
 
     logger.info(
       { sessionDate, symbol: sym, regimeLabel, playbook, source: biasResult.source, netBias: biasResult.net_bias, isRefresh, correlationId },
@@ -1024,7 +1049,7 @@ except Exception as e:
   try {
     await db.execute(
       sql`
-        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, position_lock_active, hmm_probability_used, structure_state, htf_narrative, computed_at, created_at)
+        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, position_lock_active, hmm_probability_used, structure_state, htf_narrative, regime_evidence, computed_at, created_at)
         VALUES (
           ${sessionDate}::date,
           ${sym},
@@ -1037,6 +1062,7 @@ except Exception as e:
           ${hmmProbabilityUsed},
           ${structureStateJson != null ? JSON.stringify(structureStateJson) : null}::jsonb,
           ${htfNarrativeJson != null ? JSON.stringify(htfNarrativeJson) : null}::jsonb,
+          ${regimeEvidenceJson != null ? JSON.stringify(regimeEvidenceJson) : null}::jsonb,
           ${computedAt}::timestamptz,
           NOW()
         )
@@ -1074,6 +1100,36 @@ except Exception as e:
       });
     } catch (structAuditErr) {
       logger.warn({ err: structAuditErr, sessionDate, symbol: sym }, "bias-state W25.2: structure_state audit write failed (non-blocking)");
+    }
+  }
+
+  // P6.A3+A4 W25.10: emit bias_engine.regime_classified audit event when institutional
+  // regime + evidence are populated (§10b reconstruction mandate: forensic replay must be
+  // possible without re-running the engine). Fires only when both fields are non-null —
+  // pre-Wave-25.10 callers + engine-exception paths produce no audit row.
+  if (institutionalRegimeLabel != null && regimeEvidenceJson != null) {
+    try {
+      await insertAuditRow({
+        action: "bias_engine.regime_classified",
+        entityType: "paper_session",
+        entityId: `${sessionDate}-${sym}`,
+        decisionAuthority: "system",
+        status: "success",
+        input: { sessionDate, symbol: sym, correlationId },
+        result: {
+          institutional_regime: institutionalRegimeLabel,
+          regime_label: regimeLabel,                  // classic label persisted to bias_state.regime_label
+          atr_percentile_vs_30d: regimeEvidenceJson.atr_percentile_vs_30d ?? null,
+          volume_ratio_vs_session_avg: regimeEvidenceJson.volume_ratio_vs_session_avg ?? null,
+          range_size_vs_atr: regimeEvidenceJson.range_size_vs_atr ?? null,
+          is_macro_event_day: regimeEvidenceJson.is_macro_event_day ?? null,
+          session_health: regimeEvidenceJson.session_health ?? null,
+          primary_driver: regimeEvidenceJson.primary_driver ?? null,
+        },
+        correlationId,
+      });
+    } catch (regimeAuditErr) {
+      logger.warn({ err: regimeAuditErr, sessionDate, symbol: sym }, "bias-state P6.A3+A4: regime_classified audit write failed (non-blocking)");
     }
   }
 
