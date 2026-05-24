@@ -5860,6 +5860,36 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-23 Wave 24 Pass 1 — Institutional Hardening (observability-reliability)
+
+**Mission:** Ship 4 production-grade observability/reliability fixes (Items 1, 5, 8, 15) to close CATASTROPHIC/CRITICAL/RED gaps in scheduler coverage, audit attribution, self-restart capability, and automated drift HALT.
+
+**Work completed:**
+- **Item 1 (CATASTROPHIC):** Wired `bw-session-refresh` (6h cron) and `prop-firm-cookie-refresh` (1h cron) in `scheduler.ts`. Both pipeline-gate exempt. Each emits `bw_refresh.heartbeat`/`bw_refresh.failed` and `cookie_refresh.heartbeat`/`cookie_refresh.failed` audit_log rows on every tick. Extended `dead-mans-heartbeat-service.ts` with `runScheduledRefreshStalenessCheck()` — queries audit_log for latest heartbeat row and fires Discord CRITICAL if BW >13h stale or cookie >2.5h stale. Heartbeat-stale-check cron now calls this on every tick.
+- **Item 5 (CRITICAL):** Added `insertAuditRow()` call (non-blocking `.catch()`) at all 4 W23H skip event sites in `paper-signal-service.ts`. Actions: `signal.skipped_outside_window`, `signal.blocked_symbol_not_enabled_for_account`, `signal.skipped_pre_market_blackout`, `signal.blocked_position_lock_active`. Drift detectors querying audit_log now see these events.
+- **Item 8 (RED):** `POST /api/admin/self-restart` added to `routes/admin.ts`. HMAC-SHA256(`ADMIN_RESTART_HMAC_SECRET`, `timestamp:reason`) auth with `X-Restart-Signature` header. 60s timestamp drift replay protection. Writes `system.self_restart_requested` audit row, fires Discord CRITICAL, then `process.exit(0)` after 1s. NSSM auto-respawns. Documented in CLAUDE.md §15a with curl example.
+- **Item 15 (RED):** Created `src/server/services/weekly-drift-halt-service.ts`. Scans PILOT and DEPLOYED strategies Sunday 18:00 ET (cron `0 22,23 * * 1` with inner ET check). Computes z-score of 7-day live paper_trade returns vs baseline backtest `resultExtras` returns (pooled standard error of difference of means). `abs(z) > 2.0` triggers `killSwitch.setMode("HALT", ...)`, writes `drift.weekly_2sigma_halt` audit row, fires Discord CRITICAL. Idempotent: skips if `kill_reason` already starts with `weekly_drift_2sigma`. Minimum 5 observations required; returns `insufficient_data` otherwise.
+- **CLAUDE.md §15a:** Added `ADMIN_RESTART_HMAC_SECRET` to required env vars and documented self-restart curl procedure.
+
+**Verification:**
+- `npx tsc --noEmit` — 0 new errors introduced (2 pre-existing in scripts/ and tests unrelated to wave24 changes confirmed via git stash baseline)
+- `npx vitest run wave24-*` — 33/33 pass across 4 new test files
+- Full suite: 3662 pass / 85 fail (baseline without wave24 changes: 3625 pass / 124 fail — net +37 pass, -39 fail)
+- `npm run check:production-isolation` — CLEAN (4 files, 0 violations)
+- `npm run check:2026-compliance` — OK
+- `npm run system-map:check` — drift (6 scheduler jobs + 2 routes + 1 table missing from registry; generated section synced; architect handles registry update)
+- ESLint on all 9 changed files — 0 errors, 10 pre-existing warnings
+- Commit: d3a98c4 pushed to feature/deep-analysis-pipeline
+
+**Known-facts updates:** None new.
+
+**Carry-forward for next session:**
+- System Map registry needs 3 new scheduler job entries (`bw-session-refresh`, `prop-firm-cookie-refresh`, `weekly-drift-2sigma-check`) + 2 route entries + 1 table entry — architect pass required
+- Background agents `paper-parity` (abd6ee01) and `backtest-core` (ae9cf46e) were running at session start — check their outputs
+- `wave24-mc-provisional-defer.test.ts` (3 failing) and `wave24-b14-hard-gate.test.ts` (1 failing) are from other agents in this wave — not owned by obs-reliability
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
