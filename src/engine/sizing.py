@@ -58,25 +58,33 @@ Wave 23 — Pyramid Floor Enforcement (B.1):
   returns fewer than base_contracts, use base_contracts instead. On drawdown accounts
   (< 85%), risk-cap fully binds to protect firm compliance.
   New RiskSizingResult fields: pyramid_floor_applied (bool), account_health_ratio (float).
+
+Wave 25 Pass 2 — Inst-10 Drawdown-Room Cap (Topstep only):
+  Adds a new term to the min() chain (Topstep trailing-DD only):
+    drawdownRoomCap = floor(currentDrawdownRoom × DRAWDOWN_ROOM_RISK_PCT / stopDollarsPerContract)
+  where currentDrawdownRoom = max(0, balance - trailingFloor).
+  DRAWDOWN_ROOM_RISK_PCT default 0.01 (1%) per 2026 funded-trader consensus.
+  Parity: identical to TypeScript risk-sizing.ts drawdownRoomCap computation.
+  NOT applied for MFFU (static 2% rule is correct for that firm).
+  New RiskSizingResult fields: drawdown_room_cap (Optional[int]), drawdown_room_cap_binding (bool).
 """
 
 from __future__ import annotations
 
 import logging
 import math
+import os
 from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
 import polars as pl
 
-import os
-
-from src.engine.config import ContractSpec, PositionSizeConfig, TRACK3_CONFIG
+from src.engine.config import TRACK3_CONFIG, ContractSpec, PositionSizeConfig
 from src.engine.firm_config import CONTRACT_CAP_MAX, CONTRACT_CAP_MIN
 
 # Track 3: MES-specific pyramid cap (overrides CONTRACT_CAP_MAX for MES only).
-MES_PYRAMID_CAP: int = TRACK3_CONFIG.MES_PYRAMID_CAP          # 30 micros
+MES_PYRAMID_CAP: int = TRACK3_CONFIG.MES_PYRAMID_CAP  # 30 micros
 PYRAMID_GRADUATION_PNL: float = TRACK3_CONFIG.PYRAMID_GRADUATION_PNL  # $30K trigger
 
 logger = logging.getLogger(__name__)
@@ -86,9 +94,13 @@ logger = logging.getLogger(__name__)
 # Identical math, identical env-var thresholds, identical fail-open semantics.
 # These run in the sizing pass of the backtester so backtest decisions match paper.
 
-_RISK_VIX_TARGET    = float(os.environ.get("RISK_VIX_TARGET",    "18"))
+_RISK_VIX_TARGET = float(os.environ.get("RISK_VIX_TARGET", "18"))
 _RISK_VOL_SCALE_MIN = float(os.environ.get("RISK_VOL_SCALE_MIN", "0.5"))
 _RISK_VOL_SCALE_MAX = float(os.environ.get("RISK_VOL_SCALE_MAX", "1.5"))
+
+# Wave 25 Pass 2 Inst-10: Drawdown-room risk fraction (Topstep only).
+# Mirror of TypeScript DRAWDOWN_ROOM_RISK_PCT constant in risk-sizing.ts.
+_DRAWDOWN_ROOM_RISK_PCT = float(os.environ.get("DRAWDOWN_ROOM_RISK_PCT", "0.01"))
 
 
 def compute_vol_scale(vix_now: Optional[float]) -> float:
@@ -130,23 +142,38 @@ def compute_liquidity_haircut(
 # Same math, same edge cases, identical numeric outputs.
 # CRITICAL: This computes CONTRACT COUNT only. Never pass fees/slippage to vectorbt.
 
+
 @dataclass
 class RiskSizingResult:
     """Output of compute_risk_derived_contracts(). All component values for audit trail."""
+
     final_contracts: int
     pyramid_tier: int
     risk_derived_cap: int
     firm_cap: Optional[int]
     liquidity_cap: int
-    rejection_reason: Optional[str]   # None | "zero_atr" | "zero_balance" | "negative_cap" | "zero_buffer"
+    rejection_reason: Optional[
+        str
+    ]  # None | "zero_atr" | "zero_balance" | "negative_cap" | "zero_buffer"
     # Wave 22 additions
-    firm: str = "topstep"                                          # "topstep" | "mffu"
-    risk_cap_method: str = "topstep_trailing_dd"                   # how riskDollars was derived
-    firm_cap_applied: bool = False                                 # True if firm cap was binding
+    firm: str = "topstep"  # "topstep" | "mffu"
+    risk_cap_method: str = "topstep_trailing_dd"  # how riskDollars was derived
+    firm_cap_applied: bool = False  # True if firm cap was binding
     # Wave 23 additions
-    pyramid_floor_applied: bool = False  # True when base_contracts floor overrode risk-cap
-    account_health_ratio: float = 1.0    # currentBalance / startingCapital (floor binds at >= 0.85)
+    pyramid_floor_applied: bool = (
+        False  # True when base_contracts floor overrode risk-cap
+    )
+    account_health_ratio: float = (
+        1.0  # currentBalance / startingCapital (floor binds at >= 0.85)
+    )
     evidence: dict = field(default_factory=dict)
+    # Wave 25 Pass 2 Inst-10 additions
+    drawdown_room_cap: Optional[int] = (
+        None  # Computed DD-room cap (Topstep only). None when not applied.
+    )
+    drawdown_room_cap_binding: bool = (
+        False  # True when drawdownRoomCap was the binding constraint.
+    )
 
 
 def _compute_topstep_trailing_floor(
@@ -185,6 +212,8 @@ def compute_risk_derived_contracts(
     trailing_dd: float = 2000.0,
     high_water_balance: Optional[float] = None,
     account_starting_floor: float = 50_000.0,
+    # ── Wave 25 Pass 2 Inst-10: Drawdown-room cap (Topstep only) ────────────
+    current_drawdown_room: Optional[float] = None,
 ) -> RiskSizingResult:
     """Compute risk-derived contract count at signal time.
 
@@ -236,11 +265,17 @@ def compute_risk_derived_contracts(
     liquidity_cap = liquidity_comfort_cap
 
     # Resolve HWM default: first day or no drawdown → HWM = current balance
-    _high_water = high_water_balance if high_water_balance is not None else account_balance
+    _high_water = (
+        high_water_balance if high_water_balance is not None else account_balance
+    )
 
     # Pyramid tier (slow ramp-up — identical to TS: floor(max(0, cumulativeProfit) / threshold))
     profit_floor = max(0.0, cumulative_profit)
-    tiers = math.floor(profit_floor / tier_threshold_dollars) if tier_threshold_dollars > 0 else 0
+    tiers = (
+        math.floor(profit_floor / tier_threshold_dollars)
+        if tier_threshold_dollars > 0
+        else 0
+    )
     pyramid_tier = base_contracts + tier_increment * tiers
 
     # Determine risk cap method from firm
@@ -249,7 +284,9 @@ def compute_risk_derived_contracts(
     # Wave 23: Account health ratio for pyramid floor enforcement.
     # Floor binds when account is healthy (>= 85% of starting capital).
     # Starting capital: for Topstep = account_starting_floor; for MFFU = 50K default.
-    _starting_capital_for_health = account_starting_floor if account_starting_floor > 0 else 50_000.0
+    _starting_capital_for_health = (
+        account_starting_floor if account_starting_floor > 0 else 50_000.0
+    )
     account_health_ratio = (
         account_balance / _starting_capital_for_health
         if _starting_capital_for_health > 0
@@ -369,6 +406,25 @@ def compute_risk_derived_contracts(
     stop_dollars_per_contract = stop_multiplier * atr_points * point_dollar_value
     risk_derived_cap = math.floor(risk_dollars / stop_dollars_per_contract)
 
+    # Wave 25 Pass 2 Inst-10: Drawdown-room cap (Topstep only when current_drawdown_room provided).
+    # Parity: mirrors TypeScript drawdownRoomCap computation in risk-sizing.ts.
+    # drawdown_room_cap = floor(current_drawdown_room * DRAWDOWN_ROOM_RISK_PCT / stop_dollars_per_contract)
+    # NOT applied for MFFU (static 2% rule is correct for that firm).
+    has_drawdown_room_input = (
+        firm == "topstep"
+        and current_drawdown_room is not None
+        and float(current_drawdown_room) >= 0
+    )
+    drawdown_room_cap: Optional[int] = (
+        math.floor(
+            float(current_drawdown_room)
+            * _DRAWDOWN_ROOM_RISK_PCT
+            / stop_dollars_per_contract
+        )
+        if has_drawdown_room_input and stop_dollars_per_contract > 0
+        else None
+    )
+
     # Effective firm cap (computed early so it's available in all branch paths below).
     # DSL override takes priority over live firm cap (mirrors TS logic).
     if topstep_account_cap_override is not None:
@@ -388,12 +444,17 @@ def compute_risk_derived_contracts(
             # F-7: Pyramid floor applies on healthy account, but clamp by firm cap + liquidity cap.
             # base_contracts alone is unbounded — firm compliance limits must still bind.
             floored_contracts = base_contracts
-            if effective_firm_cap is not None and effective_firm_cap < floored_contracts:
+            if (
+                effective_firm_cap is not None
+                and effective_firm_cap < floored_contracts
+            ):
                 floored_contracts = effective_firm_cap
             if liquidity_cap < floored_contracts:
                 floored_contracts = liquidity_cap
             floored_contracts = max(0, floored_contracts)
-            floor_firm_cap_applied = (effective_firm_cap is not None and effective_firm_cap < base_contracts)
+            floor_firm_cap_applied = (
+                effective_firm_cap is not None and effective_firm_cap < base_contracts
+            )
             ev_floor: dict = {
                 "account_balance": account_balance,
                 "atr_points": atr_points,
@@ -416,18 +477,20 @@ def compute_risk_derived_contracts(
                 "risk_cap_method": risk_cap_method,
             }
             if firm == "topstep":
-                ev_floor.update({
-                    "trailing_floor": trailing_floor,
-                    "buffer": buffer,
-                    "high_water_balance": _high_water,
-                    "trailing_dd": trailing_dd,
-                    "account_starting_floor": account_starting_floor,
-                })
+                ev_floor.update(
+                    {
+                        "trailing_floor": trailing_floor,
+                        "buffer": buffer,
+                        "high_water_balance": _high_water,
+                        "trailing_dd": trailing_dd,
+                        "account_starting_floor": account_starting_floor,
+                    }
+                )
             return RiskSizingResult(
                 final_contracts=floored_contracts,
                 pyramid_tier=pyramid_tier,
                 risk_derived_cap=risk_derived_cap,
-                firm_cap=effective_firm_cap,     # F-7: expose effective firm cap
+                firm_cap=effective_firm_cap,  # F-7: expose effective firm cap
                 liquidity_cap=liquidity_cap,
                 rejection_reason=None,  # not a rejection — floor overrides
                 firm=firm,
@@ -456,13 +519,15 @@ def compute_risk_derived_contracts(
             "pyramid_floor_applied": False,
         }
         if firm == "topstep":
-            ev.update({
-                "trailing_floor": trailing_floor,
-                "buffer": buffer,
-                "high_water_balance": _high_water,
-                "trailing_dd": trailing_dd,
-                "account_starting_floor": account_starting_floor,
-            })
+            ev.update(
+                {
+                    "trailing_floor": trailing_floor,
+                    "buffer": buffer,
+                    "high_water_balance": _high_water,
+                    "trailing_dd": trailing_dd,
+                    "account_starting_floor": account_starting_floor,
+                }
+            )
         return RiskSizingResult(
             final_contracts=0,
             pyramid_tier=pyramid_tier,
@@ -486,8 +551,19 @@ def compute_risk_derived_contracts(
     _pre_firm_final = final_contracts
     if effective_firm_cap is not None:
         final_contracts = min(final_contracts, effective_firm_cap)
+    firm_cap_applied = (
+        effective_firm_cap is not None and effective_firm_cap < _pre_firm_final
+    )
+
+    # Wave 25 Pass 2 Inst-10: Apply drawdown_room_cap (Topstep only when input provided).
+    # Parity: mirrors TypeScript drawdownRoomCapBinding detection in risk-sizing.ts.
+    drawdown_room_cap_binding = False
+    if drawdown_room_cap is not None:
+        pre_ddr = final_contracts
+        final_contracts = min(final_contracts, drawdown_room_cap)
+        drawdown_room_cap_binding = drawdown_room_cap < pre_ddr
+
     final_contracts = max(0, final_contracts)
-    firm_cap_applied = (effective_firm_cap is not None and effective_firm_cap < _pre_firm_final)
 
     # Step 2 (Wave 23): Pyramid floor enforcement.
     # On healthy accounts (>= 85% of starting capital), base_contracts is the minimum viable
@@ -496,8 +572,14 @@ def compute_risk_derived_contracts(
     # F-7: Floor is min(base_contracts, effective_firm_cap, liquidity_cap) — never unbounded.
     #      Firm cap and liquidity cap must still bind even when pyramid floor overrides risk-cap.
     # On drawdown accounts (< 85%), risk-cap fully binds — floor does not override.
+    # Wave 25 Pass 2 Inst-10: drawdown_room_cap takes priority over pyramid floor —
+    # when DD room is very small, forcing base_contracts would violate the 1%-of-room contract.
     pyramid_floor_applied = False
-    if account_is_healthy and final_contracts < base_contracts:
+    if (
+        not drawdown_room_cap_binding
+        and account_is_healthy
+        and final_contracts < base_contracts
+    ):
         floor_value = base_contracts
         if effective_firm_cap is not None and effective_firm_cap < floor_value:
             floor_value = effective_firm_cap
@@ -509,21 +591,30 @@ def compute_risk_derived_contracts(
         if effective_firm_cap is not None and effective_firm_cap < base_contracts:
             firm_cap_applied = True
 
-    # Determine which cap is binding (for audit trail)
-    if pyramid_floor_applied:
+    # Determine which cap is binding (for audit trail).
+    # drawdown_room takes priority when it was binding.
+    if drawdown_room_cap_binding:
+        binding_cap = "drawdown_room"
+    elif pyramid_floor_applied:
         binding_cap = "pyramid_floor_override"
-    elif (risk_derived_cap <= pyramid_tier
-            and (effective_firm_cap is None or risk_derived_cap <= effective_firm_cap)
-            and risk_derived_cap <= liquidity_cap):
+    elif (
+        risk_derived_cap <= pyramid_tier
+        and (effective_firm_cap is None or risk_derived_cap <= effective_firm_cap)
+        and risk_derived_cap <= liquidity_cap
+    ):
         binding_cap = "risk_derived"
-    elif (effective_firm_cap is not None
-          and effective_firm_cap <= pyramid_tier
-          and effective_firm_cap <= risk_derived_cap
-          and effective_firm_cap <= liquidity_cap):
+    elif (
+        effective_firm_cap is not None
+        and effective_firm_cap <= pyramid_tier
+        and effective_firm_cap <= risk_derived_cap
+        and effective_firm_cap <= liquidity_cap
+    ):
         binding_cap = "firm_cap"
-    elif (liquidity_cap <= pyramid_tier
-          and liquidity_cap <= risk_derived_cap
-          and (effective_firm_cap is None or liquidity_cap <= effective_firm_cap)):
+    elif (
+        liquidity_cap <= pyramid_tier
+        and liquidity_cap <= risk_derived_cap
+        and (effective_firm_cap is None or liquidity_cap <= effective_firm_cap)
+    ):
         binding_cap = "liquidity_cap"
     else:
         binding_cap = "pyramid"
@@ -540,6 +631,8 @@ def compute_risk_derived_contracts(
         "risk_derived_cap": risk_derived_cap,
         "firm_cap": effective_firm_cap,
         "liquidity_cap": liquidity_cap,
+        "drawdown_room_cap": drawdown_room_cap,
+        "drawdown_room_cap_binding": drawdown_room_cap_binding,
         "final_contracts": final_contracts,
         "binding_cap": binding_cap,
         "base_contracts": base_contracts,
@@ -553,13 +646,15 @@ def compute_risk_derived_contracts(
         "pyramid_floor_applied": pyramid_floor_applied,
     }
     if firm == "topstep":
-        ev_full.update({
-            "trailing_floor": trailing_floor,
-            "buffer": buffer,
-            "high_water_balance": _high_water,
-            "trailing_dd": trailing_dd,
-            "account_starting_floor": account_starting_floor,
-        })
+        ev_full.update(
+            {
+                "trailing_floor": trailing_floor,
+                "buffer": buffer,
+                "high_water_balance": _high_water,
+                "trailing_dd": trailing_dd,
+                "account_starting_floor": account_starting_floor,
+            }
+        )
 
     return RiskSizingResult(
         final_contracts=final_contracts,
@@ -574,6 +669,8 @@ def compute_risk_derived_contracts(
         pyramid_floor_applied=pyramid_floor_applied,
         account_health_ratio=account_health_ratio,
         evidence=ev_full,
+        drawdown_room_cap=drawdown_room_cap,
+        drawdown_room_cap_binding=drawdown_room_cap_binding,
     )
 
 
@@ -748,7 +845,9 @@ def kelly_optimal_contracts(
     if f_star <= 0.0:
         logger.debug(
             "sizing.kelly_no_edge edge=%.4f odds=%.4f f_star=%.4f -> 0 contracts",
-            edge, odds, f_star,
+            edge,
+            odds,
+            f_star,
         )
         return 0
 
@@ -768,7 +867,13 @@ def kelly_optimal_contracts(
     logger.debug(
         "sizing.kelly f_star=%.4f fraction=%.4f bankroll=%.2f risk_per_trade=%.2f "
         "raw=%.3f final=%d firm_max=%d",
-        f_star, scaled_fraction, bankroll, risk_per_trade, raw_contracts, contracts, effective_max,
+        f_star,
+        scaled_fraction,
+        bankroll,
+        risk_per_trade,
+        raw_contracts,
+        contracts,
+        effective_max,
     )
 
     return contracts
@@ -885,7 +990,9 @@ def compute_position_sizes(
         return sizes, over_risk
 
     if config.type == "fixed":
-        return np.full(n, config.fixed_contracts, dtype=np.float64), np.zeros(n, dtype=bool)
+        return np.full(n, config.fixed_contracts, dtype=np.float64), np.zeros(
+            n, dtype=bool
+        )
 
     # ── risk_derived_pyramid (Wave 21 E.2, F-6 per-bar fix) ─────────────────
     # F-6: Compute PER-BAR risk-derived caps using bar-level ATR, not mean ATR.
@@ -904,7 +1011,9 @@ def compute_position_sizes(
         # Replace NaN/zero ATR with the column mean (fallback to 1.0 if all NaN)
         _valid_atr = _atr_arr[~np.isnan(_atr_arr) & (_atr_arr > 0)]
         _atr_fallback = float(np.mean(_valid_atr)) if len(_valid_atr) > 0 else 1.0
-        atr_arr = np.where(np.isnan(_atr_arr) | (_atr_arr <= 0), _atr_fallback, _atr_arr)
+        atr_arr = np.where(
+            np.isnan(_atr_arr) | (_atr_arr <= 0), _atr_fallback, _atr_arr
+        )
         # atr_for_sizing is kept for the scalar compute_risk_derived_contracts() call below
         atr_for_sizing = _atr_fallback
 
@@ -916,8 +1025,11 @@ def compute_position_sizes(
         # account_balance: use max_contracts parameter as a proxy when provided,
         # otherwise default to 50_000 (MFFU 50K eval funded account).
         # Callers that know live balance should pass it via profit_scaling_tier.
-        account_balance = float(profit_scaling_tier.get("account_balance", 50_000.0)) \
-            if profit_scaling_tier is not None else 50_000.0
+        account_balance = (
+            float(profit_scaling_tier.get("account_balance", 50_000.0))
+            if profit_scaling_tier is not None
+            else 50_000.0
+        )
 
         # Wave 22: read firm from profit_scaling_tier dict if caller provided it.
         # Callers that know the destination account's firm should pass:
@@ -932,7 +1044,9 @@ def compute_position_sizes(
             _trailing_dd = float(profit_scaling_tier.get("trailing_dd", 2000.0))
             _hwm = profit_scaling_tier.get("high_water_balance")
             _high_water = float(_hwm) if _hwm is not None else None
-            _account_starting_floor = float(profit_scaling_tier.get("account_starting_floor", 50_000.0))
+            _account_starting_floor = float(
+                profit_scaling_tier.get("account_starting_floor", 50_000.0)
+            )
 
         sizing_result = compute_risk_derived_contracts(
             base_contracts=config.base_contracts,
@@ -943,9 +1057,11 @@ def compute_position_sizes(
             account_balance=account_balance,
             cumulative_profit=cumulative_profit,
             atr_points=atr_for_sizing,
-            stop_multiplier=1.5,   # CLAUDE.md §4 default stop multiplier
+            stop_multiplier=1.5,  # CLAUDE.md §4 default stop multiplier
             point_dollar_value=contract_spec.point_value,
-            firm_contract_cap=config.firm_contract_cap if config.firm_contract_cap else max_contracts,
+            firm_contract_cap=config.firm_contract_cap
+            if config.firm_contract_cap
+            else max_contracts,
             topstep_account_cap_override=config.topstep_account_cap_override,
             firm=_firm,
             trailing_dd=_trailing_dd,
@@ -956,7 +1072,9 @@ def compute_position_sizes(
         if sizing_result.rejection_reason is not None:
             logger.warning(
                 "sizing.risk_derived_rejected reason=%s atr=%.4f balance=%.2f → 1 contract fallback",
-                sizing_result.rejection_reason, atr_for_sizing, account_balance,
+                sizing_result.rejection_reason,
+                atr_for_sizing,
+                account_balance,
             )
             # Fall back to 1 contract on rejection (minimum tradeable)
             contracts = 1
@@ -985,7 +1103,11 @@ def compute_position_sizes(
         stop_mult = 1.5  # CLAUDE.md §4 default
         pv = contract_spec.point_value
         # risk_dollars extracted from evidence (set by compute_risk_derived_contracts)
-        risk_dollars_scalar = float(sizing_result.evidence.get("risk_dollars", account_balance * config.max_risk_pct_per_trade))
+        risk_dollars_scalar = float(
+            sizing_result.evidence.get(
+                "risk_dollars", account_balance * config.max_risk_pct_per_trade
+            )
+        )
         # F-7 fix (2026-05-20): when firm_cap AND max_contracts are both None
         # (legacy strategies, no firm metadata) int(None) raised TypeError. Use a
         # sentinel "no cap" value (1e9 contracts — well above any liquidity cap
@@ -1007,9 +1129,15 @@ def compute_position_sizes(
         else:
             # Per-bar risk-derived cap: floor(risk_dollars / (stop_mult * atr[i] * pv))
             with np.errstate(divide="ignore", invalid="ignore"):
-                risk_derived_caps = np.floor(risk_dollars_scalar / (stop_mult * atr_arr * pv))
+                risk_derived_caps = np.floor(
+                    risk_dollars_scalar / (stop_mult * atr_arr * pv)
+                )
             # Clamp negative / NaN → 0
-            risk_derived_caps = np.where(np.isnan(risk_derived_caps) | (risk_derived_caps < 0), 0.0, risk_derived_caps)
+            risk_derived_caps = np.where(
+                np.isnan(risk_derived_caps) | (risk_derived_caps < 0),
+                0.0,
+                risk_derived_caps,
+            )
             # Step 1: min(pyramid_tier, risk_derived_cap, firm_cap, liquidity_cap)
             bar_sizes = np.minimum(pyramid_tier_bar, risk_derived_caps)
             bar_sizes = np.minimum(bar_sizes, effective_firm_cap_bar)
@@ -1017,7 +1145,9 @@ def compute_position_sizes(
             bar_sizes = np.maximum(bar_sizes, 0.0)
             # Step 2 (Wave 23): Pyramid floor on healthy accounts — element-wise
             if account_is_healthy_bar and base_contr > 0:
-                bar_sizes = np.where(bar_sizes < base_contr, float(base_contr), bar_sizes)
+                bar_sizes = np.where(
+                    bar_sizes < base_contr, float(base_contr), bar_sizes
+                )
             # Bars where risk_derived_caps == 0 and account unhealthy → 1 fallback (minimum tradeable)
             bar_sizes = np.where(bar_sizes <= 0, 1.0, bar_sizes)
             sizes = bar_sizes
@@ -1030,6 +1160,7 @@ def compute_position_sizes(
     if atr_col not in df.columns:
         # Fallback: compute ATR
         from src.engine.indicators.core import compute_atr
+
         atr_series = compute_atr(df, atr_period)
     else:
         atr_series = df[atr_col]
