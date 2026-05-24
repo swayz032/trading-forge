@@ -4006,6 +4006,141 @@ except Exception as e:
   });
   _scheduledJobs.add("consistency-tracker-daily-digest");
 
+  // ─── W26 Pass 4: Pattern aggregator — every 4 hours ──────────────────────────
+  // Reads recent trade_critique rows, identifies recurring patterns, and emits a
+  // strategy_proposer prompt appendix. Closes the broken feedback loop between
+  // nightly/trade critiques and strategy generation.
+  //
+  // Pipeline-gate EXEMPT: the aggregator updates the strategy proposer's prompt
+  // appendix cache in model-router.ts. This must fire even when the research
+  // pipeline is paused so that the appendix stays current for when the pipeline
+  // resumes. The kill switch (auto_patch_loop_enabled=false) is the operator's
+  // tool to halt the loop — not the pipeline gate.
+  _PIPELINE_GATE_EXEMPT.add("pattern-aggregator");
+
+  registerJob("pattern-aggregator", 4 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "pattern-aggregator" }, "cron tick start");
+    const { runPatternAggregator } = await import("./services/pattern-aggregator-service.js");
+    const result = await runPatternAggregator();
+    logger.info(
+      { status: result.status, critiquesReviewed: result.critiques_reviewed, provider: result.provider, durationMs: result.durationMs, correlationId, jobName: "pattern-aggregator" },
+      "pattern-aggregator cron complete",
+    );
+  });
+
+  cron.schedule("0 */4 * * *", async () => {
+    if (!_tryAcquireJobLock("pattern-aggregator")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("pattern-aggregator", SCHEDULER_JOBS["pattern-aggregator"].run, 1);
+      markJobRun("pattern-aggregator");
+      emitJobComplete("pattern-aggregator", Date.now() - t0);
+    } finally {
+      _releaseJobLock("pattern-aggregator");
+    }
+  });
+  _scheduledJobs.add("pattern-aggregator");
+
+  // ─── Wave 25 Pass 6 W25.11: narrative-state-tracker — every 5 min RTH ──────
+  //
+  // Computes institutional narrative phase (ACCUMULATION / MANIPULATION /
+  // DISTRIBUTION / REVERSAL_FORMING / NEUTRAL) for all 3 symbols and persists
+  // to bias_state.narrative_state (migration 0143).
+  //
+  // Pipeline-gate EXEMPT: narrative state is an observability + promotion-gate
+  // input that must populate even when the trading pipeline is paused.
+  // Idempotent: no audit row emitted unless the phase actually changes.
+  //
+  // RTH guard: Mon–Fri, 13:30–20:00 UTC (09:30–16:00 ET).
+  // Same window as liquidity-map-refresh (conservative; narrative data outside
+  // RTH is low-value and the 5-min cron would generate noise).
+
+  registerJob("narrative-state-tracker", 5 * 60 * 1000, async () => {
+    const nowUtc = new Date();
+    const dayOfWeek = nowUtc.getUTCDay(); // 0=Sun, 6=Sat
+    if (dayOfWeek === 0 || dayOfWeek === 6) return; // skip weekends
+
+    const hourUtc = nowUtc.getUTCHours();
+    const minUtc = nowUtc.getUTCMinutes();
+    const totalMinutesUtc = hourUtc * 60 + minUtc;
+    // 13:30 UTC = 810 min; 20:00 UTC = 1200 min
+    if (totalMinutesUtc < 810 || totalMinutesUtc >= 1200) return;
+
+    const sessionDate = nowUtc.toISOString().slice(0, 10);
+    const correlationId = randomUUID();
+
+    logger.info(
+      { sessionDate, correlationId },
+      "narrative-state-tracker: tick firing",
+    );
+
+    const {
+      computeNarrativeState,
+      persistNarrativeState,
+      loadLatestNarrativeState,
+    } = await import("./services/narrative-state-service.js");
+
+    for (const symbol of ["MES", "MNQ", "MCL"]) {
+      try {
+        // Load the latest bias_state row for this session+symbol to get htfNarrative + structureState
+        const { getOrComputeBiasStateForDay } = await import("./services/bias-state-service.js");
+        const biasData = await getOrComputeBiasStateForDay(nowUtc, symbol);
+
+        const htfNarrative = biasData.htfNarrative;
+        const structureState = biasData.structureState;
+
+        // Load previous narrative state for phase continuity
+        const previousState = await loadLatestNarrativeState(sessionDate, symbol);
+
+        // Compute narrative state — no liquidity levels provided from the cron path
+        // (liquidity-map-service lookup is deferred to a future pass for performance;
+        // expansion_target will be null in cron path, non-null when called from signal flow)
+        const state = computeNarrativeState(
+          htfNarrative,
+          structureState,
+          { close: 0, high: 0, low: 0, ts_event: nowUtc },
+          [], // liquidityLevelsNearby — empty in cron path
+          previousState,
+        );
+
+        await persistNarrativeState(sessionDate, symbol, state, correlationId);
+
+        logger.debug(
+          { symbol, sessionDate, phase: state.phase, correlationId },
+          "narrative-state-tracker: symbol complete",
+        );
+      } catch (err) {
+        logger.warn(
+          { err, symbol, sessionDate, correlationId },
+          "narrative-state-tracker: symbol failed (non-blocking)",
+        );
+      }
+    }
+
+    logger.info(
+      { sessionDate, correlationId },
+      "narrative-state-tracker: all symbols complete",
+    );
+  });
+
+  // Pipeline-gate EXEMPT: narrative context must populate even during PAUSE
+  _PIPELINE_GATE_EXEMPT.add("narrative-state-tracker");
+
+  // Cron driver: every 5 min — "*/5 * * * *"
+  cron.schedule("*/5 * * * *", async () => {
+    if (!_tryAcquireJobLock("narrative-state-tracker")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("narrative-state-tracker", SCHEDULER_JOBS["narrative-state-tracker"].run, 1);
+      markJobRun("narrative-state-tracker");
+      emitJobComplete("narrative-state-tracker", Date.now() - t0);
+    } finally {
+      _releaseJobLock("narrative-state-tracker");
+    }
+  });
+  _scheduledJobs.add("narrative-state-tracker");
+
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
   // cron.schedule body). Catches the F-1/F-2 class of bug — a job registered

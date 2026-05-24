@@ -7136,6 +7136,65 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-24 Wave 26 Pass 4 — Pattern Aggregator + appendixCache Loop Fix
+
+**Mission:** Close the broken feedback loop between nightly/trade critiques and strategy generation by shipping the pattern aggregator service and the synchronous appendixCache architecture that wires it into buildPromptSync.
+
+**Work completed:**
+- NEW `src/agents/pattern-aggregator.md` — 150-line rubric directing GPT-5.4 to synthesize parameter hints from technical_diagnosis fields; hard rules against new strategies/indicators/risk changes; NO_CHANGE sentinel when no 3-critique minimum patterns qualify
+- NEW `src/server/services/pattern-aggregator-service.ts` — full PatternAggregatorResult pipeline: kill switch read, min-sample guard (10, env PATTERN_AGGREGATOR_MIN_CRITIQUES), GPT-5.4 call, Ollama fallback, NO_CHANGE path, prompt_versions insert (isActive=false), A/B test creation (replicated from prompt-evolution-service to avoid circular import), setAppendixCache() call, 5 audit actions
+- MODIFIED `src/server/services/model-router.ts`:
+  - Added `pattern_aggregator` to ModelRole union type
+  - Added `pattern_aggregator: []` to KB_MANIFEST (no KB cards — trade_critique rows ARE the context)
+  - Added MODEL_CONFIGS entry: gpt-5.4, temperature=0.2, maxTokens=8192, responseFormat="text", Ollama fallback deepseek-r1:14b
+  - Added module-level `_appendixCache = new Map<string, string>()` (NOT exported as mutable)
+  - Added exported `setAppendixCache(promptType, content)` — mutates map + logs
+  - Added exported `getAppendixCacheSize()` — for tests + diagnostics
+  - Added exported `warmAppendixCache()` — async, lazy-imports DB, reads isActive=true prompt_versions rows at boot, fail-open
+  - Added exported `__clearAppendixCacheForTests()` — test isolation
+  - Modified `buildPromptSync()` — step 4 reads `_appendixCache.get(role)` synchronously, appends if non-empty; sampled 1-in-100 fire-and-forget audit `pattern_evolution.applied`
+- MODIFIED `src/server/scheduler.ts` — added `pattern-aggregator` cron every 4h (`0 */4 * * *`), added to `_PIPELINE_GATE_EXEMPT`, uses `_tryAcquireJobLock` + `withRetry` + `registerJob` + `markJobRun` pattern
+- VERIFIED `src/server/index.ts` — warmAppendixCache boot-warm already present from prior commit (cf8ec6a); no edit needed
+
+**Architectural loop-fix decision (cache + warm pattern):**
+- buildPromptSync() is SYNCHRONOUS — cannot await getActivePromptContent() (async) in the hot path
+- Solution: module-level Map<string, string> populated at boot by warmAppendixCache() (one DB read, fail-open), updated by pattern-aggregator-service via setAppendixCache() after each 4h aggregation run
+- buildPromptSync() reads the Map synchronously (zero I/O, zero async) — no breaking change to 8+ existing callers
+- Circular import avoided by replicating minimum A/B test SQL in pattern-aggregator-service rather than importing prompt-evolution-service (which imports model-router)
+- Sampled telemetry (1-in-100 fire-and-forget) prevents per-call audit spam on every buildPromptSync call
+
+**Verification:**
+- 20/20 vitest pass (`wave26-pattern-aggregator.test.ts`)
+- `npm run check:production-isolation` CLEAN — 4 files checked, 0 violations
+- `npm run check:2026-compliance` OK — MFFU + Topstep aligned
+- `npm run system-map:check` — pre-existing drift (pattern-aggregator already registered, trade_critique table listed as missing from prior session); no NEW drift introduced by this pass
+- `tsc --noEmit` — 0 errors in new files (pre-existing errors in scripts/ and test/ unrelated)
+- Forbidden files confirmed not modified: paper-signal-service.ts, nightly-critique-service.ts, paper-execution-service.ts, trade-critique-service.ts, Journal.tsx
+
+**Audit row contracts:**
+- `pattern_aggregator.completed` — result: { critiques_reviewed, new_prompt_version_id, ab_test_id, provider, appendix_length, durationMs }
+- `pattern_aggregator.insufficient_samples` — result: { rows_found, min_required }
+- `pattern_aggregator.no_change` — result: { critiques_reviewed, provider, durationMs }
+- `pattern_aggregator.failed` — result: { critiques_reviewed, reason, error? }
+- `auto_patch.loop_halted_skip` — result: { reason: "kill_switch" }
+- `pattern_evolution.applied` (sampled 1-in-100) — result: { role, appendix_length }
+
+**Files touched:**
+- `src/agents/pattern-aggregator.md` (NEW)
+- `src/server/services/pattern-aggregator-service.ts` (NEW)
+- `src/server/services/model-router.ts` (MODIFIED — appendix cache + pattern_aggregator role)
+- `src/server/scheduler.ts` (MODIFIED — pattern-aggregator 4h cron + PIPELINE_GATE_EXEMPT)
+- `src/server/__tests__/wave26-pattern-aggregator.test.ts` (NEW — 20 tests)
+
+**Known remaining mismatches:**
+- `buildPromptSync` appendix cache is only populated for the role that matches the key — other roles (critic_evaluator, scout_auditor, etc.) correctly have no appendix (cache miss = no appendix, by design)
+- promptAbTests A/B resolution is driven by prompt-evolution-service.ts weekly cron — pattern_aggregator rows participate in that resolution (same table, same logic)
+- System map shows pattern-aggregator as unregistered subsystem — pre-existing state; operator needs to run `npm run system-map:sync` to register after this pass lands
+
+**Carry-forward for next session:** None from this pass. Parent claude to batch-push after Pass 2 + Pass 4 both land.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

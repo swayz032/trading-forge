@@ -68,6 +68,7 @@ export type ModelRole =
   | "dsl_writer"
   | "quick_classifier"          // NEW (Pass 21 — phi4-mini for binary/categorical decisions)
   | "trade_critique"            // NEW (Wave 26 Pass 1 — per-trade autopsy; GPT-5.4 + Ollama fallback)
+  | "pattern_aggregator"        // NEW (Wave 26 Pass 4 — nightly+trade critique feedback loop; GPT-5.4 text output)
   | "embedder";
 
 /**
@@ -138,6 +139,9 @@ const KB_MANIFEST: Record<ModelRole, readonly string[]> = {
   // trade_critique — institutional per-trade autopsy. Prop-firm rules summary
   // gives the rubric grounding on Topstep consistency cap math.
   trade_critique: ["kb/prop-firm-rules-summary.md"],
+  // pattern_aggregator — reads trade_critique rows as context; no KB cards needed.
+  // The trade_critique rows ARE the context; KB cards would dilute the signal.
+  pattern_aggregator: [],
   embedder: [],
 };
 
@@ -339,6 +343,22 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     fallback: { provider: "ollama", model: "deepseek-r1:14b" },
     timeoutMs: 90_000, // full-model reasoning needs more headroom than mini
   },
+  // ─── Wave 26 Pass 4: pattern_aggregator ──────────────────────────────────
+  // GPT-5.4 full model — reads trade_critique technical_diagnosis batch and
+  // emits a strategy_proposer prompt appendix as plain-text markdown (NOT JSON).
+  // responseFormat:"text" bypasses buildJsonSchema entirely — this role emits
+  // prompt-appendix markdown, not structured data.
+  // Fallback: Ollama deepseek-r1:14b (reasoning model for pattern synthesis).
+  pattern_aggregator: {
+    provider: "openai",
+    model: "gpt-5.4",
+    temperature: 0.2,
+    maxTokens: 8192,
+    systemPromptPath: "src/agents/pattern-aggregator.md",
+    responseFormat: "text",
+    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    timeoutMs: 90_000,
+  },
   embedder: {
     provider: "ollama",
     model: "nomic-embed-text",
@@ -358,6 +378,80 @@ export function selectModel(role: ModelRole): ModelConfig {
     return MODEL_CONFIGS.fast_critique;
   }
   return config;
+}
+
+// ─── Wave 26 Pass 4: Appendix cache (architectural loop fix) ───────────────
+//
+// Problem: buildPromptSync() is SYNCHRONOUS but getActivePromptContent() is ASYNC.
+// They cannot be directly composed in the hot path without adding async/await
+// to every buildPromptSync caller (breaking 8+ callers).
+//
+// Solution: module-level Map<string, string> warmed at boot and updated by
+// pattern-aggregator-service after each aggregation run. buildPromptSync reads
+// the map synchronously — no I/O, no async in hot path.
+//
+// The map is NOT exported directly to prevent callers from mutating it without
+// the telemetry side-effect. Use setAppendixCache() to mutate.
+
+const _appendixCache = new Map<string, string>();
+
+/**
+ * Update the appendix cache for a prompt type. Called by pattern-aggregator-service
+ * after each successful aggregation run. Also called by warmAppendixCache() at boot.
+ *
+ * Thread-safe: JavaScript single-threaded; Map.set() is atomic.
+ */
+export function setAppendixCache(promptType: string, content: string): void {
+  _appendixCache.set(promptType, content);
+  logger.info(
+    { promptType, contentLength: content.length },
+    "model-router: appendix cache updated",
+  );
+}
+
+/**
+ * Return the number of entries in the appendix cache.
+ * Used by tests and diagnostics — not business logic.
+ */
+export function getAppendixCacheSize(): number {
+  return _appendixCache.size;
+}
+
+/**
+ * Boot-warm the appendix cache by reading active prompt_versions rows.
+ * Call once at startup AFTER migrations apply. Fail-open: any error is
+ * logged as info and the cache starts empty (no strategy generation blocked).
+ *
+ * Imports DB lazily to avoid circular dependency at module-load time.
+ */
+export async function warmAppendixCache(): Promise<void> {
+  try {
+    // Lazy import to avoid circular at module-load (model-router → db before db is ready)
+    const { db } = await import("../db/index.js");
+    const { promptVersions } = await import("../db/schema.js");
+    const { eq } = await import("drizzle-orm");
+
+    const activeVersions = await db
+      .select({ promptType: promptVersions.promptType, content: promptVersions.content })
+      .from(promptVersions)
+      .where(eq(promptVersions.isActive, true));
+
+    for (const row of activeVersions) {
+      if (row.content && row.content.trim().length > 0) {
+        _appendixCache.set(row.promptType, row.content);
+      }
+    }
+
+    logger.info(
+      { warmedCount: activeVersions.length, cacheSize: _appendixCache.size },
+      "model-router: appendix cache warmed at boot",
+    );
+  } catch (err) {
+    logger.info(
+      { err },
+      "model-router: appendix cache warm failed at boot — starting empty (non-blocking)",
+    );
+  }
 }
 
 // ─── KB injection (Pass 1 Branch C) ────────────────────────────────────────
@@ -393,6 +487,14 @@ const inFlight = new Map<string, Promise<string>>();
 export function __clearPromptCacheForTests(): void {
   promptCache.clear();
   inFlight.clear();
+}
+
+/**
+ * Test helper — clears the appendix cache. Exposed for unit tests that need
+ * a clean appendix state between assertions. Production code never calls this.
+ */
+export function __clearAppendixCacheForTests(): void {
+  _appendixCache.clear();
 }
 
 function cacheKey(role: ModelRole, ctx?: PromptTaskContext): string {
@@ -555,6 +657,29 @@ function buildPromptSync(
   if (cards.length > 0) parts.push(cards.join("\n\n"));
   if (fewShot.trim().length > 0) {
     parts.push(`## Few-shot examples\n\n${fewShot.trim()}`);
+  }
+
+  // 4. Wave 26 Pass 4: Appendix cache injection (synchronous — no async in hot path).
+  //    Reads the module-level _appendixCache populated by warmAppendixCache() at boot
+  //    and updated by pattern-aggregator-service after each aggregation run.
+  //    Sampled telemetry: audit row fires 1-in-100 cache hits to avoid per-call spam.
+  const appendix = _appendixCache.get(role);
+  if (appendix && appendix.trim().length > 0) {
+    parts.push(appendix.trim());
+    // Sampled 1-in-100 telemetry — fire-and-forget, never throws, never awaited
+    if (Math.random() < 0.01) {
+      import("../db/index.js").then(({ db }) =>
+        import("../db/schema.js").then(({ auditLog }) =>
+          db.insert(auditLog).values({
+            action: "pattern_evolution.applied",
+            entityType: "model_router",
+            status: "success",
+            result: { role, appendix_length: appendix.length },
+            decisionAuthority: "scheduler",
+          }).catch(() => {}),
+        ),
+      ).catch(() => {});
+    }
   }
 
   return parts.join("\n\n");
