@@ -67,6 +67,7 @@ export type ModelRole =
   | "fast_critique"
   | "dsl_writer"
   | "quick_classifier"          // NEW (Pass 21 — phi4-mini for binary/categorical decisions)
+  | "trade_critique"            // NEW (Wave 26 Pass 1 — per-trade autopsy; GPT-5.4 + Ollama fallback)
   | "embedder";
 
 /**
@@ -134,6 +135,9 @@ const KB_MANIFEST: Record<ModelRole, readonly string[]> = {
   fast_critique: [],
   dsl_writer: [],
   quick_classifier: [],
+  // trade_critique — institutional per-trade autopsy. Prop-firm rules summary
+  // gives the rubric grounding on Topstep consistency cap math.
+  trade_critique: ["kb/prop-firm-rules-summary.md"],
   embedder: [],
 };
 
@@ -317,6 +321,23 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     model: "phi4-mini",
     temperature: 0.2,
     maxTokens: 512,
+  },
+  // ─── Wave 26 Pass 1: trade_critique ──────────────────────────────────────
+  // GPT-5.4 full model (operator-specified literal — do NOT normalise to mini).
+  // 8192 token output budget for dual-output JSON (technical_diagnosis +
+  // plain_english_summary) plus chain-of-thought attribution reasoning.
+  // Strict Responses-API schema enforcement (NOT json_object — institutional bar).
+  // Fallback: Ollama deepseek-r1:14b (reasoning model appropriate for trade autopsy).
+  trade_critique: {
+    provider: "openai",
+    model: "gpt-5.4",
+    temperature: 0.2,
+    maxTokens: 8192,
+    systemPromptPath: "src/agents/trade-critique.md",
+    responseFormat: "json",
+    responsesApiVersion: "v1",
+    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    timeoutMs: 90_000, // full-model reasoning needs more headroom than mini
   },
   embedder: {
     provider: "ollama",
@@ -935,6 +956,85 @@ export async function loadStrictSchemaForRole(role: ModelRole): Promise<unknown 
           },
         },
         required: ["matches"],
+        additionalProperties: false,
+      };
+    // ─── Wave 26 Pass 1: trade_critique strict schema ──────────────────────
+    // Dual-output shape: technical_diagnosis + plain_english_summary.
+    // All nullable fields required in the schema so strict mode forces emission
+    // (LLM emits null for fields where data is unavailable rather than omitting).
+    case "trade_critique":
+      return {
+        type: "object",
+        properties: {
+          technical_diagnosis: {
+            type: "object",
+            properties: {
+              entry_quality_score: { type: "number" },
+              exit_execution_delta_r: { type: "number" },
+              confluence_factors_missed: {
+                type: "array",
+                items: { type: "string" },
+              },
+              parameter_hint: {
+                type: ["object", "null"],
+                properties: {
+                  field: { type: "string" },
+                  current: { type: ["string", "number", "null"] },
+                  suggested_range: { type: "string" },
+                  confidence: { type: "number" },
+                },
+                required: ["field", "current", "suggested_range", "confidence"],
+                additionalProperties: false,
+              },
+              regime_mismatch: { type: "boolean" },
+              attribution: {
+                type: "object",
+                properties: {
+                  regime:     { type: "number" },
+                  structure:  { type: "number" },
+                  narrative:  { type: "number" },
+                  confluence: { type: "number" },
+                  decay:      { type: "number" },
+                  liquidity:  { type: "number" },
+                  fill:       { type: "number" },
+                  exit_plan:  { type: "number" },
+                },
+                required: ["regime","structure","narrative","confluence","decay","liquidity","fill","exit_plan"],
+                additionalProperties: false,
+              },
+              realized_r: { type: ["number", "null"] },
+              expected_r_percentile: { type: ["number", "null"] },
+              topstep_consistency_current_pct: { type: ["number", "null"] },
+              topstep_consistency_distance_to_cap: { type: ["number", "null"] },
+            },
+            required: [
+              "entry_quality_score",
+              "exit_execution_delta_r",
+              "confluence_factors_missed",
+              "parameter_hint",
+              "regime_mismatch",
+              "attribution",
+              "realized_r",
+              "expected_r_percentile",
+              "topstep_consistency_current_pct",
+              "topstep_consistency_distance_to_cap",
+            ],
+            additionalProperties: false,
+          },
+          plain_english_summary: {
+            type: "object",
+            properties: {
+              grade:           { type: "string", enum: ["A+","A","B+","B","C+","C","D","F"] },
+              one_liner:       { type: "string" },
+              what_went_right: { type: "string" },
+              what_to_watch:   { type: "string" },
+              action_needed:   { type: "string" },
+            },
+            required: ["grade","one_liner","what_went_right","what_to_watch","action_needed"],
+            additionalProperties: false,
+          },
+        },
+        required: ["technical_diagnosis", "plain_english_summary"],
         additionalProperties: false,
       };
     case "critic_evaluator":

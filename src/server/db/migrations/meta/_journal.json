@@ -1002,6 +1002,13 @@
       "when": 1779613546110,
       "tag": "0140_liquidity_levels",
       "breakpoints": true
+    },
+    {
+      "idx": 143,
+      "version": "7",
+      "when": 1779700000000,
+      "tag": "0141_trade_critique",
+      "breakpoints": true
     }
   ]
 }

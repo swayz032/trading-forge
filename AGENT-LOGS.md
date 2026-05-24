@@ -7079,6 +7079,33 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-24 Wave 25 Pass 5 — order flow layer (VWAP bands + Anchored VWAP + SMT ES↔NQ)
+
+**Mission:** Wire VWAP bands + Anchored VWAP + continuous SMT divergence into Stage 2 weighted scoring. Light up vwap_alignment + smt_confirmation factors (transition from Pass 1 stubs).
+
+**Work completed:**
+- **P5.A1 (backtest-core):** `compute_vwap_with_bands()` (5 columns: vwap, vwap_band_1s_upper/lower, vwap_band_2s_upper/lower with Globex 18:00 ET session-resetting variance accumulation) + `compute_anchored_vwap()` (deterministic `anchored_vwap_<iso>` column naming for per-strategy anchor timestamps) in `src/engine/indicators/core.py`. 2 new DSL archetypes: `vwap_band_reject`, `anchored_vwap_retest`. New IndicatorConfig.anchor_ts field. 63 new pytest GREEN (test_vwap_bands.py + test_anchored_vwap.py + test_archetype_vwap_band_reject.py).
+- **P5.A2 (backtest-core):** `src/engine/indicators/smt_divergence.py` with continuous [0,1] `compute_smt_divergence(es_bars, nq_bars)` — 4-component weighted formula (magnitude × time_synced × structure_quality × displacement_confirmation). Emits smt_score + smt_direction (bullish_es_strong/bullish_nq_strong/bearish_es_strong/bearish_nq_strong). Closes GPT critique #7 (binary SMT → continuous). 33 new pytest GREEN.
+- **P5.A3 (paper-parity):** `confluence-score.ts::evalVwapAlignment()` REWRITTEN institutional discount/premium (long satisfied when close below VWAP — CORRECTS retail "long above VWAP") + 1σ band reject + anchored VWAP retest in priority order. `evalSmtConfirmation()` reads continuous ctx.smt_score + ctx.smt_direction with 0.5 satisfaction threshold; decay engine multiplies smt_age_bars on top (no double-decay). 28 new vitest in `wave25-vwap-smt-wiring.test.ts` + 5 updated wave25-weighted-scoring tests for new VWAP semantics.
+- **Architect close-out (P5.A5):** Live SMT bridge to paper-signal-service.ts **DEFERRED to Wave 26** (Option B). Reasoning: Python bridge requires MES+MNQ buffer co-location, 30s subprocess cache, parity test suite, audit wiring — 60-90 min of careful work in hot signal path during close-out is wrong blast radius. SMT factor 0.10 weight; backtest engine populates SMT directly so institutional logic is testable end-to-end via backtest; only live-paper consumer is dark. Paper continues fail-open with `reason='smt_unavailable'` (same effective behavior as Pass 1 stub for the live path only).
+- System Map: 3 new subsystem entries registered (`vwap_bands_engine`, `smt_divergence_engine`, `confluence_score_engine` — the latter is the consolidated Path C 11-factor evaluator entry).
+- CLAUDE.md §2 Pass 5 entry appended; §2b 11-factor table footnote updated (vwap_alignment + smt_confirmation now LIVE; SMT live-paper deferral explicitly noted).
+
+**Verification:** 124 new tests across 4 suites (63 + 33 + 28 + 5 updated) green per worker reports. `npm run system-map:sync` ran clean. `npm run system-map:check` exit 0 (pre-existing drift items only — no new drift introduced by Pass 5). Backward-compat preserved: `use_weighted_scoring=false` strategies unaffected; missing-data fail-open paths preserved (smt_unavailable, vwap_unavailable).
+
+**Known-facts updates:**
+- **VWAP semantics are now institutional discount/premium** (long below VWAP, short above) — CORRECTS the retail-style "long above VWAP" assumption. Any agent reverting this regresses Pass 5.
+- **SMT is continuous [0,1] not binary** (4-component formula per GPT critique #7). Any binary SMT logic in future passes is wrong.
+- **New columns vwap_band_1s_*, vwap_band_2s_*, anchored_vwap_<iso>** are additive — no existing schema/CSV consumers impacted.
+- **Live SMT bridge gap is intentional Wave 26 work**, not a bug. paper-signal-service.ts smt_unavailable fail-open is the designed Pass 5 boundary.
+
+**Carry-forward for next session:**
+- **Pass 6 (regime + narrative)** — independent of Pass 5 outputs; can dispatch in parallel.
+- **Pass 7 (adaptive exits)** — will consume `vwap_band_2s_upper/lower` for runner-trail decisions + `smt_score` for early-exit triggers. Pass 5 contract is stable for Pass 7 to depend on.
+- **Wave 26 candidate #1: Live SMT bridge** — wire `compute_smt_divergence` Python subprocess + 30s cache + populate `ctx.smt_score` / `ctx.smt_direction` / `ctx.smt_age_bars` in paper-signal-service.ts Path C SignalContext builder (`paper-signal-service.ts:3141-3159`). Pattern reference: `paper-execution-service.ts:302` `runPythonModule` + market-internals-service.ts cache singleton. Estimated 60-90 min.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

@@ -2719,6 +2719,38 @@ export const preMarketSessions = pgTable(
   ],
 );
 
+// ─── Trade Critique (Wave 26 Pass 1) ─────────────────────────────────────────
+// Autopsies every closed paper/live position within 60 seconds.
+// Written by trade-critique-service.ts; read by analytics + promotion-gate dashboards.
+// Soft FK to paper_positions (no hard FK until Wave 25 schema stabilises).
+//
+// Migration: 0141_trade_critique.sql (idx 143)
+export const tradeCritique = pgTable(
+  "trade_critique",
+  {
+    id:                   uuid("id").primaryKey().defaultRandom(),
+    positionId:           uuid("position_id").notNull(),          // soft FK — no hard FK by design
+    sessionId:            uuid("session_id"),
+    accountId:            uuid("account_id"),
+    strategyId:           uuid("strategy_id"),
+    critiquedAt:          timestamp("critiqued_at", { withTimezone: true }).notNull().defaultNow(),
+    grade:                text("grade").notNull(),                 // A+/A/B+/B/C+/C/D/F
+    technicalDiagnosis:   jsonb("technical_diagnosis").notNull(),
+    plainEnglishSummary:  jsonb("plain_english_summary").notNull(),
+    dataCompleteness:     text("data_completeness").notNull().default("full"), // full|partial|minimal
+    missingFields:        text("missing_fields").array().notNull().default(sql`'{}'`),
+    provider:             text("provider").notNull(),              // openai|ollama
+    model:                text("model").notNull(),
+    correlationId:        text("correlation_id"),
+    createdAt:            timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_trade_critique_position_id").on(table.positionId),
+    index("idx_trade_critique_account_strategy").on(table.accountId, table.strategyId, table.critiquedAt),
+    index("idx_trade_critique_grade").on(table.grade).where(sql`grade IN ('D','F')`),
+  ],
+);
+
 // ─── Liquidity Levels (Wave 25 Pass 3 — W25.6) ────────────────
 // Persistent ranked liquidity map engine.  One row per active price level.
 // expired_at IS NULL = active.  17 canonical level_type values (contract

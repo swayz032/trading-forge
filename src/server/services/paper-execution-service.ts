@@ -1943,6 +1943,17 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
     }
   }
 
+  // Wave 26 Pass 1: fire-and-forget trade critique autopsy.
+  // MUST remain after the audit write above so the position row is fully committed.
+  // Dynamic import avoids circular dependency at module load time.
+  void import("./trade-critique-service.js").then(({ runTradeCritique }) => {
+    void runTradeCritique(pos.id, correlationId ?? undefined).catch((err) => {
+      logger.error({ positionId: pos.id, err }, "trade_critique fire-and-forget failed (non-blocking)");
+    });
+  }).catch((err) => {
+    logger.error({ positionId: pos.id, err }, "trade-critique-service dynamic import failed (non-blocking)");
+  });
+
   return { trade, pnl: netPnl, grossPnl, commission, slippage, rollSpreadCost: rollCost.estimatedSpreadCost };
   }); // end withSessionLock
   } finally {
