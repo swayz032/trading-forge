@@ -3500,5 +3500,132 @@
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
     "criticality": "important"
+  },
+  {
+    "id": "transcript_extractor_local_routing",
+    "domain": "research",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 26 Pass A — local-first routing for the transcript_extractor LLM role. Direct Ollama gemma4:e2b primary with cloud gpt-5-mini fallback. callScoutExtractLlm() in src/server/services/model-router.ts: 2-phase boot health check (/api/tags + test-inference probe in checkTranscriptExtractorOllamaHealth) sets module-level OLLAMA_HEALTHY flag; runtime gates isForceCloud() + OLLAMA_HEALTHY decide primary. 30s per-attempt timeout via OllamaClient(undefined, 30_000); 3-attempt retry with exponential backoff + jitter; JSON validation gate (JSON.parse(raw)) attaches fallbackReason='ollama_invalid_json' on parse failure. Fallback fires once per call (not per failure-mode) to cloud retry path. Per-call audit row llm.transcript_extractor_call captures {model, provider, fellback, fallback_reason, durationMs}. Operator panic-revert: TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true flips primary to cloud without code change. Local-model override: TRANSCRIPT_EXTRACTOR_LOCAL_MODEL env (default gemma4:e2b). Infrastructure dependency: Ollama >= 0.4.x for gemma4 execution; older Ollama lists model in tags but fails at test-inference (boot probe catches this and routes to cloud). Cloud budget cap: OPENAI_DAILY_BUDGET_TOKENS (alias TRADING_FORGE_DAILY_TOKEN_BUDGET), default 500_000 (tightened from leaky 1M) — enforced via isOverBudget() gate returning HTTP 429 to model-router.",
+    "data_sources": [
+      "YouTube transcripts (operator-ingest path)",
+      "Ollama local inference at OLLAMA_HOST"
+    ],
+    "reads_from": [
+      "system_journal"
+    ],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "llm.transcript_extractor_call",
+      "llm.transcript_extractor_ollama_fallback_to_cloud",
+      "llm.retry_attempt"
+    ],
+    "metrics_surfaces": [
+      "/api/health",
+      "/api/openai-proxy/usage"
+    ],
+    "telemetry_sources": [
+      "audit_log:llm.transcript_extractor_call",
+      "stdout-pino-logger"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/openai-proxy"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "stdout-pino-logger",
+      "/api/openai-proxy/usage"
+    ],
+    "recovery_mode": "fail-soft-cloud-fallback",
+    "health_check": "checkTranscriptExtractorOllamaHealth-at-boot",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:llm.transcript_extractor_call:per-call",
+      "logger:model-router:Ollama health OK:boot"
+    ],
+    "evidence_queries": [
+      "src/server/__tests__/wave26-transcript-extractor-gemma4-routing.test.ts",
+      "scripts/wave26-gemma4-smoke-test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "env-revert-via-TRANSCRIPT_EXTRACTOR_FORCE_CLOUD",
+    "criticality": "important"
+  },
+  {
+    "id": "replay_harness_engine",
+    "domain": "validation",
+    "owner_surface": "python",
+    "automation_mode": "autonomous",
+    "manual_gate": "operator-approve",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 27 Pass 1 — deterministic replay harness for backtest reconstruction. quantum_replay.py + db_loader.py in src/engine/replay/. Loads historical bar context + schema-version gate + CPCV purge enforcement to reproduce any 90-day-old trade decision from audit_log + system_journal seeds. 19 pytest pass. Registry entry added 2026-05-24 by Wave 26 Pass A closeout (resolves pre-existing system-map drift item 'Registry is missing 1 engine subsystem mappings').",
+    "data_sources": [
+      "audit_log",
+      "system_journal",
+      "S3 ratio_adj bars"
+    ],
+    "reads_from": [
+      "audit_log",
+      "system_journal"
+    ],
+    "writes_to": [],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "replay.harness_executed"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "stdout-json-summary"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "replay"
+    ],
+    "database_tables": [
+      "audit_log",
+      "system_journal"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "stdout-json-summary"
+    ],
+    "recovery_mode": "operator-rerun",
+    "health_check": "tests/python/replay/test_quantum_replay.py",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "static-evidence",
+    "freshness_signals": [],
+    "evidence_queries": [
+      "tests/python/replay/test_quantum_replay.py"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
   }
 ]

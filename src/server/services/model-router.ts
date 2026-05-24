@@ -23,6 +23,154 @@ import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
 
+// ─── Wave 26 — Transcript Extractor local-first routing ───────────────────────
+//
+// gemma4:e2b is the LOCAL PRIMARY for transcript_extractor.
+// Cloud gpt-5-mini is the FALLBACK (fires only on Ollama failure or force-cloud).
+//
+// OLLAMA_HEALTHY is set by checkTranscriptExtractorOllamaHealth() at module load.
+// Module-level flag (not exported) — callers route through callScoutExtractLlm()
+// which reads it. Starts as true; set false only if boot ping fails or model
+// is not found in tags list.
+let OLLAMA_HEALTHY = true;
+
+/**
+ * Whether TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true is set in the environment.
+ * Operator panic-revert: flips primary back to gpt-5-mini without code change.
+ * Evaluated at module load AND re-read per call so a process restart picks it up.
+ */
+function isForceCloud(): boolean {
+  return (process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD ?? "false") === "true";
+}
+
+/** Local model name — overridable per deployment. */
+function getLocalTranscriptModel(): string {
+  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+}
+
+/**
+ * Determine the effective provider for transcript_extractor at module load.
+ * Force-cloud and Ollama unhealthy both flip to cloud.
+ */
+function getTranscriptExtractorProvider(): "openai" | "ollama" {
+  if (isForceCloud()) return "openai";
+  if (!OLLAMA_HEALTHY) return "openai";
+  return "ollama";
+}
+
+function getTranscriptExtractorModel(): string {
+  if (isForceCloud()) return "gpt-5-mini";
+  if (!OLLAMA_HEALTHY) return "gpt-5-mini";
+  return getLocalTranscriptModel();
+}
+
+function getTranscriptExtractorFallbackProvider(): "openai" | "ollama" {
+  // When primary is Ollama → fallback is cloud
+  // When primary is cloud (force or unhealthy) → no meaningful fallback (stays cloud)
+  if (isForceCloud() || !OLLAMA_HEALTHY) return "openai";
+  return "openai";
+}
+
+function getTranscriptExtractorFallbackModel(): string {
+  return "gpt-5-mini";
+}
+
+/**
+ * Ping Ollama at boot to confirm gemma4:e2b is available AND executable.
+ *
+ * Two-phase check:
+ *   1. /api/tags — confirm model exists in registry
+ *   2. Test inference — send a tiny JSON probe to confirm the model can actually
+ *      load and execute (catches "memory layout cannot be allocated" errors from
+ *      Ollama versions that list gemma4 but cannot run it, e.g. Ollama < 0.4.x)
+ *
+ * Sets OLLAMA_HEALTHY=false if either phase fails.
+ * Fire-and-forget: any error is logged and swallowed — never blocks startup.
+ */
+export async function checkTranscriptExtractorOllamaHealth(): Promise<void> {
+  const ollamaBase = process.env.OLLAMA_HOST ?? process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
+  const targetModel = getLocalTranscriptModel();
+  try {
+    // Phase 1: tags check
+    const res = await fetch(`${ollamaBase}/api/tags`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) {
+      OLLAMA_HEALTHY = false;
+      logger.warn(
+        { status: res.status, ollamaBase },
+        "model-router: Ollama health ping returned non-OK — transcript_extractor routing to cloud fallback",
+      );
+      return;
+    }
+    const data = await res.json() as { models?: Array<{ name: string }> };
+    const models = data.models ?? [];
+    const modelFound = models.some(
+      (m) => m.name === targetModel || m.name.startsWith(targetModel.split(":")[0] ?? ""),
+    );
+    if (!modelFound) {
+      OLLAMA_HEALTHY = false;
+      logger.warn(
+        { targetModel, available: models.map((m) => m.name) },
+        "model-router: gemma4:e2b not found in Ollama tags — transcript_extractor routing to cloud fallback",
+      );
+      return;
+    }
+
+    // Phase 2: test inference — send a tiny probe to verify the model actually loads.
+    // Catches "memory layout cannot be allocated" errors that occur with older Ollama
+    // versions (< 0.4.x) that list Gemma 4 in tags but cannot execute it.
+    // 15s timeout — model cold-start can be slow but should not exceed 15s for a 2-token response.
+    const probeRes = await fetch(`${ollamaBase}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: targetModel,
+        prompt: '{"ok":true}',
+        format: "json",
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    const probeData = await probeRes.json() as { response?: string; error?: string };
+    if (!probeRes.ok || probeData.error) {
+      OLLAMA_HEALTHY = false;
+      logger.warn(
+        { targetModel, ollamaBase, probeError: probeData.error ?? `HTTP ${probeRes.status}` },
+        "model-router: Ollama test-inference probe failed — transcript_extractor routing to cloud fallback (model cannot execute; check Ollama version ≥ 0.4.x for gemma4 support)",
+      );
+      return;
+    }
+
+    OLLAMA_HEALTHY = true;
+    logger.info(
+      { targetModel, ollamaBase },
+      "model-router: Ollama health OK — transcript_extractor primary is local gemma4:e2b",
+    );
+  } catch (err) {
+    OLLAMA_HEALTHY = false;
+    logger.warn(
+      { err, ollamaBase, targetModel },
+      "model-router: Ollama health check failed — transcript_extractor routing to cloud fallback",
+    );
+  }
+}
+
+/**
+ * Test helper: override OLLAMA_HEALTHY state.
+ * Production code never calls this.
+ */
+export function __setOllamaHealthyForTests(healthy: boolean): void {
+  OLLAMA_HEALTHY = healthy;
+}
+
+/**
+ * Test helper: read current OLLAMA_HEALTHY state.
+ */
+export function __getOllamaHealthyForTests(): boolean {
+  return OLLAMA_HEALTHY;
+}
+
 export interface ModelConfig {
   provider: "openai" | "ollama";
   model: string;
@@ -45,8 +193,11 @@ export interface ModelConfig {
    */
   responsesApiVersion?: "v1";
   fallback?: {
-    provider: "ollama";
+    provider: "ollama" | "openai";
     model: string;
+    temperature?: number;
+    maxTokens?: number;
+    responseFormat?: "json" | "text";
   };
   /** Optional per-role override; falls back to default 30s. */
   timeoutMs?: number;
@@ -224,15 +375,33 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
   // (finishReason: "length"), producing malformed JSON that the route
   // classified as model_unavailable. JackTrades 4H+15M (the canonical MTF
   // target) failed for this reason. GPT-5-mini supports up to 16K output.
+  //
+  // Wave 26 (local-first swap): primary flipped to local Ollama gemma4:e2b
+  // (5.1B effective-2B, Q4_K_M, 7.2 GB) — 96.7% of GPT-5-mini burn traced
+  // to this single role (127.7M tokens / 7,938 calls over 15 days). Cloud
+  // gpt-5-mini is now the FALLBACK (fires only when Ollama is down, returns
+  // invalid JSON, or times out, or TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true).
+  // Prompt + KB cards + few-shot UNCHANGED — model swap only.
+  // Boot health check sets OLLAMA_HEALTHY module flag; FORCE_CLOUD is the
+  // operator panic-revert without code change.
   transcript_extractor: {
-    provider: "openai",
-    model: "gpt-5-mini",
+    provider: getTranscriptExtractorProvider(),
+    model: getTranscriptExtractorModel(),
     temperature: 0.3,
     maxTokens: 8192,
     systemPromptPath: "src/agents/transcript-extractor.md",
     responseFormat: "json",
-    responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "qwen2.5-coder:7b" },
+    // NOTE: responsesApiVersion intentionally NOT set for Ollama primary path.
+    // When force-cloud is active the provider flips to "openai" but we still
+    // do NOT use the Responses API — json_object mode is correct here because
+    // loadStrictSchemaForRole returns null for transcript_extractor (W23H fix13).
+    fallback: {
+      provider: getTranscriptExtractorFallbackProvider(),
+      model: getTranscriptExtractorFallbackModel(),
+      temperature: 0.3,
+      maxTokens: 8192,
+      responseFormat: "json",
+    },
   },
   // ─── Tournament roles (Pass 14 — Strategy Tournament hPXh graduation) ───
   // tournament_prosecutor — adversarial bear-case attack on a proposed strategy.
@@ -1775,21 +1944,128 @@ async function writeScoutRetryAudit(row: {
   }
 }
 
+// ─── Wave 26 — Transcript Extractor audit row shape ───────────────────────────
+
+export interface TranscriptExtractorAuditResult {
+  model: string;
+  provider: "ollama" | "openai";
+  fellback: boolean;
+  fallback_reason?: string;
+  inputTokens: number;
+  outputTokens: number;
+  finishReason: string;
+  durationMs: number;
+}
+
+/**
+ * Write per-call audit row for transcript_extractor with model/provider/fellback
+ * fields per §10b instrumentation requirement.
+ * Fire-and-forget — never blocks caller.
+ */
+async function writeTranscriptExtractorAudit(
+  result: TranscriptExtractorAuditResult,
+  correlationId?: string,
+): Promise<void> {
+  try {
+    const { db } = await import("../db/index.js");
+    const { auditLog } = await import("../db/schema.js");
+    await db.insert(auditLog).values({
+      action: "llm.transcript_extractor_call",
+      decisionAuthority: "system",
+      status: "success",
+      durationMs: result.durationMs,
+      result: {
+        model: result.model,
+        provider: result.provider,
+        fellback: result.fellback,
+        fallback_reason: result.fallback_reason ?? null,
+        inputTokens: result.inputTokens,
+        outputTokens: result.outputTokens,
+        finishReason: result.finishReason,
+        ...(correlationId ? { correlation_id: correlationId } : {}),
+      } as Record<string, unknown>,
+    });
+  } catch (err) {
+    logger.debug({ err }, "writeTranscriptExtractorAudit failed (fire-and-forget)");
+  }
+}
+
+/**
+ * Call Ollama gemma4:e2b with 30s timeout per-attempt and JSON validation.
+ *
+ * Returns: { text: string, model, durationMs } on success
+ *          throws on timeout / connection refused / invalid JSON with
+ *          reason attached as err.fallbackReason for callScoutExtractLlm.
+ */
+async function callOllamaForTranscriptExtractor(
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+  taskContext?: PromptTaskContext,
+): Promise<{ text: string; model: string; durationMs: number; inputTokens: number; outputTokens: number }> {
+  const role = "transcript_extractor" as const;
+  const model = getLocalTranscriptModel();
+
+  const { OllamaClient } = await import("./ollama-client.js");
+  // Use a 30s per-call timeout (per R2 requirement). OllamaClient default is 120s;
+  // we override here to keep the primary path responsive.
+  const ollama = new OllamaClient(undefined, 30_000);
+
+  const systemPrompt = loadSystemPrompt(role, taskContext);
+  const userChunks = messages
+    .filter((m) => m.role !== "system")
+    .map((m) => m.content)
+    .join("\n\n");
+  const prompt = `${systemPrompt}\n\n${userChunks}`;
+
+  const startedAt = Date.now();
+  const res = await ollama.generate(model, prompt, undefined, true /* wantJson=format:"json" */);
+  const durationMs = Date.now() - startedAt;
+
+  const raw = res?.response ?? "";
+  if (!raw || raw.trim().length === 0) {
+    const e = new Error("Ollama returned empty response for transcript_extractor") as Error & { fallbackReason: string };
+    e.fallbackReason = "ollama_empty_response";
+    throw e;
+  }
+
+  // R3: JSON validation gate — if parse fails, record reason and throw
+  try {
+    JSON.parse(raw);
+  } catch {
+    const e = new Error("Ollama returned non-JSON for transcript_extractor") as Error & { fallbackReason: string };
+    e.fallbackReason = "ollama_invalid_json";
+    throw e;
+  }
+
+  return { text: raw, model, durationMs, inputTokens: 0, outputTokens: 0 };
+}
+
 /**
  * callScoutExtractLlm — production entry-point for scout_extract / transcript_extractor
- * LLM calls with exponential-backoff retry and Ollama fallback on exhaustion.
+ * LLM calls with exponential-backoff retry and cloud fallback.
  *
- * ONLY use this for the transcript_extractor role in the scout-extract route.
- * Do NOT use for strategy_proposer (different SLO + synthesizer refusal contract).
+ * Wave 26 local-first swap: PRIMARY is now Ollama gemma4:e2b.
+ * Cloud gpt-5-mini is the FALLBACK (fires only when Ollama fails).
  *
- * Retry behaviour: up to 3 attempts, delays 1s / 4s / 15s (±25% jitter).
- * Retries on: HTTP 429, HTTP 5xx, network timeout, model_unavailable, rate_limit.
- * On exhaustion: falls back to Ollama qwen2.5-coder:7b (deterministic) via the
- * same Ollama path as callOpenAIOrFallback.
+ * Routing logic:
+ *   1. If TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true → skip Ollama, use cloud
+ *      (operator panic-revert; flips primary without code change)
+ *   2. If OLLAMA_HEALTHY=false (set at boot by checkTranscriptExtractorOllamaHealth)
+ *      → skip Ollama, use cloud
+ *   3. Otherwise: try Ollama (up to 3 attempts with retry), then fall back to
+ *      cloud on exhaustion or per-call failure (timeout/invalid JSON/empty)
+ *
+ * R4 token budget gate: when cloud budget is exhausted (budget_exhausted_forced_ollama
+ * scenario), the normal cloud path returns null and we stay Ollama-only — cloud
+ * is what we're protecting.
+ *
+ * Function signature UNCHANGED — downstream callers (agent.ts, scout-extract route)
+ * depend on `(messages, taskContext, callFn, sleepFn) => Promise<string | null>`.
  *
  * @param messages    Chat messages to send (same contract as callOpenAI).
  * @param taskContext Optional task context for prompt caching.
- * @param callFn      Injected for tests; defaults to callOpenAI.
+ * @param callFn      Injected for tests; defaults to callOpenAI (cloud path).
+ *                    When testing Ollama-primary routing, inject a mock that
+ *                    drives the cloud fallback path.
  * @param sleepFn     Injected for tests to avoid real setTimeout delays.
  */
 export async function callScoutExtractLlm(
@@ -1799,52 +2075,184 @@ export async function callScoutExtractLlm(
   sleepFn?: (ms: number) => Promise<void>,
 ): Promise<string | null> {
   const role = "transcript_extractor" as const;
+  const forceCloud = isForceCloud();
+  const ollamaHealthy = OLLAMA_HEALTHY;
 
-  const result = await withScoutExtractRetry(
+  // ── Path A: force-cloud or boot-unhealthy → use existing cloud+retry path ──
+  if (forceCloud || !ollamaHealthy) {
+    const reason = forceCloud ? "force_cloud_env" : "ollama_unhealthy_at_boot";
+    logger.info({ role, reason }, "callScoutExtractLlm: routing to cloud primary (TRANSCRIPT_EXTRACTOR_FORCE_CLOUD or Ollama unhealthy)");
+
+    const result = await withScoutExtractRetry(
+      () => callFn(role, messages, taskContext),
+      writeScoutRetryAudit,
+      sleepFn,
+    );
+
+    if (result.text !== null) {
+      void writeTranscriptExtractorAudit({
+        model: "gpt-5-mini",
+        provider: "openai",
+        fellback: false,
+        inputTokens: 0,
+        outputTokens: 0,
+        finishReason: "stop",
+        durationMs: 0,
+      });
+      return result.text;
+    }
+
+    if (result.exhausted) {
+      // Cloud retries exhausted — nothing left to try
+      void writeTranscriptExtractorAudit({
+        model: "gpt-5-mini",
+        provider: "openai",
+        fellback: false,
+        fallback_reason: "cloud_retries_exhausted",
+        inputTokens: 0,
+        outputTokens: 0,
+        finishReason: "error",
+        durationMs: 0,
+      });
+      return null;
+    }
+
+    // Budget gate / circuit open / refusal
+    return callOpenAIOrFallback(role, messages, taskContext);
+  }
+
+  // ── Path B: Ollama primary — try up to 3 attempts, then fall back to cloud ──
+  let ollamaText: string | null = null;
+  let ollamaFallbackReason: string | undefined;
+  let ollama_durationMs = 0;
+
+  for (let attempt = 0; attempt < MAX_SCOUT_ATTEMPTS; attempt++) {
+    try {
+      const res = await callOllamaForTranscriptExtractor(messages, taskContext);
+      ollamaText = res.text;
+      ollama_durationMs = res.durationMs;
+      logger.info(
+        { role, model: res.model, durationMs: res.durationMs, attempt: attempt + 1 },
+        "callScoutExtractLlm: Ollama primary succeeded",
+      );
+      break;
+    } catch (err: unknown) {
+      const fallbackReason = (err as { fallbackReason?: string }).fallbackReason ?? classifyLlmError(err) ?? "ollama_error";
+      ollamaFallbackReason = fallbackReason;
+
+      // Check if retryable
+      const isRetryable =
+        fallbackReason === "network_timeout" ||
+        fallbackReason === "ollama_timeout" ||
+        classifyLlmError(err) !== null;
+
+      logger.warn(
+        { role, attempt: attempt + 1, fallbackReason, isRetryable },
+        "callScoutExtractLlm: Ollama primary attempt failed",
+      );
+
+      void writeScoutRetryAudit({
+        action: "llm.retry_attempt",
+        decisionAuthority: "system",
+        status: "retrying",
+        result: {
+          role: "scout_extract",
+          attempt: attempt + 1,
+          reason: fallbackReason,
+          model_id: getLocalTranscriptModel(),
+          err_message: err instanceof Error ? err.message : String(err ?? ""),
+          path: "ollama_primary",
+        },
+      });
+
+      const isLastAttempt = attempt === MAX_SCOUT_ATTEMPTS - 1;
+      if (isLastAttempt || !isRetryable) break;
+
+      // Backoff before retry
+      const base = SCOUT_RETRY_BASE_DELAYS_MS[attempt] ?? 1_000;
+      const jitter = base * 0.25 * (Math.random() * 2 - 1);
+      const delay = Math.max(100, Math.round(base + jitter));
+      if (sleepFn) {
+        await sleepFn(delay);
+      } else {
+        await new Promise<void>((r) => setTimeout(r, delay));
+      }
+    }
+  }
+
+  if (ollamaText !== null) {
+    // Success on Ollama primary
+    void writeTranscriptExtractorAudit({
+      model: getLocalTranscriptModel(),
+      provider: "ollama",
+      fellback: false,
+      inputTokens: 0,
+      outputTokens: 0,
+      finishReason: "stop",
+      durationMs: ollama_durationMs,
+    });
+    return ollamaText;
+  }
+
+  // ── Ollama failed all attempts — fall back to cloud gpt-5-mini ──
+  logger.warn(
+    { role, fallbackReason: ollamaFallbackReason },
+    "callScoutExtractLlm: Ollama primary exhausted — falling back to cloud gpt-5-mini",
+  );
+
+  void writeScoutRetryAudit({
+    action: "llm.transcript_extractor_ollama_fallback_to_cloud",
+    decisionAuthority: "system",
+    status: "retrying",
+    result: {
+      role: "scout_extract",
+      ollama_model: getLocalTranscriptModel(),
+      fallback_reason: ollamaFallbackReason ?? "unknown",
+    },
+  });
+
+  // Try cloud with retry
+  const cloudResult = await withScoutExtractRetry(
     () => callFn(role, messages, taskContext),
     writeScoutRetryAudit,
     sleepFn,
   );
 
-  if (result.text !== null) return result.text;
-
-  // Fallback to Ollama — either on exhaustion (transient LLM errors) or on
-  // clean null (budget gate / circuit open). callOpenAIOrFallback already
-  // handles the Ollama path; route through it so we don't duplicate that logic.
-  // On retry-exhaustion, cloud is known bad — skip cloud call, go direct to Ollama.
-  if (result.exhausted) {
-    const config = MODEL_CONFIGS[role];
-    if (!config?.fallback || config.fallback.provider !== "ollama") {
-      logger.warn({ role }, "callScoutExtractLlm: retries exhausted but no Ollama fallback configured");
-      return null;
-    }
-    try {
-      const { OllamaClient } = await import("./ollama-client.js");
-      const ollama = new OllamaClient();
-      const systemPrompt = loadSystemPrompt(role, taskContext);
-      const userChunks = messages
-        .filter((m) => m.role !== "system")
-        .map((m) => m.content)
-        .join("\n\n");
-      const prompt = `${systemPrompt}\n\n${userChunks}`;
-      const wantJson = config.responseFormat === "json";
-      const startedAt = Date.now();
-      const res = await ollama.generate(config.fallback.model, prompt, undefined, wantJson);
-      const durationMs = Date.now() - startedAt;
-      logger.info(
-        { role, model: config.fallback.model, durationMs, responseLen: res?.response?.length ?? 0, retries_exhausted: true },
-        "callScoutExtractLlm: Ollama fallback after retry exhaustion completed",
-      );
-      return res?.response ?? null;
-    } catch (err) {
-      logger.error({ role, err }, "callScoutExtractLlm: Ollama fallback after retry exhaustion failed");
-      return null;
-    }
+  if (cloudResult.text !== null) {
+    void writeTranscriptExtractorAudit({
+      model: "gpt-5-mini",
+      provider: "openai",
+      fellback: true,
+      fallback_reason: ollamaFallbackReason,
+      inputTokens: 0,
+      outputTokens: 0,
+      finishReason: "stop",
+      durationMs: 0,
+    });
+    return cloudResult.text;
   }
 
-  // Clean null from callOpenAI (budget gate / circuit open / refusal) — delegate
-  // to callOpenAIOrFallback which handles the Ollama path with proper logging.
-  return callOpenAIOrFallback(role, messages, taskContext);
+  // R4: cloud is what we're protecting — if cloud budget is exhausted after
+  // Ollama has already failed, there is nothing left to try.
+  void writeTranscriptExtractorAudit({
+    model: "gpt-5-mini",
+    provider: "openai",
+    fellback: true,
+    fallback_reason: ollamaFallbackReason ?? "ollama_failure_cloud_budget_also_exhausted",
+    inputTokens: 0,
+    outputTokens: 0,
+    finishReason: "error",
+    durationMs: 0,
+  });
+
+  if (!cloudResult.exhausted) {
+    // Clean null from cloud (budget gate / circuit) — no further path
+    logger.warn({ role }, "callScoutExtractLlm: Ollama failed and cloud budget/circuit unavailable — returning null");
+    return null;
+  }
+
+  logger.error({ role }, "callScoutExtractLlm: both Ollama primary and cloud fallback exhausted");
+  return null;
 }
 
 export { MODEL_CONFIGS, KB_MANIFEST, FEWSHOT_ROLES };

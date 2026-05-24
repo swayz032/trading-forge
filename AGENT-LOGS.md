@@ -7531,6 +7531,44 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-24 Wave 26 Pass A — transcript_extractor → gemma4:e2b local-first
+
+**Mission:** Cut 96.7% of GPT-5-mini burn (127.7M tokens / 7,938 calls over 15 days from single role) by routing transcript_extractor to local Ollama gemma4:e2b. Prompt + KB + few-shot UNCHANGED — model swap only.
+
+**Work completed:**
+- model-router.ts: provider=ollama, model=gemma4:e2b, fallback={provider:openai, model:gpt-5-mini}; OLLAMA_HEALTHY 2-phase boot probe (tags + test-inference); 30s timeout; JSON validation gate
+- openai-proxy.ts: OPENAI_DAILY_BUDGET_TOKENS env alias + 500K default (was 1M leaky)
+- index.ts: boot health check wired
+- .env: 3 new env vars (TRANSCRIPT_EXTRACTOR_LOCAL_MODEL, TRANSCRIPT_EXTRACTOR_FORCE_CLOUD, OPENAI_DAILY_BUDGET_TOKENS)
+- scripts/wave26-gemma4-smoke-test.ts (validates W23H field coverage)
+- 13 new tests + backward-compat preserved
+
+**Verification:** wave26-transcript-extractor-gemma4-routing 13/13 GREEN; audit query for `llm.transcript_extractor_call` runs clean (0 rows expected pre-deploy); system-map:check drift = pre-existing "replay" engine subsystem mapping (Wave 27 commit) — NOT caused by this change; closeout pass registered transcript_extractor_local_routing + replay_harness_engine subsystems in registry; check:production-isolation GREEN.
+
+**Critical operational finding:** Ollama 0.24.0 (current Skytech) cannot execute gemma4:e2b — needs ≥ 0.4.x. Model shows in /api/tags but runtime fails. **Code correctly fails-safe to cloud gpt-5-mini.** Operator needs `winget upgrade Ollama.Ollama` then restart API. Boot health check (2-phase: registry + test-inference probe) auto-detects + flips to local primary when upgrade succeeds.
+
+**Known-facts updates:**
+- transcript_extractor is now local-first (was cloud-first). FORCE_CLOUD=true is the operator panic-revert. 96.7% burn reduction target depends on Ollama upgrade.
+- Other LLM roles UNCHANGED — dsl_quality_critic, scout_auditor, strategy_proposer, strategy_name_discoverer all stay cloud (their combined burn was only 3.3% — not worth the local-routing complexity).
+- OpenClaw remains dangling service (OPENCLAW_GATEWAY_TOKEN placeholder) — not affecting burn either way.
+- Token-counting in openai-proxy.ts increments AFTER call completes — small N-concurrent overshoot possible (bounded, not unbounded). 500K cap is hard-enforced via `isOverBudget()` gate returning 429.
+
+**Operator next steps:**
+1. `winget upgrade Ollama.Ollama` (admin shell)
+2. Restart Trading Forge API (`schtasks /End /TN TradingForgeAPI; schtasks /Run /TN TradingForgeAPI` or via NSSM)
+3. Watch boot log for `[transcript_extractor] OLLAMA_HEALTHY=true` (or =false if upgrade didn't take)
+4. Run `npx tsx scripts/wave26-gemma4-smoke-test.ts` against an ICT/SMC transcript — verify all W23H fields populate
+5. If smoke green → extract YouTube videos via operator-ingest path; monitor `audit_log` for model="gemma4:e2b" entries
+6. If smoke fails → set `TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true` in .env + restart → reverts to gpt-5-mini
+
+**Carry-forward to Wave 27 / 28:**
+- Mixed OpenClaw + Gemma 4 for OPENCLAW_COMPLIANCE_GUARD agent (multi-step prop-firm rule extraction — not transcript_extractor)
+- Persistent OpenClaw discovery agent to replace 4h cron polls (Wave 28)
+- If gemma4:e2b quality insufficient post-upgrade, pull gemma4:9b (better quality, slightly slower)
+- Pre-existing system-map drift on "replay" engine subsystem — Wave 27 backlog item to resolve
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

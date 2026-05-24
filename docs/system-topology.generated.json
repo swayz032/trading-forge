@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T19:37:25.663Z",
+  "generatedAt": "2026-05-24T21:46:55.343Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -19,9 +19,9 @@
     "schedulerJobs": 83,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
-    "engineSubsystems": 26,
+    "engineSubsystems": 27,
     "databaseTables": 96,
-    "registrySubsystems": 44
+    "registrySubsystems": 46
   },
   "routes": [
     "/api/admin",
@@ -756,6 +756,7 @@
     "parity_engine",
     "pine_compiler",
     "quantum_mc",
+    "replay",
     "skip_engine",
     "strategy_memory",
     "survival",
@@ -862,33 +863,33 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 44,
-    "autonomousSubsystems": 41,
+    "registryEntries": 46,
+    "autonomousSubsystems": 43,
     "selfEvolvingSubsystems": 8,
     "proofStatusCounts": {
-      "runtime-proven": 36,
+      "runtime-proven": 37,
       "partially-proven": 0,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 3
+      "drifted": 4
     },
     "runtimeStateCounts": {
-      "active": 39,
+      "active": 41,
       "experimental": 5
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 39,
+      "active_preprod": 41,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 37,
+      "runtime_proven_autonomous": 39,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 32,
+      "not_collecting": 34,
       "collecting_only": 0,
       "learning_active": 7,
       "learning_blocked": 0,
@@ -896,13 +897,13 @@
     },
     "learningModeCounts": {
       "active_learning": 6,
-      "deterministic_instrumented": 31,
+      "deterministic_instrumented": 33,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 6,
-      "deterministic_instrumented": 36,
+      "deterministic_instrumented": 38,
       "manual_gated": 2
     },
     "manualGates": [
@@ -910,13 +911,14 @@
       "kill_switch",
       "operator_invoke_for_cohort_validation",
       "operator_opt_in_per_strategy",
+      "operator-approve",
       "operator-halt-only",
       "tradingview_deploy"
     ],
     "coveredCounts": {
       "routes": 70,
       "schedulerJobs": 83,
-      "engineSubsystems": 26,
+      "engineSubsystems": 27,
       "databaseTables": 96
     },
     "missingRoutes": [],
@@ -942,22 +944,23 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 36,
-      "dataCollectionComplete": 44,
-      "auditabilityComplete": 44,
-      "failureVisibilityComplete": 44,
-      "authorityCorrect": 44,
+      "automationComplete": 38,
+      "dataCollectionComplete": 46,
+      "auditabilityComplete": 46,
+      "failureVisibilityComplete": 46,
+      "authorityCorrect": 46,
       "learningActive": 7,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
         "exit_engine_ab_harness",
+        "replay_harness_engine",
         "ts_python_parity_ci_gate"
       ]
     },
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 37,
+        "production_autonomous": 39,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -995,6 +998,7 @@
         "smt_live_bridge_service",
         "strategy_lifecycle",
         "trade_critique_service",
+        "transcript_extractor_local_routing",
         "vwap_bands_engine",
         "workflow_orchestration"
       ],
@@ -1003,6 +1007,7 @@
         "exit_engine_ab_harness",
         "pattern_aggregator_service",
         "production_hardening",
+        "replay_harness_engine",
         "ts_python_parity_ci_gate"
       ],
       "experimentalSubsystems": [
@@ -1031,6 +1036,8 @@
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "production_hardening:manual_gate:operator-halt-only",
+        "replay_harness_engine:invalid-active-proof-mode",
+        "replay_harness_engine:manual_gate:operator-approve",
         "ts_python_parity_ci_gate:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
@@ -1056,6 +1063,8 @@
         "production_hardening:manual_gate:operator-halt-only",
         "prop_firm_survival_twin:experimental_governance",
         "quantum_adversarial_stress:experimental_governance",
+        "replay_harness_engine:invalid-active-proof-mode",
+        "replay_harness_engine:manual_gate:operator-approve",
         "synthetic_black_swan_survival:experimental_governance",
         "ts_python_parity_ci_gate:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
@@ -1077,6 +1086,7 @@
         "production_hardening",
         "prop_firm_survival_twin",
         "quantum_adversarial_stress",
+        "replay_harness_engine",
         "synthetic_black_swan_survival",
         "ts_python_parity_ci_gate"
       ],
@@ -4293,6 +4303,80 @@
         "coverageGaps": []
       },
       {
+        "id": "replay_harness_engine",
+        "domain": "validation",
+        "ownerSurface": "python",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "operator-approve",
+        "selfEvolving": false,
+        "proofMode": "static-evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "python",
+        "activationBlockers": [
+          "manual_gate:operator-approve"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "replay.harness_executed",
+          "stdout-json-summary"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "S3 ratio_adj bars",
+          "system_journal"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode",
+          "manual_gate:operator-approve"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "replay.harness_executed",
+          "stdout-json-summary",
+          "tests/python/replay/test_quantum_replay.py"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "tests/python/replay/test_quantum_replay.py",
+        "freshnessSignals": [],
+        "evidenceQueries": [
+          "tests/python/replay/test_quantum_replay.py"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
+      },
+      {
         "id": "research_orchestration",
         "domain": "research",
         "ownerSurface": "node-python-n8n",
@@ -4953,6 +5037,96 @@
         "coverageGaps": []
       },
       {
+        "id": "transcript_extractor_local_routing",
+        "domain": "research",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "env-revert-via-TRANSCRIPT_EXTRACTOR_FORCE_CLOUD",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "/api/health",
+          "/api/openai-proxy/usage",
+          "audit_log:llm.transcript_extractor_call",
+          "audit_log:llm.transcript_extractor_call:per-call",
+          "llm.retry_attempt",
+          "llm.transcript_extractor_call",
+          "llm.transcript_extractor_ollama_fallback_to_cloud",
+          "logger:model-router:Ollama health OK:boot",
+          "stdout-pino-logger"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "Ollama local inference at OLLAMA_HOST",
+          "system_journal",
+          "YouTube transcripts (operator-ingest path)"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health",
+          "/api/openai-proxy/usage",
+          "audit_log:llm.transcript_extractor_call",
+          "audit_log:llm.transcript_extractor_call:per-call",
+          "llm.retry_attempt",
+          "llm.transcript_extractor_call",
+          "llm.transcript_extractor_ollama_fallback_to_cloud",
+          "logger:model-router:Ollama health OK:boot",
+          "scripts/wave26-gemma4-smoke-test.ts",
+          "src/server/__tests__/wave26-transcript-extractor-gemma4-routing.test.ts",
+          "stdout-pino-logger"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/openai-proxy"
+        ],
+        "schedulerJobs": [],
+        "healthCheck": "checkTranscriptExtractorOllamaHealth-at-boot",
+        "freshnessSignals": [
+          "audit_log:llm.transcript_extractor_call:per-call",
+          "logger:model-router:Ollama health OK:boot"
+        ],
+        "evidenceQueries": [
+          "src/server/__tests__/wave26-transcript-extractor-gemma4-routing.test.ts",
+          "scripts/wave26-gemma4-smoke-test.ts"
+        ],
+        "coverageGaps": []
+      },
+      {
         "id": "ts_python_parity_ci_gate",
         "domain": "validation",
         "ownerSurface": "node-python",
@@ -5444,6 +5618,20 @@
         "operatingClass": "deterministic_instrumented",
         "criticality": "advisory",
         "coverageGaps": []
+      },
+      {
+        "id": "replay",
+        "ownerSubsystemId": "replay_harness_engine",
+        "ownerDomain": "validation",
+        "runtimeState": "active",
+        "proofStatus": "drifted",
+        "manualGate": "operator-approve",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "criticality": "important",
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
       },
       {
         "id": "skip_engine",
@@ -8726,6 +8914,80 @@
       "coverageGaps": []
     },
     {
+      "id": "replay_harness_engine",
+      "domain": "validation",
+      "ownerSurface": "python",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "proofMode": "static-evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "python",
+      "activationBlockers": [
+        "manual_gate:operator-approve"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "replay.harness_executed",
+        "stdout-json-summary"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "S3 ratio_adj bars",
+        "system_journal"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-approve"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "replay.harness_executed",
+        "stdout-json-summary",
+        "tests/python/replay/test_quantum_replay.py"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "tests/python/replay/test_quantum_replay.py",
+      "freshnessSignals": [],
+      "evidenceQueries": [
+        "tests/python/replay/test_quantum_replay.py"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
+    },
+    {
       "id": "research_orchestration",
       "domain": "research",
       "ownerSurface": "node-python-n8n",
@@ -9386,6 +9648,96 @@
       "coverageGaps": []
     },
     {
+      "id": "transcript_extractor_local_routing",
+      "domain": "research",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "env-revert-via-TRANSCRIPT_EXTRACTOR_FORCE_CLOUD",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "/api/health",
+        "/api/openai-proxy/usage",
+        "audit_log:llm.transcript_extractor_call",
+        "audit_log:llm.transcript_extractor_call:per-call",
+        "llm.retry_attempt",
+        "llm.transcript_extractor_call",
+        "llm.transcript_extractor_ollama_fallback_to_cloud",
+        "logger:model-router:Ollama health OK:boot",
+        "stdout-pino-logger"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "Ollama local inference at OLLAMA_HOST",
+        "system_journal",
+        "YouTube transcripts (operator-ingest path)"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health",
+        "/api/openai-proxy/usage",
+        "audit_log:llm.transcript_extractor_call",
+        "audit_log:llm.transcript_extractor_call:per-call",
+        "llm.retry_attempt",
+        "llm.transcript_extractor_call",
+        "llm.transcript_extractor_ollama_fallback_to_cloud",
+        "logger:model-router:Ollama health OK:boot",
+        "scripts/wave26-gemma4-smoke-test.ts",
+        "src/server/__tests__/wave26-transcript-extractor-gemma4-routing.test.ts",
+        "stdout-pino-logger"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/openai-proxy"
+      ],
+      "schedulerJobs": [],
+      "healthCheck": "checkTranscriptExtractorOllamaHealth-at-boot",
+      "freshnessSignals": [
+        "audit_log:llm.transcript_extractor_call:per-call",
+        "logger:model-router:Ollama health OK:boot"
+      ],
+      "evidenceQueries": [
+        "src/server/__tests__/wave26-transcript-extractor-gemma4-routing.test.ts",
+        "scripts/wave26-gemma4-smoke-test.ts"
+      ],
+      "coverageGaps": []
+    },
+    {
       "id": "ts_python_parity_ci_gate",
       "domain": "validation",
       "ownerSurface": "node-python",
@@ -9879,6 +10231,20 @@
       "coverageGaps": []
     },
     {
+      "id": "replay",
+      "ownerSubsystemId": "replay_harness_engine",
+      "ownerDomain": "validation",
+      "runtimeState": "active",
+      "proofStatus": "drifted",
+      "manualGate": "operator-approve",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "criticality": "important",
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
+    },
+    {
       "id": "skip_engine",
       "ownerSubsystemId": "context_execution",
       "ownerDomain": "execution",
@@ -9956,6 +10322,7 @@
     "kill_switch",
     "operator_invoke_for_cohort_validation",
     "operator_opt_in_per_strategy",
+    "operator-approve",
     "operator-halt-only",
     "tradingview_deploy"
   ]

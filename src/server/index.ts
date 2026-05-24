@@ -691,9 +691,16 @@ const server = app.listen(port, () => {
   // Populates the module-level _appendixCache in model-router.ts from any active
   // prompt_versions rows. buildPromptSync() reads this cache synchronously — no
   // async in the hot path. Fail-open: cache starts empty if DB read fails.
-  import("./services/model-router.js").then(({ warmAppendixCache }) => {
+  import("./services/model-router.js").then(({ warmAppendixCache, checkTranscriptExtractorOllamaHealth }) => {
     warmAppendixCache().catch((err) => {
       logger.info({ err }, "Appendix cache warm failed at boot — starting empty (non-blocking)");
+    });
+    // ─── Wave 26: Ollama health check for transcript_extractor gemma4:e2b ─────
+    // Sets OLLAMA_HEALTHY module flag. If Ollama is down or model is missing,
+    // transcript_extractor routes to cloud fallback. Fail-open: any error is
+    // swallowed here; the check itself logs WARN.
+    checkTranscriptExtractorOllamaHealth().catch((err) => {
+      logger.info({ err }, "Ollama health check failed at boot — transcript_extractor routing to cloud (non-blocking)");
     });
   }).catch((err) => {
     logger.info({ err }, "model-router import failed during appendix warm — non-blocking");

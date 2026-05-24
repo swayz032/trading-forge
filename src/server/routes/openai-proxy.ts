@@ -25,8 +25,16 @@ export const openaiProxyRoutes = Router();
 // User has 2.5M GPT-5-mini free tokens/day at the OpenAI org level, SHARED with
 // the Aspire project. Trading Forge gets a hard daily cap so it can't starve
 // Aspire. When budget hits, callers receive 429 → model-router falls back to
-// local Ollama (deepseek-r1:14b / qwen2.5-coder:7b) automatically.
-const DAILY_BUDGET = Number(process.env.TRADING_FORGE_DAILY_TOKEN_BUDGET ?? 1_000_000);
+// local Ollama (deepseek-r1:14b / qwen2.5-coder:7b / gemma4:e2b) automatically.
+//
+// Wave 26 (local-first gemma4 routing): transcript_extractor is now Ollama-primary
+// so cloud budget should burn far less. Default tightened to 500K
+// (OPENAI_DAILY_BUDGET_TOKENS, alias TRADING_FORGE_DAILY_TOKEN_BUDGET preserved).
+const DAILY_BUDGET = Number(
+  process.env.OPENAI_DAILY_BUDGET_TOKENS ??
+  process.env.TRADING_FORGE_DAILY_TOKEN_BUDGET ??
+  500_000,
+);
 const ALERT_THRESHOLDS = [0.5, 0.75, 0.9, 1.0] as const;
 
 interface DailyUsage {

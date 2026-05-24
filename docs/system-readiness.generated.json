@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T19:37:25.663Z",
+  "generatedAt": "2026-05-24T21:46:55.343Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -9,6 +9,8 @@
     "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
     "pattern_aggregator_service:manual_gate:kill_switch",
     "production_hardening:manual_gate:operator-halt-only",
+    "replay_harness_engine:invalid-active-proof-mode",
+    "replay_harness_engine:manual_gate:operator-approve",
     "ts_python_parity_ci_gate:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:manual_gate:ci_gate",
     "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
@@ -21,9 +23,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 44,
-    "ready": 32,
-    "blocked": 5,
+    "total": 46,
+    "ready": 33,
+    "blocked": 6,
     "manualGated": 2,
     "experimental": 5
   },
@@ -799,6 +801,25 @@
       ]
     },
     {
+      "id": "replay_harness_engine",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "replay.harness_executed",
+        "stdout-json-summary",
+        "tests/python/replay/test_quantum_replay.py"
+      ]
+    },
+    {
       "id": "research_orchestration",
       "status": "ready",
       "productionTargetState": "production_autonomous",
@@ -947,6 +968,30 @@
         "trade_critique.idempotent_skip",
         "wave26-trade-critique-service.test.ts",
         "wave26-trade-journal-route.test.ts"
+      ]
+    },
+    {
+      "id": "transcript_extractor_local_routing",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "env-revert-via-TRANSCRIPT_EXTRACTOR_FORCE_CLOUD",
+      "blockers": [],
+      "requiredEvidence": [
+        "/api/health",
+        "/api/openai-proxy/usage",
+        "audit_log:llm.transcript_extractor_call",
+        "audit_log:llm.transcript_extractor_call:per-call",
+        "llm.retry_attempt",
+        "llm.transcript_extractor_call",
+        "llm.transcript_extractor_ollama_fallback_to_cloud",
+        "logger:model-router:Ollama health OK:boot",
+        "scripts/wave26-gemma4-smoke-test.ts",
+        "src/server/__tests__/wave26-transcript-extractor-gemma4-routing.test.ts",
+        "stdout-pino-logger"
       ]
     },
     {
