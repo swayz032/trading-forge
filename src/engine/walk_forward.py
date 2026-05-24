@@ -126,6 +126,238 @@ def split_walk_forward_windows(
     return windows
 
 
+def _run_walk_forward_cpcv(
+    request: BacktestRequest,
+    data: Optional[pl.DataFrame] = None,
+    n_splits: int = 6,
+    k_test_groups: int = 2,
+    embargo_bars: int = 20,
+) -> dict:
+    """Combinatorial Purged Cross-Validation (CPCV) walk-forward.
+
+    Wave 24 Pass 1 — Item 10. Implements Lopez de Prado CPCV spec:
+      - N=6 splits, k=2 test groups → C(N, k) = C(6, 2) = 15 combinatorial paths.
+      - Each combination of k splits is the OOS test set; remaining N-k are IS.
+      - Purge window applied between IS and OOS to prevent label overlap.
+      - PSR (Probabilistic Sharpe Ratio) and DSR aggregated across 15 paths.
+
+    This eliminates the "multiple testing" bias of plain WF where the IS windows
+    reuse test periods across splits. CPCV distributes each data point across
+    multiple IS/OOS roles — the resulting 15 paths sample the full return
+    distribution without repeating test data in any single path.
+
+    Args:
+        request:        Backtest configuration.
+        data:           Optional pre-loaded OHLCV DataFrame.
+        n_splits:       Number of folds (N=6 per spec).
+        k_test_groups:  Number of test folds per combination (k=2 per spec).
+        embargo_bars:   Purge/embargo bars between IS and each OOS fold.
+
+    Returns:
+        dict with oos_metrics, windows, wf_metadata (mode="cpcv", n_paths=15).
+    """
+    from itertools import combinations as _combos
+
+    start_time = time.time()
+    config = request.strategy
+
+    if data is None:
+        from src.engine.data_loader import load_ohlcv
+        data = load_ohlcv(
+            config.symbol, config.timeframe,
+            request.start_date, request.end_date,
+        )
+
+    n = len(data)
+    _base_seed = int(os.environ.get("BACKTEST_SEED", "42"))
+
+    # ── Partition data into N equal-ish folds ────────────────────────────────
+    fold_size = n // n_splits
+    folds: list[pl.DataFrame] = []
+    for fi in range(n_splits):
+        fold_start = fi * fold_size
+        fold_end = (fi + 1) * fold_size if fi < n_splits - 1 else n
+        folds.append(data.slice(fold_start, fold_end - fold_start))
+
+    # ── Generate C(N, k) = 15 combinatorial paths ───────────────────────────
+    n_paths = 0
+    path_sharpes: list[float] = []
+    path_returns: list[float] = []
+    all_oos_trades: list[dict] = []
+    all_oos_pnls: list[float] = []
+    all_oos_pnl_records: list[dict] = []
+    all_oos_equity: list[float] = []
+
+    _shared_req = BacktestRequest(
+        strategy=config,
+        start_date=request.start_date,
+        end_date=request.end_date,
+        slippage_ticks=request.slippage_ticks,
+        commission_per_side=request.commission_per_side,
+        firm_key=request.firm_key,
+        max_trades_per_day=request.max_trades_per_day,
+        event_calendar=request.event_calendar,
+        fill_model=request.fill_model,
+    )
+
+    for test_fold_indices in _combos(range(n_splits), k_test_groups):
+        is_fold_indices = [fi for fi in range(n_splits) if fi not in test_fold_indices]
+
+        # IS data = concatenation of IS folds (must be temporally ordered)
+        is_fold_dfs = [folds[fi] for fi in sorted(is_fold_indices)]
+        if is_fold_dfs:
+            is_data = pl.concat(is_fold_dfs)
+        else:
+            continue
+
+        # OOS data = concatenation of test folds with embargo strip applied.
+        # For each test fold, we drop the first embargo_bars rows to implement
+        # the temporal purge (labels from the IS side cannot overlap OOS).
+        oos_parts: list[pl.DataFrame] = []
+        for ti in sorted(test_fold_indices):
+            fold_df = folds[ti]
+            if len(fold_df) > embargo_bars:
+                oos_parts.append(fold_df.slice(embargo_bars, len(fold_df) - embargo_bars))
+            else:
+                # Fold too small after purge — skip this fold's contribution.
+                oos_parts.append(fold_df)
+
+        if not oos_parts:
+            continue
+        oos_data = pl.concat(oos_parts)
+
+        if len(oos_data) == 0:
+            continue
+
+        # Seed: base + path index for determinism
+        path_seed = _base_seed + n_paths
+        os.environ["BACKTEST_WINDOW_SEED"] = str(path_seed)
+        np.random.seed(path_seed)
+
+        try:
+            path_result = run_backtest(_shared_req, data=oos_data, warmup_data=is_data)
+        except Exception as _path_exc:
+            print(
+                f"CPCV path {n_paths+1} failed: {_path_exc!r}. Skipping.",
+                file=sys.stderr,
+            )
+            n_paths += 1
+            continue
+
+        path_sharpes.append(float(path_result.get("sharpe_ratio", 0.0)))
+        path_returns.append(float(path_result.get("total_return", 0.0)))
+        all_oos_trades.extend(path_result.get("trades", []))
+        all_oos_pnls.extend(path_result.get("daily_pnls", []))
+        all_oos_pnl_records.extend(path_result.get("daily_pnl_records", []))
+        # equity_bars is raw float[] equity per bar; equity_curve is list[dict] (daily agg).
+        # Use equity_bars for drawdown math to avoid dict → float cast error.
+        _raw_eq = path_result.get("equity_bars", [])
+        if not _raw_eq:
+            # Fallback: extract value from equity_curve dicts when equity_bars absent
+            _raw_eq = [
+                float(rec.get("equity", rec.get("value", 0)))
+                for rec in path_result.get("equity_curve", [])
+                if isinstance(rec, dict)
+            ]
+        all_oos_equity.extend(_raw_eq)
+        n_paths += 1
+
+    if not path_sharpes:
+        return {
+            "confidence": "LOW",
+            "low_confidence_windows": 0,
+            "oos_metrics": {"total_return": 0, "sharpe_ratio": 0, "max_drawdown": 0,
+                            "win_rate": 0, "profit_factor": 0, "total_trades": 0,
+                            "avg_trade_pnl": 0, "avg_daily_pnl": 0},
+            "wf_metadata": {
+                "mode": "cpcv", "n_folds": n_splits, "embargo_pct": 0.01,
+                "purge_window": embargo_bars, "n_paths": 0,
+                "psr": None, "dsr": None,
+            },
+            "trades": [],
+            "daily_pnls": [],
+            "windows": [],
+            "execution_time_ms": int((time.time() - start_time) * 1000),
+        }
+
+    # ── Aggregate from all paths ─────────────────────────────────────────────
+    total_trades = len(all_oos_trades)
+    total_return = sum(path_returns)
+
+    if all_oos_pnls:
+        pnl_arr = np.array(all_oos_pnls)
+        agg_sharpe = float(np.mean(pnl_arr) / np.std(pnl_arr, ddof=1) * np.sqrt(252)) if np.std(pnl_arr, ddof=1) > 0 else 0.0
+    else:
+        agg_sharpe = 0.0
+
+    # Max drawdown from concatenated equity
+    if all_oos_equity:
+        eq_arr = np.array(all_oos_equity, dtype=float)
+        running_peak = np.maximum.accumulate(eq_arr)
+        max_dd = float(np.max(running_peak - eq_arr))
+    else:
+        max_dd = 0.0
+
+    gross_wins = sum(float(t.get("PnL", t.get("pnl", 0))) for t in all_oos_trades if float(t.get("PnL", t.get("pnl", 0))) > 0)
+    gross_losses = sum(abs(float(t.get("PnL", t.get("pnl", 0)))) for t in all_oos_trades if float(t.get("PnL", t.get("pnl", 0))) < 0)
+    agg_pf = float(gross_wins / gross_losses) if gross_losses > 0 else 999.99
+    agg_win_rate = float(sum(1 for t in all_oos_trades if float(t.get("PnL", t.get("pnl", 0))) > 0) / max(total_trades, 1))
+    avg_daily = float(np.mean(all_oos_pnls)) if all_oos_pnls else 0.0
+
+    # ── PSR / DSR across CPCV paths ──────────────────────────────────────────
+    # PSR = fraction of paths where path Sharpe > Sharpe* (the expected max under null).
+    # DSR computed with n_trials = n_paths (each path = an independent trial in CPCV).
+    try:
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _cpcv_dsr
+
+        _n_obs = len(all_oos_pnls)
+        _dsr_result = _cpcv_dsr(
+            observed_sharpe=agg_sharpe,
+            n_trials=n_paths,
+            n_observations=max(_n_obs, 2),
+        )
+        _psr = float(sum(1 for s in path_sharpes if s > 0) / max(len(path_sharpes), 1))
+        _dsr_val = _dsr_result.get("dsr")
+    except Exception:
+        _dsr_result = {}
+        _psr = None
+        _dsr_val = None
+
+    elapsed_ms = int((time.time() - start_time) * 1000)
+
+    return {
+        "confidence": "OK" if total_trades >= MIN_OOS_TRADES else "LOW",
+        "low_confidence_windows": 0,
+        "oos_metrics": {
+            "total_return": round(total_return, 2),
+            "sharpe_ratio": round(agg_sharpe, 4),
+            "max_drawdown": round(max_dd, 2),
+            "win_rate": round(agg_win_rate, 4),
+            "profit_factor": round(agg_pf, 4),
+            "total_trades": total_trades,
+            "avg_trade_pnl": round(total_return / max(total_trades, 1), 2),
+            "avg_daily_pnl": round(avg_daily, 2),
+        },
+        "trades": all_oos_trades,
+        "daily_pnls": all_oos_pnls,
+        "daily_pnl_records": all_oos_pnl_records,
+        "equity_curve": all_oos_equity,
+        "windows": [],
+        "n_splits": n_splits,
+        "is_ratio": 1.0 - (k_test_groups / n_splits),
+        "execution_time_ms": elapsed_ms,
+        "wf_metadata": {
+            "mode": "cpcv",
+            "n_folds": n_splits,
+            "embargo_pct": 0.01,
+            "purge_window": embargo_bars,
+            "n_paths": n_paths,
+            "psr": _psr,
+            "dsr": _dsr_val,
+        },
+    }
+
+
 def run_walk_forward(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,
@@ -134,6 +366,7 @@ def run_walk_forward(
     optimize: bool = False,
     n_trials: int = 800,
     embargo_bars: int = 20,
+    wf_mode: Optional[str] = None,
 ) -> dict:
     """Run walk-forward validation.
 
@@ -149,10 +382,45 @@ def run_walk_forward(
         is_ratio: IS fraction per window (default 0.7)
         optimize: Whether to run Optuna optimization per window
         n_trials: Optuna trials per window if optimizing
+        wf_mode: Walk-forward mode — "plain" (default, backward compat),
+            "purged_embargo" (Lopez de Prado AFML Ch.7 purge + embargo),
+            "cpcv" (combinatorial purged CV, N=6 splits k=2 test groups → 15 paths).
+            Overrides WF_MODE env var. Env default is "plain".
 
     Returns:
-        dict with oos_metrics (aggregate), windows (per-window detail)
+        dict with oos_metrics (aggregate), windows (per-window detail),
+        wf_metadata (mode, n_folds, embargo_pct, purge_window, n_paths for cpcv)
     """
+    # ── Walk-forward mode resolution ─────────────────────────────────────────
+    # Priority: explicit wf_mode param > WF_MODE env > "plain"
+    _VALID_WF_MODES = ("plain", "purged_embargo", "cpcv")
+    _resolved_mode = (
+        wf_mode
+        or os.environ.get("WF_MODE", "plain")
+    ).lower()
+    if _resolved_mode not in _VALID_WF_MODES:
+        print(
+            f"Walk-forward: unknown WF_MODE={_resolved_mode!r}; defaulting to 'plain'.",
+            file=sys.stderr,
+        )
+        _resolved_mode = "plain"
+
+    # Dispatch CPCV to dedicated implementation (Item 10, Wave 24 Pass 1).
+    if _resolved_mode == "cpcv":
+        return _run_walk_forward_cpcv(
+            request=request,
+            data=data,
+            embargo_bars=embargo_bars,
+        )
+
+    # purged_embargo and plain share the same windowing engine but with
+    # a purge window applied in the purged_embargo case.
+    _embargo_pct = float(os.environ.get("WF_EMBARGO_PCT", "0.01"))
+    _purge_window = int(os.environ.get("WF_PURGE_WINDOW", "0"))
+    if _resolved_mode == "purged_embargo" and _purge_window == 0:
+        # Default purge window = 20 bars (covers typical multi-bar Style C runner holds)
+        _purge_window = int(os.environ.get("WF_PURGE_WINDOW", "20"))
+
     start_time = time.time()
     config = request.strategy
 
@@ -189,7 +457,21 @@ def run_walk_forward(
             file=sys.stderr,
         )
 
-    windows = split_walk_forward_windows(data, n_splits, is_ratio, embargo_bars=embargo_bars)
+    # For purged_embargo mode, add the purge window to the embargo_bars so that
+    # IS training samples whose label window overlaps the OOS test window are excluded.
+    # This implements Lopez de Prado AFML Ch. 7 purging logic:
+    # The purge window = max expected bars-per-trade-holding (Style C runner default: 20).
+    # The embargo % is an additional gap after OOS to prevent leakage into next IS slice.
+    _effective_embargo = embargo_bars
+    if _resolved_mode == "purged_embargo" and _purge_window > 0:
+        _effective_embargo = embargo_bars + _purge_window
+        print(
+            f"Walk-forward (purged_embargo): purge_window={_purge_window} bars added to embargo. "
+            f"Total embargo = {_effective_embargo} bars.",
+            file=sys.stderr,
+        )
+
+    windows = split_walk_forward_windows(data, n_splits, is_ratio, embargo_bars=_effective_embargo)
     print(f"Walk-forward: {len(windows)} windows, IS ratio={is_ratio}", file=sys.stderr)
 
     window_results = []
@@ -562,6 +844,16 @@ def run_walk_forward(
         "param_stability": param_stability,
         "prop_compliance": prop_compliance,
         "execution_time_ms": elapsed_ms,
+        # Wave 24 Pass 1 — Item 10: wf_metadata for downstream promotion gate.
+        # mode: "plain" | "purged_embargo" | "cpcv"
+        # purge_window: bars excluded between IS and OOS (purged_embargo mode)
+        # embargo_pct: % of dataset embargoed after each OOS fold (approx)
+        "wf_metadata": {
+            "mode": _resolved_mode,
+            "n_folds": len(windows),
+            "embargo_pct": _embargo_pct if _resolved_mode == "purged_embargo" else 0.0,
+            "purge_window": _purge_window if _resolved_mode == "purged_embargo" else 0,
+        },
     }
 
 

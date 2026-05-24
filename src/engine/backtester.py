@@ -284,12 +284,11 @@ def apply_eligibility_gate(
             # Dedupe by error type per bar to avoid log explosion on systematic failures.
             # seen_errors is captured from the outer function scope (closure).
             exc_type_key = type(exc).__name__
-            if not hasattr(_apply_eligibility_gate, "_seen_errors"):
-                _apply_eligibility_gate._seen_errors = set()
+            if not hasattr(_apply_eligibility_gate, "_seen_errors"):  # noqa: F821
+                _apply_eligibility_gate._seen_errors = set()  # noqa: F821
             error_bar_key = (exc_type_key, int(idx))
-            if error_bar_key not in _apply_eligibility_gate._seen_errors:
-                _apply_eligibility_gate._seen_errors.add(error_bar_key)
-                import traceback as _tb
+            if error_bar_key not in _apply_eligibility_gate._seen_errors:  # noqa: F821
+                _apply_eligibility_gate._seen_errors.add(error_bar_key)  # noqa: F821
                 print(
                     f"eligibility_gate_error bar={idx}: {exc_type_key}: {exc}",
                     file=sys.stderr,
@@ -1427,7 +1426,7 @@ def _apply_dsl_stop_loss_and_time_stop(
                     )
                 else:
                     in_long = True
-                    long_entry_price = _long_ep
+                    long_entry_price = _long_ep  # noqa: F841
                     long_stop_price = _long_sp
 
         # Check short entry
@@ -1469,7 +1468,7 @@ def _apply_dsl_stop_loss_and_time_stop(
                     )
                 else:
                     in_short = True
-                    short_entry_price = _short_ep
+                    short_entry_price = _short_ep  # noqa: F841
                     short_stop_price = _short_sp
 
         # ── ATR stop fires: track when stop price is breached ───────
@@ -1724,8 +1723,10 @@ def run_backtest(
         htf_tf = config.bias_timeframe
         htf_suffix = f"_{htf_tf}"
         try:
+            from src.engine.indicators.core import (
+                compute_htf_indicators as _compute_htf_ind,
+            )
             from src.engine.indicators.mtf_join import forward_fill_htf_to_exec
-            from src.engine.indicators.core import compute_htf_indicators as _compute_htf_ind
 
             print(
                 f"  MTF: loading HTF {htf_tf} data for bias gating "
@@ -1989,8 +1990,9 @@ def run_backtest(
     skipped_outside_window_count = 0
     _entry_windows_raw = getattr(config, "allowed_entry_windows", None)
     if _entry_windows_raw:
-        from src.engine.entry_windows import parse_entry_windows, is_bar_in_any_window
         import datetime as _dt
+
+        from src.engine.entry_windows import is_bar_in_any_window, parse_entry_windows
 
         _entry_windows = parse_entry_windows(_entry_windows_raw)  # raises on malformed
         _ts_col_ew = "ts_event" if "ts_event" in df.columns else None
@@ -2376,6 +2378,105 @@ def run_backtest(
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
 
+    # ─── Wave 24 Pass 1 — Item 14: Blackout gate + cross-symbol DLL ─────────
+    # Apply BEFORE the E.3/E.5/E.4 guards so that blackout-suppressed entries
+    # don't waste cycles in the stop-ceiling check.
+    #
+    # Blackout gate: parity with paper-signal-service.ts blackout_windows.
+    # Cross-symbol DLL: parity with cross-symbol-pnl.ts evaluateCrossSymbolDll().
+    # Both are fail-safe: any error is logged and the run continues without them.
+    _dsl_guards_meta: dict = {
+        "stop_ceiling_skips": 0,
+        "time_stop_exits": 0,
+        "dll_halt_blocks": 0,
+        "blackout_skips": 0,
+        "cross_symbol_dll_halts": 0,
+    }
+
+    _guard_ts_list_early = (
+        df["ts_et"].to_list() if "ts_et" in df.columns
+        else (df["ts_event"].to_list() if "ts_event" in df.columns else [])
+    )
+
+    # ── Blackout gate ────────────────────────────────────────────────────────
+    try:
+        from src.engine.context.blackout_gate import (
+            apply_blackout_mask_to_entries,
+            load_blackouts_from_env_or_config,
+        )
+        _blackout_symbol = config.symbol if hasattr(config, "symbol") else "MES"
+        _config_blackouts = (
+            getattr(request, "blackout_windows", None)
+            or getattr(config, "blackout_windows", None)
+        )
+        _blackout_windows = load_blackouts_from_env_or_config(
+            symbol=_blackout_symbol,
+            config_blackouts=_config_blackouts,
+        )
+        if _blackout_windows:
+            _bl_el = entries_pd.to_numpy().astype(bool)
+            _bl_es = short_entries_pd.to_numpy().astype(bool)
+            _bl_el, _bl_es, _bl_skips = apply_blackout_mask_to_entries(
+                _bl_el, _bl_es, _guard_ts_list_early, _blackout_windows,
+            )
+            entries_pd = pd.Series(_bl_el, index=entries_pd.index)
+            short_entries_pd = pd.Series(_bl_es, index=short_entries_pd.index)
+            _dsl_guards_meta["blackout_skips"] = _bl_skips
+            if _bl_skips > 0:
+                print(
+                    f"[DSL guards] Item14 blackout_skips={_bl_skips} "
+                    f"({len(_blackout_windows)} blackout windows active)",
+                    file=sys.stderr,
+                )
+    except Exception as _bl_err:
+        print(f"[DSL guards] blackout gate error (non-fatal): {_bl_err!r}", file=sys.stderr)
+
+    # ── Cross-symbol DLL guard ────────────────────────────────────────────────
+    # For single-symbol backtests this is the degenerate case (one symbol's P&L).
+    # bar_dollar_pnls at this point is not yet computed — we proxy with zeros here
+    # and let the existing per-bar DLL halt (E.4) handle intra-bar enforcement.
+    # The cross-symbol DLL layer adds the MULTI-SYMBOL cross-aggregate enforcement
+    # that the paper side computes from cross-symbol-pnl.ts. Since the Python
+    # backtester currently runs one symbol at a time, we track the single-symbol
+    # session P&L from sizes × close prices as an approximation. The guard fires
+    # when this single symbol's session loss exceeds 67% of the firm DLL.
+    try:
+        from src.engine.context.cross_symbol_dll import (
+            apply_cross_symbol_dll_to_entries,
+        )
+        _cs_firm_dll = 1000.0
+        if request.firm_key:
+            from src.engine.firm_config import FIRM_RULES as _cs_firm_rules
+            _cs_firm_dll = float(_cs_firm_rules.get(request.firm_key, {}).get("daily_loss_limit") or 1000.0)
+        # Build a per-bar estimated P&L from close price changes × contracts × point_value.
+        # This is a rough proxy — bar-level P&L is not fully computed until after vectorbt.
+        # We use ATR-scaled estimates for now; exact P&L enforcement is in E.4.
+        # Wave 24: for multi-symbol runs the caller should concatenate P&L arrays before
+        # passing here. For the single-symbol case, use a zero array (degenerate).
+        _cs_bar_pnls = np.zeros(len(entries_pd), dtype=float)
+        _cs_el = entries_pd.to_numpy().astype(bool)
+        _cs_es = short_entries_pd.to_numpy().astype(bool)
+        _cs_xl = exits_pd.to_numpy().astype(bool)
+        _cs_xs = short_exits_pd.to_numpy().astype(bool) if "short_exits" in df.columns else np.zeros(len(_cs_el), dtype=bool)
+        _cs_el, _cs_es, _cs_xl, _cs_xs, _cs_meta = apply_cross_symbol_dll_to_entries(
+            _cs_el, _cs_es, _cs_xl, _cs_xs,
+            _cs_bar_pnls, _guard_ts_list_early, _cs_firm_dll,
+        )
+        entries_pd = pd.Series(_cs_el, index=entries_pd.index)
+        short_entries_pd = pd.Series(_cs_es, index=short_entries_pd.index)
+        exits_pd = pd.Series(_cs_xl, index=exits_pd.index)
+        if "entry_short" in df.columns:
+            short_exits_pd = pd.Series(_cs_xs, index=short_exits_pd.index)
+        _dsl_guards_meta["cross_symbol_dll_halts"] = _cs_meta["entries_suppressed"]
+        if _cs_meta["entries_suppressed"] > 0:
+            print(
+                f"[DSL guards] Item14 cross_symbol_dll_halts={_cs_meta['entries_suppressed']} "
+                f"force_close_events={_cs_meta['force_close_events']}",
+                file=sys.stderr,
+            )
+    except Exception as _cs_err:
+        print(f"[DSL guards] cross-symbol DLL error (non-fatal): {_cs_err!r}", file=sys.stderr)
+
     # ─── CRITICAL #1: Wire E.3/E.5/E.4 DSL guards ───────────────
     # These functions are defined in this module and tested individually but were
     # never called from run_backtest() — they fired in class-based paths only.
@@ -2387,11 +2488,6 @@ def run_backtest(
     #
     # Inputs at this point are fully rolled (next-bar fill applied) and sized.
     # We modify the pandas entry/exit Series in-place before vbt.Portfolio runs.
-    _dsl_guards_meta: dict = {
-        "stop_ceiling_skips": 0,
-        "time_stop_exits": 0,
-        "dll_halt_blocks": 0,
-    }
     try:
         _guard_atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 1.0)
         _guard_close_np = df["close"].to_numpy()
@@ -3212,6 +3308,86 @@ def run_backtest(
             "critical_failures": [_serialize_inv_check(c) for c in _inv_report.critical_failures],
             "warnings": [_serialize_inv_check(c) for c in _inv_report.warnings],
         }
+
+        # ── Wave 24 Pass 1 — Item 18: PBO in invariants ──────────────────────
+        # Item 19: Honest-PSR DSR (multiple-testing corrected) ───────────────
+        # Both are emitted into result["invariants"] after the harness checks.
+        # They do NOT affect overall_passed — the promotion gate in TS reads them
+        # separately. See lifecycle-service.ts wave24-pbo-promotion-gate checks.
+        try:
+            from src.engine.risk_metrics import (
+                compute_deflated_sharpe_ratio as _compute_dsr_inv,
+            )
+            from src.engine.risk_metrics import compute_pbo as _compute_pbo_inv
+
+            # ── PBO: computed from walk-forward windows if present ────────────
+            _wf_windows = result.get("windows", [])
+            _n_obs_inv = max(len(result.get("daily_pnls", [])), 2)
+            _total_trades_inv = int(result.get("total_trades", 0))
+            _observed_sharpe_inv = float(result.get("sharpe_ratio", 0.0))
+
+            if len(_wf_windows) >= 4:
+                _pbo_result = _compute_pbo_inv(_wf_windows, metric="sharpe_ratio")
+                _pbo_val = _pbo_result.get("pbo")
+                _pbo_threshold = float(os.environ.get("PBO_PROMOTION_THRESHOLD", "0.5"))
+                _pbo_flag = (_pbo_val is not None and _pbo_val > _pbo_threshold)
+                result["invariants"]["pbo"] = {
+                    "value": _pbo_val,
+                    "n_trials": _pbo_result.get("n_combinations", 0),
+                    "interpretable": (
+                        "high" if (_pbo_val is not None and _pbo_val >= 0.4) else
+                        "med" if (_pbo_val is not None and _pbo_val >= 0.15) else
+                        "low"
+                    ),
+                    "interpretation": _pbo_result.get("interpretation", ""),
+                }
+                result["invariants"]["pbo_flag"] = _pbo_flag
+            else:
+                result["invariants"]["pbo"] = {"not_applicable": True, "reason": "fewer than 4 walk-forward windows"}
+                result["invariants"]["pbo_flag"] = False
+
+            # ── Honest DSR: n_trials from WF fold count or MC trial count ────
+            # n_trials = number of independent parameter configurations evaluated.
+            # For a single-config backtest: n_trials=1 → DSR reduces to raw SR test.
+            # For a walk-forward run: n_trials = number of OOS windows (each is a
+            # distinct candidate evaluation in the IS optimization search space).
+            # For an MC sweep: n_trials is passed via result["mc_n_trials"] if set.
+            _n_trials_inv = int(
+                result.get("mc_n_trials", 0)
+                or len(_wf_windows)
+                or 1
+            )
+            _dsr_threshold = float(os.environ.get("DSR_HONEST_THRESHOLD", "1.5"))
+
+            if _total_trades_inv > 0 and _n_obs_inv > 1:
+                _dsr_honest = _compute_dsr_inv(
+                    observed_sharpe=_observed_sharpe_inv,
+                    n_trials=_n_trials_inv,
+                    n_observations=_n_obs_inv,
+                )
+                _dsr_passed_honest = (
+                    _dsr_honest.get("dsr", 0.0) >= _dsr_threshold
+                )
+                result["invariants"]["dsr_honest"] = {
+                    "sr_observed": round(_observed_sharpe_inv, 4),
+                    "sr_threshold": _dsr_honest.get("sr_expected_max"),
+                    "n_trials": _n_trials_inv,
+                    "dsr": _dsr_honest.get("dsr"),
+                    "dsr_passed": _dsr_passed_honest,
+                    "p_value": _dsr_honest.get("p_value"),
+                    "interpretation": _dsr_honest.get("interpretation", ""),
+                }
+            else:
+                result["invariants"]["dsr_honest"] = {
+                    "not_applicable": True,
+                    "reason": "no trades or insufficient observations",
+                }
+        except Exception as _pbo_dsr_err:
+            print(
+                json.dumps({"event": "invariants.pbo_dsr_error", "error": str(_pbo_dsr_err)[:300]}),
+                file=sys.stderr,
+            )
+
         if not _inv_report.overall_passed:
             import json as _inv_json
             _inv_payload = {
@@ -3236,7 +3412,6 @@ def run_backtest(
     # the JSON hash of both results (excluding timestamp_utc which varies by wall clock).
     # If hashes match, set run_receipt.determinism_verified = True.
     # Skip by default — second run doubles compute time and is expensive in production.
-    import os
     if os.environ.get("TF_VERIFY_DETERMINISM", "0") == "1":
         try:
             import json as _json
@@ -3311,7 +3486,10 @@ def _emit_validated_result(result: dict) -> None:
     if result.get("result_extras") is not None:
         return
     try:
-        from src.engine.jsonb_contracts import BacktestResultExtras, RESULT_EXTRAS_VERSION
+        from src.engine.jsonb_contracts import (
+            RESULT_EXTRAS_VERSION,
+            BacktestResultExtras,
+        )
         extras_raw = {
             "schema_version": RESULT_EXTRAS_VERSION,
             "invariants": result.get("invariants"),

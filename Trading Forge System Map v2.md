@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-20T18:09:14.248Z`.
+Updated automatically from the repo on `2026-05-24T01:24:03.902Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-05-20T18:09:14.248Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `operator-halt-only, tradingview_deploy`
 - API routes tracked: `64`
-- Scheduler jobs tracked: `63`
+- Scheduler jobs tracked: `69`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -54,7 +54,7 @@ Updated automatically from the repo on `2026-05-20T18:09:14.248Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `21`
 - Route coverage: `62/64`
-- Scheduler coverage: `62/63`
+- Scheduler coverage: `63/69`
 - Engine coverage: `26/26`
 - Database coverage: `92/93`
 - Autonomous subsystems with audit coverage: `21/21`
@@ -249,6 +249,7 @@ Updated automatically from the repo on `2026-05-20T18:09:14.248Z`.
 - `autonomous-scout-discovery`
 - `bias-engine-refresh-10am-et`
 - `bias-engine-session-start`
+- `bw-session-refresh`
 - `c11-bls-release`
 - `c11-fred-daily`
 - `c11-h41-weekly`
@@ -271,12 +272,15 @@ Updated automatically from the repo on `2026-05-20T18:09:14.248Z`.
 - `funnel-snapshot`
 - `graveyard-pattern-extraction`
 - `harsh-regime-phase-activation-check`
+- `heartbeat-stale-check`
+- `heartbeat-write`
 - `idempotency-cleanup`
 - `lifecycle-auto-check`
 - `macro-data-sync`
 - `meta-parameter-review`
 - `metrics-collector`
 - `metrics-heartbeat`
+- `n8n-execution-scrape`
 - `n8n-health-check`
 - `n8n-workflow-sync`
 - `nightly-critique`
@@ -287,6 +291,7 @@ Updated automatically from the repo on `2026-05-20T18:09:14.248Z`.
 - `pre-market-routine`
 - `pre-trading-day-health-check`
 - `prompt-ab-resolution`
+- `prop-firm-cookie-refresh`
 - `prop-firm-dashboard-snapshot`
 - `prop-firm-health-check`
 - `python-pool-saturation-check`
@@ -304,6 +309,7 @@ Updated automatically from the repo on `2026-05-20T18:09:14.248Z`.
 - `w19-definition-pull`
 - `w19-imbalance-pull`
 - `w19-statistics-pull`
+- `weekly-drift-2sigma-check`
 
 ### Engine Subsystems
 - `anti_setups`

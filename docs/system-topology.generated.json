@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-20T18:09:14.248Z",
+  "generatedAt": "2026-05-24T01:24:03.902Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 64,
-    "schedulerJobs": 63,
+    "schedulerJobs": 69,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 26,
@@ -98,6 +98,7 @@
     "autonomous-scout-discovery",
     "bias-engine-refresh-10am-et",
     "bias-engine-session-start",
+    "bw-session-refresh",
     "c11-bls-release",
     "c11-fred-daily",
     "c11-h41-weekly",
@@ -120,12 +121,15 @@
     "funnel-snapshot",
     "graveyard-pattern-extraction",
     "harsh-regime-phase-activation-check",
+    "heartbeat-stale-check",
+    "heartbeat-write",
     "idempotency-cleanup",
     "lifecycle-auto-check",
     "macro-data-sync",
     "meta-parameter-review",
     "metrics-collector",
     "metrics-heartbeat",
+    "n8n-execution-scrape",
     "n8n-health-check",
     "n8n-workflow-sync",
     "nightly-critique",
@@ -136,6 +140,7 @@
     "pre-market-routine",
     "pre-trading-day-health-check",
     "prompt-ab-resolution",
+    "prop-firm-cookie-refresh",
     "prop-firm-dashboard-snapshot",
     "prop-firm-health-check",
     "python-pool-saturation-check",
@@ -152,7 +157,8 @@
     "validation-cadence-monthly",
     "w19-definition-pull",
     "w19-imbalance-pull",
-    "w19-statistics-pull"
+    "w19-statistics-pull",
+    "weekly-drift-2sigma-check"
   ],
   "workflows": [
     "0A_health_monitor_66HEjQavpvirY6g5",
@@ -882,7 +888,7 @@
     ],
     "coveredCounts": {
       "routes": 62,
-      "schedulerJobs": 62,
+      "schedulerJobs": 63,
       "engineSubsystems": 26,
       "databaseTables": 92
     },
@@ -891,7 +897,12 @@
       "/api/pre-market"
     ],
     "missingSchedulerJobs": [
-      "pre-market-routine"
+      "bw-session-refresh",
+      "heartbeat-stale-check",
+      "heartbeat-write",
+      "pre-market-routine",
+      "prop-firm-cookie-refresh",
+      "weekly-drift-2sigma-check"
     ],
     "missingEngineSubsystems": [],
     "missingDatabaseTables": [
