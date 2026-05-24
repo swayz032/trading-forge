@@ -913,6 +913,143 @@
     "criticality": "critical"
   },
   {
+    "id": "5tf_mtf_engine",
+    "domain": "execution",
+    "owner_surface": "python",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "engine",
+    "automation_scope": "Wave 25 Pass 2 — N-timeframe MTF loader + multi-HTF indicator computation + N-TF join-to-exec. Replaces 2-TF (exec + daily) with full institutional top-down hierarchy: daily / HTF / ITF / trigger / exec. Backward-compat: strategies without 5-TF declaration default to 2-TF behavior.",
+    "data_sources": [
+      "ratio-adjusted continuous bar data (Polars)",
+      "strategies.daily_tf",
+      "strategies.htf_tf",
+      "strategies.itf_tf",
+      "strategies.trigger_tf"
+    ],
+    "reads_from": [
+      "strategies",
+      "market_data_meta"
+    ],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "engine.mtf_join_completed"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "backtest stdout logs"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "data_loader.load_n_timeframes",
+      "indicators.core.compute_multi_htf_indicators",
+      "indicators.mtf_join.join_n_timeframes_to_exec"
+    ],
+    "database_tables": [
+      "strategies",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "backtest stdout logs",
+      "/api/backtests/:id"
+    ],
+    "recovery_mode": "fail-open-to-2tf",
+    "health_check": "/api/backtests/:id",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:engine.mtf_join_completed"
+    ],
+    "evidence_queries": [
+      "mtf-5tf-join-tests"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "htf_narrative_engine",
+    "domain": "execution",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "engine",
+    "automation_scope": "Wave 25 Pass 2 — per-session HTF narrative state computation. compute_htf_narrative() emits 4 dataclasses (AsianRange, LondonBias, NYBias, DailyDealing) from multi-TF data. Pure function (no DB, no time.now), replay-deterministic. Persisted to bias_state.htf_narrative JSONB (mig 0137) and exposed to TS via bias-state-service.ts typed interfaces. Fail-open: null narrative never blocks signal flow.",
+    "data_sources": [
+      "intraday bars (DataFrame, UTC timestamps)",
+      "daily bars (DataFrame, UTC)",
+      "session boundary constants (Asian/London/NY ET windows)"
+    ],
+    "reads_from": [
+      "bias_state"
+    ],
+    "writes_to": [
+      "bias_state",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "bias_engine.htf_narrative_computed"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:bias_engine.htf_narrative_computed"
+    ],
+    "scheduler_jobs": [
+      "bias-engine-refresh-10am-et",
+      "bias-engine-session-start"
+    ],
+    "routes": [
+      "/api/bias-state"
+    ],
+    "engine_subsystems": [
+      "context.htf_narrative.compute_htf_narrative",
+      "context.bias_engine"
+    ],
+    "database_tables": [
+      "bias_state",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "/api/bias-state"
+    ],
+    "recovery_mode": "fail-open-null-narrative",
+    "health_check": "/api/bias-state",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "bias_state:recent-update"
+    ],
+    "evidence_queries": [
+      "htf-narrative-persistence-tests",
+      "test_htf_narrative"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
     "id": "production_hardening",
     "domain": "production",
     "owner_surface": "node",

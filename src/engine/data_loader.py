@@ -737,6 +737,95 @@ def load_with_htf(
     return exec_df, htf_df
 
 
+# ─── N-Timeframe Loader (W25.4) ──────────────────────────────────────
+
+def load_n_timeframes(
+    symbol: str,
+    timeframes: list[str],
+    start: str,
+    end: str,
+    adjusted: bool = True,
+) -> dict[str, pl.DataFrame]:
+    """Load N timeframes via sequential load_ohlcv calls (cache-friendly).
+
+    Returns a dict keyed by timeframe string (e.g. {"1m": df, "15m": df, "4h": df}).
+    Duplicate timeframe strings are deduplicated — only the first occurrence loads.
+    Daily ("daily" or "1d") ALWAYS loads regardless of this list (engine invariant);
+    however if the caller includes "daily" or "1d" explicitly it is still loaded here.
+
+    Args:
+        symbol: Futures symbol (MES, MNQ, MCL, etc.)
+        timeframes: List of timeframe strings. Duplicates are deduplicated.
+        start: Start date YYYY-MM-DD.
+        end: End date YYYY-MM-DD.
+        adjusted: Use ratio-adjusted data (default True).
+
+    Returns:
+        Dict mapping each unique timeframe string to its loaded Polars DataFrame.
+
+    Raises:
+        ValueError: if timeframes list is empty.
+        ValueError: if any load_ohlcv() call fails (no data found).
+    """
+    if not timeframes:
+        raise ValueError("load_n_timeframes: timeframes list must not be empty")
+
+    # Deduplicate preserving order
+    seen: set[str] = set()
+    unique_tfs: list[str] = []
+    for tf in timeframes:
+        if tf not in seen:
+            seen.add(tf)
+            unique_tfs.append(tf)
+
+    result: dict[str, pl.DataFrame] = {}
+    for tf in unique_tfs:
+        result[tf] = load_ohlcv(
+            symbol=symbol,
+            timeframe=tf,
+            start=start,
+            end=end,
+            adjusted=adjusted,
+        )
+    return result
+
+
+def resample_daily_to_weekly(daily_df: pl.DataFrame) -> pl.DataFrame:
+    """ISO-week aggregation: Monday 00:00 UTC → one weekly bar per ISO week.
+
+    Used by pre-market routine for strict ISO-week PWH/PWL (Pass 2.5).
+    The S3 bucket has no weekly TF folder — this resamples from daily bars in-engine.
+
+    The group_by_dynamic with every="1w", closed="left", label="left" anchors each
+    group to the Monday start of each ISO week (Polars uses Mon as week start).
+    Output ts_event = Monday 00:00 UTC for each week.
+
+    Args:
+        daily_df: Daily OHLCV Polars DataFrame with ts_event column.
+
+    Returns:
+        Weekly OHLCV DataFrame (one row per ISO week). Immutable — original unchanged.
+
+    Raises:
+        ValueError: if ts_event column is missing from daily_df.
+    """
+    if "ts_event" not in daily_df.columns:
+        raise ValueError("resample_daily_to_weekly: daily_df must have 'ts_event' column")
+
+    return (
+        daily_df
+        .sort("ts_event")
+        .group_by_dynamic("ts_event", every="1w", closed="left", label="left")
+        .agg([
+            pl.col("open").first(),
+            pl.col("high").max(),
+            pl.col("low").min(),
+            pl.col("close").last(),
+            pl.col("volume").sum(),
+        ])
+    )
+
+
 # ─── Rollover Day Detection (Task 7.1) ──────────────────────────────
 
 # Delivery months per symbol. Equity index futures roll quarterly;

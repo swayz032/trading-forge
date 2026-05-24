@@ -504,4 +504,60 @@ def compute_htf_indicators(
             ])
 
     return result
+
+
+def compute_multi_htf_indicators(
+    tf_data: dict[str, pl.DataFrame],
+    configs: "list[IndicatorConfig] | None" = None,
+    suffix_map: "dict[str, str] | None" = None,
+) -> dict[str, pl.DataFrame]:
+    """Compute indicators per TF; returns dict of TF → DataFrame with suffixed cols.
+
+    W25.4 — Generalised version of compute_htf_indicators() for N timeframes.
+    Existing compute_htf_indicators() remains unchanged as a thin wrapper.
+
+    Each TF in tf_data gets compute_htf_indicators() called with a suffix derived from:
+        1. suffix_map[tf] if provided, else
+        2. The canonical suffix: "_{tf}" with non-alphanum chars replaced by "_"
+           e.g. "4h" → "_4h", "1d" → "_1d", "15m" → "_15m"
+
+    Args:
+        tf_data: Dict mapping TF string → raw OHLCV Polars DataFrame.
+        configs: Indicator configs to compute on every TF. If None, no indicators
+            are computed but the OHLCV DataFrames are returned unchanged (useful when
+            the caller only needs the raw bars for backward-asof joins).
+        suffix_map: Optional override for per-TF suffix. Dict of {tf_string: suffix}.
+            Any TF not in the map gets the canonical suffix.
+
+    Returns:
+        Dict with the same keys as tf_data, values being the OHLCV DataFrame with
+        suffixed indicator columns added (or unchanged if configs is None/empty).
+
+    Raises:
+        ValueError: if tf_data is empty.
+    """
+    if not tf_data:
+        raise ValueError("compute_multi_htf_indicators: tf_data must not be empty")
+
+    _suffix_map = suffix_map or {}
+    result: dict[str, pl.DataFrame] = {}
+
+    for tf, df in tf_data.items():
+        # Derive suffix: use provided map, else canonical "_{tf}" with safe chars
+        if tf in _suffix_map:
+            suffix = _suffix_map[tf]
+        else:
+            # Replace non-alphanumeric with underscore, prepend underscore
+            import re as _re
+            safe = _re.sub(r"[^a-zA-Z0-9]", "_", tf)
+            suffix = f"_{safe}"
+
+        if configs:
+            result[tf] = compute_htf_indicators(df, configs, suffix)
+        else:
+            result[tf] = df
+
+    return result
+
+
 # test_append

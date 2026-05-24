@@ -68,6 +68,54 @@ export interface StructureState {
   market_structure_aligned?: boolean;
 }
 
+// ─── Wave 25 P2.A3 HtfNarrative contract ──────────────────────────────────────
+// Mirrors the Python `HtfNarrative` dataclass (src/engine/context/htf_narrative.py)
+// AFTER `dataclasses.asdict()` serialisation — keys are snake_case.
+// Persisted in bias_state.htf_narrative JSONB (migration 0137); consumed by
+// confluence-score.ts as supplementary HTF-alignment context.
+//
+// Shape locked by P2.A3; do not rename fields without updating BOTH:
+//   - src/engine/context/htf_narrative.py (dataclass)
+//   - src/server/db/migrations/0137_bias_state_htf_narrative.sql (comment)
+export interface AsianRange {
+  high: number | null;
+  low: number | null;
+  range_size: number | null;
+  formed_at_bar_idx: number | null;
+}
+
+export interface LondonBias {
+  direction: "bullish" | "bearish" | null;
+  swept_pdh: boolean;
+  swept_pdl: boolean;
+}
+
+export interface NYBias {
+  direction: "bullish" | "bearish" | null;
+  open_above_overnight_range: boolean;
+  open_below_overnight_range: boolean;
+}
+
+export interface DailyDealing {
+  dealing_range_high: number | null;
+  dealing_range_low: number | null;
+  current_quadrant:
+    | "premium_upper"
+    | "premium_lower"
+    | "discount_upper"
+    | "discount_lower"
+    | "equilibrium"
+    | null;
+}
+
+export interface HtfNarrative {
+  asian_range: AsianRange;
+  london_bias: LondonBias;
+  ny_bias: NYBias;
+  daily_dealing: DailyDealing;
+  computed_at_bar_idx: number;
+}
+
 // ─── Active symbols ───────────────────────────────────────────────────────────
 export const BIAS_SYMBOLS = ["MES", "MNQ", "MCL"] as const;
 export type BiasSymbol = typeof BIAS_SYMBOLS[number];
@@ -91,6 +139,8 @@ interface CachedBiasDecision {
   positionLockActive: boolean;
   /** W25.2: structure engine snapshot (null until structure_engine.py publishes or when MTF unavailable). */
   structureState: StructureState | null;
+  /** P2.A3 W25.5: HTF narrative state (null until htf_narrative.py publishes or when 5-TF unavailable). */
+  htfNarrative: HtfNarrative | null;
 }
 
 function cacheKey(sessionDate: string, symbol: string): string {
@@ -129,6 +179,13 @@ export interface BiasStateForSignal {
    *   - Consumed by confluence-score.ts (Path C) `market_structure_aligned` factor.
    */
   structureState: StructureState | null;
+  /**
+   * P2.A3 W25.5: HTF narrative state computed by htf_narrative.py for this session.
+   *   - null when 5-TF data unavailable or the strategy does not declare a 5-TF hierarchy.
+   *   - Carries AsianRange / LondonBias / NYBias / DailyDealing snapshots.
+   *   - Fail-open: a null value never blocks signal flow (strategies without 5-TF use structureState only).
+   */
+  htfNarrative: HtfNarrative | null;
 }
 
 /**
@@ -144,6 +201,7 @@ function stubBiasState(sessionDate: string, symbol: string): BiasStateForSignal 
     activeStrategyId: null,
     positionLockActive: false,
     structureState: null,
+    htfNarrative: null,
   };
 }
 
@@ -322,6 +380,7 @@ export async function getOrComputeBiasStateForDay(
           symbol: biasState.symbol,
           positionLockActive: biasState.positionLockActive,
           structureState: biasState.structureState,
+          htfNarrative: biasState.htfNarrative,
         })
         .from(biasState)
         .where(and(eq(biasState.sessionDate, sessionDate), eq(biasState.symbol, sym)))
@@ -340,6 +399,7 @@ export async function getOrComputeBiasStateForDay(
           computedAt: row.computedAt.toISOString(),
           positionLockActive: row.positionLockActive ?? false,
           structureState: (row.structureState as StructureState | null) ?? null,
+          htfNarrative: (row.htfNarrative as HtfNarrative | null) ?? null,
         };
         dailyBiasCache.set(key, decision);
         logger.info(
@@ -358,6 +418,7 @@ export async function getOrComputeBiasStateForDay(
   let playbook = "NO_TRADE";
   let evidence: Record<string, unknown> = {};
   let structureStateJson: Record<string, unknown> | null = null;
+  let htfNarrativeJson: Record<string, unknown> | null = null;
   const computedAt = new Date().toISOString();
   const isRefresh = forceRefresh;
 
@@ -432,6 +493,8 @@ export async function getOrComputeBiasStateForDay(
       evidence: Record<string, unknown>;
       source: string;
       structure_state: Record<string, unknown> | null;
+      /** P2.A3 W25.5: HTF narrative JSONB blob (null when 5-TF unavailable). */
+      htf_narrative: Record<string, unknown> | null;
     }>({
       scriptCode: `
 import sys, json, os, datetime
@@ -459,7 +522,7 @@ PLAYBOOK_TO_REGIME = {
     "LEAN_SHORT":               "TRENDING_DOWN",
 }
 
-def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, evidence, source, structure_state=None):
+def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, evidence, source, structure_state=None, htf_narrative=None):
     print(json.dumps({
         "regime_label": regime_label,
         "playbook": playbook,
@@ -469,6 +532,7 @@ def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, ev
         "evidence": evidence,
         "source": source,
         "structure_state": structure_state,
+        "htf_narrative": htf_narrative,
     }))
 
 # ── Attempt Primary: compute_bias() from live OHLCV + HTF/session context ──
@@ -571,6 +635,12 @@ try:
         import dataclasses as _dc
         structure_state_dict = _dc.asdict(state.structure_state)
 
+    # P2.A3 W25.5: Serialise htf_narrative for TS persistence (audit event guard)
+    htf_narrative_dict = None
+    if getattr(state, 'htf_narrative', None) is not None:
+        import dataclasses as _dc2
+        htf_narrative_dict = _dc2.asdict(state.htf_narrative)
+
     # W23H.A: Wire the dead 9-playbook router. route_playbook() replaces the direct
     # state.playbook lookup with the full routing logic (SWEEP_REVERSAL, ORB, MEAN_REVERSION).
     # Falls back gracefully if import fails (legacy PLAYBOOK_TO_REGIME still covers state.playbook).
@@ -619,6 +689,7 @@ try:
         },
         source="compute_bias_primary",
         structure_state=structure_state_dict,
+        htf_narrative=htf_narrative_dict,
     )
     primary_ok = True
 
@@ -675,6 +746,8 @@ except Exception as primary_err:
     computedViaPrimary = biasResult.source === "compute_bias_primary";
     // W25.2: capture structure_state from Python emit (may be null if engine unavailable)
     structureStateJson = biasResult.structure_state ?? null;
+    // P2.A3 W25.5: capture htf_narrative from Python emit (null when 5-TF unavailable)
+    htfNarrativeJson = biasResult.htf_narrative ?? null;
 
     logger.info(
       { sessionDate, symbol: sym, regimeLabel, playbook, source: biasResult.source, netBias: biasResult.net_bias, isRefresh, correlationId },
@@ -951,7 +1024,7 @@ except Exception as e:
   try {
     await db.execute(
       sql`
-        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, position_lock_active, hmm_probability_used, structure_state, computed_at, created_at)
+        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, position_lock_active, hmm_probability_used, structure_state, htf_narrative, computed_at, created_at)
         VALUES (
           ${sessionDate}::date,
           ${sym},
@@ -963,6 +1036,7 @@ except Exception as e:
           ${positionLockActive},
           ${hmmProbabilityUsed},
           ${structureStateJson != null ? JSON.stringify(structureStateJson) : null}::jsonb,
+          ${htfNarrativeJson != null ? JSON.stringify(htfNarrativeJson) : null}::jsonb,
           ${computedAt}::timestamptz,
           NOW()
         )
@@ -1000,6 +1074,31 @@ except Exception as e:
       });
     } catch (structAuditErr) {
       logger.warn({ err: structAuditErr, sessionDate, symbol: sym }, "bias-state W25.2: structure_state audit write failed (non-blocking)");
+    }
+  }
+
+  // P2.A3 W25.5: emit audit event when htf_narrative is populated (guard: only on non-null)
+  // Correlation_id is threaded from caller chain per §10b reconstruction mandate.
+  if (htfNarrativeJson != null) {
+    try {
+      await insertAuditRow({
+        action: "bias_engine.htf_narrative_computed",
+        entityType: "paper_session",
+        entityId: `${sessionDate}-${sym}`,
+        decisionAuthority: "system",
+        status: "success",
+        input: { sessionDate, symbol: sym, correlationId },
+        result: {
+          asian_range: htfNarrativeJson.asian_range,
+          london_bias: htfNarrativeJson.london_bias,
+          ny_bias: htfNarrativeJson.ny_bias,
+          daily_dealing: htfNarrativeJson.daily_dealing,
+          computed_at_bar_idx: htfNarrativeJson.computed_at_bar_idx,
+        },
+        correlationId,
+      });
+    } catch (htfAuditErr) {
+      logger.warn({ err: htfAuditErr, sessionDate, symbol: sym }, "bias-state P2.A3: htf_narrative audit write failed (non-blocking)");
     }
   }
 
@@ -1107,6 +1206,7 @@ except Exception as e:
     computedAt,
     positionLockActive,
     structureState: (structureStateJson as StructureState | null) ?? null,
+    htfNarrative: (htfNarrativeJson as HtfNarrative | null) ?? null,
   };
   // Always update cache with latest decision (whether session-start or refresh)
   dailyBiasCache.set(key, decision);

@@ -115,3 +115,47 @@ def forward_fill_htf_to_exec(
         )
 
     return joined
+
+
+def join_n_timeframes_to_exec(
+    exec_df: pl.DataFrame,
+    htf_dict: dict[str, pl.DataFrame],
+) -> pl.DataFrame:
+    """Backward-asof joins all HTFs in htf_dict onto exec_df. No look-ahead.
+
+    W25.4 — Composes forward_fill_htf_to_exec() sequentially for N timeframes.
+    Each HTF DataFrame in htf_dict must have ts_event plus any indicator columns
+    that should be joined. Columns must already carry their TF suffix to prevent
+    collisions (e.g. 'ema_50_4h', 'close_1h').
+
+    Empty htf_dict returns exec_df unchanged.
+
+    Args:
+        exec_df: Execution-timeframe DataFrame with 'ts_event' column.
+        htf_dict: Dict of {tf_string: htf_df}. Each htf_df must have 'ts_event'.
+            Any non-ts_event columns present in the htf_df are joined to exec_df.
+
+    Returns:
+        exec_df with all HTF non-ts_event columns backward-asof joined.
+        Row count is preserved (same as forward_fill_htf_to_exec guarantee).
+
+    Raises:
+        ValueError: if exec_df is missing 'ts_event'.
+        ValueError: if any htf_df in htf_dict is missing 'ts_event'.
+    """
+    if "ts_event" not in exec_df.columns:
+        raise ValueError("join_n_timeframes_to_exec: exec_df must have 'ts_event' column")
+
+    result = exec_df
+    for tf, htf_df in htf_dict.items():
+        if "ts_event" not in htf_df.columns:
+            raise ValueError(
+                f"join_n_timeframes_to_exec: htf_df for tf='{tf}' must have 'ts_event' column"
+            )
+        # All columns in the HTF df except ts_event are joined
+        value_cols = [c for c in htf_df.columns if c != "ts_event"]
+        if not value_cols:
+            continue
+        result = forward_fill_htf_to_exec(result, htf_df, value_cols)
+
+    return result

@@ -29,6 +29,8 @@ Agents must never fake profitability. The gates decide.
 
 **Wave 25 Pass 2 CLOSED 2026-05-24 — institutional-grade hardening pass.** 9 of 13 Phase B backlog items shipped (69%); 4 explicitly deferred (Inst-7 TopstepX migration pending operator account opening, Inst-9 Bagged CPCV optional enhancement, Wave 25 candidate #24 over-engineered for current scale, A-4 in-memory dedup accepted trade-off). 50 new tests across 5 vitest + 2 pytest files (23+14+13 by worker). 2 cross-audit false-positives caught: journal idx=137 collision (no collision) and computeRiskDerivedContracts zero-callers (has callers). All 3 CI hard gates GREEN. New env vars: DRAWDOWN_ROOM_RISK_PCT (default 0.01). New scheduled jobs: n8n-drift-detector-weekly, n8n-drift-detector-monthly. See AGENT-LOGS Wave 25 Pass 2 master-orchestration entry.
 
+**Wave 25 Pass 2 (5-TF + HTF narrative) CLOSED 2026-05-24** — separate from the hardening track. 5-TF MTF expansion (`load_n_timeframes()` + `compute_multi_htf_indicators()` + `join_n_timeframes_to_exec()` in `src/engine/data_loader.py` + `src/engine/indicators/core.py` + `src/engine/indicators/mtf_join.py`) + HTF narrative state (`compute_htf_narrative()` with AsianRange/LondonBias/NYBias/DailyDealing dataclasses in `src/engine/context/htf_narrative.py`). Migrations 0137 (`bias_state.htf_narrative` JSONB, idx 139) + 0138 (`strategies.{daily_tf,htf_tf,itf_tf,trigger_tf}` TEXT columns, idx 140). 56 Python + 27 TS tests GREEN. Audit event `bias_engine.htf_narrative_computed`. New subsystems registered: `5tf_mtf_engine` + `htf_narrative_engine`. DSL compiler extended from single-TF (`bias_timeframe`) AND-gating to N-TF AND-gating. Backward-compat: strategies with no new TF columns continue 2-TF operation (exec + daily) identically to pre-Pass-2 behavior. Cross-pass producers for Pass 2.5 (pre-market reads all TFs), Pass 5 (multi-TF VWAP), Pass 6 (HtfNarrative extended with A/M/E phase tracking — parallel field, NOT piggyback), Pass 7 (regime + daily_dealing for runner-trail).
+
 All build phases are done. **No new subsystems for 90 days.** The only work is production hardening:
 
 - **Pipeline production** — CANDIDATE → TESTING → PAPER → DEPLOY_READY → PILOT → DEPLOYED must flow without orphan states or silent drops
@@ -131,6 +133,36 @@ The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-p
 **Independent Structure Engine (W25.2):** `src/engine/context/structure_engine.py` publishes `StructureState` (BOS/CHoCH/MSS/PD-zone/HTF-alignment) BEFORE the entry trigger evaluates. Fixes the circular-logic bug where `structural_setup=True` whenever the entry fired. Persisted to `bias_state.structure_state` JSONB (migration 0134); typed contract in `BiasStateForSignal.structureState` and `confluence-score.ts::StructureState`.
 
 **Killzone helper (W25.3):** `src/server/lib/killzone.ts` — 5 first-class zones (`london`, `ny_am`, `ny_pm`, `silver_bullet`, `macro_window`) with DST-correct Intl.DateTimeFormat evaluation. Pure functions, never throws.
+
+### 5-TF MTF hierarchy (Wave 25, Pass 2, W25.4)
+
+Engine moves from 2-TF (exec + daily) to full institutional top-down: **daily / HTF / ITF / trigger / exec**. Declared per-strategy via 4 OPTIONAL TEXT columns on `strategies` (migration 0138 idx 140): `daily_tf`, `htf_tf`, `itf_tf`, `trigger_tf`. Daily ALWAYS loads (engine invariant); other TFs are optional and skipped when null. Strategies with NONE of the new columns set continue 2-TF operation identically to pre-Pass-2 behavior — backward-compat is the engine default, not an opt-in.
+
+| Engine helper | File | Role |
+|---|---|---|
+| `load_n_timeframes()` | `src/engine/data_loader.py` | Loads up to 5 TFs from S3 ratio-adjusted Parquet; returns Polars DataFrames keyed by TF label |
+| `compute_multi_htf_indicators()` | `src/engine/indicators/core.py` | Computes per-TF indicator set (ATR, EMA, VWAP, structure markers) before join |
+| `join_n_timeframes_to_exec()` | `src/engine/indicators/mtf_join.py` | Aligns higher-TF indicators to exec-TF bar timestamps without look-ahead; emits `engine.mtf_join_completed` audit row |
+| `resample_daily_to_weekly()` | `src/engine/indicators/mtf_join.py` | ISO-week aggregation helper (used by Pass 2.5 for PWH/PWL) |
+
+DSL compiler (`src/server/lib/dsl-compiler.ts`) extended from single-TF (`bias_timeframe`) AND-gating to N-TF AND-gating: any TF declared on the strategy participates in the bias-alignment check at signal time.
+
+### HTF Narrative State (Wave 25, Pass 2, W25.5)
+
+Per-session institutional context, computed pure-functionally (no DB, no `time.now()`, no side effects — replay-deterministic).
+
+`src/engine/context/htf_narrative.py::compute_htf_narrative()` emits 4 snake-case dataclasses (Python-side) mirrored exactly by 5 exported TS interfaces (`bias-state-service.ts:71-117`). All field types are primitives (`Optional[float|int|str|bool]`) — no Python-only types like `Decimal`.
+
+| Dataclass | Session window (ET) | Fields |
+|---|---|---|
+| `AsianRange`   | 18:00 prev day → 03:00 | `high`, `low`, `range_size`, `formed_at_bar_idx` |
+| `LondonBias`   | 03:00 → 08:30          | `direction` ("bullish"/"bearish"/null), `swept_pdh`, `swept_pdl` |
+| `NYBias`       | 08:30 → 10:30          | `direction`, `open_above_overnight_range`, `open_below_overnight_range` |
+| `DailyDealing` | full daily             | `dealing_range_high`, `dealing_range_low`, `current_quadrant` (premium_upper / premium_lower / discount_upper / discount_lower / equilibrium / null) |
+
+Persisted to `bias_state.htf_narrative` JSONB (migration 0137 idx 139). Wired into TS via `BiasStateForSignal.htfNarrative` (typed). Audit event: `bias_engine.htf_narrative_computed`. **Fail-open contract**: a null narrative NEVER blocks signal flow — strategies without 5-TF declaration use `structureState` only.
+
+**Cross-pass consumer contract:** Pass 6 (narrative continuity state machine) will EXTEND HtfNarrative with A/M/E phase tracking via a PARALLEL field — do NOT mutate the existing 4 sub-dataclasses or piggyback A/M/E onto `DailyDealing.current_quadrant`. Pass 7 (adaptive exits) consumes `daily_dealing` for runner-trail target selection.
 
 ---
 
@@ -601,7 +633,7 @@ MAX_CONCURRENT_BACKTESTS=1
 - **API Server:** Express.js 5 + TypeScript (`src/server/`)
 - **Database:** PostgreSQL on Railway + Drizzle ORM (`src/server/db/schema.ts`)
 - **Backtest Engine:** Python + vectorbt + Polars + DuckDB (`src/engine/`)
-- **AI Agents:** TypeScript + Ollama (qwen3-coder:30b, deepseek-r1:14b) + GPT-5-mini (cloud)
+- **AI Agents:** TypeScript + Ollama (qwen2.5-coder:7b primary, deepseek-r1:14b) + GPT-5-mini (cloud). Pass 21 (2026-05-12) retired qwen3-coder:30b — 18GB model couldn't load on RTX 5060 8GB VRAM. Override via `PARAMETER_EVOLVER_MODEL` env var.
 - **Orchestration:** n8n on Railway since Pass 21 — `https://n8n-production-84ff.up.railway.app`
 - **Data Lake:** AWS S3 (Parquet, ratio-adjusted continuous contracts)
 - **Dashboard:** React + Vite + TailwindCSS (`Trading_forge_frontend/amber-vision-main/`)

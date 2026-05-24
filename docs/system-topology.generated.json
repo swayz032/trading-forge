@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T07:55:18.576Z",
+  "generatedAt": "2026-05-24T08:28:21.487Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -21,7 +21,7 @@
     "canonicalWorkflows": 28,
     "engineSubsystems": 26,
     "databaseTables": 94,
-    "registrySubsystems": 22
+    "registrySubsystems": 24
   },
   "routes": [
     "/api/admin",
@@ -851,33 +851,33 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 22,
-    "autonomousSubsystems": 22,
+    "registryEntries": 24,
+    "autonomousSubsystems": 24,
     "selfEvolvingSubsystems": 7,
     "proofStatusCounts": {
-      "runtime-proven": 17,
+      "runtime-proven": 19,
       "partially-proven": 0,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 17,
+      "active": 19,
       "experimental": 5
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 17,
+      "active_preprod": 19,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 15,
+      "runtime_proven_autonomous": 17,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 11,
+      "not_collecting": 13,
       "collecting_only": 0,
       "learning_active": 6,
       "learning_blocked": 0,
@@ -885,13 +885,13 @@
     },
     "learningModeCounts": {
       "active_learning": 5,
-      "deterministic_instrumented": 10,
+      "deterministic_instrumented": 12,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 5,
-      "deterministic_instrumented": 15,
+      "deterministic_instrumented": 17,
       "manual_gated": 2
     },
     "manualGates": [
@@ -927,23 +927,24 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "complete",
-      "automationComplete": 17,
-      "dataCollectionComplete": 22,
-      "auditabilityComplete": 22,
-      "failureVisibilityComplete": 22,
-      "authorityCorrect": 22,
+      "automationComplete": 19,
+      "dataCollectionComplete": 24,
+      "auditabilityComplete": 24,
+      "failureVisibilityComplete": 24,
+      "authorityCorrect": 24,
       "learningActive": 6,
       "incompleteSubsystems": []
     },
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 15,
+        "production_autonomous": 17,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
       },
       "readySubsystems": [
+        "5tf_mtf_engine",
         "backtest_qualification",
         "broker_abstraction_layer",
         "compliance_governance",
@@ -951,6 +952,7 @@
         "critic_evolution",
         "deepar_regime",
         "frankenstein_randomization_gate",
+        "htf_narrative_engine",
         "observability_reliability",
         "operator_absent_autopilot",
         "parameter_robustness_gate",
@@ -1028,6 +1030,82 @@
       "runtimeControlBlockers": []
     },
     "subsystems": [
+      {
+        "id": "5tf_mtf_engine",
+        "domain": "execution",
+        "ownerSurface": "python",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "engine",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "critical",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log:engine.mtf_join_completed",
+          "backtest stdout logs",
+          "engine.mtf_join_completed"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "market_data_meta",
+          "ratio-adjusted continuous bar data (Polars)",
+          "strategies",
+          "strategies.daily_tf",
+          "strategies.htf_tf",
+          "strategies.itf_tf",
+          "strategies.trigger_tf"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:engine.mtf_join_completed",
+          "backtest stdout logs",
+          "engine.mtf_join_completed",
+          "mtf-5tf-join-tests"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "/api/backtests/:id",
+        "freshnessSignals": [
+          "audit_log:engine.mtf_join_completed"
+        ],
+        "evidenceQueries": [
+          "mtf-5tf-join-tests"
+        ],
+        "coverageGaps": []
+      },
       {
         "id": "a_plus_market_auditor",
         "domain": "quantum-challenger",
@@ -1988,6 +2066,88 @@
         "evidenceQueries": [
           "frankenstein-pending-row",
           "frankenstein-pass-rate"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "htf_narrative_engine",
+        "domain": "execution",
+        "ownerSurface": "python-node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "engine",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "critical",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log:bias_engine.htf_narrative_computed",
+          "bias_engine.htf_narrative_computed",
+          "bias_state:recent-update"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "bias_state",
+          "daily bars (DataFrame, UTC)",
+          "intraday bars (DataFrame, UTC timestamps)",
+          "session boundary constants (Asian/London/NY ET windows)"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:bias_engine.htf_narrative_computed",
+          "bias_engine.htf_narrative_computed",
+          "bias_state:recent-update",
+          "htf-narrative-persistence-tests",
+          "test_htf_narrative"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/bias-state"
+        ],
+        "schedulerJobs": [
+          "bias-engine-refresh-10am-et",
+          "bias-engine-session-start"
+        ],
+        "healthCheck": "/api/bias-state",
+        "freshnessSignals": [
+          "bias_state:recent-update"
+        ],
+        "evidenceQueries": [
+          "htf-narrative-persistence-tests",
+          "test_htf_narrative"
         ],
         "coverageGaps": []
       },
@@ -3679,6 +3839,82 @@
   },
   "subsystemSummaries": [
     {
+      "id": "5tf_mtf_engine",
+      "domain": "execution",
+      "ownerSurface": "python",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "engine",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "critical",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log:engine.mtf_join_completed",
+        "backtest stdout logs",
+        "engine.mtf_join_completed"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "market_data_meta",
+        "ratio-adjusted continuous bar data (Polars)",
+        "strategies",
+        "strategies.daily_tf",
+        "strategies.htf_tf",
+        "strategies.itf_tf",
+        "strategies.trigger_tf"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:engine.mtf_join_completed",
+        "backtest stdout logs",
+        "engine.mtf_join_completed",
+        "mtf-5tf-join-tests"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "/api/backtests/:id",
+      "freshnessSignals": [
+        "audit_log:engine.mtf_join_completed"
+      ],
+      "evidenceQueries": [
+        "mtf-5tf-join-tests"
+      ],
+      "coverageGaps": []
+    },
+    {
       "id": "a_plus_market_auditor",
       "domain": "quantum-challenger",
       "ownerSurface": "python-node",
@@ -4638,6 +4874,88 @@
       "evidenceQueries": [
         "frankenstein-pending-row",
         "frankenstein-pass-rate"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "htf_narrative_engine",
+      "domain": "execution",
+      "ownerSurface": "python-node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "engine",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "critical",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log:bias_engine.htf_narrative_computed",
+        "bias_engine.htf_narrative_computed",
+        "bias_state:recent-update"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "bias_state",
+        "daily bars (DataFrame, UTC)",
+        "intraday bars (DataFrame, UTC timestamps)",
+        "session boundary constants (Asian/London/NY ET windows)"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:bias_engine.htf_narrative_computed",
+        "bias_engine.htf_narrative_computed",
+        "bias_state:recent-update",
+        "htf-narrative-persistence-tests",
+        "test_htf_narrative"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/bias-state"
+      ],
+      "schedulerJobs": [
+        "bias-engine-refresh-10am-et",
+        "bias-engine-session-start"
+      ],
+      "healthCheck": "/api/bias-state",
+      "freshnessSignals": [
+        "bias_state:recent-update"
+      ],
+      "evidenceQueries": [
+        "htf-narrative-persistence-tests",
+        "test_htf_narrative"
       ],
       "coverageGaps": []
     },

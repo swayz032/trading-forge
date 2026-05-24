@@ -114,6 +114,10 @@ class DailyBiasState:
     # Stage 2 weighted scoring (W25.1) reads this to compute market_structure_aligned.
     # Downstream JSON shape: see structure_engine.py module docstring.
     structure_state: Optional["StructureState"] = None
+    # W25.5 — HTF Narrative state (Asian/London/NY session + dealing range quadrant).
+    # None when intraday_bars not provided (back-compat: all existing callers unaffected).
+    # Serialised to bias_state.htf_narrative JSONB by bias-state-service.ts (migration 0137).
+    htf_narrative: Optional["HtfNarrative"] = None
 
 
 def _score_htf_trend(htf: HTFContext) -> int:
@@ -606,6 +610,9 @@ def compute_bias(
     vp_levels: Optional["VPLevels"] = None,
     exec_bars: Optional[pl.DataFrame] = None,
     htf_bars: Optional[pl.DataFrame] = None,
+    intraday_bars: Optional[pl.DataFrame] = None,
+    daily_bars_for_narrative: Optional[pl.DataFrame] = None,
+    current_bar_idx: int = 0,
 ) -> DailyBiasState:
     """Compute the full daily bias state from all 7 components + optional VP context.
 
@@ -616,6 +623,12 @@ def compute_bias(
     When provided, compute_structure_state() runs independently and populates
     DailyBiasState.structure_state. When absent (existing callers), structure_state
     remains None and downstream Stage 2 treats it as "factor unavailable".
+
+    W25.5: intraday_bars is an optional new param for HTF narrative state.
+    When provided, compute_htf_narrative() runs and populates DailyBiasState.htf_narrative.
+    When absent (existing callers), htf_narrative remains None (back-compat).
+    daily_bars_for_narrative is the full daily DataFrame for PDH/PDL context.
+    current_bar_idx is the exec-TF bar index for traceability in replay.
 
     Returns DailyBiasState with net_bias (-100..+100) and bias_confidence (0..1).
     """
@@ -690,6 +703,23 @@ def compute_bias(
     # when bars=None so existing callers see no behavior change.
     of_features = _compute_order_flow_features(bars, session)
 
+    # W25.5: HTF Narrative state (Asian/London/NY + dealing range quadrant).
+    # Fail-open: if intraday_bars is None or compute throws → None.
+    # Existing callers that don't pass intraday_bars see no behavior change.
+    htf_narrative_result = None
+    if intraday_bars is not None:
+        try:
+            from src.engine.context.htf_narrative import compute_htf_narrative
+            htf_narrative_result = compute_htf_narrative(
+                daily_bars=daily_bars_for_narrative if daily_bars_for_narrative is not None else pl.DataFrame(),
+                intraday_bars=intraday_bars,
+                htf_bars=htf_bars,
+                current_bar_idx=current_bar_idx,
+            )
+        except Exception:  # noqa: BLE001
+            # HTF narrative failure must NEVER break compute_bias()
+            htf_narrative_result = None
+
     # W25.2: Independent structure validation layer.
     # Fail-open: if exec_bars is None or htf_bars is None or engine throws → None.
     # Existing callers that don't pass exec_bars/htf_bars see no behavior change.
@@ -759,6 +789,7 @@ def compute_bias(
         htf_aligned=htf_aligned,
         range_bound_eligible=range_bound_eligible,
         structure_state=structure_state_result,
+        htf_narrative=htf_narrative_result,
     )
 
     # Track 5: SHADOW write — fire-and-forget persistence of bias decision.

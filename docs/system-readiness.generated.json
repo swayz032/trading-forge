@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T07:55:18.576Z",
+  "generatedAt": "2026-05-24T08:28:21.487Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -14,13 +14,30 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 22,
-    "ready": 14,
+    "total": 24,
+    "ready": 16,
     "blocked": 1,
     "manualGated": 2,
     "experimental": 5
   },
   "subsystems": [
+    {
+      "id": "5tf_mtf_engine",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:engine.mtf_join_completed",
+        "backtest stdout logs",
+        "engine.mtf_join_completed",
+        "mtf-5tf-join-tests"
+      ]
+    },
     {
       "id": "a_plus_market_auditor",
       "status": "experimental",
@@ -236,6 +253,24 @@
         "frankenstein:* SSE",
         "frankenstein.run-complete",
         "lifecycle.gate-blocked-frankenstein"
+      ]
+    },
+    {
+      "id": "htf_narrative_engine",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:bias_engine.htf_narrative_computed",
+        "bias_engine.htf_narrative_computed",
+        "bias_state:recent-update",
+        "htf-narrative-persistence-tests",
+        "test_htf_narrative"
       ]
     },
     {

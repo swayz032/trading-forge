@@ -2166,6 +2166,15 @@ export const biasState = pgTable(
     //   last_break_age_bars, swing_high, swing_low, computed_at_bar_idx }
     // Consumed by confluence-score.ts (W25.1) market_structure_aligned factor.
     structureState: jsonb("structure_state"),
+    // P2.A3 W25.5 (migration 0137): JSON-serialised HtfNarrative from htf_narrative.py.
+    // NULL for pre-Wave-25 rows and when 5-TF data unavailable. Shape:
+    // { asian_range:{high,low,range_size,formed_at_bar_idx},
+    //   london_bias:{direction,swept_pdh,swept_pdl},
+    //   ny_bias:{direction,open_above_overnight_range,open_below_overnight_range},
+    //   daily_dealing:{dealing_range_high,dealing_range_low,current_quadrant},
+    //   computed_at_bar_idx }
+    // Strategies without 5-TF hierarchy leave this NULL; fail-open contract.
+    htfNarrative: jsonb("htf_narrative"),
     computedAt: timestamp("computed_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -3895,6 +3895,44 @@ def run_class_backtest(
             print(f"WARNING: Could not load daily data for HTF gate: {e}", file=sys.stderr)
             daily_data = None
 
+    # ─── W25.4: Load strategy-declared additional TFs (4H, 1H, trigger TF) ──
+    # Strategies that declare htf_tf/itf_tf/trigger_tf have those TFs loaded here
+    # and passed into compute_htf_context for richer context.
+    # Strategies without these declarations get existing 2-TF behaviour (back-compat).
+    _four_h_data: "pl.DataFrame | None" = None
+    _one_h_data: "pl.DataFrame | None" = None
+    if hasattr(strategy, "htf_tf") and strategy.htf_tf:
+        _declared_htf_tf = strategy.htf_tf
+    elif hasattr(strategy, "bias_timeframe") and strategy.bias_timeframe:
+        _declared_htf_tf = strategy.bias_timeframe
+    else:
+        _declared_htf_tf = None
+
+    if hasattr(strategy, "itf_tf") and strategy.itf_tf:
+        _declared_itf_tf = strategy.itf_tf
+    else:
+        _declared_itf_tf = None
+
+    if _declared_htf_tf and _declared_htf_tf not in ("daily", "1d"):
+        try:
+            from src.engine.data_loader import load_n_timeframes as _load_n_tfs
+            _extra_tfs = [_declared_htf_tf]
+            if _declared_itf_tf and _declared_itf_tf != _declared_htf_tf:
+                _extra_tfs.append(_declared_itf_tf)
+            _loaded = _load_n_tfs(symbol, _extra_tfs, start_date, end_date)
+            _four_h_data = _loaded.get(_declared_htf_tf)
+            if _declared_itf_tf:
+                _one_h_data = _loaded.get(_declared_itf_tf)
+            print(
+                f"W25.4: loaded extra TFs {_extra_tfs} for {strategy.name}",
+                file=sys.stderr,
+            )
+        except Exception as _e:
+            print(
+                f"WARNING W25.4: Could not load extra TFs ({_declared_htf_tf}, {_declared_itf_tf}): {_e}",
+                file=sys.stderr,
+            )
+
     if htf_cache is None and daily_data is not None and len(daily_data) >= 200:
         from src.engine.context.htf_context import compute_htf_context
         htf_cache = {}
@@ -3905,8 +3943,8 @@ def run_class_backtest(
             day_key = str(bar_date)[:10]
             htf_cache[day_key] = compute_htf_context(
                 daily_df=daily_data.slice(0, day_idx),
-                four_h_df=None,
-                one_h_df=None,
+                four_h_df=_four_h_data,
+                one_h_df=_one_h_data,
                 current_price=float(daily_data["close"][day_idx - 1]),
                 bar_date=bar_date,
             )

@@ -93,6 +93,25 @@ export interface DslCompileInput {
   bias_timeframe?: string | null;
   /** W23G.11: HTF bias condition string (e.g. "ema_50_4h > ema_200_4h"). Reserved for future use. */
   bias_condition?: string | null;
+  /**
+   * W25.4: 5-TF hierarchy fields. All nullable — strategies without these declared
+   * fall back to bias_timeframe single-TF behaviour (backward compat).
+   *
+   * daily_tf   — dealing range + bias narrative (e.g. "1d"). Always loaded by engine.
+   * htf_tf     — structure TF (e.g. "4h"). When set, htf_condition is AND-gated.
+   * itf_tf     — execution narrative TF (e.g. "1h"). When set, itf_condition is AND-gated.
+   * trigger_tf — fine entry trigger (e.g. "1m" or "5m"). Metadata only; no grammar gate.
+   *
+   * htf_condition / itf_condition: pre-suffixed column expressions, e.g.
+   *   htf_condition: "ema_50_4h > ema_200_4h"
+   *   itf_condition: "rsi_14_1h > 50"
+   */
+  daily_tf?: string | null;
+  htf_tf?: string | null;
+  itf_tf?: string | null;
+  trigger_tf?: string | null;
+  htf_condition?: string | null;
+  itf_condition?: string | null;
 }
 
 const TIMEFRAME_TO_BARS: Record<string, number> = { "1m": 1, "5m": 5, "15m": 15, "30m": 30, "1h": 60, "4h": 240, "1d": 1440 };
@@ -426,41 +445,83 @@ export function compileDslToEngine(input: DslCompileInput): CompiledStrategy | n
  */
 export function applyConfluenceToCompiled(
   base: CompiledStrategy,
-  input: Pick<DslCompileInput, "confirming_indicators" | "min_factors_satisfied" | "bias_timeframe" | "bias_condition">,
+  input: Pick<
+    DslCompileInput,
+    | "confirming_indicators"
+    | "min_factors_satisfied"
+    | "bias_timeframe"
+    | "bias_condition"
+    | "htf_tf"
+    | "itf_tf"
+    | "htf_condition"
+    | "itf_condition"
+  >,
 ): CompiledStrategy {
   const confirmings = input.confirming_indicators ?? [];
   const biasTimeframe = input.bias_timeframe ?? null;
   const biasCondition = (input.bias_condition ?? "").trim();
   const notes = [...base.compileNotes];
 
-  // ── MTF: AND-gate bias_condition into grammar (W23H.1) ────────────────────
+  // ── W25.4: Collect all TF conditions to AND-gate ──────────────────────────
+  // Build a list of (tf, condition) pairs. The first matching pair (bias_timeframe
+  // or htf_tf with a condition) is gated via the W23H.1 mechanism. Additional TF
+  // conditions (itf_tf) are also AND-gated if provided.
+  //
+  // Backward compat: strategies with only bias_timeframe + bias_condition continue
+  // to compile identically — the list has one entry and the result is unchanged.
+  type TfGate = { tf: string; condition: string; label: string };
+  const tfGates: TfGate[] = [];
+
+  // Canonical single-TF gate (W23H.1) — bias_timeframe / bias_condition
+  if (biasTimeframe && biasCondition) {
+    tfGates.push({ tf: biasTimeframe, condition: biasCondition, label: "bias_timeframe" });
+  }
+  // W25.4 HTF (4H) gate — when htf_tf is declared separately from bias_timeframe
+  const htfTf = (input.htf_tf ?? "").trim();
+  const htfCondition = (input.htf_condition ?? "").trim();
+  if (htfTf && htfCondition && htfTf !== biasTimeframe) {
+    tfGates.push({ tf: htfTf, condition: htfCondition, label: "htf_tf" });
+  }
+  // W25.4 ITF (1H) gate — execution narrative layer
+  const itfTf = (input.itf_tf ?? "").trim();
+  const itfCondition = (input.itf_condition ?? "").trim();
+  if (itfTf && itfCondition) {
+    tfGates.push({ tf: itfTf, condition: itfCondition, label: "itf_tf" });
+  }
+
+  // ── MTF: AND-gate bias_condition into grammar (W23H.1 + W25.4) ──────────
   // When bias_timeframe + bias_condition are both present, AND-gate the condition
   // into the entry grammar. The bias_condition uses pre-suffixed column names
   // (e.g. 'ema_50_4h > ema_200_4h') that the engine's forward_fill_htf_to_exec()
   // will make available as columns in the exec_df before signal evaluation.
+  //
+  // W25.4 extends this: all tfGates are applied sequentially. The sentinel guard
+  // ("high < low") applies to the outermost expression at each step.
   let baseLongWithBias = base.entry_long;
   let baseShortWithBias = base.entry_short;
 
-  if (biasTimeframe && biasCondition) {
-    logger.info(
-      { bias_timeframe: biasTimeframe, bias_condition: biasCondition },
-      "dsl-compiler W23H.1: MTF bias gate active — AND-gating bias_condition into entry grammar",
-    );
-
-    const longIssentinel = base.entry_long === "high < low";
-    const shortIssentinel = base.entry_short === "high < low";
-
-    if (!longIssentinel) {
-      baseLongWithBias = `(${base.entry_long}) AND (${biasCondition})`;
-      notes.push(
-        `mtf.bias_gate: bias_timeframe='${biasTimeframe}' → entry_long AND-gated with '${biasCondition}'`,
+  if (tfGates.length > 0) {
+    for (const gate of tfGates) {
+      logger.info(
+        { tf: gate.tf, condition: gate.condition, label: gate.label },
+        `dsl-compiler W25.4: MTF bias gate (${gate.label}) — AND-gating condition into entry grammar`,
       );
-    }
-    if (!shortIssentinel) {
-      baseShortWithBias = `(${base.entry_short}) AND (${biasCondition})`;
-      notes.push(
-        `mtf.bias_gate: bias_timeframe='${biasTimeframe}' → entry_short AND-gated with '${biasCondition}'`,
-      );
+
+      const longIssentinel = baseLongWithBias === "high < low";
+      const shortIssentinel = baseShortWithBias === "high < low";
+
+      if (!longIssentinel) {
+        baseLongWithBias = `(${baseLongWithBias}) AND (${gate.condition})`;
+        notes.push(
+          `mtf.bias_gate: ${gate.label}='${gate.tf}' → entry_long AND-gated with '${gate.condition}'`,
+        );
+      }
+      if (!shortIssentinel) {
+        baseShortWithBias = `(${baseShortWithBias}) AND (${gate.condition})`;
+        notes.push(
+          `mtf.bias_gate: ${gate.label}='${gate.tf}' → entry_short AND-gated with '${gate.condition}'`,
+        );
+      }
     }
   } else if (biasTimeframe && !biasCondition) {
     // bias_timeframe set but no condition — log advisory only, no grammar change.
@@ -611,5 +672,10 @@ export function compileDslWithConfluence(input: DslCompileInput): CompiledStrate
     min_factors_satisfied: input.min_factors_satisfied,
     bias_timeframe: input.bias_timeframe,
     bias_condition: input.bias_condition,
+    // W25.4: pass through 5-TF hierarchy fields
+    htf_tf: input.htf_tf,
+    itf_tf: input.itf_tf,
+    htf_condition: input.htf_condition,
+    itf_condition: input.itf_condition,
   });
 }
