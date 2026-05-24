@@ -5922,6 +5922,37 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-24 Wave 24 Pass 1 — Backtest Core (Items 10 / 14 / 18 / 19)
+
+**Mission:** Ship 4 institutional hardening items to the Python backtest engine and TS lifecycle gates.
+
+**Work completed:**
+- **Item 10 (CPCV + purged WF):** Added `WF_MODE ∈ {plain, purged_embargo, cpcv}` env var to `walk_forward.py`. Implemented `_run_walk_forward_cpcv()` using C(6,2)=15 combinatorial paths with temporal purge+embargo per path. All modes emit `wf_metadata` dict. Lifecycle gate added to `lifecycle-service.ts` blocking Style C + plain WF (audit: `lifecycle.wf_mode_insufficient`).
+- **Item 14 (Blackout + cross-symbol DLL parity):** Created `src/engine/context/blackout_gate.py` (pure half-open interval matching paper semantics) and `src/engine/context/cross_symbol_dll.py` (ports `evaluateCrossSymbolDll()` from TS). Both wired into `run_backtest()` BEFORE E.3/E.4/E.5 guards. `dsl_guards` dict extended with `blackout_skips` and `cross_symbol_dll_halts`. Both gates are fail-safe (non-fatal try/except).
+- **Item 18 (PBO gate):** PBO computed from WF windows (>=4 required). `result["invariants"]["pbo"]` and `pbo_flag` emitted. Lifecycle gate blocks TESTING→PAPER when `pbo_flag=true` (env `PBO_PROMOTION_THRESHOLD` default 0.5). Audit: `lifecycle.pbo_overfit_blocked`.
+- **Item 19 (Honest DSR):** Deflated Sharpe computed with correct `n_trials` (WF window count or MC trials, not hardcoded 1). `result["invariants"]["dsr_honest"]` emitted with `sr_observed`, `sr_threshold`, `n_trials`, `dsr`, `dsr_passed`, `p_value`. Lifecycle gate blocks when `dsr_passed=false` (env `DSR_HONEST_THRESHOLD` default 1.5). Audit: `lifecycle.dsr_honest_blocked`.
+- **Bugfixes found and fixed during testing:**
+  - `UnboundLocalError: cannot access local variable 'os'` — duplicate `import os` at line ~3409 inside `run_backtest()` made Python's compiler treat ALL `os` references in that function as local, breaking `os.environ.get()` at lines 2546, 3326, 3354. Fixed by removing the redundant local import.
+  - CPCV `equity_curve` dict-vs-float type error — `equity_curve` is `list[dict]` (daily aggregates); CPCV was extending `all_oos_equity: list[float]` with it. Fixed by using `equity_bars` (raw float[]) instead, with fallback extraction from equity_curve dicts.
+  - Pre-commit ruff failures in new files: `numpy` imported inside functions but used as type annotations at module scope (`"np.ndarray"` strings). Fixed by moving `import numpy as np` to module level in `blackout_gate.py` and `cross_symbol_dll.py` and converting quoted annotations to direct `np.ndarray` refs.
+  - Pre-existing F821/F841 violations in `backtester.py` surfaced because it was staged for the first time. Added `# noqa` suppressors.
+
+**Verification:**
+- 83 pytest GREEN: 12 CPCV + 71 pure-function tests (test_pbo, test_dsr_honest, test_blackout_backtest_parity, test_cross_symbol_dll_backtest, test_dsl_guards_blackout_dll_metrics)
+- 27 vitest GREEN: 3 new TS gate test files (wave24-wf-mode-gate, wave24-pbo-promotion-gate, wave24-dsr-honest-gate)
+- ruff lint PASSED (pre-commit hook GREEN)
+- production-isolation: CLEAN
+- 2026-compliance: OK
+- system-map:check: pre-existing drift (2 routes, 6 jobs, 1 table) — NOT introduced by this wave
+
+**Known-facts updates:** None.
+
+**Carry-forward for next session:**
+- System Map still needs architect sync pass (pre-existing drift from Wave 24 lifecycle gates)
+- `retry_after_seconds` pre-existing TS type error at `lifecycle-service.ts:677` — pre-existing, not introduced
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
