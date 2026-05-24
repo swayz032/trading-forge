@@ -33,6 +33,11 @@ import { logger } from "../lib/logger.js";
 import { isInAnyKillzone, activeKillzones } from "../lib/killzone.js";
 import { getInternalsSnapshot } from "./market-internals-service.js";
 import type { RankedLevel } from "./liquidity-map-service.js";
+import {
+  deriveFactorDecay,
+  getDecayTelemetryThreshold,
+  type DecayResult,
+} from "../lib/confluence-decay.js";
 
 // ─── Named weight constants — 11-factor model (W25.5c renormalization) ────────
 // Weights sum to exactly 1.00. Equal-weight-ish starter.
@@ -191,6 +196,50 @@ export interface SignalContext {
    */
   liquidityNearestAbove?: RankedLevel[] | null;
   liquidityNearestBelow?: RankedLevel[] | null;
+
+  // ─── W25.7 Pass 4: Decay context fields ─────────────────────────────────────
+  // All optional — when absent, decay functions return confidence=1.0 (no penalty).
+  // Backward-compat: pre-Pass-4 call sites that don't populate these get the
+  // same behavior as before (no decay applied, full weight contribution).
+
+  /**
+   * Age in bars of the SMT divergence signal.
+   * Used by deriveFactorDecay for smt_confirmation.
+   * Populate from the SMT engine output when Pass 5 ships.
+   */
+  smt_age_bars?: number | null;
+
+  /**
+   * Number of sessions since the VP levels were last refreshed.
+   * Used by deriveFactorDecay for vp_level_proximity.
+   */
+  vp_age_sessions?: number | null;
+
+  /**
+   * Number of times the active VP level was touched by price.
+   * Used by deriveFactorDecay for vp_level_proximity.
+   */
+  vp_touched_count?: number | null;
+
+  /**
+   * Age in bars since the VWAP anchor bar was set.
+   * Used by deriveFactorDecay for vwap_alignment.
+   * When absent (session VWAP, not anchored), decay returns confidence=1.0.
+   */
+  vwap_anchor_age_bars?: number | null;
+
+  /**
+   * Age in bars of the cumulative-delta / volume signature accumulation.
+   * Used by deriveFactorDecay for delta_or_volume_signature.
+   */
+  delta_age_bars?: number | null;
+
+  /**
+   * Age in hours of the cross-asset direction reading (DXY/10Y).
+   * Pre-market readings become stale as the session progresses.
+   * Used by deriveFactorDecay for cross_asset_aligned.
+   */
+  cross_asset_age_hours?: number | null;
 }
 
 /**
@@ -200,10 +249,31 @@ export interface FactorContribution {
   factor: string;
   weight: number;
   satisfied: boolean;
-  /** Numeric contribution to score: weight × (satisfied ? 1 : 0) */
+  /**
+   * Numeric contribution to score.
+   * Pre-Pass-4:  weight × (satisfied ? 1 : 0)
+   * Post-Pass-4: weight × (satisfied ? decay_confidence : 0)
+   *              When decay doesn't apply (null), decay_confidence=1.0 → same math.
+   */
   contribution: number;
   reason: string;
   is_hard_block: boolean;
+  /**
+   * W25.7 Pass 4: decay confidence in [0, 1].
+   * null = decay doesn't apply for this factor (liquidity/internals/macro/regime/killzone).
+   * 1.0  = decay applies but no age info available (backward-compat, no penalty).
+   */
+  decay_confidence: number | null;
+  /**
+   * W25.7 Pass 4: human-readable decay reason for the audit trail.
+   * null when decay doesn't apply.
+   */
+  decay_reason: string | null;
+  /**
+   * W25.7 Pass 4: true when the confluence's mitigated flag hard-kills the factor.
+   * A hard-killed factor forces satisfied=false even if the evaluator returned true.
+   */
+  hard_killed: boolean;
 }
 
 /**
@@ -221,6 +291,14 @@ export interface WeightedScoreResult {
   hardBlockTriggered: boolean;
   /** Identifies which level of the override hierarchy supplied the weights */
   weightsSource: "strategy_override" | "env_default" | "code_default";
+  /**
+   * W25.7 Pass 4: Subset of factorContributions where the factor was satisfied=true
+   * but decay reduced its confidence below the DECAY_TELEMETRY_THRESHOLD.
+   * Callers (paper-signal-service.ts) should fire signal.confluence_factor_decayed
+   * audit rows for each entry.
+   * Empty array when no factors were significantly decayed.
+   */
+  decayedFactors: FactorContribution[];
 }
 
 // ─── Strategy shape (minimal — only fields this module reads) ─────────────────
@@ -772,6 +850,21 @@ export function evaluateWeightedConfluence(
   const factorContributions: FactorContribution[] = [];
   let hardBlockTriggered = false;
 
+  // W25.7 Pass 4: decay telemetry threshold (env-tunable).
+  const decayTelemetryThreshold = getDecayTelemetryThreshold();
+
+  // Build the signalContext bridge for deriveFactorDecay.
+  // This extracts the decay-relevant fields from SignalContext into the
+  // generic Record<string, unknown> shape expected by deriveFactorDecay.
+  const decaySignalContext: Record<string, unknown> = {
+    smt_age_bars:         signalContext.smt_age_bars  ?? undefined,
+    vp_age_sessions:      signalContext.vp_age_sessions ?? undefined,
+    vp_touched_count:     signalContext.vp_touched_count ?? undefined,
+    vwap_anchor_age_bars: signalContext.vwap_anchor_age_bars ?? undefined,
+    delta_age_bars:       signalContext.delta_age_bars ?? undefined,
+    cross_asset_age_hours: signalContext.cross_asset_age_hours ?? undefined,
+  };
+
   for (const factorName of Object.keys(CODE_DEFAULTS)) {
     const factorCfg = CODE_DEFAULTS[factorName];
     const weight = weights[factorName] ?? factorCfg.weight;
@@ -796,6 +889,67 @@ export function evaluateWeightedConfluence(
       }
     }
 
+    // ── W25.7 Pass 4: Apply decay ─────────────────────────────────────────────
+    // deriveFactorDecay returns null for NO_DECAY_FACTORS (liquidity/internals/
+    // macro/regime/killzone). For those, decay_confidence stays at 1.0 (full weight).
+    let decayResult: DecayResult | null = null;
+    let decayConfidence: number | null = null;
+    let decayReason: string | null = null;
+    let hardKilled = false;
+
+    try {
+      decayResult = deriveFactorDecay(factorName, {
+        structureState: signalContext.structureState,
+        signalContext: decaySignalContext,
+      });
+    } catch (decayErr) {
+      // Decay function threw unexpectedly — log and continue without penalty
+      // (conservative: don't penalize a factor because of a decay computation bug).
+      logger.error(
+        { factor: factorName, strategyId: strategy.id, decayErr },
+        "confluence-score: deriveFactorDecay threw unexpectedly — skipping decay for this factor",
+      );
+      decayResult = null;
+    }
+
+    if (decayResult !== null) {
+      decayConfidence = decayResult.confidence;
+      decayReason = decayResult.reason;
+
+      // Hard-kill: mitigated confluence forces satisfied=false.
+      if (decayResult.hard_killed) {
+        hardKilled = true;
+        satisfied = false;
+        reason = `hard_killed_by_decay: ${decayResult.reason}`;
+      }
+    }
+
+    // Effective confidence: 1.0 when decay doesn't apply (decayResult=null).
+    const effectiveConfidence = decayConfidence !== null ? decayConfidence : 1.0;
+
+    // Contribution = weight × (satisfied ? effectiveConfidence : 0)
+    const contribution = satisfied ? weight * effectiveConfidence : 0;
+
+    // ── Decay telemetry: log when a satisfied factor has significant decay ────
+    // This feeds the signal.confluence_factor_decayed audit event fired by Stage 2.
+    if (
+      satisfied &&
+      decayConfidence !== null &&
+      decayConfidence < decayTelemetryThreshold
+    ) {
+      logger.debug(
+        {
+          strategyId: strategy.id,
+          factor: factorName,
+          decay_confidence: decayConfidence,
+          threshold: decayTelemetryThreshold,
+          decay_reason: decayReason,
+        },
+        "confluence-score: factor satisfied but decayed below threshold",
+      );
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     if (factorCfg.isHardBlock && !satisfied) {
       hardBlockTriggered = true;
     }
@@ -804,9 +958,12 @@ export function evaluateWeightedConfluence(
       factor: factorName,
       weight,
       satisfied,
-      contribution: satisfied ? weight : 0,
+      contribution,
       reason,
       is_hard_block: factorCfg.isHardBlock,
+      decay_confidence: decayConfidence,
+      decay_reason: decayReason,
+      hard_killed: hardKilled,
     });
   }
 
@@ -830,9 +987,21 @@ export function evaluateWeightedConfluence(
       passed,
       hardBlockTriggered,
       weightsSource,
-      factorSummary: factorContributions.map((fc) => `${fc.factor}:${fc.satisfied ? 1 : 0}`).join(","),
+      factorSummary: factorContributions.map((fc) =>
+        `${fc.factor}:${fc.satisfied ? 1 : 0}` +
+        (fc.decay_confidence !== null ? `:d${fc.decay_confidence.toFixed(2)}` : "")
+      ).join(","),
     },
     "confluence-score: weighted evaluation complete",
+  );
+
+  // W25.7 Pass 4: collect factors that were satisfied but significantly decayed.
+  // These are surfaced for the signal.confluence_factor_decayed audit event.
+  const decayedFactors = factorContributions.filter(
+    (fc) =>
+      fc.satisfied &&
+      fc.decay_confidence !== null &&
+      fc.decay_confidence < decayTelemetryThreshold,
   );
 
   return {
@@ -842,5 +1011,6 @@ export function evaluateWeightedConfluence(
     factorContributions,
     hardBlockTriggered,
     weightsSource,
+    decayedFactors,
   };
 }

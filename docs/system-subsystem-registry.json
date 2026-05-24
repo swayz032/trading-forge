@@ -2561,5 +2561,57 @@
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
     "criticality": "important"
+  },
+  {
+    "id": "confluence_decay_engine",
+    "domain": "signal_generation",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 25 Pass 4 (W25.7) — pure-functional confluence decay/staleness engine. 7 pure decay functions (fvgDecay/obDecay/chochDecay/mssDecay/smtDecay/vpLevelDecay/genericDecay) with named half-lives (FVG 200 bars, OB 150, CHoCH 100, MSS 80, SMT 60, VP 5 sessions, generic 200). deriveFactorDecay() aggregate maps canonical factor names → decay result. Anti-double-decay guard: NO_DECAY_FACTORS set skips 5 factors (liquidity_target_clear/internals_aligned/macro_alignment/regime_match/killzone_active). Mitigated flag = hard_killed=true → satisfied forced false. Stage 2 weighted scoring multiplies factor.contribution by decay confidence. Replay-deterministic — no Date.now(), no I/O, callers compute age and pass it in. DECAY_TELEMETRY_THRESHOLD (default 0.7) gates the signal.confluence_factor_decayed audit row in paper-signal-service.ts.",
+    "data_sources": [
+      "structure_state",
+      "signal_context"
+    ],
+    "reads_from": [],
+    "writes_to": [],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "signal.confluence_factor_decayed"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:signal.confluence_factor_decayed"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log"
+    ],
+    "recovery_mode": "pure-function-no-failure-path",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:signal.confluence_factor_decayed:per-bar-conditional"
+    ],
+    "evidence_queries": [
+      "wave25-confluence-decay.test.ts",
+      "wave25-confluence-decay-stage2-wiring.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
   }
 ]

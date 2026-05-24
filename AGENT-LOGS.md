@@ -6925,6 +6925,38 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-24 Wave 25 Pass 4 — confluence decay engine
+
+**Mission:** Make every confluence age out. Close GPT critique #5 (decay/staleness).
+
+**Work completed:**
+- `src/server/lib/confluence-decay.ts` (NEW): 7 pure decay functions (`fvgDecay`/`obDecay`/`chochDecay`/`mssDecay`/`smtDecay`/`vpLevelDecay`/`genericDecay`) + `deriveFactorDecay()` aggregate + `getDecayTelemetryThreshold()` env reader. Named half-life constants (FVG 200, OB 150, CHoCH 100, MSS 80, SMT 60, VP 5 sessions, generic 200). `NO_DECAY_FACTORS` set explicit (liquidity/internals/macro/regime/killzone — anti-double-decay guard).
+- `src/server/services/confluence-score.ts`: extended `FactorContribution` with `decay_confidence: number | null` + `decay_reason: string | null` + `hard_killed: boolean`. `WeightedScoreResult` extended with `decayedFactors: FactorContribution[]` (pre-filtered to satisfied + below-threshold). Stage 2 multiplies `contribution = weight × decay_confidence` (math-equivalent to pre-Pass-4 when decay_confidence=1.0 or null). `SignalContext` extended with 6 optional decay context fields (`smt_age_bars`/`vp_age_sessions`/`vp_touched_count`/`vwap_anchor_age_bars`/`delta_age_bars`/`cross_asset_age_hours`).
+- `src/server/services/paper-signal-service.ts`: wired `signal.confluence_factor_decayed` audit event (P4.A2). Iterates `weightedResult.decayedFactors` after the decision audit row; one info-status audit row per entry; carries `correlationId` from caller chain. Guards: empty array short-circuits (no allocation); never fires on backward-compat Path B (only inside Path C try block).
+- `src/server/__tests__/wave25-confluence-decay.test.ts` (78 pure tests) + `wave25-confluence-decay-stage2-wiring.test.ts` (35 wiring tests incl. 3 new audit-wiring contract tests covering: threshold filter at 0.7, no-fire at >=0.7, env override `DECAY_TELEMETRY_THRESHOLD` respected).
+- `docs/system-subsystem-registry.json`: registered `confluence_decay_engine` subsystem (audit_actions: `signal.confluence_factor_decayed`).
+- `CLAUDE.md` §2 close-out entry + §2b 11-factor table decay footnote + §12 weighted-score gate row updated.
+
+**Verification:**
+- `npx vitest run wave25-confluence-decay.test.ts` → 78 pass.
+- `npx vitest run wave25-confluence-decay-stage2-wiring.test.ts` → 35 pass.
+- `npx vitest run wave25-weighted-scoring.test.ts` → 44 pass (backward-compat preserved).
+- `npm run system-map:sync` + `npm run system-map:check` → `driftItems: []`, exit 0.
+- TS check on touched files clean; pre-existing TS errors in `volume-profile-service.ts` + a pre-existing RankedLevel-fixture strictness on line 135 of the wiring test are unrelated to Pass 4.
+
+**Known-facts updates:**
+- Decay applied to 6 factors (`market_structure_aligned` via CHoCH/MSS age, `smt_confirmation`, `vp_level_proximity`, `vwap_alignment`, `delta_or_volume_signature`, `cross_asset_aligned`). 5 factors skipped to prevent double-decay (`liquidity_target_clear` / `internals_aligned` / `macro_alignment` / `regime_match` / `killzone_active`).
+- All decay functions are PURE — caller passes age, no `Date.now()` inside the lib. Replay-deterministic.
+- `decayedFactors[]` is the canonical audit source — paper-signal-service iterates it directly, never re-filters. Threshold check happens once inside `evaluateWeightedConfluence`.
+- Anti-double-decay verified: `liquidity_target_clear` returns `decay_confidence=null` (the existing touch+age decay inside `liquidity-map-service` is the only source of truth for that factor's staleness).
+
+**Carry-forward for next session (Pass 5 + Pass 6 + Pass 7 cross-pass dependencies):**
+- Pass 5 (VWAP bands + AVWAP + SMT ES↔NQ): when paper-signal-service injects new context fields, populate `smt_age_bars` + `delta_age_bars` + `vwap_anchor_age_bars` in `WeightedSignalContext` so the corresponding decay paths activate. Today they read from `signalContext` but the bridge to live producers is Pass 5.
+- Pass 6 (regime + narrative): no decay-engine impact, but the regime-match factor remains NO_DECAY (binary state) — do NOT add it to the decay set.
+- Pass 7 (adaptive exit engine): MUST consume `result.decayedFactors[]` to inform TP1/TP2 selection. Aged CHoCH → tighten TP. The contract is `FactorContribution[]` with non-null `decay_confidence < 0.7`.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

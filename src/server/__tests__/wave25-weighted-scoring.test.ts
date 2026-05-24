@@ -115,12 +115,16 @@ describe("evaluateWeightedConfluence", () => {
   });
 
   describe("stub factors", () => {
-    it("liquidity_target_clear returns satisfied=false with pending_pass3 reason", () => {
+    it("liquidity_target_clear returns satisfied=false when levels not pre-populated (Pass 3 wired)", () => {
+      // Pass 3 shipped: the stub is replaced by the real evaluator.
+      // When ctx.liquidityNearestAbove/Below are not set, the evaluator returns
+      // "liquidity_map_unavailable" (conservative fail-open) instead of the old
+      // "pending_pass3" stub reason. This is the expected post-Pass-3 behavior.
       const result = evaluateWeightedConfluence(makeStrategy(), makeContext());
       const fc = result.factorContributions.find((c) => c.factor === FACTOR_LIQUIDITY_TARGET_CLEAR);
       expect(fc).toBeDefined();
       expect(fc!.satisfied).toBe(false);
-      expect(fc!.reason).toContain("pending_pass3");
+      expect(fc!.reason).toBe("liquidity_map_unavailable");
     });
 
     it("smt_confirmation returns satisfied=false with pending_pass5 reason", () => {

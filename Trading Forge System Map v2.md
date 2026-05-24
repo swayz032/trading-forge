@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-24T09:26:01.574Z`.
+Updated automatically from the repo on `2026-05-24T09:43:26.757Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -20,54 +20,54 @@ Updated automatically from the repo on `2026-05-24T09:26:01.574Z`.
 - Database tables tracked: `95`
 
 ### Subsystem Runtime States
-- `active`: `24`
+- `active`: `25`
 - `experimental`: `5`
 
 ### Current Pre-Production States
-- `active_preprod`: `24`
+- `active_preprod`: `25`
 - `experimental_preprod`: `5`
 - `inactive_preprod`: `0`
 - `partially_active_preprod`: `0`
 
 ### Launch Target States
 - `experimental_challenger`: `5`
-- `runtime_proven_autonomous`: `22`
+- `runtime_proven_autonomous`: `23`
 - `runtime_proven_manual_gate`: `2`
 
 ### Production Target States
-- `production_autonomous`: `22`
+- `production_autonomous`: `23`
 - `production_experimental`: `5`
 - `production_manual_gate`: `2`
 - `production_not_intended`: `0`
 
 ### Subsystem Operating Classes
 - `adaptive`: `5`
-- `deterministic_instrumented`: `22`
+- `deterministic_instrumented`: `23`
 - `manual_gated`: `2`
 
 ### Learning Modes
 - `active_learning`: `5`
-- `deterministic_instrumented`: `17`
+- `deterministic_instrumented`: `18`
 - `manual_gate_only`: `2`
 - `shadow_experimental`: `5`
 
 ### Registry Coverage
-- Registry subsystems tracked: `29`
+- Registry subsystems tracked: `30`
 - Route coverage: `68/68`
 - Scheduler coverage: `79/79`
 - Engine coverage: `26/26`
 - Database coverage: `95/95`
-- Autonomous subsystems with audit coverage: `29/29`
-- Autonomous subsystems with audit actions: `29/29`
-- Autonomous subsystems with telemetry evidence: `29/29`
-- Active-runtime subsystems with freshness signals: `29/29`
-- Runtime/experimental subsystems with evidence queries: `29/29`
+- Autonomous subsystems with audit coverage: `30/30`
+- Autonomous subsystems with audit actions: `30/30`
+- Autonomous subsystems with telemetry evidence: `30/30`
+- Active-runtime subsystems with freshness signals: `30/30`
+- Runtime/experimental subsystems with evidence queries: `30/30`
 - Self-evolving subsystems with learning inputs: `7/7`
 - Self-evolving subsystems with learning persistence: `7/7`
-- Failure visibility complete: `29/29`
+- Failure visibility complete: `30/30`
 
 ### Proof Status
-- `runtime-proven`: `24`
+- `runtime-proven`: `25`
 - `partially-proven`: `0`
 - `offline-by-design`: `0`
 - `experimental`: `5`
@@ -75,17 +75,17 @@ Updated automatically from the repo on `2026-05-24T09:26:01.574Z`.
 
 ### Pre-Production Integrity
 - Integrity status: `complete`
-- Automation complete: `24/29`
-- Data collection complete: `29/29`
-- Auditability complete: `29/29`
-- Failure visibility complete: `29/29`
-- Authority correct: `29/29`
+- Automation complete: `25/30`
+- Data collection complete: `30/30`
+- Auditability complete: `30/30`
+- Failure visibility complete: `30/30`
+- Authority correct: `30/30`
 - Learning active: `6/7`
 - Incomplete subsystems: `0`
 
 ### Production Convergence
 - Convergence status: `blocked`
-- Ready subsystem targets: `23`
+- Ready subsystem targets: `24`
 - Blocked subsystem targets: `1`
 - Experimental subsystem targets: `5`
 - Shadow workflow candidates: `0`
@@ -110,7 +110,7 @@ Updated automatically from the repo on `2026-05-24T09:26:01.574Z`.
 - `collecting_only`: `0`
 - `learning_active`: `6`
 - `learning_blocked`: `0`
-- `not_collecting`: `18`
+- `not_collecting`: `19`
 - `shadow_experimental`: `5`
 
 ### Workflow States
@@ -130,6 +130,7 @@ Updated automatically from the repo on `2026-05-24T09:26:01.574Z`.
 - `broker_abstraction_layer` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `cloud_qmc_ising` class=`deterministic_instrumented` learningMode=`shadow_experimental` current=`experimental_preprod` target=`production_experimental` automation=`experimental` data=`complete` audit=`complete` failureVisibility=`complete` learning=`experimental` authority=`correct` ready=`false` preprodBlockers=experimental_governance productionBlockers=experimental_governance gaps=none
 - `compliance_governance` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
+- `confluence_decay_engine` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `context_execution` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `critic_evolution` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `deepar_regime` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none

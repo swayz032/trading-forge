@@ -39,6 +39,7 @@ import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONA
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
 // Wave 25 W25.1: weighted confluence scoring (Path C)
 import { evaluateWeightedConfluence, type ScoringStrategy, type SignalContext as WeightedSignalContext } from "./confluence-score.js";
+import { getDecayTelemetryThreshold } from "../lib/confluence-decay.js";
 // Wave 25 W25.6 (Pass 3 P3.A5 architect close-out): liquidity-map injection so
 // the liquidity_target_clear factor lights up in production. Fail-soft on any
 // error — null result → factor falls back to "liquidity_map_unavailable".
@@ -3247,6 +3248,40 @@ export async function evaluateSignals(
                   status: "info",
                   correlationId: correlationId ?? null,
                 }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for factor_unavailable row"));
+              }
+            }
+
+            // ── Wave 25 W25.7 (Pass 4 P4.A2): signal.confluence_factor_decayed ──
+            // For every satisfied factor whose decay_confidence dropped below
+            // DECAY_TELEMETRY_THRESHOLD (default 0.7), emit an INFO audit row so
+            // operators can see staleness pressure on signal quality without
+            // pulling per-factor rows. decayedFactors is pre-filtered in
+            // evaluateWeightedConfluence() to exclude NO_DECAY_FACTORS (anti-
+            // double-decay guard) and unsatisfied factors. Guard: skip emission
+            // when the array is empty (no allocation for boring bars).
+            if (weightedResult.decayedFactors.length > 0) {
+              const decayThreshold = getDecayTelemetryThreshold();
+              for (const dec of weightedResult.decayedFactors) {
+                insertAuditRow({
+                  action: "signal.confluence_factor_decayed",
+                  entityType: "strategy",
+                  entityId: sessionConfig.strategyId,
+                  decisionAuthority: "system",
+                  result: {
+                    factor: dec.factor,
+                    weight: dec.weight,
+                    satisfied: dec.satisfied,
+                    decay_confidence: dec.decay_confidence,
+                    decay_reason: dec.decay_reason,
+                    hard_killed: dec.hard_killed,
+                    weighted_contribution: dec.contribution,
+                    decay_telemetry_threshold: decayThreshold,
+                    session_id: sessionId,
+                    symbol,
+                  } as Record<string, unknown>,
+                  status: "info",
+                  correlationId: correlationId ?? null,
+                }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for confluence_factor_decayed row"));
               }
             }
 

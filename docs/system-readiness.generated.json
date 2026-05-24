@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T09:26:01.574Z",
+  "generatedAt": "2026-05-24T09:43:26.757Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -14,8 +14,8 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 29,
-    "ready": 21,
+    "total": 30,
+    "ready": 22,
     "blocked": 1,
     "manualGated": 2,
     "experimental": 5
@@ -160,6 +160,24 @@
         "evaluate",
         "on_session_end",
         "on_trade"
+      ]
+    },
+    {
+      "id": "confluence_decay_engine",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:signal.confluence_factor_decayed",
+        "audit_log:signal.confluence_factor_decayed:per-bar-conditional",
+        "signal.confluence_factor_decayed",
+        "wave25-confluence-decay-stage2-wiring.test.ts",
+        "wave25-confluence-decay.test.ts"
       ]
     },
     {
