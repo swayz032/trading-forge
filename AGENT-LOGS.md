@@ -4,6 +4,51 @@
 
 ---
 
+### Session Log — 2026-05-24 parent-claude — Wave 25 Pass 2 institutional-grade MASTER ORCHESTRATION + Discord critical-alert triage
+
+**Mission:** Operator invoked "use all subagents to make sure trading forge is institutional grade." Parent claude orchestrated the Wave 24 playbook (3 parallel audits → ranked backlog → parallel worker fixes → architect close-out) freshly applied as Wave 25 Pass 2.
+
+**Phase A — 3 parallel audits in background:**
+- `accuracy-validator` → 3 RED + 2 YELLOW + 11 GREEN-confirmed. Caught 2 false positives from prior sibling sessions: (a) journal idx=137 collision (actually 0134→136, 0135→137, 0136→138, no collision); (b) `computeRiskDerivedContracts` zero-callers (has callers at `paper-signal-service.ts:3826`).
+- `autonomous-readiness` → VACATION-SAFE with 3 conditions. HIGH: A-1 W25.1 Path C `evaluateWeightedConfluence()` uncaught throw. MED: A-2 n8n drift detector cron missing; A-3 family-grade alert jargon.
+- `institutional-edge-researcher` → Overall 7.2/10. 1 RED (Inst-10 sizing anchor at 2% of balance vs 2026-institutional 1% of drawdown-room — 3 cited 2025-26 sources converge), 2 YELLOW (Inst-7 TopstepX latency deferred until operator opens account; Inst-8 W25.2 SMC factor needs ablation before promotion).
+
+**Phase B — ranked backlog (13 items):** 5 RED + 5 YELLOW + 3 carry-forwards.
+
+**Phase C — 3 parallel worker dispatches:**
+| Worker | Items | Commits | Tests |
+|---|---|---|---|
+| paper-parity | A-1 + R-1 + Inst-10 + Y-2 | `c5d3bd8` + `b1341d0` log | 23 vitest + 13 pytest |
+| observability-reliability | R-3 + Y-1 + A-2 + A-3 | `35b82f4` + `0e1c993` log | 14 vitest |
+| backtest-core | Inst-8 + Inst-9 | `d23238c` + `59c9b87` log | 13 pytest |
+
+Pushed `0e1c993..b1341d0` to `feature/deep-analysis-pipeline`.
+
+**Phase D — architect master close-out (`d9d747f`):** R-2 system-map verified clean (`/api/b15-robustness` already registered by Pass-1 architect sibling `4f990c4`). All 3 CI hard gates GREEN. Baselines preserved (wave24 182/182, wave23h 397/397, wave25 281/283 — 2 pre-existing failures in payout-audit-packet + htf-narrative-persistence unrelated to Phase C). Master audit row payload + idempotent apply script at `scripts/finalize-wave25-pass2-master-closeout.mjs` and `docs/wave-25-pass-2-master-audit-row.json`. CLAUDE.md §2 + System Map v2 §2f updated. Memory entry `project_wave25_pass2_complete_2026_05_24.md` indexed.
+
+**Phase E — Discord critical-alert triage (operator-initiated):**
+- Investigated Openclaw scout-bot DM channel: massive recurring `HTTP 404: model 'qwen3-coder:30b' not found` errors from 5/12 through 5/18. Verified Ollama state on tower — `qwen3-coder:30b` not installed; canonical local model per Pass 21 (2026-05-12) migration is `qwen2.5-coder:7b`. Found 1 orphaned hardcoded reference at `src/engine/parameter_evolver.py:22` that Pass 21 missed. Fixed to env-overridable with default `qwen2.5-coder:7b`; updated `evolution-service.ts` header comment + `openai-proxy.ts` error-message reference + CLAUDE.md §15 tech-stack line.
+- Investigated **Trading Forge server #critical-alerts** channel: 1 P0 alert at today 4:22 AM — `Boot Migration Blocked — pg_dump Unavailable`. **73 migrations** stacked unapplied (0066 → 0138). Root cause: Wave 24 Pass 2 operator carry-forward never resolved (`BOOT_MIGRATION_ALLOW_NO_BACKUP=true` was never set in tower `.env`; Windows has no native `pg_dump`; boot-migration runner correctly fail-closed on every backend restart since Wave 24 close-out). **FIXED:** appended `BOOT_MIGRATION_ALLOW_NO_BACKUP=true` to tower `.env` with documented rationale. Operator must restart backend to apply the 73 pending migrations via `information_schema` JSON backup fallback.
+
+**Verification:**
+- All Phase C tests GREEN (50 new tests across 3 workers); Wave 24 baseline 182/182 preserved; Wave 23H baseline 397/397 preserved.
+- 3 CI hard gates GREEN: `system-map:check` exit 0; `check:production-isolation` clean; `check:2026-compliance` OK.
+- 7 commits pushed to `origin/feature/deep-analysis-pipeline`: `d23238c`, `59c9b87`, `35b82f4`, `0e1c993`, `c5d3bd8`, `b1341d0`, `d9d747f`.
+- Discord triage: 4 file edits (parameter_evolver.py, evolution-service.ts, openai-proxy.ts, CLAUDE.md §15) + 1 .env append (BOOT_MIGRATION_ALLOW_NO_BACKUP=true). Final commit pending.
+
+**Known-facts updates:**
+- The `qwen3-coder:30b → qwen2.5-coder:7b` migration is now complete in source. Pin-worthy note: Pass 21 left `parameter_evolver.py` as the lone orphaned caller — caught by Discord-driven triage 12 days after migration.
+- Boot-migration runner on Windows tower MUST run with `BOOT_MIGRATION_ALLOW_NO_BACKUP=true` or supply native `pg_dump` — fail-closed default is correct posture but operator must opt in once.
+
+**Carry-forward for next session:**
+- **Operator action (P0):** Restart `TradingForgeAPI` NSSM service to trigger boot-migration runner with the new env var. Expect 73 migrations to apply via JSON backup fallback. Watch Discord for `migration.auto_applied` audit events and any `migration.auto_apply_failed` Discord CRITICAL.
+- **Operator action (P1):** Commit + push the parameter_evolver fix + .env change (parent-claude final session commit pending).
+- 2 pre-existing wave25 test failures (`payout-audit-packet`, `htf-narrative-persistence`) — unrelated to Pass 2; warrant a dedicated cleanup pass.
+- 3 deleted `.claude/agents/*.md` files in working tree from Wave 24 — operator decision pending (commit deletions or restore).
+- Discord 2-channel split (operator-technical + family-plain-english) — A-3 family postscript helper now in place; channel routing remains carry-forward when family distribution goes live.
+
+---
+
 ### Session Log — 2026-05-24 observability-reliability — Wave 25 Pass 2 (R-3 + Y-1 + A-2 + A-3)
 
 **Mission:** Ship 4 observability hardening items from Phase A audits: audit action name mismatch (R-3), drift cron pipeline-gate exemption (Y-1), n8n drift detector cron registration (A-2), and family-grade alert postscripts (A-3).

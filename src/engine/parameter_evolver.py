@@ -2,7 +2,7 @@
 
 When a strategy enters DECLINING, this engine:
 1. Loads current params + Optuna robust ranges
-2. Calls Ollama qwen3 for 3 mutation candidates
+2. Calls Ollama for 3 mutation candidates
 3. Returns structured mutations for re-backtesting
 
 Called by evolution-service.ts via subprocess (same pattern as backtester.py).
@@ -11,6 +11,7 @@ Called by evolution-service.ts via subprocess (same pattern as backtester.py).
 from __future__ import annotations
 
 import json
+import os
 import sys
 import argparse
 from typing import Optional
@@ -18,8 +19,11 @@ from typing import Optional
 import requests
 
 
-OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
-MODEL = "qwen3-coder:30b"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
+# Pass 21 (2026-05-12) retired qwen3-coder:30b (18GB, can't load on RTX 5060 8GB
+# VRAM). qwen2.5-coder:7b is the canonical local model across all roles. Env
+# override allows operator to flip to a larger model without code edit.
+MODEL = os.getenv("PARAMETER_EVOLVER_MODEL", "qwen2.5-coder:7b")
 
 
 def _summarise_mutation_outcomes(outcomes: list[dict]) -> str:

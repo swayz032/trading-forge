@@ -25,7 +25,7 @@ export const openaiProxyRoutes = Router();
 // User has 2.5M GPT-5-mini free tokens/day at the OpenAI org level, SHARED with
 // the Aspire project. Trading Forge gets a hard daily cap so it can't starve
 // Aspire. When budget hits, callers receive 429 → model-router falls back to
-// local Ollama (deepseek-r1:14b / qwen3-coder:30b) automatically.
+// local Ollama (deepseek-r1:14b / qwen2.5-coder:7b) automatically.
 const DAILY_BUDGET = Number(process.env.TRADING_FORGE_DAILY_TOKEN_BUDGET ?? 1_000_000);
 const ALERT_THRESHOLDS = [0.5, 0.75, 0.9, 1.0] as const;
 
@@ -83,7 +83,7 @@ async function postBudgetAlert(threshold: number, used: number): Promise<void> {
     summary: `GPT-5 mini token budget at ${Math.round(threshold * 100)}% (${used.toLocaleString()} / ${DAILY_BUDGET.toLocaleString()} tokens used today)`,
     impact:
       threshold >= 1
-        ? "Hard cap reached. Trading Forge calls now return 429; model-router will fall back to local Ollama (deepseek-r1:14b / qwen3-coder:30b). No outage but lower model quality until midnight UTC reset."
+        ? "Hard cap reached. Trading Forge calls now return 429; model-router will fall back to local Ollama (deepseek-r1:14b / qwen2.5-coder:7b). No outage but lower model quality until midnight UTC reset."
         : threshold >= 0.9
         ? "90% of daily Trading Forge GPT-5 mini budget consumed. Aspire project still has shared-pool access."
         : `${Math.round(threshold * 100)}% of daily Trading Forge budget consumed. Continue normal operation.`,
