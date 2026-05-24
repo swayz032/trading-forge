@@ -1,0 +1,498 @@
+/**
+ * boot-migration-runner.ts — Auto-apply pending Drizzle migrations on backend boot.
+ *
+ * PURPOSE:
+ *   drizzle-kit migrate is broken (per 0075/0076 comments). Every schema change
+ *   required manual operator apply (migrations 0106, 0120-0123, 0131 all needed
+ *   operator action). During vacations, migrations sit pending indefinitely.
+ *   This module is called from src/server/index.ts BEFORE app.listen() to
+ *   auto-apply pending migrations with pg_dump rollback safety.
+ *
+ * ALGORITHM:
+ *   1. Read _journal.json (canonical migration list)
+ *   2. Query drizzle.__drizzle_migrations (bootstrap-create if absent)
+ *   3. For each pending migration in order:
+ *      a. pg_dump --schema-only snapshot to BOOT_MIGRATION_BACKUP_DIR
+ *         (or information_schema JSON dump if pg_dump unavailable)
+ *      b. Execute migration SQL in a TRANSACTION with per-stmt breakpoint splitting
+ *      c. On success: insert drizzle.__drizzle_migrations row + emit audit_log migration.auto_applied
+ *      d. On failure: ROLLBACK + emit audit_log migration.auto_apply_failed +
+ *         fire Discord CRITICAL + THROW (blocks boot)
+ *
+ * ENV VARS:
+ *   BOOT_MIGRATION_ENABLED=true           (default: true)
+ *   BOOT_MIGRATION_ALLOW_NO_BACKUP=false  (default: false — fail-closed)
+ *   BOOT_MIGRATION_BACKUP_DIR             (default: os.tmpdir())
+ *   BOOT_MIGRATION_TIMEOUT_MS=300000      (default: 5 min per migration)
+ *
+ * IDEMPOTENCY:
+ *   Re-running with no pending migrations = no-op. No audit row, no backup.
+ *
+ * PARITY:
+ *   Matches apply-missing-migrations.mjs exactly in SQL execution
+ *   (split on --> statement-breakpoint, execute in transaction) and adds:
+ *   - Backup before each migration (pg_dump or information_schema JSON)
+ *   - audit_log rows (migration.auto_applied / migration.auto_apply_failed)
+ *   - Discord CRITICAL on failure so operator knows to restore
+ *   - THROW on failure to block boot (fail-closed)
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
+import crypto from "node:crypto";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { fileURLToPath } from "node:url";
+import { sql } from "drizzle-orm";
+import { db } from "../db/index.js";
+import { logger } from "./logger.js";
+import { insertAuditRowSafe } from "./audit-log-helper.js";
+
+const execFileAsync = promisify(execFile);
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface JournalEntry {
+  idx: number;
+  version: string;
+  when: number;
+  tag: string;
+  breakpoints: boolean;
+}
+
+interface Journal {
+  version: string;
+  dialect: string;
+  entries: JournalEntry[];
+}
+
+// ─── Path resolution ──────────────────────────────────────────────────────────
+
+// Works in both ESM (tsx) and compiled-to-dist contexts.
+// __dirname in ESM via fileURLToPath(import.meta.url).
+const _filename = fileURLToPath(import.meta.url);
+const _dirname = path.dirname(_filename);
+
+// src/server/lib/ → resolve to repo root regardless of outDir.
+// Compiled: dist/server/lib/ — three hops up to repo root.
+// Dev tsx: src/server/lib/ — three hops up to repo root.
+// We rely on the migrations dir relative to where the file lives during dev.
+// In production (dist/), migrations are copied as data files. We use env var
+// override if MIGRATIONS_DIR is set, otherwise resolve relative to this file.
+function resolveMigrationsDir(): string {
+  if (process.env.MIGRATIONS_DIR) return process.env.MIGRATIONS_DIR;
+  // Go up from lib/ → server/ → src/ → root
+  const repoRoot = path.resolve(_dirname, "..", "..", "..");
+  return path.join(repoRoot, "src", "server", "db", "migrations");
+}
+
+function resolveJournalPath(): string {
+  return path.join(resolveMigrationsDir(), "meta", "_journal.json");
+}
+
+// ─── pg_dump availability ─────────────────────────────────────────────────────
+
+/**
+ * Check if pg_dump is available on the host.
+ * On Windows tower, PostgreSQL CLI may not be on PATH.
+ */
+export async function checkPgDumpAvailable(): Promise<boolean> {
+  try {
+    await execFileAsync("pg_dump", ["--version"], { timeout: 5000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Take a pg_dump --schema-only snapshot of the public schema.
+ * Returns the path to the written .sql backup file.
+ */
+export async function takePgDumpBackup(
+  backupDir: string,
+  migrationTag: string,
+  timestamp: number,
+  databaseUrl: string,
+): Promise<string> {
+  const filename = `tf-backup-${timestamp}-pre-${migrationTag}.sql`;
+  const filePath = path.join(backupDir, filename);
+
+  // pg_dump uses PGPASSWORD env var for non-interactive auth
+  const pgPassword = extractPgPassword(databaseUrl);
+  await execFileAsync(
+    "pg_dump",
+    ["--schema-only", "--schema=public", `--file=${filePath}`],
+    {
+      env: { ...process.env, PGPASSWORD: pgPassword },
+      timeout: 60_000,
+    },
+  );
+
+  return filePath;
+}
+
+/**
+ * Fallback backup: dump DDL via information_schema queries to a JSON file.
+ * Captures table/column/index definitions so operators can reconstruct
+ * the schema without pg_dump. Not a full rollback artifact — purely
+ * a reference document.
+ */
+export async function takeInformationSchemaBackup(
+  backupDir: string,
+  migrationTag: string,
+  timestamp: number,
+): Promise<string> {
+  const filename = `tf-backup-${timestamp}-pre-${migrationTag}.json`;
+  const filePath = path.join(backupDir, filename);
+
+  const [tablesResult, columnsResult, indexesResult] = await Promise.all([
+    db.execute(sql.raw(
+      "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name",
+    )),
+    db.execute(sql.raw(
+      "SELECT table_name, column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'public' ORDER BY table_name, ordinal_position",
+    )),
+    db.execute(sql.raw(
+      "SELECT indexname, tablename, indexdef FROM pg_indexes WHERE schemaname = 'public' ORDER BY tablename, indexname",
+    )),
+  ]);
+
+  const snapshot = {
+    captured_at: new Date(timestamp).toISOString(),
+    migration_tag: migrationTag,
+    backup_type: "information_schema_json",
+    restore_note:
+      "This is a logical schema snapshot, NOT a pg_dump. Use as reference to manually reconstruct schema on rollback.",
+    tables: tablesResult,
+    columns: columnsResult,
+    indexes: indexesResult,
+  };
+
+  fs.writeFileSync(filePath, JSON.stringify(snapshot, null, 2), "utf8");
+  return filePath;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function extractPgPassword(databaseUrl: string): string {
+  try {
+    const url = new URL(databaseUrl);
+    return url.password || "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Fire Discord CRITICAL via the local relay (matches alert-service.ts pattern),
+ * falling back to direct webhook. Fire-and-forget — never throws.
+ */
+export async function fireDiscordCritical(title: string, message: string): Promise<void> {
+  const discordPort = process.env.DISCORD_ALERT_PORT || "4100";
+
+  // Primary: local relay (same pattern as alert-service.ts)
+  try {
+    await fetch(`http://localhost:${discordPort}/alert/alerts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, message, severity: "critical" }),
+      signal: AbortSignal.timeout(4000),
+    });
+    return;
+  } catch {
+    // Fall through to direct webhook
+  }
+
+  // Fallback: direct Discord webhook URL
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (!webhookUrl) return;
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        embeds: [
+          {
+            title,
+            description: message,
+            color: 0xff0000,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(4000),
+    });
+  } catch {
+    // Best-effort — never throw from notification path
+  }
+}
+
+// ─── Core migration runner ────────────────────────────────────────────────────
+
+/**
+ * Main entry point. Call from src/server/index.ts BEFORE app.listen().
+ *
+ * Throws on migration failure so the server boot is blocked (fail-closed).
+ * No-ops cleanly when:
+ *   - BOOT_MIGRATION_ENABLED=false
+ *   - No pending migrations exist
+ *   - Journal file is absent (bare repo / test environment)
+ */
+export async function runPendingMigrations(): Promise<void> {
+  // ─── Kill-switch gate ───────────────────────────────────────────────────────
+  const enabled = (process.env.BOOT_MIGRATION_ENABLED ?? "true").toLowerCase();
+  if (enabled === "false" || enabled === "0") {
+    logger.info("boot-migration: disabled via BOOT_MIGRATION_ENABLED=false — skipping");
+    return;
+  }
+
+  const allowNoBackup =
+    (process.env.BOOT_MIGRATION_ALLOW_NO_BACKUP ?? "false").toLowerCase() === "true";
+  const backupDir = process.env.BOOT_MIGRATION_BACKUP_DIR || os.tmpdir();
+  const timeoutMs = Math.max(
+    1000,
+    Number(process.env.BOOT_MIGRATION_TIMEOUT_MS ?? "300000"),
+  );
+
+  // ─── Journal ────────────────────────────────────────────────────────────────
+  const journalPath = resolveJournalPath();
+  if (!fs.existsSync(journalPath)) {
+    logger.warn({ journalPath }, "boot-migration: _journal.json not found — skipping (bare env?)");
+    return;
+  }
+
+  const journal: Journal = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+
+  // ─── Bootstrap __drizzle_migrations table ───────────────────────────────────
+  // First deploy may not have the tracking table yet (drizzle creates it on
+  // first `drizzle-kit migrate` run, which is broken on this project).
+  try {
+    await db.execute(sql`
+      CREATE SCHEMA IF NOT EXISTS drizzle;
+      CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations (
+        id         SERIAL      PRIMARY KEY,
+        hash       TEXT        NOT NULL,
+        created_at BIGINT      NOT NULL
+      )
+    `);
+  } catch (bootstrapErr) {
+    const msg = bootstrapErr instanceof Error ? bootstrapErr.message : String(bootstrapErr);
+    // "already exists" is always safe to ignore
+    if (!msg.toLowerCase().includes("already exists")) {
+      logger.warn({ err: bootstrapErr }, "boot-migration: __drizzle_migrations bootstrap warning (tolerated)");
+    }
+  }
+
+  // ─── Query applied ──────────────────────────────────────────────────────────
+  type AppliedRow = { created_at: string };
+  const appliedResult = await db.execute<AppliedRow>(
+    sql`SELECT created_at::text AS created_at FROM drizzle.__drizzle_migrations`,
+  );
+  // drizzle-orm returns { rows: [...] } for raw execute; normalise either shape
+  const appliedRows: AppliedRow[] =
+    (appliedResult as { rows?: AppliedRow[] }).rows ??
+    (appliedResult as unknown as AppliedRow[]);
+  const appliedWhens = new Set(appliedRows.map((r) => String(r.created_at)));
+
+  // ─── Compute pending ────────────────────────────────────────────────────────
+  const pending = journal.entries.filter((e) => !appliedWhens.has(String(e.when)));
+
+  if (pending.length === 0) {
+    logger.info(
+      { total: journal.entries.length },
+      "boot-migration: no pending migrations — boot proceeds",
+    );
+    return;
+  }
+
+  logger.info(
+    { count: pending.length, tags: pending.map((e) => e.tag) },
+    "boot-migration: pending migrations found — applying",
+  );
+
+  // ─── pg_dump availability (check once) ──────────────────────────────────────
+  const pgDumpAvailable = await checkPgDumpAvailable();
+  if (!pgDumpAvailable) {
+    if (!allowNoBackup) {
+      const msg =
+        "boot-migration BLOCKED: pg_dump not found and BOOT_MIGRATION_ALLOW_NO_BACKUP=false. " +
+        "Install postgresql-client or set BOOT_MIGRATION_ALLOW_NO_BACKUP=true to proceed with " +
+        "information_schema JSON backup only.";
+      logger.error(msg);
+      await fireDiscordCritical(
+        "Boot Migration Blocked — pg_dump Unavailable",
+        `${msg}\n\nPending: ${pending.map((e) => e.tag).join(", ")}`,
+      );
+      throw new Error(msg);
+    }
+    logger.warn(
+      "boot-migration: pg_dump unavailable — using information_schema JSON backup (BOOT_MIGRATION_ALLOW_NO_BACKUP=true)",
+    );
+  }
+
+  // ─── Ensure backup dir ──────────────────────────────────────────────────────
+  try {
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true });
+    }
+  } catch (mkdirErr) {
+    logger.warn({ err: mkdirErr, backupDir }, "boot-migration: failed to create backup dir (will use os.tmpdir())");
+  }
+
+  const migrationsDir = resolveMigrationsDir();
+  const databaseUrl = process.env.DATABASE_URL ?? "";
+
+  // ─── Apply each pending migration in journal order ───────────────────────────
+  for (const entry of pending) {
+    const sqlFilePath = path.join(migrationsDir, `${entry.tag}.sql`);
+
+    if (!fs.existsSync(sqlFilePath)) {
+      logger.warn({ tag: entry.tag, sqlFilePath }, "boot-migration: SQL file missing — skipping entry");
+      continue;
+    }
+
+    const migrationSql = fs.readFileSync(sqlFilePath, "utf8");
+    const hash = crypto.createHash("sha256").update(migrationSql).digest("hex");
+
+    // Split on Drizzle statement-breakpoint markers (matches apply-missing-migrations.mjs)
+    const statements = migrationSql
+      .split("--> statement-breakpoint")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    const startTs = Date.now();
+    let backupPath: string | null = null;
+
+    logger.info(
+      { tag: entry.tag, idx: entry.idx, stmtCount: statements.length },
+      "boot-migration: starting migration",
+    );
+
+    // ── Step 1: Backup ──────────────────────────────────────────────────────
+    try {
+      if (pgDumpAvailable) {
+        backupPath = await takePgDumpBackup(backupDir, entry.tag, startTs, databaseUrl);
+        logger.info({ tag: entry.tag, backupPath }, "boot-migration: pg_dump backup written");
+      } else {
+        // ALLOW_NO_BACKUP=true path — information_schema JSON fallback
+        backupPath = await takeInformationSchemaBackup(backupDir, entry.tag, startTs);
+        logger.info({ tag: entry.tag, backupPath }, "boot-migration: information_schema JSON backup written");
+      }
+    } catch (backupErr) {
+      const backupErrMsg =
+        `boot-migration: backup failed for ${entry.tag}: ` +
+        (backupErr instanceof Error ? backupErr.message : String(backupErr));
+      logger.error({ tag: entry.tag, err: backupErr }, backupErrMsg);
+
+      if (!allowNoBackup) {
+        await fireDiscordCritical(
+          `Boot Migration Blocked — Backup Failed: ${entry.tag}`,
+          `${backupErrMsg}\n\nSet BOOT_MIGRATION_ALLOW_NO_BACKUP=true to skip backup requirement.`,
+        );
+        throw new Error(backupErrMsg);
+      }
+      // Proceed without backup — ALLOW_NO_BACKUP=true
+      logger.warn({ tag: entry.tag }, "boot-migration: proceeding without backup (BOOT_MIGRATION_ALLOW_NO_BACKUP=true)");
+    }
+
+    // ── Step 2: Execute migration in transaction with timeout ───────────────
+    try {
+      await Promise.race([
+        db.transaction(async (tx) => {
+          for (const stmt of statements) {
+            await tx.execute(sql.raw(stmt));
+          }
+          // Record in drizzle.__drizzle_migrations
+          await tx.execute(
+            sql`INSERT INTO drizzle.__drizzle_migrations (hash, created_at) VALUES (${hash}, ${entry.when})`,
+          );
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new Error(`boot-migration: timeout after ${timeoutMs}ms for ${entry.tag}`),
+              ),
+            timeoutMs,
+          ),
+        ),
+      ]);
+
+      const durationMs = Date.now() - startTs;
+      logger.info(
+        { tag: entry.tag, idx: entry.idx, durationMs, backupPath },
+        "boot-migration: migration applied successfully",
+      );
+
+      // Audit success (non-blocking via insertAuditRowSafe)
+      await insertAuditRowSafe({
+        action: "migration.auto_applied",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "gate",
+        input: {
+          migration_name: entry.tag,
+          journal_idx: entry.idx,
+          backup_path: backupPath,
+        } as Record<string, unknown>,
+        result: { duration_ms: durationMs, hash } as Record<string, unknown>,
+        status: "success",
+        correlationId: null,
+      });
+    } catch (err) {
+      const durationMs = Date.now() - startTs;
+      const errMsg = err instanceof Error ? err.message : String(err);
+
+      const restoreCommand = backupPath
+        ? `psql "$DATABASE_URL" < "${backupPath}"`
+        : "No backup available — inspect DB state manually before proceeding";
+
+      const criticalMsg =
+        `Migration ${entry.tag} (idx=${entry.idx}) failed during auto-apply.\n\n` +
+        `Error: ${errMsg}\n\n` +
+        `Backup path: ${backupPath ?? "none"}\n` +
+        `Restore command: ${restoreCommand}\n\n` +
+        `Server boot is BLOCKED. Options:\n` +
+        `  1. Fix the migration SQL and restart\n` +
+        `  2. Set BOOT_MIGRATION_ENABLED=false to skip auto-apply and apply manually\n` +
+        `  3. Restore DB from backup above`;
+
+      logger.error(
+        { tag: entry.tag, idx: entry.idx, err, backupPath, durationMs },
+        "boot-migration: migration FAILED — boot blocked",
+      );
+
+      // Audit failure (non-blocking)
+      await insertAuditRowSafe({
+        action: "migration.auto_apply_failed",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "gate",
+        input: {
+          migration_name: entry.tag,
+          journal_idx: entry.idx,
+          backup_path: backupPath,
+        } as Record<string, unknown>,
+        result: { error: errMsg, duration_ms: durationMs } as Record<string, unknown>,
+        status: "failure",
+        correlationId: null,
+      });
+
+      // Discord CRITICAL — fire-and-forget, never blocks
+      await fireDiscordCritical(
+        `BOOT BLOCKED — Migration Failed: ${entry.tag}`,
+        criticalMsg,
+      );
+
+      // Throw to block boot (fail-closed)
+      throw new Error(`boot-migration: failed to apply ${entry.tag}: ${errMsg}`);
+    }
+  }
+
+  logger.info(
+    { applied: pending.length, tags: pending.map((e) => e.tag) },
+    "boot-migration: all pending migrations applied — boot proceeds",
+  );
+}

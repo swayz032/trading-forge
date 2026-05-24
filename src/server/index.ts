@@ -80,6 +80,15 @@ import { scoutHealthRoutes } from "./routes/scout-health.js";
 import { tradingViewWebhookRoutes } from "./routes/tradingview-webhook.js";
 import { preMarketRoutes } from "./routes/pre-market.js";
 import { brokerAccountRoutes } from "./routes/broker-accounts.js";
+import { runPendingMigrations } from "./lib/boot-migration-runner.js";
+
+// ─── Boot migration runner ────────────────────────────────────────
+// Apply any pending Drizzle migrations BEFORE app.listen() and BEFORE any
+// service initialization that reads DB schema. This is the automation-cert
+// gate that prevents vacation-mode migration drift from breaking production.
+// Throws on failure to block boot (fail-closed). No-ops when all applied.
+// Controlled by BOOT_MIGRATION_ENABLED env var (default: true).
+await runPendingMigrations();
 
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard
