@@ -1,0 +1,582 @@
+/**
+ * confluence-score.ts — Wave 25 Pass 1, W25.1
+ *
+ * Weighted probabilistic confluence scoring (Path C) for Stage 2 of the A+ gate.
+ *
+ * Replaces the boolean "satisfied >= min_factors_satisfied" retail checklist with
+ * a 9-factor weighted model where each factor carries a named weight and factors
+ * with is_hard_block=true force score=0 when not satisfied.
+ *
+ * Pattern mirrors src/server/services/picker-metrics.ts (W23H.C composite picker):
+ *   - Fixed weights at the code level (overfitting guard — adjust only after
+ *     30+ days forward instrumentation via audit_log)
+ *   - All component contributions clamped to their weight (0 or weight)
+ *   - Final score in [0, 1]
+ *
+ * Override hierarchy (highest wins):
+ *   1. strategy.confluence_score_weights (per-strategy DB column)
+ *   2. process.env.CONFLUENCE_SCORE_WEIGHTS (JSON string, operator env var)
+ *   3. CODE_DEFAULTS below
+ *
+ * Hard-block contract: any factor with is_hard_block=true that returns
+ *   satisfied=false sets score=0 and hardBlockTriggered=true, overriding
+ *   the weighted sum regardless of other factors.
+ *
+ * Stub contract: three factor evaluators are stubs pending upstream Pass deliveries.
+ *   They MUST emit satisfied=false with a "pending_passX" reason string — they must
+ *   NOT throw or return satisfied=true accidentally.
+ *
+ * Logger import: uses ./logger.js leaf module (feedback_helper_logger_import.md).
+ */
+
+import { logger } from "../lib/logger.js";
+
+// ─── Named weight constants (institutional defaults, equal-weight starter) ────
+// Overfitting guard: only adjust after 30+ days of audit_log instrumentation.
+
+export const W_MARKET_STRUCTURE_ALIGNED = 0.20; // BOS/CHoCH/MSS aligned to bias
+export const W_LIQUIDITY_TARGET_CLEAR   = 0.15; // DOL identified within R:R
+export const W_SMT_CONFIRMATION         = 0.12; // ES↔NQ divergence agrees
+export const W_VWAP_ALIGNMENT           = 0.12; // session VWAP alignment
+export const W_KILLZONE_ACTIVE          = 0.10; // in trade window
+export const W_DELTA_OR_VOLUME          = 0.10; // cumulative delta OR volume spike
+export const W_VP_LEVEL_PROXIMITY       = 0.08; // POC/VAH/VAL/naked-POC magnet
+export const W_MACRO_ALIGNMENT          = 0.08; // FOMC/CPI/NFP blackout safe — HARD BLOCK
+export const W_REGIME_MATCH             = 0.05; // current regime in preferred_regimes[]
+
+// Default threshold — must be met or exceeded for the signal to pass.
+export const DEFAULT_CONFLUENCE_THRESHOLD = 0.72;
+
+// Env var name for operator-level weight override (JSON string).
+const ENV_WEIGHTS_KEY = "CONFLUENCE_SCORE_WEIGHTS";
+
+// ─── Canonical factor names (stable keys — referenced in audit rows) ──────────
+export const FACTOR_MARKET_STRUCTURE_ALIGNED = "market_structure_aligned";
+export const FACTOR_LIQUIDITY_TARGET_CLEAR   = "liquidity_target_clear";
+export const FACTOR_SMT_CONFIRMATION         = "smt_confirmation";
+export const FACTOR_VWAP_ALIGNMENT           = "vwap_alignment";
+export const FACTOR_KILLZONE_ACTIVE          = "killzone_active";
+export const FACTOR_DELTA_OR_VOLUME          = "delta_or_volume_signature";
+export const FACTOR_VP_LEVEL_PROXIMITY       = "vp_level_proximity";
+export const FACTOR_MACRO_ALIGNMENT          = "macro_alignment";
+export const FACTOR_REGIME_MATCH             = "regime_match";
+
+// ─── Code defaults table ──────────────────────────────────────────────────────
+// factor → { weight, isHardBlock }
+// Hard-block means: if satisfied=false for this factor → score=0, pass=false
+// regardless of what the rest of the model says.
+
+export interface FactorConfig {
+  weight: number;
+  isHardBlock: boolean;
+}
+
+export const CODE_DEFAULTS: Record<string, FactorConfig> = {
+  [FACTOR_MARKET_STRUCTURE_ALIGNED]: { weight: W_MARKET_STRUCTURE_ALIGNED, isHardBlock: false },
+  [FACTOR_LIQUIDITY_TARGET_CLEAR]:   { weight: W_LIQUIDITY_TARGET_CLEAR,   isHardBlock: false },
+  [FACTOR_SMT_CONFIRMATION]:         { weight: W_SMT_CONFIRMATION,          isHardBlock: false },
+  [FACTOR_VWAP_ALIGNMENT]:           { weight: W_VWAP_ALIGNMENT,            isHardBlock: false },
+  [FACTOR_KILLZONE_ACTIVE]:          { weight: W_KILLZONE_ACTIVE,           isHardBlock: false },
+  [FACTOR_DELTA_OR_VOLUME]:          { weight: W_DELTA_OR_VOLUME,           isHardBlock: false },
+  [FACTOR_VP_LEVEL_PROXIMITY]:       { weight: W_VP_LEVEL_PROXIMITY,        isHardBlock: false },
+  [FACTOR_MACRO_ALIGNMENT]:          { weight: W_MACRO_ALIGNMENT,           isHardBlock: true  }, // HARD BLOCK
+  [FACTOR_REGIME_MATCH]:             { weight: W_REGIME_MATCH,              isHardBlock: false },
+};
+
+// ─── Public interfaces ────────────────────────────────────────────────────────
+
+/**
+ * Minimal bar data needed for factor evaluation.
+ */
+export interface BarSnapshot {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  /** UTC milliseconds — used for killzone time checks */
+  timestamp?: number;
+}
+
+/**
+ * Structure state published by the structure_engine.py (Pass 1 W25.2).
+ * Consumed read-only here. When null, structure factors return satisfied=false
+ * with reason "structure_engine_unavailable" (expected before W25.2 ships).
+ */
+export interface StructureState {
+  market_structure_aligned: boolean;
+  bos_recent: boolean;
+  choch_recent: boolean;
+  mss_recent: boolean;
+  htf_bias_aligned: boolean;
+  pd_zone: "premium" | "discount" | "equilibrium";
+  last_break_age_bars: number;
+}
+
+/**
+ * All inputs that factor evaluators can read.
+ * Populated at signal time from the surrounding paper-signal-service context.
+ */
+export interface SignalContext {
+  strategyId: string;
+  bar: BarSnapshot;
+  /** Current indicator snapshot — keys match DSL indicator names */
+  indicators: Record<string, number | undefined>;
+  direction: "long" | "short";
+  /** Bias engine active strategy for this symbol+session (null = no preference) */
+  bias_active_strategy_id: string | null;
+  /**
+   * Structure engine state — populated by bias-state-service after W25.2 ships.
+   * null until the structure engine publishes its first state (Pass 1 W25.2).
+   */
+  structureState: StructureState | null;
+  /** calendarBlocked: reuses the existing signal-time calendar check result */
+  calendarBlocked: boolean;
+}
+
+/**
+ * Per-factor evaluation result.
+ */
+export interface FactorContribution {
+  factor: string;
+  weight: number;
+  satisfied: boolean;
+  /** Numeric contribution to score: weight × (satisfied ? 1 : 0) */
+  contribution: number;
+  reason: string;
+  is_hard_block: boolean;
+}
+
+/**
+ * Full weighted-scoring result returned by evaluateWeightedConfluence().
+ */
+export interface WeightedScoreResult {
+  /** Final score in [0, 1] (0 if hard-block triggered) */
+  score: number;
+  /** Threshold applied (strategy override or DEFAULT_CONFLUENCE_THRESHOLD) */
+  threshold: number;
+  /** True iff score >= threshold AND no hard-block factor failed */
+  passed: boolean;
+  factorContributions: FactorContribution[];
+  /** True if any hard-block factor returned satisfied=false */
+  hardBlockTriggered: boolean;
+  /** Identifies which level of the override hierarchy supplied the weights */
+  weightsSource: "strategy_override" | "env_default" | "code_default";
+}
+
+// ─── Strategy shape (minimal — only fields this module reads) ─────────────────
+
+export interface ScoringStrategy {
+  id: string;
+  symbol: string;
+  confluence_score_weights: Record<string, number> | null;
+  confluence_score_threshold: number | null;
+  entry_quality?: Record<string, unknown> | null;
+}
+
+// ─── Weight resolution ────────────────────────────────────────────────────────
+
+/**
+ * Parse env var CONFLUENCE_SCORE_WEIGHTS if present.
+ * Returns null on parse error (logs warning, falls back to code defaults).
+ */
+function parseEnvWeights(): Record<string, number> | null {
+  const raw = process.env[ENV_WEIGHTS_KEY];
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      logger.warn(
+        { key: ENV_WEIGHTS_KEY, value: raw },
+        "confluence-score: CONFLUENCE_SCORE_WEIGHTS is not a JSON object — falling back to code defaults",
+      );
+      return null;
+    }
+    return parsed as Record<string, number>;
+  } catch (err) {
+    logger.warn(
+      { key: ENV_WEIGHTS_KEY, err },
+      "confluence-score: failed to parse CONFLUENCE_SCORE_WEIGHTS JSON — falling back to code defaults",
+    );
+    return null;
+  }
+}
+
+/**
+ * Resolve weights for all 9 canonical factors according to the override hierarchy.
+ * Returns a map of factor → resolved weight (NOT renormalised here — caller decides
+ * whether to renormalise when a partial override set is provided).
+ */
+function resolveWeights(strategy: ScoringStrategy): {
+  weights: Record<string, number>;
+  source: WeightedScoreResult["weightsSource"];
+} {
+  // Priority 1: per-strategy DB column
+  if (strategy.confluence_score_weights && Object.keys(strategy.confluence_score_weights).length > 0) {
+    // Merge strategy overrides over code defaults (strategy may provide a partial map)
+    const merged: Record<string, number> = {};
+    for (const [factor, cfg] of Object.entries(CODE_DEFAULTS)) {
+      merged[factor] = strategy.confluence_score_weights[factor] ?? cfg.weight;
+    }
+    return { weights: merged, source: "strategy_override" };
+  }
+
+  // Priority 2: env var
+  const envWeights = parseEnvWeights();
+  if (envWeights) {
+    const merged: Record<string, number> = {};
+    for (const [factor, cfg] of Object.entries(CODE_DEFAULTS)) {
+      merged[factor] = envWeights[factor] ?? cfg.weight;
+    }
+    return { weights: merged, source: "env_default" };
+  }
+
+  // Priority 3: code defaults
+  const defaults: Record<string, number> = {};
+  for (const [factor, cfg] of Object.entries(CODE_DEFAULTS)) {
+    defaults[factor] = cfg.weight;
+  }
+  return { weights: defaults, source: "code_default" };
+}
+
+// ─── Individual factor evaluators ────────────────────────────────────────────
+// Each returns { satisfied, reason }. Must NEVER throw.
+
+/**
+ * market_structure_aligned — reads structureState published by W25.2.
+ * Pass 1: if structureState is null, returns satisfied=false with descriptive reason.
+ * This means the factor always fails until Pass 2 (W25.2) ships — which is correct:
+ * strategies opting into weighted scoring before the structure engine is live will
+ * not pass the default 0.72 threshold on this factor alone.
+ */
+function evalMarketStructureAligned(
+  ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  if (ctx.structureState === null) {
+    return { satisfied: false, reason: "structure_engine_unavailable" };
+  }
+  const satisfied = ctx.structureState.market_structure_aligned === true;
+  return {
+    satisfied,
+    reason: satisfied
+      ? `structure_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}`
+      : `structure_not_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}`,
+  };
+}
+
+/**
+ * liquidity_target_clear — STUB (pending Pass 3 W25.6 liquidity-map-service).
+ * Returns satisfied=false so the factor contributes 0 to score until the real
+ * evaluator is wired.
+ */
+function evalLiquidityTargetClear(
+  _ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  return { satisfied: false, reason: "liquidity_map_not_shipped_pending_pass3" };
+}
+
+/**
+ * smt_confirmation — STUB (pending Pass 5 W25.9 smt_divergence.py).
+ */
+function evalSmtConfirmation(
+  _ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  return { satisfied: false, reason: "smt_pending_pass5" };
+}
+
+/**
+ * vwap_alignment — real-ish evaluator using existing session VWAP indicator.
+ * Reads indicators.vwap; compares bar.close position relative to vwap in the
+ * signal direction. Fails open when vwap indicator is absent (satisfied=false
+ * to preserve the conservative character of the weighted model).
+ */
+function evalVwapAlignment(
+  ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  const vwap = ctx.indicators["vwap"];
+  if (vwap === undefined || !Number.isFinite(vwap)) {
+    return { satisfied: false, reason: "vwap_indicator_absent" };
+  }
+  const close = ctx.bar.close;
+  if (ctx.direction === "long") {
+    const satisfied = close > vwap;
+    return {
+      satisfied,
+      reason: satisfied
+        ? `long_close_${close.toFixed(2)}_above_vwap_${vwap.toFixed(2)}`
+        : `long_close_${close.toFixed(2)}_below_vwap_${vwap.toFixed(2)}`,
+    };
+  } else {
+    const satisfied = close < vwap;
+    return {
+      satisfied,
+      reason: satisfied
+        ? `short_close_${close.toFixed(2)}_below_vwap_${vwap.toFixed(2)}`
+        : `short_close_${close.toFixed(2)}_above_vwap_${vwap.toFixed(2)}`,
+    };
+  }
+}
+
+/**
+ * killzone_active — STUB (pending Pass 1 W25.3 killzone.ts helper).
+ * W25.3 ships in the same pass; if that track runs before this one it will wire
+ * the real helper. Until then, stub returns false.
+ */
+function evalKillzoneActive(
+  _ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  // Attempt dynamic import of killzone helper — if W25.3 has already shipped
+  // the module will exist. If not, return stub response.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const kz = require("../lib/killzone.js") as {
+      isInKillzone?: (ts: number, zone: string) => boolean;
+    };
+    if (kz.isInKillzone && typeof kz.isInKillzone === "function") {
+      const ts = _ctx.bar.timestamp ?? Date.now();
+      // Check any active killzone window
+      const zones = ["london", "ny_am", "ny_pm", "silver_bullet"] as const;
+      for (const zone of zones) {
+        if (kz.isInKillzone(ts, zone)) {
+          return { satisfied: true, reason: `killzone_active_${zone}` };
+        }
+      }
+      return { satisfied: false, reason: "no_killzone_active" };
+    }
+  } catch {
+    // Module not yet present — expected before W25.3 ships
+  }
+  return { satisfied: false, reason: "killzone_helper_pending_w25.3" };
+}
+
+/**
+ * delta_or_volume_signature — proxy evaluator using volume confirmation.
+ * Real delta signal lands in Pass 5 (W25.9). For now: satisfied if current
+ * bar volume > rolling-mean of last 20 bars × 1.2 (same threshold as canonical-5
+ * volume_confirmation factor).
+ */
+function evalDeltaOrVolumeSignature(
+  ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  const vol = ctx.bar.volume;
+  if (!Number.isFinite(vol) || vol <= 0) {
+    return { satisfied: false, reason: "volume_absent_or_zero" };
+  }
+  // Try to find rolling mean from indicators snapshot
+  const rollingMeanKey = "volume_rolling_mean_20";
+  const rollingMean = ctx.indicators[rollingMeanKey];
+  if (rollingMean !== undefined && Number.isFinite(rollingMean) && rollingMean > 0) {
+    const VOLUME_SPIKE_MULTIPLE = 1.2;
+    const satisfied = vol > rollingMean * VOLUME_SPIKE_MULTIPLE;
+    return {
+      satisfied,
+      reason: satisfied
+        ? `volume_spike_${vol.toFixed(0)}_gt_mean_${rollingMean.toFixed(0)}_x${VOLUME_SPIKE_MULTIPLE}`
+        : `volume_insufficient_${vol.toFixed(0)}_lte_mean_${rollingMean.toFixed(0)}_x${VOLUME_SPIKE_MULTIPLE}`,
+    };
+  }
+  // Fallback: no rolling mean in indicators — delta/volume judgment deferred
+  return { satisfied: false, reason: "volume_rolling_mean_unavailable_pending_accumulation" };
+}
+
+/**
+ * vp_level_proximity — reads existing VP indicators if available.
+ * Satisfied when bar.close is within 1×ATR of any VP key level
+ * (vp_poc, vp_vah, vp_val).
+ */
+function evalVpLevelProximity(
+  ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  const atr = ctx.indicators["atr"];
+  const poc = ctx.indicators["vp_poc"];
+  const vah = ctx.indicators["vp_vah"];
+  const val = ctx.indicators["vp_val"];
+
+  const levels: Array<{ name: string; value: number }> = [];
+  if (poc !== undefined && Number.isFinite(poc)) levels.push({ name: "poc", value: poc });
+  if (vah !== undefined && Number.isFinite(vah)) levels.push({ name: "vah", value: vah });
+  if (val !== undefined && Number.isFinite(val)) levels.push({ name: "val", value: val });
+
+  if (levels.length === 0) {
+    return { satisfied: false, reason: "vp_indicators_absent" };
+  }
+
+  if (!atr || !Number.isFinite(atr) || atr <= 0) {
+    return { satisfied: false, reason: "atr_indicator_absent" };
+  }
+
+  const close = ctx.bar.close;
+  const VP_PROXIMITY_ATR_MULTIPLIER = 1.0; // within 1×ATR of any VP level
+
+  for (const lvl of levels) {
+    if (Math.abs(close - lvl.value) <= atr * VP_PROXIMITY_ATR_MULTIPLIER) {
+      return {
+        satisfied: true,
+        reason: `close_${close.toFixed(2)}_within_1atr_of_${lvl.name}_${lvl.value.toFixed(2)}`,
+      };
+    }
+  }
+
+  const nearest = levels.reduce((best, lvl) =>
+    Math.abs(close - lvl.value) < Math.abs(close - best.value) ? lvl : best
+  );
+  return {
+    satisfied: false,
+    reason: `no_vp_level_within_1atr_nearest_${nearest.name}_${nearest.value.toFixed(2)}_dist_${Math.abs(close - nearest.value).toFixed(2)}_atr_${atr.toFixed(2)}`,
+  };
+}
+
+/**
+ * macro_alignment — HARD BLOCK factor.
+ * Reads the calendarBlocked flag already computed at signal time in paper-signal-service.
+ * If any FOMC/CPI/NFP/economic-event blackout covers this bar's timestamp → satisfied=false.
+ * This is a hard-block: the entire weighted score becomes 0.
+ */
+function evalMacroAlignment(
+  ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  const satisfied = !ctx.calendarBlocked;
+  return {
+    satisfied,
+    reason: satisfied ? "no_event_blackout" : "event_blackout_active_hard_block",
+  };
+}
+
+/**
+ * regime_match — satisfied when the bias engine's active strategy matches
+ * this strategy OR when no preference is set (bias_active_strategy_id is null).
+ */
+function evalRegimeMatch(
+  ctx: SignalContext,
+  strategyId: string,
+): { satisfied: boolean; reason: string } {
+  const active = ctx.bias_active_strategy_id;
+  const satisfied = active === null || active === strategyId;
+  return {
+    satisfied,
+    reason: satisfied
+      ? active === null
+        ? "regime_no_preference"
+        : `regime_matched_active=${active}`
+      : `regime_mismatch_active=${active}_this=${strategyId}`,
+  };
+}
+
+// ─── Factor dispatch table ─────────────────────────────────────────────────────
+
+type FactorEvaluator = (ctx: SignalContext, strategyId: string) => { satisfied: boolean; reason: string };
+
+const FACTOR_EVALUATORS: Record<string, FactorEvaluator> = {
+  [FACTOR_MARKET_STRUCTURE_ALIGNED]: (ctx) => evalMarketStructureAligned(ctx),
+  [FACTOR_LIQUIDITY_TARGET_CLEAR]:   (ctx) => evalLiquidityTargetClear(ctx),
+  [FACTOR_SMT_CONFIRMATION]:         (ctx) => evalSmtConfirmation(ctx),
+  [FACTOR_VWAP_ALIGNMENT]:           (ctx) => evalVwapAlignment(ctx),
+  [FACTOR_KILLZONE_ACTIVE]:          (ctx) => evalKillzoneActive(ctx),
+  [FACTOR_DELTA_OR_VOLUME]:          (ctx) => evalDeltaOrVolumeSignature(ctx),
+  [FACTOR_VP_LEVEL_PROXIMITY]:       (ctx) => evalVpLevelProximity(ctx),
+  [FACTOR_MACRO_ALIGNMENT]:          (ctx) => evalMacroAlignment(ctx),
+  [FACTOR_REGIME_MATCH]:             (ctx, id) => evalRegimeMatch(ctx, id),
+};
+
+// ─── Main export ──────────────────────────────────────────────────────────────
+
+/**
+ * Evaluate all 9 canonical weighted confluence factors for a given signal.
+ *
+ * Safe to call from paper-signal-service: never throws. All factor evaluators
+ * fail to satisfied=false on any error (conservative — preserves hard-block
+ * guarantees).
+ *
+ * @param strategy  Minimal strategy shape (id, symbol, score columns).
+ * @param signalContext  Bar + indicator snapshot at signal time.
+ * @returns WeightedScoreResult with full factor audit trail.
+ */
+export function evaluateWeightedConfluence(
+  strategy: ScoringStrategy,
+  signalContext: SignalContext,
+): WeightedScoreResult {
+  const { weights, source: weightsSource } = resolveWeights(strategy);
+
+  // Threshold: strategy column → code default
+  const threshold =
+    strategy.confluence_score_threshold !== null &&
+    strategy.confluence_score_threshold !== undefined &&
+    Number.isFinite(Number(strategy.confluence_score_threshold))
+      ? Number(strategy.confluence_score_threshold)
+      : DEFAULT_CONFLUENCE_THRESHOLD;
+
+  const factorContributions: FactorContribution[] = [];
+  let hardBlockTriggered = false;
+
+  for (const factorName of Object.keys(CODE_DEFAULTS)) {
+    const factorCfg = CODE_DEFAULTS[factorName];
+    const weight = weights[factorName] ?? factorCfg.weight;
+    const evaluator = FACTOR_EVALUATORS[factorName];
+
+    let satisfied = false;
+    let reason = "evaluator_not_registered";
+
+    if (evaluator) {
+      try {
+        const result = evaluator(signalContext, strategy.id);
+        satisfied = result.satisfied;
+        reason = result.reason;
+      } catch (err) {
+        // Factor evaluator must never throw — defensive catch here as backstop.
+        logger.error(
+          { factor: factorName, strategyId: strategy.id, err },
+          "confluence-score: factor evaluator threw unexpectedly — treating as satisfied=false (fail-closed)",
+        );
+        satisfied = false;
+        reason = "evaluator_threw_unexpected_error";
+      }
+    }
+
+    if (factorCfg.isHardBlock && !satisfied) {
+      hardBlockTriggered = true;
+    }
+
+    factorContributions.push({
+      factor: factorName,
+      weight,
+      satisfied,
+      contribution: satisfied ? weight : 0,
+      reason,
+      is_hard_block: factorCfg.isHardBlock,
+    });
+  }
+
+  // When a hard-block factor failed, score is forced to 0 regardless of sum.
+  let score: number;
+  if (hardBlockTriggered) {
+    score = 0;
+  } else {
+    const rawSum = factorContributions.reduce((acc, fc) => acc + fc.contribution, 0);
+    // Clamp to [0, 1] — should already be in range if weights sum to 1.0
+    score = Math.max(0, Math.min(1, rawSum));
+  }
+
+  const passed = !hardBlockTriggered && score >= threshold;
+
+  logger.debug(
+    {
+      strategyId: strategy.id,
+      score: score.toFixed(4),
+      threshold: threshold.toFixed(2),
+      passed,
+      hardBlockTriggered,
+      weightsSource,
+      factorSummary: factorContributions.map((fc) => `${fc.factor}:${fc.satisfied ? 1 : 0}`).join(","),
+    },
+    "confluence-score: weighted evaluation complete",
+  );
+
+  return {
+    score,
+    threshold,
+    passed,
+    factorContributions,
+    hardBlockTriggered,
+    weightsSource,
+  };
+}

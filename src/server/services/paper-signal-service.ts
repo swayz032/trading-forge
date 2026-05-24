@@ -37,6 +37,8 @@ import { parseEntryWindows, isBarInAnyWindow } from "../lib/entry-windows.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
 import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
+// Wave 25 W25.1: weighted confluence scoring (Path C)
+import { evaluateWeightedConfluence, type ScoringStrategy, type SignalContext as WeightedSignalContext } from "./confluence-score.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -2901,6 +2903,12 @@ export async function evaluateSignals(
         extraction_provenance?: string;
         /** W23G.11 per-strategy confirming indicators (W23H.D: evaluated at signal time) */
         confirming_indicators?: ConfirmingIndicator[];
+        /**
+         * Wave 25 W25.1: opt-in to weighted probabilistic scoring (Path C).
+         * When true, Stage 2 uses evaluateWeightedConfluence() instead of boolean counting.
+         * Default false — existing strategies continue on Path A or B unchanged.
+         */
+        use_weighted_scoring?: boolean;
       } | undefined;
 
       const isLegacyStrategy =
@@ -3070,6 +3078,191 @@ export async function evaluateSignals(
             reason: "signal.a_plus_bypassed_legacy: no entry_quality block or legacy_no_confluence provenance",
           }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ bypass log"));
         } else if (entryQuality) {
+          // ── Wave 25 W25.1 + W23H.D dispatcher ─────────────────────────────
+          // Three paths, evaluated in priority order:
+          //
+          //   Path C (Wave 25): entry_quality.use_weighted_scoring === true
+          //     → evaluateWeightedConfluence() — 9-factor weighted probabilistic model
+          //     → Hard-block on macro_alignment failure (score forced to 0)
+          //     → Opt-in only; default false = backward-compat for all pre-W25 strategies
+          //
+          //   Path A (W23H.D): confirming_indicators[] is non-empty
+          //     → per-strategy boolean: satisfiedCount >= minRequired
+          //
+          //   Path B (Wave 23.C): confirming_indicators is absent/empty
+          //     → canonical-5 factor boolean: satisfiedCount >= minRequired
+
+          const useWeightedScoring = entryQuality.use_weighted_scoring === true && !isLegacyStrategy;
+
+          if (useWeightedScoring) {
+            // ── Path C: Wave 25 weighted confluence scoring ───────────────────
+            // Build SignalContext from available signal-time data.
+            // structureState will be null until W25.2 (structure_engine.py) ships —
+            // market_structure_aligned factor returns satisfied=false with reason
+            // "structure_engine_unavailable" in that case (expected for Pass 1).
+            const signalDir = (config.side === "short" ? "short" : "long") as "long" | "short";
+
+            // Read structureState from biasState if published by W25.2 — null for now.
+            const structureStateRaw = biasState !== null
+              ? (biasState as unknown as Record<string, unknown>).structureState as WeightedSignalContext["structureState"] ?? null
+              : null;
+
+            const weightedCtx: WeightedSignalContext = {
+              strategyId: sessionConfig.strategyId,
+              bar: {
+                open: bar.open,
+                high: bar.high,
+                low: bar.low,
+                close: bar.close,
+                volume: bar.volume ?? 0,
+                timestamp: typeof bar.timestamp === "number" ? bar.timestamp : undefined,
+              },
+              indicators: indicators as Record<string, number | undefined>,
+              direction: signalDir,
+              bias_active_strategy_id: biasState?.activeStrategyId ?? null,
+              structureState: structureStateRaw,
+              calendarBlocked,
+            };
+
+            // Build minimal ScoringStrategy shape for evaluator.
+            // Top-level DB columns read from rawConfig (merged with defaults).
+            const scoringStrategy: ScoringStrategy = {
+              id: sessionConfig.strategyId,
+              symbol: (config as unknown as Record<string, unknown>).symbol as string ?? "",
+              confluence_score_weights: (entryQuality as unknown as Record<string, unknown>).confluence_score_weights as Record<string, number> | null ?? null,
+              confluence_score_threshold: (entryQuality as unknown as Record<string, unknown>).confluence_score_threshold as number | null ?? null,
+              entry_quality: entryQuality as Record<string, unknown>,
+            };
+
+            const weightedResult = evaluateWeightedConfluence(scoringStrategy, weightedCtx);
+
+            // Per-factor audit rows (fire-and-forget)
+            for (const fc of weightedResult.factorContributions) {
+              db.insert(paperSignalLogs).values({
+                sessionId,
+                symbol,
+                direction: config.side,
+                signalType: "a_plus_factor_evaluated",
+                price: String(bar.close),
+                indicatorSnapshot: {
+                  ...indicators,
+                  _factor: fc.factor,
+                  _factor_weight: fc.weight,
+                  _factor_satisfied: fc.satisfied,
+                  _factor_contribution: fc.contribution,
+                  _factor_reason: fc.reason,
+                  _factor_source: "weighted",
+                  _factor_is_hard_block: fc.is_hard_block,
+                },
+                acted: fc.satisfied,
+                reason: `signal.a_plus_factor_evaluated: factor=${fc.factor} weight=${fc.weight} satisfied=${fc.satisfied} source=weighted reason=${fc.reason}`,
+              }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist Path C factor audit log"));
+            }
+
+            // Decision audit row
+            insertAuditRow({
+              action: weightedResult.passed
+                ? "signal.confluence_score_evaluated"
+                : weightedResult.hardBlockTriggered
+                  ? "signal.confluence_hard_blocked"
+                  : "signal.weighted_score_rejected",
+              entityType: "strategy",
+              entityId: sessionConfig.strategyId,
+              decisionAuthority: "system",
+              result: {
+                score: weightedResult.score,
+                threshold: weightedResult.threshold,
+                passed: weightedResult.passed,
+                hard_block: weightedResult.hardBlockTriggered,
+                factor_contributions: weightedResult.factorContributions.map((fc) => ({
+                  factor: fc.factor,
+                  weight: fc.weight,
+                  satisfied: fc.satisfied,
+                  contribution: fc.contribution,
+                })),
+                weights_source: weightedResult.weightsSource,
+              } as Record<string, unknown>,
+              status: "success",
+              correlationId: null,
+            }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for weighted confluence decision"));
+
+            span.setAttribute("a_plus_weighted_score", weightedResult.score);
+            span.setAttribute("a_plus_threshold", weightedResult.threshold);
+            span.setAttribute("a_plus_passed", weightedResult.passed);
+            span.setAttribute("a_plus_hard_block", weightedResult.hardBlockTriggered);
+            span.setAttribute("a_plus_weights_source", weightedResult.weightsSource);
+            span.setAttribute("a_plus_factor_source", "weighted");
+
+            if (!weightedResult.passed) {
+              stage2Blocked = true;
+              logger.info(
+                {
+                  sessionId,
+                  symbol,
+                  score: weightedResult.score,
+                  threshold: weightedResult.threshold,
+                  hardBlock: weightedResult.hardBlockTriggered,
+                  weightsSource: weightedResult.weightsSource,
+                  strategyId: sessionConfig.strategyId,
+                },
+                "Wave 25 W25.1 Stage 2: A+ gate REJECTED — weighted confluence score below threshold",
+              );
+              broadcastSSE("signal:weighted_score_rejected", {
+                sessionId,
+                symbol,
+                score: weightedResult.score,
+                threshold: weightedResult.threshold,
+                hardBlock: weightedResult.hardBlockTriggered,
+                weightsSource: weightedResult.weightsSource,
+                price: bar.close,
+                timestamp: bar.timestamp,
+              });
+              db.insert(paperSignalLogs).values({
+                sessionId,
+                symbol,
+                direction: config.side,
+                signalType: "a_plus_rejected",
+                price: String(bar.close),
+                indicatorSnapshot: {
+                  ...indicators,
+                  _weighted_score: weightedResult.score,
+                  _weighted_threshold: weightedResult.threshold,
+                  _hard_block: weightedResult.hardBlockTriggered,
+                  _weights_source: weightedResult.weightsSource,
+                  _a_plus_factor_source: "weighted",
+                },
+                acted: false,
+                reason: `signal.weighted_score_rejected: score=${weightedResult.score.toFixed(4)} threshold=${weightedResult.threshold} hard_block=${weightedResult.hardBlockTriggered} weights_source=${weightedResult.weightsSource}`,
+              }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist weighted score rejected log"));
+            } else {
+              logger.debug(
+                {
+                  sessionId,
+                  symbol,
+                  score: weightedResult.score,
+                  threshold: weightedResult.threshold,
+                  weightsSource: weightedResult.weightsSource,
+                },
+                "Wave 25 W25.1 Stage 2: A+ gate PASSED — weighted confluence",
+              );
+              db.insert(paperSignalLogs).values({
+                sessionId,
+                symbol,
+                direction: config.side,
+                signalType: "a_plus_passed",
+                price: String(bar.close),
+                indicatorSnapshot: {
+                  ...indicators,
+                  _weighted_score: weightedResult.score,
+                  _weighted_threshold: weightedResult.threshold,
+                  _weights_source: weightedResult.weightsSource,
+                  _a_plus_factor_source: "weighted",
+                },
+                acted: true,
+                reason: `signal.confluence_score_evaluated: score=${weightedResult.score.toFixed(4)} threshold=${weightedResult.threshold} weights_source=${weightedResult.weightsSource}`,
+              }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist weighted score passed log"));
+            }
+          } else {
           // ── W23H.D dispatcher: per-strategy vs canonical 5 ─────────────────
           const customIndicators = entryQuality.confirming_indicators ?? [];
           const usePerStrategy = customIndicators.length > 0;
@@ -3324,6 +3517,7 @@ export async function evaluateSignals(
               }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ passed log"));
             }
           }
+          } // end else (Path A / Path B)
         }
       }
 

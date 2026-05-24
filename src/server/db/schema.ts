@@ -80,6 +80,13 @@ export const strategies = pgTable("strategies", {
   // migration 0125b (Track B) to enforce the cap at the database layer.
   generation: integer("generation").notNull().default(0), // Evolution generation (0 = original)
   source: text("source"), // Origin of the strategy: 'ollama' | 'openclaw' | 'manual' | 'n8n' | 'evolved' (added by migration 0045)
+  // Wave 25 W25.1: weighted confluence scoring (Path C in Stage 2 dispatcher)
+  // Default FALSE: all pre-Wave-25 strategies continue using boolean paths (A or B).
+  useWeightedScoring: boolean("use_weighted_scoring").default(false),
+  // NULL → evaluateWeightedConfluence() uses code default (0.72).
+  confluenceScoreThreshold: numeric("confluence_score_threshold"),
+  // NULL → evaluator uses env/code defaults. Map of factor → weight (re-normalised to 1.0 by evaluator).
+  confluenceScoreWeights: jsonb("confluence_score_weights").$type<Record<string, number>>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 },
@@ -2147,6 +2154,14 @@ export const biasState = pgTable(
     // W24-P2 Item 21: true when HMM overlay was computed for this row (advisory only).
     // Rule-based regime label is ALWAYS authoritative. HMM never overrides.
     hmmProbabilityUsed: boolean("hmm_probability_used").notNull().default(false),
+    // W25.2: JSON-serialised StructureState from structure_engine.py.
+    // NULL for pre-Wave-25 rows and when MTF data unavailable. Shape:
+    // { bos_recent, bos_direction, choch_recent, choch_direction, mss_recent,
+    //   mss_direction, mss_displacement_atr_mult, displacement_active,
+    //   premium_discount_zone, htf_bias_aligned, last_break_direction,
+    //   last_break_age_bars, swing_high, swing_low, computed_at_bar_idx }
+    // Consumed by confluence-score.ts (W25.1) market_structure_aligned factor.
+    structureState: jsonb("structure_state"),
     computedAt: timestamp("computed_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

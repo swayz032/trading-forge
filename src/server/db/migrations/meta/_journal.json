@@ -904,6 +904,69 @@
       "when": 1748293200000,
       "tag": "0126_critical_path_timestamptz",
       "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1748379600000,
+      "tag": "0127_generation_check",
+      "breakpoints": true
+    },
+    {
+      "idx": 130,
+      "version": "7",
+      "when": 1748466000000,
+      "tag": "0128_hmac_secret_encryption",
+      "breakpoints": true
+    },
+    {
+      "idx": 131,
+      "version": "7",
+      "when": 1748552400000,
+      "tag": "0129_hmac_rotation_runbook",
+      "breakpoints": true
+    },
+    {
+      "idx": 132,
+      "version": "7",
+      "when": 1748638800000,
+      "tag": "0130_paper_position_partials",
+      "breakpoints": true
+    },
+    {
+      "idx": 133,
+      "version": "7",
+      "when": 1748725200000,
+      "tag": "0131_operator_absent_pending",
+      "breakpoints": true
+    },
+    {
+      "idx": 134,
+      "version": "7",
+      "when": 1748811600000,
+      "tag": "0132_hmm_regime_overlay",
+      "breakpoints": true
+    },
+    {
+      "idx": 135,
+      "version": "7",
+      "when": 1748898000000,
+      "tag": "0133_webhook_latency_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 136,
+      "version": "7",
+      "when": 1748984401000,
+      "tag": "0134_bias_state_structure_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 137,
+      "version": "7",
+      "when": 1749070800000,
+      "tag": "0135_strategies_confluence_scoring",
+      "breakpoints": true
     }
   ]
 }
