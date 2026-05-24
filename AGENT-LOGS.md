@@ -4,6 +4,43 @@
 
 ---
 
+### Session Log — 2026-05-24 observability-reliability — Wave 25 Pass 2 (R-3 + Y-1 + A-2 + A-3)
+
+**Mission:** Ship 4 observability hardening items from Phase A audits: audit action name mismatch (R-3), drift cron pipeline-gate exemption (Y-1), n8n drift detector cron registration (A-2), and family-grade alert postscripts (A-3).
+
+**Work completed:**
+- **R-3 (RED) — Canonical action name**: Added 5-line comment at `weekly-drift-halt-service.ts:218` documenting `drift.weekly_2sigma_halt` as the one canonical action name for all consumers. Confirmed zero non-comment occurrences of `auto_halt.weekly_drift_2sigma` across entire `src/` tree (grep scan clean). No CLAUDE.md §12 table change needed — table uses operational descriptions, not action strings.
+- **Y-1 (YELLOW) — Pipeline-gate exemption**: Added `"weekly-drift-2sigma-check"` to `_PIPELINE_GATE_EXEMPT` Set in `scheduler.ts` (alongside the 8 existing exempt jobs). Added defensive `logger.info` BEFORE the `pipelineGate()` call with structured `{job}` field — proves the job reached the cron body regardless of pipeline state. Comment explains the exemption rationale (operator may have paused mid-week DUE TO drift; the detector must not be silenced by the same pause it's guarding).
+- **A-2 (MEDIUM) — n8n drift detector crons**: Registered 2 new cron jobs in `scheduler.ts`: `n8n-drift-detector-weekly` (Sun 19:00 ET, cron `0 23 * * 1`) and `n8n-drift-detector-monthly` (1st of month 09:00 ET, cron `0 13,14 1 * *`). Both added to `_PIPELINE_GATE_EXEMPT`. Extracted shared `_runN8nDriftAudit(jobName)` helper (spawns `npm run audit:n8n` via `execFile`, 5-min timeout, captures stdout/stderr/exitCode). Three audit actions: `n8n.drift_check_clean` (exit 0), `n8n.drift_detected` (exit != 0 + `notifyCritical`), `n8n.drift_check_errored` (timeout/spawn error + `notifyCritical`). Discord alerts include `DGEk1D478xWJClKD` errorWorkflow reference and `npm run audit:n8n` remediation command. Updated CLAUDE.md §2 from "runs monthly" to "runs weekly (Sun 19:00 ET) + monthly (1st 09:00 ET)."
+- **A-3 (MEDIUM) — Family-grade alerts**: Created `src/server/lib/notification-helpers.ts` with `appendFamilyGradePostscript(operatorBody, plainWhat, plainAction)`. Applied at 3 sites: `dead-mans-heartbeat-service.ts` 48h confirmed alert (autopilot engaged), 24h pending alert (confirmation window started), and `bitwarden-session-refresh-service.ts` BW refresh failure alert. Each postscript block begins with `--- For family members ---` separator. Discord channel routing note documented in helper: single channel now, 2-channel split is Wave 25+ carry-forward.
+- Updated scheduler init `logger.info` string to include the 2 new n8n drift jobs.
+- Noted: core service files (`scheduler.ts`, `weekly-drift-halt-service.ts`, `notification-helpers.ts`, `dead-mans-heartbeat-service.ts`, `bitwarden-session-refresh-service.ts`, `CLAUDE.md`) were included in the architect's close-out commit `4f990c4` ahead of this session commit.
+
+**Verification:**
+- `npm test wave25-weekly-drift-action-canonical` → 2/2 PASS
+- `npm test wave25-drift-cron-gate-exempt` → 2/2 PASS
+- `npm test wave25-n8n-drift-cron` → 4/4 PASS
+- `npm test wave25-family-grade-alerts` → 6/6 PASS
+- All 14 new wave25-pass2 tests GREEN
+- `npm test wave24` → 182/182 PASS (baseline preserved)
+- `npm run check:production-isolation` → CLEAN (4 files, 0 violations)
+- `npm run check:2026-compliance` → OK
+- `npm run system-map:check` → status:ok, driftItems:[]
+- `npx tsc --noEmit --skipLibCheck` → 0 errors on touched files (pre-existing script errors unchanged)
+- Commit SHA: `35b82f4` (test files) + `4f990c4` (service/scheduler/CLAUDE.md files in architect commit)
+
+**Known-facts updates:**
+- Canonical action name for weekly drift HALT audit row is `drift.weekly_2sigma_halt`. The variant `auto_halt.weekly_drift_2sigma` was never written to production and is documented as invalid in the service file comment and caught by a static file-scan test.
+- `_PIPELINE_GATE_EXEMPT` now has 11 entries (8 pre-existing + `weekly-drift-2sigma-check` + `n8n-drift-detector-weekly` + `n8n-drift-detector-monthly`).
+- `_runN8nDriftAudit` is a private function in `scheduler.ts`, not exported. Tests verify it via source-level assertions.
+- `appendFamilyGradePostscript` is exported from `src/server/lib/notification-helpers.ts`. Single Discord channel currently; 2-channel split is a future carry-forward.
+
+**Carry-forward for next session:**
+- Discord 2-channel split (operator-technical + family-plain-english): currently documented as carry-forward. When implemented, the `appendFamilyGradePostscript` separator line `--- For family members ---` can be used to route the postscript to the family channel only.
+- Wave25 Pass 2 payout-audit-packet.test.ts has 2 pre-existing failures (not introduced this session — present since `89e802e`).
+
+---
+
 ### Session Log — 2026-05-24 Wave 25 Pass 1 — weighted scoring + structure engine + killzone
 
 **Mission:** Replace boolean Stage 2 with weighted probabilistic scoring; build independent structure validation layer; extract killzone helper. P1.A5 (`trading-forge-architect`) closes Pass 1 with system-map sync + contract verification + backfill enablement.
