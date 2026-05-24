@@ -20,16 +20,14 @@ from __future__ import annotations
 
 import pytest
 
+from src.engine.context.structural_targets import select_exit_style
 from src.engine.exits.style_c_handler import (
     HANDLER_VERSION,
-    StyleCState,
-    evaluate_exit,
     TP1_FRACTION_C,
     TP2_FRACTION_C,
+    StyleCState,
+    evaluate_exit,
 )
-from src.engine.exits.style_d_handler import ExitDecision
-from src.engine.context.structural_targets import select_exit_style
-
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -192,26 +190,26 @@ def test_select_exit_style_returns_style_c_when_conditions_met():
     assert select_exit_style("TREND_CONTINUATION", "P", "inflation") == "style_c"
 
 
-def test_select_exit_style_returns_style_d_on_crisis():
-    """Style D when macro=crisis."""
-    assert select_exit_style("TREND_CONTINUATION", "Thin", "crisis") == "style_d"
+def test_select_exit_style_returns_style_c_on_crisis():
+    """Wave 24: style_c is returned even in crisis (tighter Chandelier handled by handler)."""
+    assert select_exit_style("TREND_CONTINUATION", "Thin", "crisis") == "style_c"
 
 
-def test_select_exit_style_returns_style_d_wrong_playbook():
-    """Style D when playbook != TREND_CONTINUATION."""
-    assert select_exit_style("MEAN_REVERSION", "Thin", "growth") == "style_d"
-    assert select_exit_style(None, "Thin", "growth") == "style_d"
+def test_select_exit_style_returns_style_c_any_playbook():
+    """Wave 24: Style D dead — all playbooks return style_c."""
+    assert select_exit_style("MEAN_REVERSION", "Thin", "growth") == "style_c"
+    assert select_exit_style(None, "Thin", "growth") == "style_c"
 
 
-def test_select_exit_style_returns_style_d_wrong_vp():
-    """Style D when vp_shape not in {D, b, P, Thin}."""
-    assert select_exit_style("TREND_CONTINUATION", "UNKNOWN", "growth") == "style_d"
-    assert select_exit_style("TREND_CONTINUATION", None, "growth") == "style_d"
+def test_select_exit_style_returns_style_c_any_vp():
+    """Wave 24: Style D dead — all VP shapes return style_c."""
+    assert select_exit_style("TREND_CONTINUATION", "UNKNOWN", "growth") == "style_c"
+    assert select_exit_style("TREND_CONTINUATION", None, "growth") == "style_c"
 
 
 def test_select_exit_style_default_no_context():
-    """No regime context → Style D."""
-    assert select_exit_style() == "style_d"
+    """Wave 24: No regime context → style_c (Style D is DEAD, W23F.N)."""
+    assert select_exit_style() == "style_c"
 
 
 # ─── Test 7: Determinism ─────────────────────────────────────────────────────
