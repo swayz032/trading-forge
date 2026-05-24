@@ -6859,6 +6859,72 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-24 Wave 25 Pass 3 P3.A3 — Naked POC Python→TS Bridge
+
+**Mission:** Build the Python→TS bridge for naked POC persistence so `liquidity_target_clear` (confluence weight 0.13) and the pre-market briefing `nearby_naked_pocs` field have a persistent table source.
+
+**Work completed:**
+- Added `NakedPocRecord` dataclass and `extract_naked_pocs_for_persistence()` to `src/engine/indicators/volume_profile.py`. Pure function, no I/O, Polars only. Returns list sorted ascending by age_days (most recent POC first). Accepts separate daily_history + intraday_history params; merges and deduplicates by ts_event when different DataFrames are passed; gracefully handles same-object case.
+- Created `scripts/sync_naked_pocs_to_liquidity_map.py` — standalone CLI bridge. Reads S3 via `load_ohlcv()`, calls export helper, POSTs to `/api/admin/liquidity-map/naked-pocs-batch`. Dry-run by default; `--apply` writes. Tolerates HTTP 404 (endpoint not yet deployed by P3.A1+A2) with a clear warning and exit 0. Emits JSON summary to stdout for cron audit.
+- Added `naked-poc-sync-daily` cron in `src/server/scheduler.ts`: fires 4:30 PM ET weekdays (dual UTC fire 20:30+21:30 with ET-hour guard matching contract-roll-sweep pattern). Pipeline-gate EXEMPT. Spawns Python via `child_process.spawn`, per-symbol failure is non-blocking. 2 retries with DLQ escalation via `withRetry`.
+- Added `naked-poc-sync-daily` and `liquidity-map-refresh` to the startup logger.info inventory string.
+- Created `src/engine/tests/test_extract_naked_pocs.py` — 12 tests covering all specified scenarios.
+
+**Verification:**
+- `python -m pytest src/engine/tests/test_extract_naked_pocs.py -v` → 12/12 PASSED
+- `python -m pytest src/engine/tests/test_volume_profile.py` → 15/15 PASSED (no regressions)
+- Combined 27/27 PASSED
+- `npm run check:production-isolation` → CLEAN, 0 violations
+- `python -m scripts.sync_naked_pocs_to_liquidity_map --symbol MES --date 2026-05-24 --dry-run` → CLI signature works; S3 403 expected (no AWS creds in dev shell)
+
+**Endpoint contract defined for P3.A1+A2 (paper-parity sibling):**
+- `POST /api/admin/liquidity-map/naked-pocs-batch`
+- Body: `{symbol, as_of_date, records: [{session_date, price, age_days, establishing_high, establishing_low, establishing_volume}]}`
+- Expected response: `{ok: true, upserted: N, symbol, as_of_date}`
+- Script tolerates 404 until endpoint ships (TODO block in sync script)
+
+**Known-facts updates:** none
+
+**Carry-forward for next session:**
+- P3.A1+A2 must ship `POST /api/admin/liquidity-map/naked-pocs-batch` in liquidity-map-service.ts. Once live, remove the 404-toleration block in `scripts/sync_naked_pocs_to_liquidity_map.py` and make 404 a hard failure.
+- `nearby_naked_pocs` in pre_market_sessions still uses simplified extraction (Pass 2.5 honest deferral). After P3.A3+A1 are both live and the `liquidity_levels` table is populated, the pre-market briefing service can be upgraded to query from that table instead.
+- Pass 7 adaptive exit engine will consume `liquidity_levels` rows for TP targeting — this bridge is the prerequisite.
+
+---
+
+### Session Log — 2026-05-24 Wave 25 Pass 3 — persistent liquidity map engine (P3.A5 architect close-out)
+
+**Mission:** Promote liquidity tracking from per-bar lookup to persistent ranked engine. Light up `liquidity_target_clear` factor in 11-factor weighted scoring. Establish 17-type LevelType enum contract for Pass 7 adaptive exits. Close two integration gaps left open by P3.A1+A2 / P3.A3 parallel delivery.
+
+**Work completed:**
+- Migration 0140 idx 142 `liquidity_levels` table (17 level_types + indexes) — P3.A1+A2
+- `liquidity-map-service.ts` (CRUD + sweep_probability heuristic + composite rank + Stage 2 wiring) — P3.A1+A2
+- `volume_profile.py::extract_naked_pocs_for_persistence()` + `scripts/sync_naked_pocs_to_liquidity_map.py` CLI — P3.A3
+- `liquidity-map-refresh` cron (30 min RTH, pipeline-gate exempt) + `naked-poc-sync-daily` cron (16:30 ET, pipeline-gate exempt) — P3.A2 + P3.A3
+- **P3.A5 GAP CLOSURE 1:** `paper-signal-service.ts` Path C dispatcher now fetches `getNearestLiquidity(symbol, bar.close, above/below)` in parallel BEFORE `evaluateWeightedConfluence()` and injects into `WeightedSignalContext.liquidityNearestAbove/Below`. Fail-soft: any error → null → factor returns "liquidity_map_unavailable" (fail-open preserved). The factor is now LIVE in production signal flow.
+- **P3.A5 GAP CLOSURE 2:** `POST /api/admin/liquidity-map/naked-pocs-batch` endpoint shipped in `routes/admin.ts`. Validates body, UPSERTs into `liquidity_levels` with `level_type='naked_poc'` + `htf_significance=2`, bucket-rounds price to ±0.25 (MES tick) for idempotency, emits `liquidity_map.naked_pocs_batched` audit row carrying correlation_id. Optional `LIQUIDITY_MAP_BATCH_SECRET` shared-secret check (defense-in-depth; admin routes already mounted behind tower-relay HMAC). The cron's previous 404 soft-failure now resolves to a real persistence call.
+- New test `wave25-naked-pocs-batch-endpoint.test.ts` — 7 cases: happy path, missing symbol 400, malformed as_of_date 400, records-not-array 400, idempotency (2nd call inserts 0), audit row + correlation_id, shared-secret 401.
+- Subsystem registry: added `liquidity_map_service` + `naked_poc_persistence_bridge` (criticality=critical / important). System Map check GREEN, driftItems=[].
+
+**Verification:**
+- `npx vitest run wave25-liquidity-map.test.ts wave25-confluence-11-factor.test.ts wave25-weighted-scoring.test.ts wave25-naked-pocs-batch-endpoint.test.ts` — 117/117 GREEN
+- `npm run system-map:check` — status=ok, driftItems=[]
+- `npx tsc --noEmit` shows no NEW errors introduced by Pass 3 edits (one pre-existing admin.ts(463) error unrelated to this work)
+- Backward-compat preserved: legacy strategies (no `use_weighted_scoring`) unaffected; weighted strategies with empty liquidity map still pass via fail-open
+
+**Known-facts updates:**
+- **LevelType enum is FROZEN as Pass 7 contract.** Never extend without Pass 7 adaptive-exit-engine sign-off. The 17 values are now load-bearing for both Stage 2 confluence scoring AND adaptive TP target selection.
+- sweep_probability uses 1-week age decay window with touch/distance penalties (institutional heuristic per TradeAxis 2025).
+- New optional env var: `LIQUIDITY_MAP_BATCH_SECRET` — shared-secret on the naked-POCs-batch endpoint; unset = no check (relay HMAC remains primary auth).
+- POC price bucketing: nearest 0.25 (MES tick) for idempotency on UPSERT.
+
+**Carry-forward for next session:**
+- Pass 4 (confluence decay engine) — closes GPT critique #5. Pass 4's decay function multiplies factor contribution by per-confluence age confidence; must INTEGRATE with liquidity-map's existing `touched_count` decay to avoid double-decay.
+- HOD/LOD level types in enum but not yet populated — deferred to Wave 26 when intraday bar DAL is ready.
+- `pre-market-briefing-service.ts` `nearby_naked_pocs` simplified extraction can now be upgraded to query `liquidity_levels` directly (the Pass-2.5 honest deferral has its prerequisite live).
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

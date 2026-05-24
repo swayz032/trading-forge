@@ -3306,7 +3306,7 @@ except Exception as e:
   });
   _scheduledJobs.add("harsh-regime-phase-activation-check");
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT), naked-poc-sync-daily (4:30 PM ET weekdays — W25.6-P3A3, pipeline-gate-EXEMPT), liquidity-map-refresh (every 30min RTH Mon-Fri — W25.6-P3A1, pipeline-gate-EXEMPT)");
 
   // ─── Wave 24 Pass 1 Item 1: BW session refresh — every 6 hours ────────────────
   // CATASTROPHIC GAP: runBwSessionRefreshCheck existed but had ZERO callers in
@@ -3734,6 +3734,234 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("pre-market-briefing-discord");
+
+  // ─── W25.6 — Liquidity Map Refresh ──────────────────────────
+  // Fires every 30 min during RTH (09:30–16:00 ET, Mon–Fri).
+  // Calls refreshSessionLevels() for all 3 symbols to populate/update the
+  // persistent liquidity_levels table.
+  //
+  // Pipeline-gate EXEMPT: levels must populate even when pipeline is PAUSED
+  // so the operator can see them in the dashboard and the adaptive exit engine
+  // (Pass 7) can consume them regardless of whether new entries are being taken.
+  //
+  // Idempotent: refreshSessionLevels() uses UPSERT — calling twice = no duplicates.
+  // Failure handling: non-fatal — logs + DLQ via withRetry. A missed refresh
+  // means levels are slightly stale but the factor fails gracefully.
+
+  registerJob("liquidity-map-refresh", 30 * 60 * 1000, async () => {
+    const nowUtc = new Date();
+
+    // RTH guard: Mon–Fri, 13:30–20:00 UTC (09:30–16:00 ET, handles EDT/EST via offset check).
+    // We use UTC hours for simplicity; exact DST correction is handled by the ±30min window.
+    // EDT: 09:30 ET = 13:30 UTC; 16:00 ET = 20:00 UTC
+    // EST: 09:30 ET = 14:30 UTC; 16:00 ET = 21:00 UTC
+    // We fire in the union: 13:30–21:00 UTC covers both windows with overlap acceptable.
+    const dayOfWeek = nowUtc.getUTCDay(); // 0=Sun, 6=Sat
+    if (dayOfWeek === 0 || dayOfWeek === 6) return; // skip weekends
+
+    const hourUtc = nowUtc.getUTCHours();
+    const minUtc = nowUtc.getUTCMinutes();
+    const totalMinutesUtc = hourUtc * 60 + minUtc;
+    // 13:30 = 810 UTC minutes; 21:00 = 1260 UTC minutes
+    if (totalMinutesUtc < 810 || totalMinutesUtc >= 1260) return; // outside RTH window
+
+    const sessionDate = nowUtc.toISOString().slice(0, 10);
+    const correlationId = randomUUID();
+
+    logger.info(
+      { sessionDate, correlationId, totalMinutesUtc },
+      "liquidity-map-refresh: tick firing",
+    );
+
+    const { refreshSessionLevels } = await import("./services/liquidity-map-service.js");
+
+    let totalAdded = 0;
+    for (const symbol of ["MES", "MNQ", "MCL"]) {
+      try {
+        const result = await refreshSessionLevels(symbol, sessionDate, correlationId);
+        totalAdded += result.added;
+
+        await insertAuditRow({
+          action: "liquidity_map.session_refreshed",
+          entityType: "liquidity_map",
+          entityId: `${symbol}:${sessionDate}`,
+          correlationId,
+          status: "success",
+          result: {
+            symbol,
+            sessionDate,
+            added: result.added,
+            expired: result.expired,
+          },
+        }).catch((err) =>
+          logger.warn({ err, symbol }, "liquidity-map-refresh: audit insert failed (non-blocking)"),
+        );
+
+        logger.info(
+          { symbol, sessionDate, added: result.added, expired: result.expired, correlationId },
+          "liquidity-map-refresh: symbol complete",
+        );
+      } catch (err) {
+        logger.warn({ err, symbol, sessionDate }, "liquidity-map-refresh: symbol refresh failed (non-blocking)");
+      }
+    }
+
+    logger.info(
+      { sessionDate, correlationId, totalAdded },
+      "liquidity-map-refresh: all symbols complete",
+    );
+  });
+
+  // Pipeline-gate EXEMPT: levels must populate even during PAUSE
+  _PIPELINE_GATE_EXEMPT.add("liquidity-map-refresh");
+
+  // Cron driver: every 30 min — "*/30 * * * *"
+  cron.schedule("*/30 * * * *", async () => {
+    if (!_tryAcquireJobLock("liquidity-map-refresh")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("liquidity-map-refresh", SCHEDULER_JOBS["liquidity-map-refresh"].run, 1);
+      markJobRun("liquidity-map-refresh");
+      emitJobComplete("liquidity-map-refresh", Date.now() - t0);
+    } finally {
+      _releaseJobLock("liquidity-map-refresh");
+    }
+  });
+  _scheduledJobs.add("liquidity-map-refresh");
+
+  // ─── Wave 25 Pass 3 W25.6: naked-poc-sync-daily — 4:30 PM ET weekdays ───────
+  //
+  // After RTH close, stable session bars are available. Spawns the Python bridge
+  // script (scripts/sync_naked_pocs_to_liquidity_map.py) for all 3 VP symbols to
+  // persist naked POC levels into the liquidity_levels table via the TS endpoint:
+  //   POST /api/admin/liquidity-map/naked-pocs-batch
+  //
+  // Pipeline-gate EXEMPT: pre-market context levels must populate even when
+  // pipeline is paused. Missing a sync silently degrades liquidity_target_clear
+  // scoring but must not hold up lifecycle work during operator pause.
+  //
+  // Idempotent: the TS endpoint UPSERTs on (symbol, session_date, level_type,
+  // price) — re-running produces no duplicate rows.
+  //
+  // Runs at both 20:30 and 21:30 UTC to cover EDT (UTC-4) and EST (UTC-5).
+  // ET-hour guard fires only at 16:30 ET, matching contract-roll-sweep cadence.
+  //
+  // If the TS endpoint has not yet been deployed by P3.A1+A2, the Python script
+  // tolerates 404 and exits 0 — no DLQ backpressure until endpoint ships.
+
+  registerJob("naked-poc-sync-daily", 24 * 60 * 60 * 1000, async () => {
+    const { spawn } = await import("child_process");
+
+    const symbolsEnv = process.env.VP_SYMBOLS ?? "MES,MNQ,MCL";
+    const symbols = symbolsEnv.split(",").map((s: string) => s.trim());
+
+    // Build ISO date in ET for the session we just closed
+    const etDateStr = new Date().toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const [mm, dd, yyyy] = etDateStr.split("/");
+    const isoDate = `${yyyy}-${mm}-${dd}`;
+
+    const backendUrl =
+      process.env.TF_BACKEND_URL ??
+      process.env.TF_BACKEND_PUBLIC_URL ??
+      "http://localhost:4000";
+
+    for (const sym of symbols) {
+      await new Promise<void>((resolve, reject) => {
+        const args = [
+          "-m", "scripts.sync_naked_pocs_to_liquidity_map",
+          "--symbol", sym,
+          "--date", isoDate,
+          "--apply",
+          "--backend-url", backendUrl,
+        ];
+        const proc = spawn("python", args, {
+          cwd: process.cwd(),
+          env: { ...process.env as Record<string, string> },
+          stdio: ["ignore", "pipe", "pipe"],
+        });
+
+        let stdoutBuf = "";
+        let stderrBuf = "";
+        proc.stdout?.on("data", (d: Buffer) => { stdoutBuf += d.toString(); });
+        proc.stderr?.on("data", (d: Buffer) => { stderrBuf += d.toString(); });
+
+        proc.on("close", (code: number | null) => {
+          if (code === 0) {
+            logger.info(
+              { symbol: sym, sessionDate: isoDate, stdout: stdoutBuf.slice(0, 2000) },
+              "naked-poc-sync-daily: sync completed",
+            );
+            resolve();
+          } else {
+            reject(
+              new Error(
+                `naked-poc-sync-daily: Python script exited ${code} for ${sym}. ` +
+                `stderr=${stderrBuf.slice(0, 500)}`,
+              ),
+            );
+          }
+        });
+
+        proc.on("error", (err: Error) => {
+          logger.error(
+            { symbol: sym, sessionDate: isoDate, err: String(err) },
+            "naked-poc-sync-daily: failed to spawn Python process",
+          );
+          reject(err);
+        });
+      }).catch((err) => {
+        // Per-symbol failure is non-blocking — log and continue with next symbol
+        logger.error(
+          { symbol: sym, err: String(err) },
+          "naked-poc-sync-daily: symbol sync failed — continuing",
+        );
+      });
+    }
+  });
+
+  // Pipeline-gate EXEMPT: pre-market context must populate even during PAUSE
+  _PIPELINE_GATE_EXEMPT.add("naked-poc-sync-daily");
+
+  // Cron driver: fires at 20:30 and 21:30 UTC weekdays (covers EDT + EST 16:30 ET)
+  cron.schedule("30 20,21 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("naked-poc-sync-daily")) return;
+    try {
+      const now = new Date();
+      const etTimeStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: false,
+      });
+      const [etHourStr, etMinStr] = etTimeStr.split(":");
+      const etHour = parseInt(etHourStr, 10);
+      const etMin = parseInt(etMinStr, 10);
+      if (etHour !== 16 || etMin !== 30) {
+        logger.debug(
+          { etHour, etMin },
+          "Scheduler: naked-poc-sync-daily cron fired but not 16:30 ET — skipping",
+        );
+        return;
+      }
+      logger.info("Scheduler: naked-poc-sync-daily (4:30 PM ET)");
+      const t0nps = Date.now();
+      await withRetry(
+        "naked-poc-sync-daily",
+        SCHEDULER_JOBS["naked-poc-sync-daily"].run,
+        2, // 2 retries — backoff handles transient S3/backend hiccups
+      );
+      markJobRun("naked-poc-sync-daily");
+      emitJobComplete("naked-poc-sync-daily", Date.now() - t0nps);
+    } finally {
+      _releaseJobLock("naked-poc-sync-daily");
+    }
+  });
+  _scheduledJobs.add("naked-poc-sync-daily");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

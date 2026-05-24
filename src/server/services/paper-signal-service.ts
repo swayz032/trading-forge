@@ -39,6 +39,10 @@ import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONA
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
 // Wave 25 W25.1: weighted confluence scoring (Path C)
 import { evaluateWeightedConfluence, type ScoringStrategy, type SignalContext as WeightedSignalContext } from "./confluence-score.js";
+// Wave 25 W25.6 (Pass 3 P3.A5 architect close-out): liquidity-map injection so
+// the liquidity_target_clear factor lights up in production. Fail-soft on any
+// error — null result → factor falls back to "liquidity_map_unavailable".
+import { getNearestLiquidity } from "./liquidity-map-service.js";
 import { notifyCritical } from "./notification-service.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
@@ -3122,6 +3126,17 @@ export async function evaluateSignals(
             const structureStateRaw: WeightedSignalContext["structureState"] =
               biasState?.structureState ?? null;
 
+            // ── Wave 25 W25.6 (Pass 3 P3.A5): liquidity-map injection ──────────
+            // Fetch nearest ranked levels above + below the current bar close so
+            // confluence-score.ts::evalLiquidityTargetClear() can light up the
+            // liquidity_target_clear factor. Fail-soft: any error → null →
+            // factor returns "liquidity_map_unavailable" (fail-open preserved).
+            // Parallelized to keep per-bar latency below the previous baseline.
+            const [liquidityNearestAbove, liquidityNearestBelow] = await Promise.all([
+              getNearestLiquidity(symbol, bar.close, "above").catch(() => null),
+              getNearestLiquidity(symbol, bar.close, "below").catch(() => null),
+            ]);
+
             const weightedCtx: WeightedSignalContext = {
               strategyId: sessionConfig.strategyId,
               bar: {
@@ -3134,9 +3149,12 @@ export async function evaluateSignals(
               },
               indicators: indicators as Record<string, number | undefined>,
               direction: signalDir,
+              symbol,
               bias_active_strategy_id: biasState?.activeStrategyId ?? null,
               structureState: structureStateRaw,
               calendarBlocked,
+              liquidityNearestAbove,
+              liquidityNearestBelow,
             };
 
             // Build minimal ScoringStrategy shape for evaluator.

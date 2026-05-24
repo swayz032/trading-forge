@@ -32,6 +32,7 @@
 import { logger } from "../lib/logger.js";
 import { isInAnyKillzone, activeKillzones } from "../lib/killzone.js";
 import { getInternalsSnapshot } from "./market-internals-service.js";
+import type { RankedLevel } from "./liquidity-map-service.js";
 
 // ─── Named weight constants — 11-factor model (W25.5c renormalization) ────────
 // Weights sum to exactly 1.00. Equal-weight-ish starter.
@@ -180,6 +181,16 @@ export interface SignalContext {
    */
   dxyDirection?: "up" | "down" | "flat" | null;
   us10yDirection?: "up" | "down" | "flat" | null;
+  /**
+   * W25.6 (Pass 3): Pre-populated liquidity levels for the liquidity_target_clear
+   * factor.  paper-signal-service.ts must call getNearestLiquidity() BEFORE
+   * evaluateWeightedConfluence() and inject the results here.
+   *
+   * When null/absent: evalLiquidityTargetClear returns satisfied=false with
+   * reason="liquidity_map_unavailable" (conservative fail-open).
+   */
+  liquidityNearestAbove?: RankedLevel[] | null;
+  liquidityNearestBelow?: RankedLevel[] | null;
 }
 
 /**
@@ -323,14 +334,60 @@ function evalMarketStructureAligned(
 }
 
 /**
- * liquidity_target_clear — STUB (pending Pass 3 W25.6 liquidity-map-service).
- * Returns satisfied=false so the factor contributes 0 to score until the real
- * evaluator is wired.
+ * liquidity_target_clear — Pass 3, W25.6.
+ *
+ * Queries the persistent liquidity map for at least one active level in the
+ * signal direction (above for LONG, below for SHORT) within 1 ADR.
+ *
+ * Satisfied when ≥1 level is returned with sweep_probability ≥ 0.4.
+ * This proves a DOM-of-liquidity (DOL) exists as a realistic take-profit target.
+ *
+ * Fail-open on any service error (satisfied=false with descriptive reason) —
+ * never throws.  The factor contributes 0 to the score when the map is
+ * unavailable, which is conservative (preserves the integrity of the gate).
  */
 function evalLiquidityTargetClear(
-  _ctx: SignalContext,
+  ctx: SignalContext,
 ): { satisfied: boolean; reason: string } {
-  return { satisfied: false, reason: "liquidity_map_not_shipped_pending_pass3" };
+  // Import is dynamic to avoid circular dep and allow test mocking.
+  // The import is sync-pattern-safe because getNearestLiquidity returns a Promise;
+  // we call it and handle the result asynchronously inside a try/catch.
+  // However, factor evaluators must be synchronous in the current architecture
+  // (evaluateWeightedConfluence is sync). We therefore check whether the service
+  // has already pre-populated a cached result via ctx.liquidityLevelsAbove /
+  // ctx.liquidityLevelsBelow, and fall back to satisfied=false when not pre-populated.
+  //
+  // Call site: paper-signal-service.ts must call getNearestLiquidity() BEFORE
+  // invoking evaluateWeightedConfluence() and inject the result into
+  // ctx.liquidityNearestAbove / ctx.liquidityNearestBelow. Until that wiring
+  // lands (Pass 3 P3.A5 architect pass), the factor reads from the pre-populated
+  // fields and returns "liquidity_map_unavailable" when absent.
+
+  const direction = ctx.direction;
+  const levels = direction === "long"
+    ? ctx.liquidityNearestAbove
+    : ctx.liquidityNearestBelow;
+
+  if (!levels || levels.length === 0) {
+    return { satisfied: false, reason: "liquidity_map_unavailable" };
+  }
+
+  const MIN_SWEEP_PROBABILITY = 0.4;
+  const qualifying = levels.filter((l) => l.sweep_probability >= MIN_SWEEP_PROBABILITY);
+
+  if (qualifying.length === 0) {
+    const best = levels[0];
+    return {
+      satisfied: false,
+      reason: `no_level_meets_sweep_prob_threshold_best=${best.level_type}_sp=${best.sweep_probability.toFixed(2)}_dist=${best.distance_points.toFixed(2)}`,
+    };
+  }
+
+  const top = qualifying[0];
+  return {
+    satisfied: true,
+    reason: `${direction}_dol_clear_${top.level_type}_sp=${top.sweep_probability.toFixed(2)}_dist=${top.distance_points.toFixed(2)}_htf=${top.htf_significance}`,
+  };
 }
 
 /**

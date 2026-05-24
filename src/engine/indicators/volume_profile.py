@@ -349,6 +349,162 @@ def compute_naked_pocs(
     return naked
 
 
+# ─── Wave 25 Pass 3 W25.6: Naked POC export helper ───────────────────────────
+#
+# Pure function — no I/O, no side effects. Returns a list of NakedPocRecord
+# ready for persistence via the TS HTTP endpoint.
+# Does NOT replace compute_naked_pocs(); that function returns (date, price) tuples
+# used by the existing VP CLI contract. This export helper adds the richer shape
+# needed for the liquidity_levels table (age_days, high/low at establishment,
+# establishing_volume) so downstream systems can weight levels by freshness and size.
+
+@dataclass
+class NakedPocRecord:
+    """Naked POC entry ready for DB persistence via TS liquidity-map endpoint."""
+
+    symbol: str
+    session_date: str              # ISO YYYY-MM-DD of the session that ESTABLISHED the POC
+    price: float
+    age_days: int                  # sessions since established (count of prior dates)
+    high_low_at_establishment: Tuple[float, float]  # (session_high, session_low) when POC formed
+    establishing_volume: float     # total session volume when POC formed
+
+
+def extract_naked_pocs_for_persistence(
+    daily_history: "pl.DataFrame",
+    intraday_history: "pl.DataFrame",
+    symbol: str,
+    as_of_date: str,
+    lookback_days: int = NAKED_POC_LOOKBACK_DAYS,
+) -> "List[NakedPocRecord]":
+    """Returns list of currently-naked POCs ready for DB persistence.
+
+    Pure function — no I/O, no side effects. Safe to call in hot paths.
+
+    A POC is "naked" if price has NOT traded through it since the session in
+    which it formed (same definition as compute_naked_pocs()).
+
+    The function merges daily_history and intraday_history so callers can pass
+    either 5-min bars (from the VP CLI data pipeline) or daily OHLCV — the
+    ts_event date column is used for session grouping regardless of bar frequency.
+    If intraday_history is empty (or the caller passes the same DataFrame twice)
+    the function gracefully falls back to daily_history for all computations.
+
+    Args:
+        daily_history: Polars DataFrame with ts_event, high, low, close, volume.
+            Used to establish per-session POC via compute_volume_profile().
+            Must cover at least lookback_days + 1 sessions of history.
+        intraday_history: Same schema. Merged with daily_history before computation
+            so intraday bars improve POC precision. Pass an empty DataFrame or the
+            same DataFrame as daily_history if you only have one granularity.
+        symbol: Futures symbol for tick_size lookup (e.g. "MES").
+        as_of_date: ISO YYYY-MM-DD — the date for which we want naked POCs.
+            Sessions on or after this date are excluded from the lookback window.
+        lookback_days: Maximum number of prior sessions to inspect (default 30).
+
+    Returns:
+        List of NakedPocRecord sorted by ascending age (most recently established
+        first), matching the ordering convention used by nearby_naked_pocs in
+        pre_market_sessions.
+    """
+    from datetime import date as _date
+
+    if len(daily_history) == 0:
+        return []
+
+    tick = _get_tick_size(symbol)
+
+    # Merge intraday into daily if intraday has rows and is a different object
+    if len(intraday_history) > 0 and intraday_history is not daily_history:
+        # Guard: both must share the required columns
+        required = {"ts_event", "high", "low", "close", "volume"}
+        if required.issubset(set(intraday_history.columns)) and required.issubset(set(daily_history.columns)):
+            merged = pl.concat([daily_history, intraday_history]).sort("ts_event").unique(subset=["ts_event"], keep="first")
+        else:
+            merged = daily_history
+    else:
+        merged = daily_history
+
+    # Ensure date column
+    if "ts_event" not in merged.columns:
+        return []
+
+    df = merged.with_columns(
+        pl.col("ts_event").dt.date().alias("_date")
+    ).sort("ts_event")
+
+    try:
+        current_date = _date.fromisoformat(as_of_date)
+    except Exception:
+        return []
+
+    all_dates = df["_date"].unique().sort().to_list()
+    prior_dates = [d for d in all_dates if d < current_date]
+    prior_dates = prior_dates[-lookback_days:]
+
+    if not prior_dates:
+        return []
+
+    # ── Step 1: compute POC + session metadata for each prior date ────────────
+    # We store (date, poc_price, session_high, session_low, total_volume) in one pass.
+    session_records: List[Tuple[object, float, float, float, float]] = []
+    for d in prior_dates:
+        day_bars = df.filter(pl.col("_date") == d)
+        if len(day_bars) == 0:
+            continue
+        lvl = compute_volume_profile(day_bars, tick_size=tick)
+        if lvl.poc <= 0:
+            continue
+        session_records.append((
+            d,
+            lvl.poc,
+            lvl.session_high,
+            lvl.session_low,
+            lvl.total_volume,
+        ))
+
+    if not session_records:
+        return []
+
+    # ── Step 2: filter to naked (untouched since establishment) ──────────────
+    naked_records: List[NakedPocRecord] = []
+
+    for poc_date, poc_price, sess_high, sess_low, sess_vol in session_records:
+        subsequent = df.filter(
+            (pl.col("_date") > poc_date) & (pl.col("_date") < current_date)
+        )
+        if len(subsequent) > 0:
+            touched = subsequent.filter(
+                (pl.col("high") >= poc_price) & (pl.col("low") <= poc_price)
+            )
+            if len(touched) > 0:
+                continue  # POC was retested — not naked
+
+        # Age = number of sessions from poc_date up to (but not including) as_of_date
+        # Use position in prior_dates list rather than calendar days to avoid
+        # skewing by weekends / holidays.
+        age_sessions = len([d for d in prior_dates if d > poc_date])
+
+        iso_date = (
+            poc_date.isoformat()  # type: ignore[union-attr]
+            if hasattr(poc_date, "isoformat")
+            else str(poc_date)
+        )
+
+        naked_records.append(NakedPocRecord(
+            symbol=symbol,
+            session_date=iso_date,
+            price=round(poc_price, 6),
+            age_days=age_sessions,
+            high_low_at_establishment=(sess_high, sess_low),
+            establishing_volume=sess_vol,
+        ))
+
+    # Sort by ascending age (most recent first — mirrors pre_market_sessions convention)
+    naked_records.sort(key=lambda r: r.age_days)
+    return naked_records
+
+
 # ─── A+ Gate: VP Shape Score (Wave 23 Gap-Fix-A) ─────────────────────────────
 #
 # Python port of getSessionShapeScore() from volume-profile-service.ts.

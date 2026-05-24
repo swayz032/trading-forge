@@ -2718,3 +2718,35 @@ export const preMarketSessions = pgTable(
     index("idx_pre_market_sessions_symbol").on(table.symbol, table.sessionDate),
   ],
 );
+
+// ─── Liquidity Levels (Wave 25 Pass 3 — W25.6) ────────────────
+// Persistent ranked liquidity map engine.  One row per active price level.
+// expired_at IS NULL = active.  17 canonical level_type values (contract
+// for Pass 7 adaptive exits — do NOT add more without updating that contract).
+//
+// Migration: 0140_liquidity_levels.sql (idx 142)
+export const liquidityLevels = pgTable(
+  "liquidity_levels",
+  {
+    id:               uuid("id").primaryKey().defaultRandom(),
+    symbol:           text("symbol").notNull(),
+    sessionDate:      date("session_date").notNull(),
+    levelType:        text("level_type").notNull(),
+    price:            numeric("price", { precision: 20, scale: 5 }).notNull(),
+    // htf_significance 1-5: 1=intraday, 2=session, 3=daily, 4=weekly, 5=monthly
+    htfSignificance:  integer("htf_significance").notNull().default(1),
+    // [0,1] — computed lazily on first getNearestLiquidity call; stored back.
+    sweepProbability: numeric("sweep_probability", { precision: 5, scale: 4 }),
+    touchedCount:     integer("touched_count").notNull().default(0),
+    // e.g. { "naked_poc_session": "2026-05-22", "fvg_origin_bar_idx": 1234 }
+    sourceMeta:       jsonb("source_meta").notNull().default(sql`'{}'::jsonb`),
+    createdAt:        timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiredAt:        timestamp("expired_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("idx_liquidity_levels_symbol_session").on(table.symbol, table.sessionDate),
+    index("idx_liquidity_levels_active").on(table.symbol, table.levelType).where(sql`expired_at IS NULL`),
+    index("idx_liquidity_levels_price").on(table.symbol, table.price).where(sql`expired_at IS NULL`),
+    index("idx_liquidity_levels_rank").on(table.symbol, table.htfSignificance, table.sweepProbability).where(sql`expired_at IS NULL`),
+  ],
+);

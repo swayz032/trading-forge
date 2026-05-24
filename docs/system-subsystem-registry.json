@@ -2423,5 +2423,143 @@
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
     "criticality": "important"
+  },
+  {
+    "id": "liquidity_map_service",
+    "domain": "signal_generation",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "scheduler",
+    "automation_scope": "Wave 25 Pass 3 — persistent ranked institutional liquidity engine. Promotes liquidity tracking from per-bar lookup to persistent ranked map across 17 canonical LevelTypes (PDH/PDL/PWH_ISO/PWL_ISO/PMH/PML/Asian/London/HOD/LOD/naked_poc/untouched_fvg/untouched_ob/EQH/EQL). Sweep probability heuristic (age decay + touch decay + distance attenuation + HTF significance) + composite rank scoring. Stage 2 liquidity_target_clear factor (weight 0.13) now real (was stub). Refresh cron every 30 min RTH; pipeline-gate exempt. LevelType enum is FROZEN as Pass 7 adaptive-exit-engine contract.",
+    "data_sources": [
+      "pre_market_sessions",
+      "bias_state.structure_state"
+    ],
+    "reads_from": [
+      "pre_market_sessions",
+      "bias_state",
+      "liquidity_levels"
+    ],
+    "writes_to": [
+      "liquidity_levels",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "liquidity_map.level_added",
+      "liquidity_map.level_swept",
+      "liquidity_map.session_refreshed",
+      "liquidity_map.naked_pocs_batched"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:liquidity_map.level_added",
+      "audit_log:liquidity_map.level_swept"
+    ],
+    "scheduler_jobs": [
+      "liquidity-map-refresh"
+    ],
+    "routes": [
+      "POST /api/admin/liquidity-map/naked-pocs-batch"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "liquidity_levels",
+      "pre_market_sessions",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log"
+    ],
+    "recovery_mode": "fail-soft-audit-only",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:liquidity_map.session_refreshed:30min-rth"
+    ],
+    "evidence_queries": [
+      "wave25-liquidity-map.test.ts",
+      "wave25-naked-pocs-batch-endpoint.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "naked_poc_persistence_bridge",
+    "domain": "signal_generation",
+    "owner_surface": "python_to_node_bridge",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "scheduler",
+    "automation_scope": "Wave 25 Pass 3 — Python→TS bridge that detects naked POCs from 30-day daily+5m history (extract_naked_pocs_for_persistence in volume_profile.py) and persists them into liquidity_levels table via POST /api/admin/liquidity-map/naked-pocs-batch. Runs daily at 16:30 ET via cron naked-poc-sync-daily; pipeline-gate exempt. Idempotent (UPSERT bucketed at ±0.25 MES tick). Maintains correlation_id chain Python → TS endpoint → audit_log.",
+    "data_sources": [
+      "S3 ratio_adj/{symbol}/daily",
+      "S3 ratio_adj/{symbol}/5min"
+    ],
+    "reads_from": [
+      "S3"
+    ],
+    "writes_to": [
+      "liquidity_levels",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "liquidity_map.naked_pocs_batched"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:liquidity_map.naked_pocs_batched"
+    ],
+    "scheduler_jobs": [
+      "naked-poc-sync-daily"
+    ],
+    "routes": [
+      "POST /api/admin/liquidity-map/naked-pocs-batch"
+    ],
+    "engine_subsystems": [
+      "volume_profile"
+    ],
+    "database_tables": [
+      "liquidity_levels",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "stdout-json-summary"
+    ],
+    "recovery_mode": "fail-soft-cron-retry",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:liquidity_map.naked_pocs_batched:daily-1630-et"
+    ],
+    "evidence_queries": [
+      "test_extract_naked_pocs.py",
+      "wave25-naked-pocs-batch-endpoint.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
   }
 ]

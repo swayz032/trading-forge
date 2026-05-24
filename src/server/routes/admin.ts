@@ -9,10 +9,10 @@
 
 import { Router } from "express";
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
-import { desc, eq, and } from "drizzle-orm";
+import { desc, eq, and, sql } from "drizzle-orm";
 import { getMode, setMode } from "../services/pipeline-control-service.js";
 import { db } from "../db/index.js";
-import { agentHealthReports, dataIntegrityFindings } from "../db/schema.js";
+import { agentHealthReports, dataIntegrityFindings, liquidityLevels } from "../db/schema.js";
 import { getPhaseRecord, setPhaseOverride, type PhaseValue } from "../services/harsh-regime-phase-service.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
@@ -769,4 +769,182 @@ adminRoutes.get("/data-integrity-findings", async (req, res) => {
     req.log.error({ err }, "Admin: failed to fetch data integrity findings");
     res.status(500).json({ error: "Failed to fetch data integrity findings" });
   }
+});
+
+// ─── Wave 25 Pass 3 P3.A5 architect close-out ─────────────────────────────────
+// POST /admin/liquidity-map/naked-pocs-batch
+//
+// Persistence endpoint consumed by scripts/sync_naked_pocs_to_liquidity_map.py
+// (cron job `naked-poc-sync-daily` at 16:30 ET). Closes the Python→TS bridge
+// integration gap left open by P3.A1+A2 / P3.A3 parallel delivery.
+//
+// Request body:
+//   {
+//     "symbol": "MES",
+//     "as_of_date": "2026-05-24",       // ISO YYYY-MM-DD
+//     "records": [
+//       {
+//         "session_date": "2026-05-20", // when the POC was established
+//         "price": 5312.25,
+//         "age_days": 2,
+//         "establishing_high": 5320.0,
+//         "establishing_low": 5298.75,
+//         "establishing_volume": 18432.0
+//       }, ...
+//     ]
+//   }
+//
+// Response: { ok: true, upserted: N, symbol, as_of_date, correlation_id }
+//
+// Idempotency: UPSERT on (symbol, session_date, level_type='naked_poc', price
+// bucketed to nearest 0.25). Re-running the script for the same date produces
+// no duplicate rows.
+//
+// Auth: optional shared-secret via X-Liquidity-Map-Secret header.  Enforced
+// only when env var LIQUIDITY_MAP_BATCH_SECRET is set.  Operator-grade admin
+// endpoint — admin routes are mounted behind the tower-relay HMAC gateway so
+// this layer is defense-in-depth, not the primary auth boundary.
+//
+// Audit: liquidity_map.naked_pocs_batched row carries the correlation_id.
+adminRoutes.post("/liquidity-map/naked-pocs-batch", async (req, res) => {
+  const correlationId = randomUUID();
+
+  // ── Optional shared-secret check ────────────────────────────────────────
+  const requiredSecret = process.env.LIQUIDITY_MAP_BATCH_SECRET;
+  if (requiredSecret && requiredSecret.length > 0) {
+    const providedSecret = req.header("x-liquidity-map-secret") ?? "";
+    if (providedSecret !== requiredSecret) {
+      logger.warn({ correlationId }, "liquidity-map naked-pocs-batch: shared-secret mismatch");
+      return res.status(401).json({ error: "shared_secret_mismatch", correlationId });
+    }
+  }
+
+  // ── Body validation ─────────────────────────────────────────────────────
+  const body = (req.body ?? {}) as {
+    symbol?: unknown;
+    as_of_date?: unknown;
+    records?: unknown;
+  };
+
+  if (typeof body.symbol !== "string" || body.symbol.trim().length === 0) {
+    return res.status(400).json({ error: "missing_or_invalid_field", field: "symbol", correlationId });
+  }
+  if (typeof body.as_of_date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(body.as_of_date)) {
+    return res.status(400).json({ error: "missing_or_invalid_field", field: "as_of_date", correlationId });
+  }
+  if (!Array.isArray(body.records)) {
+    return res.status(400).json({ error: "missing_or_invalid_field", field: "records", correlationId });
+  }
+
+  const symbol = body.symbol.trim().toUpperCase();
+  const asOfDate = body.as_of_date;
+  const records = body.records as Array<Record<string, unknown>>;
+
+  // ── Per-record validation + UPSERT ──────────────────────────────────────
+  // We use insert + ON CONFLICT DO NOTHING because the migration 0140 index
+  // does not declare a composite unique key; instead we de-dupe by querying
+  // for an existing active row at the bucketed price first.  This honours the
+  // "±0.25 MES tolerance" spec from the P3.A3 docstring without requiring a
+  // new migration.
+  let upserted = 0;
+  const skipped: Array<{ price: number; reason: string }> = [];
+
+  for (const rec of records) {
+    const price = typeof rec.price === "number" ? rec.price : Number.NaN;
+    if (!Number.isFinite(price) || price <= 0) {
+      skipped.push({ price, reason: "invalid_price" });
+      continue;
+    }
+    const sessionDate = typeof rec.session_date === "string" ? rec.session_date : null;
+    if (!sessionDate || !/^\d{4}-\d{2}-\d{2}$/.test(sessionDate)) {
+      skipped.push({ price, reason: "invalid_session_date" });
+      continue;
+    }
+
+    // Bucket price to nearest 0.25 (MES tick).  Honours idempotency tolerance.
+    const priceBucketed = Math.round(price * 4) / 4;
+    const priceBucketStr = String(priceBucketed);
+
+    // Build source_meta from the record
+    const sourceMeta: Record<string, unknown> = {
+      naked_poc_session: sessionDate,
+      source: "naked_poc_sync_cron",
+    };
+    if (typeof rec.age_days === "number") sourceMeta.age_days = rec.age_days;
+    if (typeof rec.establishing_high === "number") sourceMeta.establishing_high = rec.establishing_high;
+    if (typeof rec.establishing_low === "number") sourceMeta.establishing_low = rec.establishing_low;
+    if (typeof rec.establishing_volume === "number") sourceMeta.establishing_volume = rec.establishing_volume;
+
+    // Check for existing active row at the bucketed price (idempotency window).
+    const existing = await db
+      .select({ id: liquidityLevels.id })
+      .from(liquidityLevels)
+      .where(
+        and(
+          eq(liquidityLevels.symbol, symbol),
+          eq(liquidityLevels.levelType, "naked_poc"),
+          eq(liquidityLevels.price, priceBucketStr),
+          // Active rows only — expired rows do not block re-insert
+          sql`expired_at IS NULL`,
+        ),
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Idempotent no-op
+      continue;
+    }
+
+    try {
+      await db.insert(liquidityLevels).values({
+        symbol,
+        sessionDate,
+        levelType: "naked_poc",
+        price: priceBucketStr,
+        // htf_significance=2 (session-level) per the spec.
+        htfSignificance: 2,
+        sourceMeta,
+      });
+      upserted++;
+    } catch (err) {
+      logger.warn({ err, symbol, sessionDate, price }, "liquidity-map naked-pocs-batch: insert failed (skipped)");
+      skipped.push({ price, reason: "insert_failed" });
+    }
+  }
+
+  // ── Audit row (carries correlation_id) ──────────────────────────────────
+  await insertAuditRow({
+    action: "liquidity_map.naked_pocs_batched",
+    entityType: "liquidity_levels",
+    entityId: null,
+    decisionAuthority: "system",
+    input: {
+      symbol,
+      as_of_date: asOfDate,
+      records_submitted: records.length,
+    } as Record<string, unknown>,
+    result: {
+      upserted,
+      skipped_count: skipped.length,
+      skipped_sample: skipped.slice(0, 5),
+    } as Record<string, unknown>,
+    status: "success",
+    correlationId,
+  }).catch((err) =>
+    logger.warn({ err, correlationId }, "liquidity-map naked-pocs-batch: audit row write failed (non-blocking)"),
+  );
+
+  logger.info(
+    { correlationId, symbol, asOfDate, submitted: records.length, upserted, skipped: skipped.length },
+    "liquidity-map naked-pocs-batch: complete",
+  );
+
+  return res.json({
+    ok: true,
+    symbol,
+    as_of_date: asOfDate,
+    upserted,
+    skipped: skipped.length,
+    correlation_id: correlationId,
+  });
 });

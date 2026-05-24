@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T09:01:15.473Z",
+  "generatedAt": "2026-05-24T09:26:01.574Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -14,8 +14,8 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 27,
-    "ready": 19,
+    "total": 29,
+    "ready": 21,
     "blocked": 1,
     "manualGated": 2,
     "experimental": 5
@@ -274,6 +274,28 @@
       ]
     },
     {
+      "id": "liquidity_map_service",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:liquidity_map.level_added",
+        "audit_log:liquidity_map.level_swept",
+        "audit_log:liquidity_map.session_refreshed:30min-rth",
+        "liquidity_map.level_added",
+        "liquidity_map.level_swept",
+        "liquidity_map.naked_pocs_batched",
+        "liquidity_map.session_refreshed",
+        "wave25-liquidity-map.test.ts",
+        "wave25-naked-pocs-batch-endpoint.test.ts"
+      ]
+    },
+    {
       "id": "market_internals_service",
       "status": "ready",
       "productionTargetState": "production_autonomous",
@@ -290,6 +312,24 @@
         "internals.stale_skipped",
         "internals.subscription_connected",
         "wave25-internals-service.test.ts"
+      ]
+    },
+    {
+      "id": "naked_poc_persistence_bridge",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:liquidity_map.naked_pocs_batched",
+        "audit_log:liquidity_map.naked_pocs_batched:daily-1630-et",
+        "liquidity_map.naked_pocs_batched",
+        "test_extract_naked_pocs.py",
+        "wave25-naked-pocs-batch-endpoint.test.ts"
       ]
     },
     {
