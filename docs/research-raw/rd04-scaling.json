@@ -1,0 +1,188 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "scaling contract size pyramid prop firm",
+  "items": [
+    {
+      "title": "Stupid Simple Algo Strategy I Made… And It Works",
+      "url": "https://www.reddit.com/r/algotrading/comments/1sromc0/stupid_simple_algo_strategy_i_made_and_it_works/",
+      "snippet": "I’m mainly a prop firm trader right now, but have been searching for an algo that is simple and semi predictable that I can just run in the background. \n\nThis algo might just be that. These are the results over the last year, which is arguably it’s best time frame, but its still solid over the last 6 years as well and tracks relatively closely to buy and hold. I’m not going to spill the exact risk",
+      "published_at": "2026-04-21T14:03:30.000Z",
+      "subreddit": "algotrading",
+      "score": 176,
+      "num_comments": 86
+    },
+    {
+      "title": "My journey into automated crypto trading",
+      "url": "https://www.reddit.com/r/algotrading/comments/1r1x7mp/my_journey_into_automated_crypto_trading/",
+      "snippet": "I have been trading crypto for 4-5 years now, I have passed multiple prop firms, multiple times, all eventually leading to ruin! I realized the weakest link in the chain most often human psychology! I decided, \"It has to be better to automate this\"...\n\n\n\nI already had a background in Javascript, I enjoyed tinkering and building stuff. I learned python as I started exploring yfinance and more impor",
+      "published_at": "2026-02-11T13:21:09.000Z",
+      "subreddit": "algotrading",
+      "score": 59,
+      "num_comments": 60
+    },
+    {
+      "title": "Consistently Profitable Traders - Is a 3-5% Monthly Return Realistic with a $100k+ Prop Account?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1o8v14r/consistently_profitable_traders_is_a_35_monthly/",
+      "snippet": "\nHey everyone,\nI'm hoping to get some real-world insight from the seasoned veterans here—those who've maintained profitability and consistency for several years, not just had a few good months.\nI've been in the market since 2020, mainly dealing with long-term crypto holds and swing trading. Lately, my focus has shifted entirely to transitioning into prop firm trading. I spent three months on a dem",
+      "published_at": "2025-10-17T07:39:07.000Z",
+      "subreddit": "algotrading",
+      "score": 49,
+      "num_comments": 70
+    },
+    {
+      "title": "What programming language is the easiest to use for automated trading?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1iuv8se/what_programming_language_is_the_easiest_to_use/",
+      "snippet": "I'm sorry if this has been asked before but I'm still a bit confused as to what I need to be able to create an automated trading bot that is able to do the following.\n\nJust a background about my programming abilities, I'm able to code fullstack apps with React/NextJS &amp; NodeJS+Express. It's not the thing that I actually do professionally but I can handle making a CRUD app no problem maybe with ",
+      "published_at": "2025-02-21T16:41:25.000Z",
+      "subreddit": "algotrading",
+      "score": 29,
+      "num_comments": 72
+    },
+    {
+      "title": "Is this something that could do with leverage?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rt001o/is_this_something_that_could_do_with_leverage/",
+      "snippet": "",
+      "published_at": "2026-03-13T21:15:11.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 16
+    },
+    {
+      "title": "Spent 6 months coding a system that yields &lt;1% monthly (OOS). Is this the reality of sustainable trading",
+      "url": "https://www.reddit.com/r/algotrading/comments/1qynt7a/spent_6_months_coding_a_system_that_yields_1/",
+      "snippet": "Hi everyone,\n\nI need a reality check on my systematic portfolio's validation process before I move to live deployment. I’ve spent the last few months building a Python-based system designed strictly for survival under prop-firm style constraints, specifically avoiding a hard 10% max drawdown.\n\nI have stripped away all the noise to look at the raw, ugly numbers. Based on my Walk-Forward analysis, I",
+      "published_at": "2026-02-07T20:02:42.000Z",
+      "subreddit": "algotrading",
+      "score": 14,
+      "num_comments": 16
+    },
+    {
+      "title": "Scaling a  Systematic Conversion: Solving the \"Starvation Paradox\" and NBBO Liquidity Constraints",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rmraek/scaling_a_systematic_conversion_solving_the/",
+      "snippet": "Hey everyone,\n\nI’ve been refining a systematic options backtest focused on **relative value premium capture** and am looking for feedback on execution assumptions.\n\nI'm using **ThetaData NBBO quote history** and simulating   to understand how the strategy handles real-world liquidity.\n\n**Strategy Concept**\n\nDelta-neutral **multi-leg option structures** designed to isolate relative value between li",
+      "published_at": "2026-03-06T21:49:41.000Z",
+      "subreddit": "algotrading",
+      "score": 2,
+      "num_comments": 7
+    },
+    {
+      "title": "ow prop firms are actually losing money without realizing it: a breakdown of the operational gaps",
+      "url": "https://www.reddit.com/r/algotrading/comments/1s8lg4l/ow_prop_firms_are_actually_losing_money_without/",
+      "snippet": "The prop trading industry has grown fast enough that a lot of firms launched on infrastructure that was never designed for what they're actually doing. This post is just a breakdown of the operational gaps that tend to cause the most damage — no product pitch, just patterns worth knowing about.\n\n**The drawdown detection problem**\n\nMost firms assume their platform is monitoring drawdowns in real ti",
+      "published_at": "2026-03-31T12:01:58.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 2
+    },
+    {
+      "title": "Backtesting Results - Opinions and next steps",
+      "url": "https://www.reddit.com/r/algotrading/comments/1muf19v/backtesting_results_opinions_and_next_steps/",
+      "snippet": "Created a code and ran a backtest on MT5 using their Strategy tester and here were the results : \n\nTime Period : Jan 2010 - Dec 2024\nAccount Size : €10 000\nLeverage : 1:30 \nTicker Symbol : XAUUSD \n\nOverall profit : €42 869.99 (429% return)\nSuccessful rate : 67%\nNo. Of trades : 2711\nAverage profit per day :€18.75\nMax day loss : -€619\nMax day gain : €958\n\nWhat I noticed in the test is between 2010-2",
+      "published_at": "2025-08-19T10:52:03.000Z",
+      "subreddit": "algotrading",
+      "score": 2,
+      "num_comments": 20
+    },
+    {
+      "title": "Historical data for 6E",
+      "url": "https://www.reddit.com/r/algotrading/comments/1p6jo7s/historical_data_for_6e/",
+      "snippet": "Hi guys,\n\nI am in the process of developing my first algo on python and started off with simple OHLCV data from oanda.\n\nAt one point I realized how much I underestimated the impact of spread on lower timeframe 5m strategy, especially on a CFD.\n\nHaving been a discretionary trader up till now I simply thought this as another cost of trading, which I happily accepted.\n\nI found it hard to model precis",
+      "published_at": "2025-11-25T18:07:36.000Z",
+      "subreddit": "algotrading",
+      "score": 6,
+      "num_comments": 9
+    },
+    {
+      "title": "algo trading cryptocurrencies",
+      "url": "https://www.reddit.com/r/algotrading/comments/i7wyn6/algo_trading_cryptocurrencies/",
+      "snippet": "tldr; I'm an algorithmic cryptocurrency trader with my own cross-exchange trading platform that is performing *well(ish)* and I'm looking for ideas, partners, investors etc to help me push it forward.\n\nI've been trading cryptocurrencies programmatically since 2016 with some success. For about a year I made a modest living executing arbitrage trades across mostly fiat pairs using a bot hurredly hac",
+      "published_at": "2020-08-11T18:18:39.000Z",
+      "subreddit": "algotrading",
+      "score": 138,
+      "num_comments": 96
+    },
+    {
+      "title": "TradingView to Live Manual Trading",
+      "url": "https://www.reddit.com/r/algotrading/comments/17rdhap/tradingview_to_live_manual_trading/",
+      "snippet": "Good morning team.\n\nHow many of you have successfully moved from TradingView development to profitable? Since August, I've been trading live, just getting my feet wet with speculative/manual trading. A few of the traders I follow don't trade any strategy that they cannot systematically define, code, then backtest. I really believe in this too. I haven't made or lost money in three months, but I'm ",
+      "published_at": "2023-11-09T13:56:24.000Z",
+      "subreddit": "algotrading",
+      "score": 12,
+      "num_comments": 54
+    },
+    {
+      "title": "Trading The Online Prop Firm Challenge Fee Outweighs Their Allocated Capital: The Math Behind It",
+      "url": "https://www.reddit.com/r/algotrading/comments/18ed798/trading_the_online_prop_firm_challenge_fee/",
+      "snippet": "Maybe you have noticed the rise of the online prop firm industry (the gambling industry, so to speak). In this post I will prove to you, you're better off trading their challenge fee than passing their challenges, I will support my claim with math calculations (feel free to criticize in the comment section). Let's get into it, should you trade the challenge fee ($500), or the corresponding allocat",
+      "published_at": "2023-12-09T13:04:51.000Z",
+      "subreddit": "algotrading",
+      "score": 29,
+      "num_comments": 47
+    },
+    {
+      "title": "Binary vs Continuous Signals, LSTM, and Rob Carver’s Philosophy – Some Open Questions",
+      "url": "https://www.reddit.com/r/algotrading/comments/1m15x7e/binary_vs_continuous_signals_lstm_and_rob_carvers/",
+      "snippet": "I've been diving into non binary, continuous systems like the ones proposed by Rob Carver in his blog and books (yes, I’ve already ordered his books). I’m trying to reconcile a few concepts, and would love to hear your thoughts or get pointed toward good resources.\n\nFirst, about binary vs non binary (continuous) signals. I'm trying to understand in what situations continuous forecasts, like positi",
+      "published_at": "2025-07-16T07:04:50.000Z",
+      "subreddit": "algotrading",
+      "score": 27,
+      "num_comments": 6
+    },
+    {
+      "title": "How to judge performance of an EA ?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1lhlzk3/how_to_judge_performance_of_an_ea/",
+      "snippet": "Hi,\n\nI'm testing a strategy based only on the slope of Kaufman MA on XAUUSD/M30. Here are the results, it's converging in the long run but there is the red zone where it's messy and it can bouce back and forth a long time. I didn't find a way to get out of this. The test was performed from August 28th 2024 to now. I can think i can go prop firm with that. I put lot size 0.04 so to avoid the 5% dai",
+      "published_at": "2025-06-22T11:47:19.000Z",
+      "subreddit": "algotrading",
+      "score": 7,
+      "num_comments": 6
+    },
+    {
+      "title": "How do we conduct dynamic parameter optimization for algos?",
+      "url": "https://www.reddit.com/r/algotrading/comments/18x0777/how_do_we_conduct_dynamic_parameter_optimization/",
+      "snippet": "Hey team,\n\n**Have any of you successfully implemented a dynamic parameter optimization plan into your algos? My Long - Short Strategy is tuned on the 2023 Bull Market and I am concerned the market is turning over.** \n\nI've written a robust algo that is capable across futures and equities. What I mean by robust is that by  tuning of 4-8 parameters per side allows it to work on many securities and s",
+      "published_at": "2024-01-02T21:00:36.000Z",
+      "subreddit": "algotrading",
+      "score": 20,
+      "num_comments": 36
+    },
+    {
+      "title": "Scaling up question from a beginner/wannabe algo trader",
+      "url": "https://www.reddit.com/r/algotrading/comments/1glf9r9/scaling_up_question_from_a_beginnerwannabe_algo/",
+      "snippet": "For the past year I've been working on converting my manual trading system to a semi-automated algo system. I'm using Ninjatrader as the platform (and broker for now) and the strategy was written in Ninjascript (which is based on C#). \n\nI'm currently running the strategy live on a small account as well as using a trade copier to trade in several prop firm accounts (5 at the moment). \n\nThe strategy",
+      "published_at": "2024-11-07T01:44:30.000Z",
+      "subreddit": "algotrading",
+      "score": 11,
+      "num_comments": 16
+    },
+    {
+      "title": "Redis vs feather",
+      "url": "https://www.reddit.com/r/algotrading/comments/wneghw/redis_vs_feather/",
+      "snippet": "For the past few weeks I’ve been saving 5 min daily candles for ~150 option chains along with 5 minute daily candles for the underlying as individual feather files by contract/symbol resulting in ~50k-75k feather files every day I harvest the data. Total size for all files for each daily harvest cycle is ~500mb. Feather files are stored in the cloud while processing is done locally. Goal is to use",
+      "published_at": "2022-08-13T13:23:33.000Z",
+      "subreddit": "algotrading",
+      "score": 4,
+      "num_comments": 19
+    },
+    {
+      "title": "Strategies and systems is all set. Now the important part: Risk Management. Help wanted!",
+      "url": "https://www.reddit.com/r/algotrading/comments/10z14c3/strategies_and_systems_is_all_set_now_the/",
+      "snippet": "So I have spent the last couple of years developing strategies and backtested them. Mainly futures  intraday. \n\nI have currently 4 strategies running live trading 1 micro contract each. This live testing seems to be in line with my backtesting, so I want to nail down the risk management (position sizing). I average about 10-15 trades per week.\n\nWhat I have been thinking this far, is one of the thr",
+      "published_at": "2023-02-10T19:49:10.000Z",
+      "subreddit": "algotrading",
+      "score": 14,
+      "num_comments": 12
+    },
+    {
+      "title": "How to quit at a prop trading firm?",
+      "url": "https://www.reddit.com/r/algotrading/comments/ifkob3/how_to_quit_at_a_prop_trading_firm/",
+      "snippet": "I'm directing this question to those who work at a prop trading firm, and have experience with dealing with either others or themselves quitting at such a firm. A little background about me: I'm a run-of-the-mill trader at a prop trading firm (log-in, trade, log-out type), been working for a year, but found another opportunity (gonna be vague). This is my first job out of college.\n\nI'm mostly conf",
+      "published_at": "2020-08-24T07:44:57.000Z",
+      "subreddit": "algotrading",
+      "score": 2,
+      "num_comments": 7
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:22.736Z"
+}

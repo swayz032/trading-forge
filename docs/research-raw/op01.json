@@ -1,0 +1,2997 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "oW4hgB1vIoY",
+  "url": "https://www.youtube.com/watch?v=oW4hgB1vIoY",
+  "segments": [
+    {
+      "text": "Hi and welcome back. This strategy uses",
+      "duration": 4399,
+      "offset": 400,
+      "lang": "en"
+    },
+    {
+      "text": "reinforcement learning to train a",
+      "duration": 4480,
+      "offset": 2960,
+      "lang": "en"
+    },
+    {
+      "text": "trading AI agent on historical data. I",
+      "duration": 4720,
+      "offset": 4799,
+      "lang": "en"
+    },
+    {
+      "text": "have chosen the URA dollar hourly time",
+      "duration": 4079,
+      "offset": 7440,
+      "lang": "en"
+    },
+    {
+      "text": "frame for today's example. The model",
+      "duration": 4240,
+      "offset": 9519,
+      "lang": "en"
+    },
+    {
+      "text": "showed an increasing equity on learning",
+      "duration": 4481,
+      "offset": 11519,
+      "lang": "en"
+    },
+    {
+      "text": "data and acceptable learning rate. In",
+      "duration": 4001,
+      "offset": 13759,
+      "lang": "en"
+    },
+    {
+      "text": "other words, we're trying to make an AI",
+      "duration": 3840,
+      "offset": 16000,
+      "lang": "en"
+    },
+    {
+      "text": "model that reads historical data,",
+      "duration": 4080,
+      "offset": 17760,
+      "lang": "en"
+    },
+    {
+      "text": "applies trading operations, and learns",
+      "duration": 4000,
+      "offset": 19840,
+      "lang": "en"
+    },
+    {
+      "text": "from winning and losing trades in order",
+      "duration": 4160,
+      "offset": 21840,
+      "lang": "en"
+    },
+    {
+      "text": "to come up with the best trading pattern",
+      "duration": 3920,
+      "offset": 23840,
+      "lang": "en"
+    },
+    {
+      "text": "pretty much like a human would learn",
+      "duration": 3439,
+      "offset": 26000,
+      "lang": "en"
+    },
+    {
+      "text": "trading. You can download the Python",
+      "duration": 3759,
+      "offset": 27760,
+      "lang": "en"
+    },
+    {
+      "text": "code used in this video from the link in",
+      "duration": 3761,
+      "offset": 29439,
+      "lang": "en"
+    },
+    {
+      "text": "the description. Feel free to explore",
+      "duration": 3601,
+      "offset": 31519,
+      "lang": "en"
+    },
+    {
+      "text": "the files and use them in your own",
+      "duration": 4240,
+      "offset": 33200,
+      "lang": "en"
+    },
+    {
+      "text": "experiments. But first, let's summarize",
+      "duration": 4160,
+      "offset": 35120,
+      "lang": "en"
+    },
+    {
+      "text": "briefly how reinforcement learning",
+      "duration": 4240,
+      "offset": 37440,
+      "lang": "en"
+    },
+    {
+      "text": "works. Reinforcement learning relies on",
+      "duration": 4640,
+      "offset": 39280,
+      "lang": "en"
+    },
+    {
+      "text": "five main concepts. The agent, in this",
+      "duration": 4160,
+      "offset": 41680,
+      "lang": "en"
+    },
+    {
+      "text": "case, it's the one or the model making",
+      "duration": 3520,
+      "offset": 43920,
+      "lang": "en"
+    },
+    {
+      "text": "trading decisions, putting long and",
+      "duration": 3360,
+      "offset": 45840,
+      "lang": "en"
+    },
+    {
+      "text": "short positions, and setting stop-loss",
+      "duration": 3599,
+      "offset": 47440,
+      "lang": "en"
+    },
+    {
+      "text": "and take-profit distances. The",
+      "duration": 4640,
+      "offset": 49200,
+      "lang": "en"
+    },
+    {
+      "text": "environment where the agent operates,",
+      "duration": 5200,
+      "offset": 51039,
+      "lang": "en"
+    },
+    {
+      "text": "the action or the actions that can be",
+      "duration": 4399,
+      "offset": 53840,
+      "lang": "en"
+    },
+    {
+      "text": "taken by the agent. Then depending on",
+      "duration": 3921,
+      "offset": 56239,
+      "lang": "en"
+    },
+    {
+      "text": "the result of an action, the agent",
+      "duration": 3921,
+      "offset": 58239,
+      "lang": "en"
+    },
+    {
+      "text": "receives a reward that can be either",
+      "duration": 4160,
+      "offset": 60160,
+      "lang": "en"
+    },
+    {
+      "text": "positive or negative with different",
+      "duration": 4959,
+      "offset": 62160,
+      "lang": "en"
+    },
+    {
+      "text": "values. One more concept is the policy",
+      "duration": 5280,
+      "offset": 64320,
+      "lang": "en"
+    },
+    {
+      "text": "which is the agent's strategy or mapping",
+      "duration": 4641,
+      "offset": 67119,
+      "lang": "en"
+    },
+    {
+      "text": "from different states of the environment",
+      "duration": 4559,
+      "offset": 69600,
+      "lang": "en"
+    },
+    {
+      "text": "to actions. In other words, it's the",
+      "duration": 5200,
+      "offset": 71760,
+      "lang": "en"
+    },
+    {
+      "text": "decision patterns learned so far by the",
+      "duration": 4561,
+      "offset": 74159,
+      "lang": "en"
+    },
+    {
+      "text": "agent considering the current",
+      "duration": 4000,
+      "offset": 76960,
+      "lang": "en"
+    },
+    {
+      "text": "environment state. If you are familiar",
+      "duration": 4000,
+      "offset": 78720,
+      "lang": "en"
+    },
+    {
+      "text": "with reinforcement learning, this would",
+      "duration": 3839,
+      "offset": 80960,
+      "lang": "en"
+    },
+    {
+      "text": "be a model-free approach where the agent",
+      "duration": 4800,
+      "offset": 82720,
+      "lang": "en"
+    },
+    {
+      "text": "learns directly from experience or trial",
+      "duration": 4881,
+      "offset": 84799,
+      "lang": "en"
+    },
+    {
+      "text": "and error in the environment. Think",
+      "duration": 4720,
+      "offset": 87520,
+      "lang": "en"
+    },
+    {
+      "text": "about it as training a dog to complete",
+      "duration": 4720,
+      "offset": 89680,
+      "lang": "en"
+    },
+    {
+      "text": "certain tasks. Every time the dog does",
+      "duration": 4400,
+      "offset": 92240,
+      "lang": "en"
+    },
+    {
+      "text": "well, it will receive a reward. And if",
+      "duration": 4560,
+      "offset": 94400,
+      "lang": "en"
+    },
+    {
+      "text": "it doesn't, then either the reward is",
+      "duration": 4640,
+      "offset": 96640,
+      "lang": "en"
+    },
+    {
+      "text": "null or it can be also negative. Of",
+      "duration": 4320,
+      "offset": 98960,
+      "lang": "en"
+    },
+    {
+      "text": "course, AI agents don't have this",
+      "duration": 4400,
+      "offset": 101280,
+      "lang": "en"
+    },
+    {
+      "text": "intrinsic motivation for the reward. So",
+      "duration": 5119,
+      "offset": 103280,
+      "lang": "en"
+    },
+    {
+      "text": "they can be coded in a way to maximize",
+      "duration": 5200,
+      "offset": 105680,
+      "lang": "en"
+    },
+    {
+      "text": "the reward value. In other words, if the",
+      "duration": 4720,
+      "offset": 108399,
+      "lang": "en"
+    },
+    {
+      "text": "agent receives more reward doing action",
+      "duration": 4879,
+      "offset": 110880,
+      "lang": "en"
+    },
+    {
+      "text": "A, then this action will be attributed",
+      "duration": 5040,
+      "offset": 113119,
+      "lang": "en"
+    },
+    {
+      "text": "the highest probability in the future.",
+      "duration": 4320,
+      "offset": 115759,
+      "lang": "en"
+    },
+    {
+      "text": "So now we will define our environment,",
+      "duration": 3761,
+      "offset": 118159,
+      "lang": "en"
+    },
+    {
+      "text": "the agent and the list of possible",
+      "duration": 4080,
+      "offset": 120079,
+      "lang": "en"
+    },
+    {
+      "text": "actions that the agent will use to trade",
+      "duration": 4080,
+      "offset": 121920,
+      "lang": "en"
+    },
+    {
+      "text": "in the created environment. And we will",
+      "duration": 4641,
+      "offset": 124159,
+      "lang": "en"
+    },
+    {
+      "text": "let the agent run trading on historical",
+      "duration": 5840,
+      "offset": 126000,
+      "lang": "en"
+    },
+    {
+      "text": "data for around 10 years for example and",
+      "duration": 5680,
+      "offset": 128800,
+      "lang": "en"
+    },
+    {
+      "text": "learning from the reward system the best",
+      "duration": 4960,
+      "offset": 131840,
+      "lang": "en"
+    },
+    {
+      "text": "possible ways of trading just like a",
+      "duration": 4800,
+      "offset": 134480,
+      "lang": "en"
+    },
+    {
+      "text": "human trader learning new strategies and",
+      "duration": 4560,
+      "offset": 136800,
+      "lang": "en"
+    },
+    {
+      "text": "experimenting with trial and error to",
+      "duration": 4240,
+      "offset": 139280,
+      "lang": "en"
+    },
+    {
+      "text": "improve his trading skills. Okay. Now",
+      "duration": 4080,
+      "offset": 141360,
+      "lang": "en"
+    },
+    {
+      "text": "let's see how this is done in Python. It",
+      "duration": 3520,
+      "offset": 143520,
+      "lang": "en"
+    },
+    {
+      "text": "will be highly technical but you can",
+      "duration": 3519,
+      "offset": 145440,
+      "lang": "en"
+    },
+    {
+      "text": "still follow even if you don't have a",
+      "duration": 3839,
+      "offset": 147040,
+      "lang": "en"
+    },
+    {
+      "text": "purely technical or numerical background",
+      "duration": 4081,
+      "offset": 148959,
+      "lang": "en"
+    },
+    {
+      "text": "because the elements of the code are",
+      "duration": 4481,
+      "offset": 150879,
+      "lang": "en"
+    },
+    {
+      "text": "directly related to trading. I will show",
+      "duration": 4080,
+      "offset": 153040,
+      "lang": "en"
+    },
+    {
+      "text": "you the results and we will discuss how",
+      "duration": 3760,
+      "offset": 155360,
+      "lang": "en"
+    },
+    {
+      "text": "these can be used for our strategies.",
+      "duration": 4320,
+      "offset": 157120,
+      "lang": "en"
+    },
+    {
+      "text": "Since this project is relatively larger",
+      "duration": 4399,
+      "offset": 159120,
+      "lang": "en"
+    },
+    {
+      "text": "than the previous projects or studies",
+      "duration": 4159,
+      "offset": 161440,
+      "lang": "en"
+    },
+    {
+      "text": "published on this channel. I'm not using",
+      "duration": 3921,
+      "offset": 163519,
+      "lang": "en"
+    },
+    {
+      "text": "a Jupyter notebook file this time. I'm",
+      "duration": 3521,
+      "offset": 165599,
+      "lang": "en"
+    },
+    {
+      "text": "using Python files because we're going",
+      "duration": 5439,
+      "offset": 167440,
+      "lang": "en"
+    },
+    {
+      "text": "to use few files like 1 2 3 four",
+      "duration": 5839,
+      "offset": 169120,
+      "lang": "en"
+    },
+    {
+      "text": "different Python files. So we're",
+      "duration": 4161,
+      "offset": 172879,
+      "lang": "en"
+    },
+    {
+      "text": "splitting the code into four different",
+      "duration": 4000,
+      "offset": 174959,
+      "lang": "en"
+    },
+    {
+      "text": "files in order to make it easier to read",
+      "duration": 3919,
+      "offset": 177040,
+      "lang": "en"
+    },
+    {
+      "text": "and easier to understand. And then we're",
+      "duration": 3920,
+      "offset": 178959,
+      "lang": "en"
+    },
+    {
+      "text": "going to launch it through Python. So",
+      "duration": 3761,
+      "offset": 180959,
+      "lang": "en"
+    },
+    {
+      "text": "we're not using a Jupyter notebook file",
+      "duration": 4000,
+      "offset": 182879,
+      "lang": "en"
+    },
+    {
+      "text": "in this case. However, when you download",
+      "duration": 5040,
+      "offset": 184720,
+      "lang": "en"
+    },
+    {
+      "text": "it, I will be sharing a folder with the",
+      "duration": 5681,
+      "offset": 186879,
+      "lang": "en"
+    },
+    {
+      "text": "data I will be using for this model. So",
+      "duration": 4800,
+      "offset": 189760,
+      "lang": "en"
+    },
+    {
+      "text": "we can see that we have the Euro US",
+      "duration": 5360,
+      "offset": 192560,
+      "lang": "en"
+    },
+    {
+      "text": "dollar candlestick, the hourly uh data.",
+      "duration": 7360,
+      "offset": 194560,
+      "lang": "en"
+    },
+    {
+      "text": "It's between 2020 and 2023. And then I",
+      "duration": 6399,
+      "offset": 197920,
+      "lang": "en"
+    },
+    {
+      "text": "have another out of sample data or",
+      "duration": 4560,
+      "offset": 201920,
+      "lang": "en"
+    },
+    {
+      "text": "testing data where I've downloaded",
+      "duration": 6161,
+      "offset": 204319,
+      "lang": "en"
+    },
+    {
+      "text": "between 2023 and 2025. So this is the",
+      "duration": 5839,
+      "offset": 206480,
+      "lang": "en"
+    },
+    {
+      "text": "data on which we're going to test the",
+      "duration": 4080,
+      "offset": 210480,
+      "lang": "en"
+    },
+    {
+      "text": "model after we have trained it on the",
+      "duration": 4321,
+      "offset": 212319,
+      "lang": "en"
+    },
+    {
+      "text": "previous 3 years. I'm going to start",
+      "duration": 5360,
+      "offset": 214560,
+      "lang": "en"
+    },
+    {
+      "text": "with the um indicators.py file. So",
+      "duration": 5599,
+      "offset": 216640,
+      "lang": "en"
+    },
+    {
+      "text": "that's a Python file. I'm using pandas",
+      "duration": 5599,
+      "offset": 219920,
+      "lang": "en"
+    },
+    {
+      "text": "and pandas technical analysis. It's just",
+      "duration": 5521,
+      "offset": 222239,
+      "lang": "en"
+    },
+    {
+      "text": "defining one single function here. Load",
+      "duration": 4561,
+      "offset": 225519,
+      "lang": "en"
+    },
+    {
+      "text": "and pre-process data. It takes a CSV",
+      "duration": 4800,
+      "offset": 227760,
+      "lang": "en"
+    },
+    {
+      "text": "path. So the path for the CSV file.",
+      "duration": 5120,
+      "offset": 230080,
+      "lang": "en"
+    },
+    {
+      "text": "We're going to read underscore CSV using",
+      "duration": 5200,
+      "offset": 232560,
+      "lang": "en"
+    },
+    {
+      "text": "the path. Clean the data somehow. Sort",
+      "duration": 4319,
+      "offset": 235200,
+      "lang": "en"
+    },
+    {
+      "text": "the index. add some technical",
+      "duration": 4559,
+      "offset": 237760,
+      "lang": "en"
+    },
+    {
+      "text": "indicators, the RSI14, moving average",
+      "duration": 5761,
+      "offset": 239519,
+      "lang": "en"
+    },
+    {
+      "text": "2050, and the ATR, the moving average 20",
+      "duration": 4881,
+      "offset": 242319,
+      "lang": "en"
+    },
+    {
+      "text": "slope as well. So that's just the",
+      "duration": 4000,
+      "offset": 245280,
+      "lang": "en"
+    },
+    {
+      "text": "difference between two consecutive rows.",
+      "duration": 4800,
+      "offset": 247200,
+      "lang": "en"
+    },
+    {
+      "text": "It's not really the regression slope on",
+      "duration": 4879,
+      "offset": 249280,
+      "lang": "en"
+    },
+    {
+      "text": "three or four rows. So it's not really",
+      "duration": 4239,
+      "offset": 252000,
+      "lang": "en"
+    },
+    {
+      "text": "the slope, it's just a difference",
+      "duration": 4320,
+      "offset": 254159,
+      "lang": "en"
+    },
+    {
+      "text": "between uh two consecutive moving",
+      "duration": 4400,
+      "offset": 256239,
+      "lang": "en"
+    },
+    {
+      "text": "average values. And then we're dropping",
+      "duration": 5121,
+      "offset": 258479,
+      "lang": "en"
+    },
+    {
+      "text": "the uh empty values or the empty rows.",
+      "duration": 4961,
+      "offset": 260639,
+      "lang": "en"
+    },
+    {
+      "text": "We return a data frame with few",
+      "duration": 4319,
+      "offset": 263600,
+      "lang": "en"
+    },
+    {
+      "text": "additional indicators. And this is where",
+      "duration": 4960,
+      "offset": 265600,
+      "lang": "en"
+    },
+    {
+      "text": "if you intend to improve this uh code,",
+      "duration": 5441,
+      "offset": 267919,
+      "lang": "en"
+    },
+    {
+      "text": "this is where we can add some additional",
+      "duration": 4960,
+      "offset": 270560,
+      "lang": "en"
+    },
+    {
+      "text": "indicators and some custom indicators.",
+      "duration": 3839,
+      "offset": 273360,
+      "lang": "en"
+    },
+    {
+      "text": "Maybe you don't want to use the classic",
+      "duration": 3360,
+      "offset": 275520,
+      "lang": "en"
+    },
+    {
+      "text": "indicators. Maybe you want to add your",
+      "duration": 4081,
+      "offset": 277199,
+      "lang": "en"
+    },
+    {
+      "text": "own. But I mean this is where we can do",
+      "duration": 3920,
+      "offset": 278880,
+      "lang": "en"
+    },
+    {
+      "text": "it. It's in this file. You can define",
+      "duration": 3840,
+      "offset": 281280,
+      "lang": "en"
+    },
+    {
+      "text": "whatever indicators you want uh as",
+      "duration": 4720,
+      "offset": 282800,
+      "lang": "en"
+    },
+    {
+      "text": "functions here and then use them to",
+      "duration": 5040,
+      "offset": 285120,
+      "lang": "en"
+    },
+    {
+      "text": "return the data frame with these",
+      "duration": 4560,
+      "offset": 287520,
+      "lang": "en"
+    },
+    {
+      "text": "indicators. Now we can define the",
+      "duration": 4640,
+      "offset": 290160,
+      "lang": "en"
+    },
+    {
+      "text": "trading environment and this is done",
+      "duration": 5839,
+      "offset": 292080,
+      "lang": "en"
+    },
+    {
+      "text": "using importing gym numpy because we're",
+      "duration": 5119,
+      "offset": 294800,
+      "lang": "en"
+    },
+    {
+      "text": "going to use it for numerical uh",
+      "duration": 4801,
+      "offset": 297919,
+      "lang": "en"
+    },
+    {
+      "text": "analysis or numerical uh operations and",
+      "duration": 5121,
+      "offset": 299919,
+      "lang": "en"
+    },
+    {
+      "text": "from gym we're also importing spaces the",
+      "duration": 4479,
+      "offset": 302720,
+      "lang": "en"
+    },
+    {
+      "text": "observation spaces and the action",
+      "duration": 4320,
+      "offset": 305040,
+      "lang": "en"
+    },
+    {
+      "text": "spaces. So these are basically uh",
+      "duration": 4961,
+      "offset": 307199,
+      "lang": "en"
+    },
+    {
+      "text": "defining the actions that are allowed uh",
+      "duration": 4960,
+      "offset": 309360,
+      "lang": "en"
+    },
+    {
+      "text": "for for the uh the agent. And I'm",
+      "duration": 4400,
+      "offset": 312160,
+      "lang": "en"
+    },
+    {
+      "text": "defining a class named forex trading",
+      "duration": 4080,
+      "offset": 314320,
+      "lang": "en"
+    },
+    {
+      "text": "environment that inherits from",
+      "duration": 4320,
+      "offset": 316560,
+      "lang": "en"
+    },
+    {
+      "text": "gym.vironment environment class because",
+      "duration": 4160,
+      "offset": 318400,
+      "lang": "en"
+    },
+    {
+      "text": "this is how I want to create the",
+      "duration": 4159,
+      "offset": 320880,
+      "lang": "en"
+    },
+    {
+      "text": "environment by inheriting from the uh",
+      "duration": 5280,
+      "offset": 322560,
+      "lang": "en"
+    },
+    {
+      "text": "package gym. We define the uh",
+      "duration": 4801,
+      "offset": 325039,
+      "lang": "en"
+    },
+    {
+      "text": "constructor. Notice that we have a",
+      "duration": 4880,
+      "offset": 327840,
+      "lang": "en"
+    },
+    {
+      "text": "window size by default equal to 30. So",
+      "duration": 6480,
+      "offset": 329840,
+      "lang": "en"
+    },
+    {
+      "text": "by default the um uh the agent is going",
+      "duration": 6080,
+      "offset": 332720,
+      "lang": "en"
+    },
+    {
+      "text": "to read the last 30 candles before",
+      "duration": 4240,
+      "offset": 336320,
+      "lang": "en"
+    },
+    {
+      "text": "taking a decision. And this of course",
+      "duration": 4320,
+      "offset": 338800,
+      "lang": "en"
+    },
+    {
+      "text": "includes all the related technical",
+      "duration": 4880,
+      "offset": 340560,
+      "lang": "en"
+    },
+    {
+      "text": "indicators that we've added in the data",
+      "duration": 4560,
+      "offset": 343120,
+      "lang": "en"
+    },
+    {
+      "text": "frame. Now, for the uh stop-loss",
+      "duration": 4880,
+      "offset": 345440,
+      "lang": "en"
+    },
+    {
+      "text": "options, I'm allowing the agent to take",
+      "duration": 6480,
+      "offset": 347680,
+      "lang": "en"
+    },
+    {
+      "text": "one of three decisions. Either 60 pips",
+      "duration": 8240,
+      "offset": 350320,
+      "lang": "en"
+    },
+    {
+      "text": "or 90 pips distance or 120 pips. Where",
+      "duration": 6319,
+      "offset": 354160,
+      "lang": "en"
+    },
+    {
+      "text": "do these come from? These are just",
+      "duration": 4240,
+      "offset": 358560,
+      "lang": "en"
+    },
+    {
+      "text": "random. On the Euro US dollar, I would",
+      "duration": 4641,
+      "offset": 360479,
+      "lang": "en"
+    },
+    {
+      "text": "put uh on the hourly time frame, I would",
+      "duration": 5839,
+      "offset": 362800,
+      "lang": "en"
+    },
+    {
+      "text": "put maybe 60 pips to 90 or 120 pips of",
+      "duration": 5760,
+      "offset": 365120,
+      "lang": "en"
+    },
+    {
+      "text": "stop-loss distance. Same thing for the",
+      "duration": 5761,
+      "offset": 368639,
+      "lang": "en"
+    },
+    {
+      "text": "take-profit options. So we have 60, 90",
+      "duration": 6319,
+      "offset": 370880,
+      "lang": "en"
+    },
+    {
+      "text": "and 120. You could add these, you could",
+      "duration": 5519,
+      "offset": 374400,
+      "lang": "en"
+    },
+    {
+      "text": "extend these, but the more options you",
+      "duration": 5921,
+      "offset": 377199,
+      "lang": "en"
+    },
+    {
+      "text": "give to um the agent, the more time it's",
+      "duration": 5361,
+      "offset": 379919,
+      "lang": "en"
+    },
+    {
+      "text": "going to uh take to train the agent and",
+      "duration": 3919,
+      "offset": 383120,
+      "lang": "en"
+    },
+    {
+      "text": "it's going to become computationally",
+      "duration": 4000,
+      "offset": 385280,
+      "lang": "en"
+    },
+    {
+      "text": "more expensive. So it requires more",
+      "duration": 4401,
+      "offset": 387039,
+      "lang": "en"
+    },
+    {
+      "text": "computation time. Now this shouldn't be",
+      "duration": 4400,
+      "offset": 389280,
+      "lang": "en"
+    },
+    {
+      "text": "a problem of course, but for the sake of",
+      "duration": 4080,
+      "offset": 391440,
+      "lang": "en"
+    },
+    {
+      "text": "this video, I kept it as simple as",
+      "duration": 3680,
+      "offset": 393680,
+      "lang": "en"
+    },
+    {
+      "text": "possible to show you how it's done. Now",
+      "duration": 4160,
+      "offset": 395520,
+      "lang": "en"
+    },
+    {
+      "text": "there are three options here for trades.",
+      "duration": 5200,
+      "offset": 397360,
+      "lang": "en"
+    },
+    {
+      "text": "either the action zero. So it means that",
+      "duration": 4639,
+      "offset": 399680,
+      "lang": "en"
+    },
+    {
+      "text": "we're we're not going to trade. The",
+      "duration": 3680,
+      "offset": 402560,
+      "lang": "en"
+    },
+    {
+      "text": "agent is going to skip the candle",
+      "duration": 4160,
+      "offset": 404319,
+      "lang": "en"
+    },
+    {
+      "text": "without opening any trades. But in the",
+      "duration": 4959,
+      "offset": 406240,
+      "lang": "en"
+    },
+    {
+      "text": "opposite case, if action is positive or",
+      "duration": 5201,
+      "offset": 408479,
+      "lang": "en"
+    },
+    {
+      "text": "it's equal to one, then we have two",
+      "duration": 4961,
+      "offset": 411199,
+      "lang": "en"
+    },
+    {
+      "text": "different directions, either we short",
+      "duration": 4720,
+      "offset": 413680,
+      "lang": "en"
+    },
+    {
+      "text": "the market or the agent will long the",
+      "duration": 4479,
+      "offset": 416160,
+      "lang": "en"
+    },
+    {
+      "text": "market. So either zero or one taking",
+      "duration": 3919,
+      "offset": 418400,
+      "lang": "en"
+    },
+    {
+      "text": "into account of course stop-loss and",
+      "duration": 4000,
+      "offset": 420639,
+      "lang": "en"
+    },
+    {
+      "text": "take profits. We compute the shapes of",
+      "duration": 4401,
+      "offset": 422319,
+      "lang": "en"
+    },
+    {
+      "text": "the data frame to be used later on by",
+      "duration": 4000,
+      "offset": 424639,
+      "lang": "en"
+    },
+    {
+      "text": "the agent. And this is where we",
+      "duration": 4560,
+      "offset": 426720,
+      "lang": "en"
+    },
+    {
+      "text": "initialize the uh current step which is",
+      "duration": 4881,
+      "offset": 428639,
+      "lang": "en"
+    },
+    {
+      "text": "equal to zero at first. We have the",
+      "duration": 4400,
+      "offset": 431280,
+      "lang": "en"
+    },
+    {
+      "text": "equity $10,000.",
+      "duration": 4959,
+      "offset": 433520,
+      "lang": "en"
+    },
+    {
+      "text": "Maximum slippage is zero for the moment.",
+      "duration": 5840,
+      "offset": 435680,
+      "lang": "en"
+    },
+    {
+      "text": "Then we have the uh positions list is",
+      "duration": 5681,
+      "offset": 438479,
+      "lang": "en"
+    },
+    {
+      "text": "empty at this point. And at the end I",
+      "duration": 5200,
+      "offset": 441520,
+      "lang": "en"
+    },
+    {
+      "text": "would like to um plot the equity curve.",
+      "duration": 4479,
+      "offset": 444160,
+      "lang": "en"
+    },
+    {
+      "text": "So we're going to log the equity curve",
+      "duration": 4640,
+      "offset": 446720,
+      "lang": "en"
+    },
+    {
+      "text": "values and the last trade information.",
+      "duration": 6161,
+      "offset": 448639,
+      "lang": "en"
+    },
+    {
+      "text": "The function within the class named get",
+      "duration": 7279,
+      "offset": 451360,
+      "lang": "en"
+    },
+    {
+      "text": "observation is simply to return the last",
+      "duration": 6480,
+      "offset": 454800,
+      "lang": "en"
+    },
+    {
+      "text": "window size. Remember that we took 30 by",
+      "duration": 5840,
+      "offset": 458639,
+      "lang": "en"
+    },
+    {
+      "text": "default, 30 rows. So the agent is going",
+      "duration": 6479,
+      "offset": 461280,
+      "lang": "en"
+    },
+    {
+      "text": "to read the last 30 rows but also the",
+      "duration": 4881,
+      "offset": 464479,
+      "lang": "en"
+    },
+    {
+      "text": "number of features. So the shape is",
+      "duration": 3440,
+      "offset": 467759,
+      "lang": "en"
+    },
+    {
+      "text": "going to be window size. It's a numpy",
+      "duration": 3360,
+      "offset": 469360,
+      "lang": "en"
+    },
+    {
+      "text": "array by the way. So it's",
+      "duration": 3601,
+      "offset": 471199,
+      "lang": "en"
+    },
+    {
+      "text": "two-dimensional numpy array with the",
+      "duration": 4960,
+      "offset": 472720,
+      "lang": "en"
+    },
+    {
+      "text": "window size and also accessing all the",
+      "duration": 5679,
+      "offset": 474800,
+      "lang": "en"
+    },
+    {
+      "text": "features available on the data frame. It",
+      "duration": 4880,
+      "offset": 477680,
+      "lang": "en"
+    },
+    {
+      "text": "also takes care of the edge case at the",
+      "duration": 3761,
+      "offset": 480479,
+      "lang": "en"
+    },
+    {
+      "text": "beginning of the data frame when we",
+      "duration": 3919,
+      "offset": 482560,
+      "lang": "en"
+    },
+    {
+      "text": "don't have enough history. So this is",
+      "duration": 4880,
+      "offset": 484240,
+      "lang": "en"
+    },
+    {
+      "text": "going to be used by the agent to read",
+      "duration": 6321,
+      "offset": 486479,
+      "lang": "en"
+    },
+    {
+      "text": "the data before each candle. And now we",
+      "duration": 6160,
+      "offset": 489120,
+      "lang": "en"
+    },
+    {
+      "text": "have to define the calculate reward.",
+      "duration": 4480,
+      "offset": 492800,
+      "lang": "en"
+    },
+    {
+      "text": "Remember that the agent is going to",
+      "duration": 4160,
+      "offset": 495280,
+      "lang": "en"
+    },
+    {
+      "text": "behave just like we are training a pet.",
+      "duration": 4080,
+      "offset": 497280,
+      "lang": "en"
+    },
+    {
+      "text": "Okay, we're training a dog. And we need",
+      "duration": 4879,
+      "offset": 499440,
+      "lang": "en"
+    },
+    {
+      "text": "to provide this reward function to know",
+      "duration": 5360,
+      "offset": 501360,
+      "lang": "en"
+    },
+    {
+      "text": "when we can reward in a positive value",
+      "duration": 5440,
+      "offset": 504319,
+      "lang": "en"
+    },
+    {
+      "text": "or in a negative value the agent. In",
+      "duration": 4960,
+      "offset": 506720,
+      "lang": "en"
+    },
+    {
+      "text": "this case, we're going to use the uh",
+      "duration": 3840,
+      "offset": 509759,
+      "lang": "en"
+    },
+    {
+      "text": "profit and loss for each of the trades.",
+      "duration": 4239,
+      "offset": 511680,
+      "lang": "en"
+    },
+    {
+      "text": "So, if the agent opens a long position,",
+      "duration": 5761,
+      "offset": 513599,
+      "lang": "en"
+    },
+    {
+      "text": "for example, or any trade and the uh the",
+      "duration": 6000,
+      "offset": 515919,
+      "lang": "en"
+    },
+    {
+      "text": "result of profit and loss is positive,",
+      "duration": 4239,
+      "offset": 519360,
+      "lang": "en"
+    },
+    {
+      "text": "the reward is going to be positive. And",
+      "duration": 4241,
+      "offset": 521919,
+      "lang": "en"
+    },
+    {
+      "text": "it's also proportional to the uh profit",
+      "duration": 4641,
+      "offset": 523599,
+      "lang": "en"
+    },
+    {
+      "text": "and loss value. And that's why at the",
+      "duration": 4720,
+      "offset": 526160,
+      "lang": "en"
+    },
+    {
+      "text": "end of this function, the reward, which",
+      "duration": 5360,
+      "offset": 528240,
+      "lang": "en"
+    },
+    {
+      "text": "is the returned value, is the profit and",
+      "duration": 5200,
+      "offset": 530880,
+      "lang": "en"
+    },
+    {
+      "text": "loss times 10,000 because it has to be",
+      "duration": 5280,
+      "offset": 533600,
+      "lang": "en"
+    },
+    {
+      "text": "adjusted to the uh the number of pips uh",
+      "duration": 4960,
+      "offset": 536080,
+      "lang": "en"
+    },
+    {
+      "text": "from from the Euro US dollar price. In",
+      "duration": 4320,
+      "offset": 538880,
+      "lang": "en"
+    },
+    {
+      "text": "the opposite case, if it's a loss, so if",
+      "duration": 4640,
+      "offset": 541040,
+      "lang": "en"
+    },
+    {
+      "text": "it's negative, in this case, we're going",
+      "duration": 4720,
+      "offset": 543200,
+      "lang": "en"
+    },
+    {
+      "text": "to return a reward that is negative.",
+      "duration": 5200,
+      "offset": 545680,
+      "lang": "en"
+    },
+    {
+      "text": "Now, since the data is processed in",
+      "duration": 5840,
+      "offset": 547920,
+      "lang": "en"
+    },
+    {
+      "text": "candles, you might have this extreme",
+      "duration": 5200,
+      "offset": 550880,
+      "lang": "en"
+    },
+    {
+      "text": "case where one candle touches the",
+      "duration": 4560,
+      "offset": 553760,
+      "lang": "en"
+    },
+    {
+      "text": "stop-loss and the takerit at the same",
+      "duration": 4319,
+      "offset": 556080,
+      "lang": "en"
+    },
+    {
+      "text": "time. We don't know since we're not",
+      "duration": 4160,
+      "offset": 558320,
+      "lang": "en"
+    },
+    {
+      "text": "using tick data, we don't know which of",
+      "duration": 5281,
+      "offset": 560399,
+      "lang": "en"
+    },
+    {
+      "text": "these uh levels were touched first, were",
+      "duration": 5280,
+      "offset": 562480,
+      "lang": "en"
+    },
+    {
+      "text": "triggered f first. So, we don't know if",
+      "duration": 5599,
+      "offset": 565680,
+      "lang": "en"
+    },
+    {
+      "text": "the trade was a loss or a profit. In",
+      "duration": 5280,
+      "offset": 567760,
+      "lang": "en"
+    },
+    {
+      "text": "this case, just to be on the safe side,",
+      "duration": 4560,
+      "offset": 571279,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to consider it a loss. So we",
+      "duration": 5440,
+      "offset": 573040,
+      "lang": "en"
+    },
+    {
+      "text": "don't cheat our way around. We're going",
+      "duration": 4801,
+      "offset": 575839,
+      "lang": "en"
+    },
+    {
+      "text": "to in case of a doubt, we're going to",
+      "duration": 4560,
+      "offset": 578480,
+      "lang": "en"
+    },
+    {
+      "text": "consider the trade it's been a loss and",
+      "duration": 4639,
+      "offset": 580640,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to uh return a negative",
+      "duration": 4560,
+      "offset": 583040,
+      "lang": "en"
+    },
+    {
+      "text": "reward as well. And that's it basically.",
+      "duration": 4000,
+      "offset": 585279,
+      "lang": "en"
+    },
+    {
+      "text": "Now we still have to define one more",
+      "duration": 4400,
+      "offset": 587600,
+      "lang": "en"
+    },
+    {
+      "text": "function that's uh the step function.",
+      "duration": 4881,
+      "offset": 589279,
+      "lang": "en"
+    },
+    {
+      "text": "It's going to consider all of the",
+      "duration": 4160,
+      "offset": 592000,
+      "lang": "en"
+    },
+    {
+      "text": "previous uh functions. So we have",
+      "duration": 4080,
+      "offset": 594160,
+      "lang": "en"
+    },
+    {
+      "text": "direction, stop-loss, and a takerit and",
+      "duration": 4480,
+      "offset": 596160,
+      "lang": "en"
+    },
+    {
+      "text": "a reward and so on. It's going to crunch",
+      "duration": 3840,
+      "offset": 598240,
+      "lang": "en"
+    },
+    {
+      "text": "it all together. and it's going to",
+      "duration": 3520,
+      "offset": 600640,
+      "lang": "en"
+    },
+    {
+      "text": "return the observation, the reward and",
+      "duration": 4560,
+      "offset": 602080,
+      "lang": "en"
+    },
+    {
+      "text": "other information. The reset function",
+      "duration": 5359,
+      "offset": 604160,
+      "lang": "en"
+    },
+    {
+      "text": "resets the uh the values of the back",
+      "duration": 5680,
+      "offset": 606640,
+      "lang": "en"
+    },
+    {
+      "text": "test. So, uh to the current step and the",
+      "duration": 5841,
+      "offset": 609519,
+      "lang": "en"
+    },
+    {
+      "text": "equity 10,000 and uh it empties the",
+      "duration": 5920,
+      "offset": 612320,
+      "lang": "en"
+    },
+    {
+      "text": "equity curve list and so on to uh to",
+      "duration": 5120,
+      "offset": 615360,
+      "lang": "en"
+    },
+    {
+      "text": "restart the test actually. Then we can",
+      "duration": 4480,
+      "offset": 618240,
+      "lang": "en"
+    },
+    {
+      "text": "render the equity curve using the render",
+      "duration": 4320,
+      "offset": 620480,
+      "lang": "en"
+    },
+    {
+      "text": "function. So that was our trading",
+      "duration": 5200,
+      "offset": 622720,
+      "lang": "en"
+    },
+    {
+      "text": "environment.py. Now to train the agent,",
+      "duration": 4560,
+      "offset": 624800,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to use all of these",
+      "duration": 4240,
+      "offset": 627920,
+      "lang": "en"
+    },
+    {
+      "text": "functions and classes to make it happen.",
+      "duration": 5280,
+      "offset": 629360,
+      "lang": "en"
+    },
+    {
+      "text": "So we're going to import from stable",
+      "duration": 5359,
+      "offset": 632160,
+      "lang": "en"
+    },
+    {
+      "text": "baseline 3 the PO. That's the um the",
+      "duration": 5280,
+      "offset": 634640,
+      "lang": "en"
+    },
+    {
+      "text": "model we're going to use to train the",
+      "duration": 5201,
+      "offset": 637519,
+      "lang": "en"
+    },
+    {
+      "text": "agent. And if again if you are coming",
+      "duration": 5520,
+      "offset": 639920,
+      "lang": "en"
+    },
+    {
+      "text": "from data science AI or reinforcement",
+      "duration": 4160,
+      "offset": 642720,
+      "lang": "en"
+    },
+    {
+      "text": "learning and you are a bit familiar with",
+      "duration": 4639,
+      "offset": 645440,
+      "lang": "en"
+    },
+    {
+      "text": "these, this is a model free approach.",
+      "duration": 4880,
+      "offset": 646880,
+      "lang": "en"
+    },
+    {
+      "text": "This means that the agent is going to",
+      "duration": 3681,
+      "offset": 650079,
+      "lang": "en"
+    },
+    {
+      "text": "learn directly from the environment. We",
+      "duration": 4319,
+      "offset": 651760,
+      "lang": "en"
+    },
+    {
+      "text": "don't have the whole environment map in",
+      "duration": 4160,
+      "offset": 653760,
+      "lang": "en"
+    },
+    {
+      "text": "front of us and we're asking the agent",
+      "duration": 3760,
+      "offset": 656079,
+      "lang": "en"
+    },
+    {
+      "text": "to learn from the map. It's actually",
+      "duration": 4800,
+      "offset": 657920,
+      "lang": "en"
+    },
+    {
+      "text": "going to interact step by step with the",
+      "duration": 5361,
+      "offset": 659839,
+      "lang": "en"
+    },
+    {
+      "text": "candles with the historical data trial",
+      "duration": 4400,
+      "offset": 662720,
+      "lang": "en"
+    },
+    {
+      "text": "and error and it's going to adjust the",
+      "duration": 4480,
+      "offset": 665200,
+      "lang": "en"
+    },
+    {
+      "text": "parameters uh when it's progressing",
+      "duration": 4480,
+      "offset": 667120,
+      "lang": "en"
+    },
+    {
+      "text": "through the data. So first we're going",
+      "duration": 3920,
+      "offset": 669680,
+      "lang": "en"
+    },
+    {
+      "text": "to load and process the data. I have the",
+      "duration": 4640,
+      "offset": 671600,
+      "lang": "en"
+    },
+    {
+      "text": "euro US dollar hourly time frame 2020",
+      "duration": 4880,
+      "offset": 673600,
+      "lang": "en"
+    },
+    {
+      "text": "2023. I'm creating actually an",
+      "duration": 5120,
+      "offset": 676240,
+      "lang": "en"
+    },
+    {
+      "text": "environment. So using the uh the class",
+      "duration": 4799,
+      "offset": 678480,
+      "lang": "en"
+    },
+    {
+      "text": "forex trading environment providing the",
+      "duration": 5039,
+      "offset": 681360,
+      "lang": "en"
+    },
+    {
+      "text": "data frame the window size of 30 the",
+      "duration": 5521,
+      "offset": 683279,
+      "lang": "en"
+    },
+    {
+      "text": "stop-loss options which you can change",
+      "duration": 4481,
+      "offset": 686399,
+      "lang": "en"
+    },
+    {
+      "text": "here the take-profit options then we",
+      "duration": 4800,
+      "offset": 688800,
+      "lang": "en"
+    },
+    {
+      "text": "have a dummy vector declaration that is",
+      "duration": 5280,
+      "offset": 690880,
+      "lang": "en"
+    },
+    {
+      "text": "required by stable baselines for",
+      "duration": 5120,
+      "offset": 693600,
+      "lang": "en"
+    },
+    {
+      "text": "parallelization so we're not going to uh",
+      "duration": 4880,
+      "offset": 696160,
+      "lang": "en"
+    },
+    {
+      "text": "go into the technical details but this",
+      "duration": 5520,
+      "offset": 698720,
+      "lang": "en"
+    },
+    {
+      "text": "is where you can also experiment to",
+      "duration": 5120,
+      "offset": 701040,
+      "lang": "en"
+    },
+    {
+      "text": "change the po now I'm not saying that",
+      "duration": 3760,
+      "offset": 704240,
+      "lang": "en"
+    },
+    {
+      "text": "you will be getting better results it's",
+      "duration": 4239,
+      "offset": 706160,
+      "lang": "en"
+    },
+    {
+      "text": "just that for learning purposes and for",
+      "duration": 5120,
+      "offset": 708000,
+      "lang": "en"
+    },
+    {
+      "text": "educational purposes. It's good also to",
+      "duration": 4801,
+      "offset": 710399,
+      "lang": "en"
+    },
+    {
+      "text": "train the model using different models",
+      "duration": 5120,
+      "offset": 713120,
+      "lang": "en"
+    },
+    {
+      "text": "or uh the agent actually train the agent",
+      "duration": 5600,
+      "offset": 715200,
+      "lang": "en"
+    },
+    {
+      "text": "using different models. The PO is",
+      "duration": 5839,
+      "offset": 718240,
+      "lang": "en"
+    },
+    {
+      "text": "actually one of the best suited models",
+      "duration": 5760,
+      "offset": 720800,
+      "lang": "en"
+    },
+    {
+      "text": "for uh for this case for financial",
+      "duration": 5200,
+      "offset": 724079,
+      "lang": "en"
+    },
+    {
+      "text": "trading uh simply because this is a very",
+      "duration": 5279,
+      "offset": 726560,
+      "lang": "en"
+    },
+    {
+      "text": "noisy and continuous data. So we assume",
+      "duration": 4800,
+      "offset": 729279,
+      "lang": "en"
+    },
+    {
+      "text": "that the data is flowing continuously.",
+      "duration": 5041,
+      "offset": 731839,
+      "lang": "en"
+    },
+    {
+      "text": "you the agent is going to receive data",
+      "duration": 5440,
+      "offset": 734079,
+      "lang": "en"
+    },
+    {
+      "text": "live from the market and it will build",
+      "duration": 5199,
+      "offset": 736880,
+      "lang": "en"
+    },
+    {
+      "text": "its skills trading live on the market",
+      "duration": 4000,
+      "offset": 739519,
+      "lang": "en"
+    },
+    {
+      "text": "checking whenever we have a loss",
+      "duration": 3440,
+      "offset": 742079,
+      "lang": "en"
+    },
+    {
+      "text": "whenever we have a winning trade and so",
+      "duration": 4241,
+      "offset": 743519,
+      "lang": "en"
+    },
+    {
+      "text": "on so it's kind of acquiring this",
+      "duration": 4880,
+      "offset": 745519,
+      "lang": "en"
+    },
+    {
+      "text": "experience and in this case PO works",
+      "duration": 4720,
+      "offset": 747760,
+      "lang": "en"
+    },
+    {
+      "text": "well then we're going to train the model",
+      "duration": 4481,
+      "offset": 750399,
+      "lang": "en"
+    },
+    {
+      "text": "so using modelarn",
+      "duration": 4720,
+      "offset": 752480,
+      "lang": "en"
+    },
+    {
+      "text": "the total total time steps actually is",
+      "duration": 4399,
+      "offset": 754880,
+      "lang": "en"
+    },
+    {
+      "text": "50,000 you might want to adjust this one",
+      "duration": 4639,
+      "offset": 757200,
+      "lang": "en"
+    },
+    {
+      "text": "as well if you increase it it's going to",
+      "duration": 4881,
+      "offset": 759279,
+      "lang": "en"
+    },
+    {
+      "text": "uh train the model more in a better way",
+      "duration": 5680,
+      "offset": 761839,
+      "lang": "en"
+    },
+    {
+      "text": "but it's requires also it requires also",
+      "duration": 5600,
+      "offset": 764160,
+      "lang": "en"
+    },
+    {
+      "text": "uh additional computational power then",
+      "duration": 5440,
+      "offset": 767519,
+      "lang": "en"
+    },
+    {
+      "text": "we can save the model as model euras",
+      "duration": 4800,
+      "offset": 769760,
+      "lang": "en"
+    },
+    {
+      "text": "dollar and that's the zip file you can",
+      "duration": 3841,
+      "offset": 772959,
+      "lang": "en"
+    },
+    {
+      "text": "see here I've already run and trained",
+      "duration": 4640,
+      "offset": 774560,
+      "lang": "en"
+    },
+    {
+      "text": "the model and I've saved it here for",
+      "duration": 5360,
+      "offset": 776800,
+      "lang": "en"
+    },
+    {
+      "text": "later to be used and uh at the end we",
+      "duration": 5680,
+      "offset": 779200,
+      "lang": "en"
+    },
+    {
+      "text": "print model saved successfully then we",
+      "duration": 5840,
+      "offset": 782160,
+      "lang": "en"
+    },
+    {
+      "text": "can evaluate or test the model so we're",
+      "duration": 5519,
+      "offset": 784880,
+      "lang": "en"
+    },
+    {
+      "text": "going to um reset the environment uh the",
+      "duration": 4320,
+      "offset": 788000,
+      "lang": "en"
+    },
+    {
+      "text": "equity curve is empty again and then",
+      "duration": 3680,
+      "offset": 790399,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to try to predict use the",
+      "duration": 3440,
+      "offset": 792320,
+      "lang": "en"
+    },
+    {
+      "text": "model to predict values using the",
+      "duration": 3601,
+      "offset": 794079,
+      "lang": "en"
+    },
+    {
+      "text": "observation space. We don't have any",
+      "duration": 4639,
+      "offset": 795760,
+      "lang": "en"
+    },
+    {
+      "text": "stochastic uh operations included. So",
+      "duration": 6399,
+      "offset": 797680,
+      "lang": "en"
+    },
+    {
+      "text": "that's deterministic and for each um",
+      "duration": 6000,
+      "offset": 800399,
+      "lang": "en"
+    },
+    {
+      "text": "step we're going to apply the action",
+      "duration": 4560,
+      "offset": 804079,
+      "lang": "en"
+    },
+    {
+      "text": "buying or selling and so on. We're going",
+      "duration": 6000,
+      "offset": 806399,
+      "lang": "en"
+    },
+    {
+      "text": "to record the observation, the reward",
+      "duration": 5841,
+      "offset": 808639,
+      "lang": "en"
+    },
+    {
+      "text": "and if it's done or not. So if it's",
+      "duration": 4000,
+      "offset": 812399,
+      "lang": "en"
+    },
+    {
+      "text": "finished or not and some additional",
+      "duration": 3760,
+      "offset": 814480,
+      "lang": "en"
+    },
+    {
+      "text": "information and at the end I'm going to",
+      "duration": 5120,
+      "offset": 816399,
+      "lang": "en"
+    },
+    {
+      "text": "append the equity uh with the current",
+      "duration": 4880,
+      "offset": 818240,
+      "lang": "en"
+    },
+    {
+      "text": "equity actually. So that's going to",
+      "duration": 4161,
+      "offset": 821519,
+      "lang": "en"
+    },
+    {
+      "text": "build our equity curve. Uh so we're",
+      "duration": 4880,
+      "offset": 823120,
+      "lang": "en"
+    },
+    {
+      "text": "going to append all the equity values or",
+      "duration": 4320,
+      "offset": 825680,
+      "lang": "en"
+    },
+    {
+      "text": "the balance values in the equity curve",
+      "duration": 4160,
+      "offset": 828000,
+      "lang": "en"
+    },
+    {
+      "text": "list to be able to plot it using this",
+      "duration": 5120,
+      "offset": 830000,
+      "lang": "en"
+    },
+    {
+      "text": "part of uh of the file. To be able to",
+      "duration": 5840,
+      "offset": 832160,
+      "lang": "en"
+    },
+    {
+      "text": "run this, I will be opening a new",
+      "duration": 5279,
+      "offset": 835120,
+      "lang": "en"
+    },
+    {
+      "text": "terminal. I'm going to um source my",
+      "duration": 4079,
+      "offset": 838000,
+      "lang": "en"
+    },
+    {
+      "text": "environment because I've created a",
+      "duration": 3201,
+      "offset": 840399,
+      "lang": "en"
+    },
+    {
+      "text": "virtual environment specifically for",
+      "duration": 3521,
+      "offset": 842079,
+      "lang": "en"
+    },
+    {
+      "text": "this application. Virtual environment",
+      "duration": 4560,
+      "offset": 843600,
+      "lang": "en"
+    },
+    {
+      "text": "scripts activate. I'm going to run",
+      "duration": 7280,
+      "offset": 845600,
+      "lang": "en"
+    },
+    {
+      "text": "python train uh agent.py. pi",
+      "duration": 7520,
+      "offset": 848160,
+      "lang": "en"
+    },
+    {
+      "text": "and I'm going to run it. So, it's going",
+      "duration": 5360,
+      "offset": 852880,
+      "lang": "en"
+    },
+    {
+      "text": "to take a while before it finishes. So,",
+      "duration": 4240,
+      "offset": 855680,
+      "lang": "en"
+    },
+    {
+      "text": "as you can see, you can follow up what's",
+      "duration": 3760,
+      "offset": 858240,
+      "lang": "en"
+    },
+    {
+      "text": "happening, the uh elapse time, the",
+      "duration": 4560,
+      "offset": 859920,
+      "lang": "en"
+    },
+    {
+      "text": "learning rate, the loss value. And once",
+      "duration": 4560,
+      "offset": 862000,
+      "lang": "en"
+    },
+    {
+      "text": "this is done, it's going to plot the",
+      "duration": 4240,
+      "offset": 864480,
+      "lang": "en"
+    },
+    {
+      "text": "equity curve on the training data. And",
+      "duration": 4560,
+      "offset": 866560,
+      "lang": "en"
+    },
+    {
+      "text": "as you can see, it's training well. So",
+      "duration": 6400,
+      "offset": 868720,
+      "lang": "en"
+    },
+    {
+      "text": "it's managing to increase uh the equity",
+      "duration": 5920,
+      "offset": 871120,
+      "lang": "en"
+    },
+    {
+      "text": "which means that basically the agent",
+      "duration": 5360,
+      "offset": 875120,
+      "lang": "en"
+    },
+    {
+      "text": "knows uh that it needs to follow the",
+      "duration": 5599,
+      "offset": 877040,
+      "lang": "en"
+    },
+    {
+      "text": "positive rewards action or course of",
+      "duration": 3840,
+      "offset": 880480,
+      "lang": "en"
+    },
+    {
+      "text": "actions. So it's building a kind of",
+      "duration": 4000,
+      "offset": 882639,
+      "lang": "en"
+    },
+    {
+      "text": "policy that will allow the equity to",
+      "duration": 4879,
+      "offset": 884320,
+      "lang": "en"
+    },
+    {
+      "text": "increase uh over time with it with the",
+      "duration": 4401,
+      "offset": 886639,
+      "lang": "en"
+    },
+    {
+      "text": "different trades. Now the correct way to",
+      "duration": 3760,
+      "offset": 889199,
+      "lang": "en"
+    },
+    {
+      "text": "evaluate the agent is actually to test",
+      "duration": 4479,
+      "offset": 891040,
+      "lang": "en"
+    },
+    {
+      "text": "it on new and unseen data. This is the",
+      "duration": 4401,
+      "offset": 892959,
+      "lang": "en"
+    },
+    {
+      "text": "training data and it's working well. We",
+      "duration": 4000,
+      "offset": 895519,
+      "lang": "en"
+    },
+    {
+      "text": "can see that the equity is positive. the",
+      "duration": 4320,
+      "offset": 897360,
+      "lang": "en"
+    },
+    {
+      "text": "agent is heading in the correct",
+      "duration": 4801,
+      "offset": 899519,
+      "lang": "en"
+    },
+    {
+      "text": "direction. Let's close this one and head",
+      "duration": 6719,
+      "offset": 901680,
+      "lang": "en"
+    },
+    {
+      "text": "to the test agent.py file. And here I'm",
+      "duration": 6560,
+      "offset": 904320,
+      "lang": "en"
+    },
+    {
+      "text": "loading a new unseen data. So that's",
+      "duration": 5440,
+      "offset": 908399,
+      "lang": "en"
+    },
+    {
+      "text": "always the uras dollar candlesticks 1",
+      "duration": 5680,
+      "offset": 910880,
+      "lang": "en"
+    },
+    {
+      "text": "hour uh time frame. But this time it's",
+      "duration": 6321,
+      "offset": 913839,
+      "lang": "en"
+    },
+    {
+      "text": "2023 up to 2025. I'm not going to train",
+      "duration": 6160,
+      "offset": 916560,
+      "lang": "en"
+    },
+    {
+      "text": "the model here. It's not going to fit or",
+      "duration": 4479,
+      "offset": 920160,
+      "lang": "en"
+    },
+    {
+      "text": "apply any fitting. It's just going to",
+      "duration": 4400,
+      "offset": 922720,
+      "lang": "en"
+    },
+    {
+      "text": "try and trade. But I'm still using the",
+      "duration": 4401,
+      "offset": 924639,
+      "lang": "en"
+    },
+    {
+      "text": "same options for stop-loss and take",
+      "duration": 4719,
+      "offset": 927120,
+      "lang": "en"
+    },
+    {
+      "text": "profits. The same window size as what we",
+      "duration": 5440,
+      "offset": 929040,
+      "lang": "en"
+    },
+    {
+      "text": "have used for the training part. And I'm",
+      "duration": 5201,
+      "offset": 931839,
+      "lang": "en"
+    },
+    {
+      "text": "going to run this uh same model. So",
+      "duration": 4159,
+      "offset": 934480,
+      "lang": "en"
+    },
+    {
+      "text": "we're loading the model that we have",
+      "duration": 4080,
+      "offset": 937040,
+      "lang": "en"
+    },
+    {
+      "text": "saved from the uh training phase or the",
+      "duration": 6320,
+      "offset": 938639,
+      "lang": "en"
+    },
+    {
+      "text": "learning phase. And we're going to",
+      "duration": 5760,
+      "offset": 941120,
+      "lang": "en"
+    },
+    {
+      "text": "try and",
+      "duration": 6560,
+      "offset": 944959,
+      "lang": "en"
+    },
+    {
+      "text": "test the agent. So python test agent.py.",
+      "duration": 7040,
+      "offset": 946880,
+      "lang": "en"
+    },
+    {
+      "text": "It also takes a bit of time before",
+      "duration": 4481,
+      "offset": 951519,
+      "lang": "en"
+    },
+    {
+      "text": "showing the equity curve. And this is",
+      "duration": 4960,
+      "offset": 953920,
+      "lang": "en"
+    },
+    {
+      "text": "what we're getting. So it's not what",
+      "duration": 5839,
+      "offset": 956000,
+      "lang": "en"
+    },
+    {
+      "text": "we've expected. The equity was showing a",
+      "duration": 5920,
+      "offset": 958880,
+      "lang": "en"
+    },
+    {
+      "text": "more positive trend using the training",
+      "duration": 5601,
+      "offset": 961839,
+      "lang": "en"
+    },
+    {
+      "text": "steps or the training data. But this is",
+      "duration": 5279,
+      "offset": 964800,
+      "lang": "en"
+    },
+    {
+      "text": "on new and unseen data. It's not very",
+      "duration": 4480,
+      "offset": 967440,
+      "lang": "en"
+    },
+    {
+      "text": "bad either because to be honest we",
+      "duration": 4241,
+      "offset": 970079,
+      "lang": "en"
+    },
+    {
+      "text": "didn't provide much for the um uh for",
+      "duration": 4880,
+      "offset": 971920,
+      "lang": "en"
+    },
+    {
+      "text": "the agent. So these are barely few",
+      "duration": 4240,
+      "offset": 974320,
+      "lang": "en"
+    },
+    {
+      "text": "technical indicators. These are classic",
+      "duration": 3279,
+      "offset": 976800,
+      "lang": "en"
+    },
+    {
+      "text": "technical indicators. the two moving",
+      "duration": 4959,
+      "offset": 978560,
+      "lang": "en"
+    },
+    {
+      "text": "averages, the RSI, the ATR, and what",
+      "duration": 5120,
+      "offset": 980079,
+      "lang": "en"
+    },
+    {
+      "text": "we're calling a slope, which is not",
+      "duration": 3361,
+      "offset": 983519,
+      "lang": "en"
+    },
+    {
+      "text": "really a slope. We didn't apply",
+      "duration": 3281,
+      "offset": 985199,
+      "lang": "en"
+    },
+    {
+      "text": "aggression. This is just to show you an",
+      "duration": 4560,
+      "offset": 986880,
+      "lang": "en"
+    },
+    {
+      "text": "example as simple as possible actually",
+      "duration": 5200,
+      "offset": 988480,
+      "lang": "en"
+    },
+    {
+      "text": "just for the sake of this video. But in",
+      "duration": 4880,
+      "offset": 991440,
+      "lang": "en"
+    },
+    {
+      "text": "this function, you might want to think",
+      "duration": 5040,
+      "offset": 993680,
+      "lang": "en"
+    },
+    {
+      "text": "how you can add additional technical",
+      "duration": 4639,
+      "offset": 996320,
+      "lang": "en"
+    },
+    {
+      "text": "indicators that matter for the trading",
+      "duration": 4320,
+      "offset": 998720,
+      "lang": "en"
+    },
+    {
+      "text": "that matter for the agent that can",
+      "duration": 3921,
+      "offset": 1000959,
+      "lang": "en"
+    },
+    {
+      "text": "provide additional and valuable",
+      "duration": 4080,
+      "offset": 1003040,
+      "lang": "en"
+    },
+    {
+      "text": "information for the agent to learn how",
+      "duration": 4720,
+      "offset": 1004880,
+      "lang": "en"
+    },
+    {
+      "text": "to trade. One thing also that we could",
+      "duration": 6320,
+      "offset": 1007120,
+      "lang": "en"
+    },
+    {
+      "text": "be changing in the trading environment",
+      "duration": 7359,
+      "offset": 1009600,
+      "lang": "en"
+    },
+    {
+      "text": "these options. So I've also provided",
+      "duration": 5360,
+      "offset": 1013440,
+      "lang": "en"
+    },
+    {
+      "text": "very limited options for the stop- loss",
+      "duration": 4320,
+      "offset": 1016959,
+      "lang": "en"
+    },
+    {
+      "text": "and take profit values. So it's either",
+      "duration": 5360,
+      "offset": 1018800,
+      "lang": "en"
+    },
+    {
+      "text": "6090 or 120 pips for both. Maybe this is",
+      "duration": 4721,
+      "offset": 1021279,
+      "lang": "en"
+    },
+    {
+      "text": "not enough for trading the Euro US",
+      "duration": 3840,
+      "offset": 1024160,
+      "lang": "en"
+    },
+    {
+      "text": "dollar. maybe we should be providing",
+      "duration": 4640,
+      "offset": 1026000,
+      "lang": "en"
+    },
+    {
+      "text": "more values maybe with five pips of",
+      "duration": 5520,
+      "offset": 1028000,
+      "lang": "en"
+    },
+    {
+      "text": "increments uh covering from 30 pips up",
+      "duration": 6159,
+      "offset": 1030640,
+      "lang": "en"
+    },
+    {
+      "text": "to I would say 100 pips for example for",
+      "duration": 5519,
+      "offset": 1033520,
+      "lang": "en"
+    },
+    {
+      "text": "both stop-loss and take profit options",
+      "duration": 4321,
+      "offset": 1036799,
+      "lang": "en"
+    },
+    {
+      "text": "so that's one thing to be uh to be",
+      "duration": 4400,
+      "offset": 1039039,
+      "lang": "en"
+    },
+    {
+      "text": "improved also when we were training the",
+      "duration": 5360,
+      "offset": 1041120,
+      "lang": "en"
+    },
+    {
+      "text": "agent we used 50,000 time steps maybe",
+      "duration": 6081,
+      "offset": 1043439,
+      "lang": "en"
+    },
+    {
+      "text": "the agent is overfitting we could try to",
+      "duration": 6480,
+      "offset": 1046480,
+      "lang": "en"
+    },
+    {
+      "text": "um fit it with 10,000 steps for example",
+      "duration": 7680,
+      "offset": 1049520,
+      "lang": "en"
+    },
+    {
+      "text": "so now if I'm interrupting ing and",
+      "duration": 6560,
+      "offset": 1052960,
+      "lang": "en"
+    },
+    {
+      "text": "retraining with 10,000 steps. I'm going",
+      "duration": 5120,
+      "offset": 1057200,
+      "lang": "en"
+    },
+    {
+      "text": "to show you, let me save it first. So,",
+      "duration": 4880,
+      "offset": 1059520,
+      "lang": "en"
+    },
+    {
+      "text": "I'm going to show you the uh effect of",
+      "duration": 4479,
+      "offset": 1062320,
+      "lang": "en"
+    },
+    {
+      "text": "this small",
+      "duration": 4639,
+      "offset": 1064400,
+      "lang": "en"
+    },
+    {
+      "text": "uh parameter. So, I just switched from",
+      "duration": 5760,
+      "offset": 1066799,
+      "lang": "en"
+    },
+    {
+      "text": "50,000 time steps of training down to",
+      "duration": 6401,
+      "offset": 1069039,
+      "lang": "en"
+    },
+    {
+      "text": "10,000 time steps. And this is the",
+      "duration": 4480,
+      "offset": 1072559,
+      "lang": "en"
+    },
+    {
+      "text": "training equity again. It's working",
+      "duration": 3920,
+      "offset": 1075440,
+      "lang": "en"
+    },
+    {
+      "text": "well. Now, we can test the model. The",
+      "duration": 4721,
+      "offset": 1077039,
+      "lang": "en"
+    },
+    {
+      "text": "equity that we're going to get is",
+      "duration": 4480,
+      "offset": 1079360,
+      "lang": "en"
+    },
+    {
+      "text": "slightly different. So as you can see",
+      "duration": 5520,
+      "offset": 1081760,
+      "lang": "en"
+    },
+    {
+      "text": "it's kind of positive at first, it's not",
+      "duration": 5600,
+      "offset": 1083840,
+      "lang": "en"
+    },
+    {
+      "text": "as positive later on and so on. So",
+      "duration": 4720,
+      "offset": 1087280,
+      "lang": "en"
+    },
+    {
+      "text": "sometimes you might get the set of",
+      "duration": 5119,
+      "offset": 1089440,
+      "lang": "en"
+    },
+    {
+      "text": "parameters that will allow you to um",
+      "duration": 4960,
+      "offset": 1092000,
+      "lang": "en"
+    },
+    {
+      "text": "train the model but then test it also on",
+      "duration": 4641,
+      "offset": 1094559,
+      "lang": "en"
+    },
+    {
+      "text": "unseen data and you can still have this",
+      "duration": 4800,
+      "offset": 1096960,
+      "lang": "en"
+    },
+    {
+      "text": "positive equity trend uh even when you",
+      "duration": 4960,
+      "offset": 1099200,
+      "lang": "en"
+    },
+    {
+      "text": "are testing on unseen data. So as you",
+      "duration": 4000,
+      "offset": 1101760,
+      "lang": "en"
+    },
+    {
+      "text": "may have noticed there's a lot of",
+      "duration": 4080,
+      "offset": 1104160,
+      "lang": "en"
+    },
+    {
+      "text": "options that we can still use to improve",
+      "duration": 5919,
+      "offset": 1105760,
+      "lang": "en"
+    },
+    {
+      "text": "the trading agent uh potential. I still",
+      "duration": 6000,
+      "offset": 1108240,
+      "lang": "en"
+    },
+    {
+      "text": "find it enjoyable to be honest. Uh",
+      "duration": 5521,
+      "offset": 1111679,
+      "lang": "en"
+    },
+    {
+      "text": "adding some more stop-loss options, take",
+      "duration": 5679,
+      "offset": 1114240,
+      "lang": "en"
+    },
+    {
+      "text": "profit options and trading indicators,",
+      "duration": 4640,
+      "offset": 1117200,
+      "lang": "en"
+    },
+    {
+      "text": "maybe the classic or custom indicators",
+      "duration": 5601,
+      "offset": 1119919,
+      "lang": "en"
+    },
+    {
+      "text": "and so on. Changing the total time steps",
+      "duration": 5440,
+      "offset": 1121840,
+      "lang": "en"
+    },
+    {
+      "text": "uh in order to avoid overfitting the",
+      "duration": 3920,
+      "offset": 1125520,
+      "lang": "en"
+    },
+    {
+      "text": "model on the training data and so on.",
+      "duration": 4240,
+      "offset": 1127280,
+      "lang": "en"
+    },
+    {
+      "text": "So, it's a lot of fun and seeing the",
+      "duration": 4479,
+      "offset": 1129440,
+      "lang": "en"
+    },
+    {
+      "text": "results straight in front of us is also",
+      "duration": 4399,
+      "offset": 1131520,
+      "lang": "en"
+    },
+    {
+      "text": "powerful because you can see the effects",
+      "duration": 4401,
+      "offset": 1133919,
+      "lang": "en"
+    },
+    {
+      "text": "immediately in front of you. And that",
+      "duration": 4000,
+      "offset": 1135919,
+      "lang": "en"
+    },
+    {
+      "text": "will be it for this video. I hope you",
+      "duration": 3599,
+      "offset": 1138320,
+      "lang": "en"
+    },
+    {
+      "text": "guys liked it and found the information",
+      "duration": 3921,
+      "offset": 1139919,
+      "lang": "en"
+    },
+    {
+      "text": "helpful. I've been receiving lots of",
+      "duration": 4401,
+      "offset": 1141919,
+      "lang": "en"
+    },
+    {
+      "text": "requests recently. Why don't we use the",
+      "duration": 4320,
+      "offset": 1143840,
+      "lang": "en"
+    },
+    {
+      "text": "reinforcement learning in trading? As",
+      "duration": 3120,
+      "offset": 1146320,
+      "lang": "en"
+    },
+    {
+      "text": "you may have noticed, it's very",
+      "duration": 3440,
+      "offset": 1148160,
+      "lang": "en"
+    },
+    {
+      "text": "powerful. It has a lot of potential, but",
+      "duration": 4880,
+      "offset": 1149440,
+      "lang": "en"
+    },
+    {
+      "text": "it's not as simple to fine-tune as well",
+      "duration": 5199,
+      "offset": 1151600,
+      "lang": "en"
+    },
+    {
+      "text": "because you have a lot of noise in the",
+      "duration": 5120,
+      "offset": 1154320,
+      "lang": "en"
+    },
+    {
+      "text": "trading data. So this is the nature of",
+      "duration": 6561,
+      "offset": 1156799,
+      "lang": "en"
+    },
+    {
+      "text": "the market and sometimes the model is",
+      "duration": 6080,
+      "offset": 1159440,
+      "lang": "en"
+    },
+    {
+      "text": "finding it difficult to pick up the",
+      "duration": 4559,
+      "offset": 1163360,
+      "lang": "en"
+    },
+    {
+      "text": "signal the true signal of the trend from",
+      "duration": 4080,
+      "offset": 1165520,
+      "lang": "en"
+    },
+    {
+      "text": "all the noise that you can find in the",
+      "duration": 3841,
+      "offset": 1167919,
+      "lang": "en"
+    },
+    {
+      "text": "data. But anyway I hope you guys liked",
+      "duration": 4000,
+      "offset": 1169600,
+      "lang": "en"
+    },
+    {
+      "text": "it. I hope you found this information",
+      "duration": 3600,
+      "offset": 1171760,
+      "lang": "en"
+    },
+    {
+      "text": "helpful. If so please leave a like,",
+      "duration": 4000,
+      "offset": 1173600,
+      "lang": "en"
+    },
+    {
+      "text": "leave a comment, drop your ideas in the",
+      "duration": 4240,
+      "offset": 1175360,
+      "lang": "en"
+    },
+    {
+      "text": "comments section. This was requested by",
+      "duration": 4000,
+      "offset": 1177600,
+      "lang": "en"
+    },
+    {
+      "text": "one of the uh viewers through the",
+      "duration": 3680,
+      "offset": 1179600,
+      "lang": "en"
+    },
+    {
+      "text": "comment section. So don't hesitate to",
+      "duration": 4480,
+      "offset": 1181600,
+      "lang": "en"
+    },
+    {
+      "text": "drop us some of your ideas. Thank you so",
+      "duration": 4720,
+      "offset": 1183280,
+      "lang": "en"
+    },
+    {
+      "text": "much for watching. Thank you so much for",
+      "duration": 3920,
+      "offset": 1186080,
+      "lang": "en"
+    },
+    {
+      "text": "staying that long. Until our next one,",
+      "duration": 5600,
+      "offset": 1188000,
+      "lang": "en"
+    },
+    {
+      "text": "trade safe and see you next time.",
+      "duration": 3600,
+      "offset": 1190000,
+      "lang": "en"
+    }
+  ],
+  "text": "Hi and welcome back. This strategy uses reinforcement learning to train a trading AI agent on historical data. I have chosen the URA dollar hourly time frame for today's example. The model showed an increasing equity on learning data and acceptable learning rate. In other words, we're trying to make an AI model that reads historical data, applies trading operations, and learns from winning and losing trades in order to come up with the best trading pattern pretty much like a human would learn trading. You can download the Python code used in this video from the link in the description. Feel free to explore the files and use them in your own experiments. But first, let's summarize briefly how reinforcement learning works. Reinforcement learning relies on five main concepts. The agent, in this case, it's the one or the model making trading decisions, putting long and short positions, and setting stop-loss and take-profit distances. The environment where the agent operates, the action or the actions that can be taken by the agent. Then depending on the result of an action, the agent receives a reward that can be either positive or negative with different values. One more concept is the policy which is the agent's strategy or mapping from different states of the environment to actions. In other words, it's the decision patterns learned so far by the agent considering the current environment state. If you are familiar with reinforcement learning, this would be a model-free approach where the agent learns directly from experience or trial and error in the environment. Think about it as training a dog to complete certain tasks. Every time the dog does well, it will receive a reward. And if it doesn't, then either the reward is null or it can be also negative. Of course, AI agents don't have this intrinsic motivation for the reward. So they can be coded in a way to maximize the reward value. In other words, if the agent receives more reward doing action A, then this action will be attributed the highest probability in the future. So now we will define our environment, the agent and the list of possible actions that the agent will use to trade in the created environment. And we will let the agent run trading on historical data for around 10 years for example and learning from the reward system the best possible ways of trading just like a human trader learning new strategies and experimenting with trial and error to improve his trading skills. Okay. Now let's see how this is done in Python. It will be highly technical but you can still follow even if you don't have a purely technical or numerical background because the elements of the code are directly related to trading. I will show you the results and we will discuss how these can be used for our strategies. Since this project is relatively larger than the previous projects or studies published on this channel. I'm not using a Jupyter notebook file this time. I'm using Python files because we're going to use few files like 1 2 3 four different Python files. So we're splitting the code into four different files in order to make it easier to read and easier to understand. And then we're going to launch it through Python. So we're not using a Jupyter notebook file in this case. However, when you download it, I will be sharing a folder with the data I will be using for this model. So we can see that we have the Euro US dollar candlestick, the hourly uh data. It's between 2020 and 2023. And then I have another out of sample data or testing data where I've downloaded between 2023 and 2025. So this is the data on which we're going to test the model after we have trained it on the previous 3 years. I'm going to start with the um indicators.py file. So that's a Python file. I'm using pandas and pandas technical analysis. It's just defining one single function here. Load and pre-process data. It takes a CSV path. So the path for the CSV file. We're going to read underscore CSV using the path. Clean the data somehow. Sort the index. add some technical indicators, the RSI14, moving average 2050, and the ATR, the moving average 20 slope as well. So that's just the difference between two consecutive rows. It's not really the regression slope on three or four rows. So it's not really the slope, it's just a difference between uh two consecutive moving average values. And then we're dropping the uh empty values or the empty rows. We return a data frame with few additional indicators. And this is where if you intend to improve this uh code, this is where we can add some additional indicators and some custom indicators. Maybe you don't want to use the classic indicators. Maybe you want to add your own. But I mean this is where we can do it. It's in this file. You can define whatever indicators you want uh as functions here and then use them to return the data frame with these indicators. Now we can define the trading environment and this is done using importing gym numpy because we're going to use it for numerical uh analysis or numerical uh operations and from gym we're also importing spaces the observation spaces and the action spaces. So these are basically uh defining the actions that are allowed uh for for the uh the agent. And I'm defining a class named forex trading environment that inherits from gym.vironment environment class because this is how I want to create the environment by inheriting from the uh package gym. We define the uh constructor. Notice that we have a window size by default equal to 30. So by default the um uh the agent is going to read the last 30 candles before taking a decision. And this of course includes all the related technical indicators that we've added in the data frame. Now, for the uh stop-loss options, I'm allowing the agent to take one of three decisions. Either 60 pips or 90 pips distance or 120 pips. Where do these come from? These are just random. On the Euro US dollar, I would put uh on the hourly time frame, I would put maybe 60 pips to 90 or 120 pips of stop-loss distance. Same thing for the take-profit options. So we have 60, 90 and 120. You could add these, you could extend these, but the more options you give to um the agent, the more time it's going to uh take to train the agent and it's going to become computationally more expensive. So it requires more computation time. Now this shouldn't be a problem of course, but for the sake of this video, I kept it as simple as possible to show you how it's done. Now there are three options here for trades. either the action zero. So it means that we're we're not going to trade. The agent is going to skip the candle without opening any trades. But in the opposite case, if action is positive or it's equal to one, then we have two different directions, either we short the market or the agent will long the market. So either zero or one taking into account of course stop-loss and take profits. We compute the shapes of the data frame to be used later on by the agent. And this is where we initialize the uh current step which is equal to zero at first. We have the equity $10,000. Maximum slippage is zero for the moment. Then we have the uh positions list is empty at this point. And at the end I would like to um plot the equity curve. So we're going to log the equity curve values and the last trade information. The function within the class named get observation is simply to return the last window size. Remember that we took 30 by default, 30 rows. So the agent is going to read the last 30 rows but also the number of features. So the shape is going to be window size. It's a numpy array by the way. So it's two-dimensional numpy array with the window size and also accessing all the features available on the data frame. It also takes care of the edge case at the beginning of the data frame when we don't have enough history. So this is going to be used by the agent to read the data before each candle. And now we have to define the calculate reward. Remember that the agent is going to behave just like we are training a pet. Okay, we're training a dog. And we need to provide this reward function to know when we can reward in a positive value or in a negative value the agent. In this case, we're going to use the uh profit and loss for each of the trades. So, if the agent opens a long position, for example, or any trade and the uh the result of profit and loss is positive, the reward is going to be positive. And it's also proportional to the uh profit and loss value. And that's why at the end of this function, the reward, which is the returned value, is the profit and loss times 10,000 because it has to be adjusted to the uh the number of pips uh from from the Euro US dollar price. In the opposite case, if it's a loss, so if it's negative, in this case, we're going to return a reward that is negative. Now, since the data is processed in candles, you might have this extreme case where one candle touches the stop-loss and the takerit at the same time. We don't know since we're not using tick data, we don't know which of these uh levels were touched first, were triggered f first. So, we don't know if the trade was a loss or a profit. In this case, just to be on the safe side, we're going to consider it a loss. So we don't cheat our way around. We're going to in case of a doubt, we're going to consider the trade it's been a loss and we're going to uh return a negative reward as well. And that's it basically. Now we still have to define one more function that's uh the step function. It's going to consider all of the previous uh functions. So we have direction, stop-loss, and a takerit and a reward and so on. It's going to crunch it all together. and it's going to return the observation, the reward and other information. The reset function resets the uh the values of the back test. So, uh to the current step and the equity 10,000 and uh it empties the equity curve list and so on to uh to restart the test actually. Then we can render the equity curve using the render function. So that was our trading environment.py. Now to train the agent, we're going to use all of these functions and classes to make it happen. So we're going to import from stable baseline 3 the PO. That's the um the model we're going to use to train the agent. And if again if you are coming from data science AI or reinforcement learning and you are a bit familiar with these, this is a model free approach. This means that the agent is going to learn directly from the environment. We don't have the whole environment map in front of us and we're asking the agent to learn from the map. It's actually going to interact step by step with the candles with the historical data trial and error and it's going to adjust the parameters uh when it's progressing through the data. So first we're going to load and process the data. I have the euro US dollar hourly time frame 2020 2023. I'm creating actually an environment. So using the uh the class forex trading environment providing the data frame the window size of 30 the stop-loss options which you can change here the take-profit options then we have a dummy vector declaration that is required by stable baselines for parallelization so we're not going to uh go into the technical details but this is where you can also experiment to change the po now I'm not saying that you will be getting better results it's just that for learning purposes and for educational purposes. It's good also to train the model using different models or uh the agent actually train the agent using different models. The PO is actually one of the best suited models for uh for this case for financial trading uh simply because this is a very noisy and continuous data. So we assume that the data is flowing continuously. you the agent is going to receive data live from the market and it will build its skills trading live on the market checking whenever we have a loss whenever we have a winning trade and so on so it's kind of acquiring this experience and in this case PO works well then we're going to train the model so using modelarn the total total time steps actually is 50,000 you might want to adjust this one as well if you increase it it's going to uh train the model more in a better way but it's requires also it requires also uh additional computational power then we can save the model as model euras dollar and that's the zip file you can see here I've already run and trained the model and I've saved it here for later to be used and uh at the end we print model saved successfully then we can evaluate or test the model so we're going to um reset the environment uh the equity curve is empty again and then we're going to try to predict use the model to predict values using the observation space. We don't have any stochastic uh operations included. So that's deterministic and for each um step we're going to apply the action buying or selling and so on. We're going to record the observation, the reward and if it's done or not. So if it's finished or not and some additional information and at the end I'm going to append the equity uh with the current equity actually. So that's going to build our equity curve. Uh so we're going to append all the equity values or the balance values in the equity curve list to be able to plot it using this part of uh of the file. To be able to run this, I will be opening a new terminal. I'm going to um source my environment because I've created a virtual environment specifically for this application. Virtual environment scripts activate. I'm going to run python train uh agent.py. pi and I'm going to run it. So, it's going to take a while before it finishes. So, as you can see, you can follow up what's happening, the uh elapse time, the learning rate, the loss value. And once this is done, it's going to plot the equity curve on the training data. And as you can see, it's training well. So it's managing to increase uh the equity which means that basically the agent knows uh that it needs to follow the positive rewards action or course of actions. So it's building a kind of policy that will allow the equity to increase uh over time with it with the different trades. Now the correct way to evaluate the agent is actually to test it on new and unseen data. This is the training data and it's working well. We can see that the equity is positive. the agent is heading in the correct direction. Let's close this one and head to the test agent.py file. And here I'm loading a new unseen data. So that's always the uras dollar candlesticks 1 hour uh time frame. But this time it's 2023 up to 2025. I'm not going to train the model here. It's not going to fit or apply any fitting. It's just going to try and trade. But I'm still using the same options for stop-loss and take profits. The same window size as what we have used for the training part. And I'm going to run this uh same model. So we're loading the model that we have saved from the uh training phase or the learning phase. And we're going to try and test the agent. So python test agent.py. It also takes a bit of time before showing the equity curve. And this is what we're getting. So it's not what we've expected. The equity was showing a more positive trend using the training steps or the training data. But this is on new and unseen data. It's not very bad either because to be honest we didn't provide much for the um uh for the agent. So these are barely few technical indicators. These are classic technical indicators. the two moving averages, the RSI, the ATR, and what we're calling a slope, which is not really a slope. We didn't apply aggression. This is just to show you an example as simple as possible actually just for the sake of this video. But in this function, you might want to think how you can add additional technical indicators that matter for the trading that matter for the agent that can provide additional and valuable information for the agent to learn how to trade. One thing also that we could be changing in the trading environment these options. So I've also provided very limited options for the stop- loss and take profit values. So it's either 6090 or 120 pips for both. Maybe this is not enough for trading the Euro US dollar. maybe we should be providing more values maybe with five pips of increments uh covering from 30 pips up to I would say 100 pips for example for both stop-loss and take profit options so that's one thing to be uh to be improved also when we were training the agent we used 50,000 time steps maybe the agent is overfitting we could try to um fit it with 10,000 steps for example so now if I'm interrupting ing and retraining with 10,000 steps. I'm going to show you, let me save it first. So, I'm going to show you the uh effect of this small uh parameter. So, I just switched from 50,000 time steps of training down to 10,000 time steps. And this is the training equity again. It's working well. Now, we can test the model. The equity that we're going to get is slightly different. So as you can see it's kind of positive at first, it's not as positive later on and so on. So sometimes you might get the set of parameters that will allow you to um train the model but then test it also on unseen data and you can still have this positive equity trend uh even when you are testing on unseen data. So as you may have noticed there's a lot of options that we can still use to improve the trading agent uh potential. I still find it enjoyable to be honest. Uh adding some more stop-loss options, take profit options and trading indicators, maybe the classic or custom indicators and so on. Changing the total time steps uh in order to avoid overfitting the model on the training data and so on. So, it's a lot of fun and seeing the results straight in front of us is also powerful because you can see the effects immediately in front of you. And that will be it for this video. I hope you guys liked it and found the information helpful. I've been receiving lots of requests recently. Why don't we use the reinforcement learning in trading? As you may have noticed, it's very powerful. It has a lot of potential, but it's not as simple to fine-tune as well because you have a lot of noise in the trading data. So this is the nature of the market and sometimes the model is finding it difficult to pick up the signal the true signal of the trend from all the noise that you can find in the data. But anyway I hope you guys liked it. I hope you found this information helpful. If so please leave a like, leave a comment, drop your ideas in the comments section. This was requested by one of the uh viewers through the comment section. So don't hesitate to drop us some of your ideas. Thank you so much for watching. Thank you so much for staying that long. Until our next one, trade safe and see you next time.",
+  "cited_at": "2026-05-24T05:01:56.886Z"
+}

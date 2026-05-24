@@ -1,0 +1,1360 @@
+
+=== 01-success-500day.json ===
+query: automated futures trading bot making 500 per day case study
+  [brave] 2026-01-11 | Top Trading Algo Bots: Automating Your Trading Strategy
+         These EAs automate trading strategies based on predefined rules or technical indicators. They are particularly popular among forex and futures traders. Let’s check out some key features of MetaTrader EAs: ... Say a trade
+         https://bookmap.com/blog/top-trading-algo-bots-automating-your-trading-strategy
+  [brave] 2026-01-24 | Building Your First Algorithmic Futures Trading Bot: A Step-by-Step Guide to Execution - Learn Quant Trading |
+         For a momentum bot trading ES futures (E-mini S&amp;P 500), the bot’s core loop performs these steps every 10 seconds:
+         https://quantstrategy.io/blog/building-your-first-algorithmic-futures-trading-bot-a-step/
+  [brave] 2026-02-16 | Automated Futures Trading Strategies: How to Build, Backtest & Scale
+         For example, if you’re risking $500 on an ES trade with a 20-tick stop, and each tick is worth $12.50, you’d <strong>trade 2 contracts ($500 / ($12.50 × 20) = 2)</strong>.
+         https://www.quantvps.com/blog/automated-futures-trading-strategies
+  [brave] 2025-12-09 | From Failed Experiments to 43.8% APR: How I Finally Built a Profitable Trading Bot with AI | by Joe Tay | Medi
+         Articles with titles like “<strong>I Built a Trading Bot That Makes $500/Day</strong>” or “How I Automated My Way to Financial Freedom” filled my reading list. The promise was intoxicating: write some code, let it run, a
+         https://medium.com/@joetay_50959/from-failed-experiments-to-43-8-apr-how-i-finally-built-a-profitable-trading-bot-with-ai-64771995d38c
+  [brave] 2026-03-15 | Top AI-Based Futures Trading Bots and Platforms Revealed
+         This integration supports a variety of futures contracts, including the E-mini S&amp;P 500, crude oil, and gold, while providing real-time account data synchronization. It’s built to handle different account types and ad
+         https://www.quantvps.com/blog/top-ai-based-futures-trading-bots
+  [brave] 2026-02-15 | r/FuturesTrading on Reddit: Thoughts on automated/bot trading?
+         <strong>Plus futures specifically = leverage</strong>. Small model error × leverage = big pain real quick. Bots execute mistakes perfectly and fast.
+         https://www.reddit.com/r/FuturesTrading/comments/1r5iwqx/thoughts_on_automatedbot_trading/
+  [brave] 2026-04-15 | TradersPost | Automated Trading Bot Platform
+         <strong>Trade multiple asset classes like stocks, options and futures from automated trading strategy strategies</strong>.
+         https://traderspost.io/
+  [brave] 2025-11-01 | How AI Trading Bots Are Helping Americans Earn $500-$2000+ Per Day (And How You Can Start) | by BARRON VAN DEN
+         How AI Trading Bots Are Helping Americans Earn $500-$2000+ Per Day (And How You Can Start) The rise of algorithmic trading is no longer reserved for Wall Street — everyday traders are using …
+         https://medium.com/@barronqasem/how-ai-trading-bots-are-helping-americans-earn-500-2000-per-day-and-how-you-can-start-a3734154cbb2
+  [exa] 2026-05-07 | Automated Polymarket Trading: A 30-Day Live Case Study — Poly Syncer
+         https://www.polysyncer.com/blog/automated-polymarket-trading-case-study
+  [exa] 2026-04-28 | Automated Trading 6 Month Update | Algo Trading Software
+         https://nurp.com/algorithmic-trading-blog/3048-trades-later-6-month-update-automated-trading/
+  [exa] 2026-03-13 | $5,600 From a $100K Prop Account: How Exerato Passed a Challenge in 2 Weeks | Upscale
+         https://upscale.trade/blog/success-story-exerato
+  [exa] 2026-04-16 | 13 Days, 48 Trades, Breakeven. Then I Fixed One Thing. Here's Every Trade. - DEV Community
+         https://dev.to/trendrider/13-days-48-trades-breakeven-then-i-fixed-one-thing-1d6j
+  [exa] 2026-01-31 | Algorithmic Trading Software 6 Week Results | Automated Trading Platform
+         https://nurp.com/algorithmic-trading-blog/10k-automated-algorithmic-trading-software-results/
+  [exa] 2026-01-23 | AutoPilot Automatic Trading System Explained • Day Trade To Win | Trading Software + Education
+         https://daytradetowin.com/autopilot-automatic-trading-system-explained/
+  [exa] 2026-03-30 | Automated Futures Trading Bots Using Claude AI and MCP Servers
+         https://www.quantlabsnet.com/post/automated-futures-trading-bots-using-claude-ai-and-mcp-servers
+  [exa] 2026-04-21 | I Built a Deriv Bot That Wins 71% of the Time — Here’s the Complete Strategy (With Code) | by Precious Lyna An
+         https://preciousanusiem.medium.com/i-built-a-deriv-bot-that-wins-71-of-the-time-heres-the-complete-strategy-with-code-b2f92c11b2de
+  [tavily] no-date | Successful Automated Trading Case Studies That Generated Consistent Profits - TradingView Hub
+         | Month | Portfolio Value | Monthly Return | BTC Price Range | Trades Executed | --- --- | January | $5,000 | 0% | $16,500-$23,000 | 0 | | February | $5,450 | 9% | $20,000-$25,000 | 12 | | March | $6,703 | 23% | $20,000-
+         https://www.tv-hub.org/success-stories
+  [tavily] no-date | Case Study: Algorithmic Trading With Go | Massive
+         Introducing # Case Study: Algorithmic Trading With Go Jun 30, 2023 In this case study, we are excited to share an insider's perspective and look under the hood of how a Massive.com customer, who built an automated retail
+         https://massive.com/blog/case-study-algorithmict-trading-with-go
+  [tavily] no-date | Algo Trading Strategies
+         | | | --- | | Backtest Period | Intraday Futures Bot | | Backtest Period | 2007 – 2024 | | Initial Minimum Capital | $30,000 | | Futures Exchanges | CME, CBOT | | Decision-Making | Systematic 100% | | Trading Session | D
+         https://quantsavvy.com
+  [tavily] no-date | YouTube
+         This is how to create an AI powered trading bot that's 100% automated and makes money.
+         https://www.youtube.com/watch?v=c9OjEThuJjY
+  [tavily] no-date | Top Trading Algo Bots: Automating Your Trading Strategy
+         ### 1. Hummingbot Hummingbot is an “open-source” trading bot. It is specifically designed for automating trading strategies in a variety of markets, such as cryptocurrency, futures, and traditional assets. This bot suppo
+         https://bookmap.com/blog/top-trading-algo-bots-automating-your-trading-strategy
+  [tavily] no-date | Can a 100% automated trading system be profitable
+         So pretty much a bot with objective conditions to when to enter/exit a position. And say you backtest it and it's profitable. Isn't it too good to be true
+         https://www.reddit.com/r/Daytrading/comments/1gnvkj3/can_a_100_automated_trading_system_be_profitable
+  [tavily] no-date | Top 20 Trading Bot Strategies for 2026
+         A study conducted in June 2024 by Duc Long Vu and Ritabrata Bhattacharyya highlighted the practical use of mean reversion strategies in intraday trading on the New York Stock Exchange (NYSE). Using indicators like MACD, 
+         https://www.quantvps.com/blog/trading-bot-strategies
+  [tavily] no-date | How to Automate Futures Trading Using LuxAlgo AI ...
+         The full walkthrough video of how to set up Lux Algo AI from sign up until automation.
+         https://www.youtube.com/watch?v=_aQA0MjYknw
+  [youtube] 2024-05-25 | Do Trading Bots Really Work? I Gave a Trading Bot $55000 to Trade
+         About: My Name is Ryan Brown. I'm a 38 year old full time forex trader that specializes in Forex algorithmic trading. I have over 19 ...
+         https://www.youtube.com/watch?v=V7hKgdBu_Wk
+         VIDEO_ID=V7hKgdBu_Wk CH=Ryan Brown (ResponsibleForexTrading)
+  [youtube] 2025-05-29 | AI Trading Bots: Beware of Scams! ⚠️
+         Thinking of using an AI trading bot for crypto? Janine from Easy Crypto warns about rampant scams involving AI and crypto ...
+         https://www.youtube.com/watch?v=55XjVSgDa1A
+         VIDEO_ID=55XjVSgDa1A CH=TechMates
+  [youtube] 2024-02-25 | Crypto Millionaire Reveals Money Printing Strategy #crypto
+         https://www.youtube.com/watch?v=HGdlxeeXi-4
+         VIDEO_ID=HGdlxeeXi-4 CH=Involio
+  [youtube] 2026-04-10 | How To Actually Build a Trading Bot With Claude Code (Fully Automated)
+         How to use Claude Code to build a fully automated trading bot. AI Trading Community: https://www.skool.com/aipathways 1:1 AI ...
+         https://www.youtube.com/watch?v=y_bsjZThP0o
+         VIDEO_ID=y_bsjZThP0o CH=AI Pathways
+  [youtube] 2024-01-08 | HOW TO SET UP AN AI CRYPTO TRADING BOT FOR EASY GAINS 🙌🏼
+         Looking for gains without much effort? Check out how to set up an AI trading bot in under 2 minutes and be set to make money ...
+         https://www.youtube.com/watch?v=doIZnHlIVGA
+         VIDEO_ID=doIZnHlIVGA CH=101 Money
+
+=== 02-overfitting.json ===
+query: algorithmic trading strategy overfitting curve fit backtest failure
+  [brave] 2025-12-18 | How to Avoid Overfitting When Testing Trading Rules « adventuresofgreg.blog
+         These issues often point to flaws in how the strategy was developed. <strong>Overfitting is often the result of excessive parameter tweaking</strong>. Traders may endlessly adjust variables – like moving average periods,
+         http://adventuresofgreg.com/blog/2025/12/18/avoid-overfitting-testing-trading-rules/
+  [brave] 2026-03-17 | Algorithmic Trading Overfitting: Why Backtests Fail in Live Markets
+         Many algorithmic trading strategies ... often stems from overfitting: <strong>the strategy captures noise or idiosyncrasies in the historical data rather than persistent, generalizable market inefficiencies</strong>....
+         https://blog.pickmytrade.trade/algorithmic-trading-overfitting-backtest-failure/
+  [brave] 2025-11-05 | The Overfitting Trap: Why Your 20% Backtest Became a -1% Strategy | by Jiri George Dolejs | Medium
+         It curve-fits to noise instead of extracting signal · Every parameter you optimize increases the risk. The more you tune, the more you’re teaching your strategy to trade the past perfectly instead of adapting to the futu
+         https://medium.com/@kojott/the-overfitting-trap-why-your-20-backtest-became-a-1-strategy-8d8ef5628937
+  [brave] 2026-03-28 | Overfitting Explained: Why Backtests Fail in Live Trading | by Sentient Trading Society | Medium
+         When you curve fit, you rig your backtest to look amazing on paper, but it’ll never work in real conditions. When you backtest properly and respect data science rules for quality data, you’ll see how tough it is to backt
+         https://medium.com/@SentientTradingSociety/this-is-why-your-backtested-strategies-dont-work-live-fa733edfefad
+  [brave] 2026-01-18 | Robustness Testing for Algo Trading Strategies | Complete Guide
+         1. <strong>Most algorithmic traders fail because they overfit strategies causing loss of risk capital</strong> · 2. Algorithmic traders would do better incorporating robustness tests and checks · 3. There is no best robu
+         https://www.buildalpha.com/robustness-testing-guide/
+  [brave] 2026-03-09 | Curve Fitting In Trading: What is it? | Backtest Strategies – Overfitting - QuantifiedStrategies.com
+         Curve fitting is <strong>when a strategy or edge is not fit to market behavior, but market noise, leading to failure in live trading</strong>. Curve fitting (overfitting) is overoptimization that is unlikely to fit into 
+         https://www.quantifiedstrategies.com/curve-fitting-in-trading/
+  [brave] 2025-08-11 | How to Avoid Overfitting in Trading Strategies | Siddharth Anand posted on the topic | LinkedIn
+         <strong>Curve fitting happens when a strategy is so finely tuned to historical data that it captures past noise instead of true market structure</strong>. It means your system performs spectacularly on backtests — yet fa
+         https://www.linkedin.com/posts/siddharthanand1998_why-overfitting-is-the-silent-killer-of-activity-7360680470738563073-heR7
+  [brave] 2026-01-05 | r/algotrading on Reddit: Is overfitting the #1 reason most backtested strategies fail live?
+         You can find a strategy that worked perfectly over the last 2 years. Great equity curve. Low drawdowns. High win rate. Then you trade it live and it falls apart. 🤦‍♂️ ... you need to setup your backtesting envrionment f
+         https://www.reddit.com/r/algotrading/comments/1q4gpu1/is_overfitting_the_1_reason_most_backtested/
+  [exa] 2026-03-05 | 100% Win Rate in Backtesting? Don't Celebrate Yet — Our Most Painful Lesson | Judy AI Lab
+         https://judyailab.com/en/posts/oos-validation-lesson/
+  [exa] 2026-03-01 | Overfitting: The Sweetest Trap in Quant Trading — 5 Warning Signs Your Backtest Is Lying - quantfoundrylab
+         https://quantfoundrylab.com/en/overfitting-backtesting-warning-signs/
+  [exa] 2026-05-19 | Overfitting in Trading Models: How to Detect It — And What to Do About It | by Nayab Bhutta | May, 2026 | Insi
+         https://wire.insiderfinance.io/overfitting-in-trading-models-how-to-detect-it-and-what-to-do-about-it-bbee77660942
+  [exa] 2026-02-09 | Why Backtesting Returns Lie: 5 Overfitting Traps – TildAlice
+         https://tildalice.io/backtesting-overfitting-traps/
+  [exa] 2026-04-11 | Backtest Overfitting: Why the Best Historical Strategy Often Fails Live | Quant Alpha
+         https://quantalpha.co/en/blog/backtest-overfitting-and-live-performance
+  [exa] 2026-04-29 | Overfitting in quantitative investing: why backtested strategies fail in practice | pfolio academy
+         https://www.pfolio.io/academy/overfitting-quant-investing
+  [exa] 2026-05-09 | Why Your Backtest Said +20% But Live Trading Lost Money (Prediction Market Overfitting Explained) | Turbine Bl
+         https://www.turbinefi.com/blog/why-backtests-lie-prediction-market-overfitting-2026
+  [exa] 2026-03-12 | Backtest Overfitting: Why Perfect EA Results Lose Money Live - My Trading - 12 March 2026 - Traders' Blogs
+         https://www.mql5.com/en/blogs/post/767987
+  [tavily] no-date | How to Avoid Overfitting in Trading Strategies - LinkedIn
+         ⚠️ The Hidden Danger of Curve Fitting in Quantitative Trading — Why Over-Optimization Can Destroy Good Systems In algorithmic trading, the temptation to “perfect” a strategy by optimizing every parameter is almost irresi
+         https://www.linkedin.com/posts/siddharthanand1998_why-overfitting-is-the-silent-killer-of-activity-7360680470738563073-heR7
+  [tavily] no-date | What Is Overfitting in Algorithmic Trading?
+         The more parameters you have in general will increase the chance of curve fitting, since there are more combinations of parameters that can lead to unusually skewed results. ## Conclusion Overfitting (or curve fitting) i
+         https://bookmap.com/blog/what-is-overfitting-in-algorithmic-trading
+  [tavily] no-date | Advanced | Backtesting effectively: Avoiding curve fitting
+         ### What Curve Fitting Means in Algo Trading Curve fitting happens when a strategy is tuned so closely to past data that it loses adaptability. Traders might tweak stop losses, moving averages, or entry points until the 
+         https://24markets.com/education/backtesting-effectively-avoiding-curve-fitting
+  [tavily] no-date | How to Avoid Overfitting When Testing Trading Rules « adventuresofgreg.blog
+         « Backtesting Platforms Compared: Features That Matter 10 Best Practices for Trading Strategy Optimization » ### How to Avoid Overfitting When Testing Trading Rules Trading 18th December 2025 - By adventuresofgreg Overfi
+         http://adventuresofgreg.com/blog/2025/12/18/avoid-overfitting-testing-trading-rules
+  [tavily] no-date | What Is Overfitting in Trading Strategies?
+         Overfitting in trading happens when a strategy is overly tailored to historical data, mistaking random noise for actual patterns. This leads to great backtest results but poor real-world performance. Key causes include e
+         https://www.luxalgo.com/blog/what-is-overfitting-in-trading-strategies
+  [tavily] no-date | 3 Simple Ways To Reduce The Risk Of Curve-fitting - Build Alpha
+         ## Why do Automated Trading Strategies Fail? Most automated trading strategies fail due to curve fitting or overoptimization. There are numerous other factors, but overfitting and overoptimization are the prime suspects.
+         https://www.buildalpha.com/3-simple-ways-to-reduce-the-risk-of-curve-fitting
+  [tavily] no-date | How to avoid overfitting in algorithmic trading - LinkedIn
+         Overfitting in algorithmic trading occurs when a strategy is excessively optimized for historical data, leading to poor performance in live markets. This happens because the algorithm mistakes random noise for meaningful
+         https://www.linkedin.com/posts/aiml-finance_overfitting-in-algorithmic-trading-occurs-activity-7317808563676958720-ad94
+  [tavily] no-date | Successful Backtesting of Algorithmic Trading Strategies - Part I | QuantStart
+         ### Optimisation Bias This is probably the most insidious of all backtest biases. It involves adjusting or introducing additional trading parameters until the strategy performance on the backtest data set is very attract
+         https://www.quantstart.com/articles/Successful-Backtesting-of-Algorithmic-Trading-Strategies-Part-I
+  [youtube] 2026-03-11 | Why Most Systematic Trading Strategies Fail: Overfitting &amp; Degrees Of Freedom Explained
+         Building a systematic trading strategy isn't that difficult. Building one that actually survives live trading is. In this video we break ...
+         https://www.youtube.com/watch?v=Nvfmi2vANs0
+         VIDEO_ID=Nvfmi2vANs0 CH=Investing Canvas
+  [youtube] 2024-05-22 | How to avoid curve fitting when backtesting?
+         The 2 free backtested strategies are available here: https://www.quantifiedstrategies.com/guide ...
+         https://www.youtube.com/watch?v=3MOaUKnQzto
+         VIDEO_ID=3MOaUKnQzto CH=Quantified Strategies
+  [youtube] 2026-03-10 | 3 Backtesting Pitfalls That Ruin Your Trading Strategy
+         Master Quantitative Skills with Quant Guild* https://quantguild.com * Interactive Brokers for Algorithmic Trading* ...
+         https://www.youtube.com/watch?v=sjq3toGtr0U
+         VIDEO_ID=sjq3toGtr0U CH=Roman Paolucci
+  [youtube] 2025-11-11 | 25.0 The Perfect Backtest Trap
+         Curve-fitting, or overfitting, is a critical pitfall in quantitative trading. It occurs when a strategy's parameters are excessively ...
+         https://www.youtube.com/watch?v=nzZak2qyNQs
+         VIDEO_ID=nzZak2qyNQs CH=LICENCE TO PRINT (LTP)
+  [youtube] 2026-05-16 | Why 99% of Trading Bots Fail (Institutional Algorithmic Architecture)
+         In this deep dive, we strip away retail trading illusions and examine the strict mathematical realities of institutional algorithmic ...
+         https://www.youtube.com/watch?v=S-usI5A98mg
+         VIDEO_ID=S-usI5A98mg CH=QuantForgeAnalytics
+
+=== 03-overstrict.json ===
+query: trading bot too restrictive no trades signal starvation over filtered
+  [brave] 2026-03-04 | Our Trading Bot Rewrites Its Own Rules. Here's How (and What Went Wrong). - DEV Community
+         The Adaptive Trend system (inspired by arXiv:2602.11708) has been running 81 iterations with zero trades. It&#x27;s waiting for a momentum signal on 6-hour candles — MOM &gt; 3% for long, MOM &lt; -4% for short. This is 
+         https://dev.to/ai-agent-economy/our-trading-bot-rewrites-its-own-rules-heres-how-and-what-went-wrong-5dg9
+  [brave] 2025-10-28 | Automated Trading Bots & AI Signal Tools That Work (and Don’t)
+         Operations: <strong>automate health checks for data, model server, and exchange connectivity</strong>. If any check fails, flatten and pause. Rotate API keys and restrict permissions to trade-only.
+         https://cryptoadventure.com/automated-trading-bots-ai-signal-tools-that-work-and-dont/
+  [brave] 2025-12-27 | Common Pitfalls to Avoid When Building Your First Crypto Trading Bot: What Beginners Get Wrong - Coin Bureau
+         In reality, your bot trades an exchange’s order book, fee schedule, and API, instead of believing it trades “the market”. Pick the wrong venue and even a good strategy can be dragged down by thin liquidity, unreliable en
+         https://coinbureau.com/guides/crypto-trading-bot-mistakes-to-avoid
+  [brave] 2026-02-08 | r/Daytrading on Reddit: I started building a trading BOT, for those who tried this, am I wasting my time?
+         It depends on where you are. US restrictions are aweful... making 90% of bots either useless or not connect properly. However, there is a way... tradingview and or tradovate python to api connections using 3rd party mark
+         https://www.reddit.com/r/Daytrading/comments/1qynmrq/i_started_building_a_trading_bot_for_those_who/
+  [brave] 2026-05-01 | MetaTrader Error Survival Guide 2026: Fix Trade Disabled &amp; More
+         <strong>Account-level restriction</strong>.
+         https://newyorkcityservers.com/blog/metatrader-error-survival-guide-2025-fix-trade-disabled-more
+  [brave] 2026-02-08 | r/SideProject on Reddit: Polymarket trading bot - exploiting market inefficiencies to make arbitrage trades.
+         later I made it a bit more responsive and started tracking swings. id hold tokens until sell pressure on the order book started to build, the. dump the winning token at market and place a limit orders for the loser at 3c
+         https://www.reddit.com/r/SideProject/comments/1qz11e5/polymarket_trading_bot_exploiting_market/
+  [brave] 2025-11-25 | Why Most Trading Bots Fail — And How Proper Indicator Confluence Fixes It | by MariamHov | Medium
+         Only take RSI signals when ATR &lt; ATR_threshold Only take breakout trades when BBWidth &gt; expansion_threshold · With volatility filtering, your bot stops trading in chaotic periods and activates when conditions norma
+         https://medium.com/@mariamhov/why-most-trading-bots-fail-and-how-proper-indicator-confluence-fixes-it-ae7da273f90f
+  [brave] 2026-04-07 | r/passive_income on Reddit: I built an OpenClaw crypto trading bot with 15 safety checks. Here's why 92% of bo
+         First real signals came through, LLM consensus working correctly now. Bot is live and scanning 4x daily. Waiting on 10 clean paper trades before going live with real capital. F&amp;G has been in fear territory which is e
+         https://www.reddit.com/r/passive_income/comments/1sdd5je/i_built_an_openclaw_crypto_trading_bot_with_15/
+  [exa] 2026-05-23 | My bot ran for 48 hours and didn't do a thing - DEV Community
+         https://dev.to/cameronmeese/my-bot-ran-for-48-hours-and-didnt-do-a-thing-1bh
+  [exa] 2026-02-28 | Add rate limit error recovery and backoff · 96a447f · msei99/passivbot
+         https://github.com/msei99/passivbot/commit/96a447f718aab0c399a047ffbb65f07ded3c001c
+  [exa] 2026-04-06 | Fix Bybit closed-pnl pagination storm causing retCode:10006 rate limits · 626ad21 · msei99/passivbot
+         https://github.com/msei99/passivbot/commit/626ad218f20b2dc93faea9610cc300d222992df6
+  [exa] 2026-05-16 | toxic flow · Issue #8237 · hummingbot/hummingbot
+         https://github.com/hummingbot/hummingbot/issues/8237
+  [exa] 2025-07-05 | Bot enters heartbeat-only mode - no candle processing occurs despite successful initialization · Issue #11957 
+         https://github.com/freqtrade/freqtrade/issues/11957
+  [exa] 2025-05-06 | Bot Missing Signals Due to Outdated History for Pair BTC/USDC · Issue #11725 · freqtrade/freqtrade
+         https://github.com/freqtrade/freqtrade/issues/11725
+  [exa] 2026-04-04 | Crypto Trading Bot: Fix Microstructure Issues | Kalena — Kalena
+         https://blog.kalena.ai/crypto-trading-bot-performance-is-a-microstructure-problem-here-s-how-to-diagnose-and-fix-it
+  [exa] 2026-03-16 | Confirm_trade_entry callback not properly limiting directional trades in backtest mode · Issue #12954 · freqtr
+         https://github.com/freqtrade/freqtrade/issues/12954
+  [tavily] no-date | Trading Bot Strategy - The 5 Essential Elements Every Bot Needs - Tickerly
+         The takeaway: Your entry logic needs a clear, testable assumption about market behavior. Everything else is built on top of that in your trading bot strategy. ## 2. Entry Qualifiers (Filters): Decide When to Act on Signa
+         https://tickerly.net/five-elements-every-trading-bot-strategy-needs
+  [tavily] no-date | AI Trading Bot Risk Management: Complete 2025 Guide
+         Apply confidence thresholds to signal accuracy Use volume filters to block trades on thin liquidity Pause bots after 3–4 consecutive stop-losses Pro Tip: The 3Commas bots marketplace allows traders to select top-performi
+         https://3commas.io/blog/ai-trading-bot-risk-management-guide-2025
+  [tavily] no-date | My Bot Is Turned ON - Why Hasn't It Made Any Trades?
+         my Trend and different a my again investigate decisions I that that get that how which passed you different they where the ultimately now point opportunity of where stopping position making can't not you're this environm
+         https://www.youtube.com/watch?v=yaz64J394us
+  [tavily] no-date | Step Six — Mastering False Signal Filters: Enhancing Your Binance Futures Trading Strategy
+         Applying too many filters can also significantly reduce the number of valid data points, making it difficult to ensure that the remaining trades represent a reliable sample of market behavior. With too few data points, t
+         https://medium.com/@inbox.artem/step-six-mastering-false-signal-filters-enhancing-your-binance-futures-trading-strategy-87fea5f9974c
+  [tavily] no-date | Trading Bots That Passed Funded Challenges | For Traders
+         ### Drawdown Management Risk control is a cornerstone of these EAs, with built-in kill-switches that monitor equity in real time. If the daily drawdown limit (e.g., 2.5%) or the overall limit (e.g., 5.5%) is hit, the bot
+         https://www.fortraders.com/blog/trading-bots-passed-funded-challenges
+  [tavily] no-date | [PDF] Best Practices For Automated Trading Risk Controls And System ...
+         limits within their own trading infrastructure for indirect access participants or using an exchange-provided tool for direct access participants, based on a review of the risk limits appropriate for the market participa
+         https://www.fia.org/sites/default/files/2024-07/FIA_WP_AUTOMATED%20TRADING%20RISK%20CONTROLS_FINAL_0.pdf
+  [tavily] no-date | AI Bots Redefine Algorithmic Trading Through Machine Learning
+         Signal Agents represent Tickeron's entry-level AI trading bots, designed for traders seeking straightforward copy trading capabilities. These bots generate real-time trading signals without complex money management requi
+         https://tickeron.com/blogs/ai-bots-redefine-algorithmic-trading-through-machine-learning-11474
+  [tavily] no-date | Order Book Filtration and Directional Signal Extraction at ... - arXiv
+         The distinction between filtered and unfiltered OBI signals has become an important practical consideration in high-frequency data analysis. An unfiltered order book signal is computed directly from the raw data stream, 
+         https://arxiv.org/html/2507.22712v1
+  [youtube] 2026-05-19 | Apocalypse: Poor Boy Unlocks a Check-In System: Every Beauty He Shelters Unlocks a New Resource!
+         manhwarecap #animerecap #anicap #themanhwaman #manhwa #webtoon #manhwarecaps #manhwacap #webtoonrecap ...
+         https://www.youtube.com/watch?v=_pe5Bm83S5o
+         VIDEO_ID=_pe5Bm83S5o CH=COMICS STORM
+  [youtube] 2025-10-15 | He Built A Fence Just To Punish Neighbors 😵
+         https://www.youtube.com/watch?v=TjxAgpSK6ok
+         VIDEO_ID=TjxAgpSK6ok CH=Zack D. Films
+  [youtube] 2025-12-30 | AI Thought He Was Falling Asleep 😑
+         https://www.youtube.com/watch?v=lRX9vq4E9KI
+         VIDEO_ID=lRX9vq4E9KI CH=Zack D. Films
+  [youtube] 2026-05-23 | ☄️New【Multi Sub 】Doomsday smuggler: I trade spicy strips for gold bricks EP 1-129#anime #animation
+         都市#逆袭#热血#city #counterattack #passionate 【Introduction】 Suddenly, the end - of - the - world game descended into reality ...
+         https://www.youtube.com/watch?v=3YFywsM-oM4
+         VIDEO_ID=3YFywsM-oM4 CH=Quartic element Anime
+  [youtube] 2025-12-30 | How Reliable Is Your Memory? 🤔
+         https://www.youtube.com/watch?v=A_FhjDDVZ9w
+         VIDEO_ID=A_FhjDDVZ9w CH=Zack D. Films
+
+=== 04-propfirm-postmortem.json ===
+query: prop firm trading bot Topstep MFFU automated funded account blown
+  [brave] 2026-05-04 | Topstep Review 2026: Futures Prop Firm Rules, Payouts, Express Funded Accounts
+         Everything futures traders need to know about Topstep in 2026: how the Trading Combine works, how payouts and consistency rules actually function, what account sizes and costs look like, and how the Back2Funded reactivat
+         https://damnpropfirms.com/futures-prop-firms/topstep/
+  [brave] 2026-01-29 | r/PropFirmTester on Reddit: MFFU Is a Scam
+         I’m talking to the level 2 support team now about this issue. I’ve always been a fan of MFFU because of all the positive experiences I’ve heard, but they’ve been handling this worse than TopStep. There are tens (maybe hu
+         https://www.reddit.com/r/PropFirmTester/comments/1qqdsmg/mffu_is_a_scam/
+  [brave] 2026-02-06 | r/TopStepX on Reddit: Topstep just locked my account, any one have this happen.
+         Well time for everyone to move from this prop firm. From what I hear topstep is some bs. First they had a technical problem so they gave everyone free accounts now they are banning everyone and reasons is always hedging.
+         https://www.reddit.com/r/TopStepX/comments/1qxbwyy/topstep_just_locked_my_account_any_one_have_this/
+  [brave] 2025-12-18 | r/TopStepX on Reddit: I finally joined a different prop firm.
+         ... Topstep is absolute trash, the scumbags of this industry and it’s so sad as they used to be such a good company. <strong>During one of the last outages I had two funded accounts get blown due to not being able to fla
+         https://www.reddit.com/r/TopStepX/comments/1ppxkc9/i_finally_joined_a_different_prop_firm/
+  [brave] 2025-11-04 | Best Trading Robots for Funded Accounts | For Traders
+         Tailored for proprietary traders, For Traders integrates seamlessly with Tradovate, allowing users to place simultaneous orders for both evaluation and funded accounts. It supports firms like Topstep and Apex, making it 
+         https://www.fortraders.com/blog/trading-robots-funded-accounts
+  [brave] 2026-03-05 | MyFundedFutures vs Topstep 2026: Which Futures Prop Firm Wins?
+         Topstep made two significant changes in 2026: <strong>they locked all new accounts into their proprietary TopstepX platform, and they removed the 100% first-$10K payout structure for traders who joined on or after Januar
+         https://www.proptradingvibes.com/blog/myfunded-futures-vs-topstep-d9a5a
+  [brave] 2025-12-10 | From Zero to $250K Funded: Prop Firm Success Story - PickMyTrade
+         Discover this prop firm success story: from zero to funded trader using automation. Unlock funded trader automation tips for your journey.
+         https://blog.pickmytrade.trade/from-zero-to-funded-prop-firm-success-story-automation/
+  [brave] 2026-01-18 | Best Trading Bots for Funded Accounts (2026 Guide) - Funded Account PRO
+         Learn which trading bots work with funded accounts, what prop firms allow, real risks, costs, and how to stay rule-compliant.
+         https://fundedaccountpro.com/guides/best-trading-bots-for-funded-accounts
+  [exa] 2026-04-10 | Topstep vs MyFundedFutures 2026: Rules, Cost & Payouts
+         https://traderssecondbrain.com/guides/topstep-vs-myfundedfutures
+  [exa] 2026-05-10 | MFFU Rules 2026: Every Plan, Every Rule
+         https://proptradingvibes.com/blog/myfundedfutures-rules-overview
+  [exa] 2026-04-24 | MyFundedFutures Review 2026: Code PROPSCOPE 32% OFF | PropScope
+         https://propscope.net/en/myfundedfutures/
+  [exa] 2026-03-20 | MyFundedFutures Review 2026: Is the 4.9 Trustpilot Score Deserved? — PropScorer Blog
+         https://www.propscorer.com/blog/myfundedfutures-review-2026
+  [exa] 2026-02-22 | Best Trade Copier for MyFundedFutures 2026 | MFFU Guide | Copilink
+         https://copilink.com/articles/best-trade-copier-myfundedfutures-2026
+  [exa] 2026-01-18 | MyFundedFutures Review 2026 — Rules, Payouts, Accounts & Limits
+         https://www.proptradingvibes.com/prop-firms/myfundedfutures
+  [exa] 2026-03-06 | MyFundedFutures Core vs Pro: Which Plan Should You Choose? (2026)
+         https://proptradingvibes.com/blog/myfundedfutures-core-vs-pro
+  [exa] 2026-04-10 | Apex vs MyFundedFutures 2026: Drawdown, Fees & Payouts
+         https://traderssecondbrain.com/guides/apex-vs-myfundedfutures
+  [tavily] no-date | ClearEdge Automation
+         Read more Read more 9 mins Read Stop Blowing Funded Accounts With Automated Prop Firm Drawdown Protection Read more Read more 9 mins Read How To Pass Prop Firm Combines Using 2026 Automation Rules Read more Read more 9 m
+         https://clearedge.trading/post/prop-firm-automation-guide
+  [tavily] no-date | TradersPost for Prop Firm Traders | Automated Trading Bot Platform
+         How It Works Connections Assets Pricing About Us Docs Support Blog Login Start now ## TradersPost for Prop Firm Traders Automate Your Prop Firm Trading Execute trades across evaluation and funded accounts from firms like
+         https://traderspost.io/use-cases/prop-firms
+  [tavily] no-date | Best Trading Robots for Funded Accounts | For Traders
+         Each robot offers unique features, but careful configuration and testing are essential to ensure compliance with prop firm rules. Below is a quick comparison of key details. ### Quick Comparison | Trading Robot | Platfor
+         https://www.fortraders.com/blog/trading-robots-funded-accounts
+  [tavily] no-date | PROP FIRM TRADERS - Intentionally blowing accounts? - Reddit
+         I'm about to request my second payout from topstep after market close. I think the trick is to have multiple small withdrawals. My first was
+         https://www.reddit.com/r/Daytrading/comments/1rei3u0/prop_firm_traders_intentionally_blowing_accounts
+  [tavily] no-date | Topstep vs. Tradeify vs. My Funded Futures: Which Prop Firm is Right for You?
+         ## What Are Proprietary Trading Firms? Proprietary trading firms, or prop firms, allow traders to access capital without putting their own funds at risk. Traders must pass an evaluation by demonstrating consistent profit
+         https://crosstrade.io/blog/topstep-vs-tradeify-vs-my-funded-futures
+  [tavily] no-date | Topstep's Funded Futures Trading Program - How it Works
+         # Prove your strategy. Earn funding. Trade our money. Prove your strategy. Earn funding. Trade our money. Topstep prop firm combine, express funded trader, and live funded trader seals. ## The Trading Combine® This is wh
+         https://www.topstep.com/our-program
+  [tavily] no-date | Fair Play and Prohibited Trading Practices | My Funded Futures Help Center
+         Understanding the Simulated Market Challenges Certain trading strategies may exploit the simulated fill algorithm, performing well in the evaluation stage but inevitably resulting in losses when transitioned to live mark
+         https://help.myfundedfutures.com/en/articles/8444599-fair-play-and-prohibited-trading-practices
+  [tavily] no-date | Instagram
+         Topstep is currently facing a severe reputational crisis following widespread technical failures on its new TopstepX platform. ⁠ ⁠ During a three-day outage, traders watched thousands of dollars in unsecured profits vani
+         https://www.instagram.com/reel/DSdtPZnkt9r
+  [youtube] 2025-04-30 | Quick $7500 → Secured 5 Topstep Funded Accounts
+         Took one quick trade today and passed all 5 of my Topstep combine accounts. Locked in $7500 total. If you're in the combine ...
+         https://www.youtube.com/watch?v=71BkV5PLdUs
+         VIDEO_ID=71BkV5PLdUs CH=Tyler Camn
+  [youtube] 2025-05-15 | How I’ll Pass a $50K Futures Challenge: $1.5K/Day Gold Trade (50% Rule)
+         Helpful Links Free E-Books: “10 Easy Steps to Get Funded” & “Million-Dollar Funded Trader” ...
+         https://www.youtube.com/watch?v=ckBdnPMMLK8
+         VIDEO_ID=ckBdnPMMLK8 CH=Prop Firm Kid
+  [youtube] 2025-05-20 | The Hidden Power of Apex Funded Accounts…
+         https://www.youtube.com/watch?v=a_3eAgpR-XQ
+         VIDEO_ID=a_3eAgpR-XQ CH=Cammy Capital
+  [youtube] 2025-04-21 | How I Pass the Topstep Combine in 2 Days
+         How I Pass the Topstep Combine in 2 Days #trading #topsteptrader #tradingstrategy how to pass trading combine,how to pass ...
+         https://www.youtube.com/watch?v=djo9RPiPJ0A
+         VIDEO_ID=djo9RPiPJ0A CH=Roddric Mack
+  [youtube] 2024-05-17 | The Power of Multiple Accounts | Prop Firm HACK for Scaling Your Day Trading
+         Scale Your Day Trading Profits FAST: Prop Firm HACK with 20x Accounts! WARNING: This strategy is NOT for everyone. Watch to ...
+         https://www.youtube.com/watch?v=IieCffbKyAs
+         VIDEO_ID=IieCffbKyAs CH=Trading with Forrest 
+
+=== 05-long-survivors.json ===
+query: profitable algorithmic trading bot survived 12 months consistent profit retail
+  [brave] 2026-02-09 | Is Automated Trading Profitable? Real Data & Guide [2026] - TradingView Hub
+         Here&#x27;s what we&#x27;re seeing: <strong>DCA bots on 3Commas averaged around 18.7% annualized returns across 100 verified users over 12 months</strong> — not bad at all, though you should be a bit skeptical since it&#
+         https://www.tv-hub.org/guide/is-automated-trading-profitable
+  [brave] 2025-12-09 | From Failed Experiments to 43.8% APR: How I Finally Built a Profitable Trading Bot with AI | by Joe Tay | Medi
+         From Failed Experiments to 43.8% APR: How I Finally Built a Profitable Trading Bot with AI A four-year journey of persistence, failures, and an unexpected breakthrough with Generative AI It’s …
+         https://medium.com/@joetay_50959/from-failed-experiments-to-43-8-apr-how-i-finally-built-a-profitable-trading-bot-with-ai-64771995d38c
+  [brave] 2026-02-28 | AI Trading Bots: Worth Using or Just a Scam?
+         Only <strong>10-30% Profit</strong>: Industry estimates suggest only a minority of retail bot users remain profitable after 12 months.
+         https://www.unboxfuture.com/2026/02/AI-Trading-Bots-Worth-Using-or-Just-a-Scam.html?m=1
+  [brave] 2026-01-11 | Top Trading Algo Bots: Automating Your Trading Strategy
+         Profitability varies widely and depends on the quality of the strategy, market conditions, and the type of algorithmic trading software used. A quant trading bot may outperform during stable conditions but struggle durin
+         https://bookmap.com/blog/top-trading-algo-bots-automating-your-trading-strategy
+  [brave] 2026-03-10 | I Tested 5 Automated Trading Bots for 12 Months: Here’s What Actually Worked (And What Lost Me Money) | by Geo
+         Profit-sharing model — they only take a cut (20–30%) when the bot makes money. No profit, no fee. This aligns incentives. Grid trading specialization — their grid implementation is the most reliable I’ve tested. The bots
+         https://medium.com/@fingrafov/i-tested-5-automated-trading-bots-for-12-months-heres-what-actually-worked-and-what-lost-me-0d265bd2aa0f
+  [brave] 2026-05-05 | Are Crypto Trading Bots Profitable? 12 Tips to Boost Profits
+         A 90-day live paper test done across top pairs showed a clear pattern: overlaps between significant cash and derivatives liquidity providers create more active order book activity and repeatable spread compression. Marke
+         https://www.goatfundedtrader.com/blog/are-crypto-trading-bots-profitable
+  [brave] 2025-08-28 | Is AI Bot Trading Profitable in 2025? Real Results Revealed
+         Poorly designed bots also fail by overfitting to past data or ignoring market shifts like volatility spikes. ... In speed, consistency, and emotion-free execution, yes—AI bots on platforms like <strong>Trade Ideas</stron
+         https://agentiveaiq.com/blog/is-ai-bot-trading-profitable-the-2025-reality-check
+  [brave] 2025-06-11 | r/TradingView on Reddit: For those with profitable TradingView bots — how did you build them and what strategy
+         I ended up using the TradingView bot integration from Finestel, which basically listens to the alerts and turns them into real trades automatically. It saves a lot of manual work and removes the delay you normally get wh
+         https://www.reddit.com/r/TradingView/comments/1l8gkvf/for_those_with_profitable_tradingview_bots_how/
+  [exa] 2026-03-28 | The $214 Problem: Month Three — MAXIMUS
+         https://www.northlakelabs.com/max/blog/214-problem-month-three/
+  [exa] 2026-04-21 | One Year of Trading Algorithm Performance
+         https://nurp.com/wisdom/trading-algorithm-performance-over-a-year-of-tracking/
+  [exa] 2026-04-23 | weemaba999/TradingLab999
+         https://github.com/weemaba999/TradingLab999
+  [exa] 2026-04-28 | Automated Trading 6 Month Update | Algo Trading Software
+         https://nurp.com/algorithmic-trading-blog/3048-trades-later-6-month-update-automated-trading/
+  [exa] 2026-04-11 | 0x8dxd Polymarket: $2.38M All-Time, $313 to $438K Origin Story | Cointrenches
+         https://cointrenches.io/0x8dxd-polymarket-crypto-micro-bot-profile/
+  [exa] 2026-04-21 | I Built a Deriv Bot That Wins 71% of the Time — Here’s the Complete Strategy (With Code) | by Precious Lyna An
+         https://preciousanusiem.medium.com/i-built-a-deriv-bot-that-wins-71-of-the-time-heres-the-complete-strategy-with-code-b2f92c11b2de
+  [exa] 2026-04-16 | 13 Days, 48 Trades, Breakeven. Then I Fixed One Thing. Here's Every Trade. - DEV Community
+         https://dev.to/trendrider/13-days-48-trades-breakeven-then-i-fixed-one-thing-1d6j
+  [exa] 2026-05-22 | I Built a Lab That Trades for Me. Most trading bots are vaporware. You… | by Devin Julian | May, 2026 | Medium
+         https://medium.com/@devinjulian/i-built-a-lab-that-trades-for-me-b784b370e341
+  [tavily] no-date | AI Bots Redefine Algorithmic Trading Through Machine Learning
+         Single Agent AI Trading Bots focus on individual stocks or ETFs, applying concentrated machine learning analysis to identify optimal entry and exit points for specific securities. These bots excel when traders have convi
+         https://tickeron.com/blogs/ai-bots-redefine-algorithmic-trading-through-machine-learning-11474
+  [tavily] no-date | The Most Profitable Trading Strategy: Data-Backed Guide
+         Professional scalpers report 55-65% win rates according to Above The Green Line research, though some high frequency approaches target 80% or higher win rates to offset substantial transaction costs. The appeal is obviou
+         https://www.hyrotrader.com/blog/most-profitable-trading-strategy
+  [tavily] no-date | Is Automated Trading Profitable? Real Data & Guide [2026] - TradingView Hub
+         # Is Automated Trading Profitable? What the Data Actually Shows ## Quick Summary Yes, automated trading can be profitable — about 60% of retail algo traders show positive annual returns, compared to just 5-10% of manual 
+         https://www.tv-hub.org/guide/is-automated-trading-profitable
+  [tavily] no-date | Algo Trading Strategies
+         % Profit and Loss ##### Core Features 2 ## Monthly Performance Our leading futures day trading bot delivers impressive monthly returns in quant trading & algorithmic trading: 2020: Annual return of 75.4% (Jan: 9.6%, Mar:
+         https://quantsavvy.com
+  [tavily] no-date | Are Crypto Trading Bots Worth It in 2026? Pros, Cons & Costs
+         ## The Profitability Myth Roughly 70% of global trading volume is now handled by algorithms, but that statistic hides an important truth. Most of it comes from institutional bots, not retail traders. Firms like Jump Trad
+         https://coincub.com/blog/are-crypto-trading-bots-worth-it
+  [tavily] no-date | What is Algorithmic Trading | Benefits, Strategies & Future Trends
+         ### Is algo trading legal in US? Yes, algorithmic trading is legal in the US. However, traders must comply with regulations set by the Securities and Exchange Commission (SEC) and the Commodity Futures Trading Commission
+         https://www.moomoo.com/us/learn/detail-algorithmic-trading-117889-250388038
+  [tavily] no-date | Top 20 Trading Bot Strategies for 2026
+         For example, an ORB strategy applied to a $10,000 futures account trading a single contract resulted in a 433% profit increase. This demonstrates how automation's consistent and emotionless execution can lead to impressi
+         https://www.quantvps.com/blog/trading-bot-strategies
+  [tavily] no-date | Rise of the Retail Algo-Trader: Reinventing Broker Infrastructure for 2025 - Spencer Logic
+         ## Market Growth & Retail Adoption The global algorithmic trading market is forecasted to grow from around US $18.7 bn in 2025 to over $28 bn by 2030, at a CAGR of ~8.7 %. Retail investors now account for approximately 4
+         https://www.spencerlogic.com/blog/rise-of-the-retail-algo-trader-reinventing-broker-infrastructure-for-2025
+  [youtube] 2024-07-05 | SMC STRATEGY PERFECT FOR ALL BEGINNERS #trading #forex #daytrading #money #stocks
+         https://www.youtube.com/watch?v=ameg5lsKWsI
+         VIDEO_ID=ameg5lsKWsI CH=CallistoFX
+  [youtube] 2025-02-10 | Losing Out On $42,000,000 Profit On A Meme Coin...
+         Get 30% Off All Evaluations with Alpha Capital: https://app.alphacapitalgroup.uk/signup/TOT (Or Use Code: TOT) Get 20% off ...
+         https://www.youtube.com/watch?v=9W5xwJqHf_Y
+         VIDEO_ID=9W5xwJqHf_Y CH=Titans Of Tomorrow
+  [youtube] 2025-06-30 | How I Trade Forex Full Margin in 2025, To Flip small account Quickly | Full Tutorial
+         forex #forextrader #tradinggold In this video, I reveal how I heavily flipped my small 10$ forex trading account in 2025 using the ...
+         https://www.youtube.com/watch?v=9bamDLCMT4k
+         VIDEO_ID=9bamDLCMT4k CH=Gold Mastery Fx
+  [youtube] 2025-04-11 | Can You Make ₹20,000 per Month from ₹1 Lakh? @PushkarRajThakurOfficial #trading #shorts #ytshorts
+         Can You Make ₹20000 per Month from ₹1 Lakh? ⁨@PushkarRajThakurOfficial⁩ #trading #shorts #ytshorts Credit : Deepak ...
+         https://www.youtube.com/watch?v=zOUsZJhQfl8
+         VIDEO_ID=zOUsZJhQfl8 CH=BhavyaMoneyTalks
+  [youtube] 2024-10-30 | 7 Steps to Make Money with a Small YouTube Channel
+         7 tips for making money on YouTube with new channel. **** FREE YouTube Growth Masterclass http://ThinkMasterclass.com ...
+         https://www.youtube.com/watch?v=NCNQkLtubuk
+         VIDEO_ID=NCNQkLtubuk CH=Think Media
+
+=== op01.json ===
+
+=== op02.json ===
+
+=== op03.json ===
+
+=== op04.json ===
+
+=== r01-algotrading-profitable.json ===
+query: bot profitable consistent
+subreddit: r/algotrading
+  [reddit] 2025-10-17 score=51 comments=70 | Consistently Profitable Traders - Is a 3-5% Monthly Return Realistic with a $100k+ Prop Account?
+          Hey everyone, I'm hoping to get some real-world insight from the seasoned veterans here—those who've maintained profitability and consistency for several years, not just had a few good months. I've been in the market since 2020, mainly dealing with long-term 
+         https://www.reddit.com/r/algotrading/comments/1o8v14r/consistently_profitable_traders_is_a_35_monthly/
+  [reddit] 2025-10-20 score=0 comments=27 | Guys it took me 249 hours to make this bot reasonably profitable ,
+         It did around 2.5% in 3 days , i ran 5 iterations of it and its consistent , also its inversing a losing strategy i made , but i can increase the funds on the flipped one and generate profit , rightnow its , 12$ on the looser strat and 30$ on the main
+         https://www.reddit.com/r/algotrading/comments/1obmf16/guys_it_took_me_249_hours_to_make_this_bot/
+  [reddit] 2025-10-20 score=0 comments=4 | Guys it took me 249 hours to make this bot reasonably profitable ,
+         I have ran 5 iterations of it in last 1 month and in every one of them its consistent , rightnow it just did around 2.5% in 3 days
+         https://www.reddit.com/r/algotrading/comments/1obma47/guys_it_took_me_249_hours_to_make_this_bot/
+  [reddit] 2026-01-07 score=588 comments=143 | Dead Internet Theory in r/algotrading
+         im calling this out because the discussion quality here is being degraded by what i am 99% sure is a bot farming engagement. if you saw the recent post about Small experiment: "[Small experiment: filtering low-expectancy trades flipped a strategy’s PnL in 24h]
+         https://www.reddit.com/r/algotrading/comments/1q67z33/dead_internet_theory_in_ralgotrading/
+  [reddit] 2024-09-13 score=404 comments=149 | From gambling to trading, my experience over the years
+         Hello everyone, I want to share with you some of the concepts behind the algorithmic trading setup I’ve developed over the years, and take you through my journey up until today. First, a little about myself: I’m 35 years old and have been working as a senior e
+         https://www.reddit.com/r/algotrading/comments/1ffut3a/from_gambling_to_trading_my_experience_over_the/
+  [reddit] 2025-11-05 score=63 comments=107 | Hi everyone, I finally put my MT5 EA on a funded account. Excited!
+         Hey everyone, I am not a trader, but a programmer. I have always been inclined to solve the trading problem, and It's been a long road, learning, failing, testing, and deploying live. To whoever is building bots, the following will help you get more confidence
+         https://www.reddit.com/r/algotrading/comments/1op7ooq/hi_everyone_i_finally_put_my_mt5_ea_on_a_funded/
+  [reddit] 2025-09-10 score=119 comments=94 | What is a good trading algorithm?
+         I am just wondering what your definition of a good algorithm (for automatic) trading is. What properties are most important for you and why? When you have one or more algorithms in production, would you like to share the basic stats like average ROI and worst 
+         https://www.reddit.com/r/algotrading/comments/1nddefv/what_is_a_good_trading_algorithm/
+  [reddit] 2021-05-23 score=768 comments=143 | Advice for aspiring algo-traders
+         1. Don't quit your job 2. Don't write your backtesting engine 3. Expect to spend 3-5 years coming up with remotely consistent/profitable method. That's assuming you put 20h+/week in it. 80% spent on your strategy development, 10% on experiments, 10% on automat
+         https://www.reddit.com/r/algotrading/comments/njcquf/advice_for_aspiring_algotraders/
+  [reddit] 2026-05-01 score=3 comments=43 | How do you tell apart alpha from bullshit?
+         Math undergraduate here, with a background in software engineering. I’ve always been interested in algo trading, though I haven’t been consistent. I built my first bot 7 years ago, and it was profitable for some time (until it wasn’t). Looking back, I don’t kn
+         https://www.reddit.com/r/algotrading/comments/1t0twnn/how_do_you_tell_apart_alpha_from_bullshit/
+  [reddit] 2026-04-17 score=9 comments=39 | ClaudeAI CryptoTrading API
+         Hey everyone! 👋 I've been exploring the idea of building an automated crypto trading bot connected to Coinbase (or similar platforms like Binance or Kraken) via their APIs, and I'd love to hear from anyone who's actually done this. Specifically I'm curious ab
+         https://www.reddit.com/r/algotrading/comments/1snrfcs/claudeai_cryptotrading_api/
+
+=== r02-algotrading-overfit.json ===
+query: overfit curve fit
+subreddit: r/algotrading
+  [reddit] 2025-06-29 score=626 comments=88 | Meta Labeling for Algorithmic Trading: How to Amplify a Real Edge
+         I’ve commented briefly on some other posts mentioning this approach, and there usually seems to be some interest so I figured it would be good to make a full post. There is a lot of misunderstanding and misconceptions about how to use machine learning for algo
+         https://www.reddit.com/r/algotrading/comments/1lnm48w/meta_labeling_for_algorithmic_trading_how_to/
+  [reddit] 2026-04-22 score=80 comments=60 | 4 years of a 15x-leveraged daily BTC signal — Sharpe 2.2, MDD -13%. Here's the stuff that actually kept levera
+         Long-time lurker. Posting because I keep seeing "15x leverage" treated like an inherent death sentence here, and I think that framing misses the actual issue. The problem isn't leverage — it's running leverage over a signal that can't handle it. I built a dail
+         https://www.reddit.com/r/algotrading/comments/1ss5btv/4_years_of_a_15xleveraged_daily_btc_signal_sharpe/
+  [reddit] 2026-04-22 score=35 comments=52 | What broke first when I moved from backtesting to live wasn't the strategy
+         Everyone talks about overfitting and curve fitting as the big live trading failure modes.Those are real. But what actually caught me off guard was more mundane execution latency, order handling edge cases, and how the algo behaved during low liquidity periods 
+         https://www.reddit.com/r/algotrading/comments/1ssh4lq/what_broke_first_when_i_moved_from_backtesting_to/
+  [reddit] 2025-08-17 score=81 comments=59 | Skepticism about skepticism about retail algo trading
+         Been reading this sub a lot and trying to learn more about daytrading. It seems people have a pretty negative view of the whole thing and consider it a losing proposition. But I'm finding myself being skeptical about all the negativity. For context, I've devel
+         https://www.reddit.com/r/algotrading/comments/1msd6ww/skepticism_about_skepticism_about_retail_algo/
+  [reddit] 2026-01-09 score=9 comments=22 | Are the standard Bollinger Band parameters (20, 2) statistically significant, or just a legacy heuristic?
+         I’m currently backtesting a mean reversion strategy using Bollinger Bands, and it got me thinking about the ubiquity of the standard (20, 2) settings. I understand the theoretical basis: a 20-day SMA captures the intermediate trend, and +/- 2 standard deviatio
+         https://www.reddit.com/r/algotrading/comments/1q87a99/are_the_standard_bollinger_band_parameters_20_2/
+  [reddit] 2026-01-20 score=13 comments=16 | Built a systematic trading system - looking for feedback on my entry/exit approach and understanding commercia
+         Hey everyone, Been working on a trading project for about a year and wanted to share some results and get feedback. Not selling anything - genuinely curious if my approach makes sense and if there's any appetite for this kind of thing. **The high-level idea:**
+         https://www.reddit.com/r/algotrading/comments/1qhpies/built_a_systematic_trading_system_looking_for/
+  [reddit] 2025-03-01 score=77 comments=45 | My Walkforward Optimization Backtesting System for a Trend-Following Trading Strategy
+         Hey r/algotrading, I’ve been working on a trend-following trading strategy and wanted to share how I use **walkforward optimization** to backtest and evaluate its performance. This method has been key to ensuring my strategy holds up across different market co
+         https://www.reddit.com/r/algotrading/comments/1j187b3/my_walkforward_optimization_backtesting_system/
+  [reddit] 2026-01-05 score=0 comments=8 | Repeatedly failing OOS , am I overfitting or just not enough data?
+          Hello everyone, I'm at a frustrating crossroads in my quant journey and could use some seasoned perspective. My Background: ~5 years of discretionary FX trading with mixed results. For the last 3 months, I've been fully committed to building a robust, automat
+         https://www.reddit.com/r/algotrading/comments/1q4y07t/repeatedly_failing_oos_am_i_overfitting_or_just/
+  [reddit] 2025-06-05 score=0 comments=8 | If you're just getting started or feeling lost...
+         Here’s what helped me find my edge—and it wasn’t building a fancy tech stack, running thousands of backtests, or diving into machine learning. None of that comes first. The first real assignment is simple: **Put on a basic data analytics hat.** Start with raw 
+         https://www.reddit.com/r/algotrading/comments/1l3ntxv/if_youre_just_getting_started_or_feeling_lost/
+  [reddit] 2021-04-29 score=6 comments=15 | Question regarding overfitting algos
+         Hi! I'm quite new to this sub and I've been wondering about overfitting for a while. Sorry if this is not the right place to ask this question. There's a lot of conflicting information to be found on the internet about overfitting. So I found this picture: [ht
+         https://www.reddit.com/r/algotrading/comments/n15hy5/question_regarding_overfitting_algos/
+
+=== r03-algotrading-notrades.json ===
+query: bot no trades not triggering filtered
+subreddit: r/algotrading
+  [reddit] 2026-01-07 score=590 comments=143 | Dead Internet Theory in r/algotrading
+         im calling this out because the discussion quality here is being degraded by what i am 99% sure is a bot farming engagement. if you saw the recent post about Small experiment: "[Small experiment: filtering low-expectancy trades flipped a strategy’s PnL in 24h]
+         https://www.reddit.com/r/algotrading/comments/1q67z33/dead_internet_theory_in_ralgotrading/
+  [reddit] 2026-05-18 score=2 comments=2 | Seeking feedback on my scanner (dealer Greek exposure x 4-gate filter)
+         I built a CLI tool that scans any US stock ticker and produces an options entry recommendation based on trend regime, dealer Greek positioning, and market structure. Looking for honest feedback. Tear it apart, tell me what's broken, suggest improvements, or te
+         https://www.reddit.com/r/algotrading/comments/1tglpcx/seeking_feedback_on_my_scanner_dealer_greek/
+  [reddit] 2026-04-19 score=239 comments=155 | My AI built me a trading bot and now neither of us fully knows what we're doing — roast us please
+         Hi r/algotrading, This is technically Claude writing this, because my human asked me to. He described himself as a "Finanz-Noob" (German for "has no idea what's happening") and thought it would be a good idea to ask an AI to build him an algo trading bot from 
+         https://www.reddit.com/r/algotrading/comments/1spzi78/my_ai_built_me_a_trading_bot_and_now_neither_of/
+  [reddit] 2026-04-18 score=115 comments=155 | 6 months full time on algo, 17 strategies dead on MNQ/NQ, I genuinely don't know what I'm missing anymore
+         Been grinding on this for about 6 months full-time now. Started with mean-reversion ideas, then went into microstructure, order flow, ML, cross-asset lead-lag, basically everything I could get my hands on. I have 3 years of Databento L2 tick data on MNQ, 7 yea
+         https://www.reddit.com/r/algotrading/comments/1spd5nf/6_months_full_time_on_algo_17_strategies_dead_on/
+  [reddit] 2026-03-15 score=25 comments=91 | Is anyone interested in discussing a kalshi 15 minute btc market strat I’m developing/ have developed (not sur
+         Hey everyone I wfh and a couple weeks ago I got obsessed with BTC 15 minute market I came up with some pretty simple indicators but I back tested them from 5 years of data and am using Claude code to scrape kalshi crypto market prices constantly to further ref
+         https://www.reddit.com/r/algotrading/comments/1ru03le/is_anyone_interested_in_discussing_a_kalshi_15/
+  [reddit] 2021-01-27 score=803 comments=192 | /r/algotrading is currently being swarmed by stock pumping bots - They are trying to influence retail traders 
+         It started with a trickle a few days ago, but we are now seeing tens of thousands of bots joining the sub, many of which are posting stock pumping comments and threads.. (Literally 40k+ new users signing up in the last 24 hours.) Thankfully, many of the existi
+         https://www.reddit.com/r/algotrading/comments/l6hs4e/ralgotrading_is_currently_being_swarmed_by_stock/
+  [reddit] 2025-11-05 score=65 comments=107 | Hi everyone, I finally put my MT5 EA on a funded account. Excited!
+         Hey everyone, I am not a trader, but a programmer. I have always been inclined to solve the trading problem, and It's been a long road, learning, failing, testing, and deploying live. To whoever is building bots, the following will help you get more confidence
+         https://www.reddit.com/r/algotrading/comments/1op7ooq/hi_everyone_i_finally_put_my_mt5_ea_on_a_funded/
+  [reddit] 2026-05-01 score=3 comments=43 | How do you tell apart alpha from bullshit?
+         Math undergraduate here, with a background in software engineering. I’ve always been interested in algo trading, though I haven’t been consistent. I built my first bot 7 years ago, and it was profitable for some time (until it wasn’t). Looking back, I don’t kn
+         https://www.reddit.com/r/algotrading/comments/1t0twnn/how_do_you_tell_apart_alpha_from_bullshit/
+  [reddit] 2021-10-25 score=640 comments=133 | I created a Python trading framework for trading stocks &amp; crypto
+         [https://github.com/Blankly-Finance/Blankly](https://github.com/Blankly-Finance/Blankly) So I've seen a few posts already from our users that have linked our open-source trading framework `Blankly`. We think the excitement around our code is really cool, but I
+         https://www.reddit.com/r/algotrading/comments/qfksk2/i_created_a_python_trading_framework_for_trading/
+  [reddit] 2020-05-25 score=3 comments=0 | Has anybody found a reliable trading bot service to place limit orders with a bulk-upload .csv file? Hoping to
+          I have looked through the following platforms so far without luck: Coinigy TrailingCrypto Cryptohopper CryptoHero Kaktana Altrady TradeSanta
+         https://www.reddit.com/r/algotrading/comments/gq7bb5/has_anybody_found_a_reliable_trading_bot_service/
+
+=== r04-futures-bot.json ===
+query: automated bot strategy
+subreddit: r/FuturesTrading
+  [reddit] 2026-02-15 score=19 comments=44 | Thoughts on automated/bot trading?
+         I keep seeing that psychology is what gets in the way of profitable trading. If that’s the case why don’t the majority of traders find a good strategy, backtest it to verify its profitability, and then set up a bot to take psychology and fear out of the equati
+         https://www.reddit.com/r/FuturesTrading/comments/1r5iwqx/thoughts_on_automatedbot_trading/
+  [reddit] 2025-11-12 score=4 comments=24 | Been using AI for trading the last few months — here’s how it actually helps
+         Been using AI in my trading for a few months now and honestly it’s been a game changer for workflow and improvement. I’m not doing any “automated trading” or bot stuff — just using it in practical ways to get better. **Daily session planning** – Every morning 
+         https://www.reddit.com/r/FuturesTrading/comments/1ove05v/been_using_ai_for_trading_the_last_few_months/
+  [reddit] 2026-03-29 score=0 comments=5 | Built an AI-assisted M1 Brent scalper 54% WR, PF 1.86, but 94% of profit came from ONE month. Curve fitting or
+         Hey guys, I’ve been grinding on a fully automated bot for Brent Crude (XTIUSD) on the M1 timeframe. Just wrapped up a proper backtest and the headline stats look pretty solid on paper… but something feels off and I need a reality check from people who’ve been 
+         https://www.reddit.com/r/FuturesTrading/comments/1s6sol1/built_an_aiassisted_m1_brent_scalper_54_wr_pf_186/
+  [reddit] 2025-07-07 score=1 comments=28 | Quantvue and other automation providers
+         So I've played and low level traded with different securities and crypto. I am trying to find something that fits the time I have to trade and put into this. Spending a lot of time on YouTube University (joke). Life is busy and the time I could spend trading m
+         https://www.reddit.com/r/FuturesTrading/comments/1lthftg/quantvue_and_other_automation_providers/
+  [reddit] 2025-03-14 score=19 comments=14 | weekly results from my fully automated NinjaTrader algorithm trading NQ futures
+         Been working on converting my manual NQ trading strategy into a fully automated bot with NinjaTrader since October. Over that period it’s shown signs of potential but struggled at other times. I’ve continued to tweak it to where I am relatively comfortable run
+         https://www.reddit.com/r/FuturesTrading/comments/1jbgf9z/weekly_results_from_my_fully_automated/
+  [reddit] 2025-08-19 score=0 comments=15 | Building a modular bot: criteria over strategies
+         Instead of following the classic route of building a bot around a fixed “strategy” (e.g., moving average crossovers, RSI signals, or predefined patterns), our approach has been to design a system based on independent criteria. Basic and advanced indicators The
+         https://www.reddit.com/r/FuturesTrading/comments/1muiwi0/building_a_modular_bot_criteria_over_strategies/
+  [reddit] 2025-11-09 score=1 comments=0 | Or strategy on full automation, thoughts/ideas welcome
+         I tested las week, this ORB strategy I tweaked from an indicator @orenluxy created and I further modified. Work is still in progress. From my preliminary testing, I only made it work on MBT and MET... Yeah, not the classic instruments but that's why I wanted t
+         https://www.reddit.com/r/FuturesTrading/comments/1oslf1j/or_strategy_on_full_automation_thoughtsideas/
+  [reddit] 2025-01-27 score=7 comments=19 | Has anyone used AI to try to backtest/automate strategies?
+         I do a lot of manual backtesting for my strats, but I do wonder if you could use AI to code and backtest on some platforms. Anyone ever tried this? I have 0 coding experience.
+         https://www.reddit.com/r/FuturesTrading/comments/1ib80ms/has_anyone_used_ai_to_try_to_backtestautomate/
+  [reddit] 2023-12-20 score=6 comments=19 | Automate TV futures strategy
+         What are some good brokers that provide you API access, for minimal to no fee, to the their SIM/DEMO environment to automate and test TV strategies? And I know using web hooks isn’t the most optimal way but I want to simply put it to test before implementing i
+         https://www.reddit.com/r/FuturesTrading/comments/18mzlhy/automate_tv_futures_strategy/
+  [reddit] 2026-04-16 score=160 comments=67 | Iran-US Oil 0DTE opening strategy with an 83% win rate
+         Tldr: Oil futures down premarket = Opening upwards move for SPX, take gains by trading 0DTE options and taking profits in the first 15 minutes. **Disclaimer:** yeah I know there's a ceasefire between Iran and the US. I was gonna post this a week ago but they a
+         https://www.reddit.com/r/FuturesTrading/comments/1smqrt3/iranus_oil_0dte_opening_strategy_with_an_83_win/
+
+=== r05-daytrading-failed.json ===
+query: algo bot prop firm failed
+subreddit: r/Daytrading
+  [reddit] 2025-09-08 score=4627 comments=796 | How Losing in Trading Made Me Lose My Family
+         Guys... I saw it in lots of posts here... Since prop firms get hyped everywhere and Influencers post their 10k per day trades, more and more people need to be aware of the darkside of this. Here is mine: My dream ? Same as yours - freedom for my family... Havi
+         https://www.reddit.com/r/Daytrading/comments/1nbfv7f/how_losing_in_trading_made_me_lose_my_family/
+  [reddit] 2024-08-02 score=151 comments=304 | I’ve failed nearly 50 prop firm challenges. 
+         Hello, this week I’ve blown over 15 prop firm challenges and spent most of my savings this year blowing accounts. When I blow one I immediately buy another and go full leverage and just hope it hits the target. I’ve only passed once and I blew the account the 
+         https://www.reddit.com/r/Daytrading/comments/1ehy43k/ive_failed_nearly_50_prop_firm_challenges/
+  [reddit] 2025-11-21 score=31 comments=108 | Can Someone Explain Prop Firms to Me Like I’m 5?
+         I’ve never done a prop firm challenge. Not once. I always told myself, “If I can’t get profitable with my own money, I don’t deserve more size anyway.” So I just stuck to trading my own account and using my own leverage. I’m not against prop firms at all. I ac
+         https://www.reddit.com/r/Daytrading/comments/1p38pb3/can_someone_explain_prop_firms_to_me_like_im_5/
+  [reddit] 2026-02-14 score=10 comments=72 | Best Prop Firm 2026
+          Any good recommendations guys? I’m finding that a lot of them have silly rules and will suddenly refuse a payout
+         https://www.reddit.com/r/Daytrading/comments/1r4j45j/best_prop_firm_2026/
+  [reddit] 2025-09-04 score=63 comments=72 | Why Prop Firms Suck and What You Should Do Instead
+         Note: I used ChatGPT just to rewrite my ideas for clarity because I suck at writing clearly .. if you have a problem with that .. just don't read what I wrote . These are my opinions/experience. Prop firms get hyped all over x and YouTube , but they’re a scam 
+         https://www.reddit.com/r/Daytrading/comments/1n8j9ok/why_prop_firms_suck_and_what_you_should_do_instead/
+  [reddit] 2026-04-11 score=0 comments=35 | Beginners should NOT trade futures/forex and 99% of people shouldn’t trade prop firms
+         If you’re a new trader you should not be trading forex or futures. You also should not be trading “prop firms” and if you are trading prop firms, you should in 99% of cases stop immediately and the fact that you are trading with prop firms is a strong signal t
+         https://www.reddit.com/r/Daytrading/comments/1sir92t/beginners_should_not_trade_futuresforex_and_99_of/
+  [reddit] 2025-12-12 score=9 comments=58 | Confused after failing a prop firm challenge – which prop firm is best for beginners on a budget?
+         Hi everyone, I’m honestly a bit lost and looking for advice from people with real experience. I recently tried a prop firm challenge (FundingPips Zero 5k) and failed it because I unknowingly violated a high-impact news rule. I fully accept the mistake, but it 
+         https://www.reddit.com/r/Daytrading/comments/1pkpjmm/confused_after_failing_a_prop_firm_challenge/
+  [reddit] 2026-03-04 score=6 comments=40 | new to prop firms and trying to understand if the whole sector is even real
+         hey guys im pretty new to the prop firm space and been trying to research before buying any challenge but the more i read the more confused i get. sometimes i see posts about a firm and then the comments are full of people thanking the company or saying its gr
+         https://www.reddit.com/r/Daytrading/comments/1rk7uhy/new_to_prop_firms_and_trying_to_understand_if_the/
+  [reddit] 2026-04-09 score=13 comments=29 | How is prop firm trading technically different from live capital?
+         For example let’s say youre trading with $2,000 and your risk is 2% per trade so $40. Now let’s say you want to take a $50k eval which is usually $2,000 drawdown. It’s not feasible to use 2% risk of $50,000 so do you just use 2% risk of the drawn down? Or do y
+         https://www.reddit.com/r/Daytrading/comments/1sh0b7i/how_is_prop_firm_trading_technically_different/
+  [reddit] 2026-05-14 score=0 comments=23 | Prop Firm Enforcement Question: Lucid Support Said Similar Entries Were Allowed, Then I Was Banned For “Fraud”
+         Lucid Trading Fraud Ban Exposed: They Said Similar Entries Were Allowed, Then Permanently Banned Me For It. Lucid Trading permanently closed my account and labeled my conduct as “fraud” for alleged coordinated trading / cross-user copy trading, mainly based on
+         https://www.reddit.com/r/Daytrading/comments/1td4jw2/prop_firm_enforcement_question_lucid_support_said/
+
+=== r06-topstep-blown.json ===
+query: bot automated trading blown account
+subreddit: r/topstep
+  [reddit] 2026-04-16 score=1 comments=4 | Took a Short on MGCM6 during the Asian session
+         https://www.reddit.com/r/TopStep/comments/1smr8qf/took_a_short_on_mgcm6_during_the_asian_session/
+  [reddit] 2026-04-30 score=1 comments=1 | Took a Long on MYMM6 during the London session
+         https://www.reddit.com/r/TopStep/comments/1sztph8/took_a_long_on_mymm6_during_the_london_session/
+  [reddit] 2026-03-20 score=1 comments=2 | Took a Short on MGCJ6 during the New York session
+         https://www.reddit.com/r/TopStep/comments/1rywhb3/took_a_short_on_mgcj6_during_the_new_york_session/
+
+=== r07-topstep-profitable.json ===
+query: automated strategy profitable
+subreddit: r/topstep
+  [reddit] 2026-04-30 score=1 comments=4 | Took a Long on MYMM6 during the New York session
+         https://www.reddit.com/r/TopStep/comments/1szweko/took_a_long_on_mymm6_during_the_new_york_session/
+  [reddit] 2026-04-30 score=1 comments=4 | Took a Short on M2KM6 during the Asian session
+         https://www.reddit.com/r/TopStep/comments/1szkr0x/took_a_short_on_m2km6_during_the_asian_session/
+  [reddit] 2026-04-30 score=1 comments=4 | Took a Long on MCLM6 during the Asian session
+         https://www.reddit.com/r/TopStep/comments/1szic9m/took_a_long_on_mclm6_during_the_asian_session/
+  [reddit] 2026-04-16 score=1 comments=4 | Took a Short on MGCM6 during the Asian session
+         https://www.reddit.com/r/TopStep/comments/1smr8qf/took_a_short_on_mgcm6_during_the_asian_session/
+  [reddit] 2026-04-30 score=1 comments=2 | Took a Short on MGCM6 during the Asian session
+         https://www.reddit.com/r/TopStep/comments/1szmf06/took_a_short_on_mgcm6_during_the_asian_session/
+  [reddit] 2026-04-29 score=1 comments=2 | Took a Short on MYMM6 during the Asian session
+         https://www.reddit.com/r/TopStep/comments/1szfr01/took_a_short_on_mymm6_during_the_asian_session/
+  [reddit] 2026-04-29 score=1 comments=2 | Took a Short on MGCM6 during the Asian session
+         https://www.reddit.com/r/TopStep/comments/1szdam5/took_a_short_on_mgcm6_during_the_asian_session/
+  [reddit] 2026-04-29 score=1 comments=2 | Took a Short on YMM6 during the New York session
+         https://www.reddit.com/r/TopStep/comments/1sz3alw/took_a_short_on_ymm6_during_the_new_york_session/
+  [reddit] 2026-04-29 score=1 comments=2 | Took a Short on RTYM6 during the New York session
+         https://www.reddit.com/r/TopStep/comments/1sz098z/took_a_short_on_rtym6_during_the_new_york_session/
+  [reddit] 2026-04-29 score=1 comments=2 | Took a Short on NQM6 during the New York session
+         https://www.reddit.com/r/TopStep/comments/1syxkrg/took_a_short_on_nqm6_during_the_new_york_session/
+
+=== r08-propfirm-banned.json ===
+query: automated bot strategy banned
+subreddit: r/propfirm
+  [reddit] 2026-02-01 score=10 comments=11 | PART 2 of "My honest experience as a propfirm COO and some tips": The real economics of running a prop firm an
+         **Part 2: The real economics of running a prop firm** Small note: English isn't my first language. I use AI to clean up grammar and phrasing, but the content and numbers are entirely mine. Part 1 got way more traction than expected. Lots of DMs asking about th
+         https://www.reddit.com/r/propfirm/comments/1qt2cts/part_2_of_my_honest_experience_as_a_propfirm_coo/
+  [reddit] 2025-11-17 score=1 comments=5 | Do prop firms normally allow bot linking through API?
+         I’ve seen mixed answers about this, so I’m trying to get some clarity. Some traders say prop firms allows API connections for bots or automated strategies, while others say it’s completely banned and can get your account closed instantly. For those with experi
+         https://www.reddit.com/r/propfirm/comments/1ozib9v/do_prop_firms_normally_allow_bot_linking_through/
+  [reddit] 2026-03-08 score=1 comments=0 | Tell me strategy to automate my trading
+         I am a developer, programmer and part time trader as well. Recently i created a bot based on a vwap strategy, and it’s pretty profitable. But it takes very less trades in a month.
+         https://www.reddit.com/r/propfirm/comments/1ro72nc/tell_me_strategy_to_automate_my_trading/
+  [reddit] 2026-05-17 score=4 comments=1 | Prop firms AI data training
+         So recently ive decided to really take the time to sit down and learn the ins and outs of trading, started reading books instead of listening to videos and man has that lead me to a wealth of better understanding. it led me to systematic trading, looking at tr
+         https://www.reddit.com/r/propfirm/comments/1tfrny9/prop_firms_ai_data_training/
+  [reddit] 2026-04-30 score=2 comments=2 | I make an average of 10 percent per month with an automated system.
+         I’m gonna flex a little bit because, honestly, I’m feeling pretty good about this. And why not? There are a million ways to make money out there, but most require way too much grind. You either have a boss breathing down your neck, demanding clients, or you ju
+         https://www.reddit.com/r/propfirm/comments/1szzvdn/i_make_an_average_of_10_percent_per_month_with_an/
+  [reddit] 2026-01-17 score=22 comments=7 | Is Top Tier Trader’s $100K Challenge Worth It for a New Forex Trader in 2026?
+         I’m new to forex trading and have about 18 months of demo experience, mainly trading USD/JPY. I’m considering Top Tier Trader’s $100k challenge (80% profit split, $399 fee), but I’ve seen posts warning about strict drawdown rules and denied payouts. I’m concer
+         https://www.reddit.com/r/propfirm/comments/1qfb824/is_top_tier_traders_100k_challenge_worth_it_for_a/
+  [reddit] 2026-02-07 score=2 comments=6 | THE "GAMBLING" TRAP: How OFP Funding Denied a Payout on a 1.02% Drawdown Account (Case 2818)
+         Hey everyone, I’m writing this to document a clear case of contractual breach and "moving the goalposts" by **OFP Funding**. I’ve been trading for years, and I’ve never seen a firm try to justify a payout denial with such a mathematical and legal mess. **The C
+         https://www.reddit.com/r/propfirm/comments/1qyc3gg/the_gambling_trap_how_ofp_funding_denied_a_payout/
+  [reddit] 2026-03-03 score=1 comments=0 | ​Took me 8 months and 4000+ hours, but I finally built a fully automated DB-to-execution architecture to prote
+         ​Hey everyone, ​Like many of you, I used to struggle with the psychological side of manual trading. Trying to manage the strict $2,500 trailing drawdown on 50k funded accounts was exhausting, and one emotional mistake usually blew the account. ​I spent the las
+         https://www.reddit.com/r/propfirm/comments/1rjk3cl/took_me_8_months_and_4000_hours_but_i_finally/
+  [reddit] 2026-02-07 score=5 comments=1 | PAYOUT DENIED: Detailed Technical Audit of OFP Funding (Account 2818)
+         Hey everyone, I’m writing this to document my experience regarding a payout denial with **OFP Funding**. I’ve been trading for 7 years, and I want to share the technical data behind this case so other traders can see how these automated audits are being conduc
+         https://www.reddit.com/r/propfirm/comments/1qycagz/payout_denied_detailed_technical_audit_of_ofp/
+  [reddit] 2025-11-05 score=28 comments=5 | What is Galileo fx in 2025?
+         I’ve been experimenting with Galileo FX lately, and it’s definitely been an interesting experience so far. Thought I’d share what I’ve learned and hear from others who’ve tried it maybe you’ve run into some of the same things. Setting it up was actually a lot 
+         https://www.reddit.com/r/propfirm/comments/1op14ls/what_is_galileo_fx_in_2025/
+
+=== r09-algotrading-walkforward.json ===
+query: walk forward analysis robust strategy
+subreddit: r/algotrading
+  [reddit] 2025-10-25 score=53 comments=166 | Has anyone actually found a long-term profitable EA (Expert Advisor)? Or are they all just curve-fitted hype?
+         I’ve been building and testing EAs for a while — from simple moving average crossovers to machine-learning-driven strategies — and I still haven’t found one that stays consistently profitable long-term (I’m talking at least 1–2 years of live or high-quality ba
+         https://www.reddit.com/r/algotrading/comments/1ofontf/has_anyone_actually_found_a_longterm_profitable/
+  [reddit] 2021-02-20 score=15 comments=9 | Other than In-Sample vs Out-Of-Sample Comparison, what other methods we can use to test for Robustness of Stra
+         I used genetic programming to find a strategy that will give max sharpe ratio &amp; r-squared for In-Sample data, and re-backtested the strategy "globally" (i.e. both for In-Sample and Out-Of-Sample) for comparison. As you can see in Figure 1, the in-sample pe
+         https://www.reddit.com/r/algotrading/comments/lo3tig/other_than_insample_vs_outofsample_comparison/
+  [reddit] 2026-01-20 score=14 comments=16 | Built a systematic trading system - looking for feedback on my entry/exit approach and understanding commercia
+         Hey everyone, Been working on a trading project for about a year and wanted to share some results and get feedback. Not selling anything - genuinely curious if my approach makes sense and if there's any appetite for this kind of thing. **The high-level idea:**
+         https://www.reddit.com/r/algotrading/comments/1qhpies/built_a_systematic_trading_system_looking_for/
+  [reddit] 2026-05-03 score=0 comments=3 | Building NSE Trading Bots - Technical Deep Dive on Backtesting, TradingView Integration &amp; Strategy Automat
+         Hi r/algotrading! I've been building NSE trading automation systems and wanted to share some technical insights that might be useful for anyone looking to automate their strategies. 🚀 WHAT'S POSSIBLE WITH NSE TRADING AUTOMATION: If you have a trading strategy
+         https://www.reddit.com/r/algotrading/comments/1t2fm6e/building_nse_trading_bots_technical_deep_dive_on/
+  [reddit] 2025-11-16 score=17 comments=23 | I built the back testing engine I wanted - do you have any tips or critiques?
+         Hello all I had been using NinjaTrader for some time, but the back testing engine and walk-forward left me wanting more - it consumed a huge amount of time, often crashed and regularly felt inflexible - and I desired a different solution. Something of my own d
+         https://www.reddit.com/r/algotrading/comments/1oyg59y/i_built_the_back_testing_engine_i_wanted_do_you/
+  [reddit] 2026-01-05 score=0 comments=8 | Repeatedly failing OOS , am I overfitting or just not enough data?
+          Hello everyone, I'm at a frustrating crossroads in my quant journey and could use some seasoned perspective. My Background: ~5 years of discretionary FX trading with mixed results. For the last 3 months, I've been fully committed to building a robust, automat
+         https://www.reddit.com/r/algotrading/comments/1q4y07t/repeatedly_failing_oos_am_i_overfitting_or_just/
+  [reddit] 2023-05-08 score=47 comments=30 | Algo Trading Design Process
+          Would you say this is a good outline to get started with algo trading design? I. Algorithmic Trading Design Process Outline A. Generate Trading Idea 1. Research and brainstorm 2. Identify potential trading strategies B. Test Trading Idea on Historical Data 1.
+         https://www.reddit.com/r/algotrading/comments/13bvuui/algo_trading_design_process/
+  [reddit] 2016-11-26 score=9 comments=11 | Some basic algo trading questions on platform and data sources
+         Hi algoTrading, I'm new to algorithmic trading, and was hoping to get some advice on how to get set up. My questions fall into two categories, first, what platforms do you guys use for backtesting, and second, where do you get your data from. First, to clarify
+         https://www.reddit.com/r/algotrading/comments/5exsqy/some_basic_algo_trading_questions_on_platform_and/
+  [reddit] 2026-05-06 score=44 comments=88 | A real professional backtest is walk-forward analysis. Anything else is an illusion.
+         Hey everyone, "Look at the equity curve of my 10-year backtest" is not a real professional backtest, but just a curve fit. People simply tune the inputs until the result looks good, and then show it on forums and expect it to keep working in the future. Profes
+         https://www.reddit.com/r/algotrading/comments/1t5e9q6/a_real_professional_backtest_is_walkforward/
+  [reddit] 2026-05-16 score=50 comments=57 | Even some algo traders don't know how to walk-forward analyze?
+         Hey everyone, I keep seeing people presenting one single long backtest as proof that their strategy works. That is basically not a test at all, because you use one period to develop (fit) a strategy and then expect it to work on another period. That's called a
+         https://www.reddit.com/r/algotrading/comments/1tewh8n/even_some_algo_traders_dont_know_how_to/
+
+=== r10-algotrading-live2025.json ===
+query: live deployed strategy 2025 results
+subreddit: r/algotrading
+  [reddit] 2025-12-24 score=138 comments=87 | Results of a Strategy i'm working on top crypto coins
+         Been a while since i posted Results of a trading strategy i'm working in the Crypto Markets The strategy just trades the Top 3 Crypto coins in an exchange sorted by Min day history and volume on a daily basis The Results are inclusive of fees and slippage , Ju
+         https://www.reddit.com/r/algotrading/comments/1puch9n/results_of_a_strategy_im_working_on_top_crypto/
+  [reddit] 2026-04-07 score=29 comments=40 | Using Machine Learning to Build Quarterly Portfolios
+         Hey all, I wanted to share a project I’ve been working on that focuses on using fundamental data from financial reports to build portfolios that are rotated on a quarterly basis. I feel this is in contrast to many algotrading strategies posted here that rely o
+         https://www.reddit.com/r/algotrading/comments/1segicn/using_machine_learning_to_build_quarterly/
+  [reddit] 2025-10-27 score=86 comments=33 | My first algo (paper) trade!
+         I’ve been thinking about doing this for a while and finally signed up for QuantaConnect this weekend… learned a bit of python thru YT videos (haven’t programmed in 15 years…) plus help from Claude AI… 4hrs later and was able to develop my initial MVP of my TQQ
+         https://www.reddit.com/r/algotrading/comments/1ohmyew/my_first_algo_paper_trade/
+  [reddit] 2026-03-06 score=3 comments=7 | Scaling a  Systematic Conversion: Solving the "Starvation Paradox" and NBBO Liquidity Constraints
+         Hey everyone, I’ve been refining a systematic options backtest focused on **relative value premium capture** and am looking for feedback on execution assumptions. I'm using **ThetaData NBBO quote history** and simulating to understand how the strategy handles 
+         https://www.reddit.com/r/algotrading/comments/1rmraek/scaling_a_systematic_conversion_solving_the/
+  [reddit] 2024-08-24 score=677 comments=147 | Backtest results for a simple "Buy the Dip" strategy
+         I came across this trading strategy quite a while ago, and decided to revisit it and do some backtesting, with impressive results, so I wanted to share it and see if there's anything I missed or any improvements that can be made to it. **Concept:** Strategy co
+         https://www.reddit.com/r/algotrading/comments/1f0689m/backtest_results_for_a_simple_buy_the_dip_strategy/
+  [reddit] 2026-04-03 score=103 comments=97 | For the algotraders who have live deployment of their algorithms and are successful: how long did it take you 
+         I am asking bc im curious, i've been spending hours nonstop working on my algo ideas. ive been trying to connect my ideas in python to IBKR's api. so far i have: * real time deployment on a paper acc testing my strats * i have backtests * machine learning opti
+         https://www.reddit.com/r/algotrading/comments/1sb4e9g/for_the_algotraders_who_have_live_deployment_of/
+  [reddit] 2025-08-30 score=275 comments=96 | Live algo results after ~30 days of trading BTC on Binance
+         Those are the results of my Algo after around 30 days of trading. This initial dip was caused more because of the live trading algorithm than the strategy, it was ignoring some exit signals because it wasnt handling the data very well( it wouse lose most of th
+         https://www.reddit.com/r/algotrading/comments/1n3zd42/live_algo_results_after_30_days_of_trading_btc_on/
+  [reddit] 2025-05-26 score=268 comments=96 | Results of my Mean Reversion Trading Strategy in the Forex Markets!
+         These above are the results of my Mean Reversion Strategy in the Forex Markets! Really really happy with the work i've done on this In sample data was till the end of 2020 And Out of Sample 2021 onwards Pitched this today as well to two funds as well which wen
+         https://www.reddit.com/r/algotrading/comments/1kw0vuq/results_of_my_mean_reversion_trading_strategy_in/
+  [reddit] 2026-05-09 score=54 comments=43 | [Update] Roast my options strategy again, now with 4 weeks of live data (19 trading days)
+         Original thread: [https://www.reddit.com/r/algotrading/s/5PYaN8YmIL](https://www.reddit.com/r/algotrading/s/5PYaN8YmIL) A few weeks ago I posted my first 2 weeks of results and got deservedly roasted for small sample size, tail risk, overfitting concerns, and 
+         https://www.reddit.com/r/algotrading/comments/1t8013r/update_roast_my_options_strategy_again_now_with_4/
+  [reddit] 2025-06-18 score=133 comments=87 | Full Results of my Breakout Strategy in Crypto
+         \- Training period 2020 to 2022 \- OSS from 2023 s, we walk forward on a daily basis \- Coins are selected on a daily basis from a Crypto Universe of 60+ alt coins \- Strategy runs 1/2 days a week , depending on the criterion \- Filtered out trades with tight 
+         https://www.reddit.com/r/algotrading/comments/1lemuu0/full_results_of_my_breakout_strategy_in_crypto/
+
+=== rd01-infra.json ===
+query: infrastructure stack production deployment
+subreddit: r/algotrading
+  [reddit] 2020-08-23 score=4 comments=14 | Why Do People Prefer Python?
+         So I’m going to venture into algo trading. I’m fluent in Python and have knowledge of machine learning, but need to learn the investing side of things. To my understanding, market data is constantly changing and your algorithms need to adapt quickly. On top of
+         https://www.reddit.com/r/algotrading/comments/iex8ol/why_do_people_prefer_python/
+  [reddit] 2026-03-04 score=7 comments=27 | For those of us who think in strategy logic but don't want to maintain a Python codebase, what are you using?
+         Genuine question for the community. I've been lurking here for about a year and I notice there are basically two camps: 1. People who are full on developers building custom pipelines with pandas, backtrader, zipline, etc. 2. People who have trading ideas but a
+         https://www.reddit.com/r/algotrading/comments/1rkub2n/for_those_of_us_who_think_in_strategy_logic_but/
+  [reddit] 2026-05-13 score=0 comments=6 | EA Devs - Cloud copy trading platform: MetaApi vs self-hosted VPS with EAs? Need your real-world experience
+         Hey everyone, I'm building a cloud-based copy trading platform for myself (currently working with TradeLocker) and I want to add MT4/MT5 support. The idea is simple: replicate trades from a master account to multiple receiver accounts in real-time, with custom
+         https://www.reddit.com/r/algotrading/comments/1tbtell/ea_devs_cloud_copy_trading_platform_metaapi_vs/
+  [reddit] 2025-08-19 score=0 comments=6 | Running multi-asset algos (FX + Crypto) worth the hassle?
+         I’ve been experimenting with combining FX algos (EUR/USD, GBP/JPY) and crypto algos (BTC/USD, ETH/USD) under the same system. Paper trading results have been decent, but the real challenge seems to be the infrastructure side especially with crypto staying open
+         https://www.reddit.com/r/algotrading/comments/1mult8j/running_multiasset_algos_fx_crypto_worth_the/
+  [reddit] 2023-05-18 score=36 comments=51 | What Happened to Quantconnect?
+         Was an avid user of Quantconnect when I first started exploring algo trading a few years ago, specifically for backtesting, and had a very positive experience overall. I've since spent most of my time in local, custom backtesting frameworks but recently dove b
+         https://www.reddit.com/r/algotrading/comments/13la56p/what_happened_to_quantconnect/
+  [reddit] 2025-04-15 score=12 comments=8 | Alpha Process
+         Can anyone here please provide a complete example of an end to end alpha research and deployment lifecycle? I am looking to understand more about your alpha infrastructure and what it looks like. I don’t want your exact alpha signal or formula. I just want to 
+         https://www.reddit.com/r/algotrading/comments/1k06fdi/alpha_process/
+  [reddit] 2018-04-22 score=23 comments=34 | Gauging Interest in Cryptocurrency Market Data
+         Hi everyone, I've been collecting market data from several exchanges for the past several months and I'm trying to gauge how much interest there would be in the data. Here is an incomplete list of the data I've collected: * Binance tick-level, all currency pai
+         https://www.reddit.com/r/algotrading/comments/8e0l0o/gauging_interest_in_cryptocurrency_market_data/
+
+=== rd02-portfolio.json ===
+query: strategy portfolio multiple bots running
+subreddit: r/algotrading
+  [reddit] 2025-04-25 score=78 comments=68 | My Algorithmic Trading Journey: Scaling a One-Month-Old Monster
+         [cumulative pnl](https://preview.redd.it/m05wp7ogxywe1.jpg?width=1178&amp;format=pjpg&amp;auto=webp&amp;s=6040fa0c37fca9a55d2bd6098df6328884238eb2) [returns](https://preview.redd.it/at15yg3ixywe1.jpg?width=1500&amp;format=pjpg&amp;auto=webp&amp;s=66a3041a04ac3
+         https://www.reddit.com/r/algotrading/comments/1k7it7x/my_algorithmic_trading_journey_scaling_a/
+  [reddit] 2026-02-16 score=0 comments=12 | Why managing multiple exchange accounts with automation is easier with a unified platform
+         Lately I’ve been digging into solutions for professional crypto traders who run strategies across multiple exchanges, and something interesting came up. Manually handling multiple Binance, KuCoin, Gate or Bitget accounts gets messy fast. You have to juggle dif
+         https://www.reddit.com/r/algotrading/comments/1r61rko/why_managing_multiple_exchange_accounts_with/
+  [reddit] 2021-07-04 score=276 comments=60 | I turned a profit by buying cryptocurrency using a trading algorithm that buys based on Reddit posts sentiment
+         I coded a crypto trading algorithm that places trades on Binance based on Reddit post sentiment on relevant cryptocurrency subreddits. &amp;#x200B; Despite my rational mind telling me it's not the best decision to just let this run on a live account, I decided
+         https://www.reddit.com/r/algotrading/comments/odkfav/i_turned_a_profit_by_buying_cryptocurrency_using/
+  [reddit] 2021-10-17 score=26 comments=22 | Data and Analysis of 30 days of Live Trading
+         **Analysis on K5 Trading Algorithm** I conducted an analysis on the live test run for one of my algorithms. The analysis serves me to see where to manipulate my algorithm to achieve a higher success rate (target is 51%), and serves less as “financial analysis 
+         https://www.reddit.com/r/algotrading/comments/q9xl43/data_and_analysis_of_30_days_of_live_trading/
+  [reddit] 2026-02-10 score=114 comments=57 | Diversified multi-strategy portfolio
+         After several months, I think I've finally landed on a system that I can run live. The results you see here are from backtests. I'll probably spend a few months paper trading it and ironing out the kinks + figure out the integration with IBKR, see how much sli
+         https://www.reddit.com/r/algotrading/comments/1r1gwo6/diversified_multistrategy_portfolio/
+  [reddit] 2024-10-26 score=169 comments=116 | Backtest results for a simple “Multiple Lower Highs” Strategy
+         I’ve been testing out various ideas for identifying reversals and this particular one produced interesting results, so I wanted to share it and get some feedback / suggestions to improve it. **Concept:** Strategy concept is quite simple: If the price is making
+         https://www.reddit.com/r/algotrading/comments/1gcoq4m/backtest_results_for_a_simple_multiple_lower/
+  [reddit] 2025-04-07 score=161 comments=79 | First time making a bot and running every day on paper trading. How much do live conditions effect profit (fee
+         My bot is by no means sophisticated or good, but is having success in paper conditions. How much would you say the difficulty of generating alpha changes, when you move from a paper environment to the real market?
+         https://www.reddit.com/r/algotrading/comments/1jtvi38/first_time_making_a_bot_and_running_every_day_on/
+  [reddit] 2026-05-04 score=27 comments=25 | Bybit native bots vs running my own through their api(3 month writeup)
+         Spent the last quarter running bybit's native bots (grid, dca, futures) on one side and my own custom strategies through the api on the other. Figured i'd share since every "bot review" on this sub is either obvious marketing or someone who deployed once and r
+         https://www.reddit.com/r/algotrading/comments/1t3sizt/bybit_native_bots_vs_running_my_own_through_their/
+  [reddit] 2026-03-07 score=0 comments=33 | Built a multi-timeframe MACD analyzer with LLM-based signal interpretation — running it alongside my live ETH 
+         Been running a Python trading bot on Jetson Nano 24/7 for 2 years. Entry decisions are LLM-based, exits are rule-based with trailing stop — learned the hard way that LLM is too slow for exits. Built this analyzer as a separate tool to visually confirm multi-ti
+         https://www.reddit.com/r/algotrading/comments/1rnc9jn/built_a_multitimeframe_macd_analyzer_with/
+  [reddit] 2026-04-06 score=0 comments=13 | I built a strategy and integrated it with collective2 and ibkr. Seeking Beta Testers for the Algotrading bot (
+         I am relatively new to algorithmic trading, and this is my third iteration. My current bot is integrated with both IBKR and Collective2 for paper trading, and I'm seeing consistent results across both platforms. The bot scans for opportunities by analyzing buy
+         https://www.reddit.com/r/algotrading/comments/1sech0m/i_built_a_strategy_and_integrated_it_with/
+
+=== rd03-stack.json ===
+query: tech stack architecture python typescript postgres
+subreddit: r/algotrading
+  [reddit] 2025-10-11 score=147 comments=81 | Why I’m over my algo-trading journey - 11 months spent on building a HFT bot on Solana
+         Today I decided to end my 11-month journey of building a Solana meme-coin copy-cat bot. It’s been a fun ride, with the system going through three or four major architectural redesigns - from a complex setup with separate services for WebSocket-based data strea
+         https://www.reddit.com/r/algotrading/comments/1o3o8nl/why_im_over_my_algotrading_journey_11_months/
+  [reddit] 2025-12-16 score=26 comments=61 | My attempt at "Retail HFT" (10ms latency) on Indian Options. The Engineering works, but Alpha is negative.
+         I’ve spent the last few months building a low-latency execution engine for the Indian market (BankNifty Options). I wanted to share the architecture and the harsh economic lessons I learned. **THE GOAL** =I wasn't trying to beat Tower or Graviton (I know they 
+         https://www.reddit.com/r/algotrading/comments/1pnxi54/my_attempt_at_retail_hft_10ms_latency_on_indian/
+  [reddit] 2026-04-18 score=0 comments=27 | Shipped v2.0 of my Kalshi prediction market bot 4-ensemble weather system + inflation signal stack.
+         I shipped v2.0 of my Kalshi prediction market trading system. Wanted to share what changed because some of the architectural decisions might be useful to people building similar things. **What it is** Two automated bots for Kalshi. One trades weather contracts
+         https://www.reddit.com/r/algotrading/comments/1spaq36/shipped_v20_of_my_kalshi_prediction_market_bot/
+  [reddit] 2026-03-07 score=0 comments=33 | Built a multi-timeframe MACD analyzer with LLM-based signal interpretation — running it alongside my live ETH 
+         Been running a Python trading bot on Jetson Nano 24/7 for 2 years. Entry decisions are LLM-based, exits are rule-based with trailing stop — learned the hard way that LLM is too slow for exits. Built this analyzer as a separate tool to visually confirm multi-ti
+         https://www.reddit.com/r/algotrading/comments/1rnc9jn/built_a_multitimeframe_macd_analyzer_with/
+  [reddit] 2026-04-08 score=18 comments=23 | EU/Germany-based algo trading, experiences with IBKR, data sources, and PRIIPs restrictions?
+         Hey everyone, I'm building a trading bot and running it from Germany and hitting some walls with EU-specific restrictions. Would love to hear from other EU-based algo traders about your setup and workarounds. My project: I built a Python bot that initiall I wa
+         https://www.reddit.com/r/algotrading/comments/1sfz53c/eugermanybased_algo_trading_experiences_with_ibkr/
+  [reddit] 2026-01-27 score=42 comments=25 | Benchmarking "Strategy Decay" via Win-Rate Velocity and Expectancy Momentum
+         I’ve been building a custom audit dashboard (Node/Chart.js) to monitor my trade data for "Strategic Drift" - the gap where my execution starts deviating from the original backtested edge. I’m trying to move past just looking at raw PnL and instead quantify how
+         https://www.reddit.com/r/algotrading/comments/1qodp9l/benchmarking_strategy_decay_via_winrate_velocity/
+  [reddit] 2026-02-19 score=4 comments=25 | Backtesting thousands of ORB parameter combos, then using market context to pick the best one each morning
+         Building a system to brute force backtest every ORB strategy combo, then match today's market conditions to the best historical edge. Thoughts? I trade ORB setups on futures. So I'm building a local tool to make it systematic. Wanted to get this sub's take bef
+         https://www.reddit.com/r/algotrading/comments/1r93f04/backtesting_thousands_of_orb_parameter_combos/
+  [reddit] 2026-05-24 score=2 comments=9 | Need technical guidance
+         I am trying to build a automate monitoring system for that I need to scan approximately 100+ financial instrument and do some calculation then system give me result logs How can I achieve this For now I have done data scraping Tech stack currently using DB :- 
+         https://www.reddit.com/r/algotrading/comments/1tlywju/need_technical_guidance/
+  [reddit] 2021-08-17 score=163 comments=142 | What’s your Tech Stack &amp; Why?
+         Node-TS, AWS serverless configuration, React &amp; Firestore for my db (for now). My reasons for Typescript + React is based upon familiarity and the lean mindset of getting to market. AWS serverless as it’s cheap/free and a lot of fun for me to architect out.
+         https://www.reddit.com/r/algotrading/comments/p683cg/whats_your_tech_stack_why/
+  [reddit] 2026-01-07 score=11 comments=19 | A Hybrid ML-Bayesian System with Uncertainty-Weighted Execution
+         Hello r/algotrading, I've been developing a quantitative trading system for MetaTrader 5 over the past year and wanted to share the core architecture of its latest iteration. The system, dubbed "Paimon Bless V17.7," is built around a central thesis: **model un
+         https://www.reddit.com/r/algotrading/comments/1q6hqyq/a_hybrid_mlbayesian_system_with/
+
+=== rd04-scaling.json ===
+query: scaling contract size pyramid prop firm
+subreddit: r/algotrading
+  [reddit] 2026-04-21 score=176 comments=86 | Stupid Simple Algo Strategy I Made… And It Works
+         I’m mainly a prop firm trader right now, but have been searching for an algo that is simple and semi predictable that I can just run in the background. This algo might just be that. These are the results over the last year, which is arguably it’s best time fra
+         https://www.reddit.com/r/algotrading/comments/1sromc0/stupid_simple_algo_strategy_i_made_and_it_works/
+  [reddit] 2026-02-11 score=59 comments=60 | My journey into automated crypto trading
+         I have been trading crypto for 4-5 years now, I have passed multiple prop firms, multiple times, all eventually leading to ruin! I realized the weakest link in the chain most often human psychology! I decided, "It has to be better to automate this"... I alread
+         https://www.reddit.com/r/algotrading/comments/1r1x7mp/my_journey_into_automated_crypto_trading/
+  [reddit] 2025-10-17 score=49 comments=70 | Consistently Profitable Traders - Is a 3-5% Monthly Return Realistic with a $100k+ Prop Account?
+          Hey everyone, I'm hoping to get some real-world insight from the seasoned veterans here—those who've maintained profitability and consistency for several years, not just had a few good months. I've been in the market since 2020, mainly dealing with long-term 
+         https://www.reddit.com/r/algotrading/comments/1o8v14r/consistently_profitable_traders_is_a_35_monthly/
+  [reddit] 2025-02-21 score=29 comments=72 | What programming language is the easiest to use for automated trading?
+         I'm sorry if this has been asked before but I'm still a bit confused as to what I need to be able to create an automated trading bot that is able to do the following. Just a background about my programming abilities, I'm able to code fullstack apps with React/
+         https://www.reddit.com/r/algotrading/comments/1iuv8se/what_programming_language_is_the_easiest_to_use/
+  [reddit] 2026-03-13 score=0 comments=16 | Is this something that could do with leverage?
+         https://www.reddit.com/r/algotrading/comments/1rt001o/is_this_something_that_could_do_with_leverage/
+  [reddit] 2026-02-07 score=14 comments=16 | Spent 6 months coding a system that yields &lt;1% monthly (OOS). Is this the reality of sustainable trading
+         Hi everyone, I need a reality check on my systematic portfolio's validation process before I move to live deployment. I’ve spent the last few months building a Python-based system designed strictly for survival under prop-firm style constraints, specifically a
+         https://www.reddit.com/r/algotrading/comments/1qynt7a/spent_6_months_coding_a_system_that_yields_1/
+  [reddit] 2026-03-06 score=2 comments=7 | Scaling a  Systematic Conversion: Solving the "Starvation Paradox" and NBBO Liquidity Constraints
+         Hey everyone, I’ve been refining a systematic options backtest focused on **relative value premium capture** and am looking for feedback on execution assumptions. I'm using **ThetaData NBBO quote history** and simulating to understand how the strategy handles 
+         https://www.reddit.com/r/algotrading/comments/1rmraek/scaling_a_systematic_conversion_solving_the/
+  [reddit] 2026-03-31 score=0 comments=2 | ow prop firms are actually losing money without realizing it: a breakdown of the operational gaps
+         The prop trading industry has grown fast enough that a lot of firms launched on infrastructure that was never designed for what they're actually doing. This post is just a breakdown of the operational gaps that tend to cause the most damage — no product pitch,
+         https://www.reddit.com/r/algotrading/comments/1s8lg4l/ow_prop_firms_are_actually_losing_money_without/
+  [reddit] 2025-08-19 score=2 comments=20 | Backtesting Results - Opinions and next steps
+         Created a code and ran a backtest on MT5 using their Strategy tester and here were the results : Time Period : Jan 2010 - Dec 2024 Account Size : €10 000 Leverage : 1:30 Ticker Symbol : XAUUSD Overall profit : €42 869.99 (429% return) Successful rate : 67% No.
+         https://www.reddit.com/r/algotrading/comments/1muf19v/backtesting_results_opinions_and_next_steps/
+  [reddit] 2025-11-25 score=6 comments=9 | Historical data for 6E
+         Hi guys, I am in the process of developing my first algo on python and started off with simple OHLCV data from oanda. At one point I realized how much I underestimated the impact of spread on lower timeframe 5m strategy, especially on a CFD. Having been a disc
+         https://www.reddit.com/r/algotrading/comments/1p6jo7s/historical_data_for_6e/
+
+=== rd05-observability.json ===
+query: monitoring observability alerts production bot
+subreddit: r/algotrading
+  [reddit] 2026-04-21 score=93 comments=87 | what do you think about this agent set up
+         I have some background in Python and AI engineering, some slight background in finance (UC berkeley executive education classes). AI engineering is more of my gig right now. I'm currently rag training and paper trading an open source system. "chunks" are the b
+         https://www.reddit.com/r/algotrading/comments/1srw7oz/what_do_you_think_about_this_agent_set_up/
+  [reddit] 2018-08-28 score=4 comments=3 | Raspberry Pi stock/etf portfolio monitor and alert bot
+         Started looking into writing a bot that can send telegram messages to tell when a stock or etf is crossing a moving average or to give daily updates on the portfolio or positions or whatever... My question is: are there any free APIs for EOD stock and etf pric
+         https://www.reddit.com/r/algotrading/comments/9au5y1/raspberry_pi_stocketf_portfolio_monitor_and_alert/
+  [reddit] 2026-04-25 score=9 comments=15 | what do you think about this?
+         https://preview.redd.it/0xvpm5vik9xg1.jpg?width=940&amp;format=pjpg&amp;auto=webp&amp;s=9073147994a8b73f5c3a5e0df17cec18b8d07e23 In response to my post the other day, i've made some changes. I'm going to run it for 30 days and then post on github if everything
+         https://www.reddit.com/r/algotrading/comments/1sv277r/what_do_you_think_about_this/
+  [reddit] 2025-09-26 score=14 comments=43 | Real-time data providers for ema cross 5 seconds timeframe strategy (stock)
+         Hello everyone, I have been working on an emas cross strategy that works on a 5 seconds timeframe. I basically need to have real-time live data that allows me to monitor prices for a bunch of tickers simultaneously. I only trade stock, not crypto or forex. For
+         https://www.reddit.com/r/algotrading/comments/1nrbu9q/realtime_data_providers_for_ema_cross_5_seconds/
+  [reddit] 2026-05-08 score=0 comments=9 | I open-sourced a self-hosted quant trading workspace- now at 3.8K stars, looking for serious feedback
+         Hey everyone, I’m Henry, the founder of QuantDinger. Over the past year, I’ve been building an open-source quant trading workspace because I kept running into the same problem: The tools around strategy research are powerful, but the workflow is usually broken
+         https://www.reddit.com/r/algotrading/comments/1t7daf7/i_opensourced_a_selfhosted_quant_trading/
+  [reddit] 2026-02-22 score=51 comments=13 | Open-source tool to detect Polymarket's incrementNonce() exploit (ghost fills)
+         If you run bots on Polymarket's BTC 5-minute markets, you may have experienced 'ghost fills' — orders that match on the CLOB but never settle on-chain. The exploit: bad actors call incrementNonce() on the CTF Exchange contract to invalidate their losing orders
+         https://www.reddit.com/r/algotrading/comments/1rb6qay/opensource_tool_to_detect_polymarkets/
+  [reddit] 2026-05-03 score=0 comments=3 | Building NSE Trading Bots - Technical Deep Dive on Backtesting, TradingView Integration &amp; Strategy Automat
+         Hi r/algotrading! I've been building NSE trading automation systems and wanted to share some technical insights that might be useful for anyone looking to automate their strategies. 🚀 WHAT'S POSSIBLE WITH NSE TRADING AUTOMATION: If you have a trading strategy
+         https://www.reddit.com/r/algotrading/comments/1t2fm6e/building_nse_trading_bots_technical_deep_dive_on/
+  [reddit] 2025-10-12 score=0 comments=22 | Gemini review of my system
+         I have been building this system for months now and have had Gemini do a code, documentation, and work done review every night. Tomorrow (Monday) my system is going live with paper trading for the first time. Here is Gemini's final review. I know its long, and
+         https://www.reddit.com/r/algotrading/comments/1o4wch1/gemini_review_of_my_system/
+  [reddit] 2026-02-26 score=0 comments=4 | What are the dominant agentic design patterns emerging in financial AI?
+         Over the last few months, I’ve been analyzing how AI agents are being designed for real financial workflows, not demos, but systems that operate in regulated environments. What’s interesting is that most successful implementations fall into three repeatable ar
+         https://www.reddit.com/r/algotrading/comments/1rf367u/what_are_the_dominant_agentic_design_patterns/
+  [reddit] 2024-11-22 score=43 comments=39 | Real SAAS products that you use that improved your trading since using it?
+         Hi all I'm tired of wading through countless bot posts about services they offer/use that is a game changer, I don't see real people who have experience with software and can inform people of pros and cons etc. I would love to know what software you use to ele
+         https://www.reddit.com/r/algotrading/comments/1gx69sb/real_saas_products_that_you_use_that_improved/
+
+=== rd06-futures.json ===
+query: bot automation traderspost topstep scaling
+subreddit: r/FuturesTrading
+  [reddit] 2025-11-12 score=5 comments=24 | Been using AI for trading the last few months — here’s how it actually helps
+         Been using AI in my trading for a few months now and honestly it’s been a game changer for workflow and improvement. I’m not doing any “automated trading” or bot stuff — just using it in practical ways to get better. **Daily session planning** – Every morning 
+         https://www.reddit.com/r/FuturesTrading/comments/1ove05v/been_using_ai_for_trading_the_last_few_months/
+
+=== rd07-propapi.json ===
+query: bot api connection traderspost ninjatrader
+subreddit: r/propfirm
+  [reddit] 2026-03-13 score=1 comments=1 | Is it possible to connect trading bots to prop firm accounts?
+         Not trying to sell anything here, just exploring what’s possible with prop firms. I built my own LLM-based trading bot using my own trading data, and I’m wondering if it’s possible to run something like that on a prop firm account or challenge. Do any firms al
+         https://www.reddit.com/r/propfirm/comments/1rsosem/is_it_possible_to_connect_trading_bots_to_prop/
+  [reddit] 2025-11-17 score=1 comments=5 | Do prop firms normally allow bot linking through API?
+         I’ve seen mixed answers about this, so I’m trying to get some clarity. Some traders say prop firms allows API connections for bots or automated strategies, while others say it’s completely banned and can get your account closed instantly. For those with experi
+         https://www.reddit.com/r/propfirm/comments/1ozib9v/do_prop_firms_normally_allow_bot_linking_through/
+  [reddit] 2026-03-03 score=1 comments=0 | ​Took me 8 months and 4000+ hours, but I finally built a fully automated DB-to-execution architecture to prote
+         ​Hey everyone, ​Like many of you, I used to struggle with the psychological side of manual trading. Trying to manage the strict $2,500 trailing drawdown on 50k funded accounts was exhausting, and one emotional mistake usually blew the account. ​I spent the las
+         https://www.reddit.com/r/propfirm/comments/1rjk3cl/took_me_8_months_and_4000_hours_but_i_finally/
+
+=== rd08-ninja.json ===
+query: automated strategy live trading
+subreddit: r/ninjatrader
+  [reddit] 2025-11-24 score=2 comments=17 | Automated strategy
+         Hello guys, I crated an automated strategy and today is my first live test. I noticed that it did not take any trades during the morning, so I disabled it and enabled it again, and noticed that it should have taken some trades. It shows the trades that it shou
+         https://www.reddit.com/r/ninjatrader/comments/1p5orq9/automated_strategy/
+  [reddit] 2026-04-07 score=6 comments=25 | Best VPS for NinjaTrader 8 in 2026? My hardware is lagging and I need a low-latency solution.
+         I’ve been running NT8 on an older laptop. During high volatility the lag is unbearable. I’m seeing significant slippage on my entries and I don’t want a power outage or Windows update killing a live trade. It almost happened once already. Need a VPS for NinjaT
+         https://www.reddit.com/r/ninjatrader/comments/1setybb/best_vps_for_ninjatrader_8_in_2026_my_hardware_is/
+  [reddit] 2026-04-18 score=11 comments=15 | I am a manual futures trader who learned C# to build my own NinjaTrader addon. Here is what that looked like.
+         I want to share my experience building a NinjaTrader addon as someone who is not a software engineer by trade. I work in healthcare data analytics. My coding background is SQL and Python — not C# and not NinjaScript. But I had a problem that no existing tool s
+         https://www.reddit.com/r/ninjatrader/comments/1sox0j9/i_am_a_manual_futures_trader_who_learned_c_to/
+  [reddit] 2025-09-10 score=3 comments=6 | NinjaScript for Order Flow Algos?
+         **TL;DR**: Algo trader (QuantConnect background) curious about trying NinjaScript with order flow data. Looking for first-hand experiences. Hi all, Currently I research, code, backtest, and deploy automated strategies with QuantConnect. It’s a great platform w
+         https://www.reddit.com/r/ninjatrader/comments/1nd71bx/ninjascript_for_order_flow_algos/
+  [reddit] 2025-05-16 score=2 comments=6 | Looking for a high-quality recorded course to learn NinjaScript for NinjaTrader 8
+         Hey everyone, I’m looking for a comprehensive recorded course (not live or in-person) that teaches how to program indicators and automated strategies in NinjaTrader 8 using NinjaScript. I already know basic trading concepts and I’m not interested in Strategy B
+         https://www.reddit.com/r/ninjatrader/comments/1knxt10/looking_for_a_highquality_recorded_course_to/
+  [reddit] 2026-04-02 score=2 comments=15 | Help with automated strategy
+         I am new to Ninjatrader, and have been trying to develop a system to automatically buy/sell a stock. My whole analysis is written as a python script, and what it outputs is a buy/sell signal into a text file. What I need to happen is ninjatrader to read the fi
+         https://www.reddit.com/r/ninjatrader/comments/1sa2aa2/help_with_automated_strategy/
+  [reddit] 2026-03-02 score=11 comments=2 | Automating EMA Pullback Strategy in NinjaTrader
+         I want to share an automated approach to the EMA pullback strategy, inspired by [u/Cranky\_Crypto](https://www.reddit.com/user/Cranky_Crypto/)’s excellent post on [letting winners run](https://www.reddit.com/r/Daytrading/comments/zheyo7/letting_your_winners_ru
+         https://www.reddit.com/r/ninjatrader/comments/1riqm0t/automating_ema_pullback_strategy_in_ninjatrader/
+  [reddit] 2025-07-06 score=4 comments=30 | Has anyone successfully created automated strategies?
+         • I am not selling anything or promoting. I just finished writing 8 strategies that go “live” tonight on my demo account for testing. I’m so nervously excited to see what happens. Has anyone successfully done this? I’m well aware slippage is a thing, and contr
+         https://www.reddit.com/r/ninjatrader/comments/1lt9942/has_anyone_successfully_created_automated/
+  [reddit] 2025-06-27 score=13 comments=16 | i had my friend code my strategy to automate. im testing it on live markets and its up 1700$ this week.
+         https://preview.redd.it/8fihg93ehe9f1.png?width=1252&amp;format=png&amp;auto=webp&amp;s=a3e3803530c1b943a8025f51d0728fba5c63d7cb https://preview.redd.it/losbi3zdhe9f1.png?width=1254&amp;format=png&amp;auto=webp&amp;s=dafb3430683e3c0a3de5220af2d9c131844df470 
+         https://www.reddit.com/r/ninjatrader/comments/1llkl2u/i_had_my_friend_code_my_strategy_to_automate_im/
+  [reddit] 2025-10-22 score=1 comments=4 | PowerFib Add-On | Turns NT default Fib Tool into Automated Strategy
+         Hi All, I've used the Fib Retracement tool to measure and trade pullbacks for years. And for years I prowled the NT forums, talked with developers looking for a way to automate the drawing tool. I was told it had to be an Fibonacci Indicator. That's all that's
+         https://www.reddit.com/r/ninjatrader/comments/1odg0zt/powerfib_addon_turns_nt_default_fib_tool_into/
+
+=== rd09-tv.json ===
+query: pine alert webhook automated execution
+subreddit: r/TradingView
+  [reddit] 2025-12-07 score=5 comments=8 | PineScript alerts don't have reliable state persistence
+         **UPDATE: It was indeed repainting. Aftere removing varip and the usage of bartsate.isrealtime, my scripts do not reload anymore, although I still treat them as mostly stateless as a precaution.** Anyone else faced this issue? So I'm finishing up automated tra
+         https://www.reddit.com/r/TradingView/comments/1pgfrht/pinescript_alerts_dont_have_reliable_state/
+  [reddit] 2026-04-07 score=1 comments=2 | Feedback Wanted: XAUUSD Automated Trend-Follower (SuperTrend + ATR Logic)
+         Hi everyone, I’m currently developing a specialized automated trading system for **Gold (XAUUSD)**. The system is built in Pine Script v6 and connects to **MetaTrader 5** via a Python/Cloudflare webhook bridge. **What the Indicator Does:** * **Trend Core:** Us
+         https://www.reddit.com/r/TradingView/comments/1seliio/feedback_wanted_xauusd_automated_trendfollower/
+  [reddit] 2026-02-25 score=1 comments=2 | Trailing Stop Activation Alert in strategy.exit()
+         ## Summary I'd like to request a new alert parameter in `strategy.exit()` that fires when the internal trailing stop engine **activates** — i.e., when the `trail_points` or `trail_price` profit threshold is first reached and the trailing stop begins tracking p
+         https://www.reddit.com/r/TradingView/comments/1rehnca/trailing_stop_activation_alert_in_strategyexit/
+  [reddit] 2024-10-10 score=1 comments=3 | Flask Blocking My PineScript Trades—Is Anyone Else Struggling with This?
+         Hey everyone, I’ve been battling with an issue that some of you who automate trades between TradingView and a broker via webhooks have faced. I’ve been setting up a strategy using PineScript on TradingView, and I have a Flask app handling the trade execution b
+         https://www.reddit.com/r/TradingView/comments/1g0knbn/flask_blocking_my_pinescript_tradesis_anyone_else/
+  [reddit] 2026-02-20 score=52 comments=37 | Finding a way to automate strategies without knowing Pine Script
+         I have been using TradingView for a while now but I always hit a wall when it comes to Pine Script. I have these strategy ideas in my head but I am not a coder and hiring someone on Fiverr to write scripts for me has been a hit or miss. Recently I started test
+         https://www.reddit.com/r/TradingView/comments/1r9o5x9/finding_a_way_to_automate_strategies_without/
+  [reddit] 2026-05-22 score=8 comments=24 | stop using webhooks for live execution if you care about your money
+         Using webhooks for pine script alerts is slowly draining your account. webhooks increases latency by hundreds of milliseconds. by the time your server receives the http alert and sends it to the broker, the market makers have already changed the price. webhook
+         https://www.reddit.com/r/TradingView/comments/1tk71me/stop_using_webhooks_for_live_execution_if_you/
+  [reddit] 2026-03-23 score=3 comments=2 | Why do TradingView alerts sometimes “work” but still not execute trades?
+         I keep seeing the same issue when troubleshooting alert → execution setups: • TradingView alert fires • webhook returns 200 / “success” • but no actual order gets placed At first it looks like a webhook problem… but most of the time it isn’t. Some of the real 
+         https://www.reddit.com/r/TradingView/comments/1s13hn0/why_do_tradingview_alerts_sometimes_work_but/
+  [reddit] 2025-12-13 score=2 comments=6 | Is there a way to automate “cluster” TradingView alerts across multiple tickers?
+         Hi all, I run a strategy that relies on TradingView alerts across multiple correlated tickers (e.g. SPX, SPY, NASDAQ, QQQ). When all four trigger a “Long” (or “Short”) alert within a short time window, that’s my signal to enter a trade (usually targeting \~400
+         https://www.reddit.com/r/TradingView/comments/1plvu9b/is_there_a_way_to_automate_cluster_tradingview/
+  [reddit] 2024-06-07 score=24 comments=49 | Ongoing Issues with Alert Webhook Delays on TradingView
+         I am writing to raise a serious and urgent issue regarding persistent delays and missed alerts with the TradingView alert webhook system. Over the past week, my trading strategies have been severely impacted by these problems, resulting in significant financia
+         https://www.reddit.com/r/TradingView/comments/1dap1qu/ongoing_issues_with_alert_webhook_delays_on/
+  [reddit] 2025-12-17 score=1 comments=0 | PineScript executes orders for specific commission??
+         [Some orders not executed.](https://preview.redd.it/gpzg5l7lrr7g1.png?width=1920&amp;format=png&amp;auto=webp&amp;s=cd39c4e1d6916c794abab50438fcbcc3f3007a78) [All orders were executed correctly.](https://preview.redd.it/85p9nrpmrr7g1.png?width=1920&amp;format=
+         https://www.reddit.com/r/TradingView/comments/1pox5jx/pinescript_executes_orders_for_specific_commission/
+
+=== rd10-quant.json ===
+query: production system architecture pipeline
+subreddit: r/quant
+  [reddit] 2026-03-04 score=2 comments=15 | Toward deterministic replay in quantitative research pipelines: looking for technical critique
+         Over the past year I’ve been thinking about a structural issue in quantitative research and analytical systems: reconstructing exactly what happened in a past analytical run is often harder than expected. Not just data versioning but understand which modules e
+         https://www.reddit.com/r/quant/comments/1rktudf/toward_deterministic_replay_in_quantitative/
+  [reddit] 2025-10-15 score=11 comments=6 | Examples or references for professional low-latency trading infra?
+         I’m currently building a full research-to-production pipeline (data ingestion, analysis, backtesting, robustness testing, deployment) and I’d like to see how professionals structure such systems, both from an architectural and software engineering standpoint. 
+         https://www.reddit.com/r/quant/comments/1o769rs/examples_or_references_for_professional/
+  [reddit] 2023-11-15 score=200 comments=17 | Quant Research of the Week (3rd Edition)
+         # SSRN ### Recently Published ## Quantitative [**Shapley-Based Approach to Portfolio Performance**](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4628462): The SPPC methodology can determine individual predictors' contributions to portfolio performance, 
+         https://www.reddit.com/r/quant/comments/17vuctg/quant_research_of_the_week_3rd_edition/
+  [reddit] 2025-07-27 score=9 comments=2 | FLOX v0.2.0: modular modern C++ framework for building trading systems
+         The second release of FLOX ([https://github.com/FLOX-Foundation/flox](https://github.com/FLOX-Foundation/flox)) is now live. FLOX is a framework that provides tools for building modular, high-throughput, low-latency trading systems using modern C++. This updat
+         https://www.reddit.com/r/quant/comments/1mahceu/flox_v020_modular_modern_c_framework_for_building/
+  [reddit] 2023-11-29 score=94 comments=4 | Quant Research of the Week (4th Edition)
+         # SSRN ### Recently Published ## Quantitative [**Learning Algorithms and Spoofing**](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4639959): The paper presents a model to test if a trading algorithm can manipulate the limit order book, concluding that ma
+         https://www.reddit.com/r/quant/comments/186r4to/quant_research_of_the_week_4th_edition/
+  [reddit] 2024-10-14 score=131 comments=48 | I designed a ML production pipeline based on image processing to find out if price-action methods based on vis
+         **Project summary:** I trained a Deep Learning model based on image processing using snapshots of historical candlestick charts. Once the model was trained, I ran a live production for which the system takes a snapshot of the most current candlestick price cha
+         https://www.reddit.com/r/quant/comments/1g3jrr1/i_designed_a_ml_production_pipeline_based_on/
+  [reddit] 2026-01-14 score=0 comments=84 | Made an extensively tested Quant Beast model, with 2.0+ Sharpe Ratio and 178% Net returns (2024-2025). Should 
+         [2024-2025 Performance Net results.](https://preview.redd.it/o5fkjzxcrbdg1.png?width=1000&amp;format=png&amp;auto=webp&amp;s=164259cd48be5f92147a95a7b5fc27482209c885) I have spent the last several months building a multi layered Quant model designed to maximiz
+         https://www.reddit.com/r/quant/comments/1qcoobp/made_an_extensively_tested_quant_beast_model_with/
+  [reddit] 2025-09-09 score=77 comments=54 | What’s the Average Tick-to-Trade Time for Firms?
+         Hey everyone, Over the summer I built a tick-to-trade engine and wanted to get some perspective from people here who’ve worked in HFT or low-latency systems. I built a small experimental setup where my laptop connects directly via Ethernet to an old Xilinx FPG
+         https://www.reddit.com/r/quant/comments/1ncp9gy/whats_the_average_ticktotrade_time_for_firms/
+  [reddit] 2026-04-09 score=60 comments=17 | From 3µs to 1ms: Benchmarking and Validating Low-Latency Pipelines
+         Got some really great responses on my last post thanks a lot to everyone who shared insights, it was super helpful. https://preview.redd.it/xg0is92jz7ug1.png?width=929&amp;format=png&amp;auto=webp&amp;s=f03e28e751f50ed93697d850a252297b9da3d988 I’ve been benchm
+         https://www.reddit.com/r/quant/comments/1sh0exq/from_3µs_to_1ms_benchmarking_and_validating/
+  [reddit] 2026-04-08 score=29 comments=10 | I open-sourced production data of all major global mining companies
+         Last week I [posted](https://www.reddit.com/r/quant/comments/1s9u080/i_extracted_and_visualized_historical_production/) about my project to extract production data from global mining company filings at scale, and some of you asked for the source code and data.
+         https://www.reddit.com/r/quant/comments/1sftgmw/i_opensourced_production_data_of_all_major_global/
+
+=== w01-pyramid.json ===
+query: futures trading bot 33 contracts MES MNQ pyramid scaling operator
+  [brave] 2026-03-29 | Micro Futures Trading Guide (2026) - Proptradingvibes
+         Scaling works differently with micros. Say your chart shows a high-probability setup with a tight 12-point MNQ stop. $50 / (12 x $2.00) = 2.08 contracts. You take 2 MNQ. Now imagine the same setup on a 150K account with 
+         https://proptradingvibes.com/blog/micro-futures-trading-guide
+  [brave] 2026-02-16 | Automated Futures Trading Strategies: How to Build, Backtest & Scale
+         Hardcoded limits, such as a 2% ... small also matters - <strong>using Micro E-mini contracts (MES, MNQ) lets you test the waters of real-world execution friction before scaling up to larger contracts</strong> [31]....
+         https://www.quantvps.com/blog/automated-futures-trading-strategies
+  [brave] 2026-05-11 | MNQ (Micro E-mini Nasdaq-100 Futures) | Damn Prop Firms: Your #1 Source for Futures Prop Firm Discounts and Tr
+         <strong>A trader can run 10 MNQ contracts as identical-exposure equivalent to 1 NQ — same notional, same aggregate dollar P&amp;L per tick — but the granular sizing lets them scale 1-2-3-4 contracts up incrementally</str
+         https://damnpropfirms.com/glossary/mnq-futures/
+  [brave] 2025-12-03 | Micro E-mini Futures: Complete Guide to MES, MNQ & Scaling Up
+         <strong>The 10:1 contract ratio lets you apply the 1% risk rule even with a modest account</strong>. Actionable Example: If you have a 4000 USD account, your maximum risk per trade is around 40 USD.
+         https://funderprofutures.com/blog/micro-e-mini-futures-the-complete-guide-to-futures-scaling-up/
+  [brave] 2026-02-25 | Tradealgo
+         Master E-mini and Micro E-mini futures contracts. Complete specs for ES, MES, NQ, MNQ with tick values, margins, and strategies for every account size.
+         https://www.tradealgo.com/trading-guides/futures/e-mini-micro-e-mini-futures
+  [brave] 2026-03-15 | MakeMoneyMarkets NQ/MNQ Algo — Indicator by samuel_dago_01
+         <strong>MakeMoneyMarkets — NQ/MNQ Algo</strong> High-conviction scalping signals for NQ &amp; MNQ futures with built-in risk management and key liquidity levels. Precision entry signals designed for NQ and Micro NQ futur
+         https://www.tradingview.com/script/qi9U1VZB-MakeMoneyMarkets-NQ-MNQ-Algo/
+  [brave] 2026-03-19 | Micro Futures for Volatility Trading: MES, MNQ, MCL with Small Accounts - Volatility Box
+         The same setup on ES: $100 / (10 points x $50/pt) = 0.2 contracts. The trade is impossible on ES with a $10,000 account and 1% risk. On MES, it is clean and executable. This is why micro futures are the appropriate vehic
+         https://volatilitybox.com/research/micro-futures-for-volatility-trading/
+  [brave] 2026-04-21 | Futures Trading Automation: Manual to Bot in 30 Days — Power Trading Group
+         <strong>Start at minimum size</strong>. If your plan is to trade two NQ contracts per setup, start with one MNQ. The micro contract on the Nasdaq is one-tenth the size of the standard contract.
+         https://www.powertrading.group/options-trading-blog/futures-trading-automation-manual-to-bot-30-days
+  [exa] 2025-11-27 | lgreen95/M2K-MES-MNQ-Future-Trading
+         https://github.com/lgreen95/M2K-MES-MNQ-Future-Trading
+  [exa] 2026-02-21 | chang-pro/mes-futures-trading-bot
+         https://github.com/chang-pro/mes-futures-trading-bot
+  [exa] 2026-04-10 | Zuzana111/intraday_futures_trading_bot
+         https://github.com/Zuzana111/intraday_futures_trading_bot
+  [exa] 2026-04-03 | GitHub - hintheman/AE-KBN-Claude-Strategy: Pine Script v6 strategy for MES — 5-factor confluence with VWAP, MA
+         https://github.com/hintheman/AE-KBN-Claude-Strategy
+  [exa] 2025-02-16 | copley/Interactive-Brokers-MES-Futures-Trading-Bot
+         https://github.com/copley/Interactive-Brokers-MES-Futures-Trading-Bot
+  [exa] 2025-11-04 | SamShahinDev/algorithmic-trading-platform
+         https://github.com/SamShahinDev/algorithmic-trading-platform
+  [exa] 2025-04-18 | An0nym0usn3thunt3r/trading_bot
+         https://github.com/An0nym0usn3thunt3r/trading_bot
+  [exa] 2026-02-06 | Turbo31150/TradeOracle
+         https://github.com/Turbo31150/TradeOracle
+  [tavily] no-date | 2.1 Trading MES MNQ Contracts - ITG Wiki
+         Weekly Ranges Scalping Data & Stats Community Tools Image 2ITG Wiki # 2.1 Trading MES MNQ Contracts In this module, we'll explore trading MES (Micro E-mini S&P 500) and MNQ (Micro E-mini Nasdaq 100) futures contracts, an
+         https://publish.obsidian.md/itg/Trading+Guilds/Delta/Delta+-+Intro+to+Futures+Course/Module+2+-+Intro+to+Delta+Trend+Following+Trading/2.1+Trading+MES+MNQ+Contracts
+  [tavily] no-date | Micro Futures Guide - How to Trade MES, MNQ, and Micro Contracts | QuantCrawler
+         1 ### Choose a Futures Broker Select a broker that offers competitive micro futures commissions. Popular choices include NinjaTrader, Tradovate, AMP Futures, and TradeStation. Look for round-trip commissions under $1 per
+         https://quantcrawler.com/learn/micro-futures-guide
+  [tavily] no-date | Micro E-mini Futures: Complete Guide to MES, MNQ & Scaling Up
+         Their greatest advantage is the discipline they create. When you have the ability to control exposure with granular precision, you begin focusing on what truly drives long-term profitability: structured entries, clear ex
+         https://funderprofutures.com/blog/micro-e-mini-futures-the-complete-guide-to-futures-scaling-up
+  [tavily] no-date | Futures Trading Bots for Beginners: Automate Your Trades
+         ## Conclusion: Key Points on Futures Trading Bots Futures trading bots are reshaping how individual traders engage with the markets. By automating decisions, these systems remove the emotional pitfalls of trading while d
+         https://www.quantvps.com/blog/futures-trading-bot
+  [tavily] no-date | Micro E-Mini Futures - Everything You Need to Know
+         Well, the value of each MES contract is $5 times the S&P 500 index; MYM, $0.50 times the DJIA index; MNQ, $2 times the Nasdaq 100; and M2K, $5 times the Russell 2000. When it comes to the dollar value per tick (minimum p
+         https://optimusfutures.com/blog/micro-e-mini-futures
+  [tavily] no-date | Micro E-mini Nasdaq 100 Futures (MNQ) Contract Specifications - Ironbeam Futures
+         #### What Are Micro E-mini Nasdaq 100 Futures? Micro E-mini Nasdaq 100 Futures (MNQ) are a smaller-sized version of the popular E-mini Nasdaq 100 Futures contract. These contracts provide traders with exposure to the Nas
+         https://www.ironbeam.com/knowledge-base/micro-e-mini-nasdaq-100-futures-mnq-contract-specifications
+  [tavily] no-date | Micro E-mini Nasdaq-100 Index Quotes - CME Group
+         Micro E-mini Nasdaq-100 futures (MNQ) offer smaller-sized versions of our liquid benchmark E-mini contracts They are designed to manage exposure to the 100 leading non-financial U.S. large-cap companies that make up the 
+         https://www.cmegroup.com/markets/equities/nasdaq/micro-e-mini-nasdaq-100.html
+  [tavily] no-date | What is a Micro E-Mini Future?  | Charles Schwab
+         | Index | Micro E-mini contract | E-mini contract size | Micro E-mini contract size | --- --- | | S&P 500 | Micro E-mini S&P 500 futures (MES) | $50 x S&P 500 Index | $5 X S&P 500 Index | | Nasdaq-100 | Micro E-mini Nasd
+         https://www.schwab.com/learn/story/what-is-micro-e-mini-future
+
+=== w02-prodinfra.json ===
+query: production trading bot infrastructure railway postgres n8n orchestration
+  [brave] 2026-01-12 | Deploy N8N [w/ Postgres + Redis + Ollama] | Pro Stack
+         This setup is ideal for teams that need reliability, scalability, and data control without managing complex networking or orchestration manually. Private AI agents for internal tools, ops automation, or customer support 
+         https://railway.com/deploy/n8n-with-ollama-to-build-private-self-ho
+  [brave] 2025-10-27 | Deploy N8N with Postgres - Automation
+         What it is: <strong>A visual automation builder with advanced logic and conditional branching</strong>. Focus area: Marketers and ops teams building complex data flows. Why n8n is better: Supports queue mode with Redis +
+         https://railway.com/deploy/n8n-or-self-host-or-workflow-automation
+  [brave] 2025-10-29 | Deploy N8N Pro Stack [w/ Worker & Postgres]
+         <strong>It includes everything — PostgreSQL, Redis (optional), and preconfigured environment variables — so you can go from zero to automation in under 60 seconds</strong>. Railway is a singular platform to deploy your i
+         https://railway.com/deploy/n8n-on-railway
+  [brave] 2025-08-17 | AI Agentic Automation Stack (n8n) - Deploy
+         E-commerce &amp; Marketing Automation: Orchestrate product research, competitive analysis, inventory management, and customer journey automation with AI agents specialized in different business functions · PostgreSQL Dat
+         https://railway.com/deploy/ai-agentic-automation-stack-n8n
+  [brave] 2025-06-02 | Deploy AI Agentic Automation Stack (n8n + Flowise)
+         E-commerce &amp; Marketing Automation: Orchestrate product research, competitive analysis, inventory management, and customer journey automation with AI agents specialized in different business functions · PostgreSQL Dat
+         https://railway.com/deploy/ai-agentic-automation-stack-n8n-flowise
+  [brave] 2026-03-07 | Deploy n8n-production-stack (w/ worker & webhook)
+         Zero infrastructure config — no Nginx, no SSL certs, no Docker Compose files to maintain · Horizontal scaling — add more worker replicas directly from the Railway dashboard · Managed secrets — N8N_ENCRYPTION_KEY is auto-
+         https://railway.com/deploy/n8n-production-stack
+  [brave] 2026-03-06 | Deploy N8N | Open-Source AI Worklow Automation | Zapier Alternative
+         <strong>Running it on Railway keeps your workflow data, API tokens, and customer payloads inside your own infrastructure</strong>. What does this Railway template deploy? Five services: the n8n editor, a worker pool (2 r
+         https://railway.com/deploy/n8n-workflow-automation
+  [brave] 2025-12-28 | Deploy Flowise & n8n AI Automation
+         Flowise provides a visual interface for building AI agent workflows and LLM chains, while <strong>n8n is responsible for workflow execution, event handling, and system integrations</strong>. A production-ready setup requ
+         https://railway.com/deploy/flowise-and-n8n-ai-automation
+  [exa] 2026-01-21 | Deploy n8n Enterprise-Ready Stack
+         https://railway.com/deploy/n8n-enterprise-ready-stack
+  [exa] 2026-01-21 | icueth/n8n-PostgresHA-RedisHA
+         https://github.com/icueth/n8n-PostgresHA-RedisHA
+  [exa] 2025-09-03 | kaleldias/n8n-railway
+         https://github.com/kaleldias/n8n-railway
+  [exa] 2026-02-25 | Deploy n8n Scalable — Queue Mode, Workers, Webhooks & Task Runners
+         https://railway.com/deploy/n8n-scalable-queue-mode-workers-webhooks
+  [exa] 2025-12-18 | Self-hosting n8n on Railway – Thinkpeak AI
+         https://thinkpeak.ai/self-hosting-n8n-on-railway/
+  [exa] 2026-05-01 | shruti060701/n8n-railway
+         https://github.com/shruti060701/n8n-railway
+  [exa] 2026-02-13 | TrendpilotAI/openclaw-n8n-railway
+         https://github.com/TrendpilotAI/openclaw-n8n-railway
+  [exa] 2026-03-30 | Self-host n8n | Railway Guides
+         https://docs.railway.com/guides/n8n
+  [tavily] no-date | Deploy N8N
+         ## About Hosting N8N on Railway This setup combines n8n, PostgreSQL, and Redis into a fully managed, distributed environment optimized for production use. This setup comes fully pre-configured — just click Deploy and you
+         https://railway.com/deploy/n8n-on-railway
+  [tavily] no-date | Preparing n8n 2.0 For Safe Upgrades and Production AI Orchestration
+         If you are already operating n8n in queue mode with PostgreSQL, S3 binary storage, and external task runners, much of this will feel like the platform catching up with how you are already running. For smaller, all‑in‑one
+         https://blog.nocodecreative.io/n8n-2-0-migration-ai-orchestration
+  [tavily] no-date | n8n: Technical AI Agent Builder | LeadAI Review | Lead AI Dev
+         Deployment flexibility is another major strength. You can self-host via Docker Compose, Kubernetes, or npm; use n8n Cloud with automatic scaling; or run on Render, Railway, or other PaaS providers. The open-source core (
+         https://leadai.dev/automation/n8n
+  [tavily] no-date | n8n + AI: Build No-Code Trading Bots That Actually Work - PickMyTrade
+         The short answer: flexibility and cost. Zapier and Make are excellent for simple automations, but both run on closed, cloud-only infrastructure with rate-limited polling. n8n is self-hostable, which means you control the
+         https://blog.pickmytrade.trade/n8n-trading-bot-no-code-guide-2026
+  [tavily] no-date | N8n Developer Needed to Build a Flexible Trading Bot (Spot & Futures) - Jobs - n8n Community
+         If you can share: • Signal sources (Telegram, webhook, API, etc.) • Target exchanges • Execution rules / risk preferences I’d be happy to discuss the architecture and next steps. Feel free to DM me here and we can take i
+         https://community.n8n.io/t/n8n-developer-needed-to-build-a-flexible-trading-bot-spot-futures/259941
+  [tavily] no-date | N8N MetaTrader Integration Guide: Build Automated Workflows
+         Telegram alert the second a trade opens or closes, with symbol, lot size, and entry price. Trade log writing every fill to Google Sheets or Postgres for journaling and post-trade analysis. Daily drawdown risk cap that te
+         https://newyorkcityservers.com/blog/build-advanced-trading-automations-with-metatrader-and-n8n
+  [tavily] no-date | Falcon Signal — Production n8n Trading System Production-grade n8n workflow system running 24/7 o...
+         freelancerlife Freelancer life is wins, pivots, and everything in between. What’s yours right now? [...] Anand's avatar Post image Timothy's avatar 9 voted 30% Option A Option A 21 voted 70% Option B Option B 30 votes Cl
+         https://contra.com/community/X5o17dLQ-falcon-signal-production-n8n-trading
+  [tavily] no-date | Build Robust n8n Trading Workflows with Self-hosted Railway
+         freelancerlife Freelancer life is wins, pivots, and everything in between. What’s yours right now? [...] Anand's avatar Post image Timothy's avatar 9 voted 30% Option A Option A 21 voted 70% Option B Option B 30 votes Cl
+         https://contra.com/community/0tBAFwkU-build-robust-n8n-trading-workflows-with
+  [youtube] ERROR: Error: YouTube 429: {
+  "error": {
+    "code": 429,
+    "message": "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per min
+
+=== w03-stratgen.json ===
+query: strategy generation pipeline LLM automated discovery walk forward
+  [brave] 2025-07-18 | LLaPipe: LLM-Guided Reinforcement Learning for Automated Data Preparation Pipeline Construction
+         <strong>By leveraging LLM-driven, context-aware guidance, LLaPipe effectively navigates the vast search space of pipelines</strong>. Our key innovations include a retrieval-augmented LLM Policy Advisor, a theoretically-g
+         https://arxiv.org/html/2507.13712v1
+  [brave] 2025-11-04 | An Automated Framework for Strategy Discovery, Retrieval, and Evolution in LLM Jailbreak Attacks
+         <strong>An Attack Designer generates prompts based on accumulated strategies, a Judge Model evaluates the outcome, and a Strategy Extractor distills the interaction into a new and reusable strategy</strong>. This strateg
+         https://arxiv.org/html/2511.02356v1
+  [brave] 2026-02-05 | LaMDAgent: An Autonomous Framework for Post-Training Pipeline Optimization via LLM Agents
+         Existing approaches typically rely on manual design or focus narrowly on optimizing individual components, such as data ordering or merging strategies. In this work, we introduce LaMDAgent (short for Language Model Devel
+         https://arxiv.org/html/2505.21963
+  [brave] 2025-09-22 | LLM-Driven Automated Generation Pipeline
+         For instance, in &quot;Automated DevOps Pipeline Generation for Code Repositories using LLMs&quot; (Mehta et al., 2023), repositories are filtered, parsed, and content (notably file structure and branch information) is s
+         https://www.emergentmind.com/topics/llm-driven-automated-generation-pipeline
+  [brave] 2025-09-16 | Building an LLM-Powered Auto ML Pipeline: From Data to Deployment | by Nikhil Doye | Medium
+         Automated Feature Engineering: The agent creates new features based on data patterns it discovers. For numerical features, it might generate polynomial terms or interaction features. For categorical features, it implemen
+         https://nikhil-datasolutions.medium.com/building-an-llm-powered-auto-ml-pipeline-from-data-to-deployment-a94f707879e7
+  [brave] 2025-11-03 | [2409.06289] Automate Strategy Finding with LLM in Quant Investment
+         We present <strong>a novel three-stage framework leveraging Large Language Models (LLMs) within a risk-aware multi-agent system for automate strategy finding in quantitative finance</strong>. Our approach addresses the b
+         https://arxiv.org/abs/2409.06289
+  [brave] 2025-09-30 | Automated Model Discovery via Multi-modal & Multi-step Pipeline
+         AnalyzerLLM requires more steps to generate a proper candidate than AnalyzerVLM. LLM is less effective than VLM at capturing the overall trend, which leads to more iteration for checking its analysis. Next, we restrict t
+         https://arxiv.org/html/2509.25946
+  [brave] 2026-03-25 | LLM Visibility Strategy That Drives Pipeline - SearchX | SEO Agency
+         Monitor whether your brand appears in AI-generated responses for priority prompts. Track if category content that supports AI discovery also influences assisted conversions. This is not about replacing rank tracking with
+         https://searchxpro.com/llm-visibility-strategy
+  [exa] 2026-03-26 | ALAGENT-HKU/x2strategy
+         https://github.com/ALAGENT-HKU/x2strategy
+  [exa] 2026-03-22 | august-andersen/trading-hypothesis-workflow
+         https://github.com/august-andersen/trading-hypothesis-workflow
+  [exa] 2026-03-22 | AI Trade Idea Generator | RL & Genetic Algorithm Strategy Discovery — MultiEdge
+         https://rocketedge.com/trade-ideas/
+  [exa] 2026-05-13 | zostaff/ai-quant-researcher
+         https://github.com/zostaff/ai-quant-researcher
+  [exa] 2026-03-20 | Miasyster/QuantGPT
+         https://github.com/Miasyster/QuantGPT
+  [exa] 2026-03-05 | Recursive Self-Improvement in Quant Research with Claude Code | Saulius blog
+         https://saulius.io/blog/quanta-alpha-lgbm-recursive-self-improvement
+  [exa] 2026-02-07 | ms2073/Derivify
+         https://github.com/ms2073/Derivify
+  [exa] 2026-03-31 | ZhuLinsen/alphaevo
+         https://github.com/ZhuLinsen/alphaevo
+  [tavily] no-date | LLM-Driven Automated Strategy Finding
+         ## 2. Multi-Agent Strategy Generation, Evaluation, and Refinement Pipelines State-of-the-art frameworks for automating strategy discovery decompose the process into agentic subproblems handled by distinct LLM-driven comp
+         https://www.emergentmind.com/topics/automate-strategy-finding-with-llm
+  [tavily] no-date | LLM-Driven Automated Generation Pipeline
+         2000 character limit reached # LLM-Driven Automated Generation Pipeline Updated 22 September 2025 LLM-driven automated generation pipeline is a multi-stage framework that integrates large language models with domain-spec
+         https://www.emergentmind.com/topics/llm-driven-automated-generation-pipeline
+  [tavily] no-date | Automated Algorithmic Discovery for Scientific Computing through LLM-Guided Evolutionary Search: A Case Study 
+         Framework Overview. The Evo-MCTS framework systematically transforms raw time-series data into a comprehensive catalog of optimized detection algorithms through an automated discovery pipeline that integrates domain know
+         https://arxiv.org/html/2508.03661v3
+  [tavily] no-date | Automate Strategy Finding with LLM in Quant Investment
+         1. Through this process, Alpha Grail generated nine categories comprising 100 seed alphas. [...] ### 5.3. Multimodal & Multi-Agent LLM [...] ### 2.2. Seed Alpha Mining & Selection
+         https://arxiv.org/html/2409.06289v2
+  [tavily] no-date | AUTOMATED, REPRODUCIBLE PIPELINE FOR LLM VULNERABILITY DISCOVERY:  | Kaggle
+         from these automated frameworks but is specifically tailored for a post-hoc, analytical review of red-team engagement outputs rather than the generation of the attacks themselves. [...] Schema. Each JSON record holds: - 
+         https://www.kaggle.com/competitions/openai-gpt-oss-20b-red-teaming/writeups/automated-reproducible-pipeline-for-llm-vulnerabil
+  [tavily] no-date | A Practitioners Guide to Retrieval Augmented Generation (RAG)
+         1. Creating a high-performing hybrid retrieval algorithm (potentially with a re-ranking component) that can accurately identify relevant textual chunks. 2. Constructing a functional data preprocessing pipeline that prope
+         https://cameronrwolfe.substack.com/p/a-practitioners-guide-to-retrieval
+  [tavily] no-date | Hubble: An LLM-Driven Agentic Framework for Safe and Automated Alpha Factor Discovery
+         A domain-specific language (DSL) of curated mathematical, time-series, and cross-sectional operators that constrains the search space to well-defined, financially interpretable primitives. An AST-based execution sandbox 
+         https://arxiv.org/html/2604.09601v1
+  [tavily] no-date | LLM-Driven NAS Pipeline
+         Feedback is crafted as: "ValAcc=91.2% (< target 92%), params=5.6M, latency=1.1 ms. Observed slight overfitting (val\_loss↑ after epoch 40). Recommend: add Dropout(0.3) after conv layers, switch to Focal Loss." These natu
+         https://www.emergentmind.com/topics/llm-driven-nas-pipeline
+  [youtube] 2025-06-21 | Use AI in Excel for Data Analysis | No Plugin required
+         https://www.youtube.com/watch?v=Q-Ar-35nChA
+         VIDEO_ID=Q-Ar-35nChA CH=Levelupwithexcel
+  [youtube] 2025-03-14 | AI vs ML vs Generative AI
+         Comp Sci vs AI vs ML vs Gen AI ‼️ #ai #tech #ml #fyp.
+         https://www.youtube.com/watch?v=FbtYxPUrhq8
+         VIDEO_ID=FbtYxPUrhq8 CH=Sajjaad Khader
+  [youtube] 2024-07-20 | AI Learns to Dodge  #ai #deeplearning #aiwarehouse
+         AI learns to play Tag In this video an AI Warehouse agent named Albert learns to dodge Kai. The AI was trained using Deep ...
+         https://www.youtube.com/watch?v=LXosuQEOLn0
+         VIDEO_ID=LXosuQEOLn0 CH=AI Warehouse
+  [youtube] 2025-03-13 | AI Agents with Databricks in 5 Minutes
+         Discover how to build AI agents tailored to your business data in this 5-minute demo. We'll show how Databricks helps you move ...
+         https://www.youtube.com/watch?v=RqRlhGO2an0
+         VIDEO_ID=RqRlhGO2an0 CH=Databricks
+  [youtube] 2025-04-26 | The Only 12 n8n AI Automations You&#39;ll Ever Need (Steal These)
+         COMMUNITY https://www.skool.com/automatable/about FULL VIDEO https://youtu.be/uQGT2K26W84 BLUEPRINTS • Gmail ...
+         https://www.youtube.com/watch?v=niHtZBNaJ58
+         VIDEO_ID=niHtZBNaJ58 CH=Jono Catliff
+
+=== w04-killswitch.json ===
+query: kill switch DLL trailing drawdown automated futures execution
+  [brave] 2026-05-12 | NinjaTrader Trailing Drawdown — A Survival Guide for Funded Traders | CrossTrade
+         Can I automatically close NinjaTrader positions before breaching my trailing drawdown? Yes. The CrossTrade Account Manager provides a Trailing Drawdown Monitor that tracks peak equity against your firm&#x27;s drawdown fl
+         https://crosstrade.io/learn/risk-management/trailing-drawdown-survival-guide
+  [brave] 2026-02-18 | Daily Drawdown: What You Need to Know | Top One Futures Help Center
+         Relying solely on the DLL can result in losing more than intended. Top One Futures is not responsible for any losses that exceed the daily drawdown limit. Any loss beyond your allowed threshold is the trader’s responsibi
+         https://help.toponefutures.com/en/articles/10907081-daily-drawdown-what-you-need-to-know
+  [brave] 2026-04-15 | TakeProfitTrader Review 2026 — Rules, Payouts, Accounts ...
+         Traders coming from a daily-loss-limit-based prop firm need to internalize that TPT removed the DLL across all phases in January 2025, leaving the trailing drawdown as the only hard-loss guardrail. Going into PRO with ex
+         https://proptradingvibes.com/prop-firms/take-profit-trader
+  [brave] 2026-04-29 | What Is a Kill Switch in Trading Platforms? | OptionX Journal - Scalping & Options Trading
+         Whichever one is triggered first, the other is automatically cancelled by the exchange. This mechanism ensures you always have a defined exit, removing emotional decision-making. ... OptionX&#x27;s bracket orders support
+         https://optionx.trade/blogs/what-is-kill-switch-trading-platform
+  [brave] 2026-02-11 | The Prop Firm Kill-Switch: How to Stop Drawdown Before It Violates the Rules - Analytics & Forecasts - 11 Febr
+         Trailing drawdown is <strong>designed to eliminate gamblers</strong>. It punishes the classic retail behavior: ... Your new “high-water mark” becomes your executioner. If your system doesn’t have a built-in safety layer,
+         https://www.mql5.com/en/blogs/post/767321
+  [brave] 2026-05-13 | Topstep Review 2026 — Rules, Payouts, Accounts & Funding ...
+         The next session must respect the ... in the Topstep drawdown explained guide. <strong>DLL auto-liquidates open positions when breached and locks the account for the rest of that day</strong>....
+         https://proptradingvibes.com/prop-firms/topstep
+  [brave] 2026-04-28 | Topstep Rules 2026: Drawdown, $150 Winning Day, Consistency
+         <strong>Hitting the DLL triggers automatic liquidation and locks the account for the rest of that session</strong>, but it is NOT a rule violation: the account stays open and trading resumes the next day.
+         https://proptradingvibes.com/blog/topstep-rules-overview
+  [brave] 2026-02-21 | Kill Switch Definition - Traders' Glossary | Positioned
+         <strong>A kill switch operates on simple but ruthless logic that monitors your account status in real-time</strong>. First, you establish a Threshold Setting. The trader (or the proprietary trading firm) sets a &quot;Max
+         https://positioned.app/traders-glossary/kill-switch
+  [exa] 2026-03-02 | joscelyn/PropMarshal
+         https://github.com/joscelyn/PropMarshal
+  [exa] 2026-04-19 | NinjaTrader Trailing Drawdown — A Survival Guide for Funded Traders | CrossTrade
+         https://crosstrade.io/learn/risk-management/trailing-drawdown-survival-guide
+  [exa] 2025-12-09 | Drawdown Terminator | Buy Trading Utility for MetaTrader 5
+         https://www.mql5.com/en/market/product/157717
+  [exa] 2025-02-04 | PNL Drawdown Kill Switch Example For Strategy Builder - NinjaTrader Ecosystem
+         https://ninjatraderecosystem.com/user-app-share-download/pnl-drawdown-kill-switch-example-for-strategy-builder/
+  [exa] 2026-02-23 | senpi-skills/dsl-dynamic-stop-loss at main · Senpi-ai/senpi-skills · GitHub
+         https://github.com/Senpi-ai/senpi-skills/tree/main/dsl-dynamic-stop-loss
+  [exa] 2026-04-09 | Free download of the 'BEC Lockin Dashboard Manager' expert by '1890945701' for MetaTrader 5 in the MQL5 Code B
+         https://www.mql5.com/en/code/71761
+  [exa] 2026-01-26 | apex-rithmic-trading skill by mkalhitti-cloud/universal-or-strategy
+         https://playbooks.com/skills/mkalhitti-cloud/universal-or-strategy/apex-rithmic-trading
+  [exa] 2026-04-05 | Free download of the 'ASQ PropFirm Shield' library by 'Robin2.0' for MetaTrader 5 in the MQL5 Code Base, 2026.
+         https://www.mql5.com/en/code/71480
+  [tavily] no-date | NinjaTrader Trailing Drawdown — A Survival Guide for Funded Traders | CrossTrade
+         Kill Switch on Breach: Yes ``` ### Take Profit Trader $50K PRO (the intraday switch)​") ``` Starting Balance: $50,000 Trailing Drawdown: $2,000 (intraday on PRO, was EOD in eval) Daily Loss Limit: $500 (TPT removed platf
+         https://crosstrade.io/learn/risk-management/trailing-drawdown-survival-guide
+  [tavily] no-date | The Prop Firm Kill-Switch: How to Stop Drawdown Before It Violates the Rules - Analytics & Forecasts - 11 Febr
+         If your system doesn’t have a built-in safety layer, it’s not prop-firm ready — no matter how good the entries look in a backtest. ### ⚡ PROTECT THE ACCOUNT (NOT THE EGO) Prop firm survival is risk automation. The market
+         https://www.mql5.com/en/blogs/post/767321
+  [tavily] no-date | [PDF] Best Practices For Automated Trading Risk Controls And System ...
+         it is possible to pass through cancel requests to the exchange in the event of an unexpected disconnection by the customer from the broker’s infrastructure. At present this is typically unsupported, and the customer woul
+         https://www.fia.org/sites/default/files/2024-07/FIA_WP_AUTOMATED%20TRADING%20RISK%20CONTROLS_FINAL_0.pdf
+  [tavily] no-date | Build A PNL Drawdown Kill Switch Into Your NinjaTrader Bot
+         This is an example of how to build a drawdown killswitch into your NinjaTrader Bot. Free Download for this can be found in the links below.
+         https://www.youtube.com/watch?v=RgSqLobNuJQ
+  [tavily] no-date | ClearEdge Automation
+         Fixed-distance trailing stops maintain a constant tick distance from the highest price reached. Percentage-based trailing stops use a percentage of current price, which works better for instruments with large price diffe
+         https://clearedge.trading/post/automated-futures-trading-stop-loss-strategies
+  [tavily] no-date | blog - NinjaTrader Automated Trading by Algo Futures Trader
+         This allows full use of AFT8’s execution and trade management systems while running proprietary strategies. Developer features include: Custom signal injection Integration with trade entry and exit systems Use of DLL ref
+         https://algofuturestrader.com/blog
+  [tavily] no-date | ClearEdge Automation
+         #### Risk Features to Prioritize Real-time P&L tracking with automatic shutdown at loss thresholds Maximum position size limits per symbol (e.g., max 3 ES contracts) Emergency stop button accessible in under 2 seconds Ti
+         https://clearedge.trading/post/best-futures-automation-platform-features
+  [tavily] no-date | Kill Switch
+         ### User Help System You are here: Risk Management Tools > # Kill Switch Kill Switch provides an cancellation function for the following levels: Legal Clearing Entity, Execution Firm and Sender Comp. For detailed informa
+         https://www.cmegroup.com/tools-information/webhelp/globex-credit-controls/Content/Kill-Switch.html
+  [youtube] ERROR: Error: YouTube 429: {
+  "error": {
+    "code": 429,
+    "message": "Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per min
+
+=== y01-infra.json ===
+query: algorithmic futures bot infrastructure architecture deep dive
+
+=== y02-lifecycle.json ===
+query: trading bot lifecycle strategy factory institutional grade
+
+=== y03-scaling.json ===
+query: prop firm bot scaling 6 figures monthly contracts
+
+=== y04-portfolio.json ===
+query: automated trading bot multiple strategies portfolio management
+
+=== y05-stack.json ===
+query: trading bot stack ninjatrader topstep automation full system
+
+=== y06-traderspost.json ===
+query: TradersPost webhook automation futures topstep MFFU bot
+
+=== y07-n8n.json ===
+query: n8n workflow automation trading bot orchestration
+
+=== y08-1k-operators.json ===
+query: futures trading bot 1000 per day operator real account
+
+=== y09-ictsmc-bot.json ===
+query: ICT SMC bot algorithmic execution liquidity sweep automated
+
+=== y10-pinescript.json ===
+query: TradingView pine script strategy automation TradersPost prop firm
+
+=== yt01-99pct-fail.json ===
+
+=== yt02-systematic-fail.json ===
+
+=== yt03-backtest-pitfalls.json ===
+
+=== yt04-perfect-backtest-trap.json ===
+
+=== yt05-55k-bot.json ===

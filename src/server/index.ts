@@ -80,6 +80,9 @@ import { scoutHealthRoutes } from "./routes/scout-health.js";
 import { tradingViewWebhookRoutes } from "./routes/tradingview-webhook.js";
 import { preMarketRoutes } from "./routes/pre-market.js";
 import { brokerAccountRoutes } from "./routes/broker-accounts.js";
+import { brokerErrorBudgetRoutes } from "./routes/broker-error-budget.js";
+import { deployedStrategyStarvationRoutes } from "./routes/deployed-strategy-starvation.js";
+import { webhookLatencyRoutes } from "./routes/webhook-latency.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 
 // ─── Boot migration runner ────────────────────────────────────────
@@ -515,6 +518,15 @@ app.use("/api/pre-market", preMarketRoutes);
 
 // W23H.H: Per-account symbol whitelist — GET list + PATCH enabled_symbols
 app.use("/api/broker-accounts", brokerAccountRoutes);
+
+// W25 Gap 8: Broker error budget — rejection-class aggregation + alarm
+app.use("/api/broker-error-budget", brokerErrorBudgetRoutes);
+
+// W25 Gap 3: Deployed strategy signal starvation watchdog
+app.use("/api/deployed-strategy-starvation", deployedStrategyStarvationRoutes);
+
+// W25 Gap 4: Webhook latency monitor + regime coverage status
+app.use("/api/webhook-latency", webhookLatencyRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {

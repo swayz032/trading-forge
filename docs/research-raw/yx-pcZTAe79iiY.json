@@ -1,0 +1,1539 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "pcZTAe79iiY",
+  "url": "https://www.youtube.com/watch?v=pcZTAe79iiY",
+  "segments": [
+    {
+      "text": "All right, guys. Welcome back to another",
+      "duration": 5440,
+      "offset": 0,
+      "lang": "en"
+    },
+    {
+      "text": "video. Today, we are going to learn how",
+      "duration": 5521,
+      "offset": 2639,
+      "lang": "en"
+    },
+    {
+      "text": "to fully automate any Trading View",
+      "duration": 5199,
+      "offset": 5440,
+      "lang": "en"
+    },
+    {
+      "text": "future strategy. As you guys know, I",
+      "duration": 5599,
+      "offset": 8160,
+      "lang": "en"
+    },
+    {
+      "text": "have fully automated all of my trading.",
+      "duration": 5841,
+      "offset": 10639,
+      "lang": "en"
+    },
+    {
+      "text": "And as you can see, here is the strategy",
+      "duration": 4961,
+      "offset": 13759,
+      "lang": "en"
+    },
+    {
+      "text": "report for one of the systems that we",
+      "duration": 4799,
+      "offset": 16480,
+      "lang": "en"
+    },
+    {
+      "text": "have created. This is specifically for",
+      "duration": 5120,
+      "offset": 18720,
+      "lang": "en"
+    },
+    {
+      "text": "V1. Now, I know a lot of people want to",
+      "duration": 4561,
+      "offset": 21279,
+      "lang": "en"
+    },
+    {
+      "text": "fully automate what they're seeing here.",
+      "duration": 4240,
+      "offset": 23840,
+      "lang": "en"
+    },
+    {
+      "text": "So I'm going to walk you through step by",
+      "duration": 5040,
+      "offset": 25840,
+      "lang": "en"
+    },
+    {
+      "text": "step exactly how to automate this by",
+      "duration": 5200,
+      "offset": 28080,
+      "lang": "en"
+    },
+    {
+      "text": "using Trader Post. Now first things",
+      "duration": 3920,
+      "offset": 30880,
+      "lang": "en"
+    },
+    {
+      "text": "first, we have two things you can",
+      "duration": 3600,
+      "offset": 33280,
+      "lang": "en"
+    },
+    {
+      "text": "automate. We have the orb strategy",
+      "duration": 4400,
+      "offset": 34800,
+      "lang": "en"
+    },
+    {
+      "text": "builder as you can see right here. We",
+      "duration": 4720,
+      "offset": 36880,
+      "lang": "en"
+    },
+    {
+      "text": "also have the tradeex orb sniper which",
+      "duration": 4160,
+      "offset": 39200,
+      "lang": "en"
+    },
+    {
+      "text": "gives you multiple variations to",
+      "duration": 3520,
+      "offset": 41600,
+      "lang": "en"
+    },
+    {
+      "text": "automate as well. Without any more",
+      "duration": 3440,
+      "offset": 43360,
+      "lang": "en"
+    },
+    {
+      "text": "fluff, let's just go ahead and go",
+      "duration": 4080,
+      "offset": 45120,
+      "lang": "en"
+    },
+    {
+      "text": "straight to Trader Post. Start from the",
+      "duration": 4000,
+      "offset": 46800,
+      "lang": "en"
+    },
+    {
+      "text": "beginning. Let me go ahead and type in",
+      "duration": 3280,
+      "offset": 49200,
+      "lang": "en"
+    },
+    {
+      "text": "traderspost.io.",
+      "duration": 2960,
+      "offset": 50800,
+      "lang": "en"
+    },
+    {
+      "text": "The next thing you're going to want to",
+      "duration": 3599,
+      "offset": 52480,
+      "lang": "en"
+    },
+    {
+      "text": "do is go to the dashboard. I just want",
+      "duration": 4799,
+      "offset": 53760,
+      "lang": "en"
+    },
+    {
+      "text": "to mention I am not affiliated with this",
+      "duration": 4081,
+      "offset": 56079,
+      "lang": "en"
+    },
+    {
+      "text": "company. This is just my preferred",
+      "duration": 3921,
+      "offset": 58559,
+      "lang": "en"
+    },
+    {
+      "text": "company to use when I am automating",
+      "duration": 4560,
+      "offset": 60160,
+      "lang": "en"
+    },
+    {
+      "text": "Trading View signals. Now, the first",
+      "duration": 3840,
+      "offset": 62480,
+      "lang": "en"
+    },
+    {
+      "text": "thing you're going to do once you're on",
+      "duration": 3040,
+      "offset": 64720,
+      "lang": "en"
+    },
+    {
+      "text": "Trader Post is you're going to head over",
+      "duration": 3119,
+      "offset": 66320,
+      "lang": "en"
+    },
+    {
+      "text": "here to brokers. All right. Now, you're",
+      "duration": 3840,
+      "offset": 67760,
+      "lang": "en"
+    },
+    {
+      "text": "going to go over to the top right hand",
+      "duration": 4641,
+      "offset": 69439,
+      "lang": "en"
+    },
+    {
+      "text": "corner and click on connect broker. Now,",
+      "duration": 4480,
+      "offset": 71600,
+      "lang": "en"
+    },
+    {
+      "text": "there are two routes of doing this. Now,",
+      "duration": 3280,
+      "offset": 74080,
+      "lang": "en"
+    },
+    {
+      "text": "if you're someone who just wants to",
+      "duration": 3120,
+      "offset": 76080,
+      "lang": "en"
+    },
+    {
+      "text": "trade a normal broker account, all of",
+      "duration": 3840,
+      "offset": 77360,
+      "lang": "en"
+    },
+    {
+      "text": "those are up here. All of your prop firm",
+      "duration": 3520,
+      "offset": 79200,
+      "lang": "en"
+    },
+    {
+      "text": "accounts are now down here. Now,",
+      "duration": 3200,
+      "offset": 81200,
+      "lang": "en"
+    },
+    {
+      "text": "personally, I've actually had better",
+      "duration": 5120,
+      "offset": 82720,
+      "lang": "en"
+    },
+    {
+      "text": "success trading directly into Trade of",
+      "duration": 5120,
+      "offset": 84400,
+      "lang": "en"
+    },
+    {
+      "text": "my Prop account. So, I'm going to do",
+      "duration": 4000,
+      "offset": 87840,
+      "lang": "en"
+    },
+    {
+      "text": "that as the example. So, here we will",
+      "duration": 4559,
+      "offset": 89520,
+      "lang": "en"
+    },
+    {
+      "text": "click on Trade of We now going to scroll",
+      "duration": 4720,
+      "offset": 91840,
+      "lang": "en"
+    },
+    {
+      "text": "all the way down and click on I agree.",
+      "duration": 4000,
+      "offset": 94079,
+      "lang": "en"
+    },
+    {
+      "text": "Now, I'm going to go ahead and get my",
+      "duration": 3840,
+      "offset": 96560,
+      "lang": "en"
+    },
+    {
+      "text": "Apex information. All right. Now that I",
+      "duration": 3761,
+      "offset": 98079,
+      "lang": "en"
+    },
+    {
+      "text": "have my password here, I'm going to go",
+      "duration": 3679,
+      "offset": 100400,
+      "lang": "en"
+    },
+    {
+      "text": "ahead and log in. Now, as you can see,",
+      "duration": 3760,
+      "offset": 101840,
+      "lang": "en"
+    },
+    {
+      "text": "once we have logged in, it's going to",
+      "duration": 3841,
+      "offset": 104079,
+      "lang": "en"
+    },
+    {
+      "text": "bring you to this page here. As you can",
+      "duration": 4479,
+      "offset": 105600,
+      "lang": "en"
+    },
+    {
+      "text": "see, here is one of my active Apex",
+      "duration": 4640,
+      "offset": 107920,
+      "lang": "en"
+    },
+    {
+      "text": "accounts. What we are going to do now is",
+      "duration": 4881,
+      "offset": 110079,
+      "lang": "en"
+    },
+    {
+      "text": "now switch this on. Now that this is",
+      "duration": 4080,
+      "offset": 112560,
+      "lang": "en"
+    },
+    {
+      "text": "switched on, we are going to go ahead",
+      "duration": 3920,
+      "offset": 114960,
+      "lang": "en"
+    },
+    {
+      "text": "and press save. And now it should be",
+      "duration": 4159,
+      "offset": 116640,
+      "lang": "en"
+    },
+    {
+      "text": "popping up under paper accounts right",
+      "duration": 3760,
+      "offset": 118880,
+      "lang": "en"
+    },
+    {
+      "text": "here. Now what we need to do from here",
+      "duration": 4640,
+      "offset": 120799,
+      "lang": "en"
+    },
+    {
+      "text": "is go to strategies. Once we are in the",
+      "duration": 4720,
+      "offset": 122640,
+      "lang": "en"
+    },
+    {
+      "text": "strategy section, we now need to click",
+      "duration": 4401,
+      "offset": 125439,
+      "lang": "en"
+    },
+    {
+      "text": "on this, which is plus new strategy. Go",
+      "duration": 4239,
+      "offset": 127360,
+      "lang": "en"
+    },
+    {
+      "text": "ahead and click on that. Now for the",
+      "duration": 3360,
+      "offset": 129840,
+      "lang": "en"
+    },
+    {
+      "text": "name of the strategy, you're going to",
+      "duration": 3521,
+      "offset": 131599,
+      "lang": "en"
+    },
+    {
+      "text": "call it whatever you want. In this case,",
+      "duration": 5360,
+      "offset": 133200,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to say tradeex orb is the",
+      "duration": 5759,
+      "offset": 135120,
+      "lang": "en"
+    },
+    {
+      "text": "best. The description can be pretty much",
+      "duration": 4640,
+      "offset": 138560,
+      "lang": "en"
+    },
+    {
+      "text": "anything. Now, primarily everything here",
+      "duration": 4481,
+      "offset": 140879,
+      "lang": "en"
+    },
+    {
+      "text": "is going to stay the same. Let me show",
+      "duration": 3840,
+      "offset": 143200,
+      "lang": "en"
+    },
+    {
+      "text": "you the things that you are going to",
+      "duration": 3360,
+      "offset": 145360,
+      "lang": "en"
+    },
+    {
+      "text": "change. You want to change this from",
+      "duration": 4080,
+      "offset": 147040,
+      "lang": "en"
+    },
+    {
+      "text": "stocks to futures. You can leave this on",
+      "duration": 4960,
+      "offset": 148720,
+      "lang": "en"
+    },
+    {
+      "text": "any ticker. Now, I would recommend going",
+      "duration": 4800,
+      "offset": 151120,
+      "lang": "en"
+    },
+    {
+      "text": "ahead and switching the notifications to",
+      "duration": 3839,
+      "offset": 153680,
+      "lang": "en"
+    },
+    {
+      "text": "everything. That way, when the",
+      "duration": 3840,
+      "offset": 155920,
+      "lang": "en"
+    },
+    {
+      "text": "notification or the strategy fires an",
+      "duration": 4641,
+      "offset": 157519,
+      "lang": "en"
+    },
+    {
+      "text": "alert, you can make sure that is firing",
+      "duration": 4240,
+      "offset": 159760,
+      "lang": "en"
+    },
+    {
+      "text": "the correct alert. Type in whatever",
+      "duration": 3840,
+      "offset": 162160,
+      "lang": "en"
+    },
+    {
+      "text": "email you want to type in to receive the",
+      "duration": 3599,
+      "offset": 164000,
+      "lang": "en"
+    },
+    {
+      "text": "alert with. Now, we're going to scroll",
+      "duration": 4319,
+      "offset": 166000,
+      "lang": "en"
+    },
+    {
+      "text": "down to security here. This really",
+      "duration": 4401,
+      "offset": 167599,
+      "lang": "en"
+    },
+    {
+      "text": "doesn't matter as well. I know some",
+      "duration": 3681,
+      "offset": 170319,
+      "lang": "en"
+    },
+    {
+      "text": "people want to keep their IP address",
+      "duration": 4720,
+      "offset": 172000,
+      "lang": "en"
+    },
+    {
+      "text": "more private away from Trader Post. If",
+      "duration": 4319,
+      "offset": 174000,
+      "lang": "en"
+    },
+    {
+      "text": "that's the case, then click on Trading",
+      "duration": 3120,
+      "offset": 176720,
+      "lang": "en"
+    },
+    {
+      "text": "View. I'm going to go ahead and select",
+      "duration": 3280,
+      "offset": 178319,
+      "lang": "en"
+    },
+    {
+      "text": "any IP address. It really doesn't",
+      "duration": 3280,
+      "offset": 179840,
+      "lang": "en"
+    },
+    {
+      "text": "matter. Now, what you want to do is now",
+      "duration": 3761,
+      "offset": 181599,
+      "lang": "en"
+    },
+    {
+      "text": "click on save. Then, right after save,",
+      "duration": 4479,
+      "offset": 183120,
+      "lang": "en"
+    },
+    {
+      "text": "you want to click on subscribe. Now,",
+      "duration": 4159,
+      "offset": 185360,
+      "lang": "en"
+    },
+    {
+      "text": "it's going to bring you to this page",
+      "duration": 3681,
+      "offset": 187599,
+      "lang": "en"
+    },
+    {
+      "text": "here. And if it doesn't, you're just",
+      "duration": 3360,
+      "offset": 189519,
+      "lang": "en"
+    },
+    {
+      "text": "going to click on subscriptions over",
+      "duration": 3360,
+      "offset": 191280,
+      "lang": "en"
+    },
+    {
+      "text": "here. And you're going to click on the",
+      "duration": 3601,
+      "offset": 192879,
+      "lang": "en"
+    },
+    {
+      "text": "account that you have just added. Once",
+      "duration": 3840,
+      "offset": 194640,
+      "lang": "en"
+    },
+    {
+      "text": "it then brings you to this popup window",
+      "duration": 4240,
+      "offset": 196480,
+      "lang": "en"
+    },
+    {
+      "text": "here, you are now going to press create.",
+      "duration": 4399,
+      "offset": 198480,
+      "lang": "en"
+    },
+    {
+      "text": "Now, it's going to bring you to another",
+      "duration": 3920,
+      "offset": 200720,
+      "lang": "en"
+    },
+    {
+      "text": "page that looks like this. And the first",
+      "duration": 3360,
+      "offset": 202879,
+      "lang": "en"
+    },
+    {
+      "text": "thing we're going to do is switch from",
+      "duration": 3920,
+      "offset": 204640,
+      "lang": "en"
+    },
+    {
+      "text": "manual submit to autosubmit. We're going",
+      "duration": 4640,
+      "offset": 206239,
+      "lang": "en"
+    },
+    {
+      "text": "to leave this on futures. Scroll down",
+      "duration": 4399,
+      "offset": 208560,
+      "lang": "en"
+    },
+    {
+      "text": "here. Make sure allow signal overrides",
+      "duration": 3841,
+      "offset": 210879,
+      "lang": "en"
+    },
+    {
+      "text": "is checked off. And make sure that the",
+      "duration": 3441,
+      "offset": 212959,
+      "lang": "en"
+    },
+    {
+      "text": "connected broker is the broker that",
+      "duration": 3680,
+      "offset": 214720,
+      "lang": "en"
+    },
+    {
+      "text": "we've just connected to. Again, go down",
+      "duration": 3919,
+      "offset": 216400,
+      "lang": "en"
+    },
+    {
+      "text": "to notifications. Click on everything",
+      "duration": 3440,
+      "offset": 218400,
+      "lang": "en"
+    },
+    {
+      "text": "and type in the email you want to",
+      "duration": 3761,
+      "offset": 220319,
+      "lang": "en"
+    },
+    {
+      "text": "receive the notifications to. As you can",
+      "duration": 5039,
+      "offset": 221840,
+      "lang": "en"
+    },
+    {
+      "text": "see, here is my email. Now, this is also",
+      "duration": 4320,
+      "offset": 224080,
+      "lang": "en"
+    },
+    {
+      "text": "really, really important. We're going to",
+      "duration": 3201,
+      "offset": 226879,
+      "lang": "en"
+    },
+    {
+      "text": "scroll down to sides here and we're",
+      "duration": 3440,
+      "offset": 228400,
+      "lang": "en"
+    },
+    {
+      "text": "going to switch from bullish over to",
+      "duration": 3680,
+      "offset": 230080,
+      "lang": "en"
+    },
+    {
+      "text": "both. We do not need to click anything",
+      "duration": 3840,
+      "offset": 231840,
+      "lang": "en"
+    },
+    {
+      "text": "else. Now, we can scroll down.",
+      "duration": 3600,
+      "offset": 233760,
+      "lang": "en"
+    },
+    {
+      "text": "Everything else here is practically",
+      "duration": 3440,
+      "offset": 235680,
+      "lang": "en"
+    },
+    {
+      "text": "going to be the same. Just make sure",
+      "duration": 4000,
+      "offset": 237360,
+      "lang": "en"
+    },
+    {
+      "text": "that allow signal override is",
+      "duration": 3920,
+      "offset": 239120,
+      "lang": "en"
+    },
+    {
+      "text": "essentially checked off everywhere. As",
+      "duration": 3519,
+      "offset": 241360,
+      "lang": "en"
+    },
+    {
+      "text": "you can see here, you do not need to",
+      "duration": 3839,
+      "offset": 243040,
+      "lang": "en"
+    },
+    {
+      "text": "worry about entry order type. As long as",
+      "duration": 3841,
+      "offset": 244879,
+      "lang": "en"
+    },
+    {
+      "text": "this is checked off, you will be fine.",
+      "duration": 4000,
+      "offset": 246879,
+      "lang": "en"
+    },
+    {
+      "text": "Let's keep on moving down. Everything",
+      "duration": 3920,
+      "offset": 248720,
+      "lang": "en"
+    },
+    {
+      "text": "that you are seeing here on mine should",
+      "duration": 3521,
+      "offset": 250879,
+      "lang": "en"
+    },
+    {
+      "text": "be the same on yours. Now, let's go",
+      "duration": 3520,
+      "offset": 252640,
+      "lang": "en"
+    },
+    {
+      "text": "ahead and come to the very top again.",
+      "duration": 3839,
+      "offset": 254400,
+      "lang": "en"
+    },
+    {
+      "text": "Look over to the top right over here.",
+      "duration": 4240,
+      "offset": 256160,
+      "lang": "en"
+    },
+    {
+      "text": "Make sure it says autosubmit here. Now,",
+      "duration": 4081,
+      "offset": 258239,
+      "lang": "en"
+    },
+    {
+      "text": "in order for the alerts to fire, you",
+      "duration": 3840,
+      "offset": 260400,
+      "lang": "en"
+    },
+    {
+      "text": "need to click on disabled. And it should",
+      "duration": 4240,
+      "offset": 262320,
+      "lang": "en"
+    },
+    {
+      "text": "now say enabled as you see here. Now,",
+      "duration": 4000,
+      "offset": 264240,
+      "lang": "en"
+    },
+    {
+      "text": "the next thing we're going to do is come",
+      "duration": 3760,
+      "offset": 266560,
+      "lang": "en"
+    },
+    {
+      "text": "over to web hook. Once we click on web",
+      "duration": 3600,
+      "offset": 268240,
+      "lang": "en"
+    },
+    {
+      "text": "hook, it's going to show you all this",
+      "duration": 3439,
+      "offset": 270320,
+      "lang": "en"
+    },
+    {
+      "text": "confusing information here. The first",
+      "duration": 3840,
+      "offset": 271840,
+      "lang": "en"
+    },
+    {
+      "text": "thing we're going to do is highlight",
+      "duration": 4241,
+      "offset": 273759,
+      "lang": "en"
+    },
+    {
+      "text": "this web hook. Click on copy. Now, we're",
+      "duration": 4640,
+      "offset": 275680,
+      "lang": "en"
+    },
+    {
+      "text": "going to head over to Trading View. Now,",
+      "duration": 3520,
+      "offset": 278000,
+      "lang": "en"
+    },
+    {
+      "text": "first I'm going to show you how to",
+      "duration": 3680,
+      "offset": 280320,
+      "lang": "en"
+    },
+    {
+      "text": "automate the orb strategy builder, and",
+      "duration": 3840,
+      "offset": 281520,
+      "lang": "en"
+    },
+    {
+      "text": "then I'm going to show you how to",
+      "duration": 3600,
+      "offset": 284000,
+      "lang": "en"
+    },
+    {
+      "text": "automate the Tradeex Orb Sniper. First",
+      "duration": 3920,
+      "offset": 285360,
+      "lang": "en"
+    },
+    {
+      "text": "things first, let's go ahead and go to",
+      "duration": 3440,
+      "offset": 287600,
+      "lang": "en"
+    },
+    {
+      "text": "the strategy builder. What you're going",
+      "duration": 3600,
+      "offset": 289280,
+      "lang": "en"
+    },
+    {
+      "text": "to do is click on the three little dots",
+      "duration": 3840,
+      "offset": 291040,
+      "lang": "en"
+    },
+    {
+      "text": "here that say more. Now, we're going to",
+      "duration": 4000,
+      "offset": 292880,
+      "lang": "en"
+    },
+    {
+      "text": "come down to where it says add alert on",
+      "duration": 3680,
+      "offset": 294880,
+      "lang": "en"
+    },
+    {
+      "text": "orb strategy builder. We're going to",
+      "duration": 3520,
+      "offset": 296880,
+      "lang": "en"
+    },
+    {
+      "text": "click on this. Now, the first thing",
+      "duration": 3440,
+      "offset": 298560,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to do from here is then go",
+      "duration": 3600,
+      "offset": 300400,
+      "lang": "en"
+    },
+    {
+      "text": "to notifications. Scroll down to",
+      "duration": 3759,
+      "offset": 302000,
+      "lang": "en"
+    },
+    {
+      "text": "notifications and make sure that this",
+      "duration": 4639,
+      "offset": 304000,
+      "lang": "en"
+    },
+    {
+      "text": "web hook URL is checked off. We're now",
+      "duration": 4720,
+      "offset": 305759,
+      "lang": "en"
+    },
+    {
+      "text": "going to highlight everything here.",
+      "duration": 3840,
+      "offset": 308639,
+      "lang": "en"
+    },
+    {
+      "text": "Delete everything. And again, now we",
+      "duration": 3440,
+      "offset": 310479,
+      "lang": "en"
+    },
+    {
+      "text": "just need to make sure that this link",
+      "duration": 4081,
+      "offset": 312479,
+      "lang": "en"
+    },
+    {
+      "text": "that you see here is now being posted in",
+      "duration": 4720,
+      "offset": 313919,
+      "lang": "en"
+    },
+    {
+      "text": "here. Now, the next thing we want to do",
+      "duration": 4800,
+      "offset": 316560,
+      "lang": "en"
+    },
+    {
+      "text": "is come over to message. Now, the alert",
+      "duration": 5120,
+      "offset": 318639,
+      "lang": "en"
+    },
+    {
+      "text": "name is going to be Ben is the best",
+      "duration": 4640,
+      "offset": 321360,
+      "lang": "en"
+    },
+    {
+      "text": "trader ever. Now, if you do not have the",
+      "duration": 4401,
+      "offset": 323759,
+      "lang": "en"
+    },
+    {
+      "text": "alert name as this, then the strategy is",
+      "duration": 4080,
+      "offset": 326000,
+      "lang": "en"
+    },
+    {
+      "text": "just simply not going to work. All jokes",
+      "duration": 3840,
+      "offset": 328160,
+      "lang": "en"
+    },
+    {
+      "text": "aside, you can have the alert name as",
+      "duration": 3839,
+      "offset": 330080,
+      "lang": "en"
+    },
+    {
+      "text": "anything. Now, in this little message",
+      "duration": 3759,
+      "offset": 332000,
+      "lang": "en"
+    },
+    {
+      "text": "area down here, you're going to go back",
+      "duration": 3921,
+      "offset": 333919,
+      "lang": "en"
+    },
+    {
+      "text": "to Trader Post. Now, where it says",
+      "duration": 4081,
+      "offset": 335759,
+      "lang": "en"
+    },
+    {
+      "text": "Trading View Strategy, you're going to",
+      "duration": 4160,
+      "offset": 337840,
+      "lang": "en"
+    },
+    {
+      "text": "come down to here and click on copy.",
+      "duration": 4480,
+      "offset": 339840,
+      "lang": "en"
+    },
+    {
+      "text": "This is the JSON message. It essentially",
+      "duration": 4240,
+      "offset": 342000,
+      "lang": "en"
+    },
+    {
+      "text": "just allows it to continue to automate",
+      "duration": 3840,
+      "offset": 344320,
+      "lang": "en"
+    },
+    {
+      "text": "the alerts for you. Anyways, once we've",
+      "duration": 3679,
+      "offset": 346240,
+      "lang": "en"
+    },
+    {
+      "text": "copied this, we're going to come back to",
+      "duration": 3920,
+      "offset": 348160,
+      "lang": "en"
+    },
+    {
+      "text": "Trading View and now paste that same",
+      "duration": 4321,
+      "offset": 349919,
+      "lang": "en"
+    },
+    {
+      "text": "message into here. Make sure that your",
+      "duration": 4480,
+      "offset": 352080,
+      "lang": "en"
+    },
+    {
+      "text": "settings look like this. You can either",
+      "duration": 5519,
+      "offset": 354240,
+      "lang": "en"
+    },
+    {
+      "text": "have this between NQ or MNQ. Now, once",
+      "duration": 5359,
+      "offset": 356560,
+      "lang": "en"
+    },
+    {
+      "text": "everything is matching up like so,",
+      "duration": 4321,
+      "offset": 359759,
+      "lang": "en"
+    },
+    {
+      "text": "you're going to click on create. Now, if",
+      "duration": 3921,
+      "offset": 361919,
+      "lang": "en"
+    },
+    {
+      "text": "you want to make sure that your alert is",
+      "duration": 3600,
+      "offset": 364080,
+      "lang": "en"
+    },
+    {
+      "text": "set, you're going to come over to this",
+      "duration": 3760,
+      "offset": 365840,
+      "lang": "en"
+    },
+    {
+      "text": "clock looking thing that says alerts on",
+      "duration": 4079,
+      "offset": 367680,
+      "lang": "en"
+    },
+    {
+      "text": "it. Click on it here. And now, it should",
+      "duration": 4080,
+      "offset": 369600,
+      "lang": "en"
+    },
+    {
+      "text": "show you the alert. Now, the strategy",
+      "duration": 3440,
+      "offset": 371759,
+      "lang": "en"
+    },
+    {
+      "text": "builder is a little bit different from",
+      "duration": 3440,
+      "offset": 373680,
+      "lang": "en"
+    },
+    {
+      "text": "the orb sniper. So, let's go ahead and",
+      "duration": 3921,
+      "offset": 375199,
+      "lang": "en"
+    },
+    {
+      "text": "walk over the orb sniper. What we're",
+      "duration": 4880,
+      "offset": 377120,
+      "lang": "en"
+    },
+    {
+      "text": "going to do is click off of this. We're",
+      "duration": 5040,
+      "offset": 379120,
+      "lang": "en"
+    },
+    {
+      "text": "now going to click on this strategy.",
+      "duration": 3840,
+      "offset": 382000,
+      "lang": "en"
+    },
+    {
+      "text": "We're now also going to come to the",
+      "duration": 3680,
+      "offset": 384160,
+      "lang": "en"
+    },
+    {
+      "text": "three dots here and click on more. Same",
+      "duration": 3680,
+      "offset": 385840,
+      "lang": "en"
+    },
+    {
+      "text": "as before, we're going to add alert on",
+      "duration": 3440,
+      "offset": 387840,
+      "lang": "en"
+    },
+    {
+      "text": "the Tradeex Sniper. We're going to come",
+      "duration": 3760,
+      "offset": 389520,
+      "lang": "en"
+    },
+    {
+      "text": "to notifications. Make sure that web",
+      "duration": 4320,
+      "offset": 391280,
+      "lang": "en"
+    },
+    {
+      "text": "hook URL is clicked on. Let's go ahead",
+      "duration": 3840,
+      "offset": 393280,
+      "lang": "en"
+    },
+    {
+      "text": "and delete everything here. We're going",
+      "duration": 3760,
+      "offset": 395600,
+      "lang": "en"
+    },
+    {
+      "text": "to come back to Trader Post. We are",
+      "duration": 4960,
+      "offset": 397120,
+      "lang": "en"
+    },
+    {
+      "text": "going to highlight and copy this URL. We",
+      "duration": 4959,
+      "offset": 399360,
+      "lang": "en"
+    },
+    {
+      "text": "are going to go back to Trading View.",
+      "duration": 4800,
+      "offset": 402080,
+      "lang": "en"
+    },
+    {
+      "text": "Paste the same URL that we just copied.",
+      "duration": 4320,
+      "offset": 404319,
+      "lang": "en"
+    },
+    {
+      "text": "Now, the next thing we're going to do is",
+      "duration": 4000,
+      "offset": 406880,
+      "lang": "en"
+    },
+    {
+      "text": "click on settings. Now, once we are in",
+      "duration": 4161,
+      "offset": 408639,
+      "lang": "en"
+    },
+    {
+      "text": "settings, make sure the condition is set",
+      "duration": 4560,
+      "offset": 410880,
+      "lang": "en"
+    },
+    {
+      "text": "to the indicator or strategy. And the",
+      "duration": 4080,
+      "offset": 412800,
+      "lang": "en"
+    },
+    {
+      "text": "next thing we need to do is click on",
+      "duration": 3440,
+      "offset": 415440,
+      "lang": "en"
+    },
+    {
+      "text": "this right below it and click on order",
+      "duration": 4000,
+      "offset": 416880,
+      "lang": "en"
+    },
+    {
+      "text": "fills only. If you haven't clicked on",
+      "duration": 3840,
+      "offset": 418880,
+      "lang": "en"
+    },
+    {
+      "text": "either of these two here, then it's",
+      "duration": 3759,
+      "offset": 420880,
+      "lang": "en"
+    },
+    {
+      "text": "going to be firing so many alerts and",
+      "duration": 3680,
+      "offset": 422720,
+      "lang": "en"
+    },
+    {
+      "text": "firing way too many trades. So, please",
+      "duration": 3280,
+      "offset": 424639,
+      "lang": "en"
+    },
+    {
+      "text": "make sure that you have orders fills",
+      "duration": 4480,
+      "offset": 426400,
+      "lang": "en"
+    },
+    {
+      "text": "only on this specific strategy. Now,",
+      "duration": 4881,
+      "offset": 427919,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to come over to message and",
+      "duration": 3759,
+      "offset": 430880,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to do the exact same thing",
+      "duration": 4080,
+      "offset": 432800,
+      "lang": "en"
+    },
+    {
+      "text": "as before where we come back to trader",
+      "duration": 4321,
+      "offset": 434639,
+      "lang": "en"
+    },
+    {
+      "text": "post. We're going to copy the JSON",
+      "duration": 5599,
+      "offset": 436880,
+      "lang": "en"
+    },
+    {
+      "text": "message from Trading View Strategy. come",
+      "duration": 6560,
+      "offset": 438960,
+      "lang": "en"
+    },
+    {
+      "text": "back to trading view and copy that JSON",
+      "duration": 4560,
+      "offset": 442479,
+      "lang": "en"
+    },
+    {
+      "text": "message in the message. I'm just going",
+      "duration": 2799,
+      "offset": 445520,
+      "lang": "en"
+    },
+    {
+      "text": "to go ahead and make it simple where it",
+      "duration": 3681,
+      "offset": 447039,
+      "lang": "en"
+    },
+    {
+      "text": "says put JSON message here. Now",
+      "duration": 5361,
+      "offset": 448319,
+      "lang": "en"
+    },
+    {
+      "text": "everything should look like this, this,",
+      "duration": 5599,
+      "offset": 450720,
+      "lang": "en"
+    },
+    {
+      "text": "and this. Go ahead and click on create.",
+      "duration": 4160,
+      "offset": 453680,
+      "lang": "en"
+    },
+    {
+      "text": "And now we're going to come back over to",
+      "duration": 3361,
+      "offset": 456319,
+      "lang": "en"
+    },
+    {
+      "text": "this clock looking thing, and it should",
+      "duration": 4240,
+      "offset": 457840,
+      "lang": "en"
+    },
+    {
+      "text": "show it here. Your alert is now active",
+      "duration": 4799,
+      "offset": 459680,
+      "lang": "en"
+    },
+    {
+      "text": "to automate. And now these strategies",
+      "duration": 5119,
+      "offset": 462080,
+      "lang": "en"
+    },
+    {
+      "text": "are fully automated for you. I will be",
+      "duration": 5280,
+      "offset": 464479,
+      "lang": "en"
+    },
+    {
+      "text": "making a more in-depth video soon about",
+      "duration": 5041,
+      "offset": 467199,
+      "lang": "en"
+    },
+    {
+      "text": "the Orb strategy builder, but as you can",
+      "duration": 4720,
+      "offset": 469759,
+      "lang": "en"
+    },
+    {
+      "text": "see, you can pretty much build your own",
+      "duration": 4720,
+      "offset": 472240,
+      "lang": "en"
+    },
+    {
+      "text": "opening range breakout strategy with all",
+      "duration": 4481,
+      "offset": 474479,
+      "lang": "en"
+    },
+    {
+      "text": "of the inputs and features that you see",
+      "duration": 4400,
+      "offset": 476960,
+      "lang": "en"
+    },
+    {
+      "text": "here. There are literally thousands of",
+      "duration": 4160,
+      "offset": 478960,
+      "lang": "en"
+    },
+    {
+      "text": "different combinations that you can do",
+      "duration": 3839,
+      "offset": 481360,
+      "lang": "en"
+    },
+    {
+      "text": "as well as trade any given trading",
+      "duration": 4320,
+      "offset": 483120,
+      "lang": "en"
+    },
+    {
+      "text": "session. I've even included some of my",
+      "duration": 4400,
+      "offset": 485199,
+      "lang": "en"
+    },
+    {
+      "text": "high probability filters. I'm also going",
+      "duration": 3920,
+      "offset": 487440,
+      "lang": "en"
+    },
+    {
+      "text": "to release other things like a trailing",
+      "duration": 4160,
+      "offset": 489599,
+      "lang": "en"
+    },
+    {
+      "text": "ATR stop-loss, other ways to basically",
+      "duration": 4800,
+      "offset": 491360,
+      "lang": "en"
+    },
+    {
+      "text": "just trail the stop loss in general. But",
+      "duration": 4401,
+      "offset": 493759,
+      "lang": "en"
+    },
+    {
+      "text": "yeah, this is a really, really, really",
+      "duration": 4319,
+      "offset": 496160,
+      "lang": "en"
+    },
+    {
+      "text": "cool tool. Anyways, that is pretty much",
+      "duration": 4479,
+      "offset": 498160,
+      "lang": "en"
+    },
+    {
+      "text": "it. If this video was helpful, make sure",
+      "duration": 4321,
+      "offset": 500479,
+      "lang": "en"
+    },
+    {
+      "text": "to like, comment, and subscribe. If you",
+      "duration": 4400,
+      "offset": 502639,
+      "lang": "en"
+    },
+    {
+      "text": "guys need more help with Trader Post or",
+      "duration": 4000,
+      "offset": 504800,
+      "lang": "en"
+    },
+    {
+      "text": "automating your strategies from Trading",
+      "duration": 3761,
+      "offset": 507039,
+      "lang": "en"
+    },
+    {
+      "text": "View, then just give me a DM in Discord,",
+      "duration": 3599,
+      "offset": 508800,
+      "lang": "en"
+    },
+    {
+      "text": "and I'm more than happy to help. If you",
+      "duration": 3599,
+      "offset": 510800,
+      "lang": "en"
+    },
+    {
+      "text": "guys also want access to the Orb",
+      "duration": 4000,
+      "offset": 512399,
+      "lang": "en"
+    },
+    {
+      "text": "Strategy Builder or even the strategies",
+      "duration": 4401,
+      "offset": 514399,
+      "lang": "en"
+    },
+    {
+      "text": "that we've curated here, I will also",
+      "duration": 4801,
+      "offset": 516399,
+      "lang": "en"
+    },
+    {
+      "text": "leave these in the description below",
+      "duration": 4799,
+      "offset": 518800,
+      "lang": "en"
+    },
+    {
+      "text": "because automating this is pretty sick.",
+      "duration": 4160,
+      "offset": 521200,
+      "lang": "en"
+    },
+    {
+      "text": "That's pretty much it. I'll see you guys",
+      "duration": 4561,
+      "offset": 523599,
+      "lang": "en"
+    },
+    {
+      "text": "in the next video.",
+      "duration": 2800,
+      "offset": 525360,
+      "lang": "en"
+    }
+  ],
+  "text": "All right, guys. Welcome back to another video. Today, we are going to learn how to fully automate any Trading View future strategy. As you guys know, I have fully automated all of my trading. And as you can see, here is the strategy report for one of the systems that we have created. This is specifically for V1. Now, I know a lot of people want to fully automate what they're seeing here. So I'm going to walk you through step by step exactly how to automate this by using Trader Post. Now first things first, we have two things you can automate. We have the orb strategy builder as you can see right here. We also have the tradeex orb sniper which gives you multiple variations to automate as well. Without any more fluff, let's just go ahead and go straight to Trader Post. Start from the beginning. Let me go ahead and type in traderspost.io. The next thing you're going to want to do is go to the dashboard. I just want to mention I am not affiliated with this company. This is just my preferred company to use when I am automating Trading View signals. Now, the first thing you're going to do once you're on Trader Post is you're going to head over here to brokers. All right. Now, you're going to go over to the top right hand corner and click on connect broker. Now, there are two routes of doing this. Now, if you're someone who just wants to trade a normal broker account, all of those are up here. All of your prop firm accounts are now down here. Now, personally, I've actually had better success trading directly into Trade of my Prop account. So, I'm going to do that as the example. So, here we will click on Trade of We now going to scroll all the way down and click on I agree. Now, I'm going to go ahead and get my Apex information. All right. Now that I have my password here, I'm going to go ahead and log in. Now, as you can see, once we have logged in, it's going to bring you to this page here. As you can see, here is one of my active Apex accounts. What we are going to do now is now switch this on. Now that this is switched on, we are going to go ahead and press save. And now it should be popping up under paper accounts right here. Now what we need to do from here is go to strategies. Once we are in the strategy section, we now need to click on this, which is plus new strategy. Go ahead and click on that. Now for the name of the strategy, you're going to call it whatever you want. In this case, we're going to say tradeex orb is the best. The description can be pretty much anything. Now, primarily everything here is going to stay the same. Let me show you the things that you are going to change. You want to change this from stocks to futures. You can leave this on any ticker. Now, I would recommend going ahead and switching the notifications to everything. That way, when the notification or the strategy fires an alert, you can make sure that is firing the correct alert. Type in whatever email you want to type in to receive the alert with. Now, we're going to scroll down to security here. This really doesn't matter as well. I know some people want to keep their IP address more private away from Trader Post. If that's the case, then click on Trading View. I'm going to go ahead and select any IP address. It really doesn't matter. Now, what you want to do is now click on save. Then, right after save, you want to click on subscribe. Now, it's going to bring you to this page here. And if it doesn't, you're just going to click on subscriptions over here. And you're going to click on the account that you have just added. Once it then brings you to this popup window here, you are now going to press create. Now, it's going to bring you to another page that looks like this. And the first thing we're going to do is switch from manual submit to autosubmit. We're going to leave this on futures. Scroll down here. Make sure allow signal overrides is checked off. And make sure that the connected broker is the broker that we've just connected to. Again, go down to notifications. Click on everything and type in the email you want to receive the notifications to. As you can see, here is my email. Now, this is also really, really important. We're going to scroll down to sides here and we're going to switch from bullish over to both. We do not need to click anything else. Now, we can scroll down. Everything else here is practically going to be the same. Just make sure that allow signal override is essentially checked off everywhere. As you can see here, you do not need to worry about entry order type. As long as this is checked off, you will be fine. Let's keep on moving down. Everything that you are seeing here on mine should be the same on yours. Now, let's go ahead and come to the very top again. Look over to the top right over here. Make sure it says autosubmit here. Now, in order for the alerts to fire, you need to click on disabled. And it should now say enabled as you see here. Now, the next thing we're going to do is come over to web hook. Once we click on web hook, it's going to show you all this confusing information here. The first thing we're going to do is highlight this web hook. Click on copy. Now, we're going to head over to Trading View. Now, first I'm going to show you how to automate the orb strategy builder, and then I'm going to show you how to automate the Tradeex Orb Sniper. First things first, let's go ahead and go to the strategy builder. What you're going to do is click on the three little dots here that say more. Now, we're going to come down to where it says add alert on orb strategy builder. We're going to click on this. Now, the first thing we're going to do from here is then go to notifications. Scroll down to notifications and make sure that this web hook URL is checked off. We're now going to highlight everything here. Delete everything. And again, now we just need to make sure that this link that you see here is now being posted in here. Now, the next thing we want to do is come over to message. Now, the alert name is going to be Ben is the best trader ever. Now, if you do not have the alert name as this, then the strategy is just simply not going to work. All jokes aside, you can have the alert name as anything. Now, in this little message area down here, you're going to go back to Trader Post. Now, where it says Trading View Strategy, you're going to come down to here and click on copy. This is the JSON message. It essentially just allows it to continue to automate the alerts for you. Anyways, once we've copied this, we're going to come back to Trading View and now paste that same message into here. Make sure that your settings look like this. You can either have this between NQ or MNQ. Now, once everything is matching up like so, you're going to click on create. Now, if you want to make sure that your alert is set, you're going to come over to this clock looking thing that says alerts on it. Click on it here. And now, it should show you the alert. Now, the strategy builder is a little bit different from the orb sniper. So, let's go ahead and walk over the orb sniper. What we're going to do is click off of this. We're now going to click on this strategy. We're now also going to come to the three dots here and click on more. Same as before, we're going to add alert on the Tradeex Sniper. We're going to come to notifications. Make sure that web hook URL is clicked on. Let's go ahead and delete everything here. We're going to come back to Trader Post. We are going to highlight and copy this URL. We are going to go back to Trading View. Paste the same URL that we just copied. Now, the next thing we're going to do is click on settings. Now, once we are in settings, make sure the condition is set to the indicator or strategy. And the next thing we need to do is click on this right below it and click on order fills only. If you haven't clicked on either of these two here, then it's going to be firing so many alerts and firing way too many trades. So, please make sure that you have orders fills only on this specific strategy. Now, we're going to come over to message and we're going to do the exact same thing as before where we come back to trader post. We're going to copy the JSON message from Trading View Strategy. come back to trading view and copy that JSON message in the message. I'm just going to go ahead and make it simple where it says put JSON message here. Now everything should look like this, this, and this. Go ahead and click on create. And now we're going to come back over to this clock looking thing, and it should show it here. Your alert is now active to automate. And now these strategies are fully automated for you. I will be making a more in-depth video soon about the Orb strategy builder, but as you can see, you can pretty much build your own opening range breakout strategy with all of the inputs and features that you see here. There are literally thousands of different combinations that you can do as well as trade any given trading session. I've even included some of my high probability filters. I'm also going to release other things like a trailing ATR stop-loss, other ways to basically just trail the stop loss in general. But yeah, this is a really, really, really cool tool. Anyways, that is pretty much it. If this video was helpful, make sure to like, comment, and subscribe. If you guys need more help with Trader Post or automating your strategies from Trading View, then just give me a DM in Discord, and I'm more than happy to help. If you guys also want access to the Orb Strategy Builder or even the strategies that we've curated here, I will also leave these in the description below because automating this is pretty sick. That's pretty much it. I'll see you guys in the next video.",
+  "cited_at": "2026-05-24T05:04:36.859Z"
+}

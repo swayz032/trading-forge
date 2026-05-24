@@ -1659,7 +1659,12 @@
     ],
     "audit_actions": [
       "paper.session_auto_stop",
-      "regret.score-fill"
+      "regret.score-fill",
+      "signal.starvation_warning",
+      "signal.starvation_critical",
+      "webhook.broker_ack",
+      "webhook.latency_high",
+      "portfolio.regime_coverage_gap"
     ],
     "metrics_surfaces": [
       "/api/health",
@@ -1675,6 +1680,7 @@
     "scheduler_jobs": [
       "agent-health-sweep",
       "data-integrity-suite",
+      "deployed-strategy-starvation-check",
       "disabled-job-probe",
       "dlq-escalation",
       "dlq-retry",
@@ -1683,19 +1689,23 @@
       "metrics-heartbeat",
       "pre-trading-day-health-check",
       "python-pool-saturation-check",
+      "regime-coverage-check",
       "resource-snapshot",
       "stale-pending-sweeper",
       "system-map-drift",
-      "validation-cadence-monthly"
+      "validation-cadence-monthly",
+      "webhook-latency-check"
     ],
     "routes": [
       "/api/admin",
       "/api/alerts",
+      "/api/deployed-strategy-starvation",
       "/api/dlq",
       "/api/health",
       "/api/metrics",
       "/api/sse",
-      "/api/validation-cadence"
+      "/api/validation-cadence",
+      "/api/webhook-latency"
     ],
     "engine_subsystems": [],
     "database_tables": [
@@ -1853,7 +1863,8 @@
     ],
     "audit_actions": [
       "broker.order_routed",
-      "broker.credentials_loaded"
+      "broker.credentials_loaded",
+      "broker.error_budget_breach"
     ],
     "metrics_surfaces": [
       "/api/health/dashboard"
@@ -1862,9 +1873,12 @@
       "broker:order_routed SSE",
       "audit_log:broker.order_routed"
     ],
-    "scheduler_jobs": [],
+    "scheduler_jobs": [
+      "broker-error-budget-check"
+    ],
     "routes": [
       "/api/broker-accounts",
+      "/api/broker-error-budget",
       "/api/strategy-assignments"
     ],
     "engine_subsystems": [

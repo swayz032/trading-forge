@@ -1,0 +1,111 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "7LnIvCnwL34",
+  "url": "https://www.youtube.com/watch?v=7LnIvCnwL34",
+  "segments": [
+    {
+      "text": "For those of you who are looking to",
+      "duration": 2319,
+      "offset": 80,
+      "lang": "en"
+    },
+    {
+      "text": "create a trading bot with multiple",
+      "duration": 2480,
+      "offset": 1120,
+      "lang": "en"
+    },
+    {
+      "text": "strategies, you might be asking the",
+      "duration": 2481,
+      "offset": 2399,
+      "lang": "en"
+    },
+    {
+      "text": "question, well, how do I add more",
+      "duration": 2960,
+      "offset": 3600,
+      "lang": "en"
+    },
+    {
+      "text": "strategies? I want to automate more than",
+      "duration": 3840,
+      "offset": 4880,
+      "lang": "en"
+    },
+    {
+      "text": "one. Well, we have one loaded in here",
+      "duration": 3920,
+      "offset": 6560,
+      "lang": "en"
+    },
+    {
+      "text": "that we click the auto trade button on.",
+      "duration": 3600,
+      "offset": 8720,
+      "lang": "en"
+    },
+    {
+      "text": "But if I was to go under my searching",
+      "duration": 4239,
+      "offset": 10480,
+      "lang": "en"
+    },
+    {
+      "text": "subscriptions section, I could now add",
+      "duration": 3920,
+      "offset": 12320,
+      "lang": "en"
+    },
+    {
+      "text": "any strategies that I've already",
+      "duration": 3761,
+      "offset": 14719,
+      "lang": "en"
+    },
+    {
+      "text": "subscribed to and load them in by their",
+      "duration": 4879,
+      "offset": 16240,
+      "lang": "en"
+    },
+    {
+      "text": "name. You will also in this tab find",
+      "duration": 4719,
+      "offset": 18480,
+      "lang": "en"
+    },
+    {
+      "text": "your own personal strategies from your",
+      "duration": 4320,
+      "offset": 21119,
+      "lang": "en"
+    },
+    {
+      "text": "portfolio tab showing up right here. So",
+      "duration": 3920,
+      "offset": 23199,
+      "lang": "en"
+    },
+    {
+      "text": "for example, testing is a strategy that",
+      "duration": 3361,
+      "offset": 25439,
+      "lang": "en"
+    },
+    {
+      "text": "I've already created personally that",
+      "duration": 5041,
+      "offset": 27119,
+      "lang": "en"
+    },
+    {
+      "text": "I've brought in through Trading View.",
+      "duration": 3360,
+      "offset": 28800,
+      "lang": "en"
+    }
+  ],
+  "text": "For those of you who are looking to create a trading bot with multiple strategies, you might be asking the question, well, how do I add more strategies? I want to automate more than one. Well, we have one loaded in here that we click the auto trade button on. But if I was to go under my searching subscriptions section, I could now add any strategies that I've already subscribed to and load them in by their name. You will also in this tab find your own personal strategies from your portfolio tab showing up right here. So for example, testing is a strategy that I've already created personally that I've brought in through Trading View.",
+  "cited_at": "2026-05-24T05:04:35.567Z"
+}

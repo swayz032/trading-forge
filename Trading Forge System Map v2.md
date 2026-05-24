@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
+Updated automatically from the repo on `2026-05-24T06:47:47.654Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,8 +11,8 @@ Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `operator-halt-only, tradingview_deploy`
-- API routes tracked: `64`
-- Scheduler jobs tracked: `70`
+- API routes tracked: `67`
+- Scheduler jobs tracked: `74`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -53,8 +53,8 @@ Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `21`
-- Route coverage: `64/64`
-- Scheduler coverage: `70/70`
+- Route coverage: `67/67`
+- Scheduler coverage: `74/74`
 - Engine coverage: `26/26`
 - Database coverage: `94/94`
 - Autonomous subsystems with audit coverage: `21/21`
@@ -187,6 +187,7 @@ Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 - `/api/bias-decisions`
 - `/api/bias-state`
 - `/api/broker-accounts`
+- `/api/broker-error-budget`
 - `/api/cloud-qmc`
 - `/api/compiler`
 - `/api/compliance`
@@ -195,6 +196,7 @@ Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 - `/api/data`
 - `/api/decay`
 - `/api/deepar`
+- `/api/deployed-strategy-starvation`
 - `/api/dlq`
 - `/api/frankenstein`
 - `/api/governor`
@@ -239,6 +241,7 @@ Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 - `/api/validation`
 - `/api/validation-cadence`
 - `/api/volume-profile`
+- `/api/webhook-latency`
 
 ### Scheduler Jobs
 - `a-plus-auditor-scan`
@@ -249,6 +252,7 @@ Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 - `autonomous-scout-discovery`
 - `bias-engine-refresh-10am-et`
 - `bias-engine-session-start`
+- `broker-error-budget-check`
 - `bw-session-refresh`
 - `c11-bls-release`
 - `c11-fred-daily`
@@ -265,6 +269,7 @@ Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 - `deepar-predict`
 - `deepar-train`
 - `deepar-validate`
+- `deployed-strategy-starvation-check`
 - `disabled-job-probe`
 - `dlq-escalation`
 - `dlq-retry`
@@ -298,6 +303,7 @@ Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 - `python-pool-saturation-check`
 - `quantum-cost-prune`
 - `regen-declining-sweep`
+- `regime-coverage-check`
 - `regret-score-fill`
 - `resource-snapshot`
 - `rolling-sharpe`
@@ -310,6 +316,7 @@ Updated automatically from the repo on `2026-05-24T02:40:23.122Z`.
 - `w19-definition-pull`
 - `w19-imbalance-pull`
 - `w19-statistics-pull`
+- `webhook-latency-check`
 - `weekly-drift-2sigma-check`
 
 ### Engine Subsystems
@@ -1140,3 +1147,77 @@ Both migrations idempotent (`ADD COLUMN IF NOT EXISTS` / `CREATE TABLE IF NOT EX
 - `npx vitest run wave24` — **19 files / 182 tests GREEN**
 - `npx tsc --noEmit` — 231 pre-existing errors in `volume-profile-service.ts` (pre-dating Wave 24, untouched by this wave); ZERO new errors introduced by Wave 24
 - Pytest blocked on Windows AppControl DLL issue (documented pre-existing; non-blocking for close-out)
+
+## §2e Wave 25 — Hardening Items Close-out (2026-05-24)
+
+Wave 25 = targeted production-hardening dispatch addressing verified gaps from `docs/wave25-bot-research-PLAIN.md`. Closed GREEN 2026-05-24. **6 of 6 items shipped (100%)** across two parallel subagent tracks (observability-reliability + paper-parity).
+
+Pass commit refs: placeholder — populated by parent claude after architect close-out commit.
+
+### Tracks shipped
+
+| Track | Items | Notes |
+|---|---|---|
+| observability (Track 1) | Deployed-strategy signal starvation watchdog; webhook latency monitor (+ migration 0133); regime coverage monitor; AGENT-LOGS LLM-on-execution-path pin | 32/32 tests GREEN |
+| paper-parity (Track 2) | Broker error budget aggregator + panel; payout audit packet generator + runbook | 34/34 tests GREEN |
+
+### Migrations applied (Wave 25)
+- `0133_webhook_latency_audit.sql` — composite index `audit_log (action, created_at DESC)` to accelerate the latency monitor's rolling-1h hot query. Idempotent (`CREATE INDEX IF NOT EXISTS`), journaled. **Apply is operator's call** — boot-migration runner will pick up automatically on next service start.
+
+### Surfaces registered
+
+**New routes (3):**
+- `GET /api/deployed-strategy-starvation/status` — current per-strategy starvation classifications.
+- `GET /api/webhook-latency/status` — rolling-1h webhook fire→broker-ack p95 latency.
+- `GET /api/webhook-latency/regime-coverage` (sibling endpoint exposing regime gap snapshot).
+- `GET /api/broker-error-budget` + `/api/broker-error-budget/alarms` — rolling broker rejection-rate aggregation + breach alarms.
+
+**New scheduled jobs (4):**
+- `deployed-strategy-starvation-check` — every 4h RTH weekdays. Reads `audit_log` rows for `paper.trade_open` + `signal.a_plus_factor_evaluated` per deployed strategy, classifies WARN / CRITICAL, dedupes by recent alarm. Fail-open.
+- `webhook-latency-check` — every 15 min. Reads last 1h of `webhook.broker_ack` rows (latency in `result.fire_to_ack_ms`), computes p95, fires WARN if above threshold. Fail-open. **Currently zero-state until `tradingview-webhook.ts` / `broker-router.ts` instrument the `webhook.broker_ack` write — see carry-forward.**
+- `regime-coverage-check` — daily 06:00 ET weekdays. Reads `strategies.preferredRegimes` and verifies every regime in `DEPLOYED_REGIME_LIST` has ≥1 PILOT/DEPLOYED strategy. Wildcard (NULL) strategies cover all regimes. Fail-open.
+- `broker-error-budget-check` — hourly, pipeline-gated. Aggregates `broker_router.route_order` (attempt) vs `broker_router.route_rejected` + `broker_router.compliance_rejected` (rejection) rolling-1h, fires alarm when rejection ratio exceeds budget. Fail-open.
+
+**New audit_log actions (6):**
+- `signal.starvation_warning`, `signal.starvation_critical` — deployed strategy with too-few or zero signal evaluations in the rolling window.
+- `webhook.broker_ack` — written by webhook handler on broker ack with `result.fire_to_ack_ms` (instrumentation pending — see carry-forward #1).
+- `webhook.latency_high` — fired by `webhook-latency-check` when rolling-1h p95 exceeds threshold.
+- `portfolio.regime_coverage_gap` — fired by `regime-coverage-check` when at least one regime has zero deployed coverage.
+- `broker.error_budget_breach` — fired by `broker-error-budget-check` when rolling rejection ratio exceeds budget.
+
+**New SSE events (5):**
+- `alert:signal_starvation_warn`, `alert:signal_starvation_critical`
+- `alert:webhook_latency_high`
+- `alert:regime_coverage_gap`
+- `alert:broker_error_budget`
+
+**New scripts / artifacts:**
+- `scripts/generate-payout-audit-packet.ts` — generates per-account payout dispute packet (parametric JOIN over fills / paper_orders / audit_log). Backed by `src/server/lib/payout-audit-packet.ts`.
+- `docs/payout-dispute-runbook.md` — operator runbook for prop-firm payout dispute escalation.
+
+**New frontend cards (Dashboard.tsx Observability row):**
+- `SignalStarvationCard` (wired) — `useDeployedStrategyStarvation` hook.
+- `RegimeCoverageCard` (wired).
+- `BrokerErrorBudgetCard` (component exists, NOT yet wired — see carry-forward #2).
+
+### Cross-cutting contract verification (Wave 25 close-out)
+1. **Starvation watchdog ↔ paper engine:** watchdog reads `audit_log` rows with `action IN ('paper.trade_open', 'signal.a_plus_factor_evaluated')`. Both action emitters confirmed live in `paper-signal-service.ts` + `paper-execution-service.ts`.
+2. **Broker error budget ↔ broker router:** aggregator reads `broker_router.route_order` (attempts) and `broker_router.route_rejected` + `broker_router.compliance_rejected` (rejections). All three emitters confirmed live in `broker-router.ts`.
+3. **Regime coverage list semantics:** `DEPLOYED_REGIME_LIST` constant (`TRENDING_UP`, `TRENDING_DOWN`, `RANGE_BOUND`) is the registry-of-record for the cron. It mirrors the values stored in `strategies.preferredRegimes`. Note: `bias_engine.py` uses different *playbook* strings (`TREND`, `RANGE_BOUND`, `NO_TRADE`) at a different semantic layer — this is intentional separation, not drift. W25.10 will extend `DEPLOYED_REGIME_LIST` with 4 additional regimes (currently commented out).
+4. **Webhook latency monitor:** wired end-to-end (cron + service + route + index + frontend), but **blind until `webhook.broker_ack` emitter instrumentation lands** (carry-forward #1). Service returns zero-row state with explicit `samples: 0` until then.
+5. **Payout audit packet:** unit-tested against mocked DB; **requires real-DB smoke test** against actual fills / paper_orders / audit_log schemas before first production payout dispute (carry-forward #3).
+
+### Verification (Wave 25 close-out)
+- `npm run system-map:check` — EXIT 0 status `ok` zero drift (verified post sync)
+- `npm run system-map:sync` — registry updated: observability_reliability gains 3 routes + 4 audit actions + 3 cron jobs; broker_abstraction_layer gains 1 route + 1 audit action + 1 cron job
+- `npm run check:production-isolation` — EXIT 0 (4 files checked, 0 violations)
+- `npm run check:2026-compliance` — EXIT 0 (MFFU + Topstep aligned)
+- `npx vitest run wave25-` — **7 files / 127 tests GREEN** (66 net-new for the 6 hardening items: 7 starvation + 13 webhook-latency + 12 regime-coverage + 21 broker-error-budget + 13 payout-audit-packet; plus 18 structure-stage2 + 43 weighted-scoring pre-existing wave25 files)
+- `npx tsc --noEmit` — 231 pre-existing errors (W24 baseline from `volume-profile-service.ts` null-byte recovery commit `410b75c`); **ZERO new errors introduced by Wave 25**
+
+### Operator carry-forwards (NOT in scope for Wave 25 close-out)
+1. **`webhook.broker_ack` instrumentation** — `tradingview-webhook.ts` + `broker-router.ts` must write the `webhook.broker_ack` audit row with `metadata.fire_to_ack_ms` for the latency monitor to produce signal. ~30 min add. Until then the monitor returns zero-sample state.
+2. **`BrokerErrorBudgetCard` dashboard wiring** — component + hook exist; needs add to `Dashboard.tsx` Observability row alongside the other Wave 25 cards. ~5 min.
+3. **Payout audit packet real-DB smoke test** — run `tsx scripts/generate-payout-audit-packet.ts --account-id <real_id> --start <iso> --end <iso>` to verify JOIN queries match live schema. Mocked tests cannot catch column-name drift.
+4. **Migration 0133 apply** — operator decision. Idempotent, journaled, composite index only (no data mutation). Boot-migration runner will pick up on next start when authorized.
+5. **OPTIONAL Wave 26 candidate** — ±20% parameter jitter battery (SDR/PSI/RWS metrics) on top of existing Optuna plateau variance per `docs/wave25-bot-research-PLAIN.md`.

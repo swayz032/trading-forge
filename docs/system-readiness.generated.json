@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T02:40:23.122Z",
+  "generatedAt": "2026-05-24T06:47:47.654Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -92,6 +92,7 @@
         "broker-order-routing-audit",
         "broker:order_routed SSE",
         "broker.credentials_loaded",
+        "broker.error_budget_breach",
         "broker.order_routed"
       ]
     },
@@ -257,8 +258,13 @@
         "health-dashboard-runtime",
         "metrics:snapshot SSE",
         "paper.session_auto_stop",
+        "portfolio.regime_coverage_gap",
         "regret.score-fill",
-        "scheduler:job-complete SSE"
+        "scheduler:job-complete SSE",
+        "signal.starvation_critical",
+        "signal.starvation_warning",
+        "webhook.broker_ack",
+        "webhook.latency_high"
       ]
     },
     {

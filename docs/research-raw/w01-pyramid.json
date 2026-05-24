@@ -1,0 +1,279 @@
+{
+  "query": "futures trading bot 33 contracts MES MNQ pyramid scaling operator",
+  "since": "2024-01-01",
+  "depth": "deep",
+  "sources": [
+    {
+      "source": "brave",
+      "items": [
+        {
+          "title": "Micro Futures Trading Guide (2026) - Proptradingvibes",
+          "url": "https://proptradingvibes.com/blog/micro-futures-trading-guide",
+          "snippet": "Scaling works differently with micros. Say your chart shows a high-probability setup with a tight 12-point MNQ stop. $50 / (12 x $2.00) = 2.08 contracts. You take 2 MNQ. Now imagine the same setup on a 150K account with $4,500 drawdown, risking 1% ($45). $45 / (12 x $2.00) = 1.87 contracts.",
+          "published_at": "2026-03-29T23:10:35.000Z",
+          "score": null
+        },
+        {
+          "title": "Automated Futures Trading Strategies: How to Build, Backtest & Scale",
+          "url": "https://www.quantvps.com/blog/automated-futures-trading-strategies",
+          "snippet": "Hardcoded limits, such as a 2% ... small also matters - <strong>using Micro E-mini contracts (MES, MNQ) lets you test the waters of real-world execution friction before scaling up to larger contracts</strong> [31]....",
+          "published_at": "2026-02-16T09:40:23.000Z",
+          "score": null
+        },
+        {
+          "title": "MNQ (Micro E-mini Nasdaq-100 Futures) | Damn Prop Firms: Your #1 Source for Futures Prop Firm Discounts and Trading Resources",
+          "url": "https://damnpropfirms.com/glossary/mnq-futures/",
+          "snippet": "<strong>A trader can run 10 MNQ contracts as identical-exposure equivalent to 1 NQ — same notional, same aggregate dollar P&amp;L per tick — but the granular sizing lets them scale 1-2-3-4 contracts up incrementally</strong>.",
+          "published_at": "2026-05-11T09:48:11.000Z",
+          "score": null
+        },
+        {
+          "title": "Micro E-mini Futures: Complete Guide to MES, MNQ & Scaling Up",
+          "url": "https://funderprofutures.com/blog/micro-e-mini-futures-the-complete-guide-to-futures-scaling-up/",
+          "snippet": "<strong>The 10:1 contract ratio lets you apply the 1% risk rule even with a modest account</strong>. Actionable Example: If you have a 4000 USD account, your maximum risk per trade is around 40 USD.",
+          "published_at": "2025-12-03T12:42:14.000Z",
+          "score": null
+        },
+        {
+          "title": "Tradealgo",
+          "url": "https://www.tradealgo.com/trading-guides/futures/e-mini-micro-e-mini-futures",
+          "snippet": "Master E-mini and Micro E-mini futures contracts. Complete specs for ES, MES, NQ, MNQ with tick values, margins, and strategies for every account size.",
+          "published_at": "2026-02-25T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "MakeMoneyMarkets NQ/MNQ Algo — Indicator by samuel_dago_01",
+          "url": "https://www.tradingview.com/script/qi9U1VZB-MakeMoneyMarkets-NQ-MNQ-Algo/",
+          "snippet": "<strong>MakeMoneyMarkets — NQ/MNQ Algo</strong> High-conviction scalping signals for NQ &amp; MNQ futures with built-in risk management and key liquidity levels. Precision entry signals designed for NQ and Micro NQ futures scalpers who demand more than just arrows ...",
+          "published_at": "2026-03-15T21:11:59.000Z",
+          "score": null
+        },
+        {
+          "title": "Micro Futures for Volatility Trading: MES, MNQ, MCL with Small Accounts - Volatility Box",
+          "url": "https://volatilitybox.com/research/micro-futures-for-volatility-trading/",
+          "snippet": "The same setup on ES: $100 / (10 points x $50/pt) = 0.2 contracts. The trade is impossible on ES with a $10,000 account and 1% risk. On MES, it is clean and executable. This is why micro futures are the appropriate vehicle for applying Volatility Box levels to smaller accounts. Volatility Box ES futures models and NQ futures models both provide level data that maps directly to MES and MNQ.",
+          "published_at": "2026-03-19T20:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Futures Trading Automation: Manual to Bot in 30 Days — Power Trading Group",
+          "url": "https://www.powertrading.group/options-trading-blog/futures-trading-automation-manual-to-bot-30-days",
+          "snippet": "<strong>Start at minimum size</strong>. If your plan is to trade two NQ contracts per setup, start with one MNQ. The micro contract on the Nasdaq is one-tenth the size of the standard contract.",
+          "published_at": "2026-04-21T01:26:50.000Z",
+          "score": null
+        },
+        {
+          "title": "Micro Futures Contract Calculator — Indicator by xxBoomerxx",
+          "url": "https://www.tradingview.com/script/WLDTeNRK-Micro-Futures-Contract-Calculator/",
+          "snippet": "Check the top-right table for: Risk, stop-loss, contract type, and number of contracts (e.g., “10” for MNQ, “4” for MES). Use the contract number to size trades, ensuring risk stays fixed. Why Standardized Risk is Important: Consistency: Fixed risk per trade (e.g., $100) prevents oversized losses, stabilizing long-term performance.",
+          "published_at": "2025-06-28T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Micro E-mini Futures (MES, MNQ, MYM, M2K): The Complete Guide to CME Fractional-Sized Contracts - NexusFi Academy",
+          "url": "https://nexusfi.com/a/instruments/micro-e-mini-futures",
+          "snippet": "Overview Micro futures are <strong>fractional-sized versions of CME Group&#x27;s most popular futures contracts</strong>, trading at 1/10th the notional value of their E-mini coun...",
+          "published_at": "2026-04-23T23:10:09.000Z",
+          "score": null
+        },
+        {
+          "title": "Micro Futures: How to Trade MES and MNQ | The Trapped Trader",
+          "url": "https://thetrappedtrader.com/blog/micro-futures-mes-mnq-guide",
+          "snippet": "Learn how micro E-mini futures (MES and MNQ) work, how much capital you actually need, and how to build real consistency before sizing up to full contracts.",
+          "published_at": "2026-03-21T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "ai-futures-bot · GitHub Topics · GitHub",
+          "url": "https://github.com/topics/ai-futures-bot",
+          "snippet": "<strong>Automated AI trading signal generator for futures: M2K (Russell 2000), MES (S&amp;P 500), and MNQ (Nasdaq-100)</strong>",
+          "published_at": "2026-02-09T05:00:00.000Z",
+          "score": null
+        }
+      ]
+    },
+    {
+      "source": "exa",
+      "items": [
+        {
+          "title": "lgreen95/M2K-MES-MNQ-Future-Trading",
+          "url": "https://github.com/lgreen95/M2K-MES-MNQ-Future-Trading",
+          "snippet": "",
+          "published_at": "2025-11-27T00:00:00.000Z",
+          "score": 1
+        },
+        {
+          "title": "chang-pro/mes-futures-trading-bot",
+          "url": "https://github.com/chang-pro/mes-futures-trading-bot",
+          "snippet": "",
+          "published_at": "2026-02-21T00:00:00.000Z",
+          "score": 0.9090909090909091
+        },
+        {
+          "title": "Zuzana111/intraday_futures_trading_bot",
+          "url": "https://github.com/Zuzana111/intraday_futures_trading_bot",
+          "snippet": "",
+          "published_at": "2026-04-10T00:00:00.000Z",
+          "score": 0.8181818181818181
+        },
+        {
+          "title": "GitHub - hintheman/AE-KBN-Claude-Strategy: Pine Script v6 strategy for MES — 5-factor confluence with VWAP, MACD, SMC, KC, CCI · GitHub",
+          "url": "https://github.com/hintheman/AE-KBN-Claude-Strategy",
+          "snippet": "",
+          "published_at": "2026-04-03T00:00:00.000Z",
+          "score": 0.7272727272727273
+        },
+        {
+          "title": "copley/Interactive-Brokers-MES-Futures-Trading-Bot",
+          "url": "https://github.com/copley/Interactive-Brokers-MES-Futures-Trading-Bot",
+          "snippet": "",
+          "published_at": "2025-02-16T00:00:00.000Z",
+          "score": 0.6363636363636364
+        },
+        {
+          "title": "SamShahinDev/algorithmic-trading-platform",
+          "url": "https://github.com/SamShahinDev/algorithmic-trading-platform",
+          "snippet": "",
+          "published_at": "2025-11-04T00:00:00.000Z",
+          "score": 0.5454545454545454
+        },
+        {
+          "title": "An0nym0usn3thunt3r/trading_bot",
+          "url": "https://github.com/An0nym0usn3thunt3r/trading_bot",
+          "snippet": "",
+          "published_at": "2025-04-18T00:00:00.000Z",
+          "score": 0.4545454545454546
+        },
+        {
+          "title": "Turbo31150/TradeOracle",
+          "url": "https://github.com/Turbo31150/TradeOracle",
+          "snippet": "",
+          "published_at": "2026-02-06T00:00:00.000Z",
+          "score": 0.36363636363636365
+        },
+        {
+          "title": "faizalmy/manifoldbot",
+          "url": "https://github.com/faizalmy/manifoldbot",
+          "snippet": "",
+          "published_at": "2025-12-01T00:00:00.000Z",
+          "score": 0.2727272727272727
+        },
+        {
+          "title": "ODIN MNQ RENKO BOT - OrderFlow Hub",
+          "url": "https://orderflow-hub.com/product/odin-mnq-renko-bot/",
+          "snippet": "",
+          "published_at": "2025-12-27T00:00:00.000Z",
+          "score": 0.18181818181818177
+        },
+        {
+          "title": "lgreen95/Future-Trading",
+          "url": "https://github.com/lgreen95/Future-Trading",
+          "snippet": "",
+          "published_at": "2025-11-13T00:00:00.000Z",
+          "score": 0.09090909090909094
+        },
+        {
+          "title": "jsoladur/crypto-futures-bot",
+          "url": "https://github.com/jsoladur/crypto-futures-bot",
+          "snippet": "",
+          "published_at": "2025-12-03T00:00:00.000Z",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "source": "tavily",
+      "items": [
+        {
+          "title": "2.1 Trading MES MNQ Contracts - ITG Wiki",
+          "url": "https://publish.obsidian.md/itg/Trading+Guilds/Delta/Delta+-+Intro+to+Futures+Course/Module+2+-+Intro+to+Delta+Trend+Following+Trading/2.1+Trading+MES+MNQ+Contracts",
+          "snippet": "Weekly Ranges\n\nScalping\n\nData & Stats\n\nCommunity Tools\n\nImage 2ITG Wiki\n\n# 2.1 Trading MES MNQ Contracts\n\nIn this module, we'll explore trading MES (Micro E-mini S&P 500) and MNQ (Micro E-mini Nasdaq 100) futures contracts, and discuss why they might be a better choice for new traders compared to their larger counterparts, ES (E-mini S&P 500) and NQ (E-mini Nasdaq 100).\n\n### MES and MNQ Contracts:",
+          "published_at": null,
+          "score": 0.52130115
+        },
+        {
+          "title": "Micro Futures Guide - How to Trade MES, MNQ, and Micro Contracts | QuantCrawler",
+          "url": "https://quantcrawler.com/learn/micro-futures-guide",
+          "snippet": "1\n\n### Choose a Futures Broker\n\nSelect a broker that offers competitive micro futures commissions. Popular choices include NinjaTrader, Tradovate, AMP Futures, and TradeStation. Look for round-trip commissions under $1 per micro contract.\n\n2\n\n### Fund Your Account\n\nWhile you can technically start with a few hundred dollars, we recommend $2,000-5,000 minimum. This allows you to trade multiple contr",
+          "published_at": null,
+          "score": 0.42176673
+        },
+        {
+          "title": "Micro E-mini Futures: Complete Guide to MES, MNQ & Scaling Up",
+          "url": "https://funderprofutures.com/blog/micro-e-mini-futures-the-complete-guide-to-futures-scaling-up",
+          "snippet": "Their greatest advantage is the discipline they create. When you have the ability to control exposure with granular precision, you begin focusing on what truly drives long-term profitability: structured entries, clear exits, and correct sizing. You learn that consistency comes from risk management, not oversized trades.\n\nWhether you trade equity indices with MES and MNQ or diversify with Micro Gol",
+          "published_at": null,
+          "score": 0.40147716
+        },
+        {
+          "title": "Futures Trading Bots for Beginners: Automate Your Trades",
+          "url": "https://www.quantvps.com/blog/futures-trading-bot",
+          "snippet": "## Conclusion: Key Points on Futures Trading Bots\n\nFutures trading bots are reshaping how individual traders engage with the markets. By automating decisions, these systems remove the emotional pitfalls of trading while delivering the speed and precision needed to thrive in today’s fast-moving futures landscape. Understanding this transformation is critical to effectively deploying and managing a ",
+          "published_at": null,
+          "score": 0.27965432
+        },
+        {
+          "title": "Micro E-Mini Futures - Everything You Need to Know",
+          "url": "https://optimusfutures.com/blog/micro-e-mini-futures",
+          "snippet": "Well, the value of each MES contract is $5 times the S&P 500 index; MYM, $0.50 times the DJIA index; MNQ, $2 times the Nasdaq 100; and M2K, $5 times the Russell 2000.\n\nWhen it comes to the dollar value per tick (minimum price fluctuations), at these levels, the MES moves $1.25 per tick (per contract); and the MYM, MNQ, and M2K all move $0.50 per tick (per contract).\n\nCompared with the standard e-m",
+          "published_at": null,
+          "score": 0.2716354
+        },
+        {
+          "title": "Micro E-mini Nasdaq 100 Futures (MNQ) Contract Specifications - Ironbeam Futures",
+          "url": "https://www.ironbeam.com/knowledge-base/micro-e-mini-nasdaq-100-futures-mnq-contract-specifications",
+          "snippet": "#### What Are Micro E-mini Nasdaq 100 Futures?\n\nMicro E-mini Nasdaq 100 Futures (MNQ) are a smaller-sized version of the popular E-mini Nasdaq 100 Futures contract. These contracts provide traders with exposure to the Nasdaq 100 Index—a benchmark that tracks 100 of the largest non-financial companies listed on the Nasdaq Stock Exchange. MNQ contracts are ideal for traders who want to trade tech-he",
+          "published_at": null,
+          "score": 0.25747135
+        },
+        {
+          "title": "Micro E-mini Nasdaq-100 Index Quotes - CME Group",
+          "url": "https://www.cmegroup.com/markets/equities/nasdaq/micro-e-mini-nasdaq-100.html",
+          "snippet": "Micro E-mini Nasdaq-100 futures (MNQ) offer smaller-sized versions of our liquid benchmark E-mini contracts\n They are designed to manage exposure to the 100 leading non-financial U.S. large-cap companies that make up the Nasdaq-100\n The Micro E-mini Nasdaq-100 futures contract is $2 x the Nasdaq-100 Index and has a minimum tick of 0.25 index points\n View delayed data for Micro E-mini Nasdaq-100 fu",
+          "published_at": null,
+          "score": 0.24015966
+        },
+        {
+          "title": "What is a Micro E-Mini Future?  | Charles Schwab",
+          "url": "https://www.schwab.com/learn/story/what-is-micro-e-mini-future",
+          "snippet": "| Index | Micro E-mini contract | E-mini contract size | Micro E-mini contract size |\n ---  --- |\n| S&P 500 | Micro E-mini S&P 500 futures (MES) | $50 x S&P 500 Index | $5 X S&P 500 Index |\n| Nasdaq-100 | Micro E-mini Nasdaq-100 futures (MNQ) | $20 x Nasdaq-100 Index | $2 X Nasdaq-100 Index |\n| Dow Jones | Micro E-mini Dow futures (MYM) | $5 x DJIA Index | $.50 X DJIA Index |\n| Russell 2000 | Micr",
+          "published_at": null,
+          "score": 0.19910583
+        },
+        {
+          "title": "Micro Futures Trading Guide | Micro E-Mini Futures",
+          "url": "https://bookmap.com/blog/micro-futures-a-short-guide",
+          "snippet": "In figure 3, we can see how a synthetic Multibook instrument of the combined volume and liquidity of MES and ES shows clear buying absorption on the offers, leading to a price reversal. Combining these two instruments can give you more insights into the order flow of each, and increase both the quantity and quality of trading opportunities that may be missed when only looking at a single instrumen",
+          "published_at": null,
+          "score": 0.11987123
+        },
+        {
+          "title": "Top 20 Trading Bot Strategies for 2026",
+          "url": "https://www.quantvps.com/blog/trading-bot-strategies",
+          "snippet": "For example, an ORB strategy applied to a $10,000 futures account trading a single contract resulted in a 433% profit increase. This demonstrates how automation's consistent and emotionless execution can lead to impressive results.\n\n### Market Applicability\n\nBreakout strategies work well across different markets, each offering unique opportunities:\n\nWhile breakout strategies are versatile, they de",
+          "published_at": null,
+          "score": 0.10946776
+        },
+        {
+          "title": "Trading Micro E-Mini Futures Contracts | NinjaTrader",
+          "url": "https://ninjatrader.com/futures/futures-contracts/micro-emini",
+          "snippet": "Futures, options, foreign currency, digital asset, and event contract trading involves substantial risk and is not suitable for everyone. An investor may lose all or more than the initial investment. Trading should be undertaken only with risk capital—funds that can be lost without jeopardizing one’s financial security or lifestyle—and only by those who can afford such losses. Past performance is ",
+          "published_at": null,
+          "score": 0.07439947
+        },
+        {
+          "title": "How I Made $10200 In October (NQ Trading Bot)",
+          "url": "https://www.youtube.com/watch?v=pbmwRJbFkT8",
+          "snippet": "Here's how much I made in the month of October using our fully automated ATS program.",
+          "published_at": null,
+          "score": 0.07343685
+        }
+      ]
+    },
+    {
+      "source": "youtube",
+      "items": []
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:32.861Z"
+}

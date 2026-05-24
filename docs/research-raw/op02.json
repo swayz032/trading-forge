@@ -1,0 +1,1011 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "Ol4NIRFgYpg",
+  "url": "https://www.youtube.com/watch?v=Ol4NIRFgYpg",
+  "segments": [
+    {
+      "text": "Alex here. In today's video, I'm going",
+      "duration": 3760,
+      "offset": 1440,
+      "lang": "en"
+    },
+    {
+      "text": "to show you the day trading crypto",
+      "duration": 4280,
+      "offset": 3600,
+      "lang": "en"
+    },
+    {
+      "text": "arbitrage AI bot I built. And this",
+      "duration": 4640,
+      "offset": 5200,
+      "lang": "en"
+    },
+    {
+      "text": "educational video was recorded during",
+      "duration": 4640,
+      "offset": 7880,
+      "lang": "en"
+    },
+    {
+      "text": "the bot's second run after build. And",
+      "duration": 4360,
+      "offset": 9840,
+      "lang": "en"
+    },
+    {
+      "text": "I've been running it over the past few",
+      "duration": 2840,
+      "offset": 12520,
+      "lang": "en"
+    },
+    {
+      "text": "weeks.",
+      "duration": 3160,
+      "offset": 14200,
+      "lang": "en"
+    },
+    {
+      "text": "I've tried all kinds of crypto arbitrage",
+      "duration": 4080,
+      "offset": 15360,
+      "lang": "en"
+    },
+    {
+      "text": "strategies over the years, but this",
+      "duration": 3440,
+      "offset": 17360,
+      "lang": "en"
+    },
+    {
+      "text": "system has delivered some of the most",
+      "duration": 4600,
+      "offset": 19440,
+      "lang": "en"
+    },
+    {
+      "text": "impressive results I've ever seen.",
+      "duration": 4840,
+      "offset": 20800,
+      "lang": "en"
+    },
+    {
+      "text": "What's really exciting is that the",
+      "duration": 4320,
+      "offset": 24040,
+      "lang": "en"
+    },
+    {
+      "text": "entire system is built with AI. So, even",
+      "duration": 4200,
+      "offset": 25640,
+      "lang": "en"
+    },
+    {
+      "text": "if you're not a developer or an",
+      "duration": 3680,
+      "offset": 28360,
+      "lang": "en"
+    },
+    {
+      "text": "experienced trader, it handles most of",
+      "duration": 4520,
+      "offset": 29840,
+      "lang": "en"
+    },
+    {
+      "text": "the complex work for you automatically.",
+      "duration": 3680,
+      "offset": 32040,
+      "lang": "en"
+    },
+    {
+      "text": "In this video, I'm going to show you",
+      "duration": 3840,
+      "offset": 34360,
+      "lang": "en"
+    },
+    {
+      "text": "exactly how this bot works, how I set it",
+      "duration": 4280,
+      "offset": 35720,
+      "lang": "en"
+    },
+    {
+      "text": "up, and the results it delivers in",
+      "duration": 3120,
+      "offset": 38200,
+      "lang": "en"
+    },
+    {
+      "text": "action.",
+      "duration": 3200,
+      "offset": 40000,
+      "lang": "en"
+    },
+    {
+      "text": "On a high level, the bot scans",
+      "duration": 3840,
+      "offset": 41320,
+      "lang": "en"
+    },
+    {
+      "text": "decentralized exchanges to identify",
+      "duration": 4640,
+      "offset": 43200,
+      "lang": "en"
+    },
+    {
+      "text": "potential arbitrage opportunities.",
+      "duration": 4480,
+      "offset": 45160,
+      "lang": "en"
+    },
+    {
+      "text": "Once it detects a trading pattern that",
+      "duration": 4160,
+      "offset": 47840,
+      "lang": "en"
+    },
+    {
+      "text": "meets the preset conditions, it reacts",
+      "duration": 3680,
+      "offset": 49640,
+      "lang": "en"
+    },
+    {
+      "text": "automatically.",
+      "duration": 3680,
+      "offset": 52000,
+      "lang": "en"
+    },
+    {
+      "text": "In short, it continuously monitors",
+      "duration": 4800,
+      "offset": 53320,
+      "lang": "en"
+    },
+    {
+      "text": "on-chain markets in real time,",
+      "duration": 4320,
+      "offset": 55680,
+      "lang": "en"
+    },
+    {
+      "text": "tracks price differences across the",
+      "duration": 4080,
+      "offset": 58120,
+      "lang": "en"
+    },
+    {
+      "text": "various liquidity pools, and searches",
+      "duration": 4320,
+      "offset": 60000,
+      "lang": "en"
+    },
+    {
+      "text": "for short-term market inefficiencies",
+      "duration": 4610,
+      "offset": 62200,
+      "lang": "en"
+    },
+    {
+      "text": "that can be exploited instantly.",
+      "duration": 3120,
+      "offset": 64320,
+      "lang": "en"
+    },
+    {
+      "text": ">> [clears throat]",
+      "duration": 2310,
+      "offset": 66810,
+      "lang": "en"
+    },
+    {
+      "text": ">> To get started, first you'll need to",
+      "duration": 3960,
+      "offset": 67440,
+      "lang": "en"
+    },
+    {
+      "text": "download the MetaMask browser extension",
+      "duration": 4640,
+      "offset": 69120,
+      "lang": "en"
+    },
+    {
+      "text": "and create an account.",
+      "duration": 3760,
+      "offset": 71400,
+      "lang": "en"
+    },
+    {
+      "text": "Once you're ready, head over to the",
+      "duration": 3440,
+      "offset": 73760,
+      "lang": "en"
+    },
+    {
+      "text": "platform I use to deploy smart contracts",
+      "duration": 3360,
+      "offset": 75160,
+      "lang": "en"
+    },
+    {
+      "text": "on Ethereum.",
+      "duration": 3000,
+      "offset": 77200,
+      "lang": "en"
+    },
+    {
+      "text": "I've included all the necessary resource",
+      "duration": 3000,
+      "offset": 78520,
+      "lang": "en"
+    },
+    {
+      "text": "links in the description, so you can",
+      "duration": 2960,
+      "offset": 80200,
+      "lang": "en"
+    },
+    {
+      "text": "follow along.",
+      "duration": 3360,
+      "offset": 81520,
+      "lang": "en"
+    },
+    {
+      "text": "From there, create a new file and give",
+      "duration": 4920,
+      "offset": 83160,
+      "lang": "en"
+    },
+    {
+      "text": "it any name you want.",
+      "duration": 3200,
+      "offset": 84880,
+      "lang": "en"
+    },
+    {
+      "text": "Now, let's get started. This is the code",
+      "duration": 3920,
+      "offset": 90040,
+      "lang": "en"
+    },
+    {
+      "text": "I'll be using in the demo, and for your",
+      "duration": 3760,
+      "offset": 92480,
+      "lang": "en"
+    },
+    {
+      "text": "convenience, I've also linked it below.",
+      "duration": 3840,
+      "offset": 93960,
+      "lang": "en"
+    },
+    {
+      "text": "It's open source, so if you want to go",
+      "duration": 3160,
+      "offset": 96240,
+      "lang": "en"
+    },
+    {
+      "text": "through it yourself or run it through",
+      "duration": 3560,
+      "offset": 97800,
+      "lang": "en"
+    },
+    {
+      "text": "any auditing tools you trust, feel free",
+      "duration": 4080,
+      "offset": 99400,
+      "lang": "en"
+    },
+    {
+      "text": "to do that. Go ahead and copy this code",
+      "duration": 3840,
+      "offset": 101360,
+      "lang": "en"
+    },
+    {
+      "text": "and paste it into the file you just",
+      "duration": 4400,
+      "offset": 103480,
+      "lang": "en"
+    },
+    {
+      "text": "created.",
+      "duration": 2680,
+      "offset": 105200,
+      "lang": "en"
+    },
+    {
+      "text": "The script comes with detailed comments,",
+      "duration": 3720,
+      "offset": 118680,
+      "lang": "en"
+    },
+    {
+      "text": "which makes it much easier to understand",
+      "duration": 3920,
+      "offset": 120680,
+      "lang": "en"
+    },
+    {
+      "text": "what each part of the code does.",
+      "duration": 3480,
+      "offset": 122400,
+      "lang": "en"
+    },
+    {
+      "text": "At the top of the file, you'll see the",
+      "duration": 3000,
+      "offset": 124600,
+      "lang": "en"
+    },
+    {
+      "text": "compiler version. Make sure your",
+      "duration": 3960,
+      "offset": 125880,
+      "lang": "en"
+    },
+    {
+      "text": "compiler settings match it exactly. If",
+      "duration": 5800,
+      "offset": 127600,
+      "lang": "en"
+    },
+    {
+      "text": "not, switch it before moving on.",
+      "duration": 6400,
+      "offset": 129840,
+      "lang": "en"
+    },
+    {
+      "text": "Once that's done, click compile.",
+      "duration": 4920,
+      "offset": 133400,
+      "lang": "en"
+    },
+    {
+      "text": "After the contract finishes compiling,",
+      "duration": 3920,
+      "offset": 136240,
+      "lang": "en"
+    },
+    {
+      "text": "it's time to connect your wallet. Head",
+      "duration": 4760,
+      "offset": 138320,
+      "lang": "en"
+    },
+    {
+      "text": "over to this section, select the option,",
+      "duration": 4480,
+      "offset": 140160,
+      "lang": "en"
+    },
+    {
+      "text": "pick your wallet from the list, and",
+      "duration": 3000,
+      "offset": 143080,
+      "lang": "en"
+    },
+    {
+      "text": "approve the connection in the pop-up",
+      "duration": 3640,
+      "offset": 144640,
+      "lang": "en"
+    },
+    {
+      "text": "window.",
+      "duration": 3880,
+      "offset": 146080,
+      "lang": "en"
+    },
+    {
+      "text": "If everything connects properly, you",
+      "duration": 3240,
+      "offset": 148280,
+      "lang": "en"
+    },
+    {
+      "text": "should see your account details appear",
+      "duration": 3000,
+      "offset": 149960,
+      "lang": "en"
+    },
+    {
+      "text": "on the screen.",
+      "duration": 2640,
+      "offset": 151520,
+      "lang": "en"
+    },
+    {
+      "text": "From there,",
+      "duration": 3280,
+      "offset": 152960,
+      "lang": "en"
+    },
+    {
+      "text": "click here to continue. Approve the next",
+      "duration": 4080,
+      "offset": 154160,
+      "lang": "en"
+    },
+    {
+      "text": "prompt.",
+      "duration": 3000,
+      "offset": 156240,
+      "lang": "en"
+    },
+    {
+      "text": "Then give it a moment for the",
+      "duration": 2640,
+      "offset": 158240,
+      "lang": "en"
+    },
+    {
+      "text": "confirmation message to show up in the",
+      "duration": 2960,
+      "offset": 159240,
+      "lang": "en"
+    },
+    {
+      "text": "console.",
+      "duration": 4320,
+      "offset": 160880,
+      "lang": "en"
+    },
+    {
+      "text": "Perfect. This means our trading bot has",
+      "duration": 5280,
+      "offset": 162200,
+      "lang": "en"
+    },
+    {
+      "text": "been deployed to the blockchain.",
+      "duration": 6360,
+      "offset": 165200,
+      "lang": "en"
+    },
+    {
+      "text": "The control panel shows up right here.",
+      "duration": 6240,
+      "offset": 167480,
+      "lang": "en"
+    },
+    {
+      "text": "As you can see, only two functions are",
+      "duration": 4240,
+      "offset": 171560,
+      "lang": "en"
+    },
+    {
+      "text": "available. We deliberately keep",
+      "duration": 4600,
+      "offset": 173720,
+      "lang": "en"
+    },
+    {
+      "text": "everything as simple as possible.",
+      "duration": 4640,
+      "offset": 175800,
+      "lang": "en"
+    },
+    {
+      "text": "One button starts the bot and runs the",
+      "duration": 3920,
+      "offset": 178320,
+      "lang": "en"
+    },
+    {
+      "text": "automated arbitrage.",
+      "duration": 3520,
+      "offset": 180440,
+      "lang": "en"
+    },
+    {
+      "text": "The other stops it and withdraws the",
+      "duration": 5320,
+      "offset": 182240,
+      "lang": "en"
+    },
+    {
+      "text": "entire balance directly to your wallet.",
+      "duration": 6080,
+      "offset": 183960,
+      "lang": "en"
+    },
+    {
+      "text": "Before starting anything, click here to",
+      "duration": 4720,
+      "offset": 187560,
+      "lang": "en"
+    },
+    {
+      "text": "review the deployment details.",
+      "duration": 4440,
+      "offset": 190040,
+      "lang": "en"
+    },
+    {
+      "text": "After the page is loaded, open your",
+      "duration": 4360,
+      "offset": 192280,
+      "lang": "en"
+    },
+    {
+      "text": "wallet and compare the address shown",
+      "duration": 4320,
+      "offset": 194480,
+      "lang": "en"
+    },
+    {
+      "text": "with your own wallet address. Make",
+      "duration": 5680,
+      "offset": 196640,
+      "lang": "en"
+    },
+    {
+      "text": "absolutely sure they match.",
+      "duration": 3520,
+      "offset": 198800,
+      "lang": "en"
+    },
+    {
+      "text": "If the addresses match, only you will",
+      "duration": 4760,
+      "offset": 203120,
+      "lang": "en"
+    },
+    {
+      "text": "have full, unrestricted, exclusive",
+      "duration": 4320,
+      "offset": 205320,
+      "lang": "en"
+    },
+    {
+      "text": "access to your bot.",
+      "duration": 3680,
+      "offset": 207880,
+      "lang": "en"
+    },
+    {
+      "text": "Essentially, this means the bot belongs",
+      "duration": 4440,
+      "offset": 209640,
+      "lang": "en"
+    },
+    {
+      "text": "to your wallet.",
+      "duration": 4800,
+      "offset": 211560,
+      "lang": "en"
+    },
+    {
+      "text": "Now, copy the contract address of our",
+      "duration": 4640,
+      "offset": 214080,
+      "lang": "en"
+    },
+    {
+      "text": "bot. Now, we need to fund the bot so it",
+      "duration": 4680,
+      "offset": 216360,
+      "lang": "en"
+    },
+    {
+      "text": "can start trading. I recommend starting",
+      "duration": 4760,
+      "offset": 218720,
+      "lang": "en"
+    },
+    {
+      "text": "with 1 to 10 Ethereum.",
+      "duration": 4000,
+      "offset": 221040,
+      "lang": "en"
+    },
+    {
+      "text": "With this amount, the bot will operate",
+      "duration": 4280,
+      "offset": 223480,
+      "lang": "en"
+    },
+    {
+      "text": "at full power. The minimum is 0.5",
+      "duration": 4480,
+      "offset": 225040,
+      "lang": "en"
+    },
+    {
+      "text": "Ethereum. It will still work and",
+      "duration": 4120,
+      "offset": 227760,
+      "lang": "en"
+    },
+    {
+      "text": "generate profit, but the returns will be",
+      "duration": 3920,
+      "offset": 229520,
+      "lang": "en"
+    },
+    {
+      "text": "much lower compared to what you'll see",
+      "duration": 2800,
+      "offset": 231880,
+      "lang": "en"
+    },
+    {
+      "text": "later.",
+      "duration": 3360,
+      "offset": 233440,
+      "lang": "en"
+    },
+    {
+      "text": "If you start with too small an amount,",
+      "duration": 4000,
+      "offset": 234680,
+      "lang": "en"
+    },
+    {
+      "text": "you could even end up losing money",
+      "duration": 3760,
+      "offset": 236800,
+      "lang": "en"
+    },
+    {
+      "text": "because trading fees might exceed any",
+      "duration": 4360,
+      "offset": 238680,
+      "lang": "en"
+    },
+    {
+      "text": "profit. Personally,",
+      "duration": 5160,
+      "offset": 240560,
+      "lang": "en"
+    },
+    {
+      "text": "I use 10 Ethereum in my bot, which",
+      "duration": 5160,
+      "offset": 243040,
+      "lang": "en"
+    },
+    {
+      "text": "generates around 2.5 [music] to 3.5",
+      "duration": 4480,
+      "offset": 245720,
+      "lang": "en"
+    },
+    {
+      "text": "Ethereum per day.",
+      "duration": 4040,
+      "offset": 248200,
+      "lang": "en"
+    },
+    {
+      "text": "Here, for demonstration purposes, I'll",
+      "duration": 5080,
+      "offset": 250200,
+      "lang": "en"
+    },
+    {
+      "text": "use 1 Ethereum.",
+      "duration": 5119,
+      "offset": 252240,
+      "lang": "en"
+    },
+    {
+      "text": "Now, head back to the compiler. Click",
+      "duration": 5760,
+      "offset": 255280,
+      "lang": "en"
+    },
+    {
+      "text": "start and confirm the action.",
+      "duration": 3681,
+      "offset": 257359,
+      "lang": "en"
+    },
+    {
+      "text": "Make sure the start function actually",
+      "duration": 2800,
+      "offset": 265040,
+      "lang": "en"
+    },
+    {
+      "text": "worked.",
+      "duration": 2920,
+      "offset": 266600,
+      "lang": "en"
+    },
+    {
+      "text": "You should see this both in the console",
+      "duration": 5600,
+      "offset": 267840,
+      "lang": "en"
+    },
+    {
+      "text": "log and in the interface.",
+      "duration": 3920,
+      "offset": 269520,
+      "lang": "en"
+    },
+    {
+      "text": "I'm going to let the bot run for a few",
+      "duration": 4280,
+      "offset": 275200,
+      "lang": "en"
+    },
+    {
+      "text": "hours.",
+      "duration": 2560,
+      "offset": 276920,
+      "lang": "en"
+    },
+    {
+      "text": "9 hours have gone by, so [music] let's",
+      "duration": 3720,
+      "offset": 280720,
+      "lang": "en"
+    },
+    {
+      "text": "refresh the page and see how the bot",
+      "duration": 2840,
+      "offset": 282920,
+      "lang": "en"
+    },
+    {
+      "text": "did.",
+      "duration": 3840,
+      "offset": 284440,
+      "lang": "en"
+    },
+    {
+      "text": "Wow. My balance is now slightly above",
+      "duration": 5520,
+      "offset": 285760,
+      "lang": "en"
+    },
+    {
+      "text": "1.6 ETH.",
+      "duration": 4760,
+      "offset": 288280,
+      "lang": "en"
+    },
+    {
+      "text": "That's three profitable trades and a",
+      "duration": 5320,
+      "offset": 291280,
+      "lang": "en"
+    },
+    {
+      "text": "total profit of 0.6 ETH.",
+      "duration": 6360,
+      "offset": 293040,
+      "lang": "en"
+    },
+    {
+      "text": "Pretty amazing.",
+      "duration": 4560,
+      "offset": 296600,
+      "lang": "en"
+    },
+    {
+      "text": "Let's let it keep running, and we'll",
+      "duration": 5720,
+      "offset": 299400,
+      "lang": "en"
+    },
+    {
+      "text": "come back in a few hours to check on it.",
+      "duration": 3960,
+      "offset": 301160,
+      "lang": "en"
+    },
+    {
+      "text": "Another 12 hours have passed, and it's",
+      "duration": 5160,
+      "offset": 306520,
+      "lang": "en"
+    },
+    {
+      "text": "time to refresh the page again.",
+      "duration": 7440,
+      "offset": 308320,
+      "lang": "en"
+    },
+    {
+      "text": "Now, it's getting even more interesting.",
+      "duration": 4080,
+      "offset": 311680,
+      "lang": "en"
+    },
+    {
+      "text": "Three more profitable trades.",
+      "duration": 4480,
+      "offset": 317000,
+      "lang": "en"
+    },
+    {
+      "text": "And here's the key thing to understand.",
+      "duration": 3800,
+      "offset": 319280,
+      "lang": "en"
+    },
+    {
+      "text": "It doesn't matter whether Ethereum is",
+      "duration": 3560,
+      "offset": 321480,
+      "lang": "en"
+    },
+    {
+      "text": "moving up or down.",
+      "duration": 3360,
+      "offset": 323080,
+      "lang": "en"
+    },
+    {
+      "text": "As long as there's buying and selling",
+      "duration": 3200,
+      "offset": 325040,
+      "lang": "en"
+    },
+    {
+      "text": "activity on the Ethereum network, the",
+      "duration": 4720,
+      "offset": 326440,
+      "lang": "en"
+    },
+    {
+      "text": "bot keeps running and generating profit.",
+      "duration": 4400,
+      "offset": 328240,
+      "lang": "en"
+    },
+    {
+      "text": "So, it makes no difference whether the",
+      "duration": 4600,
+      "offset": 331160,
+      "lang": "en"
+    },
+    {
+      "text": "market is bullish or bearish right now.",
+      "duration": 5560,
+      "offset": 332640,
+      "lang": "en"
+    },
+    {
+      "text": "And now, here comes the best part. Click",
+      "duration": 5080,
+      "offset": 335760,
+      "lang": "en"
+    },
+    {
+      "text": "withdraw and confirm the transaction,",
+      "duration": 4320,
+      "offset": 338200,
+      "lang": "en"
+    },
+    {
+      "text": "and the arbitrage profits will be sent",
+      "duration": 3760,
+      "offset": 340840,
+      "lang": "en"
+    },
+    {
+      "text": "straight to your wallet. At the same",
+      "duration": 5680,
+      "offset": 342520,
+      "lang": "en"
+    },
+    {
+      "text": "time, the script will stop running.",
+      "duration": 3600,
+      "offset": 344600,
+      "lang": "en"
+    },
+    {
+      "text": "Refresh the page one more time to make",
+      "duration": 5480,
+      "offset": 361440,
+      "lang": "en"
+    },
+    {
+      "text": "sure everything went through properly.",
+      "duration": 3560,
+      "offset": 363360,
+      "lang": "en"
+    },
+    {
+      "text": "As you can see, the Ethereum has been",
+      "duration": 4240,
+      "offset": 370640,
+      "lang": "en"
+    },
+    {
+      "text": "deposited into the wallet.",
+      "duration": 3800,
+      "offset": 372680,
+      "lang": "en"
+    },
+    {
+      "text": "From here, you can either send it to",
+      "duration": 3520,
+      "offset": 374880,
+      "lang": "en"
+    },
+    {
+      "text": "your exchange or use it for another",
+      "duration": 3960,
+      "offset": 376480,
+      "lang": "en"
+    },
+    {
+      "text": "round of bot arbitrage.",
+      "duration": 4200,
+      "offset": 378400,
+      "lang": "en"
+    },
+    {
+      "text": "Just a quick disclaimer, this video is",
+      "duration": 4400,
+      "offset": 380440,
+      "lang": "en"
+    },
+    {
+      "text": "for educational purposes only. If you",
+      "duration": 4240,
+      "offset": 382600,
+      "lang": "en"
+    },
+    {
+      "text": "enjoyed the video, be sure to like and",
+      "duration": 4200,
+      "offset": 384840,
+      "lang": "en"
+    },
+    {
+      "text": "subscribe for more content like this.",
+      "duration": 4200,
+      "offset": 386840,
+      "lang": "en"
+    },
+    {
+      "text": "I'll be sharing new projects in future",
+      "duration": 4280,
+      "offset": 389040,
+      "lang": "en"
+    },
+    {
+      "text": "videos. If you have any questions, my",
+      "duration": 3800,
+      "offset": 391040,
+      "lang": "en"
+    },
+    {
+      "text": "Telegram link is in the description",
+      "duration": 4040,
+      "offset": 393320,
+      "lang": "en"
+    },
+    {
+      "text": "below. Thanks for watching, and see you",
+      "duration": 5360,
+      "offset": 394840,
+      "lang": "en"
+    },
+    {
+      "text": "in the next one.",
+      "duration": 2840,
+      "offset": 397360,
+      "lang": "en"
+    }
+  ],
+  "text": "Alex here. In today's video, I'm going to show you the day trading crypto arbitrage AI bot I built. And this educational video was recorded during the bot's second run after build. And I've been running it over the past few weeks. I've tried all kinds of crypto arbitrage strategies over the years, but this system has delivered some of the most impressive results I've ever seen. What's really exciting is that the entire system is built with AI. So, even if you're not a developer or an experienced trader, it handles most of the complex work for you automatically. In this video, I'm going to show you exactly how this bot works, how I set it up, and the results it delivers in action. On a high level, the bot scans decentralized exchanges to identify potential arbitrage opportunities. Once it detects a trading pattern that meets the preset conditions, it reacts automatically. In short, it continuously monitors on-chain markets in real time, tracks price differences across the various liquidity pools, and searches for short-term market inefficiencies that can be exploited instantly. >> [clears throat] >> To get started, first you'll need to download the MetaMask browser extension and create an account. Once you're ready, head over to the platform I use to deploy smart contracts on Ethereum. I've included all the necessary resource links in the description, so you can follow along. From there, create a new file and give it any name you want. Now, let's get started. This is the code I'll be using in the demo, and for your convenience, I've also linked it below. It's open source, so if you want to go through it yourself or run it through any auditing tools you trust, feel free to do that. Go ahead and copy this code and paste it into the file you just created. The script comes with detailed comments, which makes it much easier to understand what each part of the code does. At the top of the file, you'll see the compiler version. Make sure your compiler settings match it exactly. If not, switch it before moving on. Once that's done, click compile. After the contract finishes compiling, it's time to connect your wallet. Head over to this section, select the option, pick your wallet from the list, and approve the connection in the pop-up window. If everything connects properly, you should see your account details appear on the screen. From there, click here to continue. Approve the next prompt. Then give it a moment for the confirmation message to show up in the console. Perfect. This means our trading bot has been deployed to the blockchain. The control panel shows up right here. As you can see, only two functions are available. We deliberately keep everything as simple as possible. One button starts the bot and runs the automated arbitrage. The other stops it and withdraws the entire balance directly to your wallet. Before starting anything, click here to review the deployment details. After the page is loaded, open your wallet and compare the address shown with your own wallet address. Make absolutely sure they match. If the addresses match, only you will have full, unrestricted, exclusive access to your bot. Essentially, this means the bot belongs to your wallet. Now, copy the contract address of our bot. Now, we need to fund the bot so it can start trading. I recommend starting with 1 to 10 Ethereum. With this amount, the bot will operate at full power. The minimum is 0.5 Ethereum. It will still work and generate profit, but the returns will be much lower compared to what you'll see later. If you start with too small an amount, you could even end up losing money because trading fees might exceed any profit. Personally, I use 10 Ethereum in my bot, which generates around 2.5 [music] to 3.5 Ethereum per day. Here, for demonstration purposes, I'll use 1 Ethereum. Now, head back to the compiler. Click start and confirm the action. Make sure the start function actually worked. You should see this both in the console log and in the interface. I'm going to let the bot run for a few hours. 9 hours have gone by, so [music] let's refresh the page and see how the bot did. Wow. My balance is now slightly above 1.6 ETH. That's three profitable trades and a total profit of 0.6 ETH. Pretty amazing. Let's let it keep running, and we'll come back in a few hours to check on it. Another 12 hours have passed, and it's time to refresh the page again. Now, it's getting even more interesting. Three more profitable trades. And here's the key thing to understand. It doesn't matter whether Ethereum is moving up or down. As long as there's buying and selling activity on the Ethereum network, the bot keeps running and generating profit. So, it makes no difference whether the market is bullish or bearish right now. And now, here comes the best part. Click withdraw and confirm the transaction, and the arbitrage profits will be sent straight to your wallet. At the same time, the script will stop running. Refresh the page one more time to make sure everything went through properly. As you can see, the Ethereum has been deposited into the wallet. From here, you can either send it to your exchange or use it for another round of bot arbitrage. Just a quick disclaimer, this video is for educational purposes only. If you enjoyed the video, be sure to like and subscribe for more content like this. I'll be sharing new projects in future videos. If you have any questions, my Telegram link is in the description below. Thanks for watching, and see you in the next one.",
+  "cited_at": "2026-05-24T05:01:57.251Z"
+}

@@ -1,0 +1,143 @@
+{
+  "source": "youtube",
+  "query": "algorithmic futures bot infrastructure architecture deep dive",
+  "since": "2024-01-01",
+  "items": [
+    {
+      "title": "Inside a Real High-Frequency Trading System | HFT Architecture",
+      "url": "https://www.youtube.com/watch?v=iwRaNYa8yTw",
+      "snippet": "High-Frequency Trading System (HFT) are the bleeding edge of real-time systems — HFT architecture is designed for ...",
+      "published_at": "2025-06-05T10:01:23.000Z",
+      "channel": "ByteMonk",
+      "video_id": "iwRaNYa8yTw",
+      "score": null
+    },
+    {
+      "title": "Why 99% of Trading Bots Fail (Institutional Algorithmic Architecture)",
+      "url": "https://www.youtube.com/watch?v=S-usI5A98mg",
+      "snippet": "In this deep dive, we strip away retail trading illusions and examine the strict mathematical realities of institutional algorithmic ...",
+      "published_at": "2026-05-16T14:59:10.000Z",
+      "channel": "QuantForgeAnalytics",
+      "video_id": "S-usI5A98mg",
+      "score": null
+    },
+    {
+      "title": "(Podcast) MemU, the future-oriented LLMs and AI agents memory infrastructure",
+      "url": "https://www.youtube.com/watch?v=fRDNi8ehTns",
+      "snippet": "Ever felt like your AI has the memory of a goldfish? In this episode, we are diving deep into **MemU**, the future-oriented ...",
+      "published_at": "2026-01-18T19:00:44.000Z",
+      "channel": "Eddy Says Hi #EddySaysHi",
+      "video_id": "fRDNi8ehTns",
+      "score": null
+    },
+    {
+      "title": "MCP Protocol Is Changing Everything | The Secret Behind Scalable AI Agents #MCP #AiAgent #LLM",
+      "url": "https://www.youtube.com/watch?v=7CHr0qwTcJw",
+      "snippet": "LLMs are powerful—but they hit a wall when it comes to real-world actions. That's where MCP (Model Context Protocol) comes in.",
+      "published_at": "2025-04-25T13:07:15.000Z",
+      "channel": "Amine DALY",
+      "video_id": "7CHr0qwTcJw",
+      "score": null
+    },
+    {
+      "title": "🤖 Agentic AI Explained | NVIDIA GTC 2025 Keynote with Jensen Huang 🚀",
+      "url": "https://www.youtube.com/watch?v=AnaBQacfH50",
+      "snippet": "agenticai #ai #artificialintelligence #robotics #gtc2025 #nvidia #jensenhuang #machinelearning #deeplearning #blackwellgpu ...",
+      "published_at": "2025-04-02T11:30:08.000Z",
+      "channel": "AI Beyond Infinity",
+      "video_id": "AnaBQacfH50",
+      "score": null
+    },
+    {
+      "title": "AI Agents explained in 3 steps",
+      "url": "https://www.youtube.com/watch?v=BF2k_fKuCVM",
+      "snippet": "",
+      "published_at": "2025-05-08T13:18:56.000Z",
+      "channel": "Jeff Su",
+      "video_id": "BF2k_fKuCVM",
+      "score": null
+    },
+    {
+      "title": "Complete On-Chain Ai Arbitrage Bot Development: Architecture and Execution Guide",
+      "url": "https://www.youtube.com/watch?v=GZFDzqTHNAg",
+      "snippet": "Launch Your Ai Arbitrage Bot Today: Developed with Claude Opus 4.6. Access the bot link and compiler websites through: ...",
+      "published_at": "2026-04-09T22:33:16.000Z",
+      "channel": "Nathan Ai Dev",
+      "video_id": "GZFDzqTHNAg",
+      "score": null
+    },
+    {
+      "title": "What is Retrieval Augmented Generation (RAG) ? Simplified Explanation",
+      "url": "https://www.youtube.com/watch?v=CbAQUqnrDcA",
+      "snippet": "Learn what Retrieval Augmented Generation (RAG) is and how it combines retrieval and generation to create accurate, ...",
+      "published_at": "2025-01-23T14:30:05.000Z",
+      "channel": "DevOps Mind",
+      "video_id": "CbAQUqnrDcA",
+      "score": null
+    },
+    {
+      "title": "How Optimus Will DESTROY Boring Architecture FOREVER",
+      "url": "https://www.youtube.com/watch?v=L9N6QLo--tc",
+      "snippet": "Tesla's Optimus robot is about to do something most people haven't considered: end the era of boring, repetitive architecture ...",
+      "published_at": "2026-02-27T18:00:21.000Z",
+      "channel": "The Convergence",
+      "video_id": "L9N6QLo--tc",
+      "score": null
+    },
+    {
+      "title": "Quantifying Market Sentiment: The Architecture of News-Driven Trading",
+      "url": "https://www.youtube.com/watch?v=pBxywF7yJwQ",
+      "snippet": "How do Wall Street hedge funds and quantitative trading firms react to breaking financial news in mere milliseconds? The harsh ...",
+      "published_at": "2026-03-05T19:15:00.000Z",
+      "channel": "One Minute Finance",
+      "video_id": "pBxywF7yJwQ",
+      "score": null
+    },
+    {
+      "title": "🔥AI Agents vs Agentic AI | Intellipaat",
+      "url": "https://www.youtube.com/watch?v=SKd15qYtkdU",
+      "snippet": "Enroll for Agentic AI Course: https://intellipaat.com/agentic-ai-systems-design-course/ Book your Free ...",
+      "published_at": "2026-03-12T14:16:31.000Z",
+      "channel": "Intellipaat",
+      "video_id": "SKd15qYtkdU",
+      "score": null
+    },
+    {
+      "title": "Google Marketing Live 2026",
+      "url": "https://www.youtube.com/watch?v=T9585JkTPp8",
+      "snippet": "At Google Marketing Live, we unveiled the latest advertising product announcements across Google and YouTube. In an era ...",
+      "published_at": "2026-05-20T18:25:34.000Z",
+      "channel": "Google Ads",
+      "video_id": "T9585JkTPp8",
+      "score": null
+    },
+    {
+      "title": "How LLM Works (Explained) | The Ultimate Guide To LLM | Day 1:Tokenization 🔥 #shorts #ai",
+      "url": "https://www.youtube.com/watch?v=WoCtFUZXVsY",
+      "snippet": "Master Large Language Models (LLMs) in Minutes!** Confused about ChatGPT, Gemini, or DeepSeek R1? This **ultimate ...",
+      "published_at": "2025-02-05T17:33:57.000Z",
+      "channel": "Curious Steve",
+      "video_id": "WoCtFUZXVsY",
+      "score": null
+    },
+    {
+      "title": "Generative vs Agentic AI: Shaping the Future of AI Collaboration",
+      "url": "https://www.youtube.com/watch?v=EDb37y_MhRw",
+      "snippet": "Ready to become a certified watsonx AI Assistant Engineer? Register now and use code IBMTechYT20 for 20% off of your exam ...",
+      "published_at": "2025-04-21T11:00:32.000Z",
+      "channel": "IBM Technology",
+      "video_id": "EDb37y_MhRw",
+      "score": null
+    },
+    {
+      "title": "AI, Machine Learning, Deep Learning and Generative AI Explained",
+      "url": "https://www.youtube.com/watch?v=qYNweeDHiyU",
+      "snippet": "Want to learn more about Agentic AI + Data? Register here → https://ibm.biz/BdeGLe Want to play with the technology yourself?",
+      "published_at": "2024-08-05T11:00:52.000Z",
+      "channel": "IBM Technology",
+      "video_id": "qYNweeDHiyU",
+      "score": null
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:09.573Z"
+}

@@ -1,0 +1,325 @@
+{
+  "query": "trading bot too restrictive no trades signal starvation over filtered",
+  "since": "2024-01-01",
+  "depth": "deep",
+  "sources": [
+    {
+      "source": "brave",
+      "items": [
+        {
+          "title": "Our Trading Bot Rewrites Its Own Rules. Here's How (and What Went Wrong). - DEV Community",
+          "url": "https://dev.to/ai-agent-economy/our-trading-bot-rewrites-its-own-rules-heres-how-and-what-went-wrong-5dg9",
+          "snippet": "The Adaptive Trend system (inspired by arXiv:2602.11708) has been running 81 iterations with zero trades. It&#x27;s waiting for a momentum signal on 6-hour candles — MOM &gt; 3% for long, MOM &lt; -4% for short. This is correct.",
+          "published_at": "2026-03-04T21:12:05.000Z",
+          "score": null
+        },
+        {
+          "title": "Automated Trading Bots & AI Signal Tools That Work (and Don’t)",
+          "url": "https://cryptoadventure.com/automated-trading-bots-ai-signal-tools-that-work-and-dont/",
+          "snippet": "Operations: <strong>automate health checks for data, model server, and exchange connectivity</strong>. If any check fails, flatten and pause. Rotate API keys and restrict permissions to trade-only.",
+          "published_at": "2025-10-28T13:44:18.000Z",
+          "score": null
+        },
+        {
+          "title": "Common Pitfalls to Avoid When Building Your First Crypto Trading Bot: What Beginners Get Wrong - Coin Bureau",
+          "url": "https://coinbureau.com/guides/crypto-trading-bot-mistakes-to-avoid",
+          "snippet": "In reality, your bot trades an exchange’s order book, fee schedule, and API, instead of believing it trades “the market”. Pick the wrong venue and even a good strategy can be dragged down by thin liquidity, unreliable endpoints, or restrictive rate limits.Pick the Wrong Venue and even a Good Strategy can be Dragged Down.",
+          "published_at": "2025-12-27T07:06:43.000Z",
+          "score": null
+        },
+        {
+          "title": "r/Daytrading on Reddit: I started building a trading BOT, for those who tried this, am I wasting my time?",
+          "url": "https://www.reddit.com/r/Daytrading/comments/1qynmrq/i_started_building_a_trading_bot_for_those_who/",
+          "snippet": "It depends on where you are. US restrictions are aweful... making 90% of bots either useless or not connect properly. However, there is a way... tradingview and or tradovate python to api connections using 3rd party markets. From there use claude or grok. I used both.",
+          "published_at": "2026-02-08T00:55:40.000Z",
+          "score": null
+        },
+        {
+          "title": "MetaTrader Error Survival Guide 2026: Fix Trade Disabled &amp; More",
+          "url": "https://newyorkcityservers.com/blog/metatrader-error-survival-guide-2025-fix-trade-disabled-more",
+          "snippet": "<strong>Account-level restriction</strong>.",
+          "published_at": "2026-05-01T04:41:35.000Z",
+          "score": null
+        },
+        {
+          "title": "r/SideProject on Reddit: Polymarket trading bot - exploiting market inefficiencies to make arbitrage trades.",
+          "url": "https://www.reddit.com/r/SideProject/comments/1qz11e5/polymarket_trading_bot_exploiting_market/",
+          "snippet": "later I made it a bit more responsive and started tracking swings. id hold tokens until sell pressure on the order book started to build, the. dump the winning token at market and place a limit orders for the loser at 3c above market. this only hit maybe 60% of the time, but if my signal was wrong and the token continued trading down, id drop the price 2c and held till game close. that bot made 1% per game pretty consistently. towards the end i had it decently optimized. i started tracking historical price movements and created specific price/time bucket filters to limit which signals i would trade on.",
+          "published_at": "2026-02-08T10:57:22.000Z",
+          "score": null
+        },
+        {
+          "title": "Why Most Trading Bots Fail — And How Proper Indicator Confluence Fixes It | by MariamHov | Medium",
+          "url": "https://medium.com/@mariamhov/why-most-trading-bots-fail-and-how-proper-indicator-confluence-fixes-it-ae7da273f90f",
+          "snippet": "Only take RSI signals when ATR &lt; ATR_threshold Only take breakout trades when BBWidth &gt; expansion_threshold · With volatility filtering, your bot stops trading in chaotic periods and activates when conditions normalize.",
+          "published_at": "2025-11-25T15:44:46.000Z",
+          "score": null
+        },
+        {
+          "title": "r/passive_income on Reddit: I built an OpenClaw crypto trading bot with 15 safety checks. Here's why 92% of bots fail — and what I did differently.",
+          "url": "https://www.reddit.com/r/passive_income/comments/1sdd5je/i_built_an_openclaw_crypto_trading_bot_with_15/",
+          "snippet": "First real signals came through, LLM consensus working correctly now. Bot is live and scanning 4x daily. Waiting on 10 clean paper trades before going live with real capital. F&amp;G has been in fear territory which is exactly when the filters should be conservative — no trades in choppy conditions is correct behaviour, not a failure.",
+          "published_at": "2026-04-07T09:17:09.000Z",
+          "score": null
+        },
+        {
+          "title": "I Ran a ChatGPT Trading Bot for 30 Days. Net P/L | by Andrew Rul Trading | Medium",
+          "url": "https://medium.com/@rul.a/i-ran-a-chatgpt-trading-bot-for-30-days-net-p-l-ce7cf82527fc",
+          "snippet": "I made a small tweak: I asked ChatGPT to explain its reasoning before giving me a trade. That tiny change filtered out the worst nonsense. ... Balance climbed back up to $10,720. Gold long on day 19 carried half the week (+3.4%). This phase felt like Service #4, the only AI signal provider I’d seen actually perform decently.",
+          "published_at": "2025-08-27T19:16:14.000Z",
+          "score": null
+        },
+        {
+          "title": "Why Most Trading Bots Lose Money | For Traders",
+          "url": "https://www.fortraders.com/blog/trading-bots-lose-money",
+          "snippet": "Why most trading bots fail: <strong>overfitting, weak risk controls, poor testing and lack of adaptability</strong>—practical fixes to build more reliable automated strategies.",
+          "published_at": "2026-01-09T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "r/algotrading on Reddit: People running autonomous crypto trading bots, what's your risk management setup?",
+          "url": "https://www.reddit.com/r/algotrading/comments/1s0i72i/people_running_autonomous_crypto_trading_bots/",
+          "snippet": "What I do at minimum: hard kill switch if daily drawdown exceeds a fixed percent, position size scales down automatically during high volatility regimes, exchange API permissions restricted to trade only (never withdraw), and a separate watchdog process that pings my main bot every minute and alerts me if it stops responding.",
+          "published_at": "2026-03-22T14:26:58.000Z",
+          "score": null
+        },
+        {
+          "title": "Trading Bot Not Working? Why You’re Not Seeing Results | Bitsgap blog",
+          "url": "https://bitsgap.com/blog/from-setup-to-success-how-to-fix-common-trading-bot-mistakes",
+          "snippet": "Your trading bot is running but not making profit? Discover why bots fail, how strategies really work, and what affects your trading results.",
+          "published_at": "2026-03-25T18:23:57.000Z",
+          "score": null
+        }
+      ]
+    },
+    {
+      "source": "exa",
+      "items": [
+        {
+          "title": "My bot ran for 48 hours and didn't do a thing - DEV Community",
+          "url": "https://dev.to/cameronmeese/my-bot-ran-for-48-hours-and-didnt-do-a-thing-1bh",
+          "snippet": "",
+          "published_at": "2026-05-23T00:00:00.000Z",
+          "score": 1
+        },
+        {
+          "title": "Add rate limit error recovery and backoff · 96a447f · msei99/passivbot",
+          "url": "https://github.com/msei99/passivbot/commit/96a447f718aab0c399a047ffbb65f07ded3c001c",
+          "snippet": "",
+          "published_at": "2026-02-28T00:00:00.000Z",
+          "score": 0.9090909090909091
+        },
+        {
+          "title": "Fix Bybit closed-pnl pagination storm causing retCode:10006 rate limits · 626ad21 · msei99/passivbot",
+          "url": "https://github.com/msei99/passivbot/commit/626ad218f20b2dc93faea9610cc300d222992df6",
+          "snippet": "",
+          "published_at": "2026-04-06T00:00:00.000Z",
+          "score": 0.8181818181818181
+        },
+        {
+          "title": "toxic flow · Issue #8237 · hummingbot/hummingbot",
+          "url": "https://github.com/hummingbot/hummingbot/issues/8237",
+          "snippet": "",
+          "published_at": "2026-05-16T00:00:00.000Z",
+          "score": 0.7272727272727273
+        },
+        {
+          "title": "Bot enters heartbeat-only mode - no candle processing occurs despite successful initialization · Issue #11957 · freqtrade/freqtrade",
+          "url": "https://github.com/freqtrade/freqtrade/issues/11957",
+          "snippet": "",
+          "published_at": "2025-07-05T00:00:00.000Z",
+          "score": 0.6363636363636364
+        },
+        {
+          "title": "Bot Missing Signals Due to Outdated History for Pair BTC/USDC · Issue #11725 · freqtrade/freqtrade",
+          "url": "https://github.com/freqtrade/freqtrade/issues/11725",
+          "snippet": "",
+          "published_at": "2025-05-06T00:00:00.000Z",
+          "score": 0.5454545454545454
+        },
+        {
+          "title": "Crypto Trading Bot: Fix Microstructure Issues | Kalena — Kalena",
+          "url": "https://blog.kalena.ai/crypto-trading-bot-performance-is-a-microstructure-problem-here-s-how-to-diagnose-and-fix-it",
+          "snippet": "",
+          "published_at": "2026-04-04T00:00:00.000Z",
+          "score": 0.4545454545454546
+        },
+        {
+          "title": "Confirm_trade_entry callback not properly limiting directional trades in backtest mode · Issue #12954 · freqtrade/freqtrade",
+          "url": "https://github.com/freqtrade/freqtrade/issues/12954",
+          "snippet": "",
+          "published_at": "2026-03-16T00:00:00.000Z",
+          "score": 0.36363636363636365
+        },
+        {
+          "title": "The Bug That Blocked Our Trading System for 30 Hours - And the Feature We Deliberately Didnt Build | Jamie Watters",
+          "url": "https://jamiewatters.work/journey/trader-7-bug-30-hours",
+          "snippet": "",
+          "published_at": "2026-03-10T00:00:00.000Z",
+          "score": 0.2727272727272727
+        },
+        {
+          "title": "How to Add Real-Time Orderflow Intelligence to Your Freqtrade Bot in 10 Lines of Python - DEV Community",
+          "url": "https://dev.to/horustechltd/how-to-add-real-time-orderflow-intelligence-to-your-freqtrade-bot-in-10-lines-of-python-ie5",
+          "snippet": "",
+          "published_at": "2026-04-24T00:00:00.000Z",
+          "score": 0.18181818181818177
+        },
+        {
+          "title": "python-telegramBot/crypto-liquidity-ai-trading-bot",
+          "url": "https://github.com/python-telegrambot/crypto-liquidity-ai-trading-bot",
+          "snippet": "",
+          "published_at": "2026-05-13T00:00:00.000Z",
+          "score": 0.09090909090909094
+        },
+        {
+          "title": "Why Your Crypto Bot Keeps Failing: The Data Quality Problem (And How to Fix It) - DEV Community",
+          "url": "https://dev.to/paarthurnax_3f967358857ce/why-your-crypto-bot-keeps-failing-the-data-quality-problem-and-how-to-fix-it-a25",
+          "snippet": "",
+          "published_at": "2026-03-22T00:00:00.000Z",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "source": "tavily",
+      "items": [
+        {
+          "title": "Trading Bot Strategy - The 5 Essential Elements Every Bot Needs - Tickerly",
+          "url": "https://tickerly.net/five-elements-every-trading-bot-strategy-needs",
+          "snippet": "The takeaway: Your entry logic needs a clear, testable assumption about market behavior. Everything else is built on top of that in your trading bot strategy.\n\n## 2. Entry Qualifiers (Filters): Decide When to Act on Signals\n\nRaw entry signals will get you killed.\n\nA moving average crossover can generate 50 signals in a choppy, sideways market — most of them false. Entry qualifiers are the filters ",
+          "published_at": null,
+          "score": 0.9971771
+        },
+        {
+          "title": "AI Trading Bot Risk Management: Complete 2025 Guide",
+          "url": "https://3commas.io/blog/ai-trading-bot-risk-management-guide-2025",
+          "snippet": "Apply confidence thresholds to signal accuracy\n Use volume filters to block trades on thin liquidity\n Pause bots after 3–4 consecutive stop-losses\n\nPro Tip: The 3Commas bots marketplace allows traders to select top-performing signals by win-rate, frequency, and verified backtest data.\n\n### Advanced Risk Tools and Indicators\n\n#### Technical Indicators for Risk Assessment\n\nBots can use multiple indi",
+          "published_at": null,
+          "score": 0.9968273
+        },
+        {
+          "title": "My Bot Is Turned ON - Why Hasn't It Made Any Trades?",
+          "url": "https://www.youtube.com/watch?v=yaz64J394us",
+          "snippet": "my \n Trend \n and \n different \n a \n my \n again \n investigate \n decisions \n I \n that \n that \n get \n that \n how \n which \n passed \n you \n different \n they \n where \n the \n ultimately \n now \n point \n opportunity \n of \n where \n stopping \n position \n making \n can't \n not \n you're \n this \n environment \n my \n of \n of \n sure \n passed \n sure \n passed \n came \n that \n above \n wasn't \n try \n premium \n liquidity ",
+          "published_at": null,
+          "score": 0.9905874
+        },
+        {
+          "title": "Step Six — Mastering False Signal Filters: Enhancing Your Binance Futures Trading Strategy",
+          "url": "https://medium.com/@inbox.artem/step-six-mastering-false-signal-filters-enhancing-your-binance-futures-trading-strategy-87fea5f9974c",
+          "snippet": "Applying too many filters can also significantly reduce the number of valid data points, making it difficult to ensure that the remaining trades represent a reliable sample of market behavior. With too few data points, the results can become skewed by randomness or isolated events, and the conclusions might lack statistical power. For this reason, filters should be applied with caution, ensuring t",
+          "published_at": null,
+          "score": 0.9813107
+        },
+        {
+          "title": "Trading Bots That Passed Funded Challenges | For Traders",
+          "url": "https://www.fortraders.com/blog/trading-bots-passed-funded-challenges",
+          "snippet": "### Drawdown Management\n\nRisk control is a cornerstone of these EAs, with built-in kill-switches that monitor equity in real time. If the daily drawdown limit (e.g., 2.5%) or the overall limit (e.g., 5.5%) is hit, the bot immediately closes all trades and halts further activity. For example, the XAUUSD Advanced Breakout EA limits losses to $110 per trade on standard accounts, ensuring compliance w",
+          "published_at": null,
+          "score": 0.9730365
+        },
+        {
+          "title": "[PDF] Best Practices For Automated Trading Risk Controls And System ...",
+          "url": "https://www.fia.org/sites/default/files/2024-07/FIA_WP_AUTOMATED%20TRADING%20RISK%20CONTROLS_FINAL_0.pdf",
+          "snippet": "limits within their own trading infrastructure for indirect access participants or using an exchange-provided tool for direct access participants, based on a review of the risk limits appropriate for the market participant. Additionally, exchanges should apply a similar control to all participants at a product level to prevent accidental disruption of the market caused by orders that exceed the li",
+          "published_at": null,
+          "score": 0.9615338
+        },
+        {
+          "title": "AI Bots Redefine Algorithmic Trading Through Machine Learning",
+          "url": "https://tickeron.com/blogs/ai-bots-redefine-algorithmic-trading-through-machine-learning-11474",
+          "snippet": "Signal Agents represent Tickeron's entry-level AI trading bots, designed for traders seeking straightforward copy trading capabilities. These bots generate real-time trading signals without complex money management requirements, making them ideal for beginners or those preferring fixed trade amounts. Signal Agents operate across 5-minute, 15-minute, and 60-minute timeframes, providing flexibility ",
+          "published_at": null,
+          "score": 0.9458012
+        },
+        {
+          "title": "Order Book Filtration and Directional Signal Extraction at ... - arXiv",
+          "url": "https://arxiv.org/html/2507.22712v1",
+          "snippet": "The distinction between filtered and unfiltered OBI signals has become an important practical consideration in high-frequency data analysis. An unfiltered order book signal is computed directly from the raw data stream, counting every order placement, modification, cancellation, or trade that occurs. By contrast, a filtered signal applies criteria to ignore certain transient events or out-of-band ",
+          "published_at": null,
+          "score": 0.9403531
+        },
+        {
+          "title": "Why Trading Bots Won’t Fix Bad Trading Psychology",
+          "url": "https://www.youtube.com/watch?v=U5k1J_hs_pk",
+          "snippet": "a touch. Whether you change your size, whether you enter a little early, a little late, maybe it's a questionable setup, you enter those things and you call it your strategy. But automation needs those strict rigid rules. And the cool part about it is that it takes away the ability for you to come in and mess with it until you do. And this just hit me like a brick a couple of days ago as I realize",
+          "published_at": null,
+          "score": 0.93045825
+        },
+        {
+          "title": "Top 20 Trading Bot Strategies for 2026",
+          "url": "https://www.quantvps.com/blog/trading-bot-strategies",
+          "snippet": "### Flexibility to Market Conditions\n\nBreakout trading adapts well to different market environments. In trending markets, it captures new directional moves, while in range-bound conditions, it profits from the resolution of consolidation patterns. Aligning trades with the broader market trend can significantly boost success rates. Automated systems can even use trend filters to ensure trades are p",
+          "published_at": null,
+          "score": 0.78133065
+        },
+        {
+          "title": "Kalman Filter-Based Pairs Trading Strategy In QSTrader | QuantStart",
+          "url": "https://www.quantstart.com/articles/kalman-filter-based-pairs-trading-strategy-in-qstrader",
+          "snippet": "# Only trade if days is greater than a \"burn in\" period if self.days > 1: # If we're not in the market... if self.invested is None: if e < -sqrt_Q: # Long Entry print(\"LONG: %s\" % event.time) self.cur_hedge_qty = int(floor(self.qtyself.theta)) self.events_queue.put(SignalEvent(self.tickers, \"BOT\", self.qty)) self.events_queue.put(SignalEvent(self.tickers, \"SLD\", self.cur_hedge_qty)) self.invested ",
+          "published_at": null,
+          "score": 0.6654106
+        },
+        {
+          "title": "Efficient Automated Trading System Overrides: A Hands-off Approach",
+          "url": "https://blog.quantinsti.com/automated-trading-system-overrides",
+          "snippet": "> Don’t halt your system every time there is a presidential tweet - you’ll never fill any trades.\n\n## Some tips to help with monitoring [...] Quantitative Finance & Algo Trading Blog by QuantInsti\n\nAutomated Trading  This Blog\n\n# Efficient Automated Trading System Overrides: A Hands-off Approach\n\nAutomated Trading\n\n 8 min read [...] Monitor on mobile, or other limited platforms (where changes can’",
+          "published_at": null,
+          "score": 0.44939265
+        }
+      ]
+    },
+    {
+      "source": "youtube",
+      "items": [
+        {
+          "title": "Apocalypse: Poor Boy Unlocks a Check-In System: Every Beauty He Shelters Unlocks a New Resource!",
+          "url": "https://www.youtube.com/watch?v=_pe5Bm83S5o",
+          "snippet": "manhwarecap #animerecap #anicap #themanhwaman #manhwa #webtoon #manhwarecaps #manhwacap #webtoonrecap ...",
+          "published_at": "2026-05-19T12:00:10.000Z",
+          "channel": "COMICS STORM",
+          "video_id": "_pe5Bm83S5o",
+          "score": null
+        },
+        {
+          "title": "He Built A Fence Just To Punish Neighbors 😵",
+          "url": "https://www.youtube.com/watch?v=TjxAgpSK6ok",
+          "snippet": "",
+          "published_at": "2025-10-15T14:30:33.000Z",
+          "channel": "Zack D. Films",
+          "video_id": "TjxAgpSK6ok",
+          "score": null
+        },
+        {
+          "title": "AI Thought He Was Falling Asleep 😑",
+          "url": "https://www.youtube.com/watch?v=lRX9vq4E9KI",
+          "snippet": "",
+          "published_at": "2025-12-30T15:30:28.000Z",
+          "channel": "Zack D. Films",
+          "video_id": "lRX9vq4E9KI",
+          "score": null
+        },
+        {
+          "title": "☄️New【Multi Sub 】Doomsday smuggler: I trade spicy strips for gold bricks EP 1-129#anime #animation",
+          "url": "https://www.youtube.com/watch?v=3YFywsM-oM4",
+          "snippet": "都市#逆袭#热血#city #counterattack #passionate 【Introduction】 Suddenly, the end - of - the - world game descended into reality ...",
+          "published_at": "2026-05-23T08:00:14.000Z",
+          "channel": "Quartic element Anime",
+          "video_id": "3YFywsM-oM4",
+          "score": null
+        },
+        {
+          "title": "How Reliable Is Your Memory? 🤔",
+          "url": "https://www.youtube.com/watch?v=A_FhjDDVZ9w",
+          "snippet": "",
+          "published_at": "2025-12-30T18:30:16.000Z",
+          "channel": "Zack D. Films",
+          "video_id": "A_FhjDDVZ9w",
+          "score": null
+        }
+      ]
+    }
+  ],
+  "cited_at": "2026-05-24T04:40:47.016Z"
+}

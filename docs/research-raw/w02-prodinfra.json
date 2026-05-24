@@ -1,0 +1,279 @@
+{
+  "query": "production trading bot infrastructure railway postgres n8n orchestration",
+  "since": "2024-01-01",
+  "depth": "deep",
+  "sources": [
+    {
+      "source": "brave",
+      "items": [
+        {
+          "title": "Deploy N8N [w/ Postgres + Redis + Ollama] | Pro Stack",
+          "url": "https://railway.com/deploy/n8n-with-ollama-to-build-private-self-ho",
+          "snippet": "This setup is ideal for teams that need reliability, scalability, and data control without managing complex networking or orchestration manually. Private AI agents for internal tools, ops automation, or customer support · LLM-powered workflows (summarization, classification, extraction) without sending data to third-party APIs · AI automation pipelines triggered by webhooks, schedules, or events · Local model experimentation using Ollama inside real production workflows · Use n8n + Ollama for sensitive data processing, unlimited AI ops without per-call costs, or complex workflows with loops and error handling.",
+          "published_at": "2026-01-12T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy N8N with Postgres - Automation",
+          "url": "https://railway.com/deploy/n8n-or-self-host-or-workflow-automation",
+          "snippet": "What it is: <strong>A visual automation builder with advanced logic and conditional branching</strong>. Focus area: Marketers and ops teams building complex data flows. Why n8n is better: Supports queue mode with Redis + Postgres, self-hosting, and predictable ...",
+          "published_at": "2025-10-27T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy N8N Pro Stack [w/ Worker & Postgres]",
+          "url": "https://railway.com/deploy/n8n-on-railway",
+          "snippet": "<strong>It includes everything — PostgreSQL, Redis (optional), and preconfigured environment variables — so you can go from zero to automation in under 60 seconds</strong>. Railway is a singular platform to deploy your infrastructure stack.",
+          "published_at": "2025-10-29T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "AI Agentic Automation Stack (n8n) - Deploy",
+          "url": "https://railway.com/deploy/ai-agentic-automation-stack-n8n",
+          "snippet": "E-commerce &amp; Marketing Automation: Orchestrate product research, competitive analysis, inventory management, and customer journey automation with AI agents specialized in different business functions · PostgreSQL Database: Primary data persistence for n8n workflows and user data",
+          "published_at": "2025-08-17T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy AI Agentic Automation Stack (n8n + Flowise)",
+          "url": "https://railway.com/deploy/ai-agentic-automation-stack-n8n-flowise",
+          "snippet": "E-commerce &amp; Marketing Automation: Orchestrate product research, competitive analysis, inventory management, and customer journey automation with AI agents specialized in different business functions · PostgreSQL Database: Primary data persistence for n8n workflows, FlowiseAI configurations, and user data",
+          "published_at": "2025-06-02T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy n8n-production-stack (w/ worker & webhook)",
+          "url": "https://railway.com/deploy/n8n-production-stack",
+          "snippet": "Zero infrastructure config — no Nginx, no SSL certs, no Docker Compose files to maintain · Horizontal scaling — add more worker replicas directly from the Railway dashboard · Managed secrets — N8N_ENCRYPTION_KEY is auto-generated and shared across services via Railway&#x27;s variable references · One-click deploy — the entire 5-service stack is live in under two minutes · AI agent pipelines — orchestrate LLM calls, RAG workflows, and tool-calling agents that run reliably at scale",
+          "published_at": "2026-03-07T02:32:08.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy N8N | Open-Source AI Worklow Automation | Zapier Alternative",
+          "url": "https://railway.com/deploy/n8n-workflow-automation",
+          "snippet": "<strong>Running it on Railway keeps your workflow data, API tokens, and customer payloads inside your own infrastructure</strong>. What does this Railway template deploy? Five services: the n8n editor, a worker pool (2 replicas, concurrency 10), a dedicated ...",
+          "published_at": "2026-03-06T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy Flowise & n8n AI Automation",
+          "url": "https://railway.com/deploy/flowise-and-n8n-ai-automation",
+          "snippet": "Flowise provides a visual interface for building AI agent workflows and LLM chains, while <strong>n8n is responsible for workflow execution, event handling, and system integrations</strong>. A production-ready setup requires persistent storage, reliable database ...",
+          "published_at": "2025-12-28T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy N8N Main + Worker",
+          "url": "https://railway.com/deploy/n8n-main-worker",
+          "snippet": "<strong>The Main instance handles workflow orchestration, while the Worker instance processes jobs from a Redis-powered queue</strong>. This architecture allows you to handle higher loads and run workflows in parallel with better reliability.",
+          "published_at": "2025-07-29T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy n8n — Queue Mode, Workers, Webhooks & Task Runners",
+          "url": "https://railway.com/deploy/n8n-scalable-queue-mode-workers-webhooks",
+          "snippet": "<strong>Automate deployments, monitoring alerts, and infrastructure tasks</strong>. Move and transform data between APIs, databases, and analytics tools. This template requires the following core capabilities: ... Primary database for workflows, credentials, ...",
+          "published_at": "2026-02-25T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy n8n ready production",
+          "url": "https://railway.com/deploy/n8n-ready-production",
+          "snippet": "<strong>Railway provides a unified platform to host applications and infrastructure without complex setup</strong>. By deploying n8n ready production here, you get: 🚀 One-click deployment: Quickly launch n8n, PostgreSQL, and Valkey.",
+          "published_at": "2025-11-02T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Deploy n8n v2 (Postgres + Redis + Workers)",
+          "url": "https://railway.com/deploy/n8n-v2-postgres-redis-workers",
+          "snippet": "<strong>Hosting n8n v2 with Postgres, Redis, and workers enables a scalable and production-ready workflow automation platform</strong>.",
+          "published_at": "2025-12-18T22:29:04.000Z",
+          "score": null
+        }
+      ]
+    },
+    {
+      "source": "exa",
+      "items": [
+        {
+          "title": "Deploy n8n Enterprise-Ready Stack",
+          "url": "https://railway.com/deploy/n8n-enterprise-ready-stack",
+          "snippet": "",
+          "published_at": "2026-01-21T00:00:00.000Z",
+          "score": 1
+        },
+        {
+          "title": "icueth/n8n-PostgresHA-RedisHA",
+          "url": "https://github.com/icueth/n8n-PostgresHA-RedisHA",
+          "snippet": "",
+          "published_at": "2026-01-21T00:00:00.000Z",
+          "score": 0.9090909090909091
+        },
+        {
+          "title": "kaleldias/n8n-railway",
+          "url": "https://github.com/kaleldias/n8n-railway",
+          "snippet": "",
+          "published_at": "2025-09-03T00:00:00.000Z",
+          "score": 0.8181818181818181
+        },
+        {
+          "title": "Deploy n8n Scalable — Queue Mode, Workers, Webhooks & Task Runners",
+          "url": "https://railway.com/deploy/n8n-scalable-queue-mode-workers-webhooks",
+          "snippet": "",
+          "published_at": "2026-02-25T00:00:00.000Z",
+          "score": 0.7272727272727273
+        },
+        {
+          "title": "Self-hosting n8n on Railway – Thinkpeak AI",
+          "url": "https://thinkpeak.ai/self-hosting-n8n-on-railway/",
+          "snippet": "",
+          "published_at": "2025-12-18T00:00:00.000Z",
+          "score": 0.6363636363636364
+        },
+        {
+          "title": "shruti060701/n8n-railway",
+          "url": "https://github.com/shruti060701/n8n-railway",
+          "snippet": "",
+          "published_at": "2026-05-01T00:00:00.000Z",
+          "score": 0.5454545454545454
+        },
+        {
+          "title": "TrendpilotAI/openclaw-n8n-railway",
+          "url": "https://github.com/TrendpilotAI/openclaw-n8n-railway",
+          "snippet": "",
+          "published_at": "2026-02-13T00:00:00.000Z",
+          "score": 0.4545454545454546
+        },
+        {
+          "title": "Self-host n8n | Railway Guides",
+          "url": "https://docs.railway.com/guides/n8n",
+          "snippet": "",
+          "published_at": "2026-03-30T00:00:00.000Z",
+          "score": 0.36363636363636365
+        },
+        {
+          "title": "Deploy N8N+Worker+Pgbouncer+Postgres+Valkey : 1$",
+          "url": "https://railway.com/deploy/xEFh9O",
+          "snippet": "",
+          "published_at": "2025-05-21T00:00:00.000Z",
+          "score": 0.2727272727272727
+        },
+        {
+          "title": "n8n Production Architecture: Latency Budget for 10K Daily Workflows | Markaicode",
+          "url": "https://markaicode.com/architecture/n8n-production-system-design-architecture/",
+          "snippet": "",
+          "published_at": "2026-05-19T00:00:00.000Z",
+          "score": 0.18181818181818177
+        },
+        {
+          "title": "amitaisopher/n8n-playground",
+          "url": "https://github.com/amitaisopher/n8n-playground",
+          "snippet": "",
+          "published_at": "2025-11-20T00:00:00.000Z",
+          "score": 0.09090909090909094
+        },
+        {
+          "title": "Part 1 — Architecture & Why n8n. When I started this project, I resisted… | by SQLShark | Medium",
+          "url": "https://medium.com/@SQLShark/part-1-architecture-why-n8n-9f0a1ba8e4d9",
+          "snippet": "",
+          "published_at": "2025-11-13T00:00:00.000Z",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "source": "tavily",
+      "items": [
+        {
+          "title": "Deploy N8N",
+          "url": "https://railway.com/deploy/n8n-on-railway",
+          "snippet": "## About Hosting N8N on Railway\n\nThis setup combines n8n, PostgreSQL, and Redis into a fully managed, distributed environment optimized for production use.\n\nThis setup comes fully pre-configured — just click Deploy and your n8n instance deploys instantly on Railway. No linking, no setup, no extra steps.\n\n## Common Use Cases\n\nWorkflow Example\n\nWorkflow Example\n\nMarketing Automation Pipelines  \nAuto",
+          "published_at": null,
+          "score": 0.9999521
+        },
+        {
+          "title": "Preparing n8n 2.0 For Safe Upgrades and Production AI Orchestration",
+          "url": "https://blog.nocodecreative.io/n8n-2-0-migration-ai-orchestration",
+          "snippet": "If you are already operating n8n in queue mode with PostgreSQL, S3 binary storage, and external task runners, much of this will feel like the platform catching up with how you are already running. For smaller, all‑in‑one Docker installs, it is the ideal moment to decide whether you stay on a single host or graduate to a slightly more structured architecture.\n\nMigration Planning\n\n## Understanding t",
+          "published_at": null,
+          "score": 0.9976949
+        },
+        {
+          "title": "n8n: Technical AI Agent Builder | LeadAI Review | Lead AI Dev",
+          "url": "https://leadai.dev/automation/n8n",
+          "snippet": "Deployment flexibility is another major strength. You can self-host via Docker Compose, Kubernetes, or npm; use n8n Cloud with automatic scaling; or run on Render, Railway, or other PaaS providers. The open-source core (with Apache 2.0 license) means no vendor lock-in on workflow logic—export your DAG and port it elsewhere if needed. Enterprise features include SAML/SSO, audit logs, advanced permi",
+          "published_at": null,
+          "score": 0.99711037
+        },
+        {
+          "title": "n8n + AI: Build No-Code Trading Bots That Actually Work - PickMyTrade",
+          "url": "https://blog.pickmytrade.trade/n8n-trading-bot-no-code-guide-2026",
+          "snippet": "The short answer: flexibility and cost. Zapier and Make are excellent for simple automations, but both run on closed, cloud-only infrastructure with rate-limited polling. n8n is self-hostable, which means you control the execution environment and data residency. Your API keys and trade data never touch a third-party server unless you choose the cloud version.\n\nn8n also connects to over 1,300 integ",
+          "published_at": null,
+          "score": 0.9967013
+        },
+        {
+          "title": "N8n Developer Needed to Build a Flexible Trading Bot (Spot & Futures) - Jobs - n8n Community",
+          "url": "https://community.n8n.io/t/n8n-developer-needed-to-build-a-flexible-trading-bot-spot-futures/259941",
+          "snippet": "If you can share:  \n• Signal sources (Telegram, webhook, API, etc.)  \n• Target exchanges  \n• Execution rules / risk preferences\n\nI’d be happy to discuss the architecture and next steps.  \nFeel free to DM me here and we can take it forward.\n\nThanks!\n\nSubject: Proposal: Automated Trading Signal Infrastructure (n8n/Python)\n\nHi,\n\nI came across your project regarding dynamic trading signal automation, ",
+          "published_at": null,
+          "score": 0.9964342
+        },
+        {
+          "title": "N8N MetaTrader Integration Guide: Build Automated Workflows",
+          "url": "https://newyorkcityservers.com/blog/build-advanced-trading-automations-with-metatrader-and-n8n",
+          "snippet": "Telegram alert the second a trade opens or closes, with symbol, lot size, and entry price.\n Trade log writing every fill to Google Sheets or Postgres for journaling and post-trade analysis.\n Daily drawdown risk cap that tells your EA to stop opening new positions past a 2% loss.\n Signal routing from TradingView alerts into n8n, then into MT5 as a market order.\n Broker connectivity health-check pin",
+          "published_at": null,
+          "score": 0.9959927
+        },
+        {
+          "title": "Falcon Signal — Production n8n Trading System Production-grade n8n workflow system running 24/7 o...",
+          "url": "https://contra.com/community/X5o17dLQ-falcon-signal-production-n8n-trading",
+          "snippet": "freelancerlife\n\nFreelancer life is wins, pivots, and everything in between. What’s yours right now? [...] Anand's avatar\n\nPost image\nTimothy's avatar\n\n9 voted\n\n30%\n\nOption A\n\nOption A\n\n21 voted\n\n70%\n\nOption B\n\nOption B\n\n30 votes\n\nClosed\n\nSharon's avatar\nBob's avatar\nCyberLink Security logo\n\nPost image\nJelena's avatar\nCyberLink Security logo\nOperator's avatar\n\nPost image\nPost image\nEmman's avatar\nT",
+          "published_at": null,
+          "score": 0.95695716
+        },
+        {
+          "title": "Build Robust n8n Trading Workflows with Self-hosted Railway",
+          "url": "https://contra.com/community/0tBAFwkU-build-robust-n8n-trading-workflows-with",
+          "snippet": "freelancerlife\n\nFreelancer life is wins, pivots, and everything in between. What’s yours right now? [...] Anand's avatar\n\nPost image\nTimothy's avatar\n\n9 voted\n\n30%\n\nOption A\n\nOption A\n\n21 voted\n\n70%\n\nOption B\n\nOption B\n\n30 votes\n\nClosed\n\nSharon's avatar\nBob's avatar\nCyberLink Security logo\n\nPost image\nJelena's avatar\nCyberLink Security logo\nOperator's avatar\n\nPost image\nPost image\nEmman's avatar\nT",
+          "published_at": null,
+          "score": 0.95257413
+        },
+        {
+          "title": "Automation bot - Help me Build my Workflow - n8n Community",
+          "url": "https://community.n8n.io/t/automation-bot/204704?tl=en",
+          "snippet": "Good luck.\n\n\")\n\n### Related topics\n\n| Topic |  | Replies | Views | Activity |\n ---  --- \n| Automate my trading strategy on a trading platform with n8n  Questions node ,  workflow-building | 8 | 860 | February 15, 2026 |\n| N8n Developer Needed to Build a Flexible Trading Bot (Spot & Futures)  Jobs | 14 | 431 | March 2, 2026 |\n| Wanted: workflow tutor  Jobs tutorial | 6 | 154 | November 4, 2025 |\n| ",
+          "published_at": null,
+          "score": 0.92788786
+        },
+        {
+          "title": "GitHub - enescingoz/awesome-n8n-templates: 280+ free n8n automation templates — ready-to-use workflows for Gmail, Telegram, Slack, Discord, WhatsApp, Google Drive, Notion, OpenAI, and more. AI agents, RAG chatbots, email automation, social media, DevOps, and document processing. The largest open-source n8n template collection. · GitHub",
+          "url": "https://github.com/enescingoz/awesome-n8n-templates",
+          "snippet": "> 🚀 Automate any workflow. Create your free n8n account and start building →\n\n### What are the best n8n database and storage automation templates?\n\nFind 5 database and storage automation templates for n8n. Chat with PostgreSQL using natural language, generate SQL queries from schema with AI, get intelligent movie recommendations from MongoDB, manage Supabase vector embeddings, or query SQLite dat",
+          "published_at": null,
+          "score": 0.8539127
+        },
+        {
+          "title": "#n8n #n8nworkflow #n8nautomation #ai #agent #agenticai #automations #algorithmictrading #quantitativefinance | Ritesh Kanjee",
+          "url": "https://www.linkedin.com/posts/riteshkanjee_n8n-n8nworkflow-n8nautomation-activity-7405879321950900224-hrMX",
+          "snippet": "automations too. Not “which LLM is best?” But “what exact workflow turns it into leverage?” Right now I’m more bullish on: LLMs as research and decision co-pilots, not fire-and-forget trading bots. But If you want to see how I wire this into n8n so it actually saves time in business and making money 🟣 First connect with me, so I can DM you the workflow then, 🟣 Comment \"AUTOMATION\" to my automati",
+          "published_at": null,
+          "score": 0.84286314
+        },
+        {
+          "title": "AI Agent integrations | Workflow automation with n8n",
+          "url": "https://n8n.io/integrations/agent",
+          "snippet": "Homey Pro - smarthouse integration with LLM### Generate personalized startup ideas with Claude analysis and Gmail reports### Telegram interior design studio with furniture cataloging & Gemini AI design generation### Automate LinkedIn job search and applications with Claude AI and Google Sheets### Create a knowledge-powered chatbot with Claude, Supabase & Postgres### Create daily Gmail summaries wi",
+          "published_at": null,
+          "score": 0.5774954
+        }
+      ]
+    },
+    {
+      "source": "youtube",
+      "error": "Error: YouTube 429: {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per minute' of service 'youtube.googleapis.com' for consumer 'project_number:409604625407'.\",\n    \"errors\": [\n      {\n        \"message\": \"Quota exceeded for quota metric 'Search"
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:36.283Z"
+}

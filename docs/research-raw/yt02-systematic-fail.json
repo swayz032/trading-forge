@@ -1,0 +1,999 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "Nvfmi2vANs0",
+  "url": "https://www.youtube.com/watch?v=Nvfmi2vANs0",
+  "segments": [
+    {
+      "text": "Hi guys, welcome back. In previous",
+      "duration": 4480,
+      "offset": 80,
+      "lang": "en"
+    },
+    {
+      "text": "videos, we've talked about probability,",
+      "duration": 4160,
+      "offset": 2480,
+      "lang": "en"
+    },
+    {
+      "text": "fat tails, and the fact that markets are",
+      "duration": 4480,
+      "offset": 4560,
+      "lang": "en"
+    },
+    {
+      "text": "not normally distributed. But today, I",
+      "duration": 4079,
+      "offset": 6640,
+      "lang": "en"
+    },
+    {
+      "text": "want to talk about something that's even",
+      "duration": 3599,
+      "offset": 9040,
+      "lang": "en"
+    },
+    {
+      "text": "more dangerous than volatility, and",
+      "duration": 4080,
+      "offset": 10719,
+      "lang": "en"
+    },
+    {
+      "text": "that's selfdeception. Because building",
+      "duration": 4081,
+      "offset": 12639,
+      "lang": "en"
+    },
+    {
+      "text": "systematic investing strategies isn't",
+      "duration": 3521,
+      "offset": 14799,
+      "lang": "en"
+    },
+    {
+      "text": "that hard, but building one that",
+      "duration": 3680,
+      "offset": 16720,
+      "lang": "en"
+    },
+    {
+      "text": "actually survives live trading into the",
+      "duration": 4080,
+      "offset": 18320,
+      "lang": "en"
+    },
+    {
+      "text": "future is incredibly difficult. And the",
+      "duration": 4160,
+      "offset": 20400,
+      "lang": "en"
+    },
+    {
+      "text": "reason most fail comes down to one idea,",
+      "duration": 4160,
+      "offset": 22400,
+      "lang": "en"
+    },
+    {
+      "text": "and that's degrees of freedom. Let's",
+      "duration": 3600,
+      "offset": 24560,
+      "lang": "en"
+    },
+    {
+      "text": "start with something uncomfortable. If",
+      "duration": 3360,
+      "offset": 26560,
+      "lang": "en"
+    },
+    {
+      "text": "you give me enough flexibility, I can",
+      "duration": 3519,
+      "offset": 28160,
+      "lang": "en"
+    },
+    {
+      "text": "build a strategy with extraordinary",
+      "duration": 3600,
+      "offset": 29920,
+      "lang": "en"
+    },
+    {
+      "text": "historical returns. So that's a high",
+      "duration": 4641,
+      "offset": 31679,
+      "lang": "en"
+    },
+    {
+      "text": "sharp ratio, low draw down, and a",
+      "duration": 4960,
+      "offset": 33520,
+      "lang": "en"
+    },
+    {
+      "text": "beautiful looking equity curve. But the",
+      "duration": 3919,
+      "offset": 36320,
+      "lang": "en"
+    },
+    {
+      "text": "problem is it's probably completely",
+      "duration": 4800,
+      "offset": 38480,
+      "lang": "en"
+    },
+    {
+      "text": "useless. Why? Because markets are noisy.",
+      "duration": 4640,
+      "offset": 40239,
+      "lang": "en"
+    },
+    {
+      "text": "And if you search hard enough, you'll",
+      "duration": 4240,
+      "offset": 43280,
+      "lang": "en"
+    },
+    {
+      "text": "eventually find patterns within noise.",
+      "duration": 4241,
+      "offset": 44879,
+      "lang": "en"
+    },
+    {
+      "text": "That doesn't mean you've discovered an",
+      "duration": 3680,
+      "offset": 47520,
+      "lang": "en"
+    },
+    {
+      "text": "edge. It means you've discovered",
+      "duration": 4320,
+      "offset": 49120,
+      "lang": "en"
+    },
+    {
+      "text": "randomness dressed up as skill. Degrees",
+      "duration": 4480,
+      "offset": 51200,
+      "lang": "en"
+    },
+    {
+      "text": "of freedom simply means how many",
+      "duration": 4000,
+      "offset": 53440,
+      "lang": "en"
+    },
+    {
+      "text": "adjustable decisions are you making",
+      "duration": 4559,
+      "offset": 55680,
+      "lang": "en"
+    },
+    {
+      "text": "within your system framework. Every time",
+      "duration": 4400,
+      "offset": 57440,
+      "lang": "en"
+    },
+    {
+      "text": "you choose a look back period, a",
+      "duration": 4081,
+      "offset": 60239,
+      "lang": "en"
+    },
+    {
+      "text": "different threshold value, a filter, an",
+      "duration": 4800,
+      "offset": 61840,
+      "lang": "en"
+    },
+    {
+      "text": "entry, an exit condition, a ranking",
+      "duration": 4720,
+      "offset": 64320,
+      "lang": "en"
+    },
+    {
+      "text": "metric, you're adding flexibility. And",
+      "duration": 5519,
+      "offset": 66640,
+      "lang": "en"
+    },
+    {
+      "text": "it may feel powerful, but it's dangerous",
+      "duration": 5360,
+      "offset": 69040,
+      "lang": "en"
+    },
+    {
+      "text": "because flexibility allows you to curve",
+      "duration": 4320,
+      "offset": 72159,
+      "lang": "en"
+    },
+    {
+      "text": "fit to historical data. Let me give you",
+      "duration": 4640,
+      "offset": 74400,
+      "lang": "en"
+    },
+    {
+      "text": "a visual example. Imagine I put 10 dots",
+      "duration": 4561,
+      "offset": 76479,
+      "lang": "en"
+    },
+    {
+      "text": "on a chart. Now I give you a straight",
+      "duration": 4160,
+      "offset": 79040,
+      "lang": "en"
+    },
+    {
+      "text": "ruler and say draw a line that fits",
+      "duration": 4480,
+      "offset": 81040,
+      "lang": "en"
+    },
+    {
+      "text": "these dots. It won't fit perfectly.",
+      "duration": 4239,
+      "offset": 83200,
+      "lang": "en"
+    },
+    {
+      "text": "There'll be gaps. There'll be errors. It",
+      "duration": 4000,
+      "offset": 85520,
+      "lang": "en"
+    },
+    {
+      "text": "won't look perfect. But now imagine",
+      "duration": 4320,
+      "offset": 87439,
+      "lang": "en"
+    },
+    {
+      "text": "instead I give you a bendable wire. You",
+      "duration": 4720,
+      "offset": 89520,
+      "lang": "en"
+    },
+    {
+      "text": "can twist it. You can curve it. You can",
+      "duration": 4481,
+      "offset": 91759,
+      "lang": "en"
+    },
+    {
+      "text": "shape it however you like. With enough",
+      "duration": 4480,
+      "offset": 94240,
+      "lang": "en"
+    },
+    {
+      "text": "bends, the wire can pass through every",
+      "duration": 4480,
+      "offset": 96240,
+      "lang": "en"
+    },
+    {
+      "text": "single dot perfectly. It'll look",
+      "duration": 3840,
+      "offset": 98720,
+      "lang": "en"
+    },
+    {
+      "text": "precise. It'll look intelligent. It'll",
+      "duration": 3759,
+      "offset": 100720,
+      "lang": "en"
+    },
+    {
+      "text": "look predictive. But it's not predictive",
+      "duration": 4239,
+      "offset": 102560,
+      "lang": "en"
+    },
+    {
+      "text": "at all. It's just memorizing the past.",
+      "duration": 4401,
+      "offset": 104479,
+      "lang": "en"
+    },
+    {
+      "text": "The straight lines have low degrees of",
+      "duration": 4161,
+      "offset": 106799,
+      "lang": "en"
+    },
+    {
+      "text": "freedom. But the bendable wire has high",
+      "duration": 4160,
+      "offset": 108880,
+      "lang": "en"
+    },
+    {
+      "text": "degrees of freedom. And the more bends",
+      "duration": 4400,
+      "offset": 110960,
+      "lang": "en"
+    },
+    {
+      "text": "that you allow, the more perfectly",
+      "duration": 4560,
+      "offset": 113040,
+      "lang": "en"
+    },
+    {
+      "text": "you're explaining history and the more",
+      "duration": 4480,
+      "offset": 115360,
+      "lang": "en"
+    },
+    {
+      "text": "fragile the model actually becomes.",
+      "duration": 4960,
+      "offset": 117600,
+      "lang": "en"
+    },
+    {
+      "text": "That's exactly what overoptimization and",
+      "duration": 5040,
+      "offset": 119840,
+      "lang": "en"
+    },
+    {
+      "text": "trading systems does. They actually",
+      "duration": 4159,
+      "offset": 122560,
+      "lang": "en"
+    },
+    {
+      "text": "twist themselves around historical",
+      "duration": 4159,
+      "offset": 124880,
+      "lang": "en"
+    },
+    {
+      "text": "noise. And here's where it actually gets",
+      "duration": 5361,
+      "offset": 126719,
+      "lang": "en"
+    },
+    {
+      "text": "worse. Let's say you test 15 different",
+      "duration": 5280,
+      "offset": 129039,
+      "lang": "en"
+    },
+    {
+      "text": "moving average lengths. You test 10",
+      "duration": 4400,
+      "offset": 132080,
+      "lang": "en"
+    },
+    {
+      "text": "different RSI thresholds, five different",
+      "duration": 3761,
+      "offset": 134319,
+      "lang": "en"
+    },
+    {
+      "text": "exit rules, and three different stop-",
+      "duration": 4160,
+      "offset": 136480,
+      "lang": "en"
+    },
+    {
+      "text": "losses. That's not one strategy. It's",
+      "duration": 5360,
+      "offset": 138080,
+      "lang": "en"
+    },
+    {
+      "text": "actually 2,250 combinations of the",
+      "duration": 4560,
+      "offset": 140640,
+      "lang": "en"
+    },
+    {
+      "text": "different parameters. So even if you",
+      "duration": 3439,
+      "offset": 143440,
+      "lang": "en"
+    },
+    {
+      "text": "didn't consciously think of it in that",
+      "duration": 4160,
+      "offset": 145200,
+      "lang": "en"
+    },
+    {
+      "text": "way, one of them will look incredible.",
+      "duration": 4641,
+      "offset": 146879,
+      "lang": "en"
+    },
+    {
+      "text": "Statistically, something has to. But",
+      "duration": 4320,
+      "offset": 149360,
+      "lang": "en"
+    },
+    {
+      "text": "that winner might just be the luckiest",
+      "duration": 4240,
+      "offset": 151520,
+      "lang": "en"
+    },
+    {
+      "text": "random configuration. And that's exactly",
+      "duration": 4240,
+      "offset": 153680,
+      "lang": "en"
+    },
+    {
+      "text": "what data mining is in system",
+      "duration": 4720,
+      "offset": 155760,
+      "lang": "en"
+    },
+    {
+      "text": "development. It's extremely seductive",
+      "duration": 4959,
+      "offset": 157920,
+      "lang": "en"
+    },
+    {
+      "text": "because the output looks scientific. We",
+      "duration": 3920,
+      "offset": 160480,
+      "lang": "en"
+    },
+    {
+      "text": "know that markets are not normally",
+      "duration": 3601,
+      "offset": 162879,
+      "lang": "en"
+    },
+    {
+      "text": "distributed. We know that extreme events",
+      "duration": 5040,
+      "offset": 164400,
+      "lang": "en"
+    },
+    {
+      "text": "cluster. regime shift. Outliers often",
+      "duration": 5520,
+      "offset": 166480,
+      "lang": "en"
+    },
+    {
+      "text": "dominate returns. And when you optimize",
+      "duration": 4640,
+      "offset": 169440,
+      "lang": "en"
+    },
+    {
+      "text": "heavily on past data, you are often",
+      "duration": 4319,
+      "offset": 172000,
+      "lang": "en"
+    },
+    {
+      "text": "optimizing around specific historical",
+      "duration": 4879,
+      "offset": 174080,
+      "lang": "en"
+    },
+    {
+      "text": "events. By way of example, maybe your",
+      "duration": 4481,
+      "offset": 176319,
+      "lang": "en"
+    },
+    {
+      "text": "strategy works beautifully because it",
+      "duration": 4881,
+      "offset": 178959,
+      "lang": "en"
+    },
+    {
+      "text": "was perfectly tuned to 2008 or perfectly",
+      "duration": 6000,
+      "offset": 180800,
+      "lang": "en"
+    },
+    {
+      "text": "tuned to say the 2020 rebound during CO,",
+      "duration": 4800,
+      "offset": 183840,
+      "lang": "en"
+    },
+    {
+      "text": "but those exact sequences may never",
+      "duration": 3840,
+      "offset": 186800,
+      "lang": "en"
+    },
+    {
+      "text": "repeat in the future. And if your system",
+      "duration": 4080,
+      "offset": 188640,
+      "lang": "en"
+    },
+    {
+      "text": "requires those precise shapes to",
+      "duration": 4400,
+      "offset": 190640,
+      "lang": "en"
+    },
+    {
+      "text": "succeed, it will fail. Here's a simple",
+      "duration": 4640,
+      "offset": 192720,
+      "lang": "en"
+    },
+    {
+      "text": "robustness test that I use. If you",
+      "duration": 4640,
+      "offset": 195040,
+      "lang": "en"
+    },
+    {
+      "text": "change a parameter even slightly, does",
+      "duration": 4720,
+      "offset": 197360,
+      "lang": "en"
+    },
+    {
+      "text": "the performance collapse? For example,",
+      "duration": 4720,
+      "offset": 199680,
+      "lang": "en"
+    },
+    {
+      "text": "if your moving average works at 183",
+      "duration": 5200,
+      "offset": 202080,
+      "lang": "en"
+    },
+    {
+      "text": "days, but it fails at 180 or 190, that's",
+      "duration": 5600,
+      "offset": 204400,
+      "lang": "en"
+    },
+    {
+      "text": "usually a massive red flag. Real edges",
+      "duration": 5519,
+      "offset": 207280,
+      "lang": "en"
+    },
+    {
+      "text": "are not razor thin. Momentum and mean",
+      "duration": 5120,
+      "offset": 210000,
+      "lang": "en"
+    },
+    {
+      "text": "reversion work across a variety of",
+      "duration": 4720,
+      "offset": 212799,
+      "lang": "en"
+    },
+    {
+      "text": "ranges. If your system only works on,",
+      "duration": 5039,
+      "offset": 215120,
+      "lang": "en"
+    },
+    {
+      "text": "say, an RSI of 30, you're not trading an",
+      "duration": 5121,
+      "offset": 217519,
+      "lang": "en"
+    },
+    {
+      "text": "edge. You're trading a coincidence.",
+      "duration": 4881,
+      "offset": 220159,
+      "lang": "en"
+    },
+    {
+      "text": "Complex systems feel intelligent. You",
+      "duration": 4560,
+      "offset": 222640,
+      "lang": "en"
+    },
+    {
+      "text": "feel advanced, quantitative,",
+      "duration": 4800,
+      "offset": 225040,
+      "lang": "en"
+    },
+    {
+      "text": "sophisticated even. But complexity often",
+      "duration": 5200,
+      "offset": 227200,
+      "lang": "en"
+    },
+    {
+      "text": "hides fragility. But with simple, more",
+      "duration": 4880,
+      "offset": 229840,
+      "lang": "en"
+    },
+    {
+      "text": "robust systems, they feel uncomfortable.",
+      "duration": 4080,
+      "offset": 232400,
+      "lang": "en"
+    },
+    {
+      "text": "They leave some performance on the",
+      "duration": 3760,
+      "offset": 234720,
+      "lang": "en"
+    },
+    {
+      "text": "table. They don't look perfectly",
+      "duration": 4720,
+      "offset": 236480,
+      "lang": "en"
+    },
+    {
+      "text": "optimized. They don't squeeze every drop",
+      "duration": 5039,
+      "offset": 238480,
+      "lang": "en"
+    },
+    {
+      "text": "out of the compound annual growth rate.",
+      "duration": 4720,
+      "offset": 241200,
+      "lang": "en"
+    },
+    {
+      "text": "But simple systems tend to survive. And",
+      "duration": 4080,
+      "offset": 243519,
+      "lang": "en"
+    },
+    {
+      "text": "survival is the only thing that",
+      "duration": 4160,
+      "offset": 245920,
+      "lang": "en"
+    },
+    {
+      "text": "compounds. So when building a systematic",
+      "duration": 5681,
+      "offset": 247599,
+      "lang": "en"
+    },
+    {
+      "text": "strategy, aim for logical economic",
+      "duration": 6159,
+      "offset": 250080,
+      "lang": "en"
+    },
+    {
+      "text": "reasoning, broad parameter stability,",
+      "duration": 6479,
+      "offset": 253280,
+      "lang": "en"
+    },
+    {
+      "text": "fewer moving parts, clear behavioral",
+      "duration": 6801,
+      "offset": 256239,
+      "lang": "en"
+    },
+    {
+      "text": "performance across multiple regimes, out",
+      "duration": 5681,
+      "offset": 259759,
+      "lang": "en"
+    },
+    {
+      "text": "of sample validation. Ask yourself,",
+      "duration": 4560,
+      "offset": 263040,
+      "lang": "en"
+    },
+    {
+      "text": "would this make sense if I hadn't seen a",
+      "duration": 4319,
+      "offset": 265440,
+      "lang": "en"
+    },
+    {
+      "text": "back test? And if the answer's no,",
+      "duration": 4159,
+      "offset": 267600,
+      "lang": "en"
+    },
+    {
+      "text": "you're probably reverse engineering the",
+      "duration": 3761,
+      "offset": 269759,
+      "lang": "en"
+    },
+    {
+      "text": "results. The goal of systematic",
+      "duration": 4000,
+      "offset": 271759,
+      "lang": "en"
+    },
+    {
+      "text": "investing is not to win the back test.",
+      "duration": 4000,
+      "offset": 273520,
+      "lang": "en"
+    },
+    {
+      "text": "It's not to produce the smoothest",
+      "duration": 4241,
+      "offset": 275759,
+      "lang": "en"
+    },
+    {
+      "text": "historical equity curve. The goal is to",
+      "duration": 4640,
+      "offset": 277520,
+      "lang": "en"
+    },
+    {
+      "text": "build structure that has positive",
+      "duration": 4720,
+      "offset": 280000,
+      "lang": "en"
+    },
+    {
+      "text": "expectancy across uncertain futures.",
+      "duration": 4240,
+      "offset": 282160,
+      "lang": "en"
+    },
+    {
+      "text": "You're not trying to predict your",
+      "duration": 3680,
+      "offset": 284720,
+      "lang": "en"
+    },
+    {
+      "text": "structuring probabilities. The more",
+      "duration": 4000,
+      "offset": 286400,
+      "lang": "en"
+    },
+    {
+      "text": "degrees of freedom that you introduce,",
+      "duration": 3920,
+      "offset": 288400,
+      "lang": "en"
+    },
+    {
+      "text": "the more you risk structuring noise",
+      "duration": 4000,
+      "offset": 290400,
+      "lang": "en"
+    },
+    {
+      "text": "instead of an actual real edge. The",
+      "duration": 4159,
+      "offset": 292320,
+      "lang": "en"
+    },
+    {
+      "text": "market doesn't care about your workflow",
+      "duration": 4480,
+      "offset": 294400,
+      "lang": "en"
+    },
+    {
+      "text": "or your optimization process. It will",
+      "duration": 4481,
+      "offset": 296479,
+      "lang": "en"
+    },
+    {
+      "text": "expose fragility immediately. Many",
+      "duration": 3920,
+      "offset": 298880,
+      "lang": "en"
+    },
+    {
+      "text": "traders think, \"Oh, the market's",
+      "duration": 3360,
+      "offset": 300960,
+      "lang": "en"
+    },
+    {
+      "text": "changed.\" When often it hasn't. The",
+      "duration": 3520,
+      "offset": 302800,
+      "lang": "en"
+    },
+    {
+      "text": "strategy was simply too tailored to the",
+      "duration": 4719,
+      "offset": 304320,
+      "lang": "en"
+    },
+    {
+      "text": "past. And once live data deviates only",
+      "duration": 5120,
+      "offset": 306320,
+      "lang": "en"
+    },
+    {
+      "text": "slightly, performance collapses. It's",
+      "duration": 5201,
+      "offset": 309039,
+      "lang": "en"
+    },
+    {
+      "text": "not bad luck. That's overfitting",
+      "duration": 4880,
+      "offset": 311440,
+      "lang": "en"
+    },
+    {
+      "text": "revealing itself. When I personally",
+      "duration": 4640,
+      "offset": 314240,
+      "lang": "en"
+    },
+    {
+      "text": "design strategies, I try to use minimal",
+      "duration": 5680,
+      "offset": 316320,
+      "lang": "en"
+    },
+    {
+      "text": "parameters. I avoid micro optimization.",
+      "duration": 5360,
+      "offset": 318880,
+      "lang": "en"
+    },
+    {
+      "text": "I prefer blended signals over precise",
+      "duration": 5520,
+      "offset": 322000,
+      "lang": "en"
+    },
+    {
+      "text": "thresholds. I validate long histories. I",
+      "duration": 5280,
+      "offset": 324240,
+      "lang": "en"
+    },
+    {
+      "text": "combine independent edges rather than",
+      "duration": 4480,
+      "offset": 327520,
+      "lang": "en"
+    },
+    {
+      "text": "one perfect one because no single edge",
+      "duration": 4239,
+      "offset": 329520,
+      "lang": "en"
+    },
+    {
+      "text": "will work all of the time. And",
+      "duration": 4000,
+      "offset": 332000,
+      "lang": "en"
+    },
+    {
+      "text": "robustness beats precision every time.",
+      "duration": 3841,
+      "offset": 333759,
+      "lang": "en"
+    },
+    {
+      "text": "So if you remember one thing from this",
+      "duration": 3759,
+      "offset": 336000,
+      "lang": "en"
+    },
+    {
+      "text": "video, let it be this. A perfect back",
+      "duration": 4240,
+      "offset": 337600,
+      "lang": "en"
+    },
+    {
+      "text": "test is usually a warning sign. What you",
+      "duration": 3681,
+      "offset": 339759,
+      "lang": "en"
+    },
+    {
+      "text": "should be looking for is imperfection",
+      "duration": 3520,
+      "offset": 341840,
+      "lang": "en"
+    },
+    {
+      "text": "within a logical structure which is",
+      "duration": 4000,
+      "offset": 343440,
+      "lang": "en"
+    },
+    {
+      "text": "often healthier. We know markets are",
+      "duration": 4880,
+      "offset": 345360,
+      "lang": "en"
+    },
+    {
+      "text": "messy, returns are fat tailed, regime",
+      "duration": 4400,
+      "offset": 347440,
+      "lang": "en"
+    },
+    {
+      "text": "shift, and your strategy should be",
+      "duration": 3920,
+      "offset": 350240,
+      "lang": "en"
+    },
+    {
+      "text": "simple enough to survive that reality,",
+      "duration": 4240,
+      "offset": 351840,
+      "lang": "en"
+    },
+    {
+      "text": "not perfectly shaped to yesterday's",
+      "duration": 3840,
+      "offset": 354160,
+      "lang": "en"
+    },
+    {
+      "text": "dots. In the next video, I'll show you",
+      "duration": 3679,
+      "offset": 356080,
+      "lang": "en"
+    },
+    {
+      "text": "how some of these principles apply to",
+      "duration": 3520,
+      "offset": 358000,
+      "lang": "en"
+    },
+    {
+      "text": "one of my live trading strategies and",
+      "duration": 4081,
+      "offset": 359759,
+      "lang": "en"
+    },
+    {
+      "text": "why simplicity is often more powerful",
+      "duration": 4320,
+      "offset": 361520,
+      "lang": "en"
+    },
+    {
+      "text": "than optimization. Thanks for watching",
+      "duration": 4880,
+      "offset": 363840,
+      "lang": "en"
+    },
+    {
+      "text": "and I'll see you in the next",
+      "duration": 2880,
+      "offset": 365840,
+      "lang": "en"
+    }
+  ],
+  "text": "Hi guys, welcome back. In previous videos, we've talked about probability, fat tails, and the fact that markets are not normally distributed. But today, I want to talk about something that's even more dangerous than volatility, and that's selfdeception. Because building systematic investing strategies isn't that hard, but building one that actually survives live trading into the future is incredibly difficult. And the reason most fail comes down to one idea, and that's degrees of freedom. Let's start with something uncomfortable. If you give me enough flexibility, I can build a strategy with extraordinary historical returns. So that's a high sharp ratio, low draw down, and a beautiful looking equity curve. But the problem is it's probably completely useless. Why? Because markets are noisy. And if you search hard enough, you'll eventually find patterns within noise. That doesn't mean you've discovered an edge. It means you've discovered randomness dressed up as skill. Degrees of freedom simply means how many adjustable decisions are you making within your system framework. Every time you choose a look back period, a different threshold value, a filter, an entry, an exit condition, a ranking metric, you're adding flexibility. And it may feel powerful, but it's dangerous because flexibility allows you to curve fit to historical data. Let me give you a visual example. Imagine I put 10 dots on a chart. Now I give you a straight ruler and say draw a line that fits these dots. It won't fit perfectly. There'll be gaps. There'll be errors. It won't look perfect. But now imagine instead I give you a bendable wire. You can twist it. You can curve it. You can shape it however you like. With enough bends, the wire can pass through every single dot perfectly. It'll look precise. It'll look intelligent. It'll look predictive. But it's not predictive at all. It's just memorizing the past. The straight lines have low degrees of freedom. But the bendable wire has high degrees of freedom. And the more bends that you allow, the more perfectly you're explaining history and the more fragile the model actually becomes. That's exactly what overoptimization and trading systems does. They actually twist themselves around historical noise. And here's where it actually gets worse. Let's say you test 15 different moving average lengths. You test 10 different RSI thresholds, five different exit rules, and three different stop- losses. That's not one strategy. It's actually 2,250 combinations of the different parameters. So even if you didn't consciously think of it in that way, one of them will look incredible. Statistically, something has to. But that winner might just be the luckiest random configuration. And that's exactly what data mining is in system development. It's extremely seductive because the output looks scientific. We know that markets are not normally distributed. We know that extreme events cluster. regime shift. Outliers often dominate returns. And when you optimize heavily on past data, you are often optimizing around specific historical events. By way of example, maybe your strategy works beautifully because it was perfectly tuned to 2008 or perfectly tuned to say the 2020 rebound during CO, but those exact sequences may never repeat in the future. And if your system requires those precise shapes to succeed, it will fail. Here's a simple robustness test that I use. If you change a parameter even slightly, does the performance collapse? For example, if your moving average works at 183 days, but it fails at 180 or 190, that's usually a massive red flag. Real edges are not razor thin. Momentum and mean reversion work across a variety of ranges. If your system only works on, say, an RSI of 30, you're not trading an edge. You're trading a coincidence. Complex systems feel intelligent. You feel advanced, quantitative, sophisticated even. But complexity often hides fragility. But with simple, more robust systems, they feel uncomfortable. They leave some performance on the table. They don't look perfectly optimized. They don't squeeze every drop out of the compound annual growth rate. But simple systems tend to survive. And survival is the only thing that compounds. So when building a systematic strategy, aim for logical economic reasoning, broad parameter stability, fewer moving parts, clear behavioral performance across multiple regimes, out of sample validation. Ask yourself, would this make sense if I hadn't seen a back test? And if the answer's no, you're probably reverse engineering the results. The goal of systematic investing is not to win the back test. It's not to produce the smoothest historical equity curve. The goal is to build structure that has positive expectancy across uncertain futures. You're not trying to predict your structuring probabilities. The more degrees of freedom that you introduce, the more you risk structuring noise instead of an actual real edge. The market doesn't care about your workflow or your optimization process. It will expose fragility immediately. Many traders think, \"Oh, the market's changed.\" When often it hasn't. The strategy was simply too tailored to the past. And once live data deviates only slightly, performance collapses. It's not bad luck. That's overfitting revealing itself. When I personally design strategies, I try to use minimal parameters. I avoid micro optimization. I prefer blended signals over precise thresholds. I validate long histories. I combine independent edges rather than one perfect one because no single edge will work all of the time. And robustness beats precision every time. So if you remember one thing from this video, let it be this. A perfect back test is usually a warning sign. What you should be looking for is imperfection within a logical structure which is often healthier. We know markets are messy, returns are fat tailed, regime shift, and your strategy should be simple enough to survive that reality, not perfectly shaped to yesterday's dots. In the next video, I'll show you how some of these principles apply to one of my live trading strategies and why simplicity is often more powerful than optimization. Thanks for watching and I'll see you in the next",
+  "cited_at": "2026-05-24T04:42:01.121Z"
+}

@@ -1,0 +1,339 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "_q4fLhzRwWg",
+  "url": "https://www.youtube.com/watch?v=_q4fLhzRwWg",
+  "segments": [
+    {
+      "text": "[Applause]",
+      "duration": 3080,
+      "offset": 640,
+      "lang": "en"
+    },
+    {
+      "text": "Hi, Tom Hartman here and here's how you",
+      "duration": 4241,
+      "offset": 4799,
+      "lang": "en"
+    },
+    {
+      "text": "can get an automated strategy on Trading",
+      "duration": 5120,
+      "offset": 7120,
+      "lang": "en"
+    },
+    {
+      "text": "View connected to Trader Post. Quickly",
+      "duration": 5120,
+      "offset": 9040,
+      "lang": "en"
+    },
+    {
+      "text": "from the Trader Post back end, let's go",
+      "duration": 4520,
+      "offset": 12240,
+      "lang": "en"
+    },
+    {
+      "text": "ahead and create a",
+      "duration": 4800,
+      "offset": 14160,
+      "lang": "en"
+    },
+    {
+      "text": "strategy. We'll connect it to the asset",
+      "duration": 6840,
+      "offset": 16760,
+      "lang": "en"
+    },
+    {
+      "text": "class we're interested in and hit save.",
+      "duration": 7079,
+      "offset": 18960,
+      "lang": "en"
+    },
+    {
+      "text": "Let's connect this to our paper",
+      "duration": 4679,
+      "offset": 23600,
+      "lang": "en"
+    },
+    {
+      "text": "broker and create",
+      "duration": 6321,
+      "offset": 26039,
+      "lang": "en"
+    },
+    {
+      "text": "it. On the subscription settings for the",
+      "duration": 6761,
+      "offset": 28279,
+      "lang": "en"
+    },
+    {
+      "text": "strategy, I'm going to select autosubmit",
+      "duration": 4800,
+      "offset": 32360,
+      "lang": "en"
+    },
+    {
+      "text": "so that trades get automatically",
+      "duration": 4320,
+      "offset": 35040,
+      "lang": "en"
+    },
+    {
+      "text": "executed. I'm going to allow bullish and",
+      "duration": 4559,
+      "offset": 37160,
+      "lang": "en"
+    },
+    {
+      "text": "bearish trades and hit",
+      "duration": 4920,
+      "offset": 39360,
+      "lang": "en"
+    },
+    {
+      "text": "save. Once I enable the",
+      "duration": 5041,
+      "offset": 41719,
+      "lang": "en"
+    },
+    {
+      "text": "strategy and agree to the",
+      "duration": 5799,
+      "offset": 44280,
+      "lang": "en"
+    },
+    {
+      "text": "terms, my strategy is now online. Now",
+      "duration": 5040,
+      "offset": 46760,
+      "lang": "en"
+    },
+    {
+      "text": "we'll head over to Trading",
+      "duration": 5401,
+      "offset": 50079,
+      "lang": "en"
+    },
+    {
+      "text": "View and add a strategy to my",
+      "duration": 6360,
+      "offset": 51800,
+      "lang": "en"
+    },
+    {
+      "text": "chart. Here I'll add a simple momentum",
+      "duration": 5800,
+      "offset": 55480,
+      "lang": "en"
+    },
+    {
+      "text": "strategy from Trading",
+      "duration": 3120,
+      "offset": 58160,
+      "lang": "en"
+    },
+    {
+      "text": "View. Then I need to set up an alert",
+      "duration": 7039,
+      "offset": 62760,
+      "lang": "en"
+    },
+    {
+      "text": "where I choose this strategy as my",
+      "duration": 7040,
+      "offset": 65920,
+      "lang": "en"
+    },
+    {
+      "text": "condition and I replace the message with",
+      "duration": 5881,
+      "offset": 69799,
+      "lang": "en"
+    },
+    {
+      "text": "a JSON message expected at Trader Post.",
+      "duration": 4320,
+      "offset": 72960,
+      "lang": "en"
+    },
+    {
+      "text": "I can grab that by clicking on the web",
+      "duration": 4079,
+      "offset": 75680,
+      "lang": "en"
+    },
+    {
+      "text": "hook button at the top right of the",
+      "duration": 5280,
+      "offset": 77280,
+      "lang": "en"
+    },
+    {
+      "text": "trader post back end. Copy the trading",
+      "duration": 4680,
+      "offset": 79759,
+      "lang": "en"
+    },
+    {
+      "text": "view",
+      "duration": 5800,
+      "offset": 82560,
+      "lang": "en"
+    },
+    {
+      "text": "strategy and paste that within the",
+      "duration": 6521,
+      "offset": 84439,
+      "lang": "en"
+    },
+    {
+      "text": "field. When I do that, these",
+      "duration": 4439,
+      "offset": 88360,
+      "lang": "en"
+    },
+    {
+      "text": "placeholders will be replaced with the",
+      "duration": 3360,
+      "offset": 90960,
+      "lang": "en"
+    },
+    {
+      "text": "appropriate values at the time that the",
+      "duration": 4000,
+      "offset": 92799,
+      "lang": "en"
+    },
+    {
+      "text": "alert is sent. The last thing that I",
+      "duration": 4080,
+      "offset": 94320,
+      "lang": "en"
+    },
+    {
+      "text": "need to do here is make sure that on my",
+      "duration": 3441,
+      "offset": 96799,
+      "lang": "en"
+    },
+    {
+      "text": "notifications tab that the signal is",
+      "duration": 3679,
+      "offset": 98400,
+      "lang": "en"
+    },
+    {
+      "text": "being sent to my Trader Post web hook",
+      "duration": 3760,
+      "offset": 100240,
+      "lang": "en"
+    },
+    {
+      "text": "URL. Let's go ahead and grab that from",
+      "duration": 6241,
+      "offset": 102079,
+      "lang": "en"
+    },
+    {
+      "text": "the back end. I'll click on the copy",
+      "duration": 4320,
+      "offset": 104000,
+      "lang": "en"
+    },
+    {
+      "text": "button and paste that within the web",
+      "duration": 3920,
+      "offset": 108680,
+      "lang": "en"
+    },
+    {
+      "text": "hook URL",
+      "duration": 6000,
+      "offset": 111040,
+      "lang": "en"
+    },
+    {
+      "text": "field. Once created, it's not prepared.",
+      "duration": 6479,
+      "offset": 112600,
+      "lang": "en"
+    },
+    {
+      "text": "Let's wait for a signal to come",
+      "duration": 4880,
+      "offset": 117040,
+      "lang": "en"
+    },
+    {
+      "text": "through. There we have an alert. Now, if",
+      "duration": 5000,
+      "offset": 119079,
+      "lang": "en"
+    },
+    {
+      "text": "we head back over to our trader post",
+      "duration": 5280,
+      "offset": 121920,
+      "lang": "en"
+    },
+    {
+      "text": "back end, we can go take a look at that",
+      "duration": 4721,
+      "offset": 124079,
+      "lang": "en"
+    },
+    {
+      "text": "web hook to make sure that the signal",
+      "duration": 2759,
+      "offset": 127200,
+      "lang": "en"
+    },
+    {
+      "text": "came",
+      "duration": 4480,
+      "offset": 128800,
+      "lang": "en"
+    },
+    {
+      "text": "through. We could see it here.",
+      "duration": 5481,
+      "offset": 129959,
+      "lang": "en"
+    },
+    {
+      "text": "Let's click on that signal. I can see",
+      "duration": 4480,
+      "offset": 133280,
+      "lang": "en"
+    },
+    {
+      "text": "that the position has been opened. And",
+      "duration": 4159,
+      "offset": 135440,
+      "lang": "en"
+    },
+    {
+      "text": "that's it. That's how you can get",
+      "duration": 3920,
+      "offset": 137760,
+      "lang": "en"
+    },
+    {
+      "text": "started with connecting Trading View to",
+      "duration": 4640,
+      "offset": 139599,
+      "lang": "en"
+    },
+    {
+      "text": "Trader Post.",
+      "duration": 2559,
+      "offset": 141680,
+      "lang": "en"
+    }
+  ],
+  "text": "[Applause] Hi, Tom Hartman here and here's how you can get an automated strategy on Trading View connected to Trader Post. Quickly from the Trader Post back end, let's go ahead and create a strategy. We'll connect it to the asset class we're interested in and hit save. Let's connect this to our paper broker and create it. On the subscription settings for the strategy, I'm going to select autosubmit so that trades get automatically executed. I'm going to allow bullish and bearish trades and hit save. Once I enable the strategy and agree to the terms, my strategy is now online. Now we'll head over to Trading View and add a strategy to my chart. Here I'll add a simple momentum strategy from Trading View. Then I need to set up an alert where I choose this strategy as my condition and I replace the message with a JSON message expected at Trader Post. I can grab that by clicking on the web hook button at the top right of the trader post back end. Copy the trading view strategy and paste that within the field. When I do that, these placeholders will be replaced with the appropriate values at the time that the alert is sent. The last thing that I need to do here is make sure that on my notifications tab that the signal is being sent to my Trader Post web hook URL. Let's go ahead and grab that from the back end. I'll click on the copy button and paste that within the web hook URL field. Once created, it's not prepared. Let's wait for a signal to come through. There we have an alert. Now, if we head back over to our trader post back end, we can go take a look at that web hook to make sure that the signal came through. We could see it here. Let's click on that signal. I can see that the position has been opened. And that's it. That's how you can get started with connecting Trading View to Trader Post.",
+  "cited_at": "2026-05-24T05:04:36.373Z"
+}

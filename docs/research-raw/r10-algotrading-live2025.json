@@ -1,0 +1,143 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "live deployed strategy 2025 results",
+  "items": [
+    {
+      "title": "Results of a Strategy i'm working on top crypto coins",
+      "url": "https://www.reddit.com/r/algotrading/comments/1puch9n/results_of_a_strategy_im_working_on_top_crypto/",
+      "snippet": "Been a while since i posted   \n  \nResults of a trading strategy i'm working in the Crypto Markets \n\nThe strategy just trades the Top 3 Crypto coins in an exchange sorted by Min day history and volume on a daily basis\n\nThe Results are inclusive of fees and slippage ,  \nJust 2% of the capital is deployed on a daily basis on preps. \n\nOSS after 2022 \n\nThough i'd share this as i really like the concept",
+      "published_at": "2025-12-24T02:46:25.000Z",
+      "subreddit": "algotrading",
+      "score": 138,
+      "num_comments": 87
+    },
+    {
+      "title": "Using Machine Learning to Build Quarterly Portfolios",
+      "url": "https://www.reddit.com/r/algotrading/comments/1segicn/using_machine_learning_to_build_quarterly/",
+      "snippet": "Hey all, I wanted to share a project I’ve been working on that focuses on using fundamental data from financial reports to build portfolios that are rotated on a quarterly basis. I feel this is in contrast to many algotrading strategies posted here that rely on high-frequency trading or short-term swing trading, and I thought it would be helpful to show how these methods can be applied to a low-fr",
+      "published_at": "2026-04-07T00:22:45.000Z",
+      "subreddit": "algotrading",
+      "score": 29,
+      "num_comments": 40
+    },
+    {
+      "title": "My first algo (paper) trade!",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ohmyew/my_first_algo_paper_trade/",
+      "snippet": "I’ve been thinking about doing this for a while and finally signed up for QuantaConnect this weekend… learned a bit of python thru YT videos (haven’t programmed in 15 years…) plus help from Claude AI… 4hrs later and was able to develop my initial MVP of my TQQQ grid strategy… did a bunch of backtesting and tuning, and today published it out to the live paper trading platform… all around fun and ed",
+      "published_at": "2025-10-27T18:50:36.000Z",
+      "subreddit": "algotrading",
+      "score": 86,
+      "num_comments": 33
+    },
+    {
+      "title": "Scaling a  Systematic Conversion: Solving the \"Starvation Paradox\" and NBBO Liquidity Constraints",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rmraek/scaling_a_systematic_conversion_solving_the/",
+      "snippet": "Hey everyone,\n\nI’ve been refining a systematic options backtest focused on **relative value premium capture** and am looking for feedback on execution assumptions.\n\nI'm using **ThetaData NBBO quote history** and simulating   to understand how the strategy handles real-world liquidity.\n\n**Strategy Concept**\n\nDelta-neutral **multi-leg option structures** designed to isolate relative value between li",
+      "published_at": "2026-03-06T21:49:41.000Z",
+      "subreddit": "algotrading",
+      "score": 3,
+      "num_comments": 7
+    },
+    {
+      "title": "Backtest results for a simple \"Buy the Dip\" strategy",
+      "url": "https://www.reddit.com/r/algotrading/comments/1f0689m/backtest_results_for_a_simple_buy_the_dip_strategy/",
+      "snippet": "I came across this trading strategy quite a while ago, and decided to revisit it and do some backtesting, with impressive results, so I wanted to share it and see if there's anything I missed or any improvements that can be made to it.\n\n**Concept:**\n\nStrategy concept is quite simple: If the day's close is near the bottom of the range, the next day is more likely to be an upwards move.\n\n**Setup ste",
+      "published_at": "2024-08-24T14:12:48.000Z",
+      "subreddit": "algotrading",
+      "score": 677,
+      "num_comments": 147
+    },
+    {
+      "title": "For the algotraders who have live deployment of their algorithms and are successful: how long did it take you to set this up? What led you to have confidence to deploy on live real account?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1sb4e9g/for_the_algotraders_who_have_live_deployment_of/",
+      "snippet": "I am asking bc im curious, i've been spending hours nonstop working on my algo ideas. ive been trying to connect my ideas in python to IBKR's api. \n\nso far i have:\n\n* real time deployment on a paper acc testing my strats\n* i have backtests\n* machine learning optimizing params (i learned the hard way that overfitting can happen so i needed to avoid this)\n* monte carlo sims\n* entry and exit filters\n",
+      "published_at": "2026-04-03T05:05:30.000Z",
+      "subreddit": "algotrading",
+      "score": 103,
+      "num_comments": 97
+    },
+    {
+      "title": "Live algo results after ~30 days of trading BTC on Binance",
+      "url": "https://www.reddit.com/r/algotrading/comments/1n3zd42/live_algo_results_after_30_days_of_trading_btc_on/",
+      "snippet": "Those are the results of my Algo after around 30 days of trading. This initial dip was caused more because of the live trading algorithm than the strategy, it was ignoring some exit signals because it wasnt handling the data very well( it wouse lose most of the profit at that time , but wouldnt reach negative values). After that I corrected it, and test every week if the trades look like the ones ",
+      "published_at": "2025-08-30T11:35:00.000Z",
+      "subreddit": "algotrading",
+      "score": 275,
+      "num_comments": 96
+    },
+    {
+      "title": "Results of my Mean Reversion Trading Strategy in the Forex Markets!",
+      "url": "https://www.reddit.com/r/algotrading/comments/1kw0vuq/results_of_my_mean_reversion_trading_strategy_in/",
+      "snippet": "These above are the results of my Mean Reversion Strategy in the Forex Markets!   \n  \nReally really happy with the work i've done on this   \nIn sample data was till the end of 2020   \nAnd Out of Sample 2021 onwards  \nPitched this today as well to two funds as well which went well as well \n\nThe overall strategy has one trend following strategy added to it  \nExample : If we're going long on EURUSD w",
+      "published_at": "2025-05-26T17:55:29.000Z",
+      "subreddit": "algotrading",
+      "score": 268,
+      "num_comments": 96
+    },
+    {
+      "title": "[Update] Roast my options strategy again, now with 4 weeks of live data (19 trading days)",
+      "url": "https://www.reddit.com/r/algotrading/comments/1t8013r/update_roast_my_options_strategy_again_now_with_4/",
+      "snippet": "Original thread: [https://www.reddit.com/r/algotrading/s/5PYaN8YmIL](https://www.reddit.com/r/algotrading/s/5PYaN8YmIL)\n\nA few weeks ago I posted my first 2 weeks of results and got deservedly roasted for small sample size, tail risk, overfitting concerns, and “this will blow up eventually.”  \nFair enough.  \nNow I have 19 live trading days instead of 9, so I wanted to post an update with more metr",
+      "published_at": "2026-05-09T09:22:30.000Z",
+      "subreddit": "algotrading",
+      "score": 54,
+      "num_comments": 43
+    },
+    {
+      "title": "Full Results of my Breakout Strategy in Crypto",
+      "url": "https://www.reddit.com/r/algotrading/comments/1lemuu0/full_results_of_my_breakout_strategy_in_crypto/",
+      "snippet": "\\- Training period 2020 to 2022   \n\\- OSS from 2023 s, we walk forward on a daily basis   \n\\- Coins are selected on a daily basis from a Crypto Universe of 60+ alt coins  \n\\- Strategy runs 1/2 days a week , depending on the criterion   \n\\- Filtered out trades with tight ranges ( example a range is &lt;1% this would need more margin and much higher fees )   \n\\- Coin selection is done on the basis o",
+      "published_at": "2025-06-18T17:18:03.000Z",
+      "subreddit": "algotrading",
+      "score": 133,
+      "num_comments": 87
+    },
+    {
+      "title": "Backtest results for a simple “Multiple Lower Highs” Strategy",
+      "url": "https://www.reddit.com/r/algotrading/comments/1gcoq4m/backtest_results_for_a_simple_multiple_lower/",
+      "snippet": "I’ve been testing out various ideas for identifying reversals and this particular one produced interesting results, so I wanted to share it and get some feedback / suggestions to improve it.\n\n**Concept:**\n\nStrategy concept is quite simple: If the price is making continuous lower highs, then eventually it will want to revert to the mean. The more lower highs in a row, the more likely it is that the",
+      "published_at": "2024-10-26T16:19:24.000Z",
+      "subreddit": "algotrading",
+      "score": 175,
+      "num_comments": 116
+    },
+    {
+      "title": "Results of a Breakout Strategy i'm developing",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ldiiwq/results_of_a_breakout_strategy_im_developing/",
+      "snippet": "The strategy is on the Crypto Markets   \nBacktests include all possible cost's associated with it.   \nThe strategy trade's only a select few days of the week  \nAnd chooses from a universe of 50+ coins to trade from - from which the top one's are filtered with certain metrics and we choose the top one's and trade those for the week. \n\nThis is a sub strategy : we're going to deploy it with our alrea",
+      "published_at": "2025-06-17T09:16:58.000Z",
+      "subreddit": "algotrading",
+      "score": 92,
+      "num_comments": 74
+    },
+    {
+      "title": "Checklist before going live with your strategy?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1tklpn6/checklist_before_going_live_with_your_strategy/",
+      "snippet": "TL;DR: Any checklist before going live? How long would you run in \"paper\" mode before actually going live?\n\nI been backtesting a strategy for some time tweaking parameters here and there. The strategy is kind of high volume of trades across a vast universe of stocks (monitoring ~250-300 stocks at a time with anywhere 50-150+ trades daily) . In my back testing, I have done the following:\n\n- Backtes",
+      "published_at": "2026-05-22T15:06:34.000Z",
+      "subreddit": "algotrading",
+      "score": 12,
+      "num_comments": 18
+    },
+    {
+      "title": "Strategy Backtest results. Go or no go?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1riunjt/strategy_backtest_results_go_or_no_go/",
+      "snippet": "Hello all.\n\nAfter some days of optimization, found the potential candidate to go paper trading and then live.\n\nTell me what you think about the stats.\n\n\\*\\*The strategy:\\*\\*  \n  \nIts a candle pattern as signal strategy, with 4 filters (RSI, CCI, MFI, Stochastic). The pattern (bear/bull engulfing) gives the signal, but the trade only happens with at least 3 of the filters positive on the expected d",
+      "published_at": "2026-03-02T14:43:51.000Z",
+      "subreddit": "algotrading",
+      "score": 4,
+      "num_comments": 32
+    },
+    {
+      "title": "Deployed strategy with limited test history",
+      "url": "https://www.reddit.com/r/algotrading/comments/1snf1bb/deployed_strategy_with_limited_test_history/",
+      "snippet": "The strategy is a basic mean reversion one that trades swing moves, and it aims to get good entries, and manage the position in an adaptive way using the many signals it processes.\n\nR:R of 3:1 with a high profit factor, 65% win rate. Forward tested 6 weeks with 50% up, and I'm up 10% after 2 weeks live. The problem is the backtest only covers the past 6 months. I got the data I need for further te",
+      "published_at": "2026-04-16T20:14:50.000Z",
+      "subreddit": "algotrading",
+      "score": 1,
+      "num_comments": 21
+    }
+  ],
+  "cited_at": "2026-05-24T04:41:06.997Z"
+}

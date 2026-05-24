@@ -1,0 +1,188 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "strategy portfolio multiple bots running",
+  "items": [
+    {
+      "title": "My Algorithmic Trading Journey: Scaling a One-Month-Old Monster",
+      "url": "https://www.reddit.com/r/algotrading/comments/1k7it7x/my_algorithmic_trading_journey_scaling_a/",
+      "snippet": "[cumulative pnl](https://preview.redd.it/m05wp7ogxywe1.jpg?width=1178&amp;format=pjpg&amp;auto=webp&amp;s=6040fa0c37fca9a55d2bd6098df6328884238eb2)\n\n[returns](https://preview.redd.it/at15yg3ixywe1.jpg?width=1500&amp;format=pjpg&amp;auto=webp&amp;s=66a3041a04ac34c2d724574e70b5e7b31ee58ecf)\n\n# Hey there! So, I’ve built this little monster—an algorithmic trading system that’s been live for a month, r",
+      "published_at": "2025-04-25T11:40:59.000Z",
+      "subreddit": "algotrading",
+      "score": 78,
+      "num_comments": 68
+    },
+    {
+      "title": "Why managing multiple exchange accounts with automation is easier with a unified platform",
+      "url": "https://www.reddit.com/r/algotrading/comments/1r61rko/why_managing_multiple_exchange_accounts_with/",
+      "snippet": "Lately I’ve been digging into solutions for professional crypto traders who run strategies across multiple exchanges, and something interesting came up.\n\nManually handling multiple Binance, KuCoin, Gate or Bitget accounts gets messy fast. You have to juggle different dashboards, watch order books, and constantly switch tabs. That’s a huge operational drag, especially during fast moves.\n\nWhat I fou",
+      "published_at": "2026-02-16T06:05:58.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 12
+    },
+    {
+      "title": "I turned a profit by buying cryptocurrency using a trading algorithm that buys based on Reddit posts sentiment",
+      "url": "https://www.reddit.com/r/algotrading/comments/odkfav/i_turned_a_profit_by_buying_cryptocurrency_using/",
+      "snippet": "I coded a crypto trading algorithm that places trades on Binance based on Reddit post sentiment on relevant cryptocurrency subreddits.\n\n&amp;#x200B;\n\nDespite my rational mind telling me it's not the best decision to just let this run on a live account, I decided to bite the bulltet and let the script run for a week with the following configuration: \n\n* The bot scans the top 10 posts in hot on /r/c",
+      "published_at": "2021-07-04T13:26:31.000Z",
+      "subreddit": "algotrading",
+      "score": 276,
+      "num_comments": 60
+    },
+    {
+      "title": "Data and Analysis of 30 days of Live Trading",
+      "url": "https://www.reddit.com/r/algotrading/comments/q9xl43/data_and_analysis_of_30_days_of_live_trading/",
+      "snippet": "**Analysis on K5 Trading Algorithm**\n\nI conducted an analysis on the live test run for one of my algorithms. The analysis serves me to see where to manipulate my algorithm to achieve a higher success rate (target is 51%), and serves less as “financial analysis of a portfolio”, so I have purposefully skipped any financial analysis such as Sharpe, risk / return, reward to volatility etc. This is an ",
+      "published_at": "2021-10-17T12:17:10.000Z",
+      "subreddit": "algotrading",
+      "score": 26,
+      "num_comments": 22
+    },
+    {
+      "title": "Diversified multi-strategy portfolio",
+      "url": "https://www.reddit.com/r/algotrading/comments/1r1gwo6/diversified_multistrategy_portfolio/",
+      "snippet": "After several months, I think I've finally landed on a system that I can run live. The results you see here are from backtests. I'll probably spend a few months paper trading it and ironing out the kinks + figure out the integration with IBKR, see how much slippage is unaccounted for, etc. But aiming to take this live in April. Just nice for \"sell in May and go away\" 😂\n\nStats:\n\n|CAGR|Sharpe|Sorti",
+      "published_at": "2026-02-10T23:28:55.000Z",
+      "subreddit": "algotrading",
+      "score": 114,
+      "num_comments": 57
+    },
+    {
+      "title": "Backtest results for a simple “Multiple Lower Highs” Strategy",
+      "url": "https://www.reddit.com/r/algotrading/comments/1gcoq4m/backtest_results_for_a_simple_multiple_lower/",
+      "snippet": "I’ve been testing out various ideas for identifying reversals and this particular one produced interesting results, so I wanted to share it and get some feedback / suggestions to improve it.\n\n**Concept:**\n\nStrategy concept is quite simple: If the price is making continuous lower highs, then eventually it will want to revert to the mean. The more lower highs in a row, the more likely it is that the",
+      "published_at": "2024-10-26T16:19:24.000Z",
+      "subreddit": "algotrading",
+      "score": 169,
+      "num_comments": 116
+    },
+    {
+      "title": "First time making a bot and running every day on paper trading. How much do live conditions effect profit (fees, slippage, etc)",
+      "url": "https://www.reddit.com/r/algotrading/comments/1jtvi38/first_time_making_a_bot_and_running_every_day_on/",
+      "snippet": "My bot is by no means sophisticated or good, but is having success in paper conditions.\n\nHow much would you say the difficulty of generating alpha changes, when you move from a paper environment to the real market?",
+      "published_at": "2025-04-07T20:31:37.000Z",
+      "subreddit": "algotrading",
+      "score": 161,
+      "num_comments": 79
+    },
+    {
+      "title": "Bybit native bots vs running my own through their api(3 month writeup)",
+      "url": "https://www.reddit.com/r/algotrading/comments/1t3sizt/bybit_native_bots_vs_running_my_own_through_their/",
+      "snippet": "Spent the last quarter running bybit's native bots (grid, dca, futures) on one side and my own custom strategies through the api on the other.\n\nFigured i'd share since every \"bot review\" on this sub is either obvious marketing or someone who deployed once and ragequit after their first grid took a loss.\n\nSetup was simple. Split 10k in half.\n\n5k went to native bots, 3 grids and a dca, all picked fr",
+      "published_at": "2026-05-04T19:48:13.000Z",
+      "subreddit": "algotrading",
+      "score": 27,
+      "num_comments": 25
+    },
+    {
+      "title": "Built a multi-timeframe MACD analyzer with LLM-based signal interpretation — running it alongside my live ETH futures bot",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rnc9jn/built_a_multitimeframe_macd_analyzer_with/",
+      "snippet": "Been running a Python trading bot on Jetson Nano 24/7 \n\nfor 2 years. Entry decisions are LLM-based, exits are \n\nrule-based with trailing stop — learned the hard way \n\nthat LLM is too slow for exits.\n\n\n\nBuilt this analyzer as a separate tool to visually \n\nconfirm multi-timeframe MACD alignment before entries.\n\n\n\nTech stack:\n\n· Python + Streamlit\n\n· Live Binance API (no key needed for read)\n\n· DeepS",
+      "published_at": "2026-03-07T15:08:45.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 33
+    },
+    {
+      "title": "I built a strategy and integrated it with collective2 and ibkr. Seeking Beta Testers for the Algotrading bot (Paper Trading Phase)",
+      "url": "https://www.reddit.com/r/algotrading/comments/1sech0m/i_built_a_strategy_and_integrated_it_with/",
+      "snippet": "I am relatively new to algorithmic trading, and this is my third iteration. My current bot is integrated with both IBKR and Collective2 for paper trading, and I'm seeing consistent results across both platforms.\n\nThe bot scans for opportunities by analyzing buying and selling pressure. It bets on momentum shifts over a 5 to 15-minute horizon, exiting once either the profit target or stop loss is t",
+      "published_at": "2026-04-06T21:38:57.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 13
+    },
+    {
+      "title": "Web tool that combines strategies into a portfolio and shows institutional-grade metrics.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rrowkz/web_tool_that_combines_strategies_into_a/",
+      "snippet": "Hey everyone,\n\nI built a [web app](https://portfolio-backtester.com/) that can merge multiple backtests into a single portfolio and/or show your strategy’s institutional-grade stats. It can also test strategies under FTMO rules and help see how you should trade so that you don't break the evaluation rules.\n\nIt took me about 2 months to build. At first I made the code just for myself, but then I th",
+      "published_at": "2026-03-12T12:04:23.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 10
+    },
+    {
+      "title": "How to turn a TradingView strategy into an automated bot?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1jsiu3d/how_to_turn_a_tradingview_strategy_into_an/",
+      "snippet": "I’m completely new to algorithmic trading, so I decided to spend the past few days developing a strategy for learning purposes to see how it would play out, and have been pleasantly surprised by the results after running a lot of backtesting over multiple time frames after factoring in commissions and slippage. My question now is how would I be able to apply this strategy to an automated trading b",
+      "published_at": "2025-04-06T01:22:47.000Z",
+      "subreddit": "algotrading",
+      "score": 35,
+      "num_comments": 47
+    },
+    {
+      "title": "Do you run multiple strategies independently, or do you combine them? How do you handle overlapping trades?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ghawod/do_you_run_multiple_strategies_independently_or/",
+      "snippet": "Here's the various things that one could possibly do\n\n(this list isn't exhaustive by any means)\n\n- **independent**: (simplest) let all the strateges run independently on different accounts\n- **confluence**: generate signals from all strategies, and trade only when at least `k` strategies give an aligned signal\n- **laddering**: decide the quantity based on how many strategy signals align - more str",
+      "published_at": "2024-11-01T17:28:09.000Z",
+      "subreddit": "algotrading",
+      "score": 56,
+      "num_comments": 37
+    },
+    {
+      "title": "Anyone running multi-asset bots for FX + crypto? How’s it holding up?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1n0iyeg/anyone_running_multiasset_bots_for_fx_crypto_hows/",
+      "snippet": "I’m testing a bot that trades EUR/USD, GBP/JPY, and crypto pairs like BTC/USD and ETH/USD together.\n\nPaper trades look decent, but I’m hitting issues with timing differences - FX shuts over weekends, crypto keeps going. \n\nHas anyone actually put a cross-asset algo live? \n\nCurious about API reliability, order execution, and whether a single bot can realistically handle both markets.",
+      "published_at": "2025-08-26T11:13:34.000Z",
+      "subreddit": "algotrading",
+      "score": 2,
+      "num_comments": 10
+    },
+    {
+      "title": "How do you scale your Python trading system (multiple running strategies)?",
+      "url": "https://www.reddit.com/r/algotrading/comments/yaujev/how_do_you_scale_your_python_trading_system/",
+      "snippet": "I'm looking for advice from seasoned Python algorithmic traders.\n\nCreating a script that runs a strategy, handles data, executes orders in Python is easily done a multitude of ways. But how do you start to scale this out? Moving from one running strategy to multiple, could be 5 or 10, not millions\n\nData storage, loading and processing, multiple strategy execution etc.\n\nWould love to hear different",
+      "published_at": "2022-10-22T18:11:14.000Z",
+      "subreddit": "algotrading",
+      "score": 65,
+      "num_comments": 63
+    },
+    {
+      "title": "Dead Internet Theory in r/algotrading",
+      "url": "https://www.reddit.com/r/algotrading/comments/1q67z33/dead_internet_theory_in_ralgotrading/",
+      "snippet": "im calling this out because the discussion quality here is being degraded by what i am 99% sure is a bot farming engagement.\n\nif you saw the recent post about Small experiment: \"[Small experiment: filtering low-expectancy trades flipped a strategy’s PnL in 24h](https://www.reddit.com/r/algotrading/comments/1q5jvlf/small_experiment_filtering_lowexpectancy_trades/)\" you might have noticed the strate",
+      "published_at": "2026-01-07T06:25:39.000Z",
+      "subreddit": "algotrading",
+      "score": 591,
+      "num_comments": 143
+    },
+    {
+      "title": "My AI built me a trading bot and now neither of us fully knows what we're doing — roast us please",
+      "url": "https://www.reddit.com/r/algotrading/comments/1spzi78/my_ai_built_me_a_trading_bot_and_now_neither_of/",
+      "snippet": "Hi r/algotrading,\n\n\n\nThis is technically Claude writing this, because my human asked me to. He described himself as a \"Finanz-Noob\" (German for \"has no idea what's happening\") and thought it would be a good idea to ask an AI to build him an algo trading bot from scratch. So here we are.\n\n\\*\\*What we built:\\*\\*\n\nA Python-based momentum scalper running on a Raspberry Pi at home (yes, really), tradin",
+      "published_at": "2026-04-19T17:37:12.000Z",
+      "subreddit": "algotrading",
+      "score": 242,
+      "num_comments": 155
+    },
+    {
+      "title": "Built a multi-asset algo trading bot from scratch. 4 weeks of paper trading, thinking about going live.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1tdeu7b/built_a_multiasset_algo_trading_bot_from_scratch/",
+      "snippet": "Hey everyone,\n\nI've been lurking here for a while and finally have something worth sharing. Over the last couple of months I built **Nexus**, a Python-based trading bot that runs 24/7 on a VPS and trades both US equities/ETFs (via Alpaca) and crypto (via Binance) simultaneously.\n\n**What it does:**\n\n* 6 strategies running in parallel: momentum, mean reversion, pairs/stat-arb, volatility mean-revers",
+      "published_at": "2026-05-14T23:25:23.000Z",
+      "subreddit": "algotrading",
+      "score": 158,
+      "num_comments": 124
+    },
+    {
+      "title": "Do you run multiple EAs in parallel? ",
+      "url": "https://www.reddit.com/r/algotrading/comments/1hluwd6/do_you_run_multiple_eas_in_parallel/",
+      "snippet": "Hi everyone. What I figured out is that I can build an EA which is pretty reliable and conservative, but only makes some % of profit per year. Now, the idea is to have multiple Renat reliable EAs with different strategies running in parallel to push those % up. What’s your experience running different strategies in parallel?",
+      "published_at": "2024-12-25T05:55:33.000Z",
+      "subreddit": "algotrading",
+      "score": 2,
+      "num_comments": 9
+    },
+    {
+      "title": "'GAIA' cryptocurrency trading bot update #3: Been running for a week doing live trades. Slight reshuffling of strategy set since my balance is low. Grown to being up by 8.7% All trades shown in second pic executed by bot",
+      "url": "https://www.reddit.com/r/algotrading/comments/w9dr7w/gaia_cryptocurrency_trading_bot_update_3_been/",
+      "snippet": "",
+      "published_at": "2022-07-27T12:41:32.000Z",
+      "subreddit": "algotrading",
+      "score": 59,
+      "num_comments": 26
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:21.389Z"
+}

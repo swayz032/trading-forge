@@ -1,0 +1,71 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "infrastructure stack production deployment",
+  "items": [
+    {
+      "title": "Why Do People Prefer Python?",
+      "url": "https://www.reddit.com/r/algotrading/comments/iex8ol/why_do_people_prefer_python/",
+      "snippet": "So I’m going to venture into algo trading. I’m fluent in Python and have knowledge of machine learning, but need to learn the investing side of things. \n\nTo my understanding, market data is constantly changing and your algorithms need to adapt quickly. On top of this, I anticipate running multiple metrics/computations in an ML stack concurrently. To me, it seems like high performance is a necessit",
+      "published_at": "2020-08-23T04:43:29.000Z",
+      "subreddit": "algotrading",
+      "score": 4,
+      "num_comments": 14
+    },
+    {
+      "title": "For those of us who think in strategy logic but don't want to maintain a Python codebase, what are you using?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rkub2n/for_those_of_us_who_think_in_strategy_logic_but/",
+      "snippet": "Genuine question for the community. I've been lurking here for about a year and I notice there are basically two camps:\n\n\n1. People who are full on developers building custom pipelines with pandas, backtrader, zipline, etc.\n\n\n2. People who have trading ideas but are stuck at the implementation phase because they don't code (or don't code well enough for production-grade stuff)\n\n\nI'm somewhere in b",
+      "published_at": "2026-03-04T19:03:30.000Z",
+      "subreddit": "algotrading",
+      "score": 7,
+      "num_comments": 27
+    },
+    {
+      "title": "EA Devs - Cloud copy trading platform: MetaApi vs self-hosted VPS with EAs? Need your real-world experience",
+      "url": "https://www.reddit.com/r/algotrading/comments/1tbtell/ea_devs_cloud_copy_trading_platform_metaapi_vs/",
+      "snippet": "Hey everyone,\n\nI'm building a cloud-based copy trading platform for myself (currently working with TradeLocker) and I want to add MT4/MT5 support. The idea is simple: replicate trades from a master account to multiple receiver accounts in real-time, with customizable rules (volume multiplier, equity protection, reverse mode, SL/TP filters, etc.).\n\nMy stack is TypeScript/Next.js so I'm weighing two",
+      "published_at": "2026-05-13T08:24:41.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 6
+    },
+    {
+      "title": "Running multi-asset algos (FX + Crypto) worth the hassle?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1mult8j/running_multiasset_algos_fx_crypto_worth_the/",
+      "snippet": "I’ve been experimenting with combining FX algos (EUR/USD, GBP/JPY) and crypto algos (BTC/USD, ETH/USD) under the same system. Paper trading results have been decent, but the real challenge seems to be the infrastructure side especially with crypto staying open on weekends while FX goes dark.\nHas anyone here actually deployed a cross-asset algo in production? Curious about execution stability, API ",
+      "published_at": "2025-08-19T15:33:21.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 6
+    },
+    {
+      "title": "What Happened to Quantconnect?",
+      "url": "https://www.reddit.com/r/algotrading/comments/13la56p/what_happened_to_quantconnect/",
+      "snippet": "Was an avid user of Quantconnect when I first started exploring algo trading a few years ago, specifically for backtesting, and had a very positive experience overall. I've since spent most of my time in local, custom backtesting frameworks but recently dove back into the site to quickly code up a couple strategies and take advantage of their infrastructure. In doing so, I encountered numerous iss",
+      "published_at": "2023-05-18T20:37:36.000Z",
+      "subreddit": "algotrading",
+      "score": 36,
+      "num_comments": 51
+    },
+    {
+      "title": "Alpha Process",
+      "url": "https://www.reddit.com/r/algotrading/comments/1k06fdi/alpha_process/",
+      "snippet": "Can anyone here please provide a complete example of an end to end alpha research and deployment lifecycle? I am looking to understand more about your alpha infrastructure and what it looks like. I don’t want your exact alpha signal or formula. I just want to understand how you formulate an idea, implement the alpha, and what the alpha itself actually looks like.\n\nIs the alpha a model? A number? A",
+      "published_at": "2025-04-15T23:36:22.000Z",
+      "subreddit": "algotrading",
+      "score": 12,
+      "num_comments": 8
+    },
+    {
+      "title": "Gauging Interest in Cryptocurrency Market Data",
+      "url": "https://www.reddit.com/r/algotrading/comments/8e0l0o/gauging_interest_in_cryptocurrency_market_data/",
+      "snippet": "Hi everyone,\nI've been collecting market data from several exchanges for the past several months and I'm trying to gauge how much interest there would be in the data. Here is an incomplete list of the data I've collected:\n\n* Binance tick-level, all currency pairs, full history (possibly missing last few ticks from delisted currency pairs)\n* Poloniex tick-level, all currency pairs, full history (po",
+      "published_at": "2018-04-22T02:47:27.000Z",
+      "subreddit": "algotrading",
+      "score": 23,
+      "num_comments": 34
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:20.513Z"
+}

@@ -1,0 +1,143 @@
+{
+  "source": "reddit",
+  "subreddit": "FuturesTrading",
+  "query": "automated bot strategy",
+  "items": [
+    {
+      "title": "Thoughts on automated/bot trading?",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1r5iwqx/thoughts_on_automatedbot_trading/",
+      "snippet": "I keep seeing that psychology is what gets in the way of profitable trading. If that’s the case why don’t the majority of traders find a good strategy, backtest it to verify its profitability, and then set up a bot to take psychology and fear out of the equation?",
+      "published_at": "2026-02-15T16:29:10.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 19,
+      "num_comments": 44
+    },
+    {
+      "title": "Been using AI for trading the last few months — here’s how it actually helps",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1ove05v/been_using_ai_for_trading_the_last_few_months/",
+      "snippet": "Been using AI in my trading for a few months now and honestly it’s been a game changer for workflow and improvement. I’m not doing any “automated trading” or bot stuff — just using it in practical ways to get better.\n\n**Daily session planning** – Every morning I drop in my premarket notes and it builds a session file. It can pull up similar setups from past days, remind me what happened the last t",
+      "published_at": "2025-11-12T18:58:05.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 4,
+      "num_comments": 24
+    },
+    {
+      "title": "Built an AI-assisted M1 Brent scalper 54% WR, PF 1.86, but 94% of profit came from ONE month. Curve fitting or real edge?",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1s6sol1/built_an_aiassisted_m1_brent_scalper_54_wr_pf_186/",
+      "snippet": "Hey guys, I’ve been grinding on a fully automated bot for Brent Crude (XTIUSD) on the M1 timeframe. Just wrapped up a proper backtest and the headline stats look pretty solid on paper… but something feels off and I need a reality check from people who’ve been doing this way longer than me.\n\n**Strategy in plain English (no code dumps, promise):**\n\n* Takes raw M1 OHLCV bars and builds features like ",
+      "published_at": "2026-03-29T11:32:23.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 0,
+      "num_comments": 5
+    },
+    {
+      "title": "Quantvue and other automation providers",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1lthftg/quantvue_and_other_automation_providers/",
+      "snippet": "So I've played and low level traded with different securities and crypto. I am trying to find something that fits the time I have to trade and put into this. Spending a lot of time on YouTube University (joke). Life is busy and the time I could spend trading micros or minis (which are the one's I'm landing on) I could spend doing work to advance my career or with my family - I would like to use th",
+      "published_at": "2025-07-07T01:16:31.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 1,
+      "num_comments": 28
+    },
+    {
+      "title": "weekly results from my fully automated NinjaTrader algorithm trading NQ futures",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1jbgf9z/weekly_results_from_my_fully_automated/",
+      "snippet": "Been working on converting my manual NQ trading strategy into a fully automated bot with NinjaTrader since October. Over that period it’s shown signs of potential but struggled at other times. I’ve continued to tweak it to where I am relatively comfortable running it live. \n\nHere are the results from this week. \n\nIt runs on the 1 min data series updating every tick, so I’ve only managed to get my ",
+      "published_at": "2025-03-14T22:37:19.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 19,
+      "num_comments": 14
+    },
+    {
+      "title": "Building a modular bot: criteria over strategies",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1muiwi0/building_a_modular_bot_criteria_over_strategies/",
+      "snippet": "Instead of following the classic route of building a bot around a fixed “strategy” (e.g., moving average crossovers, RSI signals, or predefined patterns), our approach has been to design a system based on independent criteria.\n\nBasic and advanced indicators\nThe bot calculates a wide range of indicators, from the most common ones (EMA, RSI, MACD) to more advanced tools (Ichimoku, ADX, ATR, CCI, SAR",
+      "published_at": "2025-08-19T13:46:19.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 0,
+      "num_comments": 15
+    },
+    {
+      "title": "Or strategy on full automation, thoughts/ideas welcome",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1oslf1j/or_strategy_on_full_automation_thoughtsideas/",
+      "snippet": "I tested las week, this ORB strategy I tweaked from an indicator @orenluxy created and I further modified. \nWork is still in progress. \nFrom my preliminary testing, I only made it work on MBT and MET... Yeah, not the classic instruments but that's why I wanted to ask the community here, anyone with experience trading these instruments? \nI'm reading these on demo account on full automation, via web",
+      "published_at": "2025-11-09T14:57:56.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 1,
+      "num_comments": 0
+    },
+    {
+      "title": "Has anyone used AI to try to backtest/automate strategies?",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1ib80ms/has_anyone_used_ai_to_try_to_backtestautomate/",
+      "snippet": "I do a lot of manual backtesting for my strats, but I do wonder if you could use AI to code and backtest on some platforms. Anyone ever tried this? I have 0 coding experience.",
+      "published_at": "2025-01-27T12:44:18.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 7,
+      "num_comments": 19
+    },
+    {
+      "title": "Automate TV futures strategy",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/18mzlhy/automate_tv_futures_strategy/",
+      "snippet": "What are some good brokers that provide you API access, for minimal to no fee, to the their SIM/DEMO environment to automate and test TV strategies? \n\nAnd I know using web hooks isn’t the most optimal way but I want to simply put it to test before implementing it directly to a broker.\n\nTS requires a 10k minimum, Tradovate requires 1k minimum with some ILA agreement from CME. \n\nIs there anyway I ca",
+      "published_at": "2023-12-20T17:10:15.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 6,
+      "num_comments": 19
+    },
+    {
+      "title": "Iran-US Oil 0DTE opening strategy with an 83% win rate",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1smqrt3/iranus_oil_0dte_opening_strategy_with_an_83_win/",
+      "snippet": "Tldr: Oil futures down premarket = Opening upwards move for SPX, take gains by trading 0DTE options and taking profits in the first 15 minutes. \n\n**Disclaimer:** yeah I know there's a ceasefire between Iran and the US. I was gonna post this a week ago but they announced the ceasefire that same day so I held off. In that time, the signal generation of this strategy has gone off the rails but I thin",
+      "published_at": "2026-04-16T02:30:45.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 160,
+      "num_comments": 67
+    },
+    {
+      "title": "Are there any algos/automated strategies that work consistently ?",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/un4m6o/are_there_any_algosautomated_strategies_that_work/",
+      "snippet": "Does anybody know any algos &amp; automated strategies that work ? Ninjatrader has tons of algos listed on their site ? Has anybody used these ?",
+      "published_at": "2022-05-11T07:55:31.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 1,
+      "num_comments": 14
+    },
+    {
+      "title": "Imantrading exposed?",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1ibkm5y/imantrading_exposed/",
+      "snippet": "isn't the line between gurus and anti-gurus getting too blurry?\n\nLet me first start by introducing the new meta for gurus and the like. First, they blow a million prop firm challenges, then finally get a couple of payouts and start their guru careers. Now they don't need to sell you a course or a subscription to a Discord or Patreon; all they have to do is shill whatever prop firm they associate w",
+      "published_at": "2025-01-27T21:27:38.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 124,
+      "num_comments": 169
+    },
+    {
+      "title": "Unable to monetise edge due to self sabotage.",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1t4cgn1/unable_to_monetise_edge_due_to_self_sabotage/",
+      "snippet": "Hi, I'm seeking some help here. I have an edge that I am very confident is profitable and scalable over the long term, if executed consistently. It involves one potential setup/trade per day if certain conditions are met.\n\nThe issue is I am unable to stop myself from breaking my own rules. I have tried all sorts of techniques such as isolating my trading pc, limiting hours, automating parts of the",
+      "published_at": "2026-05-05T11:19:14.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 12,
+      "num_comments": 31
+    },
+    {
+      "title": "Ask Me Anything",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/18m3tj4/ask_me_anything/",
+      "snippet": "A little intro, and I am keeping my name private, as this is not me trying to get exposure or sell you anything... Hopefully, this is allowed... I am just trying to give back to this fine group\n\n&amp;#x200B;\n\nI am a CTA/ Hedge fund manager in 2022 I finished top 10 in the US trading championship contest.\n\nWhile doing that, I was taking courses with the Van Tharp institute and found that the strate",
+      "published_at": "2023-12-19T14:57:56.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 35,
+      "num_comments": 250
+    },
+    {
+      "title": "Scalping ES For 5 ticks ($56 After Fees) During Asian Session",
+      "url": "https://www.reddit.com/r/FuturesTrading/comments/1si5lka/scalping_es_for_5_ticks_56_after_fees_during/",
+      "snippet": "Find an Asian session ES low with support that has hit 3/4 times, enter near the low, ride it back up as Asian session closes/London session brings in increased volume. Make $56/day, withdraw immediately to my savings account. Repeat. \n\nI’ve been doing this successfully for some time and want to know if it’s a genuine edge or if it’s going to blow up in my face at some point. \n\nTo be completely ho",
+      "published_at": "2026-04-11T01:36:09.000Z",
+      "subreddit": "FuturesTrading",
+      "score": 21,
+      "num_comments": 25
+    }
+  ],
+  "cited_at": "2026-05-24T04:41:02.317Z"
+}

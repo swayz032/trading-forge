@@ -1,0 +1,143 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "overfit curve fit",
+  "items": [
+    {
+      "title": "Meta Labeling for Algorithmic Trading: How to Amplify a Real Edge",
+      "url": "https://www.reddit.com/r/algotrading/comments/1lnm48w/meta_labeling_for_algorithmic_trading_how_to/",
+      "snippet": "I’ve commented briefly on some other posts mentioning this approach, and there usually seems to be some interest so I figured it would be good to make a full post. \n\nThere is a lot of misunderstanding and misconceptions about how to use machine learning for algo trading, and unrealistic expectations for what it’s capable of. \n\nI see many people asking about using machine learning to predict price,",
+      "published_at": "2025-06-29T18:41:22.000Z",
+      "subreddit": "algotrading",
+      "score": 626,
+      "num_comments": 88
+    },
+    {
+      "title": "4 years of a 15x-leveraged daily BTC signal — Sharpe 2.2, MDD -13%. Here's the stuff that actually kept leverage from killing me.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ss5btv/4_years_of_a_15xleveraged_daily_btc_signal_sharpe/",
+      "snippet": "Long-time lurker. Posting because I keep seeing \"15x leverage\" treated like an inherent death sentence here, and I think that framing misses the actual issue. The problem isn't leverage — it's running leverage over a signal that can't handle it.\n\nI built a daily long/short/flat model on BTC perp about 4 years ago. Backtest window is Aug 2021 → present (\\~1,500 trading days). Base signal Sharpe \\~2",
+      "published_at": "2026-04-22T00:06:16.000Z",
+      "subreddit": "algotrading",
+      "score": 80,
+      "num_comments": 60
+    },
+    {
+      "title": "What broke first when I moved from backtesting to live wasn't the strategy",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ssh4lq/what_broke_first_when_i_moved_from_backtesting_to/",
+      "snippet": "Everyone talks about overfitting and curve fitting as the big live trading failure modes.Those are real. But what actually caught me off guard was more mundane  execution latency, order handling edge cases, and how the algo behaved during low liquidity periods that backtests just glossed over.The strategy logic was fine. The infrastructure around it wasn't ready.Took me a while to separate the edg",
+      "published_at": "2026-04-22T10:06:47.000Z",
+      "subreddit": "algotrading",
+      "score": 35,
+      "num_comments": 52
+    },
+    {
+      "title": "Skepticism about skepticism about retail algo trading",
+      "url": "https://www.reddit.com/r/algotrading/comments/1msd6ww/skepticism_about_skepticism_about_retail_algo/",
+      "snippet": "Been reading this sub a lot and trying to learn more about daytrading. It seems people have a pretty negative view of the whole thing and consider it a losing proposition. But I'm finding myself being skeptical about all the negativity.\n\nFor context, I've developed an algo trading strategy that focuses on scalping open/close volatility for Mag 7 stocks and momentum trend-following in the mid-day p",
+      "published_at": "2025-08-17T00:51:02.000Z",
+      "subreddit": "algotrading",
+      "score": 81,
+      "num_comments": 59
+    },
+    {
+      "title": "Are the standard Bollinger Band parameters (20, 2) statistically significant, or just a legacy heuristic?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1q87a99/are_the_standard_bollinger_band_parameters_20_2/",
+      "snippet": "I’m currently backtesting a mean reversion strategy using Bollinger Bands, and it got me thinking about the ubiquity of the standard (20, 2) settings.\nI understand the theoretical basis: a 20-day SMA captures the intermediate trend, and +/- 2 standard deviations theoretically encompasses ~95% of price action (assuming a normal distribution, which I know financial returns often aren't).\nMy question",
+      "published_at": "2026-01-09T12:43:39.000Z",
+      "subreddit": "algotrading",
+      "score": 9,
+      "num_comments": 22
+    },
+    {
+      "title": "Built a systematic trading system - looking for feedback on my entry/exit approach and understanding commercial use",
+      "url": "https://www.reddit.com/r/algotrading/comments/1qhpies/built_a_systematic_trading_system_looking_for/",
+      "snippet": "Hey everyone,\n\nBeen working on a trading project for about a year and wanted to share some results and get feedback. Not selling anything - genuinely curious if my approach makes sense and if there's any appetite for this kind of thing.\n\n**The high-level idea:**\n\nI built a system that learns the \"personality\" of individual tickers - how they move, when they tend to reverse, what kind of volatility",
+      "published_at": "2026-01-20T03:07:17.000Z",
+      "subreddit": "algotrading",
+      "score": 13,
+      "num_comments": 16
+    },
+    {
+      "title": "My Walkforward Optimization Backtesting System for a Trend-Following Trading Strategy",
+      "url": "https://www.reddit.com/r/algotrading/comments/1j187b3/my_walkforward_optimization_backtesting_system/",
+      "snippet": "Hey r/algotrading,\n\nI’ve been working on a trend-following trading strategy and wanted to share how I use **walkforward optimization** to backtest and evaluate its performance. This method has been key to ensuring my strategy holds up across different market conditions, and I’ve backtested it from 2019 to 2024. I’ll walk you through the strategy, the walkforward process, and the results—plus, I’ve",
+      "published_at": "2025-03-01T19:55:57.000Z",
+      "subreddit": "algotrading",
+      "score": 77,
+      "num_comments": 45
+    },
+    {
+      "title": "Repeatedly failing OOS , am I overfitting or just not enough data?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1q4y07t/repeatedly_failing_oos_am_i_overfitting_or_just/",
+      "snippet": "\nHello everyone, I'm at a frustrating crossroads in my quant journey and could use some seasoned perspective.\n\nMy Background: ~5 years of discretionary FX trading with mixed results. For the last 3 months, I've been fully committed to building a robust, automated strategy to overcome discretionary pitfalls.\n\nThe Strategy &amp; The Battle:\nMy core idea is anEMA ribbon trend-following strategy on EU",
+      "published_at": "2026-01-05T21:03:16.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 8
+    },
+    {
+      "title": "If you're just getting started or feeling lost...",
+      "url": "https://www.reddit.com/r/algotrading/comments/1l3ntxv/if_youre_just_getting_started_or_feeling_lost/",
+      "snippet": "Here’s what helped me find my edge—and it wasn’t building a fancy tech stack, running thousands of backtests, or diving into machine learning. None of that comes first.\n\nThe first real assignment is simple:  \n**Put on a basic data analytics hat.**\n\nStart with raw data and just *look* at it. You don’t need anything more than Excel and a few formulas—`COUNTIFS`, `SUMIFS`, `AVERAGEIFS`, etc. Your job",
+      "published_at": "2025-06-05T02:15:15.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 8
+    },
+    {
+      "title": "Question regarding overfitting algos",
+      "url": "https://www.reddit.com/r/algotrading/comments/n15hy5/question_regarding_overfitting_algos/",
+      "snippet": "Hi!\n\nI'm quite new to this sub and I've been wondering about overfitting for a while. Sorry if this is not the right place to ask this question. There's a lot of conflicting information to be found on the internet about overfitting.\n\nSo I found this picture: [https://algotrading101.com/learn/wp-content/uploads/2019/07/Chart-view-of-curve-fitting-1024x356.png](https://algotrading101.com/learn/wp-co",
+      "published_at": "2021-04-29T14:25:27.000Z",
+      "subreddit": "algotrading",
+      "score": 6,
+      "num_comments": 15
+    },
+    {
+      "title": "Introducing and Seeking Feedback for a Machine Learning-based Crypto Trading Bot Engine",
+      "url": "https://www.reddit.com/r/algotrading/comments/10cla0x/introducing_and_seeking_feedback_for_a_machine/",
+      "snippet": "Hello everyone,\n\nI have developed a python based trading bot engine that utilizes Machine Learning to execute trades (long &amp; short) on the DYDX platform. The engine handles the full trading cycle, including data fetching, preprocessing, model training, and deployment.\n\nIn this post, I will provide an overview of the current workflow, including the steps taken to produce the train, validation a",
+      "published_at": "2023-01-15T14:32:48.000Z",
+      "subreddit": "algotrading",
+      "score": 7,
+      "num_comments": 3
+    },
+    {
+      "title": "Intraday Strategies and Sharpe Ratio",
+      "url": "https://www.reddit.com/r/algotrading/comments/ft0zld/intraday_strategies_and_sharpe_ratio/",
+      "snippet": "Hi,\n\nI've been working on my intraday strategy for last one year. So far I looked at only avg. daily returns &amp; annualised returns.\n\nThe strategy is intraday ie. holds any position (long/short) only till end of the trading day.\n\nEvery trade I risk 1% of the capital , which I recalculate at starting of a new month.\n\nI have read that higher the trading frequency higher the sharpe ratio.\n\nMy stats",
+      "published_at": "2020-04-01T14:39:55.000Z",
+      "subreddit": "algotrading",
+      "score": 5,
+      "num_comments": 4
+    },
+    {
+      "title": "Has anyone actually found a long-term profitable EA (Expert Advisor)? Or are they all just curve-fitted hype?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ofontf/has_anyone_actually_found_a_longterm_profitable/",
+      "snippet": "I’ve been building and testing EAs for a while — from simple moving average crossovers to machine-learning-driven strategies — and I still haven’t found one that stays consistently profitable long-term (I’m talking at least 1–2 years of live or high-quality backtesting data).\n\nMost EAs I see online look great in backtests, but once you run them live, the equity curve starts bleeding slowly or dies",
+      "published_at": "2025-10-25T10:56:57.000Z",
+      "subreddit": "algotrading",
+      "score": 51,
+      "num_comments": 166
+    },
+    {
+      "title": "Backtesting without proper WFA is mostly just curve fitting.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rjwlit/backtesting_without_proper_wfa_is_mostly_just/",
+      "snippet": "I see many posts saying:\n\n“I backtested several years. It works. Now I’ll go paper. If paper works, I go live.”\n\nBut when people say “backtested”, they usually mean they tried different parameters several times and chose the best settings. That’s actually limited manual optimization. The problem is they don’t know if the result is just curve fitting. This needs to be refuted.\n\nMost likely outcomes",
+      "published_at": "2026-03-03T18:07:09.000Z",
+      "subreddit": "algotrading",
+      "score": 21,
+      "num_comments": 30
+    },
+    {
+      "title": "Tests to reduce the probability your strategy is curve-fit.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rko5o1/tests_to_reduce_the_probability_your_strategy_is/",
+      "snippet": "Hey everyone, just a list of all the methods that can help refute curve-fitiing. I use 1,2,5,6, and planning to intrudoce 3 and 4.  \n\n\n\n1. Rolling Walk-Forward Analysis (WFA ). \n\nOptimize on one period, then test the chosen setup on the next period. Repeat this process across history to see if the strategy survives many independent out-of-sample windows.\n\nBui;lt-in testers like MT5, TradeStation o",
+      "published_at": "2026-03-04T15:19:45.000Z",
+      "subreddit": "algotrading",
+      "score": 26,
+      "num_comments": 28
+    }
+  ],
+  "cited_at": "2026-05-24T04:40:59.054Z"
+}

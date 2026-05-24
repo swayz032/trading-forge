@@ -14,6 +14,9 @@ import { useMonteCarlo } from "@/hooks/useMonteCarlo";
 import { useSSE } from "@/hooks/useSSE";
 import type { LeaderboardRow } from "@/components/forge/StrategyLeaderboard";
 import { num, dollarsToPoints, fmtPoints } from "@/lib/utils";
+import { ScoutHealthCard } from "@/components/dashboard/ScoutHealthCard";
+import { SignalStarvationCard } from "@/components/dashboard/SignalStarvationCard";
+import { RegimeCoverageCard } from "@/components/dashboard/RegimeCoverageCard";
 
 // ── Session ──
 function getETTime() {
@@ -481,7 +484,24 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* ROW 4: Your Markets — ES, NQ, CL */}
+      {/* ROW 4: Observability — Scout health, signal execution, regime coverage */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.28 }}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <Activity className="w-4 h-4 text-text-muted" />
+          <span className="text-xs uppercase tracking-widest text-text-muted font-medium">Observability</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <ScoutHealthCard />
+          <SignalStarvationCard />
+          <RegimeCoverageCard />
+        </div>
+      </motion.div>
+
+      {/* ROW 5: Your Markets — ES, NQ, CL */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

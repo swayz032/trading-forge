@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T02:40:23.122Z",
+  "generatedAt": "2026-05-24T06:47:47.654Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,8 +15,8 @@
     ]
   },
   "counts": {
-    "routes": 64,
-    "schedulerJobs": 70,
+    "routes": 67,
+    "schedulerJobs": 74,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 26,
@@ -36,6 +36,7 @@
     "/api/bias-decisions",
     "/api/bias-state",
     "/api/broker-accounts",
+    "/api/broker-error-budget",
     "/api/cloud-qmc",
     "/api/compiler",
     "/api/compliance",
@@ -44,6 +45,7 @@
     "/api/data",
     "/api/decay",
     "/api/deepar",
+    "/api/deployed-strategy-starvation",
     "/api/dlq",
     "/api/frankenstein",
     "/api/governor",
@@ -87,7 +89,8 @@
     "/api/tradingview",
     "/api/validation",
     "/api/validation-cadence",
-    "/api/volume-profile"
+    "/api/volume-profile",
+    "/api/webhook-latency"
   ],
   "schedulerJobs": [
     "a-plus-auditor-scan",
@@ -98,6 +101,7 @@
     "autonomous-scout-discovery",
     "bias-engine-refresh-10am-et",
     "bias-engine-session-start",
+    "broker-error-budget-check",
     "bw-session-refresh",
     "c11-bls-release",
     "c11-fred-daily",
@@ -114,6 +118,7 @@
     "deepar-predict",
     "deepar-train",
     "deepar-validate",
+    "deployed-strategy-starvation-check",
     "disabled-job-probe",
     "dlq-escalation",
     "dlq-retry",
@@ -147,6 +152,7 @@
     "python-pool-saturation-check",
     "quantum-cost-prune",
     "regen-declining-sweep",
+    "regime-coverage-check",
     "regret-score-fill",
     "resource-snapshot",
     "rolling-sharpe",
@@ -159,6 +165,7 @@
     "w19-definition-pull",
     "w19-imbalance-pull",
     "w19-statistics-pull",
+    "webhook-latency-check",
     "weekly-drift-2sigma-check"
   ],
   "workflows": [
@@ -889,8 +896,8 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 64,
-      "schedulerJobs": 70,
+      "routes": 67,
+      "schedulerJobs": 74,
       "engineSubsystems": 26,
       "databaseTables": 94
     },
@@ -1258,7 +1265,8 @@
           "failure visibility wired",
           "freshness signals available",
           "route contract reachable",
-          "runtime evidence persisted"
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
         ],
         "runtimeEvidence": [
           "/api/health/dashboard",
@@ -1266,6 +1274,7 @@
           "broker_accounts:recent-write",
           "broker:order_routed SSE",
           "broker.credentials_loaded",
+          "broker.error_budget_breach",
           "broker.order_routed"
         ],
         "dataCollectionCoverage": [
@@ -1299,14 +1308,18 @@
           "broker-order-routing-audit",
           "broker:order_routed SSE",
           "broker.credentials_loaded",
+          "broker.error_budget_breach",
           "broker.order_routed"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
           "/api/broker-accounts",
+          "/api/broker-error-budget",
           "/api/strategy-assignments"
         ],
-        "schedulerJobs": [],
+        "schedulerJobs": [
+          "broker-error-budget-check"
+        ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
           "audit_log:broker.order_routed",
@@ -2008,8 +2021,13 @@
           "CircuitBreakerRegistry.statusAll",
           "metrics:snapshot SSE",
           "paper.session_auto_stop",
+          "portfolio.regime_coverage_gap",
           "regret.score-fill",
-          "scheduler:job-complete SSE"
+          "scheduler:job-complete SSE",
+          "signal.starvation_critical",
+          "signal.starvation_warning",
+          "webhook.broker_ack",
+          "webhook.latency_high"
         ],
         "dataCollectionCoverage": [
           "agent health probes",
@@ -2052,22 +2070,30 @@
           "health-dashboard-runtime",
           "metrics:snapshot SSE",
           "paper.session_auto_stop",
+          "portfolio.regime_coverage_gap",
           "regret.score-fill",
-          "scheduler:job-complete SSE"
+          "scheduler:job-complete SSE",
+          "signal.starvation_critical",
+          "signal.starvation_warning",
+          "webhook.broker_ack",
+          "webhook.latency_high"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
           "/api/admin",
           "/api/alerts",
+          "/api/deployed-strategy-starvation",
           "/api/dlq",
           "/api/health",
           "/api/metrics",
           "/api/sse",
-          "/api/validation-cadence"
+          "/api/validation-cadence",
+          "/api/webhook-latency"
         ],
         "schedulerJobs": [
           "agent-health-sweep",
           "data-integrity-suite",
+          "deployed-strategy-starvation-check",
           "disabled-job-probe",
           "dlq-escalation",
           "dlq-retry",
@@ -2076,10 +2102,12 @@
           "metrics-heartbeat",
           "pre-trading-day-health-check",
           "python-pool-saturation-check",
+          "regime-coverage-check",
           "resource-snapshot",
           "stale-pending-sweeper",
           "system-map-drift",
-          "validation-cadence-monthly"
+          "validation-cadence-monthly",
+          "webhook-latency-check"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -3801,7 +3829,8 @@
         "failure visibility wired",
         "freshness signals available",
         "route contract reachable",
-        "runtime evidence persisted"
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
       ],
       "runtimeEvidence": [
         "/api/health/dashboard",
@@ -3809,6 +3838,7 @@
         "broker_accounts:recent-write",
         "broker:order_routed SSE",
         "broker.credentials_loaded",
+        "broker.error_budget_breach",
         "broker.order_routed"
       ],
       "dataCollectionCoverage": [
@@ -3842,14 +3872,18 @@
         "broker-order-routing-audit",
         "broker:order_routed SSE",
         "broker.credentials_loaded",
+        "broker.error_budget_breach",
         "broker.order_routed"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
         "/api/broker-accounts",
+        "/api/broker-error-budget",
         "/api/strategy-assignments"
       ],
-      "schedulerJobs": [],
+      "schedulerJobs": [
+        "broker-error-budget-check"
+      ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
         "audit_log:broker.order_routed",
@@ -4551,8 +4585,13 @@
         "CircuitBreakerRegistry.statusAll",
         "metrics:snapshot SSE",
         "paper.session_auto_stop",
+        "portfolio.regime_coverage_gap",
         "regret.score-fill",
-        "scheduler:job-complete SSE"
+        "scheduler:job-complete SSE",
+        "signal.starvation_critical",
+        "signal.starvation_warning",
+        "webhook.broker_ack",
+        "webhook.latency_high"
       ],
       "dataCollectionCoverage": [
         "agent health probes",
@@ -4595,22 +4634,30 @@
         "health-dashboard-runtime",
         "metrics:snapshot SSE",
         "paper.session_auto_stop",
+        "portfolio.regime_coverage_gap",
         "regret.score-fill",
-        "scheduler:job-complete SSE"
+        "scheduler:job-complete SSE",
+        "signal.starvation_critical",
+        "signal.starvation_warning",
+        "webhook.broker_ack",
+        "webhook.latency_high"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
         "/api/admin",
         "/api/alerts",
+        "/api/deployed-strategy-starvation",
         "/api/dlq",
         "/api/health",
         "/api/metrics",
         "/api/sse",
-        "/api/validation-cadence"
+        "/api/validation-cadence",
+        "/api/webhook-latency"
       ],
       "schedulerJobs": [
         "agent-health-sweep",
         "data-integrity-suite",
+        "deployed-strategy-starvation-check",
         "disabled-job-probe",
         "dlq-escalation",
         "dlq-retry",
@@ -4619,10 +4666,12 @@
         "metrics-heartbeat",
         "pre-trading-day-health-check",
         "python-pool-saturation-check",
+        "regime-coverage-check",
         "resource-snapshot",
         "stale-pending-sweeper",
         "system-map-drift",
-        "validation-cadence-monthly"
+        "validation-cadence-monthly",
+        "webhook-latency-check"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [

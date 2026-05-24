@@ -1,0 +1,143 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "bot profitable consistent",
+  "items": [
+    {
+      "title": "Consistently Profitable Traders - Is a 3-5% Monthly Return Realistic with a $100k+ Prop Account?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1o8v14r/consistently_profitable_traders_is_a_35_monthly/",
+      "snippet": "\nHey everyone,\nI'm hoping to get some real-world insight from the seasoned veterans here—those who've maintained profitability and consistency for several years, not just had a few good months.\nI've been in the market since 2020, mainly dealing with long-term crypto holds and swing trading. Lately, my focus has shifted entirely to transitioning into prop firm trading. I spent three months on a dem",
+      "published_at": "2025-10-17T07:39:07.000Z",
+      "subreddit": "algotrading",
+      "score": 51,
+      "num_comments": 70
+    },
+    {
+      "title": "Guys it took me 249 hours to make this bot reasonably profitable ,",
+      "url": "https://www.reddit.com/r/algotrading/comments/1obmf16/guys_it_took_me_249_hours_to_make_this_bot/",
+      "snippet": "It did around 2.5% in 3 days , i ran 5 iterations of it and its consistent , also its inversing a losing strategy i made , but i can increase the funds on the flipped one and generate profit , rightnow its , 12$ on the looser strat and 30$ on the main",
+      "published_at": "2025-10-20T16:00:46.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 27
+    },
+    {
+      "title": "Guys it took me 249 hours to make this bot reasonably profitable ,",
+      "url": "https://www.reddit.com/r/algotrading/comments/1obma47/guys_it_took_me_249_hours_to_make_this_bot/",
+      "snippet": "I have ran 5 iterations of it in last 1 month and in every one of them its consistent , rightnow it just did around 2.5% in 3 days",
+      "published_at": "2025-10-20T15:54:30.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 4
+    },
+    {
+      "title": "Dead Internet Theory in r/algotrading",
+      "url": "https://www.reddit.com/r/algotrading/comments/1q67z33/dead_internet_theory_in_ralgotrading/",
+      "snippet": "im calling this out because the discussion quality here is being degraded by what i am 99% sure is a bot farming engagement.\n\nif you saw the recent post about Small experiment: \"[Small experiment: filtering low-expectancy trades flipped a strategy’s PnL in 24h](https://www.reddit.com/r/algotrading/comments/1q5jvlf/small_experiment_filtering_lowexpectancy_trades/)\" you might have noticed the strate",
+      "published_at": "2026-01-07T06:25:39.000Z",
+      "subreddit": "algotrading",
+      "score": 588,
+      "num_comments": 143
+    },
+    {
+      "title": "From gambling to trading, my experience over the years",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ffut3a/from_gambling_to_trading_my_experience_over_the/",
+      "snippet": "Hello everyone,\n\nI want to share with you some of the concepts behind the algorithmic trading setup I’ve developed over the years, and take you through my journey up until today.\n\nFirst, a little about myself: I’m 35 years old and have been working as a senior engineer in analytics and data for over 13 years, across various industries including banking, music, e-commerce, and more recently, a well",
+      "published_at": "2024-09-13T13:31:19.000Z",
+      "subreddit": "algotrading",
+      "score": 404,
+      "num_comments": 149
+    },
+    {
+      "title": "Hi everyone, I finally put my MT5 EA on a funded account. Excited!",
+      "url": "https://www.reddit.com/r/algotrading/comments/1op7ooq/hi_everyone_i_finally_put_my_mt5_ea_on_a_funded/",
+      "snippet": "Hey everyone, I am not a trader, but a programmer. I have always been inclined to solve the trading problem, and It's been a long road, learning, failing, testing, and deploying live. \n\nTo whoever is building bots, the following will help you get more confidence and hopefully help you get to profits faster:  \n1. Ditch python completely - use backtests of the platform you are planning to trade on (",
+      "published_at": "2025-11-05T16:34:54.000Z",
+      "subreddit": "algotrading",
+      "score": 63,
+      "num_comments": 107
+    },
+    {
+      "title": "What is a good trading algorithm?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1nddefv/what_is_a_good_trading_algorithm/",
+      "snippet": "I am just wondering what your definition of a good algorithm (for automatic) trading is.\n\nWhat properties are most important for you and why?\n\nWhen you have one or more algorithms in production, would you like to share the basic stats like average ROI and worst ROI etc?\n\nNote: I will collect all the information shared in the comments and extend the post on demand. And yes, I will add your user nam",
+      "published_at": "2025-09-10T12:53:55.000Z",
+      "subreddit": "algotrading",
+      "score": 119,
+      "num_comments": 94
+    },
+    {
+      "title": "Advice for aspiring algo-traders",
+      "url": "https://www.reddit.com/r/algotrading/comments/njcquf/advice_for_aspiring_algotraders/",
+      "snippet": "1. Don't quit your job\n2. Don't write your backtesting engine\n3. Expect to spend 3-5 years coming up with remotely consistent/profitable method. That's assuming you put 20h+/week in it. 80% spent on your strategy development, 10% on experiments, 10% on automation\n4. Watching online videos / reading reddit generally doesn't contribute to your becoming better at this. Count those hours separately an",
+      "published_at": "2021-05-23T17:39:38.000Z",
+      "subreddit": "algotrading",
+      "score": 768,
+      "num_comments": 143
+    },
+    {
+      "title": "How do you tell apart alpha from bullshit?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1t0twnn/how_do_you_tell_apart_alpha_from_bullshit/",
+      "snippet": "Math undergraduate here, with a background in software engineering. I’ve always been interested in algo trading, though I haven’t been consistent. I built my first bot 7 years ago, and it was profitable for some time (until it wasn’t). Looking back, I don’t know if I had a statistical edge or it was just luck.\n\nI started dabbling again and found something promising, though I don’t want to fool mys",
+      "published_at": "2026-05-01T13:46:29.000Z",
+      "subreddit": "algotrading",
+      "score": 3,
+      "num_comments": 43
+    },
+    {
+      "title": "ClaudeAI CryptoTrading API",
+      "url": "https://www.reddit.com/r/algotrading/comments/1snrfcs/claudeai_cryptotrading_api/",
+      "snippet": "Hey everyone! 👋\n\nI've been exploring the idea of building an automated crypto trading bot connected to Coinbase (or similar platforms like Binance or Kraken) via their APIs, and I'd love to hear from anyone who's actually done this.\n\nSpecifically I'm curious about:\n\n\\\\- Have you built a trading bot that's been consistently profitable over a meaningful period of time?\n\n\\\\- How complex was the setu",
+      "published_at": "2026-04-17T05:10:20.000Z",
+      "subreddit": "algotrading",
+      "score": 9,
+      "num_comments": 39
+    },
+    {
+      "title": "Does this backtest look like a real edge live? Looking for bot and automation feedback from people with real experience?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1q0uj1z/does_this_backtest_look_like_a_real_edge_live/",
+      "snippet": "Hey everyone. I’m looking for honest feedback, especially from anyone who has traded with an automated strategy or bot in the real world.\nI’m considering using a bot for my own trading because I’m too emotional and I don’t trust myself to consistently do the right thing in the moment. Cutting losers, not revenge trading, not FOMO. Automation feels like it could remove me from the equation.\n\nI’ve b",
+      "published_at": "2026-01-01T03:22:58.000Z",
+      "subreddit": "algotrading",
+      "score": 81,
+      "num_comments": 45
+    },
+    {
+      "title": "Looking for a Dev who can code our trading strategies for Kalshi &amp; Polymarket",
+      "url": "https://www.reddit.com/r/algotrading/comments/1tdmedu/looking_for_a_dev_who_can_code_our_trading/",
+      "snippet": "I've been trading prediction markets consistently over the last 2 years and use a few strategies that have proven highly profitable, so now looking to automate some of them. This is not a high frequency strategy where low latency is a factor, however it will involve sending thousands of orders to the exchange every day, so bot needs to be very precise in mapping correct events and sending orders w",
+      "published_at": "2026-05-15T05:07:50.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 26
+    },
+    {
+      "title": "Exits are overrated Entries are underrated, together are complementary.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ta4zhj/exits_are_overrated_entries_are_underrated/",
+      "snippet": "I dont see any exit strategy better than take TP1 move SL to breakeven and have runners for TP1.5, TP2...\n\nlogically this is one of the best exit strategy ever in my opinion runners on the long run can cover for commissions, slippage and make profit on top.\n\nI'm using this exit strategy on many bots and im pretty satisfied.\n\nBut the entries they are on their own league.\n\nEntries are almost where t",
+      "published_at": "2026-05-11T14:29:00.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 20
+    },
+    {
+      "title": "My Algorithmic Trading Journey: Scaling a One-Month-Old Monster",
+      "url": "https://www.reddit.com/r/algotrading/comments/1k7it7x/my_algorithmic_trading_journey_scaling_a/",
+      "snippet": "[cumulative pnl](https://preview.redd.it/m05wp7ogxywe1.jpg?width=1178&amp;format=pjpg&amp;auto=webp&amp;s=6040fa0c37fca9a55d2bd6098df6328884238eb2)\n\n[returns](https://preview.redd.it/at15yg3ixywe1.jpg?width=1500&amp;format=pjpg&amp;auto=webp&amp;s=66a3041a04ac34c2d724574e70b5e7b31ee58ecf)\n\n# Hey there! So, I’ve built this little monster—an algorithmic trading system that’s been live for a month, r",
+      "published_at": "2025-04-25T11:40:59.000Z",
+      "subreddit": "algotrading",
+      "score": 81,
+      "num_comments": 68
+    },
+    {
+      "title": "I built a strategy and integrated it with collective2 and ibkr. Seeking Beta Testers for the Algotrading bot (Paper Trading Phase)",
+      "url": "https://www.reddit.com/r/algotrading/comments/1sech0m/i_built_a_strategy_and_integrated_it_with/",
+      "snippet": "I am relatively new to algorithmic trading, and this is my third iteration. My current bot is integrated with both IBKR and Collective2 for paper trading, and I'm seeing consistent results across both platforms.\n\nThe bot scans for opportunities by analyzing buying and selling pressure. It bets on momentum shifts over a 5 to 15-minute horizon, exiting once either the profit target or stop loss is t",
+      "published_at": "2026-04-06T21:38:57.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 13
+    }
+  ],
+  "cited_at": "2026-05-24T04:40:58.353Z"
+}

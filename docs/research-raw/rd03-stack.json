@@ -1,0 +1,188 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "tech stack architecture python typescript postgres",
+  "items": [
+    {
+      "title": "Why I’m over my algo-trading journey - 11 months spent on building a HFT bot on Solana",
+      "url": "https://www.reddit.com/r/algotrading/comments/1o3o8nl/why_im_over_my_algotrading_journey_11_months/",
+      "snippet": "Today I decided to end my 11-month journey of building a Solana meme-coin copy-cat bot. \n\nIt’s been a fun ride, with the system going through three or four major architectural redesigns - from a complex setup with separate services for WebSocket-based data streaming and trade execution originally exchanging data via Postgres, then Redis, then shared memory and a ring buffer - to a lean, gRPC-based",
+      "published_at": "2025-10-11T06:18:30.000Z",
+      "subreddit": "algotrading",
+      "score": 147,
+      "num_comments": 81
+    },
+    {
+      "title": "My attempt at \"Retail HFT\" (10ms latency) on Indian Options. The Engineering works, but Alpha is negative.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1pnxi54/my_attempt_at_retail_hft_10ms_latency_on_indian/",
+      "snippet": "I’ve spent the last few months building a low-latency execution engine for the Indian market (BankNifty Options). I wanted to share the architecture and the harsh economic lessons I learned.\n\n**THE GOAL** =I wasn't trying to beat Tower or Graviton (I know they operate in microseconds/nanoseconds with FPGAs). My goal was \"Retail HFT\"to see how fast I could push a Python-based system using standard ",
+      "published_at": "2025-12-16T09:12:31.000Z",
+      "subreddit": "algotrading",
+      "score": 26,
+      "num_comments": 61
+    },
+    {
+      "title": "Shipped v2.0 of my Kalshi prediction market bot 4-ensemble weather system + inflation signal stack.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1spaq36/shipped_v20_of_my_kalshi_prediction_market_bot/",
+      "snippet": "I shipped v2.0 of my Kalshi prediction market trading system. Wanted to share what changed because some of the architectural decisions might be useful to people building similar things.\n\n**What it is**\n\nTwo automated bots for Kalshi. One trades weather contracts (temperature highs, lows), one trades inflation contracts (CPI YoY, Core PCE). Both written in Python, both open to modify.\n\n**The weathe",
+      "published_at": "2026-04-18T21:58:52.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 27
+    },
+    {
+      "title": "Built a multi-timeframe MACD analyzer with LLM-based signal interpretation — running it alongside my live ETH futures bot",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rnc9jn/built_a_multitimeframe_macd_analyzer_with/",
+      "snippet": "Been running a Python trading bot on Jetson Nano 24/7 \n\nfor 2 years. Entry decisions are LLM-based, exits are \n\nrule-based with trailing stop — learned the hard way \n\nthat LLM is too slow for exits.\n\n\n\nBuilt this analyzer as a separate tool to visually \n\nconfirm multi-timeframe MACD alignment before entries.\n\n\n\nTech stack:\n\n· Python + Streamlit\n\n· Live Binance API (no key needed for read)\n\n· DeepS",
+      "published_at": "2026-03-07T15:08:45.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 33
+    },
+    {
+      "title": "EU/Germany-based algo trading, experiences with IBKR, data sources, and PRIIPs restrictions?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1sfz53c/eugermanybased_algo_trading_experiences_with_ibkr/",
+      "snippet": "Hey everyone,\n\nI'm building a trading bot and running it from Germany and hitting some walls with EU-specific restrictions. Would love to hear from other EU-based algo traders about your setup and workarounds.\n\nMy project:  \nI built a Python bot that initiall I wanted to trade with 5 strategies, (bull put spreads, bear call spreads, iron condor, long call and long put, but because of the complexit",
+      "published_at": "2026-04-08T17:14:38.000Z",
+      "subreddit": "algotrading",
+      "score": 18,
+      "num_comments": 23
+    },
+    {
+      "title": "Benchmarking \"Strategy Decay\" via Win-Rate Velocity and Expectancy Momentum",
+      "url": "https://www.reddit.com/r/algotrading/comments/1qodp9l/benchmarking_strategy_decay_via_winrate_velocity/",
+      "snippet": "I’ve been building a custom audit dashboard (Node/Chart.js) to monitor my trade data for \"Strategic Drift\" - the gap where my execution starts deviating from the original backtested edge. I’m trying to move past just looking at raw PnL and instead quantify how the *character* of the edge is changing in real-time.\n\nI’ve focused the logic on two specific rolling metrics to detect regime shifts:\n\n* *",
+      "published_at": "2026-01-27T13:22:44.000Z",
+      "subreddit": "algotrading",
+      "score": 42,
+      "num_comments": 25
+    },
+    {
+      "title": "Backtesting thousands of ORB parameter combos, then using market context to pick the best one each morning",
+      "url": "https://www.reddit.com/r/algotrading/comments/1r93f04/backtesting_thousands_of_orb_parameter_combos/",
+      "snippet": "Building a system to brute force backtest every ORB strategy combo, then match today's market conditions to the best historical edge. Thoughts?\n\nI trade ORB setups on futures. So I'm building a local tool to make it systematic. Wanted to get this sub's take before I'm too deep in.\n\n\n\nThe idea:\n\n1. Backtest every combination of ORB parameters. Timeframe, direction, entry type, stop type, target, ti",
+      "published_at": "2026-02-19T16:15:13.000Z",
+      "subreddit": "algotrading",
+      "score": 4,
+      "num_comments": 25
+    },
+    {
+      "title": "Need technical guidance",
+      "url": "https://www.reddit.com/r/algotrading/comments/1tlywju/need_technical_guidance/",
+      "snippet": "I am trying to build a automate monitoring system for that I need to scan approximately 100+ financial instrument and do some calculation then system give me result logs \n\nHow can I achieve this \n\nFor now I have done data scraping \n\nTech stack currently using \n\nDB :- Postgres (but thinking to migrate to timescaledb)\n\nLanguage:- Python/nodejs (for backend trying to use c)\n\nCloud :- cloudflare + sup",
+      "published_at": "2026-05-24T02:03:35.000Z",
+      "subreddit": "algotrading",
+      "score": 2,
+      "num_comments": 9
+    },
+    {
+      "title": "What’s your Tech Stack &amp; Why?",
+      "url": "https://www.reddit.com/r/algotrading/comments/p683cg/whats_your_tech_stack_why/",
+      "snippet": "Node-TS, AWS serverless configuration,  React &amp; Firestore for my db (for now).\n\nMy reasons for Typescript + React is based upon familiarity and the lean mindset of getting to market.\n\nAWS serverless as it’s cheap/free and a lot of fun for me to architect out. I’ve roughed in my infrastructure, which looks like:\n\nSemi-automated infrastructure:\n\nAWS Event -&gt; Lambda (pull list of stocks tracke",
+      "published_at": "2021-08-17T17:11:17.000Z",
+      "subreddit": "algotrading",
+      "score": 163,
+      "num_comments": 142
+    },
+    {
+      "title": "A Hybrid ML-Bayesian System with Uncertainty-Weighted Execution",
+      "url": "https://www.reddit.com/r/algotrading/comments/1q6hqyq/a_hybrid_mlbayesian_system_with/",
+      "snippet": "Hello r/algotrading,\n\nI've been developing a quantitative trading system for MetaTrader 5 over the past year and wanted to share the core architecture of its latest iteration. The system, dubbed \"Paimon Bless V17.7,\" is built around a central thesis: **model uncertainty is not noise to be ignored, but a critical signal for dynamic risk allocation.** This post breaks down its components without the",
+      "published_at": "2026-01-07T15:06:21.000Z",
+      "subreddit": "algotrading",
+      "score": 11,
+      "num_comments": 19
+    },
+    {
+      "title": "Best Platform / Tech Stack to Automate 0DTE &amp; 1DTE Options Strategies",
+      "url": "https://www.reddit.com/r/algotrading/comments/1pqxc0z/best_platform_tech_stack_to_automate_0dte_1dte/",
+      "snippet": "Hi everyone,\n\nI’m looking for advice from people who are actively automating 0DTE and 1DTE options strategies in live markets.\n\n**Background**\n\n* I have a few 0DTE strategies and 1DTE strategies\n* All strategies have been backtested using Option Alpha and Option Omega.\n* These are primarily short-premium strategies (spreads / iron structures / defined risk)\n* Backtests look solid, and now I want t",
+      "published_at": "2025-12-19T21:47:29.000Z",
+      "subreddit": "algotrading",
+      "score": 11,
+      "num_comments": 16
+    },
+    {
+      "title": "Roast My Stock Screener: Python + AI Analysis (Open Source)",
+      "url": "https://www.reddit.com/r/algotrading/comments/1js4vs5/roast_my_stock_screener_python_ai_analysis_open/",
+      "snippet": "Hi r/algotrading — I've developed an open-source stock screener that integrates traditional financial metrics with AI-generated analysis and news sentiment. It's still in its early stages, and I'm sharing it here to seek honest feedback from individuals who've built or used sophisticated trading systems.\n\n**GitHub:** [https://github.com/ba1int/stock\\_screener](https://github.com/ba1int/stock\\_scre",
+      "published_at": "2025-04-05T14:38:00.000Z",
+      "subreddit": "algotrading",
+      "score": 109,
+      "num_comments": 30
+    },
+    {
+      "title": "[PROJECT] I built a raw Python/Nginx scanner to solve the \"15-minute delay\" problem. Needs stress testing.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1qdvb0j/project_i_built_a_raw_pythonnginx_scanner_to/",
+      "snippet": "https://preview.redd.it/6cdmh8pqrkdg1.png?width=1885&amp;format=png&amp;auto=webp&amp;s=1bab9a2fd61d77713e8d5a9ba413c1d9a17692c9\n\n\n\nI got tired of paying for \"real-time\" web scanners that still felt 10-15 seconds behind the tape. I wanted to see if I could build a lightweight engine that processes huge tick volume with near-zero latency on a basic VPS.\n\nI finally got the architecture stable on a D",
+      "published_at": "2026-01-15T20:47:16.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 10
+    },
+    {
+      "title": "API recommendation coming from ToS",
+      "url": "https://www.reddit.com/r/algotrading/comments/1picwj5/api_recommendation_coming_from_tos/",
+      "snippet": "I have a strategy I've been able to semi-automate doing triggered OCO market orders on ToS, it still requires some level of attention during market hours and it would be ideal to completely automate. With that said, the most obvious thing (I think?) would be using schwab API.\n\nI had a planned \"tech stack\" of using massive (polygon.io) tick-second data streaming where in python can determine entry/",
+      "published_at": "2025-12-09T17:05:47.000Z",
+      "subreddit": "algotrading",
+      "score": 3,
+      "num_comments": 13
+    },
+    {
+      "title": "On Building an Algo Trading Platform from Scratch in Rust - The Beginning",
+      "url": "https://www.reddit.com/r/algotrading/comments/1gv2r91/on_building_an_algo_trading_platform_from_scratch/",
+      "snippet": "I've been programming for the better part of a decade. I started in web scraping with Python, moved to full stack web development in JavaScript and developed a hate:hate relationship with JS/TypeScript and all things front end web development, so to give myself a mental health break, I decided to take a mostly-backend, data-centric project on. I've been studying cryptocurrency and web3 for a while",
+      "published_at": "2024-11-19T17:31:35.000Z",
+      "subreddit": "algotrading",
+      "score": 78,
+      "num_comments": 40
+    },
+    {
+      "title": "I need some career guidance, team; this issue is keeping me up at night!",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ebv294/i_need_some_career_guidance_team_this_issue_is/",
+      "snippet": "For several decades, I have worked as an independent consultant.  I spent about a decade each in UNIX admin, IT security, and most recently, the digital analytics space, focusing on web and mobile app usage, streaming media/TV analytics, and some unique projects, like managing a competition for a high-profile live TV show, etc.\n\nA typical digital analytics client lifecycle involves Technical and l",
+      "published_at": "2024-07-25T13:36:04.000Z",
+      "subreddit": "algotrading",
+      "score": 31,
+      "num_comments": 59
+    },
+    {
+      "title": "Started with a simple data crawler, now I manage a Kafka cluster",
+      "url": "https://www.reddit.com/r/algotrading/comments/1cs6hbf/started_with_a_simple_data_crawler_now_i_manage_a/",
+      "snippet": "# How it started\n\nI started working on a project that required scraping a ton of market data from multiple sources (mostly trades and depth information, but I'm definitely planning on incorporating news and other data for sentiment analysis and screening heuristics).\n\n# Step 1 - A simple crawler\n\nI made a simple crawler in go that periodically saves the data locally with SQLite. It worked ok but w",
+      "published_at": "2024-05-14T23:29:07.000Z",
+      "subreddit": "algotrading",
+      "score": 53,
+      "num_comments": 47
+    },
+    {
+      "title": "Market Making Pivot: Process &amp; Pitfalls",
+      "url": "https://www.reddit.com/r/algotrading/comments/1niuvip/market_making_pivot_process_pitfalls/",
+      "snippet": "**TL;DR:** We pivoted our venture backed startup from building open-source AI infra to running a **market-neutral, event-driven market-making** stack (Rust). Early experiments looked promising, then we face-planted: over-reliance on LLM-generated code created hidden complexity that broke our strategy and cost \\~2 months to unwind. We’re back to boring, testable components and realistic sims; shari",
+      "published_at": "2025-09-16T21:48:10.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 8
+    },
+    {
+      "title": "What architecture do you use for your live bots?",
+      "url": "https://www.reddit.com/r/algotrading/comments/u9hh8z/what_architecture_do_you_use_for_your_live_bots/",
+      "snippet": "Is anyone interested in sharing what tech stacks they've used and enjoyed?\n\nI'm assuming most people are using Python or Java and utilising docker containers etc.",
+      "published_at": "2022-04-22T15:36:25.000Z",
+      "subreddit": "algotrading",
+      "score": 59,
+      "num_comments": 73
+    },
+    {
+      "title": "Suggestion needed for trading system design",
+      "url": "https://www.reddit.com/r/algotrading/comments/1dmeefl/suggestion_needed_for_trading_system_design/",
+      "snippet": "Hi all,\n\nI am working on a project and now I am kind of blank on how to make it better.\n\nI am streaming Stock data via Websocket to various Kafka topics. The data is in Json format and has one symbol_id for which new records are coming every second. There are 1000 different symbol_id's and new records rate is about 100 record/seconds for various different symbol's\n\nI also have to fetch static data",
+      "published_at": "2024-06-23T04:51:44.000Z",
+      "subreddit": "algotrading",
+      "score": 30,
+      "num_comments": 21
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:22.092Z"
+}

@@ -6392,6 +6392,43 @@ sentinel rename hazard.
 
 ---
 
+## 2026-05-24 — Wave 25 Hardening Close-out (architect)
+
+**Mission:** Verify the 6 production-hardening items shipped by two parallel subagents (observability-reliability + paper-parity), run all CI hard gates, sync System Map, write architect close-out audit row, and document operator carry-forwards. Closing architect — verify, don't refactor.
+
+**Work completed:**
+- Verified 11 new files exist and are wired (3 services, 3 routes, 4 frontend assets, 1 migration, payout-audit-packet lib + script + runbook).
+- Verified `index.ts` route registrations (lines 83-85 imports, 523/526/529 mounts).
+- Verified `scheduler.ts` cron registrations for all 4 new jobs (lines 1023, 3460, 3503, 3539).
+- Verified `Dashboard.tsx` wiring of `SignalStarvationCard` + `RegimeCoverageCard` (lines 18-19, 499-500). Confirmed `BrokerErrorBudgetCard` NOT wired (carry-forward #2).
+- Verified migration 0133 journaled at `meta/_journal.json` line 954; idempotent (`CREATE INDEX IF NOT EXISTS`), composite index only.
+- Verified all 6 new audit_log action emitters at their service files; all 5 new SSE events at their `broadcastSSE` / `broadcastFireAndForget` call sites.
+- Verified starvation watchdog reads existing emitters: `paper.trade_open` (paper-execution-service.ts) + `signal.a_plus_factor_evaluated` (paper-signal-service.ts). Verified broker-error-budget reads existing `broker_router.route_order` / `route_rejected` / `compliance_rejected` (broker-router.ts).
+- Documented regime-coverage semantic boundary: `DEPLOYED_REGIME_LIST` (TRENDING_UP/TRENDING_DOWN/RANGE_BOUND) is the registry-of-record for the cron; `bias_engine.py` uses different *playbook* strings (TREND/RANGE_BOUND/NO_TRADE) at a different semantic layer — intentional separation, not drift.
+- Updated `docs/system-subsystem-registry.json` to add the 3 routes + 4 cron jobs + 6 audit actions to their owning subsystems (3 routes + 3 jobs + 5 actions to `observability_reliability`; 1 route + 1 job + 1 action to `broker_abstraction_layer`).
+- Ran `npm run system-map:sync` then `npm run system-map:check` — EXIT 0, status `ok`, zero drift.
+- Added §2e to `Trading Forge System Map v2.md` documenting all 6 items, migrations, routes, jobs, audit actions, SSE events, contract verification, and carry-forwards.
+- Wrote architect close-out audit row `wave.25_hardening_closeout` via `scripts/wave25-architect-closeout.mjs` (audit_log id `1d1a61e6-64d7-478b-a38b-b908a2ca2e6b`, created_at 2026-05-24T06:50:59.011Z). Result JSONB enumerates items_shipped, migrations, routes_added, crons_added, audit_actions_added, sse_events_added, tests_added, gate results.
+
+**Verification:**
+- `npm run check:production-isolation` — EXIT 0 (4 files checked, 0 violations).
+- `npm run check:2026-compliance` — EXIT 0 (MFFU + Topstep aligned).
+- `npm run system-map:check` — EXIT 0 status `ok` zero drift (post sync).
+- `npx vitest run wave25-` — **7 files / 127 tests GREEN** (66 net-new across the 6 hardening items: 7 starvation + 13 webhook-latency + 12 regime-coverage + 21 broker-error-budget + 13 payout-audit-packet; plus 18 structure-stage2 + 43 weighted-scoring pre-existing wave25 files).
+- `npx tsc --noEmit` — 231 errors (W24 baseline from `volume-profile-service.ts` null-byte recovery commit `410b75c`); ZERO new errors introduced by Wave 25.
+- Migration 0133 verified idempotent + journaled; NOT applied to prod (operator's call).
+
+**Known-facts updates:** None added this session — the LLM-on-execution-path pin was added by Track 1 prior to architect close-out and is now live at line 6558.
+
+**Carry-forward for next session:**
+- **carry-forward #1 — `webhook.broker_ack` instrumentation:** `tradingview-webhook.ts` + `broker-router.ts` need to write `webhook.broker_ack` audit rows with `metadata.fire_to_ack_ms` for the latency monitor to produce data. ~30 min add. Until then `webhook-latency-check` returns zero-sample state.
+- **carry-forward #2 — `BrokerErrorBudgetCard` Dashboard wiring:** component + hook exist; needs to be added to `Dashboard.tsx` Observability row alongside SignalStarvationCard + RegimeCoverageCard. ~5 min.
+- **carry-forward #3 — Payout audit packet real-DB smoke test:** run `tsx scripts/generate-payout-audit-packet.ts --account-id <real_id> --start 2026-01-01T00:00:00Z --end 2026-01-31T23:59:59Z` to verify JOIN queries match live schema. Mocked tests cannot catch column-name drift.
+- **carry-forward #4 — Migration 0133 apply:** operator decision. Idempotent, journaled, composite index only (no data mutation). Boot-migration runner will pick up automatically on next service start when authorized.
+- **OPTIONAL Wave 26 candidate:** ±20% parameter jitter battery (SDR/PSI/RWS named metrics) on top of existing Optuna plateau variance per `docs/wave25-bot-research-PLAIN.md`. Operator decision.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

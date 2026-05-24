@@ -1016,6 +1016,28 @@ export function initScheduler() {
   });
   _scheduledJobs.add("pre-trading-day-health-check");
 
+  // ─── W25 Gap 8: Every hour — Broker error budget check (RTH + post-market) ──
+  // Aggregates route_rejected / compliance_rejected from audit_log over rolling
+  // 24h window. Alarms (audit + SSE + Discord WARN) when any (broker,class) pair
+  // exceeds 5% of attempts. Pipeline-gated so it only runs when active.
+  registerJob("broker-error-budget-check", 60 * 60 * 1000, async () => {
+    const { runBrokerErrorBudgetCheck } = await import("./services/broker-error-budget-service.js");
+    await runBrokerErrorBudgetCheck();
+  });
+  cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("broker-error-budget-check")) return;
+    try {
+      if (!(await pipelineGate("broker-error-budget-check"))) return;
+      const t0beb = Date.now();
+      await withRetry("broker-error-budget-check", SCHEDULER_JOBS["broker-error-budget-check"].run, 1);
+      markJobRun("broker-error-budget-check");
+      emitJobComplete("broker-error-budget-check", Date.now() - t0beb);
+    } finally {
+      _releaseJobLock("broker-error-budget-check");
+    }
+  });
+  _scheduledJobs.add("broker-error-budget-check");
+
   // ─── Every hour: Compare stopped paper sessions to backtest ─
   cron.schedule("0 * * * *", async () => {
     if (!_tryAcquireJobLock("paper-vs-backtest")) return;
@@ -3430,6 +3452,129 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("weekly-drift-2sigma-check");
+
+  // ─── Wave 25 Gap 3: Deployed-strategy signal starvation — every 4h during RTH ─
+  // Execution-side mirror of scout-watchdog-service. Checks PILOT/DEPLOYED
+  // strategies for zero signal entries or zero signal evaluations over rolling
+  // 5 RTH days. RTH gate: only fires when current ET hour is in [9..16).
+  registerJob("deployed-strategy-starvation-check", 4 * 60 * 60 * 1000, async () => {
+    const { runDeployedStrategyStarvationCheck } = await import(
+      "./services/deployed-strategy-starvation-watchdog.js"
+    );
+    const result = await runDeployedStrategyStarvationCheck();
+    logger.info(
+      { strategiesChecked: result.strategiesChecked, anyAlertFired: result.anyAlertFired },
+      "deployed-strategy-starvation-check: tick complete",
+    );
+  });
+
+  // Every 4 hours, RTH-gated (09:00–16:00 ET, weekdays)
+  cron.schedule("0 */4 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("deployed-strategy-starvation-check")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      // Only fire during RTH window (9 AM to 4 PM ET)
+      if (etHour < 9 || etHour >= 16) {
+        logger.debug({ etHour }, "Scheduler: deployed-strategy-starvation-check — outside RTH, skipping");
+        return;
+      }
+      // Not pipeline-gated: this is a safety surface like scout-watchdog
+      const t0 = Date.now();
+      await withRetry(
+        "deployed-strategy-starvation-check",
+        SCHEDULER_JOBS["deployed-strategy-starvation-check"].run,
+        1,
+      );
+      markJobRun("deployed-strategy-starvation-check");
+      emitJobComplete("deployed-strategy-starvation-check", Date.now() - t0);
+    } finally {
+      _releaseJobLock("deployed-strategy-starvation-check");
+    }
+  });
+  _scheduledJobs.add("deployed-strategy-starvation-check");
+
+  // ─── Wave 25 Gap 4: Webhook latency monitor — every 15 min ───────────────────
+  // Reads last 1h of webhook.broker_ack audit rows, computes p95 latency.
+  // Alarms when p95 > 2000ms (Pine→TradingView→TradersPost→broker path).
+  registerJob("webhook-latency-check", 15 * 60 * 1000, async () => {
+    const { runWebhookLatencyCheck } = await import(
+      "./services/webhook-latency-monitor-service.js"
+    );
+    const result = await runWebhookLatencyCheck();
+    if (result.alarmed) {
+      logger.warn(
+        { p95Ms: result.percentiles.p95, p50Ms: result.percentiles.p50 },
+        "webhook-latency-check: latency threshold exceeded",
+      );
+    } else {
+      logger.debug(
+        { p95Ms: result.percentiles.p95, count: result.percentiles.count },
+        "webhook-latency-check: within threshold",
+      );
+    }
+  });
+
+  cron.schedule("*/15 * * * *", async () => {
+    if (!_tryAcquireJobLock("webhook-latency-check")) return;
+    try {
+      // Not pipeline-gated: latency monitor is an observability surface
+      const t0 = Date.now();
+      await withRetry("webhook-latency-check", SCHEDULER_JOBS["webhook-latency-check"].run, 1);
+      markJobRun("webhook-latency-check");
+      emitJobComplete("webhook-latency-check", Date.now() - t0);
+    } finally {
+      _releaseJobLock("webhook-latency-check");
+    }
+  });
+  _scheduledJobs.add("webhook-latency-check");
+
+  // ─── Wave 25 Gap 9: Regime coverage check — daily 6 AM ET ────────────────────
+  // Verifies each regime in DEPLOYED_REGIME_LIST has ≥1 PILOT/DEPLOYED strategy.
+  // NULL preferredRegimes = wildcard (covers all regimes).
+  // Alarms when any regime has zero coverage before market open.
+  registerJob("regime-coverage-check", 24 * 60 * 60 * 1000, async () => {
+    const { runRegimeCoverageCheck } = await import(
+      "./services/regime-coverage-monitor-service.js"
+    );
+    const result = await runRegimeCoverageCheck();
+    logger.info(
+      { gapRegimes: result.gapRegimes, anyGap: result.anyGap, alertFired: result.alertFired },
+      "regime-coverage-check: tick complete",
+    );
+  });
+
+  // Daily at 6 AM ET = 10:00 UTC (EDT) or 11:00 UTC (EST), weekdays only
+  cron.schedule("0 10,11 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("regime-coverage-check")) return;
+    try {
+      const now = new Date();
+      const etHourStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: false,
+      });
+      const [etHStr, etMStr] = etHourStr.split(":");
+      const etH = parseInt(etHStr, 10);
+      const etM = parseInt(etMStr, 10);
+      if (etH !== 6 || etM !== 0) {
+        logger.debug({ etH, etM }, "Scheduler: regime-coverage-check — not 6:00 AM ET, skipping");
+        return;
+      }
+      // Not pipeline-gated: coverage alarm is a safety surface
+      const t0 = Date.now();
+      await withRetry("regime-coverage-check", SCHEDULER_JOBS["regime-coverage-check"].run, 1);
+      markJobRun("regime-coverage-check");
+      emitJobComplete("regime-coverage-check", Date.now() - t0);
+    } finally {
+      _releaseJobLock("regime-coverage-check");
+    }
+  });
+  _scheduledJobs.add("regime-coverage-check");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

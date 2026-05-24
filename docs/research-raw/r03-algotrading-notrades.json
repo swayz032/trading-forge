@@ -1,0 +1,143 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "bot no trades not triggering filtered",
+  "items": [
+    {
+      "title": "Dead Internet Theory in r/algotrading",
+      "url": "https://www.reddit.com/r/algotrading/comments/1q67z33/dead_internet_theory_in_ralgotrading/",
+      "snippet": "im calling this out because the discussion quality here is being degraded by what i am 99% sure is a bot farming engagement.\n\nif you saw the recent post about Small experiment: \"[Small experiment: filtering low-expectancy trades flipped a strategy’s PnL in 24h](https://www.reddit.com/r/algotrading/comments/1q5jvlf/small_experiment_filtering_lowexpectancy_trades/)\" you might have noticed the strate",
+      "published_at": "2026-01-07T06:25:39.000Z",
+      "subreddit": "algotrading",
+      "score": 590,
+      "num_comments": 143
+    },
+    {
+      "title": "Seeking feedback on my scanner (dealer Greek exposure x 4-gate filter)",
+      "url": "https://www.reddit.com/r/algotrading/comments/1tglpcx/seeking_feedback_on_my_scanner_dealer_greek/",
+      "snippet": "I built a CLI tool that scans any US stock ticker and produces an options entry recommendation based on trend regime, dealer Greek positioning, and market structure. Looking for honest feedback. Tear it apart, tell me what's broken, suggest improvements, or tell me I'm wasting my time. All of the above are welcome.\n\n## How It Works\n\n```\n  TICKER\n    |\n    v\n  Fetch quote + OHLCV history + options ",
+      "published_at": "2026-05-18T12:51:43.000Z",
+      "subreddit": "algotrading",
+      "score": 2,
+      "num_comments": 2
+    },
+    {
+      "title": "My AI built me a trading bot and now neither of us fully knows what we're doing — roast us please",
+      "url": "https://www.reddit.com/r/algotrading/comments/1spzi78/my_ai_built_me_a_trading_bot_and_now_neither_of/",
+      "snippet": "Hi r/algotrading,\n\n\n\nThis is technically Claude writing this, because my human asked me to. He described himself as a \"Finanz-Noob\" (German for \"has no idea what's happening\") and thought it would be a good idea to ask an AI to build him an algo trading bot from scratch. So here we are.\n\n\\*\\*What we built:\\*\\*\n\nA Python-based momentum scalper running on a Raspberry Pi at home (yes, really), tradin",
+      "published_at": "2026-04-19T17:37:12.000Z",
+      "subreddit": "algotrading",
+      "score": 239,
+      "num_comments": 155
+    },
+    {
+      "title": "6 months full time on algo, 17 strategies dead on MNQ/NQ, I genuinely don't know what I'm missing anymore",
+      "url": "https://www.reddit.com/r/algotrading/comments/1spd5nf/6_months_full_time_on_algo_17_strategies_dead_on/",
+      "snippet": "Been grinding on this for about 6 months full-time now. Started with mean-reversion ideas, then went into microstructure, order flow, ML, cross-asset lead-lag, basically everything I could get my hands on. I have 3 years of Databento L2 tick data on MNQ, 7 years of 1-min bars, 15 years of MGC, a 20-core server, and I built a custom Rust stack for tick parsing and L2 order book reconstruction befor",
+      "published_at": "2026-04-18T23:45:00.000Z",
+      "subreddit": "algotrading",
+      "score": 115,
+      "num_comments": 155
+    },
+    {
+      "title": "Is anyone interested in discussing a kalshi 15 minute btc market strat I’m developing/ have developed (not sure how much I should share curious)?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ru03le/is_anyone_interested_in_discussing_a_kalshi_15/",
+      "snippet": "Hey everyone I wfh and a couple weeks ago I got obsessed with BTC 15 minute market \n\nI came up with some pretty simple indicators but I back tested them from 5 years of data and am using Claude code to scrape kalshi crypto market prices constantly to further refine my strategy.\n\nThe image provided is from a paper trading dashboard, and I have a couple strategies I’ve been developing that look prom",
+      "published_at": "2026-03-15T00:44:14.000Z",
+      "subreddit": "algotrading",
+      "score": 25,
+      "num_comments": 91
+    },
+    {
+      "title": "/r/algotrading is currently being swarmed by stock pumping bots - They are trying to influence retail traders in the US stock market. Be very skeptical of any comment or post you read by new users who are bringing attention to individual stocks, and please report ones you see.",
+      "url": "https://www.reddit.com/r/algotrading/comments/l6hs4e/ralgotrading_is_currently_being_swarmed_by_stock/",
+      "snippet": "It started with a trickle a few days ago, but we are now seeing tens of thousands of bots joining the sub, many of which are posting stock pumping comments and threads..  (Literally 40k+ new users signing up in the last 24 hours.)\n\nThankfully, many of the existing spam filters and custom automod rules have kept the amount of spam that gets through to a minimum, but  we still need help cleaning the",
+      "published_at": "2021-01-27T23:35:42.000Z",
+      "subreddit": "algotrading",
+      "score": 803,
+      "num_comments": 192
+    },
+    {
+      "title": "Hi everyone, I finally put my MT5 EA on a funded account. Excited!",
+      "url": "https://www.reddit.com/r/algotrading/comments/1op7ooq/hi_everyone_i_finally_put_my_mt5_ea_on_a_funded/",
+      "snippet": "Hey everyone, I am not a trader, but a programmer. I have always been inclined to solve the trading problem, and It's been a long road, learning, failing, testing, and deploying live. \n\nTo whoever is building bots, the following will help you get more confidence and hopefully help you get to profits faster:  \n1. Ditch python completely - use backtests of the platform you are planning to trade on (",
+      "published_at": "2025-11-05T16:34:54.000Z",
+      "subreddit": "algotrading",
+      "score": 65,
+      "num_comments": 107
+    },
+    {
+      "title": "How do you tell apart alpha from bullshit?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1t0twnn/how_do_you_tell_apart_alpha_from_bullshit/",
+      "snippet": "Math undergraduate here, with a background in software engineering. I’ve always been interested in algo trading, though I haven’t been consistent. I built my first bot 7 years ago, and it was profitable for some time (until it wasn’t). Looking back, I don’t know if I had a statistical edge or it was just luck.\n\nI started dabbling again and found something promising, though I don’t want to fool mys",
+      "published_at": "2026-05-01T13:46:29.000Z",
+      "subreddit": "algotrading",
+      "score": 3,
+      "num_comments": 43
+    },
+    {
+      "title": "I created a Python trading framework for trading stocks &amp; crypto",
+      "url": "https://www.reddit.com/r/algotrading/comments/qfksk2/i_created_a_python_trading_framework_for_trading/",
+      "snippet": "[https://github.com/Blankly-Finance/Blankly](https://github.com/Blankly-Finance/Blankly)\n\nSo I've seen a few posts already from our users that have linked our open-source trading framework `Blankly`. We think the excitement around our code is really cool, but I do want to introduce us with a larger post. I want this to be informational and give people an idea about what we're trying to do.\n\nThere ",
+      "published_at": "2021-10-25T16:41:06.000Z",
+      "subreddit": "algotrading",
+      "score": 640,
+      "num_comments": 133
+    },
+    {
+      "title": "Has anybody found a reliable trading bot service to place limit orders with a bulk-upload .csv file? Hoping to find one that does not lock funds before order triggers. (FOR CRYPTO)",
+      "url": "https://www.reddit.com/r/algotrading/comments/gq7bb5/has_anybody_found_a_reliable_trading_bot_service/",
+      "snippet": " I have looked through the following platforms so far without luck:\n\nCoinigy\n\nTrailingCrypto\n\nCryptohopper\n\nCryptoHero\n\nKaktana\n\nAltrady\n\nTradeSanta",
+      "published_at": "2020-05-25T08:30:27.000Z",
+      "subreddit": "algotrading",
+      "score": 3,
+      "num_comments": 0
+    },
+    {
+      "title": "Opinion / Guidance",
+      "url": "https://www.reddit.com/r/algotrading/comments/1t2v527/opinion_guidance/",
+      "snippet": "Hey [r/algotrading](https://www.reddit.com/r/algotrading/),                                                                                                                          \n\nIve really watned to get into trading but i had know idea about it , i had a claude code plan and i used it to build a bot that trades.  more details given below (PS- i dont what half if this even means so i generrate",
+      "published_at": "2026-05-03T19:34:18.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 35
+    },
+    {
+      "title": "Built a crypto futures bot, now stuck and can not figure out a way forward",
+      "url": "https://www.reddit.com/r/algotrading/comments/1s90wgr/built_a_crypto_futures_bot_now_stuck_and_can_not/",
+      "snippet": "So I've been working on this for a while now. Automated strategy for crypto perp futures, 15-minute timeframe. Uses oscillator confluence for entries with a signal-reversal exit mechanism and a few filters to keep it out of bad trades. Nothing fancy, no ML, no GPT nonsense.\n\nThe results are decent — 5 out of 6 walk-forward windows pass (6-month windows, 70/30 train-test split), Sharpe around 1.86,",
+      "published_at": "2026-03-31T21:34:17.000Z",
+      "subreddit": "algotrading",
+      "score": 18,
+      "num_comments": 40
+    },
+    {
+      "title": "Does this backtest look like a real edge live? Looking for bot and automation feedback from people with real experience?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1q0uj1z/does_this_backtest_look_like_a_real_edge_live/",
+      "snippet": "Hey everyone. I’m looking for honest feedback, especially from anyone who has traded with an automated strategy or bot in the real world.\nI’m considering using a bot for my own trading because I’m too emotional and I don’t trust myself to consistently do the right thing in the moment. Cutting losers, not revenge trading, not FOMO. Automation feels like it could remove me from the equation.\n\nI’ve b",
+      "published_at": "2026-01-01T03:22:58.000Z",
+      "subreddit": "algotrading",
+      "score": 84,
+      "num_comments": 45
+    },
+    {
+      "title": "My journey in algotrading - please critique me and maybe some advice please",
+      "url": "https://www.reddit.com/r/algotrading/comments/1s9kbip/my_journey_in_algotrading_please_critique_me_and/",
+      "snippet": "I started algotrading with one of my friends with barely any prior knowledge in finance or trading myself. He knew his finance/trading stuff, but lacked the mathematics and coding for it, so I was the one who did it at first while learning along the way.\n\nAt the start, we were doing a 3-pivot strategy on a 15-minute timeframe that does around 3-7 trades a day on bitcoin, and it took us nearly half",
+      "published_at": "2026-04-01T13:17:47.000Z",
+      "subreddit": "algotrading",
+      "score": 9,
+      "num_comments": 38
+    },
+    {
+      "title": "Follow-up: tested every suggestion from my last post on my crypto bot, some worked some failed completely",
+      "url": "https://www.reddit.com/r/algotrading/comments/1sd9hlj/followup_tested_every_suggestion_from_my_last/",
+      "snippet": "Update on my crypto futures bot — implemented suggestions from my last post, some worked incredibly well, some failed completely. New problems now.\n\nPosted here recently about struggling with overfitting correction, regime detection, and backtester speed. Went and tested every suggestion I got. Here's what happened.\n\nSomeone suggested CPCV instead of Deflated Sharpe Ratio. Implemented 15 purged fo",
+      "published_at": "2026-04-05T17:25:54.000Z",
+      "subreddit": "algotrading",
+      "score": 19,
+      "num_comments": 34
+    }
+  ],
+  "cited_at": "2026-05-24T04:40:59.732Z"
+}

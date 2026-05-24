@@ -1,0 +1,188 @@
+{
+  "source": "reddit",
+  "subreddit": "ninjatrader",
+  "query": "automated strategy live trading",
+  "items": [
+    {
+      "title": "Automated strategy",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1p5orq9/automated_strategy/",
+      "snippet": "Hello guys, I crated an automated strategy and today is my first live test. I noticed that it did not take any trades during the morning, so I disabled it and enabled it again, and noticed that it should have taken some trades. It shows the trades that it should have taken on the chart, but it didn’t triggered when it was enabled the whole morning. Any ideas or suggestions why this happened? Thank",
+      "published_at": "2025-11-24T18:22:32.000Z",
+      "subreddit": "ninjatrader",
+      "score": 2,
+      "num_comments": 17
+    },
+    {
+      "title": "Best VPS for NinjaTrader 8 in 2026? My hardware is lagging and I need a low-latency solution.",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1setybb/best_vps_for_ninjatrader_8_in_2026_my_hardware_is/",
+      "snippet": "I’ve been running NT8 on an older laptop. During high volatility the lag is unbearable. I’m seeing significant slippage on my entries and I don’t want a power outage or Windows update killing a live trade. It almost happened once already. \n\nNeed a VPS for NinjaTrader 8 that offers low latency to Chicago CME and at least 16GB of RAM. Also need it to handle multiple charts and automated strategies. ",
+      "published_at": "2026-04-07T12:01:44.000Z",
+      "subreddit": "ninjatrader",
+      "score": 6,
+      "num_comments": 25
+    },
+    {
+      "title": "I am a manual futures trader who learned C# to build my own NinjaTrader addon. Here is what that looked like.",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1sox0j9/i_am_a_manual_futures_trader_who_learned_c_to/",
+      "snippet": "I want to share my experience building a NinjaTrader addon as someone who is not a software engineer by trade. I work in healthcare data analytics. My coding background is SQL and Python — not C# and not NinjaScript. But I had a problem that no existing tool solved exactly the way I needed, so I figured it out.\n\nThe problem: I trade ES and MES manually. Discretionary entries on the DOM and ChartTr",
+      "published_at": "2026-04-18T13:00:03.000Z",
+      "subreddit": "ninjatrader",
+      "score": 11,
+      "num_comments": 15
+    },
+    {
+      "title": "NinjaScript for Order Flow Algos?",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1nd71bx/ninjascript_for_order_flow_algos/",
+      "snippet": "**TL;DR**: Algo trader (QuantConnect background) curious about trying NinjaScript with order flow data. Looking for first-hand experiences.\n\nHi all,\n\nCurrently I research, code, backtest, and deploy automated strategies with QuantConnect. It’s a great platform with strong Python libraries for signal backtesting, trade execution, and portfolio modeling.\n\nUnfortunately, QC doesn’t provide order flow",
+      "published_at": "2025-09-10T06:44:17.000Z",
+      "subreddit": "ninjatrader",
+      "score": 3,
+      "num_comments": 6
+    },
+    {
+      "title": "Looking for a high-quality recorded course to learn NinjaScript for NinjaTrader 8",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1knxt10/looking_for_a_highquality_recorded_course_to/",
+      "snippet": "Hey everyone,\nI’m looking for a comprehensive recorded course (not live or in-person) that teaches how to program indicators and automated strategies in NinjaTrader 8 using NinjaScript. I already know basic trading concepts and I’m not interested in Strategy Builder-only tutorials — I want to learn how to code directly in NinjaScript (C#).\n\nMy priorities are:\n\t•\tDepth and clarity of technical cont",
+      "published_at": "2025-05-16T10:49:03.000Z",
+      "subreddit": "ninjatrader",
+      "score": 2,
+      "num_comments": 6
+    },
+    {
+      "title": "Help with automated strategy",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1sa2aa2/help_with_automated_strategy/",
+      "snippet": "I am new to Ninjatrader, and have been trying to develop a system to automatically buy/sell a stock. My whole analysis is written as a python script, and what it outputs is a buy/sell signal into a text file.\n\nWhat I need to happen is ninjatrader to read the file and either buy or sell a stock depending on the files content. I have written a simple strategy using ninjascript. It reads the buy/sell",
+      "published_at": "2026-04-02T00:24:20.000Z",
+      "subreddit": "ninjatrader",
+      "score": 2,
+      "num_comments": 15
+    },
+    {
+      "title": "Automating EMA Pullback Strategy in NinjaTrader",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1riqm0t/automating_ema_pullback_strategy_in_ninjatrader/",
+      "snippet": "I want to share an automated approach to the EMA pullback strategy, inspired by [u/Cranky\\_Crypto](https://www.reddit.com/user/Cranky_Crypto/)’s excellent post on [letting winners run](https://www.reddit.com/r/Daytrading/comments/zheyo7/letting_your_winners_run_a_few_ways_to_manage/).\n\nThe biggest challenge with automating this strategy is that the script can over-trade by adding contracts every s",
+      "published_at": "2026-03-02T11:42:06.000Z",
+      "subreddit": "ninjatrader",
+      "score": 11,
+      "num_comments": 2
+    },
+    {
+      "title": "Has anyone successfully created automated strategies?",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1lt9942/has_anyone_successfully_created_automated/",
+      "snippet": "• I am not selling anything or promoting. \n\nI just finished writing 8 strategies that go “live” tonight on my demo account for testing. I’m so nervously excited to see what happens. Has anyone successfully done this? I’m well aware slippage is a thing, and contract fees are too. What obstacles did you run into, and what was the net result? Did you decide they aren’t feasible, or did they require b",
+      "published_at": "2025-07-06T19:07:40.000Z",
+      "subreddit": "ninjatrader",
+      "score": 4,
+      "num_comments": 30
+    },
+    {
+      "title": "i had my friend code my strategy to automate. im testing it on live markets and its up 1700$ this week.",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1llkl2u/i_had_my_friend_code_my_strategy_to_automate_im/",
+      "snippet": "https://preview.redd.it/8fihg93ehe9f1.png?width=1252&amp;format=png&amp;auto=webp&amp;s=a3e3803530c1b943a8025f51d0728fba5c63d7cb\n\nhttps://preview.redd.it/losbi3zdhe9f1.png?width=1254&amp;format=png&amp;auto=webp&amp;s=dafb3430683e3c0a3de5220af2d9c131844df470\n\n",
+      "published_at": "2025-06-27T04:11:09.000Z",
+      "subreddit": "ninjatrader",
+      "score": 13,
+      "num_comments": 16
+    },
+    {
+      "title": "PowerFib Add-On | Turns NT default Fib Tool into Automated Strategy",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1odg0zt/powerfib_addon_turns_nt_default_fib_tool_into/",
+      "snippet": "Hi All,\n\nI've used the Fib Retracement tool to measure and trade pullbacks for years.  And for years I prowled the NT forums, talked with developers looking for a way to automate the drawing tool.  I was told it had to be an Fibonacci Indicator. That's all that's available; you're not able to customize them any way you want.  Well, I wanted to choose the Highs/Lows I thought significant, move the ",
+      "published_at": "2025-10-22T18:16:16.000Z",
+      "subreddit": "ninjatrader",
+      "score": 1,
+      "num_comments": 4
+    },
+    {
+      "title": "6-10 Minute Delay for Automated Trading Strategy Execution—Need Insights",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1gzy847/610_minute_delay_for_automated_trading_strategy/",
+      "snippet": "Hey everyone,\n\nI’m facing a critical issue with my automated trading setup and wanted to see if anyone here has experienced anything similar or has insights that could help.\n\nI’m running an automated strategy on NT8, receiving TV alerts to execute trades using any intermediary platform named CrossTrade. Over the past few trading days, I’ve experienced significant delays sometimes up to 6 minutes i",
+      "published_at": "2024-11-26T00:08:05.000Z",
+      "subreddit": "ninjatrader",
+      "score": 4,
+      "num_comments": 26
+    },
+    {
+      "title": "Strategy glitches simulator to live",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1mngxf3/strategy_glitches_simulator_to_live/",
+      "snippet": "Hi Everyone,\n\nI am running various strategies on the simulator and whenever I switch them on to the live account the functionality of the strategy glitches even though it works perfectly on paper trading. This is specifically on futures using simple indicators like SMA and EMA. Was wondering if anyone was having similar issues or had any advice? ",
+      "published_at": "2025-08-11T16:00:11.000Z",
+      "subreddit": "ninjatrader",
+      "score": 1,
+      "num_comments": 1
+    },
+    {
+      "title": "Best configuration for automated strategy",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1j4nuxw/best_configuration_for_automated_strategy/",
+      "snippet": "Hi, I would like to get feedback what is the best market data to use/subscribe when doing automated strategy in NJ. My use case is trade in a shorter time frame so I need a fast and good market data. Is Kinetics sufficient or do you have any recommendations? What brokerage works best with my use case? Is Interactive Broker the best choice? \n\nAppreciate for any guidance and recommendations. ",
+      "published_at": "2025-03-06T04:57:37.000Z",
+      "subreddit": "ninjatrader",
+      "score": 3,
+      "num_comments": 6
+    },
+    {
+      "title": "Automated strat not working in live account",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1izj5jp/automated_strat_not_working_in_live_account/",
+      "snippet": "I have a strategy that I had coded for NT8, it's working perfectly as far as execution on a SIM account, but when I apply it to my live account it's giving me error messages that says \"order price is outside bands \"Difference between stop and limit price is larger than banding value of 3000.0 using delta .00'  Order parameters are invalid.\"\n\nAny idea why this would not be giving me an error messag",
+      "published_at": "2025-02-27T16:01:47.000Z",
+      "subreddit": "ninjatrader",
+      "score": 1,
+      "num_comments": 2
+    },
+    {
+      "title": "Connecting TradingView to NinjaTrader for automated trading",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1cwii20/connecting_tradingview_to_ninjatrader_for/",
+      "snippet": "Hi everyone, we use TV almost exclusively for charts and have become dependent on custom indicators and Pine Script. But for years we wanted someone to figure out a way to solve the TV -&gt; Ninja problem, allowing us to send TV alerts directly to NT8. When no one did, we decided to do it ourselves.\n\n**Enter CrossTrade:** after a lot of R&amp;D, we created a dead simple Windows desktop app that ru",
+      "published_at": "2024-05-20T15:36:14.000Z",
+      "subreddit": "ninjatrader",
+      "score": 6,
+      "num_comments": 12
+    },
+    {
+      "title": "Is any person here making a living from day trading?",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/11ip2iw/is_any_person_here_making_a_living_from_day/",
+      "snippet": "",
+      "published_at": "2023-03-05T05:50:35.000Z",
+      "subreddit": "ninjatrader",
+      "score": 2,
+      "num_comments": 19
+    },
+    {
+      "title": "Tradingview Strategy -&gt; NinjaTrader Automation?",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1axj5ko/tradingview_strategy_ninjatrader_automation/",
+      "snippet": "I have written some complex strategies in TradingView already &amp; not great with C#. I was planning on using Ninjatrader as my broker to enter orders. I was going to use the OIF(Order Instruction File) feature to enter my trades, but I see Ninjatrader forces you to buy Live Datafeeds in order to enter trades even though I don't need the data? I would use Tradovate, but I was trying to avoid the ",
+      "published_at": "2024-02-22T22:02:57.000Z",
+      "subreddit": "ninjatrader",
+      "score": 2,
+      "num_comments": 4
+    },
+    {
+      "title": "Started a MES trade at 6:26pm today, and still got a warning for Initial Margin Requirement",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1tj9h4w/started_a_mes_trade_at_626pm_today_and_still_got/",
+      "snippet": "Hi.  My first trade today.  When I entered trade at 6:26pm EST, I saw only $50 was required from me. But then around 10:50pm EST, I get some kind of warning/message from the computerized woman (couldn't hear it because my bluetooth speaker didn't catch the beginning of it).  And so I looked at my messages and then also looked at my account dashboard and saw I am required to have now $2,657 for my ",
+      "published_at": "2026-05-21T04:20:00.000Z",
+      "subreddit": "ninjatrader",
+      "score": 1,
+      "num_comments": 37
+    },
+    {
+      "title": "To get accurate backtesting results you need to do a lot more than you think.  Here is the short list.",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1t8uq23/to_get_accurate_backtesting_results_you_need_to/",
+      "snippet": "First off all, never use the strategy analyzer, exotic bar types, minute data as the time series on backtest for scalping types of strategies.  These simply can't handle the nuances of trading a few ticks and you will overstate your results by an order of magnitude.\n\nNever check the fill limit order on touch box no matter what you do.  This is the worst thing you can ever do.\n\nIn general throw awa",
+      "published_at": "2026-05-10T02:47:08.000Z",
+      "subreddit": "ninjatrader",
+      "score": 11,
+      "num_comments": 10
+    },
+    {
+      "title": "Built an ORB-Fibonacci-MACD strategy on NinjaTrader - 71% win rate in backtests",
+      "url": "https://www.reddit.com/r/ninjatrader/comments/1rfl915/built_an_orbfibonaccimacd_strategy_on_ninjatrader/",
+      "snippet": "    Hey ,\n    \n    Been working on an automated ORB strategy with Fibonacci pullback entries and MACD confirmation.\n    \n    **Results from 6 months backtest:**\n    - 71% win rate on longs (NQ, 5-min)\n    - 1.84 profit factor\n    - Max drawdown under $6k\n    \n    **Strategy rules:**\n    - 20-min ORB (9:30-9:50 AM)\n    - Wait for pullback to 38.2%-50% Fib\n    - MACD confirmation required\n    - Fixe",
+      "published_at": "2026-02-26T20:22:40.000Z",
+      "subreddit": "ninjatrader",
+      "score": 10,
+      "num_comments": 20
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:26.691Z"
+}

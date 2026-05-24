@@ -1,0 +1,325 @@
+{
+  "query": "automated futures trading bot making 500 per day case study",
+  "since": "2024-01-01",
+  "depth": "deep",
+  "sources": [
+    {
+      "source": "brave",
+      "items": [
+        {
+          "title": "Top Trading Algo Bots: Automating Your Trading Strategy",
+          "url": "https://bookmap.com/blog/top-trading-algo-bots-automating-your-trading-strategy",
+          "snippet": "These EAs automate trading strategies based on predefined rules or technical indicators. They are particularly popular among forex and futures traders. Let’s check out some key features of MetaTrader EAs: ... Say a trader sets up an EA to trade S&amp;P 500 futures based on Fibonacci retracement ...",
+          "published_at": "2026-01-11T18:01:57.000Z",
+          "score": null
+        },
+        {
+          "title": "Building Your First Algorithmic Futures Trading Bot: A Step-by-Step Guide to Execution - Learn Quant Trading | QuantStrategy.io",
+          "url": "https://quantstrategy.io/blog/building-your-first-algorithmic-futures-trading-bot-a-step/",
+          "snippet": "For a momentum bot trading ES futures (E-mini S&amp;P 500), the bot’s core loop performs these steps every 10 seconds:",
+          "published_at": "2026-01-24T06:56:12.000Z",
+          "score": null
+        },
+        {
+          "title": "Automated Futures Trading Strategies: How to Build, Backtest & Scale",
+          "url": "https://www.quantvps.com/blog/automated-futures-trading-strategies",
+          "snippet": "For example, if you’re risking $500 on an ES trade with a 20-tick stop, and each tick is worth $12.50, you’d <strong>trade 2 contracts ($500 / ($12.50 × 20) = 2)</strong>.",
+          "published_at": "2026-02-16T09:40:23.000Z",
+          "score": null
+        },
+        {
+          "title": "From Failed Experiments to 43.8% APR: How I Finally Built a Profitable Trading Bot with AI | by Joe Tay | Medium",
+          "url": "https://medium.com/@joetay_50959/from-failed-experiments-to-43-8-apr-how-i-finally-built-a-profitable-trading-bot-with-ai-64771995d38c",
+          "snippet": "Articles with titles like “<strong>I Built a Trading Bot That Makes $500/Day</strong>” or “How I Automated My Way to Financial Freedom” filled my reading list. The promise was intoxicating: write some code, let it run, and watch the money roll in while ...",
+          "published_at": "2025-12-09T10:55:56.000Z",
+          "score": null
+        },
+        {
+          "title": "Top AI-Based Futures Trading Bots and Platforms Revealed",
+          "url": "https://www.quantvps.com/blog/top-ai-based-futures-trading-bots",
+          "snippet": "This integration supports a variety of futures contracts, including the E-mini S&amp;P 500, crude oil, and gold, while providing real-time account data synchronization. It’s built to handle different account types and adapt to broker-specific requirements. Alerts generated from TradingView&#x27;s Pine Script strategies are sent directly to TradersPost, which executes market or limit orders based on the predefined conditions. The system also includes automated stop-loss placement and position sizing, helping traders manage risk effectively.",
+          "published_at": "2026-03-15T05:23:06.000Z",
+          "score": null
+        },
+        {
+          "title": "r/FuturesTrading on Reddit: Thoughts on automated/bot trading?",
+          "url": "https://www.reddit.com/r/FuturesTrading/comments/1r5iwqx/thoughts_on_automatedbot_trading/",
+          "snippet": "<strong>Plus futures specifically = leverage</strong>. Small model error × leverage = big pain real quick. Bots execute mistakes perfectly and fast.",
+          "published_at": "2026-02-15T21:29:10.000Z",
+          "score": null
+        },
+        {
+          "title": "TradersPost | Automated Trading Bot Platform",
+          "url": "https://traderspost.io/",
+          "snippet": "<strong>Trade multiple asset classes like stocks, options and futures from automated trading strategy strategies</strong>.",
+          "published_at": "2026-04-15T12:15:52.000Z",
+          "score": null
+        },
+        {
+          "title": "How AI Trading Bots Are Helping Americans Earn $500-$2000+ Per Day (And How You Can Start) | by BARRON VAN DEN BERG | Nov, 2025 | Medium",
+          "url": "https://medium.com/@barronqasem/how-ai-trading-bots-are-helping-americans-earn-500-2000-per-day-and-how-you-can-start-a3734154cbb2",
+          "snippet": "How AI Trading Bots Are Helping Americans Earn $500-$2000+ Per Day (And How You Can Start) The rise of algorithmic trading is no longer reserved for Wall Street — everyday traders are using …",
+          "published_at": "2025-11-01T19:58:17.000Z",
+          "score": null
+        },
+        {
+          "title": "r/Daytrading on Reddit: Finally automated my strategy! Here’s my bot in action taking winning trades",
+          "url": "https://www.reddit.com/r/Daytrading/comments/1qw798v/finally_automated_my_strategy_heres_my_bot_in/",
+          "snippet": "The speed at which your algorithm attempts to execute the trade as well as your broadband connection and your distance away from the exchange will affect slippage. So I advise caution when you finally decide to attempt live trading. Please use a simulated account for several weeks if not several months before you finally commit real dollars. ... Good luck on your trading. 🙂 ... if you see on top of the chard it says 1 minute, so i think he played a playback of somechart to train his bot on 1 minute chart",
+          "published_at": "2026-02-05T06:16:52.000Z",
+          "score": null
+        },
+        {
+          "title": "3 Best AI Trading Bots for 2026 - StockBrokers.com",
+          "url": "https://www.stockbrokers.com/guides/ai-stock-trading-bots",
+          "snippet": "<strong>TrendSpider</strong> offers a comprehensive suite of tools as part of its market research and analysis Software-as-a-Service (SaaS) application, covering multiple asset classes, including U.S. equities and ETFs, U.S. futures, forex and cryptocurrency markets.",
+          "published_at": "2026-04-21T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "I Built an AI Trading Bot and Let It Trade for 9 Days. Here’s What Happened. | by Jiri George Dolejs | Medium",
+          "url": "https://medium.com/@kojott/i-built-an-ai-trading-bot-and-let-it-trade-for-9-days-heres-what-happened-6ceb69ad4d08",
+          "snippet": "This is what actually happens when you build a trading bot powered by <strong>DeepSeek LLM</strong>, integrate it with Hyperliquid’s perpetual futures exchange, and watch it navigate real market conditions in real-time.",
+          "published_at": "2025-11-01T02:59:17.000Z",
+          "score": null
+        },
+        {
+          "title": "Ghost AI Trading Bot | Automated Futures Every Day - YouTube",
+          "url": "https://www.youtube.com/watch?v=DRyU14vI2yk",
+          "snippet": "<strong>https://www.quantcrawler.com/get-ghost</strong>The AI analyzes the chart. Ghost executes the trade. You do nothing.Join the community:Discord: https://discord.gg/Ma3h...",
+          "published_at": "2026-04-24T20:30:08.000Z",
+          "score": null
+        }
+      ]
+    },
+    {
+      "source": "exa",
+      "items": [
+        {
+          "title": "Automated Polymarket Trading: A 30-Day Live Case Study — Poly Syncer",
+          "url": "https://www.polysyncer.com/blog/automated-polymarket-trading-case-study",
+          "snippet": "",
+          "published_at": "2026-05-07T00:00:00.000Z",
+          "score": 1
+        },
+        {
+          "title": "Automated Trading 6 Month Update | Algo Trading Software",
+          "url": "https://nurp.com/algorithmic-trading-blog/3048-trades-later-6-month-update-automated-trading/",
+          "snippet": "",
+          "published_at": "2026-04-28T00:00:00.000Z",
+          "score": 0.9090909090909091
+        },
+        {
+          "title": "$5,600 From a $100K Prop Account: How Exerato Passed a Challenge in 2 Weeks | Upscale",
+          "url": "https://upscale.trade/blog/success-story-exerato",
+          "snippet": "",
+          "published_at": "2026-03-13T00:00:00.000Z",
+          "score": 0.8181818181818181
+        },
+        {
+          "title": "13 Days, 48 Trades, Breakeven. Then I Fixed One Thing. Here's Every Trade. - DEV Community",
+          "url": "https://dev.to/trendrider/13-days-48-trades-breakeven-then-i-fixed-one-thing-1d6j",
+          "snippet": "",
+          "published_at": "2026-04-16T00:00:00.000Z",
+          "score": 0.7272727272727273
+        },
+        {
+          "title": "Algorithmic Trading Software 6 Week Results | Automated Trading Platform",
+          "url": "https://nurp.com/algorithmic-trading-blog/10k-automated-algorithmic-trading-software-results/",
+          "snippet": "",
+          "published_at": "2026-01-31T00:00:00.000Z",
+          "score": 0.6363636363636364
+        },
+        {
+          "title": "AutoPilot Automatic Trading System Explained • Day Trade To Win | Trading Software + Education",
+          "url": "https://daytradetowin.com/autopilot-automatic-trading-system-explained/",
+          "snippet": "",
+          "published_at": "2026-01-23T00:00:00.000Z",
+          "score": 0.5454545454545454
+        },
+        {
+          "title": "Automated Futures Trading Bots Using Claude AI and MCP Servers",
+          "url": "https://www.quantlabsnet.com/post/automated-futures-trading-bots-using-claude-ai-and-mcp-servers",
+          "snippet": "",
+          "published_at": "2026-03-30T00:00:00.000Z",
+          "score": 0.4545454545454546
+        },
+        {
+          "title": "I Built a Deriv Bot That Wins 71% of the Time — Here’s the Complete Strategy (With Code) | by Precious Lyna Anusiem | Apr, 2026 | Medium",
+          "url": "https://preciousanusiem.medium.com/i-built-a-deriv-bot-that-wins-71-of-the-time-heres-the-complete-strategy-with-code-b2f92c11b2de",
+          "snippet": "",
+          "published_at": "2026-04-21T00:00:00.000Z",
+          "score": 0.36363636363636365
+        },
+        {
+          "title": "I Automated My Crypto Trading for 12 Months: 28% Returns, Zero Sleepless Nights — Here's Exactly How — Steemit",
+          "url": "https://steemit.com/crypto/@fingrafov/i-automated-my-crypto-trading-for-12-months-28-returns-zero-sleepless-nights-here-s-exactly-how",
+          "snippet": "",
+          "published_at": "2026-03-05T00:00:00.000Z",
+          "score": 0.2727272727272727
+        },
+        {
+          "title": "🟧 $15.8K + $10K LIVE Trades 🚀 Precision Edge Futures (S&P500, NASDAQ, Oil)",
+          "url": "https://www.youtube.com/watch?v=zL_P8KcH6Wk",
+          "snippet": "",
+          "published_at": "2026-03-11T00:00:00.000Z",
+          "score": 0.18181818181818177
+        },
+        {
+          "title": "I Built a Lab That Trades for Me. Most trading bots are vaporware. You… | by Devin Julian | May, 2026 | Medium",
+          "url": "https://medium.com/@devinjulian/i-built-a-lab-that-trades-for-me-b784b370e341",
+          "snippet": "",
+          "published_at": "2026-05-22T00:00:00.000Z",
+          "score": 0.09090909090909094
+        },
+        {
+          "title": "Building a Fully Automated Futures Trading System in One Day",
+          "url": "https://reserveflowanalytics.substack.com/p/building-a-fully-automated-futures",
+          "snippet": "",
+          "published_at": "2026-03-21T00:00:00.000Z",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "source": "tavily",
+      "items": [
+        {
+          "title": "Successful Automated Trading Case Studies That Generated Consistent Profits - TradingView Hub",
+          "url": "https://www.tv-hub.org/success-stories",
+          "snippet": "| Month | Portfolio Value | Monthly Return | BTC Price Range | Trades Executed |\n ---  --- \n| January | $5,000 | 0% | $16,500-$23,000 | 0 |\n| February | $5,450 | 9% | $20,000-$25,000 | 12 |\n| March | $6,703 | 23% | $20,000-$28,000 | 18 |\n| April | $7,140 | 6.5% | $27,000-$31,000 | 8 |\n| May | $7,854 | 10% | $25,000-$30,000 | 14 |\n| June | $8,561 | 9% | $24,000-$31,000 | 16 |\n| July | $9,450 | 10.4",
+          "published_at": null,
+          "score": 0.99929583
+        },
+        {
+          "title": "Case Study: Algorithmic Trading With Go | Massive",
+          "url": "https://massive.com/blog/case-study-algorithmict-trading-with-go",
+          "snippet": "Introducing\n\n# Case Study: Algorithmic Trading With Go\n\nJun 30, 2023\n\nIn this case study, we are excited to share an insider's perspective and look under the hood of how a Massive.com customer, who built an automated retail trading bot that is capable of monitoring the entire stock market in real-time. We now pass the baton where they will narrate his own captivating journey. [...] So, buckle up a",
+          "published_at": null,
+          "score": 0.9984988
+        },
+        {
+          "title": "Algo Trading Strategies",
+          "url": "https://quantsavvy.com",
+          "snippet": "|  |  |\n --- |\n| Backtest Period | Intraday Futures Bot |\n| Backtest Period | 2007 – 2024 |\n| Initial Minimum Capital | $30,000﻿ |\n| Futures Exchanges | CME, CBOT﻿ |\n| Decision-Making﻿ | Systematic 100%﻿ |\n| Trading Session﻿ | Day trade only﻿ |\n| Operation Method﻿ | Servers, no cost﻿ |\n| Subscription Frequency﻿ | Annually﻿ |\n| Trading Frequency﻿ | 27 Trades per month |\n| Results Unit Size﻿ | $100k",
+          "published_at": null,
+          "score": 0.9974291
+        },
+        {
+          "title": "YouTube",
+          "url": "https://www.youtube.com/watch?v=c9OjEThuJjY",
+          "snippet": "This is how to create an AI powered trading bot that's 100% automated and makes money.",
+          "published_at": null,
+          "score": 0.99719906
+        },
+        {
+          "title": "Top Trading Algo Bots: Automating Your Trading Strategy",
+          "url": "https://bookmap.com/blog/top-trading-algo-bots-automating-your-trading-strategy",
+          "snippet": "### 1. Hummingbot\n\nHummingbot is an “open-source” trading bot. It is specifically designed for automating trading strategies in a variety of markets, such as cryptocurrency, futures, and traditional assets. This bot supports different strategies, like market-making and arbitrage. For more clarity, let’s check out some of its key features: [...] For example, say there is a “moving average crossover",
+          "published_at": null,
+          "score": 0.9964619
+        },
+        {
+          "title": "Can a 100% automated trading system be profitable",
+          "url": "https://www.reddit.com/r/Daytrading/comments/1gnvkj3/can_a_100_automated_trading_system_be_profitable",
+          "snippet": "So pretty much a bot with objective conditions to when to enter/exit a position. And say you backtest it and it's profitable. Isn't it too good to be true",
+          "published_at": null,
+          "score": 0.9942251
+        },
+        {
+          "title": "Top 20 Trading Bot Strategies for 2026",
+          "url": "https://www.quantvps.com/blog/trading-bot-strategies",
+          "snippet": "A study conducted in June 2024 by Duc Long Vu and Ritabrata Bhattacharyya highlighted the practical use of mean reversion strategies in intraday trading on the New York Stock Exchange (NYSE). Using indicators like MACD, RSI, and Bollinger Bands, the research demonstrated how this approach applies to equity markets. Similarly, Interactive Brokers has noted:\n\n\"Mean reversion strategies can be applie",
+          "published_at": null,
+          "score": 0.9904406
+        },
+        {
+          "title": "How to Automate Futures Trading Using LuxAlgo AI ...",
+          "url": "https://www.youtube.com/watch?v=_aQA0MjYknw",
+          "snippet": "The full walkthrough video of how to set up Lux Algo AI from sign up until automation.",
+          "published_at": null,
+          "score": 0.98998636
+        },
+        {
+          "title": "8 Best Automated Trading Platforms Every Trader Should Know",
+          "url": "https://www.goatfundedtrader.com/blog/best-automated-trading-platform",
+          "snippet": "#### Commodities Markets\n\nCommodities, including energy (oil, natural gas), metals (gold, silver), and agricultural products, are traded via futures or CFDs on automated platforms. Access through brokers such as Interactive Brokers or NinjaTrader enables algorithms to exploit seasonal patterns, supply disruptions, or macroeconomic trends. These markets suit trend-following or breakout systems beca",
+          "published_at": null,
+          "score": 0.9730365
+        },
+        {
+          "title": "Opening Range Breakout Strategy up 400% This Year (Strict Rules ...",
+          "url": "https://tradethatswing.com/opening-range-breakout-strategy-up-400-this-year",
+          "snippet": "Edgeful has created Algos that you can load and backtest in TradingView (plots all trade levels for you), or connect to your broker to have trades placed automatically.\n\nEdgeful is a research platform that shows the statistics on a wide range of patterns and circumstances, such as how often gaps fill, how often the market finishes higher or lower based on the opening hour (or other amount of time)",
+          "published_at": null,
+          "score": 0.7122322
+        },
+        {
+          "title": "Do AI-Based Trading Bots Actually Work for Consistent Profit? - Reddit",
+          "url": "https://www.reddit.com/r/learnmachinelearning/comments/16m3gx7/do_aibased_trading_bots_actually_work_for",
+          "snippet": "The general consensus seems to be that trading bots are ineffective for various reasons. To clarify, when I referred to a \"trading bot,\" I meant",
+          "published_at": null,
+          "score": 0.70089483
+        },
+        {
+          "title": "TrendSpider® Official - All-in-One Market Research & Trading Software",
+          "url": "https://trendspider.com",
+          "snippet": "### Describe market conditions using natural language\n\nDescribe market conditions to TrendSpider just as you would to a friend. Our AI understands and translates your words into signals, simplifying complex entries without the need for coding.\n\nAI strategy development icon\n\n### Train machine learning models to find entry signals\n\nLeverage true machine learning to build custom trading strategies. T",
+          "published_at": null,
+          "score": 0.25238404
+        }
+      ]
+    },
+    {
+      "source": "youtube",
+      "items": [
+        {
+          "title": "Do Trading Bots Really Work? I Gave a Trading Bot $55000 to Trade",
+          "url": "https://www.youtube.com/watch?v=V7hKgdBu_Wk",
+          "snippet": "About: My Name is Ryan Brown. I'm a 38 year old full time forex trader that specializes in Forex algorithmic trading. I have over 19 ...",
+          "published_at": "2024-05-25T15:18:27.000Z",
+          "channel": "Ryan Brown (ResponsibleForexTrading)",
+          "video_id": "V7hKgdBu_Wk",
+          "score": null
+        },
+        {
+          "title": "AI Trading Bots: Beware of Scams! ⚠️",
+          "url": "https://www.youtube.com/watch?v=55XjVSgDa1A",
+          "snippet": "Thinking of using an AI trading bot for crypto? Janine from Easy Crypto warns about rampant scams involving AI and crypto ...",
+          "published_at": "2025-05-29T20:23:51.000Z",
+          "channel": "TechMates",
+          "video_id": "55XjVSgDa1A",
+          "score": null
+        },
+        {
+          "title": "Crypto Millionaire Reveals Money Printing Strategy #crypto",
+          "url": "https://www.youtube.com/watch?v=HGdlxeeXi-4",
+          "snippet": "",
+          "published_at": "2024-02-25T11:25:42.000Z",
+          "channel": "Involio",
+          "video_id": "HGdlxeeXi-4",
+          "score": null
+        },
+        {
+          "title": "How To Actually Build a Trading Bot With Claude Code (Fully Automated)",
+          "url": "https://www.youtube.com/watch?v=y_bsjZThP0o",
+          "snippet": "How to use Claude Code to build a fully automated trading bot. AI Trading Community: https://www.skool.com/aipathways 1:1 AI ...",
+          "published_at": "2026-04-10T13:01:55.000Z",
+          "channel": "AI Pathways",
+          "video_id": "y_bsjZThP0o",
+          "score": null
+        },
+        {
+          "title": "HOW TO SET UP AN AI CRYPTO TRADING BOT FOR EASY GAINS 🙌🏼",
+          "url": "https://www.youtube.com/watch?v=doIZnHlIVGA",
+          "snippet": "Looking for gains without much effort? Check out how to set up an AI trading bot in under 2 minutes and be set to make money ...",
+          "published_at": "2024-01-08T09:26:21.000Z",
+          "channel": "101 Money",
+          "video_id": "doIZnHlIVGA",
+          "score": null
+        }
+      ]
+    }
+  ],
+  "cited_at": "2026-05-24T04:40:42.671Z"
+}

@@ -1,0 +1,35 @@
+{
+  "source": "reddit",
+  "subreddit": "propfirm",
+  "query": "bot api connection traderspost ninjatrader",
+  "items": [
+    {
+      "title": "Is it possible to connect trading bots to prop firm accounts?",
+      "url": "https://www.reddit.com/r/propfirm/comments/1rsosem/is_it_possible_to_connect_trading_bots_to_prop/",
+      "snippet": "Not trying to sell anything here, just exploring what’s possible with prop firms.\n\nI built my own LLM-based trading bot using my own trading data, and I’m wondering if it’s possible to run something like that on a prop firm account or challenge.\n\nDo any firms allow API access or bot trading, or is everything usually restricted to manual trading only?",
+      "published_at": "2026-03-13T14:26:48.000Z",
+      "subreddit": "propfirm",
+      "score": 1,
+      "num_comments": 1
+    },
+    {
+      "title": "Do prop firms normally allow bot linking through API?",
+      "url": "https://www.reddit.com/r/propfirm/comments/1ozib9v/do_prop_firms_normally_allow_bot_linking_through/",
+      "snippet": "I’ve seen mixed answers about this, so I’m trying to get some clarity. Some traders say prop firms allows API connections for bots or automated strategies, while others say it’s completely banned and can get your account closed instantly. \n\nFor those with experience, is API trading generally allowed, or is it something most prop firms restrict?",
+      "published_at": "2025-11-17T14:52:45.000Z",
+      "subreddit": "propfirm",
+      "score": 1,
+      "num_comments": 5
+    },
+    {
+      "title": "​Took me 8 months and 4000+ hours, but I finally built a fully automated DB-to-execution architecture to protect my funded accounts. What was your biggest hurdle in going fully automated?",
+      "url": "https://www.reddit.com/r/propfirm/comments/1rjk3cl/took_me_8_months_and_4000_hours_but_i_finally/",
+      "snippet": "​Hey everyone,\n​Like many of you, I used to struggle with the psychological side of manual trading. Trying to manage the strict $2,500 trailing drawdown on 50k funded accounts was exhausting, and one emotional mistake usually blew the account.\n​I spent the last 8 months coding my own end-to-end automated ecosystem to completely remove my hands from the keyboard. The biggest challenge was keeping t",
+      "published_at": "2026-03-03T08:35:57.000Z",
+      "subreddit": "propfirm",
+      "score": 1,
+      "num_comments": 0
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:25.981Z"
+}

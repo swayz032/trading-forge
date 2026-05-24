@@ -1,0 +1,152 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "monitoring observability alerts production bot",
+  "items": [
+    {
+      "title": "what do you think about this agent set up",
+      "url": "https://www.reddit.com/r/algotrading/comments/1srw7oz/what_do_you_think_about_this_agent_set_up/",
+      "snippet": "I have some background in Python and AI engineering, some slight background in finance (UC berkeley executive education classes).  AI engineering is more of my gig right now.  I'm currently rag training and paper trading an open source system. \"chunks\" are the books and data i have used to train the system.  I'm still building, I've only been on paper trade for 4 days, fixed a few bugs in the rese",
+      "published_at": "2026-04-21T18:24:01.000Z",
+      "subreddit": "algotrading",
+      "score": 93,
+      "num_comments": 87
+    },
+    {
+      "title": "Raspberry Pi stock/etf portfolio monitor and alert bot",
+      "url": "https://www.reddit.com/r/algotrading/comments/9au5y1/raspberry_pi_stocketf_portfolio_monitor_and_alert/",
+      "snippet": "Started looking into writing a bot that can send telegram messages to tell when a stock or etf is crossing a moving average or to give daily updates on the portfolio or positions or whatever... My question is: are there any free APIs for EOD stock and etf prices? What are you using now that yahoo finance is dead/ what did you use when learning to write trading algos(probably yahoo finance... Fml) ",
+      "published_at": "2018-08-28T00:08:52.000Z",
+      "subreddit": "algotrading",
+      "score": 4,
+      "num_comments": 3
+    },
+    {
+      "title": "what do you think about this?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1sv277r/what_do_you_think_about_this/",
+      "snippet": "https://preview.redd.it/0xvpm5vik9xg1.jpg?width=940&amp;format=pjpg&amp;auto=webp&amp;s=9073147994a8b73f5c3a5e0df17cec18b8d07e23\n\nIn response to my post the other day, i've made some changes.  I'm going to run it for 30 days and then post on github if everything is working correctly.  If you want to run it from github, i would like to ask you share your tracked data output.\n\n**Every weekday mornin",
+      "published_at": "2026-04-25T04:31:05.000Z",
+      "subreddit": "algotrading",
+      "score": 9,
+      "num_comments": 15
+    },
+    {
+      "title": "Real-time data providers for ema cross 5 seconds timeframe strategy (stock)",
+      "url": "https://www.reddit.com/r/algotrading/comments/1nrbu9q/realtime_data_providers_for_ema_cross_5_seconds/",
+      "snippet": "Hello everyone,\n\nI have been working on an emas cross strategy that works on a 5 seconds timeframe. I basically need to have real-time live data that allows me to monitor prices for a bunch of tickers simultaneously. I only trade stock, not crypto or forex.\nFor the time being, I don't need to be able to send buy/sell orders as I want to first build a dashboard showing where the different tickers a",
+      "published_at": "2025-09-26T20:18:47.000Z",
+      "subreddit": "algotrading",
+      "score": 14,
+      "num_comments": 43
+    },
+    {
+      "title": "I open-sourced a self-hosted quant trading workspace- now at 3.8K stars, looking for serious feedback",
+      "url": "https://www.reddit.com/r/algotrading/comments/1t7daf7/i_opensourced_a_selfhosted_quant_trading/",
+      "snippet": "Hey everyone,\n\nI’m Henry, the founder of QuantDinger.\n\nOver the past year, I’ve been building an open-source quant trading workspace because I kept running into the same problem:\n\nThe tools around strategy research are powerful, but the workflow is usually broken into too many pieces.\n\nYou write strategy logic in one place.  \nYou check charts somewhere else.  \nYou run backtests in another system. ",
+      "published_at": "2026-05-08T16:40:39.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 9
+    },
+    {
+      "title": "Open-source tool to detect Polymarket's incrementNonce() exploit (ghost fills)",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rb6qay/opensource_tool_to_detect_polymarkets/",
+      "snippet": "If you run bots on Polymarket's BTC 5-minute markets, you may have experienced 'ghost fills' — orders that match on the CLOB but never settle on-chain.\n\nThe exploit: bad actors call incrementNonce() on the CTF Exchange contract to invalidate their losing orders after matching. They keep only winning sides.\n\nI built Nonce Guard — a free, open-source monitoring tool that:\n\n- Watches Polygon blocks i",
+      "published_at": "2026-02-22T00:03:01.000Z",
+      "subreddit": "algotrading",
+      "score": 51,
+      "num_comments": 13
+    },
+    {
+      "title": "Building NSE Trading Bots - Technical Deep Dive on Backtesting, TradingView Integration &amp; Strategy Automation",
+      "url": "https://www.reddit.com/r/algotrading/comments/1t2fm6e/building_nse_trading_bots_technical_deep_dive_on/",
+      "snippet": "Hi r/algotrading!\n\nI've been building NSE trading automation systems and wanted to share some technical insights that might be useful for anyone looking to automate their strategies.\n\n🚀 WHAT'S POSSIBLE WITH NSE TRADING AUTOMATION:\n\nIf you have a trading strategy, here are the technical approaches to automate it:\n\nStrategy Backtesting\n\n• Using NSE Bhavcopy data (historical daily prices)\n\n• Backtes",
+      "published_at": "2026-05-03T08:20:18.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 3
+    },
+    {
+      "title": "Gemini review of my system",
+      "url": "https://www.reddit.com/r/algotrading/comments/1o4wch1/gemini_review_of_my_system/",
+      "snippet": "I have been building this system for months now and have had Gemini do a code, documentation, and work done review every night.   Tomorrow (Monday) my system is going live with paper trading for the first time.    Here is Gemini's final review.   I know its long, and if no one reads it, thats ok!   But Im sort of proud of it!   \n\n# FINAL LAUNCH ASSESSMENT: GO FOR MISSION LAUNCH\n\n# Final Rating: 10",
+      "published_at": "2025-10-12T18:15:00.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 22
+    },
+    {
+      "title": "What are the dominant agentic design patterns emerging in financial AI?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1rf367u/what_are_the_dominant_agentic_design_patterns/",
+      "snippet": "Over the last few months, I’ve been analyzing how AI agents are being designed for real financial workflows, not demos, but systems that operate in regulated environments.\n\nWhat’s interesting is that most successful implementations fall into three repeatable architecture patterns.\n\nHere’s a breakdown:\n\n**The Trading Bot Pattern (Controlled Autonomy)**\n\nNot just signal but execute.\n\nProduction syst",
+      "published_at": "2026-02-26T06:51:13.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 4
+    },
+    {
+      "title": "Real SAAS products that you use that improved your trading since using it?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1gx69sb/real_saas_products_that_you_use_that_improved/",
+      "snippet": "Hi all\n\n  \nI'm tired of wading through countless bot posts about services they offer/use that is a game changer, I don't see real people who have experience with software and can inform people of pros and cons etc.  \n  \nI would love to know what software you use to elevate your trading, whether its software that you can configure to alert you of certain trends such as a ticker who's volume has sta",
+      "published_at": "2024-11-22T12:04:34.000Z",
+      "subreddit": "algotrading",
+      "score": 43,
+      "num_comments": 39
+    },
+    {
+      "title": "Tradingview Trading Bot",
+      "url": "https://www.reddit.com/r/algotrading/comments/pue7ps/tradingview_trading_bot/",
+      "snippet": "Hi all,\n\nI'm hoping somebody with more experience or who has encountered the same problems as I have is able to help me! \n\nI'm new to coding/algo trading so any pointers would be greatly appreciated! \n\n**Context:** I'm trying to automate a very simple trading system that relies on a Pinescript strategy in Tradingview to trade Nasdaq futures (NQ) and I'm currently facing a few challenges.  \n\nThe pi",
+      "published_at": "2021-09-24T06:44:06.000Z",
+      "subreddit": "algotrading",
+      "score": 38,
+      "num_comments": 31
+    },
+    {
+      "title": "Why is my bot missing trades?",
+      "url": "https://www.reddit.com/r/algotrading/comments/16melat/why_is_my_bot_missing_trades/",
+      "snippet": "I will start by saying I am a programmer first, and not an expert on markets, so I would appreciate your help and patience in elucidating a certain market behavior I am observing. I do not need help with the coding aspect.\n\nSetup: I have created a strategy and used the Alpaca Markets API to pull SIP (paid plan) real time data. My alg recommends a price that would be good to buy, and then looks to ",
+      "published_at": "2023-09-19T02:14:34.000Z",
+      "subreddit": "algotrading",
+      "score": 12,
+      "num_comments": 12
+    },
+    {
+      "title": "[crypto] Get realtime OHLC data using a live dataframe.",
+      "url": "https://www.reddit.com/r/algotrading/comments/8smmir/crypto_get_realtime_ohlc_data_using_a_live/",
+      "snippet": "[https://livedataframe.com](https://livedataframe.com/)\n\nTLDR: Fully automated algotrading is a rabbit hole. Get started faster with a LiveDataFrame.\n\nLike a lot of you, I wanted to jump into the world of algotrading. However, after months and months of going down the rabbit hole, I found that was still doing better by trading manually.\n\nWhat I really wanted was a tool to augment my trading so tha",
+      "published_at": "2018-06-20T22:28:20.000Z",
+      "subreddit": "algotrading",
+      "score": 29,
+      "num_comments": 25
+    },
+    {
+      "title": "Are there different types of DCA buy strategies?",
+      "url": "https://www.reddit.com/r/algotrading/comments/lcdwzl/are_there_different_types_of_dca_buy_strategies/",
+      "snippet": "I'm trying to write a simple DCA buy bot that just buys assets regularly (weekly or monthly).\n\nObviously the simplest way would be to just do a fixed buy, like \"Buy $100 worth of X every month\"\n\nBut I was wondering if there are smarter methods of rebuying, for example:\n\n- Only buy red candles\n- Buy half the amount on green candle months or double on red candle months\n- Monitor the price every day ",
+      "published_at": "2021-02-04T11:42:36.000Z",
+      "subreddit": "algotrading",
+      "score": 1,
+      "num_comments": 8
+    },
+    {
+      "title": "TradingView Webhook and Alert",
+      "url": "https://www.reddit.com/r/algotrading/comments/dcgnhc/tradingview_webhook_and_alert/",
+      "snippet": "I have a plan to essentially build a stand alone executable or possibly a chrome extension that communicates with various platform software, specifically either StockSharp, NinjaTrader, TradeStation, HaasBot, or TradingTechnology. \n\nTradingview won't automate anything by itself, so I need to get the info of the study signals sent out to a stand alone application that can communicate wth the api fo",
+      "published_at": "2019-10-02T21:13:09.000Z",
+      "subreddit": "algotrading",
+      "score": 3,
+      "num_comments": 5
+    },
+    {
+      "title": "How Twitter helps cryptocurrency trading",
+      "url": "https://www.reddit.com/r/algotrading/comments/dm8ii1/how_twitter_helps_cryptocurrency_trading/",
+      "snippet": "The social network Twitter has long been considered a key place for discussion of cryptocurrency topics both among experts and among ordinary cryptocurrency market players. Moreover, based on the mood of messages on Twitter, you can build a trading strategy that allows you to effectively earn on cryptocurrencies.\n\nSo, two companies – the eToro trading platform and the TIE analytic company – linked",
+      "published_at": "2019-10-24T00:25:00.000Z",
+      "subreddit": "algotrading",
+      "score": 6,
+      "num_comments": 0
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:23.308Z"
+}

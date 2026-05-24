@@ -1,0 +1,1599 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "iwRaNYa8yTw",
+  "url": "https://www.youtube.com/watch?v=iwRaNYa8yTw",
+  "segments": [
+    {
+      "text": "Highfrequency trading systems are",
+      "duration": 4239,
+      "offset": 560,
+      "lang": "en"
+    },
+    {
+      "text": "engineered for speed, not milliseconds,",
+      "duration": 6480,
+      "offset": 2320,
+      "lang": "en"
+    },
+    {
+      "text": "but microsconds and even nanconds. In",
+      "duration": 5840,
+      "offset": 4799,
+      "lang": "en"
+    },
+    {
+      "text": "this video, we'll dive into the actual",
+      "duration": 3520,
+      "offset": 8800,
+      "lang": "en"
+    },
+    {
+      "text": "architecture behind these lightning fast",
+      "duration": 4000,
+      "offset": 10639,
+      "lang": "en"
+    },
+    {
+      "text": "systems. You'll see how market data is",
+      "duration": 4640,
+      "offset": 12320,
+      "lang": "en"
+    },
+    {
+      "text": "ingested, how an in-memory order book",
+      "duration": 4400,
+      "offset": 14639,
+      "lang": "en"
+    },
+    {
+      "text": "works, how decisions are made using",
+      "duration": 4800,
+      "offset": 16960,
+      "lang": "en"
+    },
+    {
+      "text": "FPGAs and strategy engines, and how",
+      "duration": 4441,
+      "offset": 19039,
+      "lang": "en"
+    },
+    {
+      "text": "orders are routed to exchanges like",
+      "duration": 4480,
+      "offset": 21760,
+      "lang": "en"
+    },
+    {
+      "text": "NASDAQ, all in the blink of an eye.",
+      "duration": 3959,
+      "offset": 23480,
+      "lang": "en"
+    },
+    {
+      "text": "We'll walk through a real world",
+      "duration": 2720,
+      "offset": 26240,
+      "lang": "en"
+    },
+    {
+      "text": "architecture diagram used in the",
+      "duration": 3760,
+      "offset": 27439,
+      "lang": "en"
+    },
+    {
+      "text": "industry, breaking down each component",
+      "duration": 4720,
+      "offset": 28960,
+      "lang": "en"
+    },
+    {
+      "text": "from ultra low latency NIC's, kernel",
+      "duration": 5200,
+      "offset": 31199,
+      "lang": "en"
+    },
+    {
+      "text": "bypass, event cues, and nancond clocks",
+      "duration": 4719,
+      "offset": 33680,
+      "lang": "en"
+    },
+    {
+      "text": "to pre-trade risk engines and smart",
+      "duration": 3761,
+      "offset": 36399,
+      "lang": "en"
+    },
+    {
+      "text": "order routers. Whether you are a",
+      "duration": 3601,
+      "offset": 38399,
+      "lang": "en"
+    },
+    {
+      "text": "software engineer, quant, or just",
+      "duration": 3200,
+      "offset": 40160,
+      "lang": "en"
+    },
+    {
+      "text": "someone who geeks out over high",
+      "duration": 5360,
+      "offset": 42000,
+      "lang": "en"
+    },
+    {
+      "text": "performance systems, this video is for",
+      "duration": 4000,
+      "offset": 43360,
+      "lang": "en"
+    },
+    {
+      "text": "[Music]",
+      "duration": 6590,
+      "offset": 47410,
+      "lang": "en"
+    },
+    {
+      "text": "you. So, what exactly is a highfrequency",
+      "duration": 6840,
+      "offset": 50520,
+      "lang": "en"
+    },
+    {
+      "text": "trading? At its core, HFD is the use of",
+      "duration": 5440,
+      "offset": 54000,
+      "lang": "en"
+    },
+    {
+      "text": "algorithms and machines to trade",
+      "duration": 4400,
+      "offset": 57360,
+      "lang": "en"
+    },
+    {
+      "text": "financial instruments like stocks or",
+      "duration": 5759,
+      "offset": 59440,
+      "lang": "en"
+    },
+    {
+      "text": "options at extremely high speeds. We are",
+      "duration": 5039,
+      "offset": 61760,
+      "lang": "en"
+    },
+    {
+      "text": "talking thousands to millions of trades",
+      "duration": 4161,
+      "offset": 65199,
+      "lang": "en"
+    },
+    {
+      "text": "per second, all happening faster than a",
+      "duration": 5680,
+      "offset": 66799,
+      "lang": "en"
+    },
+    {
+      "text": "human can blink. The goal to make tiny",
+      "duration": 5759,
+      "offset": 69360,
+      "lang": "en"
+    },
+    {
+      "text": "profits, sometime just a fraction of a",
+      "duration": 5680,
+      "offset": 72479,
+      "lang": "en"
+    },
+    {
+      "text": "cent on each trade, but to do it at such",
+      "duration": 5601,
+      "offset": 75119,
+      "lang": "en"
+    },
+    {
+      "text": "high volume and speed that it adds up to",
+      "duration": 5041,
+      "offset": 78159,
+      "lang": "en"
+    },
+    {
+      "text": "massive gains. These systems look for",
+      "duration": 4880,
+      "offset": 80720,
+      "lang": "en"
+    },
+    {
+      "text": "tiny inefficiencies in the market like",
+      "duration": 4640,
+      "offset": 83200,
+      "lang": "en"
+    },
+    {
+      "text": "price differences between exchanges,",
+      "duration": 4240,
+      "offset": 85600,
+      "lang": "en"
+    },
+    {
+      "text": "temporary imbalances in the order book",
+      "duration": 4720,
+      "offset": 87840,
+      "lang": "en"
+    },
+    {
+      "text": "or slow price updates and jump in before",
+      "duration": 6000,
+      "offset": 89840,
+      "lang": "en"
+    },
+    {
+      "text": "anyone else can. But to do that, speed",
+      "duration": 5519,
+      "offset": 92560,
+      "lang": "en"
+    },
+    {
+      "text": "is everything. A single millisecond",
+      "duration": 3840,
+      "offset": 95840,
+      "lang": "en"
+    },
+    {
+      "text": "delay can mean the difference between",
+      "duration": 3921,
+      "offset": 98079,
+      "lang": "en"
+    },
+    {
+      "text": "making money and losing money. And",
+      "duration": 4560,
+      "offset": 99680,
+      "lang": "en"
+    },
+    {
+      "text": "that's why HFT systems are engineered",
+      "duration": 4720,
+      "offset": 102000,
+      "lang": "en"
+    },
+    {
+      "text": "like race cars. Every component from the",
+      "duration": 5120,
+      "offset": 104240,
+      "lang": "en"
+    },
+    {
+      "text": "network car to the code is optimized for",
+      "duration": 5439,
+      "offset": 106720,
+      "lang": "en"
+    },
+    {
+      "text": "ultra low latency. You might wonder why",
+      "duration": 5280,
+      "offset": 109360,
+      "lang": "en"
+    },
+    {
+      "text": "does this exist at all? Because in",
+      "duration": 5521,
+      "offset": 112159,
+      "lang": "en"
+    },
+    {
+      "text": "financial markets being first matters.",
+      "duration": 5040,
+      "offset": 114640,
+      "lang": "en"
+    },
+    {
+      "text": "The first system to react to market data",
+      "duration": 5039,
+      "offset": 117680,
+      "lang": "en"
+    },
+    {
+      "text": "can take advantage of it. Everyone else",
+      "duration": 5600,
+      "offset": 119680,
+      "lang": "en"
+    },
+    {
+      "text": "just follows. For example, let's say",
+      "duration": 4720,
+      "offset": 122719,
+      "lang": "en"
+    },
+    {
+      "text": "you're running a marketmaking strategy.",
+      "duration": 5160,
+      "offset": 125280,
+      "lang": "en"
+    },
+    {
+      "text": "You continuously place a buy order at",
+      "duration": 6041,
+      "offset": 127439,
+      "lang": "en"
+    },
+    {
+      "text": "$9.99 and a sell order at",
+      "duration": 5799,
+      "offset": 130440,
+      "lang": "en"
+    },
+    {
+      "text": "$101. Now, if someone accepts your sell",
+      "duration": 6280,
+      "offset": 133480,
+      "lang": "en"
+    },
+    {
+      "text": "order at $101, you just earned a 2 cent",
+      "duration": 5761,
+      "offset": 136239,
+      "lang": "en"
+    },
+    {
+      "text": "spread. Now, imagine doing this",
+      "duration": 4160,
+      "offset": 139760,
+      "lang": "en"
+    },
+    {
+      "text": "thousands of times across hundreds of",
+      "duration": 4319,
+      "offset": 142000,
+      "lang": "en"
+    },
+    {
+      "text": "stocks every second. The first step in",
+      "duration": 4560,
+      "offset": 143920,
+      "lang": "en"
+    },
+    {
+      "text": "an HFT pipeline is receiving market",
+      "duration": 4721,
+      "offset": 146319,
+      "lang": "en"
+    },
+    {
+      "text": "data. The real-time feed of prices,",
+      "duration": 4479,
+      "offset": 148480,
+      "lang": "en"
+    },
+    {
+      "text": "volumes, and order book updates from",
+      "duration": 5279,
+      "offset": 151040,
+      "lang": "en"
+    },
+    {
+      "text": "stock exchanges like NASDAQ and NYC. But",
+      "duration": 5201,
+      "offset": 152959,
+      "lang": "en"
+    },
+    {
+      "text": "we are not talking about your everyday",
+      "duration": 5121,
+      "offset": 156319,
+      "lang": "en"
+    },
+    {
+      "text": "API or websocket feed. HFT system use",
+      "duration": 5840,
+      "offset": 158160,
+      "lang": "en"
+    },
+    {
+      "text": "multiccast feeds directly delivered over",
+      "duration": 4960,
+      "offset": 161440,
+      "lang": "en"
+    },
+    {
+      "text": "ultra- low latency networks often inside",
+      "duration": 4879,
+      "offset": 164000,
+      "lang": "en"
+    },
+    {
+      "text": "a collocation facility physically near",
+      "duration": 4280,
+      "offset": 166400,
+      "lang": "en"
+    },
+    {
+      "text": "the exchange server to reduce travel",
+      "duration": 4161,
+      "offset": 168879,
+      "lang": "en"
+    },
+    {
+      "text": "time. This data is received through",
+      "duration": 4680,
+      "offset": 170680,
+      "lang": "en"
+    },
+    {
+      "text": "specialized hardware an ultra low",
+      "duration": 5279,
+      "offset": 173040,
+      "lang": "en"
+    },
+    {
+      "text": "latency NIC or network interface card",
+      "duration": 5680,
+      "offset": 175360,
+      "lang": "en"
+    },
+    {
+      "text": "and a custom TCP stack sometimes even",
+      "duration": 5361,
+      "offset": 178319,
+      "lang": "en"
+    },
+    {
+      "text": "kernel bypass mechanism like DPDK or",
+      "duration": 5600,
+      "offset": 181040,
+      "lang": "en"
+    },
+    {
+      "text": "solar onload. These allow the system to",
+      "duration": 5520,
+      "offset": 183680,
+      "lang": "en"
+    },
+    {
+      "text": "handle market updates in microsconds,",
+      "duration": 4599,
+      "offset": 186640,
+      "lang": "en"
+    },
+    {
+      "text": "skipping the overhead of regular network",
+      "duration": 4720,
+      "offset": 189200,
+      "lang": "en"
+    },
+    {
+      "text": "stacks. Then comes the market data feed",
+      "duration": 4841,
+      "offset": 191239,
+      "lang": "en"
+    },
+    {
+      "text": "handler, a critical component that",
+      "duration": 4319,
+      "offset": 193920,
+      "lang": "en"
+    },
+    {
+      "text": "passes the raw stream, decodes the",
+      "duration": 4000,
+      "offset": 196080,
+      "lang": "en"
+    },
+    {
+      "text": "protocol, and transforms it into a",
+      "duration": 4241,
+      "offset": 198239,
+      "lang": "en"
+    },
+    {
+      "text": "format the system can understand. You",
+      "duration": 3840,
+      "offset": 200080,
+      "lang": "en"
+    },
+    {
+      "text": "can think of it as the translator",
+      "duration": 3280,
+      "offset": 202480,
+      "lang": "en"
+    },
+    {
+      "text": "between the exchanges language and your",
+      "duration": 4800,
+      "offset": 203920,
+      "lang": "en"
+    },
+    {
+      "text": "internal logic. But it has to translate",
+      "duration": 5039,
+      "offset": 205760,
+      "lang": "en"
+    },
+    {
+      "text": "millions of messages per second without",
+      "duration": 4239,
+      "offset": 208720,
+      "lang": "en"
+    },
+    {
+      "text": "skipping a beat. Once the market data is",
+      "duration": 4321,
+      "offset": 210799,
+      "lang": "en"
+    },
+    {
+      "text": "ingested and decoded, the next critical",
+      "duration": 4881,
+      "offset": 212959,
+      "lang": "en"
+    },
+    {
+      "text": "step is updating the order book. That is",
+      "duration": 5440,
+      "offset": 215120,
+      "lang": "en"
+    },
+    {
+      "text": "the live snapshot of all current buy and",
+      "duration": 5600,
+      "offset": 217840,
+      "lang": "en"
+    },
+    {
+      "text": "sell orders. HFT systems maintain this",
+      "duration": 5679,
+      "offset": 220560,
+      "lang": "en"
+    },
+    {
+      "text": "entire order book in memory to avoid any",
+      "duration": 5840,
+      "offset": 223440,
+      "lang": "en"
+    },
+    {
+      "text": "dis IO or database latency. It's updated",
+      "duration": 5201,
+      "offset": 226239,
+      "lang": "en"
+    },
+    {
+      "text": "in real time with every incoming message",
+      "duration": 4480,
+      "offset": 229280,
+      "lang": "en"
+    },
+    {
+      "text": "triggering a precise update. In most",
+      "duration": 4000,
+      "offset": 231440,
+      "lang": "en"
+    },
+    {
+      "text": "systems, you'll see replicated order",
+      "duration": 4479,
+      "offset": 233760,
+      "lang": "en"
+    },
+    {
+      "text": "bugs like replica A and replica B kept",
+      "duration": 5519,
+      "offset": 235440,
+      "lang": "en"
+    },
+    {
+      "text": "in sync using in-memory replication.",
+      "duration": 5121,
+      "offset": 238239,
+      "lang": "en"
+    },
+    {
+      "text": "This ensures fall tolerance. So if one",
+      "duration": 4721,
+      "offset": 240959,
+      "lang": "en"
+    },
+    {
+      "text": "replica crashes or lags, the system can",
+      "duration": 5280,
+      "offset": 243360,
+      "lang": "en"
+    },
+    {
+      "text": "instantly fail over to the other. Now",
+      "duration": 4520,
+      "offset": 245680,
+      "lang": "en"
+    },
+    {
+      "text": "the order book isn't just for",
+      "duration": 3760,
+      "offset": 248640,
+      "lang": "en"
+    },
+    {
+      "text": "recordeping. It's what drives the rest",
+      "duration": 4759,
+      "offset": 250200,
+      "lang": "en"
+    },
+    {
+      "text": "of the pipeline. Every trading decision,",
+      "duration": 4720,
+      "offset": 252400,
+      "lang": "en"
+    },
+    {
+      "text": "every market making strategy starts with",
+      "duration": 4721,
+      "offset": 254959,
+      "lang": "en"
+    },
+    {
+      "text": "the current state of the book. These",
+      "duration": 4399,
+      "offset": 257120,
+      "lang": "en"
+    },
+    {
+      "text": "updates are then published into an event",
+      "duration": 3920,
+      "offset": 259680,
+      "lang": "en"
+    },
+    {
+      "text": "stream ready for other components like",
+      "duration": 4960,
+      "offset": 261519,
+      "lang": "en"
+    },
+    {
+      "text": "the trading logic, FPGA engine, or smart",
+      "duration": 5920,
+      "offset": 263600,
+      "lang": "en"
+    },
+    {
+      "text": "router to consume in near zero latency.",
+      "duration": 5361,
+      "offset": 266479,
+      "lang": "en"
+    },
+    {
+      "text": "And as soon as the autobook is updated,",
+      "duration": 4160,
+      "offset": 269520,
+      "lang": "en"
+    },
+    {
+      "text": "the new market state is published into",
+      "duration": 4240,
+      "offset": 271840,
+      "lang": "en"
+    },
+    {
+      "text": "an event-driven pipeline, the backbone",
+      "duration": 5360,
+      "offset": 273680,
+      "lang": "en"
+    },
+    {
+      "text": "of realtime processing in HFT. This",
+      "duration": 6000,
+      "offset": 276080,
+      "lang": "en"
+    },
+    {
+      "text": "pipeline is built around a lo optimized",
+      "duration": 5680,
+      "offset": 279040,
+      "lang": "en"
+    },
+    {
+      "text": "for throughput and low contention. Why",
+      "duration": 4720,
+      "offset": 282080,
+      "lang": "en"
+    },
+    {
+      "text": "lock free? Because even the slightest",
+      "duration": 3919,
+      "offset": 284720,
+      "lang": "en"
+    },
+    {
+      "text": "delay caused by locking threads can",
+      "duration": 4720,
+      "offset": 286800,
+      "lang": "en"
+    },
+    {
+      "text": "impact trade timing. Each event like a",
+      "duration": 5041,
+      "offset": 288639,
+      "lang": "en"
+    },
+    {
+      "text": "pricing change or a new bid is stamped",
+      "duration": 4640,
+      "offset": 291520,
+      "lang": "en"
+    },
+    {
+      "text": "using nancond precision clock. This",
+      "duration": 4320,
+      "offset": 293680,
+      "lang": "en"
+    },
+    {
+      "text": "level of timing and accuracy allows the",
+      "duration": 4479,
+      "offset": 296160,
+      "lang": "en"
+    },
+    {
+      "text": "system to maintain the exact sequence of",
+      "duration": 5120,
+      "offset": 298000,
+      "lang": "en"
+    },
+    {
+      "text": "market updates, benchmark internal",
+      "duration": 4481,
+      "offset": 300639,
+      "lang": "en"
+    },
+    {
+      "text": "component latencies, and most",
+      "duration": 4560,
+      "offset": 303120,
+      "lang": "en"
+    },
+    {
+      "text": "importantly sync perfectly with external",
+      "duration": 6240,
+      "offset": 305120,
+      "lang": "en"
+    },
+    {
+      "text": "systems like FPGA engines and exchanges.",
+      "duration": 6000,
+      "offset": 307680,
+      "lang": "en"
+    },
+    {
+      "text": "The result is a precise timestamp stream",
+      "duration": 4399,
+      "offset": 311360,
+      "lang": "en"
+    },
+    {
+      "text": "of market events that downstream systems",
+      "duration": 3760,
+      "offset": 313680,
+      "lang": "en"
+    },
+    {
+      "text": "like trading strategies, risk engines,",
+      "duration": 4201,
+      "offset": 315759,
+      "lang": "en"
+    },
+    {
+      "text": "or smart routers can consume in real",
+      "duration": 6240,
+      "offset": 317440,
+      "lang": "en"
+    },
+    {
+      "text": "time. In HFD, precision is the power.",
+      "duration": 5560,
+      "offset": 319960,
+      "lang": "en"
+    },
+    {
+      "text": "Knowing exactly when something happened",
+      "duration": 4160,
+      "offset": 323680,
+      "lang": "en"
+    },
+    {
+      "text": "is just as important as knowing what",
+      "duration": 5119,
+      "offset": 325520,
+      "lang": "en"
+    },
+    {
+      "text": "happened. Now we enter the most hardware",
+      "duration": 6280,
+      "offset": 327840,
+      "lang": "en"
+    },
+    {
+      "text": "optimized part of the pipeline. FPGA",
+      "duration": 6000,
+      "offset": 330639,
+      "lang": "en"
+    },
+    {
+      "text": "acceleration. FPGA stands for field",
+      "duration": 4840,
+      "offset": 334120,
+      "lang": "en"
+    },
+    {
+      "text": "programmable gate array. A type of",
+      "duration": 4721,
+      "offset": 336639,
+      "lang": "en"
+    },
+    {
+      "text": "reconfigurable chip that can run custom",
+      "duration": 5040,
+      "offset": 338960,
+      "lang": "en"
+    },
+    {
+      "text": "logic at the speed of hardware without",
+      "duration": 7040,
+      "offset": 341360,
+      "lang": "en"
+    },
+    {
+      "text": "the overhead of CPU or OS. In HFT FPGs",
+      "duration": 6880,
+      "offset": 344000,
+      "lang": "en"
+    },
+    {
+      "text": "are used for ticktode execution. Meaning",
+      "duration": 4239,
+      "offset": 348400,
+      "lang": "en"
+    },
+    {
+      "text": "the moment a tick or market event",
+      "duration": 4159,
+      "offset": 350880,
+      "lang": "en"
+    },
+    {
+      "text": "arrives, it's evaluated by logic on the",
+      "duration": 4961,
+      "offset": 352639,
+      "lang": "en"
+    },
+    {
+      "text": "FPGA and a trading decision can be made",
+      "duration": 5681,
+      "offset": 355039,
+      "lang": "en"
+    },
+    {
+      "text": "in submicroscond latency. Why is this",
+      "duration": 5039,
+      "offset": 357600,
+      "lang": "en"
+    },
+    {
+      "text": "important? Because again, every",
+      "duration": 4240,
+      "offset": 360720,
+      "lang": "en"
+    },
+    {
+      "text": "microcond counts. By the time a CPU",
+      "duration": 4721,
+      "offset": 362639,
+      "lang": "en"
+    },
+    {
+      "text": "thread spins up, the FPGA has already",
+      "duration": 4480,
+      "offset": 364960,
+      "lang": "en"
+    },
+    {
+      "text": "evaluated the opportunity and fired off",
+      "duration": 4959,
+      "offset": 367360,
+      "lang": "en"
+    },
+    {
+      "text": "an order. These FPGAs are often directly",
+      "duration": 4720,
+      "offset": 369440,
+      "lang": "en"
+    },
+    {
+      "text": "connected to the event queue, receive",
+      "duration": 4081,
+      "offset": 372319,
+      "lang": "en"
+    },
+    {
+      "text": "nancond timestamped events, and run",
+      "duration": 4560,
+      "offset": 374160,
+      "lang": "en"
+    },
+    {
+      "text": "predefined trading strategies. Think",
+      "duration": 4320,
+      "offset": 376400,
+      "lang": "en"
+    },
+    {
+      "text": "arbitrage, market making or code",
+      "duration": 5199,
+      "offset": 378720,
+      "lang": "en"
+    },
+    {
+      "text": "stuffing, all wired into silicon. Some",
+      "duration": 5360,
+      "offset": 380720,
+      "lang": "en"
+    },
+    {
+      "text": "firms even go a step further. They push",
+      "duration": 3921,
+      "offset": 383919,
+      "lang": "en"
+    },
+    {
+      "text": "the entire decision-making logic into",
+      "duration": 5119,
+      "offset": 386080,
+      "lang": "en"
+    },
+    {
+      "text": "the FPGA to bypass software completely.",
+      "duration": 5120,
+      "offset": 387840,
+      "lang": "en"
+    },
+    {
+      "text": "Of course, this also comes with",
+      "duration": 4401,
+      "offset": 391199,
+      "lang": "en"
+    },
+    {
+      "text": "complexity. FPGA code is written in very",
+      "duration": 5679,
+      "offset": 392960,
+      "lang": "en"
+    },
+    {
+      "text": "log or VHSDL and every logic path must",
+      "duration": 5200,
+      "offset": 395600,
+      "lang": "en"
+    },
+    {
+      "text": "be deterministic. But when done right,",
+      "duration": 4161,
+      "offset": 398639,
+      "lang": "en"
+    },
+    {
+      "text": "it gives you the fastest edge in the",
+      "duration": 4560,
+      "offset": 400800,
+      "lang": "en"
+    },
+    {
+      "text": "market. Now, while FPGS handle ultra low",
+      "duration": 5119,
+      "offset": 402800,
+      "lang": "en"
+    },
+    {
+      "text": "latency scenarios, most trading logic",
+      "duration": 4480,
+      "offset": 405360,
+      "lang": "en"
+    },
+    {
+      "text": "still runs on softwarebased strategy",
+      "duration": 4400,
+      "offset": 407919,
+      "lang": "en"
+    },
+    {
+      "text": "engines, a marketmaking engine listens",
+      "duration": 4560,
+      "offset": 409840,
+      "lang": "en"
+    },
+    {
+      "text": "to the event stream, evaluates the",
+      "duration": 3841,
+      "offset": 412319,
+      "lang": "en"
+    },
+    {
+      "text": "current state of the order book, and",
+      "duration": 4480,
+      "offset": 414400,
+      "lang": "en"
+    },
+    {
+      "text": "makes rapid decisions. For example,",
+      "duration": 4720,
+      "offset": 416160,
+      "lang": "en"
+    },
+    {
+      "text": "should we go tighter? Should we widen",
+      "duration": 3879,
+      "offset": 418880,
+      "lang": "en"
+    },
+    {
+      "text": "the spread? Or should we pull our",
+      "duration": 5560,
+      "offset": 420880,
+      "lang": "en"
+    },
+    {
+      "text": "orders? Let's say the latest bid is at",
+      "duration": 7880,
+      "offset": 422759,
+      "lang": "en"
+    },
+    {
+      "text": "$9.99 and the best ask is at $101. So,",
+      "duration": 7000,
+      "offset": 426440,
+      "lang": "en"
+    },
+    {
+      "text": "your engine might place a buy at $9.99",
+      "duration": 6881,
+      "offset": 430639,
+      "lang": "en"
+    },
+    {
+      "text": "and sell at $101 to capture the spread,",
+      "duration": 6560,
+      "offset": 433440,
+      "lang": "en"
+    },
+    {
+      "text": "but it constantly recalculates based on",
+      "duration": 4640,
+      "offset": 437520,
+      "lang": "en"
+    },
+    {
+      "text": "market movements, volatility, and",
+      "duration": 4720,
+      "offset": 440000,
+      "lang": "en"
+    },
+    {
+      "text": "inventory risk. These engines can be",
+      "duration": 5360,
+      "offset": 442160,
+      "lang": "en"
+    },
+    {
+      "text": "rule-based, statistical, or even use",
+      "duration": 5199,
+      "offset": 444720,
+      "lang": "en"
+    },
+    {
+      "text": "lightweight machine learning models. But",
+      "duration": 4720,
+      "offset": 447520,
+      "lang": "en"
+    },
+    {
+      "text": "whatever the strategy is, the focus is",
+      "duration": 5601,
+      "offset": 449919,
+      "lang": "en"
+    },
+    {
+      "text": "on speed and predictability.",
+      "duration": 5519,
+      "offset": 452240,
+      "lang": "en"
+    },
+    {
+      "text": "Once a decision is made, the order is",
+      "duration": 4239,
+      "offset": 455520,
+      "lang": "en"
+    },
+    {
+      "text": "pushed to the smart auto router, which",
+      "duration": 4560,
+      "offset": 457759,
+      "lang": "en"
+    },
+    {
+      "text": "takes care of where and how to execute,",
+      "duration": 5601,
+      "offset": 459759,
+      "lang": "en"
+    },
+    {
+      "text": "possibly across multiple exchanges. The",
+      "duration": 4880,
+      "offset": 462319,
+      "lang": "en"
+    },
+    {
+      "text": "strategy engine is the brain of the",
+      "duration": 4440,
+      "offset": 465360,
+      "lang": "en"
+    },
+    {
+      "text": "system, but a brain that thinks in",
+      "duration": 4801,
+      "offset": 467199,
+      "lang": "en"
+    },
+    {
+      "text": "microsconds. Once a trading strategy",
+      "duration": 4040,
+      "offset": 469800,
+      "lang": "en"
+    },
+    {
+      "text": "decides to place an order, it's not",
+      "duration": 4080,
+      "offset": 472000,
+      "lang": "en"
+    },
+    {
+      "text": "blindly fired off to an exchange. It's",
+      "duration": 3840,
+      "offset": 473840,
+      "lang": "en"
+    },
+    {
+      "text": "first routed through a smart order",
+      "duration": 4080,
+      "offset": 476080,
+      "lang": "en"
+    },
+    {
+      "text": "router, a component that decides where",
+      "duration": 4760,
+      "offset": 477680,
+      "lang": "en"
+    },
+    {
+      "text": "and how to send the order for optimal",
+      "duration": 5920,
+      "offset": 480160,
+      "lang": "en"
+    },
+    {
+      "text": "execution. Should it go to NASDAQ, NYC,",
+      "duration": 5319,
+      "offset": 482440,
+      "lang": "en"
+    },
+    {
+      "text": "or should it be a market order or a",
+      "duration": 3760,
+      "offset": 486080,
+      "lang": "en"
+    },
+    {
+      "text": "limit order? The router evaluates",
+      "duration": 4641,
+      "offset": 487759,
+      "lang": "en"
+    },
+    {
+      "text": "multiple venues in real time based on",
+      "duration": 4799,
+      "offset": 489840,
+      "lang": "en"
+    },
+    {
+      "text": "liquidity, latency, fill probability,",
+      "duration": 4880,
+      "offset": 492400,
+      "lang": "en"
+    },
+    {
+      "text": "and even rebate structures. But before",
+      "duration": 4641,
+      "offset": 494639,
+      "lang": "en"
+    },
+    {
+      "text": "the order goes out, it passes through",
+      "duration": 4400,
+      "offset": 497280,
+      "lang": "en"
+    },
+    {
+      "text": "pre-trade risk checks. And these are",
+      "duration": 4000,
+      "offset": 499280,
+      "lang": "en"
+    },
+    {
+      "text": "absolutely critical for preventing",
+      "duration": 4000,
+      "offset": 501680,
+      "lang": "en"
+    },
+    {
+      "text": "financial disasters. The risk engine",
+      "duration": 4960,
+      "offset": 503280,
+      "lang": "en"
+    },
+    {
+      "text": "ensures you're not overspending, the",
+      "duration": 4799,
+      "offset": 505680,
+      "lang": "en"
+    },
+    {
+      "text": "order isn't too big, and the strategy",
+      "duration": 4560,
+      "offset": 508240,
+      "lang": "en"
+    },
+    {
+      "text": "isn't misfiring due to a bug. These",
+      "duration": 4281,
+      "offset": 510479,
+      "lang": "en"
+    },
+    {
+      "text": "checks are automated and happen in",
+      "duration": 4560,
+      "offset": 512800,
+      "lang": "en"
+    },
+    {
+      "text": "microsconds. If anything looks off, the",
+      "duration": 4680,
+      "offset": 514760,
+      "lang": "en"
+    },
+    {
+      "text": "order is blocked before it ever hits the",
+      "duration": 4880,
+      "offset": 517360,
+      "lang": "en"
+    },
+    {
+      "text": "exchange. Once cleared, the smart router",
+      "duration": 4800,
+      "offset": 519440,
+      "lang": "en"
+    },
+    {
+      "text": "sends the order to the selected exchange",
+      "duration": 3920,
+      "offset": 522240,
+      "lang": "en"
+    },
+    {
+      "text": "and the execution log flows back into",
+      "duration": 4360,
+      "offset": 524240,
+      "lang": "en"
+    },
+    {
+      "text": "the system for audit analysis and",
+      "duration": 4880,
+      "offset": 526160,
+      "lang": "en"
+    },
+    {
+      "text": "learning. This final checkpoint ensures",
+      "duration": 5320,
+      "offset": 528600,
+      "lang": "en"
+    },
+    {
+      "text": "that speed never overrides safety. After",
+      "duration": 5120,
+      "offset": 531040,
+      "lang": "en"
+    },
+    {
+      "text": "a trade is executed, it's the order",
+      "duration": 4800,
+      "offset": 533920,
+      "lang": "en"
+    },
+    {
+      "text": "management system that tracks and locks",
+      "duration": 5040,
+      "offset": 536160,
+      "lang": "en"
+    },
+    {
+      "text": "everything. The MS keeps a complete",
+      "duration": 4640,
+      "offset": 538720,
+      "lang": "en"
+    },
+    {
+      "text": "record of order sent, status updates",
+      "duration": 3680,
+      "offset": 541200,
+      "lang": "en"
+    },
+    {
+      "text": "such as filled, partially filled,",
+      "duration": 3840,
+      "offset": 543360,
+      "lang": "en"
+    },
+    {
+      "text": "rejected, the execution timestamps, and",
+      "duration": 4639,
+      "offset": 544880,
+      "lang": "en"
+    },
+    {
+      "text": "the routes taken. It acts like the",
+      "duration": 3920,
+      "offset": 547200,
+      "lang": "en"
+    },
+    {
+      "text": "central nervous system of the trading",
+      "duration": 3601,
+      "offset": 549519,
+      "lang": "en"
+    },
+    {
+      "text": "platform, coordinating between",
+      "duration": 3760,
+      "offset": 551120,
+      "lang": "en"
+    },
+    {
+      "text": "exchanges, strategy engines, and",
+      "duration": 4399,
+      "offset": 553120,
+      "lang": "en"
+    },
+    {
+      "text": "reporting systems. Meanwhile, a",
+      "duration": 4639,
+      "offset": 554880,
+      "lang": "en"
+    },
+    {
+      "text": "monitoring and metric stack runs in",
+      "duration": 4561,
+      "offset": 557519,
+      "lang": "en"
+    },
+    {
+      "text": "parallel, capturing latency data, system",
+      "duration": 4481,
+      "offset": 559519,
+      "lang": "en"
+    },
+    {
+      "text": "health, and performance metrics for",
+      "duration": 4319,
+      "offset": 562080,
+      "lang": "en"
+    },
+    {
+      "text": "every component. You will typically see",
+      "duration": 4560,
+      "offset": 564000,
+      "lang": "en"
+    },
+    {
+      "text": "a latency dashboard showing tick to",
+      "duration": 4481,
+      "offset": 566399,
+      "lang": "en"
+    },
+    {
+      "text": "trade times, metrics collectors tracking",
+      "duration": 4560,
+      "offset": 568560,
+      "lang": "en"
+    },
+    {
+      "text": "throughput, error rates, and Q depths,",
+      "duration": 4800,
+      "offset": 570880,
+      "lang": "en"
+    },
+    {
+      "text": "and alerts if any component slows down",
+      "duration": 5600,
+      "offset": 573120,
+      "lang": "en"
+    },
+    {
+      "text": "or behaves abnormally. All of this is",
+      "duration": 5440,
+      "offset": 575680,
+      "lang": "en"
+    },
+    {
+      "text": "key for post trade analysis, compliance",
+      "duration": 5040,
+      "offset": 578720,
+      "lang": "en"
+    },
+    {
+      "text": "reporting, and continuous optimization.",
+      "duration": 5040,
+      "offset": 581120,
+      "lang": "en"
+    },
+    {
+      "text": "In HFT, even a few microsconds of",
+      "duration": 3759,
+      "offset": 583760,
+      "lang": "en"
+    },
+    {
+      "text": "slowness can lead to missed",
+      "duration": 4000,
+      "offset": 586160,
+      "lang": "en"
+    },
+    {
+      "text": "opportunities or major losses. So",
+      "duration": 5281,
+      "offset": 587519,
+      "lang": "en"
+    },
+    {
+      "text": "realtime monitoring isn't optional. It's",
+      "duration": 4799,
+      "offset": 590160,
+      "lang": "en"
+    },
+    {
+      "text": "part of the competitive edge. From",
+      "duration": 3599,
+      "offset": 592800,
+      "lang": "en"
+    },
+    {
+      "text": "ingesting market data to making",
+      "duration": 3601,
+      "offset": 594959,
+      "lang": "en"
+    },
+    {
+      "text": "split-second decisions and executing",
+      "duration": 4560,
+      "offset": 596399,
+      "lang": "en"
+    },
+    {
+      "text": "trades in microsconds, it's a beautiful",
+      "duration": 4000,
+      "offset": 598560,
+      "lang": "en"
+    },
+    {
+      "text": "mix of hardware acceleration,",
+      "duration": 3201,
+      "offset": 600959,
+      "lang": "en"
+    },
+    {
+      "text": "event-driven software, nancond",
+      "duration": 4399,
+      "offset": 602560,
+      "lang": "en"
+    },
+    {
+      "text": "precision, and ruthless optimization.",
+      "duration": 4720,
+      "offset": 604160,
+      "lang": "en"
+    },
+    {
+      "text": "All built to shave off every possible",
+      "duration": 4241,
+      "offset": 606959,
+      "lang": "en"
+    },
+    {
+      "text": "delay. If you're into system design, low",
+      "duration": 4000,
+      "offset": 608880,
+      "lang": "en"
+    },
+    {
+      "text": "latency engineering, or just love",
+      "duration": 3360,
+      "offset": 611200,
+      "lang": "en"
+    },
+    {
+      "text": "peeking under the hood of high",
+      "duration": 3760,
+      "offset": 612880,
+      "lang": "en"
+    },
+    {
+      "text": "performance infrastructure, make sure to",
+      "duration": 3519,
+      "offset": 614560,
+      "lang": "en"
+    },
+    {
+      "text": "like this video, subscribe to the",
+      "duration": 3199,
+      "offset": 616640,
+      "lang": "en"
+    },
+    {
+      "text": "channel, and hit the bell icon so you",
+      "duration": 3521,
+      "offset": 618079,
+      "lang": "en"
+    },
+    {
+      "text": "don't miss the next deep dive. And hey,",
+      "duration": 3281,
+      "offset": 619839,
+      "lang": "en"
+    },
+    {
+      "text": "let me know in the comments which part",
+      "duration": 3200,
+      "offset": 621600,
+      "lang": "en"
+    },
+    {
+      "text": "of the architecture blew your mind the",
+      "duration": 3760,
+      "offset": 623120,
+      "lang": "en"
+    },
+    {
+      "text": "most. Would you want a deeper dive on",
+      "duration": 4159,
+      "offset": 624800,
+      "lang": "en"
+    },
+    {
+      "text": "strategy logic, FPGS, or matching",
+      "duration": 6240,
+      "offset": 626880,
+      "lang": "en"
+    },
+    {
+      "text": "engines? See you in the next one.",
+      "duration": 7391,
+      "offset": 628959,
+      "lang": "en"
+    },
+    {
+      "text": "[Music]",
+      "duration": 3230,
+      "offset": 633120,
+      "lang": "en"
+    }
+  ],
+  "text": "Highfrequency trading systems are engineered for speed, not milliseconds, but microsconds and even nanconds. In this video, we'll dive into the actual architecture behind these lightning fast systems. You'll see how market data is ingested, how an in-memory order book works, how decisions are made using FPGAs and strategy engines, and how orders are routed to exchanges like NASDAQ, all in the blink of an eye. We'll walk through a real world architecture diagram used in the industry, breaking down each component from ultra low latency NIC's, kernel bypass, event cues, and nancond clocks to pre-trade risk engines and smart order routers. Whether you are a software engineer, quant, or just someone who geeks out over high performance systems, this video is for [Music] you. So, what exactly is a highfrequency trading? At its core, HFD is the use of algorithms and machines to trade financial instruments like stocks or options at extremely high speeds. We are talking thousands to millions of trades per second, all happening faster than a human can blink. The goal to make tiny profits, sometime just a fraction of a cent on each trade, but to do it at such high volume and speed that it adds up to massive gains. These systems look for tiny inefficiencies in the market like price differences between exchanges, temporary imbalances in the order book or slow price updates and jump in before anyone else can. But to do that, speed is everything. A single millisecond delay can mean the difference between making money and losing money. And that's why HFT systems are engineered like race cars. Every component from the network car to the code is optimized for ultra low latency. You might wonder why does this exist at all? Because in financial markets being first matters. The first system to react to market data can take advantage of it. Everyone else just follows. For example, let's say you're running a marketmaking strategy. You continuously place a buy order at $9.99 and a sell order at $101. Now, if someone accepts your sell order at $101, you just earned a 2 cent spread. Now, imagine doing this thousands of times across hundreds of stocks every second. The first step in an HFT pipeline is receiving market data. The real-time feed of prices, volumes, and order book updates from stock exchanges like NASDAQ and NYC. But we are not talking about your everyday API or websocket feed. HFT system use multiccast feeds directly delivered over ultra- low latency networks often inside a collocation facility physically near the exchange server to reduce travel time. This data is received through specialized hardware an ultra low latency NIC or network interface card and a custom TCP stack sometimes even kernel bypass mechanism like DPDK or solar onload. These allow the system to handle market updates in microsconds, skipping the overhead of regular network stacks. Then comes the market data feed handler, a critical component that passes the raw stream, decodes the protocol, and transforms it into a format the system can understand. You can think of it as the translator between the exchanges language and your internal logic. But it has to translate millions of messages per second without skipping a beat. Once the market data is ingested and decoded, the next critical step is updating the order book. That is the live snapshot of all current buy and sell orders. HFT systems maintain this entire order book in memory to avoid any dis IO or database latency. It's updated in real time with every incoming message triggering a precise update. In most systems, you'll see replicated order bugs like replica A and replica B kept in sync using in-memory replication. This ensures fall tolerance. So if one replica crashes or lags, the system can instantly fail over to the other. Now the order book isn't just for recordeping. It's what drives the rest of the pipeline. Every trading decision, every market making strategy starts with the current state of the book. These updates are then published into an event stream ready for other components like the trading logic, FPGA engine, or smart router to consume in near zero latency. And as soon as the autobook is updated, the new market state is published into an event-driven pipeline, the backbone of realtime processing in HFT. This pipeline is built around a lo optimized for throughput and low contention. Why lock free? Because even the slightest delay caused by locking threads can impact trade timing. Each event like a pricing change or a new bid is stamped using nancond precision clock. This level of timing and accuracy allows the system to maintain the exact sequence of market updates, benchmark internal component latencies, and most importantly sync perfectly with external systems like FPGA engines and exchanges. The result is a precise timestamp stream of market events that downstream systems like trading strategies, risk engines, or smart routers can consume in real time. In HFD, precision is the power. Knowing exactly when something happened is just as important as knowing what happened. Now we enter the most hardware optimized part of the pipeline. FPGA acceleration. FPGA stands for field programmable gate array. A type of reconfigurable chip that can run custom logic at the speed of hardware without the overhead of CPU or OS. In HFT FPGs are used for ticktode execution. Meaning the moment a tick or market event arrives, it's evaluated by logic on the FPGA and a trading decision can be made in submicroscond latency. Why is this important? Because again, every microcond counts. By the time a CPU thread spins up, the FPGA has already evaluated the opportunity and fired off an order. These FPGAs are often directly connected to the event queue, receive nancond timestamped events, and run predefined trading strategies. Think arbitrage, market making or code stuffing, all wired into silicon. Some firms even go a step further. They push the entire decision-making logic into the FPGA to bypass software completely. Of course, this also comes with complexity. FPGA code is written in very log or VHSDL and every logic path must be deterministic. But when done right, it gives you the fastest edge in the market. Now, while FPGS handle ultra low latency scenarios, most trading logic still runs on softwarebased strategy engines, a marketmaking engine listens to the event stream, evaluates the current state of the order book, and makes rapid decisions. For example, should we go tighter? Should we widen the spread? Or should we pull our orders? Let's say the latest bid is at $9.99 and the best ask is at $101. So, your engine might place a buy at $9.99 and sell at $101 to capture the spread, but it constantly recalculates based on market movements, volatility, and inventory risk. These engines can be rule-based, statistical, or even use lightweight machine learning models. But whatever the strategy is, the focus is on speed and predictability. Once a decision is made, the order is pushed to the smart auto router, which takes care of where and how to execute, possibly across multiple exchanges. The strategy engine is the brain of the system, but a brain that thinks in microsconds. Once a trading strategy decides to place an order, it's not blindly fired off to an exchange. It's first routed through a smart order router, a component that decides where and how to send the order for optimal execution. Should it go to NASDAQ, NYC, or should it be a market order or a limit order? The router evaluates multiple venues in real time based on liquidity, latency, fill probability, and even rebate structures. But before the order goes out, it passes through pre-trade risk checks. And these are absolutely critical for preventing financial disasters. The risk engine ensures you're not overspending, the order isn't too big, and the strategy isn't misfiring due to a bug. These checks are automated and happen in microsconds. If anything looks off, the order is blocked before it ever hits the exchange. Once cleared, the smart router sends the order to the selected exchange and the execution log flows back into the system for audit analysis and learning. This final checkpoint ensures that speed never overrides safety. After a trade is executed, it's the order management system that tracks and locks everything. The MS keeps a complete record of order sent, status updates such as filled, partially filled, rejected, the execution timestamps, and the routes taken. It acts like the central nervous system of the trading platform, coordinating between exchanges, strategy engines, and reporting systems. Meanwhile, a monitoring and metric stack runs in parallel, capturing latency data, system health, and performance metrics for every component. You will typically see a latency dashboard showing tick to trade times, metrics collectors tracking throughput, error rates, and Q depths, and alerts if any component slows down or behaves abnormally. All of this is key for post trade analysis, compliance reporting, and continuous optimization. In HFT, even a few microsconds of slowness can lead to missed opportunities or major losses. So realtime monitoring isn't optional. It's part of the competitive edge. From ingesting market data to making split-second decisions and executing trades in microsconds, it's a beautiful mix of hardware acceleration, event-driven software, nancond precision, and ruthless optimization. All built to shave off every possible delay. If you're into system design, low latency engineering, or just love peeking under the hood of high performance infrastructure, make sure to like this video, subscribe to the channel, and hit the bell icon so you don't miss the next deep dive. And hey, let me know in the comments which part of the architecture blew your mind the most. Would you want a deeper dive on strategy logic, FPGS, or matching engines? See you in the next one. [Music]",
+  "cited_at": "2026-05-24T05:04:34.869Z"
+}

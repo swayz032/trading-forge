@@ -1,0 +1,188 @@
+{
+  "source": "reddit",
+  "subreddit": "quant",
+  "query": "production system architecture pipeline",
+  "items": [
+    {
+      "title": "Toward deterministic replay in quantitative research pipelines: looking for technical critique",
+      "url": "https://www.reddit.com/r/quant/comments/1rktudf/toward_deterministic_replay_in_quantitative/",
+      "snippet": "Over the past year I’ve been thinking about a structural issue in quantitative research and analytical systems: reconstructing exactly what happened in a past analytical run is often harder than expected.\n\nNot just data versioning but understand which modules executed, in what canonical order, which fallbacks triggered, what the exact configuration state was, whether execution degraded silently, w",
+      "published_at": "2026-03-04T18:46:49.000Z",
+      "subreddit": "quant",
+      "score": 2,
+      "num_comments": 15
+    },
+    {
+      "title": "Examples or references for professional low-latency trading infra?",
+      "url": "https://www.reddit.com/r/quant/comments/1o769rs/examples_or_references_for_professional/",
+      "snippet": "I’m currently building a full research-to-production pipeline (data ingestion, analysis, backtesting, robustness testing, deployment) and I’d like to see how professionals structure such systems, both from an architectural and software engineering standpoint.\n\nAny public repos, reports about a non profitable strategy conception, talks, papers, architecture diagrams or anything you recommend studyi",
+      "published_at": "2025-10-15T09:23:58.000Z",
+      "subreddit": "quant",
+      "score": 11,
+      "num_comments": 6
+    },
+    {
+      "title": "Quant Research of the Week (3rd Edition)",
+      "url": "https://www.reddit.com/r/quant/comments/17vuctg/quant_research_of_the_week_3rd_edition/",
+      "snippet": "# SSRN\n\n### Recently Published\n\n## Quantitative\n\n[**Shapley-Based Approach to Portfolio Performance**](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4628462): The SPPC methodology can determine individual predictors' contributions to portfolio performance, shedding light on the sources of economic value from return predictability. (2023-11-09, shares: 3.0)\n\n[**Volatility Modeling with Neural",
+      "published_at": "2023-11-15T14:06:01.000Z",
+      "subreddit": "quant",
+      "score": 200,
+      "num_comments": 17
+    },
+    {
+      "title": "FLOX v0.2.0: modular modern C++ framework for building trading systems",
+      "url": "https://www.reddit.com/r/quant/comments/1mahceu/flox_v020_modular_modern_c_framework_for_building/",
+      "snippet": "The second release of FLOX ([https://github.com/FLOX-Foundation/flox](https://github.com/FLOX-Foundation/flox)) is now live.\n\nFLOX is a framework that provides tools for building modular, high-throughput, low-latency trading systems using modern C++.\n\nThis update introduces several new abstractions in the core engine, including a generic WebSocket client interface, an asynchronous HTTP transport l",
+      "published_at": "2025-07-27T08:40:36.000Z",
+      "subreddit": "quant",
+      "score": 9,
+      "num_comments": 2
+    },
+    {
+      "title": "Quant Research of the Week (4th Edition)",
+      "url": "https://www.reddit.com/r/quant/comments/186r4to/quant_research_of_the_week_4th_edition/",
+      "snippet": "# SSRN\n\n### Recently Published\n\n## Quantitative\n\n[**Learning Algorithms and Spoofing**](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4639959): The paper presents a model to test if a trading algorithm can manipulate the limit order book, concluding that market conditions can allow such manipulation. (2023-11-21, shares: 18.0)\n\n[**Machine Learning for Asset Management**](https://papers.ssrn.",
+      "published_at": "2023-11-29T14:49:28.000Z",
+      "subreddit": "quant",
+      "score": 94,
+      "num_comments": 4
+    },
+    {
+      "title": "I designed a ML production pipeline based on image processing to find out if price-action methods based on visual candlestick patterns provide an edge. ",
+      "url": "https://www.reddit.com/r/quant/comments/1g3jrr1/i_designed_a_ml_production_pipeline_based_on/",
+      "snippet": "**Project summary:** I trained a Deep Learning model based on image processing using snapshots of historical candlestick charts. Once the model was trained, I ran a live production for which the system takes a snapshot of the most current candlestick price chart and feeds it to the model. The output will belong to one of the \"Long\", \"short\" or \"Pass\" categories. The live trading showed that candle",
+      "published_at": "2024-10-14T16:20:08.000Z",
+      "subreddit": "quant",
+      "score": 131,
+      "num_comments": 48
+    },
+    {
+      "title": "Made an extensively tested Quant Beast model, with 2.0+ Sharpe Ratio and 178% Net returns (2024-2025). Should I start looking for investors?",
+      "url": "https://www.reddit.com/r/quant/comments/1qcoobp/made_an_extensively_tested_quant_beast_model_with/",
+      "snippet": "[2024-2025 Performance Net results.](https://preview.redd.it/o5fkjzxcrbdg1.png?width=1000&amp;format=png&amp;auto=webp&amp;s=164259cd48be5f92147a95a7b5fc27482209c885)\n\nI have spent the last several months building a multi layered Quant model designed to maximize gains while minimizing risks.  \nWith extensive research and testing, I have finally reached a point where I am satisfied with the model a",
+      "published_at": "2026-01-14T14:28:45.000Z",
+      "subreddit": "quant",
+      "score": 0,
+      "num_comments": 84
+    },
+    {
+      "title": "What’s the Average Tick-to-Trade Time for Firms?",
+      "url": "https://www.reddit.com/r/quant/comments/1ncp9gy/whats_the_average_ticktotrade_time_for_firms/",
+      "snippet": "Hey everyone,\n\nOver the summer I built a tick-to-trade engine and wanted to get some perspective from people here who’ve worked in HFT or low-latency systems.\n\nI built a small experimental setup where my laptop connects directly via Ethernet to an old Xilinx FPGA board, with the board running a very basic strategy, mostly a PoC than anything meant to compete in production.\n\nRight now, I’m seeing a",
+      "published_at": "2025-09-09T17:29:58.000Z",
+      "subreddit": "quant",
+      "score": 77,
+      "num_comments": 54
+    },
+    {
+      "title": "From 3µs to 1ms: Benchmarking and Validating Low-Latency Pipelines",
+      "url": "https://www.reddit.com/r/quant/comments/1sh0exq/from_3µs_to_1ms_benchmarking_and_validating/",
+      "snippet": "Got some really great responses on my last post thanks a lot to everyone who shared insights, it was super helpful.\n\nhttps://preview.redd.it/xg0is92jz7ug1.png?width=929&amp;format=png&amp;auto=webp&amp;s=f03e28e751f50ed93697d850a252297b9da3d988\n\nI’ve been benchmarking a simple pipeline locally and wanted to sanity check my numbers with people who’ve worked on real low-latency systems.\n\nOn an older",
+      "published_at": "2026-04-09T19:55:22.000Z",
+      "subreddit": "quant",
+      "score": 60,
+      "num_comments": 17
+    },
+    {
+      "title": "I open-sourced production data of all major global mining companies",
+      "url": "https://www.reddit.com/r/quant/comments/1sftgmw/i_opensourced_production_data_of_all_major_global/",
+      "snippet": "Last week I [posted](https://www.reddit.com/r/quant/comments/1s9u080/i_extracted_and_visualized_historical_production/) about my project to extract production data from global mining company filings at scale, and some of you asked for the source code and data. So I spent some time fixing bugs and making it publishable.\n\nLive app: [https://mining.kadoa.com](https://mining.kadoa.com)\n\nGitHub: [https",
+      "published_at": "2026-04-08T13:51:42.000Z",
+      "subreddit": "quant",
+      "score": 29,
+      "num_comments": 10
+    },
+    {
+      "title": "We had a case where pre-trade risk checks existed — but order execution still happened first. How are people actually enforcing sequence integrity?",
+      "url": "https://www.reddit.com/r/quant/comments/1t33emu/we_had_a_case_where_pretrade_risk_checks_existed/",
+      "snippet": "We ran into a failure mode recently that I’m curious how others are handling in production systems. Setup was pretty standard:\n\n\\- pre-trade risk checks (exposure / limits)\n\n\\- order routing\n\n\\- multi-service architecture with retries + async state updates\n\nOn paper, risk check is a hard gate. But under certain conditions (retry + latency + delayed state propagation), we saw cases where:\n\norder su",
+      "published_at": "2026-05-04T01:17:19.000Z",
+      "subreddit": "quant",
+      "score": 0,
+      "num_comments": 9
+    },
+    {
+      "title": "How do HFT/MFT firms evaluate senior/principal‑level quant engineers?",
+      "url": "https://www.reddit.com/r/quant/comments/1t17fc2/how_do_hftmft_firms_evaluate_seniorprincipallevel/",
+      "snippet": "I’m a senior quant engineer with almost two decades of experience building production simulation systems for derivatives pricing.  \n  \nI’m trying to understand how prop shops and systematic funds evaluate candidates with this background when hiring for senior or principal‑level quant engineering roles.\n\nAt that level, candidates typically bring experience with:\n\n* **event‑driven research and execu",
+      "published_at": "2026-05-01T22:03:53.000Z",
+      "subreddit": "quant",
+      "score": 11,
+      "num_comments": 4
+    },
+    {
+      "title": "[HIRING] Quantitative Risk Analyst – Crypto Casino / Real-Money Gaming (Remote/Flexible)",
+      "url": "https://www.reddit.com/r/quant/comments/1rmwg9s/hiring_quantitative_risk_analyst_crypto_casino/",
+      "snippet": "What's up r/quant — Monkey Tilt here again, and we're growing the team. We hired one of your fellow r/quant members and we're looking for another!\n\nWe run a crypto-native online casino that sits somewhere between gaming, speculation, and internet culture. Think real-money play meets creator-driven entertainment. As we scale, we need someone sharp to own the quantitative side of how we manage risk ",
+      "published_at": "2026-03-07T01:24:55.000Z",
+      "subreddit": "quant",
+      "score": 0,
+      "num_comments": 11
+    },
+    {
+      "title": "Shift in Research Alpha: Assessing the \"Research Maturity\" gap between PhDs and MSc-level Quants in Systematic HFs",
+      "url": "https://www.reddit.com/r/quant/comments/1q9y256/shift_in_research_alpha_assessing_the_research/",
+      "snippet": "Hey, \n\nI’ve been observing a shift in recent job descriptions for QR roles where the emphasis on a PhD seems to be competing with a demand for 'Production-Ready Research' skills. As someone finishing a specialized Master’s in Applied Math (Dauphine), I’m curious about the community’s take on the actual delta in alpha generation.\n\nIn the current landscape, does the 3-year headstart in industry (foc",
+      "published_at": "2026-01-11T12:22:51.000Z",
+      "subreddit": "quant",
+      "score": 33,
+      "num_comments": 6
+    },
+    {
+      "title": "I developed an agent that continuously live cross correlates global events and their impact on the market",
+      "url": "https://www.reddit.com/r/quant/comments/1pjd62s/i_developed_an_agent_that_continuously_live_cross/",
+      "snippet": "KIRA (knowledge integration and reasoning assistant) is an AI agent I developed that specifically started for an edge in commodities. It was OTAS, oil tanker alert system, which was meant to find averages in AIS data around choke points and alert for abnormalities. That became all commodities with their own version of choke points. This is GARI (global alert relay interface). It shows live the mar",
+      "published_at": "2025-12-10T20:12:42.000Z",
+      "subreddit": "quant",
+      "score": 0,
+      "num_comments": 10
+    },
+    {
+      "title": "Tft for time series",
+      "url": "https://www.reddit.com/r/quant/comments/1q7lbok/tft_for_time_series/",
+      "snippet": "I’ve been reviewing the Lim et al. (2019) paper on Temporal Fusion Transformers for interpretable multi-horizon forecasting. While there is a surplus of 'mickey mouse' projects online claiming to 'predict prices' with this architecture, I am interested in its actual institutional viability for factor investing specifically for factor selection and style rotation.\n\nCurrently, I manage a robust Elas",
+      "published_at": "2026-01-08T19:26:54.000Z",
+      "subreddit": "quant",
+      "score": 13,
+      "num_comments": 2
+    },
+    {
+      "title": "Will generative AI crack the code for bank tech teams?",
+      "url": "https://www.reddit.com/r/quant/comments/18wj4ey/will_generative_ai_crack_the_code_for_bank_tech/",
+      "snippet": "https://www.risk.net/risk-management/7958664/will-generative-ai-crack-the-code-for-bank-tech-teams\n\n—\n\nWill generative AI crack the code for bank tech teams?\nBanks could roll out tools to help translate old – or write new – code within months\n\nMenghan Xiao | 2 Jan 2024\n\nOne of the major difficulties introducing generative artificial intelligence (AI) into the heavily regulated financial sector is ",
+      "published_at": "2024-01-02T06:53:04.000Z",
+      "subreddit": "quant",
+      "score": 15,
+      "num_comments": 4
+    },
+    {
+      "title": "Quant Research of the Week (10th Edition)",
+      "url": "https://www.reddit.com/r/quant/comments/1994aei/quant_research_of_the_week_10th_edition/",
+      "snippet": "# SSRN\n\n### Recently Published\n\n**Quantitative**\n\n[**SpotV2Net: Intraday Spot Volatility Forecasting**](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4692194): SpotV2Net, a new forecasting model based on Graph Attention Network architecture, enhances the accuracy of intraday spot volatility predictions for financial assets. (2024-01-11, shares: 2.0)\n\n[**Model Averaging &amp; Double Machine L",
+      "published_at": "2024-01-17T18:49:05.000Z",
+      "subreddit": "quant",
+      "score": 36,
+      "num_comments": 1
+    },
+    {
+      "title": "Quant Research of the Week (5th Edition)",
+      "url": "https://www.reddit.com/r/quant/comments/18csq03/quant_research_of_the_week_5th_edition/",
+      "snippet": " \n\n# SSRN\n\n### Recently Published\n\n## Quantitative\n\n[**Deep Reinforcement Learning for US Equities Trading**](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4645453): The study shows that Deep Reinforcement Learning can effectively interpret synthetic alpha signals in financial trading, outperforming the market benchmark. (2023-11-27, shares: 3.0)\n\n[**Machine Learning for Portfolio Performanc",
+      "published_at": "2023-12-07T10:26:47.000Z",
+      "subreddit": "quant",
+      "score": 45,
+      "num_comments": 1
+    },
+    {
+      "title": "Inside the rapid rise and fall of Coatue's quant fund",
+      "url": "https://www.reddit.com/r/quant/comments/kena6o/inside_the_rapid_rise_and_fall_of_coatues_quant/",
+      "snippet": "Came across this entertaining article about Coatue's quant noobs.  The only 2 things missing in this story are: sexual harassment and good returns.\n\nhttps://www.businessinsider.com/coatue-quant-fund-philippe-laffont-performance-data-science-2020-11\n\n\nLast spring, Coatue Management, a $25 billion hedge-fund giant, did something unusual: It made an appearance.\n\nIn the 20 years since its founding, th",
+      "published_at": "2020-12-17T01:39:51.000Z",
+      "subreddit": "quant",
+      "score": 103,
+      "num_comments": 9
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:28.250Z"
+}

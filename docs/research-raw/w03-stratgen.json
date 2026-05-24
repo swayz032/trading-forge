@@ -1,0 +1,325 @@
+{
+  "query": "strategy generation pipeline LLM automated discovery walk forward",
+  "since": "2024-01-01",
+  "depth": "deep",
+  "sources": [
+    {
+      "source": "brave",
+      "items": [
+        {
+          "title": "LLaPipe: LLM-Guided Reinforcement Learning for Automated Data Preparation Pipeline Construction",
+          "url": "https://arxiv.org/html/2507.13712v1",
+          "snippet": "<strong>By leveraging LLM-driven, context-aware guidance, LLaPipe effectively navigates the vast search space of pipelines</strong>. Our key innovations include a retrieval-augmented LLM Policy Advisor, a theoretically-grounded Adaptive Advisor Triggering (Advisor+) mechanism for efficiency, and a truly flexible ...",
+          "published_at": "2025-07-18T11:51:57.000Z",
+          "score": null
+        },
+        {
+          "title": "An Automated Framework for Strategy Discovery, Retrieval, and Evolution in LLM Jailbreak Attacks",
+          "url": "https://arxiv.org/html/2511.02356v1",
+          "snippet": "<strong>An Attack Designer generates prompts based on accumulated strategies, a Judge Model evaluates the outcome, and a Strategy Extractor distills the interaction into a new and reusable strategy</strong>. This strategy is then stored and categorized, allowing the framework to learn from both successful and ...",
+          "published_at": "2025-11-04T13:08:01.000Z",
+          "score": null
+        },
+        {
+          "title": "LaMDAgent: An Autonomous Framework for Post-Training Pipeline Optimization via LLM Agents",
+          "url": "https://arxiv.org/html/2505.21963",
+          "snippet": "Existing approaches typically rely on manual design or focus narrowly on optimizing individual components, such as data ordering or merging strategies. In this work, we introduce LaMDAgent (short for Language Model Developing Agent), a novel framework that autonomously constructs and optimizes full post-training pipelines through the use of LLM-based agents. LaMDAgent systematically explores diverse model generation techniques, datasets, and hyperparameter configurations, leveraging task-based feedback to discover high-performing pipelines with minimal human intervention.",
+          "published_at": "2026-02-05T00:35:54.000Z",
+          "score": null
+        },
+        {
+          "title": "LLM-Driven Automated Generation Pipeline",
+          "url": "https://www.emergentmind.com/topics/llm-driven-automated-generation-pipeline",
+          "snippet": "For instance, in &quot;Automated DevOps Pipeline Generation for Code Repositories using LLMs&quot; (Mehta et al., 2023), repositories are filtered, parsed, and content (notably file structure and branch information) is surfaced to the LLM through prompt design. Prompt engineering and context construction: Task- and domain-aware prompts are constructed to maximize the fidelity and specificity of LLM outputs. Strategies include two-part prompts with explicit program context (Mehta et al., 2023), meta-cognitive or skill-disclosing queries for skill emergence (Kaur et al., 2024), and chain-of-thought (CoT) or multi-shot self-guidance for complex extraction (Abolhasani et al., 2024, Menon et al., 5 May 2025).",
+          "published_at": "2025-09-22T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Building an LLM-Powered Auto ML Pipeline: From Data to Deployment | by Nikhil Doye | Medium",
+          "url": "https://nikhil-datasolutions.medium.com/building-an-llm-powered-auto-ml-pipeline-from-data-to-deployment-a94f707879e7",
+          "snippet": "Automated Feature Engineering: The agent creates new features based on data patterns it discovers. For numerical features, it might generate polynomial terms or interaction features. For categorical features, it implements intelligent encoding strategies based on cardinality and target correlation. Scalability Considerations: Generated preprocessing code includes proper scaling and normalization, with pipeline objects that can be serialized and reused during inference.",
+          "published_at": "2025-09-16T20:55:58.000Z",
+          "score": null
+        },
+        {
+          "title": "[2409.06289] Automate Strategy Finding with LLM in Quant Investment",
+          "url": "https://arxiv.org/abs/2409.06289",
+          "snippet": "We present <strong>a novel three-stage framework leveraging Large Language Models (LLMs) within a risk-aware multi-agent system for automate strategy finding in quantitative finance</strong>. Our approach addresses the brittleness of traditional deep learning ...",
+          "published_at": "2025-11-03T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Automated Model Discovery via Multi-modal & Multi-step Pipeline",
+          "url": "https://arxiv.org/html/2509.25946",
+          "snippet": "AnalyzerLLM requires more steps to generate a proper candidate than AnalyzerVLM. LLM is less effective than VLM at capturing the overall trend, which leads to more iteration for checking its analysis. Next, we restrict the number of reasoning steps of AnalyzerVLM to compare single-step and multi-step analysis, observing performance improvements across steps, as shown in Fig. 5. The results indicate that additional analysis steps lead to the discovery of a better model.",
+          "published_at": "2025-09-30T12:27:41.000Z",
+          "score": null
+        },
+        {
+          "title": "LLM Visibility Strategy That Drives Pipeline - SearchX | SEO Agency",
+          "url": "https://searchxpro.com/llm-visibility-strategy",
+          "snippet": "Monitor whether your brand appears in AI-generated responses for priority prompts. Track if category content that supports AI discovery also influences assisted conversions. This is not about replacing rank tracking with guesswork. It is about expanding your definition of search performance. If visibility improves but pipeline does not, the strategy needs work.",
+          "published_at": "2026-03-25T05:55:20.000Z",
+          "score": null
+        },
+        {
+          "title": "LLM Agents for Interactive Workflow Provenance: Reference Architecture and Evaluation Methodology",
+          "url": "https://arxiv.org/html/2509.13978v2",
+          "snippet": "Particularly, in very complex ECH ... analysis pipelines may still be necessary to handle edge cases. Continued research in interactive provenance systems will be essential to accelerate the data-to-insights process and, ultimately, scientific discovery. Our work demonstrates that LLM-powered agents, when guided by structured schema representations, dynamic prompting strategies, and a modular ...",
+          "published_at": "2025-09-23T17:18:29.000Z",
+          "score": null
+        },
+        {
+          "title": "LLM Training Pipelines: Key Facts About Pretraining | Deepchecks",
+          "url": "https://deepchecks.com/llm-training-pipelines-pretraining-guide/",
+          "snippet": "Then, these representations are processed through feed-forward layers and a classification head, which outputs logits for each masked token position. ... To achieve a more accurate level in pretraining, LLMs are exposed to trillions of tokens from diverse data sources, including web crawls, books, academic papers, code repositories, news, and social media. The training requires thousands of GPUs, parallelization, strategic architectures, and weeks or months of compute time.",
+          "published_at": "2026-02-11T11:40:03.000Z",
+          "score": null
+        },
+        {
+          "title": "Idea2Plan: Exploring AI-Powered Research Planning",
+          "url": "https://arxiv.org/html/2510.24891v1",
+          "snippet": "*Output Research Idea:** <strong>We propose a hybrid strategy that integrates continual pre-training (CPT) and supervised fine-tuning (SFT) to develop LLMs specialized in scientific literature understanding</strong>, addressing the challenges of lack of scientific knowledge and unfamiliarity with specialized ...",
+          "published_at": "2025-10-28T22:26:38.000Z",
+          "score": null
+        },
+        {
+          "title": "[2505.21963] LaMDAgent: An Autonomous Framework for Post-Training Pipeline Optimization via LLM Agents",
+          "url": "https://arxiv.org/abs/2505.21963",
+          "snippet": "Existing approaches typically rely on manual design or focus narrowly on optimizing individual components, such as data ordering or merging strategies. In this work, we introduce LaMDAgent (short for Language Model Developing Agent), a novel framework that autonomously constructs and optimizes full post-training pipelines through the use of LLM-based agents. LaMDAgent systematically explores diverse model generation techniques, datasets, and hyperparameter configurations, leveraging task-based feedback to discover high-performing pipelines with minimal human intervention.",
+          "published_at": "2025-05-28T04:00:00.000Z",
+          "score": null
+        }
+      ]
+    },
+    {
+      "source": "exa",
+      "items": [
+        {
+          "title": "ALAGENT-HKU/x2strategy",
+          "url": "https://github.com/ALAGENT-HKU/x2strategy",
+          "snippet": "",
+          "published_at": "2026-03-26T00:00:00.000Z",
+          "score": 1
+        },
+        {
+          "title": "august-andersen/trading-hypothesis-workflow",
+          "url": "https://github.com/august-andersen/trading-hypothesis-workflow",
+          "snippet": "",
+          "published_at": "2026-03-22T00:00:00.000Z",
+          "score": 0.9090909090909091
+        },
+        {
+          "title": "AI Trade Idea Generator | RL & Genetic Algorithm Strategy Discovery — MultiEdge",
+          "url": "https://rocketedge.com/trade-ideas/",
+          "snippet": "",
+          "published_at": "2026-03-22T00:00:00.000Z",
+          "score": 0.8181818181818181
+        },
+        {
+          "title": "zostaff/ai-quant-researcher",
+          "url": "https://github.com/zostaff/ai-quant-researcher",
+          "snippet": "",
+          "published_at": "2026-05-13T00:00:00.000Z",
+          "score": 0.7272727272727273
+        },
+        {
+          "title": "Miasyster/QuantGPT",
+          "url": "https://github.com/Miasyster/QuantGPT",
+          "snippet": "",
+          "published_at": "2026-03-20T00:00:00.000Z",
+          "score": 0.6363636363636364
+        },
+        {
+          "title": "Recursive Self-Improvement in Quant Research with Claude Code | Saulius blog",
+          "url": "https://saulius.io/blog/quanta-alpha-lgbm-recursive-self-improvement",
+          "snippet": "",
+          "published_at": "2026-03-05T00:00:00.000Z",
+          "score": 0.5454545454545454
+        },
+        {
+          "title": "ms2073/Derivify",
+          "url": "https://github.com/ms2073/Derivify",
+          "snippet": "",
+          "published_at": "2026-02-07T00:00:00.000Z",
+          "score": 0.4545454545454546
+        },
+        {
+          "title": "ZhuLinsen/alphaevo",
+          "url": "https://github.com/ZhuLinsen/alphaevo",
+          "snippet": "",
+          "published_at": "2026-03-31T00:00:00.000Z",
+          "score": 0.36363636363636365
+        },
+        {
+          "title": "GitHub - OnePunchMonk/AgentQuant: Autonomous quantitative trading research platform that transforms stock lists into fully backtested strategies using AI agents, real market data, and mathematical formulations, all without requiring any coding. · GitHub",
+          "url": "https://github.com/OnePunchMonk/AgentQuant",
+          "snippet": "",
+          "published_at": "2025-08-12T00:00:00.000Z",
+          "score": 0.2727272727272727
+        },
+        {
+          "title": "NeuZhou/stratevo",
+          "url": "https://github.com/NeuZhou/stratevo",
+          "snippet": "",
+          "published_at": "2026-03-15T00:00:00.000Z",
+          "score": 0.18181818181818177
+        },
+        {
+          "title": "164 Profitable Trading Strategies - by Stuart Farmer",
+          "url": "https://papertoprofit.substack.com/p/164-profitable-trading-strategies",
+          "snippet": "",
+          "published_at": "2025-05-27T00:00:00.000Z",
+          "score": 0.09090909090909094
+        },
+        {
+          "title": "chrisworsey55/atlas-gic",
+          "url": "https://github.com/chrisworsey55/atlas-gic",
+          "snippet": "",
+          "published_at": "2026-03-11T00:00:00.000Z",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "source": "tavily",
+      "items": [
+        {
+          "title": "LLM-Driven Automated Strategy Finding",
+          "url": "https://www.emergentmind.com/topics/automate-strategy-finding-with-llm",
+          "snippet": "## 2. Multi-Agent Strategy Generation, Evaluation, and Refinement Pipelines\n\nState-of-the-art frameworks for automating strategy discovery decompose the process into agentic subproblems handled by distinct LLM-driven components. In StrategyLLM, four roles—strategy generator, executor, optimizer, and evaluator—interact in an iterative, feedback-driven pipeline (Gao et al., 2023):\n\nThis multi-phase ",
+          "published_at": null,
+          "score": 0.99998045
+        },
+        {
+          "title": "LLM-Driven Automated Generation Pipeline",
+          "url": "https://www.emergentmind.com/topics/llm-driven-automated-generation-pipeline",
+          "snippet": "2000 character limit reached\n\n# LLM-Driven Automated Generation Pipeline\n\nUpdated 22 September 2025\n\n LLM-driven automated generation pipeline is a multi-stage framework that integrates large language models with domain-specific engineering to transform and validate diverse artifacts.\n The pipeline employs robust input normalization, prompt engineering, and iterative chain-of-thought strategies to",
+          "published_at": null,
+          "score": 0.99997497
+        },
+        {
+          "title": "Automated Algorithmic Discovery for Scientific Computing through LLM-Guided Evolutionary Search: A Case Study in Gravitational-Wave Detection",
+          "url": "https://arxiv.org/html/2508.03661v3",
+          "snippet": "Framework Overview. The Evo-MCTS framework systematically transforms raw time-series data into a comprehensive catalog of optimized detection algorithms through an automated discovery pipeline that integrates domain knowledge encoded in LLMs (Figure 1a, see Methods Section 4.1 for formal problem definition). [...] ### 2.5 Ablation Studies\n\nTo validate Evo-MCTS’s effectiveness, we conducted systema",
+          "published_at": null,
+          "score": 0.99966204
+        },
+        {
+          "title": "Automate Strategy Finding with LLM in Quant Investment",
+          "url": "https://arxiv.org/html/2409.06289v2",
+          "snippet": "1. Through this process, Alpha Grail generated nine categories comprising 100 seed alphas. [...] ### 5.3. Multimodal & Multi-Agent LLM [...] ### 2.2. Seed Alpha Mining & Selection",
+          "published_at": null,
+          "score": 0.9995987
+        },
+        {
+          "title": "AUTOMATED, REPRODUCIBLE PIPELINE FOR LLM VULNERABILITY DISCOVERY:  | Kaggle",
+          "url": "https://www.kaggle.com/competitions/openai-gpt-oss-20b-red-teaming/writeups/automated-reproducible-pipeline-for-llm-vulnerabil",
+          "snippet": "from these automated frameworks but is specifically tailored for a post-hoc, analytical review of red-team engagement outputs rather than the generation of the attacks themselves. [...] Schema. Each JSON record holds: - prompt_id (str) — unique identifier. - category (str) — probe family or vulnerability type. - response_text (str) — raw LLM output. - severity (float) — human label or automated se",
+          "published_at": null,
+          "score": 0.9990452
+        },
+        {
+          "title": "A Practitioners Guide to Retrieval Augmented Generation (RAG)",
+          "url": "https://cameronrwolfe.substack.com/p/a-practitioners-guide-to-retrieval",
+          "snippet": "1. Creating a high-performing hybrid retrieval algorithm (potentially with a re-ranking component) that can accurately identify relevant textual chunks.\n2. Constructing a functional data preprocessing pipeline that properly formats data and removes harmful artifacts before the data is used for RAG.\n3. Finding the correct prompting strategy that allows the LLM to reliably incorporate useful context",
+          "published_at": null,
+          "score": 0.9979652
+        },
+        {
+          "title": "Hubble: An LLM-Driven Agentic Framework for Safe and Automated Alpha Factor Discovery",
+          "url": "https://arxiv.org/html/2604.09601v1",
+          "snippet": "A domain-specific language (DSL) of curated mathematical, time-series, and cross-sectional operators that constrains the search space to well-defined, financially interpretable primitives.\n\nAn AST-based execution sandbox with whitelist validation, arity verification, and complexity limits that guarantees computational safety.\n\nA rigorous statistical evaluation pipeline that assesses predictive qua",
+          "published_at": null,
+          "score": 0.9977482
+        },
+        {
+          "title": "LLM-Driven NAS Pipeline",
+          "url": "https://www.emergentmind.com/topics/llm-driven-nas-pipeline",
+          "snippet": "Feedback is crafted as:\n\n\"ValAcc=91.2% (< target 92%), params=5.6M, latency=1.1 ms. Observed slight overfitting (val\\_loss↑ after epoch 40). Recommend: add Dropout(0.3) after conv layers, switch to Focal Loss.\"\n\nThese natural language recommendations are ingested by the Navigator LLM to generate subsequent strategies targeting areas such as model regularization or architectural simplification. Con",
+          "published_at": null,
+          "score": 0.9972638
+        },
+        {
+          "title": "Evolving Excellence: Automated Optimization of LLM-based Agents",
+          "url": "https://arxiv.org/pdf/2512.09108",
+          "snippet": "expertise in evolutionary computation. The platform workflow consists of three key stages: Figure 1: Artemis interface showing automatic component discovery based on natural-language optimization goals, eliminating manual file specification. [...] Evolutionary and Genetic Algorithms. A growing body of work combines evolutionary algorithms with LLM-based generation to improve program synthesis, alg",
+          "published_at": null,
+          "score": 0.9970421
+        },
+        {
+          "title": "Capability-Driven Skill Generation with LLMs: A RAG-Based Approach for Reusing Existing Libraries and Interfaces",
+          "url": "https://arxiv.org/html/2505.03295v2",
+          "snippet": "Furthermore, the programming language Python and target framework ROS 2 determine the automated discovery of available ROS 2 interfaces in step 2 and subsequent implementation of executable skills with ROS 2 in Python in step 3.\nAll user inputs are used in the final prompt to guide the LLM in generating an appropriate skill implementation.\n\n### III-B API Document Generation and Preparation\n\nTo gen",
+          "published_at": null,
+          "score": 0.99632156
+        },
+        {
+          "title": "Automate schema generation for intelligent document processing | Artificial Intelligence",
+          "url": "https://aws.amazon.com/blogs/machine-learning/automate-schema-generation-for-intelligent-document-processing",
+          "snippet": "## Conclusion\n\nIn this post, we showed you how the multi-document discovery feature solves the challenge of needing schemas before you can process documents but needing to process documents before you can build schemas. The solution combines visual embeddings, automatic clustering, and agentic schema generation with multimodal LLMs. It transforms an opaque collection of unknown documents into stru",
+          "published_at": null,
+          "score": 0.9951703
+        },
+        {
+          "title": "RAG and LLM business process automation: A technical strategy",
+          "url": "https://www.griddynamics.com/blog/retrieval-augmented-generation-llm",
+          "snippet": "Use case [...] Use case [...] ### Reporting: Automated reports\n\nIn today’s complex supply chains, leveraging multifaceted data is paramount. RAG dives deep into a plethora of internal documents, including real-time inventory logs, past purchase orders, vendor correspondence, and shipment histories. Drawing from these diverse sources, RAG auto-generates intricate supply chain reports. These reports",
+          "published_at": null,
+          "score": 0.9890131
+        }
+      ]
+    },
+    {
+      "source": "youtube",
+      "items": [
+        {
+          "title": "Use AI in Excel for Data Analysis | No Plugin required",
+          "url": "https://www.youtube.com/watch?v=Q-Ar-35nChA",
+          "snippet": "",
+          "published_at": "2025-06-21T08:54:17.000Z",
+          "channel": "Levelupwithexcel",
+          "video_id": "Q-Ar-35nChA",
+          "score": null
+        },
+        {
+          "title": "AI vs ML vs Generative AI",
+          "url": "https://www.youtube.com/watch?v=FbtYxPUrhq8",
+          "snippet": "Comp Sci vs AI vs ML vs Gen AI ‼️ #ai #tech #ml #fyp.",
+          "published_at": "2025-03-14T21:00:11.000Z",
+          "channel": "Sajjaad Khader",
+          "video_id": "FbtYxPUrhq8",
+          "score": null
+        },
+        {
+          "title": "AI Learns to Dodge  #ai #deeplearning #aiwarehouse",
+          "url": "https://www.youtube.com/watch?v=LXosuQEOLn0",
+          "snippet": "AI learns to play Tag In this video an AI Warehouse agent named Albert learns to dodge Kai. The AI was trained using Deep ...",
+          "published_at": "2024-07-20T04:11:42.000Z",
+          "channel": "AI Warehouse",
+          "video_id": "LXosuQEOLn0",
+          "score": null
+        },
+        {
+          "title": "AI Agents with Databricks in 5 Minutes",
+          "url": "https://www.youtube.com/watch?v=RqRlhGO2an0",
+          "snippet": "Discover how to build AI agents tailored to your business data in this 5-minute demo. We'll show how Databricks helps you move ...",
+          "published_at": "2025-03-13T16:51:42.000Z",
+          "channel": "Databricks",
+          "video_id": "RqRlhGO2an0",
+          "score": null
+        },
+        {
+          "title": "The Only 12 n8n AI Automations You&#39;ll Ever Need (Steal These)",
+          "url": "https://www.youtube.com/watch?v=niHtZBNaJ58",
+          "snippet": "COMMUNITY https://www.skool.com/automatable/about FULL VIDEO https://youtu.be/uQGT2K26W84 BLUEPRINTS • Gmail ...",
+          "published_at": "2025-04-26T19:43:49.000Z",
+          "channel": "Jono Catliff",
+          "video_id": "niHtZBNaJ58",
+          "score": null
+        }
+      ]
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:41.943Z"
+}

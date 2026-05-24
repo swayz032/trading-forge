@@ -1,0 +1,116 @@
+{
+  "source": "reddit",
+  "subreddit": "propfirm",
+  "query": "automated bot strategy banned",
+  "items": [
+    {
+      "title": "PART 2 of \"My honest experience as a propfirm COO and some tips\": The real economics of running a prop firm and my answer to your questions",
+      "url": "https://www.reddit.com/r/propfirm/comments/1qt2cts/part_2_of_my_honest_experience_as_a_propfirm_coo/",
+      "snippet": "**Part 2: The real economics of running a prop firm** Small note: English isn't my first language. I use AI to clean up grammar and phrasing, but the content and numbers are entirely mine.\n\nPart 1 got way more traction than expected. Lots of DMs asking about the business side — what it actually costs to run a prop firm, how the money flows, how we deal with risk internally. So this post is the beh",
+      "published_at": "2026-02-01T16:04:48.000Z",
+      "subreddit": "propfirm",
+      "score": 10,
+      "num_comments": 11
+    },
+    {
+      "title": "Do prop firms normally allow bot linking through API?",
+      "url": "https://www.reddit.com/r/propfirm/comments/1ozib9v/do_prop_firms_normally_allow_bot_linking_through/",
+      "snippet": "I’ve seen mixed answers about this, so I’m trying to get some clarity. Some traders say prop firms allows API connections for bots or automated strategies, while others say it’s completely banned and can get your account closed instantly. \n\nFor those with experience, is API trading generally allowed, or is it something most prop firms restrict?",
+      "published_at": "2025-11-17T14:52:45.000Z",
+      "subreddit": "propfirm",
+      "score": 1,
+      "num_comments": 5
+    },
+    {
+      "title": "Tell me strategy to automate my trading",
+      "url": "https://www.reddit.com/r/propfirm/comments/1ro72nc/tell_me_strategy_to_automate_my_trading/",
+      "snippet": "I am a developer, programmer and part time trader as well. Recently i created a bot based on a vwap strategy, and it’s pretty profitable. But it takes very less trades in a month.",
+      "published_at": "2026-03-08T15:03:53.000Z",
+      "subreddit": "propfirm",
+      "score": 1,
+      "num_comments": 0
+    },
+    {
+      "title": "Prop firms AI data training",
+      "url": "https://www.reddit.com/r/propfirm/comments/1tfrny9/prop_firms_ai_data_training/",
+      "snippet": "So recently ive decided to really take the time to sit down and learn the ins and outs of trading, started reading books instead of listening to videos and man has that lead me to a wealth of better understanding. it led me to systematic trading, looking at trading in more of statistics and probabilities sense instead of discretionary trading and it totally changed my approach on trading. I took a",
+      "published_at": "2026-05-17T14:50:54.000Z",
+      "subreddit": "propfirm",
+      "score": 4,
+      "num_comments": 1
+    },
+    {
+      "title": "I make an average of 10 percent per month with an automated system.",
+      "url": "https://www.reddit.com/r/propfirm/comments/1szzvdn/i_make_an_average_of_10_percent_per_month_with_an/",
+      "snippet": "I’m gonna flex a little bit because, honestly, I’m feeling pretty good about this. And why not? There are a million ways to make money out there, but most require way too much grind. You either have a boss breathing down your neck, demanding clients, or you just end up failing after all that effort. My method for generating passive income is a fully automated system.\n\nYou just fire up the bot and ",
+      "published_at": "2026-04-30T15:39:26.000Z",
+      "subreddit": "propfirm",
+      "score": 2,
+      "num_comments": 2
+    },
+    {
+      "title": "Is Top Tier Trader’s $100K Challenge Worth It for a New Forex Trader in 2026?",
+      "url": "https://www.reddit.com/r/propfirm/comments/1qfb824/is_top_tier_traders_100k_challenge_worth_it_for_a/",
+      "snippet": "I’m new to forex trading and have about 18 months of demo experience, mainly trading USD/JPY. I’m considering Top Tier Trader’s $100k challenge (80% profit split, $399 fee), but I’ve seen posts warning about strict drawdown rules and denied payouts. I’m concerned about risking the $399 if it’s a scam or too difficult for a beginner. I use a conservative strategy and can afford the fee, but I want ",
+      "published_at": "2026-01-17T11:47:35.000Z",
+      "subreddit": "propfirm",
+      "score": 22,
+      "num_comments": 7
+    },
+    {
+      "title": "THE \"GAMBLING\" TRAP: How OFP Funding Denied a Payout on a 1.02% Drawdown Account (Case 2818)",
+      "url": "https://www.reddit.com/r/propfirm/comments/1qyc3gg/the_gambling_trap_how_ofp_funding_denied_a_payout/",
+      "snippet": "Hey everyone, I’m writing this to document a clear case of contractual breach and \"moving the goalposts\" by **OFP Funding**. I’ve been trading for years, and I’ve never seen a firm try to justify a payout denial with such a mathematical and legal mess.\n\n**The Context:**\n\n* **Account:** $50k Instant Pro (ID 2818).\n* **Profit Generated:** $807.94.\n* **Max Drawdown:** Only 1.02% ($509).\n\nhttps://prev",
+      "published_at": "2026-02-07T12:03:13.000Z",
+      "subreddit": "propfirm",
+      "score": 2,
+      "num_comments": 6
+    },
+    {
+      "title": "​Took me 8 months and 4000+ hours, but I finally built a fully automated DB-to-execution architecture to protect my funded accounts. What was your biggest hurdle in going fully automated?",
+      "url": "https://www.reddit.com/r/propfirm/comments/1rjk3cl/took_me_8_months_and_4000_hours_but_i_finally/",
+      "snippet": "​Hey everyone,\n​Like many of you, I used to struggle with the psychological side of manual trading. Trying to manage the strict $2,500 trailing drawdown on 50k funded accounts was exhausting, and one emotional mistake usually blew the account.\n​I spent the last 8 months coding my own end-to-end automated ecosystem to completely remove my hands from the keyboard. The biggest challenge was keeping t",
+      "published_at": "2026-03-03T08:35:57.000Z",
+      "subreddit": "propfirm",
+      "score": 1,
+      "num_comments": 0
+    },
+    {
+      "title": "PAYOUT DENIED: Detailed Technical Audit of OFP Funding (Account 2818)",
+      "url": "https://www.reddit.com/r/propfirm/comments/1qycagz/payout_denied_detailed_technical_audit_of_ofp/",
+      "snippet": "Hey everyone, I’m writing this to document my experience regarding a payout denial with **OFP Funding**. I’ve been trading for 7 years, and I want to share the technical data behind this case so other traders can see how these automated audits are being conducted.\n\n**The Context:**\n\n* **Account:** $50k Instant Pro (ID 2818).\n* **Profit Generated:** $807.94.\n* **Max Drawdown:** Only 1.02% ($509).\n\n",
+      "published_at": "2026-02-07T12:13:44.000Z",
+      "subreddit": "propfirm",
+      "score": 5,
+      "num_comments": 1
+    },
+    {
+      "title": "What is Galileo fx in 2025?",
+      "url": "https://www.reddit.com/r/propfirm/comments/1op14ls/what_is_galileo_fx_in_2025/",
+      "snippet": "I’ve been experimenting with Galileo FX lately, and it’s definitely been an interesting experience so far. Thought I’d share what I’ve learned and hear from others who’ve tried it maybe you’ve run into some of the same things. Setting it up was actually a lot easier than I expected. I’m not super tech-savvy, but the installation guide was clear, and they even offer remote setup if you want someone",
+      "published_at": "2025-11-05T12:10:07.000Z",
+      "subreddit": "propfirm",
+      "score": 28,
+      "num_comments": 5
+    },
+    {
+      "title": "What are the Galileo FX reviews in 2025 ?",
+      "url": "https://www.reddit.com/r/propfirm/comments/1o4rjck/what_are_the_galileo_fx_reviews_in_2025/",
+      "snippet": "I’ve been experimenting with Galileo FX lately, and it’s honestly been quite an experience. Thought I’d share what I’ve noticed so far and hear what others think too. Setting it up was surprisingly simple the guides were clear, and they even offer remote installation if you’d rather have someone else handle it. I almost went for that option but decided to do it myself to save some money. Still, I ",
+      "published_at": "2025-10-12T15:10:25.000Z",
+      "subreddit": "propfirm",
+      "score": 18,
+      "num_comments": 4
+    },
+    {
+      "title": "Grid trading Review in 2025; Is it good?",
+      "url": "https://www.reddit.com/r/propfirm/comments/1o5neae/grid_trading_review_in_2025_is_it_good/",
+      "snippet": "I’ve been searching through this group for discussions on grid trading, but most posts I’ve found are over a year old. The ones that do exist mostly talk about traditional grid setups with fixed ranges between a high and low price. I’m curious why more traders don’t use unbounded grids that space orders more evenly. I’ve actually built an open-source bot that does this, and in just over 30 days, i",
+      "published_at": "2025-10-13T15:47:56.000Z",
+      "subreddit": "propfirm",
+      "score": 1,
+      "num_comments": 0
+    }
+  ],
+  "cited_at": "2026-05-24T04:41:05.616Z"
+}

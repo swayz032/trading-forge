@@ -1,0 +1,143 @@
+{
+  "source": "reddit",
+  "subreddit": "algotrading",
+  "query": "walk forward analysis robust strategy",
+  "items": [
+    {
+      "title": "Has anyone actually found a long-term profitable EA (Expert Advisor)? Or are they all just curve-fitted hype?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1ofontf/has_anyone_actually_found_a_longterm_profitable/",
+      "snippet": "I’ve been building and testing EAs for a while — from simple moving average crossovers to machine-learning-driven strategies — and I still haven’t found one that stays consistently profitable long-term (I’m talking at least 1–2 years of live or high-quality backtesting data).\n\nMost EAs I see online look great in backtests, but once you run them live, the equity curve starts bleeding slowly or dies",
+      "published_at": "2025-10-25T10:56:57.000Z",
+      "subreddit": "algotrading",
+      "score": 53,
+      "num_comments": 166
+    },
+    {
+      "title": "Other than In-Sample vs Out-Of-Sample Comparison, what other methods we can use to test for Robustness of Strategies?",
+      "url": "https://www.reddit.com/r/algotrading/comments/lo3tig/other_than_insample_vs_outofsample_comparison/",
+      "snippet": "I used genetic programming to find a strategy that will give max sharpe ratio &amp; r-squared for In-Sample data, and re-backtested the strategy \"globally\" (i.e. both for In-Sample and Out-Of-Sample) for comparison.\n\nAs you can see in Figure 1, the in-sample performance looks 'stable', as it should be. But the out-of-sample is a little bit choppy, even though it still made a return. Would you imme",
+      "published_at": "2021-02-20T09:43:30.000Z",
+      "subreddit": "algotrading",
+      "score": 15,
+      "num_comments": 9
+    },
+    {
+      "title": "Built a systematic trading system - looking for feedback on my entry/exit approach and understanding commercial use",
+      "url": "https://www.reddit.com/r/algotrading/comments/1qhpies/built_a_systematic_trading_system_looking_for/",
+      "snippet": "Hey everyone,\n\nBeen working on a trading project for about a year and wanted to share some results and get feedback. Not selling anything - genuinely curious if my approach makes sense and if there's any appetite for this kind of thing.\n\n**The high-level idea:**\n\nI built a system that learns the \"personality\" of individual tickers - how they move, when they tend to reverse, what kind of volatility",
+      "published_at": "2026-01-20T03:07:17.000Z",
+      "subreddit": "algotrading",
+      "score": 14,
+      "num_comments": 16
+    },
+    {
+      "title": "Building NSE Trading Bots - Technical Deep Dive on Backtesting, TradingView Integration &amp; Strategy Automation",
+      "url": "https://www.reddit.com/r/algotrading/comments/1t2fm6e/building_nse_trading_bots_technical_deep_dive_on/",
+      "snippet": "Hi r/algotrading!\n\nI've been building NSE trading automation systems and wanted to share some technical insights that might be useful for anyone looking to automate their strategies.\n\n🚀 WHAT'S POSSIBLE WITH NSE TRADING AUTOMATION:\n\nIf you have a trading strategy, here are the technical approaches to automate it:\n\nStrategy Backtesting\n\n• Using NSE Bhavcopy data (historical daily prices)\n\n• Backtes",
+      "published_at": "2026-05-03T08:20:18.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 3
+    },
+    {
+      "title": "I built the back testing engine I wanted - do you have any tips or critiques?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1oyg59y/i_built_the_back_testing_engine_i_wanted_do_you/",
+      "snippet": "Hello all\n\nI had been using NinjaTrader for some time, but the back testing engine and walk-forward left me wanting more - it consumed a huge amount of time, often crashed and regularly felt inflexible - and I desired a different solution. Something of my own design that ran with more control, could run queues of different strategies - *millions of parameter combos (thank you vectorbt!)* and could",
+      "published_at": "2025-11-16T08:08:09.000Z",
+      "subreddit": "algotrading",
+      "score": 17,
+      "num_comments": 23
+    },
+    {
+      "title": "Repeatedly failing OOS , am I overfitting or just not enough data?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1q4y07t/repeatedly_failing_oos_am_i_overfitting_or_just/",
+      "snippet": "\nHello everyone, I'm at a frustrating crossroads in my quant journey and could use some seasoned perspective.\n\nMy Background: ~5 years of discretionary FX trading with mixed results. For the last 3 months, I've been fully committed to building a robust, automated strategy to overcome discretionary pitfalls.\n\nThe Strategy &amp; The Battle:\nMy core idea is anEMA ribbon trend-following strategy on EU",
+      "published_at": "2026-01-05T21:03:16.000Z",
+      "subreddit": "algotrading",
+      "score": 0,
+      "num_comments": 8
+    },
+    {
+      "title": "Algo Trading Design Process",
+      "url": "https://www.reddit.com/r/algotrading/comments/13bvuui/algo_trading_design_process/",
+      "snippet": " Would you say this is a good outline to get started with algo trading design?\n\nI. Algorithmic Trading Design Process Outline\n\nA. Generate Trading Idea\n\n1. Research and brainstorm\n2. Identify potential trading strategies\n\nB. Test Trading Idea on Historical Data\n\n1. Select 2 random years for testing\n2. Choose 2-4 parameters to optimize\n3. Optimize for a performance measure (e.g. net profit or net p",
+      "published_at": "2023-05-08T15:45:29.000Z",
+      "subreddit": "algotrading",
+      "score": 47,
+      "num_comments": 30
+    },
+    {
+      "title": "Some basic algo trading questions on platform and data sources",
+      "url": "https://www.reddit.com/r/algotrading/comments/5exsqy/some_basic_algo_trading_questions_on_platform_and/",
+      "snippet": "Hi algoTrading,\n\nI'm new to algorithmic trading, and was hoping to get some advice on how to get set up. My questions fall into two categories, first, what platforms do you guys use for backtesting, and second, where do you get your data from.\n\nFirst, to clarify what I mean by 'platform'. I am looking for a mechanism which will enable me to (relatively) easily go from idea to backtest. For instanc",
+      "published_at": "2016-11-26T04:39:44.000Z",
+      "subreddit": "algotrading",
+      "score": 9,
+      "num_comments": 11
+    },
+    {
+      "title": "A real professional backtest is walk-forward analysis. Anything else is an illusion.",
+      "url": "https://www.reddit.com/r/algotrading/comments/1t5e9q6/a_real_professional_backtest_is_walkforward/",
+      "snippet": "Hey everyone,\n\n\"Look at the equity curve of my 10-year backtest\" is not a real professional backtest, but just a curve fit. People simply tune the inputs until the result looks good, and then show it on forums and expect it to keep working in the future.\n\nProfessional strategy research relies on walk-forward analysis and repeated out-of-sample validation across different market regimes. Walk-forwa",
+      "published_at": "2026-05-06T14:17:29.000Z",
+      "subreddit": "algotrading",
+      "score": 44,
+      "num_comments": 88
+    },
+    {
+      "title": "Even some algo traders don't know how to walk-forward analyze?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1tewh8n/even_some_algo_traders_dont_know_how_to/",
+      "snippet": "Hey everyone,\n\nI keep seeing people presenting one single long backtest as proof that their strategy works. That is basically not a test at all, because you use one period to develop (fit) a strategy and then expect it to work on another period. That's called a curve fit. Curve fits don't work on another curve, unless you want to be a gambler.\n\nTo evaluate whether a strategy actually has an edge, ",
+      "published_at": "2026-05-16T15:16:35.000Z",
+      "subreddit": "algotrading",
+      "score": 50,
+      "num_comments": 57
+    },
+    {
+      "title": "I'm really confused about Walk Forward Backtest",
+      "url": "https://www.reddit.com/r/algotrading/comments/1tbp09m/im_really_confused_about_walk_forward_backtest/",
+      "snippet": "Hey everyone,\n\n  \nI am relatively new to algo trading and I made a strategy purely based on price action and backtests 500+ assets for the 2020-2025 data at least 40+ iterations to tune the parameters and it's doing ok live so far . \n\nBefore knowing the Walk Forward Backtest approach. What I did was to split the 5 years into 5 seperate backtests (different 100 assets per year) that run with same p",
+      "published_at": "2026-05-13T04:24:31.000Z",
+      "subreddit": "algotrading",
+      "score": 29,
+      "num_comments": 58
+    },
+    {
+      "title": "Built a LightGBM stock ranking model with walk-forward validation — is this deployable? Help understanding one bad fold",
+      "url": "https://www.reddit.com/r/algotrading/comments/1sjicuf/built_a_lightgbm_stock_ranking_model_with/",
+      "snippet": "I've been building a long-only US equity model and just finished a 4-fold walk-forward backtest. Posting results here to get honest feedback on whether this is worth deploying and what to do about the one bad fold.\n\n**Setup:**\n\n* \\~500 US mid/large cap stocks\n* LightGBM binary classifier (UP vs DOWN) used as a ranker\n* Top 25 longs, rebalanced every 5 days\n* Long-only, no leverage\n* \\~13bps transa",
+      "published_at": "2026-04-12T15:59:08.000Z",
+      "subreddit": "algotrading",
+      "score": 11,
+      "num_comments": 35
+    },
+    {
+      "title": "Those who build trading analysis tools - what indicators/strategies do you prioritize for crypto futures?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1pzyo9g/those_who_build_trading_analysis_tools_what/",
+      "snippet": "Hey everyone,\n\nI've been working on a crypto futures analysis tool (built with AI pair programming - Claude specifically, since I'm not a developer by trade).\n\nCurrently using these 7 strategies:\n- MACD (crossovers + histogram momentum)\n- RSI (oversold/overbought + divergence)\n- Stochastic RSI (faster signals)\n- Bollinger Bands (squeeze + breakout)\n- EMA Cross (9/21, 50/200)\n- Volume analysis (rel",
+      "published_at": "2025-12-31T00:30:43.000Z",
+      "subreddit": "algotrading",
+      "score": 9,
+      "num_comments": 52
+    },
+    {
+      "title": "Testing Strategies on Random Walks — Smart or Pointless?",
+      "url": "https://www.reddit.com/r/algotrading/comments/1lby7kd/testing_strategies_on_random_walks_smart_or/",
+      "snippet": "This might be a naive question, but it’s been bugging me:\n\nIf markets are often modeled as a random walk, why do so many people still swear by technical analysis? And more importantly - could we use *pure* random walk data to **evaluate** a trading strategy or backtest an algo?\n\nLike, if you took your strategy and ran it on 1,000 random walk simulations (with realistic volatility, drift, etc.) and",
+      "published_at": "2025-06-15T11:33:28.000Z",
+      "subreddit": "algotrading",
+      "score": 11,
+      "num_comments": 22
+    },
+    {
+      "title": "Seeking Insights on My Trend-Focused Trading Strategy: Gaussian Filter, KAMA, and EMA Analysis with ATR-Based Risk Management",
+      "url": "https://www.reddit.com/r/algotrading/comments/1b2wa3y/seeking_insights_on_my_trendfocused_trading/",
+      "snippet": "I'm grateful for all the advice and feedback received in the previous thread [here](https://www.reddit.com/r/algotrading/comments/1asfm79/seeking_insights_on_avoiding_overfitting_in_my/) . I've continued forward testing my strategy, experiencing a small profit last week and anticipating a break-even or slight loss this week. This outcome falls outside the historical tolerance of the strategy, prom",
+      "published_at": "2024-02-29T09:23:28.000Z",
+      "subreddit": "algotrading",
+      "score": 36,
+      "num_comments": 47
+    }
+  ],
+  "cited_at": "2026-05-24T04:41:06.260Z"
+}

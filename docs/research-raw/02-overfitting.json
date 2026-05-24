@@ -1,0 +1,325 @@
+{
+  "query": "algorithmic trading strategy overfitting curve fit backtest failure",
+  "since": "2024-01-01",
+  "depth": "deep",
+  "sources": [
+    {
+      "source": "brave",
+      "items": [
+        {
+          "title": "How to Avoid Overfitting When Testing Trading Rules « adventuresofgreg.blog",
+          "url": "http://adventuresofgreg.com/blog/2025/12/18/avoid-overfitting-testing-trading-rules/",
+          "snippet": "These issues often point to flaws in how the strategy was developed. <strong>Overfitting is often the result of excessive parameter tweaking</strong>. Traders may endlessly adjust variables – like moving average periods, stop-loss levels, or indicator thresholds – until the backtest looks perfect.",
+          "published_at": "2025-12-18T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Algorithmic Trading Overfitting: Why Backtests Fail in Live Markets",
+          "url": "https://blog.pickmytrade.trade/algorithmic-trading-overfitting-backtest-failure/",
+          "snippet": "Many algorithmic trading strategies ... often stems from overfitting: <strong>the strategy captures noise or idiosyncrasies in the historical data rather than persistent, generalizable market inefficiencies</strong>....",
+          "published_at": "2026-03-17T16:28:18.000Z",
+          "score": null
+        },
+        {
+          "title": "The Overfitting Trap: Why Your 20% Backtest Became a -1% Strategy | by Jiri George Dolejs | Medium",
+          "url": "https://medium.com/@kojott/the-overfitting-trap-why-your-20-backtest-became-a-1-strategy-8d8ef5628937",
+          "snippet": "It curve-fits to noise instead of extracting signal · Every parameter you optimize increases the risk. The more you tune, the more you’re teaching your strategy to trade the past perfectly instead of adapting to the future effectively.",
+          "published_at": "2025-11-05T21:25:31.000Z",
+          "score": null
+        },
+        {
+          "title": "Overfitting Explained: Why Backtests Fail in Live Trading | by Sentient Trading Society | Medium",
+          "url": "https://medium.com/@SentientTradingSociety/this-is-why-your-backtested-strategies-dont-work-live-fa733edfefad",
+          "snippet": "When you curve fit, you rig your backtest to look amazing on paper, but it’ll never work in real conditions. When you backtest properly and respect data science rules for quality data, you’ll see how tough it is to backtest something that shows strong profitability. ... If you have something overfitted, you’ll suffer.",
+          "published_at": "2026-03-28T07:21:24.000Z",
+          "score": null
+        },
+        {
+          "title": "Robustness Testing for Algo Trading Strategies | Complete Guide",
+          "url": "https://www.buildalpha.com/robustness-testing-guide/",
+          "snippet": "1. <strong>Most algorithmic traders fail because they overfit strategies causing loss of risk capital</strong> · 2. Algorithmic traders would do better incorporating robustness tests and checks · 3. There is no best robustness test.",
+          "published_at": "2026-01-18T02:21:32.000Z",
+          "score": null
+        },
+        {
+          "title": "Curve Fitting In Trading: What is it? | Backtest Strategies – Overfitting - QuantifiedStrategies.com",
+          "url": "https://www.quantifiedstrategies.com/curve-fitting-in-trading/",
+          "snippet": "Curve fitting is <strong>when a strategy or edge is not fit to market behavior, but market noise, leading to failure in live trading</strong>. Curve fitting (overfitting) is overoptimization that is unlikely to fit into future unknown data.",
+          "published_at": "2026-03-09T12:58:01.000Z",
+          "score": null
+        },
+        {
+          "title": "How to Avoid Overfitting in Trading Strategies | Siddharth Anand posted on the topic | LinkedIn",
+          "url": "https://www.linkedin.com/posts/siddharthanand1998_why-overfitting-is-the-silent-killer-of-activity-7360680470738563073-heR7",
+          "snippet": "<strong>Curve fitting happens when a strategy is so finely tuned to historical data that it captures past noise instead of true market structure</strong>. It means your system performs spectacularly on backtests — yet fails miserably in live markets.",
+          "published_at": "2025-08-11T18:36:19.000Z",
+          "score": null
+        },
+        {
+          "title": "r/algotrading on Reddit: Is overfitting the #1 reason most backtested strategies fail live?",
+          "url": "https://www.reddit.com/r/algotrading/comments/1q4gpu1/is_overfitting_the_1_reason_most_backtested/",
+          "snippet": "You can find a strategy that worked perfectly over the last 2 years. Great equity curve. Low drawdowns. High win rate. Then you trade it live and it falls apart. 🤦‍♂️ ... you need to setup your backtesting envrionment for the strategy to fail, you can do this by mimicking slippage, higher fees, higher spread, what have you, something that would eradicate the strategy if it is not profitable enough, you can also set up your backtesting and optimization process in a way that guranatees that the strategy will break, you do this so that when it actually passes, you know for a fact it is a",
+          "published_at": "2026-01-05T13:54:14.000Z",
+          "score": null
+        },
+        {
+          "title": "8 Tips to Avoid Curve-Fitting in Trading",
+          "url": "https://algomatictrading.substack.com/p/8-tips-to-avoid-curve-fitting-in",
+          "snippet": "You go live with real money… and the equity curve immediately falls apart. ... <strong>Most likely, you fell victim to curve-fitting, the process of over-optimizing your strategy so it performs brilliantly on historical data, but fails in live trading</strong>.",
+          "published_at": "2025-10-03T10:30:33.000Z",
+          "score": null
+        },
+        {
+          "title": "Backtesting 101: Why Your Algorithmic Strategy Might Fail and How to Fix It - Nova Quant Lab - Trading & Tech",
+          "url": "https://novaquantlab.com/backtesting-101-why-your-algorithmic-strategy-might-fail-and-how-to-fix-it/",
+          "snippet": "Overfitting (also known as Curve Fitting) <strong>occurs when you make your mathematical strategy entirely too complex, attempting to “fit” your logic perfectly to past price movements</strong>.",
+          "published_at": "2026-04-03T09:23:24.000Z",
+          "score": null
+        },
+        {
+          "title": "Why Your Backtest Might Be Lying to You — And How to Fix It | by Trading Dude | Medium",
+          "url": "https://medium.com/@trading.dude/why-your-backtest-might-be-lying-to-you-and-how-to-fix-it-e1f4d46d3183",
+          "snippet": "Not all impressive backtests are overfit, but many are. Here’s what to look out for: <strong>If your backtest delivers triple-digit annual returns with minimal drawdowns — especially without leverage — take a step back</strong>.",
+          "published_at": "2025-07-04T16:31:42.000Z",
+          "score": null
+        },
+        {
+          "title": "How to Avoid Overfitting in Crypto Trading Strategies [7 Proven Methods]",
+          "url": "https://trendrider.net/blog/how-to-avoid-overfitting-crypto-trading",
+          "snippet": "Overfitting <strong>occurs when a trading strategy is tuned so precisely to historical data that it captures noise rather than genuine market patterns</strong>. Think of it like this: instead of learning the “rules of the road,” your strategy memorized the ...",
+          "published_at": "2026-04-02T04:00:00.000Z",
+          "score": null
+        }
+      ]
+    },
+    {
+      "source": "exa",
+      "items": [
+        {
+          "title": "100% Win Rate in Backtesting? Don't Celebrate Yet — Our Most Painful Lesson | Judy AI Lab",
+          "url": "https://judyailab.com/en/posts/oos-validation-lesson/",
+          "snippet": "",
+          "published_at": "2026-03-05T00:00:00.000Z",
+          "score": 1
+        },
+        {
+          "title": "Overfitting: The Sweetest Trap in Quant Trading — 5 Warning Signs Your Backtest Is Lying - quantfoundrylab",
+          "url": "https://quantfoundrylab.com/en/overfitting-backtesting-warning-signs/",
+          "snippet": "",
+          "published_at": "2026-03-01T00:00:00.000Z",
+          "score": 0.9090909090909091
+        },
+        {
+          "title": "Overfitting in Trading Models: How to Detect It — And What to Do About It | by Nayab Bhutta | May, 2026 | InsiderFinance Wire",
+          "url": "https://wire.insiderfinance.io/overfitting-in-trading-models-how-to-detect-it-and-what-to-do-about-it-bbee77660942",
+          "snippet": "",
+          "published_at": "2026-05-19T00:00:00.000Z",
+          "score": 0.8181818181818181
+        },
+        {
+          "title": "Why Backtesting Returns Lie: 5 Overfitting Traps – TildAlice",
+          "url": "https://tildalice.io/backtesting-overfitting-traps/",
+          "snippet": "",
+          "published_at": "2026-02-09T00:00:00.000Z",
+          "score": 0.7272727272727273
+        },
+        {
+          "title": "Backtest Overfitting: Why the Best Historical Strategy Often Fails Live | Quant Alpha",
+          "url": "https://quantalpha.co/en/blog/backtest-overfitting-and-live-performance",
+          "snippet": "",
+          "published_at": "2026-04-11T00:00:00.000Z",
+          "score": 0.6363636363636364
+        },
+        {
+          "title": "Overfitting in quantitative investing: why backtested strategies fail in practice | pfolio academy",
+          "url": "https://www.pfolio.io/academy/overfitting-quant-investing",
+          "snippet": "",
+          "published_at": "2026-04-29T00:00:00.000Z",
+          "score": 0.5454545454545454
+        },
+        {
+          "title": "Why Your Backtest Said +20% But Live Trading Lost Money (Prediction Market Overfitting Explained) | Turbine Blog",
+          "url": "https://www.turbinefi.com/blog/why-backtests-lie-prediction-market-overfitting-2026",
+          "snippet": "",
+          "published_at": "2026-05-09T00:00:00.000Z",
+          "score": 0.4545454545454546
+        },
+        {
+          "title": "Backtest Overfitting: Why Perfect EA Results Lose Money Live - My Trading - 12 March 2026 - Traders' Blogs",
+          "url": "https://www.mql5.com/en/blogs/post/767987",
+          "snippet": "",
+          "published_at": "2026-03-12T00:00:00.000Z",
+          "score": 0.36363636363636365
+        },
+        {
+          "title": "Curve Fitting in Trading: How to Spot It Before It Wrecks Your Strategy | darwintIQ",
+          "url": "https://www.darwintiq.com/articles/the-danger-of-curve-fitting",
+          "snippet": "",
+          "published_at": "2026-04-10T00:00:00.000Z",
+          "score": 0.2727272727272727
+        },
+        {
+          "title": "The Overfitting Trap: Why Your 20% Backtest Became a -1% Strategy | by Jiri George Dolejs | Medium",
+          "url": "https://medium.com/@kojott/the-overfitting-trap-why-your-20-backtest-became-a-1-strategy-8d8ef5628937",
+          "snippet": "",
+          "published_at": "2025-11-05T00:00:00.000Z",
+          "score": 0.18181818181818177
+        },
+        {
+          "title": "Algorithmic Trading Pitfalls: How Survivorship Bias and Curve Overfitting Skew Results (2026 Guide) - TradingToBeRich",
+          "url": "https://tradingtoberich.com/algorithmic-trading-backtesting-overfitting-survivorship-bias/",
+          "snippet": "",
+          "published_at": "2026-03-24T00:00:00.000Z",
+          "score": 0.09090909090909094
+        },
+        {
+          "title": "Overfitting Prevention in Trading Strategy Development — How to Stop Fooling Yourself",
+          "url": "https://www.varrd.com/guides/overfitting-prevention.html",
+          "snippet": "",
+          "published_at": "2026-03-01T00:00:00.000Z",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "source": "tavily",
+      "items": [
+        {
+          "title": "How to Avoid Overfitting in Trading Strategies - LinkedIn",
+          "url": "https://www.linkedin.com/posts/siddharthanand1998_why-overfitting-is-the-silent-killer-of-activity-7360680470738563073-heR7",
+          "snippet": "⚠️ The Hidden Danger of Curve Fitting in Quantitative Trading — Why Over-Optimization Can Destroy Good Systems In algorithmic trading, the temptation to “perfect” a strategy by optimizing every parameter is almost irresistible. But this perfection often comes at a hidden cost — curve fitting, also known as overfitting. 🔍 What Is Curve Fitting? Curve fitting happens when a strategy is so finely tu",
+          "published_at": null,
+          "score": 0.99996805
+        },
+        {
+          "title": "What Is Overfitting in Algorithmic Trading?",
+          "url": "https://bookmap.com/blog/what-is-overfitting-in-algorithmic-trading",
+          "snippet": "The more parameters you have in general will increase the chance of curve fitting, since there are more combinations of parameters that can lead to unusually skewed results.\n\n## Conclusion\n\nOverfitting (or curve fitting) is a common problem that algorithmic traders have to battle with when testing trading systems. If traders are not careful, they could end up with a trading strategy that rhymes pe",
+          "published_at": null,
+          "score": 0.9999603
+        },
+        {
+          "title": "Advanced | Backtesting effectively: Avoiding curve fitting",
+          "url": "https://24markets.com/education/backtesting-effectively-avoiding-curve-fitting",
+          "snippet": "### What Curve Fitting Means in Algo Trading\n\nCurve fitting happens when a strategy is tuned so closely to past data that it loses adaptability. Traders might tweak stop losses, moving averages, or entry points until the equity curve looks perfect. But in reality, the model is just responding to random noise rather than underlying market behavior.\n\nOverfitting occurs when machine learning models o",
+          "published_at": null,
+          "score": 0.9999145
+        },
+        {
+          "title": "How to Avoid Overfitting When Testing Trading Rules « adventuresofgreg.blog",
+          "url": "http://adventuresofgreg.com/blog/2025/12/18/avoid-overfitting-testing-trading-rules",
+          "snippet": "« Backtesting Platforms Compared: Features That Matter\n\n10 Best Practices for Trading Strategy Optimization »\n\n ### How to Avoid Overfitting When Testing Trading Rules\n\n  Trading\n\n  18th December 2025 - By adventuresofgreg\n\n  Overfitting ruins trading strategies. It happens when your strategy is too customized to past data, mistaking random noise for real patterns. This makes backtest results look",
+          "published_at": null,
+          "score": 0.99990606
+        },
+        {
+          "title": "What Is Overfitting in Trading Strategies?",
+          "url": "https://www.luxalgo.com/blog/what-is-overfitting-in-trading-strategies",
+          "snippet": "Overfitting in trading happens when a strategy is overly tailored to historical data, mistaking random noise for actual patterns. This leads to great backtest results but poor real-world performance. Key causes include excessive parameter tweaking, biased data selection, and unnecessary complexity. To avoid overfitting, traders should simplify models, validate strategies with fresh data, and use a",
+          "published_at": null,
+          "score": 0.999884
+        },
+        {
+          "title": "3 Simple Ways To Reduce The Risk Of Curve-fitting - Build Alpha",
+          "url": "https://www.buildalpha.com/3-simple-ways-to-reduce-the-risk-of-curve-fitting",
+          "snippet": "## Why do Automated Trading Strategies Fail?\n\nMost automated trading strategies fail due to curve fitting or overoptimization. There are numerous other factors, but overfitting and overoptimization are the prime suspects.\n\nBeginning traders hunt for the holy grail strategy and get excited over “too good to be true” backtests or hypothetical trading results. Many think a profitable backtest means a",
+          "published_at": null,
+          "score": 0.99987173
+        },
+        {
+          "title": "How to avoid overfitting in algorithmic trading - LinkedIn",
+          "url": "https://www.linkedin.com/posts/aiml-finance_overfitting-in-algorithmic-trading-occurs-activity-7317808563676958720-ad94",
+          "snippet": "Overfitting in algorithmic trading occurs when a strategy is excessively optimized for historical data, leading to poor performance in live markets. This happens because the algorithm mistakes random noise for meaningful patterns, creating a false sense of effectiveness. Here is a structured analysis of causes, solutions and best practices to mitigate this risk. 𝗛𝗼𝘄 𝗢𝘃𝗲𝗿𝗳𝗶𝘁𝘁𝗶𝗻𝗴 𝗛𝗮\ud835",
+          "published_at": null,
+          "score": 0.99985456
+        },
+        {
+          "title": "Successful Backtesting of Algorithmic Trading Strategies - Part I | QuantStart",
+          "url": "https://www.quantstart.com/articles/Successful-Backtesting-of-Algorithmic-Trading-Strategies-Part-I",
+          "snippet": "### Optimisation Bias\n\nThis is probably the most insidious of all backtest biases. It involves adjusting or introducing additional trading parameters until the strategy performance on the backtest data set is very attractive. However, once live the performance of the strategy can be markedly different. Another name for this bias is \"curve fitting\" or \"data-snooping bias\". [...] Optimisation bias i",
+          "published_at": null,
+          "score": 0.99973255
+        },
+        {
+          "title": "Is overfitting the #1 reason most backtested strategies fail live? : r/algotrading",
+          "url": "https://www.reddit.com/r/algotrading/comments/1q4gpu1/is_overfitting_the_1_reason_most_backtested",
+          "snippet": "during live market, also try to optimize and literally _overfit_ your strategy on any one random period of 6-9 months, take those parameters and backtesting them against 10 years. you'll be so surprised at how many strategies are just trash. Another interesting advice is to not only stick to one instrument and one timeframe, backtest all available instruments of interest and all timeframes, this w",
+          "published_at": null,
+          "score": 0.9997017
+        },
+        {
+          "title": "9 Proven Strategies to Dodge Overfitting in Algorithmic Trading: A Data-Driven Approach – Composer",
+          "url": "https://www.composer.trade/learn/9-proven-strategies-to-dodge-overfitting-in-algorithmic-trading",
+          "snippet": "Charts and graphs provided within are for informational purposes solely and should not be relied upon when making any investment decision. Past performance is not indicative of future results. The content speaks only as of the date indicated. Any projections, estimates, forecasts, targets, prospects, and/or opinions expressed in these materials are subject to change without notice and may differ o",
+          "published_at": null,
+          "score": 0.9997017
+        },
+        {
+          "title": "What is Overfitting in Trading? - AlgoTrading101 Blog",
+          "url": "https://algotrading101.com/learn/what-is-overfitting-in-trading",
+          "snippet": "Quantitative Trading Ideas and Guides – AlgoTrading101 Blog\n\nFrom $0 to $1,000,000. Authentic Stories about Trading, Coding and Life\n\n→ Learn Algo Trading 🤯\n\nLucas Liew\n\nLucas Liew Follow Founder at AlgoTrading101\n\n# What is Overfitting in Trading?\n\n3 min read\n\nGet 10-day Free Algo Trading Course\n\nLoading\n\nLast Updated on June 24, 2020\n\nSource\n\nWhat is overfitting in trading? Overfitting in tradi",
+          "published_at": null,
+          "score": 0.9995453
+        },
+        {
+          "title": "Common Backtesting Mistakes - Why Your Strategies Fail in Live Trading | Gainium",
+          "url": "https://gainium.io/blog/common-backtesting-problems",
+          "snippet": "curve fitting.webp\n\nTo avoid curve fitting, it is essential to consider several key factors while shaping an equity curve:\n\n1. Diversify strategies. Having different but complementary investment strategies helps reduce the risk of overfitting to a specific data set.\n2. Test the strategies in different market conditions. By evaluating the performance in various scenarios, traders can ensure that th",
+          "published_at": null,
+          "score": 0.9992735
+        }
+      ]
+    },
+    {
+      "source": "youtube",
+      "items": [
+        {
+          "title": "Why Most Systematic Trading Strategies Fail: Overfitting &amp; Degrees Of Freedom Explained",
+          "url": "https://www.youtube.com/watch?v=Nvfmi2vANs0",
+          "snippet": "Building a systematic trading strategy isn't that difficult. Building one that actually survives live trading is. In this video we break ...",
+          "published_at": "2026-03-11T10:42:46.000Z",
+          "channel": "Investing Canvas",
+          "video_id": "Nvfmi2vANs0",
+          "score": null
+        },
+        {
+          "title": "How to avoid curve fitting when backtesting?",
+          "url": "https://www.youtube.com/watch?v=3MOaUKnQzto",
+          "snippet": "The 2 free backtested strategies are available here: https://www.quantifiedstrategies.com/guide ...",
+          "published_at": "2024-05-22T07:39:19.000Z",
+          "channel": "Quantified Strategies",
+          "video_id": "3MOaUKnQzto",
+          "score": null
+        },
+        {
+          "title": "3 Backtesting Pitfalls That Ruin Your Trading Strategy",
+          "url": "https://www.youtube.com/watch?v=sjq3toGtr0U",
+          "snippet": "Master Quantitative Skills with Quant Guild* https://quantguild.com *   Interactive Brokers for Algorithmic Trading* ...",
+          "published_at": "2026-03-10T18:00:52.000Z",
+          "channel": "Roman Paolucci",
+          "video_id": "sjq3toGtr0U",
+          "score": null
+        },
+        {
+          "title": "25.0 The Perfect Backtest Trap",
+          "url": "https://www.youtube.com/watch?v=nzZak2qyNQs",
+          "snippet": "Curve-fitting, or overfitting, is a critical pitfall in quantitative trading. It occurs when a strategy's parameters are excessively ...",
+          "published_at": "2025-11-11T18:10:13.000Z",
+          "channel": "LICENCE TO PRINT (LTP)",
+          "video_id": "nzZak2qyNQs",
+          "score": null
+        },
+        {
+          "title": "Why 99% of Trading Bots Fail (Institutional Algorithmic Architecture)",
+          "url": "https://www.youtube.com/watch?v=S-usI5A98mg",
+          "snippet": "In this deep dive, we strip away retail trading illusions and examine the strict mathematical realities of institutional algorithmic ...",
+          "published_at": "2026-05-16T14:59:10.000Z",
+          "channel": "QuantForgeAnalytics",
+          "video_id": "S-usI5A98mg",
+          "score": null
+        }
+      ]
+    }
+  ],
+  "cited_at": "2026-05-24T04:40:43.250Z"
+}

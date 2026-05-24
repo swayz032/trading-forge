@@ -1,0 +1,6519 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "y_bsjZThP0o",
+  "url": "https://www.youtube.com/watch?v=y_bsjZThP0o",
+  "segments": [
+    {
+      "text": "In today's video, I'm going to show you",
+      "duration": 3080,
+      "offset": 0,
+      "lang": "en"
+    },
+    {
+      "text": "how you can build a fully automated",
+      "duration": 4080,
+      "offset": 1440,
+      "lang": "en"
+    },
+    {
+      "text": "trading bot from scratch using Cloud",
+      "duration": 4440,
+      "offset": 3080,
+      "lang": "en"
+    },
+    {
+      "text": "Code. So, it will first detect the type",
+      "duration": 3680,
+      "offset": 5520,
+      "lang": "en"
+    },
+    {
+      "text": "of market we're in, adjust your",
+      "duration": 3960,
+      "offset": 7520,
+      "lang": "en"
+    },
+    {
+      "text": "portfolio allocations automatically, and",
+      "duration": 4480,
+      "offset": 9200,
+      "lang": "en"
+    },
+    {
+      "text": "even places real trades for you. We're",
+      "duration": 3440,
+      "offset": 11480,
+      "lang": "en"
+    },
+    {
+      "text": "not going to be building some basic",
+      "duration": 3360,
+      "offset": 13680,
+      "lang": "en"
+    },
+    {
+      "text": "indicator bot that just buys when RSI",
+      "duration": 4200,
+      "offset": 14920,
+      "lang": "en"
+    },
+    {
+      "text": "crosses above 30 like what you would",
+      "duration": 4440,
+      "offset": 17040,
+      "lang": "en"
+    },
+    {
+      "text": "typically see on TradingView. Instead,",
+      "duration": 3640,
+      "offset": 19120,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to be building an actual",
+      "duration": 3360,
+      "offset": 21480,
+      "lang": "en"
+    },
+    {
+      "text": "system that first connects to a real",
+      "duration": 3680,
+      "offset": 22760,
+      "lang": "en"
+    },
+    {
+      "text": "brokerage so that you can automatically",
+      "duration": 3840,
+      "offset": 24840,
+      "lang": "en"
+    },
+    {
+      "text": "place trades. Second, it'll manage your",
+      "duration": 4240,
+      "offset": 26440,
+      "lang": "en"
+    },
+    {
+      "text": "risks with circuit breakers. And then",
+      "duration": 3840,
+      "offset": 28680,
+      "lang": "en"
+    },
+    {
+      "text": "finally, it can even adapt to changing",
+      "duration": 4200,
+      "offset": 30680,
+      "lang": "en"
+    },
+    {
+      "text": "market conditions automatically. And",
+      "duration": 3320,
+      "offset": 32520,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to be doing this without",
+      "duration": 2960,
+      "offset": 34880,
+      "lang": "en"
+    },
+    {
+      "text": "writing any of the code ourselves. So,",
+      "duration": 4040,
+      "offset": 35840,
+      "lang": "en"
+    },
+    {
+      "text": "if you've seen my previous videos, I go",
+      "duration": 3720,
+      "offset": 37840,
+      "lang": "en"
+    },
+    {
+      "text": "over the concepts around using hidden",
+      "duration": 3640,
+      "offset": 39880,
+      "lang": "en"
+    },
+    {
+      "text": "Markov models and walk-forward",
+      "duration": 3920,
+      "offset": 41560,
+      "lang": "en"
+    },
+    {
+      "text": "backtesting engines. Today, we're going",
+      "duration": 3880,
+      "offset": 43520,
+      "lang": "en"
+    },
+    {
+      "text": "to be taking those same concepts one",
+      "duration": 3560,
+      "offset": 45480,
+      "lang": "en"
+    },
+    {
+      "text": "step further. So, we're going to grab",
+      "duration": 4120,
+      "offset": 47400,
+      "lang": "en"
+    },
+    {
+      "text": "that same exact math, but now connect it",
+      "duration": 4440,
+      "offset": 49040,
+      "lang": "en"
+    },
+    {
+      "text": "to a real broker so that we can have a",
+      "duration": 4280,
+      "offset": 51520,
+      "lang": "en"
+    },
+    {
+      "text": "bot actually manage our portfolio for",
+      "duration": 3920,
+      "offset": 53480,
+      "lang": "en"
+    },
+    {
+      "text": "us. So, make sure to stay until the end",
+      "duration": 3120,
+      "offset": 55800,
+      "lang": "en"
+    },
+    {
+      "text": "of the video since I'll be covering how",
+      "duration": 3920,
+      "offset": 57400,
+      "lang": "en"
+    },
+    {
+      "text": "to build this exact system step-by-step,",
+      "duration": 4280,
+      "offset": 58920,
+      "lang": "en"
+    },
+    {
+      "text": "even if you have no technical knowledge",
+      "duration": 4160,
+      "offset": 61320,
+      "lang": "en"
+    },
+    {
+      "text": "or you've never coded before. And just",
+      "duration": 3920,
+      "offset": 63200,
+      "lang": "en"
+    },
+    {
+      "text": "as a disclaimer, I'm not a financial",
+      "duration": 3160,
+      "offset": 65480,
+      "lang": "en"
+    },
+    {
+      "text": "advisor and this is not financial",
+      "duration": 4080,
+      "offset": 67120,
+      "lang": "en"
+    },
+    {
+      "text": "advice. I'm not guaranteeing any profits",
+      "duration": 4680,
+      "offset": 68640,
+      "lang": "en"
+    },
+    {
+      "text": "inside this video. All I'm doing is",
+      "duration": 3880,
+      "offset": 71200,
+      "lang": "en"
+    },
+    {
+      "text": "showing you the concepts on how to build",
+      "duration": 3880,
+      "offset": 73320,
+      "lang": "en"
+    },
+    {
+      "text": "a systemic trading framework to help you",
+      "duration": 3880,
+      "offset": 75080,
+      "lang": "en"
+    },
+    {
+      "text": "become a more disciplined trader.",
+      "duration": 3720,
+      "offset": 77200,
+      "lang": "en"
+    },
+    {
+      "text": "Trading involves real risk and it's up",
+      "duration": 4280,
+      "offset": 78960,
+      "lang": "en"
+    },
+    {
+      "text": "to you to manage, validate, and",
+      "duration": 4440,
+      "offset": 80920,
+      "lang": "en"
+    },
+    {
+      "text": "extensively test your own strategies.",
+      "duration": 3840,
+      "offset": 83240,
+      "lang": "en"
+    },
+    {
+      "text": "So, here's what our automatic trading",
+      "duration": 3760,
+      "offset": 85360,
+      "lang": "en"
+    },
+    {
+      "text": "bot dashboard looks like as a finished",
+      "duration": 3960,
+      "offset": 87080,
+      "lang": "en"
+    },
+    {
+      "text": "product and what building by the end of",
+      "duration": 4160,
+      "offset": 89120,
+      "lang": "en"
+    },
+    {
+      "text": "this video. So, up top we can first see",
+      "duration": 4280,
+      "offset": 91040,
+      "lang": "en"
+    },
+    {
+      "text": "the detected regime, which is currently",
+      "duration": 4160,
+      "offset": 93280,
+      "lang": "en"
+    },
+    {
+      "text": "neutral. This basically tells us how",
+      "duration": 4120,
+      "offset": 95320,
+      "lang": "en"
+    },
+    {
+      "text": "volatile the market currently is and how",
+      "duration": 3960,
+      "offset": 97440,
+      "lang": "en"
+    },
+    {
+      "text": "we should classify it. And then below,",
+      "duration": 3840,
+      "offset": 99440,
+      "lang": "en"
+    },
+    {
+      "text": "we even have a confidence score. And",
+      "duration": 3040,
+      "offset": 101400,
+      "lang": "en"
+    },
+    {
+      "text": "then to the right of this, we have our",
+      "duration": 2920,
+      "offset": 103280,
+      "lang": "en"
+    },
+    {
+      "text": "portfolio value as well as our buying",
+      "duration": 3680,
+      "offset": 104440,
+      "lang": "en"
+    },
+    {
+      "text": "power. Now again, this is connected",
+      "duration": 3880,
+      "offset": 106200,
+      "lang": "en"
+    },
+    {
+      "text": "directly to a brokerage, in our case",
+      "duration": 3960,
+      "offset": 108120,
+      "lang": "en"
+    },
+    {
+      "text": "Alpaca. So, these are the numbers that",
+      "duration": 3560,
+      "offset": 110080,
+      "lang": "en"
+    },
+    {
+      "text": "are currently inside our trading",
+      "duration": 3200,
+      "offset": 112080,
+      "lang": "en"
+    },
+    {
+      "text": "account. To the right of this, we have",
+      "duration": 3680,
+      "offset": 113640,
+      "lang": "en"
+    },
+    {
+      "text": "the number of regimes that the current",
+      "duration": 4480,
+      "offset": 115280,
+      "lang": "en"
+    },
+    {
+      "text": "system is categorizing the market into.",
+      "duration": 4080,
+      "offset": 117320,
+      "lang": "en"
+    },
+    {
+      "text": "And right now the market's closed, so we",
+      "duration": 3600,
+      "offset": 119760,
+      "lang": "en"
+    },
+    {
+      "text": "don't have any active positions. Then",
+      "duration": 3640,
+      "offset": 121400,
+      "lang": "en"
+    },
+    {
+      "text": "below this, we just have simple price",
+      "duration": 3840,
+      "offset": 123360,
+      "lang": "en"
+    },
+    {
+      "text": "actions with regime overlays. Below",
+      "duration": 4160,
+      "offset": 125040,
+      "lang": "en"
+    },
+    {
+      "text": "this, we have volumes, confidence over",
+      "duration": 3840,
+      "offset": 127200,
+      "lang": "en"
+    },
+    {
+      "text": "times, distributions. And this way",
+      "duration": 3240,
+      "offset": 129200,
+      "lang": "en"
+    },
+    {
+      "text": "you'll be able to see how this actually",
+      "duration": 3720,
+      "offset": 131040,
+      "lang": "en"
+    },
+    {
+      "text": "translates to your trading strategy. And",
+      "duration": 3920,
+      "offset": 132440,
+      "lang": "en"
+    },
+    {
+      "text": "then below all of this, importantly, we",
+      "duration": 3320,
+      "offset": 134760,
+      "lang": "en"
+    },
+    {
+      "text": "have the signal feed, which actually",
+      "duration": 3720,
+      "offset": 136360,
+      "lang": "en"
+    },
+    {
+      "text": "shows all of the historical trades that",
+      "duration": 4080,
+      "offset": 138080,
+      "lang": "en"
+    },
+    {
+      "text": "this automatic trading bot has placed.",
+      "duration": 3360,
+      "offset": 140080,
+      "lang": "en"
+    },
+    {
+      "text": "So this way it'll tell you the",
+      "duration": 4040,
+      "offset": 142160,
+      "lang": "en"
+    },
+    {
+      "text": "allocation from your portfolio size, as",
+      "duration": 5560,
+      "offset": 143440,
+      "lang": "en"
+    },
+    {
+      "text": "well as entry prices, stops, and P&L in",
+      "duration": 4680,
+      "offset": 146200,
+      "lang": "en"
+    },
+    {
+      "text": "real time. Then to the left of this, we",
+      "duration": 4160,
+      "offset": 149000,
+      "lang": "en"
+    },
+    {
+      "text": "also have risk controls. And this",
+      "duration": 4120,
+      "offset": 150880,
+      "lang": "en"
+    },
+    {
+      "text": "basically shows our circuit breakers,",
+      "duration": 4080,
+      "offset": 153160,
+      "lang": "en"
+    },
+    {
+      "text": "drawdown limits, and leverage statuses,",
+      "duration": 5040,
+      "offset": 155000,
+      "lang": "en"
+    },
+    {
+      "text": "so that we manage our risk properly and",
+      "duration": 4600,
+      "offset": 157240,
+      "lang": "en"
+    },
+    {
+      "text": "obviously don't blow up our account.",
+      "duration": 3400,
+      "offset": 160040,
+      "lang": "en"
+    },
+    {
+      "text": "Then finally, these are all of the",
+      "duration": 3640,
+      "offset": 161840,
+      "lang": "en"
+    },
+    {
+      "text": "regimes that our trading system is",
+      "duration": 3519,
+      "offset": 163440,
+      "lang": "en"
+    },
+    {
+      "text": "currently characterizing the market",
+      "duration": 4920,
+      "offset": 165480,
+      "lang": "en"
+    },
+    {
+      "text": "into. So we have a crash, bear, neutral,",
+      "duration": 5521,
+      "offset": 166959,
+      "lang": "en"
+    },
+    {
+      "text": "bull, and euphoria. And then obviously,",
+      "duration": 4559,
+      "offset": 170400,
+      "lang": "en"
+    },
+    {
+      "text": "depending on the regime that the market",
+      "duration": 4680,
+      "offset": 172480,
+      "lang": "en"
+    },
+    {
+      "text": "is currently in, our allocation is going",
+      "duration": 3681,
+      "offset": 174959,
+      "lang": "en"
+    },
+    {
+      "text": "to change, and our strategies are going",
+      "duration": 3000,
+      "offset": 177160,
+      "lang": "en"
+    },
+    {
+      "text": "to change as well. So the way you can",
+      "duration": 3360,
+      "offset": 178640,
+      "lang": "en"
+    },
+    {
+      "text": "think about this is that depending on",
+      "duration": 3840,
+      "offset": 180160,
+      "lang": "en"
+    },
+    {
+      "text": "the regime that our trading system is",
+      "duration": 4239,
+      "offset": 182000,
+      "lang": "en"
+    },
+    {
+      "text": "currently detecting the market as, our",
+      "duration": 4280,
+      "offset": 184000,
+      "lang": "en"
+    },
+    {
+      "text": "strategies are going to be different.",
+      "duration": 3280,
+      "offset": 186239,
+      "lang": "en"
+    },
+    {
+      "text": "The amount of capital that we're going",
+      "duration": 2560,
+      "offset": 188280,
+      "lang": "en"
+    },
+    {
+      "text": "to allocate per trade is going to be",
+      "duration": 3281,
+      "offset": 189519,
+      "lang": "en"
+    },
+    {
+      "text": "different as well. And again, everything",
+      "duration": 4360,
+      "offset": 190840,
+      "lang": "en"
+    },
+    {
+      "text": "here was built by Claude Code, right?",
+      "duration": 4120,
+      "offset": 192800,
+      "lang": "en"
+    },
+    {
+      "text": "Which is a coding agent. All you'll need",
+      "duration": 3759,
+      "offset": 195200,
+      "lang": "en"
+    },
+    {
+      "text": "to do is prompt properly, understand the",
+      "duration": 3840,
+      "offset": 196920,
+      "lang": "en"
+    },
+    {
+      "text": "structure of your code base, and I'll be",
+      "duration": 3761,
+      "offset": 198959,
+      "lang": "en"
+    },
+    {
+      "text": "going over this from start to finish, so",
+      "duration": 3560,
+      "offset": 200760,
+      "lang": "en"
+    },
+    {
+      "text": "that you can have your own version of",
+      "duration": 3360,
+      "offset": 202720,
+      "lang": "en"
+    },
+    {
+      "text": "this trading dashboard and automatic",
+      "duration": 4320,
+      "offset": 204320,
+      "lang": "en"
+    },
+    {
+      "text": "trading bot for use yourself. Now,",
+      "duration": 3600,
+      "offset": 206080,
+      "lang": "en"
+    },
+    {
+      "text": "before you start building out this",
+      "duration": 2680,
+      "offset": 208640,
+      "lang": "en"
+    },
+    {
+      "text": "automatic trading bot, let me first",
+      "duration": 3440,
+      "offset": 209680,
+      "lang": "en"
+    },
+    {
+      "text": "explain the system and all the things we",
+      "duration": 4160,
+      "offset": 211320,
+      "lang": "en"
+    },
+    {
+      "text": "need to make step-by-step to ensure that",
+      "duration": 4160,
+      "offset": 213120,
+      "lang": "en"
+    },
+    {
+      "text": "we have a comprehensive system that",
+      "duration": 3680,
+      "offset": 215480,
+      "lang": "en"
+    },
+    {
+      "text": "covers everything we would theoretically",
+      "duration": 4080,
+      "offset": 217280,
+      "lang": "en"
+    },
+    {
+      "text": "need. So you can think of this entire",
+      "duration": 3960,
+      "offset": 219160,
+      "lang": "en"
+    },
+    {
+      "text": "system as being made up of five",
+      "duration": 4080,
+      "offset": 221360,
+      "lang": "en"
+    },
+    {
+      "text": "components. We'll have the brain,",
+      "duration": 5160,
+      "offset": 223120,
+      "lang": "en"
+    },
+    {
+      "text": "allocation, safety, brokerage, and then",
+      "duration": 4920,
+      "offset": 225440,
+      "lang": "en"
+    },
+    {
+      "text": "finally the dashboard that displays all",
+      "duration": 4080,
+      "offset": 228280,
+      "lang": "en"
+    },
+    {
+      "text": "of our information. So to start off,",
+      "duration": 3920,
+      "offset": 230360,
+      "lang": "en"
+    },
+    {
+      "text": "right, every system needs a competent",
+      "duration": 3920,
+      "offset": 232360,
+      "lang": "en"
+    },
+    {
+      "text": "brain at the center that basically makes",
+      "duration": 4080,
+      "offset": 234280,
+      "lang": "en"
+    },
+    {
+      "text": "decisions. But, in our case, our brain",
+      "duration": 4120,
+      "offset": 236280,
+      "lang": "en"
+    },
+    {
+      "text": "is going to be hidden Markov models.",
+      "duration": 3680,
+      "offset": 238360,
+      "lang": "en"
+    },
+    {
+      "text": "Now, I've went over this in previous",
+      "duration": 3800,
+      "offset": 240400,
+      "lang": "en"
+    },
+    {
+      "text": "videos, but you can think of this exact",
+      "duration": 4000,
+      "offset": 242040,
+      "lang": "en"
+    },
+    {
+      "text": "system as essentially looking at the",
+      "duration": 4040,
+      "offset": 244200,
+      "lang": "en"
+    },
+    {
+      "text": "market historically as well as with live",
+      "duration": 4760,
+      "offset": 246040,
+      "lang": "en"
+    },
+    {
+      "text": "data and then classifying what type of",
+      "duration": 4280,
+      "offset": 248240,
+      "lang": "en"
+    },
+    {
+      "text": "market we're in. So, by looking at",
+      "duration": 3560,
+      "offset": 250800,
+      "lang": "en"
+    },
+    {
+      "text": "things like price action and volume,",
+      "duration": 3800,
+      "offset": 252520,
+      "lang": "en"
+    },
+    {
+      "text": "it's able to classify the market. So,",
+      "duration": 3599,
+      "offset": 254360,
+      "lang": "en"
+    },
+    {
+      "text": "it'll tell us if the market is in a",
+      "duration": 3960,
+      "offset": 256320,
+      "lang": "en"
+    },
+    {
+      "text": "crash, if it's currently a bear market,",
+      "duration": 4121,
+      "offset": 257959,
+      "lang": "en"
+    },
+    {
+      "text": "if it's in a bull market, or just",
+      "duration": 3440,
+      "offset": 260280,
+      "lang": "en"
+    },
+    {
+      "text": "full-blown euphoria where everything",
+      "duration": 4080,
+      "offset": 262080,
+      "lang": "en"
+    },
+    {
+      "text": "just goes up. And now, depending on the",
+      "duration": 4360,
+      "offset": 263720,
+      "lang": "en"
+    },
+    {
+      "text": "type of market that we're in, the",
+      "duration": 4240,
+      "offset": 266160,
+      "lang": "en"
+    },
+    {
+      "text": "strategies are going to differ, right?",
+      "duration": 4160,
+      "offset": 268080,
+      "lang": "en"
+    },
+    {
+      "text": "So, inside our automatic trading bot, we",
+      "duration": 3440,
+      "offset": 270400,
+      "lang": "en"
+    },
+    {
+      "text": "want to make sure this is as dynamic as",
+      "duration": 3440,
+      "offset": 272240,
+      "lang": "en"
+    },
+    {
+      "text": "possible. And the way this bot is going",
+      "duration": 4160,
+      "offset": 273840,
+      "lang": "en"
+    },
+    {
+      "text": "to trade inside a bear market or choppy",
+      "duration": 4040,
+      "offset": 275680,
+      "lang": "en"
+    },
+    {
+      "text": "market is going to be very different",
+      "duration": 3560,
+      "offset": 278000,
+      "lang": "en"
+    },
+    {
+      "text": "from a trending bull market. So, before",
+      "duration": 3480,
+      "offset": 279720,
+      "lang": "en"
+    },
+    {
+      "text": "we ever make any trading decisions,",
+      "duration": 3560,
+      "offset": 281560,
+      "lang": "en"
+    },
+    {
+      "text": "before we ever layer any strategies of",
+      "duration": 4520,
+      "offset": 283200,
+      "lang": "en"
+    },
+    {
+      "text": "our own or yours on top, we need to know",
+      "duration": 4320,
+      "offset": 285120,
+      "lang": "en"
+    },
+    {
+      "text": "first what type of market it is. So,",
+      "duration": 3160,
+      "offset": 287720,
+      "lang": "en"
+    },
+    {
+      "text": "this is basically just how we should be",
+      "duration": 3320,
+      "offset": 289440,
+      "lang": "en"
+    },
+    {
+      "text": "looking at the market before ever adding",
+      "duration": 4600,
+      "offset": 290880,
+      "lang": "en"
+    },
+    {
+      "text": "any strategies. And that goes into my",
+      "duration": 4600,
+      "offset": 292760,
+      "lang": "en"
+    },
+    {
+      "text": "next point, which is step two on",
+      "duration": 3640,
+      "offset": 295480,
+      "lang": "en"
+    },
+    {
+      "text": "allocation. So, you can think of this",
+      "duration": 3240,
+      "offset": 297360,
+      "lang": "en"
+    },
+    {
+      "text": "allocation layer as being directly",
+      "duration": 3400,
+      "offset": 299120,
+      "lang": "en"
+    },
+    {
+      "text": "influenced by the brain. So, what this",
+      "duration": 3640,
+      "offset": 300600,
+      "lang": "en"
+    },
+    {
+      "text": "means is that, depending on, you know,",
+      "duration": 3440,
+      "offset": 302520,
+      "lang": "en"
+    },
+    {
+      "text": "the volatility regime, whether in a",
+      "duration": 4679,
+      "offset": 304240,
+      "lang": "en"
+    },
+    {
+      "text": "crash, bear, neutral, bull, or euphoria,",
+      "duration": 4280,
+      "offset": 305960,
+      "lang": "en"
+    },
+    {
+      "text": "it's going to change the amount we're",
+      "duration": 3441,
+      "offset": 308919,
+      "lang": "en"
+    },
+    {
+      "text": "invested in our portfolio. So,",
+      "duration": 3920,
+      "offset": 310240,
+      "lang": "en"
+    },
+    {
+      "text": "typically, in calm markets, you would",
+      "duration": 3440,
+      "offset": 312360,
+      "lang": "en"
+    },
+    {
+      "text": "have a larger amount of capital",
+      "duration": 3720,
+      "offset": 314160,
+      "lang": "en"
+    },
+    {
+      "text": "allocated. And then, in more turbulent",
+      "duration": 3640,
+      "offset": 315800,
+      "lang": "en"
+    },
+    {
+      "text": "markets, you would typically reduce your",
+      "duration": 3640,
+      "offset": 317880,
+      "lang": "en"
+    },
+    {
+      "text": "exposure to protect your capital. And",
+      "duration": 3360,
+      "offset": 319440,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to use those same exact",
+      "duration": 3040,
+      "offset": 321520,
+      "lang": "en"
+    },
+    {
+      "text": "concepts inside our automatic trading",
+      "duration": 3360,
+      "offset": 322800,
+      "lang": "en"
+    },
+    {
+      "text": "bot as well. Now, for our third",
+      "duration": 3640,
+      "offset": 324560,
+      "lang": "en"
+    },
+    {
+      "text": "component, we have the safety net.",
+      "duration": 3840,
+      "offset": 326160,
+      "lang": "en"
+    },
+    {
+      "text": "Essentially shuts everything down if",
+      "duration": 3600,
+      "offset": 328200,
+      "lang": "en"
+    },
+    {
+      "text": "certain levels are hit. So, basically,",
+      "duration": 3800,
+      "offset": 330000,
+      "lang": "en"
+    },
+    {
+      "text": "if you hit like a max drawdown in a day,",
+      "duration": 3680,
+      "offset": 331800,
+      "lang": "en"
+    },
+    {
+      "text": "if your strategies aren't working like",
+      "duration": 3520,
+      "offset": 333800,
+      "lang": "en"
+    },
+    {
+      "text": "they're supposed to, it's able to",
+      "duration": 4040,
+      "offset": 335480,
+      "lang": "en"
+    },
+    {
+      "text": "essentially call it quits, uh shut off",
+      "duration": 3599,
+      "offset": 337320,
+      "lang": "en"
+    },
+    {
+      "text": "the entire system. This way, you won't",
+      "duration": 3280,
+      "offset": 339520,
+      "lang": "en"
+    },
+    {
+      "text": "continually lose money day by day, week",
+      "duration": 3841,
+      "offset": 340919,
+      "lang": "en"
+    },
+    {
+      "text": "by week, or even during that same exact",
+      "duration": 4040,
+      "offset": 342800,
+      "lang": "en"
+    },
+    {
+      "text": "day as well. Just depending on how you",
+      "duration": 3680,
+      "offset": 344760,
+      "lang": "en"
+    },
+    {
+      "text": "structure these circuit breakers, which",
+      "duration": 3360,
+      "offset": 346840,
+      "lang": "en"
+    },
+    {
+      "text": "I'll show you later on in the video. And",
+      "duration": 3000,
+      "offset": 348440,
+      "lang": "en"
+    },
+    {
+      "text": "one thing to know is that these work",
+      "duration": 3200,
+      "offset": 350200,
+      "lang": "en"
+    },
+    {
+      "text": "independently of our AI model. So,",
+      "duration": 3920,
+      "offset": 351440,
+      "lang": "en"
+    },
+    {
+      "text": "whatever strategies, uh hidden Markov",
+      "duration": 4400,
+      "offset": 353400,
+      "lang": "en"
+    },
+    {
+      "text": "models, systems we have, these safety",
+      "duration": 4120,
+      "offset": 355360,
+      "lang": "en"
+    },
+    {
+      "text": "nets are going to be hardcoded in a",
+      "duration": 4600,
+      "offset": 357800,
+      "lang": "en"
+    },
+    {
+      "text": "sense, so that even if our strategies",
+      "duration": 5160,
+      "offset": 359480,
+      "lang": "en"
+    },
+    {
+      "text": "are technically built correctly, they",
+      "duration": 4440,
+      "offset": 362400,
+      "lang": "en"
+    },
+    {
+      "text": "should work theoretically, these safety",
+      "duration": 4160,
+      "offset": 364640,
+      "lang": "en"
+    },
+    {
+      "text": "nets are completely independent of that.",
+      "duration": 3640,
+      "offset": 366840,
+      "lang": "en"
+    },
+    {
+      "text": "And this is huge, obviously, for",
+      "duration": 3640,
+      "offset": 368800,
+      "lang": "en"
+    },
+    {
+      "text": "automated trading bots because you don't",
+      "duration": 3520,
+      "offset": 370480,
+      "lang": "en"
+    },
+    {
+      "text": "ever want to just turn on a bot and have",
+      "duration": 3360,
+      "offset": 372440,
+      "lang": "en"
+    },
+    {
+      "text": "it continually lose money, right? You'll",
+      "duration": 3400,
+      "offset": 374000,
+      "lang": "en"
+    },
+    {
+      "text": "have to essentially call it quits at",
+      "duration": 3520,
+      "offset": 375800,
+      "lang": "en"
+    },
+    {
+      "text": "some point and think about how to",
+      "duration": 3560,
+      "offset": 377400,
+      "lang": "en"
+    },
+    {
+      "text": "revisit your strategy and how to",
+      "duration": 3800,
+      "offset": 379320,
+      "lang": "en"
+    },
+    {
+      "text": "actually build a better system moving",
+      "duration": 3840,
+      "offset": 380960,
+      "lang": "en"
+    },
+    {
+      "text": "forward. And then now for step four, we",
+      "duration": 3960,
+      "offset": 383120,
+      "lang": "en"
+    },
+    {
+      "text": "have the broker. So, this is where you",
+      "duration": 3960,
+      "offset": 384800,
+      "lang": "en"
+    },
+    {
+      "text": "can choose the brokerage that you want",
+      "duration": 4680,
+      "offset": 387080,
+      "lang": "en"
+    },
+    {
+      "text": "to connect your system to. Two main",
+      "duration": 4880,
+      "offset": 388760,
+      "lang": "en"
+    },
+    {
+      "text": "options I would typically consider. The",
+      "duration": 4200,
+      "offset": 391760,
+      "lang": "en"
+    },
+    {
+      "text": "first is Alpaca. This is generally free,",
+      "duration": 3400,
+      "offset": 393640,
+      "lang": "en"
+    },
+    {
+      "text": "depending on how much volume you're",
+      "duration": 2840,
+      "offset": 395960,
+      "lang": "en"
+    },
+    {
+      "text": "trading. Obviously, if you get into like",
+      "duration": 3240,
+      "offset": 397040,
+      "lang": "en"
+    },
+    {
+      "text": "millions of dollars of volume trading,",
+      "duration": 2920,
+      "offset": 398800,
+      "lang": "en"
+    },
+    {
+      "text": "you're going to have fees on top of",
+      "duration": 3560,
+      "offset": 400280,
+      "lang": "en"
+    },
+    {
+      "text": "this. Uh but once you do get to that",
+      "duration": 3600,
+      "offset": 401720,
+      "lang": "en"
+    },
+    {
+      "text": "certain level, then I would probably",
+      "duration": 3480,
+      "offset": 403840,
+      "lang": "en"
+    },
+    {
+      "text": "change to IBKR. This is going to be",
+      "duration": 4240,
+      "offset": 405320,
+      "lang": "en"
+    },
+    {
+      "text": "paid. So, this is where our code can",
+      "duration": 4080,
+      "offset": 407320,
+      "lang": "en"
+    },
+    {
+      "text": "place real orders directly through the",
+      "duration": 4120,
+      "offset": 409560,
+      "lang": "en"
+    },
+    {
+      "text": "system to Alpaca. If you sign in to",
+      "duration": 3800,
+      "offset": 411400,
+      "lang": "en"
+    },
+    {
+      "text": "Alpaca, which I'll show you later on in",
+      "duration": 3040,
+      "offset": 413680,
+      "lang": "en"
+    },
+    {
+      "text": "the video as well, you'll be able to see",
+      "duration": 3000,
+      "offset": 415200,
+      "lang": "en"
+    },
+    {
+      "text": "all your trades, performance, and how",
+      "duration": 3120,
+      "offset": 416720,
+      "lang": "en"
+    },
+    {
+      "text": "much money you have in your account.",
+      "duration": 3240,
+      "offset": 418200,
+      "lang": "en"
+    },
+    {
+      "text": "Then finally, to tie everything",
+      "duration": 3920,
+      "offset": 419840,
+      "lang": "en"
+    },
+    {
+      "text": "together, we have the dashboard and this",
+      "duration": 3760,
+      "offset": 421440,
+      "lang": "en"
+    },
+    {
+      "text": "is where you can see everything in real",
+      "duration": 3120,
+      "offset": 423760,
+      "lang": "en"
+    },
+    {
+      "text": "time. So, now that we understand how",
+      "duration": 3800,
+      "offset": 425200,
+      "lang": "en"
+    },
+    {
+      "text": "this automatic trading bot is going to",
+      "duration": 3680,
+      "offset": 426880,
+      "lang": "en"
+    },
+    {
+      "text": "be structured, let's go ahead and build",
+      "duration": 3240,
+      "offset": 429000,
+      "lang": "en"
+    },
+    {
+      "text": "out every single one of these components",
+      "duration": 3560,
+      "offset": 430560,
+      "lang": "en"
+    },
+    {
+      "text": "one by one. So, this way you'll be able",
+      "duration": 4480,
+      "offset": 432240,
+      "lang": "en"
+    },
+    {
+      "text": "to see like from step one till the end,",
+      "duration": 3640,
+      "offset": 434120,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to be following the same",
+      "duration": 2600,
+      "offset": 436720,
+      "lang": "en"
+    },
+    {
+      "text": "exact timeline. Uh we're going to be",
+      "duration": 3240,
+      "offset": 437760,
+      "lang": "en"
+    },
+    {
+      "text": "able to test independently. So, we're",
+      "duration": 3080,
+      "offset": 439320,
+      "lang": "en"
+    },
+    {
+      "text": "going to be test that the HTML models",
+      "duration": 2720,
+      "offset": 441000,
+      "lang": "en"
+    },
+    {
+      "text": "work. We're going to test that the",
+      "duration": 2840,
+      "offset": 442400,
+      "lang": "en"
+    },
+    {
+      "text": "allocation and sizing works. We're going",
+      "duration": 2960,
+      "offset": 443720,
+      "lang": "en"
+    },
+    {
+      "text": "to test that the safety net works as",
+      "duration": 2880,
+      "offset": 445240,
+      "lang": "en"
+    },
+    {
+      "text": "well. We're going to test our strategies",
+      "duration": 3160,
+      "offset": 446680,
+      "lang": "en"
+    },
+    {
+      "text": "and backtest those. We're going to be",
+      "duration": 3720,
+      "offset": 448120,
+      "lang": "en"
+    },
+    {
+      "text": "testing our brokerage connection, so we",
+      "duration": 3400,
+      "offset": 449840,
+      "lang": "en"
+    },
+    {
+      "text": "can first see that the trades are",
+      "duration": 3520,
+      "offset": 451840,
+      "lang": "en"
+    },
+    {
+      "text": "actually getting placed through Alpaca.",
+      "duration": 3560,
+      "offset": 453240,
+      "lang": "en"
+    },
+    {
+      "text": "And then finally, the dashboard will",
+      "duration": 3080,
+      "offset": 455360,
+      "lang": "en"
+    },
+    {
+      "text": "essentially tie everything together.",
+      "duration": 2720,
+      "offset": 456800,
+      "lang": "en"
+    },
+    {
+      "text": "Now, before we start building the",
+      "duration": 3240,
+      "offset": 458440,
+      "lang": "en"
+    },
+    {
+      "text": "project, I basically inputted every",
+      "duration": 4120,
+      "offset": 459520,
+      "lang": "en"
+    },
+    {
+      "text": "single step along the way inside this",
+      "duration": 3680,
+      "offset": 461680,
+      "lang": "en"
+    },
+    {
+      "text": "master document. If you want to get",
+      "duration": 3280,
+      "offset": 463640,
+      "lang": "en"
+    },
+    {
+      "text": "access to this, you can go ahead and",
+      "duration": 3240,
+      "offset": 465360,
+      "lang": "en"
+    },
+    {
+      "text": "click the link in the description for my",
+      "duration": 3240,
+      "offset": 466920,
+      "lang": "en"
+    },
+    {
+      "text": "school community. I'll go ahead and",
+      "duration": 3680,
+      "offset": 468600,
+      "lang": "en"
+    },
+    {
+      "text": "showcase everything in a bit more detail",
+      "duration": 3640,
+      "offset": 470160,
+      "lang": "en"
+    },
+    {
+      "text": "so that you can customize these to your",
+      "duration": 3400,
+      "offset": 472280,
+      "lang": "en"
+    },
+    {
+      "text": "own strategies. I'll also show them in",
+      "duration": 3480,
+      "offset": 473800,
+      "lang": "en"
+    },
+    {
+      "text": "the video, too. So, this way if you want",
+      "duration": 3240,
+      "offset": 475680,
+      "lang": "en"
+    },
+    {
+      "text": "to just pause at certain parts of the",
+      "duration": 3280,
+      "offset": 477280,
+      "lang": "en"
+    },
+    {
+      "text": "video to see how you would change up the",
+      "duration": 3520,
+      "offset": 478920,
+      "lang": "en"
+    },
+    {
+      "text": "prompt, you can go ahead and do so. But,",
+      "duration": 3680,
+      "offset": 480560,
+      "lang": "en"
+    },
+    {
+      "text": "just to give you a broad overview, what",
+      "duration": 3360,
+      "offset": 482440,
+      "lang": "en"
+    },
+    {
+      "text": "we're first going to do is create the",
+      "duration": 3320,
+      "offset": 484240,
+      "lang": "en"
+    },
+    {
+      "text": "project scaffolding. So, this is kind of",
+      "duration": 4000,
+      "offset": 485800,
+      "lang": "en"
+    },
+    {
+      "text": "like the shell of the entire system.",
+      "duration": 4160,
+      "offset": 487560,
+      "lang": "en"
+    },
+    {
+      "text": "Then, below this we have the regime",
+      "duration": 3360,
+      "offset": 489800,
+      "lang": "en"
+    },
+    {
+      "text": "detection engine. So, this is going to",
+      "duration": 3440,
+      "offset": 491720,
+      "lang": "en"
+    },
+    {
+      "text": "be the brain that we talked about. We",
+      "duration": 4000,
+      "offset": 493160,
+      "lang": "en"
+    },
+    {
+      "text": "have the volatility-based allocation",
+      "duration": 3480,
+      "offset": 495160,
+      "lang": "en"
+    },
+    {
+      "text": "strategies. These are where you're going",
+      "duration": 3240,
+      "offset": 497160,
+      "lang": "en"
+    },
+    {
+      "text": "to input your custom strategies based on",
+      "duration": 3480,
+      "offset": 498640,
+      "lang": "en"
+    },
+    {
+      "text": "how you trade and what you're actually",
+      "duration": 3560,
+      "offset": 500400,
+      "lang": "en"
+    },
+    {
+      "text": "trading. Below this, we have",
+      "duration": 3680,
+      "offset": 502120,
+      "lang": "en"
+    },
+    {
+      "text": "walk-forward backtesting and validation",
+      "duration": 3320,
+      "offset": 503960,
+      "lang": "en"
+    },
+    {
+      "text": "to make sure that your strategy does",
+      "duration": 4240,
+      "offset": 505800,
+      "lang": "en"
+    },
+    {
+      "text": "work properly. And then finally, we have",
+      "duration": 4520,
+      "offset": 507280,
+      "lang": "en"
+    },
+    {
+      "text": "a risk management layer that ensures",
+      "duration": 2999,
+      "offset": 510040,
+      "lang": "en"
+    },
+    {
+      "text": "that our system doesn't blow up our",
+      "duration": 3040,
+      "offset": 511800,
+      "lang": "en"
+    },
+    {
+      "text": "account. We have proper, you know,",
+      "duration": 3521,
+      "offset": 513039,
+      "lang": "en"
+    },
+    {
+      "text": "circuit breakers in place, things like",
+      "duration": 3520,
+      "offset": 514840,
+      "lang": "en"
+    },
+    {
+      "text": "that. And then finally, once we've",
+      "duration": 3640,
+      "offset": 516560,
+      "lang": "en"
+    },
+    {
+      "text": "validated that everything works and is",
+      "duration": 3840,
+      "offset": 518360,
+      "lang": "en"
+    },
+    {
+      "text": "safe to a degree, we're able to connect",
+      "duration": 4000,
+      "offset": 520200,
+      "lang": "en"
+    },
+    {
+      "text": "it to Alpaca, which is a brokerage we're",
+      "duration": 4280,
+      "offset": 522200,
+      "lang": "en"
+    },
+    {
+      "text": "going to be using. Below this, we can",
+      "duration": 3280,
+      "offset": 524200,
+      "lang": "en"
+    },
+    {
+      "text": "make sure that the main loop and",
+      "duration": 2840,
+      "offset": 526480,
+      "lang": "en"
+    },
+    {
+      "text": "orchestration works. So, this is where",
+      "duration": 3080,
+      "offset": 527480,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to extensively test that",
+      "duration": 3120,
+      "offset": 529320,
+      "lang": "en"
+    },
+    {
+      "text": "we're able to send trades to Alpaca.",
+      "duration": 3520,
+      "offset": 530560,
+      "lang": "en"
+    },
+    {
+      "text": "It's receiving all our data. And then",
+      "duration": 3880,
+      "offset": 532440,
+      "lang": "en"
+    },
+    {
+      "text": "finally, we're going to monitor, have",
+      "duration": 3759,
+      "offset": 534080,
+      "lang": "en"
+    },
+    {
+      "text": "alerts, and have a dashboard that",
+      "duration": 3760,
+      "offset": 536320,
+      "lang": "en"
+    },
+    {
+      "text": "showcases all of the trades we've taken,",
+      "duration": 4321,
+      "offset": 537839,
+      "lang": "en"
+    },
+    {
+      "text": "historical performance, how our system's",
+      "duration": 3720,
+      "offset": 540080,
+      "lang": "en"
+    },
+    {
+      "text": "currently working, and just a way to",
+      "duration": 4320,
+      "offset": 542160,
+      "lang": "en"
+    },
+    {
+      "text": "visually see our system in real time.",
+      "duration": 4000,
+      "offset": 543800,
+      "lang": "en"
+    },
+    {
+      "text": "Obviously, everyone trades very",
+      "duration": 2920,
+      "offset": 546480,
+      "lang": "en"
+    },
+    {
+      "text": "differently, but the idea here is to",
+      "duration": 3240,
+      "offset": 547800,
+      "lang": "en"
+    },
+    {
+      "text": "have a very a general base case that",
+      "duration": 3560,
+      "offset": 549400,
+      "lang": "en"
+    },
+    {
+      "text": "almost anyone can use. Uh you just want",
+      "duration": 3520,
+      "offset": 551040,
+      "lang": "en"
+    },
+    {
+      "text": "to go ahead and change the strategies,",
+      "duration": 3400,
+      "offset": 552960,
+      "lang": "en"
+    },
+    {
+      "text": "change the tickers you're working with,",
+      "duration": 3480,
+      "offset": 554560,
+      "lang": "en"
+    },
+    {
+      "text": "but obviously keep the core logic here",
+      "duration": 3280,
+      "offset": 556360,
+      "lang": "en"
+    },
+    {
+      "text": "the same. Now that we've gone over the",
+      "duration": 3080,
+      "offset": 558040,
+      "lang": "en"
+    },
+    {
+      "text": "structure, let's go ahead and start",
+      "duration": 3320,
+      "offset": 559640,
+      "lang": "en"
+    },
+    {
+      "text": "building out this actual auto trading",
+      "duration": 3560,
+      "offset": 561120,
+      "lang": "en"
+    },
+    {
+      "text": "bot project. So, the first thing you'll",
+      "duration": 3560,
+      "offset": 562960,
+      "lang": "en"
+    },
+    {
+      "text": "need to do is go ahead and download an",
+      "duration": 4200,
+      "offset": 564680,
+      "lang": "en"
+    },
+    {
+      "text": "IDE where you can use Cloud Code. This",
+      "duration": 3440,
+      "offset": 566520,
+      "lang": "en"
+    },
+    {
+      "text": "is where your code base is going to",
+      "duration": 2640,
+      "offset": 568880,
+      "lang": "en"
+    },
+    {
+      "text": "live, and in our case, we're going to be",
+      "duration": 3640,
+      "offset": 569960,
+      "lang": "en"
+    },
+    {
+      "text": "using Visual Studio Code since it's",
+      "duration": 3600,
+      "offset": 571520,
+      "lang": "en"
+    },
+    {
+      "text": "pretty much the simplest way to go go",
+      "duration": 3240,
+      "offset": 573600,
+      "lang": "en"
+    },
+    {
+      "text": "and get started. So, all you'll need to",
+      "duration": 3960,
+      "offset": 575120,
+      "lang": "en"
+    },
+    {
+      "text": "do is download Visual Studio Code and",
+      "duration": 4080,
+      "offset": 576840,
+      "lang": "en"
+    },
+    {
+      "text": "then open up a blank folder inside your",
+      "duration": 3720,
+      "offset": 579080,
+      "lang": "en"
+    },
+    {
+      "text": "computer. Next, what you want to do is",
+      "duration": 4200,
+      "offset": 580920,
+      "lang": "en"
+    },
+    {
+      "text": "add Cloud Code as an extension. Search",
+      "duration": 4600,
+      "offset": 582800,
+      "lang": "en"
+    },
+    {
+      "text": "Cloud Code. You should see it pop up as",
+      "duration": 4240,
+      "offset": 585120,
+      "lang": "en"
+    },
+    {
+      "text": "the very first extension. It's called",
+      "duration": 4400,
+      "offset": 587400,
+      "lang": "en"
+    },
+    {
+      "text": "Cloud Code for VS Code. This is the",
+      "duration": 4240,
+      "offset": 589360,
+      "lang": "en"
+    },
+    {
+      "text": "easiest way to go ahead and get started.",
+      "duration": 3240,
+      "offset": 591800,
+      "lang": "en"
+    },
+    {
+      "text": "So, now once you've installed the Cloud",
+      "duration": 2840,
+      "offset": 593600,
+      "lang": "en"
+    },
+    {
+      "text": "Code extension, you should be able to",
+      "duration": 3320,
+      "offset": 595040,
+      "lang": "en"
+    },
+    {
+      "text": "see it on this right-hand side here.",
+      "duration": 3160,
+      "offset": 596440,
+      "lang": "en"
+    },
+    {
+      "text": "This is where we're going to be able to",
+      "duration": 3160,
+      "offset": 598360,
+      "lang": "en"
+    },
+    {
+      "text": "chat with Cloud Code, which again is",
+      "duration": 4280,
+      "offset": 599600,
+      "lang": "en"
+    },
+    {
+      "text": "going to help us make all the projects.",
+      "duration": 3480,
+      "offset": 601520,
+      "lang": "en"
+    },
+    {
+      "text": "We're going to need to give it very",
+      "duration": 3120,
+      "offset": 603880,
+      "lang": "en"
+    },
+    {
+      "text": "useful instructions one step at a time",
+      "duration": 3680,
+      "offset": 605000,
+      "lang": "en"
+    },
+    {
+      "text": "based on the diagram I showed you",
+      "duration": 3560,
+      "offset": 607000,
+      "lang": "en"
+    },
+    {
+      "text": "previously. Next, what we're going to be",
+      "duration": 3200,
+      "offset": 608680,
+      "lang": "en"
+    },
+    {
+      "text": "doing is something called project",
+      "duration": 4000,
+      "offset": 610560,
+      "lang": "en"
+    },
+    {
+      "text": "scaffolding. So, inside the section,",
+      "duration": 3840,
+      "offset": 611880,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to be creating just a",
+      "duration": 3720,
+      "offset": 614560,
+      "lang": "en"
+    },
+    {
+      "text": "project structure. So, no actual logic",
+      "duration": 4000,
+      "offset": 615720,
+      "lang": "en"
+    },
+    {
+      "text": "yet, but we're just going to be creating",
+      "duration": 3600,
+      "offset": 618280,
+      "lang": "en"
+    },
+    {
+      "text": "a Python project called Regime Trader",
+      "duration": 4200,
+      "offset": 619720,
+      "lang": "en"
+    },
+    {
+      "text": "with the following structure. And again,",
+      "duration": 3840,
+      "offset": 621880,
+      "lang": "en"
+    },
+    {
+      "text": "there's nothing yet inside these files.",
+      "duration": 3160,
+      "offset": 623920,
+      "lang": "en"
+    },
+    {
+      "text": "This structure is just what's going to",
+      "duration": 3000,
+      "offset": 625720,
+      "lang": "en"
+    },
+    {
+      "text": "tell Cloud Code how our files are going",
+      "duration": 2760,
+      "offset": 627080,
+      "lang": "en"
+    },
+    {
+      "text": "to look. First, we're going to have",
+      "duration": 3680,
+      "offset": 628720,
+      "lang": "en"
+    },
+    {
+      "text": "settings, credentials, HMM engine. So,",
+      "duration": 3920,
+      "offset": 629840,
+      "lang": "en"
+    },
+    {
+      "text": "this is going to be the brain. Then,",
+      "duration": 3120,
+      "offset": 632400,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to have regime strategies.",
+      "duration": 3880,
+      "offset": 633760,
+      "lang": "en"
+    },
+    {
+      "text": "So, based on the regime that we're in,",
+      "duration": 3080,
+      "offset": 635520,
+      "lang": "en"
+    },
+    {
+      "text": "it's going to have volume-based",
+      "duration": 2840,
+      "offset": 637640,
+      "lang": "en"
+    },
+    {
+      "text": "allocation strategies. Then, we're going",
+      "duration": 3440,
+      "offset": 638600,
+      "lang": "en"
+    },
+    {
+      "text": "to have a risk manager that's going to",
+      "duration": 3480,
+      "offset": 640480,
+      "lang": "en"
+    },
+    {
+      "text": "handle position sizing, leverage,",
+      "duration": 3799,
+      "offset": 642040,
+      "lang": "en"
+    },
+    {
+      "text": "drawdown limits. This is basically the",
+      "duration": 4240,
+      "offset": 643960,
+      "lang": "en"
+    },
+    {
+      "text": "API wrapper that allows us to connect to",
+      "duration": 4601,
+      "offset": 645839,
+      "lang": "en"
+    },
+    {
+      "text": "Alpaca, which is our brokerage. Then,",
+      "duration": 4120,
+      "offset": 648200,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to have an order executor.",
+      "duration": 3360,
+      "offset": 650440,
+      "lang": "en"
+    },
+    {
+      "text": "This is what's going to allow us to",
+      "duration": 4519,
+      "offset": 652320,
+      "lang": "en"
+    },
+    {
+      "text": "actually place trades to the Alpaca API.",
+      "duration": 4280,
+      "offset": 653800,
+      "lang": "en"
+    },
+    {
+      "text": "So, as the name suggests, we're able to",
+      "duration": 3161,
+      "offset": 656839,
+      "lang": "en"
+    },
+    {
+      "text": "place trades, modify trades, and even",
+      "duration": 4160,
+      "offset": 658080,
+      "lang": "en"
+    },
+    {
+      "text": "cancel trades. We're also able to track",
+      "duration": 3920,
+      "offset": 660000,
+      "lang": "en"
+    },
+    {
+      "text": "our open positions because once we're",
+      "duration": 3080,
+      "offset": 662240,
+      "lang": "en"
+    },
+    {
+      "text": "connected to Alpaca, we can see",
+      "duration": 3080,
+      "offset": 663920,
+      "lang": "en"
+    },
+    {
+      "text": "positions that are currently open. We",
+      "duration": 3680,
+      "offset": 665320,
+      "lang": "en"
+    },
+    {
+      "text": "have market data, which is real-time and",
+      "duration": 3800,
+      "offset": 667000,
+      "lang": "en"
+    },
+    {
+      "text": "historical. We have feature engineering,",
+      "duration": 3240,
+      "offset": 669000,
+      "lang": "en"
+    },
+    {
+      "text": "which is technical indicators,",
+      "duration": 3840,
+      "offset": 670800,
+      "lang": "en"
+    },
+    {
+      "text": "structured logging, the dashboard. This",
+      "duration": 3880,
+      "offset": 672240,
+      "lang": "en"
+    },
+    {
+      "text": "is where our dashboard's going to live.",
+      "duration": 3880,
+      "offset": 674640,
+      "lang": "en"
+    },
+    {
+      "text": "Alerts, so email, webhook alerts for",
+      "duration": 4040,
+      "offset": 676120,
+      "lang": "en"
+    },
+    {
+      "text": "critical events. This is if you ever",
+      "duration": 3280,
+      "offset": 678520,
+      "lang": "en"
+    },
+    {
+      "text": "want to connect your email. Below this,",
+      "duration": 3400,
+      "offset": 680160,
+      "lang": "en"
+    },
+    {
+      "text": "we have the backtester. We have",
+      "duration": 3280,
+      "offset": 681800,
+      "lang": "en"
+    },
+    {
+      "text": "performance. So, here we're able to",
+      "duration": 3840,
+      "offset": 683560,
+      "lang": "en"
+    },
+    {
+      "text": "calculate the sharp ratios, drawdowns,",
+      "duration": 4520,
+      "offset": 685080,
+      "lang": "en"
+    },
+    {
+      "text": "regime breakdowns, benchmarks. This is",
+      "duration": 4120,
+      "offset": 687400,
+      "lang": "en"
+    },
+    {
+      "text": "everything you saw inside the main",
+      "duration": 4520,
+      "offset": 689600,
+      "lang": "en"
+    },
+    {
+      "text": "dashboard that I showcased initially, uh",
+      "duration": 4880,
+      "offset": 691520,
+      "lang": "en"
+    },
+    {
+      "text": "which basically gives us our strategy as",
+      "duration": 3920,
+      "offset": 694120,
+      "lang": "en"
+    },
+    {
+      "text": "a whole, how it relates to the overall",
+      "duration": 3520,
+      "offset": 696400,
+      "lang": "en"
+    },
+    {
+      "text": "market. Then below those, we have all of",
+      "duration": 3240,
+      "offset": 698040,
+      "lang": "en"
+    },
+    {
+      "text": "the tests that we're going to be",
+      "duration": 3600,
+      "offset": 699920,
+      "lang": "en"
+    },
+    {
+      "text": "running. This is the verify like no look",
+      "duration": 4640,
+      "offset": 701280,
+      "lang": "en"
+    },
+    {
+      "text": "ahead biases, testing out strategies,",
+      "duration": 4680,
+      "offset": 703520,
+      "lang": "en"
+    },
+    {
+      "text": "risks, order, etc. And we're going to be",
+      "duration": 4280,
+      "offset": 705920,
+      "lang": "en"
+    },
+    {
+      "text": "doing extensive testing each step of the",
+      "duration": 3840,
+      "offset": 708200,
+      "lang": "en"
+    },
+    {
+      "text": "way because again, this is going to be",
+      "duration": 3760,
+      "offset": 710200,
+      "lang": "en"
+    },
+    {
+      "text": "an automated trading bot and we have to",
+      "duration": 4360,
+      "offset": 712040,
+      "lang": "en"
+    },
+    {
+      "text": "make sure that it's being validated at",
+      "duration": 3760,
+      "offset": 713960,
+      "lang": "en"
+    },
+    {
+      "text": "every step. And then finally, we just",
+      "duration": 3480,
+      "offset": 716400,
+      "lang": "en"
+    },
+    {
+      "text": "have the main file, requirements, and",
+      "duration": 3840,
+      "offset": 717720,
+      "lang": "en"
+    },
+    {
+      "text": "then the ENV file is where we're going",
+      "duration": 3440,
+      "offset": 719880,
+      "lang": "en"
+    },
+    {
+      "text": "to be storing our credentials. If we're",
+      "duration": 3600,
+      "offset": 721560,
+      "lang": "en"
+    },
+    {
+      "text": "going to be using the Alpaca API, this",
+      "duration": 3080,
+      "offset": 723320,
+      "lang": "en"
+    },
+    {
+      "text": "is where we're going to store the API",
+      "duration": 3360,
+      "offset": 725160,
+      "lang": "en"
+    },
+    {
+      "text": "keys that allow us to connect to our",
+      "duration": 3760,
+      "offset": 726400,
+      "lang": "en"
+    },
+    {
+      "text": "live account. Below this, we need a",
+      "duration": 3880,
+      "offset": 728520,
+      "lang": "en"
+    },
+    {
+      "text": "requirements file that basically has",
+      "duration": 3680,
+      "offset": 730160,
+      "lang": "en"
+    },
+    {
+      "text": "everything we're going to be using",
+      "duration": 3280,
+      "offset": 732400,
+      "lang": "en"
+    },
+    {
+      "text": "inside this trading framework. Then",
+      "duration": 3800,
+      "offset": 733840,
+      "lang": "en"
+    },
+    {
+      "text": "finally, we want to create a settings",
+      "duration": 4120,
+      "offset": 735680,
+      "lang": "en"
+    },
+    {
+      "text": "file that has all the parameters. Now,",
+      "duration": 3400,
+      "offset": 737640,
+      "lang": "en"
+    },
+    {
+      "text": "this is where you're essentially going",
+      "duration": 3000,
+      "offset": 739800,
+      "lang": "en"
+    },
+    {
+      "text": "to be changing the tickers that you want",
+      "duration": 3520,
+      "offset": 741040,
+      "lang": "en"
+    },
+    {
+      "text": "to focus on. Then below this, we have",
+      "duration": 3560,
+      "offset": 742800,
+      "lang": "en"
+    },
+    {
+      "text": "more specific parameters for the hidden",
+      "duration": 4160,
+      "offset": 744560,
+      "lang": "en"
+    },
+    {
+      "text": "Markov models, the strategies that we're",
+      "duration": 3720,
+      "offset": 746360,
+      "lang": "en"
+    },
+    {
+      "text": "going to be using depending on the",
+      "duration": 3880,
+      "offset": 748720,
+      "lang": "en"
+    },
+    {
+      "text": "regimes, risks, back tests, and",
+      "duration": 4240,
+      "offset": 750080,
+      "lang": "en"
+    },
+    {
+      "text": "monitoring. Again, we don't want to",
+      "duration": 3800,
+      "offset": 752600,
+      "lang": "en"
+    },
+    {
+      "text": "implement any logic yet. So now, let's",
+      "duration": 3560,
+      "offset": 754320,
+      "lang": "en"
+    },
+    {
+      "text": "go ahead and run this. So after waiting",
+      "duration": 3000,
+      "offset": 756400,
+      "lang": "en"
+    },
+    {
+      "text": "like 5 minutes or so, we can see the",
+      "duration": 4280,
+      "offset": 757880,
+      "lang": "en"
+    },
+    {
+      "text": "project skeleton is complete. We have 31",
+      "duration": 4680,
+      "offset": 759400,
+      "lang": "en"
+    },
+    {
+      "text": "files across eight directories. The",
+      "duration": 3280,
+      "offset": 762160,
+      "lang": "en"
+    },
+    {
+      "text": "first is going to have settings with all",
+      "duration": 3040,
+      "offset": 764080,
+      "lang": "en"
+    },
+    {
+      "text": "the parameters. So this is the broker",
+      "duration": 3240,
+      "offset": 765440,
+      "lang": "en"
+    },
+    {
+      "text": "we're going to use, the HMMs,",
+      "duration": 3760,
+      "offset": 767120,
+      "lang": "en"
+    },
+    {
+      "text": "strategies, risks, back tests, and",
+      "duration": 4600,
+      "offset": 768680,
+      "lang": "en"
+    },
+    {
+      "text": "monitoring. Next, we have the core. So",
+      "duration": 3800,
+      "offset": 770880,
+      "lang": "en"
+    },
+    {
+      "text": "these are the core parameters that we're",
+      "duration": 3200,
+      "offset": 773280,
+      "lang": "en"
+    },
+    {
+      "text": "going to be using inside the framework,",
+      "duration": 3560,
+      "offset": 774680,
+      "lang": "en"
+    },
+    {
+      "text": "where we're getting data from,",
+      "duration": 5120,
+      "offset": 776480,
+      "lang": "en"
+    },
+    {
+      "text": "monitoring, back testing. And if we go",
+      "duration": 5080,
+      "offset": 778240,
+      "lang": "en"
+    },
+    {
+      "text": "over here to the left, we can even see",
+      "duration": 3640,
+      "offset": 781600,
+      "lang": "en"
+    },
+    {
+      "text": "all of these files are created inside",
+      "duration": 4200,
+      "offset": 783320,
+      "lang": "en"
+    },
+    {
+      "text": "regime trader. And again, this is pretty",
+      "duration": 3640,
+      "offset": 785240,
+      "lang": "en"
+    },
+    {
+      "text": "much standardized no matter what",
+      "duration": 3400,
+      "offset": 787520,
+      "lang": "en"
+    },
+    {
+      "text": "strategy you have. Cloud code does work",
+      "duration": 4560,
+      "offset": 788880,
+      "lang": "en"
+    },
+    {
+      "text": "best when it has the structure all built",
+      "duration": 4160,
+      "offset": 790920,
+      "lang": "en"
+    },
+    {
+      "text": "out before we start diving deep into the",
+      "duration": 3399,
+      "offset": 793440,
+      "lang": "en"
+    },
+    {
+      "text": "weeds. Now that we finished project",
+      "duration": 3680,
+      "offset": 795080,
+      "lang": "en"
+    },
+    {
+      "text": "scaffolding, the next step is to create",
+      "duration": 4761,
+      "offset": 796839,
+      "lang": "en"
+    },
+    {
+      "text": "the brain of our entire trading bot. So",
+      "duration": 4400,
+      "offset": 798760,
+      "lang": "en"
+    },
+    {
+      "text": "again, like I mentioned, these aren't",
+      "duration": 2920,
+      "offset": 801600,
+      "lang": "en"
+    },
+    {
+      "text": "going to predict prices. They're going",
+      "duration": 3560,
+      "offset": 803160,
+      "lang": "en"
+    },
+    {
+      "text": "to predict the type of environment that",
+      "duration": 3840,
+      "offset": 804520,
+      "lang": "en"
+    },
+    {
+      "text": "the current market is in, whether it's",
+      "duration": 3520,
+      "offset": 806720,
+      "lang": "en"
+    },
+    {
+      "text": "calm, volatile, whether we're in a bear",
+      "duration": 4640,
+      "offset": 808360,
+      "lang": "en"
+    },
+    {
+      "text": "market. So, by detecting these different",
+      "duration": 4760,
+      "offset": 810240,
+      "lang": "en"
+    },
+    {
+      "text": "types of environments, we're able to",
+      "duration": 3600,
+      "offset": 813000,
+      "lang": "en"
+    },
+    {
+      "text": "reduce our exposure, change our",
+      "duration": 3880,
+      "offset": 815000,
+      "lang": "en"
+    },
+    {
+      "text": "strategies. So, in this next prompt, we",
+      "duration": 3400,
+      "offset": 816600,
+      "lang": "en"
+    },
+    {
+      "text": "can see that we're going to be",
+      "duration": 3120,
+      "offset": 818880,
+      "lang": "en"
+    },
+    {
+      "text": "implementing the HMMs, and this is going",
+      "duration": 4000,
+      "offset": 820000,
+      "lang": "en"
+    },
+    {
+      "text": "to be a volatility classifier. It's",
+      "duration": 2920,
+      "offset": 822000,
+      "lang": "en"
+    },
+    {
+      "text": "going to tell us the type of",
+      "duration": 2920,
+      "offset": 824000,
+      "lang": "en"
+    },
+    {
+      "text": "environment, like I mentioned. Below",
+      "duration": 3920,
+      "offset": 824920,
+      "lang": "en"
+    },
+    {
+      "text": "this, we want to do different types of",
+      "duration": 4440,
+      "offset": 826920,
+      "lang": "en"
+    },
+    {
+      "text": "tests to see how many regimes there are.",
+      "duration": 4800,
+      "offset": 828840,
+      "lang": "en"
+    },
+    {
+      "text": "So, inside my example from the beginning",
+      "duration": 3720,
+      "offset": 831360,
+      "lang": "en"
+    },
+    {
+      "text": "of the video, you saw that we had five",
+      "duration": 3520,
+      "offset": 833640,
+      "lang": "en"
+    },
+    {
+      "text": "regimes, right? But, the five wasn't",
+      "duration": 3800,
+      "offset": 835080,
+      "lang": "en"
+    },
+    {
+      "text": "hardcoded. That's actually something we",
+      "duration": 4080,
+      "offset": 837160,
+      "lang": "en"
+    },
+    {
+      "text": "found out through testing. So, the idea",
+      "duration": 3880,
+      "offset": 838880,
+      "lang": "en"
+    },
+    {
+      "text": "here is that this model is going to",
+      "duration": 3400,
+      "offset": 841240,
+      "lang": "en"
+    },
+    {
+      "text": "test, you know, three through seven",
+      "duration": 4000,
+      "offset": 842760,
+      "lang": "en"
+    },
+    {
+      "text": "regimes, and then this is automatically",
+      "duration": 3400,
+      "offset": 844640,
+      "lang": "en"
+    },
+    {
+      "text": "going to pick the best number of",
+      "duration": 3320,
+      "offset": 846760,
+      "lang": "en"
+    },
+    {
+      "text": "regimes. So, instead of us guessing how",
+      "duration": 3480,
+      "offset": 848040,
+      "lang": "en"
+    },
+    {
+      "text": "many there should be, we're just going",
+      "duration": 3360,
+      "offset": 850080,
+      "lang": "en"
+    },
+    {
+      "text": "to have this math here dictate that.",
+      "duration": 3040,
+      "offset": 851520,
+      "lang": "en"
+    },
+    {
+      "text": "Then, below this, we're just going to",
+      "duration": 3360,
+      "offset": 853440,
+      "lang": "en"
+    },
+    {
+      "text": "sort the regimes by mean return. This is",
+      "duration": 3960,
+      "offset": 854560,
+      "lang": "en"
+    },
+    {
+      "text": "going to help us label the regimes. So,",
+      "duration": 3080,
+      "offset": 856800,
+      "lang": "en"
+    },
+    {
+      "text": "with three, it's only bear, neutral,",
+      "duration": 3200,
+      "offset": 858520,
+      "lang": "en"
+    },
+    {
+      "text": "bull. With four, it's crash, bear, bull,",
+      "duration": 3720,
+      "offset": 859880,
+      "lang": "en"
+    },
+    {
+      "text": "euphoria. Five would be crash, bear,",
+      "duration": 3760,
+      "offset": 861720,
+      "lang": "en"
+    },
+    {
+      "text": "neutral, bull, euphoria. Then, below",
+      "duration": 3720,
+      "offset": 863600,
+      "lang": "en"
+    },
+    {
+      "text": "this, we have a bunch of functions that,",
+      "duration": 3400,
+      "offset": 865480,
+      "lang": "en"
+    },
+    {
+      "text": "again, you can copy and paste or just",
+      "duration": 3640,
+      "offset": 867320,
+      "lang": "en"
+    },
+    {
+      "text": "get it directly from my community. But,",
+      "duration": 3959,
+      "offset": 868880,
+      "lang": "en"
+    },
+    {
+      "text": "you can pause and see any of the very",
+      "duration": 3600,
+      "offset": 870960,
+      "lang": "en"
+    },
+    {
+      "text": "specific calculations we're going to be",
+      "duration": 3561,
+      "offset": 872839,
+      "lang": "en"
+    },
+    {
+      "text": "running inside these functions. And",
+      "duration": 2920,
+      "offset": 874560,
+      "lang": "en"
+    },
+    {
+      "text": "then, below this, this is how we're",
+      "duration": 2720,
+      "offset": 876400,
+      "lang": "en"
+    },
+    {
+      "text": "going to actually train the HMMs with",
+      "duration": 3880,
+      "offset": 877480,
+      "lang": "en"
+    },
+    {
+      "text": "around two years of daily data. Below",
+      "duration": 4400,
+      "offset": 879120,
+      "lang": "en"
+    },
+    {
+      "text": "this is the regime detection. Now, one",
+      "duration": 3960,
+      "offset": 881360,
+      "lang": "en"
+    },
+    {
+      "text": "important thing to know, especially if",
+      "duration": 3560,
+      "offset": 883520,
+      "lang": "en"
+    },
+    {
+      "text": "you want to run this yourself, is that",
+      "duration": 3800,
+      "offset": 885320,
+      "lang": "en"
+    },
+    {
+      "text": "the default predict function inside the",
+      "duration": 4400,
+      "offset": 887080,
+      "lang": "en"
+    },
+    {
+      "text": "HMM library is processes the entire",
+      "duration": 4440,
+      "offset": 889120,
+      "lang": "en"
+    },
+    {
+      "text": "sequence of data, but that generally",
+      "duration": 4400,
+      "offset": 891480,
+      "lang": "en"
+    },
+    {
+      "text": "creates look-ahead bias. So, what we do",
+      "duration": 5120,
+      "offset": 893560,
+      "lang": "en"
+    },
+    {
+      "text": "is make a slight tweak here to not use",
+      "duration": 4760,
+      "offset": 895880,
+      "lang": "en"
+    },
+    {
+      "text": "the model predict function. Instead,",
+      "duration": 3280,
+      "offset": 898680,
+      "lang": "en"
+    },
+    {
+      "text": "what we're going to be using is the",
+      "duration": 3400,
+      "offset": 900640,
+      "lang": "en"
+    },
+    {
+      "text": "forward algorithm only. So, make sure to",
+      "duration": 3680,
+      "offset": 901960,
+      "lang": "en"
+    },
+    {
+      "text": "include this inside your prompt, and",
+      "duration": 3320,
+      "offset": 904040,
+      "lang": "en"
+    },
+    {
+      "text": "this is just to ensure that there's no",
+      "duration": 3480,
+      "offset": 905640,
+      "lang": "en"
+    },
+    {
+      "text": "look-ahead bias when you're developing",
+      "duration": 3600,
+      "offset": 907360,
+      "lang": "en"
+    },
+    {
+      "text": "these models and strategies. So, here",
+      "duration": 3800,
+      "offset": 909120,
+      "lang": "en"
+    },
+    {
+      "text": "you can see the function. If I slowly",
+      "duration": 3480,
+      "offset": 910960,
+      "lang": "en"
+    },
+    {
+      "text": "scroll down, you can see the mandatory",
+      "duration": 3360,
+      "offset": 912920,
+      "lang": "en"
+    },
+    {
+      "text": "tests. And then, below this, we have the",
+      "duration": 3960,
+      "offset": 914440,
+      "lang": "en"
+    },
+    {
+      "text": "regime stability filter, as well as",
+      "duration": 3800,
+      "offset": 916280,
+      "lang": "en"
+    },
+    {
+      "text": "additional methods for predicting,",
+      "duration": 3880,
+      "offset": 918400,
+      "lang": "en"
+    },
+    {
+      "text": "getting regimes, detecting regimes, and",
+      "duration": 3440,
+      "offset": 920080,
+      "lang": "en"
+    },
+    {
+      "text": "then finally, how we classify the",
+      "duration": 3400,
+      "offset": 922280,
+      "lang": "en"
+    },
+    {
+      "text": "states, and then log regime changes as a",
+      "duration": 3720,
+      "offset": 923520,
+      "lang": "en"
+    },
+    {
+      "text": "warning. This is just for our",
+      "duration": 3440,
+      "offset": 925680,
+      "lang": "en"
+    },
+    {
+      "text": "information. And then with the way we",
+      "duration": 3760,
+      "offset": 927240,
+      "lang": "en"
+    },
+    {
+      "text": "build this out here, Quad has a",
+      "duration": 4280,
+      "offset": 929120,
+      "lang": "en"
+    },
+    {
+      "text": "stability filter inside this engine.",
+      "duration": 4320,
+      "offset": 931000,
+      "lang": "en"
+    },
+    {
+      "text": "What this means is that a certain regime",
+      "duration": 3760,
+      "offset": 933400,
+      "lang": "en"
+    },
+    {
+      "text": "has to persist for at least three",
+      "duration": 3760,
+      "offset": 935320,
+      "lang": "en"
+    },
+    {
+      "text": "consecutive bars before the system acts",
+      "duration": 3240,
+      "offset": 937160,
+      "lang": "en"
+    },
+    {
+      "text": "on it. So if it's like flickering",
+      "duration": 3360,
+      "offset": 939080,
+      "lang": "en"
+    },
+    {
+      "text": "between bull, bear, bull, bear, it's not",
+      "duration": 3280,
+      "offset": 940400,
+      "lang": "en"
+    },
+    {
+      "text": "actually going to do anything if it",
+      "duration": 2720,
+      "offset": 942440,
+      "lang": "en"
+    },
+    {
+      "text": "flickers more than four times in the",
+      "duration": 3880,
+      "offset": 943680,
+      "lang": "en"
+    },
+    {
+      "text": "past 20 bars. That is what causes",
+      "duration": 4280,
+      "offset": 945160,
+      "lang": "en"
+    },
+    {
+      "text": "uncertainty. So we're going to log those",
+      "duration": 3680,
+      "offset": 947560,
+      "lang": "en"
+    },
+    {
+      "text": "changes as kind of like a warning sign.",
+      "duration": 3400,
+      "offset": 949440,
+      "lang": "en"
+    },
+    {
+      "text": "So this way it does reduce your position",
+      "duration": 4080,
+      "offset": 951240,
+      "lang": "en"
+    },
+    {
+      "text": "sizes ultimately because it is more",
+      "duration": 4560,
+      "offset": 952840,
+      "lang": "en"
+    },
+    {
+      "text": "volatile and uncertain as to what regime",
+      "duration": 3960,
+      "offset": 955320,
+      "lang": "en"
+    },
+    {
+      "text": "the market is currently in. All we're",
+      "duration": 4120,
+      "offset": 957400,
+      "lang": "en"
+    },
+    {
+      "text": "building here is again just the brain,",
+      "duration": 4000,
+      "offset": 959280,
+      "lang": "en"
+    },
+    {
+      "text": "right? That detects the type of market",
+      "duration": 3520,
+      "offset": 961520,
+      "lang": "en"
+    },
+    {
+      "text": "before you apply any other allocation",
+      "duration": 3800,
+      "offset": 963280,
+      "lang": "en"
+    },
+    {
+      "text": "strategies. So here after like 10",
+      "duration": 3320,
+      "offset": 965040,
+      "lang": "en"
+    },
+    {
+      "text": "minutes or so, since we had such a",
+      "duration": 3520,
+      "offset": 967080,
+      "lang": "en"
+    },
+    {
+      "text": "robust prompt, it basically implemented",
+      "duration": 3880,
+      "offset": 968360,
+      "lang": "en"
+    },
+    {
+      "text": "everything we asked for inside these two",
+      "duration": 3440,
+      "offset": 970600,
+      "lang": "en"
+    },
+    {
+      "text": "files, so the feature engineering as",
+      "duration": 3960,
+      "offset": 972240,
+      "lang": "en"
+    },
+    {
+      "text": "well as the HMM engine, which is again",
+      "duration": 3480,
+      "offset": 974040,
+      "lang": "en"
+    },
+    {
+      "text": "going to be the main brain. It's also",
+      "duration": 2920,
+      "offset": 976200,
+      "lang": "en"
+    },
+    {
+      "text": "passing and validating the test that we",
+      "duration": 3240,
+      "offset": 977520,
+      "lang": "en"
+    },
+    {
+      "text": "had it complete after completing these",
+      "duration": 3840,
+      "offset": 979120,
+      "lang": "en"
+    },
+    {
+      "text": "sections to ensure that first of all the",
+      "duration": 4600,
+      "offset": 980760,
+      "lang": "en"
+    },
+    {
+      "text": "HMMs fit the validations, uh they're",
+      "duration": 4200,
+      "offset": 982960,
+      "lang": "en"
+    },
+    {
+      "text": "doing predictions correctly, and then",
+      "duration": 3640,
+      "offset": 985360,
+      "lang": "en"
+    },
+    {
+      "text": "there's no look-ahead bias as well.",
+      "duration": 3640,
+      "offset": 987160,
+      "lang": "en"
+    },
+    {
+      "text": "Next, what we're going to want to do is",
+      "duration": 3920,
+      "offset": 989000,
+      "lang": "en"
+    },
+    {
+      "text": "our allocation strategies, and this is",
+      "duration": 3520,
+      "offset": 990800,
+      "lang": "en"
+    },
+    {
+      "text": "how the bot is going to tell us how to",
+      "duration": 3440,
+      "offset": 992920,
+      "lang": "en"
+    },
+    {
+      "text": "size positions based on the regime that",
+      "duration": 4000,
+      "offset": 994320,
+      "lang": "en"
+    },
+    {
+      "text": "we're in. Here we can see that the HMMs",
+      "duration": 3680,
+      "offset": 996360,
+      "lang": "en"
+    },
+    {
+      "text": "excel at detecting volatile",
+      "duration": 3400,
+      "offset": 998320,
+      "lang": "en"
+    },
+    {
+      "text": "environments, and then based on the",
+      "duration": 3960,
+      "offset": 1000040,
+      "lang": "en"
+    },
+    {
+      "text": "environments, we would essentially have",
+      "duration": 4680,
+      "offset": 1001720,
+      "lang": "en"
+    },
+    {
+      "text": "fully invested portfolios, stay invested",
+      "duration": 4320,
+      "offset": 1004000,
+      "lang": "en"
+    },
+    {
+      "text": "if the trend's intact, or just reduce",
+      "duration": 4040,
+      "offset": 1006400,
+      "lang": "en"
+    },
+    {
+      "text": "your allocations completely. So below we",
+      "duration": 3880,
+      "offset": 1008320,
+      "lang": "en"
+    },
+    {
+      "text": "have a fairly simple strategy that",
+      "duration": 3280,
+      "offset": 1010440,
+      "lang": "en"
+    },
+    {
+      "text": "obviously you would want to change if",
+      "duration": 3000,
+      "offset": 1012200,
+      "lang": "en"
+    },
+    {
+      "text": "you're going to customize this to your",
+      "duration": 3720,
+      "offset": 1013720,
+      "lang": "en"
+    },
+    {
+      "text": "own framework. But what I have here is",
+      "duration": 4160,
+      "offset": 1015200,
+      "lang": "en"
+    },
+    {
+      "text": "three main distinctions. The first is",
+      "duration": 4440,
+      "offset": 1017440,
+      "lang": "en"
+    },
+    {
+      "text": "that when volatility is low, to be fully",
+      "duration": 5360,
+      "offset": 1019360,
+      "lang": "en"
+    },
+    {
+      "text": "invested at 95% of your portfolio with",
+      "duration": 5280,
+      "offset": 1021880,
+      "lang": "en"
+    },
+    {
+      "text": "1.25x leverage. And then when the",
+      "duration": 3880,
+      "offset": 1024720,
+      "lang": "en"
+    },
+    {
+      "text": "volatility's medium, we can stay",
+      "duration": 3600,
+      "offset": 1027160,
+      "lang": "en"
+    },
+    {
+      "text": "invested if the trend is intact. But",
+      "duration": 3680,
+      "offset": 1028600,
+      "lang": "en"
+    },
+    {
+      "text": "again, this is the part that you're",
+      "duration": 3480,
+      "offset": 1030760,
+      "lang": "en"
+    },
+    {
+      "text": "going to customize. So maybe you would",
+      "duration": 3640,
+      "offset": 1032280,
+      "lang": "en"
+    },
+    {
+      "text": "want to be more aggressive in a low",
+      "duration": 3320,
+      "offset": 1034240,
+      "lang": "en"
+    },
+    {
+      "text": "volume market. Maybe you'd want to have",
+      "duration": 3560,
+      "offset": 1035920,
+      "lang": "en"
+    },
+    {
+      "text": "a different filter for medium volumes.",
+      "duration": 3120,
+      "offset": 1037560,
+      "lang": "en"
+    },
+    {
+      "text": "And then obviously you'd want to add",
+      "duration": 3160,
+      "offset": 1039480,
+      "lang": "en"
+    },
+    {
+      "text": "your own specific strategies on top as",
+      "duration": 3920,
+      "offset": 1040680,
+      "lang": "en"
+    },
+    {
+      "text": "well. So the idea here is that you just",
+      "duration": 3840,
+      "offset": 1042640,
+      "lang": "en"
+    },
+    {
+      "text": "want to replace this entire section with",
+      "duration": 3680,
+      "offset": 1044600,
+      "lang": "en"
+    },
+    {
+      "text": "your own personal strategies depending",
+      "duration": 3480,
+      "offset": 1046480,
+      "lang": "en"
+    },
+    {
+      "text": "on your own risk tolerances. And then",
+      "duration": 3280,
+      "offset": 1048280,
+      "lang": "en"
+    },
+    {
+      "text": "below this we have the volatility rank",
+      "duration": 4080,
+      "offset": 1049960,
+      "lang": "en"
+    },
+    {
+      "text": "mapping strategy orchestrator. We have",
+      "duration": 4720,
+      "offset": 1051560,
+      "lang": "en"
+    },
+    {
+      "text": "confidence and uncertainty. So again, a",
+      "duration": 4040,
+      "offset": 1054040,
+      "lang": "en"
+    },
+    {
+      "text": "lot of these are hardcoded based on what",
+      "duration": 4080,
+      "offset": 1056280,
+      "lang": "en"
+    },
+    {
+      "text": "I found works. There's also rebalancing.",
+      "duration": 3800,
+      "offset": 1058080,
+      "lang": "en"
+    },
+    {
+      "text": "This is how we're going to implement",
+      "duration": 4040,
+      "offset": 1060360,
+      "lang": "en"
+    },
+    {
+      "text": "everything. So we have a base case, we",
+      "duration": 4520,
+      "offset": 1061880,
+      "lang": "en"
+    },
+    {
+      "text": "have the low volume bull strategy,",
+      "duration": 3880,
+      "offset": 1064400,
+      "lang": "en"
+    },
+    {
+      "text": "strategy orchestrator, signal data",
+      "duration": 3840,
+      "offset": 1066400,
+      "lang": "en"
+    },
+    {
+      "text": "class. And then below this we just have",
+      "duration": 3960,
+      "offset": 1068280,
+      "lang": "en"
+    },
+    {
+      "text": "some aliases and labels. This is going",
+      "duration": 3120,
+      "offset": 1070240,
+      "lang": "en"
+    },
+    {
+      "text": "to be the part where you spend the most",
+      "duration": 2760,
+      "offset": 1072240,
+      "lang": "en"
+    },
+    {
+      "text": "amount of time in. And before we even",
+      "duration": 3400,
+      "offset": 1073360,
+      "lang": "en"
+    },
+    {
+      "text": "connect to a brokerage, we want to prove",
+      "duration": 3280,
+      "offset": 1075000,
+      "lang": "en"
+    },
+    {
+      "text": "and make sure that our strategy does",
+      "duration": 3640,
+      "offset": 1076760,
+      "lang": "en"
+    },
+    {
+      "text": "work. So the idea is to tweak this a",
+      "duration": 3400,
+      "offset": 1078280,
+      "lang": "en"
+    },
+    {
+      "text": "bit. What we're going to do is first",
+      "duration": 2760,
+      "offset": 1080400,
+      "lang": "en"
+    },
+    {
+      "text": "send over this prompt just to have our",
+      "duration": 3640,
+      "offset": 1081680,
+      "lang": "en"
+    },
+    {
+      "text": "base strategies layered in. And then",
+      "duration": 3920,
+      "offset": 1083160,
+      "lang": "en"
+    },
+    {
+      "text": "once we add in backtesting, we can go",
+      "duration": 3760,
+      "offset": 1085320,
+      "lang": "en"
+    },
+    {
+      "text": "back and forth with Claude Code to",
+      "duration": 3560,
+      "offset": 1087080,
+      "lang": "en"
+    },
+    {
+      "text": "really optimize a strategy that works",
+      "duration": 4360,
+      "offset": 1089080,
+      "lang": "en"
+    },
+    {
+      "text": "for your specific use case and your",
+      "duration": 4120,
+      "offset": 1090640,
+      "lang": "en"
+    },
+    {
+      "text": "asset class or ticker that you're",
+      "duration": 3640,
+      "offset": 1093440,
+      "lang": "en"
+    },
+    {
+      "text": "trading. And also we can see that all 32",
+      "duration": 3920,
+      "offset": 1094760,
+      "lang": "en"
+    },
+    {
+      "text": "tests pass. Again, we want to make sure",
+      "duration": 3400,
+      "offset": 1097080,
+      "lang": "en"
+    },
+    {
+      "text": "that we have tests on every single phase",
+      "duration": 3480,
+      "offset": 1098680,
+      "lang": "en"
+    },
+    {
+      "text": "of our build out. Below this we can see",
+      "duration": 3480,
+      "offset": 1100480,
+      "lang": "en"
+    },
+    {
+      "text": "our different strategies, which again is",
+      "duration": 3800,
+      "offset": 1102160,
+      "lang": "en"
+    },
+    {
+      "text": "a very general strategy that you would",
+      "duration": 3760,
+      "offset": 1103960,
+      "lang": "en"
+    },
+    {
+      "text": "obviously change based on how you trade",
+      "duration": 3240,
+      "offset": 1105960,
+      "lang": "en"
+    },
+    {
+      "text": "and based on what tickers you're trading",
+      "duration": 2960,
+      "offset": 1107720,
+      "lang": "en"
+    },
+    {
+      "text": "as well. We just have different",
+      "duration": 3520,
+      "offset": 1109200,
+      "lang": "en"
+    },
+    {
+      "text": "strategies on the type of regime. Below",
+      "duration": 4000,
+      "offset": 1110680,
+      "lang": "en"
+    },
+    {
+      "text": "this we have the key components. Next,",
+      "duration": 3440,
+      "offset": 1112720,
+      "lang": "en"
+    },
+    {
+      "text": "what we're going to want to do is build",
+      "duration": 3480,
+      "offset": 1114680,
+      "lang": "en"
+    },
+    {
+      "text": "out the walk forward backtesting engine.",
+      "duration": 3840,
+      "offset": 1116160,
+      "lang": "en"
+    },
+    {
+      "text": "And this is what's going to allow us to",
+      "duration": 3480,
+      "offset": 1118160,
+      "lang": "en"
+    },
+    {
+      "text": "test out that strategy we just",
+      "duration": 3360,
+      "offset": 1120000,
+      "lang": "en"
+    },
+    {
+      "text": "implemented to see if it works on blind",
+      "duration": 3600,
+      "offset": 1121640,
+      "lang": "en"
+    },
+    {
+      "text": "data historically and also how it's",
+      "duration": 3640,
+      "offset": 1123360,
+      "lang": "en"
+    },
+    {
+      "text": "potentially going to do in the future.",
+      "duration": 3000,
+      "offset": 1125240,
+      "lang": "en"
+    },
+    {
+      "text": "So what we're going to be doing here is",
+      "duration": 3440,
+      "offset": 1127000,
+      "lang": "en"
+    },
+    {
+      "text": "splitting data into rolling windows. And",
+      "duration": 4400,
+      "offset": 1128240,
+      "lang": "en"
+    },
+    {
+      "text": "this allows us to do an allocation based",
+      "duration": 4000,
+      "offset": 1130440,
+      "lang": "en"
+    },
+    {
+      "text": "walk forward backtest. This isn't like a",
+      "duration": 3960,
+      "offset": 1132640,
+      "lang": "en"
+    },
+    {
+      "text": "traditional backtest because typically",
+      "duration": 4160,
+      "offset": 1134440,
+      "lang": "en"
+    },
+    {
+      "text": "you would have all the data, find the",
+      "duration": 4600,
+      "offset": 1136600,
+      "lang": "en"
+    },
+    {
+      "text": "perfect settings in hindsight, and then",
+      "duration": 4240,
+      "offset": 1138600,
+      "lang": "en"
+    },
+    {
+      "text": "have it pretend that it predicted the",
+      "duration": 3520,
+      "offset": 1141200,
+      "lang": "en"
+    },
+    {
+      "text": "future. With this we're able to run",
+      "duration": 4200,
+      "offset": 1142840,
+      "lang": "en"
+    },
+    {
+      "text": "blind test historically to see how it",
+      "duration": 3960,
+      "offset": 1144720,
+      "lang": "en"
+    },
+    {
+      "text": "would have actually done without having",
+      "duration": 3480,
+      "offset": 1147040,
+      "lang": "en"
+    },
+    {
+      "text": "all the data beforehand. And I'm just",
+      "duration": 3160,
+      "offset": 1148680,
+      "lang": "en"
+    },
+    {
+      "text": "expanding out this prompt just so you",
+      "duration": 3120,
+      "offset": 1150520,
+      "lang": "en"
+    },
+    {
+      "text": "can read it a bit more clearly. If you",
+      "duration": 3000,
+      "offset": 1151840,
+      "lang": "en"
+    },
+    {
+      "text": "want to pause in certain parts of the",
+      "duration": 3280,
+      "offset": 1153640,
+      "lang": "en"
+    },
+    {
+      "text": "video, you can and take in some of these",
+      "duration": 4320,
+      "offset": 1154840,
+      "lang": "en"
+    },
+    {
+      "text": "concepts and then basically tailor it to",
+      "duration": 4280,
+      "offset": 1156920,
+      "lang": "en"
+    },
+    {
+      "text": "whatever strategy you're running. But",
+      "duration": 4000,
+      "offset": 1159160,
+      "lang": "en"
+    },
+    {
+      "text": "the logic should remain largely the",
+      "duration": 3840,
+      "offset": 1161200,
+      "lang": "en"
+    },
+    {
+      "text": "same. So the idea is that we want to",
+      "duration": 3840,
+      "offset": 1163160,
+      "lang": "en"
+    },
+    {
+      "text": "build out this walk-forward optimization",
+      "duration": 3760,
+      "offset": 1165040,
+      "lang": "en"
+    },
+    {
+      "text": "engine. So we'll have rolling windows",
+      "duration": 4080,
+      "offset": 1167000,
+      "lang": "en"
+    },
+    {
+      "text": "and the in-sample windows will be 252",
+      "duration": 3640,
+      "offset": 1168800,
+      "lang": "en"
+    },
+    {
+      "text": "trading days.",
+      "duration": 3160,
+      "offset": 1171080,
+      "lang": "en"
+    },
+    {
+      "text": "Out of sample will be around 6 months",
+      "duration": 3400,
+      "offset": 1172440,
+      "lang": "en"
+    },
+    {
+      "text": "for evaluations. So you can see how",
+      "duration": 3160,
+      "offset": 1174240,
+      "lang": "en"
+    },
+    {
+      "text": "we're running this allocation-based",
+      "duration": 4240,
+      "offset": 1175840,
+      "lang": "en"
+    },
+    {
+      "text": "backtest. Below this we have the math as",
+      "duration": 5160,
+      "offset": 1177400,
+      "lang": "en"
+    },
+    {
+      "text": "well as realistic simulations. This is",
+      "duration": 4320,
+      "offset": 1180080,
+      "lang": "en"
+    },
+    {
+      "text": "just for slippage. And then finally we",
+      "duration": 3960,
+      "offset": 1182560,
+      "lang": "en"
+    },
+    {
+      "text": "have performance metrics. So we want to",
+      "duration": 3760,
+      "offset": 1184400,
+      "lang": "en"
+    },
+    {
+      "text": "calculate the total return, the sharp",
+      "duration": 4760,
+      "offset": 1186520,
+      "lang": "en"
+    },
+    {
+      "text": "ratio, max drawdowns, win rates, total",
+      "duration": 5000,
+      "offset": 1188160,
+      "lang": "en"
+    },
+    {
+      "text": "trades, things like that just be able to",
+      "duration": 4200,
+      "offset": 1191280,
+      "lang": "en"
+    },
+    {
+      "text": "quantify how it actually performed. Then",
+      "duration": 3280,
+      "offset": 1193160,
+      "lang": "en"
+    },
+    {
+      "text": "we'll want to make sure that this is",
+      "duration": 3320,
+      "offset": 1195480,
+      "lang": "en"
+    },
+    {
+      "text": "separated out by regime as well as",
+      "duration": 4280,
+      "offset": 1196440,
+      "lang": "en"
+    },
+    {
+      "text": "confidence bucketed so we know if it's",
+      "duration": 3560,
+      "offset": 1198800,
+      "lang": "en"
+    },
+    {
+      "text": "high confidence trades that are",
+      "duration": 3360,
+      "offset": 1200720,
+      "lang": "en"
+    },
+    {
+      "text": "outperforming low confidence trades and",
+      "duration": 3200,
+      "offset": 1202360,
+      "lang": "en"
+    },
+    {
+      "text": "vice versa. Then we're going to want to",
+      "duration": 3160,
+      "offset": 1204080,
+      "lang": "en"
+    },
+    {
+      "text": "compare the backtest to three main",
+      "duration": 3840,
+      "offset": 1205560,
+      "lang": "en"
+    },
+    {
+      "text": "benchmarks. The first is buy and hold.",
+      "duration": 3880,
+      "offset": 1207240,
+      "lang": "en"
+    },
+    {
+      "text": "Obviously, if you were to take a ticker,",
+      "duration": 4320,
+      "offset": 1209400,
+      "lang": "en"
+    },
+    {
+      "text": "you would see how our strategy performed",
+      "duration": 4720,
+      "offset": 1211120,
+      "lang": "en"
+    },
+    {
+      "text": "simply by actively trading it versus",
+      "duration": 3720,
+      "offset": 1213720,
+      "lang": "en"
+    },
+    {
+      "text": "just buying and holding for that entire",
+      "duration": 3640,
+      "offset": 1215840,
+      "lang": "en"
+    },
+    {
+      "text": "historical window. We would also want to",
+      "duration": 4160,
+      "offset": 1217440,
+      "lang": "en"
+    },
+    {
+      "text": "compare against the 200-day SMA trend",
+      "duration": 3720,
+      "offset": 1219480,
+      "lang": "en"
+    },
+    {
+      "text": "following. This is one of the most",
+      "duration": 3440,
+      "offset": 1221600,
+      "lang": "en"
+    },
+    {
+      "text": "common systemic strategies and then",
+      "duration": 3680,
+      "offset": 1223200,
+      "lang": "en"
+    },
+    {
+      "text": "below this we just have a random entry",
+      "duration": 3960,
+      "offset": 1225040,
+      "lang": "en"
+    },
+    {
+      "text": "and random allocation changes with same",
+      "duration": 3920,
+      "offset": 1226880,
+      "lang": "en"
+    },
+    {
+      "text": "risk rules. And then if you want to go",
+      "duration": 4040,
+      "offset": 1229000,
+      "lang": "en"
+    },
+    {
+      "text": "even more in-depth, we have stress tests",
+      "duration": 4000,
+      "offset": 1230800,
+      "lang": "en"
+    },
+    {
+      "text": "that just basically inject random crash",
+      "duration": 4000,
+      "offset": 1233040,
+      "lang": "en"
+    },
+    {
+      "text": "events. So this is just to bake in very",
+      "duration": 5120,
+      "offset": 1234800,
+      "lang": "en"
+    },
+    {
+      "text": "specific like 10 to 15% in a day drops.",
+      "duration": 4440,
+      "offset": 1237040,
+      "lang": "en"
+    },
+    {
+      "text": "So on this step, obviously you're going",
+      "duration": 2960,
+      "offset": 1239920,
+      "lang": "en"
+    },
+    {
+      "text": "to need to go back and forth with your",
+      "duration": 3160,
+      "offset": 1241480,
+      "lang": "en"
+    },
+    {
+      "text": "own strategy. Make sure that you're",
+      "duration": 3360,
+      "offset": 1242880,
+      "lang": "en"
+    },
+    {
+      "text": "backtesting it properly. This is",
+      "duration": 3280,
+      "offset": 1244640,
+      "lang": "en"
+    },
+    {
+      "text": "honestly going to take the longest",
+      "duration": 3480,
+      "offset": 1246240,
+      "lang": "en"
+    },
+    {
+      "text": "amount of time at least for you because",
+      "duration": 3400,
+      "offset": 1247920,
+      "lang": "en"
+    },
+    {
+      "text": "once you do have a strategy dialed in,",
+      "duration": 3080,
+      "offset": 1249720,
+      "lang": "en"
+    },
+    {
+      "text": "you're probably going to need a lot of",
+      "duration": 3600,
+      "offset": 1251320,
+      "lang": "en"
+    },
+    {
+      "text": "iterations before you find something",
+      "duration": 3760,
+      "offset": 1252800,
+      "lang": "en"
+    },
+    {
+      "text": "that really does pass all these stress",
+      "duration": 2800,
+      "offset": 1254920,
+      "lang": "en"
+    },
+    {
+      "text": "tests as well as the benchmark",
+      "duration": 3000,
+      "offset": 1256560,
+      "lang": "en"
+    },
+    {
+      "text": "comparisons. After you go back and forth",
+      "duration": 3640,
+      "offset": 1257720,
+      "lang": "en"
+    },
+    {
+      "text": "with Quad Code, you should end up with",
+      "duration": 3760,
+      "offset": 1259560,
+      "lang": "en"
+    },
+    {
+      "text": "first a backtester file that will show",
+      "duration": 3960,
+      "offset": 1261360,
+      "lang": "en"
+    },
+    {
+      "text": "all of the windows that it's currently",
+      "duration": 4040,
+      "offset": 1263320,
+      "lang": "en"
+    },
+    {
+      "text": "testing your strategy on as well as the",
+      "duration": 3920,
+      "offset": 1265320,
+      "lang": "en"
+    },
+    {
+      "text": "other components. And then below this,",
+      "duration": 3280,
+      "offset": 1267360,
+      "lang": "en"
+    },
+    {
+      "text": "you should have a performance file that",
+      "duration": 2960,
+      "offset": 1269240,
+      "lang": "en"
+    },
+    {
+      "text": "shows all the metrics. So, your core",
+      "duration": 4400,
+      "offset": 1270640,
+      "lang": "en"
+    },
+    {
+      "text": "metrics, trade stats, regime tables,",
+      "duration": 4560,
+      "offset": 1272200,
+      "lang": "en"
+    },
+    {
+      "text": "confidence buckets, things of that sort.",
+      "duration": 2920,
+      "offset": 1275040,
+      "lang": "en"
+    },
+    {
+      "text": "So, you can see how your strategy",
+      "duration": 3560,
+      "offset": 1276760,
+      "lang": "en"
+    },
+    {
+      "text": "performed. And obviously, you would want",
+      "duration": 3720,
+      "offset": 1277960,
+      "lang": "en"
+    },
+    {
+      "text": "to go back to the drawing board, change",
+      "duration": 3360,
+      "offset": 1280320,
+      "lang": "en"
+    },
+    {
+      "text": "up your strategy, things of that sort if",
+      "duration": 4560,
+      "offset": 1281680,
+      "lang": "en"
+    },
+    {
+      "text": "your performance hasn't been too stellar",
+      "duration": 4480,
+      "offset": 1283680,
+      "lang": "en"
+    },
+    {
+      "text": "historically, at least. And then below",
+      "duration": 3440,
+      "offset": 1286240,
+      "lang": "en"
+    },
+    {
+      "text": "this, we should have stress test. This",
+      "duration": 3800,
+      "offset": 1288160,
+      "lang": "en"
+    },
+    {
+      "text": "just shows how your performance handled",
+      "duration": 4880,
+      "offset": 1289680,
+      "lang": "en"
+    },
+    {
+      "text": "under extreme stress in the market. And",
+      "duration": 4800,
+      "offset": 1291960,
+      "lang": "en"
+    },
+    {
+      "text": "all of this information should be tested",
+      "duration": 5160,
+      "offset": 1294560,
+      "lang": "en"
+    },
+    {
+      "text": "and should pass based on our prompt.",
+      "duration": 4800,
+      "offset": 1296760,
+      "lang": "en"
+    },
+    {
+      "text": "Now, after we verify and validate the",
+      "duration": 3680,
+      "offset": 1299720,
+      "lang": "en"
+    },
+    {
+      "text": "backtesting results, what we need to do",
+      "duration": 4000,
+      "offset": 1301560,
+      "lang": "en"
+    },
+    {
+      "text": "is build a layer that guarantees in the",
+      "duration": 3480,
+      "offset": 1303400,
+      "lang": "en"
+    },
+    {
+      "text": "worst case of trading, it's going to",
+      "duration": 2880,
+      "offset": 1305560,
+      "lang": "en"
+    },
+    {
+      "text": "stop our system. And this is what I",
+      "duration": 3080,
+      "offset": 1306880,
+      "lang": "en"
+    },
+    {
+      "text": "talked about earlier, which is the risk",
+      "duration": 3840,
+      "offset": 1308440,
+      "lang": "en"
+    },
+    {
+      "text": "management layer. This is probably the",
+      "duration": 4480,
+      "offset": 1309960,
+      "lang": "en"
+    },
+    {
+      "text": "most important system in your entire",
+      "duration": 3840,
+      "offset": 1312280,
+      "lang": "en"
+    },
+    {
+      "text": "trading framework, more important than",
+      "duration": 4240,
+      "offset": 1314440,
+      "lang": "en"
+    },
+    {
+      "text": "the HMMs, even. Because a mediocre",
+      "duration": 4640,
+      "offset": 1316120,
+      "lang": "en"
+    },
+    {
+      "text": "strategy with a great risk management",
+      "duration": 4560,
+      "offset": 1318680,
+      "lang": "en"
+    },
+    {
+      "text": "layer only loses money a little bit. If",
+      "duration": 4360,
+      "offset": 1320760,
+      "lang": "en"
+    },
+    {
+      "text": "you had a great strategy, but with bad",
+      "duration": 3520,
+      "offset": 1323240,
+      "lang": "en"
+    },
+    {
+      "text": "risk management, you could basically",
+      "duration": 3000,
+      "offset": 1325120,
+      "lang": "en"
+    },
+    {
+      "text": "blow up your account. So, basically, you",
+      "duration": 3000,
+      "offset": 1326760,
+      "lang": "en"
+    },
+    {
+      "text": "can think of this risk management as",
+      "duration": 3720,
+      "offset": 1328120,
+      "lang": "en"
+    },
+    {
+      "text": "having the absolute veto power over",
+      "duration": 4280,
+      "offset": 1329760,
+      "lang": "en"
+    },
+    {
+      "text": "everything. We'll have circuit breakers",
+      "duration": 3840,
+      "offset": 1331840,
+      "lang": "en"
+    },
+    {
+      "text": "basically built in here. So, if it's",
+      "duration": 4240,
+      "offset": 1334040,
+      "lang": "en"
+    },
+    {
+      "text": "down 2% in a single day, all sizes are",
+      "duration": 5560,
+      "offset": 1335680,
+      "lang": "en"
+    },
+    {
+      "text": "cut in half. If it's down over 3%, close",
+      "duration": 5680,
+      "offset": 1338280,
+      "lang": "en"
+    },
+    {
+      "text": "everything. If it's down 5% in a week,",
+      "duration": 4400,
+      "offset": 1341240,
+      "lang": "en"
+    },
+    {
+      "text": "then you want to half your sizes. If",
+      "duration": 3360,
+      "offset": 1343960,
+      "lang": "en"
+    },
+    {
+      "text": "it's down 10% from peak, so you have a",
+      "duration": 3840,
+      "offset": 1345640,
+      "lang": "en"
+    },
+    {
+      "text": "10% drawdown, the bot just stops",
+      "duration": 3920,
+      "offset": 1347320,
+      "lang": "en"
+    },
+    {
+      "text": "completely and writes a block file that",
+      "duration": 3760,
+      "offset": 1349480,
+      "lang": "en"
+    },
+    {
+      "text": "you have to manually delete. These are",
+      "duration": 3840,
+      "offset": 1351240,
+      "lang": "en"
+    },
+    {
+      "text": "here just to make sure that you don't",
+      "duration": 3080,
+      "offset": 1353240,
+      "lang": "en"
+    },
+    {
+      "text": "blow up your account, right? You can",
+      "duration": 2880,
+      "offset": 1355080,
+      "lang": "en"
+    },
+    {
+      "text": "have a great strategy, but a few bad",
+      "duration": 3000,
+      "offset": 1356320,
+      "lang": "en"
+    },
+    {
+      "text": "days can basically trigger some of",
+      "duration": 2480,
+      "offset": 1357960,
+      "lang": "en"
+    },
+    {
+      "text": "these. And if you don't have these in",
+      "duration": 3240,
+      "offset": 1359320,
+      "lang": "en"
+    },
+    {
+      "text": "place, things can spiral out of control",
+      "duration": 4680,
+      "offset": 1360440,
+      "lang": "en"
+    },
+    {
+      "text": "fairly quickly. And this last one here",
+      "duration": 4040,
+      "offset": 1362560,
+      "lang": "en"
+    },
+    {
+      "text": "that I have highlighted is pretty",
+      "duration": 4080,
+      "offset": 1365120,
+      "lang": "en"
+    },
+    {
+      "text": "deliberate. If it's down 10%, if you see",
+      "duration": 4200,
+      "offset": 1366600,
+      "lang": "en"
+    },
+    {
+      "text": "how it's going to write this file, what",
+      "duration": 3440,
+      "offset": 1369200,
+      "lang": "en"
+    },
+    {
+      "text": "that means is that you have to go look",
+      "duration": 3560,
+      "offset": 1370800,
+      "lang": "en"
+    },
+    {
+      "text": "at what happened. It's going to go ahead",
+      "duration": 3360,
+      "offset": 1372640,
+      "lang": "en"
+    },
+    {
+      "text": "and write a file for you, so you",
+      "duration": 3160,
+      "offset": 1374360,
+      "lang": "en"
+    },
+    {
+      "text": "understand what went wrong in the",
+      "duration": 3520,
+      "offset": 1376000,
+      "lang": "en"
+    },
+    {
+      "text": "strategy if it was really down 10% from",
+      "duration": 4480,
+      "offset": 1377520,
+      "lang": "en"
+    },
+    {
+      "text": "peak. Uh you go inside, you understand",
+      "duration": 4080,
+      "offset": 1379520,
+      "lang": "en"
+    },
+    {
+      "text": "why this occurred, and then you have to",
+      "duration": 3360,
+      "offset": 1382000,
+      "lang": "en"
+    },
+    {
+      "text": "consciously and manually turn it back",
+      "duration": 4200,
+      "offset": 1383600,
+      "lang": "en"
+    },
+    {
+      "text": "on. So, this forces you to go into the",
+      "duration": 4800,
+      "offset": 1385360,
+      "lang": "en"
+    },
+    {
+      "text": "system, see what happened, and you need",
+      "duration": 4320,
+      "offset": 1387800,
+      "lang": "en"
+    },
+    {
+      "text": "to manually delete this file to resume",
+      "duration": 3720,
+      "offset": 1390160,
+      "lang": "en"
+    },
+    {
+      "text": "your strategy. And this is just to make",
+      "duration": 4560,
+      "offset": 1392120,
+      "lang": "en"
+    },
+    {
+      "text": "sure that you trust the strategy moving",
+      "duration": 4320,
+      "offset": 1393880,
+      "lang": "en"
+    },
+    {
+      "text": "forward because this can be a pretty",
+      "duration": 3240,
+      "offset": 1396680,
+      "lang": "en"
+    },
+    {
+      "text": "significant blow in your account. Now,",
+      "duration": 3920,
+      "offset": 1398200,
+      "lang": "en"
+    },
+    {
+      "text": "below this we have position level risk.",
+      "duration": 4320,
+      "offset": 1399920,
+      "lang": "en"
+    },
+    {
+      "text": "This is basically sizing. So, every",
+      "duration": 4760,
+      "offset": 1402120,
+      "lang": "en"
+    },
+    {
+      "text": "trade risks a maximum 1% of your",
+      "duration": 5040,
+      "offset": 1404240,
+      "lang": "en"
+    },
+    {
+      "text": "portfolio. Now, you can obviously change",
+      "duration": 4880,
+      "offset": 1406880,
+      "lang": "en"
+    },
+    {
+      "text": "this if you want a bit more risky. Then",
+      "duration": 4000,
+      "offset": 1409280,
+      "lang": "en"
+    },
+    {
+      "text": "below this, we have leverage, which",
+      "duration": 3400,
+      "offset": 1411760,
+      "lang": "en"
+    },
+    {
+      "text": "again you would want to change to your",
+      "duration": 3880,
+      "offset": 1413280,
+      "lang": "en"
+    },
+    {
+      "text": "own tolerances, what you're comfortable",
+      "duration": 3920,
+      "offset": 1415160,
+      "lang": "en"
+    },
+    {
+      "text": "with. Then below this, we have order",
+      "duration": 4400,
+      "offset": 1417160,
+      "lang": "en"
+    },
+    {
+      "text": "validation and then correlation checks.",
+      "duration": 4120,
+      "offset": 1419080,
+      "lang": "en"
+    },
+    {
+      "text": "So, before opening a new position, the",
+      "duration": 3640,
+      "offset": 1421560,
+      "lang": "en"
+    },
+    {
+      "text": "bot checks if it's correlated with any",
+      "duration": 4200,
+      "offset": 1423200,
+      "lang": "en"
+    },
+    {
+      "text": "existing positions. This is just a way",
+      "duration": 3680,
+      "offset": 1425200,
+      "lang": "en"
+    },
+    {
+      "text": "to make sure that we're not entering the",
+      "duration": 3720,
+      "offset": 1427400,
+      "lang": "en"
+    },
+    {
+      "text": "same type of trades. But the idea here",
+      "duration": 3720,
+      "offset": 1428880,
+      "lang": "en"
+    },
+    {
+      "text": "is that I want to give you the core",
+      "duration": 4480,
+      "offset": 1431120,
+      "lang": "en"
+    },
+    {
+      "text": "logic that should be able to be applied",
+      "duration": 4800,
+      "offset": 1432600,
+      "lang": "en"
+    },
+    {
+      "text": "generally, no matter what kind of trader",
+      "duration": 3440,
+      "offset": 1435600,
+      "lang": "en"
+    },
+    {
+      "text": "you are, but obviously change some of",
+      "duration": 3600,
+      "offset": 1437400,
+      "lang": "en"
+    },
+    {
+      "text": "these settings if you want to. So, here",
+      "duration": 3600,
+      "offset": 1439040,
+      "lang": "en"
+    },
+    {
+      "text": "you can see that the risk manager has",
+      "duration": 3520,
+      "offset": 1441000,
+      "lang": "en"
+    },
+    {
+      "text": "been built with all the thresholds. You",
+      "duration": 3960,
+      "offset": 1442640,
+      "lang": "en"
+    },
+    {
+      "text": "can see the circuit breakers and all of",
+      "duration": 3720,
+      "offset": 1444520,
+      "lang": "en"
+    },
+    {
+      "text": "their trigger levels. And then below",
+      "duration": 3000,
+      "offset": 1446600,
+      "lang": "en"
+    },
+    {
+      "text": "this, we have, you know, the minimum",
+      "duration": 3760,
+      "offset": 1448240,
+      "lang": "en"
+    },
+    {
+      "text": "size, risk-based sizing, position",
+      "duration": 3720,
+      "offset": 1449600,
+      "lang": "en"
+    },
+    {
+      "text": "limits, things of that sort. So,",
+      "duration": 2920,
+      "offset": 1452000,
+      "lang": "en"
+    },
+    {
+      "text": "everything we talked about. You can go",
+      "duration": 2760,
+      "offset": 1453320,
+      "lang": "en"
+    },
+    {
+      "text": "ahead into the file if you want to",
+      "duration": 3480,
+      "offset": 1454920,
+      "lang": "en"
+    },
+    {
+      "text": "validate, but we have test again on",
+      "duration": 3600,
+      "offset": 1456080,
+      "lang": "en"
+    },
+    {
+      "text": "every single step to make sure that",
+      "duration": 2960,
+      "offset": 1458400,
+      "lang": "en"
+    },
+    {
+      "text": "everything is passing. So, now if you",
+      "duration": 3280,
+      "offset": 1459680,
+      "lang": "en"
+    },
+    {
+      "text": "were to look at the timeline of our",
+      "duration": 3680,
+      "offset": 1461360,
+      "lang": "en"
+    },
+    {
+      "text": "automatic trading bot, we've built out",
+      "duration": 3520,
+      "offset": 1462960,
+      "lang": "en"
+    },
+    {
+      "text": "the brain that's going to classify the",
+      "duration": 3200,
+      "offset": 1465040,
+      "lang": "en"
+    },
+    {
+      "text": "market. Uh this is everything that",
+      "duration": 3720,
+      "offset": 1466480,
+      "lang": "en"
+    },
+    {
+      "text": "drives decisions. We've built out the",
+      "duration": 3960,
+      "offset": 1468240,
+      "lang": "en"
+    },
+    {
+      "text": "allocation and strategies. These are how",
+      "duration": 3800,
+      "offset": 1470200,
+      "lang": "en"
+    },
+    {
+      "text": "much of the portfolio to invest in and",
+      "duration": 4120,
+      "offset": 1472200,
+      "lang": "en"
+    },
+    {
+      "text": "how to invest. And we just finished out",
+      "duration": 4440,
+      "offset": 1474000,
+      "lang": "en"
+    },
+    {
+      "text": "the safety as well. So, this way we have",
+      "duration": 4160,
+      "offset": 1476320,
+      "lang": "en"
+    },
+    {
+      "text": "circuit breakers in case losses hit a",
+      "duration": 3640,
+      "offset": 1478440,
+      "lang": "en"
+    },
+    {
+      "text": "certain level. So, with this, we",
+      "duration": 3520,
+      "offset": 1480480,
+      "lang": "en"
+    },
+    {
+      "text": "basically have the core engine done.",
+      "duration": 3600,
+      "offset": 1482080,
+      "lang": "en"
+    },
+    {
+      "text": "What we next need to do is connect this",
+      "duration": 4120,
+      "offset": 1484000,
+      "lang": "en"
+    },
+    {
+      "text": "to a brokerage, and in our case Alpaca.",
+      "duration": 3720,
+      "offset": 1485680,
+      "lang": "en"
+    },
+    {
+      "text": "And then with the brokerage, we're able",
+      "duration": 3720,
+      "offset": 1488120,
+      "lang": "en"
+    },
+    {
+      "text": "to send trades directly from the system",
+      "duration": 4560,
+      "offset": 1489400,
+      "lang": "en"
+    },
+    {
+      "text": "here to the broker. The broker can",
+      "duration": 3720,
+      "offset": 1491840,
+      "lang": "en"
+    },
+    {
+      "text": "automatically place trades for you",
+      "duration": 3400,
+      "offset": 1493960,
+      "lang": "en"
+    },
+    {
+      "text": "without you lifting a finger, hence",
+      "duration": 3760,
+      "offset": 1495560,
+      "lang": "en"
+    },
+    {
+      "text": "making it fully automatic. So now, let's",
+      "duration": 3160,
+      "offset": 1497360,
+      "lang": "en"
+    },
+    {
+      "text": "go ahead and sell back and I'll show you",
+      "duration": 2800,
+      "offset": 1499320,
+      "lang": "en"
+    },
+    {
+      "text": "how to create your free account and",
+      "duration": 4040,
+      "offset": 1500520,
+      "lang": "en"
+    },
+    {
+      "text": "connect everything inside Cloud Code. So",
+      "duration": 3680,
+      "offset": 1502120,
+      "lang": "en"
+    },
+    {
+      "text": "what you'll first want to do is head",
+      "duration": 3280,
+      "offset": 1504560,
+      "lang": "en"
+    },
+    {
+      "text": "over to alpaca.markets",
+      "duration": 4160,
+      "offset": 1505800,
+      "lang": "en"
+    },
+    {
+      "text": "and this is the API for stocks, options,",
+      "duration": 4120,
+      "offset": 1507840,
+      "lang": "en"
+    },
+    {
+      "text": "and crypto trading. This way you'll be",
+      "duration": 3920,
+      "offset": 1509960,
+      "lang": "en"
+    },
+    {
+      "text": "able to automatically place trades from",
+      "duration": 4200,
+      "offset": 1511960,
+      "lang": "en"
+    },
+    {
+      "text": "our system for all these asset classes,",
+      "duration": 3880,
+      "offset": 1513880,
+      "lang": "en"
+    },
+    {
+      "text": "just not futures. Go ahead and click",
+      "duration": 3560,
+      "offset": 1516160,
+      "lang": "en"
+    },
+    {
+      "text": "sign up and what you want to use is the",
+      "duration": 3960,
+      "offset": 1517760,
+      "lang": "en"
+    },
+    {
+      "text": "trading API. Now once you've created",
+      "duration": 3800,
+      "offset": 1519720,
+      "lang": "en"
+    },
+    {
+      "text": "your account, it'll automatically place",
+      "duration": 3760,
+      "offset": 1521720,
+      "lang": "en"
+    },
+    {
+      "text": "you in a paper trading account. Now what",
+      "duration": 3240,
+      "offset": 1523520,
+      "lang": "en"
+    },
+    {
+      "text": "I would recommend is to start with this",
+      "duration": 3040,
+      "offset": 1525480,
+      "lang": "en"
+    },
+    {
+      "text": "trading account first, connect your",
+      "duration": 3640,
+      "offset": 1526760,
+      "lang": "en"
+    },
+    {
+      "text": "system to it, monitor it for at least a",
+      "duration": 3240,
+      "offset": 1528520,
+      "lang": "en"
+    },
+    {
+      "text": "month to make sure that everything is",
+      "duration": 3840,
+      "offset": 1530400,
+      "lang": "en"
+    },
+    {
+      "text": "working and that your strategy does seem",
+      "duration": 4400,
+      "offset": 1531760,
+      "lang": "en"
+    },
+    {
+      "text": "to potentially have an edge. And only",
+      "duration": 3680,
+      "offset": 1534240,
+      "lang": "en"
+    },
+    {
+      "text": "once you've done extensive testing and",
+      "duration": 3480,
+      "offset": 1536160,
+      "lang": "en"
+    },
+    {
+      "text": "even live market testing, would I then",
+      "duration": 3760,
+      "offset": 1537920,
+      "lang": "en"
+    },
+    {
+      "text": "click open live account on that same",
+      "duration": 3760,
+      "offset": 1539640,
+      "lang": "en"
+    },
+    {
+      "text": "strategy. Again, make sure that the",
+      "duration": 3200,
+      "offset": 1541680,
+      "lang": "en"
+    },
+    {
+      "text": "trades are being sent properly, but we",
+      "duration": 3400,
+      "offset": 1543400,
+      "lang": "en"
+    },
+    {
+      "text": "can do this in a paper account. This way",
+      "duration": 3920,
+      "offset": 1544880,
+      "lang": "en"
+    },
+    {
+      "text": "we can validate that our strategy works",
+      "duration": 3520,
+      "offset": 1546800,
+      "lang": "en"
+    },
+    {
+      "text": "in the meantime, make sure that trades",
+      "duration": 3080,
+      "offset": 1548800,
+      "lang": "en"
+    },
+    {
+      "text": "are being sent and then because it's a",
+      "duration": 3200,
+      "offset": 1550320,
+      "lang": "en"
+    },
+    {
+      "text": "paper trading account, we can do as much",
+      "duration": 3480,
+      "offset": 1551880,
+      "lang": "en"
+    },
+    {
+      "text": "testing as you want back and forth to",
+      "duration": 3880,
+      "offset": 1553520,
+      "lang": "en"
+    },
+    {
+      "text": "really hone in our strategies. So inside",
+      "duration": 3360,
+      "offset": 1555360,
+      "lang": "en"
+    },
+    {
+      "text": "your account, what you'll want to do is",
+      "duration": 2960,
+      "offset": 1557400,
+      "lang": "en"
+    },
+    {
+      "text": "scroll all the way down and you should",
+      "duration": 4040,
+      "offset": 1558720,
+      "lang": "en"
+    },
+    {
+      "text": "have a section called API keys. It'll go",
+      "duration": 4240,
+      "offset": 1560360,
+      "lang": "en"
+    },
+    {
+      "text": "ahead and give you a secret key as well",
+      "duration": 4000,
+      "offset": 1562760,
+      "lang": "en"
+    },
+    {
+      "text": "as your API key. So all you need to do",
+      "duration": 4320,
+      "offset": 1564600,
+      "lang": "en"
+    },
+    {
+      "text": "is copy these three things. The first is",
+      "duration": 4040,
+      "offset": 1566760,
+      "lang": "en"
+    },
+    {
+      "text": "this endpoint, this will be your base",
+      "duration": 4520,
+      "offset": 1568920,
+      "lang": "en"
+    },
+    {
+      "text": "URL. Then copy this, this will be your",
+      "duration": 5360,
+      "offset": 1570800,
+      "lang": "en"
+    },
+    {
+      "text": "API key and then copy this, this will be",
+      "duration": 4600,
+      "offset": 1573440,
+      "lang": "en"
+    },
+    {
+      "text": "your secret key. So these are the three",
+      "duration": 3400,
+      "offset": 1576160,
+      "lang": "en"
+    },
+    {
+      "text": "things that'll let you connect from",
+      "duration": 3320,
+      "offset": 1578040,
+      "lang": "en"
+    },
+    {
+      "text": "Cloud Code's trading system that it's",
+      "duration": 5040,
+      "offset": 1579560,
+      "lang": "en"
+    },
+    {
+      "text": "building for you directly to your actual",
+      "duration": 5200,
+      "offset": 1581360,
+      "lang": "en"
+    },
+    {
+      "text": "account here at Alpaca. And then",
+      "duration": 3720,
+      "offset": 1584600,
+      "lang": "en"
+    },
+    {
+      "text": "obviously, this goes without saying,",
+      "duration": 3760,
+      "offset": 1586560,
+      "lang": "en"
+    },
+    {
+      "text": "never share these keys with anybody. I'm",
+      "duration": 3280,
+      "offset": 1588320,
+      "lang": "en"
+    },
+    {
+      "text": "going to regenerate these after this",
+      "duration": 2800,
+      "offset": 1590320,
+      "lang": "en"
+    },
+    {
+      "text": "video as well. This is just to make sure",
+      "duration": 3080,
+      "offset": 1591600,
+      "lang": "en"
+    },
+    {
+      "text": "that no one has access to your funds,",
+      "duration": 3480,
+      "offset": 1593120,
+      "lang": "en"
+    },
+    {
+      "text": "especially if it's a live account. This",
+      "duration": 3040,
+      "offset": 1594680,
+      "lang": "en"
+    },
+    {
+      "text": "is something that we're not going to",
+      "duration": 3280,
+      "offset": 1596600,
+      "lang": "en"
+    },
+    {
+      "text": "have Cloud do for us and the reason for",
+      "duration": 3360,
+      "offset": 1597720,
+      "lang": "en"
+    },
+    {
+      "text": "that is because we don't want to share",
+      "duration": 3160,
+      "offset": 1599880,
+      "lang": "en"
+    },
+    {
+      "text": "sensitive information like API keys",
+      "duration": 3600,
+      "offset": 1601080,
+      "lang": "en"
+    },
+    {
+      "text": "directly to their chat. This is",
+      "duration": 2600,
+      "offset": 1603040,
+      "lang": "en"
+    },
+    {
+      "text": "something we're going to have to do",
+      "duration": 3080,
+      "offset": 1604680,
+      "lang": "en"
+    },
+    {
+      "text": "ourselves and it'll be super simple.",
+      "duration": 4000,
+      "offset": 1605640,
+      "lang": "en"
+    },
+    {
+      "text": "We've already built out the core",
+      "duration": 4280,
+      "offset": 1607760,
+      "lang": "en"
+    },
+    {
+      "text": "structure, so nothing much to do. So if",
+      "duration": 4520,
+      "offset": 1609640,
+      "lang": "en"
+    },
+    {
+      "text": "you go over to get ignore, you can see",
+      "duration": 4120,
+      "offset": 1612040,
+      "lang": "en"
+    },
+    {
+      "text": "that the .env files are going to be",
+      "duration": 3640,
+      "offset": 1614160,
+      "lang": "en"
+    },
+    {
+      "text": "ignored. This means that if you publish",
+      "duration": 3960,
+      "offset": 1616160,
+      "lang": "en"
+    },
+    {
+      "text": "this, your .env files won't ever be",
+      "duration": 4080,
+      "offset": 1617800,
+      "lang": "en"
+    },
+    {
+      "text": "leaked. They're going to be private. And",
+      "duration": 3400,
+      "offset": 1620120,
+      "lang": "en"
+    },
+    {
+      "text": "you can even see an example of what this",
+      "duration": 3640,
+      "offset": 1621880,
+      "lang": "en"
+    },
+    {
+      "text": "looks like. So, Claude code from our",
+      "duration": 3720,
+      "offset": 1623520,
+      "lang": "en"
+    },
+    {
+      "text": "very first prompt has already created",
+      "duration": 4200,
+      "offset": 1625520,
+      "lang": "en"
+    },
+    {
+      "text": "the structure for us. Alpaca API key,",
+      "duration": 3920,
+      "offset": 1627240,
+      "lang": "en"
+    },
+    {
+      "text": "this is just that API key I told you to",
+      "duration": 3520,
+      "offset": 1629720,
+      "lang": "en"
+    },
+    {
+      "text": "copy. Secret key is that secret key I",
+      "duration": 4360,
+      "offset": 1631160,
+      "lang": "en"
+    },
+    {
+      "text": "told you to copy. And then paper, this",
+      "duration": 3840,
+      "offset": 1633240,
+      "lang": "en"
+    },
+    {
+      "text": "can be true. You'll also need the base",
+      "duration": 3120,
+      "offset": 1635520,
+      "lang": "en"
+    },
+    {
+      "text": "URL as well, but since that's not",
+      "duration": 3000,
+      "offset": 1637080,
+      "lang": "en"
+    },
+    {
+      "text": "confidential, we can just type it into",
+      "duration": 3400,
+      "offset": 1638640,
+      "lang": "en"
+    },
+    {
+      "text": "the chat here. What's important is that",
+      "duration": 4400,
+      "offset": 1640080,
+      "lang": "en"
+    },
+    {
+      "text": "we never share the API key or the secret",
+      "duration": 4440,
+      "offset": 1642040,
+      "lang": "en"
+    },
+    {
+      "text": "key to Claude code. We want to just type",
+      "duration": 3840,
+      "offset": 1644480,
+      "lang": "en"
+    },
+    {
+      "text": "this in ourselves. So, all you want to",
+      "duration": 3520,
+      "offset": 1646480,
+      "lang": "en"
+    },
+    {
+      "text": "do is very simple. Go ahead and create a",
+      "duration": 4000,
+      "offset": 1648320,
+      "lang": "en"
+    },
+    {
+      "text": "new file, and then this will be our .env",
+      "duration": 4400,
+      "offset": 1650000,
+      "lang": "en"
+    },
+    {
+      "text": "file. Uh paste it here, and then what",
+      "duration": 4200,
+      "offset": 1652320,
+      "lang": "en"
+    },
+    {
+      "text": "you want to do is fill in your API key,",
+      "duration": 3720,
+      "offset": 1654400,
+      "lang": "en"
+    },
+    {
+      "text": "fill in your secret key, and then keep",
+      "duration": 3320,
+      "offset": 1656520,
+      "lang": "en"
+    },
+    {
+      "text": "this to be true. So, after that, I can",
+      "duration": 3040,
+      "offset": 1658120,
+      "lang": "en"
+    },
+    {
+      "text": "show you the prompt now for the Alpaca",
+      "duration": 3160,
+      "offset": 1659840,
+      "lang": "en"
+    },
+    {
+      "text": "broker integration. What we first want",
+      "duration": 3080,
+      "offset": 1661160,
+      "lang": "en"
+    },
+    {
+      "text": "to do is create this file that's going",
+      "duration": 2880,
+      "offset": 1663000,
+      "lang": "en"
+    },
+    {
+      "text": "to allow us to connect. We already have",
+      "duration": 3440,
+      "offset": 1664240,
+      "lang": "en"
+    },
+    {
+      "text": "the base URL here, so this is the URL",
+      "duration": 3320,
+      "offset": 1665880,
+      "lang": "en"
+    },
+    {
+      "text": "that you copied from that very first",
+      "duration": 3600,
+      "offset": 1667680,
+      "lang": "en"
+    },
+    {
+      "text": "step inside Alpaca. It's going to be",
+      "duration": 3560,
+      "offset": 1669200,
+      "lang": "en"
+    },
+    {
+      "text": "pretty much the same. What you'll see",
+      "duration": 3320,
+      "offset": 1671280,
+      "lang": "en"
+    },
+    {
+      "text": "here is that our credentials are in our",
+      "duration": 4360,
+      "offset": 1672760,
+      "lang": "en"
+    },
+    {
+      "text": ".env files. So, again, never hardcoded.",
+      "duration": 4240,
+      "offset": 1674600,
+      "lang": "en"
+    },
+    {
+      "text": "Then below this, we have all the other",
+      "duration": 3960,
+      "offset": 1677120,
+      "lang": "en"
+    },
+    {
+      "text": "parameters. Broker order executor, this",
+      "duration": 4400,
+      "offset": 1678840,
+      "lang": "en"
+    },
+    {
+      "text": "just lets us actually submit orders,",
+      "duration": 4120,
+      "offset": 1681080,
+      "lang": "en"
+    },
+    {
+      "text": "cancel orders, modify stops, things like",
+      "duration": 3840,
+      "offset": 1683240,
+      "lang": "en"
+    },
+    {
+      "text": "that. We also have a position tracker,",
+      "duration": 3680,
+      "offset": 1685200,
+      "lang": "en"
+    },
+    {
+      "text": "so we're able to see all the orders that",
+      "duration": 3560,
+      "offset": 1687080,
+      "lang": "en"
+    },
+    {
+      "text": "we currently have, as well as market",
+      "duration": 3720,
+      "offset": 1688880,
+      "lang": "en"
+    },
+    {
+      "text": "data. Now, this prompt isn't going to be",
+      "duration": 3480,
+      "offset": 1690640,
+      "lang": "en"
+    },
+    {
+      "text": "something custom like those allocation",
+      "duration": 3240,
+      "offset": 1692600,
+      "lang": "en"
+    },
+    {
+      "text": "strategies. It's pretty much going to be",
+      "duration": 3400,
+      "offset": 1694120,
+      "lang": "en"
+    },
+    {
+      "text": "the same for everyone. So, if you want",
+      "duration": 3040,
+      "offset": 1695840,
+      "lang": "en"
+    },
+    {
+      "text": "to take a screenshot of this section of",
+      "duration": 3480,
+      "offset": 1697520,
+      "lang": "en"
+    },
+    {
+      "text": "the video, feel free to do so. So, now",
+      "duration": 3400,
+      "offset": 1698880,
+      "lang": "en"
+    },
+    {
+      "text": "after we paste this in, it's able to",
+      "duration": 3080,
+      "offset": 1701000,
+      "lang": "en"
+    },
+    {
+      "text": "read our .env files and then help",
+      "duration": 4400,
+      "offset": 1702280,
+      "lang": "en"
+    },
+    {
+      "text": "connect us to the Alpaca API directly.",
+      "duration": 4000,
+      "offset": 1704080,
+      "lang": "en"
+    },
+    {
+      "text": "Now, after we submitted everything, we",
+      "duration": 2880,
+      "offset": 1706680,
+      "lang": "en"
+    },
+    {
+      "text": "just want to do a quick check to make",
+      "duration": 3240,
+      "offset": 1708080,
+      "lang": "en"
+    },
+    {
+      "text": "sure that the API is connected. Confirm",
+      "duration": 4440,
+      "offset": 1709560,
+      "lang": "en"
+    },
+    {
+      "text": "API is connected. The base URL, again,",
+      "duration": 4200,
+      "offset": 1711320,
+      "lang": "en"
+    },
+    {
+      "text": "is that base URL we copied with the",
+      "duration": 3680,
+      "offset": 1714000,
+      "lang": "en"
+    },
+    {
+      "text": "secret and the API keys. And then what",
+      "duration": 3840,
+      "offset": 1715520,
+      "lang": "en"
+    },
+    {
+      "text": "we want to do is place a trade for",
+      "duration": 4040,
+      "offset": 1717680,
+      "lang": "en"
+    },
+    {
+      "text": "Nvidia as a test, and we should see this",
+      "duration": 4480,
+      "offset": 1719360,
+      "lang": "en"
+    },
+    {
+      "text": "trade come through to our Alpaca",
+      "duration": 3600,
+      "offset": 1721720,
+      "lang": "en"
+    },
+    {
+      "text": "dashboard as well. So, go Go and click",
+      "duration": 3240,
+      "offset": 1723840,
+      "lang": "en"
+    },
+    {
+      "text": "enter here. And we can even see here as",
+      "duration": 3240,
+      "offset": 1725320,
+      "lang": "en"
+    },
+    {
+      "text": "it's loading, the API is connected, the",
+      "duration": 3720,
+      "offset": 1727080,
+      "lang": "en"
+    },
+    {
+      "text": "account is active with around 100,000 in",
+      "duration": 4400,
+      "offset": 1728560,
+      "lang": "en"
+    },
+    {
+      "text": "paper equity. Market's currently closed",
+      "duration": 3880,
+      "offset": 1730800,
+      "lang": "en"
+    },
+    {
+      "text": "cuz it's the weekend, but with paper",
+      "duration": 3920,
+      "offset": 1732960,
+      "lang": "en"
+    },
+    {
+      "text": "trading you can still have orders queue.",
+      "duration": 3840,
+      "offset": 1734680,
+      "lang": "en"
+    },
+    {
+      "text": "So, if they're going to place a test buy",
+      "duration": 3360,
+      "offset": 1736880,
+      "lang": "en"
+    },
+    {
+      "text": "for Nvidia, we should be able to see it",
+      "duration": 4520,
+      "offset": 1738520,
+      "lang": "en"
+    },
+    {
+      "text": "inside our Alpaca dashboard. And over",
+      "duration": 4880,
+      "offset": 1740240,
+      "lang": "en"
+    },
+    {
+      "text": "here on the Alpaca dashboard, again,",
+      "duration": 3680,
+      "offset": 1743040,
+      "lang": "en"
+    },
+    {
+      "text": "this is our paper account. If we scroll",
+      "duration": 4520,
+      "offset": 1745120,
+      "lang": "en"
+    },
+    {
+      "text": "down, we can see asset was Nvidia. It",
+      "duration": 4840,
+      "offset": 1746720,
+      "lang": "en"
+    },
+    {
+      "text": "was just a market buy. Uh we can even",
+      "duration": 3920,
+      "offset": 1749640,
+      "lang": "en"
+    },
+    {
+      "text": "see the date was literally right now, so",
+      "duration": 5280,
+      "offset": 1751560,
+      "lang": "en"
+    },
+    {
+      "text": "it was submitted on April 4th at 4:47.",
+      "duration": 4800,
+      "offset": 1753560,
+      "lang": "en"
+    },
+    {
+      "text": "So, this basically confirms to us that",
+      "duration": 4440,
+      "offset": 1756840,
+      "lang": "en"
+    },
+    {
+      "text": "the system is basically connected to our",
+      "duration": 4520,
+      "offset": 1758360,
+      "lang": "en"
+    },
+    {
+      "text": "Alpaca brokerage here. Now that we have",
+      "duration": 3000,
+      "offset": 1761280,
+      "lang": "en"
+    },
+    {
+      "text": "all the components of our system built",
+      "duration": 3520,
+      "offset": 1762880,
+      "lang": "en"
+    },
+    {
+      "text": "out with the brain, HMMs, we have the",
+      "duration": 4880,
+      "offset": 1764280,
+      "lang": "en"
+    },
+    {
+      "text": "strategies, allocations, we also have",
+      "duration": 4760,
+      "offset": 1766400,
+      "lang": "en"
+    },
+    {
+      "text": "the actual brokerage connected as well",
+      "duration": 3840,
+      "offset": 1769160,
+      "lang": "en"
+    },
+    {
+      "text": "as safety, back test, things of that",
+      "duration": 3480,
+      "offset": 1771160,
+      "lang": "en"
+    },
+    {
+      "text": "sort. We just want to connect everything",
+      "duration": 3680,
+      "offset": 1773000,
+      "lang": "en"
+    },
+    {
+      "text": "together with phase seven here. So,",
+      "duration": 3400,
+      "offset": 1774640,
+      "lang": "en"
+    },
+    {
+      "text": "basically, when we start up the system,",
+      "duration": 2720,
+      "offset": 1776680,
+      "lang": "en"
+    },
+    {
+      "text": "we want to load the configuration,",
+      "duration": 4000,
+      "offset": 1778040,
+      "lang": "en"
+    },
+    {
+      "text": "connect to Alpaca, verify the account,",
+      "duration": 4280,
+      "offset": 1779400,
+      "lang": "en"
+    },
+    {
+      "text": "check market hours to see if it's open",
+      "duration": 4160,
+      "offset": 1782040,
+      "lang": "en"
+    },
+    {
+      "text": "or closed, train the HMMs. We would then",
+      "duration": 3880,
+      "offset": 1783680,
+      "lang": "en"
+    },
+    {
+      "text": "want to initialize risk manager,",
+      "duration": 3440,
+      "offset": 1786200,
+      "lang": "en"
+    },
+    {
+      "text": "initialize position tracker, start all",
+      "duration": 3840,
+      "offset": 1787560,
+      "lang": "en"
+    },
+    {
+      "text": "the data feeds, things of that sort. So,",
+      "duration": 3680,
+      "offset": 1789640,
+      "lang": "en"
+    },
+    {
+      "text": "this is basically the bridge that ties",
+      "duration": 4040,
+      "offset": 1791400,
+      "lang": "en"
+    },
+    {
+      "text": "everything we've built thus far. And",
+      "duration": 3600,
+      "offset": 1793320,
+      "lang": "en"
+    },
+    {
+      "text": "then below this, we have the main loop",
+      "duration": 3840,
+      "offset": 1795440,
+      "lang": "en"
+    },
+    {
+      "text": "for each bar close. Default is 5-minute",
+      "duration": 4480,
+      "offset": 1796920,
+      "lang": "en"
+    },
+    {
+      "text": "bars. Then below this, we have shutdowns",
+      "duration": 3760,
+      "offset": 1799280,
+      "lang": "en"
+    },
+    {
+      "text": "in case that needs to be used, error",
+      "duration": 4040,
+      "offset": 1801400,
+      "lang": "en"
+    },
+    {
+      "text": "handling just to ensure that if there's",
+      "duration": 4560,
+      "offset": 1803040,
+      "lang": "en"
+    },
+    {
+      "text": "any issues with the Alpaca API, if the",
+      "duration": 4040,
+      "offset": 1805440,
+      "lang": "en"
+    },
+    {
+      "text": "server is down on their end, or if",
+      "duration": 4640,
+      "offset": 1807600,
+      "lang": "en"
+    },
+    {
+      "text": "there's any HMM errors on our end, uh",
+      "duration": 4920,
+      "offset": 1809480,
+      "lang": "en"
+    },
+    {
+      "text": "data feed drops, things of that sort.",
+      "duration": 3920,
+      "offset": 1812240,
+      "lang": "en"
+    },
+    {
+      "text": "This is just sure that our engine keeps",
+      "duration": 3880,
+      "offset": 1814400,
+      "lang": "en"
+    },
+    {
+      "text": "running smoothly no matter what happens",
+      "duration": 3960,
+      "offset": 1816160,
+      "lang": "en"
+    },
+    {
+      "text": "either on our end or their end. So, now",
+      "duration": 3080,
+      "offset": 1818280,
+      "lang": "en"
+    },
+    {
+      "text": "let's go ahead and copy and paste this",
+      "duration": 2720,
+      "offset": 1820120,
+      "lang": "en"
+    },
+    {
+      "text": "into Cloud Code, and this will",
+      "duration": 3160,
+      "offset": 1821360,
+      "lang": "en"
+    },
+    {
+      "text": "essentially glue everything. And while",
+      "duration": 3600,
+      "offset": 1822840,
+      "lang": "en"
+    },
+    {
+      "text": "we wait for this to run, basically, uh",
+      "duration": 3400,
+      "offset": 1824520,
+      "lang": "en"
+    },
+    {
+      "text": "this is the last step before we create",
+      "duration": 2800,
+      "offset": 1826440,
+      "lang": "en"
+    },
+    {
+      "text": "the dashboard to visually show",
+      "duration": 3440,
+      "offset": 1827920,
+      "lang": "en"
+    },
+    {
+      "text": "everything, but technically, once this",
+      "duration": 3880,
+      "offset": 1829240,
+      "lang": "en"
+    },
+    {
+      "text": "is wired, we don't really need a",
+      "duration": 2960,
+      "offset": 1831360,
+      "lang": "en"
+    },
+    {
+      "text": "dashboard. That's only if you want to",
+      "duration": 2440,
+      "offset": 1833120,
+      "lang": "en"
+    },
+    {
+      "text": "visually see what's happening in your",
+      "duration": 3400,
+      "offset": 1834320,
+      "lang": "en"
+    },
+    {
+      "text": "system, which I highly recommend. But,",
+      "duration": 3840,
+      "offset": 1835560,
+      "lang": "en"
+    },
+    {
+      "text": "if you don't, you can stop at this step",
+      "duration": 3000,
+      "offset": 1837720,
+      "lang": "en"
+    },
+    {
+      "text": "and just continually test out your",
+      "duration": 3560,
+      "offset": 1839400,
+      "lang": "en"
+    },
+    {
+      "text": "strategies, uh watch the orders go in on",
+      "duration": 4560,
+      "offset": 1840720,
+      "lang": "en"
+    },
+    {
+      "text": "the Alpaca dashboard. Awesome. Now, here",
+      "duration": 5040,
+      "offset": 1842960,
+      "lang": "en"
+    },
+    {
+      "text": "we can see that all 134 tests pass,",
+      "duration": 4240,
+      "offset": 1845280,
+      "lang": "en"
+    },
+    {
+      "text": "basically every single test that",
+      "duration": 3200,
+      "offset": 1848000,
+      "lang": "en"
+    },
+    {
+      "text": "connects every component of our trading",
+      "duration": 3840,
+      "offset": 1849520,
+      "lang": "en"
+    },
+    {
+      "text": "system. And as a final step, all we need",
+      "duration": 3800,
+      "offset": 1851200,
+      "lang": "en"
+    },
+    {
+      "text": "to do is make this a bit more visual so",
+      "duration": 3760,
+      "offset": 1853360,
+      "lang": "en"
+    },
+    {
+      "text": "we can see everything that's happening",
+      "duration": 4840,
+      "offset": 1855000,
+      "lang": "en"
+    },
+    {
+      "text": "from the back end onto our UI and make",
+      "duration": 4800,
+      "offset": 1857120,
+      "lang": "en"
+    },
+    {
+      "text": "any changes as necessary. So, this is",
+      "duration": 3800,
+      "offset": 1859840,
+      "lang": "en"
+    },
+    {
+      "text": "what the monitoring alerts and dashboard",
+      "duration": 3480,
+      "offset": 1861920,
+      "lang": "en"
+    },
+    {
+      "text": "prompt looks like. We just want to make",
+      "duration": 3720,
+      "offset": 1863640,
+      "lang": "en"
+    },
+    {
+      "text": "sure that all of our trades are being",
+      "duration": 4320,
+      "offset": 1865400,
+      "lang": "en"
+    },
+    {
+      "text": "monitored and logged properly. Uh we're",
+      "duration": 4320,
+      "offset": 1867360,
+      "lang": "en"
+    },
+    {
+      "text": "going to use this monitoring for",
+      "duration": 4320,
+      "offset": 1869720,
+      "lang": "en"
+    },
+    {
+      "text": "different positions, uh recent signals.",
+      "duration": 3840,
+      "offset": 1871680,
+      "lang": "en"
+    },
+    {
+      "text": "So, after pasting in that prompt, if you",
+      "duration": 2840,
+      "offset": 1874040,
+      "lang": "en"
+    },
+    {
+      "text": "wanted a visual dashboard, you can just",
+      "duration": 2960,
+      "offset": 1875520,
+      "lang": "en"
+    },
+    {
+      "text": "say build a Streamlit dashboard as the",
+      "duration": 3520,
+      "offset": 1876880,
+      "lang": "en"
+    },
+    {
+      "text": "UI. So, after a while, we can see that",
+      "duration": 4760,
+      "offset": 1878480,
+      "lang": "en"
+    },
+    {
+      "text": "all 134 tests pass. All our monitoring",
+      "duration": 4560,
+      "offset": 1880400,
+      "lang": "en"
+    },
+    {
+      "text": "and logging works for the trades. And",
+      "duration": 3360,
+      "offset": 1883240,
+      "lang": "en"
+    },
+    {
+      "text": "then as a final step, we just asked it",
+      "duration": 3400,
+      "offset": 1884960,
+      "lang": "en"
+    },
+    {
+      "text": "to install the dependencies needed to",
+      "duration": 3400,
+      "offset": 1886600,
+      "lang": "en"
+    },
+    {
+      "text": "run the Streamlit dashboard. And",
+      "duration": 2880,
+      "offset": 1888360,
+      "lang": "en"
+    },
+    {
+      "text": "awesome, let's go ahead and paste this",
+      "duration": 3000,
+      "offset": 1890000,
+      "lang": "en"
+    },
+    {
+      "text": "into our browser. Now, here we can see",
+      "duration": 4000,
+      "offset": 1891240,
+      "lang": "en"
+    },
+    {
+      "text": "our final dashboard. So, obviously, it's",
+      "duration": 4080,
+      "offset": 1893000,
+      "lang": "en"
+    },
+    {
+      "text": "still on a paper account. We have our",
+      "duration": 3480,
+      "offset": 1895240,
+      "lang": "en"
+    },
+    {
+      "text": "portfolio values. Right now, the",
+      "duration": 2920,
+      "offset": 1897080,
+      "lang": "en"
+    },
+    {
+      "text": "market's closed, so it's not going to",
+      "duration": 3400,
+      "offset": 1898720,
+      "lang": "en"
+    },
+    {
+      "text": "show any positions active. But, the idea",
+      "duration": 4000,
+      "offset": 1900000,
+      "lang": "en"
+    },
+    {
+      "text": "here is to always, you know, test",
+      "duration": 3680,
+      "offset": 1902120,
+      "lang": "en"
+    },
+    {
+      "text": "rigorously. Make sure this works on a",
+      "duration": 3400,
+      "offset": 1904000,
+      "lang": "en"
+    },
+    {
+      "text": "paper account, whichever strategy you're",
+      "duration": 2840,
+      "offset": 1905800,
+      "lang": "en"
+    },
+    {
+      "text": "running. You can see all the trades",
+      "duration": 2680,
+      "offset": 1907400,
+      "lang": "en"
+    },
+    {
+      "text": "coming in, whether they're performing or",
+      "duration": 3000,
+      "offset": 1908640,
+      "lang": "en"
+    },
+    {
+      "text": "not. Below this, we have the regime",
+      "duration": 3760,
+      "offset": 1910080,
+      "lang": "en"
+    },
+    {
+      "text": "detection. So, this is what tells us the",
+      "duration": 4000,
+      "offset": 1911640,
+      "lang": "en"
+    },
+    {
+      "text": "volatility of the market. Right now,",
+      "duration": 3520,
+      "offset": 1913840,
+      "lang": "en"
+    },
+    {
+      "text": "it's saying we're in a bear regime with",
+      "duration": 3720,
+      "offset": 1915640,
+      "lang": "en"
+    },
+    {
+      "text": "100% confidence. We also have risk",
+      "duration": 3960,
+      "offset": 1917360,
+      "lang": "en"
+    },
+    {
+      "text": "statuses in case we ever use any",
+      "duration": 3400,
+      "offset": 1919360,
+      "lang": "en"
+    },
+    {
+      "text": "leverage or if we're hitting any circuit",
+      "duration": 2880,
+      "offset": 1921320,
+      "lang": "en"
+    },
+    {
+      "text": "breakers. Below this, we also have",
+      "duration": 3720,
+      "offset": 1922760,
+      "lang": "en"
+    },
+    {
+      "text": "portfolios. So, obviously, right now, we",
+      "duration": 4000,
+      "offset": 1924200,
+      "lang": "en"
+    },
+    {
+      "text": "just created the system, so there's no",
+      "duration": 3720,
+      "offset": 1926480,
+      "lang": "en"
+    },
+    {
+      "text": "open positions. But, the idea is to",
+      "duration": 4000,
+      "offset": 1928200,
+      "lang": "en"
+    },
+    {
+      "text": "constantly monitor this dashboard day in",
+      "duration": 4160,
+      "offset": 1930200,
+      "lang": "en"
+    },
+    {
+      "text": "and day out as the system finds more",
+      "duration": 4080,
+      "offset": 1932200,
+      "lang": "en"
+    },
+    {
+      "text": "trades for you, logs them based on your",
+      "duration": 3400,
+      "offset": 1934360,
+      "lang": "en"
+    },
+    {
+      "text": "strategy, and you're able to see the",
+      "duration": 3560,
+      "offset": 1936280,
+      "lang": "en"
+    },
+    {
+      "text": "performance. So, that's the entire",
+      "duration": 4280,
+      "offset": 1937760,
+      "lang": "en"
+    },
+    {
+      "text": "system. A few important things to note.",
+      "duration": 4560,
+      "offset": 1939840,
+      "lang": "en"
+    },
+    {
+      "text": "First is to obviously paper trade for at",
+      "duration": 3880,
+      "offset": 1942040,
+      "lang": "en"
+    },
+    {
+      "text": "least a month. You want to make sure to",
+      "duration": 3200,
+      "offset": 1944400,
+      "lang": "en"
+    },
+    {
+      "text": "watch every decision your bot's making",
+      "duration": 3800,
+      "offset": 1945920,
+      "lang": "en"
+    },
+    {
+      "text": "for you, understand why it rebalanced",
+      "duration": 4800,
+      "offset": 1947600,
+      "lang": "en"
+    },
+    {
+      "text": "your portfolio, why it stayed put, when",
+      "duration": 4560,
+      "offset": 1949720,
+      "lang": "en"
+    },
+    {
+      "text": "the risk manager overruled something.",
+      "duration": 3920,
+      "offset": 1952400,
+      "lang": "en"
+    },
+    {
+      "text": "Again, recall back all those different",
+      "duration": 4360,
+      "offset": 1954280,
+      "lang": "en"
+    },
+    {
+      "text": "rules we had set. Next, the allocation",
+      "duration": 4560,
+      "offset": 1956320,
+      "lang": "en"
+    },
+    {
+      "text": "numbers here are swappable, and so you",
+      "duration": 4600,
+      "offset": 1958640,
+      "lang": "en"
+    },
+    {
+      "text": "can always change up your strategy, how",
+      "duration": 3360,
+      "offset": 1960880,
+      "lang": "en"
+    },
+    {
+      "text": "much of your portfolio is going to be",
+      "duration": 2960,
+      "offset": 1963240,
+      "lang": "en"
+    },
+    {
+      "text": "allocated in certain regimes. These can",
+      "duration": 3880,
+      "offset": 1964240,
+      "lang": "en"
+    },
+    {
+      "text": "always change depending on testing. It's",
+      "duration": 4040,
+      "offset": 1966200,
+      "lang": "en"
+    },
+    {
+      "text": "basically paper trade, review every",
+      "duration": 4400,
+      "offset": 1968120,
+      "lang": "en"
+    },
+    {
+      "text": "single rebalance, run back test across",
+      "duration": 4680,
+      "offset": 1970240,
+      "lang": "en"
+    },
+    {
+      "text": "different tickers, periods, iterate on",
+      "duration": 3920,
+      "offset": 1972520,
+      "lang": "en"
+    },
+    {
+      "text": "your allocation parameters, on your",
+      "duration": 3760,
+      "offset": 1974920,
+      "lang": "en"
+    },
+    {
+      "text": "strategies, and then use Cloud Code to",
+      "duration": 4800,
+      "offset": 1976440,
+      "lang": "en"
+    },
+    {
+      "text": "continually improve. So, the beauty of",
+      "duration": 4240,
+      "offset": 1978680,
+      "lang": "en"
+    },
+    {
+      "text": "this system is that it actually created",
+      "duration": 3760,
+      "offset": 1981240,
+      "lang": "en"
+    },
+    {
+      "text": "documentation for every single file we",
+      "duration": 4120,
+      "offset": 1982920,
+      "lang": "en"
+    },
+    {
+      "text": "built. So, if you were to hop into VS",
+      "duration": 4480,
+      "offset": 1985000,
+      "lang": "en"
+    },
+    {
+      "text": "Code, if you go over to the read me",
+      "duration": 4640,
+      "offset": 1987040,
+      "lang": "en"
+    },
+    {
+      "text": "file, you can see an overview of the",
+      "duration": 3840,
+      "offset": 1989480,
+      "lang": "en"
+    },
+    {
+      "text": "entire system. So, with this entire",
+      "duration": 3680,
+      "offset": 1991680,
+      "lang": "en"
+    },
+    {
+      "text": "system, Cloud Code basically knows your",
+      "duration": 3800,
+      "offset": 1993320,
+      "lang": "en"
+    },
+    {
+      "text": "code base in and out. If you ever need",
+      "duration": 3880,
+      "offset": 1995360,
+      "lang": "en"
+    },
+    {
+      "text": "to make any changes, it's able to add",
+      "duration": 4000,
+      "offset": 1997120,
+      "lang": "en"
+    },
+    {
+      "text": "them on the fly. Um it's able to review",
+      "duration": 3400,
+      "offset": 1999240,
+      "lang": "en"
+    },
+    {
+      "text": "its work. So, this is going to take a",
+      "duration": 3320,
+      "offset": 2001120,
+      "lang": "en"
+    },
+    {
+      "text": "lot of back and forth, but the",
+      "duration": 4560,
+      "offset": 2002640,
+      "lang": "en"
+    },
+    {
+      "text": "potentials here are basically limitless.",
+      "duration": 4280,
+      "offset": 2004440,
+      "lang": "en"
+    },
+    {
+      "text": "And like I mentioned earlier in the",
+      "duration": 3400,
+      "offset": 2007200,
+      "lang": "en"
+    },
+    {
+      "text": "video, if you want more detailed guides",
+      "duration": 3560,
+      "offset": 2008720,
+      "lang": "en"
+    },
+    {
+      "text": "and the complete prompt here, you can",
+      "duration": 3360,
+      "offset": 2010600,
+      "lang": "en"
+    },
+    {
+      "text": "click the link in the description for my",
+      "duration": 3720,
+      "offset": 2012280,
+      "lang": "en"
+    },
+    {
+      "text": "community. I also have custom one-to-one",
+      "duration": 3440,
+      "offset": 2013960,
+      "lang": "en"
+    },
+    {
+      "text": "projects if you want to build out a",
+      "duration": 3200,
+      "offset": 2016000,
+      "lang": "en"
+    },
+    {
+      "text": "custom strategy or system that you're",
+      "duration": 3560,
+      "offset": 2017400,
+      "lang": "en"
+    },
+    {
+      "text": "using. And if you found this video",
+      "duration": 3520,
+      "offset": 2019200,
+      "lang": "en"
+    },
+    {
+      "text": "helpful, make sure to like, comment, and",
+      "duration": 3920,
+      "offset": 2020960,
+      "lang": "en"
+    },
+    {
+      "text": "hit subscribe as I go over everything",
+      "duration": 4160,
+      "offset": 2022720,
+      "lang": "en"
+    },
+    {
+      "text": "regarding using AI for trading. I think",
+      "duration": 3800,
+      "offset": 2024880,
+      "lang": "en"
+    },
+    {
+      "text": "tools like Cloud Code have really opened",
+      "duration": 3680,
+      "offset": 2026880,
+      "lang": "en"
+    },
+    {
+      "text": "up the possibility for retail traders to",
+      "duration": 4120,
+      "offset": 2028680,
+      "lang": "en"
+    },
+    {
+      "text": "really quantify the strategies. They're",
+      "duration": 4680,
+      "offset": 2030560,
+      "lang": "en"
+    },
+    {
+      "text": "able to use systems like these that were",
+      "duration": 4120,
+      "offset": 2032800,
+      "lang": "en"
+    },
+    {
+      "text": "previously never really accessible to",
+      "duration": 3880,
+      "offset": 2035240,
+      "lang": "en"
+    },
+    {
+      "text": "the average Joe, but now almost anyone",
+      "duration": 4080,
+      "offset": 2036920,
+      "lang": "en"
+    },
+    {
+      "text": "can hop into Cloud Code, build out these",
+      "duration": 3720,
+      "offset": 2039120,
+      "lang": "en"
+    },
+    {
+      "text": "super complex systems, test out their",
+      "duration": 4120,
+      "offset": 2041000,
+      "lang": "en"
+    },
+    {
+      "text": "strategies, and just help them become a",
+      "duration": 6040,
+      "offset": 2042840,
+      "lang": "en"
+    },
+    {
+      "text": "more disciplined and profitable trader.",
+      "duration": 3760,
+      "offset": 2045120,
+      "lang": "en"
+    }
+  ],
+  "text": "In today's video, I'm going to show you how you can build a fully automated trading bot from scratch using Cloud Code. So, it will first detect the type of market we're in, adjust your portfolio allocations automatically, and even places real trades for you. We're not going to be building some basic indicator bot that just buys when RSI crosses above 30 like what you would typically see on TradingView. Instead, we're going to be building an actual system that first connects to a real brokerage so that you can automatically place trades. Second, it'll manage your risks with circuit breakers. And then finally, it can even adapt to changing market conditions automatically. And we're going to be doing this without writing any of the code ourselves. So, if you've seen my previous videos, I go over the concepts around using hidden Markov models and walk-forward backtesting engines. Today, we're going to be taking those same concepts one step further. So, we're going to grab that same exact math, but now connect it to a real broker so that we can have a bot actually manage our portfolio for us. So, make sure to stay until the end of the video since I'll be covering how to build this exact system step-by-step, even if you have no technical knowledge or you've never coded before. And just as a disclaimer, I'm not a financial advisor and this is not financial advice. I'm not guaranteeing any profits inside this video. All I'm doing is showing you the concepts on how to build a systemic trading framework to help you become a more disciplined trader. Trading involves real risk and it's up to you to manage, validate, and extensively test your own strategies. So, here's what our automatic trading bot dashboard looks like as a finished product and what building by the end of this video. So, up top we can first see the detected regime, which is currently neutral. This basically tells us how volatile the market currently is and how we should classify it. And then below, we even have a confidence score. And then to the right of this, we have our portfolio value as well as our buying power. Now again, this is connected directly to a brokerage, in our case Alpaca. So, these are the numbers that are currently inside our trading account. To the right of this, we have the number of regimes that the current system is categorizing the market into. And right now the market's closed, so we don't have any active positions. Then below this, we just have simple price actions with regime overlays. Below this, we have volumes, confidence over times, distributions. And this way you'll be able to see how this actually translates to your trading strategy. And then below all of this, importantly, we have the signal feed, which actually shows all of the historical trades that this automatic trading bot has placed. So this way it'll tell you the allocation from your portfolio size, as well as entry prices, stops, and P&L in real time. Then to the left of this, we also have risk controls. And this basically shows our circuit breakers, drawdown limits, and leverage statuses, so that we manage our risk properly and obviously don't blow up our account. Then finally, these are all of the regimes that our trading system is currently characterizing the market into. So we have a crash, bear, neutral, bull, and euphoria. And then obviously, depending on the regime that the market is currently in, our allocation is going to change, and our strategies are going to change as well. So the way you can think about this is that depending on the regime that our trading system is currently detecting the market as, our strategies are going to be different. The amount of capital that we're going to allocate per trade is going to be different as well. And again, everything here was built by Claude Code, right? Which is a coding agent. All you'll need to do is prompt properly, understand the structure of your code base, and I'll be going over this from start to finish, so that you can have your own version of this trading dashboard and automatic trading bot for use yourself. Now, before you start building out this automatic trading bot, let me first explain the system and all the things we need to make step-by-step to ensure that we have a comprehensive system that covers everything we would theoretically need. So you can think of this entire system as being made up of five components. We'll have the brain, allocation, safety, brokerage, and then finally the dashboard that displays all of our information. So to start off, right, every system needs a competent brain at the center that basically makes decisions. But, in our case, our brain is going to be hidden Markov models. Now, I've went over this in previous videos, but you can think of this exact system as essentially looking at the market historically as well as with live data and then classifying what type of market we're in. So, by looking at things like price action and volume, it's able to classify the market. So, it'll tell us if the market is in a crash, if it's currently a bear market, if it's in a bull market, or just full-blown euphoria where everything just goes up. And now, depending on the type of market that we're in, the strategies are going to differ, right? So, inside our automatic trading bot, we want to make sure this is as dynamic as possible. And the way this bot is going to trade inside a bear market or choppy market is going to be very different from a trending bull market. So, before we ever make any trading decisions, before we ever layer any strategies of our own or yours on top, we need to know first what type of market it is. So, this is basically just how we should be looking at the market before ever adding any strategies. And that goes into my next point, which is step two on allocation. So, you can think of this allocation layer as being directly influenced by the brain. So, what this means is that, depending on, you know, the volatility regime, whether in a crash, bear, neutral, bull, or euphoria, it's going to change the amount we're invested in our portfolio. So, typically, in calm markets, you would have a larger amount of capital allocated. And then, in more turbulent markets, you would typically reduce your exposure to protect your capital. And we're going to use those same exact concepts inside our automatic trading bot as well. Now, for our third component, we have the safety net. Essentially shuts everything down if certain levels are hit. So, basically, if you hit like a max drawdown in a day, if your strategies aren't working like they're supposed to, it's able to essentially call it quits, uh shut off the entire system. This way, you won't continually lose money day by day, week by week, or even during that same exact day as well. Just depending on how you structure these circuit breakers, which I'll show you later on in the video. And one thing to know is that these work independently of our AI model. So, whatever strategies, uh hidden Markov models, systems we have, these safety nets are going to be hardcoded in a sense, so that even if our strategies are technically built correctly, they should work theoretically, these safety nets are completely independent of that. And this is huge, obviously, for automated trading bots because you don't ever want to just turn on a bot and have it continually lose money, right? You'll have to essentially call it quits at some point and think about how to revisit your strategy and how to actually build a better system moving forward. And then now for step four, we have the broker. So, this is where you can choose the brokerage that you want to connect your system to. Two main options I would typically consider. The first is Alpaca. This is generally free, depending on how much volume you're trading. Obviously, if you get into like millions of dollars of volume trading, you're going to have fees on top of this. Uh but once you do get to that certain level, then I would probably change to IBKR. This is going to be paid. So, this is where our code can place real orders directly through the system to Alpaca. If you sign in to Alpaca, which I'll show you later on in the video as well, you'll be able to see all your trades, performance, and how much money you have in your account. Then finally, to tie everything together, we have the dashboard and this is where you can see everything in real time. So, now that we understand how this automatic trading bot is going to be structured, let's go ahead and build out every single one of these components one by one. So, this way you'll be able to see like from step one till the end, we're going to be following the same exact timeline. Uh we're going to be able to test independently. So, we're going to be test that the HTML models work. We're going to test that the allocation and sizing works. We're going to test that the safety net works as well. We're going to test our strategies and backtest those. We're going to be testing our brokerage connection, so we can first see that the trades are actually getting placed through Alpaca. And then finally, the dashboard will essentially tie everything together. Now, before we start building the project, I basically inputted every single step along the way inside this master document. If you want to get access to this, you can go ahead and click the link in the description for my school community. I'll go ahead and showcase everything in a bit more detail so that you can customize these to your own strategies. I'll also show them in the video, too. So, this way if you want to just pause at certain parts of the video to see how you would change up the prompt, you can go ahead and do so. But, just to give you a broad overview, what we're first going to do is create the project scaffolding. So, this is kind of like the shell of the entire system. Then, below this we have the regime detection engine. So, this is going to be the brain that we talked about. We have the volatility-based allocation strategies. These are where you're going to input your custom strategies based on how you trade and what you're actually trading. Below this, we have walk-forward backtesting and validation to make sure that your strategy does work properly. And then finally, we have a risk management layer that ensures that our system doesn't blow up our account. We have proper, you know, circuit breakers in place, things like that. And then finally, once we've validated that everything works and is safe to a degree, we're able to connect it to Alpaca, which is a brokerage we're going to be using. Below this, we can make sure that the main loop and orchestration works. So, this is where we're going to extensively test that we're able to send trades to Alpaca. It's receiving all our data. And then finally, we're going to monitor, have alerts, and have a dashboard that showcases all of the trades we've taken, historical performance, how our system's currently working, and just a way to visually see our system in real time. Obviously, everyone trades very differently, but the idea here is to have a very a general base case that almost anyone can use. Uh you just want to go ahead and change the strategies, change the tickers you're working with, but obviously keep the core logic here the same. Now that we've gone over the structure, let's go ahead and start building out this actual auto trading bot project. So, the first thing you'll need to do is go ahead and download an IDE where you can use Cloud Code. This is where your code base is going to live, and in our case, we're going to be using Visual Studio Code since it's pretty much the simplest way to go go and get started. So, all you'll need to do is download Visual Studio Code and then open up a blank folder inside your computer. Next, what you want to do is add Cloud Code as an extension. Search Cloud Code. You should see it pop up as the very first extension. It's called Cloud Code for VS Code. This is the easiest way to go ahead and get started. So, now once you've installed the Cloud Code extension, you should be able to see it on this right-hand side here. This is where we're going to be able to chat with Cloud Code, which again is going to help us make all the projects. We're going to need to give it very useful instructions one step at a time based on the diagram I showed you previously. Next, what we're going to be doing is something called project scaffolding. So, inside the section, we're going to be creating just a project structure. So, no actual logic yet, but we're just going to be creating a Python project called Regime Trader with the following structure. And again, there's nothing yet inside these files. This structure is just what's going to tell Cloud Code how our files are going to look. First, we're going to have settings, credentials, HMM engine. So, this is going to be the brain. Then, we're going to have regime strategies. So, based on the regime that we're in, it's going to have volume-based allocation strategies. Then, we're going to have a risk manager that's going to handle position sizing, leverage, drawdown limits. This is basically the API wrapper that allows us to connect to Alpaca, which is our brokerage. Then, we're going to have an order executor. This is what's going to allow us to actually place trades to the Alpaca API. So, as the name suggests, we're able to place trades, modify trades, and even cancel trades. We're also able to track our open positions because once we're connected to Alpaca, we can see positions that are currently open. We have market data, which is real-time and historical. We have feature engineering, which is technical indicators, structured logging, the dashboard. This is where our dashboard's going to live. Alerts, so email, webhook alerts for critical events. This is if you ever want to connect your email. Below this, we have the backtester. We have performance. So, here we're able to calculate the sharp ratios, drawdowns, regime breakdowns, benchmarks. This is everything you saw inside the main dashboard that I showcased initially, uh which basically gives us our strategy as a whole, how it relates to the overall market. Then below those, we have all of the tests that we're going to be running. This is the verify like no look ahead biases, testing out strategies, risks, order, etc. And we're going to be doing extensive testing each step of the way because again, this is going to be an automated trading bot and we have to make sure that it's being validated at every step. And then finally, we just have the main file, requirements, and then the ENV file is where we're going to be storing our credentials. If we're going to be using the Alpaca API, this is where we're going to store the API keys that allow us to connect to our live account. Below this, we need a requirements file that basically has everything we're going to be using inside this trading framework. Then finally, we want to create a settings file that has all the parameters. Now, this is where you're essentially going to be changing the tickers that you want to focus on. Then below this, we have more specific parameters for the hidden Markov models, the strategies that we're going to be using depending on the regimes, risks, back tests, and monitoring. Again, we don't want to implement any logic yet. So now, let's go ahead and run this. So after waiting like 5 minutes or so, we can see the project skeleton is complete. We have 31 files across eight directories. The first is going to have settings with all the parameters. So this is the broker we're going to use, the HMMs, strategies, risks, back tests, and monitoring. Next, we have the core. So these are the core parameters that we're going to be using inside the framework, where we're getting data from, monitoring, back testing. And if we go over here to the left, we can even see all of these files are created inside regime trader. And again, this is pretty much standardized no matter what strategy you have. Cloud code does work best when it has the structure all built out before we start diving deep into the weeds. Now that we finished project scaffolding, the next step is to create the brain of our entire trading bot. So again, like I mentioned, these aren't going to predict prices. They're going to predict the type of environment that the current market is in, whether it's calm, volatile, whether we're in a bear market. So, by detecting these different types of environments, we're able to reduce our exposure, change our strategies. So, in this next prompt, we can see that we're going to be implementing the HMMs, and this is going to be a volatility classifier. It's going to tell us the type of environment, like I mentioned. Below this, we want to do different types of tests to see how many regimes there are. So, inside my example from the beginning of the video, you saw that we had five regimes, right? But, the five wasn't hardcoded. That's actually something we found out through testing. So, the idea here is that this model is going to test, you know, three through seven regimes, and then this is automatically going to pick the best number of regimes. So, instead of us guessing how many there should be, we're just going to have this math here dictate that. Then, below this, we're just going to sort the regimes by mean return. This is going to help us label the regimes. So, with three, it's only bear, neutral, bull. With four, it's crash, bear, bull, euphoria. Five would be crash, bear, neutral, bull, euphoria. Then, below this, we have a bunch of functions that, again, you can copy and paste or just get it directly from my community. But, you can pause and see any of the very specific calculations we're going to be running inside these functions. And then, below this, this is how we're going to actually train the HMMs with around two years of daily data. Below this is the regime detection. Now, one important thing to know, especially if you want to run this yourself, is that the default predict function inside the HMM library is processes the entire sequence of data, but that generally creates look-ahead bias. So, what we do is make a slight tweak here to not use the model predict function. Instead, what we're going to be using is the forward algorithm only. So, make sure to include this inside your prompt, and this is just to ensure that there's no look-ahead bias when you're developing these models and strategies. So, here you can see the function. If I slowly scroll down, you can see the mandatory tests. And then, below this, we have the regime stability filter, as well as additional methods for predicting, getting regimes, detecting regimes, and then finally, how we classify the states, and then log regime changes as a warning. This is just for our information. And then with the way we build this out here, Quad has a stability filter inside this engine. What this means is that a certain regime has to persist for at least three consecutive bars before the system acts on it. So if it's like flickering between bull, bear, bull, bear, it's not actually going to do anything if it flickers more than four times in the past 20 bars. That is what causes uncertainty. So we're going to log those changes as kind of like a warning sign. So this way it does reduce your position sizes ultimately because it is more volatile and uncertain as to what regime the market is currently in. All we're building here is again just the brain, right? That detects the type of market before you apply any other allocation strategies. So here after like 10 minutes or so, since we had such a robust prompt, it basically implemented everything we asked for inside these two files, so the feature engineering as well as the HMM engine, which is again going to be the main brain. It's also passing and validating the test that we had it complete after completing these sections to ensure that first of all the HMMs fit the validations, uh they're doing predictions correctly, and then there's no look-ahead bias as well. Next, what we're going to want to do is our allocation strategies, and this is how the bot is going to tell us how to size positions based on the regime that we're in. Here we can see that the HMMs excel at detecting volatile environments, and then based on the environments, we would essentially have fully invested portfolios, stay invested if the trend's intact, or just reduce your allocations completely. So below we have a fairly simple strategy that obviously you would want to change if you're going to customize this to your own framework. But what I have here is three main distinctions. The first is that when volatility is low, to be fully invested at 95% of your portfolio with 1.25x leverage. And then when the volatility's medium, we can stay invested if the trend is intact. But again, this is the part that you're going to customize. So maybe you would want to be more aggressive in a low volume market. Maybe you'd want to have a different filter for medium volumes. And then obviously you'd want to add your own specific strategies on top as well. So the idea here is that you just want to replace this entire section with your own personal strategies depending on your own risk tolerances. And then below this we have the volatility rank mapping strategy orchestrator. We have confidence and uncertainty. So again, a lot of these are hardcoded based on what I found works. There's also rebalancing. This is how we're going to implement everything. So we have a base case, we have the low volume bull strategy, strategy orchestrator, signal data class. And then below this we just have some aliases and labels. This is going to be the part where you spend the most amount of time in. And before we even connect to a brokerage, we want to prove and make sure that our strategy does work. So the idea is to tweak this a bit. What we're going to do is first send over this prompt just to have our base strategies layered in. And then once we add in backtesting, we can go back and forth with Claude Code to really optimize a strategy that works for your specific use case and your asset class or ticker that you're trading. And also we can see that all 32 tests pass. Again, we want to make sure that we have tests on every single phase of our build out. Below this we can see our different strategies, which again is a very general strategy that you would obviously change based on how you trade and based on what tickers you're trading as well. We just have different strategies on the type of regime. Below this we have the key components. Next, what we're going to want to do is build out the walk forward backtesting engine. And this is what's going to allow us to test out that strategy we just implemented to see if it works on blind data historically and also how it's potentially going to do in the future. So what we're going to be doing here is splitting data into rolling windows. And this allows us to do an allocation based walk forward backtest. This isn't like a traditional backtest because typically you would have all the data, find the perfect settings in hindsight, and then have it pretend that it predicted the future. With this we're able to run blind test historically to see how it would have actually done without having all the data beforehand. And I'm just expanding out this prompt just so you can read it a bit more clearly. If you want to pause in certain parts of the video, you can and take in some of these concepts and then basically tailor it to whatever strategy you're running. But the logic should remain largely the same. So the idea is that we want to build out this walk-forward optimization engine. So we'll have rolling windows and the in-sample windows will be 252 trading days. Out of sample will be around 6 months for evaluations. So you can see how we're running this allocation-based backtest. Below this we have the math as well as realistic simulations. This is just for slippage. And then finally we have performance metrics. So we want to calculate the total return, the sharp ratio, max drawdowns, win rates, total trades, things like that just be able to quantify how it actually performed. Then we'll want to make sure that this is separated out by regime as well as confidence bucketed so we know if it's high confidence trades that are outperforming low confidence trades and vice versa. Then we're going to want to compare the backtest to three main benchmarks. The first is buy and hold. Obviously, if you were to take a ticker, you would see how our strategy performed simply by actively trading it versus just buying and holding for that entire historical window. We would also want to compare against the 200-day SMA trend following. This is one of the most common systemic strategies and then below this we just have a random entry and random allocation changes with same risk rules. And then if you want to go even more in-depth, we have stress tests that just basically inject random crash events. So this is just to bake in very specific like 10 to 15% in a day drops. So on this step, obviously you're going to need to go back and forth with your own strategy. Make sure that you're backtesting it properly. This is honestly going to take the longest amount of time at least for you because once you do have a strategy dialed in, you're probably going to need a lot of iterations before you find something that really does pass all these stress tests as well as the benchmark comparisons. After you go back and forth with Quad Code, you should end up with first a backtester file that will show all of the windows that it's currently testing your strategy on as well as the other components. And then below this, you should have a performance file that shows all the metrics. So, your core metrics, trade stats, regime tables, confidence buckets, things of that sort. So, you can see how your strategy performed. And obviously, you would want to go back to the drawing board, change up your strategy, things of that sort if your performance hasn't been too stellar historically, at least. And then below this, we should have stress test. This just shows how your performance handled under extreme stress in the market. And all of this information should be tested and should pass based on our prompt. Now, after we verify and validate the backtesting results, what we need to do is build a layer that guarantees in the worst case of trading, it's going to stop our system. And this is what I talked about earlier, which is the risk management layer. This is probably the most important system in your entire trading framework, more important than the HMMs, even. Because a mediocre strategy with a great risk management layer only loses money a little bit. If you had a great strategy, but with bad risk management, you could basically blow up your account. So, basically, you can think of this risk management as having the absolute veto power over everything. We'll have circuit breakers basically built in here. So, if it's down 2% in a single day, all sizes are cut in half. If it's down over 3%, close everything. If it's down 5% in a week, then you want to half your sizes. If it's down 10% from peak, so you have a 10% drawdown, the bot just stops completely and writes a block file that you have to manually delete. These are here just to make sure that you don't blow up your account, right? You can have a great strategy, but a few bad days can basically trigger some of these. And if you don't have these in place, things can spiral out of control fairly quickly. And this last one here that I have highlighted is pretty deliberate. If it's down 10%, if you see how it's going to write this file, what that means is that you have to go look at what happened. It's going to go ahead and write a file for you, so you understand what went wrong in the strategy if it was really down 10% from peak. Uh you go inside, you understand why this occurred, and then you have to consciously and manually turn it back on. So, this forces you to go into the system, see what happened, and you need to manually delete this file to resume your strategy. And this is just to make sure that you trust the strategy moving forward because this can be a pretty significant blow in your account. Now, below this we have position level risk. This is basically sizing. So, every trade risks a maximum 1% of your portfolio. Now, you can obviously change this if you want a bit more risky. Then below this, we have leverage, which again you would want to change to your own tolerances, what you're comfortable with. Then below this, we have order validation and then correlation checks. So, before opening a new position, the bot checks if it's correlated with any existing positions. This is just a way to make sure that we're not entering the same type of trades. But the idea here is that I want to give you the core logic that should be able to be applied generally, no matter what kind of trader you are, but obviously change some of these settings if you want to. So, here you can see that the risk manager has been built with all the thresholds. You can see the circuit breakers and all of their trigger levels. And then below this, we have, you know, the minimum size, risk-based sizing, position limits, things of that sort. So, everything we talked about. You can go ahead into the file if you want to validate, but we have test again on every single step to make sure that everything is passing. So, now if you were to look at the timeline of our automatic trading bot, we've built out the brain that's going to classify the market. Uh this is everything that drives decisions. We've built out the allocation and strategies. These are how much of the portfolio to invest in and how to invest. And we just finished out the safety as well. So, this way we have circuit breakers in case losses hit a certain level. So, with this, we basically have the core engine done. What we next need to do is connect this to a brokerage, and in our case Alpaca. And then with the brokerage, we're able to send trades directly from the system here to the broker. The broker can automatically place trades for you without you lifting a finger, hence making it fully automatic. So now, let's go ahead and sell back and I'll show you how to create your free account and connect everything inside Cloud Code. So what you'll first want to do is head over to alpaca.markets and this is the API for stocks, options, and crypto trading. This way you'll be able to automatically place trades from our system for all these asset classes, just not futures. Go ahead and click sign up and what you want to use is the trading API. Now once you've created your account, it'll automatically place you in a paper trading account. Now what I would recommend is to start with this trading account first, connect your system to it, monitor it for at least a month to make sure that everything is working and that your strategy does seem to potentially have an edge. And only once you've done extensive testing and even live market testing, would I then click open live account on that same strategy. Again, make sure that the trades are being sent properly, but we can do this in a paper account. This way we can validate that our strategy works in the meantime, make sure that trades are being sent and then because it's a paper trading account, we can do as much testing as you want back and forth to really hone in our strategies. So inside your account, what you'll want to do is scroll all the way down and you should have a section called API keys. It'll go ahead and give you a secret key as well as your API key. So all you need to do is copy these three things. The first is this endpoint, this will be your base URL. Then copy this, this will be your API key and then copy this, this will be your secret key. So these are the three things that'll let you connect from Cloud Code's trading system that it's building for you directly to your actual account here at Alpaca. And then obviously, this goes without saying, never share these keys with anybody. I'm going to regenerate these after this video as well. This is just to make sure that no one has access to your funds, especially if it's a live account. This is something that we're not going to have Cloud do for us and the reason for that is because we don't want to share sensitive information like API keys directly to their chat. This is something we're going to have to do ourselves and it'll be super simple. We've already built out the core structure, so nothing much to do. So if you go over to get ignore, you can see that the .env files are going to be ignored. This means that if you publish this, your .env files won't ever be leaked. They're going to be private. And you can even see an example of what this looks like. So, Claude code from our very first prompt has already created the structure for us. Alpaca API key, this is just that API key I told you to copy. Secret key is that secret key I told you to copy. And then paper, this can be true. You'll also need the base URL as well, but since that's not confidential, we can just type it into the chat here. What's important is that we never share the API key or the secret key to Claude code. We want to just type this in ourselves. So, all you want to do is very simple. Go ahead and create a new file, and then this will be our .env file. Uh paste it here, and then what you want to do is fill in your API key, fill in your secret key, and then keep this to be true. So, after that, I can show you the prompt now for the Alpaca broker integration. What we first want to do is create this file that's going to allow us to connect. We already have the base URL here, so this is the URL that you copied from that very first step inside Alpaca. It's going to be pretty much the same. What you'll see here is that our credentials are in our .env files. So, again, never hardcoded. Then below this, we have all the other parameters. Broker order executor, this just lets us actually submit orders, cancel orders, modify stops, things like that. We also have a position tracker, so we're able to see all the orders that we currently have, as well as market data. Now, this prompt isn't going to be something custom like those allocation strategies. It's pretty much going to be the same for everyone. So, if you want to take a screenshot of this section of the video, feel free to do so. So, now after we paste this in, it's able to read our .env files and then help connect us to the Alpaca API directly. Now, after we submitted everything, we just want to do a quick check to make sure that the API is connected. Confirm API is connected. The base URL, again, is that base URL we copied with the secret and the API keys. And then what we want to do is place a trade for Nvidia as a test, and we should see this trade come through to our Alpaca dashboard as well. So, go Go and click enter here. And we can even see here as it's loading, the API is connected, the account is active with around 100,000 in paper equity. Market's currently closed cuz it's the weekend, but with paper trading you can still have orders queue. So, if they're going to place a test buy for Nvidia, we should be able to see it inside our Alpaca dashboard. And over here on the Alpaca dashboard, again, this is our paper account. If we scroll down, we can see asset was Nvidia. It was just a market buy. Uh we can even see the date was literally right now, so it was submitted on April 4th at 4:47. So, this basically confirms to us that the system is basically connected to our Alpaca brokerage here. Now that we have all the components of our system built out with the brain, HMMs, we have the strategies, allocations, we also have the actual brokerage connected as well as safety, back test, things of that sort. We just want to connect everything together with phase seven here. So, basically, when we start up the system, we want to load the configuration, connect to Alpaca, verify the account, check market hours to see if it's open or closed, train the HMMs. We would then want to initialize risk manager, initialize position tracker, start all the data feeds, things of that sort. So, this is basically the bridge that ties everything we've built thus far. And then below this, we have the main loop for each bar close. Default is 5-minute bars. Then below this, we have shutdowns in case that needs to be used, error handling just to ensure that if there's any issues with the Alpaca API, if the server is down on their end, or if there's any HMM errors on our end, uh data feed drops, things of that sort. This is just sure that our engine keeps running smoothly no matter what happens either on our end or their end. So, now let's go ahead and copy and paste this into Cloud Code, and this will essentially glue everything. And while we wait for this to run, basically, uh this is the last step before we create the dashboard to visually show everything, but technically, once this is wired, we don't really need a dashboard. That's only if you want to visually see what's happening in your system, which I highly recommend. But, if you don't, you can stop at this step and just continually test out your strategies, uh watch the orders go in on the Alpaca dashboard. Awesome. Now, here we can see that all 134 tests pass, basically every single test that connects every component of our trading system. And as a final step, all we need to do is make this a bit more visual so we can see everything that's happening from the back end onto our UI and make any changes as necessary. So, this is what the monitoring alerts and dashboard prompt looks like. We just want to make sure that all of our trades are being monitored and logged properly. Uh we're going to use this monitoring for different positions, uh recent signals. So, after pasting in that prompt, if you wanted a visual dashboard, you can just say build a Streamlit dashboard as the UI. So, after a while, we can see that all 134 tests pass. All our monitoring and logging works for the trades. And then as a final step, we just asked it to install the dependencies needed to run the Streamlit dashboard. And awesome, let's go ahead and paste this into our browser. Now, here we can see our final dashboard. So, obviously, it's still on a paper account. We have our portfolio values. Right now, the market's closed, so it's not going to show any positions active. But, the idea here is to always, you know, test rigorously. Make sure this works on a paper account, whichever strategy you're running. You can see all the trades coming in, whether they're performing or not. Below this, we have the regime detection. So, this is what tells us the volatility of the market. Right now, it's saying we're in a bear regime with 100% confidence. We also have risk statuses in case we ever use any leverage or if we're hitting any circuit breakers. Below this, we also have portfolios. So, obviously, right now, we just created the system, so there's no open positions. But, the idea is to constantly monitor this dashboard day in and day out as the system finds more trades for you, logs them based on your strategy, and you're able to see the performance. So, that's the entire system. A few important things to note. First is to obviously paper trade for at least a month. You want to make sure to watch every decision your bot's making for you, understand why it rebalanced your portfolio, why it stayed put, when the risk manager overruled something. Again, recall back all those different rules we had set. Next, the allocation numbers here are swappable, and so you can always change up your strategy, how much of your portfolio is going to be allocated in certain regimes. These can always change depending on testing. It's basically paper trade, review every single rebalance, run back test across different tickers, periods, iterate on your allocation parameters, on your strategies, and then use Cloud Code to continually improve. So, the beauty of this system is that it actually created documentation for every single file we built. So, if you were to hop into VS Code, if you go over to the read me file, you can see an overview of the entire system. So, with this entire system, Cloud Code basically knows your code base in and out. If you ever need to make any changes, it's able to add them on the fly. Um it's able to review its work. So, this is going to take a lot of back and forth, but the potentials here are basically limitless. And like I mentioned earlier in the video, if you want more detailed guides and the complete prompt here, you can click the link in the description for my community. I also have custom one-to-one projects if you want to build out a custom strategy or system that you're using. And if you found this video helpful, make sure to like, comment, and hit subscribe as I go over everything regarding using AI for trading. I think tools like Cloud Code have really opened up the possibility for retail traders to really quantify the strategies. They're able to use systems like these that were previously never really accessible to the average Joe, but now almost anyone can hop into Cloud Code, build out these super complex systems, test out their strategies, and just help them become a more disciplined and profitable trader.",
+  "cited_at": "2026-05-24T05:04:35.205Z"
+}

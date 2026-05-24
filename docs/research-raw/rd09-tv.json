@@ -1,0 +1,188 @@
+{
+  "source": "reddit",
+  "subreddit": "TradingView",
+  "query": "pine alert webhook automated execution",
+  "items": [
+    {
+      "title": "PineScript alerts don't have reliable state persistence",
+      "url": "https://www.reddit.com/r/TradingView/comments/1pgfrht/pinescript_alerts_dont_have_reliable_state/",
+      "snippet": "**UPDATE: It was indeed repainting. Aftere removing varip and the usage of bartsate.isrealtime, my scripts do not reload anymore, although I still treat them as mostly stateless as a precaution.**  \n  \nAnyone else faced this issue?\n\nSo I'm finishing up automated trading that relies on TV for price feeds. And I have confirmed even var or varip variables will reset sometimes on my alert script insta",
+      "published_at": "2025-12-07T11:00:52.000Z",
+      "subreddit": "TradingView",
+      "score": 5,
+      "num_comments": 8
+    },
+    {
+      "title": "Feedback Wanted: XAUUSD Automated Trend-Follower (SuperTrend + ATR Logic)",
+      "url": "https://www.reddit.com/r/TradingView/comments/1seliio/feedback_wanted_xauusd_automated_trendfollower/",
+      "snippet": "Hi everyone,\n\nI’m currently developing a specialized automated trading system for **Gold (XAUUSD)**. The system is built in Pine Script v6 and connects to **MetaTrader 5** via a Python/Cloudflare webhook bridge.\n\n**What the Indicator Does:**\n\n* **Trend Core:** Uses a filtered SuperTrend (ATR-based) to identify primary direction.\n* **Entry Filters:** To avoid \"Chop\" and fake-outs, it uses a 20 EMA ",
+      "published_at": "2026-04-07T04:07:52.000Z",
+      "subreddit": "TradingView",
+      "score": 1,
+      "num_comments": 2
+    },
+    {
+      "title": "Trailing Stop Activation Alert in strategy.exit()",
+      "url": "https://www.reddit.com/r/TradingView/comments/1rehnca/trailing_stop_activation_alert_in_strategyexit/",
+      "snippet": "## Summary\n\nI'd like to request a new alert parameter in `strategy.exit()` that fires when the internal trailing stop engine **activates** — i.e., when the `trail_points` or `trail_price` profit threshold is first reached and the trailing stop begins tracking price. This is distinct from the existing `alert_trailing` parameter, which fires when the trailing stop **fills** (closes the position).\n\n#",
+      "published_at": "2026-02-25T16:17:30.000Z",
+      "subreddit": "TradingView",
+      "score": 1,
+      "num_comments": 2
+    },
+    {
+      "title": "Flask Blocking My PineScript Trades—Is Anyone Else Struggling with This?",
+      "url": "https://www.reddit.com/r/TradingView/comments/1g0knbn/flask_blocking_my_pinescript_tradesis_anyone_else/",
+      "snippet": "Hey everyone,\n\nI’ve been battling with an issue that some of you who automate trades between TradingView and a broker via webhooks have faced. I’ve been setting up a strategy using PineScript on TradingView, and I have a Flask app handling the trade execution by sending signals to my broker. But something isn’t working quite as I expected, and I wanted to see if anyone has gone through this and ho",
+      "published_at": "2024-10-10T14:53:14.000Z",
+      "subreddit": "TradingView",
+      "score": 1,
+      "num_comments": 3
+    },
+    {
+      "title": "Finding a way to automate strategies without knowing Pine Script",
+      "url": "https://www.reddit.com/r/TradingView/comments/1r9o5x9/finding_a_way_to_automate_strategies_without/",
+      "snippet": "I have been using TradingView for a while now but I always hit a wall when it comes to Pine Script. I have these strategy ideas in my head but I am not a coder and hiring someone on Fiverr to write scripts for me has been a hit or miss.\n\nRecently I started testing out BeeTrade for the execution and strategy building side of things. What caught my attention was the no code builder since it actually",
+      "published_at": "2026-02-20T06:42:14.000Z",
+      "subreddit": "TradingView",
+      "score": 52,
+      "num_comments": 37
+    },
+    {
+      "title": "stop using webhooks for live execution if you care about your money",
+      "url": "https://www.reddit.com/r/TradingView/comments/1tk71me/stop_using_webhooks_for_live_execution_if_you/",
+      "snippet": "Using webhooks for pine script alerts is slowly draining your account. webhooks increases latency by hundreds of milliseconds. by the time your server receives the http alert and sends it to the broker, the market makers have already changed the price. webhooks are designed for notification of disagreements, not for real time trading. stop wondering why real time slippage cancels the pnl test resu",
+      "published_at": "2026-05-22T03:31:00.000Z",
+      "subreddit": "TradingView",
+      "score": 8,
+      "num_comments": 24
+    },
+    {
+      "title": "Why do TradingView alerts sometimes “work” but still not execute trades?",
+      "url": "https://www.reddit.com/r/TradingView/comments/1s13hn0/why_do_tradingview_alerts_sometimes_work_but/",
+      "snippet": "I keep seeing the same issue when troubleshooting alert → execution setups:\n\n\n\n• TradingView alert fires  \n\n• webhook returns 200 / “success”  \n\n• but no actual order gets placed  \n\n\n\nAt first it looks like a webhook problem…  \n\nbut most of the time it isn’t.\n\n\n\nSome of the real causes I’ve run into:\n\n\n\n• wrong endpoint path returning a generic 200 response  \n\n• payload structure mismatch  \n\n• mis",
+      "published_at": "2026-03-23T01:27:01.000Z",
+      "subreddit": "TradingView",
+      "score": 3,
+      "num_comments": 2
+    },
+    {
+      "title": "Is there a way to automate “cluster” TradingView alerts across multiple tickers?",
+      "url": "https://www.reddit.com/r/TradingView/comments/1plvu9b/is_there_a_way_to_automate_cluster_tradingview/",
+      "snippet": "Hi all,\n\nI run a strategy that relies on TradingView alerts across multiple correlated tickers (e.g. SPX, SPY, NASDAQ, QQQ). When all four trigger a “Long” (or “Short”) alert within a short time window, that’s my signal to enter a trade (usually targeting \\~400 ticks on ES/SPX).\n\nRight now this is completely manual: I wait for all the alerts to fire, confirm they’re aligned, and then place the tra",
+      "published_at": "2025-12-13T20:57:49.000Z",
+      "subreddit": "TradingView",
+      "score": 2,
+      "num_comments": 6
+    },
+    {
+      "title": "Ongoing Issues with Alert Webhook Delays on TradingView",
+      "url": "https://www.reddit.com/r/TradingView/comments/1dap1qu/ongoing_issues_with_alert_webhook_delays_on/",
+      "snippet": "I am writing to raise a serious and urgent issue regarding persistent delays and missed alerts with the TradingView alert webhook system. Over the past week, my trading strategies have been severely impacted by these problems, resulting in significant financial consequences due to delayed executions and missed market opportunities. This level of service disruption is unacceptable for a platform of",
+      "published_at": "2024-06-07T23:31:21.000Z",
+      "subreddit": "TradingView",
+      "score": 24,
+      "num_comments": 49
+    },
+    {
+      "title": "PineScript executes orders for specific commission??",
+      "url": "https://www.reddit.com/r/TradingView/comments/1pox5jx/pinescript_executes_orders_for_specific_commission/",
+      "snippet": "[Some orders not executed.](https://preview.redd.it/gpzg5l7lrr7g1.png?width=1920&amp;format=png&amp;auto=webp&amp;s=cd39c4e1d6916c794abab50438fcbcc3f3007a78)\n\n[All orders were executed correctly.](https://preview.redd.it/85p9nrpmrr7g1.png?width=1920&amp;format=png&amp;auto=webp&amp;s=c328abb075728d224a485621e1ca3be1e0efc0f5)\n\nI don't know whether the title describes the problem properly, but anywa",
+      "published_at": "2025-12-17T13:57:12.000Z",
+      "subreddit": "TradingView",
+      "score": 1,
+      "num_comments": 0
+    },
+    {
+      "title": "When automating a tradingview strategy you've created using webhooks, how do you handle order quantity?",
+      "url": "https://www.reddit.com/r/TradingView/comments/1n0ueyr/when_automating_a_tradingview_strategy_youve/",
+      "snippet": "Say your account has $10k. This is how I \"thought\" it works:\n\nYou set account equity to $10k. The strategy is 100% in or 100% out let's say, for sake of this discussion. Back testing the strategy from say 2022-now shows it become $18k, so far all good. I create the alert and hookup the webhook for automation (see other posts for how to do this). My assumption is that the first buy order sent will ",
+      "published_at": "2025-08-26T18:52:55.000Z",
+      "subreddit": "TradingView",
+      "score": 1,
+      "num_comments": 10
+    },
+    {
+      "title": "Automate trade from TradingView pine script",
+      "url": "https://www.reddit.com/r/TradingView/comments/1l0rxy0/automate_trade_from_tradingview_pine_script/",
+      "snippet": "Hi All,\n\nI’ve created a strategy and set up alerts in TradingView for stocks, and I’m now looking to take the next step — triggering orders to a broker via webhook. I’d appreciate it if you could share your knowledge or experience on how to achieve this.\n\nI’m currently using Webull, and I understand that they don’t offer an official API. If you have experience with Webull integrations, I’d be grat",
+      "published_at": "2025-06-01T15:38:24.000Z",
+      "subreddit": "TradingView",
+      "score": 3,
+      "num_comments": 17
+    },
+    {
+      "title": "Feature Request – Native Algorithmic Trading &amp; Automatic Order Execution from Pine Script",
+      "url": "https://www.reddit.com/r/TradingView/comments/1oakau6/feature_request_native_algorithmic_trading/",
+      "snippet": "Hello TradingView Team,\n\nI wanted to share an idea that I believe could take TradingView to the next level. Today, Pine Script is already an excellent language for building indicators and strategies, but it remains limited to generating signals. For those of us who develop automated systems, this means we have to rely on external bridges such as PineConnector or other platforms to actually execute",
+      "published_at": "2025-10-19T08:21:41.000Z",
+      "subreddit": "TradingView",
+      "score": 3,
+      "num_comments": 4
+    },
+    {
+      "title": "Automating alert creation",
+      "url": "https://www.reddit.com/r/TradingView/comments/1pc3toe/automating_alert_creation/",
+      "snippet": "I am trading 0DTE SPY options, and want to automate things a bit. While I know what to do on the webhook side, on the TV side, is there a way for me to auto-generate the daily alerts? Each day, the option symbol will change, and I will be using multi-condition alerts to trigger my webhook.\n\n  \nI read that TV only has a broker API. Is there another way I can accomplish this task?",
+      "published_at": "2025-12-02T09:06:29.000Z",
+      "subreddit": "TradingView",
+      "score": 1,
+      "num_comments": 0
+    },
+    {
+      "title": "Execute live trades with Pine Script in TradingView",
+      "url": "https://www.reddit.com/r/TradingView/comments/1lu1vpr/execute_live_trades_with_pine_script_in/",
+      "snippet": "Hey everyone 👋  \nQuick question for the traders and devs here:\n\nIf you could write your strategy in Pine Script and have it automatically place live trades directly inside TradingView when conditions are met, using one of the brokers that are officially supported by TradingView and without webhooks, alerts, or any third-party tools, would that be something you're interested in?\n\nI'm working on a ",
+      "published_at": "2025-07-07T18:26:20.000Z",
+      "subreddit": "TradingView",
+      "score": 1,
+      "num_comments": 7
+    },
+    {
+      "title": "Can we still use webhooks with alerts after last TV policy update? What's the deal now?",
+      "url": "https://www.reddit.com/r/TradingView/comments/1lv27zj/can_we_still_use_webhooks_with_alerts_after_last/",
+      "snippet": "Hi,\n\n  \nI wanted to use alerts to send signals via webhooks to metatrader 5. Right when i started getting into it, i read a message from a pinescript trader on youtube a couple of weeks ago, saying :   \n\"TradingView recently changed their terms of use to forbid automated trading with Pine Script alerts. Here is their updated policy : [https://www.tradingview.com/policies/?aff\\_id=15271](https://ww",
+      "published_at": "2025-07-08T22:22:52.000Z",
+      "subreddit": "TradingView",
+      "score": 2,
+      "num_comments": 5
+    },
+    {
+      "title": "Automated Trading of Pine strategies? Everyone wants this.",
+      "url": "https://www.reddit.com/r/TradingView/comments/14a1ucg/automated_trading_of_pine_strategies_everyone/",
+      "snippet": "Automated Trading of pine strategies? I bet everyone wants this really bad, I wonder why the feature is still not present.   \nNowadays we are forced to send alerts either to 'third-party' (pineconnector, capitalise, etc etc) services or to custom bridges.   \nBut this approach has many flaws, plus, I would desperately like to be able to manage 100% of trading process relying solely on TradingView. ",
+      "published_at": "2023-06-15T13:00:38.000Z",
+      "subreddit": "TradingView",
+      "score": 69,
+      "num_comments": 39
+    },
+    {
+      "title": "Webhook Signals Triggering Without New Alerts – Need Help",
+      "url": "https://www.reddit.com/r/TradingView/comments/1jt9rlm/webhook_signals_triggering_without_new_alerts/",
+      "snippet": "Hi everyone,\n\nI’m using a TradingView strategy that was coded in Pine Script by someone else. It looks fine on the chart and the backtest results are solid.\n\nHowever, when I deploy the strategy through webhook signals for live trading, I’m facing a strange issue. TradingView sends out signals even when there are no new buy or sell indications showing on the chart from the strategy. This is causing",
+      "published_at": "2025-04-07T01:26:38.000Z",
+      "subreddit": "TradingView",
+      "score": 1,
+      "num_comments": 7
+    },
+    {
+      "title": "UPVOTE REQUEST : Trading View Feature Request : CRYPTO Screener + Auto Adds to List + Alerts on List = AUTOMATION",
+      "url": "https://www.reddit.com/r/TradingView/comments/1lwa9lt/upvote_request_trading_view_feature_request/",
+      "snippet": "Calling All TradingView Crypto Traders! Help Shape the Future of Automation!  \n  \nHey TradingView Crypto Crew!  \n  \nI’m diving into some next-level automation ideas and need your expertise to make it happen!I’m exploring ways to supercharge the TradingView screener by automatically flagging coins that hit specific criteria (think price surges, volume spikes, or TA signals) and adding them to a cus",
+      "published_at": "2025-07-10T11:25:56.000Z",
+      "subreddit": "TradingView",
+      "score": 0,
+      "num_comments": 0
+    },
+    {
+      "title": "Issue with Webhooks and alerts",
+      "url": "https://www.reddit.com/r/TradingView/comments/1gy6qrt/issue_with_webhooks_and_alerts/",
+      "snippet": "Background: I have been investing for over 15 years and have made a good return in the stock market (average around 40%). This is taking a lot of my time and I was looking to use Tradingview as my charting and alert platform (have been using it for a year now). I am just wondering if anyone else is having these same issues. I have seen some previous posts where quite a few people expressed issues ",
+      "published_at": "2024-11-23T18:48:39.000Z",
+      "subreddit": "TradingView",
+      "score": 1,
+      "num_comments": 14
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:27.486Z"
+}

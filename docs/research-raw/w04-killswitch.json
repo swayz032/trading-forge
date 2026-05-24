@@ -1,0 +1,279 @@
+{
+  "query": "kill switch DLL trailing drawdown automated futures execution",
+  "since": "2024-01-01",
+  "depth": "deep",
+  "sources": [
+    {
+      "source": "brave",
+      "items": [
+        {
+          "title": "NinjaTrader Trailing Drawdown — A Survival Guide for Funded Traders | CrossTrade",
+          "url": "https://crosstrade.io/learn/risk-management/trailing-drawdown-survival-guide",
+          "snippet": "Can I automatically close NinjaTrader positions before breaching my trailing drawdown? Yes. The CrossTrade Account Manager provides a Trailing Drawdown Monitor that tracks peak equity against your firm&#x27;s drawdown floor in real time and auto-flattens positions at a configurable buffer before actual breach. This lets you pre-empt the firm&#x27;s own kill switch and close positions at your chosen price rather than the firm&#x27;s forced liquidation price.",
+          "published_at": "2026-05-12T23:07:46.000Z",
+          "score": null
+        },
+        {
+          "title": "Daily Drawdown: What You Need to Know | Top One Futures Help Center",
+          "url": "https://help.toponefutures.com/en/articles/10907081-daily-drawdown-what-you-need-to-know",
+          "snippet": "Relying solely on the DLL can result in losing more than intended. Top One Futures is not responsible for any losses that exceed the daily drawdown limit. Any loss beyond your allowed threshold is the trader’s responsibility. Soft Breach: Trading is paused for the rest of the day. Resume Trading: You can continue the next day, as long as your account hasn’t exceeded the Max Trailing Drawdown.",
+          "published_at": "2026-02-18T06:17:22.000Z",
+          "score": null
+        },
+        {
+          "title": "TakeProfitTrader Review 2026 — Rules, Payouts, Accounts ...",
+          "url": "https://proptradingvibes.com/prop-firms/take-profit-trader",
+          "snippet": "Traders coming from a daily-loss-limit-based prop firm need to internalize that TPT removed the DLL across all phases in January 2025, leaving the trailing drawdown as the only hard-loss guardrail. Going into PRO with explicit awareness of the intraday lock mechanic and a self-imposed daily loss circuit-breaker is the practical defense, and the TPT EOD trailing drawdown explained and TPT intraday drawdown explained deep-dives in the rules cluster cover the mechanics in the depth they deserve. For futures traders looking for daily payouts, founder-led continuity, a four-platform stack, and an automatic path to a 90/10 split, TakeProfitTrader is one of the strongest 2026 picks once the PRO phase mechanics are read closely.",
+          "published_at": "2026-04-15T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "What Is a Kill Switch in Trading Platforms? | OptionX Journal - Scalping & Options Trading",
+          "url": "https://optionx.trade/blogs/what-is-kill-switch-trading-platform",
+          "snippet": "Whichever one is triggered first, the other is automatically cancelled by the exchange. This mechanism ensures you always have a defined exit, removing emotional decision-making. ... OptionX&#x27;s bracket orders support Auto Trailing Stop-Loss. Your stop-loss level moves in your favor as the price moves. This locks in partial profits on winning trades, effectively becoming a “dynamic kill switch” that adjusts as your position improves. For example, if you buy Nifty futures at 23,000, setting a 50-point SL and 100-point target, OptionX ensures those exits are active.",
+          "published_at": "2026-04-29T11:48:07.000Z",
+          "score": null
+        },
+        {
+          "title": "The Prop Firm Kill-Switch: How to Stop Drawdown Before It Violates the Rules - Analytics & Forecasts - 11 February 2026 - Traders' Blogs",
+          "url": "https://www.mql5.com/en/blogs/post/767321",
+          "snippet": "Trailing drawdown is <strong>designed to eliminate gamblers</strong>. It punishes the classic retail behavior: ... Your new “high-water mark” becomes your executioner. If your system doesn’t have a built-in safety layer, it’s not prop-firm ready — ...",
+          "published_at": "2026-02-11T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Topstep Review 2026 — Rules, Payouts, Accounts & Funding ...",
+          "url": "https://proptradingvibes.com/prop-firms/topstep",
+          "snippet": "The next session must respect the ... in the Topstep drawdown explained guide. <strong>DLL auto-liquidates open positions when breached and locks the account for the rest of that day</strong>....",
+          "published_at": "2026-05-13T20:37:02.000Z",
+          "score": null
+        },
+        {
+          "title": "Topstep Rules 2026: Drawdown, $150 Winning Day, Consistency",
+          "url": "https://proptradingvibes.com/blog/topstep-rules-overview",
+          "snippet": "<strong>Hitting the DLL triggers automatic liquidation and locks the account for the rest of that session</strong>, but it is NOT a rule violation: the account stays open and trading resumes the next day.",
+          "published_at": "2026-04-28T04:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Kill Switch Definition - Traders' Glossary | Positioned",
+          "url": "https://positioned.app/traders-glossary/kill-switch",
+          "snippet": "<strong>A kill switch operates on simple but ruthless logic that monitors your account status in real-time</strong>. First, you establish a Threshold Setting. The trader (or the proprietary trading firm) sets a &quot;Max Daily Loss&quot; (e.g., $1,000) or a &quot;Max Drawdown&quot; ...",
+          "published_at": "2026-02-21T05:00:00.000Z",
+          "score": null
+        },
+        {
+          "title": "Common FAQs | Tradeify Help Center",
+          "url": "https://help.tradeify.co/en/articles/12268494-common-faqs",
+          "snippet": "Auto-liquidation is a protective ... loss limit or trailing drawdown threshold. It&#x27;s not an error - it&#x27;s designed to prevent further losses. ... Your account is likely in Liquidation-Only mode due to hitting your Daily Loss Limit or drawdown threshold. DLL resets the next trading ...",
+          "published_at": "2026-05-11T21:40:51.000Z",
+          "score": null
+        },
+        {
+          "title": "Best Prop Firm Trading Platforms 2026: Tradovate, Rithmic & TopstepX Compared | Damn Prop Firms",
+          "url": "https://damnpropfirms.com/best-prop-firm-trading-platforms/",
+          "snippet": "Multi-firm account management — Connect funded and evaluation accounts from Apex, Tradeify, Take Profit Trader, Lucid Trading, FundedNext, TradeDay, and Alpha Futures all in one workspace. Manual Lockout button — One-click session kill switch that closes all open positions and blocks new orders for the rest of the session. Critical for preventing revenge trading. Prop-aware risk dashboards — Daily loss, trailing drawdown, and open risk visible in real time, so you’re never guessing whether you’re close to a breach.",
+          "published_at": "2026-04-24T15:57:04.000Z",
+          "score": null
+        },
+        {
+          "title": "Tradovate Review (2026): Modern Futures Platform for Prop Firm Traders | Damn Prop Firms",
+          "url": "https://damnpropfirms.com/best-prop-firm-trading-platforms/tradovate/",
+          "snippet": "<strong>It lets you connect multiple prop firm logins into a single workspace, track prop-specific risk metrics like daily loss and drawdown, and use tools designed for funded futures programs</strong>.",
+          "published_at": "2026-04-20T11:47:51.000Z",
+          "score": null
+        },
+        {
+          "title": "EOD Drawdown | Damn Prop Firms: Your #1 Source for Futures Prop Firm Discounts and Trading Resources",
+          "url": "https://damnpropfirms.com/glossary/eod-drawdown/",
+          "snippet": "<strong>Hitting the DLL still ends the account regardless of the drawdown model</strong>. ... EOD is friendlier for most strategies, especially scalping and intraday swing trading where unrealized peaks are common.",
+          "published_at": "2026-05-11T09:47:25.000Z",
+          "score": null
+        }
+      ]
+    },
+    {
+      "source": "exa",
+      "items": [
+        {
+          "title": "joscelyn/PropMarshal",
+          "url": "https://github.com/joscelyn/PropMarshal",
+          "snippet": "",
+          "published_at": "2026-03-02T00:00:00.000Z",
+          "score": 1
+        },
+        {
+          "title": "NinjaTrader Trailing Drawdown — A Survival Guide for Funded Traders | CrossTrade",
+          "url": "https://crosstrade.io/learn/risk-management/trailing-drawdown-survival-guide",
+          "snippet": "",
+          "published_at": "2026-04-19T00:00:00.000Z",
+          "score": 0.9090909090909091
+        },
+        {
+          "title": "Drawdown Terminator | Buy Trading Utility for MetaTrader 5",
+          "url": "https://www.mql5.com/en/market/product/157717",
+          "snippet": "",
+          "published_at": "2025-12-09T00:00:00.000Z",
+          "score": 0.8181818181818181
+        },
+        {
+          "title": "PNL Drawdown Kill Switch Example For Strategy Builder - NinjaTrader Ecosystem",
+          "url": "https://ninjatraderecosystem.com/user-app-share-download/pnl-drawdown-kill-switch-example-for-strategy-builder/",
+          "snippet": "",
+          "published_at": "2025-02-04T00:00:00.000Z",
+          "score": 0.7272727272727273
+        },
+        {
+          "title": "senpi-skills/dsl-dynamic-stop-loss at main · Senpi-ai/senpi-skills · GitHub",
+          "url": "https://github.com/Senpi-ai/senpi-skills/tree/main/dsl-dynamic-stop-loss",
+          "snippet": "",
+          "published_at": "2026-02-23T00:00:00.000Z",
+          "score": 0.6363636363636364
+        },
+        {
+          "title": "Free download of the 'BEC Lockin Dashboard Manager' expert by '1890945701' for MetaTrader 5 in the MQL5 Code Base, 2026.04.09",
+          "url": "https://www.mql5.com/en/code/71761",
+          "snippet": "",
+          "published_at": "2026-04-09T00:00:00.000Z",
+          "score": 0.5454545454545454
+        },
+        {
+          "title": "apex-rithmic-trading skill by mkalhitti-cloud/universal-or-strategy",
+          "url": "https://playbooks.com/skills/mkalhitti-cloud/universal-or-strategy/apex-rithmic-trading",
+          "snippet": "",
+          "published_at": "2026-01-26T00:00:00.000Z",
+          "score": 0.4545454545454546
+        },
+        {
+          "title": "Free download of the 'ASQ PropFirm Shield' library by 'Robin2.0' for MetaTrader 5 in the MQL5 Code Base, 2026.04.05",
+          "url": "https://www.mql5.com/en/code/71480",
+          "snippet": "",
+          "published_at": "2026-04-05T00:00:00.000Z",
+          "score": 0.36363636363636365
+        },
+        {
+          "title": "ZrakD/MT5-Risk-Management-EA",
+          "url": "https://github.com/ZrakD/MT5-Risk-Management-EA",
+          "snippet": "",
+          "published_at": "2026-04-28T00:00:00.000Z",
+          "score": 0.2727272727272727
+        },
+        {
+          "title": "Rockywei1/OpenXaiAlgo",
+          "url": "https://github.com/Rockywei1/OpenXaiAlgo",
+          "snippet": "",
+          "published_at": "2026-01-17T00:00:00.000Z",
+          "score": 0.18181818181818177
+        },
+        {
+          "title": "PapaDaCodr/kryptic-gopha",
+          "url": "https://github.com/papadacodr/kryptic-gopha",
+          "snippet": "",
+          "published_at": "2026-03-12T00:00:00.000Z",
+          "score": 0.09090909090909094
+        },
+        {
+          "title": "Automate Kill Switch Flatten All Prop Firm Accounts | NinjaTrader Guide | Copilink",
+          "url": "https://copilink.com/articles/automate-kill-switch-flatten-all-prop-accounts",
+          "snippet": "",
+          "published_at": "2026-03-01T00:00:00.000Z",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "source": "tavily",
+      "items": [
+        {
+          "title": "NinjaTrader Trailing Drawdown — A Survival Guide for Funded Traders | CrossTrade",
+          "url": "https://crosstrade.io/learn/risk-management/trailing-drawdown-survival-guide",
+          "snippet": "Kill Switch on Breach: Yes\n\n```\n\n### Take Profit Trader $50K PRO (the intraday switch)​\")\n\n```\n\nStarting Balance: $50,000\n\nTrailing Drawdown: $2,000 (intraday on PRO, was EOD in eval)\n\nDaily Loss Limit: $500 (TPT removed platform DLL in 2025)\n\nDaily Profit Target: $400\n\nTrailing DD Warning: $500 from floor\n\nTrailing DD Auto-Flatten: $250 from floor\n\nAuto-Flatten Time: 16:45 ET\n\nKill Switch on Brea",
+          "published_at": null,
+          "score": 0.560566
+        },
+        {
+          "title": "The Prop Firm Kill-Switch: How to Stop Drawdown Before It Violates the Rules - Analytics & Forecasts - 11 February 2026 - Traders' Blogs",
+          "url": "https://www.mql5.com/en/blogs/post/767321",
+          "snippet": "If your system doesn’t have a built-in safety layer, it’s not prop-firm ready — no matter how good the entries look in a backtest.\n\n### ⚡ PROTECT THE ACCOUNT (NOT THE EGO)\n\nProp firm survival is risk automation. The market doesn’t care about your feelings, and neither do prop firm rules.\n\nThe Ratio X Toolbox is built for these regimes — including execution filters and protection layers that can ac",
+          "published_at": null,
+          "score": 0.25886005
+        },
+        {
+          "title": "[PDF] Best Practices For Automated Trading Risk Controls And System ...",
+          "url": "https://www.fia.org/sites/default/files/2024-07/FIA_WP_AUTOMATED%20TRADING%20RISK%20CONTROLS_FINAL_0.pdf",
+          "snippet": "it is possible to pass through cancel requests to the exchange in the event of an unexpected disconnection by the customer from the broker’s infrastructure. At present this is typically unsupported, and the customer would need to contact the broker to manually cancel any working orders. 1.5 Kill Switches A kill switch is a control that, when activated, immediately disables all trading activity for",
+          "published_at": null,
+          "score": 0.2405475
+        },
+        {
+          "title": "Build A PNL Drawdown Kill Switch Into Your NinjaTrader Bot",
+          "url": "https://www.youtube.com/watch?v=RgSqLobNuJQ",
+          "snippet": "This is an example of how to build a drawdown killswitch into your NinjaTrader Bot. Free Download for this can be found in the links below.",
+          "published_at": null,
+          "score": 0.20315401
+        },
+        {
+          "title": "ClearEdge Automation",
+          "url": "https://clearedge.trading/post/automated-futures-trading-stop-loss-strategies",
+          "snippet": "Fixed-distance trailing stops maintain a constant tick distance from the highest price reached. Percentage-based trailing stops use a percentage of current price, which works better for instruments with large price differences like crude oil. For futures automation, fixed-tick trailing stops are more common because they align with contract specifications and provide precise dollar risk calculation",
+          "published_at": null,
+          "score": 0.19650257
+        },
+        {
+          "title": "blog - NinjaTrader Automated Trading by Algo Futures Trader",
+          "url": "https://algofuturestrader.com/blog",
+          "snippet": "This allows full use of AFT8’s execution and trade management systems while running proprietary strategies.\n\nDeveloper features include:\n\n Custom signal injection\n Integration with trade entry and exit systems\n Use of DLL references and code templates\n\nAccess to developer resources and templates is available upon request via ATS support.\n\n## Do ATS Creators Use These Algos?\n\nYes — ATS creators act",
+          "published_at": null,
+          "score": 0.14505509
+        },
+        {
+          "title": "ClearEdge Automation",
+          "url": "https://clearedge.trading/post/best-futures-automation-platform-features",
+          "snippet": "#### Risk Features to Prioritize\n\n Real-time P&L tracking with automatic shutdown at loss thresholds\n Maximum position size limits per symbol (e.g., max 3 ES contracts)\n Emergency stop button accessible in under 2 seconds\n Time filters for news events and market open/close volatility\n Trailing drawdown tracking for prop firm compliance\n\n#### Insufficient Risk Controls\n\n End-of-day P&L calculation ",
+          "published_at": null,
+          "score": 0.13689686
+        },
+        {
+          "title": "Kill Switch",
+          "url": "https://www.cmegroup.com/tools-information/webhelp/globex-credit-controls/Content/Kill-Switch.html",
+          "snippet": "### User Help System\n\nYou are here: Risk Management Tools >\n\n# Kill Switch\n\nKill Switch provides an cancellation function for the following levels: Legal Clearing Entity, Execution Firm and Sender Comp.\n\nFor detailed information, see Enforcing Kill Switch.\n\n### Primary Features\n\nKill Switch functionality:\n\n All Day Orders and Good Till orders are canceled when Kill Switch is invoked. [...] Note: K",
+          "published_at": null,
+          "score": 0.12612738
+        },
+        {
+          "title": "Kill Switch Implementation in KiteConnect | PDF",
+          "url": "https://www.scribd.com/document/820306073/kill-switch-version",
+          "snippet": "Scribd\n\n# Kill Switch Implementation in KiteConnect\n\nKill Switch Implementation in KiteConnect\n\n## Uploaded by\n\nAI-enhanced title and description\n\n# Kill Switch Implementation in KiteConnect\n\nThis document provides a Python script that utilizes the Kite Connect API for trading management. It includes functionalities for fetching positions, calculating MTM (Mark to Market), placing trades, and acti",
+          "published_at": null,
+          "score": 0.102583274
+        },
+        {
+          "title": "How to Set Up Algorithmic Trading: Complete Beginner-to-Pro Setup Guide (2026)",
+          "url": "https://www.quantvps.com/blog/how-to-set-up-algorithmic-trading",
+          "snippet": "Regularly review execution logs to spot issues like brokerage API disconnections, order errors, or logic flaws that could eat into your profits. It’s wise to set up safety mechanisms, such as kill switches or liquidation buttons, to quickly exit all positions if your algorithm starts acting unpredictably. For brokerages like Interactive Brokers, you’ll also want to schedule weekly re-authenticatio",
+          "published_at": null,
+          "score": 0.099025175
+        },
+        {
+          "title": "Automated Futures Trading Systems: Strategy Examples",
+          "url": "https://www.quantvps.com/blog/automated-futures-trading-systems",
+          "snippet": "Automated futures trading systems adhere to CFTC regulations by integrating strong risk controls, advanced monitoring tools, and clear transparency practices. These safeguards are essential for spotting and preventing potential market disruptions or rule violations, ensuring trading remains fair and orderly.\n\nTo comply with these regulations, trading platforms use automated surveillance systems to",
+          "published_at": null,
+          "score": 0.09583088
+        },
+        {
+          "title": "2013-22185 | CFTC",
+          "url": "https://www.cftc.gov/LawRegulation/FederalRegister/finalrules/2013-22185.html",
+          "snippet": "The potential result is a cascading series of market disruptions,   \nbrought about by the malfunction of a single ATS or algorithm trading   \non a single platform.  \n    Transmission effects such as this are illustrated by events like   \nthe May 6, 2010 ``Flash Crash.'' On that day, major equity indices in   \nboth the futures and securities markets fell over 5% in minutes before   \nrecovering almo",
+          "published_at": null,
+          "score": 0.07594738
+        }
+      ]
+    },
+    {
+      "source": "youtube",
+      "error": "Error: YouTube 429: {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per minute' of service 'youtube.googleapis.com' for consumer 'project_number:409604625407'.\",\n    \"errors\": [\n      {\n        \"message\": \"Quota exceeded for quota metric 'Search"
+    }
+  ],
+  "cited_at": "2026-05-24T05:02:46.673Z"
+}

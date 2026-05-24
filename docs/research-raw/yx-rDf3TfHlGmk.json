@@ -1,0 +1,3393 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "rDf3TfHlGmk",
+  "url": "https://www.youtube.com/watch?v=rDf3TfHlGmk",
+  "segments": [
+    {
+      "text": "Here's how I built my own profitable AI",
+      "duration": 4000,
+      "offset": 0,
+      "lang": "en"
+    },
+    {
+      "text": "agent day trader completely within",
+      "duration": 3680,
+      "offset": 2159,
+      "lang": "en"
+    },
+    {
+      "text": "NINDN. Now, here's how the agent works.",
+      "duration": 3680,
+      "offset": 4000,
+      "lang": "en"
+    },
+    {
+      "text": "We can send over any stock ticker like",
+      "duration": 4081,
+      "offset": 5839,
+      "lang": "en"
+    },
+    {
+      "text": "Tesla here. And once we click enter, the",
+      "duration": 3839,
+      "offset": 7680,
+      "lang": "en"
+    },
+    {
+      "text": "agent will first get all the candlestick",
+      "duration": 3280,
+      "offset": 9920,
+      "lang": "en"
+    },
+    {
+      "text": "data as well as recent news sentiments",
+      "duration": 3361,
+      "offset": 11519,
+      "lang": "en"
+    },
+    {
+      "text": "to recommend us a trade. Here we can see",
+      "duration": 3200,
+      "offset": 13200,
+      "lang": "en"
+    },
+    {
+      "text": "that it's recommending for us to sell",
+      "duration": 4319,
+      "offset": 14880,
+      "lang": "en"
+    },
+    {
+      "text": "Tesla at an entry price of 325. We also",
+      "duration": 4480,
+      "offset": 16400,
+      "lang": "en"
+    },
+    {
+      "text": "have a stop loss in case the price does",
+      "duration": 3521,
+      "offset": 19199,
+      "lang": "en"
+    },
+    {
+      "text": "raise a bit too high. And we also have a",
+      "duration": 4559,
+      "offset": 20880,
+      "lang": "en"
+    },
+    {
+      "text": "target and exit price at 322. Next, I'll",
+      "duration": 4319,
+      "offset": 22720,
+      "lang": "en"
+    },
+    {
+      "text": "be going over how this agent actually",
+      "duration": 3201,
+      "offset": 25439,
+      "lang": "en"
+    },
+    {
+      "text": "works in the back end. and make sure to",
+      "duration": 2881,
+      "offset": 27039,
+      "lang": "en"
+    },
+    {
+      "text": "stay till the end and I'll show you how",
+      "duration": 2879,
+      "offset": 28640,
+      "lang": "en"
+    },
+    {
+      "text": "to build this from scratch so that you",
+      "duration": 3040,
+      "offset": 29920,
+      "lang": "en"
+    },
+    {
+      "text": "can implement it yourself in your own",
+      "duration": 3040,
+      "offset": 31519,
+      "lang": "en"
+    },
+    {
+      "text": "trading. So now let's go ahead and do a",
+      "duration": 3840,
+      "offset": 32960,
+      "lang": "en"
+    },
+    {
+      "text": "deeper dive into our NAND AI agent",
+      "duration": 3761,
+      "offset": 34559,
+      "lang": "en"
+    },
+    {
+      "text": "workflow. So starting off, we're going",
+      "duration": 3040,
+      "offset": 36800,
+      "lang": "en"
+    },
+    {
+      "text": "to communicate with Telegram, meaning",
+      "duration": 2720,
+      "offset": 38320,
+      "lang": "en"
+    },
+    {
+      "text": "that we're going to send the tickers",
+      "duration": 2719,
+      "offset": 39840,
+      "lang": "en"
+    },
+    {
+      "text": "over via Telegram and we'll get the",
+      "duration": 3600,
+      "offset": 41040,
+      "lang": "en"
+    },
+    {
+      "text": "analyses back via Telegram as well. And",
+      "duration": 3441,
+      "offset": 42559,
+      "lang": "en"
+    },
+    {
+      "text": "the way this AI is going to help us",
+      "duration": 3040,
+      "offset": 44640,
+      "lang": "en"
+    },
+    {
+      "text": "generate trades is through two different",
+      "duration": 4000,
+      "offset": 46000,
+      "lang": "en"
+    },
+    {
+      "text": "data points. The first is this 1 minute",
+      "duration": 4640,
+      "offset": 47680,
+      "lang": "en"
+    },
+    {
+      "text": "15-minute and 1 hour candlestick data.",
+      "duration": 4079,
+      "offset": 50000,
+      "lang": "en"
+    },
+    {
+      "text": "So all we're doing is taking the last",
+      "duration": 4399,
+      "offset": 52320,
+      "lang": "en"
+    },
+    {
+      "text": "100 minutes, the last 115 minutes, and",
+      "duration": 4561,
+      "offset": 54079,
+      "lang": "en"
+    },
+    {
+      "text": "then the last 100 hours. And then once",
+      "duration": 3041,
+      "offset": 56719,
+      "lang": "en"
+    },
+    {
+      "text": "we have all that data, we're going to",
+      "duration": 2880,
+      "offset": 58640,
+      "lang": "en"
+    },
+    {
+      "text": "combine it with any recent stock news",
+      "duration": 3760,
+      "offset": 59760,
+      "lang": "en"
+    },
+    {
+      "text": "articles for the past day. And this way,",
+      "duration": 3679,
+      "offset": 61520,
+      "lang": "en"
+    },
+    {
+      "text": "we can get a complete view of both any",
+      "duration": 3440,
+      "offset": 63520,
+      "lang": "en"
+    },
+    {
+      "text": "technical indicators as well as any",
+      "duration": 3681,
+      "offset": 65199,
+      "lang": "en"
+    },
+    {
+      "text": "macro events that could be happening",
+      "duration": 3519,
+      "offset": 66960,
+      "lang": "en"
+    },
+    {
+      "text": "regarding the stock. Then after all",
+      "duration": 2800,
+      "offset": 68880,
+      "lang": "en"
+    },
+    {
+      "text": "that's done, we're going to clean up all",
+      "duration": 3121,
+      "offset": 70479,
+      "lang": "en"
+    },
+    {
+      "text": "the data, merge the two data sources.",
+      "duration": 3119,
+      "offset": 71680,
+      "lang": "en"
+    },
+    {
+      "text": "We're going to aggregate it, send it",
+      "duration": 3040,
+      "offset": 73600,
+      "lang": "en"
+    },
+    {
+      "text": "over into an AI agent, which is going to",
+      "duration": 3761,
+      "offset": 74799,
+      "lang": "en"
+    },
+    {
+      "text": "help us form the final trade opinion.",
+      "duration": 3280,
+      "offset": 76640,
+      "lang": "en"
+    },
+    {
+      "text": "And again, everything is data focused,",
+      "duration": 2879,
+      "offset": 78560,
+      "lang": "en"
+    },
+    {
+      "text": "so there's no bias at all. All it's",
+      "duration": 3280,
+      "offset": 79920,
+      "lang": "en"
+    },
+    {
+      "text": "looking at is literally the prices of",
+      "duration": 3281,
+      "offset": 81439,
+      "lang": "en"
+    },
+    {
+      "text": "every minute, hour, and every 15",
+      "duration": 3200,
+      "offset": 83200,
+      "lang": "en"
+    },
+    {
+      "text": "minutes. It's able to see all the volume",
+      "duration": 3280,
+      "offset": 84720,
+      "lang": "en"
+    },
+    {
+      "text": "levels as well. It's going to be able to",
+      "duration": 3359,
+      "offset": 86400,
+      "lang": "en"
+    },
+    {
+      "text": "calculate its own technical indicators.",
+      "duration": 3759,
+      "offset": 88000,
+      "lang": "en"
+    },
+    {
+      "text": "And then finally, it sees some outside",
+      "duration": 4241,
+      "offset": 89759,
+      "lang": "en"
+    },
+    {
+      "text": "opinion via news sentiment. And from",
+      "duration": 4081,
+      "offset": 91759,
+      "lang": "en"
+    },
+    {
+      "text": "there, it'll form a final opinion that",
+      "duration": 3600,
+      "offset": 94000,
+      "lang": "en"
+    },
+    {
+      "text": "we can view in Telegram and decide",
+      "duration": 3040,
+      "offset": 95840,
+      "lang": "en"
+    },
+    {
+      "text": "whether we want to take the trade or",
+      "duration": 2720,
+      "offset": 97600,
+      "lang": "en"
+    },
+    {
+      "text": "not. Now, before we continue, if you",
+      "duration": 2720,
+      "offset": 98880,
+      "lang": "en"
+    },
+    {
+      "text": "want to get this template, as well as",
+      "duration": 3520,
+      "offset": 100320,
+      "lang": "en"
+    },
+    {
+      "text": "join an active community of AI builders",
+      "duration": 4400,
+      "offset": 101600,
+      "lang": "en"
+    },
+    {
+      "text": "with full in-depth guides on AI agents,",
+      "duration": 3440,
+      "offset": 103840,
+      "lang": "en"
+    },
+    {
+      "text": "make sure to click the link in the",
+      "duration": 2640,
+      "offset": 106000,
+      "lang": "en"
+    },
+    {
+      "text": "description. Now, let's go ahead and",
+      "duration": 3519,
+      "offset": 107280,
+      "lang": "en"
+    },
+    {
+      "text": "build this from scratch in NAN. So,",
+      "duration": 3680,
+      "offset": 108640,
+      "lang": "en"
+    },
+    {
+      "text": "let's add the first step, which is going",
+      "duration": 2960,
+      "offset": 110799,
+      "lang": "en"
+    },
+    {
+      "text": "to be the trigger that starts this",
+      "duration": 3040,
+      "offset": 112320,
+      "lang": "en"
+    },
+    {
+      "text": "entire workflow. And just like I showed",
+      "duration": 2961,
+      "offset": 113759,
+      "lang": "en"
+    },
+    {
+      "text": "you in the beginning of the video, we'll",
+      "duration": 3520,
+      "offset": 115360,
+      "lang": "en"
+    },
+    {
+      "text": "use Telegram. So, go ahead and select on",
+      "duration": 3920,
+      "offset": 116720,
+      "lang": "en"
+    },
+    {
+      "text": "message. And I've typed in test on",
+      "duration": 3360,
+      "offset": 118880,
+      "lang": "en"
+    },
+    {
+      "text": "Telegram. So, if we test this step, we",
+      "duration": 3920,
+      "offset": 120640,
+      "lang": "en"
+    },
+    {
+      "text": "should see test as the text right here.",
+      "duration": 3919,
+      "offset": 122240,
+      "lang": "en"
+    },
+    {
+      "text": "Now, what we need to do is get live",
+      "duration": 3440,
+      "offset": 124560,
+      "lang": "en"
+    },
+    {
+      "text": "market data for that stock ticker. And",
+      "duration": 3600,
+      "offset": 126159,
+      "lang": "en"
+    },
+    {
+      "text": "the way we do this is through an API",
+      "duration": 3920,
+      "offset": 128000,
+      "lang": "en"
+    },
+    {
+      "text": "called the 12 data. So, all you need to",
+      "duration": 4081,
+      "offset": 129759,
+      "lang": "en"
+    },
+    {
+      "text": "do, which is completely free, is sign up",
+      "duration": 3600,
+      "offset": 131920,
+      "lang": "en"
+    },
+    {
+      "text": "for an account and then head over to",
+      "duration": 3920,
+      "offset": 133840,
+      "lang": "en"
+    },
+    {
+      "text": "your API keys. Now, this API lets you",
+      "duration": 4160,
+      "offset": 135520,
+      "lang": "en"
+    },
+    {
+      "text": "use this 800 times every single month,",
+      "duration": 3839,
+      "offset": 137760,
+      "lang": "en"
+    },
+    {
+      "text": "as well as eight times a minute. So, you",
+      "duration": 3919,
+      "offset": 139680,
+      "lang": "en"
+    },
+    {
+      "text": "basically will never run out of credits",
+      "duration": 4000,
+      "offset": 141599,
+      "lang": "en"
+    },
+    {
+      "text": "unless you're running this like an",
+      "duration": 4241,
+      "offset": 143599,
+      "lang": "en"
+    },
+    {
+      "text": "absolute madman, but I'm assuming most",
+      "duration": 3841,
+      "offset": 145599,
+      "lang": "en"
+    },
+    {
+      "text": "of you should be completely fine with",
+      "duration": 3920,
+      "offset": 147840,
+      "lang": "en"
+    },
+    {
+      "text": "the free account on this plan. So, once",
+      "duration": 4240,
+      "offset": 149440,
+      "lang": "en"
+    },
+    {
+      "text": "you get your API key, head back to Naden",
+      "duration": 4320,
+      "offset": 151760,
+      "lang": "en"
+    },
+    {
+      "text": "and we can begin with the HTTP request",
+      "duration": 3760,
+      "offset": 153680,
+      "lang": "en"
+    },
+    {
+      "text": "where we'll actually get the market",
+      "duration": 3680,
+      "offset": 156080,
+      "lang": "en"
+    },
+    {
+      "text": "data. So, go ahead and select the HTTP",
+      "duration": 3840,
+      "offset": 157440,
+      "lang": "en"
+    },
+    {
+      "text": "request here. And like I mentioned in",
+      "duration": 2559,
+      "offset": 159760,
+      "lang": "en"
+    },
+    {
+      "text": "the beginning of the video, we'll",
+      "duration": 3200,
+      "offset": 161280,
+      "lang": "en"
+    },
+    {
+      "text": "separate this out by 1 minute candles,",
+      "duration": 4161,
+      "offset": 162319,
+      "lang": "en"
+    },
+    {
+      "text": "15minute candles, as well as 1 hour",
+      "duration": 3680,
+      "offset": 164480,
+      "lang": "en"
+    },
+    {
+      "text": "candles. So the first one will be 1",
+      "duration": 3280,
+      "offset": 166480,
+      "lang": "en"
+    },
+    {
+      "text": "minute. And then feel free to copy this",
+      "duration": 3600,
+      "offset": 168160,
+      "lang": "en"
+    },
+    {
+      "text": "URL exactly. All you need to do is type",
+      "duration": 5040,
+      "offset": 169760,
+      "lang": "en"
+    },
+    {
+      "text": "in api.2data.com/times",
+      "duration": 4720,
+      "offset": 171760,
+      "lang": "en"
+    },
+    {
+      "text": "series since we do want the time series",
+      "duration": 3519,
+      "offset": 174800,
+      "lang": "en"
+    },
+    {
+      "text": "candles on the stocks. Next, we'll need",
+      "duration": 3280,
+      "offset": 176480,
+      "lang": "en"
+    },
+    {
+      "text": "to refine our searches. So we'll go",
+      "duration": 2961,
+      "offset": 178319,
+      "lang": "en"
+    },
+    {
+      "text": "ahead and click the send query",
+      "duration": 3040,
+      "offset": 179760,
+      "lang": "en"
+    },
+    {
+      "text": "parameters button. And this is where",
+      "duration": 3760,
+      "offset": 181280,
+      "lang": "en"
+    },
+    {
+      "text": "we'll be able to tell the API what",
+      "duration": 4320,
+      "offset": 182800,
+      "lang": "en"
+    },
+    {
+      "text": "exactly we want. to like what ticker,",
+      "duration": 4000,
+      "offset": 185040,
+      "lang": "en"
+    },
+    {
+      "text": "what type of candles, and just any other",
+      "duration": 4560,
+      "offset": 187120,
+      "lang": "en"
+    },
+    {
+      "text": "data or information. So, first and the",
+      "duration": 4640,
+      "offset": 189040,
+      "lang": "en"
+    },
+    {
+      "text": "most important obviously is that we need",
+      "duration": 3839,
+      "offset": 191680,
+      "lang": "en"
+    },
+    {
+      "text": "to know what symbol to use. So, go ahead",
+      "duration": 4160,
+      "offset": 193680,
+      "lang": "en"
+    },
+    {
+      "text": "and type in symbol as the name. And then",
+      "duration": 4321,
+      "offset": 195519,
+      "lang": "en"
+    },
+    {
+      "text": "we'll just drag over the text from",
+      "duration": 4160,
+      "offset": 197840,
+      "lang": "en"
+    },
+    {
+      "text": "Telegram. Now, I wrote test here, which",
+      "duration": 4240,
+      "offset": 199840,
+      "lang": "en"
+    },
+    {
+      "text": "obviously wouldn't actually be a symbol.",
+      "duration": 3920,
+      "offset": 202000,
+      "lang": "en"
+    },
+    {
+      "text": "So, let me go back to Telegram and just",
+      "duration": 3439,
+      "offset": 204080,
+      "lang": "en"
+    },
+    {
+      "text": "type in Apple so we can continue on",
+      "duration": 3440,
+      "offset": 205920,
+      "lang": "en"
+    },
+    {
+      "text": "here. So, all I did quickly was type in",
+      "duration": 4000,
+      "offset": 207519,
+      "lang": "en"
+    },
+    {
+      "text": "Apple to the Telegram chat. So now we",
+      "duration": 4239,
+      "offset": 209360,
+      "lang": "en"
+    },
+    {
+      "text": "can reference this AAPL stock ticker",
+      "duration": 4720,
+      "offset": 211519,
+      "lang": "en"
+    },
+    {
+      "text": "inside this HTTP request. So double",
+      "duration": 4241,
+      "offset": 213599,
+      "lang": "en"
+    },
+    {
+      "text": "clicking into this, what we need to do",
+      "duration": 3601,
+      "offset": 216239,
+      "lang": "en"
+    },
+    {
+      "text": "now is drag over the symbol. So let me",
+      "duration": 3600,
+      "offset": 217840,
+      "lang": "en"
+    },
+    {
+      "text": "do this one more time so you can see how",
+      "duration": 3280,
+      "offset": 219840,
+      "lang": "en"
+    },
+    {
+      "text": "this works. We head over into our",
+      "duration": 4000,
+      "offset": 221440,
+      "lang": "en"
+    },
+    {
+      "text": "Telegram trigger. We can see inside chat",
+      "duration": 4320,
+      "offset": 223120,
+      "lang": "en"
+    },
+    {
+      "text": "what we typed in for the text is Apple.",
+      "duration": 4400,
+      "offset": 225440,
+      "lang": "en"
+    },
+    {
+      "text": "So just simply drag this in. And again,",
+      "duration": 4000,
+      "offset": 227440,
+      "lang": "en"
+    },
+    {
+      "text": "this is depending on what you write. I",
+      "duration": 2800,
+      "offset": 229840,
+      "lang": "en"
+    },
+    {
+      "text": "wrote Apple, but if you want to do",
+      "duration": 3439,
+      "offset": 231440,
+      "lang": "en"
+    },
+    {
+      "text": "Tesla, just type in TSLA and it'll",
+      "duration": 4239,
+      "offset": 232640,
+      "lang": "en"
+    },
+    {
+      "text": "analyze Tesla for you. Next, we need to",
+      "duration": 3761,
+      "offset": 234879,
+      "lang": "en"
+    },
+    {
+      "text": "know the interval for the candles. And",
+      "duration": 2961,
+      "offset": 236879,
+      "lang": "en"
+    },
+    {
+      "text": "like I mentioned, we're going to do 1",
+      "duration": 3760,
+      "offset": 238640,
+      "lang": "en"
+    },
+    {
+      "text": "minute first. So add this parameter type",
+      "duration": 4880,
+      "offset": 239840,
+      "lang": "en"
+    },
+    {
+      "text": "in interval and then the value here will",
+      "duration": 4080,
+      "offset": 242400,
+      "lang": "en"
+    },
+    {
+      "text": "be 1 minute. Next we want to know how",
+      "duration": 4320,
+      "offset": 244720,
+      "lang": "en"
+    },
+    {
+      "text": "many one minute candles to actually get.",
+      "duration": 5360,
+      "offset": 246480,
+      "lang": "en"
+    },
+    {
+      "text": "So we'll first select output size and",
+      "duration": 4960,
+      "offset": 249040,
+      "lang": "en"
+    },
+    {
+      "text": "this can be depending on how thorough of",
+      "duration": 4239,
+      "offset": 251840,
+      "lang": "en"
+    },
+    {
+      "text": "an analysis you want. But I find that",
+      "duration": 4720,
+      "offset": 254000,
+      "lang": "en"
+    },
+    {
+      "text": "100 candles is plenty more than enough",
+      "duration": 5120,
+      "offset": 256079,
+      "lang": "en"
+    },
+    {
+      "text": "to kind of get an accurate trade signal",
+      "duration": 4000,
+      "offset": 258720,
+      "lang": "en"
+    },
+    {
+      "text": "as to what you should do for a certain",
+      "duration": 3601,
+      "offset": 261199,
+      "lang": "en"
+    },
+    {
+      "text": "stock. So I'll type in 100 here. And",
+      "duration": 3840,
+      "offset": 262720,
+      "lang": "en"
+    },
+    {
+      "text": "then finally we need to validate our",
+      "duration": 4399,
+      "offset": 264800,
+      "lang": "en"
+    },
+    {
+      "text": "account. So we'll type in API key. And",
+      "duration": 4480,
+      "offset": 266560,
+      "lang": "en"
+    },
+    {
+      "text": "this is where you'll paste in your API",
+      "duration": 3280,
+      "offset": 269199,
+      "lang": "en"
+    },
+    {
+      "text": "key that I told you to get from your",
+      "duration": 2960,
+      "offset": 271040,
+      "lang": "en"
+    },
+    {
+      "text": "free account. And then after testing",
+      "duration": 3201,
+      "offset": 272479,
+      "lang": "en"
+    },
+    {
+      "text": "step, we can see that there's an invalid",
+      "duration": 3199,
+      "offset": 274000,
+      "lang": "en"
+    },
+    {
+      "text": "interval. And the reason for this is",
+      "duration": 3519,
+      "offset": 275680,
+      "lang": "en"
+    },
+    {
+      "text": "because this needs to be 1 minute, not",
+      "duration": 4560,
+      "offset": 277199,
+      "lang": "en"
+    },
+    {
+      "text": "just 1 M. So now test once again. And it",
+      "duration": 4161,
+      "offset": 279199,
+      "lang": "en"
+    },
+    {
+      "text": "should provide all the 1 minute candles",
+      "duration": 3761,
+      "offset": 281759,
+      "lang": "en"
+    },
+    {
+      "text": "for Apple. And these are going to be 100",
+      "duration": 4320,
+      "offset": 283360,
+      "lang": "en"
+    },
+    {
+      "text": "1 minute candles. So we can see this is",
+      "duration": 4720,
+      "offset": 285520,
+      "lang": "en"
+    },
+    {
+      "text": "the date, time, open, high, low, close,",
+      "duration": 7840,
+      "offset": 287680,
+      "lang": "en"
+    },
+    {
+      "text": "and volume for 359, 358, 357. And it's",
+      "duration": 7200,
+      "offset": 290240,
+      "lang": "en"
+    },
+    {
+      "text": "going to do this 100 times. So the past",
+      "duration": 3679,
+      "offset": 295520,
+      "lang": "en"
+    },
+    {
+      "text": "100 minutes will have all the financial",
+      "duration": 3840,
+      "offset": 297440,
+      "lang": "en"
+    },
+    {
+      "text": "data for. Next, all we'll need to do is",
+      "duration": 3921,
+      "offset": 299199,
+      "lang": "en"
+    },
+    {
+      "text": "copy and paste this two more times. But",
+      "duration": 3440,
+      "offset": 301280,
+      "lang": "en"
+    },
+    {
+      "text": "rather than 1 minute, we'll do 15",
+      "duration": 3280,
+      "offset": 303120,
+      "lang": "en"
+    },
+    {
+      "text": "minutes and then 1 hour. So I just",
+      "duration": 3360,
+      "offset": 304720,
+      "lang": "en"
+    },
+    {
+      "text": "pasted this two other times. Let's click",
+      "duration": 3200,
+      "offset": 306400,
+      "lang": "en"
+    },
+    {
+      "text": "into the second one. And we'll change",
+      "duration": 3440,
+      "offset": 308080,
+      "lang": "en"
+    },
+    {
+      "text": "this to 15 minutes. And then we don't",
+      "duration": 3439,
+      "offset": 309600,
+      "lang": "en"
+    },
+    {
+      "text": "need to change anything else here. All",
+      "duration": 3440,
+      "offset": 311520,
+      "lang": "en"
+    },
+    {
+      "text": "we need to change is this interval. So",
+      "duration": 3841,
+      "offset": 313039,
+      "lang": "en"
+    },
+    {
+      "text": "rather than 1 minute, this will now be",
+      "duration": 3920,
+      "offset": 314960,
+      "lang": "en"
+    },
+    {
+      "text": "15 minutes. And then making sure that it",
+      "duration": 3599,
+      "offset": 316880,
+      "lang": "en"
+    },
+    {
+      "text": "can actually read the stock ticker. We",
+      "duration": 3200,
+      "offset": 318880,
+      "lang": "en"
+    },
+    {
+      "text": "can wire this up to our Telegram",
+      "duration": 3921,
+      "offset": 320479,
+      "lang": "en"
+    },
+    {
+      "text": "trigger. And let's wire this one up to",
+      "duration": 4720,
+      "offset": 322080,
+      "lang": "en"
+    },
+    {
+      "text": "our final one below. And this is going",
+      "duration": 4639,
+      "offset": 324400,
+      "lang": "en"
+    },
+    {
+      "text": "to be 1 hour. So rename this",
+      "duration": 4080,
+      "offset": 326800,
+      "lang": "en"
+    },
+    {
+      "text": "appropriately. And then rather than 1",
+      "duration": 3761,
+      "offset": 329039,
+      "lang": "en"
+    },
+    {
+      "text": "minute, we'll do 1 hour here. And just",
+      "duration": 3599,
+      "offset": 330880,
+      "lang": "en"
+    },
+    {
+      "text": "to see that this works, we can test this",
+      "duration": 3520,
+      "offset": 332800,
+      "lang": "en"
+    },
+    {
+      "text": "step. And we have all the 1 hour candles",
+      "duration": 4961,
+      "offset": 334479,
+      "lang": "en"
+    },
+    {
+      "text": "for Apple. So this is at 3:30, 2:30,",
+      "duration": 6000,
+      "offset": 336320,
+      "lang": "en"
+    },
+    {
+      "text": "1:30, 12:30, 11:30. You understand the",
+      "duration": 4400,
+      "offset": 339440,
+      "lang": "en"
+    },
+    {
+      "text": "drill. Next, we'll just want to combine",
+      "duration": 3360,
+      "offset": 342320,
+      "lang": "en"
+    },
+    {
+      "text": "all these data sources with a merge",
+      "duration": 3840,
+      "offset": 343840,
+      "lang": "en"
+    },
+    {
+      "text": "node. So super simple, just click this",
+      "duration": 4000,
+      "offset": 345680,
+      "lang": "en"
+    },
+    {
+      "text": "little plus here, and we can type in",
+      "duration": 3519,
+      "offset": 347680,
+      "lang": "en"
+    },
+    {
+      "text": "merge. And then for the number of",
+      "duration": 4079,
+      "offset": 349680,
+      "lang": "en"
+    },
+    {
+      "text": "inputs, we'll select this to be three.",
+      "duration": 4481,
+      "offset": 351199,
+      "lang": "en"
+    },
+    {
+      "text": "And then let's go ahead and wire all",
+      "duration": 4241,
+      "offset": 353759,
+      "lang": "en"
+    },
+    {
+      "text": "these up together. So now we have the",
+      "duration": 4239,
+      "offset": 355680,
+      "lang": "en"
+    },
+    {
+      "text": "one minute candles, 15 minute, and 1",
+      "duration": 3919,
+      "offset": 358000,
+      "lang": "en"
+    },
+    {
+      "text": "hour candles all combined. So now",
+      "duration": 3280,
+      "offset": 359919,
+      "lang": "en"
+    },
+    {
+      "text": "testing out this workflow, we can see",
+      "duration": 3041,
+      "offset": 361919,
+      "lang": "en"
+    },
+    {
+      "text": "that we have three items from this merge",
+      "duration": 3761,
+      "offset": 363199,
+      "lang": "en"
+    },
+    {
+      "text": "node. So the 1 minute, 15-inut, and 1",
+      "duration": 4160,
+      "offset": 364960,
+      "lang": "en"
+    },
+    {
+      "text": "hour candles. And to make this a bit",
+      "duration": 4000,
+      "offset": 366960,
+      "lang": "en"
+    },
+    {
+      "text": "more organized, we can combine these",
+      "duration": 4320,
+      "offset": 369120,
+      "lang": "en"
+    },
+    {
+      "text": "three items first into one item instead.",
+      "duration": 4239,
+      "offset": 370960,
+      "lang": "en"
+    },
+    {
+      "text": "So go ahead and click this add here. And",
+      "duration": 3280,
+      "offset": 373440,
+      "lang": "en"
+    },
+    {
+      "text": "then we'll just aggregate all these",
+      "duration": 4161,
+      "offset": 375199,
+      "lang": "en"
+    },
+    {
+      "text": "nodes. So we'll select all item data",
+      "duration": 4640,
+      "offset": 376720,
+      "lang": "en"
+    },
+    {
+      "text": "into a single list. We'll test this step",
+      "duration": 3279,
+      "offset": 379360,
+      "lang": "en"
+    },
+    {
+      "text": "and it's going to be the same exact",
+      "duration": 2800,
+      "offset": 381360,
+      "lang": "en"
+    },
+    {
+      "text": "data, but rather than having three",
+      "duration": 3201,
+      "offset": 382639,
+      "lang": "en"
+    },
+    {
+      "text": "separate items, we're just going to have",
+      "duration": 3520,
+      "offset": 384160,
+      "lang": "en"
+    },
+    {
+      "text": "one item that has everything in here.",
+      "duration": 3199,
+      "offset": 385840,
+      "lang": "en"
+    },
+    {
+      "text": "Now, if we look at this, the way this is",
+      "duration": 3440,
+      "offset": 387680,
+      "lang": "en"
+    },
+    {
+      "text": "structured is kind of messy. Says",
+      "duration": 4160,
+      "offset": 389039,
+      "lang": "en"
+    },
+    {
+      "text": "symbol, interval, currency. We have a",
+      "duration": 3840,
+      "offset": 391120,
+      "lang": "en"
+    },
+    {
+      "text": "bunch of data points we don't need and",
+      "duration": 3201,
+      "offset": 393199,
+      "lang": "en"
+    },
+    {
+      "text": "we don't need to write apple every",
+      "duration": 3760,
+      "offset": 394960,
+      "lang": "en"
+    },
+    {
+      "text": "single time. So, a way we can do this is",
+      "duration": 4320,
+      "offset": 396400,
+      "lang": "en"
+    },
+    {
+      "text": "by cleaning it up with a code node. Now,",
+      "duration": 3840,
+      "offset": 398720,
+      "lang": "en"
+    },
+    {
+      "text": "this is completely optional, but I find",
+      "duration": 4319,
+      "offset": 400720,
+      "lang": "en"
+    },
+    {
+      "text": "this helps the AI model understand and",
+      "duration": 4639,
+      "offset": 402560,
+      "lang": "en"
+    },
+    {
+      "text": "digest all of these data sources a bit",
+      "duration": 5521,
+      "offset": 405039,
+      "lang": "en"
+    },
+    {
+      "text": "easier. So what you can do is add one",
+      "duration": 5280,
+      "offset": 407199,
+      "lang": "en"
+    },
+    {
+      "text": "additional node here and we'll type in",
+      "duration": 3600,
+      "offset": 410560,
+      "lang": "en"
+    },
+    {
+      "text": "code. And this is where we can run",
+      "duration": 3681,
+      "offset": 412479,
+      "lang": "en"
+    },
+    {
+      "text": "custom JavaScript code. But again, it's",
+      "duration": 3360,
+      "offset": 414160,
+      "lang": "en"
+    },
+    {
+      "text": "completely optional. You only really",
+      "duration": 3120,
+      "offset": 416160,
+      "lang": "en"
+    },
+    {
+      "text": "need it if you are a little bit worried",
+      "duration": 3440,
+      "offset": 417520,
+      "lang": "en"
+    },
+    {
+      "text": "about how the AI model is going to",
+      "duration": 4400,
+      "offset": 419280,
+      "lang": "en"
+    },
+    {
+      "text": "ingest basically 300 data points of",
+      "duration": 4720,
+      "offset": 420960,
+      "lang": "en"
+    },
+    {
+      "text": "financial data. And this just makes it a",
+      "duration": 3919,
+      "offset": 423680,
+      "lang": "en"
+    },
+    {
+      "text": "little bit easier on them so that they",
+      "duration": 3919,
+      "offset": 425680,
+      "lang": "en"
+    },
+    {
+      "text": "know how everything is properly labeled.",
+      "duration": 3440,
+      "offset": 427599,
+      "lang": "en"
+    },
+    {
+      "text": "So I've just pasted in some really quick",
+      "duration": 3121,
+      "offset": 429599,
+      "lang": "en"
+    },
+    {
+      "text": "JavaScript code here if you want to",
+      "duration": 3521,
+      "offset": 431039,
+      "lang": "en"
+    },
+    {
+      "text": "pause the video and see how this looks",
+      "duration": 3680,
+      "offset": 432720,
+      "lang": "en"
+    },
+    {
+      "text": "like. But this is super simple. All",
+      "duration": 4160,
+      "offset": 434560,
+      "lang": "en"
+    },
+    {
+      "text": "we're doing is structuring this output.",
+      "duration": 4239,
+      "offset": 436400,
+      "lang": "en"
+    },
+    {
+      "text": "We're not actually changing any data. So",
+      "duration": 3520,
+      "offset": 438720,
+      "lang": "en"
+    },
+    {
+      "text": "rather than this looking like symbol,",
+      "duration": 4000,
+      "offset": 440639,
+      "lang": "en"
+    },
+    {
+      "text": "interval, currency, etc. All we have is",
+      "duration": 4320,
+      "offset": 442240,
+      "lang": "en"
+    },
+    {
+      "text": "the ticker and then we have the candles",
+      "duration": 3761,
+      "offset": 444639,
+      "lang": "en"
+    },
+    {
+      "text": "for the 1 minute. Then if we scroll",
+      "duration": 3600,
+      "offset": 446560,
+      "lang": "en"
+    },
+    {
+      "text": "down, we have the candles for the 15",
+      "duration": 3840,
+      "offset": 448400,
+      "lang": "en"
+    },
+    {
+      "text": "minutes and then candles for the 1 hour.",
+      "duration": 4240,
+      "offset": 450160,
+      "lang": "en"
+    },
+    {
+      "text": "So the way this looks is just a lot",
+      "duration": 3920,
+      "offset": 452240,
+      "lang": "en"
+    },
+    {
+      "text": "neater for the AI model to understand",
+      "duration": 3440,
+      "offset": 454400,
+      "lang": "en"
+    },
+    {
+      "text": "all these data points. Now you can",
+      "duration": 3280,
+      "offset": 456160,
+      "lang": "en"
+    },
+    {
+      "text": "consider all this data gathering portion",
+      "duration": 3919,
+      "offset": 457840,
+      "lang": "en"
+    },
+    {
+      "text": "of the candlestick data as finished. And",
+      "duration": 3680,
+      "offset": 459440,
+      "lang": "en"
+    },
+    {
+      "text": "what we can do as kind of just like a",
+      "duration": 3440,
+      "offset": 461759,
+      "lang": "en"
+    },
+    {
+      "text": "cherry on top is get some news sentiment",
+      "duration": 3840,
+      "offset": 463120,
+      "lang": "en"
+    },
+    {
+      "text": "based on all the news around the stock",
+      "duration": 4081,
+      "offset": 465199,
+      "lang": "en"
+    },
+    {
+      "text": "ticker. So Apple for example, we can",
+      "duration": 3920,
+      "offset": 466960,
+      "lang": "en"
+    },
+    {
+      "text": "search for all the recent news articles",
+      "duration": 3919,
+      "offset": 469280,
+      "lang": "en"
+    },
+    {
+      "text": "about Apple in the past 24 hours to see",
+      "duration": 4159,
+      "offset": 470880,
+      "lang": "en"
+    },
+    {
+      "text": "how this will impact the stock moving",
+      "duration": 3761,
+      "offset": 473199,
+      "lang": "en"
+    },
+    {
+      "text": "forward. So let's go ahead and add a",
+      "duration": 4641,
+      "offset": 475039,
+      "lang": "en"
+    },
+    {
+      "text": "fourth HTTP request here below. Once",
+      "duration": 5200,
+      "offset": 476960,
+      "lang": "en"
+    },
+    {
+      "text": "again, just type in HTTP request. And",
+      "duration": 4160,
+      "offset": 479680,
+      "lang": "en"
+    },
+    {
+      "text": "this time we're going to use a news API",
+      "duration": 3039,
+      "offset": 482160,
+      "lang": "en"
+    },
+    {
+      "text": "because again we want to get all the",
+      "duration": 3440,
+      "offset": 483840,
+      "lang": "en"
+    },
+    {
+      "text": "news articles for this specific ticker.",
+      "duration": 3440,
+      "offset": 485199,
+      "lang": "en"
+    },
+    {
+      "text": "So what you want to do is just head over",
+      "duration": 4240,
+      "offset": 487280,
+      "lang": "en"
+    },
+    {
+      "text": "to newsapi.org org and get your free API",
+      "duration": 5041,
+      "offset": 488639,
+      "lang": "en"
+    },
+    {
+      "text": "key. Again, completely free. Definitely",
+      "duration": 5119,
+      "offset": 491520,
+      "lang": "en"
+    },
+    {
+      "text": "do not pay for any news related APIs.",
+      "duration": 4320,
+      "offset": 493680,
+      "lang": "en"
+    },
+    {
+      "text": "This is going to be super simple to",
+      "duration": 3601,
+      "offset": 496639,
+      "lang": "en"
+    },
+    {
+      "text": "integrate with your NAN uh workflow.",
+      "duration": 3919,
+      "offset": 498000,
+      "lang": "en"
+    },
+    {
+      "text": "After this, we can paste in this URL,",
+      "duration": 4239,
+      "offset": 500240,
+      "lang": "en"
+    },
+    {
+      "text": "which is newspapi.org/v2.",
+      "duration": 3840,
+      "offset": 501919,
+      "lang": "en"
+    },
+    {
+      "text": "And then just like before, we're going",
+      "duration": 3120,
+      "offset": 504479,
+      "lang": "en"
+    },
+    {
+      "text": "to want to send query parameters because",
+      "duration": 4160,
+      "offset": 505759,
+      "lang": "en"
+    },
+    {
+      "text": "we want to tell the API what to actually",
+      "duration": 4880,
+      "offset": 507599,
+      "lang": "en"
+    },
+    {
+      "text": "search for. In our case is the ticker,",
+      "duration": 4480,
+      "offset": 509919,
+      "lang": "en"
+    },
+    {
+      "text": "which is Apple. But again, if we typed",
+      "duration": 3521,
+      "offset": 512479,
+      "lang": "en"
+    },
+    {
+      "text": "in Tesla, this should now switch to all",
+      "duration": 3440,
+      "offset": 514399,
+      "lang": "en"
+    },
+    {
+      "text": "Tesla news articles. So for the first",
+      "duration": 3760,
+      "offset": 516000,
+      "lang": "en"
+    },
+    {
+      "text": "query parameter here, just type in a Q.",
+      "duration": 3921,
+      "offset": 517839,
+      "lang": "en"
+    },
+    {
+      "text": "And then for the value, head over to",
+      "duration": 3920,
+      "offset": 519760,
+      "lang": "en"
+    },
+    {
+      "text": "schema, scroll down, and then we just",
+      "duration": 4400,
+      "offset": 521760,
+      "lang": "en"
+    },
+    {
+      "text": "want the text. So Q just means value",
+      "duration": 3920,
+      "offset": 523680,
+      "lang": "en"
+    },
+    {
+      "text": "here. So it's going to search for all",
+      "duration": 3359,
+      "offset": 526160,
+      "lang": "en"
+    },
+    {
+      "text": "news articles that includes the text",
+      "duration": 4239,
+      "offset": 527600,
+      "lang": "en"
+    },
+    {
+      "text": "APL. And it's important here that",
+      "duration": 3841,
+      "offset": 529519,
+      "lang": "en"
+    },
+    {
+      "text": "whenever you're writing these tickers in",
+      "duration": 2881,
+      "offset": 531839,
+      "lang": "en"
+    },
+    {
+      "text": "Telegram, you're actually writing the",
+      "duration": 3280,
+      "offset": 533360,
+      "lang": "en"
+    },
+    {
+      "text": "ticker and not Apple. Like if you just",
+      "duration": 4799,
+      "offset": 534720,
+      "lang": "en"
+    },
+    {
+      "text": "type in a and then we try to run this",
+      "duration": 5280,
+      "offset": 536640,
+      "lang": "en"
+    },
+    {
+      "text": "HTTP request, it's going to find a bunch",
+      "duration": 4481,
+      "offset": 539519,
+      "lang": "en"
+    },
+    {
+      "text": "of news articles on apples. You",
+      "duration": 4000,
+      "offset": 541920,
+      "lang": "en"
+    },
+    {
+      "text": "obviously don't care about the actual",
+      "duration": 4000,
+      "offset": 544000,
+      "lang": "en"
+    },
+    {
+      "text": "fruit apple and that's why we always",
+      "duration": 4240,
+      "offset": 545920,
+      "lang": "en"
+    },
+    {
+      "text": "want to reference the stock ticker which",
+      "duration": 4000,
+      "offset": 548000,
+      "lang": "en"
+    },
+    {
+      "text": "again comes from telegram. So inside",
+      "duration": 4000,
+      "offset": 550160,
+      "lang": "en"
+    },
+    {
+      "text": "telegram just always type the ticker not",
+      "duration": 3920,
+      "offset": 552000,
+      "lang": "en"
+    },
+    {
+      "text": "the actual company name. And then next",
+      "duration": 3520,
+      "offset": 554160,
+      "lang": "en"
+    },
+    {
+      "text": "what we want is the date. So like I",
+      "duration": 3440,
+      "offset": 555920,
+      "lang": "en"
+    },
+    {
+      "text": "mentioned we want all the news articles",
+      "duration": 4000,
+      "offset": 557680,
+      "lang": "en"
+    },
+    {
+      "text": "from the past 24 hours. So this name",
+      "duration": 4479,
+      "offset": 559360,
+      "lang": "en"
+    },
+    {
+      "text": "will be called from and then you can",
+      "duration": 4000,
+      "offset": 561680,
+      "lang": "en"
+    },
+    {
+      "text": "just paste in this value exactly. But",
+      "duration": 3521,
+      "offset": 563839,
+      "lang": "en"
+    },
+    {
+      "text": "what I've written here is just today",
+      "duration": 4000,
+      "offset": 565680,
+      "lang": "en"
+    },
+    {
+      "text": "minus one day. So feel free to copy this",
+      "duration": 4720,
+      "offset": 567360,
+      "lang": "en"
+    },
+    {
+      "text": "format in JavaScript. Today is June",
+      "duration": 4880,
+      "offset": 569680,
+      "lang": "en"
+    },
+    {
+      "text": "14th. So a day prior from this would be",
+      "duration": 5120,
+      "offset": 572080,
+      "lang": "en"
+    },
+    {
+      "text": "June 13th, 2025. And then finally, just",
+      "duration": 4800,
+      "offset": 574560,
+      "lang": "en"
+    },
+    {
+      "text": "like last time, we need to input our API",
+      "duration": 4240,
+      "offset": 577200,
+      "lang": "en"
+    },
+    {
+      "text": "key. So type in API key there. We'll",
+      "duration": 3599,
+      "offset": 579360,
+      "lang": "en"
+    },
+    {
+      "text": "paste this in. And then let's test this",
+      "duration": 3120,
+      "offset": 581440,
+      "lang": "en"
+    },
+    {
+      "text": "step. And it should now provide all the",
+      "duration": 4161,
+      "offset": 582959,
+      "lang": "en"
+    },
+    {
+      "text": "news articles from Apple on the past 24",
+      "duration": 4719,
+      "offset": 584560,
+      "lang": "en"
+    },
+    {
+      "text": "hours. So here we can see Apple risks",
+      "duration": 4159,
+      "offset": 587120,
+      "lang": "en"
+    },
+    {
+      "text": "falling behind because of AI revealed",
+      "duration": 3761,
+      "offset": 589279,
+      "lang": "en"
+    },
+    {
+      "text": "disappointments. Pretty standard news",
+      "duration": 3601,
+      "offset": 591279,
+      "lang": "en"
+    },
+    {
+      "text": "recently. So just a bunch of analyst",
+      "duration": 3680,
+      "offset": 593040,
+      "lang": "en"
+    },
+    {
+      "text": "reports on the actual stock. And then",
+      "duration": 3120,
+      "offset": 594880,
+      "lang": "en"
+    },
+    {
+      "text": "next, what we want to do is take those",
+      "duration": 3520,
+      "offset": 596720,
+      "lang": "en"
+    },
+    {
+      "text": "news articles and have an AI model read",
+      "duration": 3760,
+      "offset": 598000,
+      "lang": "en"
+    },
+    {
+      "text": "through them and provide us a sentiment",
+      "duration": 3360,
+      "offset": 600240,
+      "lang": "en"
+    },
+    {
+      "text": "of whether it's positive or negative in",
+      "duration": 3759,
+      "offset": 601760,
+      "lang": "en"
+    },
+    {
+      "text": "the short term. So just add in another",
+      "duration": 4080,
+      "offset": 603600,
+      "lang": "en"
+    },
+    {
+      "text": "node here and we'll type in OpenAI. And",
+      "duration": 3601,
+      "offset": 605519,
+      "lang": "en"
+    },
+    {
+      "text": "then we'll just want to message a model,",
+      "duration": 2960,
+      "offset": 607680,
+      "lang": "en"
+    },
+    {
+      "text": "but you can use any other chat model",
+      "duration": 2880,
+      "offset": 609120,
+      "lang": "en"
+    },
+    {
+      "text": "like I've mentioned in my previous",
+      "duration": 3520,
+      "offset": 610640,
+      "lang": "en"
+    },
+    {
+      "text": "videos. I just like OpenAI's models",
+      "duration": 3920,
+      "offset": 612000,
+      "lang": "en"
+    },
+    {
+      "text": "because they're cheap and effective. And",
+      "duration": 3440,
+      "offset": 614160,
+      "lang": "en"
+    },
+    {
+      "text": "then for the model here, I typically",
+      "duration": 4560,
+      "offset": 615920,
+      "lang": "en"
+    },
+    {
+      "text": "always do GPT41 mini. So let's wait for",
+      "duration": 5600,
+      "offset": 617600,
+      "lang": "en"
+    },
+    {
+      "text": "this to load and select 4.1 Mini. Next,",
+      "duration": 4320,
+      "offset": 620480,
+      "lang": "en"
+    },
+    {
+      "text": "let's go ahead and add a system prompt",
+      "duration": 4240,
+      "offset": 623200,
+      "lang": "en"
+    },
+    {
+      "text": "so the AI model knows what to actually",
+      "duration": 4320,
+      "offset": 624800,
+      "lang": "en"
+    },
+    {
+      "text": "do. But what I've written is that you're",
+      "duration": 3600,
+      "offset": 627440,
+      "lang": "en"
+    },
+    {
+      "text": "a highly intelligent and accurate",
+      "duration": 3760,
+      "offset": 629120,
+      "lang": "en"
+    },
+    {
+      "text": "sentiment analyzer in the financial",
+      "duration": 3600,
+      "offset": 631040,
+      "lang": "en"
+    },
+    {
+      "text": "markets. We want them to read all the",
+      "duration": 3360,
+      "offset": 632880,
+      "lang": "en"
+    },
+    {
+      "text": "news and then evaluate the immediate",
+      "duration": 3600,
+      "offset": 634640,
+      "lang": "en"
+    },
+    {
+      "text": "market reaction. We want a sentiment",
+      "duration": 4080,
+      "offset": 636240,
+      "lang": "en"
+    },
+    {
+      "text": "category of either positive, neutral, or",
+      "duration": 3599,
+      "offset": 638240,
+      "lang": "en"
+    },
+    {
+      "text": "negative. And then this is something a",
+      "duration": 2959,
+      "offset": 640320,
+      "lang": "en"
+    },
+    {
+      "text": "bit more standard with a sentiment",
+      "duration": 2961,
+      "offset": 641839,
+      "lang": "en"
+    },
+    {
+      "text": "analysis, but we want to calculate a",
+      "duration": 3601,
+      "offset": 643279,
+      "lang": "en"
+    },
+    {
+      "text": "numerical score between either extremely",
+      "duration": 4400,
+      "offset": 644800,
+      "lang": "en"
+    },
+    {
+      "text": "negative or extremely positive in terms",
+      "duration": 4079,
+      "offset": 646880,
+      "lang": "en"
+    },
+    {
+      "text": "of the ticker. And then finally a",
+      "duration": 4079,
+      "offset": 649200,
+      "lang": "en"
+    },
+    {
+      "text": "concise rationale as to why it's",
+      "duration": 4401,
+      "offset": 650959,
+      "lang": "en"
+    },
+    {
+      "text": "negative or positive. And this way we",
+      "duration": 4081,
+      "offset": 653279,
+      "lang": "en"
+    },
+    {
+      "text": "can feed all this information to kind of",
+      "duration": 4800,
+      "offset": 655360,
+      "lang": "en"
+    },
+    {
+      "text": "like the big main AI agent node that has",
+      "duration": 4560,
+      "offset": 657360,
+      "lang": "en"
+    },
+    {
+      "text": "this background information. So it has",
+      "duration": 3600,
+      "offset": 660160,
+      "lang": "en"
+    },
+    {
+      "text": "all the candlestick data but also has",
+      "duration": 3919,
+      "offset": 661920,
+      "lang": "en"
+    },
+    {
+      "text": "this rationale as to why these new",
+      "duration": 4079,
+      "offset": 663760,
+      "lang": "en"
+    },
+    {
+      "text": "sentiments are positive or negative. And",
+      "duration": 3281,
+      "offset": 665839,
+      "lang": "en"
+    },
+    {
+      "text": "then finally we want to make sure that",
+      "duration": 3521,
+      "offset": 667839,
+      "lang": "en"
+    },
+    {
+      "text": "this is outputed as JSON so that it's",
+      "duration": 4800,
+      "offset": 669120,
+      "lang": "en"
+    },
+    {
+      "text": "easier for the AI model to read. So we",
+      "duration": 4080,
+      "offset": 671360,
+      "lang": "en"
+    },
+    {
+      "text": "said that the output should look like",
+      "duration": 3359,
+      "offset": 673920,
+      "lang": "en"
+    },
+    {
+      "text": "this. Short-term sentiment we have the",
+      "duration": 3760,
+      "offset": 675440,
+      "lang": "en"
+    },
+    {
+      "text": "category score and then rationale. And",
+      "duration": 3361,
+      "offset": 677279,
+      "lang": "en"
+    },
+    {
+      "text": "then finally, we can drag over the",
+      "duration": 3600,
+      "offset": 679200,
+      "lang": "en"
+    },
+    {
+      "text": "articles. So from here, just simply drag",
+      "duration": 4480,
+      "offset": 680640,
+      "lang": "en"
+    },
+    {
+      "text": "over articles. And then right here,",
+      "duration": 4400,
+      "offset": 682800,
+      "lang": "en"
+    },
+    {
+      "text": "it'll say object. So to fix this, we can",
+      "duration": 3680,
+      "offset": 685120,
+      "lang": "en"
+    },
+    {
+      "text": "just stringify all this text. So just",
+      "duration": 3520,
+      "offset": 687200,
+      "lang": "en"
+    },
+    {
+      "text": "type in JSON.stringify.",
+      "duration": 3279,
+      "offset": 688800,
+      "lang": "en"
+    },
+    {
+      "text": "And then once you close the parenthesis,",
+      "duration": 2960,
+      "offset": 690720,
+      "lang": "en"
+    },
+    {
+      "text": "you should see all the text here below.",
+      "duration": 3281,
+      "offset": 692079,
+      "lang": "en"
+    },
+    {
+      "text": "So these are all the news articles that",
+      "duration": 3360,
+      "offset": 693680,
+      "lang": "en"
+    },
+    {
+      "text": "they can read through. And then finally,",
+      "duration": 3039,
+      "offset": 695360,
+      "lang": "en"
+    },
+    {
+      "text": "you just want to make sure that you're",
+      "duration": 3440,
+      "offset": 697040,
+      "lang": "en"
+    },
+    {
+      "text": "outputting the contents as JSON. So",
+      "duration": 3680,
+      "offset": 698399,
+      "lang": "en"
+    },
+    {
+      "text": "that's going to be forced to output it",
+      "duration": 3760,
+      "offset": 700480,
+      "lang": "en"
+    },
+    {
+      "text": "inside this specific format. And then",
+      "duration": 3760,
+      "offset": 702079,
+      "lang": "en"
+    },
+    {
+      "text": "testing the step. We'll wait for this to",
+      "duration": 3599,
+      "offset": 704240,
+      "lang": "en"
+    },
+    {
+      "text": "load. And we can see that we have first",
+      "duration": 4000,
+      "offset": 705839,
+      "lang": "en"
+    },
+    {
+      "text": "the category. Right now it's neutral on",
+      "duration": 3921,
+      "offset": 707839,
+      "lang": "en"
+    },
+    {
+      "text": "Apple, the score of zero. And then we",
+      "duration": 4560,
+      "offset": 709839,
+      "lang": "en"
+    },
+    {
+      "text": "have this rationale which is pretty",
+      "duration": 4240,
+      "offset": 711760,
+      "lang": "en"
+    },
+    {
+      "text": "long, but we'll be able to send this to",
+      "duration": 3841,
+      "offset": 714399,
+      "lang": "en"
+    },
+    {
+      "text": "the AI model later on. So they know why",
+      "duration": 4160,
+      "offset": 716000,
+      "lang": "en"
+    },
+    {
+      "text": "this rational is neutral. So if you were",
+      "duration": 3440,
+      "offset": 718240,
+      "lang": "en"
+    },
+    {
+      "text": "to only say neutral with the score of",
+      "duration": 4000,
+      "offset": 720160,
+      "lang": "en"
+    },
+    {
+      "text": "zero, the AI model later on will be like",
+      "duration": 4560,
+      "offset": 721680,
+      "lang": "en"
+    },
+    {
+      "text": "but why? You know, they want to they",
+      "duration": 3520,
+      "offset": 724160,
+      "lang": "en"
+    },
+    {
+      "text": "haven't read the news articles. So they",
+      "duration": 3200,
+      "offset": 726240,
+      "lang": "en"
+    },
+    {
+      "text": "need to know some reasoning. But by",
+      "duration": 3680,
+      "offset": 727680,
+      "lang": "en"
+    },
+    {
+      "text": "having this brief rationale, we can have",
+      "duration": 3600,
+      "offset": 729440,
+      "lang": "en"
+    },
+    {
+      "text": "more accurate trade signals moving",
+      "duration": 3599,
+      "offset": 731360,
+      "lang": "en"
+    },
+    {
+      "text": "forward for our stock tickers. Now,",
+      "duration": 3599,
+      "offset": 733040,
+      "lang": "en"
+    },
+    {
+      "text": "let's get to the exciting part and begin",
+      "duration": 3601,
+      "offset": 734959,
+      "lang": "en"
+    },
+    {
+      "text": "to wrap up this workflow so that we can",
+      "duration": 3681,
+      "offset": 736639,
+      "lang": "en"
+    },
+    {
+      "text": "combine all these data sources together",
+      "duration": 4399,
+      "offset": 738560,
+      "lang": "en"
+    },
+    {
+      "text": "to actually get our trade analysis. So,",
+      "duration": 4400,
+      "offset": 740320,
+      "lang": "en"
+    },
+    {
+      "text": "just like before, we'll add in another",
+      "duration": 3281,
+      "offset": 742959,
+      "lang": "en"
+    },
+    {
+      "text": "merge node, but this time we're going to",
+      "duration": 3679,
+      "offset": 744720,
+      "lang": "en"
+    },
+    {
+      "text": "merge the two main data sources. So,",
+      "duration": 4560,
+      "offset": 746240,
+      "lang": "en"
+    },
+    {
+      "text": "type in merge here. I'm sure you're an",
+      "duration": 4721,
+      "offset": 748399,
+      "lang": "en"
+    },
+    {
+      "text": "expert already, but we'll set this as",
+      "duration": 4320,
+      "offset": 750800,
+      "lang": "en"
+    },
+    {
+      "text": "the first input. And then our new",
+      "duration": 3440,
+      "offset": 753120,
+      "lang": "en"
+    },
+    {
+      "text": "sentiments here will be the second",
+      "duration": 3519,
+      "offset": 755120,
+      "lang": "en"
+    },
+    {
+      "text": "input. And then after the merge, just",
+      "duration": 3760,
+      "offset": 756560,
+      "lang": "en"
+    },
+    {
+      "text": "like before, we want to aggregate into",
+      "duration": 3601,
+      "offset": 758639,
+      "lang": "en"
+    },
+    {
+      "text": "one single item. So right now this is",
+      "duration": 3519,
+      "offset": 760320,
+      "lang": "en"
+    },
+    {
+      "text": "going to produce two items but we want",
+      "duration": 3599,
+      "offset": 762240,
+      "lang": "en"
+    },
+    {
+      "text": "one because we want to feed one item to",
+      "duration": 4560,
+      "offset": 763839,
+      "lang": "en"
+    },
+    {
+      "text": "the AI agent all at once. So add in",
+      "duration": 4240,
+      "offset": 765839,
+      "lang": "en"
+    },
+    {
+      "text": "another node here and then type in",
+      "duration": 3601,
+      "offset": 768399,
+      "lang": "en"
+    },
+    {
+      "text": "aggregate and then just like before",
+      "duration": 3921,
+      "offset": 770079,
+      "lang": "en"
+    },
+    {
+      "text": "we'll do all item data into a single",
+      "duration": 3920,
+      "offset": 772000,
+      "lang": "en"
+    },
+    {
+      "text": "list and then let's test the step and we",
+      "duration": 4000,
+      "offset": 774000,
+      "lang": "en"
+    },
+    {
+      "text": "can see that we go from two items to one",
+      "duration": 4240,
+      "offset": 775920,
+      "lang": "en"
+    },
+    {
+      "text": "made item here and then on this output",
+      "duration": 4480,
+      "offset": 778000,
+      "lang": "en"
+    },
+    {
+      "text": "we first start with the ticker which is",
+      "duration": 4799,
+      "offset": 780160,
+      "lang": "en"
+    },
+    {
+      "text": "Apple and then we have the one minute",
+      "duration": 4479,
+      "offset": 782480,
+      "lang": "en"
+    },
+    {
+      "text": "candles and then scrolling down a little",
+      "duration": 4320,
+      "offset": 784959,
+      "lang": "en"
+    },
+    {
+      "text": "bit more we have the 15-minute candles",
+      "duration": 4161,
+      "offset": 786959,
+      "lang": "en"
+    },
+    {
+      "text": "here. So now if we look at the time it",
+      "duration": 4721,
+      "offset": 789279,
+      "lang": "en"
+    },
+    {
+      "text": "goes from 10:30 10:45 and then we have",
+      "duration": 5440,
+      "offset": 791120,
+      "lang": "en"
+    },
+    {
+      "text": "the last 115minut candles and then",
+      "duration": 4639,
+      "offset": 794000,
+      "lang": "en"
+    },
+    {
+      "text": "finally here we've arrived at 1 hour",
+      "duration": 3920,
+      "offset": 796560,
+      "lang": "en"
+    },
+    {
+      "text": "candles. So now it goes from it looks",
+      "duration": 6081,
+      "offset": 798639,
+      "lang": "en"
+    },
+    {
+      "text": "like 2:30 3:30 4:30 5:30 etc. And then",
+      "duration": 6159,
+      "offset": 800480,
+      "lang": "en"
+    },
+    {
+      "text": "at the end of all of this we have the",
+      "duration": 3600,
+      "offset": 804720,
+      "lang": "en"
+    },
+    {
+      "text": "short-term sentiment based on news",
+      "duration": 3921,
+      "offset": 806639,
+      "lang": "en"
+    },
+    {
+      "text": "articles from the past 24 hours. So here",
+      "duration": 4079,
+      "offset": 808320,
+      "lang": "en"
+    },
+    {
+      "text": "we can see the categories neutral the",
+      "duration": 3279,
+      "offset": 810560,
+      "lang": "en"
+    },
+    {
+      "text": "score zero and then we have the",
+      "duration": 3521,
+      "offset": 812399,
+      "lang": "en"
+    },
+    {
+      "text": "rationale. So again, this just combines",
+      "duration": 4321,
+      "offset": 813839,
+      "lang": "en"
+    },
+    {
+      "text": "everything so that they know essentially",
+      "duration": 4000,
+      "offset": 815920,
+      "lang": "en"
+    },
+    {
+      "text": "all the info that they could possibly",
+      "duration": 3919,
+      "offset": 818160,
+      "lang": "en"
+    },
+    {
+      "text": "know to help us develop a trade",
+      "duration": 4240,
+      "offset": 819920,
+      "lang": "en"
+    },
+    {
+      "text": "strategy. So now as basically the final",
+      "duration": 3440,
+      "offset": 822079,
+      "lang": "en"
+    },
+    {
+      "text": "step, we want to feed all this",
+      "duration": 3840,
+      "offset": 824160,
+      "lang": "en"
+    },
+    {
+      "text": "information to an AI agent. So add in a",
+      "duration": 4880,
+      "offset": 825519,
+      "lang": "en"
+    },
+    {
+      "text": "final node here. Click on this advanced",
+      "duration": 4800,
+      "offset": 828000,
+      "lang": "en"
+    },
+    {
+      "text": "AI and then what we want to select is AI",
+      "duration": 4000,
+      "offset": 830399,
+      "lang": "en"
+    },
+    {
+      "text": "agent. And then for the source for",
+      "duration": 3360,
+      "offset": 832800,
+      "lang": "en"
+    },
+    {
+      "text": "prompt, we want to make our own prompt.",
+      "duration": 3841,
+      "offset": 834399,
+      "lang": "en"
+    },
+    {
+      "text": "So click define below here. And then you",
+      "duration": 4160,
+      "offset": 836160,
+      "lang": "en"
+    },
+    {
+      "text": "can copy my prompt exactly. I've written",
+      "duration": 3839,
+      "offset": 838240,
+      "lang": "en"
+    },
+    {
+      "text": "that you're an expert day trader. and",
+      "duration": 3840,
+      "offset": 840320,
+      "lang": "en"
+    },
+    {
+      "text": "then use the data below to give a single",
+      "duration": 4241,
+      "offset": 842079,
+      "lang": "en"
+    },
+    {
+      "text": "unified trade recommendation to either",
+      "duration": 4239,
+      "offset": 844160,
+      "lang": "en"
+    },
+    {
+      "text": "buy, sell, or hold based on all the",
+      "duration": 4079,
+      "offset": 846320,
+      "lang": "en"
+    },
+    {
+      "text": "candles as well as 24-hour sentiment.",
+      "duration": 3521,
+      "offset": 848399,
+      "lang": "en"
+    },
+    {
+      "text": "And the only things they're supposed to",
+      "duration": 3120,
+      "offset": 850399,
+      "lang": "en"
+    },
+    {
+      "text": "output is first the technical",
+      "duration": 3599,
+      "offset": 851920,
+      "lang": "en"
+    },
+    {
+      "text": "recommendation to buy, sell, or hold,",
+      "duration": 4721,
+      "offset": 853519,
+      "lang": "en"
+    },
+    {
+      "text": "the entry price, stop-loss if the price",
+      "duration": 4641,
+      "offset": 855519,
+      "lang": "en"
+    },
+    {
+      "text": "doesn't go the way we want, and then the",
+      "duration": 3839,
+      "offset": 858240,
+      "lang": "en"
+    },
+    {
+      "text": "target or exit price. And then after",
+      "duration": 4160,
+      "offset": 860160,
+      "lang": "en"
+    },
+    {
+      "text": "this, we can have them actually read the",
+      "duration": 4481,
+      "offset": 862079,
+      "lang": "en"
+    },
+    {
+      "text": "data because this is important. If we",
+      "duration": 4079,
+      "offset": 864320,
+      "lang": "en"
+    },
+    {
+      "text": "were to just say this, but not paste in",
+      "duration": 3120,
+      "offset": 866560,
+      "lang": "en"
+    },
+    {
+      "text": "the data, they wouldn't know what",
+      "duration": 3361,
+      "offset": 868399,
+      "lang": "en"
+    },
+    {
+      "text": "they're looking at. So I just dragged in",
+      "duration": 4000,
+      "offset": 869680,
+      "lang": "en"
+    },
+    {
+      "text": "aggregate data zero which is all the",
+      "duration": 3600,
+      "offset": 871760,
+      "lang": "en"
+    },
+    {
+      "text": "candles. So if you expand this it says",
+      "duration": 3360,
+      "offset": 873680,
+      "lang": "en"
+    },
+    {
+      "text": "ticker apple we have the one minute",
+      "duration": 4240,
+      "offset": 875360,
+      "lang": "en"
+    },
+    {
+      "text": "candles here 15-minute candles below and",
+      "duration": 4720,
+      "offset": 877040,
+      "lang": "en"
+    },
+    {
+      "text": "then the 1 hour candles here. So this",
+      "duration": 4239,
+      "offset": 879600,
+      "lang": "en"
+    },
+    {
+      "text": "data zero has all this information",
+      "duration": 4160,
+      "offset": 881760,
+      "lang": "en"
+    },
+    {
+      "text": "aggregated. So drag this over and then",
+      "duration": 4081,
+      "offset": 883839,
+      "lang": "en"
+    },
+    {
+      "text": "we want to stringify. So if we go here",
+      "duration": 3359,
+      "offset": 885920,
+      "lang": "en"
+    },
+    {
+      "text": "to the right we can see that under",
+      "duration": 3200,
+      "offset": 887920,
+      "lang": "en"
+    },
+    {
+      "text": "technical data candles we have all the",
+      "duration": 4161,
+      "offset": 889279,
+      "lang": "en"
+    },
+    {
+      "text": "one minute candles 15-minute and 1 hour",
+      "duration": 4000,
+      "offset": 891120,
+      "lang": "en"
+    },
+    {
+      "text": "candles and then below this we have the",
+      "duration": 3600,
+      "offset": 893440,
+      "lang": "en"
+    },
+    {
+      "text": "sentiment analysis for the past 24",
+      "duration": 4000,
+      "offset": 895120,
+      "lang": "en"
+    },
+    {
+      "text": "hours. So again, rather than data zero,",
+      "duration": 4239,
+      "offset": 897040,
+      "lang": "en"
+    },
+    {
+      "text": "we're just going to drag over data one",
+      "duration": 4719,
+      "offset": 899120,
+      "lang": "en"
+    },
+    {
+      "text": "here because this has the neutral zero",
+      "duration": 4240,
+      "offset": 901279,
+      "lang": "en"
+    },
+    {
+      "text": "and the rationale. And then below this,",
+      "duration": 2961,
+      "offset": 903839,
+      "lang": "en"
+    },
+    {
+      "text": "I've just written that each candle",
+      "duration": 2880,
+      "offset": 905519,
+      "lang": "en"
+    },
+    {
+      "text": "object has a time frame as well as",
+      "duration": 3760,
+      "offset": 906800,
+      "lang": "en"
+    },
+    {
+      "text": "candles for open, high, low, close, and",
+      "duration": 4240,
+      "offset": 908399,
+      "lang": "en"
+    },
+    {
+      "text": "volume. We want the agent to first group",
+      "duration": 4320,
+      "offset": 910560,
+      "lang": "en"
+    },
+    {
+      "text": "the candles by time frame. And then we",
+      "duration": 3521,
+      "offset": 912639,
+      "lang": "en"
+    },
+    {
+      "text": "want them to calculate their own",
+      "duration": 3920,
+      "offset": 914880,
+      "lang": "en"
+    },
+    {
+      "text": "indicators like RSI, MACD, or just trend",
+      "duration": 4720,
+      "offset": 916160,
+      "lang": "en"
+    },
+    {
+      "text": "lines for optimal entries. And then we",
+      "duration": 3839,
+      "offset": 918800,
+      "lang": "en"
+    },
+    {
+      "text": "want them to confirm the trends with the",
+      "duration": 3920,
+      "offset": 920880,
+      "lang": "en"
+    },
+    {
+      "text": "1 hour data, which is a bit more longer",
+      "duration": 3601,
+      "offset": 922639,
+      "lang": "en"
+    },
+    {
+      "text": "term. And then based on all this",
+      "duration": 2880,
+      "offset": 924800,
+      "lang": "en"
+    },
+    {
+      "text": "information as well as the sentiment",
+      "duration": 3520,
+      "offset": 926240,
+      "lang": "en"
+    },
+    {
+      "text": "analysis, we want them to either tell us",
+      "duration": 4000,
+      "offset": 927680,
+      "lang": "en"
+    },
+    {
+      "text": "to buy, sell or hold. And then this is",
+      "duration": 3519,
+      "offset": 929760,
+      "lang": "en"
+    },
+    {
+      "text": "the response format that they should",
+      "duration": 3440,
+      "offset": 931680,
+      "lang": "en"
+    },
+    {
+      "text": "have. So the technical recommendation,",
+      "duration": 3841,
+      "offset": 933279,
+      "lang": "en"
+    },
+    {
+      "text": "entry price, stop-loss, and then the",
+      "duration": 3920,
+      "offset": 935120,
+      "lang": "en"
+    },
+    {
+      "text": "exit price. And then finally, we can add",
+      "duration": 3440,
+      "offset": 937120,
+      "lang": "en"
+    },
+    {
+      "text": "an overall system message to make sure",
+      "duration": 3520,
+      "offset": 939040,
+      "lang": "en"
+    },
+    {
+      "text": "our output is neat and tidy for",
+      "duration": 3760,
+      "offset": 940560,
+      "lang": "en"
+    },
+    {
+      "text": "Telegram. So go ahead and click add",
+      "duration": 3440,
+      "offset": 942560,
+      "lang": "en"
+    },
+    {
+      "text": "option here. And then we want to click",
+      "duration": 3519,
+      "offset": 944320,
+      "lang": "en"
+    },
+    {
+      "text": "system message. So what I've written in",
+      "duration": 3440,
+      "offset": 946000,
+      "lang": "en"
+    },
+    {
+      "text": "system message is that you're an expert",
+      "duration": 4161,
+      "offset": 947839,
+      "lang": "en"
+    },
+    {
+      "text": "day trader. only output exactly the",
+      "duration": 4800,
+      "offset": 949440,
+      "lang": "en"
+    },
+    {
+      "text": "lines below with no rationale and no",
+      "duration": 4240,
+      "offset": 952000,
+      "lang": "en"
+    },
+    {
+      "text": "extra commentary. So, we want the",
+      "duration": 3760,
+      "offset": 954240,
+      "lang": "en"
+    },
+    {
+      "text": "response format for either technical",
+      "duration": 4000,
+      "offset": 956240,
+      "lang": "en"
+    },
+    {
+      "text": "recommendation, entry price, stop-loss,",
+      "duration": 4639,
+      "offset": 958000,
+      "lang": "en"
+    },
+    {
+      "text": "target exit, and hold. This again just",
+      "duration": 4080,
+      "offset": 960240,
+      "lang": "en"
+    },
+    {
+      "text": "confirms that we're not setting any",
+      "duration": 3601,
+      "offset": 962639,
+      "lang": "en"
+    },
+    {
+      "text": "other information to Telegram. This is",
+      "duration": 3840,
+      "offset": 964320,
+      "lang": "en"
+    },
+    {
+      "text": "all we care about whether we're buying,",
+      "duration": 3360,
+      "offset": 966240,
+      "lang": "en"
+    },
+    {
+      "text": "selling, or holding. And then finally,",
+      "duration": 3679,
+      "offset": 968160,
+      "lang": "en"
+    },
+    {
+      "text": "what we need to do with this AI agent is",
+      "duration": 4320,
+      "offset": 969600,
+      "lang": "en"
+    },
+    {
+      "text": "to actually connect an AI model cuz",
+      "duration": 3041,
+      "offset": 971839,
+      "lang": "en"
+    },
+    {
+      "text": "right now it doesn't have any",
+      "duration": 2880,
+      "offset": 973920,
+      "lang": "en"
+    },
+    {
+      "text": "intelligence. There's no AI model",
+      "duration": 3920,
+      "offset": 974880,
+      "lang": "en"
+    },
+    {
+      "text": "connected. So, just select open AI chat",
+      "duration": 4080,
+      "offset": 976800,
+      "lang": "en"
+    },
+    {
+      "text": "model. And then once again, instead of",
+      "duration": 6479,
+      "offset": 978800,
+      "lang": "en"
+    },
+    {
+      "text": "GPT 4.1 mini, I like 4.1 because we want",
+      "duration": 6720,
+      "offset": 980880,
+      "lang": "en"
+    },
+    {
+      "text": "the smartest model available that also",
+      "duration": 5041,
+      "offset": 985279,
+      "lang": "en"
+    },
+    {
+      "text": "doesn't break the bank like 01 or 03. So",
+      "duration": 4799,
+      "offset": 987600,
+      "lang": "en"
+    },
+    {
+      "text": "now let's go ahead and test out this AI",
+      "duration": 5199,
+      "offset": 990320,
+      "lang": "en"
+    },
+    {
+      "text": "agent and see how this magic works. And",
+      "duration": 4721,
+      "offset": 992399,
+      "lang": "en"
+    },
+    {
+      "text": "awesome, we have the technical",
+      "duration": 3440,
+      "offset": 995519,
+      "lang": "en"
+    },
+    {
+      "text": "recommendation for Apple, which is the",
+      "duration": 3839,
+      "offset": 997120,
+      "lang": "en"
+    },
+    {
+      "text": "hold. We have the entry price not",
+      "duration": 4240,
+      "offset": 998959,
+      "lang": "en"
+    },
+    {
+      "text": "available because we're holding. And",
+      "duration": 4161,
+      "offset": 1000959,
+      "lang": "en"
+    },
+    {
+      "text": "obviously, if you don't hold any Apple,",
+      "duration": 4481,
+      "offset": 1003199,
+      "lang": "en"
+    },
+    {
+      "text": "then just don't buy. uh stop loss not",
+      "duration": 4079,
+      "offset": 1005120,
+      "lang": "en"
+    },
+    {
+      "text": "available because it's telling you to",
+      "duration": 3599,
+      "offset": 1007680,
+      "lang": "en"
+    },
+    {
+      "text": "just sit on your hands and no target or",
+      "duration": 3921,
+      "offset": 1009199,
+      "lang": "en"
+    },
+    {
+      "text": "exit price either because again",
+      "duration": 4000,
+      "offset": 1011279,
+      "lang": "en"
+    },
+    {
+      "text": "sometimes the best move is to make no",
+      "duration": 4639,
+      "offset": 1013120,
+      "lang": "en"
+    },
+    {
+      "text": "move at all. And then as a final final",
+      "duration": 4480,
+      "offset": 1015279,
+      "lang": "en"
+    },
+    {
+      "text": "final step, I feel like I've said final",
+      "duration": 3601,
+      "offset": 1017759,
+      "lang": "en"
+    },
+    {
+      "text": "step like three times already, but we",
+      "duration": 3601,
+      "offset": 1019759,
+      "lang": "en"
+    },
+    {
+      "text": "just want to output the contents of this",
+      "duration": 4479,
+      "offset": 1021360,
+      "lang": "en"
+    },
+    {
+      "text": "back to Telegram. So click add this",
+      "duration": 4719,
+      "offset": 1023360,
+      "lang": "en"
+    },
+    {
+      "text": "here, select Telegram, and we just want",
+      "duration": 4720,
+      "offset": 1025839,
+      "lang": "en"
+    },
+    {
+      "text": "to show this exact output that we have",
+      "duration": 4401,
+      "offset": 1028079,
+      "lang": "en"
+    },
+    {
+      "text": "on this right hand side here inside our",
+      "duration": 3841,
+      "offset": 1030559,
+      "lang": "en"
+    },
+    {
+      "text": "Telegram account. From Telegram, we just",
+      "duration": 4400,
+      "offset": 1032480,
+      "lang": "en"
+    },
+    {
+      "text": "want to select uh send a text message",
+      "duration": 4000,
+      "offset": 1034400,
+      "lang": "en"
+    },
+    {
+      "text": "right here. And then we just want to",
+      "duration": 2959,
+      "offset": 1036880,
+      "lang": "en"
+    },
+    {
+      "text": "reference our chat ID from the",
+      "duration": 3600,
+      "offset": 1038400,
+      "lang": "en"
+    },
+    {
+      "text": "beginning. So collapse all of these data",
+      "duration": 4080,
+      "offset": 1039839,
+      "lang": "en"
+    },
+    {
+      "text": "sources. These are all steps or nodes",
+      "duration": 4079,
+      "offset": 1042000,
+      "lang": "en"
+    },
+    {
+      "text": "inside our workflow. All we care about",
+      "duration": 4000,
+      "offset": 1043919,
+      "lang": "en"
+    },
+    {
+      "text": "right now is this Telegram trigger. And",
+      "duration": 4641,
+      "offset": 1046079,
+      "lang": "en"
+    },
+    {
+      "text": "then drag over the chat ID. And then for",
+      "duration": 4481,
+      "offset": 1047919,
+      "lang": "en"
+    },
+    {
+      "text": "the text, which is the text that we're",
+      "duration": 3199,
+      "offset": 1050720,
+      "lang": "en"
+    },
+    {
+      "text": "going to see in Telegram, we want the",
+      "duration": 4480,
+      "offset": 1052400,
+      "lang": "en"
+    },
+    {
+      "text": "output from our AI agent. So drag over",
+      "duration": 5521,
+      "offset": 1053919,
+      "lang": "en"
+    },
+    {
+      "text": "this output. We want this to show the",
+      "duration": 4640,
+      "offset": 1056880,
+      "lang": "en"
+    },
+    {
+      "text": "technical recommendation to hold entry",
+      "duration": 4400,
+      "offset": 1059440,
+      "lang": "en"
+    },
+    {
+      "text": "price, stop-loss, target, yada yada.",
+      "duration": 3920,
+      "offset": 1061520,
+      "lang": "en"
+    },
+    {
+      "text": "Test the step. And this should now show",
+      "duration": 3360,
+      "offset": 1063840,
+      "lang": "en"
+    },
+    {
+      "text": "up inside our Telegram account. And just",
+      "duration": 3119,
+      "offset": 1065440,
+      "lang": "en"
+    },
+    {
+      "text": "to show you that they've actually sent",
+      "duration": 3280,
+      "offset": 1067200,
+      "lang": "en"
+    },
+    {
+      "text": "this over inside Telegram, we have our",
+      "duration": 3601,
+      "offset": 1068559,
+      "lang": "en"
+    },
+    {
+      "text": "message exactly here. We have the",
+      "duration": 3600,
+      "offset": 1070480,
+      "lang": "en"
+    },
+    {
+      "text": "technical recommendation to hold. Entry",
+      "duration": 3680,
+      "offset": 1072160,
+      "lang": "en"
+    },
+    {
+      "text": "price not available, stop loss not",
+      "duration": 3760,
+      "offset": 1074080,
+      "lang": "en"
+    },
+    {
+      "text": "available, target price not available.",
+      "duration": 3760,
+      "offset": 1075840,
+      "lang": "en"
+    },
+    {
+      "text": "Now, this concludes our day trader AI",
+      "duration": 4240,
+      "offset": 1077840,
+      "lang": "en"
+    },
+    {
+      "text": "agent built completely within NADN. Now,",
+      "duration": 4079,
+      "offset": 1079600,
+      "lang": "en"
+    },
+    {
+      "text": "if you found this video helpful or of",
+      "duration": 3120,
+      "offset": 1082080,
+      "lang": "en"
+    },
+    {
+      "text": "any value, make sure to like, comment,",
+      "duration": 3120,
+      "offset": 1083679,
+      "lang": "en"
+    },
+    {
+      "text": "and subscribe as it greatly helps the",
+      "duration": 3280,
+      "offset": 1085200,
+      "lang": "en"
+    },
+    {
+      "text": "channel and we focus primarily on",
+      "duration": 4081,
+      "offset": 1086799,
+      "lang": "en"
+    },
+    {
+      "text": "building AI agents either for businesses",
+      "duration": 4400,
+      "offset": 1088480,
+      "lang": "en"
+    },
+    {
+      "text": "or for individual use. And like I",
+      "duration": 3360,
+      "offset": 1090880,
+      "lang": "en"
+    },
+    {
+      "text": "mentioned in the beginning of the video,",
+      "duration": 2799,
+      "offset": 1092880,
+      "lang": "en"
+    },
+    {
+      "text": "if you want to join an AI agent",
+      "duration": 2880,
+      "offset": 1094240,
+      "lang": "en"
+    },
+    {
+      "text": "community, click the link in the",
+      "duration": 4441,
+      "offset": 1095679,
+      "lang": "en"
+    },
+    {
+      "text": "description.",
+      "duration": 3000,
+      "offset": 1097120,
+      "lang": "en"
+    }
+  ],
+  "text": "Here's how I built my own profitable AI agent day trader completely within NINDN. Now, here's how the agent works. We can send over any stock ticker like Tesla here. And once we click enter, the agent will first get all the candlestick data as well as recent news sentiments to recommend us a trade. Here we can see that it's recommending for us to sell Tesla at an entry price of 325. We also have a stop loss in case the price does raise a bit too high. And we also have a target and exit price at 322. Next, I'll be going over how this agent actually works in the back end. and make sure to stay till the end and I'll show you how to build this from scratch so that you can implement it yourself in your own trading. So now let's go ahead and do a deeper dive into our NAND AI agent workflow. So starting off, we're going to communicate with Telegram, meaning that we're going to send the tickers over via Telegram and we'll get the analyses back via Telegram as well. And the way this AI is going to help us generate trades is through two different data points. The first is this 1 minute 15-minute and 1 hour candlestick data. So all we're doing is taking the last 100 minutes, the last 115 minutes, and then the last 100 hours. And then once we have all that data, we're going to combine it with any recent stock news articles for the past day. And this way, we can get a complete view of both any technical indicators as well as any macro events that could be happening regarding the stock. Then after all that's done, we're going to clean up all the data, merge the two data sources. We're going to aggregate it, send it over into an AI agent, which is going to help us form the final trade opinion. And again, everything is data focused, so there's no bias at all. All it's looking at is literally the prices of every minute, hour, and every 15 minutes. It's able to see all the volume levels as well. It's going to be able to calculate its own technical indicators. And then finally, it sees some outside opinion via news sentiment. And from there, it'll form a final opinion that we can view in Telegram and decide whether we want to take the trade or not. Now, before we continue, if you want to get this template, as well as join an active community of AI builders with full in-depth guides on AI agents, make sure to click the link in the description. Now, let's go ahead and build this from scratch in NAN. So, let's add the first step, which is going to be the trigger that starts this entire workflow. And just like I showed you in the beginning of the video, we'll use Telegram. So, go ahead and select on message. And I've typed in test on Telegram. So, if we test this step, we should see test as the text right here. Now, what we need to do is get live market data for that stock ticker. And the way we do this is through an API called the 12 data. So, all you need to do, which is completely free, is sign up for an account and then head over to your API keys. Now, this API lets you use this 800 times every single month, as well as eight times a minute. So, you basically will never run out of credits unless you're running this like an absolute madman, but I'm assuming most of you should be completely fine with the free account on this plan. So, once you get your API key, head back to Naden and we can begin with the HTTP request where we'll actually get the market data. So, go ahead and select the HTTP request here. And like I mentioned in the beginning of the video, we'll separate this out by 1 minute candles, 15minute candles, as well as 1 hour candles. So the first one will be 1 minute. And then feel free to copy this URL exactly. All you need to do is type in api.2data.com/times series since we do want the time series candles on the stocks. Next, we'll need to refine our searches. So we'll go ahead and click the send query parameters button. And this is where we'll be able to tell the API what exactly we want. to like what ticker, what type of candles, and just any other data or information. So, first and the most important obviously is that we need to know what symbol to use. So, go ahead and type in symbol as the name. And then we'll just drag over the text from Telegram. Now, I wrote test here, which obviously wouldn't actually be a symbol. So, let me go back to Telegram and just type in Apple so we can continue on here. So, all I did quickly was type in Apple to the Telegram chat. So now we can reference this AAPL stock ticker inside this HTTP request. So double clicking into this, what we need to do now is drag over the symbol. So let me do this one more time so you can see how this works. We head over into our Telegram trigger. We can see inside chat what we typed in for the text is Apple. So just simply drag this in. And again, this is depending on what you write. I wrote Apple, but if you want to do Tesla, just type in TSLA and it'll analyze Tesla for you. Next, we need to know the interval for the candles. And like I mentioned, we're going to do 1 minute first. So add this parameter type in interval and then the value here will be 1 minute. Next we want to know how many one minute candles to actually get. So we'll first select output size and this can be depending on how thorough of an analysis you want. But I find that 100 candles is plenty more than enough to kind of get an accurate trade signal as to what you should do for a certain stock. So I'll type in 100 here. And then finally we need to validate our account. So we'll type in API key. And this is where you'll paste in your API key that I told you to get from your free account. And then after testing step, we can see that there's an invalid interval. And the reason for this is because this needs to be 1 minute, not just 1 M. So now test once again. And it should provide all the 1 minute candles for Apple. And these are going to be 100 1 minute candles. So we can see this is the date, time, open, high, low, close, and volume for 359, 358, 357. And it's going to do this 100 times. So the past 100 minutes will have all the financial data for. Next, all we'll need to do is copy and paste this two more times. But rather than 1 minute, we'll do 15 minutes and then 1 hour. So I just pasted this two other times. Let's click into the second one. And we'll change this to 15 minutes. And then we don't need to change anything else here. All we need to change is this interval. So rather than 1 minute, this will now be 15 minutes. And then making sure that it can actually read the stock ticker. We can wire this up to our Telegram trigger. And let's wire this one up to our final one below. And this is going to be 1 hour. So rename this appropriately. And then rather than 1 minute, we'll do 1 hour here. And just to see that this works, we can test this step. And we have all the 1 hour candles for Apple. So this is at 3:30, 2:30, 1:30, 12:30, 11:30. You understand the drill. Next, we'll just want to combine all these data sources with a merge node. So super simple, just click this little plus here, and we can type in merge. And then for the number of inputs, we'll select this to be three. And then let's go ahead and wire all these up together. So now we have the one minute candles, 15 minute, and 1 hour candles all combined. So now testing out this workflow, we can see that we have three items from this merge node. So the 1 minute, 15-inut, and 1 hour candles. And to make this a bit more organized, we can combine these three items first into one item instead. So go ahead and click this add here. And then we'll just aggregate all these nodes. So we'll select all item data into a single list. We'll test this step and it's going to be the same exact data, but rather than having three separate items, we're just going to have one item that has everything in here. Now, if we look at this, the way this is structured is kind of messy. Says symbol, interval, currency. We have a bunch of data points we don't need and we don't need to write apple every single time. So, a way we can do this is by cleaning it up with a code node. Now, this is completely optional, but I find this helps the AI model understand and digest all of these data sources a bit easier. So what you can do is add one additional node here and we'll type in code. And this is where we can run custom JavaScript code. But again, it's completely optional. You only really need it if you are a little bit worried about how the AI model is going to ingest basically 300 data points of financial data. And this just makes it a little bit easier on them so that they know how everything is properly labeled. So I've just pasted in some really quick JavaScript code here if you want to pause the video and see how this looks like. But this is super simple. All we're doing is structuring this output. We're not actually changing any data. So rather than this looking like symbol, interval, currency, etc. All we have is the ticker and then we have the candles for the 1 minute. Then if we scroll down, we have the candles for the 15 minutes and then candles for the 1 hour. So the way this looks is just a lot neater for the AI model to understand all these data points. Now you can consider all this data gathering portion of the candlestick data as finished. And what we can do as kind of just like a cherry on top is get some news sentiment based on all the news around the stock ticker. So Apple for example, we can search for all the recent news articles about Apple in the past 24 hours to see how this will impact the stock moving forward. So let's go ahead and add a fourth HTTP request here below. Once again, just type in HTTP request. And this time we're going to use a news API because again we want to get all the news articles for this specific ticker. So what you want to do is just head over to newsapi.org org and get your free API key. Again, completely free. Definitely do not pay for any news related APIs. This is going to be super simple to integrate with your NAN uh workflow. After this, we can paste in this URL, which is newspapi.org/v2. And then just like before, we're going to want to send query parameters because we want to tell the API what to actually search for. In our case is the ticker, which is Apple. But again, if we typed in Tesla, this should now switch to all Tesla news articles. So for the first query parameter here, just type in a Q. And then for the value, head over to schema, scroll down, and then we just want the text. So Q just means value here. So it's going to search for all news articles that includes the text APL. And it's important here that whenever you're writing these tickers in Telegram, you're actually writing the ticker and not Apple. Like if you just type in a and then we try to run this HTTP request, it's going to find a bunch of news articles on apples. You obviously don't care about the actual fruit apple and that's why we always want to reference the stock ticker which again comes from telegram. So inside telegram just always type the ticker not the actual company name. And then next what we want is the date. So like I mentioned we want all the news articles from the past 24 hours. So this name will be called from and then you can just paste in this value exactly. But what I've written here is just today minus one day. So feel free to copy this format in JavaScript. Today is June 14th. So a day prior from this would be June 13th, 2025. And then finally, just like last time, we need to input our API key. So type in API key there. We'll paste this in. And then let's test this step. And it should now provide all the news articles from Apple on the past 24 hours. So here we can see Apple risks falling behind because of AI revealed disappointments. Pretty standard news recently. So just a bunch of analyst reports on the actual stock. And then next, what we want to do is take those news articles and have an AI model read through them and provide us a sentiment of whether it's positive or negative in the short term. So just add in another node here and we'll type in OpenAI. And then we'll just want to message a model, but you can use any other chat model like I've mentioned in my previous videos. I just like OpenAI's models because they're cheap and effective. And then for the model here, I typically always do GPT41 mini. So let's wait for this to load and select 4.1 Mini. Next, let's go ahead and add a system prompt so the AI model knows what to actually do. But what I've written is that you're a highly intelligent and accurate sentiment analyzer in the financial markets. We want them to read all the news and then evaluate the immediate market reaction. We want a sentiment category of either positive, neutral, or negative. And then this is something a bit more standard with a sentiment analysis, but we want to calculate a numerical score between either extremely negative or extremely positive in terms of the ticker. And then finally a concise rationale as to why it's negative or positive. And this way we can feed all this information to kind of like the big main AI agent node that has this background information. So it has all the candlestick data but also has this rationale as to why these new sentiments are positive or negative. And then finally we want to make sure that this is outputed as JSON so that it's easier for the AI model to read. So we said that the output should look like this. Short-term sentiment we have the category score and then rationale. And then finally, we can drag over the articles. So from here, just simply drag over articles. And then right here, it'll say object. So to fix this, we can just stringify all this text. So just type in JSON.stringify. And then once you close the parenthesis, you should see all the text here below. So these are all the news articles that they can read through. And then finally, you just want to make sure that you're outputting the contents as JSON. So that's going to be forced to output it inside this specific format. And then testing the step. We'll wait for this to load. And we can see that we have first the category. Right now it's neutral on Apple, the score of zero. And then we have this rationale which is pretty long, but we'll be able to send this to the AI model later on. So they know why this rational is neutral. So if you were to only say neutral with the score of zero, the AI model later on will be like but why? You know, they want to they haven't read the news articles. So they need to know some reasoning. But by having this brief rationale, we can have more accurate trade signals moving forward for our stock tickers. Now, let's get to the exciting part and begin to wrap up this workflow so that we can combine all these data sources together to actually get our trade analysis. So, just like before, we'll add in another merge node, but this time we're going to merge the two main data sources. So, type in merge here. I'm sure you're an expert already, but we'll set this as the first input. And then our new sentiments here will be the second input. And then after the merge, just like before, we want to aggregate into one single item. So right now this is going to produce two items but we want one because we want to feed one item to the AI agent all at once. So add in another node here and then type in aggregate and then just like before we'll do all item data into a single list and then let's test the step and we can see that we go from two items to one made item here and then on this output we first start with the ticker which is Apple and then we have the one minute candles and then scrolling down a little bit more we have the 15-minute candles here. So now if we look at the time it goes from 10:30 10:45 and then we have the last 115minut candles and then finally here we've arrived at 1 hour candles. So now it goes from it looks like 2:30 3:30 4:30 5:30 etc. And then at the end of all of this we have the short-term sentiment based on news articles from the past 24 hours. So here we can see the categories neutral the score zero and then we have the rationale. So again, this just combines everything so that they know essentially all the info that they could possibly know to help us develop a trade strategy. So now as basically the final step, we want to feed all this information to an AI agent. So add in a final node here. Click on this advanced AI and then what we want to select is AI agent. And then for the source for prompt, we want to make our own prompt. So click define below here. And then you can copy my prompt exactly. I've written that you're an expert day trader. and then use the data below to give a single unified trade recommendation to either buy, sell, or hold based on all the candles as well as 24-hour sentiment. And the only things they're supposed to output is first the technical recommendation to buy, sell, or hold, the entry price, stop-loss if the price doesn't go the way we want, and then the target or exit price. And then after this, we can have them actually read the data because this is important. If we were to just say this, but not paste in the data, they wouldn't know what they're looking at. So I just dragged in aggregate data zero which is all the candles. So if you expand this it says ticker apple we have the one minute candles here 15-minute candles below and then the 1 hour candles here. So this data zero has all this information aggregated. So drag this over and then we want to stringify. So if we go here to the right we can see that under technical data candles we have all the one minute candles 15-minute and 1 hour candles and then below this we have the sentiment analysis for the past 24 hours. So again, rather than data zero, we're just going to drag over data one here because this has the neutral zero and the rationale. And then below this, I've just written that each candle object has a time frame as well as candles for open, high, low, close, and volume. We want the agent to first group the candles by time frame. And then we want them to calculate their own indicators like RSI, MACD, or just trend lines for optimal entries. And then we want them to confirm the trends with the 1 hour data, which is a bit more longer term. And then based on all this information as well as the sentiment analysis, we want them to either tell us to buy, sell or hold. And then this is the response format that they should have. So the technical recommendation, entry price, stop-loss, and then the exit price. And then finally, we can add an overall system message to make sure our output is neat and tidy for Telegram. So go ahead and click add option here. And then we want to click system message. So what I've written in system message is that you're an expert day trader. only output exactly the lines below with no rationale and no extra commentary. So, we want the response format for either technical recommendation, entry price, stop-loss, target exit, and hold. This again just confirms that we're not setting any other information to Telegram. This is all we care about whether we're buying, selling, or holding. And then finally, what we need to do with this AI agent is to actually connect an AI model cuz right now it doesn't have any intelligence. There's no AI model connected. So, just select open AI chat model. And then once again, instead of GPT 4.1 mini, I like 4.1 because we want the smartest model available that also doesn't break the bank like 01 or 03. So now let's go ahead and test out this AI agent and see how this magic works. And awesome, we have the technical recommendation for Apple, which is the hold. We have the entry price not available because we're holding. And obviously, if you don't hold any Apple, then just don't buy. uh stop loss not available because it's telling you to just sit on your hands and no target or exit price either because again sometimes the best move is to make no move at all. And then as a final final final step, I feel like I've said final step like three times already, but we just want to output the contents of this back to Telegram. So click add this here, select Telegram, and we just want to show this exact output that we have on this right hand side here inside our Telegram account. From Telegram, we just want to select uh send a text message right here. And then we just want to reference our chat ID from the beginning. So collapse all of these data sources. These are all steps or nodes inside our workflow. All we care about right now is this Telegram trigger. And then drag over the chat ID. And then for the text, which is the text that we're going to see in Telegram, we want the output from our AI agent. So drag over this output. We want this to show the technical recommendation to hold entry price, stop-loss, target, yada yada. Test the step. And this should now show up inside our Telegram account. And just to show you that they've actually sent this over inside Telegram, we have our message exactly here. We have the technical recommendation to hold. Entry price not available, stop loss not available, target price not available. Now, this concludes our day trader AI agent built completely within NADN. Now, if you found this video helpful or of any value, make sure to like, comment, and subscribe as it greatly helps the channel and we focus primarily on building AI agents either for businesses or for individual use. And like I mentioned in the beginning of the video, if you want to join an AI agent community, click the link in the description.",
+  "cited_at": "2026-05-24T05:04:35.975Z"
+}

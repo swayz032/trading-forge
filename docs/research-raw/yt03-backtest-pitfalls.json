@@ -1,0 +1,2043 @@
+{
+  "source": "youtube-transcript",
+  "video_id": "sjq3toGtr0U",
+  "url": "https://www.youtube.com/watch?v=sjq3toGtr0U",
+  "segments": [
+    {
+      "text": "[music]",
+      "duration": 3466,
+      "offset": 654,
+      "lang": "en"
+    },
+    {
+      "text": ">> You just finished your backtest. You",
+      "duration": 3560,
+      "offset": 2120,
+      "lang": "en"
+    },
+    {
+      "text": "take a look at your equity curve. It's a",
+      "duration": 3800,
+      "offset": 4120,
+      "lang": "en"
+    },
+    {
+      "text": "beautiful line up into the right 45",
+      "duration": 4720,
+      "offset": 5680,
+      "lang": "en"
+    },
+    {
+      "text": "degrees, a sharp ratio of maybe 1.5,",
+      "duration": 5800,
+      "offset": 7920,
+      "lang": "en"
+    },
+    {
+      "text": "1.7, and you're getting ready for live",
+      "duration": 5840,
+      "offset": 10400,
+      "lang": "en"
+    },
+    {
+      "text": "deployment, and of course, retirement.",
+      "duration": 5120,
+      "offset": 13720,
+      "lang": "en"
+    },
+    {
+      "text": "But, in the quant world, a good-looking",
+      "duration": 6640,
+      "offset": 16240,
+      "lang": "en"
+    },
+    {
+      "text": "backtest isn't a success. It's a crime",
+      "duration": 7120,
+      "offset": 18840,
+      "lang": "en"
+    },
+    {
+      "text": "scene. Most trading strategies fail when",
+      "duration": 5680,
+      "offset": 22880,
+      "lang": "en"
+    },
+    {
+      "text": "they hit the live markets, not because",
+      "duration": 5760,
+      "offset": 25960,
+      "lang": "en"
+    },
+    {
+      "text": "of a regime change, but because the math",
+      "duration": 6200,
+      "offset": 28560,
+      "lang": "en"
+    },
+    {
+      "text": "was broken to begin with. In this video",
+      "duration": 4520,
+      "offset": 31720,
+      "lang": "en"
+    },
+    {
+      "text": "today, we're going to talk about the",
+      "duration": 4920,
+      "offset": 34760,
+      "lang": "en"
+    },
+    {
+      "text": "three most common backtesting pitfalls",
+      "duration": 6280,
+      "offset": 36240,
+      "lang": "en"
+    },
+    {
+      "text": "that will ruin your trading strategy.",
+      "duration": 4120,
+      "offset": 39680,
+      "lang": "en"
+    },
+    {
+      "text": "While today we'll be covering these",
+      "duration": 3520,
+      "offset": 42520,
+      "lang": "en"
+    },
+    {
+      "text": "specific pitfalls, the reality is you",
+      "duration": 5080,
+      "offset": 43800,
+      "lang": "en"
+    },
+    {
+      "text": "still need to build a robust model to",
+      "duration": 4800,
+      "offset": 46040,
+      "lang": "en"
+    },
+    {
+      "text": "trade with. If you'd like to master your",
+      "duration": 4440,
+      "offset": 48880,
+      "lang": "en"
+    },
+    {
+      "text": "quantitative skills required to build",
+      "duration": 4400,
+      "offset": 50840,
+      "lang": "en"
+    },
+    {
+      "text": "these institutional-grade models for",
+      "duration": 4560,
+      "offset": 53320,
+      "lang": "en"
+    },
+    {
+      "text": "trading and market-making roles, check",
+      "duration": 5520,
+      "offset": 55240,
+      "lang": "en"
+    },
+    {
+      "text": "out quantguild.com. We have over 100",
+      "duration": 5840,
+      "offset": 57880,
+      "lang": "en"
+    },
+    {
+      "text": "hours of lecture content, an adaptive",
+      "duration": 5560,
+      "offset": 60760,
+      "lang": "en"
+    },
+    {
+      "text": "practice engine that scales with your",
+      "duration": 5760,
+      "offset": 63720,
+      "lang": "en"
+    },
+    {
+      "text": "skill level, all designed to prepare you",
+      "duration": 6240,
+      "offset": 66320,
+      "lang": "en"
+    },
+    {
+      "text": "for the real world. And if you'd like",
+      "duration": 5480,
+      "offset": 69480,
+      "lang": "en"
+    },
+    {
+      "text": "access to this Jupyter notebook, the",
+      "duration": 4680,
+      "offset": 72560,
+      "lang": "en"
+    },
+    {
+      "text": "link will be in the description below,",
+      "duration": 4200,
+      "offset": 74960,
+      "lang": "en"
+    },
+    {
+      "text": "and I'll also post it on the Quant Guild",
+      "duration": 4080,
+      "offset": 77240,
+      "lang": "en"
+    },
+    {
+      "text": "library on GitHub, where you can find",
+      "duration": 4080,
+      "offset": 79160,
+      "lang": "en"
+    },
+    {
+      "text": "all of my Jupyter notebooks and",
+      "duration": 4800,
+      "offset": 81320,
+      "lang": "en"
+    },
+    {
+      "text": "associated YouTube videos. Let's take a",
+      "duration": 5280,
+      "offset": 83240,
+      "lang": "en"
+    },
+    {
+      "text": "look at the first pitfall at the scene",
+      "duration": 4840,
+      "offset": 86120,
+      "lang": "en"
+    },
+    {
+      "text": "of this crime, look-ahead bias. What I",
+      "duration": 5440,
+      "offset": 88520,
+      "lang": "en"
+    },
+    {
+      "text": "have here for you is an animation of a",
+      "duration": 4880,
+      "offset": 90960,
+      "lang": "en"
+    },
+    {
+      "text": "trading strategy. What I'm going to do",
+      "duration": 4200,
+      "offset": 93960,
+      "lang": "en"
+    },
+    {
+      "text": "is I'm going to use alternative data to",
+      "duration": 4840,
+      "offset": 95840,
+      "lang": "en"
+    },
+    {
+      "text": "come up with a signal for a basket of",
+      "duration": 5480,
+      "offset": 98160,
+      "lang": "en"
+    },
+    {
+      "text": "equities. I'm going to rank that signal",
+      "duration": 5520,
+      "offset": 100680,
+      "lang": "en"
+    },
+    {
+      "text": "in terms of quantiles. I'm going to go",
+      "duration": 4440,
+      "offset": 103640,
+      "lang": "en"
+    },
+    {
+      "text": "long the top bucket, short the bottom",
+      "duration": 3240,
+      "offset": 106200,
+      "lang": "en"
+    },
+    {
+      "text": "bucket, create a market-neutral",
+      "duration": 4680,
+      "offset": 108080,
+      "lang": "en"
+    },
+    {
+      "text": "strategy, and I'm going to analyze the",
+      "duration": 5880,
+      "offset": 109440,
+      "lang": "en"
+    },
+    {
+      "text": "equity curve and the returns across",
+      "duration": 4880,
+      "offset": 112760,
+      "lang": "en"
+    },
+    {
+      "text": "deciles. And what you see here is",
+      "duration": 4480,
+      "offset": 115320,
+      "lang": "en"
+    },
+    {
+      "text": "something that looks very promising. We",
+      "duration": 4520,
+      "offset": 117640,
+      "lang": "en"
+    },
+    {
+      "text": "have a Sharpe ratio of three. We have a",
+      "duration": 4880,
+      "offset": 119800,
+      "lang": "en"
+    },
+    {
+      "text": "nice monotonic relationship between the",
+      "duration": 6239,
+      "offset": 122160,
+      "lang": "en"
+    },
+    {
+      "text": "signal bucket and the forward return.",
+      "duration": 5999,
+      "offset": 124680,
+      "lang": "en"
+    },
+    {
+      "text": "But, like we said at the start of this",
+      "duration": 5961,
+      "offset": 128399,
+      "lang": "en"
+    },
+    {
+      "text": "video, a successful backtest is in fact",
+      "duration": 6321,
+      "offset": 130679,
+      "lang": "en"
+    },
+    {
+      "text": "a crime scene. So, what is this pitfall",
+      "duration": 5640,
+      "offset": 134360,
+      "lang": "en"
+    },
+    {
+      "text": "that we're analyzing here? Look-ahead",
+      "duration": 5560,
+      "offset": 137000,
+      "lang": "en"
+    },
+    {
+      "text": "bias. The idea of incorporating",
+      "duration": 5320,
+      "offset": 140000,
+      "lang": "en"
+    },
+    {
+      "text": "information that isn't available on or",
+      "duration": 5840,
+      "offset": 142560,
+      "lang": "en"
+    },
+    {
+      "text": "at the time that you enter into a trade",
+      "duration": 5920,
+      "offset": 145320,
+      "lang": "en"
+    },
+    {
+      "text": "in making that trading decision. You can",
+      "duration": 6080,
+      "offset": 148400,
+      "lang": "en"
+    },
+    {
+      "text": "think of this in terms of two envelopes.",
+      "duration": 5440,
+      "offset": 151240,
+      "lang": "en"
+    },
+    {
+      "text": "We have one envelope of all of the",
+      "duration": 5560,
+      "offset": 154480,
+      "lang": "en"
+    },
+    {
+      "text": "information available to us at or before",
+      "duration": 6400,
+      "offset": 156680,
+      "lang": "en"
+    },
+    {
+      "text": "the time of the trading decision and",
+      "duration": 5919,
+      "offset": 160040,
+      "lang": "en"
+    },
+    {
+      "text": "information then that is available after",
+      "duration": 5360,
+      "offset": 163080,
+      "lang": "en"
+    },
+    {
+      "text": "the time of that trading decision. Now,",
+      "duration": 4881,
+      "offset": 165959,
+      "lang": "en"
+    },
+    {
+      "text": "it's an easy idea to grasp. We don't",
+      "duration": 5360,
+      "offset": 168440,
+      "lang": "en"
+    },
+    {
+      "text": "want to accidentally look into the",
+      "duration": 5520,
+      "offset": 170840,
+      "lang": "en"
+    },
+    {
+      "text": "future, but especially when we're",
+      "duration": 5080,
+      "offset": 173800,
+      "lang": "en"
+    },
+    {
+      "text": "dealing with alternative data and large",
+      "duration": 6240,
+      "offset": 176360,
+      "lang": "en"
+    },
+    {
+      "text": "data sets, this can become increasingly",
+      "duration": 5600,
+      "offset": 178880,
+      "lang": "en"
+    },
+    {
+      "text": "difficult, especially when you're trying",
+      "duration": 5160,
+      "offset": 182600,
+      "lang": "en"
+    },
+    {
+      "text": "to match dates across returns, across",
+      "duration": 5280,
+      "offset": 184480,
+      "lang": "en"
+    },
+    {
+      "text": "alternative data sets, whenever that",
+      "duration": 4759,
+      "offset": 187760,
+      "lang": "en"
+    },
+    {
+      "text": "data actually arrived point in time.",
+      "duration": 5080,
+      "offset": 189760,
+      "lang": "en"
+    },
+    {
+      "text": "What happens when you actually control",
+      "duration": 5321,
+      "offset": 192519,
+      "lang": "en"
+    },
+    {
+      "text": "for this look-ahead bias in something",
+      "duration": 5560,
+      "offset": 194840,
+      "lang": "en"
+    },
+    {
+      "text": "like the strategy that we just saw",
+      "duration": 4960,
+      "offset": 197840,
+      "lang": "en"
+    },
+    {
+      "text": "above? Well, in the strategy we just saw",
+      "duration": 5240,
+      "offset": 200400,
+      "lang": "en"
+    },
+    {
+      "text": "above, clearly something was wrong. We",
+      "duration": 5080,
+      "offset": 202800,
+      "lang": "en"
+    },
+    {
+      "text": "had a Sharpe ratio of three, and that is",
+      "duration": 4960,
+      "offset": 205640,
+      "lang": "en"
+    },
+    {
+      "text": "very exciting to see in a backtest, but",
+      "duration": 6359,
+      "offset": 207880,
+      "lang": "en"
+    },
+    {
+      "text": "also it is a crime scene. Likely, you've",
+      "duration": 6400,
+      "offset": 210600,
+      "lang": "en"
+    },
+    {
+      "text": "induced some bias in your backtest. When",
+      "duration": 5321,
+      "offset": 214239,
+      "lang": "en"
+    },
+    {
+      "text": "we actually control for that look-ahead",
+      "duration": 5040,
+      "offset": 217000,
+      "lang": "en"
+    },
+    {
+      "text": "bias, you can see that the performance",
+      "duration": 6360,
+      "offset": 219560,
+      "lang": "en"
+    },
+    {
+      "text": "degrades severely. Now, it's not as",
+      "duration": 7800,
+      "offset": 222040,
+      "lang": "en"
+    },
+    {
+      "text": "insulting when you see a Sharpe ratio of",
+      "duration": 6680,
+      "offset": 225920,
+      "lang": "en"
+    },
+    {
+      "text": "three, four, five. But, what is",
+      "duration": 5000,
+      "offset": 229840,
+      "lang": "en"
+    },
+    {
+      "text": "insulting is when you see a Sharpe ratio",
+      "duration": 5480,
+      "offset": 232600,
+      "lang": "en"
+    },
+    {
+      "text": "of maybe 0.9, 1.2.",
+      "duration": 6080,
+      "offset": 234840,
+      "lang": "en"
+    },
+    {
+      "text": "And it seems like your signal might have",
+      "duration": 5720,
+      "offset": 238080,
+      "lang": "en"
+    },
+    {
+      "text": "some promise, but in fact, it is",
+      "duration": 6200,
+      "offset": 240920,
+      "lang": "en"
+    },
+    {
+      "text": "polluted by this look-ahead bias. What",
+      "duration": 5400,
+      "offset": 243800,
+      "lang": "en"
+    },
+    {
+      "text": "I'm saying is look-ahead bias isn't",
+      "duration": 4600,
+      "offset": 247120,
+      "lang": "en"
+    },
+    {
+      "text": "necessarily going to contribute to",
+      "duration": 5040,
+      "offset": 249200,
+      "lang": "en"
+    },
+    {
+      "text": "enough variation explained in forward",
+      "duration": 4760,
+      "offset": 251720,
+      "lang": "en"
+    },
+    {
+      "text": "returns to automatically make your",
+      "duration": 5960,
+      "offset": 254240,
+      "lang": "en"
+    },
+    {
+      "text": "backtest look too good to be true. It in",
+      "duration": 6800,
+      "offset": 256480,
+      "lang": "en"
+    },
+    {
+      "text": "fact could just look promising and still",
+      "duration": 6800,
+      "offset": 260200,
+      "lang": "en"
+    },
+    {
+      "text": "be polluted by look-ahead bias. This can",
+      "duration": 5720,
+      "offset": 263280,
+      "lang": "en"
+    },
+    {
+      "text": "unfortunately come in a variety of",
+      "duration": 5080,
+      "offset": 267000,
+      "lang": "en"
+    },
+    {
+      "text": "different shapes, ways, and forms. It",
+      "duration": 5400,
+      "offset": 269000,
+      "lang": "en"
+    },
+    {
+      "text": "can come in the form of just including",
+      "duration": 4440,
+      "offset": 272080,
+      "lang": "en"
+    },
+    {
+      "text": "information that was available 1 week",
+      "duration": 5440,
+      "offset": 274400,
+      "lang": "en"
+    },
+    {
+      "text": "from today as a signal in your trading",
+      "duration": 5640,
+      "offset": 276520,
+      "lang": "en"
+    },
+    {
+      "text": "decision a week prior. It can come in",
+      "duration": 5120,
+      "offset": 279840,
+      "lang": "en"
+    },
+    {
+      "text": "the form of using forward data, returns",
+      "duration": 6240,
+      "offset": 282160,
+      "lang": "en"
+    },
+    {
+      "text": "from next week to aid in normalizing",
+      "duration": 6880,
+      "offset": 284960,
+      "lang": "en"
+    },
+    {
+      "text": "some sort of signal or return today or",
+      "duration": 6240,
+      "offset": 288400,
+      "lang": "en"
+    },
+    {
+      "text": "even in the past informing your trading",
+      "duration": 5160,
+      "offset": 291840,
+      "lang": "en"
+    },
+    {
+      "text": "decision. So, anytime you're dealing",
+      "duration": 4840,
+      "offset": 294640,
+      "lang": "en"
+    },
+    {
+      "text": "with a backtest, it's critical that your",
+      "duration": 4240,
+      "offset": 297000,
+      "lang": "en"
+    },
+    {
+      "text": "models, your parameterizations, your",
+      "duration": 4080,
+      "offset": 299480,
+      "lang": "en"
+    },
+    {
+      "text": "alternative data are always going to be",
+      "duration": 5280,
+      "offset": 301240,
+      "lang": "en"
+    },
+    {
+      "text": "adapted to the filtration that is you're",
+      "duration": 4560,
+      "offset": 303560,
+      "lang": "en"
+    },
+    {
+      "text": "only going to be trading with",
+      "duration": 4600,
+      "offset": 306520,
+      "lang": "en"
+    },
+    {
+      "text": "effectively that first envelope. This",
+      "duration": 5120,
+      "offset": 308120,
+      "lang": "en"
+    },
+    {
+      "text": "brings us to the second pitfall at the",
+      "duration": 4080,
+      "offset": 311120,
+      "lang": "en"
+    },
+    {
+      "text": "scene of the crime, data snooping,",
+      "duration": 5520,
+      "offset": 313240,
+      "lang": "en"
+    },
+    {
+      "text": "overfitting, P hacking. This is going to",
+      "duration": 6680,
+      "offset": 315200,
+      "lang": "en"
+    },
+    {
+      "text": "be the most insulting pitfall when you",
+      "duration": 5720,
+      "offset": 318760,
+      "lang": "en"
+    },
+    {
+      "text": "first get started backtesting trading",
+      "duration": 5400,
+      "offset": 321880,
+      "lang": "en"
+    },
+    {
+      "text": "strategies, especially if you don't have",
+      "duration": 5760,
+      "offset": 324480,
+      "lang": "en"
+    },
+    {
+      "text": "a strong basis in probability and",
+      "duration": 6120,
+      "offset": 327280,
+      "lang": "en"
+    },
+    {
+      "text": "statistics building models. What you're",
+      "duration": 5880,
+      "offset": 330240,
+      "lang": "en"
+    },
+    {
+      "text": "observing here is two different trading",
+      "duration": 5440,
+      "offset": 333400,
+      "lang": "en"
+    },
+    {
+      "text": "strategies. I'm using a moving average",
+      "duration": 5200,
+      "offset": 336120,
+      "lang": "en"
+    },
+    {
+      "text": "crossover on the left and a moving",
+      "duration": 4360,
+      "offset": 338840,
+      "lang": "en"
+    },
+    {
+      "text": "average crossover on the right. But,",
+      "duration": 3760,
+      "offset": 341320,
+      "lang": "en"
+    },
+    {
+      "text": "what I'm doing is I'm changing each of",
+      "duration": 3719,
+      "offset": 343200,
+      "lang": "en"
+    },
+    {
+      "text": "the moving averages. I have a three and",
+      "duration": 4720,
+      "offset": 345080,
+      "lang": "en"
+    },
+    {
+      "text": "a five and a seven, and a 12. And I want",
+      "duration": 5681,
+      "offset": 346919,
+      "lang": "en"
+    },
+    {
+      "text": "you to notice the seven and the 12",
+      "duration": 5200,
+      "offset": 349800,
+      "lang": "en"
+    },
+    {
+      "text": "clearly outperforms the three and the",
+      "duration": 5440,
+      "offset": 352600,
+      "lang": "en"
+    },
+    {
+      "text": "five. So, what am I going to try to",
+      "duration": 5600,
+      "offset": 355000,
+      "lang": "en"
+    },
+    {
+      "text": "trade live with? Well, I'm going to want",
+      "duration": 4240,
+      "offset": 358040,
+      "lang": "en"
+    },
+    {
+      "text": "to trade the one with a higher Sharpe",
+      "duration": 4400,
+      "offset": 360600,
+      "lang": "en"
+    },
+    {
+      "text": "ratio, right? Can't we just keep picking",
+      "duration": 4640,
+      "offset": 362280,
+      "lang": "en"
+    },
+    {
+      "text": "different parameterizations of that",
+      "duration": 5080,
+      "offset": 365000,
+      "lang": "en"
+    },
+    {
+      "text": "strategy until we find an optimal one",
+      "duration": 5800,
+      "offset": 366920,
+      "lang": "en"
+    },
+    {
+      "text": "and then trade with that live?",
+      "duration": 5920,
+      "offset": 370080,
+      "lang": "en"
+    },
+    {
+      "text": "Well, this is the idea of data snooping,",
+      "duration": 6480,
+      "offset": 372720,
+      "lang": "en"
+    },
+    {
+      "text": "overfitting, or P hacking. Suppose you",
+      "duration": 5800,
+      "offset": 376000,
+      "lang": "en"
+    },
+    {
+      "text": "tried hundreds of moving average",
+      "duration": 5320,
+      "offset": 379200,
+      "lang": "en"
+    },
+    {
+      "text": "combinations. You try a combination, it",
+      "duration": 4520,
+      "offset": 381800,
+      "lang": "en"
+    },
+    {
+      "text": "yields a Sharpe ratio. Try another one,",
+      "duration": 3320,
+      "offset": 384520,
+      "lang": "en"
+    },
+    {
+      "text": "it yields a Sharpe. Try another, it",
+      "duration": 3120,
+      "offset": 386320,
+      "lang": "en"
+    },
+    {
+      "text": "yields a different Sharpe. And you'll",
+      "duration": 4360,
+      "offset": 387840,
+      "lang": "en"
+    },
+    {
+      "text": "just pick a parameterization that has",
+      "duration": 5640,
+      "offset": 389440,
+      "lang": "en"
+    },
+    {
+      "text": "the highest Sharpe ratio. But the",
+      "duration": 6800,
+      "offset": 392200,
+      "lang": "en"
+    },
+    {
+      "text": "problem here is you are just overfitting",
+      "duration": 6360,
+      "offset": 395080,
+      "lang": "en"
+    },
+    {
+      "text": "that model's parameterization",
+      "duration": 4520,
+      "offset": 399000,
+      "lang": "en"
+    },
+    {
+      "text": "to historic data. You're not actually",
+      "duration": 5360,
+      "offset": 401440,
+      "lang": "en"
+    },
+    {
+      "text": "learning anything in a robust way. What",
+      "duration": 6680,
+      "offset": 403520,
+      "lang": "en"
+    },
+    {
+      "text": "does this then look like out of sample?",
+      "duration": 5640,
+      "offset": 406800,
+      "lang": "en"
+    },
+    {
+      "text": "Well, let's take a look at that 7-12",
+      "duration": 4880,
+      "offset": 410200,
+      "lang": "en"
+    },
+    {
+      "text": "crossover. So, this one performed better",
+      "duration": 4440,
+      "offset": 412440,
+      "lang": "en"
+    },
+    {
+      "text": "with a better parameterization. Let's",
+      "duration": 4200,
+      "offset": 415080,
+      "lang": "en"
+    },
+    {
+      "text": "try to trade with it live. So, I'm going",
+      "duration": 5200,
+      "offset": 416880,
+      "lang": "en"
+    },
+    {
+      "text": "to use that parameterization live, and I",
+      "duration": 7000,
+      "offset": 419280,
+      "lang": "en"
+    },
+    {
+      "text": "have a negative 1.8 Sharpe ratio. This",
+      "duration": 7040,
+      "offset": 422080,
+      "lang": "en"
+    },
+    {
+      "text": "is a product of overfitting your model",
+      "duration": 4800,
+      "offset": 426280,
+      "lang": "en"
+    },
+    {
+      "text": "and parameterization",
+      "duration": 5080,
+      "offset": 429120,
+      "lang": "en"
+    },
+    {
+      "text": "to data. You're just over-fitting it in",
+      "duration": 4960,
+      "offset": 431080,
+      "lang": "en"
+    },
+    {
+      "text": "a way where you're pulling different",
+      "duration": 4840,
+      "offset": 434200,
+      "lang": "en"
+    },
+    {
+      "text": "levers until the statistics look good in",
+      "duration": 5200,
+      "offset": 436040,
+      "lang": "en"
+    },
+    {
+      "text": "a backward-looking sense. You're not",
+      "duration": 3920,
+      "offset": 439040,
+      "lang": "en"
+    },
+    {
+      "text": "actually learning any structure. You",
+      "duration": 3240,
+      "offset": 441240,
+      "lang": "en"
+    },
+    {
+      "text": "don't actually have an economic",
+      "duration": 2720,
+      "offset": 442960,
+      "lang": "en"
+    },
+    {
+      "text": "interpretation for that",
+      "duration": 2760,
+      "offset": 444480,
+      "lang": "en"
+    },
+    {
+      "text": "parameterization.",
+      "duration": 4280,
+      "offset": 445680,
+      "lang": "en"
+    },
+    {
+      "text": "So, in a forward-looking capacity, it",
+      "duration": 5560,
+      "offset": 447240,
+      "lang": "en"
+    },
+    {
+      "text": "will not emulate that performance. So,",
+      "duration": 5280,
+      "offset": 449960,
+      "lang": "en"
+    },
+    {
+      "text": "what do we do about this in practice?",
+      "duration": 5360,
+      "offset": 452800,
+      "lang": "en"
+    },
+    {
+      "text": "Well, anytime you select a model, you're",
+      "duration": 4800,
+      "offset": 455240,
+      "lang": "en"
+    },
+    {
+      "text": "going to be making assumptions, and that",
+      "duration": 3280,
+      "offset": 458160,
+      "lang": "en"
+    },
+    {
+      "text": "model is going to have a",
+      "duration": 3840,
+      "offset": 460040,
+      "lang": "en"
+    },
+    {
+      "text": "parameterization. How strong those",
+      "duration": 4800,
+      "offset": 461440,
+      "lang": "en"
+    },
+    {
+      "text": "assumptions hold in a forward-looking",
+      "duration": 5240,
+      "offset": 463880,
+      "lang": "en"
+    },
+    {
+      "text": "sense dictates how robust your model",
+      "duration": 6000,
+      "offset": 466240,
+      "lang": "en"
+    },
+    {
+      "text": "will be and how good of a job you will",
+      "duration": 5200,
+      "offset": 469120,
+      "lang": "en"
+    },
+    {
+      "text": "do making trading decisions. So, in",
+      "duration": 4280,
+      "offset": 472240,
+      "lang": "en"
+    },
+    {
+      "text": "practice, we do something known as",
+      "duration": 4920,
+      "offset": 474320,
+      "lang": "en"
+    },
+    {
+      "text": "walk-forward validation. Instead of just",
+      "duration": 4600,
+      "offset": 476520,
+      "lang": "en"
+    },
+    {
+      "text": "looking at a whole bunch of historic",
+      "duration": 4600,
+      "offset": 479240,
+      "lang": "en"
+    },
+    {
+      "text": "data and then picking a parameterization",
+      "duration": 4760,
+      "offset": 481120,
+      "lang": "en"
+    },
+    {
+      "text": "that looks good or yields good",
+      "duration": 4000,
+      "offset": 483840,
+      "lang": "en"
+    },
+    {
+      "text": "performance metrics, we're actually",
+      "duration": 4920,
+      "offset": 485880,
+      "lang": "en"
+    },
+    {
+      "text": "going to chop our data up into different",
+      "duration": 5320,
+      "offset": 487840,
+      "lang": "en"
+    },
+    {
+      "text": "slices. We're going to chop our data up",
+      "duration": 4480,
+      "offset": 490800,
+      "lang": "en"
+    },
+    {
+      "text": "into maybe a couple of months, take a",
+      "duration": 4200,
+      "offset": 493160,
+      "lang": "en"
+    },
+    {
+      "text": "look at a model and parameterization,",
+      "duration": 4720,
+      "offset": 495280,
+      "lang": "en"
+    },
+    {
+      "text": "and then try it over the next couple of",
+      "duration": 6160,
+      "offset": 497360,
+      "lang": "en"
+    },
+    {
+      "text": "months on unseen data. And we do that on",
+      "duration": 6640,
+      "offset": 500000,
+      "lang": "en"
+    },
+    {
+      "text": "a rolling basis to aid in optimizing the",
+      "duration": 6160,
+      "offset": 503520,
+      "lang": "en"
+    },
+    {
+      "text": "parameter set. This will help control",
+      "duration": 5000,
+      "offset": 506640,
+      "lang": "en"
+    },
+    {
+      "text": "for this type of bias. It's not going to",
+      "duration": 4160,
+      "offset": 509680,
+      "lang": "en"
+    },
+    {
+      "text": "mitigate it completely because you can",
+      "duration": 5440,
+      "offset": 511640,
+      "lang": "en"
+    },
+    {
+      "text": "always try to mine then the walk-forward",
+      "duration": 6160,
+      "offset": 513840,
+      "lang": "en"
+    },
+    {
+      "text": "testing. In any case, this is starting",
+      "duration": 6120,
+      "offset": 517080,
+      "lang": "en"
+    },
+    {
+      "text": "to approach more concrete methodology to",
+      "duration": 5760,
+      "offset": 520000,
+      "lang": "en"
+    },
+    {
+      "text": "handle this parameterization",
+      "duration": 5320,
+      "offset": 523200,
+      "lang": "en"
+    },
+    {
+      "text": "problem. A key component of this and a",
+      "duration": 5400,
+      "offset": 525760,
+      "lang": "en"
+    },
+    {
+      "text": "key component of actually building real",
+      "duration": 5600,
+      "offset": 528520,
+      "lang": "en"
+    },
+    {
+      "text": "robust models is your model should not",
+      "duration": 5920,
+      "offset": 531160,
+      "lang": "en"
+    },
+    {
+      "text": "entirely break down just because you",
+      "duration": 6280,
+      "offset": 534120,
+      "lang": "en"
+    },
+    {
+      "text": "slightly alter the parameter set. What I",
+      "duration": 5400,
+      "offset": 537080,
+      "lang": "en"
+    },
+    {
+      "text": "mean by this is you should see",
+      "duration": 4840,
+      "offset": 540400,
+      "lang": "en"
+    },
+    {
+      "text": "reasonably stable performance out of",
+      "duration": 5359,
+      "offset": 542480,
+      "lang": "en"
+    },
+    {
+      "text": "sample in a walk-forward sense, but more",
+      "duration": 5640,
+      "offset": 545240,
+      "lang": "en"
+    },
+    {
+      "text": "importantly, if I was to slightly change",
+      "duration": 6241,
+      "offset": 547839,
+      "lang": "en"
+    },
+    {
+      "text": "the 7 and 12, maybe I make it an 8 and",
+      "duration": 6160,
+      "offset": 550880,
+      "lang": "en"
+    },
+    {
+      "text": "12, I shouldn't see severe performance",
+      "duration": 6680,
+      "offset": 554080,
+      "lang": "en"
+    },
+    {
+      "text": "degradation. That is an indicator of",
+      "duration": 5440,
+      "offset": 557040,
+      "lang": "en"
+    },
+    {
+      "text": "overfitting.",
+      "duration": 3840,
+      "offset": 560760,
+      "lang": "en"
+    },
+    {
+      "text": "So, that is this notion of data",
+      "duration": 6200,
+      "offset": 562480,
+      "lang": "en"
+    },
+    {
+      "text": "snooping, overfitting, or P-hacking.",
+      "duration": 5400,
+      "offset": 564600,
+      "lang": "en"
+    },
+    {
+      "text": "The last pitfall we're going to cover",
+      "duration": 3720,
+      "offset": 568680,
+      "lang": "en"
+    },
+    {
+      "text": "here in is survivorship bias. This is",
+      "duration": 5760,
+      "offset": 570000,
+      "lang": "en"
+    },
+    {
+      "text": "the most slept on bias in all of",
+      "duration": 5040,
+      "offset": 572400,
+      "lang": "en"
+    },
+    {
+      "text": "backtesting.",
+      "duration": 3720,
+      "offset": 575760,
+      "lang": "en"
+    },
+    {
+      "text": "So, what is it? Well, we have a famous",
+      "duration": 4600,
+      "offset": 577440,
+      "lang": "en"
+    },
+    {
+      "text": "analogy. During World War II, analysts",
+      "duration": 5560,
+      "offset": 579480,
+      "lang": "en"
+    },
+    {
+      "text": "mapped bullet holes on returning planes",
+      "duration": 5560,
+      "offset": 582040,
+      "lang": "en"
+    },
+    {
+      "text": "to determine where to add armor. So, we",
+      "duration": 4880,
+      "offset": 585040,
+      "lang": "en"
+    },
+    {
+      "text": "take a look at this plane and we say,",
+      "duration": 4400,
+      "offset": 587600,
+      "lang": "en"
+    },
+    {
+      "text": "\"Okay, let's just armor it up where all",
+      "duration": 5680,
+      "offset": 589920,
+      "lang": "en"
+    },
+    {
+      "text": "of the red dots are.\" But, what about",
+      "duration": 5600,
+      "offset": 592000,
+      "lang": "en"
+    },
+    {
+      "text": "the planes that got shot down? We didn't",
+      "duration": 5680,
+      "offset": 595600,
+      "lang": "en"
+    },
+    {
+      "text": "get to record any data from them. So,",
+      "duration": 6200,
+      "offset": 597600,
+      "lang": "en"
+    },
+    {
+      "text": "this is the idea of survivorship bias.",
+      "duration": 5400,
+      "offset": 601280,
+      "lang": "en"
+    },
+    {
+      "text": "If we were to just armor the plane",
+      "duration": 4640,
+      "offset": 603800,
+      "lang": "en"
+    },
+    {
+      "text": "around where all of the bullet holes",
+      "duration": 4560,
+      "offset": 606680,
+      "lang": "en"
+    },
+    {
+      "text": "were recorded, then we wouldn't achieve",
+      "duration": 5760,
+      "offset": 608440,
+      "lang": "en"
+    },
+    {
+      "text": "the desired outcome. We actually want to",
+      "duration": 5880,
+      "offset": 611240,
+      "lang": "en"
+    },
+    {
+      "text": "armor the plane where we don't see",
+      "duration": 4480,
+      "offset": 614200,
+      "lang": "en"
+    },
+    {
+      "text": "bullet holes.",
+      "duration": 4520,
+      "offset": 617120,
+      "lang": "en"
+    },
+    {
+      "text": "That is Okay, that's that's planes in",
+      "duration": 5200,
+      "offset": 618680,
+      "lang": "en"
+    },
+    {
+      "text": "World War II. What does that have to do",
+      "duration": 6200,
+      "offset": 621640,
+      "lang": "en"
+    },
+    {
+      "text": "with trading? Well, in the exact same",
+      "duration": 7360,
+      "offset": 623880,
+      "lang": "en"
+    },
+    {
+      "text": "capacity, if we don't include firms that",
+      "duration": 6200,
+      "offset": 627840,
+      "lang": "en"
+    },
+    {
+      "text": "went bankrupt in our backtests, if we're",
+      "duration": 4760,
+      "offset": 631240,
+      "lang": "en"
+    },
+    {
+      "text": "trading some sort of cross-sectional",
+      "duration": 4720,
+      "offset": 634040,
+      "lang": "en"
+    },
+    {
+      "text": "strategy or portfolio, we are going to",
+      "duration": 5400,
+      "offset": 636000,
+      "lang": "en"
+    },
+    {
+      "text": "be overestimating our strategies",
+      "duration": 4960,
+      "offset": 638760,
+      "lang": "en"
+    },
+    {
+      "text": "efficacy. So, what does this look like?",
+      "duration": 4280,
+      "offset": 641400,
+      "lang": "en"
+    },
+    {
+      "text": "Well, what you can see here is a",
+      "duration": 4280,
+      "offset": 643720,
+      "lang": "en"
+    },
+    {
+      "text": "beautiful trading strategy. All right,",
+      "duration": 3960,
+      "offset": 645680,
+      "lang": "en"
+    },
+    {
+      "text": "I'm going to develop this idea of a",
+      "duration": 4040,
+      "offset": 648000,
+      "lang": "en"
+    },
+    {
+      "text": "trading signal. I have my quantiles.",
+      "duration": 4160,
+      "offset": 649640,
+      "lang": "en"
+    },
+    {
+      "text": "I'll go long short, create this market",
+      "duration": 4440,
+      "offset": 652040,
+      "lang": "en"
+    },
+    {
+      "text": "neutral portfolio, and everything looks",
+      "duration": 4560,
+      "offset": 653800,
+      "lang": "en"
+    },
+    {
+      "text": "great. I get this nice-looking equity",
+      "duration": 5840,
+      "offset": 656480,
+      "lang": "en"
+    },
+    {
+      "text": "curve. But, in this backtest, I'm not",
+      "duration": 8240,
+      "offset": 658360,
+      "lang": "en"
+    },
+    {
+      "text": "including firms that went bankrupt.",
+      "duration": 6560,
+      "offset": 662320,
+      "lang": "en"
+    },
+    {
+      "text": "Okay. Well, what happens when I include",
+      "duration": 6000,
+      "offset": 666600,
+      "lang": "en"
+    },
+    {
+      "text": "bankrupt or delisted firms? Let's take a",
+      "duration": 6720,
+      "offset": 668880,
+      "lang": "en"
+    },
+    {
+      "text": "look at that exact same signal. What",
+      "duration": 4720,
+      "offset": 672600,
+      "lang": "en"
+    },
+    {
+      "text": "you're going to observe is a few of the",
+      "duration": 4720,
+      "offset": 675600,
+      "lang": "en"
+    },
+    {
+      "text": "names that had a tremendous weight in",
+      "duration": 5920,
+      "offset": 677320,
+      "lang": "en"
+    },
+    {
+      "text": "the buckets in varying capacities. That",
+      "duration": 5120,
+      "offset": 680320,
+      "lang": "en"
+    },
+    {
+      "text": "means going long yielded negative",
+      "duration": 4320,
+      "offset": 683240,
+      "lang": "en"
+    },
+    {
+      "text": "returns, going short yielded positive",
+      "duration": 4040,
+      "offset": 685440,
+      "lang": "en"
+    },
+    {
+      "text": "returns. You can see that the",
+      "duration": 5040,
+      "offset": 687560,
+      "lang": "en"
+    },
+    {
+      "text": "performance degrades severely, and we",
+      "duration": 6960,
+      "offset": 689480,
+      "lang": "en"
+    },
+    {
+      "text": "end up with a negative sharp ratio. This",
+      "duration": 8120,
+      "offset": 692600,
+      "lang": "en"
+    },
+    {
+      "text": "is akin to not armoring the plane in the",
+      "duration": 6920,
+      "offset": 696440,
+      "lang": "en"
+    },
+    {
+      "text": "places where there are no bullet holes.",
+      "duration": 5800,
+      "offset": 700720,
+      "lang": "en"
+    },
+    {
+      "text": "Effectively, we're looking at something",
+      "duration": 5720,
+      "offset": 703360,
+      "lang": "en"
+    },
+    {
+      "text": "that is contradicting",
+      "duration": 5360,
+      "offset": 706520,
+      "lang": "en"
+    },
+    {
+      "text": "decisions that we need to make to",
+      "duration": 6400,
+      "offset": 709080,
+      "lang": "en"
+    },
+    {
+      "text": "achieve the desired outcome. That is why",
+      "duration": 8240,
+      "offset": 711880,
+      "lang": "en"
+    },
+    {
+      "text": "we need to include delisted firms in our",
+      "duration": 8400,
+      "offset": 715480,
+      "lang": "en"
+    },
+    {
+      "text": "back tests. Same idea as the planes.",
+      "duration": 6720,
+      "offset": 720120,
+      "lang": "en"
+    },
+    {
+      "text": "Otherwise, we're not going to achieve",
+      "duration": 6200,
+      "offset": 723880,
+      "lang": "en"
+    },
+    {
+      "text": "the desired outcome from our analysis.",
+      "duration": 5400,
+      "offset": 726840,
+      "lang": "en"
+    },
+    {
+      "text": "So, what can we do to control for this",
+      "duration": 4520,
+      "offset": 730080,
+      "lang": "en"
+    },
+    {
+      "text": "bias? Well, at each time T that you're",
+      "duration": 4120,
+      "offset": 732240,
+      "lang": "en"
+    },
+    {
+      "text": "making a trading decision in a back",
+      "duration": 4640,
+      "offset": 734600,
+      "lang": "en"
+    },
+    {
+      "text": "test, you need to predefine an equity",
+      "duration": 5240,
+      "offset": 736360,
+      "lang": "en"
+    },
+    {
+      "text": "universe. And that equity universe can",
+      "duration": 5080,
+      "offset": 739240,
+      "lang": "en"
+    },
+    {
+      "text": "be based on an index. be based on market",
+      "duration": 4240,
+      "offset": 741600,
+      "lang": "en"
+    },
+    {
+      "text": "capitalization.",
+      "duration": 4640,
+      "offset": 744320,
+      "lang": "en"
+    },
+    {
+      "text": "Whatever you would like, but it can't",
+      "duration": 6840,
+      "offset": 745840,
+      "lang": "en"
+    },
+    {
+      "text": "just include firms that survived into",
+      "duration": 6200,
+      "offset": 748960,
+      "lang": "en"
+    },
+    {
+      "text": "the future. It has to include all of",
+      "duration": 5159,
+      "offset": 752680,
+      "lang": "en"
+    },
+    {
+      "text": "them because today, if you make trading",
+      "duration": 5400,
+      "offset": 755160,
+      "lang": "en"
+    },
+    {
+      "text": "decisions, you don't know which firms",
+      "duration": 7121,
+      "offset": 757839,
+      "lang": "en"
+    },
+    {
+      "text": "are going to survive 5-10 years into the",
+      "duration": 6880,
+      "offset": 760560,
+      "lang": "en"
+    },
+    {
+      "text": "future. Some honorable mentions, these",
+      "duration": 5560,
+      "offset": 764960,
+      "lang": "en"
+    },
+    {
+      "text": "aren't exactly pitfalls in themselves.",
+      "duration": 5160,
+      "offset": 767440,
+      "lang": "en"
+    },
+    {
+      "text": "They're certainly more in your face. You",
+      "duration": 4880,
+      "offset": 770520,
+      "lang": "en"
+    },
+    {
+      "text": "can think of them as accomplices to the",
+      "duration": 5200,
+      "offset": 772600,
+      "lang": "en"
+    },
+    {
+      "text": "crime, if you will. We have transaction",
+      "duration": 6080,
+      "offset": 775400,
+      "lang": "en"
+    },
+    {
+      "text": "costs, the spread, and slippage. In",
+      "duration": 7720,
+      "offset": 777800,
+      "lang": "en"
+    },
+    {
+      "text": "other words, if you control for those",
+      "duration": 6480,
+      "offset": 781480,
+      "lang": "en"
+    },
+    {
+      "text": "three pitfalls that we discussed,",
+      "duration": 4360,
+      "offset": 785520,
+      "lang": "en"
+    },
+    {
+      "text": "look-ahead bias, data snooping, and",
+      "duration": 4560,
+      "offset": 787960,
+      "lang": "en"
+    },
+    {
+      "text": "survivorship bias, and you don't have a",
+      "duration": 4440,
+      "offset": 789880,
+      "lang": "en"
+    },
+    {
+      "text": "viable trading strategy, these aren't",
+      "duration": 4600,
+      "offset": 792520,
+      "lang": "en"
+    },
+    {
+      "text": "going to matter at all. If you can't",
+      "duration": 5120,
+      "offset": 794320,
+      "lang": "en"
+    },
+    {
+      "text": "generate a positive sharp ratio in the",
+      "duration": 3680,
+      "offset": 797120,
+      "lang": "en"
+    },
+    {
+      "text": "classroom,",
+      "duration": 3520,
+      "offset": 799440,
+      "lang": "en"
+    },
+    {
+      "text": "taking steps closer to the real world",
+      "duration": 4280,
+      "offset": 800800,
+      "lang": "en"
+    },
+    {
+      "text": "certainly isn't going to help you.",
+      "duration": 4600,
+      "offset": 802960,
+      "lang": "en"
+    },
+    {
+      "text": "Transaction costs are going to eat away",
+      "duration": 5760,
+      "offset": 805080,
+      "lang": "en"
+    },
+    {
+      "text": "at your equity curve. The spread is also",
+      "duration": 5000,
+      "offset": 807560,
+      "lang": "en"
+    },
+    {
+      "text": "going to change what price you're",
+      "duration": 5600,
+      "offset": 810840,
+      "lang": "en"
+    },
+    {
+      "text": "filling at along with slippage. In other",
+      "duration": 6200,
+      "offset": 812560,
+      "lang": "en"
+    },
+    {
+      "text": "words, these are going to eat away at",
+      "duration": 5120,
+      "offset": 816440,
+      "lang": "en"
+    },
+    {
+      "text": "whatever beautiful equity curve you have",
+      "duration": 5400,
+      "offset": 818760,
+      "lang": "en"
+    },
+    {
+      "text": "excluding transaction costs that you",
+      "duration": 5800,
+      "offset": 821560,
+      "lang": "en"
+    },
+    {
+      "text": "would experience in the real world. In",
+      "duration": 5800,
+      "offset": 824160,
+      "lang": "en"
+    },
+    {
+      "text": "short, backtesting is a powerful",
+      "duration": 4920,
+      "offset": 827360,
+      "lang": "en"
+    },
+    {
+      "text": "technique, but it's also one of the most",
+      "duration": 5680,
+      "offset": 829960,
+      "lang": "en"
+    },
+    {
+      "text": "misapplied techniques in all of",
+      "duration": 6240,
+      "offset": 832280,
+      "lang": "en"
+    },
+    {
+      "text": "statistics. By refusing to trade as if",
+      "duration": 5800,
+      "offset": 835640,
+      "lang": "en"
+    },
+    {
+      "text": "you had a crystal ball, by refusing to",
+      "duration": 5160,
+      "offset": 838520,
+      "lang": "en"
+    },
+    {
+      "text": "torture your data until it tells you",
+      "duration": 4360,
+      "offset": 841440,
+      "lang": "en"
+    },
+    {
+      "text": "what you want, and of course by",
+      "duration": 5480,
+      "offset": 843680,
+      "lang": "en"
+    },
+    {
+      "text": "including firms in the graveyard in your",
+      "duration": 6040,
+      "offset": 845800,
+      "lang": "en"
+    },
+    {
+      "text": "back tests, you aren't just building a",
+      "duration": 5080,
+      "offset": 849160,
+      "lang": "en"
+    },
+    {
+      "text": "better model. You are building an",
+      "duration": 5240,
+      "offset": 851840,
+      "lang": "en"
+    },
+    {
+      "text": "institutional grade pipeline. That's",
+      "duration": 4280,
+      "offset": 854240,
+      "lang": "en"
+    },
+    {
+      "text": "going to do it for this video on three",
+      "duration": 3840,
+      "offset": 857080,
+      "lang": "en"
+    },
+    {
+      "text": "backtesting pitfalls that will ruin your",
+      "duration": 4360,
+      "offset": 858520,
+      "lang": "en"
+    },
+    {
+      "text": "strategy. I hope you enjoyed. I hope you",
+      "duration": 3600,
+      "offset": 860920,
+      "lang": "en"
+    },
+    {
+      "text": "learned something. This video certainly",
+      "duration": 3040,
+      "offset": 862880,
+      "lang": "en"
+    },
+    {
+      "text": "took a lot of effort to put together.",
+      "duration": 2480,
+      "offset": 864520,
+      "lang": "en"
+    },
+    {
+      "text": "So, if you liked it and you want to see",
+      "duration": 2960,
+      "offset": 865920,
+      "lang": "en"
+    },
+    {
+      "text": "more like it in the future, please like,",
+      "duration": 3800,
+      "offset": 867000,
+      "lang": "en"
+    },
+    {
+      "text": "comment, subscribe, share. It helps me",
+      "duration": 3520,
+      "offset": 868880,
+      "lang": "en"
+    },
+    {
+      "text": "out tremendously. It is always greatly",
+      "duration": 4000,
+      "offset": 870800,
+      "lang": "en"
+    },
+    {
+      "text": "appreciated. Master your quantitative",
+      "duration": 4720,
+      "offset": 872400,
+      "lang": "en"
+    },
+    {
+      "text": "skills for trading and market making",
+      "duration": 4640,
+      "offset": 874800,
+      "lang": "en"
+    },
+    {
+      "text": "roles on quantguild.com.",
+      "duration": 4320,
+      "offset": 877120,
+      "lang": "en"
+    },
+    {
+      "text": "Other than that, I want to thank you so",
+      "duration": 4080,
+      "offset": 879440,
+      "lang": "en"
+    },
+    {
+      "text": "much for watching and I'll see you in",
+      "duration": 5600,
+      "offset": 881440,
+      "lang": "en"
+    },
+    {
+      "text": "the next video.",
+      "duration": 3520,
+      "offset": 883520,
+      "lang": "en"
+    }
+  ],
+  "text": "[music] >> You just finished your backtest. You take a look at your equity curve. It's a beautiful line up into the right 45 degrees, a sharp ratio of maybe 1.5, 1.7, and you're getting ready for live deployment, and of course, retirement. But, in the quant world, a good-looking backtest isn't a success. It's a crime scene. Most trading strategies fail when they hit the live markets, not because of a regime change, but because the math was broken to begin with. In this video today, we're going to talk about the three most common backtesting pitfalls that will ruin your trading strategy. While today we'll be covering these specific pitfalls, the reality is you still need to build a robust model to trade with. If you'd like to master your quantitative skills required to build these institutional-grade models for trading and market-making roles, check out quantguild.com. We have over 100 hours of lecture content, an adaptive practice engine that scales with your skill level, all designed to prepare you for the real world. And if you'd like access to this Jupyter notebook, the link will be in the description below, and I'll also post it on the Quant Guild library on GitHub, where you can find all of my Jupyter notebooks and associated YouTube videos. Let's take a look at the first pitfall at the scene of this crime, look-ahead bias. What I have here for you is an animation of a trading strategy. What I'm going to do is I'm going to use alternative data to come up with a signal for a basket of equities. I'm going to rank that signal in terms of quantiles. I'm going to go long the top bucket, short the bottom bucket, create a market-neutral strategy, and I'm going to analyze the equity curve and the returns across deciles. And what you see here is something that looks very promising. We have a Sharpe ratio of three. We have a nice monotonic relationship between the signal bucket and the forward return. But, like we said at the start of this video, a successful backtest is in fact a crime scene. So, what is this pitfall that we're analyzing here? Look-ahead bias. The idea of incorporating information that isn't available on or at the time that you enter into a trade in making that trading decision. You can think of this in terms of two envelopes. We have one envelope of all of the information available to us at or before the time of the trading decision and information then that is available after the time of that trading decision. Now, it's an easy idea to grasp. We don't want to accidentally look into the future, but especially when we're dealing with alternative data and large data sets, this can become increasingly difficult, especially when you're trying to match dates across returns, across alternative data sets, whenever that data actually arrived point in time. What happens when you actually control for this look-ahead bias in something like the strategy that we just saw above? Well, in the strategy we just saw above, clearly something was wrong. We had a Sharpe ratio of three, and that is very exciting to see in a backtest, but also it is a crime scene. Likely, you've induced some bias in your backtest. When we actually control for that look-ahead bias, you can see that the performance degrades severely. Now, it's not as insulting when you see a Sharpe ratio of three, four, five. But, what is insulting is when you see a Sharpe ratio of maybe 0.9, 1.2. And it seems like your signal might have some promise, but in fact, it is polluted by this look-ahead bias. What I'm saying is look-ahead bias isn't necessarily going to contribute to enough variation explained in forward returns to automatically make your backtest look too good to be true. It in fact could just look promising and still be polluted by look-ahead bias. This can unfortunately come in a variety of different shapes, ways, and forms. It can come in the form of just including information that was available 1 week from today as a signal in your trading decision a week prior. It can come in the form of using forward data, returns from next week to aid in normalizing some sort of signal or return today or even in the past informing your trading decision. So, anytime you're dealing with a backtest, it's critical that your models, your parameterizations, your alternative data are always going to be adapted to the filtration that is you're only going to be trading with effectively that first envelope. This brings us to the second pitfall at the scene of the crime, data snooping, overfitting, P hacking. This is going to be the most insulting pitfall when you first get started backtesting trading strategies, especially if you don't have a strong basis in probability and statistics building models. What you're observing here is two different trading strategies. I'm using a moving average crossover on the left and a moving average crossover on the right. But, what I'm doing is I'm changing each of the moving averages. I have a three and a five and a seven, and a 12. And I want you to notice the seven and the 12 clearly outperforms the three and the five. So, what am I going to try to trade live with? Well, I'm going to want to trade the one with a higher Sharpe ratio, right? Can't we just keep picking different parameterizations of that strategy until we find an optimal one and then trade with that live? Well, this is the idea of data snooping, overfitting, or P hacking. Suppose you tried hundreds of moving average combinations. You try a combination, it yields a Sharpe ratio. Try another one, it yields a Sharpe. Try another, it yields a different Sharpe. And you'll just pick a parameterization that has the highest Sharpe ratio. But the problem here is you are just overfitting that model's parameterization to historic data. You're not actually learning anything in a robust way. What does this then look like out of sample? Well, let's take a look at that 7-12 crossover. So, this one performed better with a better parameterization. Let's try to trade with it live. So, I'm going to use that parameterization live, and I have a negative 1.8 Sharpe ratio. This is a product of overfitting your model and parameterization to data. You're just over-fitting it in a way where you're pulling different levers until the statistics look good in a backward-looking sense. You're not actually learning any structure. You don't actually have an economic interpretation for that parameterization. So, in a forward-looking capacity, it will not emulate that performance. So, what do we do about this in practice? Well, anytime you select a model, you're going to be making assumptions, and that model is going to have a parameterization. How strong those assumptions hold in a forward-looking sense dictates how robust your model will be and how good of a job you will do making trading decisions. So, in practice, we do something known as walk-forward validation. Instead of just looking at a whole bunch of historic data and then picking a parameterization that looks good or yields good performance metrics, we're actually going to chop our data up into different slices. We're going to chop our data up into maybe a couple of months, take a look at a model and parameterization, and then try it over the next couple of months on unseen data. And we do that on a rolling basis to aid in optimizing the parameter set. This will help control for this type of bias. It's not going to mitigate it completely because you can always try to mine then the walk-forward testing. In any case, this is starting to approach more concrete methodology to handle this parameterization problem. A key component of this and a key component of actually building real robust models is your model should not entirely break down just because you slightly alter the parameter set. What I mean by this is you should see reasonably stable performance out of sample in a walk-forward sense, but more importantly, if I was to slightly change the 7 and 12, maybe I make it an 8 and 12, I shouldn't see severe performance degradation. That is an indicator of overfitting. So, that is this notion of data snooping, overfitting, or P-hacking. The last pitfall we're going to cover here in is survivorship bias. This is the most slept on bias in all of backtesting. So, what is it? Well, we have a famous analogy. During World War II, analysts mapped bullet holes on returning planes to determine where to add armor. So, we take a look at this plane and we say, \"Okay, let's just armor it up where all of the red dots are.\" But, what about the planes that got shot down? We didn't get to record any data from them. So, this is the idea of survivorship bias. If we were to just armor the plane around where all of the bullet holes were recorded, then we wouldn't achieve the desired outcome. We actually want to armor the plane where we don't see bullet holes. That is Okay, that's that's planes in World War II. What does that have to do with trading? Well, in the exact same capacity, if we don't include firms that went bankrupt in our backtests, if we're trading some sort of cross-sectional strategy or portfolio, we are going to be overestimating our strategies efficacy. So, what does this look like? Well, what you can see here is a beautiful trading strategy. All right, I'm going to develop this idea of a trading signal. I have my quantiles. I'll go long short, create this market neutral portfolio, and everything looks great. I get this nice-looking equity curve. But, in this backtest, I'm not including firms that went bankrupt. Okay. Well, what happens when I include bankrupt or delisted firms? Let's take a look at that exact same signal. What you're going to observe is a few of the names that had a tremendous weight in the buckets in varying capacities. That means going long yielded negative returns, going short yielded positive returns. You can see that the performance degrades severely, and we end up with a negative sharp ratio. This is akin to not armoring the plane in the places where there are no bullet holes. Effectively, we're looking at something that is contradicting decisions that we need to make to achieve the desired outcome. That is why we need to include delisted firms in our back tests. Same idea as the planes. Otherwise, we're not going to achieve the desired outcome from our analysis. So, what can we do to control for this bias? Well, at each time T that you're making a trading decision in a back test, you need to predefine an equity universe. And that equity universe can be based on an index. be based on market capitalization. Whatever you would like, but it can't just include firms that survived into the future. It has to include all of them because today, if you make trading decisions, you don't know which firms are going to survive 5-10 years into the future. Some honorable mentions, these aren't exactly pitfalls in themselves. They're certainly more in your face. You can think of them as accomplices to the crime, if you will. We have transaction costs, the spread, and slippage. In other words, if you control for those three pitfalls that we discussed, look-ahead bias, data snooping, and survivorship bias, and you don't have a viable trading strategy, these aren't going to matter at all. If you can't generate a positive sharp ratio in the classroom, taking steps closer to the real world certainly isn't going to help you. Transaction costs are going to eat away at your equity curve. The spread is also going to change what price you're filling at along with slippage. In other words, these are going to eat away at whatever beautiful equity curve you have excluding transaction costs that you would experience in the real world. In short, backtesting is a powerful technique, but it's also one of the most misapplied techniques in all of statistics. By refusing to trade as if you had a crystal ball, by refusing to torture your data until it tells you what you want, and of course by including firms in the graveyard in your back tests, you aren't just building a better model. You are building an institutional grade pipeline. That's going to do it for this video on three backtesting pitfalls that will ruin your strategy. I hope you enjoyed. I hope you learned something. This video certainly took a lot of effort to put together. So, if you liked it and you want to see more like it in the future, please like, comment, subscribe, share. It helps me out tremendously. It is always greatly appreciated. Master your quantitative skills for trading and market making roles on quantguild.com. Other than that, I want to thank you so much for watching and I'll see you in the next video.",
+  "cited_at": "2026-05-24T04:42:01.906Z"
+}
