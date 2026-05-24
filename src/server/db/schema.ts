@@ -2206,6 +2206,14 @@ export const systemState = pgTable("system_state", {
   killReason: text("kill_reason"),
   setBy: text("set_by").notNull().default("system"),
   setAt: timestamp("set_at", { withTimezone: true }).notNull().defaultNow(),
+  // ─── Operator-absent auto-flip (W24 Pass 1.5 Item 6) ────────────────────────
+  // operator_absent_since (added in migration 0101) — set when sustained absence
+  // is confirmed; clears vacation autopilot Tier-1 promotion gate.
+  // operator_absent_pending (migration 0131) — pending-confirmation timestamp;
+  // promoted to operator_absent_since after a second 24h of continued silence.
+  // Both cleared atomically by POST /api/admin/operator-mark-present.
+  operatorAbsentSince: timestamp("operator_absent_since", { withTimezone: true }),
+  operatorAbsentPending: timestamp("operator_absent_pending", { withTimezone: true }),
 });
 
 export type SystemStateRow = typeof systemState.$inferSelect;

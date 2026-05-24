@@ -113,6 +113,7 @@ The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-p
 - BW vault auto-refresh keeps secrets fresh (if `TF_VAULT_MODE=bitwarden`)
 - Prop firm cookie refresh keeps C2 evidence intact
 - Dead-man's heartbeat alerts you via Discord/SMS if backend silent >2h during RTH
+- **W24 Pass 1.5 — `operator_absent_since` is now auto-flipped from sustained silence.** No manual flag-flip needed before leaving. Auto-detector (`runOperatorAbsenceAutoDetect`) runs on the 30-min `heartbeat-stale-check` cron: 24h of zero `audit_log` rows with `decision_authority='human'` sets `operator_absent_pending`; another 24h sets `operator_absent_since` and engages Tier-1 autopilot. Discord critical fires at each stage. Cancel via `POST /api/admin/operator-mark-present` (or simply hit any admin endpoint — that writes a human-authority audit row which clears `pending`). `_since` is sticky once set; the mark-present route is the ONLY way to clear it.
 - 14-day vacations are safe by design
 
 ---

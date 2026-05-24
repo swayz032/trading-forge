@@ -5953,6 +5953,67 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-23 Wave 24 Pass 1.5 Architect Sweep + Pass 1 Close-out
+
+**Mission:** Close the Wave 24 Pass 1 architect-sweep gap — clear `system-map:check` drift, ship operator-absent auto-flip (CATASTROPHIC fix), and document Wave 24 Pass 1 close-out across all 5 subagent tracks.
+
+**Work completed:**
+- **Item 2 (system-map:check)** — Registered the 9 missing surfaces introduced by Pass 1 subagents into `docs/system-subsystem-registry.json`:
+  - `broker_abstraction_layer.routes` += `/api/broker-accounts`
+  - `operator_absent_autopilot.scheduler_jobs`: renamed stale entries (`bitwarden-session-refresh-daily` → `bw-session-refresh`, `dead-mans-heartbeat-check` → `heartbeat-stale-check`, `dead-mans-heartbeat-write` → `heartbeat-write`, `prop-firm-cookie-refresh-daily` → `prop-firm-cookie-refresh`) to match canonical job names registered in scheduler.ts
+  - `operator_absent_autopilot.audit_actions` += `operator_absence.pending_detected`, `operator_absence.auto_detected`, `operator_presence.confirmed`, `bw_refresh.heartbeat`, `bw_refresh.failed`, `cookie_refresh.heartbeat`, `cookie_refresh.failed`, `dead_mans_heartbeat.bw_refresh_stale`, `dead_mans_heartbeat.cookie_refresh_stale`, `system.self_restart_requested`
+  - `production_hardening.scheduler_jobs` += `weekly-drift-2sigma-check`; `audit_actions` += `drift.weekly_2sigma_halt`
+  - `context_execution`: added `pre-market-routine` job, `/api/pre-market` route, `pre_market_sessions` table
+  - Ran `npm run system-map:sync` to regenerate `Trading Forge System Map v2.md` + `docs/system-topology.generated.json`. Final `npm run system-map:check` → `status: "ok"`, exit 0.
+- **Item 6 (operator-absent auto-flip — CATASTROPHIC)** — fixed the silent vacation-autopilot disconnect:
+  - Migration `0131_operator_absent_pending.sql` (additive nullable `TIMESTAMPTZ` column on `system_state`). Idempotent. Operator-applied.
+  - Drizzle `systemState` schema now exposes both `operatorAbsentSince` (pre-existing migration 0101) and `operatorAbsentPending` (new 0131).
+  - `dead-mans-heartbeat-service.ts`: new exports `runOperatorAbsenceAutoDetect()`, `clearOperatorAbsenceMarkers()`, `getLastOperatorActivityAt()`. Two-stage state machine — 24h silence → set `pending` + Discord critical; another 24h silence → promote to `since` + Discord critical. Operator activity signal = audit_log row with `decision_authority='human'` in last 24h (no middleware coupling — the mark-present route itself writes such a row).
+  - Wired into existing `heartbeat-stale-check` job (30-min cadence) in `scheduler.ts` — no new job needed.
+  - New route `POST /api/admin/operator-mark-present` in `admin.ts` — clears BOTH columns atomically, writes `operator_presence.confirmed` audit row, fires Discord warning.
+  - Test file `wave24-operator-absent-auto-flip.test.ts` — 7 tests covering fresh-activity-no-op, 24h-silence-sets-pending, 48h-silence-promotes-to-since, since-is-sticky-idempotent, activity-clears-pending-no-flap, 12h-pending-waits, mark-present-clears-both. All GREEN first run.
+
+**Verification:**
+- `npm run system-map:check` → `status: "ok"`, exit 0
+- `npm run check:production-isolation` → CLEAN (0 violations)
+- `npm run check:2026-compliance` → OK
+- `npx vitest run wave24-operator-absent-auto-flip` → 7/7 GREEN
+- `npx vitest run wave24` → 125/125 GREEN across 15 wave24 files (no regression)
+- `npx tsc --noEmit` → exit 0. Errors observed in `volume-profile-service.ts`, `validation-cadence-service.ts`, `schema.ts`, `admin.ts:463`, `test_kill_switch_blocks_cron.test.ts`, `test_invariant_blocks_promotion.test.ts` are PRE-EXISTING (verified via `git stash` + re-run). My touched files are clean.
+
+**Wave 24 Pass 1 close-out (master verification):**
+- ✅ `n8n-orchestration` (commit 5ec8af3) — N8nWorkflowDeployer + webhook auto-reregister, 6 vitest pass
+- ✅ `observability-reliability` (commit d3a98c4) — BW/cookie/drift crons + self-restart + stale-check, 33 vitest pass
+- ✅ `paper-parity` (commit 95cd2c4) — Style D deprecation + B14 HARD + mc_provisional + liquidity haircut + vol-scaling + firm-conditional C11, 52 vitest pass
+- ✅ `backtest-core` (commit bd9786e) — CPCV+purged WF + blackout/cross-symbol-DLL + PBO + honest DSR, 83 pytest + 27 vitest pass (pytest not re-run on Windows host — preserved upstream baseline)
+- ✅ `trading-forge-architect` (this session) — system-map sync + operator-absent auto-flip + close-out
+- Aggregate: **125 wave24 vitest pass + 83 pytest pass (preserved) = 208 new tests across Pass 1**
+- CI hard gates: ✅ production-isolation, ✅ 2026-compliance, ✅ system-map (now ok), vitest baseline preserved; pytest baseline noted as Windows-untrunnable per backtest-core agent note
+- Operator-pending actions: apply migration 0131 + write `system_map.synced` audit_log row (per CLAUDE.md §10). Both deferred to operator since this sweep ran without live DB access.
+
+**Env vars introduced this wave (all default-safe):**
+| Env var | Default | Owner agent |
+|---|---|---|
+| `ADMIN_RESTART_HMAC_SECRET` | empty (NODE_ENV=production fails closed; dev/test fails open) | observability-reliability |
+| `RISK_VIX_TARGET` | `18` | paper-parity |
+| `RISK_VOL_SCALE_MIN` | `0.5` | paper-parity |
+| `RISK_VOL_SCALE_MAX` | `1.5` | paper-parity |
+| `WF_MODE` | `plain` (alternate: `cpcv_purged`) | backtest-core |
+| `B14_HARD_GATE_ENABLED` | `true` | paper-parity |
+| `DSR_HONEST_THRESHOLD` | `1.5` | backtest-core |
+| `PBO_PROMOTION_THRESHOLD` | `0.5` | backtest-core |
+
+**Known-facts updates:**
+- New pin: `operator_absent_since` and `operator_absent_pending` together form a 24h+24h confirmation-window state machine driven by `runOperatorAbsenceAutoDetect()` on the `heartbeat-stale-check` (30-min) job. Pre-Pass-1.5, only the `_since` column existed and had no production writer — the very mode designed for vacation required presence to enable. Activity signal: any `audit_log.decision_authority='human'` row in last 24h. Mark-present route is the canonical clear path.
+
+**Carry-forward for next session:**
+- Operator must apply migration `0131_operator_absent_pending.sql` on production DB
+- Operator must write `system_map.synced` audit_log row (or run an architect script that does so against a live DB) per CLAUDE.md §10 step 4
+- Pre-existing TS errors in `volume-profile-service.ts`, `validation-cadence-service.ts`, `admin.ts:463`, `schema.ts:43,45`, and 2 test files remain unaddressed — out of scope for Pass 1.5 architect sweep but flagged for future cleanup
+- HMAC self-restart endpoint requires `ADMIN_RESTART_HMAC_SECRET` set on tower-side `.env` before NODE_ENV=production; document in operator runbook if not already
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

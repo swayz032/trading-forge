@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T01:24:03.902Z",
+  "generatedAt": "2026-05-24T01:42:31.045Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -887,27 +887,15 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 62,
-      "schedulerJobs": 63,
+      "routes": 64,
+      "schedulerJobs": 69,
       "engineSubsystems": 26,
-      "databaseTables": 92
+      "databaseTables": 93
     },
-    "missingRoutes": [
-      "/api/broker-accounts",
-      "/api/pre-market"
-    ],
-    "missingSchedulerJobs": [
-      "bw-session-refresh",
-      "heartbeat-stale-check",
-      "heartbeat-write",
-      "pre-market-routine",
-      "prop-firm-cookie-refresh",
-      "weekly-drift-2sigma-check"
-    ],
+    "missingRoutes": [],
+    "missingSchedulerJobs": [],
     "missingEngineSubsystems": [],
-    "missingDatabaseTables": [
-      "pre_market_sessions"
-    ],
+    "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],
@@ -1313,6 +1301,7 @@
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
+          "/api/broker-accounts",
           "/api/strategy-assignments"
         ],
         "schedulerJobs": [],
@@ -1590,6 +1579,7 @@
           "paper_signal_logs",
           "paper_trades",
           "portfolio_snapshots",
+          "pre_market_sessions",
           "prop_firm_health_checks",
           "session context",
           "shadow_signals",
@@ -1639,6 +1629,7 @@
           "/api/macro",
           "/api/paper",
           "/api/portfolio",
+          "/api/pre-market",
           "/api/risk",
           "/api/signals",
           "/api/bias-decisions",
@@ -1664,6 +1655,7 @@
           "paper-vs-backtest",
           "portfolio-correlation",
           "pre-market-prep",
+          "pre-market-routine",
           "prop-firm-dashboard-snapshot",
           "prop-firm-health-check",
           "session-analytics-rollup",
@@ -2132,9 +2124,19 @@
           "audit_log:autopilot.dead_mans_heartbeat",
           "autopilot.dead_mans_heartbeat",
           "autopilot.tier1_auto_promoted",
+          "bw_refresh.failed",
+          "bw_refresh.heartbeat",
+          "cookie_refresh.failed",
+          "cookie_refresh.heartbeat",
+          "dead_mans_heartbeat.bw_refresh_stale",
+          "dead_mans_heartbeat.cookie_refresh_stale",
           "lifecycle:operator_absent_autopromoted SSE",
+          "operator_absence.auto_detected",
+          "operator_absence.pending_detected",
+          "operator_presence.confirmed",
           "reconciliation.5_source_mismatch",
           "system_health_heartbeat:recent-write",
+          "system.self_restart_requested",
           "tradingview_markers:recent-write",
           "tradingview:marker-received SSE",
           "tradingview.marker_received"
@@ -2172,10 +2174,20 @@
           "autopilot-tier1-promotion-audit",
           "autopilot.dead_mans_heartbeat",
           "autopilot.tier1_auto_promoted",
+          "bw_refresh.failed",
+          "bw_refresh.heartbeat",
+          "cookie_refresh.failed",
+          "cookie_refresh.heartbeat",
+          "dead_mans_heartbeat.bw_refresh_stale",
+          "dead_mans_heartbeat.cookie_refresh_stale",
           "dead-mans-heartbeat-audit",
           "lifecycle:operator_absent_autopromoted SSE",
+          "operator_absence.auto_detected",
+          "operator_absence.pending_detected",
+          "operator_presence.confirmed",
           "reconciliation.5_source_mismatch",
           "system_health_heartbeat:recent-write",
+          "system.self_restart_requested",
           "tradingview_markers:recent-write",
           "tradingview-marker-audit",
           "tradingview:marker-received SSE",
@@ -2186,10 +2198,10 @@
           "/api/tradingview"
         ],
         "schedulerJobs": [
-          "bitwarden-session-refresh-daily",
-          "dead-mans-heartbeat-check",
-          "dead-mans-heartbeat-write",
-          "prop-firm-cookie-refresh-daily"
+          "bw-session-refresh",
+          "heartbeat-stale-check",
+          "heartbeat-write",
+          "prop-firm-cookie-refresh"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -2332,6 +2344,7 @@
         "runtimeEvidence": [
           "/api/production/status",
           "daily_reconciliation:recent-entry",
+          "drift.weekly_2sigma_halt",
           "paper:entry-blocked-production-halt SSE",
           "paper:force-flatten-all SSE",
           "paper.entry_blocked",
@@ -2379,6 +2392,7 @@
           "/api/production/status",
           "daily_reconciliation:recent-entry",
           "drift-detection-history",
+          "drift.weekly_2sigma_halt",
           "paper:entry-blocked-production-halt SSE",
           "paper:force-flatten-all SSE",
           "paper.entry_blocked",
@@ -2399,6 +2413,7 @@
         ],
         "schedulerJobs": [
           "daily-reconciliation",
+          "weekly-drift-2sigma-check",
           "weekly-drift-detection"
         ],
         "healthCheck": "/api/production/status",
@@ -3827,6 +3842,7 @@
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
+        "/api/broker-accounts",
         "/api/strategy-assignments"
       ],
       "schedulerJobs": [],
@@ -4104,6 +4120,7 @@
         "paper_signal_logs",
         "paper_trades",
         "portfolio_snapshots",
+        "pre_market_sessions",
         "prop_firm_health_checks",
         "session context",
         "shadow_signals",
@@ -4153,6 +4170,7 @@
         "/api/macro",
         "/api/paper",
         "/api/portfolio",
+        "/api/pre-market",
         "/api/risk",
         "/api/signals",
         "/api/bias-decisions",
@@ -4178,6 +4196,7 @@
         "paper-vs-backtest",
         "portfolio-correlation",
         "pre-market-prep",
+        "pre-market-routine",
         "prop-firm-dashboard-snapshot",
         "prop-firm-health-check",
         "session-analytics-rollup",
@@ -4646,9 +4665,19 @@
         "audit_log:autopilot.dead_mans_heartbeat",
         "autopilot.dead_mans_heartbeat",
         "autopilot.tier1_auto_promoted",
+        "bw_refresh.failed",
+        "bw_refresh.heartbeat",
+        "cookie_refresh.failed",
+        "cookie_refresh.heartbeat",
+        "dead_mans_heartbeat.bw_refresh_stale",
+        "dead_mans_heartbeat.cookie_refresh_stale",
         "lifecycle:operator_absent_autopromoted SSE",
+        "operator_absence.auto_detected",
+        "operator_absence.pending_detected",
+        "operator_presence.confirmed",
         "reconciliation.5_source_mismatch",
         "system_health_heartbeat:recent-write",
+        "system.self_restart_requested",
         "tradingview_markers:recent-write",
         "tradingview:marker-received SSE",
         "tradingview.marker_received"
@@ -4686,10 +4715,20 @@
         "autopilot-tier1-promotion-audit",
         "autopilot.dead_mans_heartbeat",
         "autopilot.tier1_auto_promoted",
+        "bw_refresh.failed",
+        "bw_refresh.heartbeat",
+        "cookie_refresh.failed",
+        "cookie_refresh.heartbeat",
+        "dead_mans_heartbeat.bw_refresh_stale",
+        "dead_mans_heartbeat.cookie_refresh_stale",
         "dead-mans-heartbeat-audit",
         "lifecycle:operator_absent_autopromoted SSE",
+        "operator_absence.auto_detected",
+        "operator_absence.pending_detected",
+        "operator_presence.confirmed",
         "reconciliation.5_source_mismatch",
         "system_health_heartbeat:recent-write",
+        "system.self_restart_requested",
         "tradingview_markers:recent-write",
         "tradingview-marker-audit",
         "tradingview:marker-received SSE",
@@ -4700,10 +4739,10 @@
         "/api/tradingview"
       ],
       "schedulerJobs": [
-        "bitwarden-session-refresh-daily",
-        "dead-mans-heartbeat-check",
-        "dead-mans-heartbeat-write",
-        "prop-firm-cookie-refresh-daily"
+        "bw-session-refresh",
+        "heartbeat-stale-check",
+        "heartbeat-write",
+        "prop-firm-cookie-refresh"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
@@ -4846,6 +4885,7 @@
       "runtimeEvidence": [
         "/api/production/status",
         "daily_reconciliation:recent-entry",
+        "drift.weekly_2sigma_halt",
         "paper:entry-blocked-production-halt SSE",
         "paper:force-flatten-all SSE",
         "paper.entry_blocked",
@@ -4893,6 +4933,7 @@
         "/api/production/status",
         "daily_reconciliation:recent-entry",
         "drift-detection-history",
+        "drift.weekly_2sigma_halt",
         "paper:entry-blocked-production-halt SSE",
         "paper:force-flatten-all SSE",
         "paper.entry_blocked",
@@ -4913,6 +4954,7 @@
       ],
       "schedulerJobs": [
         "daily-reconciliation",
+        "weekly-drift-2sigma-check",
         "weekly-drift-detection"
       ],
       "healthCheck": "/api/production/status",

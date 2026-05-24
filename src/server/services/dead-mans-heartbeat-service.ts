@@ -494,3 +494,214 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
     }
   }
 }
+
+// ─── Wave 24 Pass 1.5 Item 6: operator-absent auto-flip ──────────────────────
+//
+// The vacation-mode autopilot (OPERATOR_ABSENT_AUTOPROMOTE) reads
+// system_state.operator_absent_since. Before this fix, that column had NO
+// production writer — the operator had to set it manually before vacation.
+// Catastrophic loop: the very mode designed for vacation required presence
+// to enable.
+//
+// Auto-flip uses a two-stage state machine to prevent flapping:
+//   t=0    24h continuous silence → set operator_absent_pending = NOW()
+//   t=24h  another 24h silence    → set operator_absent_since   = NOW()
+//   any t  operator activity      → both columns cleared (mark-present route)
+//
+// "Operator activity" signal: any audit_log row with decision_authority='human'
+// in the last 24h. The mark-present route itself writes such a row, so calling
+// it is sufficient to clear the state. This intentionally avoids middleware
+// coupling — every authenticated human-decision endpoint already audits.
+
+const OPERATOR_ABSENT_ACTIVITY_WINDOW_MS = 24 * 60 * 60 * 1000;     // 24h
+const OPERATOR_ABSENT_CONFIRMATION_MS = 24 * 60 * 60 * 1000;        // 24h confirmation window
+
+/**
+ * Returns the timestamp of the most recent operator-driven action
+ * (audit_log row with decision_authority='human') or null when none found
+ * within the lookback window. Lookback is 2× the activity window so we can
+ * distinguish "never active" from "active recently".
+ */
+export async function getLastOperatorActivityAt(): Promise<Date | null> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    const { eq: _eq, desc: _desc } = await import("drizzle-orm");
+    const rows = await db
+      .select({ createdAt: auditLog.createdAt })
+      .from(auditLog)
+      .where(_eq(auditLog.decisionAuthority, "human"))
+      .orderBy(_desc(auditLog.createdAt))
+      .limit(1);
+    return rows.length > 0 ? new Date(rows[0].createdAt as unknown as string | number | Date) : null;
+  } catch (err) {
+    logger.warn({ err }, "operator-absent-detect: last-activity query failed (fail-open)");
+    return null;
+  }
+}
+
+/**
+ * Reads current system_state row. Always returns id=1 row, creating it if
+ * absent (production seed inserts it at startup; defensive null-handling here).
+ */
+async function readSystemState(): Promise<{
+  operatorAbsentSince: Date | null;
+  operatorAbsentPending: Date | null;
+} | null> {
+  try {
+    const { systemState } = await import("../db/schema.js");
+    const { eq: _eq } = await import("drizzle-orm");
+    const rows = await db
+      .select({
+        operatorAbsentSince: systemState.operatorAbsentSince,
+        operatorAbsentPending: systemState.operatorAbsentPending,
+      })
+      .from(systemState)
+      .where(_eq(systemState.id, 1))
+      .limit(1);
+    if (rows.length === 0) return null;
+    const row = rows[0];
+    return {
+      operatorAbsentSince: row.operatorAbsentSince ? new Date(row.operatorAbsentSince as unknown as string | number | Date) : null,
+      operatorAbsentPending: row.operatorAbsentPending ? new Date(row.operatorAbsentPending as unknown as string | number | Date) : null,
+    };
+  } catch (err) {
+    logger.warn({ err }, "operator-absent-detect: system_state read failed (fail-open)");
+    return null;
+  }
+}
+
+/**
+ * Two-stage operator-absence auto-flip.
+ * Idempotent — running twice in succession does NOT advance the state machine.
+ * Fail-open — any DB error logs a warning and returns without mutating.
+ */
+export async function runOperatorAbsenceAutoDetect(): Promise<void> {
+  const state = await readSystemState();
+  if (!state) {
+    logger.debug("operator-absent-detect: no system_state row — skipping");
+    return;
+  }
+  const now = new Date();
+  const lastActivity = await getLastOperatorActivityAt();
+  const silenceMs = lastActivity ? now.getTime() - lastActivity.getTime() : Number.POSITIVE_INFINITY;
+
+  // Recent activity → clear pending if it was set (and was not yet promoted).
+  // Do NOT auto-clear operator_absent_since here — promotion is sticky and
+  // requires explicit mark-present (operator must consciously re-engage).
+  if (silenceMs < OPERATOR_ABSENT_ACTIVITY_WINDOW_MS) {
+    if (state.operatorAbsentPending && !state.operatorAbsentSince) {
+      try {
+        const { systemState } = await import("../db/schema.js");
+        const { eq: _eq } = await import("drizzle-orm");
+        await db
+          .update(systemState)
+          .set({ operatorAbsentPending: null })
+          .where(_eq(systemState.id, 1));
+        logger.info("operator-absent-detect: activity observed within 24h — cleared pending flag");
+      } catch (err) {
+        logger.warn({ err }, "operator-absent-detect: pending-clear failed");
+      }
+    }
+    return;
+  }
+
+  // Silence ≥ 24h. Idempotency: skip if since is already set (already promoted).
+  if (state.operatorAbsentSince) return;
+
+  // Stage 1 → Stage 2 promotion: pending set AND ≥ 24h old → promote to since.
+  if (state.operatorAbsentPending) {
+    const pendingAgeMs = now.getTime() - state.operatorAbsentPending.getTime();
+    if (pendingAgeMs >= OPERATOR_ABSENT_CONFIRMATION_MS) {
+      try {
+        const { systemState } = await import("../db/schema.js");
+        const { eq: _eq } = await import("drizzle-orm");
+        await db
+          .update(systemState)
+          .set({ operatorAbsentSince: now })
+          .where(_eq(systemState.id, 1));
+      } catch (err) {
+        logger.error({ err }, "operator-absent-detect: promote-to-since UPDATE failed");
+        return;
+      }
+      logger.warn({ pendingSince: state.operatorAbsentPending.toISOString() },
+        "operator-absent-detect: 48h silence confirmed — operator_absent_since SET (vacation autopilot engaged)");
+      await insertAuditRow({
+        action: "operator_absence.auto_detected",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { pendingSince: state.operatorAbsentPending.toISOString(), confirmedAt: now.toISOString() } as Record<string, unknown>,
+        result: { operatorAbsentSince: now.toISOString(), confirmationHours: Math.round(pendingAgeMs / (60 * 60 * 1000)) } as Record<string, unknown>,
+        status: "success",
+        correlationId: null,
+      }).catch((err) => logger.error({ err }, "operator-absent-detect: audit row failed"));
+      notifyCritical(
+        "Operator absence auto-detected — vacation autopilot engaged",
+        "48h of continuous operator silence confirmed. Tier-1 auto-promotion (OPERATOR_ABSENT_AUTOPROMOTE) is now active. " +
+          "POST /api/admin/operator-mark-present to clear and disengage vacation mode.",
+        { operatorAbsentSince: now.toISOString(), pendingSince: state.operatorAbsentPending.toISOString() },
+      );
+      return;
+    }
+    // Pending set but not yet 24h old — wait for next tick.
+    return;
+  }
+
+  // Stage 0 → Stage 1: 24h silence, no pending yet → set pending + alert.
+  try {
+    const { systemState } = await import("../db/schema.js");
+    const { eq: _eq } = await import("drizzle-orm");
+    await db
+      .update(systemState)
+      .set({ operatorAbsentPending: now })
+      .where(_eq(systemState.id, 1));
+  } catch (err) {
+    logger.error({ err }, "operator-absent-detect: set-pending UPDATE failed");
+    return;
+  }
+  logger.warn({ lastActivityAt: lastActivity?.toISOString() ?? null },
+    "operator-absent-detect: 24h silence — operator_absent_pending SET (confirmation window started)");
+  await insertAuditRow({
+    action: "operator_absence.pending_detected",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "system",
+    input: { lastActivityAt: lastActivity?.toISOString() ?? null, silenceHours: Number.isFinite(silenceMs) ? Math.round(silenceMs / (60 * 60 * 1000)) : null } as Record<string, unknown>,
+    result: { operatorAbsentPending: now.toISOString() } as Record<string, unknown>,
+    status: "success",
+    correlationId: null,
+  }).catch((err) => logger.error({ err }, "operator-absent-detect: pending audit row failed"));
+  notifyCritical(
+    "Operator absence — confirmation window started",
+    "24h of operator silence observed. If silence continues for another 24h, vacation autopilot will auto-engage. " +
+      "POST /api/admin/operator-mark-present to cancel (or simply use any admin endpoint).",
+    { lastActivityAt: lastActivity?.toISOString() ?? null, operatorAbsentPending: now.toISOString() },
+  );
+}
+
+/**
+ * Clear both operator_absent_since AND operator_absent_pending columns
+ * atomically. Called by POST /api/admin/operator-mark-present. Returns
+ * the prior state so the route can report what was cleared.
+ */
+export async function clearOperatorAbsenceMarkers(): Promise<{
+  clearedSince: Date | null;
+  clearedPending: Date | null;
+}> {
+  const prior = await readSystemState();
+  if (!prior) {
+    return { clearedSince: null, clearedPending: null };
+  }
+  try {
+    const { systemState } = await import("../db/schema.js");
+    const { eq: _eq } = await import("drizzle-orm");
+    await db
+      .update(systemState)
+      .set({ operatorAbsentSince: null, operatorAbsentPending: null })
+      .where(_eq(systemState.id, 1));
+  } catch (err) {
+    logger.error({ err }, "operator-absent-detect: clear-markers UPDATE failed");
+    throw err;
+  }
+  return { clearedSince: prior.operatorAbsentSince, clearedPending: prior.operatorAbsentPending };
+}

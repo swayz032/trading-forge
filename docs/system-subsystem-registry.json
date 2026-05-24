@@ -728,6 +728,7 @@
       "paper-vs-backtest",
       "portfolio-correlation",
       "pre-market-prep",
+      "pre-market-routine",
       "prop-firm-dashboard-snapshot",
       "prop-firm-health-check",
       "session-analytics-rollup",
@@ -744,6 +745,7 @@
       "/api/macro",
       "/api/paper",
       "/api/portfolio",
+      "/api/pre-market",
       "/api/risk",
       "/api/signals",
       "/api/bias-decisions",
@@ -783,6 +785,7 @@
       "paper_signal_logs",
       "paper_trades",
       "portfolio_snapshots",
+      "pre_market_sessions",
       "prop_firm_health_checks",
       "shadow_signals",
       "skip_decisions",
@@ -873,7 +876,8 @@
       "production.reconciliation.completed",
       "production.drift_detection.completed",
       "paper.entry_blocked",
-      "paper.force_flatten_all"
+      "paper.force_flatten_all",
+      "drift.weekly_2sigma_halt"
     ],
     "metrics_surfaces": [
       "/api/production/status"
@@ -888,6 +892,7 @@
     ],
     "scheduler_jobs": [
       "daily-reconciliation",
+      "weekly-drift-2sigma-check",
       "weekly-drift-detection"
     ],
     "routes": [
@@ -1857,6 +1862,7 @@
     ],
     "scheduler_jobs": [],
     "routes": [
+      "/api/broker-accounts",
       "/api/strategy-assignments"
     ],
     "engine_subsystems": [
@@ -1928,7 +1934,17 @@
       "autopilot.tier1_auto_promoted",
       "autopilot.dead_mans_heartbeat",
       "tradingview.marker_received",
-      "reconciliation.5_source_mismatch"
+      "reconciliation.5_source_mismatch",
+      "operator_absence.pending_detected",
+      "operator_absence.auto_detected",
+      "operator_presence.confirmed",
+      "bw_refresh.heartbeat",
+      "bw_refresh.failed",
+      "cookie_refresh.heartbeat",
+      "cookie_refresh.failed",
+      "dead_mans_heartbeat.bw_refresh_stale",
+      "dead_mans_heartbeat.cookie_refresh_stale",
+      "system.self_restart_requested"
     ],
     "metrics_surfaces": [
       "/api/health/dashboard",
@@ -1940,10 +1956,10 @@
       "audit_log:autopilot.*"
     ],
     "scheduler_jobs": [
-      "bitwarden-session-refresh-daily",
-      "dead-mans-heartbeat-check",
-      "dead-mans-heartbeat-write",
-      "prop-firm-cookie-refresh-daily"
+      "bw-session-refresh",
+      "heartbeat-stale-check",
+      "heartbeat-write",
+      "prop-firm-cookie-refresh"
     ],
     "routes": [
       "/api/tradingview"

@@ -141,6 +141,56 @@ adminRoutes.post("/self-restart", async (req, res) => {
   }, 1_000);
 });
 
+// ─── Wave 24 Pass 1.5 Item 6: POST /operator-mark-present ────────────────────
+//
+// Clears system_state.operator_absent_since AND operator_absent_pending
+// atomically. The auto-flip detector (runOperatorAbsenceAutoDetect) sets these
+// after 24h/48h of silence; this route is how the operator says "I'm back".
+//
+// Auth: any successful authenticated session is sufficient. The request itself
+// is also a presence marker (audit row decisionAuthority='human' becomes the
+// activity signal future detector ticks will see).
+adminRoutes.post("/operator-mark-present", async (req, res) => {
+  const correlationId = randomUUID();
+  try {
+    const { clearOperatorAbsenceMarkers } = await import("../services/dead-mans-heartbeat-service.js");
+    const { clearedSince, clearedPending } = await clearOperatorAbsenceMarkers();
+
+    await insertAuditRow({
+      action: "operator_presence.confirmed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "human",
+      input: { source: "POST /api/admin/operator-mark-present" } as Record<string, unknown>,
+      result: {
+        clearedSince: clearedSince ? clearedSince.toISOString() : null,
+        clearedPending: clearedPending ? clearedPending.toISOString() : null,
+      } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    }).catch((err) => logger.error({ err }, "operator-mark-present: audit row failed (non-blocking)"));
+
+    if (clearedSince || clearedPending) {
+      notifyWarning(
+        "Operator presence confirmed — vacation autopilot disengaged",
+        `Operator manually cleared absence markers. clearedSince=${clearedSince?.toISOString() ?? "null"}, ` +
+          `clearedPending=${clearedPending?.toISOString() ?? "null"}.`,
+        { correlationId },
+      );
+    }
+
+    res.json({
+      status: "presence_confirmed",
+      clearedSince: clearedSince ? clearedSince.toISOString() : null,
+      clearedPending: clearedPending ? clearedPending.toISOString() : null,
+      correlationId,
+    });
+  } catch (err) {
+    req.log?.error({ err, correlationId }, "operator-mark-present: failed");
+    res.status(500).json({ error: "operator_mark_present_failed", correlationId });
+  }
+});
+
 // ─── GET /pipeline/status ────────────────────────────────────────
 adminRoutes.get("/pipeline/status", async (req, res) => {
   try {

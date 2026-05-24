@@ -817,10 +817,12 @@ export function initScheduler() {
   _scheduledJobs.add("heartbeat-write");
 
   registerJob("heartbeat-stale-check", 30 * 60 * 1000, async () => {
-    const { runHeartbeatStaleCheck, runScheduledRefreshStalenessCheck } = await import("./services/dead-mans-heartbeat-service.js");
+    const { runHeartbeatStaleCheck, runScheduledRefreshStalenessCheck, runOperatorAbsenceAutoDetect } = await import("./services/dead-mans-heartbeat-service.js");
     await runHeartbeatStaleCheck();
     // Wave 24 Pass 1 Item 1: also check BW + cookie refresh heartbeats
     await runScheduledRefreshStalenessCheck();
+    // Wave 24 Pass 1.5 Item 6: auto-flip operator_absent_since from 24h/48h silence
+    await runOperatorAbsenceAutoDetect();
   });
   cron.schedule("*/30 * * * *", async () => {
     if (!_tryAcquireJobLock("heartbeat-stale-check")) return;
