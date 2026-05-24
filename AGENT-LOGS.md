@@ -5890,6 +5890,38 @@ sentinel rename hazard.
 
 ---
 
+### Session Log — 2026-05-23 Wave 24 Pass 1 — Paper Parity (paper-parity agent)
+
+**Mission:** Ship 7 institutional hardening fixes (Items 3, 4, 9, 11, 12, 16, 17) for the paper-side services.
+
+**Work completed:**
+- Item 3 (CRITICAL): `?? "D"` → `?? "C"` default in `paper-execution-service.ts` (2 sites). Runtime guard emits CRITICAL audit + Discord if Style D used on position opened after 2026-05-23. `structural_targets.py` comment updated. `test_style_c_handler.py` updated: 4 tests renamed/asserted to `"style_c"`.
+- Item 4 (CRITICAL): `wave23h-c2-multi-firm.test.ts` failure fixed. Root cause: `paperSessions` missing from schema mock → `eq(paperSessions.status, "active")` threw TypeError → L2 fail-CLOSED → `overall_halted=true` unexpectedly. Fix: added `paperSessions` to schema mock + added `getTightestDrawdown` to firm-config mock.
+- Item 9 (RED): B14 Survival Twin promoted from Phase 0 advisory to HARD gate in `lifecycle-service.autoPromoteEligible`. Blocks on `survival_twin.passed===false` OR 40% single-day consistency violation. `B14_HARD_GATE_ENABLED` env var (default true). Fail-open on read errors. `CLAUDE.md §12` updated.
+- Item 11 (RED): `computeLiquidityHaircut(currentTop3Depth, baseline20dMedianTop3Depth)` added to `risk-sizing.ts`. Applied to `liquidityCap`. Emits `liquidity_haircut`, `liquidity_cap_raw`, `current_top3_depth`, `baseline_top3_depth` to evidence. Fail-open on null/zero inputs.
+- Item 12 (RED): `mc_provisional === true` sentinel check added before invariants check in `lifecycle-service._promoteStrategyInner` (TESTING→PAPER). Returns `{ success: false, error: "mc_provisional_in_progress", retry_after_seconds: 1800 }` + audit row.
+- Item 16 (RED): `computeVolScale(vixNow)` added to `risk-sizing.ts`. Uses `RISK_VIX_TARGET=18`, `RISK_VOL_SCALE_MIN=0.5`, `RISK_VOL_SCALE_MAX=1.5` env vars. Applied as `effectiveMaxRiskPct = max_risk_pct_per_trade * volScale`. Fail-open on null/zero vix.
+- Item 17 (YELLOW): `macro_blackout_mode: "strict" | "advisory"` added to `FirmConfig`. MFFU=strict, Topstep=advisory. `getMacroBlackoutMode()` helper exported. C11 macro gate in `paper-signal-service.ts` is now firm-conditional: advisory mode logs warn + allows through; strict mode blocks as before.
+
+**Verification:**
+- `npx vitest run wave24-*` (my 5 files): 42/42 GREEN
+- `npx vitest run wave23h-c2-multi-firm wave24-style-d-runtime-deprecation`: 20/20 GREEN
+- `npx tsc --noEmit`: no new errors in my changed files (pre-existing errors in volume-profile-service.ts and validation-cadence-service.ts unchanged)
+- `npm run check:production-isolation`: CLEAN (4 files, 0 violations)
+- `npm run check:2026-compliance`: OK (MFFU + Topstep aligned)
+- `pytest src/engine/tests/test_style_c_handler.py`: ALL ERRORS = pre-existing numpy ImportError on Windows (not my changes); test names for select_exit_style are correct
+- Commit: 95cd2c4 pushed to feature/deep-analysis-pipeline
+
+**Known-facts updates:**
+- `getTightestDrawdown` from `firm-config.js` is called at module-load time in `paper-risk-gate.ts` (line 125). Any test that imports lifecycle-service or paper-signal-service must include `getTightestDrawdown: vi.fn().mockReturnValue({ maxDrawdown: 2000 })` in the firm-config mock.
+- Tests that dynamically `import("../services/lifecycle-service.js")` will blow up because `strategies.ts` route file does `new LifecycleService()` at module scope (pulled in via `index.ts`). Extract pure gate logic as functions and test those instead.
+
+**Carry-forward for next session:**
+- System Map needs 7 new entries for Wave 24 items shipped (lifecycle gate changes, new risk-sizing functions, firm-config additions, signal-service C11 fork)
+- `npm run system-map:sync` not run this session — architect pass required before Wave 24 Pass 2
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
