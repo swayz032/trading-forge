@@ -426,7 +426,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "gate",
-    "automation_scope": "B15 Parameter Robustness Battery (Wave 25 Item 5): runs ±20% jitter on each parameter, computes Stability-Dependence Ratio (SDR), Population Stability Index (PSI), and Robustness-Weighted Score (RWS). Hard gate on PAPER->DEPLOY_READY when SDR < 0.85 OR PSI > 0.05 OR RWS > 0.20 (QuantForgeAnalytics 2026-05-16 institutional spec). Advisory-only when B15_BATTERY_ENABLED=false (30-day grandfather period). Required because perturbation-fragility kills strategies that survive WF/CPCV/PBO/DSR.",
+    "automation_scope": "B15 Parameter Robustness Battery (Wave 25 Item 5): runs \u00b120% jitter on each parameter, computes Stability-Dependence Ratio (SDR), Population Stability Index (PSI), and Robustness-Weighted Score (RWS). Hard gate on PAPER->DEPLOY_READY when SDR < 0.85 OR PSI > 0.05 OR RWS > 0.20 (QuantForgeAnalytics 2026-05-16 institutional spec). Advisory-only when B15_BATTERY_ENABLED=false (30-day grandfather period). Required because perturbation-fragility kills strategies that survive WF/CPCV/PBO/DSR.",
     "data_sources": [
       "backtest b15_battery JSONB",
       "strategy parameters"
@@ -569,7 +569,7 @@
     "manual_gate": "none",
     "runtime_state": "experimental",
     "decision_authority": "challenger_only",
-    "automation_scope": "Synthetic Black Swan Survival check (A14 W19) — Phase 0 SHADOW ONLY (Day 0-60). Trains a VAE generator on real OHLCV and produces statistically-realistic novel regimes that didn't happen but plausibly could; tests every PAPER-promotable strategy against thousands of these synthetic regimes before PAPER->DEPLOY_READY. Phase 0 logs WARN + writes audit_log advisory when survival_rate < 0.60; promotion proceeds regardless. Phase 1 (Day 60+, requires explicit env flag flip) becomes a hard gate blocking PAPER->DEPLOY_READY when survival_rate < 0.60. Closes the gap A4 Frankenstein and B10 MRP cannot — fragility to UNSEEN regimes.",
+    "automation_scope": "Synthetic Black Swan Survival check (A14 W19) \u2014 Phase 0 SHADOW ONLY (Day 0-60). Trains a VAE generator on real OHLCV and produces statistically-realistic novel regimes that didn't happen but plausibly could; tests every PAPER-promotable strategy against thousands of these synthetic regimes before PAPER->DEPLOY_READY. Phase 0 logs WARN + writes audit_log advisory when survival_rate < 0.60; promotion proceeds regardless. Phase 1 (Day 60+, requires explicit env flag flip) becomes a hard gate blocking PAPER->DEPLOY_READY when survival_rate < 0.60. Closes the gap A4 Frankenstein and B10 MRP cannot \u2014 fragility to UNSEEN regimes.",
     "data_sources": [
       "real OHLCV (S3) for generator training",
       "synthetic regime bank (S3) for evaluation",
@@ -651,7 +651,7 @@
     "manual_gate": "none",
     "runtime_state": "experimental",
     "decision_authority": "challenger_only",
-    "automation_scope": "Prop-Firm Survival Twin (B14 W20) — Phase 0 ADVISORY ONLY (Day 0-60). Bayesian + Monte Carlo survival probability per (strategy, firm) over a 180-day challenge horizon. Combines per-firm adversarial priors (suspension, VPN detection, payout denial, fund freeze, profitable-trader ban) with strategy modulators (payout-request size HIGH/EXTREME bands, payout-frequency cap, VPN coefficient driven by 1-automation_friendly). READ paths bypass pipelinePauseGate; admin refit endpoint is pause-gated (423). Per-firm error isolation in /rank and /simulate augmentation. Phase 0 surfaces survival probability + 180-day curve + evidence weight on every response and the /prop-firm UI but NEVER affects bestFirm selection or any lifecycle gate. Phase 1 (Day 60+, requires explicit B14_PHASE_1=true env flag flip) becomes a hard gate at PAPER->DEPLOY_READY when survival_probability < 0.50 and a tiebreaker in bestFirm selection. Answers the question B5 ROI ranking cannot — which firm will actually let the operator collect the payout (Apex banned profitable traders May 2025; MFFU froze funds 2023-2025; VPN-denied payouts unresolved 6+ months).",
+    "automation_scope": "Prop-Firm Survival Twin (B14 W20) \u2014 Phase 0 ADVISORY ONLY (Day 0-60). Bayesian + Monte Carlo survival probability per (strategy, firm) over a 180-day challenge horizon. Combines per-firm adversarial priors (suspension, VPN detection, payout denial, fund freeze, profitable-trader ban) with strategy modulators (payout-request size HIGH/EXTREME bands, payout-frequency cap, VPN coefficient driven by 1-automation_friendly). READ paths bypass pipelinePauseGate; admin refit endpoint is pause-gated (423). Per-firm error isolation in /rank and /simulate augmentation. Phase 0 surfaces survival probability + 180-day curve + evidence weight on every response and the /prop-firm UI but NEVER affects bestFirm selection or any lifecycle gate. Phase 1 (Day 60+, requires explicit B14_PHASE_1=true env flag flip) becomes a hard gate at PAPER->DEPLOY_READY when survival_probability < 0.50 and a tiebreaker in bestFirm selection. Answers the question B5 ROI ranking cannot \u2014 which firm will actually let the operator collect the payout (Apex banned profitable traders May 2025; MFFU froze funds 2023-2025; VPN-denied payouts unresolved 6+ months).",
     "data_sources": [
       "compliance_rulesets.parsedRules.allowsAutomation",
       "prop_firm_health_checks (last 90 days)",
@@ -920,7 +920,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "engine",
-    "automation_scope": "Wave 25 Pass 2 — N-timeframe MTF loader + multi-HTF indicator computation + N-TF join-to-exec. Replaces 2-TF (exec + daily) with full institutional top-down hierarchy: daily / HTF / ITF / trigger / exec. Backward-compat: strategies without 5-TF declaration default to 2-TF behavior.",
+    "automation_scope": "Wave 25 Pass 2 \u2014 N-timeframe MTF loader + multi-HTF indicator computation + N-TF join-to-exec. Replaces 2-TF (exec + daily) with full institutional top-down hierarchy: daily / HTF / ITF / trigger / exec. Backward-compat: strategies without 5-TF declaration default to 2-TF behavior.",
     "data_sources": [
       "ratio-adjusted continuous bar data (Polars)",
       "strategies.daily_tf",
@@ -987,7 +987,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "engine",
-    "automation_scope": "Wave 25 Pass 2 — per-session HTF narrative state computation. compute_htf_narrative() emits 4 dataclasses (AsianRange, LondonBias, NYBias, DailyDealing) from multi-TF data. Pure function (no DB, no time.now), replay-deterministic. Persisted to bias_state.htf_narrative JSONB (mig 0137) and exposed to TS via bias-state-service.ts typed interfaces. Fail-open: null narrative never blocks signal flow.",
+    "automation_scope": "Wave 25 Pass 2 \u2014 per-session HTF narrative state computation. compute_htf_narrative() emits 4 dataclasses (AsianRange, LondonBias, NYBias, DailyDealing) from multi-TF data. Pure function (no DB, no time.now), replay-deterministic. Persisted to bias_state.htf_narrative JSONB (mig 0137) and exposed to TS via bias-state-service.ts typed interfaces. Fail-open: null narrative never blocks signal flow.",
     "data_sources": [
       "intraday bars (DataFrame, UTC timestamps)",
       "daily bars (DataFrame, UTC)",
@@ -1057,7 +1057,7 @@
     "manual_gate": "operator-halt-only",
     "runtime_state": "active",
     "decision_authority": "gate",
-    "automation_scope": "Production carve-out: kill switch (9-layer), daily reconciliation (4-source), weekly drift detection (auto-HALT on >2σ). Hard isolation from research-side modules enforced by CI lint.",
+    "automation_scope": "Production carve-out: kill switch (9-layer), daily reconciliation (4-source), weekly drift detection (auto-HALT on >2\u03c3). Hard isolation from research-side modules enforced by CI lint.",
     "data_sources": [
       "production_trades",
       "paper_trades",
@@ -1544,7 +1544,7 @@
     "automation_mode": "autonomous",
     "runtime_state": "experimental",
     "decision_authority": "advisory",
-    "automation_scope": "Daily 8:00 AM ET pre-market scan scoring MES/MNQ/MCL via volatility audit, quantum MC, entropy filter (W3a), and 4-qubit cross-market lead-lag VQC. Emits OBSERVATION_MODE when no market is A+. Challenger-only output â€” no execution authority.",
+    "automation_scope": "Daily 8:00 AM ET pre-market scan scoring MES/MNQ/MCL via volatility audit, quantum MC, entropy filter (W3a), and 4-qubit cross-market lead-lag VQC. Emits OBSERVATION_MODE when no market is A+. Challenger-only output \u00e2\u20ac\u201d no execution authority.",
     "data_sources": [
       "pre-market ATR data",
       "VIX",
@@ -1685,7 +1685,7 @@
     "automation_mode": "autonomous",
     "runtime_state": "experimental",
     "decision_authority": "advisory",
-    "automation_scope": "Tier 4.5 W4: Ising-encoded IBM QPU enrichment. SHADOW ONLY â€” async best-effort enrichment after classical TESTINGâ†’PAPER promotion. Never a gate. d=3 rotated surface code encoder + Ising decoder + PyMatching baseline. Budget: 600s/month IBM QPU, all reserved for Ising runs.",
+    "automation_scope": "Tier 4.5 W4: Ising-encoded IBM QPU enrichment. SHADOW ONLY \u00e2\u20ac\u201d async best-effort enrichment after classical TESTING\u00e2\u2020\u2019PAPER promotion. Never a gate. d=3 rotated surface code encoder + Ising decoder + PyMatching baseline. Budget: 600s/month IBM QPU, all reserved for Ising runs.",
     "data_sources": [
       "IBM Quantum Platform (ibm_fez, ibm_kingston, ibm_marrakesh)",
       "quantum_mc_runs"
@@ -2229,5 +2229,199 @@
     "learning_boundary": "none",
     "deployment_authority": "human_release",
     "criticality": "critical"
+  },
+  {
+    "id": "pre_market_institutional_expansion",
+    "domain": "execution",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "engine",
+    "automation_scope": "Wave 25 Pass 2.5 \u2014 pre-market routine field expansion. Adds 18 institutional fields (TICK/ADD/VOLD/TRIN at open, DXY/10Y direction, cross_asset_aligned, bond_auction_today, extended_calendar_events, nearby_naked_pocs, london_range_high/low/points, pmh/pml, pwh_iso/pwl_iso, first_30min_volume_ratio) via migration 0139. Closes 'trading without written bias' failure mode (Steenbarger/Topstep 2025 funded-trader survival research). Honest deferrals: first_30min_volume_ratio always null pending 5-day RTH window DAL; nearby_naked_pocs uses simplified extraction.",
+    "data_sources": [
+      "databento daily bars",
+      "databento 5m bars (London range, first-30min vol)",
+      "treasury auction calendar (static JSON)",
+      "economic calendar (existing skipDecisions regex)",
+      "market_internals_service snapshot",
+      "volume_profile naked POC tracker"
+    ],
+    "reads_from": [
+      "pre_market_sessions",
+      "audit_log"
+    ],
+    "writes_to": [
+      "pre_market_sessions",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "pre_market.session_upserted",
+      "internals.stale_skipped",
+      "pre_market.extended_calendar_blocked"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:pre_market.session_upserted",
+      "audit_log:internals.stale_skipped"
+    ],
+    "scheduler_jobs": [
+      "pre-market-prep"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "indicators.mtf_join.resample_daily_to_weekly"
+    ],
+    "database_tables": [
+      "pre_market_sessions",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "/api/pre-market"
+    ],
+    "recovery_mode": "fail-open-null-fields",
+    "health_check": "/api/pre-market",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "pre_market_sessions:daily-upsert"
+    ],
+    "evidence_queries": [
+      "wave25-pre-market-expansion.test.ts",
+      "wave23h-pre-market-routine.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
+    "id": "market_internals_service",
+    "domain": "execution",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "engine",
+    "automation_scope": "Wave 25 Pass 2.5 \u2014 Massive WS subscription for NYSE breadth indices ($TICK, $ADD, $VOLD, $TRIN). Singleton cache exposes getInternalsSnapshot() with staleness flag (5-min threshold). Consumed by pre-market-routine.ts (tick_open/add_open/vold_open/trin_open at 09:30 ET) and confluence-score.ts (internals_aligned factor for MES/MNQ; MCL skipped \u2014 stock breadth irrelevant for crude). Fail-soft: when MASSIVE_API_KEY unset or WS disconnects, returns all-null snapshot \u2014 never blocks signal flow.",
+    "data_sources": [
+      "Massive WebSocket (Indices Basic tier)"
+    ],
+    "reads_from": [],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "internals.subscription_connected",
+      "internals.stale_skipped"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:internals.subscription_connected",
+      "audit_log:internals.stale_skipped"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "logs:market-internals-service"
+    ],
+    "recovery_mode": "fail-open-null-snapshot",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "internals.cache:5min-window"
+    ],
+    "evidence_queries": [
+      "wave25-internals-service.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "pre_market_briefing_service",
+    "domain": "observability",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "scheduler",
+    "automation_scope": "Wave 25 Pass 2.5 \u2014 daily Discord briefing at 09:00 ET (13:00 UTC). Idempotent (W23F.U pattern \u2014 audit_log dedupe by UTC date). Fail-soft (Discord errors logged + audited, never thrown). PIPELINE-GATE EXEMPT \u2014 operator wants bias on phone before market open regardless of pipeline state. Closes 'trading without written bias' failure mode (Steenbarger/Topstep 2025 podcast #1 funded-trader blowup cause).",
+    "data_sources": [
+      "pre_market_sessions (today's row per symbol)"
+    ],
+    "reads_from": [
+      "pre_market_sessions",
+      "audit_log"
+    ],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "pre_market.briefing_sent",
+      "pre_market.briefing_failed",
+      "pre_market.briefing_skipped_already_ran_today"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:pre_market.briefing_sent",
+      "audit_log:pre_market.briefing_failed"
+    ],
+    "scheduler_jobs": [
+      "pre-market-briefing-discord"
+    ],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [
+      "pre_market_sessions",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "discord-channel"
+    ],
+    "recovery_mode": "fail-soft-audit-only",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:pre_market.briefing_sent:daily"
+    ],
+    "evidence_queries": [
+      "wave25-pre-market-briefing.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
   }
 ]

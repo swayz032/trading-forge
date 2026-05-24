@@ -79,6 +79,9 @@ function makeDal(cfg: DalStubConfig = {}): PreMarketDataAccessLayer {
       cfg.onUpsert?.(input);
       return upsertedRowId;
     }),
+    // W25.5a additions — gracefully return empty to avoid interfering with pre-existing tests
+    getIntraBarsWindow: vi.fn().mockResolvedValue([]),
+    getNearbyNakedPocs: vi.fn().mockResolvedValue([]),
   };
 }
 
@@ -392,6 +395,9 @@ describe("W23H.2 UPSERT idempotency", () => {
       getFirstRthBar: vi.fn().mockResolvedValue(makeFirstRthBar()),
       getHtfBias: vi.fn().mockResolvedValue("TRENDING_UP"),
       upsertPreMarketSession: upsertFn,
+      // W25.5a additions — gracefully return empty to avoid interfering with pre-existing tests
+      getIntraBarsWindow: vi.fn().mockResolvedValue([]),
+      getNearbyNakedPocs: vi.fn().mockResolvedValue([]),
     };
 
     await runPreMarketRoutine("MES", "2026-05-21", "corr-a", dal);

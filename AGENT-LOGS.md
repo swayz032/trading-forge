@@ -6825,6 +6825,40 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-24 Wave 25 Pass 2.5 — pre-market institutional expansion + Discord briefing
+
+**Mission:** Close the 7 institutional pre-market gaps GPT identified — extend pre-market routine with internals + cross-asset + extended calendar + naked POCs + ISO-week PWH/PWL + monthly H/L + first-30min volume ratio. Wire $TICK/$ADD/$VOLD/$TRIN via existing Massive WS (Indices Basic + Stocks Basic already-paid tiers — no new vendor). Renormalize confluence scoring 9 → 11 factors with MCL skip. Daily Discord 09:00 ET briefing.
+
+**Work completed:**
+- Migration `0139_pre_market_institutional_expansion.sql` (idx 141) — `pre_market_sessions` gains 18 new columns (cross-asset + internals + bond auction + extended calendar + naked POCs + London range + ISO PWH/PWL + monthly + first-30min vol). All nullable, backward-compat preserved.
+- `src/server/services/market-internals-service.ts` (NEW) — wires existing Massive WS subscriptions for $TICK/$ADD/$VOLD/$TRIN breadth indices. Singleton cache + `getInternalsSnapshot()` with 5-min staleness flag. Graceful degradation when `MASSIVE_API_KEY` unset. Audit: `internals.subscription_connected`. `internals.stale_skipped` fires from pre-market-routine consumer side with correlationId.
+- `src/server/services/confluence-score.ts` — extended 9 → 11 factors (`internals_aligned` + `cross_asset_aligned`); MCL redistribution branch keeps weight sum = 1.00 (verified in code). Macro hard-block preserved unchanged.
+- `src/server/services/pre-market-briefing-service.ts` (NEW) + `src/server/scheduler.ts` cron registration — assembles per-symbol briefing markdown; idempotent (W23F.U audit_log dedupe by UTC date); fail-soft (Discord errors logged + audited, never thrown); pipeline-gate exempt (`_PIPELINE_GATE_EXEMPT.add("pre-market-briefing-discord")`). Cron `0 * * * *` with internal hour gate at ~13 UTC. Audit: `pre_market.briefing_sent` / `briefing_failed` / `briefing_skipped_already_ran_today` — all carry correlationId.
+- `src/server/lib/treasury-auction-calendar.ts` (NEW) — static auction calendar for `bond_auction_today` flag.
+- 206 new tests across 6 suites green (47 expansion + 13 internals + 38 confluence-11-factor + 33 briefing + 31 wave23h-pre-market-routine restoration + 44 Pass1 weighted-scoring backward-compat).
+- 3 new subsystems registered in `docs/system-subsystem-registry.json`: `pre_market_institutional_expansion`, `market_internals_service`, `pre_market_briefing_service`. Drift item "Registry is missing 1 scheduler job mappings" (pre-market-briefing-discord) cleared.
+- `CLAUDE.md` updated: §2 Pass 2.5 close-out entry appended below Pass 2 entries; §2b weight table replaced (9-factor → 11-factor with MCL redistribution note); §12 Hard Gates row updated to "11-factor".
+
+**Verification:**
+- `npm run check:production-isolation` GREEN (4 files checked, 0 violations).
+- `npm run check:2026-compliance` GREEN (MFFU + Topstep aligned).
+- `npm run system-map:sync` ran successfully; `npm run system-map:check` GREEN after registry patch (pre-market-briefing-discord now mapped to `pre_market_briefing_service` subsystem).
+- Migration journal idx=141 verified non-colliding (Pass 2 closed at idx=140).
+- Audit event matrix verified: `internals.subscription_connected` (no correlationId — startup-time event, no correlation context exists yet — acceptable), `internals.stale_skipped` (correlationId present), `signal.confluence_score_evaluated` / `confluence_hard_blocked` / `weighted_score_rejected` / `confluence_score_factor_unavailable` (all correlationId-bearing at paper-signal-service.ts:3204, 3230), `pre_market.briefing_sent` / `briefing_failed` (correlationId at pre-market-briefing-service.ts:448).
+
+**Known-facts updates:**
+- **Confluence model is now 11 factors, not 9.** Pass 2.5 added `internals_aligned` (0.05) + `cross_asset_aligned` (0.05); other weights renormalized down by 0.02 each (liquidity_target_clear 0.15→0.13, smt 0.12→0.10, vwap 0.12→0.10, killzone 0.10→0.08, delta_or_volume 0.10→0.08). Sum still = 1.00.
+- **MCL skip rule:** for MCL signals, `internals_aligned` weight zeroes and the +0.05 redistributes to `cross_asset_aligned` (→ 0.10). Stock-breadth indicators are irrelevant for crude oil; DXY/yields are what drive it.
+- **Discord briefing is pipeline-gate exempt.** Operator wants the written bias on phone before market open even when the pipeline is paused — closing the "trading without written bias" failure mode requires the briefing to be unconditional.
+- **Pass 1's `signal.confluence_score_factor_unavailable` informational rows now fire for new internals/cross-asset stubs** when Massive feed is unavailable or DXY/10Y direction unknown — operators can see coverage gaps without querying paperSignalLogs.
+
+**Carry-forward for next session:**
+- Pass 3 (persistent liquidity map engine) is next. After Pass 3 ships, the `liquidity_target_clear` factor (weight 0.13) moves from `pending_pass3` stub to real evaluation — that's the next institutional credibility unlock.
+- Honest deferrals tagged Wave 26 candidates: `first_30min_volume_ratio` always null pending 5-day RTH window DAL; `nearby_naked_pocs` uses simplified extraction; live session-start Python doesn't pass `intraday_bars` yet.
+- Skipped from plan (already shipped earlier): P2.5.A5 weekly resample (already in `data_loader.py` as `resample_daily_to_weekly` from Pass 2) and P2.5.A6 standalone obs review (folded into P2.5.A4 + this close-out).
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

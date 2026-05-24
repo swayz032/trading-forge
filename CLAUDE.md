@@ -31,6 +31,8 @@ Agents must never fake profitability. The gates decide.
 
 **Wave 25 Pass 2 (5-TF + HTF narrative) CLOSED 2026-05-24** — separate from the hardening track. 5-TF MTF expansion (`load_n_timeframes()` + `compute_multi_htf_indicators()` + `join_n_timeframes_to_exec()` in `src/engine/data_loader.py` + `src/engine/indicators/core.py` + `src/engine/indicators/mtf_join.py`) + HTF narrative state (`compute_htf_narrative()` with AsianRange/LondonBias/NYBias/DailyDealing dataclasses in `src/engine/context/htf_narrative.py`). Migrations 0137 (`bias_state.htf_narrative` JSONB, idx 139) + 0138 (`strategies.{daily_tf,htf_tf,itf_tf,trigger_tf}` TEXT columns, idx 140). 56 Python + 27 TS tests GREEN. Audit event `bias_engine.htf_narrative_computed`. New subsystems registered: `5tf_mtf_engine` + `htf_narrative_engine`. DSL compiler extended from single-TF (`bias_timeframe`) AND-gating to N-TF AND-gating. Backward-compat: strategies with no new TF columns continue 2-TF operation (exec + daily) identically to pre-Pass-2 behavior. Cross-pass producers for Pass 2.5 (pre-market reads all TFs), Pass 5 (multi-TF VWAP), Pass 6 (HtfNarrative extended with A/M/E phase tracking — parallel field, NOT piggyback), Pass 7 (regime + daily_dealing for runner-trail).
 
+**Wave 25 Pass 2.5 (Pre-Market Institutional Expansion) CLOSED 2026-05-24** — 18 new `pre_market_sessions` fields (TICK/ADD/VOLD/TRIN at open, DXY/10Y direction, cross_asset_aligned, bond_auction_today, extended_calendar_events, nearby_naked_pocs, london_range_high/low/points, pmh/pml, pwh_iso/pwl_iso, first_30min_volume_ratio) via migration `0139_pre_market_institutional_expansion.sql` (idx 141). New `market-internals-service.ts` subscribes existing Massive WS (no new vendor — Indices Basic + Stocks Basic tiers already available); singleton cache + 5-min staleness flag + fail-soft when `MASSIVE_API_KEY` unset. Confluence score expanded 9→11 factors with MCL skip rule (`internals_aligned` weight redistributes to `cross_asset_aligned` for crude — final weights still sum to 1.00). New `pre-market-briefing-service.ts` posts daily Discord briefing at 09:00 ET (13:00 UTC) — pipeline-gate exempt (`_PIPELINE_GATE_EXEMPT.add("pre-market-briefing-discord")`), fail-soft, idempotent via W23F.U audit_log dedupe pattern. 206 new tests green (173 paper-parity across 5 suites + 33 observability). Closes "trading without written bias on news days" failure mode per Steenbarger/Topstep 2025 funded-trader survival research. New subsystems registered: `pre_market_institutional_expansion`, `market_internals_service`, `pre_market_briefing_service`. Honest deferrals (Wave 26 candidates): `first_30min_volume_ratio` always null pending 5-day RTH window DAL; `nearby_naked_pocs` uses simplified extraction; live session-start Python doesn't pass `intraday_bars` yet.
+
 All build phases are done. **No new subsystems for 90 days.** The only work is production hardening:
 
 - **Pipeline production** — CANDIDATE → TESTING → PAPER → DEPLOY_READY → PILOT → DEPLOYED must flow without orphan states or silent drops
@@ -108,21 +110,25 @@ The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-p
 2. **Path A (W23H.D)** — `confirming_indicators[]` non-empty → per-strategy boolean satisfiedCount.
 3. **Path B (Wave 23.C)** — fallback → canonical-5-factor boolean.
 
-**9-factor canonical weight model** (equal-weight starter; adjust only after 30+ days audit_log instrumentation):
+**11-factor canonical weight model** (Wave 25 Pass 2.5 expansion from 9 → 11; equal-weight starter; adjust only after 30+ days audit_log instrumentation):
 
 | factor | weight | hard-block? |
 |---|---|---|
 | `market_structure_aligned`  | 0.20 | no |
-| `liquidity_target_clear`    | 0.15 | no (stub until Pass 3) |
-| `smt_confirmation`          | 0.12 | no (stub until Pass 5) |
-| `vwap_alignment`            | 0.12 | no |
-| `killzone_active`           | 0.10 | no |
-| `delta_or_volume_signature` | 0.10 | no |
+| `liquidity_target_clear`    | 0.13 | no (stub until Pass 3) |
+| `smt_confirmation`          | 0.10 | no (stub until Pass 5) |
+| `vwap_alignment`            | 0.10 | no |
+| `killzone_active`           | 0.08 | no |
+| `delta_or_volume_signature` | 0.08 | no |
 | `vp_level_proximity`        | 0.08 | no |
 | `macro_alignment`           | 0.08 | **YES — FOMC/CPI/NFP blackout = score=0** |
+| `internals_aligned`         | 0.05 | no (MES/MNQ only — MCL skipped) |
+| `cross_asset_aligned`       | 0.05 | no (DXY + 10Y vs bias) |
 | `regime_match`              | 0.05 | no |
 | **sum**                     | **1.00** | |
 | **default threshold**       | **0.72** | |
+
+**MCL redistribution (W25.5c):** for MCL signals, `internals_aligned` weight is zeroed (stock breadth irrelevant for crude) and the +0.05 redistributes to `cross_asset_aligned` (→ 0.10). Crude follows DXY/yields, not NYSE breadth. Renormalized weights still sum to 1.00. Logic in `confluence-score.ts::evaluateWeightedConfluence` (`isMCL` branch).
 
 **Override hierarchy (highest wins):** per-strategy `strategies.confluence_score_weights` (JSONB) > env var `CONFLUENCE_SCORE_WEIGHTS` (JSON string) > `CODE_DEFAULTS` table.
 
@@ -491,7 +497,7 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 | **Truthiness Check (B-3)** | post-backtest | Invariant harness (B-2) + parity shadow drift (B-1) — audit_log + Discord CRITICAL + SSE on failure |
 | **B15 Parameter Robustness Battery** | PAPER → DEPLOY_READY | ±20% parameter jitter test — SDR < 0.85 OR PSI > 0.05 OR RWS > 0.20 → block. Advisory-only when B15_BATTERY_ENABLED=false (30-day grandfather). |
 | **B15 Factor Ablation** | confluence factor promotion (advisory) | Required before promoting any confluence factor to standalone hard gate — runs B15 battery twice (with / without factor); delta Sharpe > 0.2 AND delta PF > 0.1 for marginal edge significance. |
-| **Wave 25 weighted-score threshold** | every signal (Path C, opt-in) | `confluence_score < threshold` (default 0.72) OR `hard_block_failed` (macro_alignment in event blackout) → reject. Per-factor audit row + decision audit + `signal:weighted_score_rejected` SSE. Backward-compat: strategies without `entry_quality.use_weighted_scoring=true` skip this gate entirely. |
+| **Wave 25 weighted-score threshold (11-factor)** | every signal (Path C, opt-in) | `confluence_score < threshold` (default 0.72) OR `hard_block_failed` (macro_alignment in event blackout) → reject. 11-factor model post-Pass-2.5 (was 9-factor at Pass 1) with MCL redistribution (internals → cross_asset). Per-factor audit row + decision audit + `signal:weighted_score_rejected` SSE. `signal.confluence_score_factor_unavailable` informational row fires per unsatisfied stub factor (pending_pass3/pass5/internals-unavailable). Backward-compat: strategies without `entry_quality.use_weighted_scoring=true` skip this gate entirely. |
 
 ---
 

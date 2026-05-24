@@ -14,7 +14,23 @@
  *  10. All stub factors never throw
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// Mock DB and audit-log-helper to avoid DATABASE_URL requirement in unit tests.
+// confluence-score.ts now imports market-internals-service which imports audit-log-helper.
+vi.mock("../db/index.js", () => ({
+  db: {},
+}));
+vi.mock("../db/schema.js", () => ({}));
+vi.mock("../lib/audit-log-helper.js", () => ({
+  insertAuditRow: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("../services/market-internals-service.js", () => ({
+  getInternalsSnapshot: vi.fn().mockReturnValue({
+    tick: null, add: null, vold: null, trin: null,
+    asOf: new Date(), stale: true,
+  }),
+}));
 import {
   evaluateWeightedConfluence,
   CODE_DEFAULTS,
@@ -64,9 +80,9 @@ const ALL_FACTOR_NAMES = Object.keys(CODE_DEFAULTS);
 
 describe("evaluateWeightedConfluence", () => {
   describe("result shape", () => {
-    it("returns all 9 canonical factors in factorContributions", () => {
+    it("returns all 11 canonical factors in factorContributions", () => {
       const result = evaluateWeightedConfluence(makeStrategy(), makeContext());
-      expect(result.factorContributions).toHaveLength(9);
+      expect(result.factorContributions).toHaveLength(11);
       const names = result.factorContributions.map((fc) => fc.factor);
       for (const f of ALL_FACTOR_NAMES) {
         expect(names).toContain(f);
@@ -330,11 +346,20 @@ describe("evaluateWeightedConfluence", () => {
             structureState: {
               market_structure_aligned: true,
               bos_recent: true,
+              bos_direction: "bullish",
               choch_recent: false,
+              choch_direction: null,
               mss_recent: false,
+              mss_direction: null,
+              mss_displacement_atr_mult: null,
+              displacement_active: false,
+              premium_discount_zone: "discount",
               htf_bias_aligned: true,
-              pd_zone: "discount",
+              last_break_direction: "bullish",
               last_break_age_bars: 3,
+              swing_high: null,
+              swing_low: null,
+              computed_at_bar_idx: 0,
             },
           }),
         );
@@ -349,11 +374,20 @@ describe("evaluateWeightedConfluence", () => {
             structureState: {
               market_structure_aligned: false,
               bos_recent: false,
+              bos_direction: null,
               choch_recent: false,
+              choch_direction: null,
               mss_recent: false,
+              mss_direction: null,
+              mss_displacement_atr_mult: null,
+              displacement_active: false,
+              premium_discount_zone: "premium",
               htf_bias_aligned: false,
-              pd_zone: "premium",
+              last_break_direction: null,
               last_break_age_bars: 10,
+              swing_high: null,
+              swing_low: null,
+              computed_at_bar_idx: 0,
             },
           }),
         );
@@ -549,7 +583,7 @@ describe("evaluateWeightedConfluence", () => {
   });
 
   describe("CODE_DEFAULTS validation", () => {
-    it("all 9 canonical factors are present in CODE_DEFAULTS", () => {
+    it("all 11 canonical factors are present in CODE_DEFAULTS", () => {
       const expectedFactors = [
         FACTOR_MARKET_STRUCTURE_ALIGNED,
         FACTOR_LIQUIDITY_TARGET_CLEAR,
@@ -560,6 +594,9 @@ describe("evaluateWeightedConfluence", () => {
         FACTOR_VP_LEVEL_PROXIMITY,
         FACTOR_MACRO_ALIGNMENT,
         FACTOR_REGIME_MATCH,
+        // W25.5c additions
+        "internals_aligned",
+        "cross_asset_aligned",
       ];
       for (const f of expectedFactors) {
         expect(CODE_DEFAULTS).toHaveProperty(f);

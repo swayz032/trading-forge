@@ -31,19 +31,28 @@
 
 import { logger } from "../lib/logger.js";
 import { isInAnyKillzone, activeKillzones } from "../lib/killzone.js";
+import { getInternalsSnapshot } from "./market-internals-service.js";
 
-// ─── Named weight constants (institutional defaults, equal-weight starter) ────
+// ─── Named weight constants — 11-factor model (W25.5c renormalization) ────────
+// Weights sum to exactly 1.00. Equal-weight-ish starter.
 // Overfitting guard: only adjust after 30+ days of audit_log instrumentation.
 
 export const W_MARKET_STRUCTURE_ALIGNED = 0.20; // BOS/CHoCH/MSS aligned to bias
-export const W_LIQUIDITY_TARGET_CLEAR   = 0.15; // DOL identified within R:R
-export const W_SMT_CONFIRMATION         = 0.12; // ES↔NQ divergence agrees
-export const W_VWAP_ALIGNMENT           = 0.12; // session VWAP alignment
-export const W_KILLZONE_ACTIVE          = 0.10; // in trade window
-export const W_DELTA_OR_VOLUME          = 0.10; // cumulative delta OR volume spike
+export const W_LIQUIDITY_TARGET_CLEAR   = 0.13; // DOL identified within R:R  (-0.02 from 0.15)
+export const W_SMT_CONFIRMATION         = 0.10; // ES↔NQ divergence agrees     (-0.02 from 0.12)
+export const W_VWAP_ALIGNMENT           = 0.10; // session VWAP alignment       (-0.02 from 0.12)
+export const W_KILLZONE_ACTIVE          = 0.08; // in trade window              (-0.02 from 0.10)
+export const W_DELTA_OR_VOLUME          = 0.08; // cumulative delta OR volume spike (-0.02 from 0.10)
 export const W_VP_LEVEL_PROXIMITY       = 0.08; // POC/VAH/VAL/naked-POC magnet
 export const W_MACRO_ALIGNMENT          = 0.08; // FOMC/CPI/NFP blackout safe — HARD BLOCK
+export const W_INTERNALS_ALIGNED        = 0.05; // $TICK/$ADD/$VOLD (MES/MNQ only; MCL uses 0 → redistributed)
+export const W_CROSS_ASSET_ALIGNED      = 0.05; // DXY + 10Y direction vs bias
 export const W_REGIME_MATCH             = 0.05; // current regime in preferred_regimes[]
+// Sum: 0.20+0.13+0.10+0.10+0.08+0.08+0.08+0.08+0.05+0.05+0.05 = 1.00
+
+// MCL redistribution: internals factor weight shifts to cross_asset for crude
+export const W_INTERNALS_ALIGNED_MCL    = 0.00; // internals irrelevant for crude
+export const W_CROSS_ASSET_ALIGNED_MCL  = 0.10; // +0.05 redistributed from internals for MCL
 
 // Default threshold — must be met or exceeded for the signal to pass.
 export const DEFAULT_CONFLUENCE_THRESHOLD = 0.72;
@@ -60,12 +69,18 @@ export const FACTOR_KILLZONE_ACTIVE          = "killzone_active";
 export const FACTOR_DELTA_OR_VOLUME          = "delta_or_volume_signature";
 export const FACTOR_VP_LEVEL_PROXIMITY       = "vp_level_proximity";
 export const FACTOR_MACRO_ALIGNMENT          = "macro_alignment";
+export const FACTOR_INTERNALS_ALIGNED        = "internals_aligned";
+export const FACTOR_CROSS_ASSET_ALIGNED      = "cross_asset_aligned";
 export const FACTOR_REGIME_MATCH             = "regime_match";
 
-// ─── Code defaults table ──────────────────────────────────────────────────────
+// ─── Code defaults table — 11-factor model ───────────────────────────────────
 // factor → { weight, isHardBlock }
 // Hard-block means: if satisfied=false for this factor → score=0, pass=false
 // regardless of what the rest of the model says.
+//
+// MCL override: FACTOR_INTERNALS_ALIGNED weight is set to 0 for MCL (stock breadth
+// is irrelevant for crude); its weight redistributes to FACTOR_CROSS_ASSET_ALIGNED.
+// This redistribution is applied dynamically in evaluateWeightedConfluence().
 
 export interface FactorConfig {
   weight: number;
@@ -81,6 +96,8 @@ export const CODE_DEFAULTS: Record<string, FactorConfig> = {
   [FACTOR_DELTA_OR_VOLUME]:          { weight: W_DELTA_OR_VOLUME,           isHardBlock: false },
   [FACTOR_VP_LEVEL_PROXIMITY]:       { weight: W_VP_LEVEL_PROXIMITY,        isHardBlock: false },
   [FACTOR_MACRO_ALIGNMENT]:          { weight: W_MACRO_ALIGNMENT,           isHardBlock: true  }, // HARD BLOCK
+  [FACTOR_INTERNALS_ALIGNED]:        { weight: W_INTERNALS_ALIGNED,         isHardBlock: false }, // MES/MNQ only; MCL→0
+  [FACTOR_CROSS_ASSET_ALIGNED]:      { weight: W_CROSS_ASSET_ALIGNED,       isHardBlock: false }, // MCL→0.10
   [FACTOR_REGIME_MATCH]:             { weight: W_REGIME_MATCH,              isHardBlock: false },
 };
 
@@ -142,6 +159,7 @@ export interface SignalContext {
   /** Current indicator snapshot — keys match DSL indicator names */
   indicators: Record<string, number | undefined>;
   direction: "long" | "short";
+  symbol?: string;   // W25.5c: used by internals_aligned MCL skip + cross_asset_aligned
   /** Bias engine active strategy for this symbol+session (null = no preference) */
   bias_active_strategy_id: string | null;
   /**
@@ -156,6 +174,12 @@ export interface SignalContext {
    * When undefined, killzone evaluation uses bar.timestamp (ms epoch) as fallback.
    */
   timestampUTC?: Date;
+  /**
+   * W25.5c: Cross-asset direction fields from pre_market_sessions row.
+   * null when the pre-market routine has not yet populated these for today.
+   */
+  dxyDirection?: "up" | "down" | "flat" | null;
+  us10yDirection?: "up" | "down" | "flat" | null;
 }
 
 /**
@@ -496,6 +520,140 @@ function evalRegimeMatch(
   };
 }
 
+/**
+ * internals_aligned — W25.5c
+ *
+ * Reads NYSE market-breadth internals ($TICK / $ADD / $VOLD) from the live
+ * market-internals-service snapshot.
+ *
+ * MCL skip: internals are NYSE stock-breadth; irrelevant for crude oil.
+ *   When symbol === "MCL", returns satisfied=false, reason="mcl_skip_stock_breadth_irrelevant".
+ *   The weight redistribution (internals → cross_asset) is handled in evaluateWeightedConfluence().
+ *
+ * Stale snapshot → satisfied=false, reason="internals_stale".
+ *
+ * Long: $TICK > +500 OR $ADD > 0 OR $VOLD > 0
+ * Short: $TICK < -500 OR $ADD < 0 OR $VOLD < 0
+ */
+function evalInternalsAligned(
+  ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  // MCL skip
+  if (ctx.symbol === "MCL") {
+    return { satisfied: false, reason: "mcl_skip_stock_breadth_irrelevant" };
+  }
+
+  let snapshot;
+  try {
+    snapshot = getInternalsSnapshot();
+  } catch {
+    return { satisfied: false, reason: "internals_service_unavailable" };
+  }
+
+  if (snapshot.stale) {
+    return { satisfied: false, reason: "internals_stale" };
+  }
+
+  const { tick, add, vold } = snapshot;
+
+  // At least one reading must be present
+  if (tick === null && add === null && vold === null) {
+    return { satisfied: false, reason: "internals_all_null" };
+  }
+
+  if (ctx.direction === "long") {
+    const satisfied =
+      (tick !== null && tick > 500) ||
+      (add  !== null && add  > 0)  ||
+      (vold !== null && vold > 0);
+    return {
+      satisfied,
+      reason: satisfied
+        ? `long_internals_bullish_tick=${tick ?? "null"}_add=${add ?? "null"}_vold=${vold ?? "null"}`
+        : `long_internals_not_bullish_tick=${tick ?? "null"}_add=${add ?? "null"}_vold=${vold ?? "null"}`,
+    };
+  } else {
+    const satisfied =
+      (tick !== null && tick < -500) ||
+      (add  !== null && add  < 0)   ||
+      (vold !== null && vold < 0);
+    return {
+      satisfied,
+      reason: satisfied
+        ? `short_internals_bearish_tick=${tick ?? "null"}_add=${add ?? "null"}_vold=${vold ?? "null"}`
+        : `short_internals_not_bearish_tick=${tick ?? "null"}_add=${add ?? "null"}_vold=${vold ?? "null"}`,
+    };
+  }
+}
+
+/**
+ * cross_asset_aligned — W25.5c
+ *
+ * Reads DXY / 10Y direction from SignalContext (populated by pre_market_sessions row).
+ *
+ * ES/NQ (equity index) — inverse correlation:
+ *   long  → DXY down OR 10Y down (risk-on environment)
+ *   short → DXY up OR 10Y up (risk-off environment)
+ *
+ * MCL (crude oil) — dollar-inverse correlation:
+ *   long  → DXY down (crude benefits from weak dollar)
+ *   short → DXY up
+ *
+ * Missing data → satisfied=false, reason="cross_asset_data_unavailable".
+ */
+function evalCrossAssetAligned(
+  ctx: SignalContext,
+): { satisfied: boolean; reason: string } {
+  const dxy = ctx.dxyDirection;
+  const us10y = ctx.us10yDirection;
+
+  if (!dxy && !us10y) {
+    return { satisfied: false, reason: "cross_asset_data_unavailable" };
+  }
+
+  const isMCL = ctx.symbol === "MCL";
+
+  if (isMCL) {
+    if (!dxy) return { satisfied: false, reason: "cross_asset_dxy_unavailable_mcl" };
+    if (ctx.direction === "long") {
+      const satisfied = dxy === "down";
+      return {
+        satisfied,
+        reason: satisfied
+          ? `mcl_long_dxy_down_bullish`
+          : `mcl_long_dxy=${dxy}_not_supportive`,
+      };
+    } else {
+      const satisfied = dxy === "up";
+      return {
+        satisfied,
+        reason: satisfied
+          ? `mcl_short_dxy_up_bearish`
+          : `mcl_short_dxy=${dxy}_not_supportive`,
+      };
+    }
+  }
+
+  // ES / NQ — inverse correlation
+  if (ctx.direction === "long") {
+    const satisfied = dxy === "down" || us10y === "down";
+    return {
+      satisfied,
+      reason: satisfied
+        ? `long_risk_on_dxy=${dxy ?? "null"}_10y=${us10y ?? "null"}`
+        : `long_risk_off_or_mixed_dxy=${dxy ?? "null"}_10y=${us10y ?? "null"}`,
+    };
+  } else {
+    const satisfied = dxy === "up" || us10y === "up";
+    return {
+      satisfied,
+      reason: satisfied
+        ? `short_risk_off_dxy=${dxy ?? "null"}_10y=${us10y ?? "null"}`
+        : `short_risk_on_or_mixed_dxy=${dxy ?? "null"}_10y=${us10y ?? "null"}`,
+    };
+  }
+}
+
 // ─── Factor dispatch table ─────────────────────────────────────────────────────
 
 type FactorEvaluator = (ctx: SignalContext, strategyId: string) => { satisfied: boolean; reason: string };
@@ -509,17 +667,23 @@ const FACTOR_EVALUATORS: Record<string, FactorEvaluator> = {
   [FACTOR_DELTA_OR_VOLUME]:          (ctx) => evalDeltaOrVolumeSignature(ctx),
   [FACTOR_VP_LEVEL_PROXIMITY]:       (ctx) => evalVpLevelProximity(ctx),
   [FACTOR_MACRO_ALIGNMENT]:          (ctx) => evalMacroAlignment(ctx),
+  [FACTOR_INTERNALS_ALIGNED]:        (ctx) => evalInternalsAligned(ctx),
+  [FACTOR_CROSS_ASSET_ALIGNED]:      (ctx) => evalCrossAssetAligned(ctx),
   [FACTOR_REGIME_MATCH]:             (ctx, id) => evalRegimeMatch(ctx, id),
 };
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 /**
- * Evaluate all 9 canonical weighted confluence factors for a given signal.
+ * Evaluate all 11 canonical weighted confluence factors for a given signal.
  *
  * Safe to call from paper-signal-service: never throws. All factor evaluators
  * fail to satisfied=false on any error (conservative — preserves hard-block
  * guarantees).
+ *
+ * MCL redistribution: for MCL signals, FACTOR_INTERNALS_ALIGNED weight is
+ * zeroed and its weight (+0.05) redistributes to FACTOR_CROSS_ASSET_ALIGNED
+ * (0.05 → 0.10). Total weight sum remains 1.00.
  *
  * @param strategy  Minimal strategy shape (id, symbol, score columns).
  * @param signalContext  Bar + indicator snapshot at signal time.
@@ -529,7 +693,16 @@ export function evaluateWeightedConfluence(
   strategy: ScoringStrategy,
   signalContext: SignalContext,
 ): WeightedScoreResult {
-  const { weights, source: weightsSource } = resolveWeights(strategy);
+  const { weights: baseWeights, source: weightsSource } = resolveWeights(strategy);
+
+  // Apply MCL weight redistribution: internals → cross_asset
+  const isMCL = (signalContext.symbol ?? strategy.symbol) === "MCL";
+  const weights = { ...baseWeights };
+  if (isMCL) {
+    const internalsWeight = weights[FACTOR_INTERNALS_ALIGNED] ?? W_INTERNALS_ALIGNED;
+    weights[FACTOR_INTERNALS_ALIGNED] = W_INTERNALS_ALIGNED_MCL;
+    weights[FACTOR_CROSS_ASSET_ALIGNED] = (weights[FACTOR_CROSS_ASSET_ALIGNED] ?? W_CROSS_ASSET_ALIGNED) + internalsWeight;
+  }
 
   // Threshold: strategy column → code default
   const threshold =

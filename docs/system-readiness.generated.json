@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T08:28:21.487Z",
+  "generatedAt": "2026-05-24T09:01:15.473Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -14,8 +14,8 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 24,
-    "ready": 16,
+    "total": 27,
+    "ready": 19,
     "blocked": 1,
     "manualGated": 2,
     "experimental": 5
@@ -274,6 +274,25 @@
       ]
     },
     {
+      "id": "market_internals_service",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:internals.stale_skipped",
+        "audit_log:internals.subscription_connected",
+        "internals.cache:5min-window",
+        "internals.stale_skipped",
+        "internals.subscription_connected",
+        "wave25-internals-service.test.ts"
+      ]
+    },
+    {
       "id": "observability_reliability",
       "status": "ready",
       "productionTargetState": "production_autonomous",
@@ -382,6 +401,47 @@
         "strategy_export_artifacts:recent-write",
         "strategy:deployed SSE",
         "strategy.deploy_approved"
+      ]
+    },
+    {
+      "id": "pre_market_briefing_service",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:pre_market.briefing_failed",
+        "audit_log:pre_market.briefing_sent",
+        "audit_log:pre_market.briefing_sent:daily",
+        "pre_market.briefing_failed",
+        "pre_market.briefing_sent",
+        "pre_market.briefing_skipped_already_ran_today",
+        "wave25-pre-market-briefing.test.ts"
+      ]
+    },
+    {
+      "id": "pre_market_institutional_expansion",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:internals.stale_skipped",
+        "audit_log:pre_market.session_upserted",
+        "internals.stale_skipped",
+        "pre_market_sessions:daily-upsert",
+        "pre_market.extended_calendar_blocked",
+        "pre_market.session_upserted",
+        "wave23h-pre-market-routine.test.ts",
+        "wave25-pre-market-expansion.test.ts"
       ]
     },
     {

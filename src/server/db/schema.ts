@@ -2685,6 +2685,31 @@ export const preMarketSessions = pgTable(
     pwl: numeric("pwl"),
     htfBias: text("htf_bias"),
     writtenBias: text("written_bias"),
+    // ── W25.5a institutional expansion ────────────────────────────────────────
+    // Tier 1: Internals snapshot at open (from Massive WS — W25.5b)
+    tickOpen: numeric("tick_open"),
+    addOpen: numeric("add_open"),
+    voldOpen: numeric("vold_open"),
+    trinOpen: numeric("trin_open"),
+    // Tier 1: Cross-asset direction (Databento DXY / ZN feeds)
+    dxyDirection: text("dxy_direction"),       // "up" | "down" | "flat"
+    us10yDirection: text("us10y_direction"),   // "up" | "down" | "flat"
+    crossAssetAligned: boolean("cross_asset_aligned"),
+    // Tier 1: Calendar extensions
+    bondAuctionToday: boolean("bond_auction_today"),
+    extendedCalendarEvents: jsonb("extended_calendar_events"),
+    // Tier 1: Naked POCs from volume-profile-service (last 5–10 sessions)
+    nearbyNakedPocs: jsonb("nearby_naked_pocs"),
+    // Tier 1: London range 03:00–08:00 ET (from 5m bars)
+    londonRangeHigh: numeric("london_range_high"),
+    londonRangeLow: numeric("london_range_low"),
+    londonRangePoints: numeric("london_range_points"),
+    // Tier 2: Flag-only levels (no gate)
+    pmh: numeric("pmh"),
+    pml: numeric("pml"),
+    pwhIso: numeric("pwh_iso"),
+    pwlIso: numeric("pwl_iso"),
+    first30minVolumeRatio: numeric("first_30min_volume_ratio"),
     computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

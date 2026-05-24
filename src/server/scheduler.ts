@@ -353,6 +353,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // infrastructure safety signal — the pipeline pause does not protect against it.
   "n8n-drift-detector-weekly",           // A-2: n8n drift detection — safety signal
   "n8n-drift-detector-monthly",          // A-2: n8n drift detection — defense-in-depth
+  // W25.5d: pre-market briefing must fire even when pipeline is paused.
+  // Operator wants the bias on phone before market open regardless of pipeline state.
+  // Closes "trading without written bias" failure mode (Steenbarger/Topstep 2025 podcast).
+  "pre-market-briefing-discord",         // W25.5d: operator briefing — safety signal
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -3302,7 +3306,7 @@ except Exception as e:
   });
   _scheduledJobs.add("harsh-regime-phase-activation-check");
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT)");
 
   // ─── Wave 24 Pass 1 Item 1: BW session refresh — every 6 hours ────────────────
   // CATASTROPHIC GAP: runBwSessionRefreshCheck existed but had ZERO callers in
@@ -3676,6 +3680,60 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("n8n-drift-detector-monthly");
+
+  // ─── W25.5d: Daily pre-market briefing — 14:00 UTC (09:00 ET DST / 10:00 ET EST) ─
+  //
+  // Fires hourly; inner hour-gate restricts execution to UTC 14 only.
+  // Rationale for 14:00 UTC:
+  //   - Pre-market routine fires at 12:00–13:00 UTC (08:30 ET) and populates
+  //     pre_market_sessions with written_bias + key levels.
+  //   - Briefing fires at 14:00 UTC (09:00 ET DST / 10:00 ET EST) — 30min after
+  //     the pre-market routine completes, 30min before market open (EDT) or
+  //     coinciding with open (EST). Operator sees bias on phone before first bar.
+  //
+  // Pipeline-gate EXEMPT: operator wants briefing even during PAUSE —
+  //   "trading without written bias" failure mode (Steenbarger/Topstep 2025 #1).
+  // Idempotent: W23F.U audit_log pattern — skips if already sent today.
+  // Fail-soft: Discord unreachable → logged + audited, never throws.
+  registerJob("pre-market-briefing-discord", 60 * 60 * 1000, async () => {
+    const nowUtc = new Date();
+    const hourUtc = nowUtc.getUTCHours();
+    // 09:00 ET = 13:00 UTC (EDT, Mar-Nov) → but our routine needs ~30min buffer,
+    // so we fire at 14:00 UTC instead. That's 10:00 ET EDT or 09:00 ET EST.
+    // We want a consistent "after pre-market routine, before first significant move"
+    // anchor — 14:00 UTC satisfies both DST windows with a 30+ min buffer.
+    if (hourUtc !== 14) {
+      return; // wrong hour — skip tick
+    }
+
+    const sessionDate = nowUtc.toISOString().slice(0, 10);
+    const correlationId = randomUUID();
+    logger.info({ sessionDate, correlationId, hourUtc }, "pre-market-briefing-discord: tick firing");
+
+    const { sendPreMarketBriefing } = await import("./services/pre-market-briefing-service.js");
+    const result = await sendPreMarketBriefing({ date: sessionDate });
+
+    logger.info(
+      { sessionDate, correlationId, sent: result.sent, reason: result.reason, symbolsFound: result.symbolsFound },
+      "pre-market-briefing-discord: tick complete",
+    );
+  });
+
+  // NOT pipeline-gated (safety/observability — must run when paused)
+  _PIPELINE_GATE_EXEMPT.add("pre-market-briefing-discord");
+
+  cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("pre-market-briefing-discord")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("pre-market-briefing-discord", SCHEDULER_JOBS["pre-market-briefing-discord"].run, 1);
+      markJobRun("pre-market-briefing-discord");
+      emitJobComplete("pre-market-briefing-discord", Date.now() - t0);
+    } finally {
+      _releaseJobLock("pre-market-briefing-discord");
+    }
+  });
+  _scheduledJobs.add("pre-market-briefing-discord");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

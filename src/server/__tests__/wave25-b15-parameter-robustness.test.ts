@@ -198,7 +198,7 @@ describe("B15 lifecycle gate logic", () => {
 
   it("default B15_BATTERY_ENABLED is false (advisory mode for 30 days)", () => {
     delete process.env.B15_BATTERY_ENABLED;
-    const b15HardGateEnabled = (process.env.B15_BATTERY_ENABLED ?? "false") === "true";
+    const b15HardGateEnabled = String(process.env["B15_BATTERY_ENABLED"] ?? "false") === "true";
     expect(b15HardGateEnabled).toBe(false);
   });
 
