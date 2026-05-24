@@ -7320,6 +7320,29 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-24 Wave 25 Pass 7 — adaptive exit engine SCAFFOLD + Wave 25 close
+
+**Mission:** Ship adaptive exit engine + A/B harness as scaffold; defer 3 wiring gaps to Wave 25.5 per architect contract-safety review.
+**Work completed:**
+- adaptive-exit-engine.ts (pure-function computeExitPlan) — 47 tests green
+- framework-overlay.ts exit_style switch (default static_styleC backward-compat)
+- Migration 0144 idx 146 (strategies.exit_plan_config JSONB)
+- Backtest --exit-engine CLI flag + BacktestRequest field + A/B harness scaffolding (34 tests green)
+- Wave 25 documentation close: CLAUDE.md §2 Wave-25 close entry + §4 adaptive subsection (honest scaffold status) + §12 + §13 + AGENT-LOGS
+- system-map:sync + 2 new subsystems registered (adaptive_exit_engine + exit_engine_ab_harness)
+- scripts/wave25-pass7-adaptive-opt-in.ts (dry-run by default; OPERATOR DECISION to --apply)
+**Verification:** All vitest + pytest green; check:production-isolation GREEN; check:2026-compliance OK; system-map:check OK; backward-compat preserved verbatim (existing strategies on Style C).
+**Architect call:** Prior dispatch (a5ea0e96b683ee831) correctly refused to mechanically wire 3 integration gaps without contract decisions. Operator confirmed "Proceed scaffold-only" — this session executes the scope-bounded close.
+**Known-facts updates:** adaptive-exit-engine.ts is pure-function library, NOT YET CONSUMED by paper-signal-service.ts or backtester._apply_trade_management. Style C 33/33/34 remains LIVE default. Wave 25.5 closes the wiring with paper-parity + backtest-core parallel subagents.
+**Wave 25 totals:** 7 passes, 8 dispatches, 600+ tests, 11 migrations, 14 subsystems, 3 CI hard gates GREEN.
+**Carry-forward — Wave 25.5:**
+- Gap A: choose persistence for ExitPlan (recommend new paper_positions.exit_plan JSONB via migration 0145); wire computeExitPlan() at paper-signal-service position-open
+- Gap B: choose TS→Python liquidity transport (recommend snapshot into strategy config at run-launch via existing risk-sizing.ts pattern); branch _apply_trade_management on exit_engine="adaptive"
+- Gap C: per-position AVWAP state via running ΣP·V/ΣV from entry; structure-trail via per-position swing tracker; wire updatePositionPrices() to branch on trail_method
+**Wave 26 candidates (carried from earlier passes):** live SMT bridge (Pass 5), narrative cron real-bar wiring (Pass 6), CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE flip after 30-day instrumentation, HOD/LOD enum slot population.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

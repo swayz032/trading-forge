@@ -1,8 +1,10 @@
 {
-  "generatedAt": "2026-05-24T11:13:29.830Z",
+  "generatedAt": "2026-05-24T11:48:53.496Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
+    "adaptive_exit_engine:manual_gate:wave_25_5_wiring_required",
+    "exit_engine_ab_harness:manual_gate:wave_25_5_backtester_branching_required",
     "pattern_aggregator_service:manual_gate:kill_switch",
     "production_hardening:manual_gate:operator-halt-only",
     "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
@@ -15,9 +17,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 38,
+    "total": 40,
     "ready": 29,
-    "blocked": 2,
+    "blocked": 4,
     "manualGated": 2,
     "experimental": 5
   },
@@ -60,6 +62,24 @@
         "a-plus-auditor:scan-complete SSE",
         "a-plus-auditor.scan-complete",
         "quantum_run_costs"
+      ]
+    },
+    {
+      "id": "adaptive_exit_engine",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "wave_25_5_wiring_required",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "wave_25_5_wiring_required",
+      "blockers": [
+        "manual_gate:wave_25_5_wiring_required"
+      ],
+      "requiredEvidence": [
+        "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in",
+        "strategy.wave25_pass7_adaptive_opt_in",
+        "wave25-adaptive-exit-engine.test.ts"
       ]
     },
     {
@@ -298,6 +318,24 @@
         "deepar:* SSE",
         "deepar.train",
         "deepar.weight_change"
+      ]
+    },
+    {
+      "id": "exit_engine_ab_harness",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "wave_25_5_backtester_branching_required",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "wave_25_5_wiring_required",
+      "blockers": [
+        "manual_gate:wave_25_5_backtester_branching_required"
+      ],
+      "requiredEvidence": [
+        "backtest.exit_engine_ab_run",
+        "manual-invocation:scripts/wave25_exit_engine_ab_report.py",
+        "src/engine/tests/test_exit_engine_ab.py"
       ]
     },
     {

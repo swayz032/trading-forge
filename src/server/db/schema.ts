@@ -43,6 +43,7 @@ import type {
   BacktestResultExtrasShape,
   PaperSessionConfigShape,
   PaperSessionGovernorStateShape,
+  ExitPlanConfig,
 } from "./jsonb-shapes.js";
 
 // bytea type for compressed signal vectors
@@ -87,6 +88,11 @@ export const strategies = pgTable("strategies", {
   confluenceScoreThreshold: numeric("confluence_score_threshold"),
   // NULL → evaluator uses env/code defaults. Map of factor → weight (re-normalised to 1.0 by evaluator).
   confluenceScoreWeights: jsonb("confluence_score_weights").$type<Record<string, number>>(),
+  // Wave 25 Pass 7 W25.12-W25.16: per-strategy adaptive exit engine config.
+  // NULL → exit_style defaults to "static_styleC" (backward-compat for pre-Wave-25 strategies).
+  // New strategies get exit_style="adaptive" via framework-overlay (Pass 7 default).
+  // Migration: 0144_strategies_adaptive_exits.sql, idx 146.
+  exitPlanConfig: jsonb("exit_plan_config").$type<ExitPlanConfig>().default(undefined),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 },

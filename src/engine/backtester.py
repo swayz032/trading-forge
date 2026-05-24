@@ -3840,6 +3840,7 @@ def run_class_backtest(
     max_trades_per_day: int = 2,
     use_performance_gate: bool = True,
     warmup_data: Optional[pl.DataFrame] = None,
+    exit_engine: str = "static_styleC",
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -4765,6 +4766,8 @@ def run_class_backtest(
         },
         "gate_rejections": gate_rejections,
         "governor": governor_result,
+        # W25.17: echo which exit engine was used so A/B harness can tag results correctly.
+        "exit_engine": exit_engine,
         "run_receipt": _build_run_receipt(strategy._config if hasattr(strategy, '_config') else StrategyConfig(
             name=strategy.name, symbol=strategy.symbol, timeframe=strategy.timeframe,
             indicators=[], entry_long="", entry_short="", exit="",
@@ -4818,7 +4821,20 @@ def _load_strategy_class(class_path: str) -> BaseStrategy:
 @click.option("--mode", default="single", type=click.Choice(["single", "walkforward"]))
 @click.option("--strategy-class", default=None, help="Dotted path to BaseStrategy subclass (e.g. src.engine.strategies.breaker.BreakerStrategy)")
 @click.option("--b15-battery", "run_b15_battery_flag", is_flag=True, default=False, help="Run B15 Parameter Robustness Battery after main backtest; emits B15_BATTERY_JSON sentinel to stderr")
-def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_class: Optional[str], run_b15_battery_flag: bool = False):
+@click.option(
+    "--exit-engine",
+    "exit_engine",
+    default="static_styleC",
+    type=click.Choice(["static_styleC", "adaptive"]),
+    help=(
+        "W25.17 A/B flag: which exit engine to use. "
+        "'static_styleC' (default) = existing Style C 33/33/34 TP1/TP2/runner path — "
+        "backward-compat; existing CI runs unchanged. "
+        "'adaptive' = adaptive exit engine (P7.A1+A2 TS path); "
+        "Python harness stubs until framework-overlay wiring lands in P7.A5."
+    ),
+)
+def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_class: Optional[str], run_b15_battery_flag: bool = False, exit_engine: str = "static_styleC"):
     """Run backtest engine. Outputs JSON to stdout, errors to stderr."""
     try:
         if os.path.isfile(config_input):
@@ -4829,6 +4845,15 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
     except Exception as e:
         print(json.dumps({"error": f"Invalid JSON config: {e}"}))
         sys.exit(1)
+
+    # W25.17: Inject --exit-engine flag into config dict so BacktestRequest.exit_engine
+    # is populated correctly.  CLI flag takes precedence over anything in the JSON config,
+    # preserving backward-compat: existing JSON configs that don't set exit_engine will get
+    # the static_styleC default, CLI override is explicit opt-in.
+    if exit_engine != "static_styleC" or "exit_engine" not in config:
+        config["exit_engine"] = exit_engine
+
+    print(f"[exit_engine] mode={exit_engine}", file=sys.stderr)
 
     if strategy_class:
         # Class-based strategy path
@@ -4888,6 +4913,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 commission_per_side=config.get("commission_per_side", 0.62),
                 firm_key=config.get("firm_key"),
                 skip_eligibility_gate=False,
+                exit_engine=exit_engine,
             )
     else:
         # DSL expression-based strategy path (original)

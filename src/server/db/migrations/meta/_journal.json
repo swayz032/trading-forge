@@ -1023,6 +1023,13 @@
       "when": 1779700002000,
       "tag": "0143_bias_state_narrative",
       "breakpoints": true
+    },
+    {
+      "idx": 146,
+      "version": "7",
+      "when": 1779786400000,
+      "tag": "0144_strategies_adaptive_exits",
+      "breakpoints": true
     }
   ]
 }

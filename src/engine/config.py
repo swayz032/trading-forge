@@ -357,6 +357,11 @@ class BacktestRequest(BaseModel):
     #   or omits it. Parity gap is documented in result["parity_metadata"] when absent.
     vix_now: Optional[float] = None
     top3_depth_ratio: Optional[float] = None  # currentTop3Depth / baseline20dMedian
+    # W25.17 A/B flag — which exit engine to use for this run.
+    # "static_styleC"  → existing Style C 33/33/34 TP1/TP2/runner path (default, backward-compat).
+    # "adaptive"       → adaptive exit engine (P7.A1+A2 TS path; Python harness stubs until wired).
+    # Downstream: run_class_backtest() reads this; framework-overlay.ts respects it via compile config.
+    exit_engine: Literal["static_styleC", "adaptive"] = "static_styleC"
 
 
 # ─── Backtest Result ──────────────────────────────────────────────

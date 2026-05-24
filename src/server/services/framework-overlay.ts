@@ -75,6 +75,12 @@ interface CompiledConfig {
    * DO NOT silently skip malformed specs — fail loudly at config time.
    */
   allowed_entry_windows?: string[];
+  /**
+   * Wave 25 Pass 7 — adaptive exit engine config.
+   * Stamped by applyFrameworkOverlay; consumed by paper-signal-service.ts at signal time.
+   * exit_style: "adaptive" | "static_styleC" (default "static_styleC" for backward-compat).
+   */
+  exit_plan_config?: Record<string, unknown> | null;
   [key: string]: unknown;
 }
 
@@ -153,6 +159,14 @@ interface OverlayInput {
   source: StrategySource;
   symbol: "MES" | "MNQ" | "MCL";
   bucketId?: string;
+  /**
+   * Wave 25 Pass 7 — exit engine selector.
+   * "adaptive"      = liquidity-mapped TP + regime scaling + AVWAP runner (new default for new strategies).
+   * "static_styleC" = Wave 23 33/33/34 + POC trail (backward-compat for pre-Wave-25 strategies).
+   * When omitted: defaults to "static_styleC" to preserve backward-compat for all existing strategies.
+   * Callers creating NEW strategies should pass "adaptive" to enroll in Wave 25 exits.
+   */
+  exitStyle?: "adaptive" | "static_styleC";
 }
 
 interface OverlayResult {
@@ -160,6 +174,29 @@ interface OverlayResult {
   warnings: string[];
   appliedRules: string[];
 }
+
+/**
+ * Wave 25 Pass 7 — exit_style switch.
+ *
+ * "adaptive"      = Wave 25 liquidity-mapped TP + regime scaling + AVWAP runner.
+ *                   Default for NEW strategies created after Wave 25 Pass 7.
+ * "static_styleC" = Wave 23 33/33/34 + developing_session_poc trail.
+ *                   Default for EXISTING pre-Wave-25 strategies (backward-compat).
+ *
+ * Resolution order (highest wins):
+ *   1. compiled config already has exit_plan_config.exit_style  → respect it (idempotent)
+ *   2. input.exitStyle parameter explicitly passed               → use it
+ *   3. Fall through to "static_styleC" for safety (never change existing strategies)
+ *
+ * Callers that want "adaptive" for new strategies should pass exitStyle="adaptive".
+ * The overlay will then stamp exit_plan_config.exit_style="adaptive" in the config.
+ * paper-signal-service.ts reads exit_plan_config.exit_style to route the exit call.
+ *
+ * INVARIANTS (NEVER overridden by adaptive engine — CLAUDE.md §4 + §13):
+ *   - 15:55 ET hard flatten remains in time_stop block (unchanged here)
+ *   - 67% personal DLL preserved in position_size block (unchanged here)
+ *   - Per-symbol liquidity caps preserved (unchanged here)
+ */
 
 /**
  * Apply CLAUDE.md §4 framework defaults to a compiled DSL.
@@ -405,6 +442,31 @@ export function applyFrameworkOverlay(input: OverlayInput): OverlayResult {
   const exitStr = cfg.strategy?.exit;
   if (typeof exitStr === "string" && /\bN\/?A\b/i.test(exitStr)) {
     warnings.push(`strategy.exit contains 'N/A' template hole — overlay refilled. Original: "${exitStr}"`);
+  }
+
+  // ─ Wave 25 Pass 7: exit_plan_config stamp ──────────────────────────────────
+  // Stamps exit_plan_config.exit_style on the compiled config so paper-signal-service
+  // can route to the correct exit engine at signal time.
+  //
+  // Resolution order:
+  //   1. Compiled config already has exit_plan_config.exit_style → respect it (idempotent)
+  //   2. input.exitStyle passed by caller → use it
+  //   3. Default to "static_styleC" (backward-compat for all pre-Wave-25 strategies)
+  //
+  // NEVER changes an existing "adaptive" config back to "static_styleC" or vice versa
+  // without explicit caller intent — idempotency is critical for graduated strategies.
+  {
+    const existingExitStyle = (cfg.exit_plan_config as { exit_style?: string } | null | undefined)?.exit_style;
+    if (!existingExitStyle) {
+      // No prior stamp — apply caller preference or default.
+      const targetStyle = input.exitStyle ?? "static_styleC";
+      cfg.exit_plan_config = {
+        ...(cfg.exit_plan_config as Record<string, unknown> ?? {}),
+        exit_style: targetStyle,
+      } as CompiledConfig["exit_plan_config"];
+      applied.push(`exit_plan_config.exit_style=${targetStyle} (Wave 25 Pass 7 stamp)`);
+    }
+    // else: already stamped → idempotent no-op
   }
 
   logger.info(
