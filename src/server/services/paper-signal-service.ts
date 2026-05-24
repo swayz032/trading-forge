@@ -18,6 +18,7 @@ import {
   CONTRACT_CAP_MIN,
   CONTRACT_CAP_MAX,
   getFirmLimit,
+  getMacroBlackoutMode,
   LIQUIDITY_COMFORT_CAPS,
   LIQUIDITY_COMFORT_CAP_DEFAULT,
   TOPSTEP_TRAILING_DD_BY_SIZE,
@@ -2008,6 +2009,18 @@ export async function evaluateSignals(
           acted: false,
           reason: `signal.skipped_outside_window: bar at ${bar.timestamp} not in windows [${windowSpecs.join(", ")}]`,
         }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist window-filtered signal log"));
+        // W24P1 Item 5: mirror skip to audit_log so drift detectors + Discord pipelines
+        // querying `audit_log WHERE action LIKE 'signal.skipped%'` return real rows.
+        insertAuditRow({
+          action: "signal.skipped_outside_window",
+          entityType: "signal",
+          entityId: sessionId,
+          decisionAuthority: "system",
+          input: { sessionId, symbol, barTimestamp: bar.timestamp, windowsConfigured: windowSpecs } as Record<string, unknown>,
+          result: { blocked: true, reason: "outside_allowed_entry_windows" } as Record<string, unknown>,
+          status: "success",
+          correlationId: null,
+        }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.skipped_outside_window"));
       }
     }
   } catch (windowErr) {
@@ -2522,6 +2535,17 @@ export async function evaluateSignals(
               acted: false,
               reason: `signal.blocked_symbol_not_enabled_for_account: symbol=${symbol} firmId=${firmId}`,
             }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist symbol whitelist block log"));
+            // W24P1 Item 5: mirror skip to audit_log
+            insertAuditRow({
+              action: "signal.blocked_symbol_not_enabled_for_account",
+              entityType: "signal",
+              entityId: sessionId,
+              decisionAuthority: "system",
+              input: { sessionId, symbol, firmId } as Record<string, unknown>,
+              result: { blocked: true, reason: "symbol_not_in_firm_account_whitelist" } as Record<string, unknown>,
+              status: "success",
+              correlationId: null,
+            }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.blocked_symbol_not_enabled_for_account"));
           }
         }
         // If no accounts found → fail-open (no block)
@@ -2582,6 +2606,24 @@ export async function evaluateSignals(
               acted: false,
               reason: `signal.skipped_pre_market_blackout: event=${matched.event_type} severity=${matched.severity} window=[${matched.start_utc},${matched.end_utc})`,
             }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist pre-market blackout block log"));
+            // W24P1 Item 5: mirror skip to audit_log
+            insertAuditRow({
+              action: "signal.skipped_pre_market_blackout",
+              entityType: "signal",
+              entityId: sessionId,
+              decisionAuthority: "system",
+              input: {
+                sessionId,
+                symbol,
+                event_type: matched.event_type,
+                severity: matched.severity,
+                start_utc: matched.start_utc,
+                end_utc: matched.end_utc,
+              } as Record<string, unknown>,
+              result: { blocked: true, reason: "pre_market_blackout_window" } as Record<string, unknown>,
+              status: "success",
+              correlationId: null,
+            }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.skipped_pre_market_blackout"));
           }
         }
       }
@@ -2960,6 +3002,23 @@ export async function evaluateSignals(
               acted: false,
               reason: `signal.blocked_position_lock_active: prior_position=${priorPosition.id} new_strategy=${biasState.activeStrategyId}`,
             }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist position_lock block log"));
+            // W24P1 Item 5: mirror skip to audit_log
+            insertAuditRow({
+              action: "signal.blocked_position_lock_active",
+              entityType: "signal",
+              entityId: sessionId,
+              decisionAuthority: "system",
+              input: {
+                sessionId,
+                symbol,
+                prior_position_id: priorPosition.id,
+                prior_session_id: priorPosition.sessionId,
+                new_active_strategy_id: biasState.activeStrategyId,
+              } as Record<string, unknown>,
+              result: { blocked: true, reason: "prior_strategy_has_open_position" } as Record<string, unknown>,
+              status: "success",
+              correlationId: null,
+            }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.blocked_position_lock_active"));
           }
           // else: no open positions on prior strategy → lock condition already cleared;
           // standard Stage 1 behavior continues (no block from this gate).
@@ -3326,29 +3385,64 @@ export async function evaluateSignals(
           sessionConfig.strategyId,
         );
         if (!macroGate.allowed) {
-          macroGateBlocked = true;
-          span.setAttribute("macro_gate_blocked", true);
-          span.setAttribute("macro_gate_reason", macroGate.gateReason);
-          logger.info(
-            { sessionId, symbol, direction: config.side, reason: macroGate.gateReason, severity: macroGate.severity },
-            "C11 macro gate BLOCKED entry signal",
-          );
-          db.insert(paperSignalLogs).values({
-            sessionId,
-            symbol,
-            direction: config.side,
-            signalType: "macro_gate_blocked",
-            price: String(bar.close),
-            indicatorSnapshot: {
-              ...indicators,
-              _macro_gate_reason: macroGate.gateReason,
-              _macro_crisis_prob: macroGate.macroContext.probCrisis,
-              _macro_dominant_state: macroGate.macroContext.dominantState,
-              _macro_severity: macroGate.severity,
-            },
-            acted: false,
-            reason: `macro_gate_blocked: ${macroGate.gateReason}`,
-          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist macro gate block log"));
+          // Wave 24 Item 17: firm-conditional macro blackout.
+          // MFFU=strict (block), Topstep=advisory (warn + allow through).
+          // Unknown firms default to "strict" (fail-closed).
+          const blackoutMode = getMacroBlackoutMode(sessionRow.firmId);
+          if (blackoutMode === "advisory") {
+            // Topstep: log WARN + audit, but DO NOT block the entry.
+            span.setAttribute("macro_gate_advisory", true);
+            span.setAttribute("macro_gate_reason", macroGate.gateReason);
+            logger.warn(
+              { sessionId, symbol, firmId: sessionRow.firmId, direction: config.side, reason: macroGate.gateReason, mode: "advisory" },
+              "C11 macro gate ADVISORY WARN (Topstep: no hard blackout) — entry allowed",
+            );
+            db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "c11_macro_gate_advisory_warn",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _macro_gate_reason: macroGate.gateReason,
+                _macro_crisis_prob: macroGate.macroContext.probCrisis,
+                _macro_dominant_state: macroGate.macroContext.dominantState,
+                _macro_severity: macroGate.severity,
+                _firm_blackout_mode: "advisory",
+                _firm_id: sessionRow.firmId,
+              },
+              acted: true,  // advisory — entry proceeds
+              reason: `c11_macro_gate.advisory_warn: firmId=${sessionRow.firmId ?? "unknown"} mode=advisory — ${macroGate.gateReason}`,
+            }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist C11 advisory warn log"));
+          } else {
+            // MFFU or unknown firm: strict block (existing behavior).
+            macroGateBlocked = true;
+            span.setAttribute("macro_gate_blocked", true);
+            span.setAttribute("macro_gate_reason", macroGate.gateReason);
+            logger.info(
+              { sessionId, symbol, firmId: sessionRow.firmId, direction: config.side, reason: macroGate.gateReason, severity: macroGate.severity, mode: "strict" },
+              "C11 macro gate BLOCKED entry signal (strict mode)",
+            );
+            db.insert(paperSignalLogs).values({
+              sessionId,
+              symbol,
+              direction: config.side,
+              signalType: "macro_gate_blocked",
+              price: String(bar.close),
+              indicatorSnapshot: {
+                ...indicators,
+                _macro_gate_reason: macroGate.gateReason,
+                _macro_crisis_prob: macroGate.macroContext.probCrisis,
+                _macro_dominant_state: macroGate.macroContext.dominantState,
+                _macro_severity: macroGate.severity,
+                _firm_blackout_mode: "strict",
+                _firm_id: sessionRow.firmId,
+              },
+              acted: false,
+              reason: `macro_gate_blocked: ${macroGate.gateReason}`,
+            }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist macro gate block log"));
+          }
         }
         // C11: FOMC proximity → halve contracts (advisory, not a block)
         // The halved contract count is stored in fomcReducedContracts and applied

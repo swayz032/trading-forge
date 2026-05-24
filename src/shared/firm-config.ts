@@ -42,6 +42,14 @@ export interface FirmConfig {
   displayName: string;
   evaluationType: "one_step" | "two_step";
   accountTypes: Record<string, FirmAccountConfig>;
+  /**
+   * Wave 24 Item 17 — C11 macro gate mode per firm.
+   * "strict":   MFFU rule — block entries during FOMC/CPI/NFP ±30min (unchanged).
+   * "advisory": Topstep as of April 2026 — Topstep Help Center publishes NO hard
+   *             news-trading blackout. Emit audit warn but do NOT block the entry.
+   * Default "strict" for any unknown firm (fail-closed).
+   */
+  macro_blackout_mode: "strict" | "advisory";
 }
 
 // ─── Firm Data (50K accounts only) ──────────────────────────────────────────
@@ -51,6 +59,8 @@ export const FIRMS: Record<string, FirmConfig> = {
     name: "mffu",
     displayName: "MyFundedFutures (MFFU)",
     evaluationType: "one_step",
+    // MFFU strict: rules §7 prohibit trading during Tier 1 economic data releases.
+    macro_blackout_mode: "strict",
     accountTypes: {
       "50k": {
         accountSize: 50_000, monthlyFee: 77, activationFee: 0, ongoingMonthlyFee: 0,
@@ -69,6 +79,10 @@ export const FIRMS: Record<string, FirmConfig> = {
     name: "topstep",
     displayName: "Topstep",
     evaluationType: "one_step",
+    // Topstep advisory: Help Center as of April 2026 publishes NO hard news-trading
+    // blackout (per proptradingvibes 2026-04-28). Warn but do not block. See docs/
+    // prop-firm-rules-2026-topstep.md §Macro.
+    macro_blackout_mode: "advisory",
     accountTypes: {
       "50k": {
         accountSize: 50_000, monthlyFee: 49, activationFee: 0, ongoingMonthlyFee: 0,
@@ -141,6 +155,18 @@ export function getFirmLimit(
 /** Return all FirmConfig values */
 export function getAllFirms(): FirmConfig[] {
   return Object.values(FIRMS);
+}
+
+/**
+ * Wave 24 Item 17 — Return the C11 macro blackout mode for a given firmId.
+ * "strict": block entries during news windows (MFFU).
+ * "advisory": warn but allow through (Topstep).
+ * Falls back to "strict" for unknown firms (fail-closed).
+ */
+export function getMacroBlackoutMode(firmId: string | null | undefined): "strict" | "advisory" {
+  if (!firmId) return "strict";
+  const firm = FIRMS[firmId.toLowerCase()];
+  return firm?.macro_blackout_mode ?? "strict";
 }
 
 /** Find which firm has the tightest (smallest) drawdown */

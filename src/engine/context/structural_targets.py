@@ -12,7 +12,7 @@ Key rule: TP2 must always be > 2R from entry
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 
@@ -212,14 +212,11 @@ def compute_single_tp(
 
 
 # ─── Exit Style Selection ─────────────────────────────────────────────────────
-# Style C (regime runner) conditions per CLAUDE.md §4 and style_c_handler.py:
-#   1. playbook == "TREND_CONTINUATION"
-#   2. vp_shape in {D, b, P, Thin}
-#   3. macro_state != "crisis"
-# All other combinations → Style D (default).
-#
-# Style D is the conservative default. Style C is only triggered in confirmed
-# trend-continuation regimes with a supportive VP profile and no crisis macro.
+# Wave 23 canonical: Style C 33/33/33 is the ONLY exit style (W23F.N, Wave 24).
+# Style D is DEAD — select_exit_style() always returns "style_c".
+# The vp_shape / macro_state args are retained for API compatibility + telemetry.
+# Crisis macro receives "style_c" with a tighter Chandelier multiplier (handled
+# by style_c_handler.py reading macro_state separately).
 
 _STYLE_C_VP_SHAPES = {"D", "b", "P", "Thin"}
 

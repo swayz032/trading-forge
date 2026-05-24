@@ -389,7 +389,7 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 | **A7 Signal Correlation** | PAPER → DEPLOY_READY | Duplicate-signal failure |
 | **B10 MRP** | PAPER → DEPLOY_READY (soft) | Regime-conditional fragility |
 | **A14 Black Swan** | PAPER → DEPLOY_READY (Phase 0 advisory) | Unseen-regime fragility |
-| **B14 Survival Twin** | PAPER → DEPLOY_READY (Phase 0 advisory) | Per-firm payout-denial / ban risk |
+| **B14 Survival Twin** | PAPER → DEPLOY_READY (HARD — Wave 24) | Per-firm payout-denial / ban risk (40% consistency cap) |
 | **C11 Macro Gates** | paper signal | Crisis regime + ISM/RRP stress |
 | **C1 CME Outage** | live execution | Block new entries during halts |
 | **C2 Firm Suspension** | live execution | Per-firm block on suspension |
@@ -568,7 +568,21 @@ MAX_CONCURRENT_BACKTESTS=1
 N8N_BASE_URL=https://n8n-production-84ff.up.railway.app
 TF_N8N_API_KEY=<JWT from n8n Settings → API>
 TF_BACKEND_PUBLIC_URL=https://tf-relay-production.up.railway.app
+ADMIN_RESTART_HMAC_SECRET=<random 32+ char secret — set same value in .env and keep offline>
 ```
+
+**Self-restart endpoint (Wave 24 Pass 1, Item 8):**
+NSSM TradingForgeAPI auto-respawns stale code. Non-admin `sc stop` is denied. Use the HMAC-signed self-restart endpoint to trigger a graceful restart without admin access:
+```bash
+TIMESTAMP=$(date +%s)
+REASON="deploy_2026-05-23"
+SIG=$(echo -n "${TIMESTAMP}:${REASON}" | openssl dgst -sha256 -hmac "$ADMIN_RESTART_HMAC_SECRET" | awk '{print $2}')
+curl -X POST https://<relay>/api/admin/self-restart \
+  -H "Content-Type: application/json" \
+  -H "X-Restart-Signature: $SIG" \
+  -d "{\"timestamp\": $TIMESTAMP, \"reason\": \"$REASON\"}"
+```
+Replay protection: timestamp drift > 60s → 401. NSSM respawns automatically to fresh code. Set NSSM `RestartDelay=2000` so process has time to flush logs before port re-binds.
 
 **Pinned facts:**
 - n8n on Railway requires `PORT=5678`

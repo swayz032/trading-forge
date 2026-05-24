@@ -8,15 +8,138 @@
  */
 
 import { Router } from "express";
-import { randomUUID } from "crypto";
+import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { desc, eq, and } from "drizzle-orm";
 import { getMode, setMode } from "../services/pipeline-control-service.js";
 import { db } from "../db/index.js";
 import { agentHealthReports, dataIntegrityFindings } from "../db/schema.js";
 import { getPhaseRecord, setPhaseOverride, type PhaseValue } from "../services/harsh-regime-phase-service.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { logger } from "../lib/logger.js";
 
 export const adminRoutes = Router();
+
+// ─── Wave 24 Pass 1 Item 8: POST /self-restart — HMAC-authenticated self-restart ─
+//
+// Problem: NSSM auto-respawns on port 4000 keeping stale code. Non-admin `sc stop`
+// is denied — every code deploy requires admin operator. Unacceptable for 30-day
+// unattended vacation mode.
+//
+// Solution: HMAC-signed endpoint triggers a graceful process.exit(0) so NSSM
+// auto-respawns to fresh code. HMAC uses ADMIN_RESTART_HMAC_SECRET env var.
+//
+// Signature: X-Restart-Signature = HMAC-SHA256(secret, body.timestamp + ":" + body.reason)
+// Replay protection: timestamp drift > 60s → 401.
+//
+// Curl example:
+//   TIMESTAMP=$(date +%s)
+//   REASON="deploy_2026-05-23"
+//   SIG=$(echo -n "${TIMESTAMP}:${REASON}" | openssl dgst -sha256 -hmac "$ADMIN_RESTART_HMAC_SECRET" | awk '{print $2}')
+//   curl -X POST https://<relay>/api/admin/self-restart \
+//     -H "Content-Type: application/json" \
+//     -H "X-Restart-Signature: $SIG" \
+//     -d "{\"timestamp\": $TIMESTAMP, \"reason\": \"$REASON\"}"
+//
+// NSSM config: set RestartDelay to 2000ms so the process has time to flush logs
+// before the port re-binds.
+
+const RESTART_TIMESTAMP_DRIFT_MS = 60_000; // 60 seconds replay window
+
+function verifyRestartHmac(
+  headerValue: string | undefined,
+  timestamp: number,
+  reason: string,
+  exitFn?: (code: number) => never,
+): { ok: true } | { ok: false; reason_code: string } {
+  const secret = process.env.ADMIN_RESTART_HMAC_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      return { ok: false, reason_code: "secret_not_configured" };
+    }
+    // Dev/test: allow through without secret so tests don't need the env var
+    return { ok: true };
+  }
+  if (!headerValue || typeof headerValue !== "string" || headerValue.length === 0) {
+    return { ok: false, reason_code: "missing_header" };
+  }
+  const payload = `${timestamp}:${reason}`;
+  const expected = createHmac("sha256", secret).update(payload, "utf8").digest("hex");
+  if (headerValue.length !== expected.length) {
+    return { ok: false, reason_code: "signature_mismatch" };
+  }
+  try {
+    const ok = timingSafeEqual(Buffer.from(headerValue, "hex"), Buffer.from(expected, "hex"));
+    return ok ? { ok: true } : { ok: false, reason_code: "signature_mismatch" };
+  } catch {
+    return { ok: false, reason_code: "signature_mismatch" };
+  }
+}
+
+adminRoutes.post("/self-restart", async (req, res) => {
+  const correlationId = randomUUID();
+  const body = (req.body ?? {}) as { timestamp?: number; reason?: string };
+
+  // ── Validate body ─────────────────────────────────────────────────────────
+  if (typeof body.timestamp !== "number") {
+    res.status(400).json({ error: "missing_body_field", field: "timestamp" });
+    return;
+  }
+  if (typeof body.reason !== "string" || body.reason.trim().length === 0) {
+    res.status(400).json({ error: "missing_body_field", field: "reason" });
+    return;
+  }
+
+  // ── Replay protection ─────────────────────────────────────────────────────
+  const nowMs = Date.now();
+  const tsMs = body.timestamp * 1000; // body.timestamp is Unix seconds
+  const drift = Math.abs(nowMs - tsMs);
+  if (drift > RESTART_TIMESTAMP_DRIFT_MS) {
+    req.log?.warn({ drift, correlationId }, "self-restart: timestamp drift exceeded — replay protection");
+    res.status(401).json({ error: "timestamp_drift_exceeded", drift_ms: drift, max_ms: RESTART_TIMESTAMP_DRIFT_MS });
+    return;
+  }
+
+  // ── HMAC verification ──────────────────────────────────────────────────────
+  const sig = req.header("x-restart-signature");
+  const verified = verifyRestartHmac(sig, body.timestamp, body.reason.trim());
+  if (!verified.ok) {
+    req.log?.warn({ reason_code: verified.reason_code, correlationId }, "self-restart: HMAC verification failed");
+    res.status(401).json({ error: "hmac_verification_failed", reason_code: verified.reason_code });
+    return;
+  }
+
+  const reason = body.reason.trim();
+  logger.info({ correlationId, reason }, "self-restart: HMAC verified — initiating graceful restart");
+
+  // ── Audit row ─────────────────────────────────────────────────────────────
+  await insertAuditRow({
+    action: "system.self_restart_requested",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "human",
+    input: { reason, timestamp: body.timestamp } as Record<string, unknown>,
+    result: { correlationId } as Record<string, unknown>,
+    status: "success",
+    correlationId,
+  }).catch((err) => logger.error({ err }, "self-restart: audit row write failed (non-blocking)"));
+
+  // ── Discord notification ───────────────────────────────────────────────────
+  notifyCritical(
+    "Self-Restart Initiated",
+    `Backend process is restarting via HMAC-authenticated endpoint. Reason: ${reason}. NSSM will respawn automatically.`,
+    { reason, correlationId },
+  );
+
+  // ── Respond before exiting ────────────────────────────────────────────────
+  res.json({ status: "restart_initiated", reason, correlationId });
+
+  // ── Flush logs + exit ─────────────────────────────────────────────────────
+  logger.info({ correlationId, reason }, "self-restart: flushing logs — process.exit(0) in 1s");
+  setTimeout(() => {
+    process.exit(0);
+  }, 1_000);
+});
 
 // ─── GET /pipeline/status ────────────────────────────────────────
 adminRoutes.get("/pipeline/status", async (req, res) => {

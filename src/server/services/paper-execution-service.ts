@@ -2211,7 +2211,34 @@ async function callExitHandler(
   strategyId: string | null,
   correlationId?: string | null,
 ): Promise<ExitHandlerResult> {
-  const exitStyle = (pos.currentExitStyle ?? "D") as "D" | "C";
+  // Wave 24: Style D is DEAD (W23F.N). Default to "C" for null currentExitStyle.
+  // Legacy positions that carry currentExitStyle="D" still route to style_d_handler
+  // for backward compatibility, but the runtime fallback is now "C".
+  const exitStyle = (pos.currentExitStyle ?? "C") as "D" | "C";
+
+  // Runtime guard: any position opened AFTER the Style D deprecation date (2026-05-23)
+  // that resolves to Style D should never happen — emit CRITICAL audit row + alert.
+  // Positions opened before that date may legitimately carry currentExitStyle="D".
+  const STYLE_D_DEPRECATION_DATE = new Date("2026-05-23T00:00:00Z");
+  const posEntryTime = pos.entryTime ? new Date(pos.entryTime as unknown as string) : null;
+  if (exitStyle === "D" && posEntryTime && posEntryTime >= STYLE_D_DEPRECATION_DATE) {
+    const legacyMsg =
+      `style_d.legacy_fallback_used: position ${pos.id} (entryTime ${posEntryTime.toISOString()}) ` +
+      `routed to Style D after deprecation date — should never fire. ` +
+      `Investigate currentExitStyle write path.`;
+    logger.error({ positionId: pos.id, entryTime: posEntryTime.toISOString(), strategyId }, legacyMsg);
+    insertAuditRowSafe({
+      action: "style_d.legacy_fallback_used",
+      entityType: "position",
+      entityId: pos.id,
+      decisionAuthority: "system",
+      status: "failure",
+      input: { currentExitStyle: pos.currentExitStyle, entryTime: posEntryTime.toISOString() } as Record<string, unknown>,
+      result: { message: legacyMsg } as Record<string, unknown>,
+      correlationId: correlationId ?? null,
+    }).catch((auditErr) => logger.error({ err: auditErr }, "style_d.legacy_fallback_used audit write failed"));
+    AlertFactory.systemError("style_d.legacy_fallback_used", new Error(legacyMsg));
+  }
   const entryPrice = Number(pos.entryPrice);
   const atr14 = barCtx.atr14[pos.symbol] ?? 0;
 
@@ -2622,7 +2649,7 @@ export async function updatePositionPrices(
         const atr14ForClose = exitBarContext.atr14[pos.symbol];
         const positionClosed = await applyExitDecision(
           pos, handlerResult,
-          (pos.currentExitStyle ?? "D") as "D" | "C",
+          (pos.currentExitStyle ?? "C") as "D" | "C",  // Wave 24: Style D dead — default C
           stratId, currentPrice, atr14ForClose, correlationId,
         );
         if (positionClosed) {

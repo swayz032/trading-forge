@@ -27,6 +27,7 @@ import { runAgentHealthSweep } from "./services/agent-audit-service.js";
 import { runPortfolioCorrelationCheck } from "./services/portfolio-optimizer-service.js";
 import { runMetaParameterReview } from "./services/meta-optimizer-service.js";
 import { notifyWarning, notifyCritical } from "./services/notification-service.js";
+import { insertAuditRow } from "./lib/audit-log-helper.js";
 import { runAntiSetupEffectivenessAnalysis } from "./services/anti-setup-effectiveness-service.js";
 import { invalidateAntiSetupCache } from "./services/anti-setup-gate-service.js";
 import { isActive as isPipelineActive, getMode as getPipelineMode } from "./services/pipeline-control-service.js";
@@ -816,8 +817,10 @@ export function initScheduler() {
   _scheduledJobs.add("heartbeat-write");
 
   registerJob("heartbeat-stale-check", 30 * 60 * 1000, async () => {
-    const { runHeartbeatStaleCheck } = await import("./services/dead-mans-heartbeat-service.js");
+    const { runHeartbeatStaleCheck, runScheduledRefreshStalenessCheck } = await import("./services/dead-mans-heartbeat-service.js");
     await runHeartbeatStaleCheck();
+    // Wave 24 Pass 1 Item 1: also check BW + cookie refresh heartbeats
+    await runScheduledRefreshStalenessCheck();
   });
   cron.schedule("*/30 * * * *", async () => {
     if (!_tryAcquireJobLock("heartbeat-stale-check")) return;
@@ -3133,7 +3136,165 @@ export function initScheduler() {
   });
   _scheduledJobs.add("harsh-regime-phase-activation-check");
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1)");
+
+  // ─── Wave 24 Pass 1 Item 1: BW session refresh — every 6 hours ────────────────
+  // CATASTROPHIC GAP: runBwSessionRefreshCheck existed but had ZERO callers in
+  // the scheduler. Vacation Mode promises auto-refresh during operator absence
+  // (CLAUDE.md §3) — this wires that promise. NOT pipeline-gated: credential
+  // safety signals must fire even when pipeline is paused.
+  registerJob("bw-session-refresh", 6 * 60 * 60 * 1000, async () => {
+    const { runBwSessionRefreshCheck } = await import("./services/bitwarden-session-refresh-service.js");
+    const t0bw = Date.now();
+    let outcome: string;
+    let error: string | undefined;
+    try {
+      const result = await runBwSessionRefreshCheck();
+      outcome = result.status;
+      if (result.status === "failed") {
+        error = result.error;
+      }
+    } catch (err) {
+      outcome = "failed";
+      error = err instanceof Error ? err.message : String(err);
+      logger.error({ err, jobName: "bw-session-refresh" }, "bw-session-refresh: unexpected throw from runBwSessionRefreshCheck");
+      notifyCritical(
+        "BW session refresh cron: unexpected error",
+        `runBwSessionRefreshCheck threw unexpectedly. Error: ${error}. BW vault access may degrade.`,
+        { error },
+      );
+    }
+    const durationMs = Date.now() - t0bw;
+    // Heartbeat audit row — always written so dead-mans can detect staleness
+    await insertAuditRow({
+      action: outcome === "failed" ? "bw_refresh.failed" : "bw_refresh.heartbeat",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { job: "bw-session-refresh" } as Record<string, unknown>,
+      result: { status: outcome, duration_ms: durationMs, error: error ?? null } as Record<string, unknown>,
+      status: outcome === "failed" ? "failed" : "success",
+      correlationId: null,
+    }).catch((auditErr) => logger.error({ auditErr }, "bw-session-refresh: heartbeat audit row write failed"));
+  });
+
+  // Wave 24 Item 1: BW refresh exempted from pipeline gate — credential safety
+  _PIPELINE_GATE_EXEMPT.add("bw-session-refresh");
+
+  cron.schedule("0 */6 * * *", async () => {
+    if (!_tryAcquireJobLock("bw-session-refresh")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("bw-session-refresh", SCHEDULER_JOBS["bw-session-refresh"].run, 1);
+      markJobRun("bw-session-refresh");
+      emitJobComplete("bw-session-refresh", Date.now() - t0);
+    } finally {
+      _releaseJobLock("bw-session-refresh");
+    }
+  });
+  _scheduledJobs.add("bw-session-refresh");
+
+  // ─── Wave 24 Pass 1 Item 1: Prop-firm cookie refresh — every hour ──────────
+  // CATASTROPHIC GAP: runPropFirmCookieRefresh existed but had ZERO callers in
+  // the scheduler. Vacation Mode promises auto-refresh (CLAUDE.md §3). NOT
+  // pipeline-gated: C2 evidence integrity is a safety signal.
+  registerJob("prop-firm-cookie-refresh", 60 * 60 * 1000, async () => {
+    const { runPropFirmCookieRefresh } = await import("./services/prop-firm-cookie-refresh-service.js");
+    const t0cookie = Date.now();
+    let report: Awaited<ReturnType<typeof runPropFirmCookieRefresh>> | undefined;
+    let error: string | undefined;
+    try {
+      report = await runPropFirmCookieRefresh();
+    } catch (err) {
+      error = err instanceof Error ? err.message : String(err);
+      logger.error({ err, jobName: "prop-firm-cookie-refresh" }, "prop-firm-cookie-refresh: unexpected throw");
+      notifyCritical(
+        "Prop-firm cookie refresh cron: unexpected error",
+        `runPropFirmCookieRefresh threw unexpectedly. Error: ${error}. Firm C2 evidence may be stale.`,
+        { error },
+      );
+    }
+    const durationMs = Date.now() - t0cookie;
+    const firmsRefreshed = report?.refreshedCount ?? 0;
+    const firmsFailed = report?.failedCount ?? 0;
+    const outcome = error ? "failed" : firmsFailed > 0 ? "partial" : "success";
+    // Heartbeat audit row — always written
+    await insertAuditRow({
+      action: outcome === "failed" ? "cookie_refresh.failed" : "cookie_refresh.heartbeat",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { job: "prop-firm-cookie-refresh" } as Record<string, unknown>,
+      result: {
+        status: outcome,
+        duration_ms: durationMs,
+        firms_refreshed: firmsRefreshed,
+        firms_failed: firmsFailed,
+        error: error ?? null,
+      } as Record<string, unknown>,
+      status: outcome === "failed" ? "failed" : "success",
+      correlationId: null,
+    }).catch((auditErr) => logger.error({ auditErr }, "prop-firm-cookie-refresh: heartbeat audit row write failed"));
+  });
+
+  // Wave 24 Item 1: cookie refresh exempted from pipeline gate — safety signal
+  _PIPELINE_GATE_EXEMPT.add("prop-firm-cookie-refresh");
+
+  cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("prop-firm-cookie-refresh")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("prop-firm-cookie-refresh", SCHEDULER_JOBS["prop-firm-cookie-refresh"].run, 1);
+      markJobRun("prop-firm-cookie-refresh");
+      emitJobComplete("prop-firm-cookie-refresh", Date.now() - t0);
+    } finally {
+      _releaseJobLock("prop-firm-cookie-refresh");
+    }
+  });
+  _scheduledJobs.add("prop-firm-cookie-refresh");
+
+  // ─── Wave 24 Pass 1 Item 15: Weekly drift 2σ auto-HALT — Sunday 18:00 ET ──
+  // CLAUDE.md §3 promises auto-HALT on >2σ deviation. Not previously implemented.
+  // Pipeline-gated: drift analysis is a research-side guard (production halt
+  // is activated by the service itself directly via kill-switch if needed).
+  registerJob("weekly-drift-2sigma-check", 7 * 24 * 60 * 60 * 1000, async () => {
+    const { runWeeklyDriftHaltCheck } = await import("./services/weekly-drift-halt-service.js");
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "weekly-drift-2sigma-check" }, "cron tick start");
+    const report = await runWeeklyDriftHaltCheck();
+    logger.info(
+      { correlationId, checked: report.checked, halted: report.halted, ok: report.ok, errors: report.errors },
+      "weekly-drift-2sigma-check: sweep complete",
+    );
+  });
+
+  // Sunday 18:00 ET = Monday 22:00 UTC (EDT, UTC-4) or 23:00 UTC (EST, UTC-5)
+  cron.schedule("0 22,23 * * 1", async () => {
+    if (!_tryAcquireJobLock("weekly-drift-2sigma-check")) return;
+    try {
+      const now = new Date();
+      const etStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        weekday: "short",
+        hour: "numeric",
+        hour12: false,
+      });
+      // Must be Sunday 18:00 ET — cron fires Mon 22/23 UTC which maps to Sun 18:00 ET
+      if (!etStr.includes("Sun") || !etStr.includes("18")) {
+        logger.debug({ etStr }, "Scheduler: weekly-drift-2sigma-check cron fired but not Sunday 18:00 ET — skipping");
+        return;
+      }
+      if (!(await pipelineGate("weekly-drift-2sigma-check"))) return;
+      logger.info("Scheduler: Weekly drift 2σ check (Sunday 18:00 ET confirmed)");
+      const t0wd = Date.now();
+      await withRetry("weekly-drift-2sigma-check", SCHEDULER_JOBS["weekly-drift-2sigma-check"].run, 1);
+      markJobRun("weekly-drift-2sigma-check");
+      emitJobComplete("weekly-drift-2sigma-check", Date.now() - t0wd);
+    } finally {
+      _releaseJobLock("weekly-drift-2sigma-check");
+    }
+  });
+  _scheduledJobs.add("weekly-drift-2sigma-check");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

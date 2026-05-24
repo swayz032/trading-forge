@@ -19,7 +19,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { desc, gte, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
@@ -366,4 +366,131 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
 
 export function getLastAlertFiredAt(): Date | null {
   return _alertFiredAt;
+}
+
+// ─── Wave 24 Pass 1 Item 1: Scheduled-refresh staleness check ─────────────────
+// Complements runHeartbeatStaleCheck() — detects when the BW/cookie refresh
+// crons have stopped writing heartbeat rows. Both are safety-critical for
+// 30-day unattended vacation operation.
+//
+// Thresholds use 2× the job cadence as the staleness threshold:
+//   bw_refresh.heartbeat    — job runs every 6h → stale if >13h old
+//   cookie_refresh.heartbeat — job runs every 1h → stale if >2.5h old
+//
+// Dedup: fires at most once per stale window (same pattern as main heartbeat).
+// Does NOT throw — every error path is logged and the function returns.
+
+const BW_HEARTBEAT_STALE_MS = 13 * 60 * 60 * 1000;       // 13h (2× 6h cadence)
+const COOKIE_HEARTBEAT_STALE_MS = 2.5 * 60 * 60 * 1000;  // 2.5h (2× 1h cadence + buffer)
+
+let _lastBwAlertAt: Date | null = null;
+let _lastCookieAlertAt: Date | null = null;
+
+/**
+ * Queries audit_log for the most recent heartbeat row for a given action.
+ * Returns null when no row exists or query fails.
+ */
+async function getLastRefreshHeartbeatAt(action: string): Promise<Date | null> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    const { eq: _eq, desc: _desc } = await import("drizzle-orm");
+    const rows = await db
+      .select({ createdAt: auditLog.createdAt })
+      .from(auditLog)
+      .where(_eq(auditLog.action, action))
+      .orderBy(_desc(auditLog.createdAt))
+      .limit(1);
+    return rows.length > 0 ? new Date(rows[0].createdAt as unknown as string | number | Date) : null;
+  } catch (err) {
+    logger.warn({ err, action }, "dead-mans-heartbeat: refresh-heartbeat query failed");
+    return null;
+  }
+}
+
+/**
+ * Check whether BW and cookie refresh jobs are still writing heartbeat rows.
+ * Fires Discord CRITICAL if either job's last heartbeat row is older than the
+ * staleness threshold. Deduplicates per stale window.
+ */
+export async function runScheduledRefreshStalenessCheck(): Promise<void> {
+  const now = Date.now();
+
+  // ── BW refresh heartbeat check ─────────────────────────────────────────────
+  const bwLastAt = await getLastRefreshHeartbeatAt("bw_refresh.heartbeat");
+  if (bwLastAt) {
+    const ageMs = now - bwLastAt.getTime();
+    if (ageMs > BW_HEARTBEAT_STALE_MS) {
+      // Dedup: only alert once per stale window
+      if (!_lastBwAlertAt || now - _lastBwAlertAt.getTime() > BW_HEARTBEAT_STALE_MS) {
+        _lastBwAlertAt = new Date();
+        const ageHours = (ageMs / (60 * 60 * 1000)).toFixed(1);
+        logger.error(
+          { ageHours, lastAt: bwLastAt.toISOString() },
+          "dead-mans-heartbeat: BW session refresh cron NOT RUNNING — heartbeat stale",
+        );
+        await insertAuditRow({
+          action: "dead_mans_heartbeat.bw_refresh_stale",
+          entityType: "system",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { last_heartbeat_at: bwLastAt.toISOString(), age_hours: ageHours } as Record<string, unknown>,
+          result: { alert_fired_at: _lastBwAlertAt.toISOString() } as Record<string, unknown>,
+          status: "success",
+          correlationId: null,
+        }).catch((err) => logger.error({ err }, "dead-mans-heartbeat: BW stale audit row failed"));
+        notifyCritical(
+          "CRITICAL: BW session refresh cron not running",
+          `Bitwarden session refresh heartbeat is ${ageHours}h stale (last: ${bwLastAt.toISOString()}). ` +
+            `The bw-session-refresh scheduled job may be disabled or throwing. ` +
+            `BW vault access will degrade if BW_SESSION expires. ` +
+            `Check: POST /api/admin/scheduler/jobs/bw-session-refresh/enable`,
+          { lastHeartbeatAt: bwLastAt.toISOString(), ageHours, thresholdHours: "13" },
+        );
+      }
+    } else {
+      // Fresh — clear dedup
+      if (_lastBwAlertAt) {
+        logger.info("dead-mans-heartbeat: BW refresh heartbeat recovered — clearing alert state");
+        _lastBwAlertAt = null;
+      }
+    }
+  }
+
+  // ── Cookie refresh heartbeat check ─────────────────────────────────────────
+  const cookieLastAt = await getLastRefreshHeartbeatAt("cookie_refresh.heartbeat");
+  if (cookieLastAt) {
+    const ageMs = now - cookieLastAt.getTime();
+    if (ageMs > COOKIE_HEARTBEAT_STALE_MS) {
+      if (!_lastCookieAlertAt || now - _lastCookieAlertAt.getTime() > COOKIE_HEARTBEAT_STALE_MS) {
+        _lastCookieAlertAt = new Date();
+        const ageHours = (ageMs / (60 * 60 * 1000)).toFixed(1);
+        logger.error(
+          { ageHours, lastAt: cookieLastAt.toISOString() },
+          "dead-mans-heartbeat: prop-firm cookie refresh cron NOT RUNNING — heartbeat stale",
+        );
+        await insertAuditRow({
+          action: "dead_mans_heartbeat.cookie_refresh_stale",
+          entityType: "system",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { last_heartbeat_at: cookieLastAt.toISOString(), age_hours: ageHours } as Record<string, unknown>,
+          result: { alert_fired_at: _lastCookieAlertAt.toISOString() } as Record<string, unknown>,
+          status: "success",
+          correlationId: null,
+        }).catch((err) => logger.error({ err }, "dead-mans-heartbeat: cookie stale audit row failed"));
+        notifyCritical(
+          "CRITICAL: Prop-firm cookie refresh cron not running",
+          `Cookie refresh heartbeat is ${ageHours}h stale (last: ${cookieLastAt.toISOString()}). ` +
+            `C2 evidence captures may be failing. ` +
+            `Check: POST /api/admin/scheduler/jobs/prop-firm-cookie-refresh/enable`,
+          { lastHeartbeatAt: cookieLastAt.toISOString(), ageHours, thresholdHours: "2.5" },
+        );
+      }
+    } else {
+      if (_lastCookieAlertAt) {
+        logger.info("dead-mans-heartbeat: cookie refresh heartbeat recovered — clearing alert state");
+        _lastCookieAlertAt = null;
+      }
+    }
+  }
 }

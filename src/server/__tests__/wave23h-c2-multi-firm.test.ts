@@ -83,6 +83,10 @@ vi.mock("../db/schema.js", () => ({
   auditLog: { action: "audit_log" },
   weeklyDriftReports: { severity: "severity", reportWeek: "report_week", ranAt: "ran_at" },
   brokerAccounts: { firmId: "firm_id", enabled: "enabled" },
+  // paperSessions required so eq(paperSessions.status, "active") in L2/L3 does not throw
+  // with "Cannot read property 'status' of undefined" → which makes L2/L3 fail-CLOSED
+  // causing overall_halted=true even when no firms are suspended (Wave 24 fix).
+  paperSessions: { id: "id", firmId: "firm_id", status: "status", dailyPnlBreakdown: "daily_pnl_breakdown", currentEquity: "current_equity", realizedPeakEquity: "realized_peak_equity" },
   ProductionMode: undefined,
 }));
 
@@ -131,6 +135,13 @@ vi.mock("../services/windows-health-check-service.js", () => ({
 
 vi.mock("../lib/audit-log-helper.js", () => ({
   insertAuditRow: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Mock firm-config so the dynamic import in L2/L3 does not fail in the test environment.
+// The actual getFirmAccount values don't matter for Layer 7 tests — the mock returns null
+// (unknown firm) so L2/L3 always skip without halting (Wave 24 fix).
+vi.mock("../../shared/firm-config.js", () => ({
+  getFirmAccount: vi.fn().mockReturnValue(null),
 }));
 
 // ─── Imports after mocks ──────────────────────────────────────────────────────

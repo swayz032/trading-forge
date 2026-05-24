@@ -164,6 +164,23 @@ export interface RiskSizingInputs {
    * Default: 50000 (50K Topstep combine).
    */
   accountStartingFloor?: number;
+
+  // ── Wave 24 optional scaling inputs ──────────────────────────────────────────
+  /**
+   * Current VIX level (item 16: vol-scaling on max_risk_pct).
+   * null/undefined → computeVolScale returns 1.0 (fail-open, single warn by caller).
+   */
+  vixNow?: number | null;
+  /**
+   * Current top-3 order-book depth for this symbol (item 11: liquidity haircut).
+   * null/undefined → haircut returns 1.0 (fail-open).
+   */
+  currentTop3Depth?: number | null;
+  /**
+   * 20-day rolling median top-3 depth for this symbol (item 11 baseline).
+   * null/undefined → haircut returns 1.0 (fail-open).
+   */
+  baseline20dMedianTop3Depth?: number | null;
 }
 
 /**
@@ -203,6 +220,47 @@ export interface RiskSizingResult {
   // W23H.4 additions
   /** Audit payload for sizing.confluence_multiplier_applied event. Forward to insertAuditRow(). */
   confluenceAudit: ConfluenceAuditPayload;
+}
+
+// ── Wave 24 env-configurable scaling params ───────────────────────────────────
+// Exposed as env vars so the operator can tune without a code deploy.
+const RISK_VIX_TARGET  = parseFloat(process.env.RISK_VIX_TARGET   ?? "18");
+const RISK_VOL_SCALE_MIN = parseFloat(process.env.RISK_VOL_SCALE_MIN ?? "0.5");
+const RISK_VOL_SCALE_MAX = parseFloat(process.env.RISK_VOL_SCALE_MAX ?? "1.5");
+
+/**
+ * Wave 24 Item 16 — VIX-driven vol scale on max_risk_pct_per_trade.
+ *
+ * Scale = clamp(vixTarget / vixNow, VOL_SCALE_MIN, VOL_SCALE_MAX).
+ * Returns 1.0 (no-op) when vixNow is null/<=0 (fail-open — missing data must
+ * never block entries; single warn emitted by caller).
+ *
+ * Institutional standard: risk = base × vix_scale × regime_scale.
+ * At VIX=18 (target): scale=1.0. VIX=36: scale=0.5 (floor). VIX=9: scale=1.5 (ceiling).
+ * Env: RISK_VIX_TARGET (default 18), RISK_VOL_SCALE_MIN (0.5), RISK_VOL_SCALE_MAX (1.5).
+ */
+export function computeVolScale(vixNow: number | null): number {
+  if (vixNow == null || vixNow <= 0) return 1.0;
+  return Math.max(RISK_VOL_SCALE_MIN, Math.min(RISK_VOL_SCALE_MAX, RISK_VIX_TARGET / vixNow));
+}
+
+/**
+ * Wave 24 Item 11 — Dynamic liquidity haircut on per-symbol caps.
+ *
+ * CME 2025 paper "Reassessing Liquidity Beyond Order Book Depth" documented
+ * -27% top-3 depth collapse during Liberation Day 2025-04-02. Static caps
+ * flood thinned books during liquidity events.
+ *
+ * haircut = min(1.0, currentTop3Depth / baseline20dMedianTop3Depth).
+ * Returns 1.0 (no-op) when either input is missing — fail-open on absent data.
+ * Audit emission (sizing.liquidity_haircut_applied) is handled by the caller.
+ */
+export function computeLiquidityHaircut(
+  currentTop3Depth: number | null | undefined,
+  baseline20dMedianTop3Depth: number | null | undefined,
+): number {
+  if (!currentTop3Depth || !baseline20dMedianTop3Depth) return 1.0;
+  return Math.min(1.0, currentTop3Depth / baseline20dMedianTop3Depth);
 }
 
 /**
@@ -256,7 +314,16 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
 
   // Wave 22: firm defaults to "topstep" per operator directive.
   const firm: FirmId = input.firm ?? "topstep";
-  const liquidityCap = cfg.liquidity_comfort_cap;
+
+  // Wave 24 Item 11: Dynamic liquidity haircut (CME Liberation Day -27% depth event).
+  // haircut ∈ (0, 1.0]. 1.0 when depth data absent (fail-open).
+  const liquidityHaircut = computeLiquidityHaircut(input.currentTop3Depth, input.baseline20dMedianTop3Depth);
+  const liquidityCap = Math.floor(cfg.liquidity_comfort_cap * liquidityHaircut);
+
+  // Wave 24 Item 16: VIX-driven vol scale on max_risk_pct (institutional standard).
+  // scale ∈ [0.5, 1.5]. 1.0 when VIX data absent (fail-open).
+  const volScale = computeVolScale(input.vixNow ?? null);
+  const effectiveMaxRiskPct = cfg.max_risk_pct_per_trade * volScale;
 
   // W23H.4: Resolve confluence multiplier.
   // confluence_count defaults to 1 (primary indicator only) when omitted → multiplier 1.0.
@@ -410,11 +477,11 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       };
     }
 
-    riskDollars = buffer * cfg.max_risk_pct_per_trade;
+    riskDollars = buffer * effectiveMaxRiskPct;  // Wave 24: vol-scaled risk pct
   } else {
     // MFFU: risk against current balance (unchanged from Wave 10)
     riskCapMethod = "mffu_balance_pct";
-    riskDollars = input.accountBalance * cfg.max_risk_pct_per_trade;
+    riskDollars = input.accountBalance * effectiveMaxRiskPct;  // Wave 24: vol-scaled
   }
 
   // Risk-derived ceiling (common to both firms)
@@ -617,6 +684,14 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       tier_increment: cfg.tier_increment,
       tier_threshold_dollars: cfg.tier_threshold_dollars,
       max_risk_pct_per_trade: cfg.max_risk_pct_per_trade,
+      vol_scale: volScale,
+      effective_max_risk_pct: effectiveMaxRiskPct,
+      vix_now: input.vixNow ?? null,
+      vix_target: RISK_VIX_TARGET,
+      liquidity_haircut: liquidityHaircut,
+      liquidity_cap_raw: cfg.liquidity_comfort_cap,
+      current_top3_depth: input.currentTop3Depth ?? null,
+      baseline_top3_depth: input.baseline20dMedianTop3Depth ?? null,
       tiers_earned: tiers,
       firm,
       riskCapMethod,

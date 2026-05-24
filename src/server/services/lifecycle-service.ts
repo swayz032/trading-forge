@@ -295,7 +295,7 @@ export class LifecycleService {
     toState: LifecycleState,
     options: PromoteStrategyOptions = {},
     tx?: typeof db,
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; retry_after_seconds?: number }> {
     const span = tracer.startSpan("lifecycle.promote");
     span.setAttribute("strategy.id", id);
     span.setAttribute("lifecycle.from", fromState);
@@ -320,7 +320,7 @@ export class LifecycleService {
     toState: LifecycleState,
     options: PromoteStrategyOptions,
     tx?: typeof db,
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; retry_after_seconds?: number }> {
     if (fromState === "DEPLOY_READY" && toState === "DEPLOYED" && options.actor !== "human_release") {
       const error = "Only manual release authority can promote DEPLOY_READY -> DEPLOYED";
       logger.warn({ id, fromState, toState, actor: options.actor ?? "system" }, error);
@@ -656,6 +656,27 @@ export class LifecycleService {
         if (btExtras?.resultExtras) {
           const extras = btExtras.resultExtras as Record<string, unknown>;
 
+          // ── Wave 24 / Item 12: mc_provisional sentinel check ────────────────
+          // mc_provisional=true means Monte Carlo is still running. Promoting on
+          // partial MC data yields distorted promotion inputs (Known-Facts Pin
+          // 2026-05-20 Pass 2B F-8). Defer and instruct caller to retry in 30min.
+          // Missing mc_provisional (undefined/null) = already cleared → proceed.
+          if (extras.mc_provisional === true) {
+            const deferMsg = `lifecycle.mc_provisional_deferred: MC still in progress for backtest ${promotionEvidence.backtestId} — promotion to PAPER deferred`;
+            logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId }, deferMsg);
+            insertAuditRow({
+              action: "lifecycle.mc_provisional_deferred",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "failure",
+              input: { backtestId: promotionEvidence.backtestId, attempted_transition: "TESTING→PAPER" } as Record<string, unknown>,
+              result: { reason: "mc_provisional_in_progress", retry_after_seconds: 1800 } as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.mc_provisional_deferred audit write failed"));
+            return { success: false, error: "mc_provisional_in_progress", retry_after_seconds: 1800 };
+          }
+
           // Invariant harness (B-2): hard block if overall_passed=false
           const invariants = extras.invariants as Record<string, unknown> | undefined;
           if (invariants?.overall_passed === false) {
@@ -708,6 +729,179 @@ export class LifecycleService {
         // Non-blocking: truthiness read failure must never abort a promotion.
         // Log at WARN — this is a trust gate and missing data should be visible.
         logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: extrasErr }, "lifecycle.invariant_gate: resultExtras read failed (non-blocking — promotion continues)");
+      }
+    }
+
+    // ── Wave 24 Pass 1 — Item 10: WF mode gate (Style C + plain WF → block) ─
+    // Style C runner can span many bars. Plain walk-forward leaks future info
+    // via overlapping runner holds at the IS/OOS boundary. Require purged_embargo
+    // or cpcv mode for any Style C strategy. (Item 10, Wave 24 Pass 1, 2026-05-23)
+    if (fromState === "TESTING" && toState === "PAPER" && promotionEvidence.backtestId) {
+      try {
+        const [btExtrasWf] = await (tx ?? db)
+          .select({ resultExtras: backtests.resultExtras })
+          .from(backtests)
+          .where(eq(backtests.id, promotionEvidence.backtestId))
+          .limit(1);
+
+        if (btExtrasWf?.resultExtras) {
+          const extrasWf = btExtrasWf.resultExtras as Record<string, unknown>;
+          const wfMeta = extrasWf.wf_metadata as Record<string, unknown> | undefined;
+          const wfMode = wfMeta?.mode as string | undefined;
+
+          // Read strategy DSL to check for Style C runner.
+          // Strategy config lives in the strategies table — read the DSL column.
+          const [stratDsl] = await (tx ?? db)
+            .select({ dsl: strategies.config })
+            .from(strategies)
+            .where(eq(strategies.id, id))
+            .limit(1);
+
+          const dslConfig = stratDsl?.dsl as Record<string, unknown> | undefined;
+          const exitParams = (dslConfig?.exit_params ?? dslConfig?.exitParams) as Record<string, unknown> | undefined;
+          const isStyleC = exitParams?.style === "c" || exitParams?.style === "C";
+
+          if (isStyleC && wfMode === "plain") {
+            const error =
+              `lifecycle.wf_mode_insufficient: strategy ${id} uses Style C runner exits ` +
+              `but walk-forward mode is "plain" — overlapping runner bars leak IS→OOS. ` +
+              `Re-run backtest with WF_MODE=purged_embargo or WF_MODE=cpcv before promoting to PAPER.`;
+            logger.warn(
+              { strategyId: id, fromState, toState, wfMode, isStyleC, backtestId: promotionEvidence.backtestId },
+              error,
+            );
+            insertAuditRow({
+              action: "lifecycle.wf_mode_insufficient",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "failure",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId, wfMode } as Record<string, unknown>,
+              result: {
+                reason: "plain_wf_with_style_c_runner",
+                wf_mode: wfMode,
+                is_style_c: isStyleC,
+                required_modes: ["purged_embargo", "cpcv"],
+              } as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.wf_mode_insufficient audit row write failed"));
+            return { success: false, error };
+          }
+        }
+      } catch (wfModeErr) {
+        // Non-blocking: WF mode gate failure must not abort a promotion.
+        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: wfModeErr }, "lifecycle.wf_mode_gate: read failed (non-blocking — promotion continues)");
+      }
+    }
+
+    // ── Wave 24 Pass 1 — Item 18: PBO overfit gate (TESTING → PAPER) ────────
+    // PBO > 0.5 = more likely overfit than not. Block promotion. (Item 18, W24P1)
+    if (fromState === "TESTING" && toState === "PAPER" && promotionEvidence.backtestId) {
+      try {
+        const [btExtrasPbo] = await (tx ?? db)
+          .select({ resultExtras: backtests.resultExtras })
+          .from(backtests)
+          .where(eq(backtests.id, promotionEvidence.backtestId))
+          .limit(1);
+
+        if (btExtrasPbo?.resultExtras) {
+          const extrasPbo = btExtrasPbo.resultExtras as Record<string, unknown>;
+          const invariants = extrasPbo.invariants as Record<string, unknown> | undefined;
+          const pboFlag = invariants?.pbo_flag as boolean | undefined;
+          const pboData = invariants?.pbo as Record<string, unknown> | undefined;
+
+          // Only block when pbo_flag is explicitly true (not when N/A or missing).
+          if (pboFlag === true) {
+            const pboThreshold = parseFloat(process.env.PBO_PROMOTION_THRESHOLD ?? "0.5");
+            const pboValue = pboData?.value as number | null ?? null;
+            const error =
+              `lifecycle.pbo_overfit_blocked: strategy ${id} has PBO=${pboValue?.toFixed(3) ?? "?"} ` +
+              `which exceeds threshold ${pboThreshold}. ` +
+              `Strategy appears curve-fit — block promotion to PAPER. ` +
+              `Re-run backtest with more walk-forward windows or reduce parameter search space.`;
+            logger.warn(
+              { strategyId: id, fromState, toState, pboValue, pboThreshold, backtestId: promotionEvidence.backtestId },
+              error,
+            );
+            insertAuditRow({
+              action: "lifecycle.pbo_overfit_blocked",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "failure",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: {
+                reason: "pbo_exceeds_threshold",
+                pbo_value: pboValue,
+                pbo_threshold: pboThreshold,
+                pbo_data: pboData,
+              } as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_overfit_blocked audit row write failed"));
+            return { success: false, error };
+          }
+        }
+      } catch (pboErr) {
+        // Non-blocking: PBO gate failure must not abort a promotion.
+        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: pboErr }, "lifecycle.pbo_gate: read failed (non-blocking — promotion continues)");
+      }
+    }
+
+    // ── Wave 24 Pass 1 — Item 19: Honest DSR gate (TESTING → PAPER) ─────────
+    // Honest DSR (multiple-testing corrected) < threshold → block. (Item 19, W24P1)
+    // Uses DSR_HONEST_THRESHOLD env (default 1.5). Old "dsr" field preserved for
+    // back-compat; this gate reads dsr_honest.dsr_passed which is the honest value.
+    if (fromState === "TESTING" && toState === "PAPER" && promotionEvidence.backtestId) {
+      try {
+        const [btExtrasDsr] = await (tx ?? db)
+          .select({ resultExtras: backtests.resultExtras })
+          .from(backtests)
+          .where(eq(backtests.id, promotionEvidence.backtestId))
+          .limit(1);
+
+        if (btExtrasDsr?.resultExtras) {
+          const extrasDsr = btExtrasDsr.resultExtras as Record<string, unknown>;
+          const invariants = extrasDsr.invariants as Record<string, unknown> | undefined;
+          const dsrHonest = invariants?.dsr_honest as Record<string, unknown> | undefined;
+
+          // Only gate when dsr_honest is present and not_applicable is not set.
+          if (dsrHonest && !dsrHonest.not_applicable) {
+            const dsrPassed = dsrHonest.dsr_passed as boolean | undefined;
+            const dsrValue = dsrHonest.dsr as number | null ?? null;
+            const nTrials = dsrHonest.n_trials as number | null ?? null;
+            const dsrThreshold = parseFloat(process.env.DSR_HONEST_THRESHOLD ?? "1.5");
+
+            if (dsrPassed === false) {
+              const error =
+                `lifecycle.dsr_honest_blocked: strategy ${id} has honest DSR=${dsrValue?.toFixed(3) ?? "?"} ` +
+                `(threshold ${dsrThreshold}, n_trials=${nTrials}). ` +
+                `Multiple-testing correction reduces confidence in this edge. ` +
+                `Increase OOS track record or reduce parameter search space before promoting to PAPER.`;
+              logger.warn(
+                { strategyId: id, fromState, toState, dsrValue, dsrThreshold, nTrials, backtestId: promotionEvidence.backtestId },
+                error,
+              );
+              insertAuditRow({
+                action: "lifecycle.dsr_honest_blocked",
+                entityType: "strategy",
+                entityId: id,
+                decisionAuthority: "gate",
+                status: "failure",
+                input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+                result: {
+                  reason: "honest_dsr_below_threshold",
+                  dsr_honest: dsrHonest,
+                  dsr_threshold: dsrThreshold,
+                } as Record<string, unknown>,
+                correlationId: options.correlationId ?? null,
+              }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.dsr_honest_blocked audit row write failed"));
+              return { success: false, error };
+            }
+          }
+        }
+      } catch (dsrErr) {
+        // Non-blocking: DSR gate failure must not abort a promotion.
+        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: dsrErr }, "lifecycle.dsr_honest_gate: read failed (non-blocking — promotion continues)");
       }
     }
 
@@ -1944,6 +2138,102 @@ export class LifecycleService {
             correlationId,
           }).catch(() => {});
           continue;
+        }
+
+        // ── Wave 24 Item 9: B14 Survival Twin HARD gate: PAPER → DEPLOY_READY ──
+        // PropScorer 2026-03: Topstep documented $40K payout-denial bans for
+        // consistency violations. B14 must HARD-block before any live payout claim.
+        // Env: B14_HARD_GATE_ENABLED (default "true") — set "false" for emergency disable.
+        const b14HardGateEnabled = (process.env.B14_HARD_GATE_ENABLED ?? "true") !== "false";
+        if (b14HardGateEnabled) {
+          try {
+            const [latestBtForB14] = await db
+              .select({ gateResult: backtests.gateResult, resultExtras: backtests.resultExtras })
+              .from(backtests)
+              .where(
+                and(
+                  eq(backtests.strategyId, s.id),
+                  eq(backtests.status, "completed"),
+                ),
+              )
+              .orderBy(desc(backtests.createdAt))
+              .limit(1);
+
+            if (latestBtForB14?.gateResult) {
+              const b14Gate = latestBtForB14.gateResult as Record<string, unknown>;
+              // survival_twin.passed=false → HARD block.
+              const survivalTwin = b14Gate.survival_twin as Record<string, unknown> | undefined;
+
+              // 40% single-day consistency cap check (Topstep documented rule).
+              // If any single backtest day's P&L > 40% of payout-window total P&L → violation.
+              let consistencyViolation = false;
+              if (latestBtForB14.resultExtras) {
+                const extras = latestBtForB14.resultExtras as Record<string, unknown>;
+                const dailyPnls = (extras.daily_pnls ?? extras.daily_pnl_series) as Record<string, number> | number[] | undefined;
+                if (dailyPnls) {
+                  const pnlValues = Array.isArray(dailyPnls)
+                    ? dailyPnls
+                    : Object.values(dailyPnls as Record<string, number>);
+                  const positiveDays = pnlValues.filter((v) => v > 0);
+                  const windowTotal = positiveDays.reduce((a, b) => a + b, 0);
+                  if (windowTotal > 0) {
+                    const maxDay = Math.max(...positiveDays);
+                    const maxDayPct = maxDay / windowTotal;
+                    if (maxDayPct > 0.40) {
+                      consistencyViolation = true;
+                      logger.warn(
+                        { strategyId: s.id, maxDayPct: maxDayPct.toFixed(3), windowTotal },
+                        "B14: 40% single-day consistency violation detected",
+                      );
+                    }
+                  }
+                }
+              }
+
+              const b14Failed = (survivalTwin && survivalTwin.passed === false) || consistencyViolation;
+              if (b14Failed) {
+                const blockReason = consistencyViolation
+                  ? "b14_consistency_40pct_violation"
+                  : "b14_survival_twin_failed";
+                logger.warn(
+                  { strategyId: s.id, blockReason, survivalTwin, consistencyViolation, transition: "PAPER→DEPLOY_READY" },
+                  "B14 Survival Twin HARD gate BLOCKED PAPER→DEPLOY_READY promotion",
+                );
+                await db.insert(auditLog).values({
+                  action: "lifecycle.b14_hard_blocked",
+                  entityId: s.id,
+                  entityType: "strategy",
+                  status: "failure",
+                  decisionAuthority: "gate",
+                  input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                  result: {
+                    reason: blockReason,
+                    survival_twin: survivalTwin ?? null,
+                    consistency_violation: consistencyViolation,
+                    b14_hard_gate_enabled: true,
+                  },
+                  correlationId,
+                }).catch((auditErr) => {
+                  logger.warn({ strategyId: s.id, err: auditErr }, "B14 audit insert failed (non-blocking)");
+                });
+                continue;
+              }
+            }
+            // No gateResult or survival_twin data → log advisory, allow through
+            // (legacy backtests pre-B14 don't have this data).
+          } catch (b14Err) {
+            // Fail-open: B14 gate read failure is non-blocking (survival_twin is
+            // computed post-backtest; early strategies may not have the data yet).
+            logger.warn(
+              { strategyId: s.id, err: b14Err },
+              "B14 Survival Twin gate: read failed (non-blocking — promotion continues)",
+            );
+          }
+        } else {
+          logger.warn(
+            { strategyId: s.id },
+            "B14 Survival Twin HARD gate DISABLED via B14_HARD_GATE_ENABLED=false — advisory only",
+          );
         }
 
         const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined });
