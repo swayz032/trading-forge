@@ -30,22 +30,35 @@ Pushed `0e1c993..b1341d0` to `feature/deep-analysis-pipeline`.
 - Investigated Openclaw scout-bot DM channel: massive recurring `HTTP 404: model 'qwen3-coder:30b' not found` errors from 5/12 through 5/18. Verified Ollama state on tower — `qwen3-coder:30b` not installed; canonical local model per Pass 21 (2026-05-12) migration is `qwen2.5-coder:7b`. Found 1 orphaned hardcoded reference at `src/engine/parameter_evolver.py:22` that Pass 21 missed. Fixed to env-overridable with default `qwen2.5-coder:7b`; updated `evolution-service.ts` header comment + `openai-proxy.ts` error-message reference + CLAUDE.md §15 tech-stack line.
 - Investigated **Trading Forge server #critical-alerts** channel: 1 P0 alert at today 4:22 AM — `Boot Migration Blocked — pg_dump Unavailable`. **73 migrations** stacked unapplied (0066 → 0138). Root cause: Wave 24 Pass 2 operator carry-forward never resolved (`BOOT_MIGRATION_ALLOW_NO_BACKUP=true` was never set in tower `.env`; Windows has no native `pg_dump`; boot-migration runner correctly fail-closed on every backend restart since Wave 24 close-out). **FIXED:** appended `BOOT_MIGRATION_ALLOW_NO_BACKUP=true` to tower `.env` with documented rationale. Operator must restart backend to apply the 73 pending migrations via `information_schema` JSON backup fallback.
 
-**Verification:**
+**Phase F — Post-restart boot-migration RE-failure + master-script execution on prod:**
+- Operator restarted NSSM `TradingForgeAPI` after Phase E `.env` fix. Backend went into restart loop — Discord #alerts channel fired 59 identical CRITICALs since 4:36 AM all titled `BOOT BLOCKED — Migration Failed: 0066_adversarial_stress_runs`. Boot runner kept attempting to CREATE TABLE `adversarial_stress_runs` which Railway prod already has (applied historically via `scripts/apply-XXXX.mjs` pattern). The `BOOT_MIGRATION_ALLOW_NO_BACKUP=true` change unblocked the backup step but the migration runner itself was the wrong tool for this schema state.
+- **Root-cause analysis**: Boot-migration-runner was designed for fresh local dev DBs; on this tower it's pointing at Railway prod which has 73 migrations applied via direct scripts that never wrote tracking rows to `drizzle.__drizzle_migrations`. The runner therefore sees 73 "pending" migrations and tries to re-create existing tables — all fail with "relation already exists" cascading errors.
+- **Fix**: appended `BOOT_MIGRATION_ENABLED=false` to tower `.env` with documented rationale comment. Operator now needs ONE more NSSM restart for backend to come up clean (boot runner skips entirely; Railway prod schema authoritative via existing script-based apply pattern).
+- **Master scripts ran on prod against Railway DB:**
+  - `scripts/finalize-wave25-pass2-master-closeout.mjs` — initially failed twice: (a) `column "metadata" of relation "audit_log" does not exist` — INSERT referenced nonexistent `metadata` column; (b) entity_id type mismatch — `'wave-25-pass-2'` is not a UUID. Fixed both: merged orchestration metadata into `result` jsonb under `orchestration_metadata` key, added `entity_label` field, set `entity_id=NULL` (column is nullable per schema.ts auditLog). Re-ran successfully: **audit row `2222cc26-0af0-478a-bb4a-93e9cca98aa9` written 2026-05-24T08:46:45.397Z** with action `wave.25_pass2_master_closed`.
+  - `scripts/wave25-style-d-legacy-backfill.ts --dry-run` — initially failed with drizzle `Cannot convert undefined or null to object` at `orderSelectedFields`. Root cause: SELECT referenced `paperPositions.strategyId` which does not exist on the schema (strategy is reached via `sessionId → paperSessions → strategyId` join). Removed 3 references (interface field, SELECT clause, audit-row result jsonb). Re-ran successfully: **DRY-RUN found 0 legacy Style D positions to migrate** — backfill is a no-op on this prod DB. The defensive `style_d_handler` branch in `paper-execution-service.ts:2214-2259` remains dead code; Wave 26 candidate to remove it after 30 days of zero `position.exit_style_migrated` events (which will now be every day, since the script found 0 positions).
+- Phase F commit: `6a594ee` — `wave25-pass2-script-fixes: master closeout + style-d backfill ran GREEN on prod`. Pushed to `origin/feature/deep-analysis-pipeline`.
+
+**Verification (final state):**
 - All Phase C tests GREEN (50 new tests across 3 workers); Wave 24 baseline 182/182 preserved; Wave 23H baseline 397/397 preserved.
 - 3 CI hard gates GREEN: `system-map:check` exit 0; `check:production-isolation` clean; `check:2026-compliance` OK.
-- 7 commits pushed to `origin/feature/deep-analysis-pipeline`: `d23238c`, `59c9b87`, `35b82f4`, `0e1c993`, `c5d3bd8`, `b1341d0`, `d9d747f`.
-- Discord triage: 4 file edits (parameter_evolver.py, evolution-service.ts, openai-proxy.ts, CLAUDE.md §15) + 1 .env append (BOOT_MIGRATION_ALLOW_NO_BACKUP=true). Final commit pending.
+- **10 commits** pushed to `origin/feature/deep-analysis-pipeline`: `d23238c`, `59c9b87`, `35b82f4`, `0e1c993`, `c5d3bd8`, `b1341d0`, `d9d747f`, `69b1a83` (Phase E triage), `6a594ee` (Phase F script fixes), plus this AGENT-LOGS update.
+- Master close-out audit row written to prod: `2222cc26-0af0-478a-bb4a-93e9cca98aa9`.
+- Style D legacy backfill: 0 positions on prod — no-op confirmed.
 
-**Known-facts updates:**
-- The `qwen3-coder:30b → qwen2.5-coder:7b` migration is now complete in source. Pin-worthy note: Pass 21 left `parameter_evolver.py` as the lone orphaned caller — caught by Discord-driven triage 12 days after migration.
-- Boot-migration runner on Windows tower MUST run with `BOOT_MIGRATION_ALLOW_NO_BACKUP=true` or supply native `pg_dump` — fail-closed default is correct posture but operator must opt in once.
+**Known-facts updates (pin-worthy):**
+- The `qwen3-coder:30b → qwen2.5-coder:7b` migration is now complete in source. Pass 21 left `parameter_evolver.py` as the lone orphaned caller — caught by Discord-driven triage 12 days after migration.
+- Boot-migration runner is INCOMPATIBLE with the Railway-prod-via-scripts deployment pattern. Set `BOOT_MIGRATION_ENABLED=false` on any tower pointed at a Railway DB whose migrations were applied historically via `scripts/apply-XXXX.mjs` (no `__drizzle_migrations` tracking rows). Boot runner is fine for fresh local dev DBs or any DB where Drizzle migrate has always been the only apply path. Wave 26 candidate: detect this state at boot (count `drizzle.__drizzle_migrations` rows; if 0 and pending > 5, refuse to auto-apply and Discord CRITICAL with diagnostic + opt-in env var).
+- `audit_log` table has NO `metadata` column on Railway prod (despite some recent code paths assuming one). Future agents writing direct INSERTs must merge any metadata into the `result` jsonb. The architect-generated `finalize-wave25-pass2-master-closeout.mjs` referenced `metadata` — this would have been caught earlier if drift detection ran on raw SQL INSERTs, not just Drizzle ORM calls.
+- `paper_positions` has NO `strategyId` column — strategy is reached only via `sessionId → paperSessions → strategyId`. Future agents writing position-level queries needing strategy must JOIN, not direct-select.
 
 **Carry-forward for next session:**
-- **Operator action (P0):** Restart `TradingForgeAPI` NSSM service to trigger boot-migration runner with the new env var. Expect 73 migrations to apply via JSON backup fallback. Watch Discord for `migration.auto_applied` audit events and any `migration.auto_apply_failed` Discord CRITICAL.
-- **Operator action (P1):** Commit + push the parameter_evolver fix + .env change (parent-claude final session commit pending).
+- **Operator action (P0):** ONE more NSSM `TradingForgeAPI` restart so `BOOT_MIGRATION_ENABLED=false` env var loads. Expected: backend boots clean, Discord alert flood stops.
 - 2 pre-existing wave25 test failures (`payout-audit-packet`, `htf-narrative-persistence`) — unrelated to Pass 2; warrant a dedicated cleanup pass.
 - 3 deleted `.claude/agents/*.md` files in working tree from Wave 24 — operator decision pending (commit deletions or restore).
 - Discord 2-channel split (operator-technical + family-plain-english) — A-3 family postscript helper now in place; channel routing remains carry-forward when family distribution goes live.
+- Wave 26 candidate: boot-migration-runner needs to detect "Railway-prod-via-scripts" state and abstain instead of looping (see Known-facts above).
+- Wave 26 candidate: remove `style_d_handler` branch entirely after 30 days of confirmed zero legacy Style D positions (today's prod DRY-RUN was the first such confirmation).
 
 ---
 
