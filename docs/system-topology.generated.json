@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T10:33:52.550Z",
+  "generatedAt": "2026-05-24T10:53:40.070Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,8 +15,8 @@
     ]
   },
   "counts": {
-    "routes": 69,
-    "schedulerJobs": 80,
+    "routes": 70,
+    "schedulerJobs": 82,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 26,
@@ -88,6 +88,7 @@
     "/api/survival",
     "/api/synthetic-black-swan",
     "/api/tournament",
+    "/api/trade-journal",
     "/api/tradingview",
     "/api/validation",
     "/api/validation-cadence",
@@ -145,8 +146,10 @@
     "n8n-health-check",
     "n8n-workflow-sync",
     "naked-poc-sync-daily",
+    "narrative-state-tracker",
     "nightly-critique",
     "paper-vs-backtest",
+    "pattern-aggregator",
     "pipeline-resume-drain",
     "portfolio-correlation",
     "pre-market-briefing-discord",
@@ -912,10 +915,13 @@
       "databaseTables": 95
     },
     "missingRoutes": [
-      "/api/consistency"
+      "/api/consistency",
+      "/api/trade-journal"
     ],
     "missingSchedulerJobs": [
-      "consistency-tracker-daily-digest"
+      "consistency-tracker-daily-digest",
+      "narrative-state-tracker",
+      "pattern-aggregator"
     ],
     "missingEngineSubsystems": [],
     "missingDatabaseTables": [

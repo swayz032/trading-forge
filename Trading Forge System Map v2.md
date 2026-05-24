@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-24T10:33:52.550Z`.
+Updated automatically from the repo on `2026-05-24T10:53:40.070Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,8 +11,8 @@ Updated automatically from the repo on `2026-05-24T10:33:52.550Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `operator-halt-only, tradingview_deploy`
-- API routes tracked: `69`
-- Scheduler jobs tracked: `80`
+- API routes tracked: `70`
+- Scheduler jobs tracked: `82`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -53,8 +53,8 @@ Updated automatically from the repo on `2026-05-24T10:33:52.550Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `33`
-- Route coverage: `68/69`
-- Scheduler coverage: `79/80`
+- Route coverage: `68/70`
+- Scheduler coverage: `79/82`
 - Engine coverage: `26/26`
 - Database coverage: `95/96`
 - Autonomous subsystems with audit coverage: `31/33`
@@ -251,6 +251,7 @@ Updated automatically from the repo on `2026-05-24T10:33:52.550Z`.
 - `/api/survival`
 - `/api/synthetic-black-swan`
 - `/api/tournament`
+- `/api/trade-journal`
 - `/api/tradingview`
 - `/api/validation`
 - `/api/validation-cadence`
@@ -308,8 +309,10 @@ Updated automatically from the repo on `2026-05-24T10:33:52.550Z`.
 - `n8n-health-check`
 - `n8n-workflow-sync`
 - `naked-poc-sync-daily`
+- `narrative-state-tracker`
 - `nightly-critique`
 - `paper-vs-backtest`
+- `pattern-aggregator`
 - `pipeline-resume-drain`
 - `portfolio-correlation`
 - `pre-market-briefing-discord`
