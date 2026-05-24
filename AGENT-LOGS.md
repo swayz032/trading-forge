@@ -6664,6 +6664,70 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-24 trading-forge-architect — Wave 25 Pass 2 MASTER ORCHESTRATION (3 audits → 3 workers → close-out)
+
+**Mission:** Phase D master close-out for Wave 25 Pass 2. Verify Phase C worker GREEN status (paper-parity, observability-reliability, backtest-core). Run all 3 CI hard gates. Confirm baseline preservation. Catch false-positive corrections. Write System Map §2f, CLAUDE.md §2 update, audit row script + companion JSON, memory entry, this master AGENT-LOGS entry.
+
+**Phase A — 3 parallel audits (inputs):**
+- accuracy-validator → 3 RED + 2 YELLOW + 11 GREEN-confirmed + 2 false-positives caught
+- autonomous-readiness → VACATION-SAFE with 3 conditions (A-1, A-2, A-3)
+- institutional-edge-researcher → overall 7.2/10; 1 RED (Inst-10 drawdown-room sizing), 2 YELLOW (Inst-7 TopstepX latency deferred, Inst-8 W25.2 ablation)
+
+**Phase B — 13-item ranked backlog** synthesized from the 3 audits.
+
+**Phase C — 3 parallel worker subagents shipped GREEN:**
+| Agent | Items | Commit | Tests |
+|---|---|---|---|
+| paper-parity | A-1 (Path C try/catch), R-1 (BiasStateForSignal typed structureState), Inst-10 (drawdown-room sizing TS+Python parity), Y-2 (Style D backfill script) | `c5d3bd8` + session log `b1341d0` | 23 vitest + 13 pytest |
+| observability-reliability | R-3 (weekly drift canonical action name), Y-1 (drift cron pipeline-gate-exempt), A-2 (n8n drift weekly + monthly crons), A-3 (family-grade alert postscripts) | `35b82f4` + session log `0e1c993` | 14 vitest |
+| backtest-core | Inst-8 (B15 factor ablation hook + CLAUDE.md §12 hard gate row), Inst-9 (CPCV Bagged future-work note) | `d23238c` + session log `59c9b87` | 13 pytest |
+| architect sibling commit | weighted scoring + structure engine + killzone early incorporation | `4f990c4` | (included Pass 1 close-out files) |
+
+**Phase D — architect master close-out (this session):**
+
+- **R-2 system map drift** — Already cleared in Pass 1 architect close-out (`4f990c4`). `npm run system-map:check` exits 0, `status: ok`, `driftItems: []`. `/api/b15-robustness` already in registered routes list; W25.1/W25.2/W25-pass-2 surfaces present. No additional registration work needed.
+
+- **CI hard gates (all 3 GREEN):**
+  - `npm run system-map:check` → EXIT 0, status `ok`, driftItems `[]` (68 routes, 76 scheduler jobs, 28 canonical workflows, 26 engine subsystems, 94 DB tables, 22 registry subsystems)
+  - `npm run check:production-isolation` → EXIT 0 — CLEAN (4 files checked, 0 violations)
+  - `npm run check:2026-compliance` → EXIT 0 — OK (MFFU + Topstep aligned with canonical 2026 docs)
+
+- **Test fleet baseline preserved:**
+  - `wave24` → 19 files / **182 tests GREEN** (matches Wave 24 close-out)
+  - `wave23h` → 23 files / **397 tests GREEN** (matches W23H FINAL close-out)
+  - `wave25-` → 281 pass / 2 fail (2 pre-existing failures NOT introduced by Phase C: `wave25-payout-audit-packet.test.ts` from commit `89e802e` + `wave25-htf-narrative-persistence.test.ts` from parallel HTF work stream)
+
+- **False-positive corrections verified (both held):**
+  - **Migration journal idx=137 collision** — FALSE POSITIVE. `meta/_journal.json` shows `0134_bias_state_structure_state` at idx **136**, `0135_strategies_confluence_scoring` at idx **137**. No collision. (Pass 1 architect already resolved.)
+  - **`computeRiskDerivedContracts` zero-callers** — FALSE POSITIVE. Confirmed production callers in `paper-signal-service.ts`, `broker-router.ts`, `framework-overlay.ts`, `risk-sizing.ts`.
+
+- **Wave 25 Pass 2 master audit row** — `scripts/finalize-wave25-pass2-master-closeout.mjs` written (idempotent; operator runs against prod DB). Companion `docs/wave-25-pass-2-master-audit-row.json` written with full payload for traceability. Operator runs once to insert `wave.25_pass2_master_closed` row.
+
+- **CLAUDE.md §2** — appended Wave 25 Pass 2 close-out paragraph below the existing Wave 25 active block.
+
+- **Trading Forge System Map v2.md §2f** — added Wave 25 Pass 2 close-out registry section: Phase A findings, 3-track shipment table, 4 deferred items, 2 cross-audit false-positives caught, surfaces registered (env vars, jobs, audit actions, SSE events, hard gates, scripts), baseline preservation, verification, operator carry-forwards.
+
+- **Memory entry** — `project_wave25_pass2_complete_2026_05_24.md` written; MEMORY.md index updated with new line under ## Project (Wave 24 moved to second position).
+
+**Verification:**
+- All 3 CI hard gates EXIT 0 (output captured above)
+- All 3 wave-filter baselines preserved (Wave 24 / Wave 23h) or expanded (Wave 25)
+- 2 false-positive verifications held
+- No new tests added in Phase D (architect close-out is docs + registry + memory only)
+- Working tree restrictions honored: did NOT touch HTF narrative parallel work stream (migrations 0137/0138, `htf_narrative.py`, `wave25-5tf-compile.test.ts`), did NOT delete `.claude/agents/*.md` files in working tree (operator decision), did NOT run `npm run db:migrate` or other DB-mutating commands
+
+**Known-facts updates:**
+- `meta/_journal.json` idx-to-tag map confirmed: 134→`0131_operator_absent_pending`, 135→`0132_hmm_regime_overlay`, 136→`0134_bias_state_structure_state`, 137→`0135_strategies_confluence_scoring`, 138→`0136_b15_parameter_robustness`, 139→`0137_bias_state_htf_narrative`, 140→`0138_strategies_5tf_hierarchy`. NO collisions.
+- 9 of 13 Wave 25 Pass 2 backlog items shipped; the 4 deferred items are documented with explicit rationale (no payout-denial / safety implication).
+
+**Carry-forward for next session:**
+1. Operator: run `node scripts/finalize-wave25-pass2-master-closeout.mjs` to insert `wave.25_pass2_master_closed` audit row in prod DB
+2. Investigate 2 pre-existing wave25 vitest failures (`payout-audit-packet` + `htf-narrative-persistence`) — not Pass 2 scope
+3. Inst-7 TopstepX latency item — apply when operator opens TopstepX account
+4. 3 `.claude/agents/*.md` deletions in working tree — operator decision per Wave 24 carry-forward
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

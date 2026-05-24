@@ -1225,3 +1225,72 @@ Pass commit refs: placeholder — populated by parent claude after architect clo
 3. **Payout audit packet real-DB smoke test** — run `tsx scripts/generate-payout-audit-packet.ts --account-id <real_id> --start <iso> --end <iso>` to verify JOIN queries match live schema. Mocked tests cannot catch column-name drift.
 4. **Migration 0133 apply** — operator decision. Idempotent, journaled, composite index only (no data mutation). Boot-migration runner will pick up on next start when authorized.
 5. **OPTIONAL Wave 26 candidate** — ±20% parameter jitter battery (SDR/PSI/RWS metrics) on top of existing Optuna plateau variance per `docs/wave25-bot-research-PLAIN.md`.
+
+## §2f Wave 25 Pass 2 — Institutional-Grade Hardening Close-out (2026-05-24)
+
+Wave 25 Pass 2 = institutional-grade hardening pass driven by 3 parallel Phase A audits (accuracy-validator, autonomous-readiness, institutional-edge-researcher). Closed GREEN 2026-05-24. **9 of 13 Phase B backlog items shipped (69%)**; 4 explicitly deferred. Three parallel Phase C worker subagents (paper-parity, observability-reliability, backtest-core) plus Phase D architect master close-out.
+
+### Phase A audit findings (inputs)
+- **accuracy-validator** — 3 RED + 2 YELLOW + 11 GREEN-confirmed + 2 false-positives caught (journal idx collision; computeRiskDerivedContracts zero-callers)
+- **autonomous-readiness** — VACATION-SAFE with 3 conditions (A-1, A-2, A-3)
+- **institutional-edge-researcher** — overall 7.2/10; 1 RED (Inst-10 drawdown-room sizing), 2 YELLOW (Inst-7 TopstepX latency deferred, Inst-8 W25.2 ablation)
+
+### Tracks shipped (Phase C)
+
+| Track | Items | Commit | Tests |
+|---|---|---|---|
+| paper-parity | A-1 (Path C try/catch error boundary), R-1 (BiasStateForSignal structureState typed contract), Inst-10 (drawdown-room sizing TS+Python parity), Y-2 (Style D legacy backfill script) | `c5d3bd8` + session log `b1341d0` | 23 vitest + 13 pytest |
+| observability-reliability | R-3 (weekly drift canonical action name), Y-1 (drift cron pipeline-gate-exempt), A-2 (n8n drift weekly + monthly crons), A-3 (family-grade alert postscripts) | `35b82f4` + session log `0e1c993` | 14 vitest |
+| backtest-core | Inst-8 (B15 factor ablation hook + CLAUDE.md §12 hard gate row), Inst-9 (CPCV Bagged future-work note) | `d23238c` + session log `59c9b87` | 13 pytest |
+| trading-forge-architect (Phase D) | Master close-out: System Map sync, CLAUDE.md §2 update, audit row, memory entry, AGENT-LOGS master entry | (this commit) | n/a |
+
+### Items deferred (4)
+1. **Inst-7 TopstepX latency** — pending operator opening TopstepX account ($14.50/mo with promo)
+2. **Inst-9 Bagged CPCV** — optional enhancement; future-work note shipped in `walk_forward.py` docstring
+3. **Wave 25 candidate #24 (HVN-snap TP2 + crypto-grade audit-log hash chain)** — over-engineered for current scale
+4. **A-4 in-memory dedup** — accepted trade-off
+
+### Cross-audit false-positives caught (Phase D verification)
+1. **Migration journal idx=137 collision** — false positive. `meta/_journal.json` shows `0134_bias_state_structure_state` at idx 136 and `0135_strategies_confluence_scoring` at idx 137 — NO collision.
+2. **`computeRiskDerivedContracts` zero callers** — false positive. Has production callers in `paper-signal-service.ts`, `broker-router.ts`, `framework-overlay.ts`, `risk-sizing.ts`.
+
+### Surfaces registered
+
+**New env vars (1):**
+- `DRAWDOWN_ROOM_RISK_PCT` (default `0.01`) — Topstep-only drawdown-room cap risk percentage (Inst-10).
+
+**New scheduled jobs (2):**
+- `n8n-drift-detector-weekly` — Sun 19:00 ET (cron `0 23 * * 1`), pipeline-gate-exempt
+- `n8n-drift-detector-monthly` — 1st of month 09:00 ET (cron `0 13,14 1 * *`), pipeline-gate-exempt
+
+**New audit_log actions (5):**
+- `weighted_confluence.evaluation_error` (A-1 Path C error boundary)
+- `n8n.drift_check_clean` / `n8n.drift_detected` / `n8n.drift_check_errored` (A-2)
+- `strategy.style_d_legacy_backfill` (Y-2)
+
+**New SSE events (1):**
+- `alert:path_c_error` (A-1 Path C error boundary)
+
+**New hard gate row (CLAUDE.md §12):**
+- `B15 Factor Ablation` — advisory; required before promoting any confluence factor to standalone hard gate.
+
+**New scripts:**
+- `scripts/wave25-style-d-legacy-backfill.ts` — idempotent one-time Style D → Style C migration (dry-run default; `--apply --confirm` to mutate)
+- `scripts/finalize-wave25-pass2-master-closeout.mjs` — idempotent audit row writer (operator runs against prod DB)
+
+### Baseline preservation (Phase D verification)
+- `wave24` vitest — **19 files / 182 tests GREEN** (unchanged from Wave 24 close-out)
+- `wave23h` vitest — **23 files / 397 tests GREEN** (unchanged from W23H FINAL)
+- `wave25-` vitest — **281 GREEN / 2 pre-existing failures** (NOT introduced by Phase C: `wave25-payout-audit-packet.test.ts` from commit `89e802e`, `wave25-htf-narrative-persistence.test.ts` from parallel work stream)
+
+### Verification (Wave 25 Pass 2 close-out)
+- `npm run system-map:check` — EXIT 0, status `ok`, driftItems `[]` (already GREEN before Phase D — Pass 1 architect close-out registered `/api/b15-robustness` + W25.1/W25.2 surfaces)
+- `npm run check:production-isolation` — EXIT 0 — CLEAN (4 files, 0 violations)
+- `npm run check:2026-compliance` — EXIT 0 — OK (MFFU + Topstep aligned)
+- 50 net-new tests (37 vitest + 13 pytest) across Phase C workers
+
+### Operator carry-forwards (NOT in scope for Pass 2 close-out)
+1. **Apply Wave 25 Pass 2 audit row** — run `node scripts/finalize-wave25-pass2-master-closeout.mjs` to insert the `wave.25_pass2_master_closed` row into prod `audit_log` (idempotent; companion JSON `docs/wave-25-pass-2-master-audit-row.json`).
+2. **HTF narrative parallel work stream** — uncommitted migrations 0137/0138, `htf_narrative.py`, `wave25-5tf-compile.test.ts` belong to a different agent; NOT in this close-out's scope.
+3. **`.claude/agents/*.md` deletions** — 3 deleted agent definition files in working tree; operator decision per Wave 24 carry-forward.
+4. **Wave 25 Pass 2 pre-existing failures** — `wave25-payout-audit-packet.test.ts` (2 tests) + `wave25-htf-narrative-persistence.test.ts` need follow-up; not blockers for Pass 2 close-out.

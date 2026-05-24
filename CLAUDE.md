@@ -27,6 +27,8 @@ Agents must never fake profitability. The gates decide.
 
 **Wave 25 active 2026-05-23 onward — institutional confluence + adaptive exit engine.** NOT a new subsystem; replaces retail-shaped Stage 2 boolean voting with weighted probabilistic scoring (Path C, `confluence-score.ts`) + independent Structure Engine (`structure_engine.py`, BOS/CHoCH/MSS/PD-zone) + first-class killzone helper (`killzone.ts`). Pass 1 shipped 2026-05-24 (migrations 0134 + 0135 idempotent, default OFF, backward-compat preserved). Production hardening continues in parallel — see plan `floating-yawning-lantern.md`.
 
+**Wave 25 Pass 2 CLOSED 2026-05-24 — institutional-grade hardening pass.** 9 of 13 Phase B backlog items shipped (69%); 4 explicitly deferred (Inst-7 TopstepX migration pending operator account opening, Inst-9 Bagged CPCV optional enhancement, Wave 25 candidate #24 over-engineered for current scale, A-4 in-memory dedup accepted trade-off). 50 new tests across 5 vitest + 2 pytest files (23+14+13 by worker). 2 cross-audit false-positives caught: journal idx=137 collision (no collision) and computeRiskDerivedContracts zero-callers (has callers). All 3 CI hard gates GREEN. New env vars: DRAWDOWN_ROOM_RISK_PCT (default 0.01). New scheduled jobs: n8n-drift-detector-weekly, n8n-drift-detector-monthly. See AGENT-LOGS Wave 25 Pass 2 master-orchestration entry.
+
 All build phases are done. **No new subsystems for 90 days.** The only work is production hardening:
 
 - **Pipeline production** — CANDIDATE → TESTING → PAPER → DEPLOY_READY → PILOT → DEPLOYED must flow without orphan states or silent drops

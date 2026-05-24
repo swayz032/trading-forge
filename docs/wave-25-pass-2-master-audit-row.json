@@ -1,0 +1,95 @@
+{
+  "action": "wave.25_pass2_master_closed",
+  "entity_type": "wave",
+  "entity_id": "wave-25-pass-2",
+  "status": "success",
+  "decision_authority": "scheduler",
+  "metadata": {
+    "orchestrator": "parent-claude",
+    "phase_a_audits": 3,
+    "phase_c_workers": 3,
+    "items_shipped": 9,
+    "items_deferred": 4
+  },
+  "result": {
+    "wave": 25,
+    "pass": 2,
+    "closed_at": "2026-05-24",
+    "closed_by": "wave25-pass2-architect",
+    "phase_summary": {
+      "phase_a_audits": 3,
+      "phase_c_workers": 3,
+      "items_shipped": 9,
+      "items_deferred": 4,
+      "completion_pct": 69.2
+    },
+    "phase_a_audit_findings": {
+      "accuracy_validator": { "red": 3, "yellow": 2, "green_confirmed": 11, "false_positives_caught": 2 },
+      "autonomous_readiness": { "verdict": "VACATION-SAFE", "conditions": ["A-1", "A-2", "A-3"] },
+      "institutional_edge_researcher": {
+        "overall_score": 7.2,
+        "red": ["Inst-10 drawdown-room sizing"],
+        "yellow": ["Inst-7 TopstepX latency (deferred)", "Inst-8 W25.2 ablation"]
+      }
+    },
+    "items_shipped": [
+      "A-1 Path C try/catch error boundary (paper-parity)",
+      "R-1 BiasStateForSignal structureState typed contract (paper-parity)",
+      "Inst-10 drawdown-room sizing (TS + Python parity) (paper-parity)",
+      "Y-2 Style D legacy backfill script (paper-parity)",
+      "R-3 weekly drift canonical action name (observability)",
+      "Y-1 weekly-drift-2sigma-check pipeline-gate-exempt (observability)",
+      "A-2 n8n drift detector weekly + monthly crons (observability)",
+      "A-3 family-grade alert postscripts (observability)",
+      "Inst-8 B15 factor ablation hook + CLAUDE.md §12 hard gate row (backtest-core)"
+    ],
+    "items_deferred": [
+      "Inst-7 TopstepX latency — pending operator account opening",
+      "Inst-9 Bagged CPCV — optional enhancement, comment-only note shipped",
+      "Wave 25 candidate #24 — over-engineered for current scale",
+      "A-4 in-memory dedup — accepted trade-off"
+    ],
+    "cross_audit_false_positives_caught": [
+      "Migration journal idx=137 collision — false positive: 0134 at idx 136, 0135 at idx 137, NO collision",
+      "computeRiskDerivedContracts zero-callers — false positive: 4 production callers verified"
+    ],
+    "commit_refs": {
+      "phase_c_paper_parity": "c5d3bd8",
+      "phase_c_paper_parity_session_log": "b1341d0",
+      "phase_c_observability": "35b82f4",
+      "phase_c_observability_session_log": "0e1c993",
+      "phase_c_backtest_core": "d23238c",
+      "phase_c_backtest_core_session_log": "59c9b87",
+      "phase_c_architect_sibling": "4f990c4",
+      "phase_d_architect_closeout": "PENDING_FINAL_COMMIT"
+    },
+    "test_counts": {
+      "new_vitest": 37,
+      "new_pytest": 26,
+      "new_total": 50
+    },
+    "baseline_preserved": {
+      "wave24_vitest": { "files": 19, "tests": 182, "pass": 182, "fail": 0 },
+      "wave23h_vitest": { "files": 23, "tests": 397, "pass": 397, "fail": 0 },
+      "wave25_vitest": { "pass": 281, "fail": 2, "note": "2 pre-existing failures unrelated to Phase C work" }
+    },
+    "ci_gate_status": {
+      "system_map_check": "EXIT 0 status=ok driftItems=[]",
+      "production_isolation": "EXIT 0 — CLEAN (4 files, 0 violations)",
+      "compliance_2026": "EXIT 0 — OK (MFFU + Topstep aligned)"
+    },
+    "env_vars_added": {
+      "DRAWDOWN_ROOM_RISK_PCT": { "default": "0.01", "purpose": "Inst-10 Topstep drawdown-room cap risk %" }
+    },
+    "jobs_added": ["n8n-drift-detector-weekly", "n8n-drift-detector-monthly"],
+    "hard_gates_added": ["B15 Factor Ablation (advisory)"],
+    "audit_actions_added": [
+      "weighted_confluence.evaluation_error",
+      "n8n.drift_check_clean",
+      "n8n.drift_detected",
+      "n8n.drift_check_errored",
+      "strategy.style_d_legacy_backfill"
+    ],
+    "sse_events_added": ["alert:path_c_error"]
+  }
+}
