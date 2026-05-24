@@ -25,13 +25,15 @@ Agents must never fake profitability. The gates decide.
 
 **Wave 24 CLOSED 2026-05-23 — 23 of 24 backlog items shipped (95.8%).** Item #24 (HVN-snap TP2 + crypto-grade audit-log hash chain) deferred as optional Wave 25 candidate. 182 vitest tests across 19 `wave24-*.test.ts` files GREEN. All 3 CI hard gates GREEN (system-map:check, production-isolation, 2026-compliance). Migrations `0131_operator_absent_pending.sql` + `0132_hmm_regime_overlay.sql` applied. See `Trading Forge System Map v2.md` §2d for the full close-out registry.
 
+**Wave 25 active 2026-05-23 onward — institutional confluence + adaptive exit engine.** NOT a new subsystem; replaces retail-shaped Stage 2 boolean voting with weighted probabilistic scoring (Path C, `confluence-score.ts`) + independent Structure Engine (`structure_engine.py`, BOS/CHoCH/MSS/PD-zone) + first-class killzone helper (`killzone.ts`). Pass 1 shipped 2026-05-24 (migrations 0134 + 0135 idempotent, default OFF, backward-compat preserved). Production hardening continues in parallel — see plan `floating-yawning-lantern.md`.
+
 All build phases are done. **No new subsystems for 90 days.** The only work is production hardening:
 
 - **Pipeline production** — CANDIDATE → TESTING → PAPER → DEPLOY_READY → PILOT → DEPLOYED must flow without orphan states or silent drops
 - **Lifecycle production** — every state transition atomic + audited via `audit_log` and `lifecycle_transitions`
 - **Bug tracing** — correlation_id propagates end-to-end (bar → handler → DB → SSE → audit_log) so any 90-day-old trade can be reconstructed
 - **Bugs / errors / disconnects / incidents** — fix them where they live; root cause, not workaround
-- **n8n enterprise grade** — every workflow has retry + idempotency + `errorWorkflow` attached to `DGEk1D478xWJClKD` (`0A-health-monitor`, the live global error sink — verified via REST API 2026-05-21; pre-Wave-9 referenced `BbCvlV1ARyyvY3NI` which no longer exists on Railway) + dedupe. Drift detector cron runs monthly.
+- **n8n enterprise grade** — every workflow has retry + idempotency + `errorWorkflow` attached to `DGEk1D478xWJClKD` (`0A-health-monitor`, the live global error sink — verified via REST API 2026-05-21; pre-Wave-9 referenced `BbCvlV1ARyyvY3NI` which no longer exists on Railway) + dedupe. Drift detector runs weekly (Sun 19:00 ET) + monthly (1st of month 09:00 ET). Both are pipeline-gate-exempt (W25P2-A2).
 - **Bottlenecks blocking lifecycle flow** — anything stopping CANDIDATE from reaching DEPLOYED is the priority
 - **Systems live together** — Node ↔ Python ↔ n8n ↔ Postgres ↔ frontend must agree on contracts. No silent drift.
 - **System Map sync mandatory** — after every architectural change, run `npm run system-map:sync` and keep `system-map:check` green
@@ -417,6 +419,8 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 | **DSL Quality Critic (W23F.K + W23F.L)** | graduation | Anti-pattern matches; engine-aware look-ahead; factory conventions pre-filter |
 | **Auditor (W23F live-fix)** | graduation | Schema invariants; accepts both `risk_derived_pyramid` and legacy `profit_tier_pyramid` |
 | **Truthiness Check (B-3)** | post-backtest | Invariant harness (B-2) + parity shadow drift (B-1) — audit_log + Discord CRITICAL + SSE on failure |
+| **B15 Parameter Robustness Battery** | PAPER → DEPLOY_READY | ±20% parameter jitter test — SDR < 0.85 OR PSI > 0.05 OR RWS > 0.20 → block. Advisory-only when B15_BATTERY_ENABLED=false (30-day grandfather). |
+| **B15 Factor Ablation** | confluence factor promotion (advisory) | Required before promoting any confluence factor to standalone hard gate — runs B15 battery twice (with / without factor); delta Sharpe > 0.2 AND delta PF > 0.1 for marginal edge significance. |
 
 ---
 
@@ -472,6 +476,7 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 - **Don't use single global liquidity cap** — per-symbol (MES 100 / MNQ 50 / MCL 30). Override per-strategy only with evidence.
 - **Don't write hit-rate / win-rate targets in spec** — win rate is OBSERVED output, never a design parameter. Gates measure expectancy/PF/Sharpe/regime survival, all hit-rate-agnostic.
 - **Don't preserve LLM-extracted sizing values in framework overlay** — overlay is AUTHORITATIVE, replaces scout-extracted base/tier/cap with operator-canonical Wave 23 values.
+- **Don't deploy a strategy without B15 Parameter Robustness Battery passing.** SDR ≥ 0.85, PSI ≤ 0.05, RWS ≤ 0.20 per QuantForgeAnalytics 2026-05-16 institutional spec — perturbation-fragility kills strategies that survive WF/CPCV/PBO/DSR. Optuna plateau variance is necessary but not sufficient.
 
 ---
 

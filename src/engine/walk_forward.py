@@ -7,6 +7,10 @@ Phase 12 performance fix: OOS windows are now parallelised via
 ProcessPoolExecutor (Option B). Each window is an independent
 IS-train → OOS-test pair on disjoint data slices. Determinism
 is preserved by seeding each worker with (global_seed + window_index).
+
+# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)
+# Optional enhancement for strategies with > 500 trades. Standard CPCV
+# remains the canonical 2026 institutional standard per Wave 24 audit.
 """
 
 from __future__ import annotations
