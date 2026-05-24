@@ -1,5 +1,5 @@
 /**
- * confluence-score.ts — Wave 25 Pass 1, W25.1
+ * confluence-score.ts — Wave 25 Pass 1, W25.1 (VWAP+SMT wired: Pass 5, P5.A3)
  *
  * Weighted probabilistic confluence scoring (Path C) for Stage 2 of the A+ gate.
  *
@@ -22,9 +22,16 @@
  *   satisfied=false sets score=0 and hardBlockTriggered=true, overriding
  *   the weighted sum regardless of other factors.
  *
- * Stub contract: three factor evaluators are stubs pending upstream Pass deliveries.
- *   They MUST emit satisfied=false with a "pending_passX" reason string — they must
- *   NOT throw or return satisfied=true accidentally.
+ * Pass 5 wiring (P5.A3):
+ *   - evalVwapAlignment() reads VWAP bands from ctx.indicators (vwap_band_1s_upper,
+ *     vwap_band_1s_lower, vwap_band_2s_upper, vwap_band_2s_lower) — shipped by P5.A1.
+ *     For Path C (use_weighted_scoring=true), also checks anchored_vwap_* columns in
+ *     ctx.indicators for a confidence boost when price retests anchored VWAP.
+ *   - evalSmtConfirmation() reads ctx.smt_score + ctx.smt_direction from the
+ *     compute_smt_divergence() output (P5.A2). smt_age_bars (already on SignalContext
+ *     from Pass 4) feeds the decay engine — no double-decay applies here.
+ *   - Missing VWAP/SMT data → fail-open (satisfied=false) — conservative.
+ *   - The live Python→TS bridge for SMT in paper-signal-service.ts is P5.A5 scope.
  *
  * Logger import: uses ./logger.js leaf module (feedback_helper_logger_import.md).
  */
@@ -202,10 +209,40 @@ export interface SignalContext {
   // Backward-compat: pre-Pass-4 call sites that don't populate these get the
   // same behavior as before (no decay applied, full weight contribution).
 
+  // ─── W25.8/W25.9 Pass 5: VWAP bands + SMT divergence fields ─────────────────
+  // All optional — when absent, evaluators return satisfied=false (fail-open).
+  // VWAP bands go into ctx.indicators (existing generic record) using the keys
+  // emitted by P5.A1 compute_vwap_with_bands():
+  //   indicators["vwap_band_1s_upper"]  — 1σ upper band
+  //   indicators["vwap_band_1s_lower"]  — 1σ lower band
+  //   indicators["vwap_band_2s_upper"]  — 2σ upper band
+  //   indicators["vwap_band_2s_lower"]  — 2σ lower band
+  // Anchored VWAP columns are injected as indicators["anchored_vwap_<iso>"] where
+  // the ISO timestamp suffix identifies the anchor event. evalVwapAlignment() scans
+  // for any key matching /^anchored_vwap_/ in ctx.indicators.
+  //
+  // SMT divergence fields (P5.A2 compute_smt_divergence() output):
+
+  /**
+   * Continuous [0,1] SMT divergence score from compute_smt_divergence().score.
+   * Passed as the decay confidence input — score IS the confidence; the decay
+   * engine applies smt_age_bars on top (multiplied).
+   * When undefined/null → evalSmtConfirmation returns satisfied=false (unavailable).
+   */
+  smt_score?: number | null;
+
+  /**
+   * Canonical SMT divergence direction string from P5.A2.
+   * Canonical values: "bullish_es_low_nq_higher" | "bearish_es_high_nq_lower"
+   * Other strings (e.g. "none") are treated as no-divergence → not satisfied.
+   */
+  smt_direction?: string | null;
+
   /**
    * Age in bars of the SMT divergence signal.
    * Used by deriveFactorDecay for smt_confirmation.
-   * Populate from the SMT engine output when Pass 5 ships.
+   * Populated from compute_smt_divergence() output — P5.A2.
+   * Pre-Pass-5 call sites may leave this undefined (decay returns 1.0).
    */
   smt_age_bars?: number | null;
 
@@ -469,43 +506,186 @@ function evalLiquidityTargetClear(
 }
 
 /**
- * smt_confirmation — STUB (pending Pass 5 W25.9 smt_divergence.py).
+ * smt_confirmation — Pass 5, W25.9.
+ *
+ * Reads ctx.smt_score + ctx.smt_direction produced by compute_smt_divergence()
+ * (P5.A2, smt_divergence.py). The live Python→TS bridge in paper-signal-service.ts
+ * that populates these fields is P5.A5 scope — until that lands, existing call
+ * sites that don't set smt_score/smt_direction get satisfied=false with
+ * reason="smt_unavailable" (conservative fail-open, same as the prior stub).
+ *
+ * Satisfaction logic:
+ *   Long:  smt_direction starts with "bullish_" AND smt_score >= SMT_MIN_SCORE
+ *   Short: smt_direction starts with "bearish_" AND smt_score >= SMT_MIN_SCORE
+ *
+ * Score value is the raw confidence — the decay engine multiplies smt_age_bars
+ * decay on top via deriveFactorDecay(). Do NOT apply additional decay here.
+ *
+ * Reason strings:
+ *   "smt_unavailable"         — no score/direction in ctx (P5.A5 not yet wired)
+ *   "smt_wrong_direction"     — direction does not match signal side
+ *   "smt_below_threshold"     — direction matches but score < SMT_MIN_SCORE
+ *   "smt_confirmed_<dir>_<score>" — satisfied
  */
+const SMT_MIN_SCORE = 0.5;
+
 function evalSmtConfirmation(
-  _ctx: SignalContext,
+  ctx: SignalContext,
 ): { satisfied: boolean; reason: string } {
-  return { satisfied: false, reason: "smt_pending_pass5" };
+  const score = ctx.smt_score;
+  const direction = ctx.smt_direction;
+
+  // Missing data → fail-open (P5.A5 live bridge not yet wired)
+  if (score === undefined || score === null ||
+      direction === undefined || direction === null) {
+    return { satisfied: false, reason: "smt_unavailable" };
+  }
+
+  const isLong  = ctx.direction === "long";
+  const isBull  = direction.startsWith("bullish_");
+  const isBear  = direction.startsWith("bearish_");
+
+  const directionMatches = isLong ? isBull : isBear;
+
+  if (!directionMatches) {
+    return {
+      satisfied: false,
+      reason: `smt_wrong_direction_signal=${ctx.direction}_smt=${direction}`,
+    };
+  }
+
+  if (score < SMT_MIN_SCORE) {
+    return {
+      satisfied: false,
+      reason: `smt_below_threshold_score=${score.toFixed(3)}_min=${SMT_MIN_SCORE}`,
+    };
+  }
+
+  return {
+    satisfied: true,
+    reason: `smt_confirmed_${direction}_score=${score.toFixed(3)}`,
+  };
 }
 
 /**
- * vwap_alignment — real-ish evaluator using existing session VWAP indicator.
- * Reads indicators.vwap; compares bar.close position relative to vwap in the
- * signal direction. Fails open when vwap indicator is absent (satisfied=false
- * to preserve the conservative character of the weighted model).
+ * vwap_alignment — Pass 5, W25.8.
+ *
+ * Reads session VWAP + 1σ/2σ bands from ctx.indicators (P5.A1 output).
+ * Institutional interpretation: a LONG signal is valid when price is in
+ * DISCOUNT relative to VWAP (mean-reversion bias) or is bouncing off the
+ * lower 1σ band. A SHORT signal is valid when price is in PREMIUM (above VWAP)
+ * or is rejecting the upper 1σ band.
+ *
+ * For Path C (use_weighted_scoring=true), also checks for anchored VWAP columns
+ * in ctx.indicators. If any key matches /^anchored_vwap_/ and price is within
+ * 0.5×ATR of that level, the reason string flags "anchored_vwap_retest" to
+ * signal a higher-confidence setup to the audit trail.
+ *
+ * Fails open when VWAP data is absent (satisfied=false, reason="vwap_unavailable").
+ * Backward-compat: when band indicators are absent, falls back to session VWAP
+ * position check (same as the pre-Pass-5 behavior).
+ *
+ * Reason strings:
+ *   "vwap_unavailable"       — no vwap in ctx.indicators
+ *   "close_below_vwap"       — long + close < vwap (DISCOUNT bias — satisfied)
+ *   "close_above_vwap"       — short + close > vwap (PREMIUM bias — satisfied)
+ *   "band_1s_reject"         — close near 1σ band in signal direction — satisfied
+ *   "anchored_vwap_retest"   — close within 0.5×ATR of an anchored VWAP — satisfied
+ *   "close_above_vwap_long_not_discount" — long but price in premium — not satisfied
+ *   "close_below_vwap_short_not_premium" — short but price in discount — not satisfied
+ *
+ * No double-decay: the decay engine handles vwap_anchor_age_bars via deriveFactorDecay.
+ * This function does NOT apply time penalties.
  */
 function evalVwapAlignment(
   ctx: SignalContext,
 ): { satisfied: boolean; reason: string } {
   const vwap = ctx.indicators["vwap"];
+
   if (vwap === undefined || !Number.isFinite(vwap)) {
-    return { satisfied: false, reason: "vwap_indicator_absent" };
+    return { satisfied: false, reason: "vwap_unavailable" };
   }
+
   const close = ctx.bar.close;
-  if (ctx.direction === "long") {
-    const satisfied = close > vwap;
+  const atr   = ctx.indicators["atr"];
+
+  // ── Band indicators (P5.A1) ─────────────────────────────────────────────────
+  const band1sUpper = ctx.indicators["vwap_band_1s_upper"];
+  const band1sLower = ctx.indicators["vwap_band_1s_lower"];
+
+  // ── Anchored VWAP scan (Path C bonus) ───────────────────────────────────────
+  // Scan for any anchored_vwap_<iso> key in indicators. If found and price is
+  // within 0.5×ATR of it, flag as anchored retest regardless of direction check.
+  let anchoredVwapRetest = false;
+  const atrHalf = (atr !== undefined && Number.isFinite(atr) && atr > 0)
+    ? atr * 0.5
+    : null;
+  if (atrHalf !== null) {
+    for (const [key, val] of Object.entries(ctx.indicators)) {
+      if (
+        key.startsWith("anchored_vwap_") &&
+        val !== undefined &&
+        Number.isFinite(val) &&
+        Math.abs(close - val) <= atrHalf
+      ) {
+        anchoredVwapRetest = true;
+        break;
+      }
+    }
+  }
+
+  // Anchored VWAP retest is a high-confidence setup — satisfied in either direction
+  if (anchoredVwapRetest) {
+    return { satisfied: true, reason: "anchored_vwap_retest" };
+  }
+
+  const isLong = ctx.direction === "long";
+
+  // ── Band 1σ rejection check ──────────────────────────────────────────────────
+  // Long: price at/near lower 1σ band → bouncing off discount extreme
+  // Short: price at/near upper 1σ band → rejecting premium extreme
+  if (isLong) {
+    if (
+      band1sLower !== undefined &&
+      Number.isFinite(band1sLower) &&
+      close <= band1sLower
+    ) {
+      return { satisfied: true, reason: "band_1s_reject" };
+    }
+
+    // Standard VWAP discount check: close < vwap (in discount zone)
+    if (close < vwap) {
+      return {
+        satisfied: true,
+        reason: `close_below_vwap_close=${close.toFixed(2)}_vwap=${vwap.toFixed(2)}`,
+      };
+    }
+
     return {
-      satisfied,
-      reason: satisfied
-        ? `long_close_${close.toFixed(2)}_above_vwap_${vwap.toFixed(2)}`
-        : `long_close_${close.toFixed(2)}_below_vwap_${vwap.toFixed(2)}`,
+      satisfied: false,
+      reason: `close_above_vwap_long_not_discount_close=${close.toFixed(2)}_vwap=${vwap.toFixed(2)}`,
     };
   } else {
-    const satisfied = close < vwap;
+    // Short direction
+    if (
+      band1sUpper !== undefined &&
+      Number.isFinite(band1sUpper) &&
+      close >= band1sUpper
+    ) {
+      return { satisfied: true, reason: "band_1s_reject" };
+    }
+
+    // Standard VWAP premium check: close > vwap (in premium zone)
+    if (close > vwap) {
+      return {
+        satisfied: true,
+        reason: `close_above_vwap_close=${close.toFixed(2)}_vwap=${vwap.toFixed(2)}`,
+      };
+    }
+
     return {
-      satisfied,
-      reason: satisfied
-        ? `short_close_${close.toFixed(2)}_below_vwap_${vwap.toFixed(2)}`
-        : `short_close_${close.toFixed(2)}_above_vwap_${vwap.toFixed(2)}`,
+      satisfied: false,
+      reason: `close_below_vwap_short_not_premium_close=${close.toFixed(2)}_vwap=${vwap.toFixed(2)}`,
     };
   }
 }

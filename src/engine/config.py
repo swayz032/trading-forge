@@ -9,6 +9,8 @@ import os
 from dataclasses import dataclass
 from typing import Literal, Optional
 
+from datetime import datetime
+
 from pydantic import BaseModel, field_validator, model_validator
 
 
@@ -88,6 +90,11 @@ VALID_INDICATOR_TYPES = {
     "opening_range_breakout",
     # F-7 fix (2026-05-20): donchian channel
     "donchian",
+    # Wave 25 Pass 5: VWAP bands (session-resetting 1σ/2σ) and anchored VWAP.
+    # vwap_with_bands emits vwap, vwap_band_1s_upper/lower, vwap_band_2s_upper/lower.
+    # anchored_vwap emits anchored_vwap_<anchor_iso>; requires anchor_ts on IndicatorConfig.
+    "vwap_with_bands",
+    "anchored_vwap",
 }
 
 
@@ -105,6 +112,10 @@ class IndicatorConfig(BaseModel):
     # Opening Range Breakout-specific (Phase 9)
     range_minutes: Optional[int] = None        # OR window length in minutes (default 15)
     session_start_et: Optional[str] = None     # Session open in ET, "HH:MM" (default "09:30")
+    # Anchored VWAP-specific (Wave 25 Pass 5)
+    # anchor_ts: the bar timestamp from which cumulative VWAP accumulates.
+    # Bars before anchor_ts receive null in the output column.
+    anchor_ts: Optional[datetime] = None
 
     @field_validator("type")
     @classmethod

@@ -1,12 +1,12 @@
 """Tests for the Strategy Compiler — validates DSL, compiles to backtest config, diffs."""
 
-import pytest
-from pydantic import ValidationError
-
+from src.engine.compiler.compiler import (
+    compile_to_backtest,
+    diff_strategies,
+    validate_dsl,
+)
+from src.engine.compiler.pattern_library import list_patterns, validate_entry_params
 from src.engine.compiler.strategy_schema import StrategyDSL
-from src.engine.compiler.compiler import validate_dsl, compile_to_backtest, diff_strategies
-from src.engine.compiler.pattern_library import validate_entry_params, list_patterns
-
 
 # ─── Fixtures ────────────────────────────────────────────────────────
 
@@ -168,8 +168,8 @@ class TestPatternLibrary:
 
     def test_list_patterns_returns_all(self):
         patterns = list_patterns()
-        # 10 original + 3 new (vwap_fade, event_driven_fade, overnight_drift)
-        assert len(patterns) == 13
+        # 10 original + 3 (vwap_fade, event_driven_fade, overnight_drift) + 2 W25P5 (vwap_band_reject, anchored_vwap_retest)
+        assert len(patterns) == 15
         assert "sma_crossover" in patterns
         assert "rsi_reversal" in patterns
         assert "macd_crossover" in patterns
@@ -177,6 +177,9 @@ class TestPatternLibrary:
         assert "vwap_fade" in patterns
         assert "event_driven_fade" in patterns
         assert "overnight_drift" in patterns
+        # Wave 25 Pass 5 VWAP institutional archetypes
+        assert "vwap_band_reject" in patterns
+        assert "anchored_vwap_retest" in patterns
 
     def test_validate_entry_params_directly(self):
         valid, errors = validate_entry_params("bollinger_breakout", {"period": 20, "std_dev": 2.0})

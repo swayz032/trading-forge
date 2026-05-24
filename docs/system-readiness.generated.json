@@ -1,9 +1,21 @@
 {
-  "generatedAt": "2026-05-24T09:43:26.757Z",
+  "generatedAt": "2026-05-24T10:33:52.550Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
     "production_hardening:manual_gate:operator-halt-only",
+    "smt_divergence_engine:missing-audit-actions",
+    "smt_divergence_engine:missing-audit-tables",
+    "smt_divergence_engine:missing-failure-visibility",
+    "smt_divergence_engine:missing-freshness-signals",
+    "smt_divergence_engine:missing-runtime-evidence",
+    "smt_divergence_engine:missing-telemetry-sources",
+    "vwap_bands_engine:missing-audit-actions",
+    "vwap_bands_engine:missing-audit-tables",
+    "vwap_bands_engine:missing-failure-visibility",
+    "vwap_bands_engine:missing-freshness-signals",
+    "vwap_bands_engine:missing-runtime-evidence",
+    "vwap_bands_engine:missing-telemetry-sources",
     "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
     "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
     "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -14,9 +26,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 30,
-    "ready": 22,
-    "blocked": 1,
+    "total": 33,
+    "ready": 23,
+    "blocked": 3,
     "manualGated": 2,
     "experimental": 5
   },
@@ -178,6 +190,29 @@
         "signal.confluence_factor_decayed",
         "wave25-confluence-decay-stage2-wiring.test.ts",
         "wave25-confluence-decay.test.ts"
+      ]
+    },
+    {
+      "id": "confluence_score_engine",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "a_plus_factor_evaluated",
+        "audit_log:a_plus_factor_evaluated:per-bar",
+        "audit_log:signal.confluence_factor_decayed",
+        "audit_log:signal.weighted_score_rejected",
+        "signal.confluence_factor_decayed",
+        "signal.confluence_score_factor_unavailable",
+        "signal.weighted_score_rejected",
+        "wave25-confluence-decay-stage2-wiring.test.ts",
+        "wave25-vwap-smt-wiring.test.ts",
+        "wave25-weighted-scoring.test.ts"
       ]
     },
     {
@@ -644,6 +679,27 @@
       ]
     },
     {
+      "id": "smt_divergence_engine",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "missing-audit-actions",
+        "missing-audit-tables",
+        "missing-failure-visibility",
+        "missing-freshness-signals",
+        "missing-runtime-evidence",
+        "missing-telemetry-sources"
+      ],
+      "requiredEvidence": [
+        "test_smt_divergence.py"
+      ]
+    },
+    {
       "id": "strategy_lifecycle",
       "status": "manual-gated",
       "productionTargetState": "production_manual_gate",
@@ -688,6 +744,29 @@
         "synthetic_regime_bank:recent-write",
         "synthetic-black-swan-pending-row",
         "synthetic-black-swan-survival-distribution"
+      ]
+    },
+    {
+      "id": "vwap_bands_engine",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "missing-audit-actions",
+        "missing-audit-tables",
+        "missing-failure-visibility",
+        "missing-freshness-signals",
+        "missing-runtime-evidence",
+        "missing-telemetry-sources"
+      ],
+      "requiredEvidence": [
+        "test_anchored_vwap.py",
+        "test_archetype_vwap_band_reject.py",
+        "test_vwap_bands.py"
       ]
     },
     {

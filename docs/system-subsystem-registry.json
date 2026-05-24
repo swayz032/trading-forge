@@ -2613,5 +2613,154 @@
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
     "criticality": "important"
+  },
+  {
+    "id": "vwap_bands_engine",
+    "domain": "indicator_engine",
+    "owner_surface": "python",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 25 Pass 5 (P5.A1) — VWAP with 1σ + 2σ bands plus anchored VWAP. compute_vwap_with_bands() in src/engine/indicators/core.py returns 5 columns (vwap, vwap_band_1s_upper/lower, vwap_band_2s_upper/lower) with Globex 18:00 ET session-resetting variance accumulation. compute_anchored_vwap() returns deterministic column name anchored_vwap_<iso> for per-strategy anchor timestamps (IndicatorConfig.anchor_ts). Powers 2 new DSL archetypes: vwap_band_reject (1σ band fade) and anchored_vwap_retest (event-anchored confluence). Backtest engine populates VWAP band columns into bar context; paper-signal-service feeds same columns to confluence-score evalVwapAlignment.",
+    "data_sources": [
+      "ratio_adj_parquet_bars"
+    ],
+    "reads_from": [],
+    "writes_to": [],
+    "audit_tables": [],
+    "audit_actions": [],
+    "metrics_surfaces": [],
+    "telemetry_sources": [],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "indicators.core"
+    ],
+    "database_tables": [],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [],
+    "recovery_mode": "pure-function-no-failure-path",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [],
+    "evidence_queries": [
+      "test_vwap_bands.py",
+      "test_anchored_vwap.py",
+      "test_archetype_vwap_band_reject.py"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "smt_divergence_engine",
+    "domain": "indicator_engine",
+    "owner_surface": "python",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 25 Pass 5 (P5.A2) — continuous [0,1] SMT (Smart Money Tool) ES↔NQ divergence score. compute_smt_divergence(es_bars, nq_bars) in src/engine/indicators/smt_divergence.py produces 4-component weighted formula (magnitude × time_synced × structure_quality × displacement_confirmation) with smt_score + smt_direction (bullish_es_strong/bullish_nq_strong/bearish_es_strong/bearish_nq_strong) per bar. Closes GPT critique #7 (binary SMT → continuous). Confluence decay engine (Pass 4) consumes smt_age_bars on top (multiplied). Backtest engine populates ctx.smt_score directly; live paper bridge DEFERRED to Wave 26 (paper-signal-service.ts continues fail-open with reason='smt_unavailable' for live signals).",
+    "data_sources": [
+      "ratio_adj_parquet_bars_es",
+      "ratio_adj_parquet_bars_nq"
+    ],
+    "reads_from": [],
+    "writes_to": [],
+    "audit_tables": [],
+    "audit_actions": [],
+    "metrics_surfaces": [],
+    "telemetry_sources": [],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "indicators.smt_divergence"
+    ],
+    "database_tables": [],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [],
+    "recovery_mode": "pure-function-no-failure-path",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [],
+    "evidence_queries": [
+      "test_smt_divergence.py"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "confluence_score_engine",
+    "domain": "signal_generation",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 25 Pass 1 + Pass 2.5 + Pass 3 + Pass 4 + Pass 5 — institutional 11-factor weighted confluence scoring (Path C). evaluateWeightedConfluence() in src/server/services/confluence-score.ts. Per-factor evaluators: evalMarketStructureAligned (0.20), evalLiquidityTargetClear (0.13 — LIVE since Pass 3), evalSmtConfirmation (0.10 — LIVE since Pass 5: reads ctx.smt_score + ctx.smt_direction from compute_smt_divergence; backtest path fully live, paper live-bridge deferred Wave 26), evalVwapAlignment (0.10 — LIVE since Pass 5: institutional discount/premium model, long satisfied when close below VWAP, 1σ band reject + anchored VWAP retest priority order), evalKillzoneActive (0.08), evalDeltaOrVolumeSignature (0.08), evalVpLevelProximity (0.08), evalMacroAlignment (0.08 HARD-BLOCK), evalInternalsAligned (0.05 MES/MNQ only), evalCrossAssetAligned (0.05), evalRegimeMatch (0.05). MCL redistribution: internals weight zeroed → +0.05 to cross_asset. Threshold 0.72 default. Decay engine multiplies 6/11 factor contributions by time-based confidence. Hard-block bypass: macro_alignment unsatisfied → score=0.",
+    "data_sources": [
+      "bar_context",
+      "indicators",
+      "structure_state",
+      "liquidity_levels",
+      "smt_score"
+    ],
+    "reads_from": [],
+    "writes_to": [],
+    "audit_tables": [
+      "paper_signal_logs",
+      "audit_log"
+    ],
+    "audit_actions": [
+      "a_plus_factor_evaluated",
+      "signal.weighted_score_rejected",
+      "signal.confluence_factor_decayed",
+      "signal.confluence_score_factor_unavailable"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:signal.weighted_score_rejected",
+      "audit_log:signal.confluence_factor_decayed"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "sse:signal:weighted_score_rejected"
+    ],
+    "recovery_mode": "fail-open-to-path-b",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:a_plus_factor_evaluated:per-bar"
+    ],
+    "evidence_queries": [
+      "wave25-weighted-scoring.test.ts",
+      "wave25-vwap-smt-wiring.test.ts",
+      "wave25-confluence-decay-stage2-wiring.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
   }
 ]

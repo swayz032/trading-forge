@@ -135,6 +135,35 @@ ENTRY_PATTERNS: dict[str, dict] = {
             "min_drift_bars": (2, 12),
         },
     },
+    # Wave 25 Pass 5 — VWAP institutional archetypes
+    "vwap_band_reject": {
+        "description": (
+            "Reversal entry when price tags the 2-sigma VWAP band and rejects back inside 1-sigma. "
+            "Short: price touches vwap_band_2s_upper then closes below vwap_band_1s_upper. "
+            "Long: price touches vwap_band_2s_lower then closes above vwap_band_1s_lower."
+        ),
+        "required_params": ["band_sigma"],
+        "optional_params": ["confirmation_bars", "require_close_inside"],
+        "param_ranges": {
+            "band_sigma": (1.5, 2.5),        # which sigma band triggers (default 2.0)
+            "confirmation_bars": (1, 3),
+            "require_close_inside": (0, 1),  # 0=touch only, 1=must close back inside
+        },
+    },
+    "anchored_vwap_retest": {
+        "description": (
+            "Entry when price returns to an anchored VWAP (anchored from a prior swing high/low "
+            "or session open) and rejects. Long: price dips to anchored_vwap from above and bounces. "
+            "Short: price rallies to anchored_vwap from below and fades."
+        ),
+        "required_params": ["anchor_lookback_bars"],
+        "optional_params": ["confirmation_bars", "tolerance_ticks"],
+        "param_ranges": {
+            "anchor_lookback_bars": (1, 100),   # how far back to look for anchor swing
+            "confirmation_bars": (1, 3),
+            "tolerance_ticks": (1, 10),          # proximity to AVWAP that counts as a touch
+        },
+    },
 }
 
 

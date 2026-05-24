@@ -3,10 +3,15 @@
 Column naming convention:
   sma_20, ema_9, rsi_14, atr_14,
   bb_upper_20, bb_middle_20, bb_lower_20,
-  macd_line, macd_signal, macd_hist, vwap
+  macd_line, macd_signal, macd_hist, vwap,
+  vwap_band_1s_upper, vwap_band_1s_lower,
+  vwap_band_2s_upper, vwap_band_2s_lower,
+  anchored_vwap_<anchor_iso>
 """
 
 from __future__ import annotations
+
+from datetime import datetime
 
 import numpy as np
 import polars as pl
@@ -204,6 +209,255 @@ def compute_vwap(df: pl.DataFrame) -> pl.Series:
     return vwap
 
 
+def _assign_globex_session_id(df: pl.DataFrame) -> pl.Series:
+    """Assign an integer session_id that resets at 18:00 ET (Globex open).
+
+    Globex session starts at 18:00 ET (after the 17:00-18:00 maintenance pause).
+    Each new Globex trading day increments the session_id.
+
+    Globex trading date convention:
+        Bars from 18:00 ET onward belong to the NEXT calendar date's session.
+        e.g. bars at 2026-01-02 18:00 ET through 2026-01-03 17:59 ET all belong
+        to the "2026-01-03 Globex session" (session_date = calendar_date + 1 day
+        if hour >= 18, else calendar_date).
+
+    This correctly handles:
+        - Multiple consecutive bars within the 18:xx hour (18:00, 18:05, 18:10...)
+        - Sessions that skip directly from 18:45 to next-day 18:00 (no gap bars)
+        - Intraday-only data (e.g. 09:30–16:00 only): all bars get the same session_id
+
+    Args:
+        df: DataFrame with ts_event (naive datetime, treated as ET wall-clock) or ts_et.
+
+    Returns:
+        Integer Series of session IDs, same length as df. Groups are not necessarily
+        contiguous integers starting at 0 — use them only as group labels for over().
+    """
+    import polars as pl
+
+    ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
+    ts = df[ts_col]
+
+    hour = ts.dt.hour().cast(pl.Int32)
+    date = ts.dt.date()
+
+    # Globex session date: add 1 day to calendar date for bars at hour >= 18.
+    # This groups overnight bars with the next day's session correctly.
+    # Use Polars duration arithmetic: pl.duration(days=1) for offset.
+    # Assign session_id as a dense integer by converting globex_date to ordinal.
+    # pl.Series.dt.epoch_days() gives days-since-epoch — unique per calendar date.
+    # Work inside a DataFrame to use select() for the conditional.
+    work = pl.DataFrame({
+        "hour": hour,
+        "date": date,
+    }).select(
+        pl.when(pl.col("hour") >= 18)
+        .then(pl.col("date") + pl.duration(days=1))
+        .otherwise(pl.col("date"))
+        .alias("globex_date")
+    )
+
+    # epoch_days() returns Int32 — usable directly as a group label
+    session_id = work["globex_date"].cast(pl.Datetime).dt.epoch(time_unit="d")
+    return session_id
+
+
+def compute_vwap_with_bands(
+    bars: pl.DataFrame,
+    typical_price_col: str = "typical_price",
+) -> pl.DataFrame:
+    """Computes session VWAP + 1-sigma + 2-sigma bands using cumulative TPV math.
+
+    Adds columns:
+        vwap               — session VWAP (backward-compat: same values as compute_vwap)
+        vwap_band_1s_upper — VWAP + 1*sigma
+        vwap_band_1s_lower — VWAP - 1*sigma
+        vwap_band_2s_upper — VWAP + 2*sigma
+        vwap_band_2s_lower — VWAP - 2*sigma
+
+    Session-resetting: resets at the 18:00 ET Globex session boundary.
+
+    Institutional formula (running population variance):
+        cum_pv  = cumsum(tp * vol)
+        cum_v   = cumsum(vol)
+        vwap    = cum_pv / cum_v
+        cum_pv2 = cumsum((tp - vwap)^2 * vol)
+        sigma   = sqrt(cum_pv2 / cum_v)
+        upper1  = vwap + 1*sigma
+        lower1  = vwap - 1*sigma
+        upper2  = vwap + 2*sigma
+        lower2  = vwap - 2*sigma
+
+    Zero-volume safety: cum_vol=0 → bands collapse to the running VWAP (no NaN/inf
+    propagation). Fill-forward applied to handle zero-volume bars at session open.
+
+    Pure function over Polars. No I/O. Immutable input.
+
+    Args:
+        bars: DataFrame with high, low, close, volume, and a ts_event or ts_et column.
+        typical_price_col: If already present in bars, used directly. Otherwise
+            computed as (high + low + close) / 3.
+
+    Returns:
+        bars with 5 new columns added (vwap, vwap_band_1s_upper, vwap_band_1s_lower,
+        vwap_band_2s_upper, vwap_band_2s_lower). All Float64.
+    """
+    result = bars.clone()
+
+    # Typical price
+    if typical_price_col in bars.columns:
+        tp = bars[typical_price_col]
+    else:
+        tp = (bars["high"] + bars["low"] + bars["close"]) / 3.0
+
+    vol = bars["volume"]
+    tp_vol = tp * vol
+
+    # Assign Globex session IDs for reset boundaries
+    session_id = _assign_globex_session_id(bars)
+
+    # Build working frame for vectorized grouped operations
+    work = pl.DataFrame({
+        "session_id": session_id,
+        "tp": tp,
+        "vol": vol,
+        "tp_vol": tp_vol,
+    })
+
+    # Step 1: cum_pv and cum_v per session
+    work = work.with_columns([
+        pl.col("tp_vol").cum_sum().over("session_id").alias("cum_pv"),
+        pl.col("vol").cum_sum().over("session_id").alias("cum_v"),
+    ])
+
+    # Guard against zero cumulative volume
+    safe_cum_v = pl.when(pl.col("cum_v") == 0).then(None).otherwise(pl.col("cum_v"))
+    work = work.with_columns(safe_cum_v.alias("safe_cum_v"))
+
+    # Step 2: VWAP per bar
+    work = work.with_columns(
+        (pl.col("cum_pv") / pl.col("safe_cum_v"))
+        .fill_null(strategy="forward")
+        .fill_null(0.0)
+        .alias("vwap")
+    )
+
+    # Step 3: Running variance component (tp - vwap)^2 * vol, cumsum per session
+    work = work.with_columns(
+        ((pl.col("tp") - pl.col("vwap")) ** 2 * pl.col("vol"))
+        .cum_sum()
+        .over("session_id")
+        .alias("cum_pv2")
+    )
+
+    # Step 4: sigma = sqrt(cum_pv2 / cum_v); protect against zero-vol and near-zero sigma
+    work = work.with_columns(
+        (pl.col("cum_pv2") / pl.col("safe_cum_v"))
+        .fill_null(0.0)
+        .sqrt()
+        .alias("sigma")
+    )
+
+    # Step 5: Emit bands
+    result = result.with_columns([
+        work["vwap"].alias("vwap"),
+        (work["vwap"] + work["sigma"]).alias("vwap_band_1s_upper"),
+        (work["vwap"] - work["sigma"]).alias("vwap_band_1s_lower"),
+        (work["vwap"] + 2.0 * work["sigma"]).alias("vwap_band_2s_upper"),
+        (work["vwap"] - 2.0 * work["sigma"]).alias("vwap_band_2s_lower"),
+    ])
+
+    return result
+
+
+def compute_anchored_vwap(
+    bars: pl.DataFrame,
+    anchor_ts: datetime,
+    typical_price_col: str = "typical_price",
+) -> pl.DataFrame:
+    """Anchored VWAP: cumulative VWAP starting from anchor_ts.
+
+    Adds column:
+        anchored_vwap_<anchor_iso> — Float64; null before anchor_ts, running VWAP from anchor onward.
+
+    The column name is derived from anchor_ts.isoformat() with colons replaced by
+    underscores and fractional seconds stripped — safe for Polars column names.
+    Example: anchor_ts=datetime(2026,1,3,9,30) → column='anchored_vwap_2026-01-03T09_30_00'
+
+    Backward compat: existing single `vwap` column is UNCHANGED. This function
+    does not touch any pre-existing columns.
+
+    Pure function. No I/O. Immutable input.
+
+    Args:
+        bars: DataFrame with high, low, close, volume, and ts_event (datetime).
+        anchor_ts: The timestamp from which cumulative VWAP accumulates.
+            Bars with ts_event < anchor_ts receive null.
+            The anchor bar itself (ts_event == anchor_ts) is the first bar included.
+        typical_price_col: If already present in bars, used directly. Otherwise
+            computed as (high + low + close) / 3.
+
+    Returns:
+        bars with one additional column named anchored_vwap_<anchor_iso>.
+    """
+    # Build a safe ISO column name: replace colons and dots
+    iso_raw = anchor_ts.isoformat()
+    iso_safe = iso_raw.replace(":", "_").split(".")[0]  # strip sub-second precision
+    col_name = f"anchored_vwap_{iso_safe}"
+
+    ts_col = "ts_event"  # anchored VWAP always keys from ts_event (UTC-stable)
+    ts = bars[ts_col]
+
+    # Typical price
+    if typical_price_col in bars.columns:
+        tp = bars[typical_price_col]
+    else:
+        tp = (bars["high"] + bars["low"] + bars["close"]) / 3.0
+
+    vol = bars["volume"]
+
+    # Mask: only bars at or after anchor_ts contribute.
+    # `at_or_after` is a boolean Series used for vectorized masking.
+    at_or_after = ts >= anchor_ts
+
+    # Build a working DataFrame using Series (not Expr) — pl.when(Series) returns Expr
+    # which cannot be passed to pl.DataFrame(). Evaluate via select() instead.
+    tp_vol_series = tp * vol  # Series
+
+    # Evaluate the pl.when expressions via a temporary DataFrame select
+    work = pl.DataFrame({
+        "at_or_after": at_or_after,
+        "tp_vol": tp_vol_series,
+        "vol": vol,
+    }).select([
+        pl.when(pl.col("at_or_after")).then(pl.col("tp_vol")).otherwise(0.0).alias("masked_tp_vol"),
+        pl.when(pl.col("at_or_after")).then(pl.col("vol")).otherwise(0.0).alias("masked_vol"),
+    ]).with_columns([
+        pl.col("masked_tp_vol").cum_sum().alias("cum_pv"),
+        pl.col("masked_vol").cum_sum().alias("cum_v"),
+    ])
+
+    # Guard zero cumulative volume (pre-anchor rows have cum_v=0)
+    # avwap_raw: cumulative VWAP or null when cum_v==0
+    avwap_raw_vals = work.select(
+        pl.when(pl.col("cum_v") > 0)
+        .then(pl.col("cum_pv") / pl.col("cum_v"))
+        .otherwise(None)
+        .alias("avwap_raw")
+    )["avwap_raw"]
+
+    # Apply null mask: pre-anchor rows must be null regardless of the zero-guard
+    # Use the at_or_after boolean Series to mask the final result
+    avwap_col = pl.DataFrame({
+        "at_or_after": at_or_after,
+        "avwap_raw": avwap_raw_vals,
+    }).select(
+        pl.when(pl.col("at_or_after")).then(pl.col("avwap_raw")).otherwise(None).alias(col_name)
+    )[col_name]
+
+    return bars.with_columns(avwap_col)
+
+
 def compute_opening_range_breakout(
     df: pl.DataFrame,
     range_minutes: int = 15,
@@ -366,6 +620,14 @@ def compute_indicators(
         elif cfg.type == "vwap":
             col = compute_vwap(df)
             result = result.with_columns(col.alias("vwap"))
+
+        elif cfg.type == "vwap_with_bands":
+            result = compute_vwap_with_bands(result)
+
+        elif cfg.type == "anchored_vwap":
+            anchor_ts = cfg.anchor_ts  # datetime; caller must set cfg.anchor_ts
+            if anchor_ts is not None:
+                result = compute_anchored_vwap(result, anchor_ts)
 
         elif cfg.type == "adx":
             col = compute_adx(df, cfg.period)

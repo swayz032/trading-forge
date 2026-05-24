@@ -127,12 +127,16 @@ describe("evaluateWeightedConfluence", () => {
       expect(fc!.reason).toBe("liquidity_map_unavailable");
     });
 
-    it("smt_confirmation returns satisfied=false with pending_pass5 reason", () => {
+    it("smt_confirmation returns satisfied=false when no smt data on ctx (P5.A3 wired: smt_unavailable)", () => {
+      // Post-Pass-5 (P5.A3): stub replaced by real evaluator.
+      // When ctx has no smt_score / smt_direction, returns smt_unavailable.
+      // This is the same conservative fail-open behavior — call site (paper-signal-service)
+      // must populate smt_score + smt_direction for the factor to fire (P5.A5 scope).
       const result = evaluateWeightedConfluence(makeStrategy(), makeContext());
       const fc = result.factorContributions.find((c) => c.factor === FACTOR_SMT_CONFIRMATION);
       expect(fc).toBeDefined();
       expect(fc!.satisfied).toBe(false);
-      expect(fc!.reason).toContain("pass5");
+      expect(fc!.reason).toBe("smt_unavailable");
     });
 
     it("stub factors never throw", () => {
@@ -400,54 +404,62 @@ describe("evaluateWeightedConfluence", () => {
       });
     });
 
-    describe("vwap_alignment", () => {
-      it("satisfied=true for long signal when close > vwap", () => {
+    describe("vwap_alignment (P5.A3 institutional: DISCOUNT for long, PREMIUM for short)", () => {
+      it("satisfied=true for long signal when close < vwap (discount bias — institutional)", () => {
+        // P5.A3 update: long signal is valid when price is in DISCOUNT (below VWAP).
+        // Old behavior was close > vwap — that was retail (premium-chase). Fixed.
         const result = evaluateWeightedConfluence(
           makeStrategy(),
           makeContext({
             direction: "long",
-            bar: { open: 4200, high: 4210, low: 4190, close: 4205, volume: 5000 },
-            indicators: { vwap: 4200 },
+            bar: { open: 4195, high: 4200, low: 4190, close: 4195, volume: 5000 },
+            indicators: { vwap: 4200, atr: 10 },
           }),
         );
         const fc = result.factorContributions.find((c) => c.factor === FACTOR_VWAP_ALIGNMENT);
         expect(fc!.satisfied).toBe(true);
+        expect(fc!.reason).toContain("close_below_vwap");
       });
 
-      it("satisfied=false for long signal when close < vwap", () => {
+      it("satisfied=false for long signal when close > vwap (in premium — not discount)", () => {
+        // P5.A3 update: long in premium zone is NOT the institutional setup.
         const result = evaluateWeightedConfluence(
           makeStrategy(),
           makeContext({
             direction: "long",
-            bar: { open: 4200, high: 4210, low: 4190, close: 4195, volume: 5000 },
-            indicators: { vwap: 4200 },
+            bar: { open: 4200, high: 4210, low: 4200, close: 4205, volume: 5000 },
+            indicators: { vwap: 4200, atr: 10 },
           }),
         );
         const fc = result.factorContributions.find((c) => c.factor === FACTOR_VWAP_ALIGNMENT);
         expect(fc!.satisfied).toBe(false);
+        expect(fc!.reason).toContain("close_above_vwap_long_not_discount");
       });
 
-      it("satisfied=true for short signal when close < vwap", () => {
+      it("satisfied=true for short signal when close > vwap (premium bias — institutional)", () => {
+        // P5.A3 update: short signal is valid when price is in PREMIUM (above VWAP).
         const result = evaluateWeightedConfluence(
           makeStrategy(),
           makeContext({
             direction: "short",
-            bar: { open: 4200, high: 4210, low: 4190, close: 4195, volume: 5000 },
-            indicators: { vwap: 4200 },
+            bar: { open: 4200, high: 4210, low: 4200, close: 4205, volume: 5000 },
+            indicators: { vwap: 4200, atr: 10 },
           }),
         );
         const fc = result.factorContributions.find((c) => c.factor === FACTOR_VWAP_ALIGNMENT);
         expect(fc!.satisfied).toBe(true);
+        expect(fc!.reason).toContain("close_above_vwap");
       });
 
-      it("satisfied=false when vwap indicator is absent", () => {
+      it("satisfied=false when vwap indicator is absent (reason=vwap_unavailable)", () => {
+        // P5.A3 update: reason string changed from "vwap_indicator_absent" to "vwap_unavailable".
         const result = evaluateWeightedConfluence(
           makeStrategy(),
           makeContext({ indicators: {} }), // no vwap key
         );
         const fc = result.factorContributions.find((c) => c.factor === FACTOR_VWAP_ALIGNMENT);
         expect(fc!.satisfied).toBe(false);
-        expect(fc!.reason).toContain("absent");
+        expect(fc!.reason).toBe("vwap_unavailable");
       });
     });
 
