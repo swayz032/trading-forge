@@ -112,22 +112,28 @@ const auditPayload = {
 const sql = postgres(dbUrl, { max: 1 });
 
 async function main() {
+  // entity_id is uuid-typed and nullable (schema.ts auditLog) — 'wave-25-pass-2' is not a UUID; store as entity_label in result.
+  // audit_log has no `metadata` column on prod schema — merge orchestration metadata into result jsonb.
+  const mergedResult = {
+    ...auditPayload,
+    entity_label: "wave-25-pass-2",
+    orchestration_metadata: {
+      orchestrator: "parent-claude",
+      phase_a_audits: 3,
+      phase_c_workers: 3,
+      items_shipped: 9,
+      items_deferred: 4,
+    },
+  };
   const auditRow = await sql`
-    INSERT INTO audit_log (action, entity_type, entity_id, result, status, decision_authority, metadata, created_at)
+    INSERT INTO audit_log (action, entity_type, entity_id, result, status, decision_authority, created_at)
     VALUES (
       'wave.25_pass2_master_closed',
       'wave',
-      'wave-25-pass-2',
-      ${sql.json(auditPayload)},
+      NULL,
+      ${sql.json(mergedResult)},
       'success',
       'scheduler',
-      ${sql.json({
-        orchestrator: "parent-claude",
-        phase_a_audits: 3,
-        phase_c_workers: 3,
-        items_shipped: 9,
-        items_deferred: 4,
-      })},
       NOW()
     )
     RETURNING id, created_at

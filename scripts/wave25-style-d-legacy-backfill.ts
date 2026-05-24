@@ -42,7 +42,6 @@ const AUDIT_ACTION = "position.exit_style_migrated";
 
 interface LegacyPosition {
   id: string;
-  strategyId: string | null;
   sessionId: string;
   symbol: string;
   side: string;
@@ -65,10 +64,11 @@ async function main(): Promise<void> {
   // SELECT all open positions with currentExitStyle='D' AND entryTime < deprecation date.
   // Filter: status IS NULL (open positions have no exitTime in paper_positions;
   // exitTime column is the canonical close indicator per paper-execution-service.ts).
+  // paperPositions has no strategyId column — strategy is via sessionId -> paperSessions join.
+  // Inventory script doesn't need strategy_id; the SQL UPDATE filters on positionId alone.
   const rows = await db
     .select({
       id: paperPositions.id,
-      strategyId: paperPositions.strategyId,
       sessionId: paperPositions.sessionId,
       symbol: paperPositions.symbol,
       side: paperPositions.side,
@@ -93,7 +93,7 @@ async function main(): Promise<void> {
 
   for (const pos of rows) {
     console.log(
-      `  [${pos.id}] strategy=${pos.strategyId ?? "null"} session=${pos.sessionId} ` +
+      `  [${pos.id}] session=${pos.sessionId} ` +
       `symbol=${pos.symbol} side=${pos.side} entryTime=${pos.entryTime ?? "null"}`,
     );
   }
@@ -126,7 +126,6 @@ async function main(): Promise<void> {
         decisionAuthority: "system",
         result: {
           positionId: pos.id,
-          strategyId: pos.strategyId,
           sessionId: pos.sessionId,
           symbol: pos.symbol,
           fromStyle: "D",
