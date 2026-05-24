@@ -72,7 +72,14 @@ import { sql, eq } from "drizzle-orm";
 
 const APPLY = process.argv.includes("--apply");
 const INCLUDE_LIVE = process.argv.includes("--include-live");
-const FIX_REF = "wave25-pass7-scaffold";
+const FIX_REF = "wave26-cohort-opt-in";
+
+// --strategy <name_fragment>: restrict opt-in to strategies whose name CONTAINS this fragment
+// Wave 26 Group B: cohort discipline — only silver_bullet this pass
+const STRATEGY_FILTER: string | null = (() => {
+  const idx = process.argv.indexOf("--strategy");
+  return idx >= 0 && idx + 1 < process.argv.length ? process.argv[idx + 1]! : null;
+})();
 
 type ExitPlanConfig = {
   exit_style?: "adaptive" | "static_styleC";
@@ -86,13 +93,18 @@ async function main(): Promise<void> {
   console.log();
   console.log("⚠️  SCAFFOLD-ONLY: exit_style flip has NO LIVE EFFECT until Wave 25.5 ships.");
   console.log("    Live paper + backtest paths continue to execute Style C 33/33/34.");
+  if (STRATEGY_FILTER) {
+    console.log(`Strategy filter: --strategy ${STRATEGY_FILTER}  (cohort discipline — only matching strategies opted in)`);
+  }
   console.log();
 
   // Pre-flight: confirm migration 0144 has been applied.
   const colCheck = await db.execute(
     sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'strategies' AND column_name = 'exit_plan_config'`,
   );
-  const present = (colCheck.rows ?? []).length > 0;
+  // postgres.js driver returns rows as the direct array; node-postgres wraps in {rows:[]}
+  const colRows = Array.isArray(colCheck) ? colCheck : ((colCheck as { rows?: unknown[] }).rows ?? []);
+  const present = colRows.length > 0;
   if (!present) {
     console.error("❌ Migration 0144_strategies_adaptive_exits.sql NOT applied to this DB.");
     console.error("   Missing column on strategies: exit_plan_config");
@@ -125,6 +137,11 @@ async function main(): Promise<void> {
       continue;
     }
 
+    // Cohort filter: --strategy <fragment> restricts to matching names only
+    if (STRATEGY_FILTER && !String(row.name ?? "").toLowerCase().includes(STRATEGY_FILTER.toLowerCase())) {
+      continue;
+    }
+
     const lifecycle = String(row.lifecycleState ?? "").toUpperCase();
     const isLive = lifecycle === "PAPER" || lifecycle === "DEPLOYED" || lifecycle === "PILOT" || lifecycle === "DEPLOY_READY";
     if (isLive && !INCLUDE_LIVE) {
@@ -147,7 +164,7 @@ async function main(): Promise<void> {
       .where(eq(strategies.id, row.id));
 
     await db.insert(auditLog).values({
-      action: "strategy.wave25_pass7_adaptive_opt_in",
+      action: "strategy.wave26_cohort_opt_in",
       entityType: "strategy",
       entityId: row.id,
       decisionAuthority: "system",
@@ -157,12 +174,13 @@ async function main(): Promise<void> {
         lifecycle_state: row.lifecycleState,
         prior_exit_style: currentStyle,
         new_exit_style: "adaptive",
-        scaffold_only: true,
-        live_effect: false,
-        wave_25_5_required: true,
+        cohort: "silver_bullet",
+        applied_by: "wave26_dispatch",
+        wave: "wave26_group_b",
         fix_ref: FIX_REF,
         note:
-          "exit_style flag flipped — NO LIVE EFFECT until Wave 25.5 wires paper-signal-service.ts + backtester._apply_trade_management + updatePositionPrices",
+          "Wave 26 cohort opt-in: silver_bullet strategy opts into adaptive exits. " +
+          "Wave 25.5 wiring is LIVE — adaptive engine is active for this strategy.",
       } as Record<string, unknown>,
     });
 

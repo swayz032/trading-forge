@@ -889,9 +889,13 @@ def _apply_adaptive_management(
     Backtest simplifications vs paper path:
       - Delta-divergence: not computable without live delta feed; always skipped.
         Recorded as delta_div_skipped=True in managed trade audit.
-      - Developing POC / VWAP trail: falls back to structure trail in backtest
-        because bar-level VP / VWAP computation is not wired through here.
-        Recorded as adaptive_runner_fallback=True in managed trade audit.
+      - anchored_vwap: uses true bar volume from df["volume"] (Wave 26 barVol wiring).
+        Cumulative VWAP is anchored from the entry bar using (typical_price * volume) / sum(volume).
+        Fallback to structure trail only when volume column absent.
+        adaptive_runner_fallback records whether true-volume AVWAP was active.
+      - developing_poc: still falls back to structure trail (no intraday VP per bar).
+        Recorded as adaptive_runner_fallback=True.
+      - chandelier: ATR-based trail, fully wired (no fallback needed).
       - Multi-leg P&L: blended into a single synthetic exit price for metric
         accuracy (tp1_pct @ tp1_price + tp2_pct @ tp2_price + runner_pct @ trail).
 
@@ -910,6 +914,16 @@ def _apply_adaptive_management(
     managed_trades = []
     ts_col = "ts_event"
     has_ts = ts_col in df.columns
+
+    # Wave 26 barVol wiring: extract volume array for true AVWAP computation.
+    # df may be Polars or pandas depending on the caller path.
+    try:
+        if "volume" in df.columns:
+            vol_np: Optional[np.ndarray] = df["volume"].to_numpy()
+        else:
+            vol_np = None
+    except Exception:
+        vol_np = None
 
     liquidity_snapshot = list(adaptive_ctx.liquidity_snapshot) if adaptive_ctx.liquidity_snapshot else []
     regime_default = (adaptive_ctx.regime_at_entry or "UNKNOWN")
@@ -993,6 +1007,17 @@ def _apply_adaptive_management(
         gap_through_stop_count = 0
         min_trail = max(2.0, tick * 8)
 
+        # Wave 26 barVol wiring: AVWAP accumulators anchored at entry bar.
+        # Anchored VWAP = sum(typical_price * volume, entry→bar) / sum(volume, entry→bar).
+        # Only activated when runner_trail_method == "anchored_vwap" AND vol_np is present.
+        avwap_use_true_vol = (
+            exit_plan.runner_trail_method == "anchored_vwap"
+            and vol_np is not None
+            and entry_idx < len(vol_np)
+        )
+        _avwap_cum_tpv: float = 0.0   # sum(typical_price * volume) since entry
+        _avwap_cum_vol: float = 0.0   # sum(volume) since entry
+
         # ── Bar-by-bar simulation ───────────────────────────────────────
         for bar in range(entry_idx + 1, original_exit_idx):
             if bar >= len(high_np):
@@ -1068,16 +1093,51 @@ def _apply_adaptive_management(
                         new_trail = entry_p - half_r_offset
                         trail_stop = min(trail_stop, new_trail)
 
+            # ── Accumulate AVWAP state (Wave 26 barVol wiring) ────────────
+            # Update cumulative VWAP accumulators every bar from entry onward,
+            # so that when TP2 fills we already have the anchored VWAP ready.
+            if avwap_use_true_vol and bar < len(vol_np):  # type: ignore[index]
+                bar_vol = float(vol_np[bar])  # type: ignore[index]
+                typical_price = (bar_high + bar_low + float(close_np[bar])) / 3.0
+                _avwap_cum_tpv += typical_price * bar_vol
+                _avwap_cum_vol += bar_vol
+
             # ── Advance runner trail after TP2 ─────────────────────────
             if tp2_filled:
-                # Structure trail: below most recent swing low (longs) / above high (shorts)
-                # In backtest: use bar_low / bar_high as proxy for swing level
-                if not is_short:
-                    new_trail = bar_high - max(risk_points, min_trail)
-                    trail_stop = max(trail_stop, new_trail)
+                runner_method = exit_plan.runner_trail_method
+
+                if runner_method == "anchored_vwap" and avwap_use_true_vol and _avwap_cum_vol > 0:
+                    # True AVWAP trail: price must stay on correct side of the
+                    # volume-weighted average anchored at the entry bar.
+                    avwap_price = _avwap_cum_tpv / _avwap_cum_vol
+                    # Stop trails to AVWAP (with tick offset so we don't exit at exact AVWAP).
+                    if not is_short:
+                        new_trail = avwap_price - tick
+                        trail_stop = max(trail_stop, new_trail)
+                    else:
+                        new_trail = avwap_price + tick
+                        trail_stop = min(trail_stop, new_trail)
+
+                elif runner_method == "chandelier":
+                    # Chandelier: ATR-based trail below the most recent bar high (longs).
+                    atr_at_bar = float(atr_np[bar]) if bar < len(atr_np) and not np.isnan(atr_np[bar]) else atr_at_entry
+                    if not is_short:
+                        new_trail = bar_high - (2.0 * atr_at_bar)
+                        trail_stop = max(trail_stop, new_trail)
+                    else:
+                        new_trail = bar_low + (2.0 * atr_at_bar)
+                        trail_stop = min(trail_stop, new_trail)
+
                 else:
-                    new_trail = bar_low + max(risk_points, min_trail)
-                    trail_stop = min(trail_stop, new_trail)
+                    # structure_trail / developing_poc / fallback:
+                    # Use bar_low/bar_high as proxy for swing level (developing_poc not
+                    # computable per-bar in backtest — recorded as fallback in audit).
+                    if not is_short:
+                        new_trail = bar_high - max(risk_points, min_trail)
+                        trail_stop = max(trail_stop, new_trail)
+                    else:
+                        new_trail = bar_low + max(risk_points, min_trail)
+                        trail_stop = min(trail_stop, new_trail)
 
         # ── Blended exit price ──────────────────────────────────────────
         # Multi-leg scaling: approximate P&L from separate lot fills.
@@ -1126,7 +1186,10 @@ def _apply_adaptive_management(
             "adaptive_regime": regime_default,
             "adaptive_scaling": f"{scaling.tp1_pct:.0%}/{scaling.tp2_pct:.0%}/{scaling.runner_pct:.0%}",
             "adaptive_runner_method": exit_plan.runner_trail_method,
-            "adaptive_runner_fallback": True,  # developing_poc/VWAP not wired in backtest
+            # Wave 26 barVol: avwap_use_true_vol=True means real AVWAP was computed.
+            # False means fallback (developing_poc or missing volume column).
+            "adaptive_runner_fallback": not avwap_use_true_vol,
+            "adaptive_avwap_true_vol": avwap_use_true_vol,
             "adaptive_pre_lunch_fired": pre_lunch_fired,
             "delta_div_skipped": True,   # delta-divergence requires live delta feed
         }

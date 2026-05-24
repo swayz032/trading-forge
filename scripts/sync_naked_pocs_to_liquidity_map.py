@@ -138,7 +138,10 @@ def _sync_one_symbol(
 
     try:
         from src.engine.data_loader import load_ohlcv
-        from src.engine.indicators.volume_profile import extract_naked_pocs_for_persistence
+        from src.engine.indicators.volume_profile import (
+            extract_naked_pocs_for_persistence,
+            extract_hod_lod_for_persistence,
+        )
     except ImportError as exc:
         result["status"] = "error"
         result["error"] = f"Import failed: {exc}"

@@ -1,9 +1,11 @@
 import { createMassiveFetcher } from "../../data/fetchers/massive.js";
-import { updatePositionPrices } from "./paper-execution-service.js";
-import { evaluateSignals, updateStateOnly } from "./paper-signal-service.js";
+import { updatePositionPrices, type StyleExitBarContext } from "./paper-execution-service.js";
+import { evaluateSignals, updateStateOnly, ATR } from "./paper-signal-service.js";
 import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 import { logger } from "../index.js";
 import { toEasternDateString } from "./paper-risk-gate.js";
+import { getDevelopingSessionPoc } from "./volume-profile-service.js";
+import { initSmtBarBufferProvider } from "./smt-live-service.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -98,14 +100,67 @@ function sessionsForSymbol(symbol: string): string[] {
 }
 
 /**
+ * Build a StyleExitBarContext for the current bar.
+ *
+ * Provides:
+ *   - atr14: ATR(14) computed from the bar buffer (fail-soft to 0 if insufficient)
+ *   - barVol: bar.volume (the actual bar volume — enables true AVWAP; Wave 26)
+ *   - developingSessionPoc: in-memory developing POC from volume-profile-service
+ *
+ * All fields except atr14 are optional — handlers return HOLD when absent.
+ * This function never throws — any error returns undefined so processSessionBar
+ * can proceed without exitBarContext (falls back to legacy ATR-only exits).
+ */
+async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | undefined> {
+  try {
+    // Use the local barBuffer map (paper-trading-stream.ts owns the streaming buffer).
+    // This is the same buffer used by evaluateSignals (passed as getBarBuffer(symbol)).
+    const buf = barBuffer.get(bar.symbol) ?? [];
+    const atr = ATR(buf, 14);
+    // ATR returns NaN when buffer is too short — clamp to 0 (HOLD guard in handlers)
+    const atr14 = Number.isFinite(atr) ? atr : 0;
+
+    const poc = await getDevelopingSessionPoc(bar.symbol).catch(() => null);
+
+    // ET time for time-stop evaluation (HH:MM from bar timestamp)
+    const barDate = new Date(bar.timestamp);
+    const etFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const currentTimeEt = etFormatter.format(barDate);
+
+    const ctx: StyleExitBarContext = {
+      currentTimeEt,
+      atr14: { [bar.symbol]: atr14 },
+      // Wave 26: wire actual bar volume for true AVWAP (ΣP·V / ΣV).
+      // Handlers fallback to unit-vol (barVol=1) when this map is absent or zero.
+      barVol: { [bar.symbol]: bar.volume > 0 ? bar.volume : 1 },
+      ...(poc != null ? { developingSessionPoc: { [bar.symbol]: poc } } : {}),
+    };
+    return ctx;
+  } catch (err) {
+    logger.warn({ err, symbol: bar.symbol }, "buildExitBarContext: failed — skipping exit handler dispatch for this bar");
+    return undefined;
+  }
+}
+
+/**
  * Process a single session's price update + signal evaluation.
  * Serialized per-session via sessionLocks to prevent concurrent evaluateSignals.
  */
 async function processSessionBar(sessionId: string, bar: Bar) {
   const priceMap = { [bar.symbol]: bar.close };
 
+  // Build exit bar context for Track 3 Style C/adaptive runner trail dispatch.
+  // Includes true bar volume (Wave 26 AVWAP wiring). Fail-soft: if context build
+  // fails, updatePositionPrices still runs (legacy ATR-only path).
+  const exitBarContext = await buildExitBarContext(bar);
+
   try {
-    await updatePositionPrices(sessionId, priceMap);
+    await updatePositionPrices(sessionId, priceMap, exitBarContext);
   } catch (err) {
     logger.error({ err, sessionId, symbol: bar.symbol }, "Failed to update position prices");
   }
@@ -394,6 +449,12 @@ export function isStreaming(sessionId: string): boolean {
 export function getBarBuffer(symbol: string): Bar[] {
   return barBuffer.get(symbol) ?? [];
 }
+
+// Wire bar buffer provider into smt-live-service (breaks circular dependency).
+// smt-live-service cannot import paper-trading-stream (would be circular since
+// paper-signal-service imports both). Provider injection is the safe pattern.
+// Must be called after getBarBuffer is defined above.
+initSmtBarBufferProvider(getBarBuffer);
 
 /**
  * Health snapshot for a single session — used by the scheduler's auto-recovery

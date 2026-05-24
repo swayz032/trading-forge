@@ -505,6 +505,109 @@ def extract_naked_pocs_for_persistence(
     return naked_records
 
 
+# ─── Wave 26: HOD/LOD export helper ──────────────────────────────────────────
+#
+# Wave 25 Pass 3 added hod + lod to the LevelType enum but refreshSessionLevels()
+# doesn't populate them (Wave 26 candidate).
+#
+# This helper computes HOD and LOD from intraday bars for a completed session and
+# returns HodLodRecord objects ready for persistence via the same naked-pocs-batch
+# endpoint (extended to accept level_type field).
+#
+# PURE FUNCTION — no I/O, no side effects.
+# Day-trader mandate (CLAUDE.md §2b): HOD/LOD are intraday reference levels only.
+# htf_significance=1 (lowest tier — intraday, resets daily).
+
+
+@dataclass
+class HodLodRecord:
+    """HOD or LOD entry ready for DB persistence via TS liquidity-map endpoint."""
+
+    symbol: str
+    session_date: str          # ISO YYYY-MM-DD of the session
+    level_type: str            # "hod" or "lod"
+    price: float
+    htf_significance: int = 1  # intraday level — always 1
+
+
+def extract_hod_lod_for_persistence(
+    intraday_5m_bars: pl.DataFrame,
+    symbol: str,
+    session_date: str,
+) -> List[HodLodRecord]:
+    """Return [HodLodRecord(hod), HodLodRecord(lod)] for the given session.
+
+    Pure function — no I/O, no side effects. Safe to call in hot paths.
+
+    Args:
+        intraday_5m_bars: Polars DataFrame with at minimum columns: ts_event, high, low.
+            Expected to contain only bars for the session identified by session_date.
+            If bars span multiple days, only bars with date == session_date are used.
+        symbol: Futures symbol for tick-size snapping (e.g. "MES").
+        session_date: ISO YYYY-MM-DD identifying the session.
+
+    Returns:
+        List with exactly 2 records [HodLodRecord(hod), HodLodRecord(lod)].
+        Returns empty list when bars are empty or required columns are missing.
+
+    Note on day-trader mandate (CLAUDE.md §2b):
+        HOD/LOD are intraday reference levels — they do NOT chase multi-day DOL.
+        htf_significance=1 ensures these levels receive the lowest sweep_probability
+        weight in the liquidity-map scoring model.
+    """
+    from datetime import date as _date
+
+    if len(intraday_5m_bars) == 0:
+        return []
+
+    required = {"high", "low"}
+    if not required.issubset(set(intraday_5m_bars.columns)):
+        return []
+
+    try:
+        target_date = _date.fromisoformat(session_date)
+    except Exception:
+        return []
+
+    # Filter to session_date only (handles caller passing multi-day input)
+    if "ts_event" in intraday_5m_bars.columns:
+        session_bars = intraday_5m_bars.with_columns(
+            pl.col("ts_event").dt.date().alias("_date")
+        ).filter(pl.col("_date") == target_date)
+    else:
+        # No ts_event — treat all rows as belonging to the session
+        session_bars = intraday_5m_bars
+
+    if len(session_bars) == 0:
+        return []
+
+    tick = _get_tick_size(symbol)
+
+    session_high = float(session_bars["high"].max())
+    session_low = float(session_bars["low"].min())
+
+    # Snap to tick grid (round to nearest tick) for consistency with VP levels
+    hod_price = round(session_high / tick) * tick
+    lod_price = round(session_low / tick) * tick
+
+    return [
+        HodLodRecord(
+            symbol=symbol,
+            session_date=session_date,
+            level_type="hod",
+            price=round(hod_price, 6),
+            htf_significance=1,
+        ),
+        HodLodRecord(
+            symbol=symbol,
+            session_date=session_date,
+            level_type="lod",
+            price=round(lod_price, 6),
+            htf_significance=1,
+        ),
+    ]
+
+
 # ─── A+ Gate: VP Shape Score (Wave 23 Gap-Fix-A) ─────────────────────────────
 #
 # Python port of getSessionShapeScore() from volume-profile-service.ts.

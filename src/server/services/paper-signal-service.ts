@@ -45,6 +45,10 @@ import { getDecayTelemetryThreshold } from "../lib/confluence-decay.js";
 // error — null result → factor falls back to "liquidity_map_unavailable".
 import { getNearestLiquidity } from "./liquidity-map-service.js";
 import { notifyCritical } from "./notification-service.js";
+// Wave 26 Group B Task 3: SMT live bridge — wires Python compute_smt_divergence()
+// into Path C SignalContext. Fail-soft: returns null snapshot on any error →
+// evalSmtConfirmation returns reason="smt_unavailable" (same fail-open as before).
+import { getSmtLiveSnapshot } from "./smt-live-service.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -3132,10 +3136,19 @@ export async function evaluateSignals(
             // confluence-score.ts::evalLiquidityTargetClear() can light up the
             // liquidity_target_clear factor. Fail-soft: any error → null →
             // factor returns "liquidity_map_unavailable" (fail-open preserved).
-            // Parallelized to keep per-bar latency below the previous baseline.
-            const [liquidityNearestAbove, liquidityNearestBelow] = await Promise.all([
+            //
+            // ── Wave 26 Group B Task 3: SMT live bridge ──────────────────────────
+            // Fetch the SMT divergence snapshot from the live Python bridge.
+            // Fail-soft: null snapshot → evalSmtConfirmation returns "smt_unavailable"
+            // (same fail-open as pre-Wave-26 — no regression in the live paper path).
+            // Parallelized alongside liquidity fetch to keep per-bar latency minimal.
+            const [liquidityNearestAbove, liquidityNearestBelow, smtSnapshot] = await Promise.all([
               getNearestLiquidity(symbol, bar.close, "above").catch(() => null),
               getNearestLiquidity(symbol, bar.close, "below").catch(() => null),
+              getSmtLiveSnapshot(
+                new Date(bar.timestamp),
+                correlationId ?? undefined,
+              ).catch(() => null),
             ]);
 
             const weightedCtx: WeightedSignalContext = {
@@ -3156,6 +3169,11 @@ export async function evaluateSignals(
               calendarBlocked,
               liquidityNearestAbove,
               liquidityNearestBelow,
+              // Wave 26: SMT live bridge — populate from Python compute_smt_divergence()
+              // Null when bridge unavailable → evalSmtConfirmation returns "smt_unavailable"
+              smt_score:     smtSnapshot?.score     ?? undefined,
+              smt_direction: smtSnapshot?.direction ?? undefined,
+              smt_age_bars:  smtSnapshot?.age_bars  ?? undefined,
             };
 
             // Build minimal ScoringStrategy shape for evaluator.

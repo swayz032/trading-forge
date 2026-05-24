@@ -774,9 +774,9 @@ adminRoutes.get("/data-integrity-findings", async (req, res) => {
 // ─── Wave 25 Pass 3 P3.A5 architect close-out ─────────────────────────────────
 // POST /admin/liquidity-map/naked-pocs-batch
 //
-// Persistence endpoint consumed by scripts/sync_naked_pocs_to_liquidity_map.py
-// (cron job `naked-poc-sync-daily` at 16:30 ET). Closes the Python→TS bridge
-// integration gap left open by P3.A1+A2 / P3.A3 parallel delivery.
+// Persistence endpoint consumed by:
+//   - scripts/sync_naked_pocs_to_liquidity_map.py (cron `naked-poc-sync-daily` 16:30 ET)
+//   - scripts/sync_naked_pocs_to_liquidity_map.py extended path for HOD/LOD (Wave 26)
 //
 // Request body:
 //   {
@@ -784,8 +784,10 @@ adminRoutes.get("/data-integrity-findings", async (req, res) => {
 //     "as_of_date": "2026-05-24",       // ISO YYYY-MM-DD
 //     "records": [
 //       {
-//         "session_date": "2026-05-20", // when the POC was established
+//         "session_date": "2026-05-20", // when the level was established
 //         "price": 5312.25,
+//         "level_type": "naked_poc",    // optional: defaults to "naked_poc" for backward compat
+//                                       // Wave 26: also accepts "hod" | "lod"
 //         "age_days": 2,
 //         "establishing_high": 5320.0,
 //         "establishing_low": 5298.75,
@@ -796,9 +798,10 @@ adminRoutes.get("/data-integrity-findings", async (req, res) => {
 //
 // Response: { ok: true, upserted: N, symbol, as_of_date, correlation_id }
 //
-// Idempotency: UPSERT on (symbol, session_date, level_type='naked_poc', price
-// bucketed to nearest 0.25). Re-running the script for the same date produces
-// no duplicate rows.
+// Idempotency: UPSERT on (symbol, session_date, level_type, price bucketed to nearest 0.25).
+// Re-running the script for the same date produces no duplicate rows.
+// HOD/LOD records: expire_at = end_of_session (not implemented; same as naked_poc — no expiry set
+// here, operator cron re-runs daily and existing active rows are skipped via idempotency check).
 //
 // Auth: optional shared-secret via X-Liquidity-Map-Secret header.  Enforced
 // only when env var LIQUIDITY_MAP_BATCH_SECRET is set.  Operator-grade admin
@@ -861,14 +864,28 @@ adminRoutes.post("/liquidity-map/naked-pocs-batch", async (req, res) => {
       continue;
     }
 
+    // Resolve level_type: Wave 26 extension allows "hod" | "lod"; default "naked_poc" for compat.
+    // Day-trader mandate: PWH/PWL/PMH/PML MUST NOT be accepted here.
+    const ALLOWED_BATCH_LEVEL_TYPES = new Set(["naked_poc", "hod", "lod"]);
+    const rawLevelType = typeof rec.level_type === "string" ? rec.level_type : "naked_poc";
+    if (!ALLOWED_BATCH_LEVEL_TYPES.has(rawLevelType)) {
+      skipped.push({ price, reason: `disallowed_level_type:${rawLevelType}` });
+      continue;
+    }
+    const levelType = rawLevelType as "naked_poc" | "hod" | "lod";
+
+    // htf_significance: naked_poc=2 (session), hod/lod=1 (intraday, per Wave 26 spec).
+    const htfSignificance = levelType === "naked_poc" ? 2 : 1;
+
     // Bucket price to nearest 0.25 (MES tick).  Honours idempotency tolerance.
     const priceBucketed = Math.round(price * 4) / 4;
     const priceBucketStr = String(priceBucketed);
 
     // Build source_meta from the record
     const sourceMeta: Record<string, unknown> = {
-      naked_poc_session: sessionDate,
-      source: "naked_poc_sync_cron",
+      level_session: sessionDate,
+      source: levelType === "naked_poc" ? "naked_poc_sync_cron" : "hod_lod_sync_cron",
+      level_type: levelType,
     };
     if (typeof rec.age_days === "number") sourceMeta.age_days = rec.age_days;
     if (typeof rec.establishing_high === "number") sourceMeta.establishing_high = rec.establishing_high;
@@ -882,7 +899,7 @@ adminRoutes.post("/liquidity-map/naked-pocs-batch", async (req, res) => {
       .where(
         and(
           eq(liquidityLevels.symbol, symbol),
-          eq(liquidityLevels.levelType, "naked_poc"),
+          eq(liquidityLevels.levelType, levelType),
           eq(liquidityLevels.price, priceBucketStr),
           // Active rows only — expired rows do not block re-insert
           sql`expired_at IS NULL`,
@@ -899,15 +916,14 @@ adminRoutes.post("/liquidity-map/naked-pocs-batch", async (req, res) => {
       await db.insert(liquidityLevels).values({
         symbol,
         sessionDate,
-        levelType: "naked_poc",
+        levelType,
         price: priceBucketStr,
-        // htf_significance=2 (session-level) per the spec.
-        htfSignificance: 2,
+        htfSignificance,
         sourceMeta,
       });
       upserted++;
     } catch (err) {
-      logger.warn({ err, symbol, sessionDate, price }, "liquidity-map naked-pocs-batch: insert failed (skipped)");
+      logger.warn({ err, symbol, sessionDate, price, levelType }, "liquidity-map naked-pocs-batch: insert failed (skipped)");
       skipped.push({ price, reason: "insert_failed" });
     }
   }

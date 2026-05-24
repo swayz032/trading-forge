@@ -19,7 +19,7 @@ import { logger } from "./lib/logger.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
 import { AlertFactory } from "./services/alert-service.js";
 import { runPythonModule } from "./lib/python-runner.js";
-import { startStream, stopStream, isStreaming, getActiveStreams, getStreamHealth } from "./services/paper-trading-stream.js";
+import { startStream, stopStream, isStreaming, getActiveStreams, getStreamHealth, getBarBuffer } from "./services/paper-trading-stream.js";
 import { restorePositionState, cleanupSession, restoreGovernorState } from "./services/paper-signal-service.js";
 import { trainDeepAR, predictRegime, validatePastForecasts, isDeepARDeferred } from "./services/deepar-service.js";
 import { setRegimeWeights } from "./services/regime-state-service.js";
@@ -363,6 +363,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // Topstep payout denial can happen WHILE the pipeline is paused; the digest is a
   // safety signal for the operator, not a trading research signal.
   "consistency-tracker-daily-digest",    // W26: Topstep 40/50% consistency gate digest
+  // W26 Group C: cohort audit report fires daily at 17:00 ET regardless of pipeline
+  // state — operator needs the exit_plan distribution and invariant proof even when
+  // the bot is in PAUSE. This is an observability signal, not a trading research signal.
+  "wave26-cohort-daily-audit-report",   // W26C: cohort adaptive-exit audit snapshot
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -4042,6 +4046,127 @@ except Exception as e:
   });
   _scheduledJobs.add("pattern-aggregator");
 
+  // ─── Wave 26 Group C Task 2: cohort daily audit report — daily at 17:00 ET ───
+  //
+  // Queries audit_log for the last 24h of adaptive-exit events and posts a
+  // Markdown cohort health report to Discord (INFO level — not a critical alert).
+  // Produces: exit_plan source distribution, regime distribution, runner trail
+  // usage, fallback event cluster detection, and hard-invariant proof counts.
+  //
+  // Pipeline-gate EXEMPT: operator needs the report even when trading is paused.
+  // Idempotent (W23F.U UTC-date pattern): skips if already sent today.
+  // Fail-soft: empty audit_log → zero counts in report, no crash.
+
+  registerJob("wave26-cohort-daily-audit-report", 24 * 60 * 60 * 1000, async () => {
+    const nowUtc = new Date();
+    const hourUtc = nowUtc.getUTCHours();
+    const correlationId = randomUUID();
+    // Fire at 21:00 UTC = 17:00 ET (after RTH close + post-trade settle).
+    // Check window: 20:45–21:15 UTC to account for cron scheduling jitter.
+    if (hourUtc < 20 || hourUtc > 21) return;
+
+    const sessionDate = nowUtc.toISOString().slice(0, 10);
+
+    logger.info(
+      { sessionDate, correlationId },
+      "wave26-cohort-daily-audit-report: tick firing",
+    );
+
+    // W23F.U idempotency: skip if already sent today
+    const alreadySentRows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, "wave26.cohort_audit_report_sent"),
+          gte(
+            auditLog.createdAt,
+            new Date(new Date(sessionDate + "T00:00:00.000Z").getTime()),
+          ),
+        ),
+      )
+      .limit(1);
+
+    if (alreadySentRows.length > 0) {
+      logger.debug(
+        { sessionDate, correlationId },
+        "wave26-cohort-daily-audit-report: already sent today — skipping (idempotency)",
+      );
+      return;
+    }
+
+    try {
+      // Build report via the cohort audit query service
+      const { buildCohortAuditReport } = await import("./services/cohort-audit-report-service.js");
+      const { markdown: reportMarkdown, summary } = await buildCohortAuditReport({
+        days: 1,
+        strategy: "silver_bullet",
+        correlationId,
+      });
+
+      // Post to Discord as INFO (informational — not a failure signal)
+      const { notifyInfo } = await import("./services/notification-service.js");
+      const truncatedBody = reportMarkdown.slice(0, 3500); // Discord embed limit
+      notifyInfo(
+        `Wave 26 Cohort Audit — ${sessionDate}`,
+        truncatedBody,
+        { session_date: sessionDate, strategy: "silver_bullet", correlationId },
+      );
+
+      // Write audit row confirming report was sent (idempotency anchor)
+      await insertAuditRow({
+        action: "wave26.cohort_audit_report_sent",
+        entityType: "cohort_audit_report",
+        entityId: null,
+        status: "success",
+        input: { session_date: sessionDate, days: 1, strategy: "silver_bullet" },
+        result: {
+          session_date: sessionDate,
+          summary,
+          correlationId,
+        },
+        correlationId,
+      });
+
+      logger.info(
+        { sessionDate, correlationId, summary },
+        "wave26-cohort-daily-audit-report: report sent",
+      );
+    } catch (err) {
+      logger.warn(
+        { err, sessionDate, correlationId },
+        "wave26-cohort-daily-audit-report: failed (non-blocking)",
+      );
+      // Write failure audit row for observability
+      await insertAuditRow({
+        action: "wave26.cohort_audit_report_failed",
+        entityType: "cohort_audit_report",
+        entityId: null,
+        status: "failure",
+        input: { session_date: sessionDate, days: 1, strategy: "silver_bullet" },
+        result: { session_date: sessionDate, error: String(err), correlationId },
+        correlationId,
+      }).catch(() => { /* swallow nested audit write failure */ });
+    }
+  });
+
+  _PIPELINE_GATE_EXEMPT.add("wave26-cohort-daily-audit-report");
+
+  // Cron driver: every hour — "0 * * * *"
+  // Job itself checks for the 20:xx-21:xx UTC window (17:00 ET)
+  cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("wave26-cohort-daily-audit-report")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("wave26-cohort-daily-audit-report", SCHEDULER_JOBS["wave26-cohort-daily-audit-report"].run, 1);
+      markJobRun("wave26-cohort-daily-audit-report");
+      emitJobComplete("wave26-cohort-daily-audit-report", Date.now() - t0);
+    } finally {
+      _releaseJobLock("wave26-cohort-daily-audit-report");
+    }
+  });
+  _scheduledJobs.add("wave26-cohort-daily-audit-report");
+
   // ─── Wave 25 Pass 6 W25.11: narrative-state-tracker — every 5 min RTH ──────
   //
   // Computes institutional narrative phase (ACCUMULATION / MANIPULATION /
@@ -4093,14 +4218,50 @@ except Exception as e:
         // Load previous narrative state for phase continuity
         const previousState = await loadLatestNarrativeState(sessionDate, symbol);
 
-        // Compute narrative state — no liquidity levels provided from the cron path
-        // (liquidity-map-service lookup is deferred to a future pass for performance;
-        // expansion_target will be null in cron path, non-null when called from signal flow)
+        // ── Wave 26 Group C Task 1: fetch latest real intraday bar ──────────────
+        // getBarBuffer() returns the live 200-bar rolling window from the Massive
+        // WebSocket feed. When a bar is available, pass real {close, high, low}
+        // so ACCUMULATION → MANIPULATION sweep detection fires from the cron path.
+        // Fallback: if the buffer is empty (pre-market, weekend, or feed not yet
+        // started), use close=0/high=0/low=0 — sweep detection stays dormant but
+        // phase-continuity logic still runs (backward compat preserved).
+        const symbolBarBuffer = getBarBuffer(symbol);
+        const latestStreamBar = symbolBarBuffer.length > 0
+          ? symbolBarBuffer[symbolBarBuffer.length - 1]
+          : null;
+
+        const currentBar = latestStreamBar !== null
+          ? {
+              close: latestStreamBar.close,
+              high:  latestStreamBar.high,
+              low:   latestStreamBar.low,
+              ts_event: new Date(latestStreamBar.timestamp),
+            }
+          : { close: 0, high: 0, low: 0, ts_event: nowUtc };
+
+        const barSource = latestStreamBar !== null ? "live_stream" : "fallback_zeros";
+        logger.debug(
+          {
+            symbol,
+            sessionDate,
+            correlationId,
+            bar_source: barSource,
+            close: currentBar.close,
+            high: currentBar.high,
+            low: currentBar.low,
+            ts_event: currentBar.ts_event.toISOString(),
+          },
+          "narrative-state-tracker: bar resolved for sweep detection",
+        );
+
+        // Compute narrative state — real bar enables ACCUMULATION→MANIPULATION detection.
+        // Liquidity levels are empty here (expensive lookup deferred to signal flow);
+        // expansion_target will be null in cron path, non-null when called from paper-signal-service.
         const state = computeNarrativeState(
           htfNarrative,
           structureState,
-          { close: 0, high: 0, low: 0, ts_event: nowUtc },
-          [], // liquidityLevelsNearby — empty in cron path
+          currentBar,
+          [], // liquidityLevelsNearby — empty in cron path (expansion_target computed at signal time)
           previousState,
         );
 

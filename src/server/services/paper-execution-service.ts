@@ -2298,6 +2298,14 @@ export interface StyleExitBarContext {
   currentTimeEt: string;
   /** Per-symbol ATR-14 in points */
   atr14: Record<string, number>;
+  /**
+   * Per-symbol bar volume for the current bar.
+   * Used by the anchored_vwap runner trail (ΣP·V / ΣV from entry timestamp).
+   * When absent or zero, the AVWAP degrades to a price-only average (unit-vol
+   * fallback: barVol=1 per bar, equivalent to a simple moving average of mid).
+   * Wave 26 wires real volume here from bar.volume at every processSessionBar call.
+   */
+  barVol?: Record<string, number>;
   /** Per-symbol running high since entry for each open position */
   highSinceEntry?: Record<string, number>;
   /** Per-symbol running low since entry for each open position */
@@ -2788,10 +2796,13 @@ export async function updatePositionPrices(
             const prevState = exitPlanRow.runtime_state ?? {};
             const prevSumPv = prevState.sum_pv ?? 0;
             const prevSumV  = prevState.sum_v  ?? 0;
-            // bar volume from exitBarContext (not available in existing interface — use ATR proxy)
-            // NOTE: volume is not in StyleExitBarContext; use midpoint price × 1 vol unit as a fallback
-            // until callers wire volume. The AVWAP degrades to a price-only trail when volume absent.
-            const barVol = 1; // fallback; callers should add volume to StyleExitBarContext in Wave 26
+            // Wave 26: barVol is now wired from bar.volume at processSessionBar call sites.
+            // Fallback to 1 (unit-vol) when the caller omits barVol (legacy callers,
+            // test fixtures, or markets with zero/missing volume data).
+            // Unit-vol fallback degrades AVWAP to a simple price average — still a valid
+            // trailing reference, just not truly volume-weighted.
+            const rawBarVol = exitBarContext.barVol?.[pos.symbol];
+            const barVol = rawBarVol != null && rawBarVol > 0 ? rawBarVol : 1;
             const barMid = currentPrice;
             const newSumPv = prevSumPv + barMid * barVol;
             const newSumV  = prevSumV  + barVol;

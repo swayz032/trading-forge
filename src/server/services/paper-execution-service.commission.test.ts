@@ -18,13 +18,8 @@ describe("getCommissionPerSide", () => {
     expect(getCommissionPerSide("topstep")).toBe(0.37);
   });
 
-  it("returns 0.00 for Alpha Futures (no commission)", () => {
-    expect(getCommissionPerSide("alpha")).toBe(0.00);
-  });
-
-  it("returns 1.29 for Tradeify", () => {
-    expect(getCommissionPerSide("tradeify")).toBe(1.29);
-  });
+  // Alpha Futures + Tradeify removed per migration 0097 (CLAUDE.md §6 — Topstep + MFFU only).
+  // Both now return the 0.62 fallback; dedicated test cases removed to prevent misleading failures.
 
   it("returns 0.62 for MFFU", () => {
     expect(getCommissionPerSide("mffu")).toBe(0.62);
@@ -80,25 +75,7 @@ describe("Round-trip commission arithmetic", () => {
     expect(netPnl).toBeCloseTo(99.26, 4);
   });
 
-  it("computes correct round-trip for Tradeify 3-contract trade", () => {
-    const perSide = getCommissionPerSide("tradeify"); // 1.29
-    const contracts = 3;
-    const grossPnl = 387.50;
-    const commission = perSide * 2 * contracts; // 7.74
-    const netPnl = grossPnl - commission;        // 379.76
-    expect(commission).toBeCloseTo(7.74, 4);
-    expect(netPnl).toBeCloseTo(379.76, 4);
-  });
-
-  it("Alpha Futures has zero commission — netPnl equals grossPnl", () => {
-    const perSide = getCommissionPerSide("alpha"); // 0.00
-    const contracts = 5;
-    const grossPnl = 250.00;
-    const commission = perSide * 2 * contracts; // 0.00
-    const netPnl = grossPnl - commission;        // 250.00
-    expect(commission).toBe(0);
-    expect(netPnl).toBe(grossPnl);
-  });
+  // Tradeify + Alpha Futures round-trip tests removed (migration 0097 — firms removed).
 
   it("commission reduces a winning trade correctly", () => {
     // MES: 1 contract, $50 gross win on Topstep

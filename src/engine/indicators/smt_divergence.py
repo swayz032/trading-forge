@@ -401,3 +401,92 @@ def compute_smt_divergence(
             )
 
     return None
+
+
+# ─── CLI entry-point (python -m src.engine.indicators.smt_divergence) ─────────
+# Called by smt-live-service.ts via runPythonModule.
+#
+# Contract (matches runPythonModule --config pattern):
+#   Input:  --config <path> to JSON with:
+#     {
+#       "es_bars":  [ {"open":N, "high":N, "low":N, "close":N, "volume":N, "ts_event":"ISO"}, ... ],
+#       "nq_bars":  [ {...}, ... ],
+#       "lookback": 20  // optional
+#     }
+#
+#   Output (stdout, single JSON line):
+#     {"score": 0.65, "direction": "bullish_es_low_nq_higher", "age_bars": 0}
+#     or
+#     {"score": null, "direction": null, "age_bars": null}  // when no divergence
+#
+# Graceful degradation:
+#   - Any error → {"score": null, "direction": null, "age_bars": null, "error": "..."}
+#   - Never exits non-zero (caller treats null snapshot as smt_unavailable)
+
+if __name__ == "__main__":
+    import argparse
+    import json
+    import sys
+
+    parser = argparse.ArgumentParser(description="SMT divergence CLI")
+    parser.add_argument("--config", required=True, help="Path to JSON config file")
+    args = parser.parse_args()
+
+    _NULL_RESULT: dict = {"score": None, "direction": None, "age_bars": None}
+
+    try:
+        with open(args.config, encoding="utf-8") as _f:
+            _cfg = json.load(_f)
+
+        _es_raw = _cfg.get("es_bars", [])
+        _nq_raw = _cfg.get("nq_bars", [])
+        _lookback = int(_cfg.get("lookback", 20))
+
+        if not _es_raw or not _nq_raw:
+            print(json.dumps(_NULL_RESULT))
+            sys.exit(0)
+
+        # Build Polars DataFrames from the bar arrays.
+        # Required columns: high, low, close  (open + volume used when present).
+        def _build_df(bars: list[dict]) -> pl.DataFrame:
+            opens   = [float(b.get("open", 0))   for b in bars]
+            highs   = [float(b["high"])           for b in bars]
+            lows    = [float(b["low"])            for b in bars]
+            closes  = [float(b["close"])          for b in bars]
+            volumes = [float(b.get("volume", 0)) for b in bars]
+            df = pl.DataFrame({
+                "open":   pl.Series("open",   opens,   dtype=pl.Float64),
+                "high":   pl.Series("high",   highs,   dtype=pl.Float64),
+                "low":    pl.Series("low",    lows,    dtype=pl.Float64),
+                "close":  pl.Series("close",  closes,  dtype=pl.Float64),
+                "volume": pl.Series("volume", volumes, dtype=pl.Float64),
+            })
+            ts_list = [b.get("ts_event") for b in bars]
+            if all(t is not None for t in ts_list):
+                try:
+                    df = df.with_columns(
+                        pl.Series("ts_event", ts_list, dtype=pl.Utf8)
+                          .str.to_datetime(strict=False)
+                    )
+                except Exception:
+                    pass  # ts_event is optional — alignment falls back to positional
+            return df
+
+        _es_df = _build_df(_es_raw)
+        _nq_df = _build_df(_nq_raw)
+
+        _result = compute_smt_divergence(_es_df, _nq_df, lookback=_lookback)
+
+        if _result is None:
+            print(json.dumps(_NULL_RESULT))
+        else:
+            print(json.dumps({
+                "score":     _result.score,
+                "direction": _result.direction,
+                "age_bars":  _result.age_bars,
+            }))
+
+    except Exception as _e:
+        print(json.dumps({**_NULL_RESULT, "error": str(_e)}))
+
+    sys.exit(0)

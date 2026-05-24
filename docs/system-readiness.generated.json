@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T13:37:16.932Z",
+  "generatedAt": "2026-05-24T19:37:25.663Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -9,6 +9,8 @@
     "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
     "pattern_aggregator_service:manual_gate:kill_switch",
     "production_hardening:manual_gate:operator-halt-only",
+    "ts_python_parity_ci_gate:invalid-active-proof-mode",
+    "ts_python_parity_ci_gate:manual_gate:ci_gate",
     "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
     "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
     "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -19,9 +21,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 40,
-    "ready": 29,
-    "blocked": 4,
+    "total": 44,
+    "ready": 32,
+    "blocked": 5,
     "manualGated": 2,
     "experimental": 5
   },
@@ -167,6 +169,25 @@
         "cloud-qmc-pending-row",
         "cloud-qmc.budget_exhausted",
         "cloud-qmc.enqueued"
+      ]
+    },
+    {
+      "id": "cohort_audit_report_service",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:wave26.cohort_audit_report_failed",
+        "audit_log:wave26.cohort_audit_report_sent",
+        "audit_log:wave26.cohort_audit_report_sent:daily-1700-et",
+        "src/server/__tests__/wave26-cohort-audit-report.test.ts",
+        "wave26.cohort_audit_report_failed",
+        "wave26.cohort_audit_report_sent"
       ]
     },
     {
@@ -371,6 +392,23 @@
         "frankenstein:* SSE",
         "frankenstein.run-complete",
         "lifecycle.gate-blocked-frankenstein"
+      ]
+    },
+    {
+      "id": "hod_lod_persistence_bridge",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:liquidity_map.naked_pocs_batched",
+        "audit_log:liquidity_map.naked_pocs_batched:daily-1630-et",
+        "liquidity_map.naked_pocs_batched",
+        "src/engine/tests/test_extract_hod_lod.py"
       ]
     },
     {
@@ -823,6 +861,25 @@
       ]
     },
     {
+      "id": "smt_live_bridge_service",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "production",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:smt.snapshot_captured",
+        "audit_log:smt.snapshot_stale_skipped",
+        "per-bar-invocation:getSmtLiveSnapshot",
+        "smt.snapshot_captured",
+        "smt.snapshot_stale_skipped",
+        "src/server/__tests__/wave26-smt-live-bridge.test.ts"
+      ]
+    },
+    {
       "id": "strategy_lifecycle",
       "status": "manual-gated",
       "productionTargetState": "production_manual_gate",
@@ -890,6 +947,26 @@
         "trade_critique.idempotent_skip",
         "wave26-trade-critique-service.test.ts",
         "wave26-trade-journal-route.test.ts"
+      ]
+    },
+    {
+      "id": "ts_python_parity_ci_gate",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "ci_gate",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "production",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:ci_gate"
+      ],
+      "requiredEvidence": [
+        "ci_exit_code:check:ts-python-exit-parity",
+        "ci-invocation:npm-run-check-ts-python-exit-parity",
+        "scripts/wave26-ts-python-exit-parity.ts",
+        "src/server/__tests__/wave26-ts-python-parity.test.ts"
       ]
     },
     {

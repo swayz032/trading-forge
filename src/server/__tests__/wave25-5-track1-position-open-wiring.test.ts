@@ -228,12 +228,17 @@ describe("Gap C — adaptive runner trail computation", () => {
   /**
    * Pure-function simulation of the adaptive trail computation block from
    * updatePositionPrices. Extracted for direct unit testing without DB.
+   *
+   * Wave 26: accepts barVol (optional) for true volume-weighted AVWAP.
+   * When absent or zero, falls back to unit-vol (same as pre-Wave-26 behavior).
    */
   function computeAdaptiveTrailForTest(opts: {
     trailMethod: string;
     side: "long" | "short";
     currentPrice: number;
     atrAtEntry: number;
+    /** Wave 26: actual bar volume. When absent, unit-vol fallback (barVol=1). */
+    barVol?: number;
     developingSessionPoc?: number;
     highSinceEntry?: number;
     lowSinceEntry?: number;
@@ -257,7 +262,10 @@ describe("Gap C — adaptive runner trail computation", () => {
       case "anchored_vwap": {
         const prevSumPv = prevRuntimeState.sum_pv ?? 0;
         const prevSumV  = prevRuntimeState.sum_v  ?? 0;
-        const barVol = 1; // unit volume fallback
+        // Wave 26: use actual bar volume when provided; fall back to unit-vol.
+        // Mirrors production: rawBarVol != null && rawBarVol > 0 ? rawBarVol : 1
+        const rawBarVol = opts.barVol;
+        const barVol = rawBarVol != null && rawBarVol > 0 ? rawBarVol : 1;
         const barMid = currentPrice;
         const newSumPv = prevSumPv + barMid * barVol;
         const newSumV  = prevSumV  + barVol;
@@ -367,6 +375,105 @@ describe("Gap C — adaptive runner trail computation", () => {
     expect(isTrailTighter("long", trail3, trail2)).toBe(trail3 > trail2);
     // At price 4995 with 3 bars: avwap = (5000+5010+4995)/3 ≈ 5001.67 → trail ≈ 4997.67 < trail2
     expect(trail3).toBeLessThan(trail2); // confirms ratchet guard would block this update
+  });
+
+  // ── Wave 26: True volume-weighted AVWAP tests ──────────────────────────────
+  // These tests verify that heterogeneous bar volumes produce a different (and
+  // more accurate) AVWAP than unit-vol fallback. This is the core parity gap
+  // from CLAUDE.md §2 Wave 25.5: "anchored_vwap uses unit-vol fallback because
+  // StyleExitBarContext does not yet carry barVol — Wave 26 wires real volume."
+
+  it("T5b: anchored_vwap (Wave 26) — heterogeneous volume produces true VWAP different from price average", () => {
+    // Bar 1: price=5000, vol=100  → contribution weight 100
+    // Bar 2: price=5020, vol=400  → contribution weight 400
+    //
+    // True AVWAP = (5000*100 + 5020*400) / (100+400) = (500000 + 2008000) / 500 = 2508000/500 = 5016.0
+    // Unit-vol AVWAP = (5000 + 5020) / 2 = 5010.0
+    //
+    // The two must differ — this test verifies volume is actually flowing through.
+
+    const atr = 4.0;
+
+    // Bar 1 (volume 100)
+    const bar1 = computeAdaptiveTrailForTest({
+      trailMethod: "anchored_vwap", side: "long",
+      currentPrice: 5000, atrAtEntry: atr, barVol: 100,
+    });
+    // After bar1: sum_pv = 5000*100 = 500000, sum_v = 100, avwap = 5000
+    expect(bar1.updatedRuntimeState?.sum_pv).toBe(500000);
+    expect(bar1.updatedRuntimeState?.sum_v).toBe(100);
+    expect(bar1.updatedRuntimeState?.avwap).toBe(5000);
+
+    // Bar 2 (volume 400 — 4x bar1, should pull AVWAP much closer to bar2 price)
+    const bar2 = computeAdaptiveTrailForTest({
+      trailMethod: "anchored_vwap", side: "long",
+      currentPrice: 5020, atrAtEntry: atr, barVol: 400,
+      prevRuntimeState: bar1.updatedRuntimeState!,
+    });
+    // True AVWAP = (500000 + 5020*400) / (100+400) = 2508000 / 500 = 5016.0
+    expect(bar2.updatedRuntimeState?.sum_pv).toBe(500000 + 5020 * 400); // 2508000
+    expect(bar2.updatedRuntimeState?.sum_v).toBe(500);
+    expect(bar2.updatedRuntimeState?.avwap).toBeCloseTo(5016.0, 6);
+
+    // Compute unit-vol AVWAP for same two bars: (5000*1 + 5020*1) / 2 = 5010
+    const bar1Uv = computeAdaptiveTrailForTest({
+      trailMethod: "anchored_vwap", side: "long",
+      currentPrice: 5000, atrAtEntry: atr,  // no barVol → unit-vol fallback
+    });
+    const bar2Uv = computeAdaptiveTrailForTest({
+      trailMethod: "anchored_vwap", side: "long",
+      currentPrice: 5020, atrAtEntry: atr,
+      prevRuntimeState: bar1Uv.updatedRuntimeState!,
+    });
+    expect(bar2Uv.updatedRuntimeState?.avwap).toBeCloseTo(5010.0, 6);
+
+    // Key assertion: true vol-weighted AVWAP (5016) DIFFERS from unit-vol (5010)
+    expect(bar2.updatedRuntimeState?.avwap).not.toBeCloseTo(bar2Uv.updatedRuntimeState?.avwap ?? 0, 1);
+    // True AVWAP is above unit-vol because the high-volume bar at 5020 pulls it up
+    expect(bar2.updatedRuntimeState?.avwap!).toBeGreaterThan(bar2Uv.updatedRuntimeState?.avwap!);
+
+    // Trail = AVWAP - ATR = 5016 - 4 = 5012.0 (true) vs 5010 - 4 = 5006 (unit-vol)
+    expect(bar2.computedTrail).toBeCloseTo(5016.0 - atr, 6);
+    expect(bar2Uv.computedTrail).toBeCloseTo(5010.0 - atr, 6);
+  });
+
+  it("T5c: anchored_vwap (Wave 26) — unit-vol fallback when barVol is 0 or absent", () => {
+    // barVol=0 and absent should both produce unit-vol behavior (barVol=1)
+    const atr = 4.0;
+    const barZeroVol = computeAdaptiveTrailForTest({
+      trailMethod: "anchored_vwap", side: "long",
+      currentPrice: 5000, atrAtEntry: atr, barVol: 0,
+    });
+    const barNoVol = computeAdaptiveTrailForTest({
+      trailMethod: "anchored_vwap", side: "long",
+      currentPrice: 5000, atrAtEntry: atr,
+    });
+    // Both use barVol=1 fallback: sum_v=1, sum_pv=5000, avwap=5000
+    expect(barZeroVol.updatedRuntimeState?.sum_v).toBe(1);
+    expect(barNoVol.updatedRuntimeState?.sum_v).toBe(1);
+    expect(barZeroVol.computedTrail).toBeCloseTo(barNoVol.computedTrail!, 6);
+  });
+
+  it("T5d: anchored_vwap (Wave 26) — short side trail = AVWAP + ATR cushion with volume weighting", () => {
+    // For shorts: trail is ABOVE AVWAP (not below)
+    // Bar 1: price=5000, vol=200 → avwap=5000, trail = 5000 + atr
+    // Bar 2: price=4980, vol=800 → avwap = (5000*200 + 4980*800)/(200+800) = (1000000+3984000)/1000 = 4984
+    //        trail = 4984 + atr
+    const atr = 4.0;
+    const bar1 = computeAdaptiveTrailForTest({
+      trailMethod: "anchored_vwap", side: "short",
+      currentPrice: 5000, atrAtEntry: atr, barVol: 200,
+    });
+    expect(bar1.computedTrail).toBeCloseTo(5000 + atr, 6);
+
+    const bar2 = computeAdaptiveTrailForTest({
+      trailMethod: "anchored_vwap", side: "short",
+      currentPrice: 4980, atrAtEntry: atr, barVol: 800,
+      prevRuntimeState: bar1.updatedRuntimeState!,
+    });
+    const expectedAvwap = (5000 * 200 + 4980 * 800) / 1000; // 4984
+    expect(bar2.updatedRuntimeState?.avwap).toBeCloseTo(expectedAvwap, 6);
+    expect(bar2.computedTrail).toBeCloseTo(expectedAvwap + atr, 6);
   });
 
   it("T7: developing_poc — trail = POC - 1×ATR for long (Style C verbatim)", () => {

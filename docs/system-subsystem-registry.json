@@ -3262,5 +3262,243 @@
     "learning_boundary": "engine_only",
     "deployment_authority": "production",
     "criticality": "important"
+  },
+  {
+    "id": "cohort_audit_report_service",
+    "domain": "observability",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 26 Group C deliverable. Daily cohort audit report service (src/server/services/cohort-audit-report-service.ts) + CLI (scripts/wave26-cohort-audit-report.ts). Fires daily at 17:00 ET (21:00 UTC) via wave26-cohort-daily-audit-report cron. Queries audit_log for adaptive-exit cohort signals: exit_plan_persisted, exit_plan_fallback_static, TP1 source distribution, regime distribution, 15:55 ET flatten event count, BE+1 fill count, 67% DLL halts, 95% force-closes, avg-R per winning trade. Posts dual-output Discord summary (operator + family-grade) and writes audit row wave26.cohort_audit_report_sent (or wave26.cohort_audit_report_failed on exception). Idempotent (W23F.U UTC-date pattern). Pipeline-gate exempt. Report files saved to docs/cohort-audit-reports/YYYY-MM-DD.md. Consumed by operator per docs/wave26-cohort-decision-rules.md for 7/14/30-day cohort expansion go/no-go.",
+    "data_sources": [
+      "audit_log"
+    ],
+    "reads_from": [
+      "audit_log"
+    ],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "wave26.cohort_audit_report_sent",
+      "wave26.cohort_audit_report_failed"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:wave26.cohort_audit_report_sent",
+      "audit_log:wave26.cohort_audit_report_failed"
+    ],
+    "scheduler_jobs": [
+      "wave26-cohort-daily-audit-report"
+    ],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "logger:wave26-cohort-daily-audit-report"
+    ],
+    "recovery_mode": "fail-soft-cron-retry",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:wave26.cohort_audit_report_sent:daily-1700-et"
+    ],
+    "evidence_queries": [
+      "src/server/__tests__/wave26-cohort-audit-report.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "observability_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "smt_live_bridge_service",
+    "domain": "signal_generation",
+    "owner_surface": "python_to_node_bridge",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 26 Group B deliverable. Bridges Python compute_smt_divergence() to live paper-signal-service.ts so smt_score / smt_direction / smt_age_bars populate WeightedSignalContext for evalSmtConfirmation in Path C confluence scoring. smt-live-service.ts.getSmtLiveSnapshot() spawns python -m src.engine.indicators.smt_divergence with --config JSON (paired ES/NQ bars + timestamp); 30s in-process cache to keep per-bar latency low; fail-soft (returns null on subprocess/parse error → factor returns 'smt_unavailable' fail-open). Python __main__ CLI in smt_divergence.py emits stdout JSON { score, direction, age_bars }. Wired in paper-signal-service.ts Promise.all alongside getNearestLiquidity for parallelized per-bar lookups. Audit rows: smt.snapshot_captured (info) / smt.snapshot_stale_skipped (info on cache hit).",
+    "data_sources": [
+      "paired_es_nq_bars",
+      "src/engine/indicators/smt_divergence.py"
+    ],
+    "reads_from": [],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "smt.snapshot_captured",
+      "smt.snapshot_stale_skipped"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:smt.snapshot_captured",
+      "audit_log:smt.snapshot_stale_skipped"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "src/engine/indicators/smt_divergence.py"
+    ],
+    "database_tables": [
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "logger:smt-live-service"
+    ],
+    "recovery_mode": "fail-open-null-snapshot",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "per-bar-invocation:getSmtLiveSnapshot"
+    ],
+    "evidence_queries": [
+      "src/server/__tests__/wave26-smt-live-bridge.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "production",
+    "criticality": "important"
+  },
+  {
+    "id": "ts_python_parity_ci_gate",
+    "domain": "validation",
+    "owner_surface": "node-python",
+    "automation_mode": "manual_invoke",
+    "manual_gate": "ci_gate",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 26 Group A deliverable. CI hard gate (npm run check:ts-python-exit-parity → scripts/wave26-ts-python-exit-parity.ts). Asserts TS computeExitPlan() and Python compute_exit_plan_python() produce identical tp1.price (±0.01), tp2.price (±0.01), runner_trail_method, scaling tuple, pre-lunch threshold across 5 regime fixtures (TRENDING / RANGE_BOUND / HIGH_VOL_MACRO / LOW_LIQ_CHOP / COMPRESSION). Any drift = fail-CLOSED (non-zero exit). Informational subsystem — no runtime state, no DB writes; the gate IS the freshness signal.",
+    "data_sources": [
+      "5_regime_fixtures"
+    ],
+    "reads_from": [],
+    "writes_to": [],
+    "audit_tables": [],
+    "audit_actions": [],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "ci_exit_code:check:ts-python-exit-parity"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "src/engine/exits/adaptive_exits.py",
+      "src/server/lib/adaptive-exit-engine.ts",
+      "scripts/wave26-ts-python-exit-parity.ts"
+    ],
+    "database_tables": [],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "ci_exit_code",
+      "logger:wave26-ts-python-parity"
+    ],
+    "recovery_mode": "fail-closed-ci",
+    "health_check": "ci-only",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "ci-runtime",
+    "freshness_signals": [
+      "ci-invocation:npm-run-check-ts-python-exit-parity"
+    ],
+    "evidence_queries": [
+      "src/server/__tests__/wave26-ts-python-parity.test.ts",
+      "scripts/wave26-ts-python-exit-parity.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "ci_only",
+    "deployment_authority": "production",
+    "criticality": "important"
+  },
+  {
+    "id": "hod_lod_persistence_bridge",
+    "domain": "signal_generation",
+    "owner_surface": "python_to_node_bridge",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "scheduler",
+    "automation_scope": "Wave 26 Group A deliverable. Extends naked_poc_persistence_bridge with HOD/LOD level extraction. extract_hod_lod_for_persistence() in volume_profile.py emits intraday HOD + LOD levels keyed to the prior session; same daily 16:30 ET cron (naked-poc-sync-daily) batches them through the existing POST /api/admin/liquidity-map/naked-pocs-batch endpoint which now also accepts level_type ∈ {HOD, LOD}. Closes the level_type='HOD' / level_type='LOD' population gap so paper-signal-service liquidity injection sees a fuller intraday DOL menu. Idempotent (same UPSERT bucketing as naked_poc bridge).",
+    "data_sources": [
+      "S3 ratio_adj/{symbol}/5min"
+    ],
+    "reads_from": [
+      "S3"
+    ],
+    "writes_to": [
+      "liquidity_levels",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "liquidity_map.naked_pocs_batched"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log:liquidity_map.naked_pocs_batched"
+    ],
+    "scheduler_jobs": [
+      "naked-poc-sync-daily"
+    ],
+    "routes": [
+      "POST /api/admin/liquidity-map/naked-pocs-batch"
+    ],
+    "engine_subsystems": [
+      "src/engine/indicators/volume_profile.py"
+    ],
+    "database_tables": [
+      "liquidity_levels",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "audit_log",
+      "stdout-json-summary"
+    ],
+    "recovery_mode": "fail-soft-cron-retry",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:liquidity_map.naked_pocs_batched:daily-1630-et"
+    ],
+    "evidence_queries": [
+      "src/engine/tests/test_extract_hod_lod.py"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
   }
 ]
