@@ -4,6 +4,68 @@
 
 ---
 
+### Session Log — 2026-05-24 backtest-core — Wave 25 Pass 5 W25.8: VWAP bands + Anchored VWAP
+
+**Mission:** Add VWAP standard-deviation bands (1σ/2σ) and Anchored VWAP to the indicator engine; register `vwap_band_reject` and `anchored_vwap_retest` DSL archetypes in the pattern library.
+
+**Work completed:**
+- `src/engine/indicators/core.py` — added `_assign_globex_session_id()`, `compute_vwap_with_bands()`, `compute_anchored_vwap()`; wired both into `compute_indicators()` dispatcher
+- Session reset uses Globex trading date (hour >= 18 → next calendar date) — handles multi-bar 18:xx runs correctly
+- `src/engine/config.py` — added `vwap_with_bands` and `anchored_vwap` to `VALID_INDICATOR_TYPES`; added `anchor_ts: Optional[datetime]` field to `IndicatorConfig`; added `from datetime import datetime` import
+- `src/engine/compiler/pattern_library.py` — registered `vwap_band_reject` (reversal at 2σ tag) and `anchored_vwap_retest` (retest of anchored VWAP from swing) with required/optional params and ranges
+- New `src/engine/tests/test_vwap_bands.py`: 15 tests (column names, sigma math, band ordering, session reset, zero-volume, backward-compat with compute_vwap)
+- New `src/engine/tests/test_anchored_vwap.py`: 18 tests (column naming, nulls before anchor, first-bar = TP, two-bar math, multi-anchor independence, zero-volume safety)
+- New `src/engine/tests/test_archetype_vwap_band_reject.py`: 30 tests (registration, validation, param ranges, structure invariants)
+- `src/engine/tests/test_compiler.py` — updated hardcoded pattern count 13 → 15 (added 2 W25P5 archetypes)
+
+**Verification:**
+- `python -m pytest src/engine/tests/test_vwap_bands.py src/engine/tests/test_anchored_vwap.py src/engine/tests/test_archetype_vwap_band_reject.py -v` → 63/63 PASSED
+- Broader regression sweep (177 tests across compiler, archetypes, volume profile, structure engine, signals) → 177 PASSED
+- Pre-existing `test_b3_archetypes.py` failures (7) are pre-existing fixture schema drift (`use_opening_auction_bias: Extra inputs not permitted`), not caused by W25.8
+- `npm run check:production-isolation` → CLEAN
+
+**New column names produced:**
+- `vwap`, `vwap_band_1s_upper`, `vwap_band_1s_lower`, `vwap_band_2s_upper`, `vwap_band_2s_lower`
+- `anchored_vwap_<YYYY-MM-DDTHH_MM_SS>` (colon-free ISO format)
+
+**New archetype names:**
+- `vwap_band_reject` — reversal when price tags 2σ VWAP band and closes back inside 1σ
+- `anchored_vwap_retest` — entry when price returns to anchored VWAP from stated anchor and rejects
+
+**Known-facts updates:** `_assign_globex_session_id()` uses Globex trading date (calendar date + 1 day when hour >= 18) as the session grouping key — NOT a simple hour-transition check. Multi-bar same-hour detection fails; date-based grouping is the correct approach.
+
+**Carry-forward for next session:**
+- P5.A3 (paper-parity) must wire `confluence-score.ts:evalVwapAlignment()` to read `vwap_band_1s_upper/lower`, `vwap_band_2s_upper/lower` columns from `ctx.indicators`; replace the old `ctx.indicators.vwap`-only stub. Pass `vwap_anchor_age_bars` to decay engine (200-bar half-life via fvgDecay in `confluence-decay.ts`).
+
+---
+
+### Session Log — 2026-05-24 backtest-core — Wave 25 Pass 5 W25.9: SMT divergence continuous scoring
+
+**Mission:** Build `smt_divergence.py` — continuous [0,1] SMT ES↔NQ confidence score (P5.A2 subagent).
+
+**Work completed:**
+- New `src/engine/indicators/smt_divergence.py`: `SmtDivergence` dataclass + `compute_smt_divergence(es_bars, nq_bars, lookback=20)` pure Polars function
+- Score formula: `0.35×magnitude_norm + 0.25×time_synced + 0.20×structure_quality + 0.20×displacement_confirmation` (clamped [0,1])
+- ATR(14) Wilder normalization for scale-invariant magnitude; backward asof join for NQ→ES time alignment (no look-ahead)
+- Distinct from existing `smt.py` (binary event-list); this is the probabilistic scoring layer
+- New `src/engine/tests/test_smt_divergence.py`: 33 tests covering empty/insufficient bars, no-divergence, bullish/bearish detection, determinism, score bounds, ATR normalization, time alignment, dataclass contract
+- Existing `smt.py` and all prior tests untouched
+
+**Verification:**
+- `python -m pytest src/engine/tests/test_smt_divergence.py -v` → 33/33 PASSED
+- `python -m pytest src/engine/tests/test_smt.py -v` → 10/10 PASSED (no regressions)
+- `npm run check:production-isolation` → CLEAN (4 files, 0 violations)
+
+**Sample output (canonical bullish SMT: ES new low + NQ higher low, ATR=10):**
+`SmtDivergence(detected_at_bar_idx=40, direction='bullish_es_low_nq_higher', magnitude=4.0, time_synced=1.0, structure_quality=1.0, displacement_confirmation=1.0, score=0.7076, age_bars=0)`
+
+**Known-facts updates:** None
+
+**Carry-forward for next session:**
+- P5.A3 (paper-parity) must wire `confluence-score.ts:evalSmtConfirmation()` to call `compute_smt_divergence()` and replace the `smt_pending_pass5` stub. Pass `result.age_bars` to decay engine (60-bar half-life in `confluence-decay.ts`).
+
+---
+
 ### Session Log — 2026-05-24 parent-claude — Wave 25 Pass 2 institutional-grade MASTER ORCHESTRATION + Discord critical-alert triage
 
 **Mission:** Operator invoked "use all subagents to make sure trading forge is institutional grade." Parent claude orchestrated the Wave 24 playbook (3 parallel audits → ranked backlog → parallel worker fixes → architect close-out) freshly applied as Wave 25 Pass 2.
@@ -6954,6 +7016,66 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 - Pass 5 (VWAP bands + AVWAP + SMT ES↔NQ): when paper-signal-service injects new context fields, populate `smt_age_bars` + `delta_age_bars` + `vwap_anchor_age_bars` in `WeightedSignalContext` so the corresponding decay paths activate. Today they read from `signalContext` but the bridge to live producers is Pass 5.
 - Pass 6 (regime + narrative): no decay-engine impact, but the regime-match factor remains NO_DECAY (binary state) — do NOT add it to the decay set.
 - Pass 7 (adaptive exit engine): MUST consume `result.decayedFactors[]` to inform TP1/TP2 selection. Aged CHoCH → tighten TP. The contract is `FactorContribution[]` with non-null `decay_confidence < 0.7`.
+
+---
+
+### Session Log — 2026-05-24 Wave 26 Pass 1 — Trade Critique Service
+
+**Mission:** Ship a new event-driven trade critique service that autopsies every closed paper/live position within 60 seconds using GPT-5.4 with Ollama fallback and dual-output institutional schema.
+
+**Work completed:**
+- NEW `src/server/services/trade-critique-service.ts` — full service with MAX_CONCURRENT_CRITIQUES=3 backpressure, 3-strike consecutive-failure Discord WARN, Wave 25 field missingness handling, strict schema validation, idempotency gate (5-min window), fire-and-forget architecture
+- NEW `src/server/db/migrations/0141_trade_critique.sql` — idempotent CREATE TABLE IF NOT EXISTS with 3 indexes; idx=143 claimed in journal
+- Updated `src/server/db/migrations/meta/_journal.json` — idx 143, tag `0141_trade_critique`
+- Updated `src/server/db/schema.ts` — added `tradeCritique` pgTable definition (mirrors migration, soft FK by design)
+- Updated `src/server/services/model-router.ts` — added `trade_critique` ModelRole, KB_MANIFEST entry, MODEL_CONFIGS (gpt-5.4 + deepseek-r1:14b fallback, temperature=0.2, maxTokens=8192, responsesApiVersion="v1"), and strict Responses-API JSON schema for dual-output shape
+- NEW `src/agents/trade-critique.md` — ~250-line institutional rubric covering 8 attribution dimensions, entry quality score, exit delta-R, Topstep consistency risk, backtest R percentile, parameter hints, Wave 25 missingness degraded-rubric protocol, grade assignment matrix, attribution weight sum validation
+- Updated `src/server/services/paper-execution-service.ts` — fire-and-forget `void runTradeCritique(pos.id, correlationId)` after existing audit write in `closePosition()`, via dynamic import to avoid circular dep
+- NEW `src/server/__tests__/wave26-trade-critique-service.test.ts` — 18 tests covering all scenarios
+
+**Verification:**
+- 18/18 vitest tests GREEN
+- `npm run check:production-isolation` CLEAN (4 files checked, 0 violations)
+- `npm run check:2026-compliance` OK
+- `npm run system-map:check` shows 1 new drift item for `trade_critique` table — expected, architect to close in final pass
+- `tsc --noEmit --skipLibCheck` zero errors on new/modified files (pre-existing model-router:1373 `recordLlmCall` error untouched)
+- Protected files confirmed unmodified: `nightly-critique-service.ts` and `paper-signal-service.ts`
+- Migration journal idx=143 claimed without collision (Wave 25 Pass 4 last used idx=142)
+
+**Known-facts updates:** none
+
+**Carry-forward for next session:**
+- System Map needs `trade_critique` table + subsystem registered (architect pass)
+- No route exposed yet for reading critique rows — Wave 26 Pass 2 or architect pass
+- `positionSize` on `strategies` schema: not in Drizzle type but may exist in DB via raw SQL migration — accessed via `any` cast in service safely
+
+---
+
+### Session Log — 2026-05-24 Wave 26 Pass 6 — Topstep Consistency Concentration Tracker
+
+**Mission:** Instrument the Topstep 50% consistency payout-denial rule with family-grade structured alerts, false-positive guard, and entry-gate export.
+
+**Work completed:**
+- NEW `src/server/services/consistency-tracker-service.ts` — full concentration tracker: raw SQL GROUP BY ET date for `paper_positions` joined via `paper_sessions` where `firmId='topstep'`; 5-second TTL in-process cache per accountId; gates at 40% (warn_40) and 50% (block_50); false-positive guard (Sharpe≥1.5 + sessions≥20 + clean regime + confluence≥0.85 all required); audit actions `consistency.40pct_warned`, `consistency.50pct_blocked`, `consistency.false_positive_suspected`, `consistency.gate_cleared`; family-grade Discord alerts via `notifyCritical`/`notifyWarning` + `appendFamilyGradePostscript`; `shouldBlockNewEntry()` exported (not yet wired — coordination pass required); `runConsistencyDailyDigest()` iterates all enabled Topstep accounts
+- NEW `src/server/routes/consistency.ts` — GET /api/consistency/:accountId with optional ?asOf=ISO8601 time-travel parameter; `String(req.params.accountId)` cast to resolve Express 5 ParamsDictionary `string | string[]` TS error
+- MODIFIED `src/server/index.ts` — import + route mount for `consistencyRoutes` at `/api/consistency`
+- MODIFIED `src/server/scheduler.ts` — `consistency-tracker-daily-digest` added to `_PIPELINE_GATE_EXEMPT`; job registered with `registerJob`; cron fires at 21,22 UTC with ET-hour=17 inner gate (DST-safe double-fire pattern); `_tryAcquireJobLock`/`_releaseJobLock` overlap protection
+- NEW `src/server/__tests__/wave26-consistency-tracker.test.ts` — 13 vitest tests covering: happy path 40%, 51% block, shouldBlockNewEntry both paths, FP guard fires (WARN), FP guard suppressed (choppy regime → CRITICAL), 5-second cache hit ratio, cycle boundary fresh start, all 4 audit action contracts, daily digest iteration
+
+**Verification:**
+- 13/13 vitest GREEN (`wave26-consistency-tracker.test.ts`)
+- `check:production-isolation` CLEAN (4 files, 0 violations)
+- `check:2026-compliance` OK
+- `tsc --noEmit` zero errors in Wave 26 Pass 6 files (pre-existing errors in scripts/ and broker-router.test.ts unchanged)
+- Protected files confirmed unmodified: `paper-signal-service.ts`, `nightly-critique-service.ts`
+
+**Known-facts updates:** Express 5 `req.params` types values as `string | string[]` (ParamsDictionary) — use `String(req.params.accountId)` to satisfy TS. Pre-existing pattern in other routes.
+
+**Carry-forward for next session:**
+- `shouldBlockNewEntry()` is exported but NOT wired into paper-signal-service.ts — requires a dedicated coordination pass (out of scope W26P6 per spec)
+- System Map needs `consistency_tracker_service` subsystem registered (architect pass)
+- Cycle start defaults to 1st of current month — TopstepX API lookup table is a future enhancement
+- No frontend panel yet — Wave 26 Pass 2 candidate
 
 ---
 

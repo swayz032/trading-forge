@@ -52,6 +52,8 @@ import { computeBiasForAllSymbols } from "./services/bias-state-service.js";
 import { getPhase, flipPhaseToHard } from "./services/harsh-regime-phase-service.js";
 // Pass 6 / Track C F-6: n8n execution telemetry scraper (observability — never gated)
 import { runN8nExecutionScrape } from "./services/n8n-execution-scraper-service.js";
+// W26 Pass 6: Topstep consistency concentration tracker daily digest
+import { runConsistencyDailyDigest } from "./services/consistency-tracker-service.js";
 
 let initialized = false;
 
@@ -357,6 +359,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // Operator wants the bias on phone before market open regardless of pipeline state.
   // Closes "trading without written bias" failure mode (Steenbarger/Topstep 2025 podcast).
   "pre-market-briefing-discord",         // W25.5d: operator briefing — safety signal
+  // W26 Pass 6: consistency-tracker-daily-digest must fire even when paused.
+  // Topstep payout denial can happen WHILE the pipeline is paused; the digest is a
+  // safety signal for the operator, not a trading research signal.
+  "consistency-tracker-daily-digest",    // W26: Topstep 40/50% consistency gate digest
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -3962,6 +3968,43 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("naked-poc-sync-daily");
+
+  // ─── W26 Pass 6: Consistency tracker daily digest — 5:00 PM ET daily ────────────
+  // Topstep 50% consistency rule: if a single day's P&L > 50% of cycle cumulative,
+  // payout is silently denied. Fires at 17:00 ET (21:00 UTC EDT / 22:00 UTC EST)
+  // after RTH session ends so the day's realized P&L is fully settled.
+  // Pipeline-gate EXEMPT: consistency gate is a safety signal — payout denial can
+  // happen while the pipeline is paused; operator must know regardless of mode.
+  registerJob("consistency-tracker-daily-digest", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "consistency-tracker-daily-digest" }, "cron tick start");
+    await runConsistencyDailyDigest();
+  });
+
+  // 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5)
+  cron.schedule("0 21,22 * * *", async () => {
+    if (!_tryAcquireJobLock("consistency-tracker-daily-digest")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 17) {
+        logger.debug({ etHour }, "Scheduler: consistency-tracker-daily-digest cron fired but not 17:00 ET — skipping");
+        return;
+      }
+      // NOT pipeline-gated — safety signal (in _PIPELINE_GATE_EXEMPT)
+      logger.info("Scheduler: consistency-tracker-daily-digest (5:00 PM ET confirmed)");
+      const t0cdt = Date.now();
+      await withRetry("consistency-tracker-daily-digest", SCHEDULER_JOBS["consistency-tracker-daily-digest"].run, 1);
+      markJobRun("consistency-tracker-daily-digest");
+      emitJobComplete("consistency-tracker-daily-digest", Date.now() - t0cdt);
+    } finally {
+      _releaseJobLock("consistency-tracker-daily-digest");
+    }
+  });
+  _scheduledJobs.add("consistency-tracker-daily-digest");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

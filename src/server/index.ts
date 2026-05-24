@@ -84,6 +84,7 @@ import { brokerErrorBudgetRoutes } from "./routes/broker-error-budget.js";
 import { deployedStrategyStarvationRoutes } from "./routes/deployed-strategy-starvation.js";
 import { webhookLatencyRoutes } from "./routes/webhook-latency.js";
 import { b15RobustnessRoutes } from "./routes/b15-robustness.js";
+import { consistencyRoutes } from "./routes/consistency.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 
 // ─── Boot migration runner ────────────────────────────────────────
@@ -529,6 +530,9 @@ app.use("/api/deployed-strategy-starvation", deployedStrategyStarvationRoutes);
 // W25 Gap 4: Webhook latency monitor + regime coverage status
 app.use("/api/webhook-latency", webhookLatencyRoutes);
 app.use("/api/b15-robustness", b15RobustnessRoutes);
+
+// W26 Pass 6: Topstep consistency concentration tracker — GET /api/consistency/:accountId
+app.use("/api/consistency", consistencyRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {
