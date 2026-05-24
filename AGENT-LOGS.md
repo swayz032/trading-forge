@@ -6634,6 +6634,36 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-24 Wave 25 Pass 2 paper-parity: A-1 + R-1 + Inst-10 + Y-2
+
+**Mission:** Ship 4 file:line-scoped paper-parity hardening items in one commit with full test coverage.
+
+**Work completed:**
+- **A-1 (HIGH):** Wrapped Path C `evaluateWeightedConfluence()` call in `paper-signal-service.ts` in try/catch. On throw: `pathCFailed=true`, `insertAuditRow({action:"weighted_confluence.evaluation_error",...})`, `notifyCritical(...)`, `broadcastSSE("alert:path_c_error",...)`. Path B falls through via `!useWeightedScoring || pathCFailed` condition.
+- **R-1 (RED):** Removed unsafe `(biasState?.structureState as WeightedSignalContext["structureState"])` cast at `paper-signal-service.ts:3107`. Field already typed `StructureState | null` on `BiasStateForSignal` — no cast needed.
+- **Inst-10 (RED):** `drawdownRoomCap = floor(currentDrawdownRoom × DRAWDOWN_ROOM_RISK_PCT / stopDollarsPerContract)` added to `risk-sizing.ts` min() chain (Topstep only). `DRAWDOWN_ROOM_RISK_PCT=0.01` env var. Python parity in `sizing.py`. CLAUDE.md §4 updated. Pyramid floor guard: `!drawdownRoomCapBinding && accountIsHealthy` — DD room cap takes priority over pyramid floor.
+- **Y-2 (YELLOW):** Created `scripts/wave25-style-d-legacy-backfill.ts` — one-time idempotent script to migrate positions with `currentExitStyle='D'` AND `entryTime < 2026-05-23` to Style C. Dry-run default; `--apply --confirm` required for mutation. Audit row per position.
+- 4 test files created: `wave25-path-c-error-boundary.test.ts` (4 tests), `wave25-bias-state-structure-field.test.ts` (6 tests), `wave25-drawdown-room-sizing.test.ts` (7 tests), `wave25-style-d-legacy-backfill.test.ts` (6 tests).
+- 1 Python test file created: `test_wave25_drawdown_room.py` (13 tests including 6-case parity parametrize).
+
+**Verification:**
+- 23/23 new vitest PASS (4 + 6 + 7 + 6)
+- 13/13 new pytest PASS
+- wave24 baseline: 182/182 PASS
+- wave23h baseline: 397/397 PASS
+- production-isolation: CLEAN (0 violations)
+- ruff lint: PASS (import ordering fixed in sizing.py and test file)
+
+**Bugs fixed in process:**
+- Test fixture for `wave25-bias-state-structure-field.test.ts` missing `htfNarrative: null` field — added.
+- `wave25-drawdown-room-sizing.test.ts` zero-room test used `accountBalance=45_000` which triggered `zero_buffer` early return before the drawdown cap could apply — fixed to use `accountBalance=51_000` (buffer=$2K > 0).
+- Same zero-room bug in Python test `test_wave25_drawdown_room.py::TestDrawdownRoomZero` — fixed same way.
+- `wave25-style-d-legacy-backfill.test.ts` date assertion used `getDate()` which is local-time — changed to `getUTCDate()`.
+
+**Carry-forward for next session:** None from this pass. Remaining Wave 25 Pass 2 items handled by other subagents (observability-reliability, backtest-core).
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
