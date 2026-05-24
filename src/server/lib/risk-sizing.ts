@@ -181,6 +181,26 @@ export interface RiskSizingInputs {
    * null/undefined → haircut returns 1.0 (fail-open).
    */
   baseline20dMedianTop3Depth?: number | null;
+
+  // ── Wave 25 Pass 2 Inst-10: Drawdown-room-anchored sizing (Topstep only) ──────
+  /**
+   * Current drawdown room in dollars (Topstep trailing-DD only).
+   * drawdownRoom = max(0, currentBalance - (peakBalance - trailingDD))
+   *             = max(0, buffer between current equity and trailing floor)
+   *
+   * When provided for firm="topstep": an additional cap is computed:
+   *   drawdownRoomCap = floor(drawdownRoom × DRAWDOWN_ROOM_RISK_PCT / stopDollarsPerContract)
+   *
+   * Rationale: 3 independent 2026 sources (traderssecondbrain, proptradingvibes,
+   * propfirmmatch) converge on "risk 1% of CURRENT DRAWDOWN ROOM, not 2% of balance."
+   * On a $50K Topstep with $2,500 trailing DD, 2% of balance = $1,000 = 40% of DD room —
+   * 3 losers and you're out. 1% of DD room ($25) on a 4pt ATR stop = 0 contracts when
+   * DD room approaches zero — correct, that is the intended hard stop.
+   *
+   * null/undefined → drawdownRoomCap not applied (fail-open, backward compatible).
+   * NOT applied for firm="mffu" (MFFU uses static 2% rule; drawdown-room logic is Topstep-only).
+   */
+  currentDrawdownRoom?: number | null;
 }
 
 /**
@@ -197,7 +217,7 @@ export interface ConfluenceAuditPayload {
   multiplier: number;
   contracts_before: number;
   contracts_after: number;
-  binding_constraint: "pyramidTier" | "riskDerivedCap" | "firmCap" | "liquidityCap" | "pyramid_floor_override" | "rejection";
+  binding_constraint: "pyramidTier" | "riskDerivedCap" | "firmCap" | "liquidityCap" | "pyramid_floor_override" | "drawdown_room" | "rejection";
 }
 
 export interface RiskSizingResult {
@@ -220,6 +240,11 @@ export interface RiskSizingResult {
   // W23H.4 additions
   /** Audit payload for sizing.confluence_multiplier_applied event. Forward to insertAuditRow(). */
   confluenceAudit: ConfluenceAuditPayload;
+  // Wave 25 Pass 2 Inst-10 additions
+  /** Computed drawdown-room cap (contracts). null when not applicable (MFFU or input absent). */
+  drawdownRoomCap: number | null;
+  /** True when drawdownRoomCap was the binding constraint. */
+  drawdownRoomCapBinding: boolean;
 }
 
 // ── Wave 24 env-configurable scaling params ───────────────────────────────────
@@ -227,6 +252,14 @@ export interface RiskSizingResult {
 const RISK_VIX_TARGET  = parseFloat(process.env.RISK_VIX_TARGET   ?? "18");
 const RISK_VOL_SCALE_MIN = parseFloat(process.env.RISK_VOL_SCALE_MIN ?? "0.5");
 const RISK_VOL_SCALE_MAX = parseFloat(process.env.RISK_VOL_SCALE_MAX ?? "1.5");
+
+// ── Wave 25 Pass 2 Inst-10 env var ────────────────────────────────────────────
+// Fraction of current drawdown room to risk per trade (Topstep trailing-DD only).
+// Default 0.01 = 1% per 2026 funded-trader consensus:
+//   traderssecondbrain, proptradingvibes, propfirmmatch all converge on 1% rule.
+// Operator can halve to 0.005 for more conservative DD protection.
+// Env: DRAWDOWN_ROOM_RISK_PCT (default 0.01)
+const DRAWDOWN_ROOM_RISK_PCT = parseFloat(process.env.DRAWDOWN_ROOM_RISK_PCT ?? "0.01");
 
 /**
  * Wave 24 Item 16 — VIX-driven vol scale on max_risk_pct_per_trade.
@@ -331,6 +364,15 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   const confluenceCount = input.confluence_count ?? 1;
   const multiplier = resolveConfluenceMultiplier(confluenceCount, input.confluence_size_multiplier_map);
 
+  // Wave 25 Pass 2 Inst-10: Drawdown-room cap (Topstep trailing-DD only).
+  // Applied only when currentDrawdownRoom is provided AND firm === "topstep".
+  // NOT applied for MFFU (static 2% rule is the correct path for that firm).
+  // Cap is computed here before rejection checks but only applied in the final min()
+  // after stop dollars are known (must defer to after stopDollarsPerContract is computed).
+  // We store the raw input here; the cap itself is computed after stopDollars is known.
+  const hasDrawdownRoomInput = input.currentDrawdownRoom != null && input.currentDrawdownRoom >= 0;
+  const drawdownRoomInput = hasDrawdownRoomInput ? (input.currentDrawdownRoom as number) : null;
+
   // Pyramid tier (slow ramp-up)
   const profitFloor = Math.max(0, input.cumulativeProfit);
   const tiers = Math.floor(profitFloor / cfg.tier_threshold_dollars);
@@ -359,6 +401,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       firmCapApplied: false,
       pyramidFloorApplied: false,
       accountHealthRatio,
+      drawdownRoomCap: null,
+      drawdownRoomCapBinding: false,
       evidence: {
         accountBalance: input.accountBalance,
         atrPoints: input.atrPoints,
@@ -396,6 +440,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       firmCapApplied: false,
       pyramidFloorApplied: false,
       accountHealthRatio,
+      drawdownRoomCap: null,
+      drawdownRoomCapBinding: false,
       evidence: {
         accountBalance: input.accountBalance,
         atrPoints: input.atrPoints,
@@ -450,6 +496,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         firmCapApplied: false,
         pyramidFloorApplied: false,
         accountHealthRatio,
+        drawdownRoomCap: null,
+        drawdownRoomCapBinding: false,
         evidence: {
           accountBalance: input.accountBalance,
           trailingFloor,
@@ -488,6 +536,14 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   const stopDollarsPerContract = input.stopMultiplier * input.atrPoints * input.pointDollarValue;
   const riskDerivedCap = Math.floor(riskDollars / stopDollarsPerContract);
 
+  // Wave 25 Pass 2 Inst-10: Drawdown-room cap (Topstep only, when input provided).
+  // drawdownRoomCap = floor(currentDrawdownRoom × DRAWDOWN_ROOM_RISK_PCT / stopDollarsPerContract)
+  // Applied in the final min() below. null for MFFU or when input is absent.
+  const drawdownRoomCap: number | null =
+    firm === "topstep" && hasDrawdownRoomInput && drawdownRoomInput !== null
+      ? Math.floor((drawdownRoomInput * DRAWDOWN_ROOM_RISK_PCT) / stopDollarsPerContract)
+      : null;
+
   // Edge case: computed cap ≤ 0 (extreme ATR or tiny account/buffer).
   // Wave 23: On healthy accounts, pyramid floor still applies even here.
   // If accountIsHealthy AND riskCap <= 0, we use base_contracts as the floor.
@@ -521,6 +577,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         firmCapApplied: firmCapAppliedAtFloor,
         pyramidFloorApplied: true,
         accountHealthRatio,
+        drawdownRoomCap,
+        drawdownRoomCapBinding: false,
         evidence: {
           accountBalance: input.accountBalance,
           atrPoints: input.atrPoints,
@@ -533,6 +591,7 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
           riskDerivedCap,
           firmCap: effectiveFirmCapForFloor,
           liquidityCap,
+          drawdownRoomCap: drawdownRoomCap ?? null,
           finalContracts: flooredContracts,
           rejectionReason: null,
           firm,
@@ -565,6 +624,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       firmCapApplied: false,
       pyramidFloorApplied: false,
       accountHealthRatio,
+      drawdownRoomCap,
+      drawdownRoomCapBinding: false,
       evidence: {
         accountBalance: input.accountBalance,
         atrPoints: input.atrPoints,
@@ -577,6 +638,7 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         riskDerivedCap,
         firmCap: null,
         liquidityCap,
+        drawdownRoomCap: drawdownRoomCap ?? null,
         finalContracts: 0,
         rejectionReason: "negative_cap",
         firm,
@@ -610,10 +672,18 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
 
   // Final: compute the risk-capped minimum first, then apply pyramid floor.
   // Step 1: min(pyramidTierMultiplied, riskDerivedCapMultiplied, firmCap, liquidityCap)
+  // Wave 25 Pass 2 Inst-10: Also apply drawdownRoomCap when it's a Topstep input.
   let finalContracts = Math.min(pyramidTierMultiplied, riskDerivedCapMultiplied, liquidityCap);
   const firmCapApplied = effectiveFirmCap !== null && effectiveFirmCap < Math.min(pyramidTierMultiplied, riskDerivedCapMultiplied, liquidityCap);
   if (effectiveFirmCap !== null) {
     finalContracts = Math.min(finalContracts, effectiveFirmCap);
+  }
+  // Wave 25 Pass 2 Inst-10: Apply drawdownRoomCap in the min() (Topstep only when provided).
+  let drawdownRoomCapBinding = false;
+  if (drawdownRoomCap !== null) {
+    const preDrawdownContracts = finalContracts;
+    finalContracts = Math.min(finalContracts, drawdownRoomCap);
+    drawdownRoomCapBinding = drawdownRoomCap < preDrawdownContracts;
   }
   finalContracts = Math.max(0, finalContracts);
 
@@ -625,15 +695,20 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   // On drawdown accounts (< 85%), risk-cap fully binds — floor does not override.
   // NOTE: floor uses base_contracts (not multiplied base) — floor is a safety minimum,
   // not an upsize trigger. Multiplier applies via pyramidTier, not the floor value.
+  // NOTE: drawdownRoomCap (Inst-10) OVERRIDES the pyramid floor — when DD room is very
+  // small, forcing base_contracts would violate the 1%-of-room safety contract.
   let pyramidFloorApplied = false;
-  if (accountIsHealthy && finalContracts < cfg.base_contracts) {
+  if (!drawdownRoomCapBinding && accountIsHealthy && finalContracts < cfg.base_contracts) {
     finalContracts = cfg.base_contracts;
     pyramidFloorApplied = true;
   }
 
   // Which cap is binding? (Uses multiplied values for accurate attribution.)
+  // drawdown_room takes priority when it was the binding constraint.
   let bindingCap = "pyramid";
-  if (pyramidFloorApplied) {
+  if (drawdownRoomCapBinding) {
+    bindingCap = "drawdown_room";
+  } else if (pyramidFloorApplied) {
     bindingCap = "pyramid_floor_override";
   } else if (riskDerivedCapMultiplied <= pyramidTierMultiplied && (effectiveFirmCap === null || riskDerivedCapMultiplied <= effectiveFirmCap) && riskDerivedCapMultiplied <= liquidityCap) {
     bindingCap = "risk_derived";
@@ -645,7 +720,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
 
   // Map bindingCap → ConfluenceAuditPayload binding_constraint
   const bindingConstraintForAudit: ConfluenceAuditPayload["binding_constraint"] =
-    bindingCap === "pyramid_floor_override" ? "pyramid_floor_override"
+    bindingCap === "drawdown_room"          ? "drawdown_room"
+    : bindingCap === "pyramid_floor_override" ? "pyramid_floor_override"
     : bindingCap === "risk_derived"         ? "riskDerivedCap"
     : bindingCap === "firm_cap"             ? "firmCap"
     : bindingCap === "liquidity_cap"        ? "liquidityCap"
@@ -663,6 +739,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
     firmCapApplied,
     pyramidFloorApplied,
     accountHealthRatio,
+    drawdownRoomCap,
+    drawdownRoomCapBinding,
     evidence: {
       accountBalance: input.accountBalance,
       cumulativeProfit: input.cumulativeProfit,
@@ -678,6 +756,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       riskDerivedCapMultiplied,
       firmCap: effectiveFirmCap,
       liquidityCap,
+      drawdownRoomCap: drawdownRoomCap ?? null,
+      drawdownRoomCapBinding,
       finalContracts,
       bindingCap,
       base_contracts: cfg.base_contracts,

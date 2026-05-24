@@ -172,6 +172,24 @@ tradingViewWebhookRoutes.post(
   strictRateLimit,
   async (req: Request, res: Response): Promise<void> => {
     const startedAt = Date.now();
+    // Capture the webhook fired-at time for downstream latency measurement.
+    // TradingView alert payloads may include a `time` field (ISO timestamp or
+    // Unix millis of the bar close that triggered the alert). If present, use
+    // that as the fire time (closest approximation to when Pine emitted the
+    // alert). Otherwise fall back to the handler entry timestamp.
+    const rawTime = (req.body as Record<string, unknown>)?.["time"];
+    let webhookFiredAt: number = startedAt;
+    if (rawTime !== undefined && rawTime !== null) {
+      const parsed =
+        typeof rawTime === "number"
+          ? rawTime
+          : typeof rawTime === "string"
+          ? Date.parse(rawTime)
+          : NaN;
+      if (!Number.isNaN(parsed) && parsed > 0) {
+        webhookFiredAt = parsed;
+      }
+    }
 
     // 1. Pipeline pause guard
     if (!(await isPipelineActive())) {
@@ -338,12 +356,15 @@ tradingViewWebhookRoutes.post(
     }
 
     // 7. Insert marker row (hmac_validated=true)
-    // Build the full payload object to store (includes extra fields)
+    // Build the full payload object to store (includes extra fields).
+    // webhookFiredAt is stored so downstream order routing can compute
+    // end-to-end latency (fire_to_ack_ms) for the webhook.broker_ack audit row.
     const pineAlertPayload = {
       strategy_id,
       account_id,
       bar_timestamp,
       signal,
+      webhookFiredAt,
       ...extraFields,
     } as Record<string, unknown>;
 

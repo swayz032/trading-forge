@@ -66,22 +66,43 @@ export interface PacketSummary {
 // ─── Data gathering helpers ───────────────────────────────────────────────────
 
 /**
- * Pull all paper_trades for the account in the window.
+ * Resolve a broker `account_id` to its `firm_id`.
+ *
+ * SCHEMA NOTE (Wave 25 carry-forward #3, 2026-05-24): paper_sessions has firm_id
+ * NOT account_id. This packet is firm-scoped by necessity — if the operator has
+ * multiple accounts under one firm (Topstep allows N/user) the packet includes
+ * all of them. README documents this.
+ */
+export async function resolveFirmIdFromAccountId(accountId: string): Promise<string | null> {
+  const rows = await db.execute(
+    sql`SELECT firm_id FROM broker_accounts WHERE account_id = ${accountId} LIMIT 1`,
+  );
+  const list = rows as unknown as Array<{ firm_id: string }>;
+  return list.length > 0 ? list[0].firm_id : null;
+}
+
+/**
+ * Pull all paper_trades for the account's firm in the window.
  * Returns serialisable plain objects.
+ *
+ * Note: scoped by firm_id (paper_sessions has no account_id column).
  */
 export async function gatherTrades(
   accountId: string,
   start: Date,
   end: Date,
 ): Promise<Record<string, unknown>[]> {
-  // paper_trades does not have account_id directly — it is linked via paper_sessions.
-  // We join through paper_sessions to filter by account.
+  const firmId = await resolveFirmIdFromAccountId(accountId);
+  if (!firmId) {
+    logger.warn({ accountId }, "payout-audit-packet: accountId not found in broker_accounts");
+    return [];
+  }
   const rows = await db.execute(
     sql`
       SELECT pt.*
       FROM paper_trades pt
       JOIN paper_sessions ps ON pt.session_id = ps.id
-      WHERE ps.account_id = ${accountId}
+      WHERE ps.firm_id = ${firmId}
         AND pt.entry_time >= ${start.toISOString()}
         AND pt.exit_time <= ${end.toISOString()}
       ORDER BY pt.entry_time ASC
@@ -207,12 +228,14 @@ export async function gatherStrategyDsls(
   start: Date,
   end: Date,
 ): Promise<Record<string, unknown>[]> {
-  // Find strategy IDs from paper sessions in window
+  // Find strategy IDs from paper sessions in window (firm-scoped per CF#3 schema fix)
+  const firmId = await resolveFirmIdFromAccountId(accountId);
+  if (!firmId) return [];
   const sessionRows = await db.execute(
     sql`
-      SELECT DISTINCT strategy_id, strategy_name
+      SELECT DISTINCT strategy_id
       FROM paper_sessions
-      WHERE account_id = ${accountId}
+      WHERE firm_id = ${firmId}
         AND (
           started_at >= ${start.toISOString()}
           OR (stopped_at IS NULL AND started_at <= ${end.toISOString()})
@@ -247,10 +270,13 @@ export async function gatherLifecycleTransitions(
   start: Date,
   end: Date,
 ): Promise<Record<string, unknown>[]> {
+  // Firm-scoped per CF#3 schema fix (paper_sessions has no account_id column)
+  const firmId = await resolveFirmIdFromAccountId(accountId);
+  if (!firmId) return [];
   const sessionRows = await db.execute(
     sql`
       SELECT DISTINCT strategy_id FROM paper_sessions
-      WHERE account_id = ${accountId}
+      WHERE firm_id = ${firmId}
         AND (
           started_at >= ${start.toISOString()}
           OR (stopped_at IS NULL AND started_at <= ${end.toISOString()})

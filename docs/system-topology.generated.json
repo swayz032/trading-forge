@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T06:47:47.654Z",
+  "generatedAt": "2026-05-24T07:55:18.576Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,13 +15,13 @@
     ]
   },
   "counts": {
-    "routes": 67,
-    "schedulerJobs": 74,
+    "routes": 68,
+    "schedulerJobs": 76,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 26,
     "databaseTables": 94,
-    "registrySubsystems": 21
+    "registrySubsystems": 22
   },
   "routes": [
     "/api/admin",
@@ -32,6 +32,7 @@
     "/api/anti-setups",
     "/api/archetypes",
     "/api/auditor",
+    "/api/b15-robustness",
     "/api/backtests",
     "/api/bias-decisions",
     "/api/bias-state",
@@ -135,6 +136,8 @@
     "meta-parameter-review",
     "metrics-collector",
     "metrics-heartbeat",
+    "n8n-drift-detector-monthly",
+    "n8n-drift-detector-weekly",
     "n8n-execution-scrape",
     "n8n-health-check",
     "n8n-workflow-sync",
@@ -848,33 +851,33 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 21,
-    "autonomousSubsystems": 21,
+    "registryEntries": 22,
+    "autonomousSubsystems": 22,
     "selfEvolvingSubsystems": 7,
     "proofStatusCounts": {
-      "runtime-proven": 16,
+      "runtime-proven": 17,
       "partially-proven": 0,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 16,
+      "active": 17,
       "experimental": 5
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 16,
+      "active_preprod": 17,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 14,
+      "runtime_proven_autonomous": 15,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 10,
+      "not_collecting": 11,
       "collecting_only": 0,
       "learning_active": 6,
       "learning_blocked": 0,
@@ -882,13 +885,13 @@
     },
     "learningModeCounts": {
       "active_learning": 5,
-      "deterministic_instrumented": 9,
+      "deterministic_instrumented": 10,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 5,
-      "deterministic_instrumented": 14,
+      "deterministic_instrumented": 15,
       "manual_gated": 2
     },
     "manualGates": [
@@ -896,8 +899,8 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 67,
-      "schedulerJobs": 74,
+      "routes": 68,
+      "schedulerJobs": 76,
       "engineSubsystems": 26,
       "databaseTables": 94
     },
@@ -924,18 +927,18 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "complete",
-      "automationComplete": 16,
-      "dataCollectionComplete": 21,
-      "auditabilityComplete": 21,
-      "failureVisibilityComplete": 21,
-      "authorityCorrect": 21,
+      "automationComplete": 17,
+      "dataCollectionComplete": 22,
+      "auditabilityComplete": 22,
+      "failureVisibilityComplete": 22,
+      "authorityCorrect": 22,
       "learningActive": 6,
       "incompleteSubsystems": []
     },
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 14,
+        "production_autonomous": 15,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -950,6 +953,7 @@
         "frankenstein_randomization_gate",
         "observability_reliability",
         "operator_absent_autopilot",
+        "parameter_robustness_gate",
         "pine_export_preparation",
         "quantum_experimental",
         "research_orchestration",
@@ -2249,6 +2253,90 @@
         "coverageGaps": []
       },
       {
+        "id": "parameter_robustness_gate",
+        "domain": "qualification",
+        "ownerSurface": "python-node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "gate",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "critical",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "/api/b15-robustness/coverage",
+          "b15:* SSE",
+          "b15.battery_completed",
+          "b15.battery_failed",
+          "backtests:b15_battery_recent",
+          "lifecycle.gate_blocked_b15_robustness"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtest b15_battery JSONB",
+          "backtests",
+          "strategies",
+          "strategy parameters"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/b15-robustness/coverage",
+          "b15-battery-coverage",
+          "b15-deployed-passing-rate",
+          "b15:* SSE",
+          "b15.battery_completed",
+          "b15.battery_failed",
+          "backtests:b15_battery_recent",
+          "lifecycle.gate_blocked_b15_robustness"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/b15-robustness"
+        ],
+        "schedulerJobs": [],
+        "healthCheck": "/api/b15-robustness/coverage",
+        "freshnessSignals": [
+          "backtests:b15_battery_recent"
+        ],
+        "evidenceQueries": [
+          "b15-battery-coverage",
+          "b15-deployed-passing-rate"
+        ],
+        "coverageGaps": []
+      },
+      {
         "id": "pine_export_preparation",
         "domain": "deployment-prep",
         "ownerSurface": "python-node",
@@ -3252,6 +3340,8 @@
         ],
         "schedulerJobs": [
           "n8n-data-backup-daily",
+          "n8n-drift-detector-monthly",
+          "n8n-drift-detector-weekly",
           "n8n-drift-monthly",
           "n8n-execution-scrape",
           "n8n-health-check",
@@ -4813,6 +4903,90 @@
       "coverageGaps": []
     },
     {
+      "id": "parameter_robustness_gate",
+      "domain": "qualification",
+      "ownerSurface": "python-node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "gate",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "critical",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "/api/b15-robustness/coverage",
+        "b15:* SSE",
+        "b15.battery_completed",
+        "b15.battery_failed",
+        "backtests:b15_battery_recent",
+        "lifecycle.gate_blocked_b15_robustness"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtest b15_battery JSONB",
+        "backtests",
+        "strategies",
+        "strategy parameters"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/b15-robustness/coverage",
+        "b15-battery-coverage",
+        "b15-deployed-passing-rate",
+        "b15:* SSE",
+        "b15.battery_completed",
+        "b15.battery_failed",
+        "backtests:b15_battery_recent",
+        "lifecycle.gate_blocked_b15_robustness"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/b15-robustness"
+      ],
+      "schedulerJobs": [],
+      "healthCheck": "/api/b15-robustness/coverage",
+      "freshnessSignals": [
+        "backtests:b15_battery_recent"
+      ],
+      "evidenceQueries": [
+        "b15-battery-coverage",
+        "b15-deployed-passing-rate"
+      ],
+      "coverageGaps": []
+    },
+    {
       "id": "pine_export_preparation",
       "domain": "deployment-prep",
       "ownerSurface": "python-node",
@@ -5816,6 +5990,8 @@
       ],
       "schedulerJobs": [
         "n8n-data-backup-daily",
+        "n8n-drift-detector-monthly",
+        "n8n-drift-detector-weekly",
         "n8n-drift-monthly",
         "n8n-execution-scrape",
         "n8n-health-check",

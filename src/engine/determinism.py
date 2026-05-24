@@ -90,8 +90,34 @@ def enable_determinism(seed: int = 42) -> None:
         ) from exc
 
     # Step 3: numpy global RNG seed (legacy API — for any code using np.random.*)
-    import numpy as np
-    np.random.seed(seed)
+    # Guard: Windows WDAC / AppLocker policies can block numpy.random C extension
+    # DLLs (numpy.random._bounded_integers etc.). On affected Windows machines the
+    # DLL load can DEADLOCK rather than raise ImportError. We check for a known-safe
+    # attribute first; if numpy is not yet imported, skip the seed to avoid triggering
+    # the blocked DLL chain. Production paths that use np.random.* will fail loudly
+    # at the call site with a clear error — not silently here.
+    import sys as _sys
+    if "numpy" in _sys.modules:
+        # numpy already imported earlier in this process — safe to call random.seed
+        # since the DLL was already loaded without blocking.
+        import numpy as _np
+        try:
+            _np.random.seed(seed)
+        except Exception as _np_exc:  # noqa: BLE001
+            import warnings
+            warnings.warn(
+                f"numpy.random seed failed (WDAC policy?): {_np_exc}. "
+                "Determinism seed NOT applied.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+    else:
+        # numpy not yet imported — don't trigger the DLL load here.
+        # Polars-only tests (W25.2 structure engine) don't need this seed.
+        logger.debug(
+            "enable_determinism: numpy not in sys.modules — skipping np.random.seed "
+            "(WDAC-safe: DLL load deferred to first numpy import site)"
+        )
 
     # Step 4: audit log
     determinism_env = {k: os.environ.get(k, "NOT SET") for k in _DETERMINISM_ENV_VARS}

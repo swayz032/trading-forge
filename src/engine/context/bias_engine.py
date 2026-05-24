@@ -108,6 +108,12 @@ class DailyBiasState:
     # consecutive confirmation gate to prevent false positives).
     # When False, NO_TRADE routing is unchanged.
     range_bound_eligible: bool = False
+    # W25.2 — Independent structure validation layer.
+    # Populated by compute_structure_state() BEFORE any entry trigger evaluates.
+    # None when MTF data is unavailable or structure engine fails (fail-open).
+    # Stage 2 weighted scoring (W25.1) reads this to compute market_structure_aligned.
+    # Downstream JSON shape: see structure_engine.py module docstring.
+    structure_state: Optional["StructureState"] = None
 
 
 def _score_htf_trend(htf: HTFContext) -> int:
@@ -598,11 +604,18 @@ def compute_bias(
     deepar_forecast: dict | None = None,
     bars: Optional[pl.DataFrame] = None,
     vp_levels: Optional["VPLevels"] = None,
+    exec_bars: Optional[pl.DataFrame] = None,
+    htf_bars: Optional[pl.DataFrame] = None,
 ) -> DailyBiasState:
     """Compute the full daily bias state from all 7 components + optional VP context.
 
     vp_levels is backwards-compatible: None → existing 7-component score unchanged.
     When provided, three additive VP adjustments are applied to net_bias.
+
+    W25.2: exec_bars + htf_bars are optional new params for structure state.
+    When provided, compute_structure_state() runs independently and populates
+    DailyBiasState.structure_state. When absent (existing callers), structure_state
+    remains None and downstream Stage 2 treats it as "factor unavailable".
 
     Returns DailyBiasState with net_bias (-100..+100) and bias_confidence (0..1).
     """
@@ -677,6 +690,28 @@ def compute_bias(
     # when bars=None so existing callers see no behavior change.
     of_features = _compute_order_flow_features(bars, session)
 
+    # W25.2: Independent structure validation layer.
+    # Fail-open: if exec_bars is None or htf_bars is None or engine throws → None.
+    # Existing callers that don't pass exec_bars/htf_bars see no behavior change.
+    structure_state_result = None
+    if exec_bars is not None:
+        try:
+            from src.engine.context.structure_engine import compute_structure_state
+            # Derive htf_bias string from direction_hint for alignment check
+            htf_bias_str: Optional[str] = None
+            if direction_hint > 0:
+                htf_bias_str = "bullish"
+            elif direction_hint < 0:
+                htf_bias_str = "bearish"
+            structure_state_result = compute_structure_state(
+                exec_bars=exec_bars,
+                htf_bars=htf_bars if htf_bars is not None else pl.DataFrame(),
+                htf_bias=htf_bias_str,
+            )
+        except Exception:  # noqa: BLE001
+            # Structure engine failure must NEVER break compute_bias()
+            structure_state_result = None
+
     # htf_aligned: True when net_bias direction agrees with HTF daily trend
     htf_aligned = (net_bias > 0 and direction_hint > 0) or (net_bias < 0 and direction_hint < 0)
 
@@ -723,6 +758,7 @@ def compute_bias(
         open_classification=vp_levels.open_classification if vp_levels is not None else None,
         htf_aligned=htf_aligned,
         range_bound_eligible=range_bound_eligible,
+        structure_state=structure_state_result,
     )
 
     # Track 5: SHADOW write — fire-and-forget persistence of bias decision.

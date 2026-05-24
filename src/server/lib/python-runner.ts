@@ -128,9 +128,13 @@ export interface PythonRunnerOptions {
 
 export const PARITY_SHADOW_SENTINEL = "PARITY_SHADOW_DRIFT_JSON";
 export const INVARIANT_FAILURE_SENTINEL = "INVARIANT_FAILURE_JSON";
+// B15 Parameter Robustness Battery sentinel (Wave 25 Item 5).
+// Emitted by backtester.py --b15-battery flag.
+// Both ends must change in the same commit — see Known-Facts Pin in AGENT-LOGS.md.
+export const B15_BATTERY_SENTINEL = "B15_BATTERY_JSON";
 
 export interface TruthinessSentinelEvent {
-  type: "parity_shadow_drift" | "invariant_failure";
+  type: "parity_shadow_drift" | "invariant_failure" | "b15_battery";
   payload: Record<string, unknown>;
 }
 
@@ -156,6 +160,16 @@ export function parseTruthinessSentinel(line: string): TruthinessSentinelEvent |
       return { type: "invariant_failure", payload };
     } catch {
       logger.warn({ line: line.slice(0, 120) }, "python-runner: INVARIANT_FAILURE_JSON sentinel found but JSON parse failed");
+      return null;
+    }
+  }
+  if (line.startsWith(B15_BATTERY_SENTINEL + " ")) {
+    try {
+      const json = line.slice(B15_BATTERY_SENTINEL.length + 1);
+      const payload = JSON.parse(json) as Record<string, unknown>;
+      return { type: "b15_battery", payload };
+    } catch {
+      logger.warn({ line: line.slice(0, 120) }, "python-runner: B15_BATTERY_JSON sentinel found but JSON parse failed");
       return null;
     }
   }
@@ -314,11 +328,14 @@ export async function runPythonModule<T = Record<string, unknown>>(
           const sentinel = parseTruthinessSentinel(trimmed);
           if (sentinel) {
             truthinessEvents.push(sentinel);
+            const eventName = sentinel.type === "parity_shadow_drift"
+              ? "backtest.parity_shadow_drift_detected"
+              : sentinel.type === "invariant_failure"
+              ? "backtest.invariant_failure_detected"
+              : "backtest.b15_battery_result";
             logger.error(
               {
-                event: sentinel.type === "parity_shadow_drift"
-                  ? "backtest.parity_shadow_drift_detected"
-                  : "backtest.invariant_failure_detected",
+                event: eventName,
                 sentinelType: sentinel.type,
                 component: componentName,
                 module,

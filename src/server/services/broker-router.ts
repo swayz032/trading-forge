@@ -133,18 +133,24 @@ async function writeAuditLog(
 /**
  * Route an order to the appropriate broker integration.
  *
- * @param accountId     - UUID from broker_accounts.account_id
- * @param signal        - Normalized signal shape (see WebhookSignal)
- * @param correlationId - Optional trace ID propagated from the caller (Track 5
- *                        assignment → Track 6 Pine export → Track 8 marker).
- *                        Written to the audit_log row so all three events are
- *                        queryable by correlation_id.
- * @returns             BrokerResult — always resolves, never throws
+ * @param accountId       - UUID from broker_accounts.account_id
+ * @param signal          - Normalized signal shape (see WebhookSignal)
+ * @param correlationId   - Optional trace ID propagated from the caller (Track 5
+ *                          assignment → Track 6 Pine export → Track 8 marker).
+ *                          Written to the audit_log row so all three events are
+ *                          queryable by correlation_id.
+ * @param webhookFiredAt  - Optional Unix-ms timestamp of when TradingView fired
+ *                          the alert (captured in tradingview-webhook.ts from
+ *                          payload.time or handler entry time). Used to compute
+ *                          fire_to_ack_ms for the webhook.broker_ack audit row.
+ *                          When omitted no latency row is written.
+ * @returns               BrokerResult — always resolves, never throws
  */
 export async function routeOrder(
   accountId: string,
   signal: WebhookSignal,
   correlationId?: string | null,
+  webhookFiredAt?: number | null,
 ): Promise<BrokerResult> {
   // ── F-2: Kill switch supremacy — FIRST gate, no exceptions ─────────────────
   // isHaltedForProduction() is fail-CLOSED: DB error → returns true → blocks.
@@ -507,6 +513,41 @@ export async function routeOrder(
 
     broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
     await writeAuditLog(accountId, signal, result, correlationId);
+
+    // ── webhook.broker_ack latency emitter (Wave 25 CF#1) ────────────────────
+    // Only on SUCCESSFUL broker ack. Rejection events have their own audit rows.
+    // Writes the row consumed by webhook-latency-monitor-service.ts (cron every
+    // 15 min) to compute p50/p95 fire-to-ack latency over a rolling 1h window.
+    if (submitResult.success && webhookFiredAt != null) {
+      const ackAt = Date.now();
+      const fire_to_ack_ms = ackAt - webhookFiredAt;
+      db.insert(auditLog)
+        .values({
+          action: "webhook.broker_ack",
+          entityType: "broker_account",
+          entityId: null,
+          decisionAuthority: "system",
+          input: {
+            accountId,
+            ticker: signal.ticker,
+            action: signal.action,
+          } as Record<string, unknown>,
+          result: {
+            fire_to_ack_ms,
+            source: account.brokerType === "traderspost" ? "traderspost" : "direct",
+            fired_at_iso: new Date(webhookFiredAt).toISOString(),
+            ack_at_iso: new Date(ackAt).toISOString(),
+            broker: account.brokerType,
+            account_id: accountId,
+          } as Record<string, unknown>,
+          status: "success",
+          correlationId: correlationId ?? null,
+        })
+        .catch((err: unknown) => {
+          logger.error({ err, accountId, correlationId }, "broker-router: webhook.broker_ack audit write failed (non-blocking)");
+        });
+    }
+
     return result;
   }
 

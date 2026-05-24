@@ -30,6 +30,7 @@
  */
 
 import { logger } from "../lib/logger.js";
+import { isInAnyKillzone, activeKillzones } from "../lib/killzone.js";
 
 // ─── Named weight constants (institutional defaults, equal-weight starter) ────
 // Overfitting guard: only adjust after 30+ days of audit_log instrumentation.
@@ -102,15 +103,33 @@ export interface BarSnapshot {
  * Structure state published by the structure_engine.py (Pass 1 W25.2).
  * Consumed read-only here. When null, structure factors return satisfied=false
  * with reason "structure_engine_unavailable" (expected before W25.2 ships).
+ *
+ * SHAPE: snake_case keys produced by Python `dataclasses.asdict(StructureState)`.
+ * Canonical definition lives in bias-state-service.ts — this is a structural
+ * alias to keep the confluence-score.ts module self-contained (no upward import
+ * into bias-state-service which transitively pulls db/schema and breaks test
+ * isolation per feedback_helper_logger_import.md).
+ *
+ * Adding/renaming a field requires updates in 3 places — see W25.2 dataclass docstring.
  */
 export interface StructureState {
-  market_structure_aligned: boolean;
   bos_recent: boolean;
+  bos_direction: "bullish" | "bearish" | null;
   choch_recent: boolean;
+  choch_direction: "bullish" | "bearish" | null;
   mss_recent: boolean;
+  mss_direction: "bullish" | "bearish" | null;
+  mss_displacement_atr_mult: number | null;
+  displacement_active: boolean;
+  premium_discount_zone: "premium" | "discount" | "equilibrium";
   htf_bias_aligned: boolean;
-  pd_zone: "premium" | "discount" | "equilibrium";
-  last_break_age_bars: number;
+  last_break_direction: "bullish" | "bearish" | null;
+  last_break_age_bars: number | null;
+  swing_high: number | null;
+  swing_low: number | null;
+  computed_at_bar_idx: number;
+  /** Derived: htf_bias_aligned && last_break_direction matches bias. Optional — eval handles via htf_bias_aligned + choch_recent when absent. */
+  market_structure_aligned?: boolean;
 }
 
 /**
@@ -132,6 +151,11 @@ export interface SignalContext {
   structureState: StructureState | null;
   /** calendarBlocked: reuses the existing signal-time calendar check result */
   calendarBlocked: boolean;
+  /**
+   * UTC timestamp of the signal bar. Used by killzone_active factor.
+   * When undefined, killzone evaluation uses bar.timestamp (ms epoch) as fallback.
+   */
+  timestampUTC?: Date;
 }
 
 /**
@@ -255,12 +279,22 @@ function evalMarketStructureAligned(
   if (ctx.structureState === null) {
     return { satisfied: false, reason: "structure_engine_unavailable" };
   }
-  const satisfied = ctx.structureState.market_structure_aligned === true;
+  // Prefer the explicit derived flag when published; otherwise derive from htf_bias_aligned
+  // (the W25.2 canonical predicate: HTF aligned AND a recent break exists in the same direction).
+  const derived =
+    ctx.structureState.htf_bias_aligned === true &&
+    (ctx.structureState.choch_recent === true ||
+      ctx.structureState.mss_recent === true ||
+      ctx.structureState.bos_recent === true);
+  const satisfied =
+    typeof ctx.structureState.market_structure_aligned === "boolean"
+      ? ctx.structureState.market_structure_aligned
+      : derived;
   return {
     satisfied,
     reason: satisfied
-      ? `structure_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}`
-      : `structure_not_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}`,
+      ? `structure_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}_mss=${ctx.structureState.mss_recent}`
+      : `structure_not_aligned_htf=${ctx.structureState.htf_bias_aligned}_choch=${ctx.structureState.choch_recent}_mss=${ctx.structureState.mss_recent}`,
   };
 }
 
@@ -318,35 +352,35 @@ function evalVwapAlignment(
 }
 
 /**
- * killzone_active — STUB (pending Pass 1 W25.3 killzone.ts helper).
- * W25.3 ships in the same pass; if that track runs before this one it will wire
- * the real helper. Until then, stub returns false.
+ * killzone_active — uses the W25.3 killzone.ts helper (static import).
+ * Satisfied when the signal bar's timestamp falls within ANY of the 5
+ * operator-canonical killzone windows. Active zone names are embedded in
+ * the reason string for the audit trail.
+ *
+ * Resolution order for the timestamp:
+ *   1. ctx.timestampUTC  (Date object set by paper-signal-service at signal time)
+ *   2. bar.timestamp     (ms epoch fallback)
+ *   3. Date.now()        (last-resort: reduces to "is it a killzone right now")
  */
 function evalKillzoneActive(
-  _ctx: SignalContext,
+  ctx: SignalContext,
 ): { satisfied: boolean; reason: string } {
-  // Attempt dynamic import of killzone helper — if W25.3 has already shipped
-  // the module will exist. If not, return stub response.
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const kz = require("../lib/killzone.js") as {
-      isInKillzone?: (ts: number, zone: string) => boolean;
+  const tsDate: Date =
+    ctx.timestampUTC instanceof Date
+      ? ctx.timestampUTC
+      : new Date(ctx.bar.timestamp ?? Date.now());
+
+  const zones = activeKillzones(tsDate);
+  if (zones.length > 0) {
+    return {
+      satisfied: true,
+      reason: `active: ${zones.join(", ")}`,
     };
-    if (kz.isInKillzone && typeof kz.isInKillzone === "function") {
-      const ts = _ctx.bar.timestamp ?? Date.now();
-      // Check any active killzone window
-      const zones = ["london", "ny_am", "ny_pm", "silver_bullet"] as const;
-      for (const zone of zones) {
-        if (kz.isInKillzone(ts, zone)) {
-          return { satisfied: true, reason: `killzone_active_${zone}` };
-        }
-      }
-      return { satisfied: false, reason: "no_killzone_active" };
-    }
-  } catch {
-    // Module not yet present — expected before W25.3 ships
   }
-  return { satisfied: false, reason: "killzone_helper_pending_w25.3" };
+  return {
+    satisfied: isInAnyKillzone(tsDate),
+    reason: "no_killzone_active",
+  };
 }
 
 /**

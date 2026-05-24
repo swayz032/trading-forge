@@ -4,6 +4,37 @@
 
 ---
 
+### Session Log — 2026-05-24 Wave 25 Pass 1 — weighted scoring + structure engine + killzone
+
+**Mission:** Replace boolean Stage 2 with weighted probabilistic scoring; build independent structure validation layer; extract killzone helper. P1.A5 (`trading-forge-architect`) closes Pass 1 with system-map sync + contract verification + backfill enablement.
+
+**Work completed (P1.A5 architect close-out):**
+- **Interface contract gap closed** (P1.A1 carry-forward) — Added typed `StructureState` interface to `src/server/services/bias-state-service.ts` mirroring the Python `StructureState` dataclass shape (snake_case fields per `dataclasses.asdict()`). Added `structureState: StructureState | null` to both `CachedBiasDecision` (private) and `BiasStateForSignal` (exported) interfaces. Updated `stubBiasState()`, existing-row restore path, and final-decision build site to populate the field. Aligned `confluence-score.ts::StructureState` to the canonical 15-field shape (was a 7-field subset with stale `pd_zone`/`market_structure_aligned` fields). Removed the unsafe `(biasState as unknown as Record<string,unknown>).structureState` cast at `paper-signal-service.ts:3107` — now reads `biasState?.structureState ?? null` against the typed interface.
+- **Backfill script** — Created `scripts/wave25-pass1-weighted-opt-in.ts` (idempotent, dry-run by default, `--apply` to mutate). Targets the 3 graduated archetypes (silver_bullet / crt|turtle_soup / power_of_3|power_of_three). Sets `use_weighted_scoring=TRUE`, `confluence_score_threshold=0.72` (DEFAULT_CONFLUENCE_THRESHOLD), leaves `confluence_score_weights` NULL so all 3 use canonical CODE_DEFAULTS (overfitting guard per plan §1). Writes `strategy.wave25_weighted_opt_in` audit row per mutation. Pre-flight check confirms migration 0135 columns exist before scanning — bails with operator-actionable error if 0135 not yet applied.
+- **System Map sync** — Added `parameter_robustness_gate` subsystem entry to `docs/system-subsystem-registry.json` covering `/api/b15-robustness` route + `parameter_jitter_battery` engine subsystem (Wave 25 Item 5 hardening — was untracked from sibling agent). Added 2 missing `n8n-drift-detector-weekly` + `n8n-drift-detector-monthly` scheduler jobs to the n8n subsystem registry entry. `npm run system-map:sync` exit 0; `npm run system-map:check` exit 0 / status `ok` / driftItems `[]`.
+- **CLAUDE.md updates** — (1) §2 Current Phase appended a Wave 25 active marker with Pass 1 ship date. (2) §2b Scout Architecture got a new subsection "Stage 2 weighted scoring (Wave 25, Pass 1, W25.1)" documenting the 3-path dispatcher, full 9-factor weight table with hard-block column, override hierarchy, backward-compat opt-in path, structure engine summary, killzone helper summary. (3) §12 Hard Gates table got a new "Wave 25 weighted-score threshold" row. (4) §13 Don't (Execution) got a new "Don't bypass `macro_alignment` hard-block (Wave 25 Path C)" rule.
+
+**Verification:**
+- `npm test wave25-weighted-scoring wave25-structure-stage2-wiring wave23h-10am-flip-policy` → 70/70 GREEN (44 + 18 + 8). Adding `structureState` to `BiasStateForSignal` did not regress the local-typed copy in the W23H 10am-flip test (it has its own narrower local interface).
+- `npm run system-map:sync` → exit 0
+- `npm run system-map:check` → exit 0, status `ok`, driftItems empty (was: 1 missing route + 2 missing scheduler jobs before this session)
+- `npm run check:production-isolation` → not re-run by architect (Pass 1 sibling already verified GREEN; no production-isolation-touching files modified by P1.A5 — only docs, registry JSON, and service-side interface additions)
+- Backfill `npx tsx -r dotenv/config scripts/wave25-pass1-weighted-opt-in.ts` (dry-run) → exits 2 with clear operator message "Migration 0135 NOT applied to this DB" until the boot-migration runner picks up 0135. This is expected and the pre-flight check is intentional.
+
+**Known-facts updates:**
+- Stage 2 dispatcher now has 3 dispatch paths in priority order: Path C (Wave 25 weighted), Path A (per_strategy boolean), Path B (canonical_5 boolean). Default `use_weighted_scoring=FALSE` preserves all 74+ pre-Wave-25 strategies on Path A or B without modification.
+- `BiasStateForSignal.structureState` is the authoritative contract surface for the structure engine snapshot. `confluence-score.ts::StructureState` is a structural alias kept local to avoid the upward import into bias-state-service (which transitively pulls db/schema and breaks test isolation per `feedback_helper_logger_import.md`). 3 places must stay in sync if the shape changes: (1) Python `structure_engine.py` dataclass, (2) `bias-state-service.ts` `StructureState` interface, (3) `confluence-score.ts` `StructureState` interface.
+- Migration 0135 + 0134 are both at journal idx 137 — operator should inspect `meta/_journal.json` for collision before `npm run db:migrate` (W25.1 + W25.2 sibling agents both wrote that idx).
+
+**Carry-forward for next session (Pass 2):**
+- Operator: apply migrations 0134 + 0135 (boot-migration runner picks up automatically on next service start; OR `npm run db:migrate`).
+- Operator (optional, post-migration): run `npx tsx -r dotenv/config scripts/wave25-pass1-weighted-opt-in.ts` (dry-run) then `--apply` to opt the 3 graduated strategies onto Path C.
+- Pass 2 P2.A1 + P2.A2 (`backtest-core`, sequential same agent): 5-TF MTF expansion + HTF narrative state. P2.A3 (`paper-parity`): bias_state JSONB persistence of narrative. P2.A4 (`observability-reliability`). P2.A5 (`trading-forge-architect`, last).
+- Pass 5 SMT + VWAP factor stubs in `confluence-score.ts` (`evalSmtConfirmation`, `evalLiquidityTargetClear`) read from `SignalContext.indicators` map keys — Pass 5 SMT module should write its score under a stable indicator key (suggested: `smt_score`, range [0,1]) so the stub replacement is mechanical.
+- Pass 6 narrative state machine consumes `bias_state.narrative_state` JSONB (separate column, not piggybacked on `structure_state`). When Pass 6 lands, add a parallel `narrativeState: NarrativeState | null` to `BiasStateForSignal` following the same typed-contract pattern Pass 1 established here.
+
+---
+
 ### Session Log — 2026-05-24 backtest-core — Wave 25 Pass 1 W25.2 Independent Structure Engine
 
 **Mission:** Fix the circular-logic bug where `structural_setup = True` whenever the entry trigger fires (tautological). Build BOS/CHoCH/MSS detection as an independent layer that validates BEFORE the entry trigger evaluates, publishing `StructureState` consumed by both bias engine and Stage 2 weighted scoring (W25.1 sibling).

@@ -2,11 +2,21 @@
 
 These are foundational for all ICT strategies. Swing detection
 feeds into order blocks, liquidity, and fibonacci modules.
+
+Wave 25 W25.2 additions (2026-05-24):
+    detect_choch_with_context() -- CHoCH with prior_bos_direction param
+    detect_mss_with_context()   -- MSS = CHoCH + displacement candle
+    premium_discount_zone()     -- pure scalar PD-array math helper
 """
 
 from __future__ import annotations
 
 import polars as pl
+
+# ─── Named constants (no magic numbers inline) ────────────────────────────────
+ATR_PERIOD_DEFAULT: int = 14
+SWING_LOOKBACK_DEFAULT: int = 5
+MSS_DISPLACEMENT_THRESHOLD: float = 1.5  # ATR multiples required for MSS confirmation
 
 
 def detect_swings(df: pl.DataFrame, lookback: int = 5) -> pl.DataFrame:
@@ -298,3 +308,207 @@ def compute_equilibrium(
             result[i] = (last_sh + last_sl) / 2.0
 
     return pl.Series("equilibrium", result, dtype=pl.Float64)
+
+
+# ─── Wave 25 W25.2: Context-aware detectors (new spec-conformant signatures) ──
+# These extend the original detect_choch/detect_mss which operate independently
+# on swings with no knowledge of BOS direction. The new variants accept
+# prior_bos_direction as an explicit input so the structure engine can ask:
+# "given we were in a bullish BOS series, did a CHoCH just occur?"
+#
+# No look-ahead: all detectors use only data up to and including bar i.
+# The swing lookback offset from detect_swings() already encodes the
+# confirmation delay (half_window bars). These functions never read ahead.
+
+
+def detect_choch_with_context(
+    bars: pl.DataFrame,
+    swings: pl.DataFrame,
+    prior_bos_direction: str,
+) -> pl.DataFrame:
+    """Change of Character with explicit prior-BOS-direction context.
+
+    Answers: given we were in a `prior_bos_direction` BOS series, did
+    a counter-trend structure break occur?
+
+    CHoCH definition:
+      - If prior_bos_direction="bullish": first close BELOW the most-recent
+        confirmed swing low (the swing low that established the prior upleg).
+      - If prior_bos_direction="bearish": first close ABOVE the most-recent
+        confirmed swing high (the swing high that established the prior downleg).
+
+    No look-ahead: swing pointer advances strictly at index < i, so bar i
+    can only reference swings confirmed before it.
+
+    Args:
+        bars:                 Execution-TF DataFrame with close, open, high, low columns.
+        swings:               Output of detect_swings() — index, type, price columns.
+        prior_bos_direction:  "bullish" | "bearish"
+
+    Returns:
+        DataFrame with columns:
+          choch_detected   (bool)  — True on the bar where CHoCH fires
+          choch_direction  (str)   — "bullish" | "bearish" | None
+          choch_bar_idx    (int)   — bar index of the CHoCH, else None
+          choch_magnitude  (float) — points distance of the break, else None
+    """
+    n = len(bars)
+    choch_detected: list[bool] = [False] * n
+    choch_direction: list[str | None] = [None] * n
+    choch_bar_idx: list[int | None] = [None] * n
+    choch_magnitude: list[float | None] = [None] * n
+
+    if prior_bos_direction not in ("bullish", "bearish"):
+        # Unknown direction — cannot define counter-trend; return all-false
+        return pl.DataFrame({
+            "choch_detected": pl.Series(choch_detected, dtype=pl.Boolean),
+            "choch_direction": pl.Series(choch_direction, dtype=pl.Utf8),
+            "choch_bar_idx": pl.Series(choch_bar_idx, dtype=pl.Int64),
+            "choch_magnitude": pl.Series(choch_magnitude, dtype=pl.Float64),
+        })
+
+    swing_highs = swings.filter(pl.col("type") == "high").sort("index")
+    swing_lows = swings.filter(pl.col("type") == "low").sort("index")
+
+    sh_prices = swing_highs["price"].to_list() if len(swing_highs) > 0 else []
+    sh_indices = swing_highs["index"].to_list() if len(swing_highs) > 0 else []
+    sl_prices = swing_lows["price"].to_list() if len(swing_lows) > 0 else []
+    sl_indices = swing_lows["index"].to_list() if len(swing_lows) > 0 else []
+
+    sh_ptr = 0
+    sl_ptr = 0
+    last_sh: float | None = None
+    last_sl: float | None = None
+    choch_fired = False  # only fire once per call (first counter-trend break)
+
+    for i in range(n):
+        # Advance swing pointers — strict < to avoid look-ahead
+        while sh_ptr < len(sh_indices) and sh_indices[sh_ptr] < i:
+            last_sh = float(sh_prices[sh_ptr])
+            sh_ptr += 1
+        while sl_ptr < len(sl_indices) and sl_indices[sl_ptr] < i:
+            last_sl = float(sl_prices[sl_ptr])
+            sl_ptr += 1
+
+        if choch_fired:
+            # Already detected — mark all subsequent bars as False
+            continue
+
+        close = float(bars["close"][i])
+
+        if prior_bos_direction == "bullish":
+            # CHoCH: close breaks BELOW the last confirmed swing low
+            if last_sl is not None and close < last_sl:
+                choch_detected[i] = True
+                choch_direction[i] = "bearish"
+                choch_bar_idx[i] = i
+                choch_magnitude[i] = round(last_sl - close, 4)
+                choch_fired = True
+        else:  # prior_bos_direction == "bearish"
+            # CHoCH: close breaks ABOVE the last confirmed swing high
+            if last_sh is not None and close > last_sh:
+                choch_detected[i] = True
+                choch_direction[i] = "bullish"
+                choch_bar_idx[i] = i
+                choch_magnitude[i] = round(close - last_sh, 4)
+                choch_fired = True
+
+    return pl.DataFrame({
+        "choch_detected": pl.Series(choch_detected, dtype=pl.Boolean),
+        "choch_direction": pl.Series(choch_direction, dtype=pl.Utf8),
+        "choch_bar_idx": pl.Series(choch_bar_idx, dtype=pl.Int64),
+        "choch_magnitude": pl.Series(choch_magnitude, dtype=pl.Float64),
+    })
+
+
+def detect_mss_with_context(
+    bars: pl.DataFrame,
+    choch_result: pl.DataFrame,
+    atr_period: int = ATR_PERIOD_DEFAULT,
+) -> pl.DataFrame:
+    """Market Structure Shift: CHoCH confirmed by displacement candle.
+
+    MSS fires when the CHoCH break bar has candle range >= MSS_DISPLACEMENT_THRESHOLD
+    times the ATR at that bar. A small-body CHoCH (e.g. wick extension) does NOT
+    qualify as MSS — only a displacement candle with genuine range.
+
+    No look-ahead: ATR is computed rolling up to and including bar i; the CHoCH
+    flag is already no-look-ahead (computed by detect_choch_with_context).
+
+    Args:
+        bars:         Execution-TF DataFrame with open, high, low, close, volume.
+        choch_result: Output of detect_choch_with_context().
+        atr_period:   Rolling ATR period (default ATR_PERIOD_DEFAULT=14).
+
+    Returns:
+        DataFrame with columns:
+          mss_detected              (bool)
+          mss_direction             (str)   — "bullish" | "bearish" | None
+          mss_displacement_atr_mult (float) — multiplier at the MSS bar, else None
+    """
+    from src.engine.indicators.core import compute_atr
+
+    n = len(bars)
+    mss_detected: list[bool] = [False] * n
+    mss_direction: list[str | None] = [None] * n
+    mss_displacement_atr_mult: list[float | None] = [None] * n
+
+    atr_series = compute_atr(bars, atr_period)
+    choch_detected_col = choch_result["choch_detected"].to_list()
+    choch_direction_col = choch_result["choch_direction"].to_list()
+
+    for i in range(n):
+        if not choch_detected_col[i]:
+            continue
+
+        candle_range = abs(float(bars["close"][i]) - float(bars["open"][i]))
+        atr_val = atr_series[i]
+        if atr_val is None or (atr_val != atr_val):  # None or NaN
+            continue
+
+        atr_f = float(atr_val)
+        if atr_f <= 0:
+            continue
+
+        mult = candle_range / atr_f
+        if mult >= MSS_DISPLACEMENT_THRESHOLD:
+            mss_detected[i] = True
+            mss_direction[i] = choch_direction_col[i]
+            mss_displacement_atr_mult[i] = round(mult, 4)
+
+    return pl.DataFrame({
+        "mss_detected": pl.Series(mss_detected, dtype=pl.Boolean),
+        "mss_direction": pl.Series(mss_direction, dtype=pl.Utf8),
+        "mss_displacement_atr_mult": pl.Series(mss_displacement_atr_mult, dtype=pl.Float64),
+    })
+
+
+def premium_discount_zone(
+    price: float,
+    swing_high: float,
+    swing_low: float,
+) -> str:
+    """PD-array scalar helper: classify price relative to the range midpoint.
+
+    Returns:
+        "premium"      if (price - swing_low) / range > 0.5
+        "discount"     if (price - swing_low) / range < 0.5
+        "equilibrium"  if exactly 0.5, OR if swing_high == swing_low (degenerate range)
+
+    No look-ahead: purely scalar computation on already-known price levels.
+    """
+    if swing_high == swing_low:
+        return "equilibrium"
+
+    rng = swing_high - swing_low
+    if rng <= 0:
+        # Inverted range (swing_low > swing_high) — defensive fallback
+        return "equilibrium"
+
+    ratio = (price - swing_low) / rng
+    if ratio > 0.5:
+        return "premium"
+    elif ratio < 0.5:
+        return "discount"
+    else:
+        return "equilibrium"

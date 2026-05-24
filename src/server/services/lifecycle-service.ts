@@ -2236,6 +2236,71 @@ export class LifecycleService {
           );
         }
 
+        // ── Wave 25 Item 5: B15 Parameter Robustness Battery gate: PAPER → DEPLOY_READY ──
+        // Advisory-only for 30 days (B15_BATTERY_ENABLED=false default).
+        // When B15_BATTERY_ENABLED=true, strategies that ran the battery and FAILED are HARD-blocked.
+        // Strategies WITHOUT b15_battery data (pre-B15 backtests) are NEVER blocked — backward compat.
+        const b15HardGateEnabled = (process.env.B15_BATTERY_ENABLED ?? "false") === "true";
+        try {
+          const [latestBtForB15] = await db
+            .select({ b15Battery: backtests.b15Battery })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          if (latestBtForB15?.b15Battery) {
+            const b15 = latestBtForB15.b15Battery as Record<string, unknown>;
+            // Only block when battery explicitly ran and passed=false.
+            // Absent b15_battery → skip (backward compat for pre-B15 backtests).
+            if (b15.passed === false) {
+              const failures = (b15.failures as string[] | undefined) ?? [];
+              const sdr = b15.sdr as number | undefined;
+              const psi = b15.psi as number | undefined;
+              const rws = b15.rws as number | undefined;
+              logger.warn(
+                { strategyId: s.id, sdr, psi, rws, failures, b15HardGateEnabled, transition: "PAPER→DEPLOY_READY" },
+                b15HardGateEnabled
+                  ? "B15 Parameter Robustness Battery HARD gate BLOCKED PAPER→DEPLOY_READY promotion"
+                  : "B15 Parameter Robustness Battery ADVISORY — promotion continues (B15_BATTERY_ENABLED=false)",
+              );
+              await db.insert(auditLog).values({
+                action: "lifecycle.b15_parameter_robustness_blocked",
+                entityId: s.id,
+                entityType: "strategy",
+                status: b15HardGateEnabled ? "failure" : "warning",
+                decisionAuthority: "gate",
+                input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                result: {
+                  sdr: sdr ?? null,
+                  psi: psi ?? null,
+                  rws: rws ?? null,
+                  thresholds: b15.thresholds ?? null,
+                  failures,
+                  hard_gate_enabled: b15HardGateEnabled,
+                },
+                correlationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "B15 audit insert failed (non-blocking)");
+              });
+              if (b15HardGateEnabled) {
+                continue;
+              }
+            }
+          }
+        } catch (b15Err) {
+          // Fail-open: B15 gate read failure is non-blocking (pre-B15 strategies may not have data).
+          logger.warn(
+            { strategyId: s.id, err: b15Err },
+            "B15 Parameter Robustness Battery gate: read failed (non-blocking — promotion continues)",
+          );
+        }
+
         const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined });
         if (result.success) {
           promoted.push(s.id);

@@ -216,6 +216,11 @@ async function checkStrategyDrift(
   }
 
   // ── 6. Audit row ───────────────────────────────────────────────────────────
+  // CANONICAL ACTION NAME: "drift.weekly_2sigma_halt"
+  // This is the authoritative string for all consumers (dashboard queries,
+  // reconciliation scripts, audit_log filters, n8n drift detector checks).
+  // Do NOT use "auto_halt.weekly_drift_2sigma" — that variant was rejected
+  // in Wave 25 Pass 2 R-3 audit. Update any consumer that queries the wrong name.
   await insertAuditRow({
     action: "drift.weekly_2sigma_halt",
     entityType: "strategy",

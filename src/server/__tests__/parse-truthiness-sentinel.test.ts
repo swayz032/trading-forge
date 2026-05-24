@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { parseTruthinessSentinel } from "../lib/python-runner.js";
+import { parseTruthinessSentinel, B15_BATTERY_SENTINEL } from "../lib/python-runner.js";
 
 describe("parseTruthinessSentinel", () => {
   it("parses PARITY_SHADOW_DRIFT_JSON sentinel line", () => {
@@ -67,5 +67,59 @@ describe("parseTruthinessSentinel", () => {
     expect(result!.payload.critical_failures).toEqual(["ending_balance_mismatch"]);
     const details = result!.payload.details as Record<string, number>;
     expect(details.diff).toBe(8827);
+  });
+
+  // ── Wave 25 Item 5: B15_BATTERY_JSON sentinel ─────────────────────────────
+
+  it("exports B15_BATTERY_SENTINEL constant with value 'B15_BATTERY_JSON'", () => {
+    expect(B15_BATTERY_SENTINEL).toBe("B15_BATTERY_JSON");
+  });
+
+  it("parses B15_BATTERY_JSON sentinel line (Wave 25 Item 5)", () => {
+    const payload = {
+      event: "b15_battery",
+      backtest_id: "abc-123",
+      result: { sdr: 0.91, psi: 0.025, rws: 0.14, passed: true, failures: [] },
+    };
+    const line = `B15_BATTERY_JSON ${JSON.stringify(payload)}`;
+    const result = parseTruthinessSentinel(line);
+
+    expect(result).not.toBeNull();
+    expect(result!.type).toBe("b15_battery");
+    expect((result!.payload as typeof payload).event).toBe("b15_battery");
+    expect((result!.payload as typeof payload).result.passed).toBe(true);
+    expect((result!.payload as typeof payload).result.sdr).toBe(0.91);
+  });
+
+  it("parses B15_BATTERY_JSON when battery FAILED (passed=false)", () => {
+    const payload = {
+      event: "b15_battery",
+      backtest_id: "xyz",
+      result: {
+        sdr: 0.72,
+        psi: 0.03,
+        rws: 0.18,
+        passed: false,
+        failures: ["SDR 0.72 < 0.85 — strategy is perturbation-fragile"],
+      },
+    };
+    const line = `B15_BATTERY_JSON ${JSON.stringify(payload)}`;
+    const result = parseTruthinessSentinel(line);
+
+    expect(result).not.toBeNull();
+    expect(result!.type).toBe("b15_battery");
+    expect((result!.payload as typeof payload).result.passed).toBe(false);
+    expect((result!.payload as typeof payload).result.failures).toHaveLength(1);
+  });
+
+  it("returns null for B15_BATTERY_JSON with malformed JSON", () => {
+    const line = "B15_BATTERY_JSON {not valid json}}}";
+    expect(() => parseTruthinessSentinel(line)).not.toThrow();
+    expect(parseTruthinessSentinel(line)).toBeNull();
+  });
+
+  it("B15_BATTERY_JSON prefix in middle of line is NOT matched", () => {
+    const line = "prefix B15_BATTERY_JSON {}";
+    expect(parseTruthinessSentinel(line)).toBeNull();
   });
 });

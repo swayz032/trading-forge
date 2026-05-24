@@ -419,6 +419,77 @@
     "criticality": "critical"
   },
   {
+    "id": "parameter_robustness_gate",
+    "domain": "qualification",
+    "owner_surface": "python-node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "B15 Parameter Robustness Battery (Wave 25 Item 5): runs ±20% jitter on each parameter, computes Stability-Dependence Ratio (SDR), Population Stability Index (PSI), and Robustness-Weighted Score (RWS). Hard gate on PAPER->DEPLOY_READY when SDR < 0.85 OR PSI > 0.05 OR RWS > 0.20 (QuantForgeAnalytics 2026-05-16 institutional spec). Advisory-only when B15_BATTERY_ENABLED=false (30-day grandfather period). Required because perturbation-fragility kills strategies that survive WF/CPCV/PBO/DSR.",
+    "data_sources": [
+      "backtest b15_battery JSONB",
+      "strategy parameters"
+    ],
+    "reads_from": [
+      "backtests",
+      "strategies"
+    ],
+    "writes_to": [
+      "backtests",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "backtests"
+    ],
+    "audit_actions": [
+      "b15.battery_completed",
+      "b15.battery_failed",
+      "lifecycle.gate_blocked_b15_robustness"
+    ],
+    "metrics_surfaces": [
+      "/api/b15-robustness/coverage"
+    ],
+    "telemetry_sources": [
+      "/api/b15-robustness/coverage",
+      "b15:* SSE"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/b15-robustness"
+    ],
+    "engine_subsystems": [
+      "parameter_jitter_battery"
+    ],
+    "database_tables": [
+      "backtests"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/b15-robustness/coverage",
+      "audit_log"
+    ],
+    "recovery_mode": "fail-closed-block-promotion",
+    "health_check": "/api/b15-robustness/coverage",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "backtests:b15_battery_recent"
+    ],
+    "evidence_queries": [
+      "b15-battery-coverage",
+      "b15-deployed-passing-rate"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "critical"
+  },
+  {
     "id": "signal_correlation_gate",
     "domain": "qualification",
     "owner_surface": "python-node",
@@ -1787,6 +1858,8 @@
     ],
     "scheduler_jobs": [
       "n8n-data-backup-daily",
+      "n8n-drift-detector-monthly",
+      "n8n-drift-detector-weekly",
       "n8n-drift-monthly",
       "n8n-execution-scrape",
       "n8n-health-check",

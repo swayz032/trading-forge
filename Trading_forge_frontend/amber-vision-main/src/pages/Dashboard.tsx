@@ -17,6 +17,7 @@ import { num, dollarsToPoints, fmtPoints } from "@/lib/utils";
 import { ScoutHealthCard } from "@/components/dashboard/ScoutHealthCard";
 import { SignalStarvationCard } from "@/components/dashboard/SignalStarvationCard";
 import { RegimeCoverageCard } from "@/components/dashboard/RegimeCoverageCard";
+import { BrokerErrorBudgetCard } from "@/components/dashboard/BrokerErrorBudgetCard";
 
 // ── Session ──
 function getETTime() {
@@ -494,10 +495,11 @@ export default function Dashboard() {
           <Activity className="w-4 h-4 text-text-muted" />
           <span className="text-xs uppercase tracking-widest text-text-muted font-medium">Observability</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <ScoutHealthCard />
           <SignalStarvationCard />
           <RegimeCoverageCard />
+          <BrokerErrorBudgetCard />
         </div>
       </motion.div>
 

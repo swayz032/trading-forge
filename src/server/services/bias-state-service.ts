@@ -39,6 +39,35 @@ import { and, eq, isNotNull, desc, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { computePickerScores } from "./picker-metrics.js";
 
+// ─── Wave 25 W25.2 StructureState contract ────────────────────────────────────
+// Mirrors the Python `StructureState` dataclass (src/engine/context/structure_engine.py)
+// AFTER `dataclasses.asdict()` serialization — keys are snake_case.
+// Persisted in bias_state.structure_state JSONB; consumed by confluence-score.ts
+// (W25.1, Path C) as the `market_structure_aligned` factor input.
+//
+// Shape locked by W25.2; do not rename fields without updating BOTH:
+//   - src/engine/context/structure_engine.py (dataclass)
+//   - src/server/services/confluence-score.ts (StructureState interface alias)
+export interface StructureState {
+  bos_recent: boolean;
+  bos_direction: "bullish" | "bearish" | null;
+  choch_recent: boolean;
+  choch_direction: "bullish" | "bearish" | null;
+  mss_recent: boolean;
+  mss_direction: "bullish" | "bearish" | null;
+  mss_displacement_atr_mult: number | null;
+  displacement_active: boolean;
+  premium_discount_zone: "premium" | "discount" | "equilibrium";
+  htf_bias_aligned: boolean;
+  last_break_direction: "bullish" | "bearish" | null;
+  last_break_age_bars: number | null;
+  swing_high: number | null;
+  swing_low: number | null;
+  computed_at_bar_idx: number;
+  /** Derived alignment flag — exposed by structure_engine for direct Stage 2 read. */
+  market_structure_aligned?: boolean;
+}
+
 // ─── Active symbols ───────────────────────────────────────────────────────────
 export const BIAS_SYMBOLS = ["MES", "MNQ", "MCL"] as const;
 export type BiasSymbol = typeof BIAS_SYMBOLS[number];
@@ -60,6 +89,8 @@ interface CachedBiasDecision {
   computedAt: string;
   /** W23H.E: true when this row was inserted by a 10am refresh that changed activeStrategyId. */
   positionLockActive: boolean;
+  /** W25.2: structure engine snapshot (null until structure_engine.py publishes or when MTF unavailable). */
+  structureState: StructureState | null;
 }
 
 function cacheKey(sessionDate: string, symbol: string): string {
@@ -92,6 +123,12 @@ export interface BiasStateForSignal {
   activeStrategyId: string | null;
   /** W23H.E: true when this row was written by a 10am refresh that changed activeStrategyId. */
   positionLockActive: boolean;
+  /**
+   * W25.2: structure_engine.py snapshot for this session.
+   *   - null when MTF data unavailable or structure_engine returned None (fail-open).
+   *   - Consumed by confluence-score.ts (Path C) `market_structure_aligned` factor.
+   */
+  structureState: StructureState | null;
 }
 
 /**
@@ -106,6 +143,7 @@ function stubBiasState(sessionDate: string, symbol: string): BiasStateForSignal 
     playbook: "NO_TRADE",
     activeStrategyId: null,
     positionLockActive: false,
+    structureState: null,
   };
 }
 
@@ -283,6 +321,7 @@ export async function getOrComputeBiasStateForDay(
           evidence: biasState.evidence,
           symbol: biasState.symbol,
           positionLockActive: biasState.positionLockActive,
+          structureState: biasState.structureState,
         })
         .from(biasState)
         .where(and(eq(biasState.sessionDate, sessionDate), eq(biasState.symbol, sym)))
@@ -300,6 +339,7 @@ export async function getOrComputeBiasStateForDay(
           evidence: (row.evidence as Record<string, unknown>) ?? {},
           computedAt: row.computedAt.toISOString(),
           positionLockActive: row.positionLockActive ?? false,
+          structureState: (row.structureState as StructureState | null) ?? null,
         };
         dailyBiasCache.set(key, decision);
         logger.info(
@@ -317,6 +357,7 @@ export async function getOrComputeBiasStateForDay(
   let regimeLabel = "UNKNOWN";
   let playbook = "NO_TRADE";
   let evidence: Record<string, unknown> = {};
+  let structureStateJson: Record<string, unknown> | null = null;
   const computedAt = new Date().toISOString();
   const isRefresh = forceRefresh;
 
@@ -390,6 +431,7 @@ export async function getOrComputeBiasStateForDay(
       no_trade_reasons: string[];
       evidence: Record<string, unknown>;
       source: string;
+      structure_state: Record<string, unknown> | null;
     }>({
       scriptCode: `
 import sys, json, os, datetime
@@ -417,7 +459,7 @@ PLAYBOOK_TO_REGIME = {
     "LEAN_SHORT":               "TRENDING_DOWN",
 }
 
-def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, evidence, source):
+def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, evidence, source, structure_state=None):
     print(json.dumps({
         "regime_label": regime_label,
         "playbook": playbook,
@@ -426,6 +468,7 @@ def emit(regime_label, playbook, net_bias, bias_confidence, no_trade_reasons, ev
         "no_trade_reasons": no_trade_reasons,
         "evidence": evidence,
         "source": source,
+        "structure_state": structure_state,
     }))
 
 # ── Attempt Primary: compute_bias() from live OHLCV + HTF/session context ──
@@ -518,7 +561,15 @@ try:
         deepar_forecast=None,
         bars=None,           # Intraday bars unavailable at Python level
         vp_levels=vp_levels_obj,
+        exec_bars=daily_df,  # W25.2: daily bars serve as exec_bars for structure engine
+        htf_bars=None,       # HTF bars not loaded at session-start; structure engine handles None
     )
+
+    # W25.2: Serialise structure_state for TS persistence
+    structure_state_dict = None
+    if getattr(state, 'structure_state', None) is not None:
+        import dataclasses as _dc
+        structure_state_dict = _dc.asdict(state.structure_state)
 
     # W23H.A: Wire the dead 9-playbook router. route_playbook() replaces the direct
     # state.playbook lookup with the full routing logic (SWEEP_REVERSAL, ORB, MEAN_REVERSION).
@@ -567,6 +618,7 @@ try:
             "overnight_bias": overnight_bias_str,
         },
         source="compute_bias_primary",
+        structure_state=structure_state_dict,
     )
     primary_ok = True
 
@@ -621,6 +673,8 @@ except Exception as primary_err:
     playbook    = biasResult.playbook ?? "NO_TRADE";
     evidence    = biasResult.evidence ?? {};
     computedViaPrimary = biasResult.source === "compute_bias_primary";
+    // W25.2: capture structure_state from Python emit (may be null if engine unavailable)
+    structureStateJson = biasResult.structure_state ?? null;
 
     logger.info(
       { sessionDate, symbol: sym, regimeLabel, playbook, source: biasResult.source, netBias: biasResult.net_bias, isRefresh, correlationId },
@@ -897,7 +951,7 @@ except Exception as e:
   try {
     await db.execute(
       sql`
-        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, position_lock_active, hmm_probability_used, computed_at, created_at)
+        INSERT INTO bias_state (session_date, symbol, regime_label, playbook, active_strategy_id, correlation_id, evidence, position_lock_active, hmm_probability_used, structure_state, computed_at, created_at)
         VALUES (
           ${sessionDate}::date,
           ${sym},
@@ -908,6 +962,7 @@ except Exception as e:
           ${JSON.stringify(evidence)}::jsonb,
           ${positionLockActive},
           ${hmmProbabilityUsed},
+          ${structureStateJson != null ? JSON.stringify(structureStateJson) : null}::jsonb,
           ${computedAt}::timestamptz,
           NOW()
         )
@@ -915,6 +970,37 @@ except Exception as e:
     );
   } catch (dbWriteErr) {
     logger.warn({ err: dbWriteErr, sessionDate, symbol: sym }, "bias-state: DB persist failed (fail-open, trading continues)");
+  }
+
+  // W25.2: emit audit event when structure_state is populated
+  if (structureStateJson != null) {
+    try {
+      await insertAuditRow({
+        action: "bias_engine.structure_state_published",
+        entityType: "paper_session",
+        entityId: `${sessionDate}-${sym}`,
+        decisionAuthority: "system",
+        status: "success",
+        input: { sessionDate, symbol: sym, correlationId },
+        result: {
+          bos_recent: structureStateJson.bos_recent,
+          bos_direction: structureStateJson.bos_direction,
+          choch_recent: structureStateJson.choch_recent,
+          choch_direction: structureStateJson.choch_direction,
+          mss_recent: structureStateJson.mss_recent,
+          mss_direction: structureStateJson.mss_direction,
+          mss_displacement_atr_mult: structureStateJson.mss_displacement_atr_mult,
+          displacement_active: structureStateJson.displacement_active,
+          premium_discount_zone: structureStateJson.premium_discount_zone,
+          htf_bias_aligned: structureStateJson.htf_bias_aligned,
+          last_break_direction: structureStateJson.last_break_direction,
+          computed_at_bar_idx: structureStateJson.computed_at_bar_idx,
+        },
+        correlationId,
+      });
+    } catch (structAuditErr) {
+      logger.warn({ err: structAuditErr, sessionDate, symbol: sym }, "bias-state W25.2: structure_state audit write failed (non-blocking)");
+    }
   }
 
   // W23H.E: emit dedicated audit when 10am refresh locks position due to strategy change
@@ -1020,6 +1106,7 @@ except Exception as e:
     evidence,
     computedAt,
     positionLockActive,
+    structureState: (structureStateJson as StructureState | null) ?? null,
   };
   // Always update cache with latest decision (whether session-start or refresh)
   dailyBiasCache.set(key, decision);

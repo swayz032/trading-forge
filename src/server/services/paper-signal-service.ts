@@ -39,6 +39,7 @@ import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONA
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
 // Wave 25 W25.1: weighted confluence scoring (Path C)
 import { evaluateWeightedConfluence, type ScoringStrategy, type SignalContext as WeightedSignalContext } from "./confluence-score.js";
+import { notifyCritical } from "./notification-service.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -3094,18 +3095,32 @@ export async function evaluateSignals(
 
           const useWeightedScoring = entryQuality.use_weighted_scoring === true && !isLegacyStrategy;
 
+          // A-1 (Wave 25 Pass 2): pathCFailed flag — set in catch block when Path C
+          // (evaluateWeightedConfluence) throws. When true, execution falls through to
+          // Path B (boolean counting) as if useWeightedScoring were false.
+          // This preserves bar processing on malformed weights JSON, NaN propagation,
+          // or missing factor evaluator — conditions that would otherwise silently skip
+          // the bar or crash the entire session.
+          let pathCFailed = false;
+
           if (useWeightedScoring) {
             // ── Path C: Wave 25 weighted confluence scoring ───────────────────
             // Build SignalContext from available signal-time data.
             // structureState will be null until W25.2 (structure_engine.py) ships —
             // market_structure_aligned factor returns satisfied=false with reason
             // "structure_engine_unavailable" in that case (expected for Pass 1).
+            //
+            // A-1: ENTIRE Path C block is wrapped in try/catch. Any uncaught error
+            // (malformed weights JSON, NaN propagation, missing evaluator) falls back
+            // to Path B. Audit row + SSE + Discord fire on catch. (Wave 25 Pass 2)
+            try {
             const signalDir = (config.side === "short" ? "short" : "long") as "long" | "short";
 
-            // Read structureState from biasState if published by W25.2 — null for now.
-            const structureStateRaw = biasState !== null
-              ? (biasState as unknown as Record<string, unknown>).structureState as WeightedSignalContext["structureState"] ?? null
-              : null;
+            // R-1 (Wave 25 Pass 2): structureState is now typed on BiasStateForSignal —
+            // read directly without unsafe cast. biasState.structureState is StructureState | null,
+            // which is compatible with WeightedSignalContext["structureState"].
+            const structureStateRaw: WeightedSignalContext["structureState"] =
+              biasState?.structureState ?? null;
 
             const weightedCtx: WeightedSignalContext = {
               strategyId: sessionConfig.strategyId,
@@ -3159,7 +3174,7 @@ export async function evaluateSignals(
               }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist Path C factor audit log"));
             }
 
-            // Decision audit row
+            // Decision audit row — §10b mandate: correlationId must propagate for 90-day reconstruction
             insertAuditRow({
               action: weightedResult.passed
                 ? "signal.confluence_score_evaluated"
@@ -3179,12 +3194,43 @@ export async function evaluateSignals(
                   weight: fc.weight,
                   satisfied: fc.satisfied,
                   contribution: fc.contribution,
+                  reason: fc.reason,
                 })),
                 weights_source: weightedResult.weightsSource,
+                session_id: sessionId,
+                symbol,
               } as Record<string, unknown>,
               status: "success",
-              correlationId: null,
+              correlationId: correlationId ?? null,
             }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for weighted confluence decision"));
+
+            // Informational audit rows for stub factors (pending_passX) — one row per unavailable factor.
+            // These are NOT errors; they document which factors deferred to a future pass so operators
+            // can see coverage gaps without querying individual paperSignalLogs rows.
+            for (const fc of weightedResult.factorContributions) {
+              if (
+                !fc.satisfied &&
+                (fc.reason.includes("pending_pass") ||
+                 fc.reason.includes("unavailable") ||
+                 fc.reason.includes("absent"))
+              ) {
+                insertAuditRow({
+                  action: "signal.confluence_score_factor_unavailable",
+                  entityType: "strategy",
+                  entityId: sessionConfig.strategyId,
+                  decisionAuthority: "system",
+                  result: {
+                    factor: fc.factor,
+                    reason: fc.reason,
+                    weight: fc.weight,
+                    session_id: sessionId,
+                    symbol,
+                  } as Record<string, unknown>,
+                  status: "info",
+                  correlationId: correlationId ?? null,
+                }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for factor_unavailable row"));
+              }
+            }
 
             span.setAttribute("a_plus_weighted_score", weightedResult.score);
             span.setAttribute("a_plus_threshold", weightedResult.threshold);
@@ -3209,13 +3255,22 @@ export async function evaluateSignals(
               );
               broadcastSSE("signal:weighted_score_rejected", {
                 sessionId,
+                strategyId: sessionConfig.strategyId,
                 symbol,
                 score: weightedResult.score,
                 threshold: weightedResult.threshold,
                 hardBlock: weightedResult.hardBlockTriggered,
                 weightsSource: weightedResult.weightsSource,
+                // Top-3 unsatisfied factors by weight — enough for dashboard to show "why"
+                // without sending all 9 (keeps SSE payload compact)
+                topUnsatisfiedFactors: weightedResult.factorContributions
+                  .filter((fc) => !fc.satisfied)
+                  .sort((a, b) => b.weight - a.weight)
+                  .slice(0, 3)
+                  .map((fc) => ({ factor: fc.factor, weight: fc.weight, reason: fc.reason })),
                 price: bar.close,
                 timestamp: bar.timestamp,
+                correlationId: correlationId ?? null,
               });
               db.insert(paperSignalLogs).values({
                 sessionId,
@@ -3262,8 +3317,51 @@ export async function evaluateSignals(
                 reason: `signal.confluence_score_evaluated: score=${weightedResult.score.toFixed(4)} threshold=${weightedResult.threshold} weights_source=${weightedResult.weightsSource}`,
               }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist weighted score passed log"));
             }
-          } else {
-          // ── W23H.D dispatcher: per-strategy vs canonical 5 ─────────────────
+            } catch (pathCErr: unknown) {
+              // A-1 (Wave 25 Pass 2): Path C evaluation error — emit audit + SSE + Discord + fall back to Path B.
+              // Conservative: treat as if useWeightedScoring=false so Path B runs on this bar.
+              pathCFailed = true;
+              const pathCErrMsg = pathCErr instanceof Error ? pathCErr.message : String(pathCErr);
+              logger.error(
+                { err: pathCErr, strategyId: sessionConfig.strategyId, correlationId },
+                "path_c_evaluation_failed",
+              );
+              insertAuditRow({
+                action: "weighted_confluence.evaluation_error",
+                entityType: "strategy",
+                entityId: sessionConfig.strategyId,
+                decisionAuthority: "system",
+                result: {
+                  strategyId: sessionConfig.strategyId,
+                  error: pathCErrMsg,
+                  correlationId: correlationId ?? null,
+                  fallback: "path_b",
+                  session_id: sessionId,
+                  symbol,
+                } as Record<string, unknown>,
+                status: "failure",
+                correlationId: correlationId ?? null,
+              }).catch((auditErr: unknown) => logger.warn({ err: auditErr, sessionId }, "path_c_error audit write failed"));
+              notifyCritical(
+                "Path C evaluation failed",
+                `evaluateWeightedConfluence threw for strategy ${sessionConfig.strategyId}: ${pathCErrMsg}. Falling back to Path B.`,
+                { strategyId: sessionConfig.strategyId, sessionId, correlationId: correlationId ?? null },
+              );
+              broadcastSSE("alert:path_c_error", {
+                sessionId,
+                strategyId: sessionConfig.strategyId,
+                symbol,
+                error: pathCErrMsg,
+                fallback: "path_b",
+                correlationId: correlationId ?? null,
+              });
+            }
+          }
+
+          if (!useWeightedScoring || pathCFailed) {
+          // ── W23H.D dispatcher: per-strategy vs canonical 5 (Path B fallback) ──
+          // Runs when: (a) strategy does not opt into Path C, OR
+          //            (b) Path C threw an error (A-1 fallback — pathCFailed=true)
           const customIndicators = entryQuality.confirming_indicators ?? [];
           const usePerStrategy = customIndicators.length > 0;
 
@@ -3517,7 +3615,7 @@ export async function evaluateSignals(
               }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ passed log"));
             }
           }
-          } // end else (Path A / Path B)
+          } // end if (!useWeightedScoring || pathCFailed) — Path B (Path A / canonical 5)
         }
       }
 
@@ -3821,6 +3919,21 @@ export async function evaluateSignals(
           // W23H.4: confluence-weighted sizing
           confluence_count: confluenceCount,
           confluence_size_multiplier_map: confluenceSizeMultiplierMap,
+          // Wave 25 Pass 2 Inst-10: Drawdown-room cap (Topstep only).
+          // currentDrawdownRoom = max(0, balance - trailingFloor)
+          // trailingFloor = min(highWaterBalance - trailingDD, accountStartingFloor)
+          // Only passed for firm="topstep" — MFFU uses static 2% rule.
+          currentDrawdownRoom: (() => {
+            const firmId = (sessionRow.firmId ?? "topstep") as string;
+            if (firmId !== "topstep") return undefined;
+            const trailingDDForRoom = (() => {
+              const cfg = sessionRow.config as { trailing_dd_amount?: number } | null;
+              if (cfg && typeof cfg.trailing_dd_amount === "number") return cfg.trailing_dd_amount;
+              return TOPSTEP_TRAILING_DD_BY_SIZE[accountStartingFloor] ?? 2000;
+            })();
+            const trailingFloorForRoom = Math.min(highWaterBalance - trailingDDForRoom, accountStartingFloor);
+            return Math.max(0, accountBalance - trailingFloorForRoom);
+          })(),
         };
 
         const sizingResult = computeRiskDerivedContracts(sizingInputs);
@@ -3838,6 +3951,27 @@ export async function evaluateSignals(
             decisionAuthority: "system",
             correlationId: correlationId ?? null,
           }).catch((err: unknown) => logger.warn({ err, sessionId }, "sizing.confluence_multiplier_applied audit write failed"));
+        }
+
+        // Wave 25 Pass 2 Inst-10: emit audit row when drawdownRoomCap is binding.
+        if (sizingResult.drawdownRoomCapBinding) {
+          insertAuditRow({
+            action: "sizing.drawdown_room_cap_binding",
+            entityType: "strategy",
+            entityId: sessionConfig.strategyId ?? "unknown",
+            decisionAuthority: "system",
+            result: {
+              sessionId,
+              symbol,
+              drawdownRoomCap: sizingResult.drawdownRoomCap,
+              finalContracts: sizingResult.finalContracts,
+              bindingConstraint: "drawdown_room",
+              accountBalance,
+              highWaterBalance,
+            } as Record<string, unknown>,
+            status: "success",
+            correlationId: correlationId ?? null,
+          }).catch((err: unknown) => logger.warn({ err, sessionId }, "sizing.drawdown_room_cap_binding audit write failed"));
         }
 
         logger.debug(

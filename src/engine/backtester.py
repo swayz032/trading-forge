@@ -4779,7 +4779,8 @@ def _load_strategy_class(class_path: str) -> BaseStrategy:
 @click.option("--backtest-id", default=None, help="UUID for this backtest run")
 @click.option("--mode", default="single", type=click.Choice(["single", "walkforward"]))
 @click.option("--strategy-class", default=None, help="Dotted path to BaseStrategy subclass (e.g. src.engine.strategies.breaker.BreakerStrategy)")
-def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_class: Optional[str]):
+@click.option("--b15-battery", "run_b15_battery_flag", is_flag=True, default=False, help="Run B15 Parameter Robustness Battery after main backtest; emits B15_BATTERY_JSON sentinel to stderr")
+def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_class: Optional[str], run_b15_battery_flag: bool = False):
     """Run backtest engine. Outputs JSON to stdout, errors to stderr."""
     try:
         if os.path.isfile(config_input):
@@ -5043,6 +5044,36 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                     json.dumps({"event": "parity_shadow.error", "error": str(_ps_err)[:300]}),
                     file=sys.stderr,
                 )
+
+    # ─── B15 Parameter Robustness Battery (Wave 25 Item 5) ─────────────────────
+    # Gated by --b15-battery CLI flag. When set, runs SDR/PSI/RWS after the main
+    # backtest and emits B15_BATTERY_JSON sentinel to stderr (mirroring the
+    # PARITY_SHADOW_DRIFT_JSON + INVARIANT_FAILURE_JSON pattern). The sentinel
+    # is parsed by src/server/lib/python-runner.ts so the result lands in
+    # backtests.b15_battery JSONB without altering stdout contract.
+    if run_b15_battery_flag and "error" not in result:
+        try:
+            from src.engine.parameter_jitter_battery import run_b15_battery
+            # strategy_dsl is the original config dict (not re-parsed — use raw config)
+            strategy_dsl_for_battery = config if isinstance(config, dict) else {}
+            b15_result = run_b15_battery(strategy_dsl_for_battery, result)
+            result["b15_battery"] = b15_result
+            _b15_payload = {
+                "event": "b15_battery",
+                "backtest_id": backtest_id or "cli",
+                "result": b15_result,
+            }
+            print(f"B15_BATTERY_JSON {json.dumps(_b15_payload)}", file=sys.stderr)
+            print(
+                f"[b15] sdr={b15_result['sdr']} psi={b15_result['psi']} "
+                f"rws={b15_result['rws']} passed={b15_result['passed']}",
+                file=sys.stderr,
+            )
+        except Exception as _b15_err:
+            print(
+                json.dumps({"event": "b15_battery.error", "error": str(_b15_err)[:300]}),
+                file=sys.stderr,
+            )
 
     # C-1 FIX: Use shared _emit_validated_result() so main() and run_backtest()
     # both go through the same Pydantic validation path. The idempotency guard in

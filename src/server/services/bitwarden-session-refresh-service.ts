@@ -22,6 +22,7 @@ import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
 import { notifyCritical } from "./notification-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const execAsync = promisify(exec);
 // F-3 / F-6: execFileAsync avoids spawning a shell, so:
@@ -186,12 +187,18 @@ export async function runBwSessionRefreshCheck(): Promise<BwRefreshResult> {
       logger.error({ logErr }, "bitwarden-refresh: audit log write also failed");
     });
 
-    // Critical Discord alert
+    // Critical Discord alert — Wave 25 Pass 2 A-3: family-grade postscript appended
+    // so family members know backup credentials keep the bot running and they
+    // do not need to take technical action for the first few days.
     await notifyCritical(
       "bitwarden_refresh_failed",
-      `BW_SESSION refresh failed with ${hoursRemaining.toFixed(1)}h remaining. ` +
-        `Backend credential access may fail within ${hoursRemaining.toFixed(1)}h. ` +
-        `Error: ${errorMsg}. Run 'bw unlock' manually and update BW_SESSION.`,
+      appendFamilyGradePostscript(
+        `BW_SESSION refresh failed with ${hoursRemaining.toFixed(1)}h remaining. ` +
+          `Backend credential access may fail within ${hoursRemaining.toFixed(1)}h. ` +
+          `Error: ${errorMsg}. Run 'bw unlock' manually and update BW_SESSION.`,
+        "The bot's secure password vault needs to be unlocked. Trading will continue using backup credentials.",
+        "Wait — backup credentials will keep the bot running. If you see this alert for 3+ days, call Tony.",
+      ),
       { hoursRemaining, error: errorMsg },
     );
 

@@ -125,11 +125,32 @@ describe("evaluateWeightedConfluence", () => {
       ).not.toThrow();
     });
 
-    it("killzone_active returns satisfied=false when killzone.ts not present", () => {
-      const result = evaluateWeightedConfluence(makeStrategy(), makeContext());
+    it("killzone_active returns satisfied=false when bar.timestamp is outside all killzones", () => {
+      // W25.3 is now shipped — killzone_active uses the real killzone.ts helper.
+      // Pick a UTC timestamp that maps to 12:00 ET (midday) — outside all 5 killzones.
+      // 12:00 ET EDT (UTC-4) = 16:00 UTC. Use a date clearly in EDT (August 2026).
+      const outsideAllKillzones = new Date("2026-08-15T16:00:00.000Z"); // 12:00 ET EDT
+      const result = evaluateWeightedConfluence(
+        makeStrategy(),
+        makeContext({ timestampUTC: outsideAllKillzones }),
+      );
       const fc = result.factorContributions.find((c) => c.factor === FACTOR_KILLZONE_ACTIVE);
       expect(fc).toBeDefined();
       expect(fc!.satisfied).toBe(false);
+      expect(fc!.reason).toBe("no_killzone_active");
+    });
+
+    it("killzone_active returns satisfied=true with zone names in reason when inside ny_am", () => {
+      // 09:00 ET EDT (UTC-4) = 13:00 UTC — inside ny_am (07:00–10:00 ET)
+      const insideNyAm = new Date("2026-08-15T13:00:00.000Z"); // 09:00 ET EDT
+      const result = evaluateWeightedConfluence(
+        makeStrategy(),
+        makeContext({ timestampUTC: insideNyAm }),
+      );
+      const fc = result.factorContributions.find((c) => c.factor === FACTOR_KILLZONE_ACTIVE);
+      expect(fc).toBeDefined();
+      expect(fc!.satisfied).toBe(true);
+      expect(fc!.reason).toContain("ny_am");
     });
   });
 

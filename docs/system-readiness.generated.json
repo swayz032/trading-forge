@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-24T06:47:47.654Z",
+  "generatedAt": "2026-05-24T07:55:18.576Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -14,8 +14,8 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 21,
-    "ready": 13,
+    "total": 22,
+    "ready": 14,
     "blocked": 1,
     "manualGated": 2,
     "experimental": 5
@@ -303,6 +303,27 @@
         "tradingview-marker-audit",
         "tradingview:marker-received SSE",
         "tradingview.marker_received"
+      ]
+    },
+    {
+      "id": "parameter_robustness_gate",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [],
+      "requiredEvidence": [
+        "/api/b15-robustness/coverage",
+        "b15-battery-coverage",
+        "b15-deployed-passing-rate",
+        "b15:* SSE",
+        "b15.battery_completed",
+        "b15.battery_failed",
+        "backtests:b15_battery_recent",
+        "lifecycle.gate_blocked_b15_robustness"
       ]
     },
     {

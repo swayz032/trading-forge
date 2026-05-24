@@ -146,6 +146,10 @@ export const backtests = pgTable(
     // IR = E[R_p - R_b] / σ_diff * sqrt(252). Null when benchmark unavailable or < 2 bars.
     // Applied migration: 0083_information_ratio.sql
     informationRatio: numeric("information_ratio"),
+    // B15: Parameter Robustness Battery (Wave 25 Item 5 — QuantForgeAnalytics 2026-05-16 spec)
+    // {sdr, psi, rws, passed, thresholds, failures, sdr_detail, psi_detail, rws_detail}
+    // Null for backtests run without --b15-battery flag. Migration: 0136_b15_parameter_robustness.sql.
+    b15Battery: jsonb("b15_battery"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),

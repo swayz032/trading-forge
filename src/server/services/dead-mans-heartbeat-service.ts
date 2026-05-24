@@ -25,6 +25,7 @@ import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const HEARTBEAT_TABLE = "system_health_heartbeat";
 const RTH_START_ET_HOUR = 9;   // 9:30 AM ET (we check >= 9 for safety)
@@ -637,8 +638,14 @@ export async function runOperatorAbsenceAutoDetect(): Promise<void> {
       }).catch((err) => logger.error({ err }, "operator-absent-detect: audit row failed"));
       notifyCritical(
         "Operator absence auto-detected — vacation autopilot engaged",
-        "48h of continuous operator silence confirmed. Tier-1 auto-promotion (OPERATOR_ABSENT_AUTOPROMOTE) is now active. " +
-          "POST /api/admin/operator-mark-present to clear and disengage vacation mode.",
+        // Wave 25 Pass 2 A-3: family-grade postscript appended so family members
+        // can understand the alert without technical knowledge of the system.
+        appendFamilyGradePostscript(
+          "48h of continuous operator silence confirmed. Tier-1 auto-promotion (OPERATOR_ABSENT_AUTOPROMOTE) is now active. " +
+            "POST /api/admin/operator-mark-present to clear and disengage vacation mode.",
+          "The bot detected the operator has been offline for 48 hours and has switched to autopilot mode.",
+          "No action needed if Tony's away. If he should be reachable, call him.",
+        ),
         { operatorAbsentSince: now.toISOString(), pendingSince: state.operatorAbsentPending.toISOString() },
       );
       return;
@@ -673,8 +680,14 @@ export async function runOperatorAbsenceAutoDetect(): Promise<void> {
   }).catch((err) => logger.error({ err }, "operator-absent-detect: pending audit row failed"));
   notifyCritical(
     "Operator absence — confirmation window started",
-    "24h of operator silence observed. If silence continues for another 24h, vacation autopilot will auto-engage. " +
-      "POST /api/admin/operator-mark-present to cancel (or simply use any admin endpoint).",
+    // Wave 25 Pass 2 A-3: family-grade postscript so family members understand
+    // the pending state and know this is a 24h warning, not a crisis.
+    appendFamilyGradePostscript(
+      "24h of operator silence observed. If silence continues for another 24h, vacation autopilot will auto-engage. " +
+        "POST /api/admin/operator-mark-present to cancel (or simply use any admin endpoint).",
+      "The bot hasn't heard from the operator in 24 hours. Autopilot will engage in 24 more hours if no signal.",
+      "If you can reach Tony, ask him to log into Trading Forge. Otherwise wait — this is automatic.",
+    ),
     { lastActivityAt: lastActivity?.toISOString() ?? null, operatorAbsentPending: now.toISOString() },
   );
 }

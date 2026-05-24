@@ -344,6 +344,15 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   "bias-engine-refresh-10am-et",     // Safety/observability input
   "harsh-regime-phase-activation-check", // Safety — gate hardening
   "n8n-execution-scrape",                // F-6: observability — must scrape even when paused
+  // Wave 25 Pass 2 Y-1: drift detection must fire even when pipeline is paused.
+  // An operator may have paused mid-week DUE TO drift; the auto-HALT signal is
+  // the source of truth and cannot be silenced by the same pause it's guarding.
+  "weekly-drift-2sigma-check",           // Y-1: safety signal — must fire even when paused
+  // Wave 25 Pass 2 A-2: n8n drift detector must fire even when pipeline is paused.
+  // Drift in n8n wiring (missing errorWorkflow, retry, idempotency) is an
+  // infrastructure safety signal — the pipeline pause does not protect against it.
+  "n8n-drift-detector-weekly",           // A-2: n8n drift detection — safety signal
+  "n8n-drift-detector-monthly",          // A-2: n8n drift detection — defense-in-depth
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -3293,7 +3302,7 @@ except Exception as e:
   });
   _scheduledJobs.add("harsh-regime-phase-activation-check");
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT)");
 
   // ─── Wave 24 Pass 1 Item 1: BW session refresh — every 6 hours ────────────────
   // CATASTROPHIC GAP: runBwSessionRefreshCheck existed but had ZERO callers in
@@ -3441,6 +3450,12 @@ except Exception as e:
         logger.debug({ etStr }, "Scheduler: weekly-drift-2sigma-check cron fired but not Sunday 18:00 ET — skipping");
         return;
       }
+      // Wave 25 Pass 2 Y-1: defensive log BEFORE pipelineGate — proves the job
+      // actually reached this point regardless of pipeline state. The gate is
+      // now a no-op (weekly-drift-2sigma-check is in _PIPELINE_GATE_EXEMPT), but
+      // this log ensures audit trails always show the job ran even if a future
+      // refactor changes the exemption list without updating the handler.
+      logger.info({ job: "weekly-drift-2sigma-check" }, "running pipeline-gate-exempt drift check");
       if (!(await pipelineGate("weekly-drift-2sigma-check"))) return;
       logger.info("Scheduler: Weekly drift 2σ check (Sunday 18:00 ET confirmed)");
       const t0wd = Date.now();
@@ -3576,6 +3591,92 @@ except Exception as e:
   });
   _scheduledJobs.add("regime-coverage-check");
 
+  // ─── Wave 25 Pass 2 A-2: n8n drift detector — weekly (Sun 19:00 ET) ─────────
+  // Spawns `npm run audit:n8n` as a child process. Captures stdout + stderr +
+  // exit code. Writes audit row on every outcome so the operator can see that
+  // the check actually ran. Fires Discord CRITICAL when drift is detected or
+  // when the spawned process errors / times out.
+  //
+  // Pipeline-gate-exempt: n8n drift detection is an infrastructure safety signal.
+  // An operator may have paused the pipeline because of n8n drift; we cannot
+  // suppress the detector that would catch the root cause.
+  //
+  // Schedule rationale: Sunday 19:00 ET fires ONE HOUR after the weekly-drift-2sigma
+  // check (18:00 ET). Two separate observability sweeps per Sunday gives defense-
+  // in-depth without overlap. The monthly run (1st of month 09:00 ET) is a
+  // secondary confirmatory gate.
+  registerJob("n8n-drift-detector-weekly", 7 * 24 * 60 * 60 * 1000, async () => {
+    await _runN8nDriftAudit("n8n-drift-detector-weekly");
+  });
+
+  // Sun 19:00 ET = Mon 23:00 UTC (EDT, UTC-4) or Mon 00:00 UTC next day (EST, UTC-5).
+  // Fire at Mon 23:00 and Tue 00:00 UTC to cover both offsets; ET day+hour guard
+  // inside the handler filters to Sunday 19:00 only.
+  cron.schedule("0 23 * * 1", async () => {
+    if (!_tryAcquireJobLock("n8n-drift-detector-weekly")) return;
+    try {
+      const now = new Date();
+      const etStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        weekday: "short",
+        hour: "numeric",
+        hour12: false,
+      });
+      if (!etStr.includes("Sun") || !etStr.includes("19")) {
+        logger.debug({ etStr }, "Scheduler: n8n-drift-detector-weekly — not Sunday 19:00 ET, skipping");
+        return;
+      }
+      logger.info({ job: "n8n-drift-detector-weekly" }, "running pipeline-gate-exempt n8n drift check (weekly)");
+      // _PIPELINE_GATE_EXEMPT — no gate call needed; log confirms it ran
+      const t0 = Date.now();
+      await withRetry("n8n-drift-detector-weekly", SCHEDULER_JOBS["n8n-drift-detector-weekly"].run, 1);
+      markJobRun("n8n-drift-detector-weekly");
+      emitJobComplete("n8n-drift-detector-weekly", Date.now() - t0);
+    } finally {
+      _releaseJobLock("n8n-drift-detector-weekly");
+    }
+  });
+  _scheduledJobs.add("n8n-drift-detector-weekly");
+
+  // ─── Wave 25 Pass 2 A-2: n8n drift detector — monthly (1st of month 09:00 ET) ─
+  // Defense-in-depth: monthly confirmatory run. The weekly job is the primary
+  // detection surface; the monthly job catches accumulation that slips between
+  // weekly windows (e.g. a workflow activated mid-week without errorWorkflow).
+  //
+  // 09:00 ET on the 1st = 13:00 UTC (EDT) or 14:00 UTC (EST).
+  registerJob("n8n-drift-detector-monthly", 30 * 24 * 60 * 60 * 1000, async () => {
+    await _runN8nDriftAudit("n8n-drift-detector-monthly");
+  });
+
+  // Fire at 13:00 and 14:00 UTC on the 1st of every month to cover EDT/EST.
+  // ET day-of-month + hour guard inside handler filters to 09:00 ET on the 1st.
+  cron.schedule("0 13,14 1 * *", async () => {
+    if (!_tryAcquireJobLock("n8n-drift-detector-monthly")) return;
+    try {
+      const now = new Date();
+      const etStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        day: "numeric",
+        hour: "numeric",
+        hour12: false,
+      });
+      // etStr is e.g. "1 9" for 1st of month at 09:00 ET
+      const [etDay, etHour] = etStr.split(" ");
+      if (etDay !== "1" || etHour !== "9") {
+        logger.debug({ etStr }, "Scheduler: n8n-drift-detector-monthly — not 1st of month 09:00 ET, skipping");
+        return;
+      }
+      logger.info({ job: "n8n-drift-detector-monthly" }, "running pipeline-gate-exempt n8n drift check (monthly)");
+      const t0 = Date.now();
+      await withRetry("n8n-drift-detector-monthly", SCHEDULER_JOBS["n8n-drift-detector-monthly"].run, 1);
+      markJobRun("n8n-drift-detector-monthly");
+      emitJobComplete("n8n-drift-detector-monthly", Date.now() - t0);
+    } finally {
+      _releaseJobLock("n8n-drift-detector-monthly");
+    }
+  });
+  _scheduledJobs.add("n8n-drift-detector-monthly");
+
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
   // cron.schedule body). Catches the F-1/F-2 class of bug — a job registered
@@ -3596,6 +3697,131 @@ except Exception as e:
   resumeActivePaperSessions().catch((err) => {
     logger.error({ err }, "Scheduler: paper session resume failed");
   });
+}
+
+/**
+ * Wave 25 Pass 2 A-2: Shared implementation for n8n drift detector crons.
+ *
+ * Spawns `npm run audit:n8n` as a child process with a 5-minute hard timeout.
+ * Captures stdout + stderr + exit code. On every outcome, writes an audit_log
+ * row so the operator can verify the check fired. On non-zero exit or spawn
+ * error, also fires a Discord CRITICAL with plain-English remediation guidance.
+ *
+ * Called by both n8n-drift-detector-weekly and n8n-drift-detector-monthly so
+ * the detection logic stays DRY across schedules.
+ */
+async function _runN8nDriftAudit(jobName: string): Promise<void> {
+  const correlationId = randomUUID();
+  const TIMEOUT_MS = 5 * 60 * 1000; // 5-minute hard timeout
+
+  logger.info({ correlationId, jobName }, "n8n-drift-audit: starting audit:n8n subprocess");
+
+  let stdout = "";
+  let stderr = "";
+  let exitCode: number | null = null;
+  let timedOut = false;
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      import("child_process").then(({ execFile }) => {
+        // Use npm.cmd on Windows, npm on POSIX
+        const npmBin = process.platform === "win32" ? "npm.cmd" : "npm";
+        const proc = execFile(
+          npmBin,
+          ["run", "audit:n8n"],
+          {
+            cwd: process.cwd(),
+            env: { ...process.env } as NodeJS.ProcessEnv,
+            timeout: TIMEOUT_MS,
+            maxBuffer: 512 * 1024, // 512 KB stdout buffer
+          },
+          (err, out, errOut) => {
+            stdout = out ?? "";
+            stderr = errOut ?? "";
+            if (err) {
+              // execFile populates err.code for non-zero exit; err.killed for timeout
+              if ((err as NodeJS.ErrnoException & { killed?: boolean }).killed) {
+                timedOut = true;
+              }
+              exitCode = (err as NodeJS.ErrnoException & { code?: unknown }).code === "ETIMEDOUT"
+                ? -1
+                : ((err as NodeJS.ErrnoException & { status?: number }).status ?? -1);
+              reject(err);
+            } else {
+              exitCode = 0;
+              resolve();
+            }
+          },
+        );
+        // Belt-and-suspenders timeout in case execFile option doesn't fire
+        setTimeout(() => {
+          timedOut = true;
+          try { proc.kill("SIGTERM"); } catch { /* ignore */ }
+        }, TIMEOUT_MS + 5000);
+      }).catch(reject);
+    });
+
+    // Exit code 0 — clean
+    logger.info({ correlationId, jobName, stdoutTail: stdout.slice(-300) }, "n8n-drift-audit: audit:n8n exited 0 — no drift");
+    await insertAuditRow({
+      action: "n8n.drift_check_clean",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { jobName, correlationId } as Record<string, unknown>,
+      result: { exitCode: 0, stdoutTail: stdout.slice(-200) } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    }).catch((err) => logger.error({ err, jobName }, "n8n-drift-audit: audit row write failed (clean)"));
+
+  } catch (spawnErr) {
+    const stderrSummary = stderr.slice(-500);
+    const stdoutSummary = stdout.slice(-500);
+    const resolvedExitCode = exitCode ?? -1;
+
+    if (timedOut) {
+      logger.error({ correlationId, jobName, timeoutMs: TIMEOUT_MS }, "n8n-drift-audit: audit:n8n TIMED OUT");
+      await insertAuditRow({
+        action: "n8n.drift_check_errored",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { jobName, correlationId, timedOut: true } as Record<string, unknown>,
+        result: { exitCode: resolvedExitCode, stderrSummary, stdoutSummary } as Record<string, unknown>,
+        status: "failed",
+        correlationId,
+      }).catch((err) => logger.error({ err }, "n8n-drift-audit: audit row write failed (timeout)"));
+      notifyCritical(
+        "n8n drift detector TIMED OUT",
+        `The n8n drift check (${jobName}) did not complete within 5 minutes. ` +
+          `This may indicate n8n API is unreachable or the audit script hung. ` +
+          `Run \`npm run audit:n8n\` from the Skytech tower to investigate. ` +
+          `Stderr tail: ${stderrSummary || "(empty)"}`,
+        { jobName, correlationId, timeoutMs: TIMEOUT_MS },
+      );
+    } else {
+      logger.error({ correlationId, jobName, exitCode: resolvedExitCode, stderrSummary }, "n8n-drift-audit: audit:n8n exited non-zero — drift detected");
+      await insertAuditRow({
+        action: "n8n.drift_detected",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { jobName, correlationId, exitCode: resolvedExitCode } as Record<string, unknown>,
+        result: { exitCode: resolvedExitCode, stderrSummary, stdoutSummary } as Record<string, unknown>,
+        status: "failed",
+        correlationId,
+      }).catch((err) => logger.error({ err }, "n8n-drift-audit: audit row write failed (drift)"));
+      notifyCritical(
+        "n8n workflow drift detected",
+        `n8n drift check (${jobName}) exited with code ${resolvedExitCode} — one or more workflows ` +
+          `are missing errorWorkflow, retry config, or idempotency headers. ` +
+          `Review and re-attach errorWorkflow (DGEk1D478xWJClKD) as needed. ` +
+          `Run \`npm run audit:n8n\` from the Skytech tower to see the full drift report. ` +
+          `Stdout: ${stdoutSummary || "(empty)"}`,
+        { jobName, correlationId, exitCode: resolvedExitCode, stderrSummary },
+      );
+    }
+  }
 }
 
 /**

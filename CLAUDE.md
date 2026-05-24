@@ -96,6 +96,40 @@ The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-p
 - **Strategy `name` derives from `symbols[0]`, NOT from the LLM's name field** — W23F.M graduator canonicalizes name from routing market. An MNQ-routed strategy must NOT have `_mes_` in its name even if the source text used MES as the example.
 - **Sizing is FRAMEWORK-AUTHORITATIVE (W23F.N)** — overlay REPLACES LLM-extracted base/tier/cap values. The operator's pyramid math wins, not the YouTuber's. Wave 23 canonical: MES 6 / MNQ 6 / MCL 18 base + 3 per +$3K + per-symbol liquidity caps MES 100 / MNQ 50 / MCL 30.
 
+### Stage 2 weighted scoring (Wave 25, Pass 1, W25.1)
+
+`src/server/services/paper-signal-service.ts:3080-3264` dispatcher now has THREE paths (priority order):
+
+1. **Path C (Wave 25, opt-in)** — `entry_quality.use_weighted_scoring === true` → `evaluateWeightedConfluence()` in `src/server/services/confluence-score.ts`.
+2. **Path A (W23H.D)** — `confirming_indicators[]` non-empty → per-strategy boolean satisfiedCount.
+3. **Path B (Wave 23.C)** — fallback → canonical-5-factor boolean.
+
+**9-factor canonical weight model** (equal-weight starter; adjust only after 30+ days audit_log instrumentation):
+
+| factor | weight | hard-block? |
+|---|---|---|
+| `market_structure_aligned`  | 0.20 | no |
+| `liquidity_target_clear`    | 0.15 | no (stub until Pass 3) |
+| `smt_confirmation`          | 0.12 | no (stub until Pass 5) |
+| `vwap_alignment`            | 0.12 | no |
+| `killzone_active`           | 0.10 | no |
+| `delta_or_volume_signature` | 0.10 | no |
+| `vp_level_proximity`        | 0.08 | no |
+| `macro_alignment`           | 0.08 | **YES — FOMC/CPI/NFP blackout = score=0** |
+| `regime_match`              | 0.05 | no |
+| **sum**                     | **1.00** | |
+| **default threshold**       | **0.72** | |
+
+**Override hierarchy (highest wins):** per-strategy `strategies.confluence_score_weights` (JSONB) > env var `CONFLUENCE_SCORE_WEIGHTS` (JSON string) > `CODE_DEFAULTS` table.
+
+**Hard-block contract:** `macro_alignment` (and any future factor with `is_hard_block: true`) forces score to 0 when not satisfied — bypasses the weighted sum entirely. Never tradable in event blackout regardless of how strong other factors look.
+
+**Backward compat:** `use_weighted_scoring` defaults FALSE — all pre-Wave-25 strategies stay on Path A/B. Opt in per-strategy via `scripts/wave25-pass1-weighted-opt-in.ts --apply` (idempotent, dry-run by default).
+
+**Independent Structure Engine (W25.2):** `src/engine/context/structure_engine.py` publishes `StructureState` (BOS/CHoCH/MSS/PD-zone/HTF-alignment) BEFORE the entry trigger evaluates. Fixes the circular-logic bug where `structural_setup=True` whenever the entry fired. Persisted to `bias_state.structure_state` JSONB (migration 0134); typed contract in `BiasStateForSignal.structureState` and `confluence-score.ts::StructureState`.
+
+**Killzone helper (W25.3):** `src/server/lib/killzone.ts` — 5 first-class zones (`london`, `ny_am`, `ny_pm`, `silver_bullet`, `macro_window`) with DST-correct Intl.DateTimeFormat evaluation. Pure functions, never throws.
+
 ---
 
 ## §3. Operator Workflow
@@ -171,7 +205,9 @@ finalContracts = min(
   floor(accountBalance × max_risk_pct_per_trade
         ÷ (stop_multiplier × ATR_points × point_dollar_value)),   // risk cap
   firmContractCap,                                        // Topstep/MFFU tier
-  liquidity_comfort_cap                                   // book-depth ceiling
+  liquidity_comfort_cap,                                  // book-depth ceiling
+  floor(currentDrawdownRoom × DRAWDOWN_ROOM_RISK_PCT      // Topstep ONLY (W25P2 Inst-10)
+        ÷ (stop_multiplier × ATR_points × point_dollar_value))    //   env DRAWDOWN_ROOM_RISK_PCT=0.01
 )
 ```
 
@@ -421,6 +457,7 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 | **Truthiness Check (B-3)** | post-backtest | Invariant harness (B-2) + parity shadow drift (B-1) — audit_log + Discord CRITICAL + SSE on failure |
 | **B15 Parameter Robustness Battery** | PAPER → DEPLOY_READY | ±20% parameter jitter test — SDR < 0.85 OR PSI > 0.05 OR RWS > 0.20 → block. Advisory-only when B15_BATTERY_ENABLED=false (30-day grandfather). |
 | **B15 Factor Ablation** | confluence factor promotion (advisory) | Required before promoting any confluence factor to standalone hard gate — runs B15 battery twice (with / without factor); delta Sharpe > 0.2 AND delta PF > 0.1 for marginal edge significance. |
+| **Wave 25 weighted-score threshold** | every signal (Path C, opt-in) | `confluence_score < threshold` (default 0.72) OR `hard_block_failed` (macro_alignment in event blackout) → reject. Per-factor audit row + decision audit + `signal:weighted_score_rejected` SSE. Backward-compat: strategies without `entry_quality.use_weighted_scoring=true` skip this gate entirely. |
 
 ---
 
@@ -439,6 +476,7 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 - Don't pyramid into winners (Style B) — wrong distribution
 - Don't trip kill switch at 95% of firm DLL — 67% leaves buffer
 - Don't bypass `routeOrder()` — every order flows through broker-router
+- **Don't bypass `macro_alignment` hard-block (Wave 25 Path C)** — FOMC/CPI/NFP days are non-negotiable rejects regardless of other factor scores. The weighted score is forced to 0 when `calendarBlocked=true`. There is no per-strategy override and no env-var escape. If you find yourself wanting to bypass this, the answer is to skip the trade.
 
 ### Compliance
 - Don't simulate strategies against a firm without loading the firm's 2026 rules doc first

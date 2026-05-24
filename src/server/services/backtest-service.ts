@@ -663,6 +663,32 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           if (ev.type === "invariant_failure" && !result.invariants) {
             result.invariants = ev.payload as BacktestResult["invariants"];
           }
+          // B15 battery sentinel — persist to backtests.b15_battery JSONB (Wave 25 Item 5)
+          if (ev.type === "b15_battery" && ev.payload?.result) {
+            try {
+              await db
+                .update(backtests)
+                .set({ b15Battery: ev.payload.result as Record<string, unknown> })
+                .where(eq(backtests.id, backtestId));
+              logger.info(
+                {
+                  event: "backtest.b15_battery_persisted",
+                  backtestId,
+                  strategyId,
+                  sdr: (ev.payload.result as Record<string, unknown>).sdr,
+                  psi: (ev.payload.result as Record<string, unknown>).psi,
+                  rws: (ev.payload.result as Record<string, unknown>).rws,
+                  passed: (ev.payload.result as Record<string, unknown>).passed,
+                },
+                "B15 battery result persisted to backtests.b15_battery",
+              );
+            } catch (b15PersistErr) {
+              logger.warn(
+                { backtestId, strategyId, err: b15PersistErr },
+                "B15 battery persist failed (non-blocking)",
+              );
+            }
+          }
         }
 
         const parityShadow = result.parity_shadow;
