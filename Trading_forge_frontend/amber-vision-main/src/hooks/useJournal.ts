@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
-import type { JournalEntry, JournalStats, ScoutFunnelResponse, ScoutFunnel } from "@/types/api";
+import type {
+  JournalEntry,
+  JournalStats,
+  ScoutFunnelResponse,
+  ScoutFunnel,
+  TradeJournalEntry,
+  TradeJournalStats,
+} from "@/types/api";
 
 export interface JournalFilters {
   status?: string;
@@ -87,5 +94,58 @@ export function useScoutFingerprints() {
       const res = await api.get<{ fingerprints: any[] } | any[]>("/journal/scout-fingerprints");
       return Array.isArray(res) ? res : res.fingerprints ?? [];
     },
+  });
+}
+
+// ─── Trade Journal hooks — Wave 26 Pass 2 ──────────────────────────────────
+// These hit /api/trade-journal (paper_positions + trade_critique) — distinct
+// from the system_journal research log at /api/journal.
+
+export interface TradeJournalFilters {
+  outcome?: "win" | "loss" | "scratch" | "all";
+  regime?: string;
+  strategyId?: string;
+  accountId?: string;
+  gradeMin?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * useTradeJournal — paginated list of closed positions + GPT-5.4 autopsy.
+ * Returns { data: TradeJournalEntry[], total: number } or undefined while loading.
+ */
+export function useTradeJournal(filters?: TradeJournalFilters) {
+  const params = new URLSearchParams();
+  if (filters?.outcome && filters.outcome !== "all") params.set("outcome", filters.outcome);
+  if (filters?.regime && filters.regime !== "all") params.set("regime", filters.regime);
+  if (filters?.strategyId) params.set("strategyId", filters.strategyId);
+  if (filters?.accountId) params.set("accountId", filters.accountId);
+  if (filters?.gradeMin && filters.gradeMin !== "any") params.set("gradeMin", filters.gradeMin);
+  if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters?.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters?.limit != null) params.set("limit", String(filters.limit));
+  if (filters?.offset != null) params.set("offset", String(filters.offset));
+  const qs = params.toString();
+
+  return useQuery({
+    queryKey: ["trade-journal", filters],
+    queryFn: () =>
+      api.get<{ data: TradeJournalEntry[]; total: number }>(
+        `/trade-journal${qs ? `?${qs}` : ""}`
+      ),
+  });
+}
+
+/**
+ * useTradeJournalStats — KPI aggregation for Trade Journal header cards.
+ */
+export function useTradeJournalStats() {
+  return useQuery({
+    queryKey: ["trade-journal", "stats"],
+    queryFn: () => api.get<TradeJournalStats>("/trade-journal/stats"),
+    staleTime: 60_000,  // 1-minute cache — stats are not real-time sensitive
   });
 }

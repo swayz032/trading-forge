@@ -372,3 +372,90 @@ export interface OhlcvBar {
   close: number;
   volume?: number;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TRADE JOURNAL — Wave 26 Pass 2
+// Denormalized shape: paper_positions JOIN trade_critique JOIN strategies
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Plain-English autopsy block — family-safe, always shown */
+export interface TradePlainEnglish {
+  one_liner: string | null;
+  what_went_right: string | null;
+  what_to_watch: string | null;
+  action_needed: string | null;
+}
+
+/** Full 8-dimension technical attribution block — operator-only by default */
+export interface TradeTechnicalDiagnosis {
+  realized_r?: number | null;
+  entry_quality_score?: number | null;
+  regime_at_entry?: string | null;
+  structure_state_at_entry?: string | null;
+  confluence_score_at_entry?: number | null;
+  narrative_phase_at_entry?: string | null;
+  exit_reason?: string | null;
+  exit_execution_delta_r?: number | null;
+  expected_r_percentile?: number | null;
+  topstep_consistency_distance_to_cap?: number | null;
+  confluence_factors_missed?: string[];
+  attribution_weights?: Record<string, number>;
+  parameter_hint?: {
+    field: string;
+    current: number | string;
+    suggested_range: string;
+    confidence: number;
+  } | null;
+  [key: string]: unknown;
+}
+
+/** One closed trade + its GPT-5.4 autopsy (null critique fields when not yet critiqued) */
+export interface TradeJournalEntry {
+  positionId: string;
+  accountId: string;        // paper_positions.session_id (closest approximation)
+  strategyId: string | null;
+  strategyName: string;
+  symbol: string;
+  side: string;             // long | short
+  entryPrice: string | null;
+  exitPrice: string | null;
+  entryTime: string | null;
+  exitTime: string | null;
+  contracts: number;
+  outcome: "win" | "loss" | "scratch";
+  realizedR: number | null;
+  entryQualityScore: number | null;
+  // Critique fields — null when position has no critique yet
+  grade: string | null;     // A+ | A | B+ | B | C+ | C | D | F
+  plainEnglish: TradePlainEnglish | null;
+  technicalDiagnosis: TradeTechnicalDiagnosis | null;
+  dataCompleteness: "full" | "partial" | "minimal" | null;
+  missingFields: string[];
+  // Context captured at trade time
+  regimeAtEntry: string | null;
+  structureStateAtEntry: string | null;
+  confluenceScoreAtEntry: number | null;
+  narrativePhaseAtEntry: string | null;
+  // TCA
+  implementationShortfall: string | null;
+  fillRatio: string | null;
+  exitReason: string | null;
+  // Provenance
+  provider: string | null;
+  model: string | null;
+  critiquedAt: string | null;
+  correlationId: string | null;
+}
+
+/** KPI aggregation response from GET /api/trade-journal/stats */
+export interface TradeJournalStats {
+  totalTrades: number;
+  winRate: number;
+  avgR: number | null;
+  avgGrade: string | null;   // Weighted letter grade e.g. "B+"
+  sharpeRolling30d: number | null;
+  byRegime: Record<string, number>;
+  byStrategy: Record<string, number>;
+  last7DaysCount: number;
+  byGrade: Record<string, number>;  // { "A+": N, "A": N, ... }
+}

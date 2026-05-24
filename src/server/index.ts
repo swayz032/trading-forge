@@ -85,6 +85,7 @@ import { deployedStrategyStarvationRoutes } from "./routes/deployed-strategy-sta
 import { webhookLatencyRoutes } from "./routes/webhook-latency.js";
 import { b15RobustnessRoutes } from "./routes/b15-robustness.js";
 import { consistencyRoutes } from "./routes/consistency.js";
+import { tradeJournalRoutes } from "./routes/trade-journal.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 
 // ─── Boot migration runner ────────────────────────────────────────
@@ -533,6 +534,7 @@ app.use("/api/b15-robustness", b15RobustnessRoutes);
 
 // W26 Pass 6: Topstep consistency concentration tracker — GET /api/consistency/:accountId
 app.use("/api/consistency", consistencyRoutes);
+app.use("/api/trade-journal", tradeJournalRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {
@@ -683,6 +685,18 @@ const server = app.listen(port, () => {
     });
   }).catch((err) => {
     logger.warn({ err }, "MetricsAggregator import failed during warm-up (non-blocking)");
+  });
+
+  // ─── W26 Pass 4: Warm appendix cache before scheduler fires ─────────────────
+  // Populates the module-level _appendixCache in model-router.ts from any active
+  // prompt_versions rows. buildPromptSync() reads this cache synchronously — no
+  // async in the hot path. Fail-open: cache starts empty if DB read fails.
+  import("./services/model-router.js").then(({ warmAppendixCache }) => {
+    warmAppendixCache().catch((err) => {
+      logger.info({ err }, "Appendix cache warm failed at boot — starting empty (non-blocking)");
+    });
+  }).catch((err) => {
+    logger.info({ err }, "model-router import failed during appendix warm — non-blocking");
   });
 
   // Start scheduled jobs (rolling Sharpe, pre-market prep, drift checks)

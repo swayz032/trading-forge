@@ -4,6 +4,36 @@
 
 ---
 
+### Session Log — 2026-05-24 paper-parity — Wave 26 Pass 2: Trade Journal frontend repurpose
+
+**Mission:** Repurpose Journal.tsx from system_journal (research log) to paper_positions + trade_critique (trade autopsy layer); add GET /api/trade-journal route.
+
+**Work completed:**
+- NEW `src/server/routes/trade-journal.ts` — GET /api/trade-journal (LEFT JOIN positions+critiques+sessions+strategies; 9 filter params; pagination; grade-order filtering) + GET /api/trade-journal/stats (totalTrades, winRate, avgR, avgGrade, sharpeRolling30d, byGrade, byRegime, byStrategy, last7DaysCount)
+- `src/server/index.ts` — mounted tradeJournalRoutes at /api/trade-journal (additive; /journal research route preserved)
+- `Trading_forge_frontend/amber-vision-main/src/pages/Journal.tsx` — full repurpose: header "Trade Journal" + GPT-5.4 subtitle; 5 KPI cards (Total Trades, Win Rate, Avg R, Avg Grade, Last 7 Days); filter bar (outcome/regime/strategy/gradeMin/date range); ForgeScoreRing uses entry_quality_score/10; collapsed row shows outcome badge + grade pill + realized_r + regime + exit_reason + elapsed; expanded view: plain-English block ALWAYS visible (one_liner, what_went_right, what_to_watch, action_needed) + "Technical Details" accordion (OPEN for operator, COLLAPSED for family); accordion shows 8-dimension attribution bars (Tailwind divs), exit_execution_delta_r, confluence_factors_missed chips, parameter_hint card, R percentile, Topstep cap distance, TCA fields; data completeness pill + missingFields chips; operator/family toggle via localStorage 'tf:is_operator_account' (default true)
+- `Trading_forge_frontend/amber-vision-main/src/hooks/useJournal.ts` — ADDITIVE: TradeJournalFilters interface + useTradeJournal() + useTradeJournalStats() hooks hitting /api/trade-journal; existing research hooks preserved for backward compat
+- `Trading_forge_frontend/amber-vision-main/src/types/api.ts` — ADDITIVE: TradePlainEnglish, TradeTechnicalDiagnosis, TradeJournalEntry, TradeJournalStats interfaces
+- `Trading_forge_frontend/amber-vision-main/src/lib/journalTranslate.ts` — ADDITIVE: translateGrade(), translateRegime(), translateAttribution() helpers
+- NEW `src/server/__tests__/wave26-trade-journal-route.test.ts` — 9 tests (list LEFT JOIN, win/loss outcome derivation, regime filter, gradeMin filter, date range, pagination; stats totalTrades+winRate+byGrade, byGrade sum)
+
+**Verification:**
+- `npx vitest run src/server/__tests__/wave26-trade-journal-route.test.ts` → 9/9 PASSED
+- `npx tsc --noEmit` backend → zero new errors in trade-journal.ts / index.ts (pre-existing errors in scripts/ and test files only)
+- Frontend `npx tsc -b --noEmit` → zero new errors in Journal.tsx / useJournal.ts / journalTranslate.ts / api.ts (pre-existing errors in other pages only)
+- `npm run check:production-isolation` → CLEAN (4 files, 0 violations)
+- Forbidden files confirmed untouched: paper-signal-service.ts, nightly-critique-service.ts, model-router.ts, scheduler.ts, trade-critique-service.ts (only modified by other passes already in working tree)
+
+**Parity notes:**
+- LEFT JOIN design: uncritiqued positions always appear (grade=null); never hidden from journal — preserves audit completeness
+- Outcome derived from entryPrice/exitPrice/side in the route (position math); realizedR reads from technicalDiagnosis.realized_r when critique present
+- Operator/Family dual-render uses localStorage 'tf:is_operator_account' per Finding 9; real account_strategy_assignments.is_operator_account wiring deferred to architect pass
+
+**Carry-forward for next session:**
+- ProductionStatusPanel.tsx: 7th pill for consistency state (GET /api/consistency/:accountId) is carry-forward — component is 443 lines with complex layout; fitting within ~30 lines not viable without architect review
+- Live SMT bridge for paper-signal-service smt_score population (already noted in Wave 25 Pass 5 deferrals)
+- is_operator_account real DB wiring: account_strategy_assignments does not yet have this column; LSM flag covers the gate requirement for now
+
 ### Session Log — 2026-05-24 backtest-core — Wave 25 Pass 5 W25.8: VWAP bands + Anchored VWAP
 
 **Mission:** Add VWAP standard-deviation bands (1σ/2σ) and Anchored VWAP to the indicator engine; register `vwap_band_reject` and `anchored_vwap_retest` DSL archetypes in the pattern library.

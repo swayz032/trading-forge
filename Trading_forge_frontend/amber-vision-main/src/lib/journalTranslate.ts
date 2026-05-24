@@ -360,6 +360,69 @@ export function simplifyPrompt(raw: string | null): string {
   return t;
 }
 
+// ─── Trade Journal translators — Wave 26 Pass 2 ────────────────────────────
+
+/**
+ * translateGrade — convert a letter grade to a display color class and label.
+ * Color scheme:
+ *   A+      → emerald (best — institutional quality)
+ *   A       → profit green
+ *   B+ / B  → amber (solid)
+ *   C+ / C  → orange (marginal)
+ *   D / F   → loss red
+ */
+export function translateGrade(grade: string | null): {
+  color: string;
+  bgColor: string;
+  label: string;
+} {
+  switch (grade) {
+    case "A+": return { color: "text-emerald-400", bgColor: "bg-emerald-400/10 border-emerald-400/30", label: "A+" };
+    case "A":  return { color: "text-profit",      bgColor: "bg-profit/10 border-profit/30",           label: "A"  };
+    case "B+": return { color: "text-amber-400",   bgColor: "bg-amber-400/10 border-amber-400/30",     label: "B+" };
+    case "B":  return { color: "text-amber-300",   bgColor: "bg-amber-300/10 border-amber-300/30",     label: "B"  };
+    case "C+": return { color: "text-orange-400",  bgColor: "bg-orange-400/10 border-orange-400/30",   label: "C+" };
+    case "C":  return { color: "text-orange-300",  bgColor: "bg-orange-300/10 border-orange-300/30",   label: "C"  };
+    case "D":  return { color: "text-loss",        bgColor: "bg-loss/10 border-loss/30",               label: "D"  };
+    case "F":  return { color: "text-loss",        bgColor: "bg-loss/20 border-loss/50",               label: "F"  };
+    default:   return { color: "text-text-muted",  bgColor: "bg-[hsl(var(--surface-2))] border-border/30", label: "—" };
+  }
+}
+
+/**
+ * translateRegime — convert regime label to a human-readable string.
+ */
+export function translateRegime(regime: string | null): string {
+  if (!regime) return "—";
+  switch (regime) {
+    case "TRENDING_UP":    return "Trending Up";
+    case "TRENDING_DOWN":  return "Trending Down";
+    case "RANGE_BOUND":    return "Range Bound";
+    case "HIGH_VOLATILITY": return "High Volatility";
+    case "LOW_VOLATILITY":  return "Low Volatility";
+    default: return regime.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+}
+
+/**
+ * translateAttribution — sort attribution weight map descending for display.
+ * Returns [ { factor, weight } ] ordered by weight descending.
+ */
+export function translateAttribution(
+  weights: Record<string, number> | null | undefined
+): Array<{ factor: string; weight: number; label: string }> {
+  if (!weights || typeof weights !== "object") return [];
+  return Object.entries(weights)
+    .map(([factor, weight]) => ({
+      factor,
+      weight: typeof weight === "number" ? weight : 0,
+      label: factor
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase()),
+    }))
+    .sort((a, b) => b.weight - a.weight);
+}
+
 // ── Prop-compliance summary ────────────────────────────────────────────────
 
 export function summarizePropCompliance(raw: any): string {
