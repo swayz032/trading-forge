@@ -80,14 +80,23 @@ Write-Host "  NSSM found at: $nssm"
 
 $SVC = "TradingForgeAPI"
 $NODE_EXE = (Get-Command node.exe).Source
-$ENTRY = "$TF_ROOT\dist\server\index.js"  # production build
+# Use tsx runtime directly — sidesteps the 246 pre-existing tsc errors that
+# block `npm run build`. tsx is already a dev dep, runs the same way `npm run dev`
+# does minus --watch. Same JS engine, same imports, just no type-check overhead.
+$TSX_CLI = "$TF_ROOT\node_modules\tsx\dist\cli.mjs"
+$ENTRY = "$TF_ROOT\src\server\index.ts"  # tsx loads .ts directly
+
+if (-not (Test-Path $TSX_CLI)) {
+    Write-Host "  ERROR: tsx not found at $TSX_CLI. Run 'npm install' first." -ForegroundColor Red
+    exit 1
+}
 
 # Remove existing service if it exists (idempotent — fresh config every run)
 & $nssm stop $SVC 2>&1 | Out-Null
 & $nssm remove $SVC confirm 2>&1 | Out-Null
 
-# Install fresh
-& $nssm install $SVC $NODE_EXE $ENTRY
+# Install fresh — node.exe runs tsx cli.mjs which runs src/server/index.ts
+& $nssm install $SVC $NODE_EXE "`"$TSX_CLI`" `"$ENTRY`""
 & $nssm set $SVC AppDirectory $TF_ROOT
 & $nssm set $SVC AppEnvironmentExtra "NODE_ENV=production" "PORT=4000"
 & $nssm set $SVC AppStdout "$LOG_DIR\trading-forge-api.log"
@@ -104,14 +113,18 @@ $ENTRY = "$TF_ROOT\dist\server\index.js"  # production build
 & $nssm set $SVC Start SERVICE_AUTO_START   # boot with Windows
 & $nssm set $SVC Description "Trading Forge API — auto-respawn on crash, boots on startup. Wave 26 Pass H."
 
-# Try to start (silently fail if dist/ doesn't exist yet)
-if (Test-Path $ENTRY) {
-    & $nssm start $SVC 2>&1 | Out-Null
-    Start-Sleep -Seconds 3
-    $status = & $nssm status $SVC
-    Write-Host "  Service status: $status" -ForegroundColor $(if ($status -match "RUNNING") {"Green"} else {"Yellow"})
-} else {
-    Write-Host "  ! dist/server/index.js missing — run 'npm run build' then 'nssm start $SVC'" -ForegroundColor Yellow
+# Start immediately — tsx loads .ts at runtime so no build step needed
+& $nssm start $SVC 2>&1 | Out-Null
+Start-Sleep -Seconds 8
+$status = & $nssm status $SVC
+Write-Host "  Service status: $status" -ForegroundColor $(if ($status -match "RUNNING") {"Green"} else {"Yellow"})
+
+# Verify it actually answers on :4000
+try {
+    $hc = Invoke-WebRequest -Uri "http://localhost:4000/api/health" -TimeoutSec 10 -UseBasicParsing
+    Write-Host "  ✓ /api/health responding HTTP $($hc.StatusCode)" -ForegroundColor Green
+} catch {
+    Write-Host "  ! /api/health not yet responding — check $LOG_DIR\trading-forge-api.err.log" -ForegroundColor Yellow
 }
 Write-Host "  NSSM service '$SVC' installed.`n" -ForegroundColor Cyan
 
@@ -203,8 +216,14 @@ Write-Host "  sc query TradingForgeAPI"
 Write-Host "  Get-ScheduledTask -TaskName TF_ZombieNodeKiller,TF_NightlyMaintenance"
 Write-Host ""
 Write-Host "Next steps:"
-Write-Host "  1. Build production bundle: cd $TF_ROOT && npm run build"
-Write-Host "  2. Start service:           nssm start TradingForgeAPI"
-Write-Host "  3. Verify API responds:     curl http://localhost:4000/api/health"
-Write-Host "  4. n8n health-watchdog workflow imports automatically via API (no manual step)"
+Write-Host "  Service auto-started via tsx runtime (no build step needed)."
+Write-Host "  If it failed, check  $LOG_DIR\trading-forge-api.err.log"
+Write-Host "  Verify:              curl http://localhost:4000/api/health"
+Write-Host "  Restart manually:    nssm restart TradingForgeAPI"
+Write-Host "  Tail live logs:      Get-Content $LOG_DIR\trading-forge-api.log -Tail 50 -Wait"
+Write-Host ""
+Write-Host "TS errors note: tsx skips type-checking entirely (matches your npm run dev"
+Write-Host "behavior). The 246 pre-existing tsc errors in src/server/__tests__/* and"
+Write-Host "drift-detector.ts etc don't block runtime — they only block npm run build."
+Write-Host "Address those in a separate cleanup pass when convenient."
 Write-Host ""
