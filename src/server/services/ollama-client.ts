@@ -55,14 +55,20 @@ export class OllamaClient {
     model: string,
     prompt: string,
     options?: OllamaOptions,
-    json?: boolean,
+    /** Wave 26 Pass B:
+     *  - `true`  → body.format = "json"  (syntactic JSON enforcement, backward-compat)
+     *  - object  → body.format = <schema> (GBNF grammar-constrained, Ollama 0.5+, strict shape)
+     *  - falsy   → omit format entirely
+     */
+    format?: boolean | Record<string, unknown>,
   ): Promise<GenerateResponse> {
     const body: Record<string, unknown> = {
       model: this.resolveModel(model),
       prompt,
       stream: false,
     };
-    if (json) body.format = "json";
+    if (format === true) body.format = "json";
+    else if (format && typeof format === "object") body.format = format;
     if (options) body.options = options;
     return this.request<GenerateResponse>("/api/generate", body);
   }
@@ -71,14 +77,20 @@ export class OllamaClient {
     model: string,
     messages: ChatMessage[],
     options?: OllamaOptions,
-    json?: boolean,
+    /** Wave 26 Pass B:
+     *  - `true`  → body.format = "json"  (syntactic JSON enforcement, backward-compat)
+     *  - object  → body.format = <schema> (GBNF grammar-constrained, Ollama 0.5+, strict shape)
+     *  - falsy   → omit format entirely
+     */
+    format?: boolean | Record<string, unknown>,
   ): Promise<ChatResponse> {
     const body: Record<string, unknown> = {
       model: this.resolveModel(model),
       messages,
       stream: false,
     };
-    if (json) body.format = "json";
+    if (format === true) body.format = "json";
+    else if (format && typeof format === "object") body.format = format;
     if (options) body.options = options;
     return this.request<ChatResponse>("/api/chat", body);
   }
@@ -97,14 +109,16 @@ export class OllamaClient {
     model: string,
     prompt: string,
     options?: OllamaOptions,
-    json?: boolean,
+    /** Wave 26 Pass B: true → "json", object → schema, falsy → omit */
+    format?: boolean | Record<string, unknown>,
   ): AsyncGenerator<string> {
     const body: Record<string, unknown> = {
       model: this.resolveModel(model),
       prompt,
       stream: true,
     };
-    if (json) body.format = "json";
+    if (format === true) body.format = "json";
+    else if (format && typeof format === "object") body.format = format;
     if (options) body.options = options;
     yield* this.streamRequest("/api/generate", body);
   }

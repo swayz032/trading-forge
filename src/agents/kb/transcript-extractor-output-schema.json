@@ -1,0 +1,280 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TranscriptExtractorOutput",
+  "description": "Output schema for the transcript_extractor role. Passed as format object to Ollama /api/chat for GBNF grammar-constrained sampling (Ollama 0.5+). Self-contained — no $ref to external files; Ollama needs the schema resolvable at request time.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["strategies"],
+  "properties": {
+    "strategies": {
+      "type": "array",
+      "description": "Strategies extracted from the transcript. Empty array if no complete strategies found.",
+      "items": {
+        "$ref": "#/$defs/StrategyDSL"
+      }
+    },
+    "empty_reason": {
+      "type": ["string", "null"],
+      "description": "no_strategy_content | wrong_instrument | non_json | other",
+      "enum": ["no_strategy_content", "wrong_instrument", "non_json", "other", null]
+    },
+    "empty_reason_detail": {
+      "type": ["string", "null"],
+      "description": "Human-readable detail about why no strategies were extracted."
+    },
+    "instrument_classification": {
+      "type": ["string", "null"],
+      "description": "What instruments were discussed in the transcript, if determinable."
+    }
+  },
+  "$defs": {
+    "ChartConstruction": {
+      "type": "string",
+      "enum": ["candles", "renko"]
+    },
+    "Direction": {
+      "type": "string",
+      "enum": ["long", "short", "both"]
+    },
+    "EntryType": {
+      "type": "string",
+      "enum": ["breakout", "mean_reversion", "trend_follow", "volatility_expansion", "session_pattern", "event_driven"]
+    },
+    "ExitType": {
+      "type": "string",
+      "enum": ["fixed_target", "trailing_stop", "time_exit", "indicator_signal", "atr_multiple"]
+    },
+    "Timeframe": {
+      "type": "string",
+      "enum": ["1m", "5m", "15m", "30m", "1h", "4h", "1d"]
+    },
+    "ProfitScalingTier": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "increment": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 2
+        },
+        "threshold": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 3000
+        }
+      }
+    },
+    "ConfirmingIndicator": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["indicator", "params", "direction"],
+      "properties": {
+        "indicator": {
+          "type": "string",
+          "description": "Indicator name or archetype:* token"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["agree", "disagree", "either"]
+        }
+      }
+    },
+    "StrategyDSL": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Strategy Definition Language — the strict schema every strategy must conform to.",
+      "required": [
+        "name",
+        "description",
+        "symbol",
+        "timeframe",
+        "direction",
+        "entry_type",
+        "entry_indicator",
+        "entry_params",
+        "entry_condition",
+        "exit_type",
+        "exit_params",
+        "stop_loss_atr_multiple"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "symbol": {
+          "type": "string",
+          "enum": ["MES", "MNQ", "MCL"]
+        },
+        "timeframe": {
+          "$ref": "#/$defs/Timeframe"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "entry_type": {
+          "$ref": "#/$defs/EntryType"
+        },
+        "entry_indicator": {
+          "type": "string"
+        },
+        "entry_params": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "entry_condition": {
+          "type": "string"
+        },
+        "exit_type": {
+          "$ref": "#/$defs/ExitType"
+        },
+        "exit_params": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "stop_loss_atr_multiple": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 5
+        },
+        "take_profit_atr_multiple": {
+          "type": ["number", "null"],
+          "minimum": 1,
+          "maximum": 10,
+          "default": null
+        },
+        "chart_construction": {
+          "$ref": "#/$defs/ChartConstruction",
+          "default": "candles"
+        },
+        "schema_version": {
+          "type": "string",
+          "default": "v1"
+        },
+        "source": {
+          "type": "string",
+          "default": "manual"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "max_contracts": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 20,
+          "default": null
+        },
+        "daily_target_dollars": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "default": null
+        },
+        "preferred_regime": {
+          "type": ["string", "null"],
+          "default": null
+        },
+        "session_filter": {
+          "type": ["string", "null"],
+          "default": null
+        },
+        "sizing_method": {
+          "type": ["string", "null"],
+          "enum": ["fixed", "kelly", "atr_based", null],
+          "default": null
+        },
+        "profit_scaling_tier": {
+          "$ref": "#/$defs/ProfitScalingTier"
+        },
+        "bypass_news_blackout": {
+          "type": ["boolean", "null"],
+          "default": null
+        },
+        "frankenstein_test_mode": {
+          "type": ["string", "null"],
+          "enum": ["full_shuffle", "benchmark_relative", "calendar_preserving", "synthetic_gbm", null],
+          "default": null
+        },
+        "bias_timeframe": {
+          "anyOf": [{ "$ref": "#/$defs/Timeframe" }, { "type": "null" }],
+          "default": null
+        },
+        "bias_condition": {
+          "type": ["string", "null"],
+          "default": null
+        },
+        "execution_timeframe": {
+          "anyOf": [{ "$ref": "#/$defs/Timeframe" }, { "type": "null" }],
+          "default": null
+        },
+        "primary_indicator": {
+          "type": ["string", "null"],
+          "default": null
+        },
+        "confirming_indicators": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": { "$ref": "#/$defs/ConfirmingIndicator" }
+            },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "min_factors_satisfied": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "default": null
+        },
+        "preferred_regimes": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"]
+              },
+              "minItems": 1
+            },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "confluence_factors": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["regime_match", "structural_setup", "volume_confirmation", "macro_alignment", "vp_shape"]
+              }
+            },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "source_claim_win_rate": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1,
+          "default": null
+        },
+        "source_claim_avg_r": {
+          "type": ["number", "null"],
+          "default": null
+        }
+      }
+    }
+  }
+}

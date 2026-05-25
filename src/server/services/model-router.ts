@@ -45,12 +45,38 @@ function isForceCloud(): boolean {
 
 /** Local model name — overridable per deployment.
  *
- * Wave 26 (2026-05-24): operator's Skytech tower has `gemma4:latest` (8.95 GB,
- * gemma4 family) installed — works with current Ollama 0.24.0. `gemma4:e2b`
- * (5.1B MoE variant) was never on this machine. Default now matches what's
- * actually present. Override per-deployment via env var. */
+ * Wave 26 Pass B (2026-05-25): default swapped from gemma4 → qwen2.5-coder:7b.
+ * Research (arXiv 2501.10868 JSONSchemaBench) shows qwen2.5-coder:7b materially
+ * outperforms gemma4 on strict JSON schema adherence in the 7-8B class.
+ * Code-trained models have stronger schema-following from RLHF on structured
+ * output tasks. gemma4 remains available as override via env var.
+ *
+ * Install locally: `ollama pull qwen2.5-coder:7b` (4.7 GB Q4_K_M). */
 function getLocalTranscriptModel(): string {
-  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4";
+  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "qwen2.5-coder:7b";
+}
+
+/**
+ * Whether strict JSON Schema enforcement is enabled (Ollama GBNF grammar sampling).
+ *
+ * When true (default): passes the full transcript-extractor-output-schema.json
+ * as `format` object to Ollama /api/chat → GBNF-constrained sampling enforces
+ * `{strategies: [...], empty_reason?, ...}` shape at the token level.
+ *
+ * When false: falls back to `format: "json"` string mode (syntactic JSON only,
+ * no shape control — legacy behavior).
+ *
+ * Set TRANSCRIPT_EXTRACTOR_STRICT_SCHEMA=false as an escape hatch if schema
+ * enforcement breaks on a specific model deployment.
+ *
+ * IMPORTANT: Never set `think: false` anywhere in the Ollama request body.
+ * Ollama bug #15260 — passing `think: false` silently drops `format` schema
+ * enforcement on gemma4. The fix is to omit `think` entirely.
+ */
+function isStrictSchemaMode(): boolean {
+  const val = process.env.TRANSCRIPT_EXTRACTOR_STRICT_SCHEMA;
+  // Default true — only disable when explicitly set to "false"
+  return val !== "false";
 }
 
 /** Ollama context window for transcript_extractor.
@@ -2009,12 +2035,44 @@ async function writeTranscriptExtractorAudit(
   }
 }
 
+// ─── Wave 26 Pass B — Transcript Extractor output schema ─────────────────────
+//
+// Loaded once at module level (sync, tiny file). Passed as `format` object to
+// Ollama /api/chat for GBNF grammar-constrained sampling (Ollama 0.5+).
+// Self-contained — no $ref to external paths; Ollama needs it resolvable at
+// request time.
+//
+// IMPORTANT: Never add a `think` field to the Ollama request body.
+// Ollama bug #15260 — passing `think: false` silently drops `format` schema
+// enforcement on gemma4. Fix = omit `think` entirely.
+let _transcriptOutputSchema: Record<string, unknown> | null = null;
+function loadTranscriptOutputSchema(): Record<string, unknown> | null {
+  if (_transcriptOutputSchema !== null) return _transcriptOutputSchema;
+  try {
+    const schemaPath = resolve(PROJECT_ROOT, "src/agents/kb/transcript-extractor-output-schema.json");
+    const raw = readFileSync(schemaPath, "utf-8");
+    _transcriptOutputSchema = JSON.parse(raw) as Record<string, unknown>;
+    return _transcriptOutputSchema;
+  } catch (err) {
+    logger.warn({ err }, "model-router: failed to load transcript-extractor-output-schema.json — falling back to format:json string mode");
+    return null;
+  }
+}
+
 /**
- * Call Ollama gemma4:e2b with 30s timeout per-attempt and JSON validation.
+ * Call Ollama qwen2.5-coder:7b (Wave 26 Pass B primary) via /api/chat with:
+ *   - proper role-tagged messages (system + user) so Ollama applies chat template
+ *   - JSON Schema as format object for GBNF grammar-constrained sampling (Ollama 0.5+)
+ *   - strict sampling: temperature=0, top_p=0.9, top_k=20
+ *   - 30s per-call timeout (R2 requirement)
  *
  * Returns: { text: string, model, durationMs } on success
  *          throws on timeout / connection refused / invalid JSON with
  *          reason attached as err.fallbackReason for callScoutExtractLlm.
+ *
+ * Schema enforcement: controlled by TRANSCRIPT_EXTRACTOR_STRICT_SCHEMA env var
+ * (default true). When false → falls back to format:"json" string mode (escape
+ * hatch for model deployments that don't support GBNF schema enforcement).
  */
 async function callOllamaForTranscriptExtractor(
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
@@ -2028,24 +2086,52 @@ async function callOllamaForTranscriptExtractor(
   // we override here to keep the primary path responsive.
   const ollama = new OllamaClient(undefined, 30_000);
 
+  // Build proper role-tagged message array for /api/chat.
+  // /api/chat auto-applies the model's chat template (e.g. Gemma <start_of_turn>,
+  // Qwen <|im_start|>) — better instruction following than /api/generate concatenation.
   const systemPrompt = loadSystemPrompt(role, taskContext);
   const userChunks = messages
     .filter((m) => m.role !== "system")
     .map((m) => m.content)
     .join("\n\n");
-  const prompt = `${systemPrompt}\n\n${userChunks}`;
 
-  // Wave 26 (2026-05-24): pass num_ctx=16384 default (override via
-  // TRANSCRIPT_EXTRACTOR_NUM_CTX env). Default Ollama context is 2048 — too
-  // small for our prompt (~5K tokens) + transcript (~3K-7K tokens). 16K covers
-  // ~95% of YouTube transcripts; long-form videos already use chunked-fallback
-  // path (scout-extract route, CHUNKED_FALLBACK_THRESHOLD = 12000).
+  // Append the schema hint to the user message.
+  // Research shows literal "Return JSON matching the schema" in the user message
+  // significantly improves schema adherence across all 7-8B models.
+  const userContent = `${userChunks}\n\nReturn JSON matching the schema.`;
+
+  const chatMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userContent },
+  ];
+
+  // Strict sampling for JSON schema adherence (JSONSchemaBench 2025 findings):
+  //   temperature=0 → deterministic greedy decoding (no randomness)
+  //   top_p=0.9     → nucleus sampling cap (redundant with temp=0, belt+suspenders)
+  //   top_k=20      → vocabulary restriction (forces common tokens, reduces hallucination)
+  // num_ctx: prompt (~5K) + transcript (~3K-7K) + output budget → 16384 covers ~95%
   const numCtx = getTranscriptOllamaNumCtx();
+  const samplingOptions = {
+    num_ctx: numCtx,
+    temperature: 0,
+    top_p: 0.9,
+    top_k: 20,
+    // NEVER add: think: false — Ollama bug #15260 silently drops format enforcement
+  };
+
+  // Determine format: schema object (GBNF strict) or "json" string (syntactic only).
+  // Schema object requires Ollama 0.5+. Legacy Ollama falls back gracefully to
+  // treating unknown format values as no-format (still valid JSON output expected
+  // from the sampling, just no grammar enforcement).
+  const strictSchema = isStrictSchemaMode();
+  const schema = strictSchema ? loadTranscriptOutputSchema() : null;
+  const formatArg: boolean | Record<string, unknown> = schema ?? true;
+
   const startedAt = Date.now();
-  const res = await ollama.generate(model, prompt, { num_ctx: numCtx }, true /* wantJson=format:"json" */);
+  const res = await ollama.chat(model, chatMessages, samplingOptions, formatArg);
   const durationMs = Date.now() - startedAt;
 
-  const raw = res?.response ?? "";
+  const raw = res?.message?.content ?? "";
   if (!raw || raw.trim().length === 0) {
     const e = new Error("Ollama returned empty response for transcript_extractor") as Error & { fallbackReason: string };
     e.fallbackReason = "ollama_empty_response";

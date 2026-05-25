@@ -2,9 +2,11 @@
  * wave26-transcript-extractor-gemma4-routing.test.ts
  *
  * Wave 26 — Transcript Extractor local-first routing tests.
+ * Wave 26 Pass B update: model swapped from gemma4:e2b → qwen2.5-coder:7b;
+ * API switched from /api/generate (ollama.generate) → /api/chat (ollama.chat).
  *
  * Validates:
- *   T1. Default config: transcript_extractor primary = Ollama gemma4:e2b
+ *   T1. Default config: transcript_extractor primary = Ollama qwen2.5-coder:7b via chat()
  *   T2. TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true → primary flips to gpt-5-mini
  *   T3. Ollama down → fallback to cloud, audit row emitted
  *   T4. Ollama returns invalid JSON → fallback to cloud, audit row emitted
@@ -94,17 +96,20 @@ const SAMPLE_MESSAGES: Array<{ role: "system" | "user" | "assistant"; content: s
 
 /**
  * Create a mock OllamaClient instance with configurable behavior.
+ * Wave 26 Pass B: callOllamaForTranscriptExtractor now uses ollama.chat()
+ * (via /api/chat) instead of ollama.generate() (via /api/generate).
+ * Mock targets the chat() method; generate() is a no-op stub for verification.
  */
 function mockOllamaInstance(opts: {
   throws?: Error;
   response?: string;
   delayMs?: number;
 }) {
-  const generateFn = vi.fn();
+  const chatFn = vi.fn();
   if (opts.throws) {
-    generateFn.mockRejectedValue(opts.throws);
+    chatFn.mockRejectedValue(opts.throws);
   } else if (opts.delayMs !== undefined) {
-    generateFn.mockImplementation(() =>
+    chatFn.mockImplementation(() =>
       new Promise((_, reject) =>
         setTimeout(() => {
           const err = new Error("Ollama unreachable at http://localhost:11434: AbortError: This operation was aborted");
@@ -114,9 +119,14 @@ function mockOllamaInstance(opts: {
       ),
     );
   } else {
-    generateFn.mockResolvedValue({ response: opts.response ?? VALID_JSON_RESPONSE });
+    // /api/chat returns { message: { role, content } }
+    chatFn.mockResolvedValue({
+      message: { role: "assistant", content: opts.response ?? VALID_JSON_RESPONSE },
+    });
   }
-  return { generate: generateFn };
+  // generate() stub — should NOT be called after Pass B refactor
+  const generateFn = vi.fn().mockResolvedValue({ response: "" });
+  return { chat: chatFn, generate: generateFn };
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -134,7 +144,8 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     // Default: Ollama healthy, no force-cloud
     __setOllamaHealthyForTests(true);
     delete process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD;
-    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "gemma4:e2b";
+    // Wave 26 Pass B: default model is now qwen2.5-coder:7b
+    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "qwen2.5-coder:7b";
   });
 
   afterEach(() => {
@@ -152,6 +163,7 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T1: Default routing is Ollama ──────────────────────────────────────────
+  // Wave 26 Pass B: now uses ollama.chat() (not generate); model = qwen2.5-coder:7b
 
   it("T1: TRANSCRIPT_EXTRACTOR_FORCE_CLOUD not set → callFn (cloud) is NOT called when Ollama succeeds", async () => {
     const mockOllama = mockOllamaInstance({ response: VALID_JSON_RESPONSE });
@@ -162,8 +174,16 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     const result = await callScoutExtractLlm(SAMPLE_MESSAGES, undefined, cloudCallFn, async () => {});
 
     expect(result).toBe(VALID_JSON_RESPONSE);
-    expect(mockOllama.generate).toHaveBeenCalledOnce();
-    expect(mockOllama.generate).toHaveBeenCalledWith("gemma4:e2b", expect.any(String), undefined, true);
+    // Pass B: chat() is called, not generate()
+    expect(mockOllama.chat).toHaveBeenCalledOnce();
+    expect(mockOllama.generate).not.toHaveBeenCalled();
+    // Model is qwen2.5-coder:7b (Pass B default)
+    expect(mockOllama.chat).toHaveBeenCalledWith(
+      "qwen2.5-coder:7b",
+      expect.any(Array), // messages array
+      expect.objectContaining({ temperature: 0, top_p: 0.9, top_k: 20 }),
+      expect.anything(), // format (schema object or true)
+    );
     expect(cloudCallFn).not.toHaveBeenCalled();
   });
 
@@ -180,6 +200,8 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     const result = await callScoutExtractLlm(SAMPLE_MESSAGES, undefined, cloudCallFn, async () => {});
 
     expect(result).toBe(VALID_JSON_RESPONSE);
+    // Wave 26 Pass B: neither chat() nor generate() should be called
+    expect(mockOllama.chat).not.toHaveBeenCalled();
     expect(mockOllama.generate).not.toHaveBeenCalled();
     expect(cloudCallFn).toHaveBeenCalledOnce();
   });
@@ -212,8 +234,8 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
 
     expect(result).toBe(VALID_JSON_RESPONSE);
     expect(cloudCallFn).toHaveBeenCalled();
-    // Ollama was tried (invalid JSON path) and cloud was the fallback
-    expect(mockOllama.generate).toHaveBeenCalled();
+    // Wave 26 Pass B: chat() was tried (invalid JSON path) and cloud was the fallback
+    expect(mockOllama.chat).toHaveBeenCalled();
   });
 
   // ── T5: Ollama timeout → fallback to cloud ─────────────────────────────────
@@ -251,8 +273,9 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T7: Audit row carries model + provider + fellback fields ───────────────
+  // Wave 26 Pass B: model is qwen2.5-coder:7b, uses chat() not generate()
 
-  it("T7: successful Ollama call — Ollama called with gemma4 model and JSON mode, cloud NOT called", async () => {
+  it("T7: successful Ollama call — Ollama chat called with qwen2.5-coder:7b and JSON schema mode, cloud NOT called", async () => {
     const mockOllama = mockOllamaInstance({ response: VALID_JSON_RESPONSE });
     vi.mocked(OllamaClient).mockImplementation(() => mockOllama as any);
 
@@ -261,18 +284,21 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     const result = await callScoutExtractLlm(SAMPLE_MESSAGES, undefined, cloudCallFn, async () => {});
 
     expect(result).toBe(VALID_JSON_RESPONSE);
-    // Ollama called with correct model (gemma4:e2b) and JSON mode (true)
-    expect(mockOllama.generate).toHaveBeenCalledOnce();
-    const [model, , , jsonMode] = mockOllama.generate.mock.calls[0];
-    expect(model).toBe("gemma4:e2b");
-    expect(jsonMode).toBe(true); // format:"json" — Ollama JSON output mode (R4)
+    // Wave 26 Pass B: chat() called (not generate), model is qwen2.5-coder:7b
+    expect(mockOllama.chat).toHaveBeenCalledOnce();
+    expect(mockOllama.generate).not.toHaveBeenCalled();
+    const [model, , , formatArg] = mockOllama.chat.mock.calls[0] as [string, unknown, unknown, unknown];
+    expect(model).toBe("qwen2.5-coder:7b");
+    // format is either schema object (strict mode) or true (fallback)
+    expect(formatArg).toBeDefined();
     // Cloud NOT called when Ollama succeeds
     expect(cloudCallFn).not.toHaveBeenCalled();
   });
 
   // ── T8: FORCE_CLOUD=false + OLLAMA_HEALTHY=true → Ollama primary ───────────
+  // Wave 26 Pass B: chat() used; model = qwen2.5-coder:7b
 
-  it("T8: FORCE_CLOUD=false + OLLAMA_HEALTHY=true → Ollama called with gemma4:e2b and json=true", async () => {
+  it("T8: FORCE_CLOUD=false + OLLAMA_HEALTHY=true → Ollama chat called with qwen2.5-coder:7b", async () => {
     process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD = "false";
     __setOllamaHealthyForTests(true);
 
@@ -283,10 +309,11 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
 
     await callScoutExtractLlm(SAMPLE_MESSAGES, undefined, cloudCallFn, async () => {});
 
-    expect(mockOllama.generate).toHaveBeenCalledOnce();
-    const [model, , , jsonFlag] = mockOllama.generate.mock.calls[0];
-    expect(model).toBe("gemma4:e2b");
-    expect(jsonFlag).toBe(true); // format:"json" passed through
+    // Pass B: chat() not generate()
+    expect(mockOllama.chat).toHaveBeenCalledOnce();
+    expect(mockOllama.generate).not.toHaveBeenCalled();
+    const [model] = mockOllama.chat.mock.calls[0] as [string, ...unknown[]];
+    expect(model).toBe("qwen2.5-coder:7b");
     expect(cloudCallFn).not.toHaveBeenCalled();
   });
 
@@ -306,6 +333,7 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T10: Boot health check — model not in tags sets OLLAMA_HEALTHY=false ───
+  // Wave 26 Pass B: looking for qwen2.5-coder:7b by default
 
   it("T10: checkTranscriptExtractorOllamaHealth with different model in tags sets OLLAMA_HEALTHY=false", async () => {
     const origFetch = globalThis.fetch;
@@ -313,13 +341,14 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
       ok: true,
       json: async () => ({
         models: [
-          { name: "qwen2.5-coder:7b" },
           { name: "deepseek-r1:14b" },
+          { name: "gemma4:latest" },
         ],
       }),
     } as any);
     __setOllamaHealthyForTests(true);
-    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "gemma4:e2b";
+    // qwen2.5-coder:7b is the default — not present in tags above
+    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "qwen2.5-coder:7b";
 
     await checkTranscriptExtractorOllamaHealth();
 
@@ -330,19 +359,21 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T11: Boot health check — model present sets OLLAMA_HEALTHY=true ────────
+  // Wave 26 Pass B: qwen2.5-coder:7b in tags → healthy
 
-  it("T11: checkTranscriptExtractorOllamaHealth with gemma4:e2b in tags sets OLLAMA_HEALTHY=true", async () => {
+  it("T11: checkTranscriptExtractorOllamaHealth with qwen2.5-coder:7b in tags sets OLLAMA_HEALTHY=true", async () => {
     const origFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         models: [
-          { name: "gemma4:e2b" },
           { name: "qwen2.5-coder:7b" },
+          { name: "deepseek-r1:14b" },
         ],
       }),
     } as any);
     __setOllamaHealthyForTests(false); // start unhealthy
+    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "qwen2.5-coder:7b";
 
     await checkTranscriptExtractorOllamaHealth();
 
@@ -352,6 +383,7 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T12: OLLAMA_HEALTHY=false (from boot) → routes to cloud ───────────────
+  // Wave 26 Pass B: generate() never called (chat() is the new path, but also skipped)
 
   it("T12: OLLAMA_HEALTHY=false at boot → cloud path used (Ollama NOT called)", async () => {
     __setOllamaHealthyForTests(false);
@@ -364,12 +396,14 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     const result = await callScoutExtractLlm(SAMPLE_MESSAGES, undefined, cloudCallFn, async () => {});
 
     expect(result).toBe(VALID_JSON_RESPONSE);
-    // Ollama should NOT have been called when boot health is false
+    // Ollama should NOT have been called when boot health is false — neither chat() nor generate()
+    expect(mockOllama.chat).not.toHaveBeenCalled();
     expect(mockOllama.generate).not.toHaveBeenCalled();
     expect(cloudCallFn).toHaveBeenCalled();
   });
 
   // ── T13: Fell-back audit row carries fellback=true + reason ───────────────
+  // Wave 26 Pass B: chat() was tried (not generate()), cloud fallback fires
 
   it("T13: cloud fallback after Ollama invalid JSON → cloud called with correct role", async () => {
     const mockOllama = mockOllamaInstance({ response: "not valid json response from ollama" });
@@ -380,8 +414,9 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     const result = await callScoutExtractLlm(SAMPLE_MESSAGES, undefined, cloudCallFn, async () => {});
 
     expect(result).toBe(VALID_JSON_RESPONSE);
-    // Ollama was tried and returned invalid JSON → cloud was called as fallback
-    expect(mockOllama.generate).toHaveBeenCalled();
+    // Wave 26 Pass B: chat() was tried and returned invalid JSON → cloud was called as fallback
+    expect(mockOllama.chat).toHaveBeenCalled();
+    expect(mockOllama.generate).not.toHaveBeenCalled();
     expect(cloudCallFn).toHaveBeenCalledWith("transcript_extractor", SAMPLE_MESSAGES, undefined);
   });
 });
