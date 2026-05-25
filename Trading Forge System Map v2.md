@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-25T00:58:13.642Z`.
+Updated automatically from the repo on `2026-05-25T03:44:45.876Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-05-25T00:58:13.642Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, tradingview_deploy`
 - API routes tracked: `70`
-- Scheduler jobs tracked: `83`
+- Scheduler jobs tracked: `84`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -54,7 +54,7 @@ Updated automatically from the repo on `2026-05-25T00:58:13.642Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `46`
 - Route coverage: `70/70`
-- Scheduler coverage: `83/83`
+- Scheduler coverage: `83/84`
 - Engine coverage: `27/27`
 - Database coverage: `96/96`
 - Autonomous subsystems with audit coverage: `43/43`
@@ -339,6 +339,7 @@ Updated automatically from the repo on `2026-05-25T00:58:13.642Z`.
 - `prop-firm-health-check`
 - `python-pool-saturation-check`
 - `quantum-cost-prune`
+- `quantum-replay-weekly-analysis`
 - `regen-declining-sweep`
 - `regime-coverage-check`
 - `regret-score-fill`

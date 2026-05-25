@@ -1,0 +1,29 @@
+{
+  "action": "wave.27_pass1_5_master_closed",
+  "entity_type": "wave",
+  "entity_label": "wave-27-pass1-5",
+  "status": "success",
+  "decision_authority": "parent-claude",
+  "result": {
+    "passes_shipped": 1,
+    "sub_tracks": 3,
+    "commits": ["d20475c", "ea569fc", "PENDING_ARCHITECT_SHA"],
+    "tests_added": 21,
+    "services_added": 2,
+    "new_ts_modules": 2,
+    "scheduler_jobs_added": 1,
+    "audit_actions_added": 8,
+    "env_vars_added": 4,
+    "a1_verdict": "auto-fire LIVE with opt-OUT default",
+    "a2_verdict": "weekly cron LIVE with DST guard + kill switch",
+    "carry_forwards": [
+      "pass_2_evidence_gated",
+      "pass_3_evidence_gated",
+      "pass_4_blocked_python_verification",
+      "db_loader_idempotency_bug1",
+      "robustness_subprocess_dry_run",
+      "compliance_shadow_mode_HIGH",
+      "exit_slippage_asymmetry_HIGH"
+    ]
+  }
+}

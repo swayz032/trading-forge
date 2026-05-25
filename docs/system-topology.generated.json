@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T00:58:13.642Z",
+  "generatedAt": "2026-05-25T03:44:45.876Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 70,
-    "schedulerJobs": 83,
+    "schedulerJobs": 84,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 27,
@@ -162,6 +162,7 @@
     "prop-firm-health-check",
     "python-pool-saturation-check",
     "quantum-cost-prune",
+    "quantum-replay-weekly-analysis",
     "regen-declining-sweep",
     "regime-coverage-check",
     "regret-score-fill",
@@ -922,7 +923,9 @@
       "databaseTables": 96
     },
     "missingRoutes": [],
-    "missingSchedulerJobs": [],
+    "missingSchedulerJobs": [
+      "quantum-replay-weekly-analysis"
+    ],
     "missingEngineSubsystems": [],
     "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],

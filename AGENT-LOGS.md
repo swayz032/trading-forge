@@ -7597,6 +7597,36 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-25 parent-claude — Wave 27 Pass 1.5 MASTER ORCHESTRATION (auto-fire LIVE)
+
+**Mission:** Operator surfaced critical autonomy gap — Pass 1 manual harness is dead code because agents drive backtests autonomously and don't remember manual commands. Pass 1.5 wires auto-fire + weekly Discord verdict so the entire evaluation loop runs without operator intervention.
+
+**Phase A — Round 1 (2 parallel sub-tracks):**
+- P1.5.A1 paper-parity | `d20475c` | 11 vitest | Fire-and-forget quantum_replay auto-fire hook in `backtest-service.ts:1700` + NEW `src/server/lib/quantum-replay-runner.ts` (~200 lines); 3 audit actions (`quantum_replay.auto_fire_enqueued` / `auto_fire_failed` / `circuit_breaker_opened`); circuit breaker after 5 consecutive failures; opt-OUT default (`QUANTUM_REPLAY_AUTO_FIRE_ENABLED=true`).
+- P1.5.A2 observability-reliability | `ea569fc` | 10 vitest | NEW `src/server/services/quantum-replay-weekly-service.ts` (~310 lines) + `scheduler.ts` Sunday 19:00 ET DST-safe double-fire cron at 23:00 UTC with ET-hour=19 guard; 5 audit actions (`quantum_replay.weekly_verdict_emitted` / `weekly_analysis_failed` / `weekly_analysis_timeout` / `weekly_analysis_skipped_no_data` / `weekly_analysis_loop_halted_skip`); kill switch via `system_parameters.auto_patch_loop_enabled` (shared with Wave 26 pattern-aggregator); Discord templates with `appendFamilyGradePostscript` per SIGNAL/INCONCLUSIVE/NO_SIGNAL/PRELIMINARY/FAILURE verdict.
+
+**Phase B — Round 2 (architect last per §11 rule #3):**
+- P1.5.A3 trading-forge-architect | this commit | System Map sync (84 scheduler jobs registered, +1 from 83; `quantum-replay-weekly-analysis` added) + 3 CI gates GREEN (system-map:check exit 0, production-isolation exit 0, 2026-compliance exit 0) + CLAUDE.md §2/§12/§13/§14/§15 append-only updates + memory entry + audit row.
+
+**Verification:** 21 new vitest GREEN (11 + 10). All 3 CI hard gates GREEN. Baseline preserved vs Wave 27 Pass 1.
+
+**Known-facts updates:**
+- AUTO-FIRE DEFAULT IS OPT-OUT (`QUANTUM_REPLAY_AUTO_FIRE_ENABLED=true` unless explicitly set false) — matches operator's autonomous-agents-drive-everything reality. Reverting to opt-in defeats the purpose of Pass 1.5.
+- WEEKLY VERDICT FIRES SUNDAY 19:00 ET via DST-safe double-fire pattern (23:00 UTC + ET-hour=19 guard) — mirrors W25P2 consistency-tracker cron pattern. Use this same pattern for any future operator-facing weekly cron.
+- Discord templates use `appendFamilyGradePostscript` for family-grade readability — institutional verdict pills (SIGNAL/INCONCLUSIVE/NO_SIGNAL/PRELIMINARY) get a plain-English postscript by default.
+- `quantum_replay.py` CLI uses human-readable stdout (NOT JSON) — A1 used `child_process.spawn` directly with "Completed: N" regex parsing instead of the `runPythonModule` helper. Don't change the Python CLI to emit JSON without coordinating the TS-side parser update.
+- Kill switch `system_parameters.auto_patch_loop_enabled` is the SHARED flag for Wave 26 pattern-aggregator AND Wave 27 weekly-replay. Single SQL update halts both autonomous mutation loops. Adding a parallel kill switch defeats the unification.
+
+**Carry-forward for next session:**
+- Pass 2 (~5 dev-days): confluence-score + trade-critique + B15 robustness replay grading — EVIDENCE-GATED on Pass 1.5 accumulated data + weekly verdict transition from PRELIMINARY → SIGNAL/INCONCLUSIVE/NO_SIGNAL (requires n ≥ 50 folds + |ρ| signal at p ≤ 0.05).
+- Pass 3 (~3 dev-days): pattern-aggregator + consistency-tracker replay + harness consolidation — EVIDENCE-GATED on Pass 2 GREEN.
+- Pass 4 (deferred): B14 Survival Twin replay — blocked pending Python verification of `src/engine/survival/survival_scorer.py` write-free contract.
+- BUG-1 (LOW from Pass 1 A5): `db_loader.py:809` ON CONFLICT clause uses `(id)` — race condition for future concurrent replay (non-blocking single-threaded). Address before any concurrent replay execution.
+- Robustness Python subprocess not suppressed by TS-level `dryRun` — Pass 2 callers must mock at TS boundary OR add `--dry-run` flag to `src/engine/optimizer.py`.
+- Pre-existing Pass 0 HIGH findings still open (non-blocking): compliance shadow mode, exit slippage asymmetry.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
