@@ -250,6 +250,104 @@ def compute_dataset_hash(df: pl.DataFrame) -> str:
     return hashlib.sha256(csv_bytes).hexdigest()
 
 
+# ─── Zero-Volume Fail-Loud Guard (M1) ────────────────────────────
+# Wave 27.5 Pass D.3: holidays and data gaps produce volume=0 bars.
+# ATR computed on zero-vol bars produces NaN. On indicator-compute bars
+# (rolling averages) this is acceptable. On trade-critical bars (where a
+# stop or TP would fire) it is NOT — silent skip hides a data-integrity
+# failure that can mask systematic backtest errors on US holidays (5-10
+# days/year).
+#
+# BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD (default "true"):
+#   true  → raise ZeroVolumeOnTradeCriticalBar (institutional default)
+#   false → warn to stderr and return False (preserves legacy silent-skip)
+#
+# Callers (backtester._apply_trade_management, simulator step loops) should
+# call check_zero_volume_trade_critical() before executing any stop/TP action.
+
+class ZeroVolumeOnTradeCriticalBar(RuntimeError):
+    """Raised when a trade-critical bar (stop/TP candidate) has volume == 0.
+
+    This indicates a holiday bar or data gap that should not produce fills.
+    Raise path is the institutional default (BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD=true).
+    Set the env var to "false" to restore legacy silent-skip behavior.
+    """
+
+    def __init__(self, bar_timestamp: str, symbol: str, attempted_action: str) -> None:
+        self.bar_timestamp = bar_timestamp
+        self.symbol = symbol
+        self.attempted_action = attempted_action
+        super().__init__(
+            f"ZeroVolumeOnTradeCriticalBar: {symbol} bar at {bar_timestamp} has volume=0 "
+            f"but attempted_action='{attempted_action}'. "
+            f"Set BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD=false to skip silently."
+        )
+
+
+def check_zero_volume_trade_critical(
+    bar_volume: float,
+    bar_timestamp: str,
+    symbol: str,
+    attempted_action: str,
+    *,
+    audit_callback: "Optional[callable]" = None,  # type: ignore[type-arg]
+) -> bool:
+    """Check whether a trade-critical bar has zero volume.
+
+    Trade-critical = a bar where a stop, TP, or entry fill would execute.
+    Indicator-compute bars (rolling averages, ATR, etc.) should NOT call this.
+
+    Args:
+        bar_volume: Volume of the current bar (0 triggers the guard).
+        bar_timestamp: ISO timestamp string for the bar (for audit/error payload).
+        symbol: Trading symbol (for audit/error payload).
+        attempted_action: Human-readable action string, e.g. 'stop_trigger',
+            'tp1_trigger', 'entry_fill'.
+        audit_callback: Optional callable(action, payload) for writing an
+            audit_log row. When provided, called BEFORE raise/return so callers
+            with DB access can persist the event.
+
+    Returns:
+        False when volume > 0 (bar is valid — no action needed).
+        False when volume == 0 AND fail-loud is disabled (legacy silent-skip).
+
+    Raises:
+        ZeroVolumeOnTradeCriticalBar: when volume == 0 AND
+            BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD is "true" (default).
+    """
+    if bar_volume != 0:
+        return False  # Fast path — most bars have volume
+
+    fail_loud = os.environ.get("BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD", "true").lower() != "false"
+
+    audit_payload = {
+        "bar_timestamp": bar_timestamp,
+        "symbol": symbol,
+        "attempted_action": attempted_action,
+        "fail_loud": fail_loud,
+    }
+
+    if audit_callback is not None:
+        try:
+            audit_callback("backtest.zero_volume_trade_critical_raised", audit_payload)
+        except Exception as _cb_err:  # noqa: BLE001
+            print(
+                f"WARNING: zero-vol audit callback failed: {_cb_err}",
+                file=sys.stderr,
+            )
+
+    if fail_loud:
+        raise ZeroVolumeOnTradeCriticalBar(bar_timestamp, symbol, attempted_action)
+
+    # Backward-compat: env=false — warn to stderr, return True to signal caller to skip
+    print(
+        f"WARNING: zero-vol trade-critical bar skipped: {symbol} {bar_timestamp} "
+        f"attempted_action={attempted_action} (BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD=false)",
+        file=sys.stderr,
+    )
+    return True  # Caller should skip this bar
+
+
 def validate_bars(df: pl.DataFrame, symbol: str = "", timeframe: str = "") -> DataQualityReport:
     """Run comprehensive data quality checks on OHLCV bars.
 

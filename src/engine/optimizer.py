@@ -7,6 +7,8 @@ Max 5 tunable params enforced.
 
 from __future__ import annotations
 
+import json
+import os
 import sys
 from copy import deepcopy
 
@@ -199,12 +201,12 @@ def run_robustness_test(
                    robustness (is_robust, plateau_variance, etc.),
                    robust_ranges (per-param min/max)
     """
+    from src.engine.backtester import run_backtest
     from src.engine.robustness import (
         analyze_optuna_study,
         compute_param_importance,
         extract_robust_range,
     )
-    from src.engine.backtester import run_backtest
 
     space = _build_search_space(config)
 
@@ -257,3 +259,139 @@ def run_robustness_test(
         "robustness": robustness,
         "robust_ranges": {k: list(v) for k, v in robust_ranges.items()},
     }
+
+
+# ─── CLI entrypoint (M6 Wave 27.5 Pass D.3) ─────────────────────────────────
+#
+# Invoked by robustness-service.ts via:
+#   python -m src.engine.optimizer --config <tmpfile> --mode robustness [--dry-run]
+#
+# --dry-run:
+#   When set, the optimizer STILL computes the full result (Optuna study runs)
+#   but:
+#     - Does NOT write any cache/temp artifacts to ~/.trading-forge/optimizer_cache/
+#     - Does NOT write DB rows (handled by robustness-service.ts caller guard)
+#     - DOES emit the result JSON to stdout normally
+#   This matches the dryRun=true path in robustness-service.ts where audit_log
+#   writes are suppressed TS-side.
+#
+# BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD env var applies to any
+# run_backtest() calls inside the Optuna objective (see data_loader.py M1 guard).
+
+def _get_optimizer_cache_dir() -> "os.PathLike[str]":
+    """Return the optimizer cache directory path (not created here)."""
+    import pathlib
+    return pathlib.Path.home() / ".trading-forge" / "optimizer_cache"
+
+
+def _write_optimizer_cache(cache_key: str, result: dict, dry_run: bool) -> None:
+    """Write optimizer result to disk cache.
+
+    Skipped when dry_run=True so dryRun backtest replays don't pollute
+    the cache with ephemeral intermediate results.
+    """
+    if dry_run:
+        print(
+            f"[optimizer] --dry-run: skipping cache write for key {cache_key}",
+            file=sys.stderr,
+        )
+        return
+    try:
+        import pathlib
+        cache_dir = pathlib.Path(_get_optimizer_cache_dir())
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_file = cache_dir / f"{cache_key}.json"
+        with open(cache_file, "w") as f:
+            json.dump(result, f)
+        print(f"[optimizer] cache written: {cache_file}", file=sys.stderr)
+    except Exception as cache_err:
+        # Cache write failure is non-blocking — result is still emitted to stdout
+        print(f"WARNING: optimizer cache write failed: {cache_err}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Optimizer — Optuna TPE parameter robustness testing"
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        required=True,
+        help="Path to JSON config file (written by robustness-service.ts via python-runner)",
+    )
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="robustness",
+        choices=["robustness", "optimize"],
+        help="Operation mode: 'robustness' (default) runs full robustness analysis; "
+             "'optimize' runs parameter optimization only",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        dest="dry_run",
+        help=(
+            "Dry-run mode: compute result but skip all disk and DB writes. "
+            "Result is still emitted to stdout as normal JSON. "
+            "Used by robustness-service.ts when dryRun=true to suppress "
+            "cache artifacts during replay-grading runs."
+        ),
+    )
+    args = parser.parse_args()
+
+    if args.dry_run:
+        print("[optimizer] --dry-run: cache writes suppressed, result computed normally", file=sys.stderr)
+
+    # Load config from file path (python-runner writes a temp JSON file)
+    try:
+        with open(args.config, "r") as f:
+            config_data = json.load(f)
+    except Exception as config_err:
+        print(json.dumps({"error": f"Failed to load config from {args.config}: {config_err}"}))
+        sys.exit(1)
+
+    try:
+        from src.engine.config import StrategyConfig
+        strategy_config = StrategyConfig(**config_data.get("strategy", config_data))
+    except Exception as parse_err:
+        print(json.dumps({"error": f"Failed to parse StrategyConfig: {parse_err}"}))
+        sys.exit(1)
+
+    # Load data for optimization — uses local_path from config if provided
+    try:
+        from src.engine.data_loader import load_ohlcv
+        data_params = config_data.get("data", {})
+        data = load_ohlcv(
+            symbol=data_params.get("symbol", strategy_config.symbol),
+            timeframe=data_params.get("timeframe", strategy_config.timeframe),
+            start=data_params.get("start", "2023-01-01"),
+            end=data_params.get("end", "2023-12-31"),
+            local_path=data_params.get("local_path"),
+        )
+    except Exception as data_err:
+        print(json.dumps({"error": f"Failed to load data: {data_err}"}))
+        sys.exit(1)
+
+    n_trials = config_data.get("n_trials", 800)
+
+    try:
+        if args.mode == "robustness":
+            result = run_robustness_test(strategy_config, data, n_trials=n_trials)
+        else:
+            result = optimize_strategy(strategy_config, data, n_trials=n_trials)
+    except Exception as run_err:
+        print(json.dumps({"error": f"Optimizer run failed: {run_err}"}))
+        sys.exit(1)
+
+    # Cache write (skipped in dry-run mode)
+    import hashlib as _hashlib
+    cache_key = _hashlib.sha256(
+        f"{strategy_config.name}:{strategy_config.symbol}:{n_trials}:{args.mode}".encode()
+    ).hexdigest()[:16]
+    _write_optimizer_cache(cache_key, result, dry_run=args.dry_run)
+
+    print(json.dumps(result))

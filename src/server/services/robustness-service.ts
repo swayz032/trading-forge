@@ -26,7 +26,7 @@ export interface RobustnessResult {
 
 const ROBUSTNESS_TIMEOUT_MS = 600_000;
 
-async function runPythonRobustness(configJson: string): Promise<RobustnessResult> {
+async function runPythonRobustness(configJson: string, dryRun: boolean = false): Promise<RobustnessResult> {
   // Parse the config JSON string back to an object so runPythonModule can
   // write it to a temp file (avoids CLI argument length limits).
   let configObj: Record<string, unknown>;
@@ -35,6 +35,14 @@ async function runPythonRobustness(configJson: string): Promise<RobustnessResult
   } catch {
     throw new Error(`runPythonRobustness: invalid configJson — ${configJson.slice(0, 200)}`);
   }
+
+  // Wave 27.5 Pass D.3 (M6): propagate dryRun=true as --dry-run CLI flag to the
+  // Python subprocess. When set, optimizer.py skips all disk cache writes and
+  // returns the same JSON result via stdout. DB audit suppression is handled
+  // TS-side in runRobustnessTest() (existing dryRun guard below).
+  const cliArgs = dryRun
+    ? ["--mode", "robustness", "--dry-run"]
+    : ["--mode", "robustness"];
 
   // runPythonModule handles platform detection (python vs python3), the
   // subprocess semaphore, SIGTERM drain, and structured stderr logging.
@@ -45,7 +53,7 @@ async function runPythonRobustness(configJson: string): Promise<RobustnessResult
   try {
     return await runPythonModule<RobustnessResult>({
       module: "src.engine.optimizer",
-      args: ["--mode", "robustness"],
+      args: cliArgs,
       config: configObj,
       componentName: "robustness-engine",
       timeoutMs: ROBUSTNESS_TIMEOUT_MS,
@@ -81,7 +89,7 @@ export async function runRobustnessTest(
   const startTime = Date.now();
 
   try {
-    const result = await runPythonRobustness(configJson);
+    const result = await runPythonRobustness(configJson, dryRun);
 
     if (!dryRun) {
       await db.insert(auditLog).values({

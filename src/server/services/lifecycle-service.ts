@@ -2453,6 +2453,46 @@ export class LifecycleService {
             }).catch((auditErr) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate audit insert failed (non-blocking)");
             });
+
+            // Wave 27.5 Pass D.3 — WFE warn-floor Discord WARN (carry-forward from Pass B).
+            // When WFE is in the warn band [WFE_WARN_FLOOR, WFE_HARD_FLOOR) the promotion
+            // continues but the operator should see a phone notification. Block path already
+            // uses continue above; this fires only for the "warned" status.
+            if (wfeResult.status === "warned") {
+              const wfeVal = wfeResult.wfeOverall != null ? wfeResult.wfeOverall.toFixed(2) : "N/A";
+              const operatorBody =
+                `[WARN] Walk-Forward Efficiency below institutional target\n` +
+                `Strategy: ${s.name}\n` +
+                `WFE: ${wfeVal} (warn floor: ${wfeResult.warnFloor.toFixed(2)}, hard floor: ${wfeResult.hardFloor.toFixed(2)})\n` +
+                `Promotion ALLOWED but flagged for operator review`;
+              const plainWhat =
+                "A strategy passed all gates but the bot's out-of-sample performance was " +
+                "lower than the institutional target. Tony will review.";
+              const plainAction = "No action needed.";
+              // Dynamic import keeps lifecycle-service.ts free of a hard notification-service dep
+              // (consistent with backtest-service.ts pattern — avoids circular boot graph).
+              Promise.all([
+                import("./notification-service.js"),
+                import("../lib/notification-helpers.js"),
+              ]).then(([{ notifyWarning }, { appendFamilyGradePostscript }]) => {
+                notifyWarning(
+                  `WFE below target: ${s.name} (${wfeVal})`,
+                  appendFamilyGradePostscript(operatorBody, plainWhat, plainAction),
+                  {
+                    strategyId: s.id,
+                    strategyName: s.name,
+                    wfe_overall: wfeResult.wfeOverall,
+                    warn_floor: wfeResult.warnFloor,
+                    hard_floor: wfeResult.hardFloor,
+                    transition: "PAPER→DEPLOY_READY",
+                    correlationId,
+                  },
+                );
+              }).catch((notifyErr) => {
+                logger.warn({ strategyId: s.id, err: notifyErr }, "WFE warn-floor Discord notify failed (non-blocking)");
+              });
+            }
+
             if (isBlock) {
               continue;
             }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T20:58:27.920Z",
+  "generatedAt": "2026-05-25T21:10:10.608Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -918,17 +918,13 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 70,
-      "schedulerJobs": 83,
+      "routes": 71,
+      "schedulerJobs": 84,
       "engineSubsystems": 27,
       "databaseTables": 96
     },
-    "missingRoutes": [
-      "/api/admin/slumdawg"
-    ],
-    "missingSchedulerJobs": [
-      "quantum-replay-weekly-analysis"
-    ],
+    "missingRoutes": [],
+    "missingSchedulerJobs": [],
     "missingEngineSubsystems": [],
     "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
@@ -3303,6 +3299,7 @@
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
           "/api/admin",
+          "/api/admin/slumdawg",
           "/api/alerts",
           "/api/deployed-strategy-starvation",
           "/api/dlq",
@@ -4333,7 +4330,8 @@
         "activationCriteria": [
           "failure visibility wired",
           "freshness signals available",
-          "runtime evidence persisted"
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
         ],
         "runtimeEvidence": [
           "replay.harness_executed",
@@ -4372,7 +4370,9 @@
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [],
-        "schedulerJobs": [],
+        "schedulerJobs": [
+          "quantum-replay-weekly-analysis"
+        ],
         "healthCheck": "tests/python/replay/test_quantum_replay.py",
         "freshnessSignals": [],
         "evidenceQueries": [
@@ -7914,6 +7914,7 @@
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
         "/api/admin",
+        "/api/admin/slumdawg",
         "/api/alerts",
         "/api/deployed-strategy-starvation",
         "/api/dlq",
@@ -8944,7 +8945,8 @@
       "activationCriteria": [
         "failure visibility wired",
         "freshness signals available",
-        "runtime evidence persisted"
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
       ],
       "runtimeEvidence": [
         "replay.harness_executed",
@@ -8983,7 +8985,9 @@
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [],
-      "schedulerJobs": [],
+      "schedulerJobs": [
+        "quantum-replay-weekly-analysis"
+      ],
       "healthCheck": "tests/python/replay/test_quantum_replay.py",
       "freshnessSignals": [],
       "evidenceQueries": [

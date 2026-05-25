@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-25T20:58:27.920Z`.
+Updated automatically from the repo on `2026-05-25T21:10:10.608Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -53,8 +53,8 @@ Updated automatically from the repo on `2026-05-25T20:58:27.920Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `46`
-- Route coverage: `70/71`
-- Scheduler coverage: `83/84`
+- Route coverage: `71/71`
+- Scheduler coverage: `84/84`
 - Engine coverage: `27/27`
 - Database coverage: `96/96`
 - Autonomous subsystems with audit coverage: `43/43`
