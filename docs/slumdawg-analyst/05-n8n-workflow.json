@@ -1,0 +1,200 @@
+{
+  "name": "Slumdawg Analyst — Anam Tools Gateway",
+  "nodes": [
+    {
+      "id": "webhook-ingest",
+      "name": "Webhook: ingest-youtube",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 100],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/ingest-youtube",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "http-ingest",
+      "name": "TF: ingest-youtube",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TF_BACKEND_PUBLIC_URL }}/api/admin/slumdawg/ingest-youtube",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "url", "value": "={{ $json.body.url }}" }
+          ]
+        },
+        "options": { "timeout": 180000 }
+      }
+    },
+    {
+      "id": "respond-ingest",
+      "name": "Respond: ingest-youtube",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [800, 100],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    },
+
+    {
+      "id": "webhook-activity",
+      "name": "Webhook: activity-today",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/activity-today",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "http-activity",
+      "name": "TF: activity-today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.TF_BACKEND_PUBLIC_URL }}/api/admin/slumdawg/activity-today",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "respond-activity",
+      "name": "Respond: activity-today",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [800, 300],
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}" }
+    },
+
+    {
+      "id": "webhook-journal",
+      "name": "Webhook: journal-today",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 500],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/journal-today",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "http-journal",
+      "name": "TF: journal-today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 500],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.TF_BACKEND_PUBLIC_URL }}/api/admin/slumdawg/journal-today",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "respond-journal",
+      "name": "Respond: journal-today",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [800, 500],
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}" }
+    },
+
+    {
+      "id": "webhook-status",
+      "name": "Webhook: status-now",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 700],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/status-now",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "http-status",
+      "name": "TF: status-now",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 700],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.TF_BACKEND_PUBLIC_URL }}/api/admin/slumdawg/status-now",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "respond-status",
+      "name": "Respond: status-now",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [800, 700],
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}" }
+    },
+
+    {
+      "id": "webhook-lifecycle",
+      "name": "Webhook: lifecycle",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 900],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/lifecycle",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "http-lifecycle",
+      "name": "TF: lifecycle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 900],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.TF_BACKEND_PUBLIC_URL }}/api/admin/slumdawg/lifecycle/{{ $json.body.name || '' }}",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "respond-lifecycle",
+      "name": "Respond: lifecycle",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [800, 900],
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}" }
+    }
+  ],
+  "connections": {
+    "Webhook: ingest-youtube":  { "main": [[{ "node": "TF: ingest-youtube",  "type": "main", "index": 0 }]] },
+    "TF: ingest-youtube":       { "main": [[{ "node": "Respond: ingest-youtube",  "type": "main", "index": 0 }]] },
+    "Webhook: activity-today":  { "main": [[{ "node": "TF: activity-today",  "type": "main", "index": 0 }]] },
+    "TF: activity-today":       { "main": [[{ "node": "Respond: activity-today",  "type": "main", "index": 0 }]] },
+    "Webhook: journal-today":   { "main": [[{ "node": "TF: journal-today",   "type": "main", "index": 0 }]] },
+    "TF: journal-today":        { "main": [[{ "node": "Respond: journal-today",   "type": "main", "index": 0 }]] },
+    "Webhook: status-now":      { "main": [[{ "node": "TF: status-now",      "type": "main", "index": 0 }]] },
+    "TF: status-now":           { "main": [[{ "node": "Respond: status-now",      "type": "main", "index": 0 }]] },
+    "Webhook: lifecycle":       { "main": [[{ "node": "TF: lifecycle",       "type": "main", "index": 0 }]] },
+    "TF: lifecycle":            { "main": [[{ "node": "Respond: lifecycle",       "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all"
+  }
+}

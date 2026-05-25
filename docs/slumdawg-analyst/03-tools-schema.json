@@ -1,0 +1,49 @@
+[
+  {
+    "name": "ingest_youtube_strategy",
+    "description": "Take a YouTube URL from the user, preview what strategy concept it contains, and feed it into the Trading Forge extraction pipeline. Returns the concept name + the 3 strategy variants (MES, MNQ, MCL) that get graduated. Call this whenever the user pastes or speaks a YouTube link, says 'feed this to the kitchen', or asks to add a new strategy.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The full YouTube URL — must contain youtube.com or youtu.be"
+        }
+      },
+      "required": ["url"]
+    },
+    "endpoint": "https://n8n-production-84ff.up.railway.app/webhook/slumdawg/ingest-youtube"
+  },
+  {
+    "name": "get_bot_activity_today",
+    "description": "Get the full breakdown of what Slumdawg Bot did today — how many trade signals fired, how many got blocked by safety gates, how many trades were actually taken, win/loss split, today's net P&L, any halt/safety-brake events. Call this when the user asks 'what did Slumdawg do today', 'today's trades', 'today's P&L', 'how's the bot doing', 'today's activity'.",
+    "parameters": { "type": "object", "properties": {} },
+    "endpoint": "https://n8n-production-84ff.up.railway.app/webhook/slumdawg/activity-today"
+  },
+  {
+    "name": "get_trade_journal_today",
+    "description": "Pull the daily GPT-5.4 trade journals/critiques for every trade Slumdawg took today. Each entry has a grade (A+ through F), a plain-English summary of what happened, and a 'what to do better next time' note. Call this when user asks 'what did GPT say', 'today's journal', 'today's report card', 'what did Slumdawg do wrong', 'what's tomorrow's homework', 'GPT's notes'.",
+    "parameters": { "type": "object", "properties": {} },
+    "endpoint": "https://n8n-production-84ff.up.railway.app/webhook/slumdawg/journal-today"
+  },
+  {
+    "name": "get_market_status_now",
+    "description": "Get the LIVE current state — what positions are open right now, current P&L on open positions, today's closed P&L, current market mood (regime), narrative phase, pipeline mode (running/paused), and minutes until the daily 3:55pm hard-flatten. Call this when user asks 'what's happening right now', 'what's open', 'what's the market doing', 'how much in profit currently', 'live status', 'what's the bot looking at right now'.",
+    "parameters": { "type": "object", "properties": {} },
+    "endpoint": "https://n8n-production-84ff.up.railway.app/webhook/slumdawg/status-now"
+  },
+  {
+    "name": "query_strategy_lifecycle",
+    "description": "Look up strategies in the Trading Forge library. Either get the full list grouped by stage (rookie/practice/preseason/etc), OR look up a specific strategy by name (partial match supported). Returns stage, preferred markets, regimes it works in. Call when user asks 'how's strategy X doing', 'show me the library', 'what's in PAPER stage', 'list all strategies', 'is X strategy deployed'.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Optional partial-match strategy name (e.g. 'silver_bullet' or 'fib'). Omit to get all strategies grouped by stage."
+        }
+      }
+    },
+    "endpoint": "https://n8n-production-84ff.up.railway.app/webhook/slumdawg/lifecycle"
+  }
+]
