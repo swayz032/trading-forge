@@ -4,6 +4,48 @@
 
 ---
 
+### Session Log — 2026-05-25 backtest-core — Wave 27.5 Pass C.1: 4 backtest engine HIGH findings
+
+**Mission:** Close HIGH #5 (exit slippage asymmetry), HIGH #6 (partial fills not modeled), HIGH #7 (MC autocorr NaN guard), HIGH #8 (no outlier truncation in MC). Commit `47bdb95`.
+
+**Work completed:**
+
+- **HIGH #5 — Exit Slippage Asymmetry (13 pytest):**
+  - Confirmed `slippage_arr` is computed bar-by-bar with session multipliers applied to ALL bars; `exit_slip = slippage_arr[exit_idx]` is already symmetric by construction.
+  - `backtester.py`: added `BACKTEST_EXIT_SLIPPAGE_SYMMETRIC` env var (default true); documented symmetric contract in slippage section; added `engine_audit["exit_slippage_session_applied"]` dict with `symmetric_mode`, `entries_session_mult_avg`, `exits_session_mult_avg`, `asymmetry_delta`, `n_trades`.
+  - NEW `src/engine/tests/test_exit_slippage_symmetry.py`: 13 pytest covering session multiplier propagation, exit-bar uses exit session, backward-compat env var, audit payload structure and values.
+
+- **HIGH #6 — Partial Fills Not Modeled (13 pytest):**
+  - `fill_model.py`: added `compute_volume_based_fill_ratios()` (3-zone: full/linear/forced-0.5) and `apply_volume_partial_fills()` (Stage 2, composable with RSI Stage 1). Zero-volume bars treated as unlimited. `BACKTEST_PARTIAL_FILL_ENABLED` (default true) + `BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD` (default 0.1) env vars.
+  - `backtester.py`: wired Stage 2 into DSL run path; `engine_audit["partial_fill_modeled"]` dict with `enabled`, `total_orders`, `partial_fills`, `avg_fill_ratio`, `avg_slippage_delta_per_partial`, `volume_threshold`.
+  - P&L contract preserved: fill model outputs integer contracts, never passed to vectorbt (CLAUDE.md hard rule).
+  - NEW `src/engine/tests/test_partial_fill_model.py`: 13 pytest covering 3-zone ratios, minimum-1-contract floor, disabled env backward compat, audit payload keys, total_orders counting, non-entry bars unchanged, vectorbt contract check.
+
+- **HIGH #7 — MC Autocorr NaN Guard (16 pytest):**
+  - `monte_carlo.py`: new `_safe_autocorrelation(trades) → (float, bool)` — scipy.stats.pearsonr primary (p_value > 0.5 → detection_failed=True), corrcoef fallback, NaN/Inf guard on both paths, empty/single array fast-return. "When in doubt, prefer block-bootstrap."
+  - `optimal_block_length()` updated to use `_safe_autocorrelation()`; detection_failed → block_len *= 1.5 (conservative inflation).
+  - NEW `src/engine/tests/test_mc_autocorr_nan_guard.py`: 16 pytest covering all-zero/identical/correlated/uncorrelated/empty/single arrays, scipy fallback mock, corrcoef NaN detection, optimal_block_length NaN guard, clamped range invariant.
+
+- **HIGH #8 — No Outlier Truncation in MC (16 pytest):**
+  - `monte_carlo.py`: new `trim_trade_outliers(trades, trim_multiplier, window_days=21) → (ndarray, dict)` — rolling worst-month window; `trim_bound = multiplier × |worst_month|`; `np.clip(trades, -trim_bound, trim_bound)`; audit payload with all required keys. Arrays shorter than window_days skipped gracefully.
+  - `config.py`: `MonteCarloRequest.trim_outlier_multiplier: Optional[float] = None` (defaults null = opt-IN).
+  - `monte_carlo.py` `run_monte_carlo()`: reads `request.trim_outlier_multiplier` then `MC_TRIM_OUTLIER_MULTIPLIER` env (default null); when active writes `result["outlier_trim_applied"]` audit dict. Opt-IN by design (per spec).
+  - NEW `src/engine/tests/test_mc_outlier_truncation.py`: 16 pytest covering backward compat no-trim, catastrophic trade clipping, worst-month rolling window, audit payload, env var activation.
+
+**Verification:** 58/58 new pytest GREEN. 17 pre-existing failures unchanged (3 battery RWS + 14 walk_forward_regime_context — confirmed pre-C.1 baseline). All ruff lint clean. Commit `47bdb95` landed with pre-commit hooks PASSING.
+
+**Known-facts updates:**
+- `slippage_arr` is computed with session multipliers for ALL bars — exit slippage is symmetric by construction (not a code change, documentation + audit).
+- Volume-based partial fill composes with RSI Stage 1 as Stage 2; both gated independently; P&L always manual (vectorbt never receives slippage/fees).
+- `_safe_autocorrelation` design: p-value > 0.5 → detection_failed → forces block-bootstrap (conservative). False-positive autocorr detection is preferable to false-negative.
+- `trim_trade_outliers` is rolling-window based — catastrophic trade inside worst window inflates trim_bound above itself (documented correct behavior, not a bug).
+
+**Carry-forward for next session:**
+- **Pass C.2 / Pass D:** H4 compliance mode env knob (already shipped in earlier C session), MED+LOW sweep M1-M8.
+- **WFE Discord WARN:** `AlertFactory.warn()` not yet wired (carry-forward from Pass B).
+
+---
+
 ### Session Log — 2026-05-25 parent-claude — Wave 27.5 Pass B MASTER ORCHESTRATION (WF HIGH + B14 wiring)
 
 **Mission:** Close 3 Walk-Forward HIGH findings + wire B14 gate to consume Pass A's institutional uncertainty (`probability_of_ruin_ci.ci_high`). After Pass B, PAPER → DEPLOY_READY makes promotion decisions on conservative bounds instead of optimistic scalars.
