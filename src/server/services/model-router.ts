@@ -2064,10 +2064,183 @@ function loadTranscriptOutputSchema(): Record<string, unknown> | null {
 }
 
 /**
- * Call Ollama qwen2.5-coder:7b (Wave 26 Pass B primary) via /api/chat with:
- *   - proper role-tagged messages (system + user) so Ollama applies chat template
+ * Build a Gemma-4-correct few-shot messages array for transcript_extractor.
+ *
+ * WHY this format is required (verified sources):
+ *   1. Gemma has NO native system role (Google AI Gemma prompt docs) — only
+ *      user/model turns. Ollama auto-collapses system into first user turn but
+ *      loses join-formatting control. We own the format explicitly.
+ *   2. Few-shot examples MUST be alternating user/assistant turns — Gemma learns
+ *      "produce JSON" from real assistant turns containing JSON, NOT from
+ *      JSON-dumped strings inside a flat system block.
+ *   3. temperature=0 + GBNF schema triggers Ollama issue #15502 (token repetition
+ *      loop). Workaround: temperature=0.1. This function itself is format-only;
+ *      see callOllamaForTranscriptExtractor for sampling params.
+ *   4. Schema must be re-stated in the final user turn because Gemma loses
+ *      long-range schema awareness across multi-turn context.
+ *
+ * Message structure produced:
+ *   Turn 1 user:      rules + KB + schema-as-text + "Example 1 input:" + fewshot1.input
+ *   Turn 1 assistant: JSON.stringify(fewshot1.expected_output)
+ *   Turn 2 user:      "Example 2 input:" + fewshot2.input
+ *   Turn 2 assistant: JSON.stringify(fewshot2.expected_output)
+ *   Turn 3 user:      "Example 3 input:" + fewshot3.input  (refusal example)
+ *   Turn 3 assistant: JSON.stringify(fewshot3.expected_output)  (empty strategies)
+ *   Final user:       "Now extract from this transcript. Return ONLY JSON matching
+ *                      the schema above.\n\nTranscript:\n" + transcript
+ *
+ * NOTE: qwen2.5-coder:7b also accepts this turn structure (it supports both
+ * system+user and pure user/assistant patterns) but its native format is
+ * system + alternating turns. If using qwen, this format is slightly suboptimal
+ * but functionally correct. Consider model-family detection for qwen if needed.
+ */
+export function buildGemmaFewShotMessages(
+  role: ModelRole,
+  taskContext: PromptTaskContext | undefined,
+  userPayload: string,
+  schema: Record<string, unknown> | null,
+): Array<{ role: "user" | "assistant"; content: string }> {
+  // ── Step 1: Rules + KB content WITHOUT few-shot (Gemma needs these inline) ──
+  const rulesAndKb = buildPromptWithoutFewShot(role, taskContext);
+  const schemaStr = schema ? `\n\n## Output JSON Schema\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`` : "";
+  const rulesBlock = `${rulesAndKb}${schemaStr}`;
+
+  // ── Step 2: Load few-shot files DIRECTLY as structured objects ──────────────
+  // Don't go through loadFewShotExamples() — that formats as "INPUT: ... → OUTPUT: ..."
+  // strings which are only useful in flat system prompts. Gemma needs real turns.
+  const fewShotDir = resolve(PROJECT_ROOT, "src/agents/kb/few-shot", roleToDirName(role));
+  type FewShotFile = { input: unknown; expected_output: unknown };
+  const examples: FewShotFile[] = [];
+  try {
+    const files = readdirSync(fewShotDir).filter((f) => f.endsWith(".json")).sort();
+    for (const f of files) {
+      try {
+        const parsed = JSON.parse(readFileSync(resolve(fewShotDir, f), "utf-8")) as FewShotFile;
+        if (parsed.input !== undefined && parsed.expected_output !== undefined) {
+          examples.push(parsed);
+        }
+      } catch {
+        // Non-fatal — missing or malformed example skipped; model sees fewer turns
+      }
+    }
+  } catch {
+    // Dir missing entirely — skip all examples; model still gets rules+KB+final turn
+  }
+
+  // ── Step 3: Build alternating user/assistant turns ─────────────────────────
+  const msgs: Array<{ role: "user" | "assistant"; content: string }> = [];
+
+  // Filter by taskContext.signalType if specified (same filter logic as loadFewShotExamples)
+  let selectedExamples = examples;
+  if (taskContext?.signalType) {
+    const target = taskContext.signalType;
+    const filtered = examples.filter((ex) => exampleMatchesSignal(ex, target));
+    if (filtered.length > 0) selectedExamples = filtered;
+  }
+
+  for (let i = 0; i < selectedExamples.length; i++) {
+    const ex = selectedExamples[i]!;
+    const inputStr = typeof ex.input === "string" ? ex.input : JSON.stringify(ex.input, null, 2);
+    const outputStr = JSON.stringify(ex.expected_output);
+
+    if (i === 0) {
+      // First turn: include rules + KB + schema + first example input
+      msgs.push({
+        role: "user",
+        content: `${rulesBlock}\n\nExample ${i + 1} input:\n${inputStr}`,
+      });
+    } else {
+      msgs.push({
+        role: "user",
+        content: `Example ${i + 1} input:\n${inputStr}`,
+      });
+    }
+    msgs.push({ role: "assistant", content: outputStr });
+  }
+
+  // ── Step 4: Final user turn with the actual transcript ─────────────────────
+  // Schema is re-stated in the instruction because Gemma loses long-range schema
+  // awareness across multi-turn context (empirically observed + Google docs confirm).
+  const schemaReminder = schema
+    ? " Return ONLY JSON matching the schema above."
+    : " Return ONLY valid JSON.";
+  const finalUserContent =
+    msgs.length > 0
+      ? // Examples were added — no need to re-inject rules block
+        `Now extract from this transcript.${schemaReminder}\n\nTranscript:\n${userPayload}`
+      : // No examples (dir missing) — include rules block in the only user turn
+        `${rulesBlock}\n\nNow extract from this transcript.${schemaReminder}\n\nTranscript:\n${userPayload}`;
+
+  msgs.push({ role: "user", content: finalUserContent });
+
+  return msgs;
+}
+
+/**
+ * Build rules + KB content for a role, WITHOUT the few-shot examples section.
+ * Used by buildGemmaFewShotMessages to inject rules into the first user turn
+ * instead of a system message (Gemma has no native system role).
+ *
+ * Includes appendix cache (same as buildPromptSync step 4) so pattern-aggregator
+ * improvements still reach Gemma's context.
+ */
+function buildPromptWithoutFewShot(
+  role: ModelRole,
+  taskContext: PromptTaskContext | undefined,
+): string {
+  const config = MODEL_CONFIGS[role];
+  if (!config) return "";
+
+  // 1. Base prompt from .md file.
+  let base = "";
+  if (config.systemPromptPath) {
+    try {
+      const fullPath = resolve(PROJECT_ROOT, config.systemPromptPath);
+      base = readFileSync(fullPath, "utf-8");
+    } catch {
+      logger.debug({ role, path: config.systemPromptPath }, "buildPromptWithoutFewShot: prompt file not found");
+    }
+  }
+
+  // 2. KB cards for this role.
+  const cards: string[] = [];
+  for (const cardPath of KB_MANIFEST[role] ?? []) {
+    const content = readKbCard(cardPath);
+    if (content !== null) {
+      const cardName = cardPath.replace(/^kb\//, "");
+      cards.push(`## KB: ${cardName}\n\n${content.trim()}`);
+    }
+  }
+
+  // NOTE: Few-shot section INTENTIONALLY OMITTED — caller (buildGemmaFewShotMessages)
+  // injects examples as real alternating turns, not as strings inside the rules block.
+
+  const parts: string[] = [];
+  if (base.trim().length > 0) parts.push(base.trim());
+  if (cards.length > 0) parts.push(cards.join("\n\n"));
+
+  // 4. Appendix cache injection (same as buildPromptSync step 4 — pattern-aggregator
+  //    improvements must reach the model even in Gemma few-shot format).
+  const appendix = _appendixCache.get(role);
+  if (appendix && appendix.trim().length > 0) {
+    parts.push(appendix.trim());
+  }
+
+  return parts.join("\n\n");
+}
+
+/**
+ * Call Ollama gemma4 (Wave 26 Pass C) via /api/chat with:
+ *   - Gemma-4-correct few-shot message format (alternating user/assistant turns,
+ *     NO system role — Gemma has no native system role per Google AI docs)
  *   - JSON Schema as format object for GBNF grammar-constrained sampling (Ollama 0.5+)
- *   - strict sampling: temperature=0, top_p=0.9, top_k=20
+ *   - Gemma-4 proper sampling (per Google docs + Unsloth + Ollama issue #15502):
+ *       temperature=0.1  NOT 0 — avoids GBNF repetition loop (Ollama issue #15502)
+ *       top_p=0.95       Google default (NOT 0.9)
+ *       top_k=64         Google default (NOT 20 — too tight for JSON escapes)
+ *       min_p=0.0        Google default
+ *       repeat_penalty=1.0  explicit; default but documented
+ *       num_predict=2048    HARD CAP — prevents unbounded repetition if bug fires
  *   - 30s per-call timeout (R2 requirement)
  *
  * Returns: { text: string, model, durationMs } on success
@@ -2090,45 +2263,51 @@ async function callOllamaForTranscriptExtractor(
   // we override here to keep the primary path responsive.
   const ollama = new OllamaClient(undefined, 30_000);
 
-  // Build proper role-tagged message array for /api/chat.
-  // /api/chat auto-applies the model's chat template (e.g. Gemma <start_of_turn>,
-  // Qwen <|im_start|>) — better instruction following than /api/generate concatenation.
-  const systemPrompt = loadSystemPrompt(role, taskContext);
-  const userChunks = messages
+  // Determine schema first — needed for buildGemmaFewShotMessages AND for formatArg.
+  const strictSchema = isStrictSchemaMode();
+  const schema = strictSchema ? loadTranscriptOutputSchema() : null;
+
+  // Extract transcript payload from incoming messages (non-system content).
+  const userPayload = messages
     .filter((m) => m.role !== "system")
     .map((m) => m.content)
     .join("\n\n");
 
-  // Append the schema hint to the user message.
-  // Research shows literal "Return JSON matching the schema" in the user message
-  // significantly improves schema adherence across all 7-8B models.
-  const userContent = `${userChunks}\n\nReturn JSON matching the schema.`;
+  // Build Gemma-4-correct few-shot message array (Wave 26 Pass C).
+  // NO system role — rules + KB injected into first user turn.
+  // Few-shot examples as alternating user/assistant turns.
+  // Schema re-stated in final user turn for long-range awareness.
+  const chatMessages = buildGemmaFewShotMessages(role, taskContext, userPayload, schema);
 
-  const chatMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-    { role: "system", content: systemPrompt },
-    { role: "user", content: userContent },
-  ];
-
-  // Strict sampling for JSON schema adherence (JSONSchemaBench 2025 findings):
-  //   temperature=0 → deterministic greedy decoding (no randomness)
-  //   top_p=0.9     → nucleus sampling cap (redundant with temp=0, belt+suspenders)
-  //   top_k=20      → vocabulary restriction (forces common tokens, reduces hallucination)
+  // GEMMA 4 PROPER SAMPLING (per Google AI docs + Unsloth Gemma 3 fine-tune guide
+  // + Ollama issue #15502 workaround):
+  //   temperature=0.1  NOT 0 — temp=0 + GBNF schema triggers Ollama issue #15502
+  //                    (token repetition loop). Google's recommended range for
+  //                    strict JSON is 0.1 (HuggingFace gemma-3-27b-it discussion #84).
+  //   top_p=0.95       Google default (was 0.9 — too restrictive for JSON escapes).
+  //   top_k=64         Google default (was 20 — Gemma's vocab tail matters for
+  //                    JSON escapes: \", \n, etc. top_k=20 cuts these off).
+  //   min_p=0.0        Google default; explicit for documentation.
+  //   repeat_penalty=1.0  Ollama default; explicit to prevent unintended change.
+  //   num_predict=2048    HARD CAP — when issue #15502 repetition loop fires,
+  //                    this prevents it running until context exhaustion.
   // num_ctx: prompt (~5K) + transcript (~3K-7K) + output budget → 16384 covers ~95%
+  // NEVER add: think field — Ollama bug #15260 silently drops format enforcement
   const numCtx = getTranscriptOllamaNumCtx();
   const samplingOptions = {
     num_ctx: numCtx,
-    temperature: 0,
-    top_p: 0.9,
-    top_k: 20,
-    // NEVER add: think: false — Ollama bug #15260 silently drops format enforcement
+    temperature: 0.1,
+    top_p: 0.95,
+    top_k: 64,
+    min_p: 0.0,
+    repeat_penalty: 1.0,
+    num_predict: 2048,
   };
 
   // Determine format: schema object (GBNF strict) or "json" string (syntactic only).
   // Schema object requires Ollama 0.5+. Legacy Ollama falls back gracefully to
   // treating unknown format values as no-format (still valid JSON output expected
   // from the sampling, just no grammar enforcement).
-  const strictSchema = isStrictSchemaMode();
-  const schema = strictSchema ? loadTranscriptOutputSchema() : null;
   const formatArg: boolean | Record<string, unknown> = schema ?? true;
 
   const startedAt = Date.now();

@@ -8,9 +8,9 @@
  *   S2. ollama-client: format=true → body.format = "json" (backward compat)
  *   S3. ollama-client: format=undefined → format key omitted from body entirely
  *   S4. callOllamaForTranscriptExtractor uses /api/chat (not /api/generate)
- *   S5. Messages array has system role + user role
- *   S6. User content includes "Return JSON matching the schema" literal
- *   S7. Options include temperature=0, top_p=0.9, top_k=20, num_ctx=16384
+ *   S5. Messages array has NO system role + has user role (Wave 26 Pass C: Gemma no-system-role fix)
+ *   S6. Final user message content includes "Return ONLY JSON matching the schema above" literal
+ *   S7. Options include temperature=0.1, top_p=0.95, top_k=64, num_predict=2048, num_ctx=16384 (Wave 26 Pass C: Gemma 4 sampling fix)
  *   S8. No `think` field anywhere in request body
  *   S9. TRANSCRIPT_EXTRACTOR_STRICT_SCHEMA=false → falls back to format:"json" string
  *   S10. Default model = gemma4 when env unset
@@ -212,9 +212,12 @@ describe("wave26-transcript-extractor-strict-schema", () => {
     expect(generateFn).not.toHaveBeenCalled();
   });
 
-  // ── S5: Messages array has system + user roles ───────────────────────────────
+  // ── S5: Messages array has NO system role (Wave 26 Pass C Gemma fix) ────────
+  // Gemma has no native system role (Google AI Gemma prompt docs). Pass C moves
+  // rules+KB into the first user turn as alternating few-shot pairs. System role
+  // must be ABSENT.
 
-  it("S5: chat messages array includes system role and user role", async () => {
+  it("S5: chat messages array has NO system role (Gemma no-system-role fix) but has user role", async () => {
     __setOllamaHealthyForTests(true);
     delete process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD;
 
@@ -223,27 +226,40 @@ describe("wave26-transcript-extractor-strict-schema", () => {
     expect(capturedChatBodies.length).toBeGreaterThan(0);
     const { messages } = capturedChatBodies[0]!;
     const roles = messages.map((m) => m.role);
-    expect(roles).toContain("system");
+    // No system role — Gemma has no native system role
+    expect(roles).not.toContain("system");
+    // Must have user role (at minimum the final transcript turn)
     expect(roles).toContain("user");
   });
 
-  // ── S6: User content includes "Return JSON matching the schema" ─────────────
+  // ── S6: Final user turn includes schema adherence instruction ───────────────
+  // Wave 26 Pass C: schema instruction moved to final user turn (Gemma loses
+  // long-range schema awareness across multi-turn context — must re-state).
 
-  it("S6: user message content includes 'Return JSON matching the schema' literal", async () => {
+  it("S6: final user message content includes 'matching the schema' instruction", async () => {
     __setOllamaHealthyForTests(true);
     delete process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD;
 
     await callScoutExtractLlm(SAMPLE_TRANSCRIPT_MESSAGES, undefined, CLOUD_NO_OP);
 
     expect(capturedChatBodies.length).toBeGreaterThan(0);
-    const userMsg = capturedChatBodies[0]!.messages.find((m) => m.role === "user");
-    expect(userMsg).toBeDefined();
-    expect(userMsg!.content).toContain("Return JSON matching the schema");
+    const { messages } = capturedChatBodies[0]!;
+    // Find the LAST user message (final instruction turn)
+    const userMsgs = messages.filter((m) => m.role === "user");
+    expect(userMsgs.length).toBeGreaterThan(0);
+    const lastUserMsg = userMsgs[userMsgs.length - 1]!;
+    expect(lastUserMsg.content).toContain("matching the schema");
   });
 
-  // ── S7: Sampling options include temperature=0, top_p=0.9, top_k=20 ─────────
+  // ── S7: Sampling options — Gemma 4 correct values (Wave 26 Pass C) ──────────
+  // Old values: temp=0, top_p=0.9, top_k=20 (caused GBNF repetition loop on gemma4)
+  // New values: temp=0.1, top_p=0.95, top_k=64, num_predict=2048
+  //   - temperature=0.1: avoids Ollama issue #15502 (temp=0 + GBNF = repetition loop)
+  //   - top_p=0.95: Google default for Gemma 4
+  //   - top_k=64: Google default; vocab tail needed for JSON escapes (\", \n, etc.)
+  //   - num_predict=2048: HARD CAP prevents unbounded repetition if bug fires
 
-  it("S7: chat options include temperature=0, top_p=0.9, top_k=20, num_ctx=16384", async () => {
+  it("S7: chat options include temperature=0.1, top_p=0.95, top_k=64, num_predict=2048, num_ctx=16384", async () => {
     __setOllamaHealthyForTests(true);
     delete process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD;
 
@@ -252,9 +268,10 @@ describe("wave26-transcript-extractor-strict-schema", () => {
     expect(capturedChatBodies.length).toBeGreaterThan(0);
     const { options } = capturedChatBodies[0]!;
     expect(options).toBeDefined();
-    expect(options!.temperature).toBe(0);
-    expect(options!.top_p).toBe(0.9);
-    expect(options!.top_k).toBe(20);
+    expect(options!.temperature).toBe(0.1);
+    expect(options!.top_p).toBe(0.95);
+    expect(options!.top_k).toBe(64);
+    expect(options!.num_predict).toBe(2048);
     expect(options!.num_ctx).toBe(16384);
   });
 

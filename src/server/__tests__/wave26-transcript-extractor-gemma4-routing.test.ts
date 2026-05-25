@@ -178,10 +178,13 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     expect(mockOllama.chat).toHaveBeenCalledOnce();
     expect(mockOllama.generate).not.toHaveBeenCalled();
     // Model is gemma4 (Pass B default)
+    // Wave 26 Pass C: sampling params updated to Gemma-4 correct values
+    // (temperature=0.1 avoids Ollama issue #15502 GBNF repetition loop;
+    //  top_p=0.95 + top_k=64 are Google defaults for Gemma 4)
     expect(mockOllama.chat).toHaveBeenCalledWith(
       "gemma4",
       expect.any(Array), // messages array
-      expect.objectContaining({ temperature: 0, top_p: 0.9, top_k: 20 }),
+      expect.objectContaining({ temperature: 0.1, top_p: 0.95, top_k: 64 }),
       expect.anything(), // format (schema object or true)
     );
     expect(cloudCallFn).not.toHaveBeenCalled();
