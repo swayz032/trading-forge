@@ -9,7 +9,10 @@
 
 #Requires -RunAsAdministrator
 
-$ErrorActionPreference = "Stop"
+# Default to Continue so harmless nssm stderr (e.g. "Can't open service" when
+# the service doesn't exist yet on first run) doesn't halt the whole script.
+# Critical errors are still caught by explicit `if (-not ...)` checks below.
+$ErrorActionPreference = "Continue"
 $TF_ROOT = "C:\Users\tonio\Projects\trading-forge\trading-forge"
 $OLLAMA_MODELS = "$env:USERPROFILE\.ollama\models"
 $LOG_DIR = "C:\Users\tonio\bin\tf-logs"
@@ -99,9 +102,11 @@ if (-not (Test-Path $TSX_CLI)) {
     exit 1
 }
 
-# Remove existing (idempotent)
-& $nssm stop $SVC 2>&1 | Out-Null
-& $nssm remove $SVC confirm 2>&1 | Out-Null
+# Remove existing (idempotent - silently swallow "service doesn't exist" stderr).
+# Using cmd.exe redirect since native exe stderr leaks through `2>&1 | Out-Null`
+# in PowerShell strict mode and is reported as NativeCommandError.
+cmd.exe /c "`"$nssm`" stop $SVC >NUL 2>&1"
+cmd.exe /c "`"$nssm`" remove $SVC confirm >NUL 2>&1"
 
 # Install fresh - node runs tsx cli which runs src/server/index.ts (no build needed)
 & $nssm install $SVC $NODE_EXE "`"$TSX_CLI`" `"$ENTRY`""
@@ -121,8 +126,8 @@ if (-not (Test-Path $TSX_CLI)) {
 & $nssm set $SVC Start SERVICE_AUTO_START
 & $nssm set $SVC Description "Trading Forge API - auto-respawn on crash, boots on startup. Wave 26 Pass H."
 
-# Start
-& $nssm start $SVC 2>&1 | Out-Null
+# Start (silence stderr to avoid NativeCommandError on warnings)
+cmd.exe /c "`"$nssm`" start $SVC >NUL 2>&1"
 Start-Sleep -Seconds 8
 $status = & $nssm status $SVC
 Write-Host "  Service status: $status" -ForegroundColor Green
