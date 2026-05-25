@@ -1312,7 +1312,12 @@ def _extract_atr_period(config: StrategyConfig) -> int:
     return 14
 
 
-def _compute_daily_pnls(equity: np.ndarray, index=None, starting_capital: float = 50_000.0) -> list[dict]:
+def _compute_daily_pnls(
+    equity: np.ndarray,
+    index=None,
+    starting_capital: float = 50_000.0,
+    ts_et_index=None,
+) -> list[dict]:
     """Compute daily P&L from equity curve, aggregated by calendar day.
 
     For intraday data (e.g. 15min), multiple bars share the same calendar
@@ -1325,6 +1330,21 @@ def _compute_daily_pnls(equity: np.ndarray, index=None, starting_capital: float 
     (first_day_equity - starting_capital), where starting_capital is the equity
     value before any bar touches the equity curve.
 
+    MED #2 (Wave 27.5 Pass D.1) — DST-aware aggregation:
+    When ts_et_index is provided (Eastern Time strings from the ts_et column),
+    date strings are read directly from it — no UTC+offset arithmetic needed,
+    so DST spring-forward and fall-back transitions are handled correctly.
+    ts_et is set by data_loader.py and is always in ET regardless of season.
+
+    Args:
+        equity:           Cumulative equity curve (one value per bar).
+        index:            Bar timestamps (pandas DatetimeIndex or similar).
+                          Used when ts_et_index is None.
+        starting_capital: Equity baseline before any trades.
+        ts_et_index:      Optional list/array of Eastern Time strings
+                          (length must match equity).  When present, takes
+                          priority over index for date grouping.
+
     Returns:
         list of {"date": "YYYY-MM-DD", "pnl": float} dicts
     """
@@ -1332,41 +1352,51 @@ def _compute_daily_pnls(equity: np.ndarray, index=None, starting_capital: float 
         return []
 
     # If no datetime index, fall back to per-bar diff (daily data)
-    if index is None or len(index) == 0 or not hasattr(index[0], "date"):
+    if (ts_et_index is None) and (index is None or len(index) == 0 or not hasattr(index[0], "date")):
         pnls = np.diff(equity)
         return [{"date": None, "pnl": round(float(p), 2)} for p in pnls]
 
-    # Group equity by CME trading day — take last value per trading day.
-    # C-7 FIX: CME futures trade on a 5 PM ET → 5 PM ET cycle. Using UTC calendar
-    # date misattributes bars timestamped 5 PM–midnight ET to the wrong session date.
-    # For example, a 5:30 PM ET bar belongs to the NEXT CME trading day, not today.
-    #
-    # Rule: if bar's ET hour >= 17, it belongs to the NEXT calendar day's session.
-    # Implementation: try to use pandas tz_convert("America/New_York") when the
-    # index has timezone info. Fall back to UTC calendar date when tz info is absent
-    # (e.g. daily data, synthetic test data) to preserve backward compatibility.
-    from datetime import timedelta as _td
-    daily: dict[str, float] = {}
-    for i, v in enumerate(equity):
-        ts = index[i]
-        try:
-            # Attempt CME trading-day calculation using ET timezone.
-            if hasattr(ts, "tz_convert") and ts.tzinfo is not None:
-                et_ts = ts.tz_convert("America/New_York")
-                if et_ts.hour >= 17:
-                    trading_day = (et_ts + _td(days=1)).date()
+    # MED #2: Prefer ts_et (Eastern Time) for date grouping — zero DST ambiguity.
+    # ts_et strings are already in ET format ("YYYY-MM-DDTHH:MM:SS" or similar),
+    # so slicing [:10] gives the ET calendar date directly.
+    if ts_et_index is not None and len(ts_et_index) == len(equity):
+        daily: dict[str, float] = {}
+        for i, v in enumerate(equity):
+            ts_str = str(ts_et_index[i])
+            day_str = ts_str[:10] if len(ts_str) >= 10 else ts_str
+            daily[day_str] = float(v)
+    else:
+        # Group equity by CME trading day — take last value per trading day.
+        # C-7 FIX: CME futures trade on a 5 PM ET → 5 PM ET cycle. Using UTC calendar
+        # date misattributes bars timestamped 5 PM–midnight ET to the wrong session date.
+        # For example, a 5:30 PM ET bar belongs to the NEXT CME trading day, not today.
+        #
+        # Rule: if bar's ET hour >= 17, it belongs to the NEXT calendar day's session.
+        # Implementation: try to use pandas tz_convert("America/New_York") when the
+        # index has timezone info. Fall back to UTC calendar date when tz info is absent
+        # (e.g. daily data, synthetic test data) to preserve backward compatibility.
+        from datetime import timedelta as _td
+        daily = {}
+        for i, v in enumerate(equity):
+            ts = index[i]
+            try:
+                # Attempt CME trading-day calculation using ET timezone.
+                if hasattr(ts, "tz_convert") and ts.tzinfo is not None:
+                    et_ts = ts.tz_convert("America/New_York")
+                    if et_ts.hour >= 17:
+                        trading_day = (et_ts + _td(days=1)).date()
+                    else:
+                        trading_day = et_ts.date()
+                    day_str = str(trading_day)
+                elif hasattr(ts, "date"):
+                    # No timezone info — fall back to UTC calendar date (daily data path).
+                    day_str = str(ts.date())
                 else:
-                    trading_day = et_ts.date()
-                day_str = str(trading_day)
-            elif hasattr(ts, "date"):
-                # No timezone info — fall back to UTC calendar date (daily data path).
-                day_str = str(ts.date())
-            else:
-                day_str = str(ts)
-        except Exception:
-            # Defensive fallback: any conversion failure reverts to UTC string slice.
-            day_str = str(ts)[:10] if len(str(ts)) >= 10 else str(ts)
-        daily[day_str] = float(v)
+                    day_str = str(ts)
+            except Exception:
+                # Defensive fallback: any conversion failure reverts to UTC string slice.
+                day_str = str(ts)[:10] if len(str(ts)) >= 10 else str(ts)
+            daily[day_str] = float(v)
 
     sorted_days = sorted(daily.items())
     if len(sorted_days) < 1:
@@ -1414,25 +1444,91 @@ def _compute_monthly_returns(equity: np.ndarray, index) -> list[dict]:
     return results
 
 
-def _aggregate_equity_daily(equity: np.ndarray, index) -> list[dict]:
+def _aggregate_equity_daily(equity: np.ndarray, index, ts_et_index=None) -> list[dict]:
     """Aggregate intraday equity to one point per calendar day (last value).
 
     For 15-min data, multiple bars share the same date. Lightweight-charts
     requires unique, ascending time values. Take the last (closing) value
     per calendar day.
+
+    MED #2 (Wave 27.5 Pass D.1) — DST-aware aggregation:
+    When ts_et_index is provided, date strings are read directly from Eastern
+    Time strings — no UTC arithmetic, no DST off-by-one on transition days.
     """
     if len(equity) == 0:
         return []
 
     daily: dict[str, float] = {}
-    for i, v in enumerate(equity):
-        if hasattr(index[i], "date"):
-            day_str = str(index[i].date())
-        else:
-            day_str = str(index[i])
-        daily[day_str] = round(float(v), 2)  # last value wins
+    if ts_et_index is not None and len(ts_et_index) == len(equity):
+        # DST-safe path: ts_et already in Eastern Time.
+        for i, v in enumerate(equity):
+            ts_str = str(ts_et_index[i])
+            day_str = ts_str[:10] if len(ts_str) >= 10 else ts_str
+            daily[day_str] = round(float(v), 2)
+    else:
+        for i, v in enumerate(equity):
+            if hasattr(index[i], "date"):
+                day_str = str(index[i].date())
+            else:
+                day_str = str(index[i])
+            daily[day_str] = round(float(v), 2)  # last value wins
 
     return [{"time": k, "value": v} for k, v in daily.items()]
+
+
+# ─── DST Boundary Detection (MED #2, Wave 27.5 Pass D.1) ──────────────────
+# 2 days per year, DST transitions may shift ET offsets (UTC-5 ↔ UTC-4).
+# Detect whether a backtest spans a spring-forward or fall-back boundary so
+# the audit log can record which transition was encountered.
+# All arithmetic is calendar-only — no tz libraries required.
+
+_US_DST_TRANSITIONS: list[tuple[str, bool]] = [
+    # (date_iso, spring_forward)
+    # 2023
+    ("2023-03-12", True),  ("2023-11-05", False),
+    # 2024
+    ("2024-03-10", True),  ("2024-11-03", False),
+    # 2025
+    ("2025-03-09", True),  ("2025-11-02", False),
+    # 2026
+    ("2026-03-08", True),  ("2026-11-01", False),
+    # 2027
+    ("2027-03-14", True),  ("2027-11-07", False),
+    # 2028
+    ("2028-03-12", True),  ("2028-11-05", False),
+]
+
+
+def _detect_dst_transitions(
+    ts_et_list: list,
+) -> list[dict]:
+    """Return DST transitions that fall within the date range of ts_et_list.
+
+    Args:
+        ts_et_list: List of ET timestamp strings (from ts_et column).
+
+    Returns:
+        List of audit dicts, one per transition within the date range.
+        Each dict: { transition_date, spring_forward, hour_skipped_or_repeated }
+    """
+    if not ts_et_list:
+        return []
+    try:
+        first_date = str(ts_et_list[0])[:10]
+        last_date = str(ts_et_list[-1])[:10]
+    except Exception:
+        return []
+
+    result = []
+    for date_iso, spring_forward in _US_DST_TRANSITIONS:
+        if first_date <= date_iso <= last_date:
+            result.append({
+                "transition_date": date_iso,
+                "spring_forward": spring_forward,
+                # spring-forward skips 02:00–02:59 ET; fall-back repeats 01:00–01:59 ET
+                "hour_skipped_or_repeated": "02:00-02:59 ET (skipped)" if spring_forward else "01:00-01:59 ET (repeated)",
+            })
+    return result
 
 
 MINIMUM_TRADES = 500
@@ -2565,6 +2661,44 @@ def run_backtest(
         from src.engine.firm_config import get_contract_cap
         max_contracts = get_contract_cap(request.firm_key, config.symbol)
 
+    # ─── MED #4 (Wave 27.5 Pass D.1) — VIX margin expansion ──────────────
+    # CME doubles intraday margin when VIX > 30 (emergency tier: VIX > 50).
+    # Apply expansion to the max_contracts cap BEFORE sizing so simulated
+    # P&L reflects actual tradeable position limits in high-vol regimes.
+    # Backward compat: when VIX column is absent, skip silently + emit audit.
+    _margin_expansion_audit_dsl: dict = {}
+    if "vix" in df.columns:
+        from src.engine.margin_expansion import (
+            apply_vix_margin_expansion,
+            get_vix_expansion_audit,
+        )
+        # Use the peak VIX in the backtest window for a conservative cap.
+        # Rationale: CME margin requirements are regime-level policy changes
+        # (announced days ahead), not bar-by-bar — peak represents the worst
+        # sustained regime the backtest faced.
+        _vix_np = df["vix"].to_numpy()
+        _vix_np_clean = _vix_np[~np.isnan(_vix_np)]
+        _peak_vix = float(np.max(_vix_np_clean)) if len(_vix_np_clean) > 0 else 0.0
+        _base_mc = max_contracts if max_contracts is not None else 100  # sentinel if no firm cap
+        _expanded_mc = apply_vix_margin_expansion(_base_mc, _peak_vix)
+        _margin_expansion_audit_dsl = get_vix_expansion_audit(_base_mc, _expanded_mc, _peak_vix)
+        if _expanded_mc != _base_mc:
+            # Only override if we have an actual firm cap to constrain.
+            # If max_contracts was None (no firm cap), we don't impose one.
+            if max_contracts is not None:
+                max_contracts = _expanded_mc
+                print(
+                    f"[margin-expansion] VIX={_peak_vix:.1f} → max_contracts {_base_mc} → {_expanded_mc}",
+                    file=sys.stderr,
+                )
+    else:
+        _margin_expansion_audit_dsl = {
+            "skipped": True,
+            "reason": "backtest.margin_expansion_unavailable_no_vix",
+            "vix_column_present": False,
+        }
+        print("[margin-expansion] VIX column absent — skipping margin expansion", file=sys.stderr)
+
     # ─── Position sizing — Wave 24 Pass 2: vol-scale + liquidity-haircut ─────
     # Mirror paper-engine parity: apply the same vol-scale and liquidity-haircut
     # that computeRiskDerivedContracts() applies on the paper side (risk-sizing.ts).
@@ -3266,6 +3400,18 @@ def run_backtest(
         _h5_entry_slips: list[float] = []
         _h5_exit_slips: list[float] = []
 
+        # MED #5 (Wave 27.5 Pass D.1) — Roll spread cost setup.
+        # Import once, collect audit rows per roll day encountered.
+        from src.engine.roll_spread_cost import (
+            build_roll_spread_audit,
+            compute_roll_spread_cost,
+        )
+        _has_rollover_col = "is_rollover_day" in df.columns
+        _ts_et_list_roll = df["ts_et"].to_list() if "ts_et" in df.columns else (
+            df["ts_event"].to_list() if "ts_event" in df.columns else []
+        )
+        _roll_spread_audit_rows: list[dict] = []
+
         for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
             size = float(row["Size"])
@@ -3306,7 +3452,34 @@ def run_backtest(
             slip_cost = (entry_slip + exit_slip) * int_size
             # H2 FIX: commission charged on integer contracts only.
             comm_cost = commission * int_size * 2
-            net_pnl = gross - slip_cost - comm_cost
+
+            # MED #5 (Wave 27.5 Pass D.1) — Itemised roll spread cost.
+            # On rollover days the entry bar carries an extra spread cost (2-4 ticks)
+            # that the generic 1.5-tick slippage model underestimates.
+            # Deduct BEFORE generic slippage; generic slippage still applies on top.
+            _roll_cost_usd = 0.0
+            if _has_rollover_col and entry_idx < len(df):
+                try:
+                    _is_roll_day = bool(df["is_rollover_day"][entry_idx])
+                except Exception:
+                    _is_roll_day = False
+                if _is_roll_day:
+                    try:
+                        _roll_ts_str = str(_ts_et_list_roll[entry_idx]) if entry_idx < len(_ts_et_list_roll) else ""
+                        from datetime import date as _date_cls
+                        _roll_date = _date_cls.fromisoformat(_roll_ts_str[:10])
+                        _roll_cost = compute_roll_spread_cost(config.symbol, _roll_date, int_size)
+                        _roll_cost_usd = float(_roll_cost)
+                        _roll_spread_audit_rows.append(
+                            build_roll_spread_audit(config.symbol, _roll_date, int_size, _roll_cost)
+                        )
+                    except Exception as _re:
+                        print(
+                            f"[roll-spread] Error computing roll cost at bar {entry_idx}: {_re}",
+                            file=sys.stderr,
+                        )
+
+            net_pnl = gross - slip_cost - comm_cost - _roll_cost_usd
 
             trade_pnls_list.append(net_pnl)
             _h5_entry_slips.append(entry_slip)
@@ -3327,6 +3500,7 @@ def run_backtest(
             trade["GrossPnL"] = round(gross, 2)
             trade["SlippageCost"] = round(slip_cost, 2)
             trade["CommissionCost"] = round(comm_cost, 2)
+            trade["RollSpreadCost"] = round(_roll_cost_usd, 4)
 
             # ─── Per-trade R:R (reward / risk) ─────────────────────
             # Risk = ATR at entry × atr_sl_mult × point_value (1R stop in $)
@@ -3446,6 +3620,11 @@ def run_backtest(
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
 
+    # MED #2 (Wave 27.5 Pass D.1): extract ts_et list for DST-aware aggregation.
+    # ts_et is Eastern Time (set by data_loader.py) — no UTC offset arithmetic needed.
+    _ts_et_list_eq = df["ts_et"].to_list() if "ts_et" in df.columns else None
+    _dst_transitions = _detect_dst_transitions(_ts_et_list_eq or [])
+
     # Reconciliation: equity total must match sum of per-trade P&Ls (Golden Rule)
     if len(trade_pnls_arr) > 0 and len(equity) > 0:
         equity_total = float(equity[-1] - STARTING_CAPITAL)
@@ -3459,7 +3638,11 @@ def run_backtest(
             )
 
     # F-11 FIX: pass STARTING_CAPITAL so the first day's P&L is correctly anchored.
-    daily_pnl_records = _compute_daily_pnls(equity, equity_index, starting_capital=STARTING_CAPITAL)
+    # MED #2: pass ts_et_index for DST-safe daily grouping.
+    daily_pnl_records = _compute_daily_pnls(
+        equity, equity_index, starting_capital=STARTING_CAPITAL,
+        ts_et_index=_ts_et_list_eq,
+    )
     daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
 
     winning_days = sum(1 for p in daily_pnl_values if p > 0)
@@ -3668,7 +3851,7 @@ def run_backtest(
         "profit_factor": round(profit_factor, 4), "total_trades": total_trades,
         "avg_trade_pnl": round(avg_trade_pnl, 2), "total_trading_days": total_trading_days,
         "trades": trades_list, "daily_pnls": daily_pnl_values,
-        "equity_curve": _aggregate_equity_daily(equity, equity_index),
+        "equity_curve": _aggregate_equity_daily(equity, equity_index, ts_et_index=_ts_et_list_eq),
     }
     sanity = run_sanity_checks(_prelim, symbol=config.symbol, timeframe=config.timeframe)
     cross_val = run_cross_validation(_prelim)
@@ -3755,7 +3938,8 @@ def run_backtest(
         "avg_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None])), 2) if trades_list else 0.0,
         "avg_winner_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0])), 2) if any(t.get("rr", 0) > 0 for t in trades_list) else 0.0,
         "avg_loser_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] < 0])), 2) if any(t.get("rr", 0) < 0 for t in trades_list) else 0.0,
-        "equity_curve": _aggregate_equity_daily(equity, equity_index),
+        # MED #2: pass ts_et_index for DST-safe daily aggregation.
+        "equity_curve": _aggregate_equity_daily(equity, equity_index, ts_et_index=_ts_et_list_eq),
         # WF Fix 1: raw bar-level equity for intraday max DD calculation in walk_forward.py.
         # daily-aggregated equity_curve misses intraday swings — this field preserves them.
         # Downstream: walk_forward.py reads this to compute continuous bar-level max_dd.
@@ -3905,6 +4089,35 @@ def run_backtest(
     if isinstance(result.get("run_receipt"), dict):
         result["run_receipt"]["parity_long"] = _parity_long
         result["run_receipt"]["parity_short"] = _parity_short
+
+    # ─── MED #2 (Wave 27.5 Pass D.1) — DST boundary audit ───────────────────────
+    # Additive field: records which DST transitions fell within the backtest date
+    # range.  Consumers may use this to flag drawdown values computed near the
+    # transition as subject to the cosmetic off-by-1-hour edge case.
+    if _dst_transitions:
+        result["dst_boundary_processed"] = {
+            "transitions": _dst_transitions,
+            "ts_et_used": _ts_et_list_eq is not None,
+            "count": len(_dst_transitions),
+        }
+    else:
+        result["dst_boundary_processed"] = {
+            "transitions": [],
+            "ts_et_used": _ts_et_list_eq is not None,
+            "count": 0,
+        }
+
+    # ─── MED #4 (Wave 27.5 Pass D.1) — VIX margin expansion audit ───────────────
+    # Populated from _margin_expansion_audit_dsl set during sizing (see below).
+    # Additive field: None when VIX data column absent or no expansion triggered.
+    if "_margin_expansion_audit_dsl" in dir():
+        result["margin_expansion_audit"] = _margin_expansion_audit_dsl  # noqa: F821
+
+    # ─── MED #5 (Wave 27.5 Pass D.1) — Roll spread cost audit ───────────────────
+    # Populated from _roll_spread_audit_rows set during P&L computation (see below).
+    # Additive list: empty when no roll days in date range or itemisation disabled.
+    if "_roll_spread_audit_rows" in dir():
+        result["roll_spread_costs"] = _roll_spread_audit_rows  # noqa: F821
 
     # ─── Pass B-2: Invariant Harness (always runs — cheap pure validation) ───
     # Runs AFTER result dict is fully assembled, BEFORE determinism check.
@@ -4855,6 +5068,17 @@ def run_class_backtest(
     if trades_records is not None:
         trade_pnls_list = []
 
+        # MED #5 (Wave 27.5 Pass D.1) — Roll spread cost setup (class backtest path).
+        from src.engine.roll_spread_cost import (
+            build_roll_spread_audit,
+            compute_roll_spread_cost,
+        )
+        _has_rollover_col_cls = "is_rollover_day" in df.columns
+        _ts_et_list_roll_cls = df["ts_et"].to_list() if "ts_et" in df.columns else (
+            df["ts_event"].to_list() if "ts_event" in df.columns else []
+        )
+        _roll_spread_audit_rows_cls: list[dict] = []
+
         for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
             size = float(row["Size"])
@@ -4891,7 +5115,31 @@ def run_class_backtest(
             slip_cost = (entry_slip + exit_slip) * int_size
             # H2 FIX: commission charged on integer contracts only.
             comm_cost = commission * int_size * 2
-            net_pnl = gross - slip_cost - comm_cost
+
+            # MED #5 (Wave 27.5 Pass D.1) — Itemised roll spread cost (class backtest path).
+            _roll_cost_usd_cls = 0.0
+            if _has_rollover_col_cls and entry_idx < len(df):
+                try:
+                    _is_roll_day_cls = bool(df["is_rollover_day"][entry_idx])
+                except Exception:
+                    _is_roll_day_cls = False
+                if _is_roll_day_cls:
+                    try:
+                        _roll_ts_str_cls = str(_ts_et_list_roll_cls[entry_idx]) if entry_idx < len(_ts_et_list_roll_cls) else ""
+                        from datetime import date as _date_cls2
+                        _roll_date_cls = _date_cls2.fromisoformat(_roll_ts_str_cls[:10])
+                        _roll_cost_cls = compute_roll_spread_cost(symbol, _roll_date_cls, int_size)
+                        _roll_cost_usd_cls = float(_roll_cost_cls)
+                        _roll_spread_audit_rows_cls.append(
+                            build_roll_spread_audit(symbol, _roll_date_cls, int_size, _roll_cost_cls)
+                        )
+                    except Exception as _re_cls:
+                        print(
+                            f"[roll-spread] Error computing roll cost at bar {entry_idx}: {_re_cls}",
+                            file=sys.stderr,
+                        )
+
+            net_pnl = gross - slip_cost - comm_cost - _roll_cost_usd_cls
 
             trade_pnls_list.append(net_pnl)
 
@@ -4913,6 +5161,7 @@ def run_class_backtest(
             trade["GrossPnL"] = round(gross, 2)
             trade["SlippageCost"] = round(slip_cost, 2)
             trade["CommissionCost"] = round(comm_cost, 2)
+            trade["RollSpreadCost"] = round(_roll_cost_usd_cls, 4)
 
             # ─── Per-trade R:R (using 6pt capped risk) ───────────────
             risk_dollars = risk_pts * spec.point_value
@@ -5019,6 +5268,10 @@ def run_class_backtest(
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
     equity_index = close_pd.index
 
+    # MED #2 (Wave 27.5 Pass D.1): extract ts_et list for DST-aware aggregation (class path).
+    _ts_et_list_eq_cls = df["ts_et"].to_list() if "ts_et" in df.columns else None
+    _dst_transitions_cls = _detect_dst_transitions(_ts_et_list_eq_cls or [])
+
     # Reconciliation: managed equity total must match sum of per-trade P&Ls
     if len(trade_pnls_arr) > 0 and len(equity) > 0:
         equity_total = float(equity[-1] - STARTING_CAPITAL)
@@ -5032,7 +5285,11 @@ def run_class_backtest(
             )
 
     # F-11 FIX: pass STARTING_CAPITAL so the first day's P&L is correctly anchored.
-    daily_pnl_records = _compute_daily_pnls(equity, equity_index, starting_capital=STARTING_CAPITAL)
+    # MED #2: pass ts_et_index for DST-safe daily grouping.
+    daily_pnl_records = _compute_daily_pnls(
+        equity, equity_index, starting_capital=STARTING_CAPITAL,
+        ts_et_index=_ts_et_list_eq_cls,
+    )
     daily_pnl_values = [d["pnl"] for d in daily_pnl_records]
 
     winning_days = sum(1 for p in daily_pnl_values if p > 0)
@@ -5180,7 +5437,7 @@ def run_class_backtest(
         "profit_factor": round(profit_factor, 4), "total_trades": total_trades,
         "avg_trade_pnl": round(avg_trade_pnl, 2), "total_trading_days": total_trading_days,
         "trades": trades_list, "daily_pnls": daily_pnl_values,
-        "equity_curve": _aggregate_equity_daily(equity, equity_index),
+        "equity_curve": _aggregate_equity_daily(equity, equity_index, ts_et_index=_ts_et_list_eq_cls),
     }
     sanity = run_sanity_checks(_prelim_class, symbol=symbol, timeframe=timeframe)
     cross_val = run_cross_validation(_prelim_class)
@@ -5281,7 +5538,8 @@ def run_class_backtest(
         "avg_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None])), 2) if trades_list else 0.0,
         "avg_winner_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] > 0])), 2) if any(t.get("rr", 0) > 0 for t in trades_list) else 0.0,
         "avg_loser_rr": round(float(np.mean([t["rr"] for t in trades_list if t.get("rr") is not None and t["rr"] < 0])), 2) if any(t.get("rr", 0) < 0 for t in trades_list) else 0.0,
-        "equity_curve": _aggregate_equity_daily(equity, equity_index),
+        # MED #2: pass ts_et_index for DST-safe daily aggregation (class path).
+        "equity_curve": _aggregate_equity_daily(equity, equity_index, ts_et_index=_ts_et_list_eq_cls),
         # WF Fix 1: raw bar-level equity for intraday max DD calculation in walk_forward.py.
         "equity_bars": equity.tolist(),
         "monthly_returns": _compute_monthly_returns(equity, equity_index),
@@ -5344,6 +5602,14 @@ def run_class_backtest(
             indicators=[], entry_long="", entry_short="", exit="",
             stop_loss={"type": "atr"}, position_size={"type": "fixed"},
         ), dataset_hash=compute_dataset_hash(df)),
+        # MED #2 (Wave 27.5 Pass D.1) — DST boundary audit (class backtest path).
+        "dst_boundary_processed": {
+            "transitions": _dst_transitions_cls,
+            "ts_et_used": _ts_et_list_eq_cls is not None,
+            "count": len(_dst_transitions_cls),
+        },
+        # MED #5 (Wave 27.5 Pass D.1) — Roll spread cost audit (class backtest path).
+        "roll_spread_costs": _roll_spread_audit_rows_cls,
     }
 
 
