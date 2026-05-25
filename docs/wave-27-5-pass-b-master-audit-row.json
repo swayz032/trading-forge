@@ -1,0 +1,65 @@
+{
+  "action": "wave.27_5_pass_b_master_closed",
+  "entity_type": "wave",
+  "entity_id": null,
+  "entity_label": "wave-27-5-pass-b",
+  "status": "success",
+  "decision_authority": "parent-claude",
+  "result": {
+    "high_findings_closed": 3,
+    "gate_wirings_added": 3,
+    "sub_tracks": 2,
+    "commits": ["08105d8", "e1dfef2", "aa172a5"],
+    "tests_added": 101,
+    "audit_actions_added": 12,
+    "audit_actions": [
+      "walk_forward.wfe_below_warn_floor",
+      "walk_forward.wfe_below_hard_floor",
+      "walk_forward.parameter_drift_classified",
+      "walk_forward.pbo_computed",
+      "walk_forward.pbo_high_overfit_risk",
+      "b14.gate_evaluated",
+      "b14.legacy_ruin_scalar_fallback",
+      "lifecycle.wfe_hard_floor_block",
+      "lifecycle.wfe_warning_below_target",
+      "lifecycle.wfe_unavailable_legacy",
+      "lifecycle.parameter_overfit_drift_block",
+      "lifecycle.parameter_drift_indeterminate_warn"
+    ],
+    "sse_events_added": 3,
+    "sse_events": [
+      "lifecycle:b14_evaluated",
+      "lifecycle:wfe_evaluated",
+      "lifecycle:parameter_drift_evaluated"
+    ],
+    "env_vars_added": 4,
+    "env_vars": [
+      "WFE_HARD_FLOOR",
+      "WFE_WARN_FLOOR",
+      "PBO_OVERFIT_THRESHOLD",
+      "B14_RUIN_CI_HIGH_THRESHOLD"
+    ],
+    "new_python_modules": 1,
+    "new_python_modules_list": ["src/engine/walk_forward_regime_context.py"],
+    "new_ts_helpers": 3,
+    "new_ts_helpers_list": [
+      "src/server/lib/lifecycle/b14-ci-gate.ts",
+      "src/server/lib/lifecycle/wfe-gate.ts",
+      "src/server/lib/lifecycle/parameter-drift-gate.ts"
+    ],
+    "b14_ci_high_wired": true,
+    "wfe_hard_floor": 0.70,
+    "wfe_warn_floor": 0.50,
+    "pbo_overfit_threshold": 0.5,
+    "b14_ruin_ci_high_threshold": 0.40,
+    "remaining_passes_in_wave": 2,
+    "carry_forwards": [
+      "pass_c_backtest_engine_high",
+      "pass_d_med_low_sweep",
+      "wfe_discord_warn_alertfactory_wire",
+      "pbo_p_value_real_computation",
+      "pre_existing_system_map_drift_route_and_scheduler_job"
+    ],
+    "ci_gates_green": ["check:production-isolation", "check:2026-compliance", "system-map:check"]
+  }
+}

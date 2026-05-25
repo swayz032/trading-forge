@@ -4,6 +4,35 @@
 
 ---
 
+### Session Log — 2026-05-25 parent-claude — Wave 27.5 Pass B MASTER ORCHESTRATION (WF HIGH + B14 wiring)
+
+**Mission:** Close 3 Walk-Forward HIGH findings + wire B14 gate to consume Pass A's institutional uncertainty (`probability_of_ruin_ci.ci_high`). After Pass B, PAPER → DEPLOY_READY makes promotion decisions on conservative bounds instead of optimistic scalars.
+
+**Phase A — Round 1 (2 parallel sub-tracks):**
+- **B.1 backtest-core | `08105d8` + `e1dfef2` | 53 new pytest** — H1 WFE floors (`WFE_HARD_FLOOR=0.70`, `WFE_WARN_FLOOR=0.50`) + H2 `src/engine/walk_forward_regime_context.py` 4-class drift classifier (`regime_driven|overfit_drift|indeterminate|stable`) + H3 PBO auto-wired into `walk_forward.py` aggregation (~line 774+) when `len(window_results) ≥ 4`. Also ran `npm run system-map:sync` in `e1dfef2`.
+- **B.2 paper-parity | `aa172a5` | 48 new vitest** — NEW `b14-ci-gate.ts` + `wfe-gate.ts` + `parameter-drift-gate.ts` pure-function helpers; `lifecycle-service.ts` 3 additive gate insertions at PAPER → DEPLOY_READY; legacy null fallback for pre-W27.5 backtests via documented `b14.legacy_ruin_scalar_fallback` / `lifecycle.wfe_unavailable_legacy` warn audits; 3 new SSE events for dashboard visibility (`lifecycle:b14_evaluated` / `lifecycle:wfe_evaluated` / `lifecycle:parameter_drift_evaluated`).
+
+**Phase B — Round 2 (architect last):**
+- **B.3 trading-forge-architect | this commit** — System Map sync verification (B.1 already ran in `e1dfef2`; re-run produced minor timestamp delta on `Trading Forge System Map v2.md` + `docs/system-readiness.generated.json` + `docs/system-topology.generated.json` — no structural delta), all 3 CI hard gates GREEN (system-map:check + check:production-isolation + check:2026-compliance), CLAUDE.md §2 + §12 + §13 + §15 append-only updates, AGENT-LOGS master entry, memory entry + MEMORY.md index update, audit row written to prod DB (`698b92ab-d19a-4ea8-81a7-87c08848d611`), batched push for `08105d8` + `e1dfef2` + `aa172a5` + this commit.
+
+**Verification:** 101 new tests (53 pytest + 48 vitest) GREEN across 7 new files + 4 modified service/engine files. All 3 CI hard gates GREEN. Combined Wave 27.5 so far: 250 new tests across Pass A + Pass B.
+
+**Known-facts updates:**
+- `probability_of_ruin_ci.ci_high` is now the CANONICAL conservative bound for B14 promotion decisions. Old code reading scalar `probability_of_ruin` gets a documented warn + fallback via `b14.legacy_ruin_scalar_fallback`.
+- `WFE_HARD_FLOOR=0.70` is the institutional 2026 standard; ship strategies below this only with explicit env override + audit rationale.
+- `walk_forward_regime_context.py` is pure-functional 4-class drift classifier (no scipy, no I/O, replay-deterministic). `regime_driven + stable` are acceptable; `overfit_drift + indeterminate` are flagged. Confidence ≥ 0.70 promotes `overfit_drift` to hard-block.
+- B.1 already ran `npm run system-map:sync` in `e1dfef2` — architect re-verification confirms no structural delta (only timestamp refresh).
+
+**Carry-forward for next session:**
+- **Pass C (~2 dev-days):** Backtest Engine HIGH — H4 compliance mode env knob, H5 exit slippage symmetry, H6 fill_model activation, H7 autocorr NaN guard, H8 outlier truncation.
+- **Pass D (~1.5 dev-days):** MED+LOW sweep — M1-M8.
+- **WFE Discord WARN:** currently audit + SSE only; `AlertFactory.warn()` not yet wired (Pass C/D candidate).
+- **`pbo_p_value` field** is currently always `None` (reserved for future wiring; current PBO returns binary pass/fail only).
+- **2 pre-existing system-map drift items** (route + scheduler job pre-date Pass B.1) — deferred to Pass D as carry-forward.
+- **Operator action:** `npm run db:migrate` to apply migrations 0146 + 0147 (Pass A) to Railway prod (or wait for boot-migration-runner).
+
+---
+
 ### Session Log — 2026-05-25 backtest-core — Wave 27.5 Pass B.1: WF 3 HIGH findings closed
 
 **Mission:** Close 3 Walk-Forward HIGH advisory findings to institutional grade: H1 WFE > 0.70 not gated, H2 parameter stability lacks regime-context, H3 PBO not auto-wired into aggregation.

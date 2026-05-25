@@ -9,7 +9,7 @@
     "criticals_closed": 3,
     "low_closed": 1,
     "sub_tracks": 2,
-    "commits": ["6e94f18", "8d10bea", "PENDING_ARCHITECT_SHA"],
+    "commits": ["6e94f18", "8d10bea", "9ddf9ec"],
     "tests_added": 149,
     "migrations_added": 2,
     "migrations": ["0146_backtests_firm_rules_version.sql", "0147_quantum_mc_runs_replay_uniqueness.sql"],
