@@ -43,9 +43,28 @@ function isForceCloud(): boolean {
   return (process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD ?? "false") === "true";
 }
 
-/** Local model name — overridable per deployment. */
+/** Local model name — overridable per deployment.
+ *
+ * Wave 26 (2026-05-24): operator's Skytech tower has `gemma4:latest` (8.95 GB,
+ * gemma4 family) installed — works with current Ollama 0.24.0. `gemma4:e2b`
+ * (5.1B MoE variant) was never on this machine. Default now matches what's
+ * actually present. Override per-deployment via env var. */
 function getLocalTranscriptModel(): string {
-  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4";
+}
+
+/** Ollama context window for transcript_extractor.
+ *
+ * Default 16384: prompt (~5K tokens with KB injection + few-shot) + transcript
+ * (~3K-7K typical, up to ~10K for long-form videos). 16K leaves headroom for
+ * output. RTX 5060 8 GB VRAM: model (~3-9 GB depending on variant) + 16K ctx
+ * (~2.4 GB) fits comfortably. Operator can lower for VRAM relief or raise to
+ * 32768 for institutional max (TIGHT on 8 GB GPUs). */
+function getTranscriptOllamaNumCtx(): number {
+  const raw = process.env.TRANSCRIPT_EXTRACTOR_NUM_CTX;
+  const parsed = raw ? Number.parseInt(raw, 10) : 16384;
+  if (!Number.isFinite(parsed) || parsed < 2048 || parsed > 131072) return 16384;
+  return parsed;
 }
 
 /**
@@ -2016,8 +2035,14 @@ async function callOllamaForTranscriptExtractor(
     .join("\n\n");
   const prompt = `${systemPrompt}\n\n${userChunks}`;
 
+  // Wave 26 (2026-05-24): pass num_ctx=16384 default (override via
+  // TRANSCRIPT_EXTRACTOR_NUM_CTX env). Default Ollama context is 2048 — too
+  // small for our prompt (~5K tokens) + transcript (~3K-7K tokens). 16K covers
+  // ~95% of YouTube transcripts; long-form videos already use chunked-fallback
+  // path (scout-extract route, CHUNKED_FALLBACK_THRESHOLD = 12000).
+  const numCtx = getTranscriptOllamaNumCtx();
   const startedAt = Date.now();
-  const res = await ollama.generate(model, prompt, undefined, true /* wantJson=format:"json" */);
+  const res = await ollama.generate(model, prompt, { num_ctx: numCtx }, true /* wantJson=format:"json" */);
   const durationMs = Date.now() - startedAt;
 
   const raw = res?.response ?? "";

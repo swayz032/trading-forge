@@ -21,7 +21,8 @@ import { resolve } from "path";
 
 // Force Ollama primary (ensure env is unset or false)
 process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD = "false";
-process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "gemma4:e2b";
+process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4";
+process.env.TRANSCRIPT_EXTRACTOR_NUM_CTX = process.env.TRANSCRIPT_EXTRACTOR_NUM_CTX ?? "16384";
 process.env.OLLAMA_HOST = process.env.OLLAMA_HOST ?? "http://localhost:11434";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "..");
