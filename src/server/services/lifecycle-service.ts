@@ -34,6 +34,9 @@ import { tracer } from "../lib/tracing.js";
 import { strategyPromotions } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
+import { evaluateB14CiGate } from "../lib/b14-ci-gate.js";
+import { evaluateWfeGate } from "../lib/wfe-gate.js";
+import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -2144,11 +2147,20 @@ export class LifecycleService {
         // PropScorer 2026-03: Topstep documented $40K payout-denial bans for
         // consistency violations. B14 must HARD-block before any live payout claim.
         // Env: B14_HARD_GATE_ENABLED (default "true") — set "false" for emergency disable.
+        //
+        // Wave 27.5 Pass B.2: B14 now ALSO reads probability_of_ruin_ci.ci_high from
+        // the latest MC run (Pass A introduced BCa CI bootstrap). When ci_high > threshold
+        // (default 0.40, env B14_RUIN_CI_HIGH_THRESHOLD), the gate hard-blocks.
+        // Falls back to scalar probability_of_ruin for pre-Pass-A MC runs.
         const b14HardGateEnabled = (process.env.B14_HARD_GATE_ENABLED ?? "true") !== "false";
         if (b14HardGateEnabled) {
           try {
             const [latestBtForB14] = await db
-              .select({ gateResult: backtests.gateResult, resultExtras: backtests.resultExtras })
+              .select({
+                id: backtests.id,
+                gateResult: backtests.gateResult,
+                resultExtras: backtests.resultExtras,
+              })
               .from(backtests)
               .where(
                 and(
@@ -2221,6 +2233,79 @@ export class LifecycleService {
             }
             // No gateResult or survival_twin data → log advisory, allow through
             // (legacy backtests pre-B14 don't have this data).
+
+            // ── Wave 27.5 Pass B.2: B14 CI gate (probability_of_ruin_ci.ci_high) ──
+            // Reads the latest MC run for this backtest and evaluates ci_high against
+            // the institutional 0.40 threshold. Falls back to scalar for pre-Pass-A runs.
+            if (latestBtForB14?.id) {
+              const [latestMcForB14] = await db
+                .select({
+                  probabilityOfRuin: monteCarloRuns.probabilityOfRuin,
+                  riskMetrics: monteCarloRuns.riskMetrics,
+                })
+                .from(monteCarloRuns)
+                .where(
+                  and(
+                    eq(monteCarloRuns.backtestId, latestBtForB14.id),
+                    eq(monteCarloRuns.status, "completed"),
+                  ),
+                )
+                .orderBy(desc(monteCarloRuns.createdAt))
+                .limit(1);
+
+              if (latestMcForB14) {
+                const rm = (latestMcForB14.riskMetrics as Record<string, unknown> | null) ?? {};
+                const ruinCi = (rm.probability_of_ruin_ci ?? null) as Record<string, unknown> | null;
+                const pointEstimate = latestMcForB14.probabilityOfRuin != null
+                  ? Number(latestMcForB14.probabilityOfRuin)
+                  : null;
+
+                const b14CiResult = evaluateB14CiGate(ruinCi, pointEstimate);
+
+                // Always emit audit row so dashboard can show gate evaluation history.
+                await db.insert(auditLog).values({
+                  action: "b14.gate_evaluated",
+                  entityId: s.id,
+                  entityType: "strategy",
+                  status: b14CiResult.passed ? "success" : "failure",
+                  decisionAuthority: "gate",
+                  input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                  result: b14CiResult.auditPayload,
+                  correlationId,
+                }).catch((auditErr) => {
+                  logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate audit insert failed (non-blocking)");
+                });
+
+                broadcastSSE("lifecycle:b14_evaluated", {
+                  strategyId: s.id,
+                  ...b14CiResult.auditPayload,
+                  passed: b14CiResult.passed,
+                  reason: b14CiResult.reason,
+                  legacyFallback: b14CiResult.legacyFallback,
+                });
+
+                if (!b14CiResult.passed) {
+                  logger.warn(
+                    {
+                      strategyId: s.id,
+                      ciHigh: b14CiResult.auditPayload.ci_high,
+                      threshold: b14CiResult.auditPayload.threshold,
+                      transition: "PAPER→DEPLOY_READY",
+                    },
+                    "B14 CI gate BLOCKED: probability_of_ruin_ci.ci_high exceeds institutional threshold",
+                  );
+                  continue;
+                }
+
+                if (b14CiResult.legacyFallback) {
+                  logger.warn(
+                    { strategyId: s.id },
+                    "B14 CI gate: using legacy scalar fallback (pre-Pass-A MC run — upgrade to get BCa CI)",
+                  );
+                }
+              }
+              // No MC run at all for this backtest → fail-open (pre-MC strategies).
+            }
           } catch (b14Err) {
             // Fail-open: B14 gate read failure is non-blocking (survival_twin is
             // computed post-backtest; early strategies may not have the data yet).
@@ -2298,6 +2383,168 @@ export class LifecycleService {
           logger.warn(
             { strategyId: s.id, err: b15Err },
             "B15 Parameter Robustness Battery gate: read failed (non-blocking — promotion continues)",
+          );
+        }
+
+        // ── Wave 27.5 Pass B.2 Gate #2: WFE hard floor: PAPER → DEPLOY_READY ──
+        // Reads backtests.walk_forward_results.wfe_overall (written by Pass B.1
+        // walk_forward.py — embedded in existing walkForwardResults JSONB column).
+        // WFE < WFE_WARN_FLOOR (default 0.50) → HARD block (likely overfit).
+        // WFE_WARN_FLOOR ≤ WFE < WFE_HARD_FLOOR (default 0.70) → WARN + allow.
+        // Null WFE (pre-Pass-B.1 backtest or non-WF backtest) → fail-open for legacy compat.
+        try {
+          const [latestBtForWfe] = await db
+            .select({ walkForwardResults: backtests.walkForwardResults })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const wfResults = (latestBtForWfe?.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const wfeOverall = wfResults?.wfe_overall != null ? Number(wfResults.wfe_overall) : null;
+
+          const wfeResult = evaluateWfeGate(wfeOverall);
+
+          broadcastSSE("lifecycle:wfe_evaluated", {
+            strategyId: s.id,
+            wfe_overall: wfeResult.wfeOverall,
+            status: wfeResult.status,
+            hard_floor: wfeResult.hardFloor,
+            warn_floor: wfeResult.warnFloor,
+            passed: wfeResult.passed,
+          });
+
+          if (wfeResult.auditAction) {
+            const isBlock = wfeResult.status === "blocked";
+            logger[isBlock ? "warn" : "info"](
+              {
+                strategyId: s.id,
+                wfeOverall: wfeResult.wfeOverall,
+                hardFloor: wfeResult.hardFloor,
+                warnFloor: wfeResult.warnFloor,
+                status: wfeResult.status,
+                transition: "PAPER→DEPLOY_READY",
+              },
+              isBlock
+                ? "WFE gate BLOCKED PAPER→DEPLOY_READY: wfe_overall below hard floor"
+                : wfeResult.status === "warned"
+                ? "WFE gate ADVISORY: wfe_overall below target (0.70) — promotion continues"
+                : "WFE gate: wfe_overall unavailable (legacy backtest) — promotion continues",
+            );
+            await db.insert(auditLog).values({
+              action: wfeResult.auditAction,
+              entityId: s.id,
+              entityType: "strategy",
+              status: isBlock ? "failure" : "warning",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: {
+                wfe_overall: wfeResult.wfeOverall,
+                hard_floor: wfeResult.hardFloor,
+                warn_floor: wfeResult.warnFloor,
+                status: wfeResult.status,
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate audit insert failed (non-blocking)");
+            });
+            if (isBlock) {
+              continue;
+            }
+          }
+        } catch (wfeErr) {
+          // Fail-open: WFE gate read failure is non-blocking.
+          logger.warn(
+            { strategyId: s.id, err: wfeErr },
+            "WFE gate: read failed (non-blocking — promotion continues)",
+          );
+        }
+
+        // ── Wave 27.5 Pass B.2 Gate #3: Parameter drift classification: PAPER → DEPLOY_READY ──
+        // Reads backtests.walk_forward_results.param_stability.drift_classification (Pass B.1).
+        // Pass B.1 walk_forward.py writes regime-context classification into param_stability
+        // as {drift_classification, drift_confidence, drift_evidence} — embedded in the
+        // existing walkForwardResults JSONB column.
+        // overfit_drift + confidence >= 0.70 → HARD block.
+        // overfit_drift (low confidence) OR indeterminate → WARN + allow.
+        // regime_driven | stable → no action.
+        // Null → fail-open for legacy compat.
+        try {
+          const [latestBtForDrift] = await db
+            .select({ walkForwardResults: backtests.walkForwardResults })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const driftWfResults = (latestBtForDrift?.walkForwardResults as Record<string, unknown> | null) ?? null;
+          // param_stability.drift_classification is the regime-context enhanced field.
+          // Falls back to binary is_fragile via "indeterminate" in legacy WF runs.
+          const paramStability = (driftWfResults?.param_stability as Record<string, unknown> | null) ?? null;
+          const driftClassification = (paramStability?.drift_classification as string | null) ?? null;
+          const driftConfidence = paramStability?.drift_confidence != null
+            ? Number(paramStability.drift_confidence)
+            : null;
+
+          const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence);
+
+          broadcastSSE("lifecycle:parameter_drift_evaluated", {
+            strategyId: s.id,
+            classification: driftResult.classification,
+            confidence: driftResult.confidence,
+            status: driftResult.status,
+            passed: driftResult.passed,
+          });
+
+          if (driftResult.auditAction) {
+            const isBlock = driftResult.status === "blocked";
+            logger[isBlock ? "warn" : "info"](
+              {
+                strategyId: s.id,
+                classification: driftResult.classification,
+                confidence: driftResult.confidence,
+                status: driftResult.status,
+                transition: "PAPER→DEPLOY_READY",
+              },
+              isBlock
+                ? "Parameter drift gate BLOCKED PAPER→DEPLOY_READY: overfit_drift with high confidence"
+                : `Parameter drift gate ADVISORY: ${driftResult.classification ?? "unavailable"} — promotion continues`,
+            );
+            await db.insert(auditLog).values({
+              action: driftResult.auditAction,
+              entityId: s.id,
+              entityType: "strategy",
+              status: isBlock ? "failure" : "warning",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: {
+                classification: driftResult.classification,
+                confidence: driftResult.confidence,
+                status: driftResult.status,
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate audit insert failed (non-blocking)");
+            });
+            if (isBlock) {
+              continue;
+            }
+          }
+        } catch (driftErr) {
+          // Fail-open: drift gate read failure is non-blocking.
+          logger.warn(
+            { strategyId: s.id, err: driftErr },
+            "Parameter drift gate: read failed (non-blocking — promotion continues)",
           );
         }
 
