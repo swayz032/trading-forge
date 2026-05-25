@@ -7,7 +7,7 @@
   "result": {
     "passes_shipped": 1,
     "sub_tracks": 3,
-    "commits": ["d20475c", "ea569fc", "PENDING_ARCHITECT_SHA"],
+    "commits": ["d20475c", "ea569fc", "c7fedf7"],
     "tests_added": 21,
     "services_added": 2,
     "new_ts_modules": 2,
