@@ -64,22 +64,27 @@ Write-Host ""
 # ===== H.2 NSSM TradingForgeAPI SERVICE =====
 Write-Host "H.2 - Installing NSSM TradingForgeAPI service..." -ForegroundColor Yellow
 
-$nssm = (Get-Command nssm.exe -ErrorAction SilentlyContinue).Source
+# NSSM was pre-staged at C:\Users\tonio\bin\nssm\nssm.exe (downloaded via
+# chocolatey CDN since nssm.cc was 503'd, version 2.24-101-g897c7ad win64).
+# Fall back to winget / common paths if the pre-staged file is missing.
+$nssmCandidates = @(
+    "C:\Users\tonio\bin\nssm\nssm.exe",
+    (Get-Command nssm.exe -ErrorAction SilentlyContinue).Source,
+    "C:\ProgramData\chocolatey\bin\nssm.exe",
+    "C:\Program Files\NSSM\nssm.exe",
+    "C:\Program Files (x86)\nssm\win64\nssm.exe",
+    "C:\Program Files\NSSM\win64\nssm.exe"
+)
+$nssm = $null
+foreach ($c in $nssmCandidates) { if ($c -and (Test-Path $c)) { $nssm = $c; break } }
 if (-not $nssm) {
     Write-Host "  NSSM not found. Installing via winget..."
     winget install -e --id NSSM.NSSM --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
     Start-Sleep -Seconds 2
-    $nssmCandidates = @(
-        "C:\ProgramData\chocolatey\bin\nssm.exe",
-        "C:\Program Files\NSSM\nssm.exe",
-        "C:\Program Files (x86)\nssm\win64\nssm.exe",
-        "C:\Program Files\NSSM\win64\nssm.exe"
-    )
-    foreach ($c in $nssmCandidates) { if (Test-Path $c) { $nssm = $c; break } }
-    if (-not $nssm) { $nssm = (Get-Command nssm.exe -ErrorAction SilentlyContinue).Source }
+    foreach ($c in $nssmCandidates) { if ($c -and (Test-Path $c)) { $nssm = $c; break } }
 }
 if (-not $nssm) {
-    Write-Host "  ERROR: NSSM still not found. Install manually from https://nssm.cc/download then re-run." -ForegroundColor Red
+    Write-Host "  ERROR: NSSM still not found. Download manually from https://nssm.cc/download then re-run." -ForegroundColor Red
     exit 1
 }
 Write-Host "  NSSM found at: $nssm" -ForegroundColor Green
