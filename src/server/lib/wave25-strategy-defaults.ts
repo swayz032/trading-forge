@@ -97,27 +97,19 @@ const SYMBOL_AGNOSTIC_DEFAULT = ["MES", "MNQ", "MCL"] as const;
 
 export function inferSymbolSet(
   _strategyName: string | null | undefined,
-  conceptName: string | null | undefined,
+  _conceptName: string | null | undefined,
   originalMarket: "MES" | "MNQ" | "MCL",
 ): string[] {
-  // Detect on concept_name ONLY — strategy_name carries the W23F.M routing
-  // suffix `_mes_5m` / `_mnq_15m` / `_mcl_1h` which would mis-classify every
-  // strategy as symbol-specific. concept_name is the LLM-extracted concept
-  // before the suffix is appended.
-  const n = String(conceptName ?? "").toLowerCase();
-
-  // Crude / oil / WTI specific. `_` is a word char in regex so use explicit
-  // anchors instead of \b (which fails inside snake_case names).
-  if (/(^|_|\s)(oil|crude|wti)(_|\s|$)/.test(n)) return ["MCL"];
-
-  // Nasdaq specific
-  if (/(^|_|\s)(nasdaq|ndx|ndq)(_|\s|$)/.test(n)) return ["MNQ"];
-
-  // S&P specific
-  if (/(^|_|\s)(s_p|sp500|spx|s&p)(_|\s|$)/.test(n)) return ["MES"];
-
-  // Default — symbol-agnostic, fan out to all 3 with the bucket's routing
-  // market in the leader slot to preserve W23F.M naming canonicalization.
+  // Wave 26 Pass F.2 (2026-05-25) — operator mandate: "test every concept on
+  // all 3 markets until backtest tells us otherwise". DEPLOY-stage filters to
+  // markets where the concept proves out. Removed the nasdaq/oil/S&P-specific
+  // detection from Pass E — those concepts get fanned out to MES + MNQ + MCL
+  // like everything else. A nasdaq concept might still earn on MES or MCL;
+  // we let backtest decide, not the LLM-derived concept name.
+  //
+  // Leader slot = bucket's routing market (W23F.M naming canonicalization
+  // invariant — the leader gets the original "_mes_" / "_mnq_" / "_mcl_"
+  // suffix, variants get their per-market suffix via deriveStrategyName).
   const set = new Set<string>([originalMarket, ...SYMBOL_AGNOSTIC_DEFAULT]);
   return Array.from(set);
 }

@@ -61,18 +61,23 @@ describe("Wave 26 Pass E — Wave 25 institutional defaults", () => {
       expect(s.length).toBe(3);
     });
 
-    it("oil-specific strategy → [MCL] only", () => {
-      expect(inferSymbolSet("top_down_bias_oil_short", "top_down_bias_oil_short", "MCL")).toEqual(["MCL"]);
-      expect(inferSymbolSet("crude_oil_pullback", "crude_oil_pullback", "MCL")).toEqual(["MCL"]);
+    // Wave 26 Pass F.2 (2026-05-25) — universal fan-out. Operator mandate:
+    // test EVERY concept on all 3 markets, separate at DEPLOY-stage based on
+    // backtest verdict. Previous behavior (route oil→MCL, nasdaq→MNQ, sp→MES
+    // exclusively) was removed because the LLM-derived concept name shouldn't
+    // pre-decide which markets are tradable — backtest does.
+    it("oil-name concept STILL fans out to all 3 (Pass F.2)", () => {
+      expect(inferSymbolSet("top_down_bias_oil_short", "top_down_bias_oil_short", "MCL").length).toBe(3);
+      expect(inferSymbolSet("crude_oil_pullback", "crude_oil_pullback", "MCL").length).toBe(3);
     });
 
-    it("nasdaq-specific strategy → [MNQ] only", () => {
-      expect(inferSymbolSet("first_candle_rule_nasdaq", "first_candle_rule_nasdaq", "MES")).toEqual(["MNQ"]);
-      expect(inferSymbolSet("one_candle_setup_nasdaq_5m", "one_candle_setup_nasdaq_5m", "MES")).toEqual(["MNQ"]);
+    it("nasdaq-name concept STILL fans out to all 3 (Pass F.2)", () => {
+      expect(inferSymbolSet("first_candle_rule_nasdaq", "first_candle_rule_nasdaq", "MES").length).toBe(3);
+      expect(inferSymbolSet("one_candle_setup_nasdaq_5m", "one_candle_setup_nasdaq_5m", "MES").length).toBe(3);
     });
 
-    it("S&P/ES-specific strategy → [MES] only", () => {
-      expect(inferSymbolSet("sp500_breakout", "sp500_breakout", "MES")).toEqual(["MES"]);
+    it("S&P-name concept STILL fans out to all 3 (Pass F.2)", () => {
+      expect(inferSymbolSet("sp500_breakout", "sp500_breakout", "MES").length).toBe(3);
     });
 
     it("EMA crossover (agnostic) → all 3", () => {
@@ -128,7 +133,7 @@ describe("Wave 26 Pass E — Wave 25 institutional defaults", () => {
       expect(r.configAdditions.confirming_indicators).toEqual(["structural_setup", "volume_confirmation"]);
     });
 
-    it("oil strategy stays MCL-only", () => {
+    it("oil-name concept fans out to all 3 (Pass F.2 universal-fanout)", () => {
       const r = applyWave25Defaults({
         strategyName: "top_down_bias_oil_short_mcl_1h",
         conceptName: "top_down_bias_oil_short",
@@ -136,7 +141,7 @@ describe("Wave 26 Pass E — Wave 25 institutional defaults", () => {
         originalMarket: "MCL",
         confluenceFactors: [],
       });
-      expect(r.symbols).toEqual(["MCL"]);
+      expect(r.symbols.length).toBe(3);
     });
   });
 });
