@@ -370,12 +370,21 @@ def _apply_backtest_parity_gates(
     direction: str,
     symbol: str,
     strategy_name: str,
+    compliance_mode_override: Optional[str] = None,
 ) -> tuple[np.ndarray, dict]:
     """G2 parity gate. Default enforce; env-var toggle to shadow or off.
 
-    TF_BACKTEST_SKIP_MODE      — "enforce" (default) | "shadow" | "off"
+    TF_BACKTEST_SKIP_MODE       — "enforce" (default) | "shadow" | "off"
     TF_BACKTEST_ANTI_SETUP_MODE — "enforce" (default) | "shadow" | "off"
-    TF_BACKTEST_COMPLIANCE_MODE — "shadow" (default)  | "enforce" | "off"
+    BACKTEST_COMPLIANCE_MODE    — "enforce" (default, W27.5 C.2) | "shadow" | "off"
+    TF_BACKTEST_COMPLIANCE_MODE — legacy alias; BACKTEST_COMPLIANCE_MODE takes
+                                  precedence when both are set.
+
+    compliance_mode resolution (highest wins):
+      1. compliance_mode_override argument (per-backtest config.compliance_mode)
+      2. BACKTEST_COMPLIANCE_MODE env var (new canonical name)
+      3. TF_BACKTEST_COMPLIANCE_MODE env var (legacy alias preserved for backward compat)
+      4. hardcoded default "enforce" (W27.5 C.2 institutional default)
 
     Returns (filtered_entries, parity_stats).
     """
@@ -383,8 +392,21 @@ def _apply_backtest_parity_gates(
     # P0-3: default changed from "off" to "enforce" — production hardening.
     skip_mode = os.environ.get("TF_BACKTEST_SKIP_MODE", "enforce").lower()
     anti_mode = os.environ.get("TF_BACKTEST_ANTI_SETUP_MODE", "enforce").lower()
-    # P0-2: compliance gate mode. Default "shadow" (logs violations, does not block).
-    compliance_mode = os.environ.get("TF_BACKTEST_COMPLIANCE_MODE", "shadow").lower()
+    # W27.5 C.2: compliance gate mode. Default changed from "shadow" to "enforce"
+    # (institutional default per operator mandate).  Research backtests must explicitly
+    # opt-out via per-backtest config.compliance_mode="shadow" or env var.
+    # Resolution: per-backtest override > BACKTEST_COMPLIANCE_MODE > TF_BACKTEST_COMPLIANCE_MODE > "enforce"
+    _VALID_COMPLIANCE_MODES = {"shadow", "enforce", "off"}
+    if compliance_mode_override is not None:
+        _cm_raw = str(compliance_mode_override).lower().strip()
+        compliance_mode = _cm_raw if _cm_raw in _VALID_COMPLIANCE_MODES else "enforce"
+    else:
+        _env_new = os.environ.get("BACKTEST_COMPLIANCE_MODE", "").lower().strip()
+        _env_legacy = os.environ.get("TF_BACKTEST_COMPLIANCE_MODE", "").lower().strip()
+        _env_val = _env_new if _env_new in _VALID_COMPLIANCE_MODES else (
+            _env_legacy if _env_legacy in _VALID_COMPLIANCE_MODES else "enforce"
+        )
+        compliance_mode = _env_val
 
     parity_stats = {
         "skip_mode": skip_mode,
@@ -447,15 +469,44 @@ def _apply_backtest_parity_gates(
 
             if _compliance_result["violations"]:
                 parity_stats["compliance_violations"] = _compliance_result["violations"]
-                print(
-                    f"[parity-gate] COMPLIANCE {compliance_mode.upper()} strategy={strategy_name or '?'} "
-                    f"violations={_compliance_result['violations']}",
-                    file=sys.stderr,
-                )
                 if compliance_mode == "enforce":
-                    # Block all signals — strategy failed hard compliance check
+                    # Block all signals — strategy failed hard compliance check.
+                    # Emit one audit row per violation type so the Node bridge can
+                    # persist compliance.enforce_block audit rows.
                     parity_stats["compliance_blocked"] = int(len(signal_indices))
+                    for _v in _compliance_result["violations"]:
+                        _vtype = _v.get("type", "unknown") if isinstance(_v, dict) else str(_v)
+                        _vrule = _v.get("rule", "unknown") if isinstance(_v, dict) else "unknown"
+                        print(
+                            f"[compliance.enforce_block] strategy={strategy_name or '?'} "
+                            f"dir={direction} violation_type={_vtype} rule={_vrule} "
+                            f"attempted_qty={len(signal_indices)} "
+                            f"compliance_mode=enforce",
+                            file=sys.stderr,
+                        )
+                    print(
+                        f"[parity-gate] COMPLIANCE ENFORCE strategy={strategy_name or '?'} "
+                        f"violations={_compliance_result['violations']} "
+                        f"blocked={len(signal_indices)} signals",
+                        file=sys.stderr,
+                    )
                     return np.zeros_like(out), parity_stats
+                else:
+                    # Shadow mode: log, do not block
+                    for _v in _compliance_result["violations"]:
+                        _vtype = _v.get("type", "unknown") if isinstance(_v, dict) else str(_v)
+                        _vrule = _v.get("rule", "unknown") if isinstance(_v, dict) else "unknown"
+                        print(
+                            f"[compliance.shadow_logged] strategy={strategy_name or '?'} "
+                            f"dir={direction} violation_type={_vtype} rule={_vrule} "
+                            f"compliance_mode=shadow",
+                            file=sys.stderr,
+                        )
+                    print(
+                        f"[parity-gate] COMPLIANCE SHADOW strategy={strategy_name or '?'} "
+                        f"violations={_compliance_result['violations']} (not blocked)",
+                        file=sys.stderr,
+                    )
             elif _compliance_result.get("warnings"):
                 print(
                     f"[parity-gate] compliance warnings strategy={strategy_name or '?'} "
@@ -2594,12 +2645,41 @@ def run_backtest(
             combined_slippage_mult = event_slippage_mult
 
     # ─── Slippage ─────────────────────────────────────────────
+    # HIGH #5 — Symmetric exit slippage (Wave 27.5 Pass C.1).
+    #
+    # SYMMETRIC SLIPPAGE CONTRACT:
+    # slippage_arr is computed bar-by-bar with session_multipliers applied to ALL bars.
+    # Both entry and exit slippage are read from slippage_arr[bar_idx] — the session
+    # multiplier at the exit bar is automatically applied to the exit, just as the
+    # entry bar's multiplier is applied to the entry. Entries and exits always use
+    # the SESSION MULTIPLIER OF THEIR OWN BAR (not the other side's bar).
+    #
+    # Example: entry at bar 100 (RTH core, mult=1.0); exit at bar 120 (overnight, mult=2.0).
+    #   → entry_slip = slippage_arr[100] = ATR_scaled × 1.0
+    #   → exit_slip  = slippage_arr[120] = ATR_scaled × 2.0   (CORRECT — crisis exit penalized)
+    #
+    # Opt-out: set BACKTEST_EXIT_SLIPPAGE_SYMMETRIC=false to fall back to flat overhead
+    # (legacy behavior prior to Wave 27.5 — NOT recommended for institutional runs).
+    _exit_slippage_symmetric = os.environ.get("BACKTEST_EXIT_SLIPPAGE_SYMMETRIC", "true").lower() in ("true", "1", "yes")
+
     _order_type = request.fill_model.order_type if request.fill_model else "market"
     slippage_arr = compute_slippage(
         df, spec, request.slippage_ticks, atr_period,
-        session_multipliers=combined_slippage_mult,
+        session_multipliers=combined_slippage_mult if _exit_slippage_symmetric else None,
         order_type=_order_type,
     )
+    # When symmetric mode is OFF, still apply session multipliers to entries only.
+    # We track the non-session-multiplied exit slip for the audit delta.
+    _slippage_arr_no_session: Optional[np.ndarray] = None
+    if not _exit_slippage_symmetric and combined_slippage_mult is not None:
+        # Re-compute WITH multipliers for entry-only tracking (for asymmetry_delta audit)
+        _slippage_arr_session = compute_slippage(
+            df, spec, request.slippage_ticks, atr_period,
+            session_multipliers=combined_slippage_mult,
+            order_type=_order_type,
+        )
+        _slippage_arr_no_session = slippage_arr  # flat, no multipliers
+
     # spread_multiplier scales slippage for crisis stress tests / sensitivity analysis.
     # fill_model.compute_fill_probabilities_v2 already consumes spread_multiplier for
     # limit-order fill probability — applying it here ensures market-order slippage
@@ -2685,22 +2765,46 @@ def run_backtest(
             ])
 
     # ─── G2 parity gate (skip + anti-setup, default off) ────────
+    # W27.5 C.2: per-backtest compliance_mode override wins over env var.
+    # Reads from request config dict (BacktestRequest.strategy fields or raw config).
+    _per_backtest_compliance_mode: Optional[str] = getattr(config, "compliance_mode", None)
+    if _per_backtest_compliance_mode is None:
+        # Also check the raw request-level config dict if strategy config doesn't have it
+        _req_raw_config = getattr(request, "_raw_config", None)
+        if isinstance(_req_raw_config, dict):
+            _per_backtest_compliance_mode = _req_raw_config.get("compliance_mode")
+    # W27.5 C.2: initialize _parity_short to empty dict so result dict can always
+    # reference it even when no short signals exist.
+    _parity_short: dict = {}
     entries_np, _parity_long = _apply_backtest_parity_gates(
         entries_np, df, "long", config.symbol, getattr(config, "name", ""),
+        compliance_mode_override=_per_backtest_compliance_mode,
     )
     df = df.with_columns([pl.Series("entry_long", entries_np)])
     if "entry_short" in df.columns:
         short_entries_np = df["entry_short"].to_numpy()
         short_entries_np, _parity_short = _apply_backtest_parity_gates(
             short_entries_np, df, "short", config.symbol, getattr(config, "name", ""),
+            compliance_mode_override=_per_backtest_compliance_mode,
         )
         df = df.with_columns([pl.Series("entry_short", short_entries_np)])
 
     # ─── Fill probability model (Task 3.10) ───────────────────
+    # Stage 1: RSI/type-based fill probability gate (entry yes/no + size halving
+    #          on low-probability fills).  Unchanged from pre-W27.5.
+    # Stage 2: Volume-based partial fill ratio (HIGH #6, Wave 27.5 Pass C.1).
+    #          Activated when BACKTEST_PARTIAL_FILL_ENABLED=true (default).
+    #          Degrades sizes at entry bars where order_qty > volume_threshold × bar_volume.
+    #          Uses BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD env var (default 0.1).
+    #
+    # P&L contract: both stages output integer contract sizes consumed by the
+    # futures P&L formula in backtester.py.  NEVER passed to vectorbt slippage/fees.
     entries_np = df["entry_long"].to_numpy()
+    _partial_fill_audit: dict = {}
     if request.fill_model:
         from src.engine.fill_model import (
             apply_fill_model,
+            apply_volume_partial_fills,
             compute_fill_probabilities_v2,
         )
         fill_config = request.fill_model.model_dump()
@@ -2711,6 +2815,14 @@ def run_backtest(
             spread_multiplier=spread_multiplier,
         )
         entries_np, sizes = apply_fill_model(entries_np, fill_probs, sizes, seed=42)
+
+        # Stage 2: Volume-based partial fill (HIGH #6).
+        # Apply AFTER the RSI gate so we only degrade fills that passed Stage 1.
+        # Env var BACKTEST_PARTIAL_FILL_ENABLED controls activation (default: true).
+        sizes, _vol_fill_ratios, _partial_fill_audit = apply_volume_partial_fills(
+            entries_np, sizes, df,
+        )
+
         long_adjusted_sizes = sizes.copy()  # Save before rolling for re-alignment
 
     # ─── A7: Capture pre-roll signal vector ──────────────────────
@@ -3140,10 +3252,19 @@ def run_backtest(
         # Compute correct dollar P&L per trade:
         #   gross = (exit - entry) × size × point_value  (long)
         #   gross = (entry - exit) × size × point_value  (short)
-        #   slippage = per-bar slippage at entry/exit × size  (both sides)
+        #   slippage = per-bar slippage at entry/exit bars (SYMMETRIC: both use
+        #              slippage_arr[bar_idx] which includes the bar's session multiplier)
         #   commission = commission_per_side × size × 2  (roundtrip)
         #   net_pnl = gross - slippage - commission
+        #
+        # HIGH #5 — Symmetric exit slippage (Wave 27.5 Pass C.1):
+        # slippage_arr[exit_idx] carries the exit bar's session multiplier automatically.
+        # This means crisis-session exits (overnight, FOMC, etc.) are penalized at the
+        # same session-multiplied rate as entries in that session.
+        # See BACKTEST_EXIT_SLIPPAGE_SYMMETRIC env var in the slippage computation above.
         trade_pnls_list = []
+        _h5_entry_slips: list[float] = []
+        _h5_exit_slips: list[float] = []
 
         for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
@@ -3176,7 +3297,10 @@ def run_backtest(
             else:
                 gross = (exit_p - entry_p) * int_size * spec.point_value
 
-            # Per-trade friction: per-bar slippage at entry + exit bars
+            # Per-trade friction: per-bar slippage at entry + exit bars.
+            # HIGH #5: slippage_clean[exit_idx] automatically applies the exit bar's
+            # session multiplier (slippage_arr was computed with session_multipliers
+            # for all bars). Symmetric slippage is thus enforced by construction.
             entry_slip = float(slippage_clean[entry_idx]) if entry_idx < len(slippage_clean) else 0.0
             exit_slip = float(slippage_clean[exit_idx]) if exit_idx < len(slippage_clean) else 0.0
             slip_cost = (entry_slip + exit_slip) * int_size
@@ -3185,6 +3309,8 @@ def run_backtest(
             net_pnl = gross - slip_cost - comm_cost
 
             trade_pnls_list.append(net_pnl)
+            _h5_entry_slips.append(entry_slip)
+            _h5_exit_slips.append(exit_slip)
 
             trade: dict = {}
             for col in trades_records.columns:
@@ -3718,6 +3844,35 @@ def run_backtest(
             "forge_score_version": _full_forge_result.get("forge_score_version", "unknown"),
             # W23H.3: count of entry signals masked by allowed_entry_windows (0 when no windows configured)
             "skipped_outside_window_count": skipped_outside_window_count,
+            # HIGH #5 — Symmetric exit slippage audit (Wave 27.5 Pass C.1).
+            # session_mult_avg: average session multiplier applied to entry/exit slips.
+            # asymmetry_delta: difference between entry avg and exit avg — should be ~0
+            #   in symmetric mode (both use their own bar's multiplier).
+            #   Non-zero indicates a mixed-session run (entries in RTH, exits overnight, etc.)
+            #   — this is EXPECTED and NOT a bug.  It reflects real-world conditions.
+            "exit_slippage_session_applied": {
+                "symmetric_mode": _exit_slippage_symmetric,
+                "entries_session_mult_avg": round(
+                    float(np.mean(_h5_entry_slips)) if _h5_entry_slips else 0.0, 4
+                ),
+                "exits_session_mult_avg": round(
+                    float(np.mean(_h5_exit_slips)) if _h5_exit_slips else 0.0, 4
+                ),
+                "asymmetry_delta": round(
+                    (float(np.mean(_h5_exit_slips)) - float(np.mean(_h5_entry_slips)))
+                    if _h5_entry_slips and _h5_exit_slips else 0.0,
+                    4,
+                ),
+                "n_trades": len(_h5_entry_slips),
+            },
+            # HIGH #6 — Partial fill model audit (Wave 27.5 Pass C.1).
+            "partial_fill_modeled": _partial_fill_audit if _partial_fill_audit else {
+                "enabled": False,
+                "total_orders": 0,
+                "partial_fills": 0,
+                "avg_fill_ratio": 1.0,
+                "avg_slippage_delta_per_partial": 0.0,
+            },
         },
         # CRITICAL #1 — DSL guard summary (E.3/E.4/E.5 enforcement).
         # Additive field: downstream consumers that don't read it are unaffected.
@@ -3737,7 +3892,19 @@ def run_backtest(
         # to align backtest sizing with paper-engine sizing. Enables operator to
         # see at a glance whether the backtest ran with or without VIX scaling.
         "parity_metadata": _parity_metadata,
+        # W27.5 C.2 — parity gate stats: compliance gate enforcement summary.
+        # TS side reads run_receipt.parity_long / run_receipt.parity_short to
+        # compute compliance aggregation for Discord warning.
+        "parity_gate": {
+            "long": _parity_long,
+            "short": _parity_short,
+        },
     }
+    # Also embed parity gate stats in run_receipt for backward-compat TS readers.
+    # This is done after the result dict is built to avoid mutating run_receipt template.
+    if isinstance(result.get("run_receipt"), dict):
+        result["run_receipt"]["parity_long"] = _parity_long
+        result["run_receipt"]["parity_short"] = _parity_short
 
     # ─── Pass B-2: Invariant Harness (always runs — cheap pure validation) ───
     # Runs AFTER result dict is fully assembled, BEFORE determinism check.
@@ -4498,12 +4665,16 @@ def run_class_backtest(
             firm_key=firm_key, htf_cache=htf_cache, spec=spec,
             strategy_name=strategy.name,
         )
-        # G2 parity gate (skip + anti-setup, default off via env vars)
+        # G2 parity gate (skip + anti-setup + compliance gate)
+        # W27.5 C.2: read compliance_mode from strategy object if available.
+        _cls_compliance_mode: Optional[str] = getattr(strategy, "compliance_mode", None)
         long_entries_np, _parity_long = _apply_backtest_parity_gates(
             long_entries_np, df, "long", symbol, strategy.name,
+            compliance_mode_override=_cls_compliance_mode,
         )
         short_entries_np, _parity_short = _apply_backtest_parity_gates(
             short_entries_np, df, "short", symbol, strategy.name,
+            compliance_mode_override=_cls_compliance_mode,
         )
 
     # Merge gate stats

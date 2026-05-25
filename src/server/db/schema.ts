@@ -162,6 +162,13 @@ export const backtests = pgTable(
     // MC engine asserts this matches current rules before running; mismatch → refuse + audit.
     // Applied migration: 0146_backtests_firm_rules_version.sql (idx 148).
     firmRulesVersion: text("firm_rules_version"),
+    // Wave 27.5 Pass C.2 — Compliance Gate Enforcement Mode Env Knob (H4)
+    // "shadow" = violations logged, trades NOT blocked (research escape hatch).
+    // "enforce" = violating trades SKIPPED + audit row emitted (institutional default).
+    // Resolved at INSERT: per-backtest config.compliance_mode > env BACKTEST_COMPLIANCE_MODE > "enforce".
+    // Research runs must explicitly opt-out; silence = enforcement.
+    // Applied migration: 0148_backtests_compliance_mode.sql (idx 150).
+    complianceMode: text("compliance_mode"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),

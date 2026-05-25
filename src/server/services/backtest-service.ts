@@ -34,6 +34,8 @@ import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { notifyCritical } from "./notification-service.js";
 // Wave 27.5 Pass A.1 — CRITICAL #1: stamp firm rules version fingerprint at backtest creation
 import { computeFirmRulesVersion } from "../lib/firm-rules-version.js";
+// Wave 27.5 Pass C.2 — compliance gate enforcement mode env knob
+import { resolveComplianceMode, isResearchBacktest } from "../lib/compliance-mode.js";
 
 /**
  * Normalize gate_result from Python into a stable JSONB shape.
@@ -363,6 +365,12 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
   // and the Python backtester also writes it independently from Python-side globals.
   const firmRulesVersionStamp = computeFirmRulesVersion();
 
+  // W27.5 C.2: resolve compliance_mode at INSERT time so the audit trail records
+  // which mode was active for this specific backtest.
+  const configRecord = config as unknown as Record<string, unknown>;
+  const { mode: resolvedComplianceMode, source: complianceModeSource } =
+    resolveComplianceMode(configRecord);
+
   const [row] = await db
     .insert(backtests)
     .values({
@@ -373,10 +381,26 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       startDate: new Date(config.start_date),
       endDate: new Date(config.end_date),
       status: "running",
-      config: config as unknown as Record<string, unknown>,
+      config: configRecord,
       firmRulesVersion: firmRulesVersionStamp,
+      complianceMode: resolvedComplianceMode,
     })
     .returning();
+
+  // Log research-mode override at INSERT time so operators can audit which backtests
+  // were run in shadow mode (potentially over-optimistic P&L estimates).
+  if (isResearchBacktest(configRecord)) {
+    logger.warn(
+      { backtestId: row.id, strategyId, complianceMode: "shadow", source: complianceModeSource },
+      "Backtest started in RESEARCH (shadow) compliance mode — violations will be logged but NOT block trades. " +
+      "P&L estimates may be over-optimistic for strategies with compliance violations.",
+    );
+  } else {
+    logger.info(
+      { backtestId: row.id, strategyId, complianceMode: resolvedComplianceMode, source: complianceModeSource },
+      "Backtest compliance gate mode resolved at INSERT",
+    );
+  }
 
   const backtestId = row.id;
   backtestSpan.setAttribute("backtestId", backtestId);
@@ -879,6 +903,117 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         logger.warn(
           { backtestId, strategyId, err: truthinessErr },
           "backtest.truthiness: audit/alert block failed (non-blocking — backtest is still completed)",
+        );
+      }
+    })();
+
+    // ─── W27.5 C.2: Compliance aggregation Discord warning ─────────────────────
+    // When enforce mode is active and violations exceeded 5% of attempted trades,
+    // emit a family-grade Discord WARN so operators know how many trades were
+    // blocked by firm-rule enforcement.
+    (async () => {
+      try {
+        const resultRecord = result as unknown as Record<string, unknown>;
+        // parity_gate field (W27.5 C.2) carries compliance gate stats at top-level result.
+        // run_receipt.parity_long / parity_short is the backward-compat fallback.
+        const parityGate = resultRecord.parity_gate as Record<string, unknown> | null | undefined;
+        const runReceipt = resultRecord.run_receipt as Record<string, unknown> | null | undefined;
+        if (!parityGate && !runReceipt) return;
+
+        // Aggregate compliance_blocked across long + short parity stats
+        const parityLong = (parityGate?.["long"] ?? runReceipt?.parity_long) as Record<string, unknown> | null | undefined;
+        const parityShort = (parityGate?.["short"] ?? runReceipt?.parity_short) as Record<string, unknown> | null | undefined;
+        const blockedLong = Number(parityLong?.compliance_blocked ?? 0);
+        const blockedShort = Number(parityShort?.compliance_blocked ?? 0);
+        const totalBlocked = blockedLong + blockedShort;
+        const complianceModeInResult = String(parityLong?.compliance_mode ?? parityShort?.compliance_mode ?? resolvedComplianceMode);
+
+        if (complianceModeInResult !== "enforce" || totalBlocked === 0) return;
+
+        // Compute attempted = signals_evaluated before blocking
+        const attemptedLong = Number(parityLong?.skip_signals_evaluated ?? 0) + blockedLong;
+        const attemptedShort = Number(parityShort?.skip_signals_evaluated ?? 0) + blockedShort;
+        const totalAttempted = attemptedLong + attemptedShort;
+
+        if (totalAttempted === 0) return;
+
+        const blockedPct = totalBlocked / totalAttempted;
+        const DISCORD_THRESHOLD = 0.05; // 5% of attempted trades
+
+        // Log at info level regardless of threshold
+        logger.info(
+          {
+            event: "backtest.compliance_enforcement_summary",
+            backtestId,
+            strategyId,
+            totalBlocked,
+            totalAttempted,
+            blockedPct: (blockedPct * 100).toFixed(1) + "%",
+            complianceMode: complianceModeInResult,
+          },
+          "Compliance gate enforcement summary",
+        );
+
+        // Emit audit row for every enforce-mode backtest that had blocks
+        await insertAuditRowSafe({
+          action: "compliance.enforce_block",
+          entityType: "backtest",
+          entityId: backtestId,
+          input: { strategyId, complianceMode: complianceModeInResult },
+          result: {
+            total_blocked: totalBlocked,
+            total_attempted: totalAttempted,
+            blocked_pct: blockedPct,
+            violation_types: (parityLong?.compliance_violations as unknown[] | undefined ?? [])
+              .concat(parityShort?.compliance_violations as unknown[] | undefined ?? []),
+          },
+          status: "success",
+        });
+
+        if (blockedPct > DISCORD_THRESHOLD) {
+          const { notifyWarning } = await import("./notification-service.js");
+          const { appendFamilyGradePostscript } = await import("../lib/notification-helpers.js");
+          const strategyName = config.strategy.name ?? strategyId;
+          const firmId = (config as unknown as Record<string, unknown>).firm_key as string | undefined ?? "unknown";
+          const topViolation = (() => {
+            const allViolations = [
+              ...(parityLong?.compliance_violations as Array<Record<string, unknown>> | undefined ?? []),
+              ...(parityShort?.compliance_violations as Array<Record<string, unknown>> | undefined ?? []),
+            ];
+            if (!allViolations.length) return "unknown";
+            // Count by type
+            const counts: Record<string, number> = {};
+            for (const v of allViolations) {
+              const t = String(v?.type ?? "unknown");
+              counts[t] = (counts[t] ?? 0) + 1;
+            }
+            return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "unknown";
+          })();
+
+          const operatorBody =
+            `[WARN] Compliance enforcement blocked ${totalBlocked}/${totalAttempted} trades during backtest of ${strategyName}\n` +
+            `Firm: ${firmId}\n` +
+            `Blocked: ${(blockedPct * 100).toFixed(1)}% of attempted trades\n` +
+            `Most common violation: ${topViolation}\n` +
+            `Report: /api/backtests/${backtestId}/compliance-summary`;
+
+          const plainWhat =
+            "The bot was tested against a prop firm's rules. " +
+            `Some attempted trades (${totalBlocked} of ${totalAttempted}) would have broken the rules and were blocked.`;
+
+          const plainAction =
+            "If this strategy moves to live trading, those trades simply won't happen. No action needed.";
+
+          notifyWarning(
+            "Compliance Enforcement Blocked Trades",
+            appendFamilyGradePostscript(operatorBody, plainWhat, plainAction),
+            { backtestId, strategyId, totalBlocked, totalAttempted, firmId },
+          );
+        }
+      } catch (complianceAggErr) {
+        logger.warn(
+          { backtestId, strategyId, err: complianceAggErr },
+          "Compliance aggregation Discord warning failed (non-blocking)",
         );
       }
     })();

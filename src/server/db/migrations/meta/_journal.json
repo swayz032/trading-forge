@@ -1044,6 +1044,20 @@
       "when": 1748217600000,
       "tag": "0146_backtests_firm_rules_version",
       "breakpoints": true
+    },
+    {
+      "idx": 149,
+      "version": "7",
+      "when": 1748304000000,
+      "tag": "0147_quantum_mc_runs_replay_uniqueness",
+      "breakpoints": true
+    },
+    {
+      "idx": 150,
+      "version": "7",
+      "when": 1748390400000,
+      "tag": "0148_backtests_compliance_mode",
+      "breakpoints": true
     }
   ]
 }
