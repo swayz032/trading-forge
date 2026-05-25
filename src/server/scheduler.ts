@@ -54,6 +54,8 @@ import { getPhase, flipPhaseToHard } from "./services/harsh-regime-phase-service
 import { runN8nExecutionScrape } from "./services/n8n-execution-scraper-service.js";
 // W26 Pass 6: Topstep consistency concentration tracker daily digest
 import { runConsistencyDailyDigest } from "./services/consistency-tracker-service.js";
+// W27 Pass 1.5 A2: Weekly quantum replay analysis + Discord verdict emitter
+import { runQuantumReplayWeeklyAnalysis } from "./services/quantum-replay-weekly-service.js";
 
 let initialized = false;
 
@@ -367,6 +369,12 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // state — operator needs the exit_plan distribution and invariant proof even when
   // the bot is in PAUSE. This is an observability signal, not a trading research signal.
   "wave26-cohort-daily-audit-report",   // W26C: cohort adaptive-exit audit snapshot
+  // W27 Pass 1.5 A2: weekly quantum replay verdict must fire even when pipeline is
+  // paused. The quantum harness is an observability / advisory signal for the operator
+  // — an operator who paused trading still wants to know whether the disagreement
+  // predictor is producing signal. Silencing it during a pipeline pause would break
+  // the evidence-accumulation contract.
+  "quantum-replay-weekly-analysis",     // W27P1.5: quantum replay weekly verdict
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -3316,7 +3324,7 @@ except Exception as e:
   });
   _scheduledJobs.add("harsh-regime-phase-activation-check");
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT), naked-poc-sync-daily (4:30 PM ET weekdays — W25.6-P3A3, pipeline-gate-EXEMPT), liquidity-map-refresh (every 30min RTH Mon-Fri — W25.6-P3A1, pipeline-gate-EXEMPT)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT), naked-poc-sync-daily (4:30 PM ET weekdays — W25.6-P3A3, pipeline-gate-EXEMPT), liquidity-map-refresh (every 30min RTH Mon-Fri — W25.6-P3A1, pipeline-gate-EXEMPT), quantum-replay-weekly-analysis (Sunday 19:00 ET — W27P1.5-A2, pipeline-gate-EXEMPT, kill-switch=auto_patch_loop_enabled)");
 
   // ─── Wave 24 Pass 1 Item 1: BW session refresh — every 6 hours ────────────────
   // CATASTROPHIC GAP: runBwSessionRefreshCheck existed but had ZERO callers in
@@ -4301,6 +4309,68 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("narrative-state-tracker");
+
+  // ─── Wave 27 Pass 1.5 A2: Weekly quantum replay analysis — Sunday 19:00 ET ──
+  //
+  // Spawns scripts/replay-grade-quantum.ts --apply, parses Spearman + binomial
+  // stats + verdict, and posts a family-grade Discord notification.
+  //
+  // Schedule: 0 23 * * 0 (Sunday 23:00 UTC = 19:00 ET during EDT, 18:00 ET during EST).
+  // DST-aware double-fire: fires at 23:00 UTC AND 00:00 UTC next day (Monday) to
+  // cover EDT (UTC-4) and EST (UTC-5). ET hour guard inside handler allows execution
+  // only when ET hour == 19 (Sunday evening, regardless of DST offset).
+  //
+  // Kill switch: system_parameters.auto_patch_loop_enabled="false" halts the job.
+  // Timeout: QUANTUM_REPLAY_WEEKLY_TIMEOUT_MS env var (default 600000ms = 10 min).
+  // NOT pipeline-gated: quantum harness is an observability / advisory signal —
+  // an operator who paused trading still needs to know whether the predictor has signal.
+  registerJob("quantum-replay-weekly-analysis", 7 * 24 * 60 * 60 * 1000, async () => {
+    const result = await runQuantumReplayWeeklyAnalysis();
+    logger.info(
+      {
+        job: "quantum-replay-weekly-analysis",
+        status: result.status,
+        verdict: result.verdict,
+        sampleSize: result.sampleSize,
+        spearmanRho: result.spearmanRho,
+        durationMs: result.durationMs,
+        correlationId: result.correlationId,
+      },
+      "quantum-replay-weekly-analysis: tick complete",
+    );
+  });
+
+  // Sun 19:00 ET = Sun 23:00 UTC (EDT, UTC-4) or Mon 00:00 UTC (EST, UTC-5).
+  // Fire at both; ET day+hour guard inside the handler filters to Sunday 19:00 ET only.
+  cron.schedule("0 23,0 * * 0,1", async () => {
+    if (!_tryAcquireJobLock("quantum-replay-weekly-analysis")) return;
+    try {
+      const now = new Date();
+      const etStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        weekday: "short",
+        hour: "numeric",
+        hour12: false,
+      });
+      // Must be Sunday at 19:00 ET — cron fires Sun 23:00 UTC (EDT) or Mon 00:00 UTC (EST)
+      if (!etStr.includes("Sun") || !etStr.includes("19")) {
+        logger.debug(
+          { etStr, utcHour: now.getUTCHours(), utcDay: now.getUTCDay() },
+          "Scheduler: quantum-replay-weekly-analysis cron fired but not Sunday 19:00 ET — skipping",
+        );
+        return;
+      }
+      // _PIPELINE_GATE_EXEMPT — no gate call needed
+      logger.info({ job: "quantum-replay-weekly-analysis" }, "running pipeline-gate-exempt quantum replay weekly analysis (Sunday 19:00 ET confirmed)");
+      const t0qrw = Date.now();
+      await withRetry("quantum-replay-weekly-analysis", SCHEDULER_JOBS["quantum-replay-weekly-analysis"].run, 1);
+      markJobRun("quantum-replay-weekly-analysis");
+      emitJobComplete("quantum-replay-weekly-analysis", Date.now() - t0qrw);
+    } finally {
+      _releaseJobLock("quantum-replay-weekly-analysis");
+    }
+  });
+  _scheduledJobs.add("quantum-replay-weekly-analysis");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
