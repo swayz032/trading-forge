@@ -9,7 +9,10 @@ import { logger } from "../lib/logger.js";
 // TODO: correlation_id not threaded through most call sites in this file.
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { onPaperTradeClose } from "../scheduler.js";
-import { getFirmAccount, CONTRACT_SPECS, getCommissionPerSide } from "../../shared/firm-config.js";
+import { getFirmAccount, CONTRACT_SPECS } from "../../shared/firm-config.js";
+// Wave 27.5 Pass D.2: symbol-aware commission — replaces the legacy symbol-agnostic
+// getCommissionPerSide(firmId) for position-close P&L calculations.
+import { getCommissionPerSide as getCommissionPerSideBySymbol } from "../lib/contract-class.js";
 import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCache } from "./paper-risk-gate.js";
 import { getEtOffsetMinutes } from "../lib/dst-utils.js";
 import { tracer } from "../lib/tracing.js";
@@ -1784,9 +1787,11 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   const grossPnl = direction * (actualExit - entryPrice) * spec.pointValue * pos.contracts;
 
   // Commission: round-trip (entry + exit sides) × contracts
-  // Per-side rate comes from the firm's commissionPerSide in firm-config.ts.
-  // Falls back to $0.62/side when firmId is null/unknown (conservative — avoids overstating net P&L).
-  const commissionPerSide = getCommissionPerSide(sessionForFirm?.firmId);
+  // Wave 27.5 Pass D.2: symbol-aware lookup via contract-class.ts.
+  // Resolves micro ($0.37-$0.62/side) vs mini ($3.70-$6.20/side) per symbol + firm.
+  // Falls back to $0.62/side when symbol class or firmId is unknown (conservative —
+  // avoids overstating net P&L; same fallback as the legacy helper).
+  const commissionPerSide = getCommissionPerSideBySymbol(pos.symbol, sessionForFirm?.firmId ?? null);
   const commission = commissionPerSide * 2 * pos.contracts;
 
   // closedAt is declared here (before roll cost and enrichment) so it serves as the
