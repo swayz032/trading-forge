@@ -953,7 +953,13 @@ def run_walk_forward(
             _pbo_pass = (_pbo_val is None) or (_pbo_val <= _pbo_threshold)
             pbo_result["pbo_pass"] = _pbo_pass
             pbo_result["pbo_threshold"] = _pbo_threshold
-            pbo_result["pbo_p_value"] = None  # Reserved for future bayesian extension
+            # pbo_p_value is now populated by compute_pbo() (Wave 27.5 Pass D.4).
+            # compute_pbo uses scipy.stats.binomtest on the IS/OOS rank-pair count.
+            # Result is already present in pbo_result — no override needed.
+            # Fall back to None only when compute_pbo didn't include the key
+            # (e.g. scipy not installed, or compute_pbo pre-dates this version).
+            if "pbo_p_value" not in pbo_result:
+                pbo_result["pbo_p_value"] = None
 
             if _pbo_val is not None:
                 if _pbo_val > _pbo_threshold:
@@ -1097,7 +1103,10 @@ def run_walk_forward(
         # Wave 27.5 Pass B HIGH #3 — PBO auto-wire (additive; None when < 4 windows)
         "pbo": pbo_result.get("pbo") if pbo_result else None,
         "pbo_pass": pbo_result.get("pbo_pass") if pbo_result else None,
-        "pbo_p_value": None,  # Reserved for Bayesian extension
+        # Wave 27.5 Pass D.4: pbo_p_value now populated by compute_pbo() via
+        # scipy.stats.binomtest — no longer hardcoded None.
+        # Falls back to None when compute_pbo unavailable or < 10 combinations.
+        "pbo_p_value": pbo_result.get("pbo_p_value") if pbo_result else None,
         "pbo_detail": pbo_result,
     }
 

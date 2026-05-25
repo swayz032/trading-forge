@@ -639,6 +639,7 @@ def compute_pbo(
             "pbo": None,
             "interpretation": f"Need at least 4 walk-forward windows for PBO (have {n_windows}).",
             "n_combinations": 0,
+            "pbo_p_value": None,  # Insufficient data
         }
 
     # Extract OOS metric values per window
@@ -674,10 +675,34 @@ def compute_pbo(
     else:
         interp = f"PBO={pbo:.2f} — High overfitting probability. Strategy likely curve-fit."
 
+    # ── pbo_p_value real computation (Wave 27.5 Pass D.4) ─────────────────
+    # Binomial test under null hypothesis H0: PBO = 0.5 (no systematic overfitting).
+    # n_overfit = number of IS/OOS combination pairs where IS-selected strategy
+    # degraded in OOS (the "success" count under H0: PBO).
+    # p-value = P(observing this or more extreme | H0: p=0.5).
+    #   Small p → statistically significant departure from baseline.
+    #   PBO >> 0.5 → overfit signal; PBO << 0.5 → robust / generalises well.
+    # Two-sided test is appropriate: both directions are informative.
+    # Minimum 10 combinations required for statistical reliability.
+    pbo_p_value: float | None = None
+    _MIN_COMBOS_FOR_PVALUE = 10
+    if n_combos >= _MIN_COMBOS_FOR_PVALUE:
+        try:
+            from scipy.stats import binomtest as _binomtest
+            _btest = _binomtest(n_overfit, n_combos, p=0.5, alternative="two-sided")
+            pbo_p_value = float(_btest.pvalue)
+        except ImportError:
+            # scipy not available — pbo_p_value remains None
+            pass
+        except Exception:
+            # Any computation failure → None (fail-soft, never blocks PBO result)
+            pass
+
     return {
         "pbo": round(pbo, 4),
         "interpretation": interp,
         "n_combinations": n_combos,
+        "pbo_p_value": pbo_p_value,
     }
 
 

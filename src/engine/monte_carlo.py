@@ -1465,6 +1465,116 @@ def run_monte_carlo(
             block_length=computed_block_len,
         )
 
+    elif request.method == "regime_block_bootstrap":
+        # ── MED #7 — Regime-Aware MC Resampling (Wave 27.5 Pass D.4) ─────────
+        # Opt-in: requires MC_REGIME_AWARE_BOOTSTRAP_ENABLED=true
+        # Caller must supply regime_per_trade and trades as list[dict] via
+        # MonteCarloRequest.regime_per_trade + raw_trades_dicts fields.
+        # When env var is off or fields missing → fall back to block_bootstrap.
+        _regime_enabled = _os.environ.get(
+            "MC_REGIME_AWARE_BOOTSTRAP_ENABLED", "false",
+        ).lower() in ("true", "1", "yes")
+
+        _regime_per_trade = getattr(request, "regime_per_trade", None)
+        _raw_trades_dicts = getattr(request, "raw_trades_dicts", None)
+
+        if (
+            _regime_enabled
+            and _regime_per_trade is not None
+            and _raw_trades_dicts is not None
+            and len(_regime_per_trade) == len(_raw_trades_dicts)
+        ):
+            try:
+                from src.engine.mc_regime_resampling import run_regime_block_bootstrap
+                computed_block_len = optimal_block_length(trades_arr)
+                paths, _regime_audit = run_regime_block_bootstrap(
+                    trades=_raw_trades_dicts,
+                    regime_per_trade=_regime_per_trade,
+                    n_paths=request.num_simulations,
+                    block_length=computed_block_len,
+                    seed=request.seed,
+                    pnl_key="pnl",
+                    backtest_id=request.backtest_id,
+                )
+            except Exception as _regime_exc:
+                import sys as _sys
+                print(
+                    f"[MC regime_block_bootstrap] failed ({_regime_exc}). "
+                    f"Falling back to block_bootstrap.",
+                    file=_sys.stderr,
+                )
+                computed_block_len = optimal_block_length(trades_arr)
+                paths = block_bootstrap(
+                    trades_arr, request.num_simulations,
+                    expected_block_length=computed_block_len, seed=request.seed,
+                )
+        else:
+            # Env disabled or missing data → transparent fallback to block_bootstrap
+            computed_block_len = optimal_block_length(trades_arr)
+            paths = block_bootstrap(
+                trades_arr, request.num_simulations,
+                expected_block_length=computed_block_len, seed=request.seed,
+            )
+
+    elif request.method == "multi_asset_correlation":
+        # ── MED #8 — Multi-Asset Correlation MC (Wave 27.5 Pass D.4) ──────────
+        # Opt-in: requires MC_MULTI_ASSET_CORRELATION_ENABLED=true
+        # Caller must supply daily_pnls_per_symbol: dict[str, list[float]]
+        # via MonteCarloRequest.daily_pnls_per_symbol.
+        # When env var is off or field missing → fall back to block_bootstrap.
+        _ma_enabled = _os.environ.get(
+            "MC_MULTI_ASSET_CORRELATION_ENABLED", "false",
+        ).lower() in ("true", "1", "yes")
+
+        _daily_pnls_per_symbol = getattr(request, "daily_pnls_per_symbol", None)
+
+        if (
+            _ma_enabled
+            and _daily_pnls_per_symbol is not None
+            and isinstance(_daily_pnls_per_symbol, dict)
+            and len(_daily_pnls_per_symbol) >= 2
+        ):
+            try:
+                from src.engine.mc_multi_asset import run_multi_asset_correlation_bootstrap
+                computed_block_len = optimal_block_length(trades_arr)
+                _ma_paths_dict, _ma_audit = run_multi_asset_correlation_bootstrap(
+                    daily_pnls_per_symbol=_daily_pnls_per_symbol,
+                    n_paths=request.num_simulations,
+                    block_length=computed_block_len,
+                    seed=request.seed,
+                    backtest_id=request.backtest_id,
+                )
+                # Combine per-symbol paths into a single aggregate path (sum of symbols)
+                # for downstream risk metrics (which expect single-asset paths).
+                # Individual symbol paths are stored in result["multi_asset_paths"].
+                symbol_order = sorted(_ma_paths_dict.keys())
+                combined = np.sum(
+                    np.stack([_ma_paths_dict[s] for s in symbol_order], axis=0),
+                    axis=0,
+                )  # shape (n_paths, n_obs)
+                paths = combined
+            except Exception as _ma_exc:
+                import sys as _sys
+                print(
+                    f"[MC multi_asset_correlation] failed ({_ma_exc}). "
+                    f"Falling back to block_bootstrap.",
+                    file=_sys.stderr,
+                )
+                computed_block_len = optimal_block_length(trades_arr)
+                paths = block_bootstrap(
+                    trades_arr, request.num_simulations,
+                    expected_block_length=computed_block_len, seed=request.seed,
+                )
+                _ma_paths_dict = None
+        else:
+            # Env disabled or missing data → transparent fallback to block_bootstrap
+            computed_block_len = optimal_block_length(trades_arr)
+            paths = block_bootstrap(
+                trades_arr, request.num_simulations,
+                expected_block_length=computed_block_len, seed=request.seed,
+            )
+            _ma_paths_dict = None
+
     else:  # "both"
         # Split simulations: trade_resample + return_bootstrap + arch_stationary
         third = request.num_simulations // 3
@@ -1612,8 +1722,18 @@ def run_monte_carlo(
     if firm_survival:
         result["firm_survival"] = firm_survival
 
-    if request.method in ("block_bootstrap", "arch_stationary", "both"):
+    if request.method in (
+        "block_bootstrap", "arch_stationary", "both",
+        "regime_block_bootstrap", "multi_asset_correlation",
+    ):
         result["block_length"] = computed_block_len
+
+    # Wave 27.5 Pass D.4 — MED #8: store per-symbol paths when multi_asset ran
+    if request.method == "multi_asset_correlation" and locals().get("_ma_paths_dict") is not None:
+        result["multi_asset_paths"] = {
+            sym: paths_arr.tolist()[:min(10, len(paths_arr))]  # store first 10 for inspection
+            for sym, paths_arr in _ma_paths_dict.items()
+        }
 
     # HIGH #8: Include outlier trim audit in result when trimming was applied
     if _outlier_trim_audit is not None:
