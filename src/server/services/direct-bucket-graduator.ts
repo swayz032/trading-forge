@@ -357,7 +357,12 @@ export function deriveEntryIndicator(
   // pattern_library. Add explicit routes for the newly-graduating archetypes.
   if (/supertrend/.test(cn)) return "supertrend";
   if (/cumulative.delta|cvd.divergence/.test(cn)) return "cumulative_delta";
-  if (/volume.profile|market.profile|(^|_)poc(_|$)|(^|_)vah(_|$)|(^|_)val(_|$)/.test(cn)) return "volume_profile";
+  // Wave 26 Pass E.3 fix-up (2026-05-25) — engine's pattern_library doesn't
+  // compile `volume_profile` as a parametric indicator. Route to liquidity_sweep_breakout
+  // (semantic match: VP imbalance / POC / VAH / VAL areas are where institutional
+  // liquidity rests and sweeps occur). All VP-concept strategies stay tradable
+  // via the existing engine archetype that DOES compile.
+  if (/volume.profile|market.profile|(^|_)poc(_|$)|(^|_)vah(_|$)|(^|_)val(_|$)/.test(cn)) return "liquidity_sweep_breakout";
   if (/ichimoku/.test(cn)) return "ichimoku_cloud";
   if (/(^|_)dema(_|$)|double.exponential/.test(cn)) return "dema_crossover";
   if (/(^|_)alma(_|$)|arnaud.legoux/.test(cn)) return "alma_filter";
@@ -936,6 +941,28 @@ export async function graduateBucketDirectly(opts: {
     const fallbackTicks = envOverride ? Number.parseInt(envOverride, 10) : SWEEP_BUFFER_DEFAULTS[market];
     if (Number.isFinite(fallbackTicks) && fallbackTicks >= 1 && fallbackTicks <= 10) {
       effectiveEntryParams.buffer_ticks = fallbackTicks;
+    }
+  }
+
+  // Wave 26 Pass E.3 fix-up — liquidity_sweep_breakout default-fill. Same
+  // pattern as buffer_ticks. Fires when VP/POC/vacuum concepts re-route here.
+  // Sensible institutional defaults: sweep_lookback=20 bars (typical equal-high
+  // / equal-low cluster lookback), volume_spike_multiplier=1.5x (sweep candle
+  // volume > 1.5× average is the institutional sweep signature).
+  if (earlyIndicator === "liquidity_sweep_breakout") {
+    if (effectiveEntryParams.sweep_lookback === null || effectiveEntryParams.sweep_lookback === undefined) {
+      const env = process.env.LIQUIDITY_SWEEP_LOOKBACK_DEFAULT;
+      const fallback = env ? Number.parseInt(env, 10) : 20;
+      if (Number.isFinite(fallback) && fallback >= 5 && fallback <= 100) {
+        effectiveEntryParams.sweep_lookback = fallback;
+      }
+    }
+    if (effectiveEntryParams.volume_spike_multiplier === null || effectiveEntryParams.volume_spike_multiplier === undefined) {
+      const env = process.env.LIQUIDITY_SWEEP_VOLUME_MULT_DEFAULT;
+      const fallback = env ? Number.parseFloat(env) : 1.5;
+      if (Number.isFinite(fallback) && fallback >= 1.0 && fallback <= 5.0) {
+        effectiveEntryParams.volume_spike_multiplier = fallback;
+      }
     }
   }
 
