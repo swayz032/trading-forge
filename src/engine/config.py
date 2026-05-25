@@ -520,6 +520,16 @@ class MonteCarloRequest(BaseModel):
     # None means the backtest predates the drift-check feature; MC runs with a warning.
     backtest_firm_rules_version: Optional[str] = None
 
+    # Wave 27.5 Pass C.1 — HIGH #8: Optional outlier truncation.
+    # Trims extreme individual trade P&Ls to ±multiplier × |worst_month| before
+    # bootstrap resampling.  Prevents a single catastrophic trade from dominating
+    # block-bootstrap resampling and artificially amplifying tail risk in paths.
+    # Default: None (no trimming — backward compat).
+    # Institutional default: 2.0.  Set MC_TRIM_OUTLIER_MULTIPLIER env var to activate.
+    # WARNING: trimming reduces tail-risk reflection of true catastrophic events.
+    # Use with care — opt-IN only.
+    trim_outlier_multiplier: Optional[float] = None
+
     @field_validator("num_simulations")
     @classmethod
     def validate_num_simulations(cls, v: int) -> int:

@@ -236,8 +236,82 @@ def return_bootstrap(
     return _to_numpy(paths, xp)
 
 
+def _safe_autocorrelation(trades: np.ndarray) -> tuple[float, bool]:
+    """Compute lag-1 autocorrelation with NaN guard and fallback detection.
+
+    HIGH #7 — MC Autocorrelation Detection Fragile.
+    np.corrcoef() produces NaN when trades have near-zero variance
+    (many breakeven fills) or when all values are identical.
+    This guard ensures block-bootstrap is chosen (safer assumption) when
+    autocorrelation cannot be reliably measured.
+
+    Design principle: "When in doubt, prefer block-bootstrap. False-positive
+    autocorrelation detection is preferable to false-negative, which silently
+    underestimates tail risk."
+
+    Args:
+        trades: 1D array of trade P&Ls (len >= 2)
+
+    Returns:
+        (autocorrelation_value, detection_failed).
+        detection_failed=True means the value is unreliable → block-bootstrap
+        should be forced regardless of the returned value.
+    """
+    if len(trades) < 2:
+        return 0.0, True
+
+    # Primary: scipy.stats.pearsonr — returns (r, p_value), handles edge cases
+    try:
+        from scipy import stats as _sp_stats
+        r, p_value = _sp_stats.pearsonr(trades[:-1], trades[1:])
+        if np.isnan(r) or np.isinf(r):
+            # pearsonr returned NaN/Inf — near-zero variance case
+            import sys as _sys
+            print(
+                "[autocorr] scipy.stats.pearsonr returned NaN/Inf — "
+                "defaulting to block-bootstrap (safer assumption).",
+                file=_sys.stderr,
+            )
+            return 0.0, True
+        # Low-confidence detection: p-value > 0.5 means we cannot reliably distinguish
+        # autocorrelation from noise. Force block-bootstrap in this case.
+        if p_value > 0.5:
+            return r, True  # detected but unreliable — treat as failed
+        return r, False
+    except ImportError:
+        pass  # scipy not available — fall through to corrcoef fallback
+
+    # Fallback: np.corrcoef with explicit NaN guard
+    try:
+        autocorr = np.corrcoef(trades[:-1], trades[1:])[0, 1]
+    except Exception:
+        import sys as _sys
+        print(
+            "[autocorr] np.corrcoef raised an exception — "
+            "defaulting to block-bootstrap (safer assumption).",
+            file=_sys.stderr,
+        )
+        return 0.0, True
+
+    if np.isnan(autocorr) or np.isinf(autocorr):
+        import sys as _sys
+        print(
+            "[autocorr] np.corrcoef returned NaN/Inf — "
+            "defaulting to block-bootstrap (safer assumption).",
+            file=_sys.stderr,
+        )
+        return 0.0, True
+
+    return float(autocorr), False
+
+
 def optimal_block_length(trades: np.ndarray) -> int:
     """Data-driven block length: PPW (2004) when arch available, else cube-root fallback.
+
+    HIGH #7 (Wave 27.5 Pass C.1): Uses _safe_autocorrelation() instead of bare
+    np.corrcoef() to guard against NaN when trades have near-zero variance
+    (breakeven fills, identical values). When detection fails or is low-confidence,
+    block-bootstrap is forced (conservative assumption preserving tail risk).
 
     Args:
         trades: 1D array of trade P&Ls
@@ -246,6 +320,7 @@ def optimal_block_length(trades: np.ndarray) -> int:
         Block length clamped to [3, n//10]
     """
     n = len(trades)
+    _autocorr_detection_failed = False
     try:
         from arch.bootstrap import optimal_block_length as ppw_obl
         result = ppw_obl(trades)
@@ -254,10 +329,34 @@ def optimal_block_length(trades: np.ndarray) -> int:
         # Fallback: cube-root + autocorrelation
         block_len = int(np.ceil(n ** (1 / 3)))
         if n > 1:
-            autocorr = np.corrcoef(trades[:-1], trades[1:])[0, 1]
-            if not np.isnan(autocorr) and autocorr > 0.15:
+            autocorr, _autocorr_detection_failed = _safe_autocorrelation(trades)
+            # When detection failed: force block-length expansion (safer assumption).
+            # A false-positive (spurious high autocorr) → larger blocks → more
+            # conservative bootstrap is always preferable to underestimating tail risk.
+            if _autocorr_detection_failed or autocorr > 0.15:
                 block_len = int(block_len * 1.5)
-    return max(3, min(block_len, n // 10))
+    clamped = max(3, min(block_len, n // 10))
+
+    # Audit row for detection failures (best-effort — never blocks bootstrap)
+    if _autocorr_detection_failed:
+        try:
+            from src.engine.audit_writer import write_audit_row_sync
+            write_audit_row_sync(
+                action="monte_carlo.autocorr_detection_failed",
+                entity_type="monte_carlo",
+                entity_id="optimal_block_length",
+                severity="warn",
+                payload={
+                    "n_trades": n,
+                    "fallback": "block_bootstrap_forced",
+                    "block_length": clamped,
+                    "reason": "NaN/low-confidence autocorrelation — conservative block-bootstrap enforced",
+                },
+            )
+        except Exception:
+            pass  # Audit write failure must never block bootstrap computation
+
+    return clamped
 
 
 if NUMBA_AVAILABLE:
@@ -511,6 +610,105 @@ def _get_stress_params(level: int) -> dict:
     elif level == 3:
         return {"loss_multiplier": 2.5, "win_reduction": 0.5, "win_rate_reduction": 0.10}
     return {"loss_multiplier": 1.0, "win_reduction": 1.0, "win_rate_reduction": 0.0}
+
+
+# ─── Outlier Truncation (Wave 27.5 Pass C.1 — HIGH #8) ──────────
+
+
+def trim_trade_outliers(
+    trades: np.ndarray,
+    trim_multiplier: float,
+    window_days: int = 21,
+    trades_per_day: float = 1.5,
+) -> tuple[np.ndarray, dict]:
+    """Trim extreme individual trade P&Ls to ±multiplier × |worst_month|.
+
+    HIGH #8 — No Outlier Truncation in MC Inputs.
+    Institutional desks trim extreme outliers (±2× worst-month) before bootstrap
+    resampling to prevent a single catastrophic flash-crash trade from dominating
+    the resampling distribution and artificially amplifying tail risk estimates.
+
+    Trade-off (documented per spec): trimming reduces tail-risk reflection of true
+    catastrophic events. Use MC_TRIM_OUTLIER_MULTIPLIER with care — opt-IN only.
+    Default trim_multiplier = None in MonteCarloRequest preserves backward compat.
+
+    Algorithm:
+      1. Map each trade to a rolling 21-trade window (≈1 month at 1-2 trades/day).
+      2. Compute per-window sum to approximate monthly P&L.
+      3. worst_month = min(window_sum) across all windows.
+      4. Clip all trade P&Ls to [-multiplier × |worst_month|, +multiplier × |worst_month|].
+
+    Args:
+        trades: 1D array of trade P&Ls.
+        trim_multiplier: Clip threshold = multiplier × |worst_month|.
+            Typical institutional value: 2.0.
+        window_days: Rolling window in calendar-day-equivalent trades (default 21).
+        trades_per_day: Used only for the window-size label in audit payload.
+
+    Returns:
+        (trimmed_trades, audit_payload) where audit_payload contains pre/post stats.
+
+    WARNING: trimming reduces tail-risk reflection of true catastrophic events.
+    Use with care — opt-IN only (default None preserves backward compat).
+    """
+    n = len(trades)
+    if n < window_days:
+        # Not enough data for rolling window — return unchanged with explanation
+        return trades.copy(), {
+            "trim_multiplier": trim_multiplier,
+            "n_trades_in": n,
+            "n_trades_trimmed": 0,
+            "max_abs_trade_in": float(np.max(np.abs(trades))) if n > 0 else 0.0,
+            "max_abs_trade_out": float(np.max(np.abs(trades))) if n > 0 else 0.0,
+            "worst_month_pnl": None,
+            "trim_bound": None,
+            "skipped_reason": f"n_trades ({n}) < window_days ({window_days})",
+        }
+
+    # Rolling window sum over consecutive windows (stride = 1 trade)
+    window_sums = np.array([
+        float(np.sum(trades[i:i + window_days]))
+        for i in range(n - window_days + 1)
+    ])
+    worst_month = float(np.min(window_sums))
+    # If worst_month is 0 or positive (e.g. all-winning history), use mean loss as fallback
+    if worst_month >= 0:
+        losses = trades[trades < 0]
+        if len(losses) > 0:
+            worst_month = float(np.mean(losses)) * window_days
+        else:
+            # No losses at all — trimming is a no-op
+            return trades.copy(), {
+                "trim_multiplier": trim_multiplier,
+                "n_trades_in": n,
+                "n_trades_trimmed": 0,
+                "max_abs_trade_in": float(np.max(np.abs(trades))) if n > 0 else 0.0,
+                "max_abs_trade_out": float(np.max(np.abs(trades))) if n > 0 else 0.0,
+                "worst_month_pnl": worst_month,
+                "trim_bound": None,
+                "skipped_reason": "no losses in history — trimming is a no-op",
+            }
+
+    trim_bound = trim_multiplier * abs(worst_month)
+    max_abs_in = float(np.max(np.abs(trades)))
+
+    trimmed = np.clip(trades, -trim_bound, trim_bound)
+    n_trimmed = int(np.sum(np.abs(trades) > trim_bound))
+    max_abs_out = float(np.max(np.abs(trimmed)))
+
+    audit_payload = {
+        "trim_multiplier": trim_multiplier,
+        "n_trades_in": n,
+        "n_trades_trimmed": n_trimmed,
+        "max_abs_trade_in": max_abs_in,
+        "max_abs_trade_out": max_abs_out,
+        "worst_month_pnl": worst_month,
+        "trim_bound": trim_bound,
+        "window_days": window_days,
+        "skipped_reason": None,
+    }
+
+    return trimmed, audit_payload
 
 
 # ─── Per-Firm Survival Simulation ────────────────────────────────
@@ -1125,6 +1323,47 @@ def run_monte_carlo(
             "Use walk-forward OOS trades."
         )
 
+    # HIGH #8 — Outlier truncation (opt-IN; default None = no trimming).
+    # Resolve trim multiplier from: request field → env var → None (no trim).
+    # WARNING: trimming reduces tail-risk reflection of true catastrophic events.
+    # Use MC_TRIM_OUTLIER_MULTIPLIER with care (institutional default: 2.0).
+    _trim_mult = getattr(request, "trim_outlier_multiplier", None)
+    if _trim_mult is None:
+        _trim_env = _os.environ.get("MC_TRIM_OUTLIER_MULTIPLIER", "").strip()
+        if _trim_env and _trim_env.lower() not in ("null", "none", "0", ""):
+            try:
+                _trim_mult = float(_trim_env)
+            except ValueError:
+                _trim_mult = None
+
+    _outlier_trim_audit: Optional[dict] = None
+    if _trim_mult is not None and _trim_mult > 0:
+        trades_arr, _trim_audit_payload = trim_trade_outliers(
+            trades_arr, trim_multiplier=_trim_mult,
+        )
+        _outlier_trim_audit = _trim_audit_payload
+        if _trim_audit_payload.get("n_trades_trimmed", 0) > 0:
+            import sys as _sys
+            print(
+                f"[MC outlier-trim] multiplier={_trim_mult} "
+                f"trimmed={_trim_audit_payload['n_trades_trimmed']}/{_trim_audit_payload['n_trades_in']} "
+                f"bound={_trim_audit_payload.get('trim_bound', 'N/A'):.2f}",
+                file=_sys.stderr,
+            )
+        # Audit row (best-effort)
+        if _trim_audit_payload.get("n_trades_trimmed", 0) > 0:
+            try:
+                from src.engine.audit_writer import write_audit_row_sync
+                write_audit_row_sync(
+                    action="monte_carlo.outliers_trimmed",
+                    entity_type="monte_carlo",
+                    entity_id=request.backtest_id,
+                    severity="info",
+                    payload=_trim_audit_payload,
+                )
+            except Exception:
+                pass  # Audit write failure must not block MC
+
     # 8.2 — Apply stress testing if requested
     stress_applied: Optional[str] = None
     if request.stress_level > 0:
@@ -1375,6 +1614,10 @@ def run_monte_carlo(
 
     if request.method in ("block_bootstrap", "arch_stationary", "both"):
         result["block_length"] = computed_block_len
+
+    # HIGH #8: Include outlier trim audit in result when trimming was applied
+    if _outlier_trim_audit is not None:
+        result["outlier_trim_applied"] = _outlier_trim_audit
 
     # Step 18: Optional permutation overfitting test
     if request.run_permutation_test:

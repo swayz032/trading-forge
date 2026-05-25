@@ -2,16 +2,32 @@
 
 Per CLAUDE.md: Don't assume limit orders always fill — model fill
 probability, especially for mean reversion entries at extremes.
+
+Wave 27.5 Pass C.1 — HIGH #6: Probabilistic volume-based partial fill model.
+Large-size orders (order_qty > BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD × bar_volume)
+experience degraded fill probability. Orders larger than bar_volume are forced-partial.
+
+Control via env vars:
+  BACKTEST_PARTIAL_FILL_ENABLED         (default: "true")  — opt-OUT to disable
+  BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD (default: "0.1")  — fraction of bar volume
+                                          above which fill probability degrades
+
+P&L contract: fill model outputs adjusted sizes (integer contracts); P&L is always
+computed by backtester.py using the futures formula:
+  net_pnl = (exit - entry) × contracts × point_value - slippage - commission
+Never passed to vectorbt slippage/fees (CLAUDE.md hard rule for futures).
 """
 
 from __future__ import annotations
+
+import os
+import sys
 
 import numpy as np
 import polars as pl
 
 from src.engine.config import CONTRACT_SPECS
 from src.engine.monte_carlo import create_authoritative_rng
-
 
 # ─── Default Fill Probabilities ──────────────────────────────────
 
@@ -23,6 +39,11 @@ DEFAULT_FILL_CONFIG = {
     "limit_at_extreme": 0.50,
     "partial_fill_threshold": 0.70,
 }
+
+# ─── Volume-Based Partial Fill (HIGH #6) ─────────────────────────
+# Env var defaults — read at module import time for performance.
+_PARTIAL_FILL_ENABLED = os.environ.get("BACKTEST_PARTIAL_FILL_ENABLED", "true").lower() in ("true", "1", "yes")
+_PARTIAL_FILL_VOLUME_THRESHOLD = float(os.environ.get("BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD", "0.1"))
 
 
 def compute_fill_probabilities(
@@ -99,7 +120,6 @@ def apply_fill_model(
     # np.random.default_rng() uses SFC64 which differs from the PCG64DXSM used by monte_carlo.py,
     # causing RNG family mismatch and non-reproducible cross-module replay.
     rng = create_authoritative_rng(seed)[0]
-    n = len(entries)
 
     filtered_entries = entries.copy()
     adjusted_sizes = sizes.copy()
@@ -225,3 +245,152 @@ def compute_fill_probabilities_v2(
         fill_probs = fill_probs * 0.85
 
     return fill_probs
+
+
+# ─── Volume-Based Partial Fill Model (Wave 27.5 Pass C.1 — HIGH #6) ─────────
+
+
+def compute_volume_based_fill_ratios(
+    df: pl.DataFrame,
+    order_quantities: np.ndarray,
+    volume_threshold: float = _PARTIAL_FILL_VOLUME_THRESHOLD,
+) -> np.ndarray:
+    """Compute per-bar fill ratio based on order size relative to bar volume.
+
+    HIGH #6 — Partial Fills NOT Modeled: Large-size strategies (≥50 MES) backtest
+    optimistic by 1-3 ticks on overnight entries because 100% fill is assumed.
+    This function models fill ratio degradation when order quantity is large
+    relative to available bar volume.
+
+    Rules:
+      - order_qty / bar_volume < threshold → 1.0 (full fill)
+      - order_qty / bar_volume in [threshold, 1.0] → linear degradation from 1.0 to 0.5
+      - order_qty / bar_volume > 1.0 → 0.5 (forced partial; can never fill more than
+        the available volume gracefully; 0.5 is the minimum fill ratio)
+
+    The minimum fill ratio is 0.5 (never zero) — a partial fill is always attempted
+    for market orders; complete non-fills are modeled by the RSI-based fill probability
+    gate in apply_fill_model(), not here. These two models compose:
+      1. RSI/type-based fill probability (apply this entry? yes/no)
+      2. Volume-based fill ratio (if yes, how many contracts?)
+
+    Args:
+        df: DataFrame with 'volume' column (or returns 1.0 array if absent)
+        order_quantities: Per-bar order quantity (contract count) array
+        volume_threshold: Fraction of bar volume above which degradation begins
+            (default: BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD env var, default 0.1)
+
+    Returns:
+        Float array of fill ratios in [0.5, 1.0] per bar.
+        Values are 1.0 for bars with no entry or sufficient volume.
+    """
+    n = len(df)
+    fill_ratios = np.ones(n, dtype=np.float64)
+
+    if not _PARTIAL_FILL_ENABLED:
+        return fill_ratios
+
+    # Get volume array — if absent (e.g. test fixture), return all 1.0
+    if "volume" not in df.columns:
+        return fill_ratios
+
+    volume = df["volume"].to_numpy().astype(np.float64)
+    # Guard: zero or NaN volume → treat as unlimited (return 1.0)
+    safe_volume = np.where((volume > 0) & np.isfinite(volume), volume, np.inf)
+
+    order_q = np.asarray(order_quantities, dtype=np.float64)
+    # Ratio of order size to bar volume
+    qty_vol_ratio = order_q / safe_volume
+
+    # Three zones:
+    # Zone 1: ratio < threshold → no degradation
+    # Zone 2: threshold ≤ ratio ≤ 1.0 → linear from 1.0 → 0.5
+    # Zone 3: ratio > 1.0 → forced 0.5 (bar volume insufficient)
+    zone2_mask = (qty_vol_ratio >= volume_threshold) & (qty_vol_ratio <= 1.0)
+    zone3_mask = qty_vol_ratio > 1.0
+
+    if np.any(zone2_mask):
+        # Linear interpolation: at threshold → 1.0, at 1.0 → 0.5
+        ratio_in_zone = (qty_vol_ratio[zone2_mask] - volume_threshold) / (1.0 - volume_threshold + 1e-10)
+        fill_ratios[zone2_mask] = 1.0 - 0.5 * ratio_in_zone
+
+    fill_ratios[zone3_mask] = 0.5
+
+    return fill_ratios
+
+
+def apply_volume_partial_fills(
+    entries: np.ndarray,
+    sizes: np.ndarray,
+    df: pl.DataFrame,
+    volume_threshold: float = _PARTIAL_FILL_VOLUME_THRESHOLD,
+) -> tuple[np.ndarray, np.ndarray, dict]:
+    """Apply volume-based fill ratio to sizes at entry bars.
+
+    HIGH #6 — activates the volume-based partial fill model on size arrays.
+    Only modifies sizes at actual entry bars (entries == True).
+    Does NOT modify the entries array (complete non-fills are handled by
+    the RSI-based apply_fill_model gate, not this function).
+
+    Args:
+        entries: Boolean array of entry signals (post-roll, next-bar convention)
+        sizes: Float array of position sizes (contracts per bar)
+        df: DataFrame with 'volume' column
+        volume_threshold: Volume threshold for degradation onset
+
+    Returns:
+        (adjusted_sizes, fill_ratios, audit_payload)
+        adjusted_sizes: Modified sizes with partial fills applied at entry bars
+        fill_ratios: Per-bar fill ratio array (for audit/logging)
+        audit_payload: Dict with partial fill statistics
+
+    P&L contract: caller (backtester.py) uses adjusted_sizes in the futures P&L
+    formula — never pass to vectorbt slippage/fees.
+    """
+    if not _PARTIAL_FILL_ENABLED:
+        return sizes.copy(), np.ones(len(sizes), dtype=np.float64), {
+            "enabled": False,
+            "total_orders": 0,
+            "partial_fills": 0,
+            "avg_fill_ratio": 1.0,
+            "avg_slippage_delta_per_partial": 0.0,
+        }
+
+    adjusted_sizes = sizes.copy()
+    fill_ratios = compute_volume_based_fill_ratios(df, sizes, volume_threshold=volume_threshold)
+
+    entry_mask = entries.astype(bool)
+    entry_indices = np.where(entry_mask)[0]
+    total_orders = len(entry_indices)
+    partial_fills = 0
+    fill_ratio_sum = 0.0
+
+    for idx in entry_indices:
+        ratio = fill_ratios[idx]
+        if ratio < 1.0 and not np.isnan(adjusted_sizes[idx]):
+            original_size = adjusted_sizes[idx]
+            new_size = max(1.0, int(original_size * ratio))  # floor, minimum 1 contract
+            if new_size < original_size:
+                adjusted_sizes[idx] = float(new_size)
+                partial_fills += 1
+        fill_ratio_sum += fill_ratios[idx]
+
+    avg_fill_ratio = fill_ratio_sum / total_orders if total_orders > 0 else 1.0
+
+    audit_payload = {
+        "enabled": True,
+        "total_orders": total_orders,
+        "partial_fills": partial_fills,
+        "avg_fill_ratio": round(avg_fill_ratio, 4),
+        "avg_slippage_delta_per_partial": 0.0,  # Placeholder — slippage delta computed in backtester
+        "volume_threshold": volume_threshold,
+    }
+
+    if partial_fills > 0:
+        print(
+            f"[fill_model] volume-partial: {partial_fills}/{total_orders} orders partially filled "
+            f"(avg_ratio={avg_fill_ratio:.3f}, threshold={volume_threshold})",
+            file=sys.stderr,
+        )
+
+    return adjusted_sizes, fill_ratios, audit_payload
