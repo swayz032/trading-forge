@@ -45,15 +45,19 @@ function isForceCloud(): boolean {
 
 /** Local model name — overridable per deployment.
  *
- * Wave 26 Pass B (2026-05-25): default swapped from gemma4 → qwen2.5-coder:7b.
- * Research (arXiv 2501.10868 JSONSchemaBench) shows qwen2.5-coder:7b materially
- * outperforms gemma4 on strict JSON schema adherence in the 7-8B class.
- * Code-trained models have stronger schema-following from RLHF on structured
- * output tasks. gemma4 remains available as override via env var.
+ * Wave 26 Pass B (2026-05-25): primary is gemma4 (operator's choice).
+ * Pass B ALSO ships the universal fixes that make gemma4 work for strict JSON:
+ *   1. JSON Schema object as `format` (Ollama GBNF grammar-constrained sampling
+ *      — forces output shape at the token level, not just "valid JSON")
+ *   2. /api/chat endpoint (proper Gemma <start_of_turn>user/model template)
+ *   3. temperature=0, top_p=0.9, top_k=20 (strict sampling)
+ *   4. NO `think` field anywhere (Ollama bug #15260 silently drops schema
+ *      enforcement on gemma4 when think:false is explicitly set — omit entirely)
+ *   5. Literal "Return JSON matching the schema." in user message
  *
- * Install locally: `ollama pull qwen2.5-coder:7b` (4.7 GB Q4_K_M). */
+ * qwen2.5-coder:7b available as override via env var when needed. */
 function getLocalTranscriptModel(): string {
-  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "qwen2.5-coder:7b";
+  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4";
 }
 
 /**

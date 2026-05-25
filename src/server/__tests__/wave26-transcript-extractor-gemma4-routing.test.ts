@@ -2,11 +2,11 @@
  * wave26-transcript-extractor-gemma4-routing.test.ts
  *
  * Wave 26 — Transcript Extractor local-first routing tests.
- * Wave 26 Pass B update: model swapped from gemma4:e2b → qwen2.5-coder:7b;
+ * Wave 26 Pass B update: model swapped from gemma4:e2b → gemma4;
  * API switched from /api/generate (ollama.generate) → /api/chat (ollama.chat).
  *
  * Validates:
- *   T1. Default config: transcript_extractor primary = Ollama qwen2.5-coder:7b via chat()
+ *   T1. Default config: transcript_extractor primary = Ollama gemma4 via chat()
  *   T2. TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true → primary flips to gpt-5-mini
  *   T3. Ollama down → fallback to cloud, audit row emitted
  *   T4. Ollama returns invalid JSON → fallback to cloud, audit row emitted
@@ -144,8 +144,8 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     // Default: Ollama healthy, no force-cloud
     __setOllamaHealthyForTests(true);
     delete process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD;
-    // Wave 26 Pass B: default model is now qwen2.5-coder:7b
-    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "qwen2.5-coder:7b";
+    // Wave 26 Pass B: default model is now gemma4
+    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "gemma4";
   });
 
   afterEach(() => {
@@ -163,7 +163,7 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T1: Default routing is Ollama ──────────────────────────────────────────
-  // Wave 26 Pass B: now uses ollama.chat() (not generate); model = qwen2.5-coder:7b
+  // Wave 26 Pass B: now uses ollama.chat() (not generate); model = gemma4
 
   it("T1: TRANSCRIPT_EXTRACTOR_FORCE_CLOUD not set → callFn (cloud) is NOT called when Ollama succeeds", async () => {
     const mockOllama = mockOllamaInstance({ response: VALID_JSON_RESPONSE });
@@ -177,9 +177,9 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     // Pass B: chat() is called, not generate()
     expect(mockOllama.chat).toHaveBeenCalledOnce();
     expect(mockOllama.generate).not.toHaveBeenCalled();
-    // Model is qwen2.5-coder:7b (Pass B default)
+    // Model is gemma4 (Pass B default)
     expect(mockOllama.chat).toHaveBeenCalledWith(
-      "qwen2.5-coder:7b",
+      "gemma4",
       expect.any(Array), // messages array
       expect.objectContaining({ temperature: 0, top_p: 0.9, top_k: 20 }),
       expect.anything(), // format (schema object or true)
@@ -273,9 +273,9 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T7: Audit row carries model + provider + fellback fields ───────────────
-  // Wave 26 Pass B: model is qwen2.5-coder:7b, uses chat() not generate()
+  // Wave 26 Pass B: model is gemma4, uses chat() not generate()
 
-  it("T7: successful Ollama call — Ollama chat called with qwen2.5-coder:7b and JSON schema mode, cloud NOT called", async () => {
+  it("T7: successful Ollama call — Ollama chat called with gemma4 and JSON schema mode, cloud NOT called", async () => {
     const mockOllama = mockOllamaInstance({ response: VALID_JSON_RESPONSE });
     vi.mocked(OllamaClient).mockImplementation(() => mockOllama as any);
 
@@ -284,11 +284,11 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     const result = await callScoutExtractLlm(SAMPLE_MESSAGES, undefined, cloudCallFn, async () => {});
 
     expect(result).toBe(VALID_JSON_RESPONSE);
-    // Wave 26 Pass B: chat() called (not generate), model is qwen2.5-coder:7b
+    // Wave 26 Pass B: chat() called (not generate), model is gemma4
     expect(mockOllama.chat).toHaveBeenCalledOnce();
     expect(mockOllama.generate).not.toHaveBeenCalled();
     const [model, , , formatArg] = mockOllama.chat.mock.calls[0] as [string, unknown, unknown, unknown];
-    expect(model).toBe("qwen2.5-coder:7b");
+    expect(model).toBe("gemma4");
     // format is either schema object (strict mode) or true (fallback)
     expect(formatArg).toBeDefined();
     // Cloud NOT called when Ollama succeeds
@@ -296,9 +296,9 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T8: FORCE_CLOUD=false + OLLAMA_HEALTHY=true → Ollama primary ───────────
-  // Wave 26 Pass B: chat() used; model = qwen2.5-coder:7b
+  // Wave 26 Pass B: chat() used; model = gemma4
 
-  it("T8: FORCE_CLOUD=false + OLLAMA_HEALTHY=true → Ollama chat called with qwen2.5-coder:7b", async () => {
+  it("T8: FORCE_CLOUD=false + OLLAMA_HEALTHY=true → Ollama chat called with gemma4", async () => {
     process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD = "false";
     __setOllamaHealthyForTests(true);
 
@@ -313,7 +313,7 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
     expect(mockOllama.chat).toHaveBeenCalledOnce();
     expect(mockOllama.generate).not.toHaveBeenCalled();
     const [model] = mockOllama.chat.mock.calls[0] as [string, ...unknown[]];
-    expect(model).toBe("qwen2.5-coder:7b");
+    expect(model).toBe("gemma4");
     expect(cloudCallFn).not.toHaveBeenCalled();
   });
 
@@ -333,7 +333,7 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T10: Boot health check — model not in tags sets OLLAMA_HEALTHY=false ───
-  // Wave 26 Pass B: looking for qwen2.5-coder:7b by default
+  // Wave 26 Pass B: looking for gemma4 by default
 
   it("T10: checkTranscriptExtractorOllamaHealth with different model in tags sets OLLAMA_HEALTHY=false", async () => {
     const origFetch = globalThis.fetch;
@@ -342,13 +342,13 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
       json: async () => ({
         models: [
           { name: "deepseek-r1:14b" },
-          { name: "gemma4:latest" },
+          { name: "qwen2.5-coder:7b" },
         ],
       }),
     } as any);
     __setOllamaHealthyForTests(true);
-    // qwen2.5-coder:7b is the default — not present in tags above
-    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "qwen2.5-coder:7b";
+    // gemma4 is the default — not present in tags above (no gemma* variant)
+    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "gemma4";
 
     await checkTranscriptExtractorOllamaHealth();
 
@@ -359,21 +359,21 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
   });
 
   // ── T11: Boot health check — model present sets OLLAMA_HEALTHY=true ────────
-  // Wave 26 Pass B: qwen2.5-coder:7b in tags → healthy
+  // Wave 26 Pass B: gemma4 in tags → healthy
 
-  it("T11: checkTranscriptExtractorOllamaHealth with qwen2.5-coder:7b in tags sets OLLAMA_HEALTHY=true", async () => {
+  it("T11: checkTranscriptExtractorOllamaHealth with gemma4 in tags sets OLLAMA_HEALTHY=true", async () => {
     const origFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         models: [
-          { name: "qwen2.5-coder:7b" },
+          { name: "gemma4" },
           { name: "deepseek-r1:14b" },
         ],
       }),
     } as any);
     __setOllamaHealthyForTests(false); // start unhealthy
-    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "qwen2.5-coder:7b";
+    process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL = "gemma4";
 
     await checkTranscriptExtractorOllamaHealth();
 

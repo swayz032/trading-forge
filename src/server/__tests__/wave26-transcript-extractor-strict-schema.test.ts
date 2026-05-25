@@ -13,7 +13,7 @@
  *   S7. Options include temperature=0, top_p=0.9, top_k=20, num_ctx=16384
  *   S8. No `think` field anywhere in request body
  *   S9. TRANSCRIPT_EXTRACTOR_STRICT_SCHEMA=false → falls back to format:"json" string
- *   S10. Default model = qwen2.5-coder:7b when env unset
+ *   S10. Default model = gemma4 when env unset
  *   S11. TRANSCRIPT_EXTRACTOR_STRICT_SCHEMA=true (default) → format object passed to Ollama
  *   S12. Schema object is the full transcript-extractor-output-schema.json (has strategies array)
  *   S13. transcript-extractor-output-schema.json validates a well-formed strategy object
@@ -289,9 +289,9 @@ describe("wave26-transcript-extractor-strict-schema", () => {
     expect(capturedChatBodies[0]!.format).not.toBeInstanceOf(Object);
   });
 
-  // ── S10: Default model = qwen2.5-coder:7b when env unset ─────────────────────
+  // ── S10: Default model = gemma4 when env unset ─────────────────────
 
-  it("S10: default local model is qwen2.5-coder:7b when TRANSCRIPT_EXTRACTOR_LOCAL_MODEL is unset", async () => {
+  it("S10: default local model is gemma4 when TRANSCRIPT_EXTRACTOR_LOCAL_MODEL is unset", async () => {
     delete process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL;
     __setOllamaHealthyForTests(true);
     delete process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD;
@@ -299,7 +299,7 @@ describe("wave26-transcript-extractor-strict-schema", () => {
     await callScoutExtractLlm(SAMPLE_TRANSCRIPT_MESSAGES, undefined, CLOUD_NO_OP);
 
     expect(capturedChatBodies.length).toBeGreaterThan(0);
-    expect(capturedChatBodies[0]!.model).toBe("qwen2.5-coder:7b");
+    expect(capturedChatBodies[0]!.model).toBe("gemma4");
   });
 
   // ── S11: Default strict schema = true → format is schema object ──────────────
