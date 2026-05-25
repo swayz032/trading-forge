@@ -186,6 +186,7 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
       expect.any(Array), // messages array
       expect.objectContaining({ temperature: 0.1, top_p: 0.95, top_k: 64 }),
       expect.anything(), // format (schema object or true)
+      expect.any(String), // Wave 26 Pass C-fix: keep_alive (default "30m")
     );
     expect(cloudCallFn).not.toHaveBeenCalled();
   });

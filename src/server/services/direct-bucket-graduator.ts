@@ -257,7 +257,30 @@ const ENTRY_INDICATOR_MAP: Record<string, string> = {
  * Returning null causes the graduator to reject the bucket (audited as
  * 'no_engine_compatible_indicator').
  */
-function deriveEntryIndicator(conceptName: string, fallback: string | null): string | null {
+/**
+ * Wave 26 Pass D (2026-05-25) — engine-indicator whitelist for LLM-passthrough.
+ * If the bucket's concept name doesn't match any regex but the LLM's
+ * `entry_indicator` field is already one of these known engine-supported names,
+ * use it directly. Closes the gap where new vocabulary in concept_name causes
+ * rejection even though the LLM correctly identified a supported indicator
+ * (e.g. concept "4h_pattern_entry_model" with entry_indicator "fair_value_gap").
+ */
+const ENGINE_INDICATOR_WHITELIST = new Set([
+  "sma_crossover", "ema_crossover", "macd_crossover", "donchian_breakout",
+  "supertrend", "ichimoku_cloud", "dema_crossover", "alma_filter",
+  "rsi_reversal", "rsi_divergence", "connors_rsi2",
+  "bollinger_breakout", "vwap_fade", "vwap_reversion", "keltner_squeeze",
+  "atr_breakout", "atr_trailing_stop",
+  "cumulative_delta", "vwap_order_flow", "volume_profile", "liquidity_sweep_breakout",
+  "session_open_breakout", "overnight_drift", "fifo_session_open",
+  "news_fade_mco", "event_driven_fade",
+]);
+
+export function deriveEntryIndicator(
+  conceptName: string,
+  fallback: string | null,
+  llmEntryIndicator?: string | null,
+): string | null {
   const cn = conceptName.toLowerCase();
 
   // ─── Pass 21 v3 (2026-05-17) — STRUCTURAL ARCHETYPE ROUTING ──────────
@@ -382,6 +405,63 @@ function deriveEntryIndicator(conceptName: string, fallback: string | null): str
   // Pivot points genuinely have no engine spec — these stay rejected until
   // engine work is done. Pass 21 v3 keeps the reject narrow.
   if (/pivot.point|floor.pivot|camarilla|woodie/.test(cn)) return null;
+
+  // ─── Wave 26 Pass D (2026-05-25) — vocabulary expansion ─────────────────
+  // Operator's 29-URL batch introduced 6 new concept-name patterns that fell
+  // through the chain even though they map cleanly to existing engine
+  // primitives. Each line below corresponds to a graduation rejection observed
+  // in audit_log on 2026-05-25. All target engine-supported indicators — no
+  // new engine work needed.
+
+  // "extreme band reversal" / "3-sigma BB" / "outlier band" → bollinger_breakout
+  // (engine compiles bollinger_breakout with std_dev=3.0 for 3-sigma variants).
+  if (/extreme.band|(\d|three|two).{0,2}sigma|outlier.band|band.reversal/.test(cn)) return "bollinger_breakout";
+
+  // "one candle setup" / "first candle break" / "opening candle break" → ORB family.
+  // The "first 5m candle of RTH" pattern is functionally identical to ORB with
+  // a 5-minute range_minutes; engine compiles via session_open_breakout.
+  if (/(one|first|opening).{0,4}(candle|bar)|first.{0,4}\d+.?min.{0,4}(candle|bar)/.test(cn)) return "session_open_breakout";
+
+  // "MA trend following" / "20 MA trend" / "moving average trend following" →
+  // ema_crossover (engine's canonical MA-pullback compile target; same pattern
+  // shape — slope check + price-to-MA distance — captured by the existing
+  // ema_crossover primitive via fast/slow period derivation).
+  if (/ma.trend.follow|moving.average.trend|trend.follow.{0,8}(ma|ema|sma)|(\d+).{0,4}(ma|ema|sma).{0,8}trend/.test(cn)) return "ema_crossover";
+
+  // "multi confluence" / "stacked confluence" / "confluence setup" — these are
+  // meta-patterns (multiple confluences stacked, not a primitive indicator).
+  // Route via the bucket's entry_archetype fallback; if that's unknown, default
+  // to ema_crossover (most multi-confluence setups gate MA-based entries).
+  if (/multi.confluence|stacked.confluence|confluence.setup/.test(cn)) {
+    if (fallback && ENTRY_INDICATOR_MAP[fallback]) return ENTRY_INDICATOR_MAP[fallback];
+    return "ema_crossover";
+  }
+
+  // "market structure level" / "structure level identification" / "swing
+  // structure" → Wave 25 BOS/MSS archetype. Operator strategies routinely
+  // describe "identify lower highs / break of structure" which IS the BOS
+  // signal; ARCHETYPE_REGISTRY has break_of_structure already, route via that.
+  if (/market.structure(?!.shift)|structure.level|swing.structure|major.structure/.test(cn)) return "archetype:break_of_structure";
+
+  // ─── LLM passthrough fallback ───────────────────────────────────────────
+  // Concept name didn't match any regex BUT the LLM extracted a known
+  // engine-supported entry_indicator. Trust the LLM in this narrow path —
+  // it correctly identified the indicator even though the bucket name diverges.
+  // Example: concept "4h_pattern_entry_model" + LLM entry_indicator "fair_value_gap"
+  // → returns "archetype:fvg_retrace" (the engine analog).
+  if (llmEntryIndicator) {
+    const llm = llmEntryIndicator.toLowerCase().trim();
+    if (ENGINE_INDICATOR_WHITELIST.has(llm)) return llm;
+    // Common LLM-vocabulary aliases for archetype indicators
+    if (llm === "fair_value_gap" || llm === "fvg") return "archetype:fvg_retrace";
+    if (llm === "order_block" || llm === "supply_demand_zone" || llm === "demand_supply_zone") return "archetype:order_block";
+    if (llm === "liquidity_sweep") return "liquidity_sweep_breakout";
+    if (llm === "fibonacci_retracement") return "archetype:ict_ote";
+    if (llm === "simple_moving_average" || llm === "exponential_moving_average") return "ema_crossover";
+    if (llm === "trendline_breakout" || llm === "trendline_bounce") return "ema_crossover";  // engine analog
+    if (llm === "previous_range_pullback" || llm === "break_and_retest") return "session_open_breakout";
+    if (llm === "volume_profile_imbalance") return "volume_profile";
+  }
 
   // Fallback to archetype mapping ONLY for ambiguous cases.
   if (fallback && ENTRY_INDICATOR_MAP[fallback]) return ENTRY_INDICATOR_MAP[fallback];
@@ -806,7 +886,10 @@ export async function graduateBucketDirectly(opts: {
   // wide-fingerprint dedup, so two graduations with different periods extracted
   // from their concept names produce different wide hashes.
   // Prefer LLM-extracted params if present; otherwise pull numerics from name.
-  const earlyIndicator = deriveEntryIndicator(conceptName, bucketMeta.entryArchetype);
+  // Wave 26 Pass D: pass LLM's entry_indicator through for whitelist passthrough
+  // when concept name doesn't match any regex.
+  const llmEntryIndicator = ((extractedIdea as any)?.entry_indicator ?? null) as string | null;
+  const earlyIndicator = deriveEntryIndicator(conceptName, bucketMeta.entryArchetype, llmEntryIndicator);
   const entryParamsFromExtraction = (extractedIdea as any)?.entry_params;
   const llmParams = (entryParamsFromExtraction && typeof entryParamsFromExtraction === "object")
     ? (entryParamsFromExtraction as Record<string, unknown>)
@@ -815,6 +898,22 @@ export async function graduateBucketDirectly(opts: {
   // LLM-provided values take precedence over name-derived (LLM is authoritative
   // when present; name-derive is a fallback for empty extractions).
   const effectiveEntryParams: Record<string, unknown> = { ...namedParams, ...llmParams };
+
+  // Wave 26 Pass D (2026-05-25) — per-symbol sweep-buffer default fill.
+  // LLM extractions of `session_open_breakout` routinely leave `buffer_ticks`
+  // null (no explicit tick count in the source). PARAM_RANGES validates
+  // buffer_ticks ∈ [1,10] when present, so null → param_range_violation
+  // rejection. Fill from canonical CLAUDE.md §4 per-symbol policy table
+  // (mirrors src/engine/context/structural_stops.py) BEFORE range validation.
+  if (earlyIndicator === "session_open_breakout"
+      && (effectiveEntryParams.buffer_ticks === null || effectiveEntryParams.buffer_ticks === undefined)) {
+    const SWEEP_BUFFER_DEFAULTS: Record<string, number> = { MES: 3, MNQ: 5, MCL: 2 };
+    const envOverride = process.env[`STOP_BUFFER_TICKS_${market}`];
+    const fallbackTicks = envOverride ? Number.parseInt(envOverride, 10) : SWEEP_BUFFER_DEFAULTS[market];
+    if (Number.isFinite(fallbackTicks) && fallbackTicks >= 1 && fallbackTicks <= 10) {
+      effectiveEntryParams.buffer_ticks = fallbackTicks;
+    }
+  }
 
   const wideFingerprint = computeWideConceptFingerprintHash({
     market,
@@ -895,7 +994,7 @@ export async function graduateBucketDirectly(opts: {
   }
 
   const entryType = deriveEntryType(conceptName, bucketMeta.entryArchetype);
-  const entryIndicator = deriveEntryIndicator(conceptName, bucketMeta.entryArchetype);
+  const entryIndicator = deriveEntryIndicator(conceptName, bucketMeta.entryArchetype, llmEntryIndicator);
 
   // Pass 21 (2026-05-16) — REJECT graduation if no engine-compatible indicator.
   // Concepts like Supertrend, ICT/SMC, FVG, Volume Profile, Pivot Points have
@@ -1003,7 +1102,11 @@ export async function graduateBucketDirectly(opts: {
     ict_silver_bullet_ny_pm: { identifier: /silver.bullet|(2|3)[:\s]?pm|14[:.]00|ny pm|new york pm/i, context: [/sweep|liquidity/i, /fvg|fair.value.gap/i] },
     ict_judas_swing: { identifier: /judas|manipulation|fake.move|fake.breakout/i, context: [/mss|market.structure.shift|reversal/i] },
     ict_ny_lunch_reversal: { identifier: /lunch|12[:\s]?pm|12[:.]00|1[:\s]?pm/i, context: [/mss|reversal|reverse/i] },
-    ict_ote: { identifier: /ote|optimal.trade.entry|optimal.entry/i, context: [/bos|break.of.structure/i, /62|70|79|fib|fibonacci/i] },
+    // Wave 26 Pass D (2026-05-25) — widen identifier to accept canonical OTE
+    // fib-percentage expressions. Operator's Gemma-4 extractions describe OTE
+    // as "71% fib retracement" / "0.71 fib level" without using the literal
+    // "OTE" abbreviation — same mechanic, different vocabulary. Both pass.
+    ict_ote: { identifier: /ote|optimal.trade.entry|optimal.entry|fib.{0,3}(level|zone|retrace).{0,20}(0\.62|0\.705?|0\.71|0\.79|62%|70\.5%|71%|79%)|(0\.62|0\.705?|0\.71|0\.79|62%|70\.5%|71%|79%).{0,20}fib.{0,3}(level|zone|retrace)|(71|705|62|79).{0,3}(fib|level|zone).{0,20}(retrac|pullback|entry)/i, context: [/bos|break.of.structure/i, /62|70|71|79|fib|fibonacci/i] },
     ict_power_of_3: { identifier: /power.of.3|power.of.three|accumulation.*manipulation|po3/i, context: [/asia/i, /london/i, /ny/i] },
     ict_unicorn: { identifier: /unicorn/i, context: [/breaker|breaker.block/i, /fvg|fair.value.gap/i] },
     ict_breaker: { identifier: /breaker|failed.swing|flipped/i, context: [/retest|return/i] },

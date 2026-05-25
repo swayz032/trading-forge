@@ -2259,9 +2259,18 @@ async function callOllamaForTranscriptExtractor(
   const model = getLocalTranscriptModel();
 
   const { OllamaClient } = await import("./ollama-client.js");
-  // Use a 30s per-call timeout (per R2 requirement). OllamaClient default is 120s;
-  // we override here to keep the primary path responsive.
-  const ollama = new OllamaClient(undefined, 30_000);
+  // Wave 26 Pass C-fix (2026-05-25): bump timeout 30s → 120s. Gemma 4 on RTX
+  // 5060 8 GB VRAM (8.95 GB model = VRAM spillover) takes 30-90s per call on
+  // cold start; first call after model unload routinely hits >30s. Original
+  // R2 30s spec was for a smaller model. Per-call retry remains 3 attempts.
+  // Override via env: TRANSCRIPT_EXTRACTOR_OLLAMA_TIMEOUT_MS (range 30000-300000).
+  const timeoutMs = (() => {
+    const raw = process.env.TRANSCRIPT_EXTRACTOR_OLLAMA_TIMEOUT_MS;
+    const parsed = raw ? Number.parseInt(raw, 10) : 120_000;
+    if (!Number.isFinite(parsed) || parsed < 30_000 || parsed > 300_000) return 120_000;
+    return parsed;
+  })();
+  const ollama = new OllamaClient(undefined, timeoutMs);
 
   // Determine schema first — needed for buildGemmaFewShotMessages AND for formatArg.
   const strictSchema = isStrictSchemaMode();
@@ -2310,8 +2319,13 @@ async function callOllamaForTranscriptExtractor(
   // from the sampling, just no grammar enforcement).
   const formatArg: boolean | Record<string, unknown> = schema ?? true;
 
+  // Wave 26 Pass C-fix: keep Gemma resident between calls. Default 30m covers
+  // a full 29-URL extraction batch without unload tax. Env override:
+  // TRANSCRIPT_EXTRACTOR_OLLAMA_KEEP_ALIVE (e.g. "1h", "0" to disable).
+  const keepAlive = process.env.TRANSCRIPT_EXTRACTOR_OLLAMA_KEEP_ALIVE ?? "30m";
+
   const startedAt = Date.now();
-  const res = await ollama.chat(model, chatMessages, samplingOptions, formatArg);
+  const res = await ollama.chat(model, chatMessages, samplingOptions, formatArg, keepAlive);
   const durationMs = Date.now() - startedAt;
 
   const raw = res?.message?.content ?? "";

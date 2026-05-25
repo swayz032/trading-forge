@@ -83,6 +83,10 @@ export class OllamaClient {
      *  - falsy   → omit format entirely
      */
     format?: boolean | Record<string, unknown>,
+    /** Wave 26 Pass C-fix: top-level Ollama keep_alive (e.g. "30m"). Keeps the
+     *  model resident in VRAM/RAM after the call so subsequent calls skip cold
+     *  start. Avoids 30-90s reload tax per call on Gemma 4 / 8 GB VRAM hosts. */
+    keepAlive?: string,
   ): Promise<ChatResponse> {
     const body: Record<string, unknown> = {
       model: this.resolveModel(model),
@@ -92,6 +96,7 @@ export class OllamaClient {
     if (format === true) body.format = "json";
     else if (format && typeof format === "object") body.format = format;
     if (options) body.options = options;
+    if (keepAlive) body.keep_alive = keepAlive;
     return this.request<ChatResponse>("/api/chat", body);
   }
 
