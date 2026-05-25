@@ -1844,13 +1844,14 @@ export async function graduateBucketDirectly(opts: {
       originalMarket: market,
       confluenceFactors,
     });
-    // Multi-symbol fan-out — Wave 26 Pass E lets symbol-agnostic strategies
-    // run on all 3 (MES, MNQ, MCL). symbol-specific (oil/nasdaq/S&P) stay
-    // routed to the matching firm. Keep the bucket's market as the leader
-    // slot (W23F.M name canonicalization invariant).
-    const symbolsArrayWithFanOut = wave25Defaults.symbols.length >= symbolsArray.length
-      ? wave25Defaults.symbols
-      : symbolsArray;
+    // Wave 26 Pass F (2026-05-25) — REVISED multi-symbol approach. Instead of
+    // packing [MES,MNQ,MCL] into one row (Pass E), graduate as SEPARATE rows
+    // per market. Operator decision: backtest each (concept × market) pair
+    // independently → DEPLOY-stage filters to markets where the concept earns.
+    // Leader row written here; non-leader variants are inserted in the fan-out
+    // block below this main INSERT.
+    const leaderSymbol = wave25Defaults.symbols[0] ?? market;
+    const symbolsArrayWithFanOut = [leaderSymbol];
 
     const [inserted] = await db.insert(strategies).values({
       name: strategyName,
@@ -1921,6 +1922,88 @@ export async function graduateBucketDirectly(opts: {
     await db.update(strategyPendingBuckets)
       .set({ graduatedStrategyId: inserted.id, wideFingerprintHash: wideFingerprint })
       .where(eq(strategyPendingBuckets.id, bucketId));
+
+    // ─── Wave 26 Pass F (2026-05-25) — per-market fan-out ────────────────
+    // Operator mandate: each (concept × market) pair gets its OWN strategy
+    // row so backtest yields per-market verdicts. Symbol-agnostic concepts
+    // INSERT one leader row above + non-leader variants here. Symbol-specific
+    // concepts (single-element wave25Defaults.symbols) skip this block.
+    // Per-variant: re-apply framework-overlay with the variant market for
+    // correct base_contracts (MES 6 / MNQ 6 / MCL 18) + liquidity_cap.
+    const fanOutMarkets = wave25Defaults.symbols.slice(1) as Array<"MES" | "MNQ" | "MCL">;
+    const fanOutStrategyIds: string[] = [];
+    for (const variantMarket of fanOutMarkets) {
+      try {
+        const variantName = deriveStrategyName(conceptName, variantMarket, timeframe).slice(0, 80);
+        // Per-variant framework-overlay run — picks up correct per-market sizing
+        const variantOverlayed = applyFrameworkOverlay({
+          compiled: compiled as any,
+          source: "graduated_bucket",
+          symbol: variantMarket,
+          bucketId,
+        });
+        const [variantInserted] = await db.insert(strategies).values({
+          name: variantName,
+          description: thesis,
+          symbol: variantMarket,
+          symbols: [variantMarket],
+          timeframe,
+          source: "graduated_bucket",
+          config: {
+            ...(variantOverlayed.config as Record<string, unknown>),
+            entry_quality: entryQualityBlock,
+            bias_timeframe: wave25Defaults.configAdditions.bias_timeframe,
+            confirming_indicators: wave25Defaults.configAdditions.confirming_indicators,
+          },
+          useWeightedScoring: wave25Defaults.useWeightedScoring,
+          confluenceScoreThreshold: String(wave25Defaults.confluenceScoreThreshold),
+          confluenceScoreWeights: wave25Defaults.confluenceScoreWeights,
+          exitPlanConfig: wave25Defaults.exitPlanConfig,
+          preferredRegime,
+          preferredRegimes: (() => {
+            const cfg = variantOverlayed.config as Record<string, unknown>;
+            const llmRegimes = Array.isArray(cfg?.preferred_regimes) ? cfg.preferred_regimes as string[] : null;
+            if (llmRegimes && llmRegimes.length > 1) return llmRegimes;
+            const ind = String(entryIndicator || "").toLowerCase();
+            const STRUCTURAL_RX = /archetype:(ict_|wyckoff_|fvg|order_block|liquidity_sweep|judas|silver_bullet|breaker|turtle_soup|power_of_3|ote|smc|cisd|mss|bos|choch|change_of_character)/;
+            const BREAKOUT_RX = /^(opening_range_breakout|atr_breakout|donchian_breakout|bollinger_breakout|session_open_breakout)$/;
+            const MEAN_REV_RX = /^(rsi_reversal|vwap_reversion|connors_rsi2|vwap_fade|stochastic_rsi)$/;
+            const TREND_RX = /^(ema_crossover|sma_crossover|dema_crossover|macd_crossover|supertrend|ichimoku_cloud)$/;
+            if (STRUCTURAL_RX.test(ind)) return ["TRENDING_UP","TRENDING_DOWN","RANGE_BOUND"];
+            if (BREAKOUT_RX.test(ind))   return ["TRENDING_UP","TRENDING_DOWN","RANGE_BOUND"];
+            if (MEAN_REV_RX.test(ind))   return ["RANGE_BOUND"];
+            if (TREND_RX.test(ind))      return ["TRENDING_UP","TRENDING_DOWN"];
+            return llmRegimes && llmRegimes.length > 0 ? llmRegimes : [preferredRegime];
+          })(),
+          tags: strategyTags,
+        }).returning({ id: strategies.id });
+        // 5-TF columns via raw SQL (Drizzle schema not synced w/ migration 0138)
+        await db.execute(sql`
+          UPDATE strategies SET
+            daily_tf   = ${wave25Defaults.dailyTf},
+            htf_tf     = ${wave25Defaults.htfTf},
+            itf_tf     = ${wave25Defaults.itfTf},
+            trigger_tf = ${wave25Defaults.triggerTf}
+          WHERE id = ${variantInserted.id}::uuid
+        `);
+        fanOutStrategyIds.push(variantInserted.id);
+        await db.insert(auditLog).values({
+          action: "graduation.market_variant_created",
+          entityType: "strategy",
+          entityId: variantInserted.id,
+          input: { bucket_id: bucketId, leader_strategy_id: inserted.id, variant_market: variantMarket } as Record<string, unknown>,
+          result: { variant_name: variantName, variant_market: variantMarket, leader_market: leaderSymbol } as Record<string, unknown>,
+          status: "success",
+          decisionAuthority: "system",
+          correlationId: correlationId ?? null,
+        }).catch((e: unknown) => logger.warn({ err: e }, "market_variant audit failed (non-blocking)"));
+      } catch (variantErr: unknown) {
+        // Non-fatal: variant failure doesn't roll back the leader graduation.
+        // Operator can re-run the fan-out via the backfill script.
+        logger.warn({ err: variantErr, variantMarket, bucketId },
+          `direct-graduator: fan-out variant INSERT failed (non-blocking) for ${variantMarket}`);
+      }
+    }
 
     logger.info(
       {
