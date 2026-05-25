@@ -36,6 +36,7 @@ import { runDslQualityCritic } from "./agent-service.js";
 // TODO: correlation_id not threaded through all call sites in this file.
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
+import { applyWave25Defaults } from "../lib/wave25-strategy-defaults.js";
 
 /**
  * Pass 21 v3 (2026-05-17) — STRUCTURAL ARCHETYPE REGISTRY.
@@ -1737,17 +1738,46 @@ export async function graduateBucketDirectly(opts: {
     : [market];
 
   try {
+    // Wave 26 Pass E (2026-05-25) — auto-apply Wave 25 institutional defaults
+    // to every NEW graduation. Closes the gap where graduator emitted Wave 23
+    // defaults only, requiring operator to run wave25-pass1/7-opt-in.ts per
+    // strategy. The opt-in scripts still work for pre-Pass-E rows + as
+    // panic-revert tools — Pass E just makes the default state "fully wired".
+    const wave25Defaults = applyWave25Defaults({
+      strategyName,
+      conceptName,
+      execTimeframe: timeframe,
+      originalMarket: market,
+      confluenceFactors,
+    });
+    // Multi-symbol fan-out — Wave 26 Pass E lets symbol-agnostic strategies
+    // run on all 3 (MES, MNQ, MCL). symbol-specific (oil/nasdaq/S&P) stay
+    // routed to the matching firm. Keep the bucket's market as the leader
+    // slot (W23F.M name canonicalization invariant).
+    const symbolsArrayWithFanOut = wave25Defaults.symbols.length >= symbolsArray.length
+      ? wave25Defaults.symbols
+      : symbolsArray;
+
     const [inserted] = await db.insert(strategies).values({
       name: strategyName,
       description: thesis,
       symbol: market,
-      symbols: symbolsArray,
+      symbols: symbolsArrayWithFanOut,
       timeframe,
       source: "graduated_bucket",
       config: {
         ...(overlayed.config as Record<string, unknown>),
         entry_quality: entryQualityBlock,
+        // Wave 26 Pass E — bias_timeframe + confirming_indicators in config JSONB
+        bias_timeframe: wave25Defaults.configAdditions.bias_timeframe,
+        confirming_indicators: wave25Defaults.configAdditions.confirming_indicators,
       },
+      // Wave 26 Pass E — Wave 25 Pass 1/2/7 institutional columns auto-set
+      // (5-TF columns are set via raw SQL below — Drizzle schema not synced with migration 0138)
+      useWeightedScoring: wave25Defaults.useWeightedScoring,
+      confluenceScoreThreshold: String(wave25Defaults.confluenceScoreThreshold),
+      confluenceScoreWeights: wave25Defaults.confluenceScoreWeights,
+      exitPlanConfig: wave25Defaults.exitPlanConfig,
       preferredRegime,
       // W23H.B: also write the new array column so Pass 2 W23H.C picker
       // (regime = ANY(preferred_regimes)) has data on every new graduation.
@@ -1781,6 +1811,18 @@ export async function graduateBucketDirectly(opts: {
       })(),
       tags: strategyTags,
     }).returning({ id: strategies.id });
+
+    // Wave 26 Pass E — 5-TF MTF hierarchy columns (Wave 25 Pass 2 W25.4).
+    // Migration 0138 added daily_tf/htf_tf/itf_tf/trigger_tf to PG but Drizzle
+    // schema.ts isn't synced — use raw SQL UPDATE for these 4 columns.
+    await db.execute(sql`
+      UPDATE strategies SET
+        daily_tf   = ${wave25Defaults.dailyTf},
+        htf_tf     = ${wave25Defaults.htfTf},
+        itf_tf     = ${wave25Defaults.itfTf},
+        trigger_tf = ${wave25Defaults.triggerTf}
+      WHERE id = ${inserted.id}::uuid
+    `);
 
     await db.update(strategyPendingBuckets)
       .set({ graduatedStrategyId: inserted.id, wideFingerprintHash: wideFingerprint })
