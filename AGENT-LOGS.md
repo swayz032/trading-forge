@@ -7569,6 +7569,34 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-25 parent-claude — Wave 27 Pass 1 MASTER ORCHESTRATION (5 sub-tracks shipped, replay harness LIVE)
+**Mission:** Operator approved Wave 27 Pass 1 plan (quantum-only replay grading + Pass 2 plug-readiness via dryRun param additions). Team Mode dispatch per CLAUDE.md §11.
+**Phase A — Pass 0 pre-flight audit (Explore + this session):** Backtest engine verified READY for use as quantum-replay truth (10-dimension scorecard; 2 HIGH findings non-blocking — compliance shadow mode + exit slippage asymmetry; 3 wiring gaps closed by Wave 25.5 commit c333b31).
+**Phase B — Round 1 (3 parallel sub-tracks):**
+- P1.A1 quantum-challenger | 5b42697 | 34 pytest | quantum_replay.py + IAE invoker + CLI
+- P1.A2 backtest-core | e94fc3d | 19 pytest | db_loader.py + schema-version gate + CPCV purge enforcement
+- P1.A4 paper-parity | 1a7fa7c | 12 vitest | dryRun param additions to 4 services
+**Phase C — Round 2 (sequential after A1+A2):**
+- P1.A3 critic-optimizer | bab6b67 | 36 vitest | replay-grade-quantum.ts + quantum-disagreement.ts pure library + markdown report
+**Phase D — Round 3 (sequential after A1-A4):**
+- P1.A5 observability-reliability | (report only) | 53 pytest + 48 vitest verified | PROCEED TO CLOSE-OUT verdict
+**Phase E — Round 4 (architect last):**
+- P1.A6 trading-forge-architect | (this commit) | System Map sync + 3 CI hard gates + CLAUDE.md + memory + audit row
+**Verification:** 65 new vitest (P1.A3 + P1.A4) + 53 new pytest (P1.A1 + P1.A2) = 118 new tests GREEN. Pre-existing baseline preserved (39 failures before P1, 39 failures after P1 — zero new regressions per A5).
+**Known-facts updates:**
+- SCHEMA CORRECTION: `daily_pnls` lives on `backtests` table, NOT `monte_carlo_runs.daily_pnls` (plan corrected during Pass 1)
+- CIRCULAR IMPORT: src/engine/replay/__init__.py intentionally minimal — callers must import direct from sub-modules
+- vectorbt JIT collection hangs pytest if conftest doesn't mock vectorbt at module level (P1.A2 hit this; pattern documented in tests/python/replay/test_db_loader.py)
+**Carry-forward for next session:**
+- BUG-1 (LOW): db_loader.py:809 ON CONFLICT clause uses (id) not (backtest_id, method, reproducibility_hash) — safe single-threaded, race condition for concurrent replay. Track for Wave 27 Pass 2 cleanup.
+- Pass 2 (~5 dev-days): confluence-score + trade-critique + B15 robustness replay grading — EVIDENCE-GATED on Pass 1 decision rule (need ≥50 strategy-folds + Spearman/binomial signal at p ≤ 0.05)
+- Pass 3 (~3 dev-days): pattern-aggregator + consistency-tracker replay + harness consolidation — EVIDENCE-GATED on Pass 2 GREEN
+- Pass 4 (deferred): B14 Survival Twin replay — blocked pending Python verification of src/engine/survival/survival_scorer.py
+- HIGH findings from Pass 0 audit still open (non-blocking): compliance shadow mode, exit slippage asymmetry
+- Robustness Python subprocess not suppressed by TS-level dryRun — Pass 2 callers must mock at TS boundary OR add --dry-run flag to src/engine/optimizer.py
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

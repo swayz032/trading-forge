@@ -1,0 +1,53 @@
+{
+  "action": "wave.27_pass1_master_closed",
+  "entity_type": "wave",
+  "entity_label": "wave-27-pass1",
+  "status": "success",
+  "decision_authority": "parent-claude",
+  "result": {
+    "passes_shipped": 1,
+    "sub_tracks": 5,
+    "commits": ["5b42697", "e94fc3d", "bab6b67", "1a7fa7c", "ARCHITECT_SHA_PLACEHOLDER"],
+    "tests_added": 118,
+    "tests_added_breakdown": {
+      "pytest": 53,
+      "vitest": 65
+    },
+    "services_modified": 4,
+    "new_python_modules": 2,
+    "new_ts_scripts": 1,
+    "new_ts_libraries": 1,
+    "bugs_found": 1,
+    "severity": "LOW",
+    "a5_verdict": "PROCEED TO CLOSE-OUT",
+    "ci_gates": {
+      "system_map_check": 0,
+      "production_isolation": 0,
+      "compliance_2026": 0
+    },
+    "new_subsystems": [
+      "quantum_replay",
+      "replay_db_loader",
+      "replay_grade_quantum",
+      "quantum_disagreement"
+    ],
+    "new_audit_action_namespaces": [
+      "quantum_replay.completed",
+      "quantum_replay.failed",
+      "quantum_replay.partial_data",
+      "quantum_replay.schema_mismatch",
+      "replay_grade_quantum.signal_detected",
+      "replay_grade_quantum.no_signal",
+      "replay_grade_quantum.inconclusive",
+      "replay_grade_quantum.preliminary",
+      "replay_grade_quantum.purge_violation"
+    ],
+    "carry_forwards": [
+      "db_loader_idempotency_clause",
+      "pass_2_evidence_gated",
+      "pass_3_evidence_gated",
+      "pass_4_blocked_python_verification",
+      "robustness_subprocess_dry_run"
+    ]
+  }
+}
