@@ -7808,6 +7808,35 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-25 parent-claude — Wave 27.5 Pass C MASTER ORCHESTRATION (5 Backtest Engine HIGH closed)
+
+**Mission:** Close all 5 Backtest Engine HIGH findings. Combined with Pass A (3 MC CRITICALs) + Pass B (3 WF HIGH + B14 gate wiring), Wave 27.5 now closes all 11 CRITICAL+HIGH findings. Only MED+LOW sweep (Pass D) remains.
+
+**Phase A — Round 1 (2 parallel sub-tracks):**
+- C.1 backtest-core | `47bdb95` + `8dbf3c3` | 58 new pytest | H5 exit slippage symmetry documented + audit row + docstring + audit (no behavior change — already symmetric); H6 `fill_model.py` activated (3-zone partial fill: <0.1 vol = 100%, 0.1–1.0 vol = linear degrade, >1.0 vol = forced partial); H7 `_safe_autocorrelation` NaN guard (defaults to block-bootstrap on detection failure — conservative); H8 `trim_outlier_multiplier` (opt-IN, default `None` — when set, trims trades to ±multiplier × worst-month)
+- C.2 paper-parity | `1f6d193` | 36 tests (11 pytest + 25 vitest) | H4 `compliance_mode` default flipped from `"shadow"` → `"enforce"`; migration 0148 `backtests.compliance_mode` column; per-backtest override + legacy env var alias preserved; Discord family-grade WARN aggregation on >5% blocked-pct
+
+**Phase B — Round 2 (architect last):**
+- C.3 trading-forge-architect | [this commit] | System Map sync (`fill_model_partial_fills` Python subsystem + `compliance-mode` TS lib registered; 6 new audit actions tracked; migration 0148 registered) + 2 of 3 CI gates GREEN (production-isolation + 2026-compliance) + system-map:check reports 2 pre-existing drift items (1 API route + 1 scheduler job — same items as Pass B carry-forward, deferred to Pass D per spec) + CLAUDE.md (§2/§12/§13/§15) + memory + audit row + batched push
+
+**Verification:** 94 new tests (69 pytest + 25 vitest) GREEN across 5 new test files + 6 modified files. 2 of 3 CI hard gates GREEN; system-map:check carries 2 pre-existing drift items forward to Pass D (identical to Pass B carry-forward — pre-dates this work). Wave 27.5 cumulative: 344 new tests across 10 commits; **ALL 11 CRITICAL+HIGH findings now closed** (3 MC CRITICALs + 3 WF HIGH + 5 Backtest Engine HIGH).
+
+**Known-facts updates:**
+- Compliance mode INSTITUTIONAL DEFAULT is "enforce" per W27.5 Pass C — shadow mode only for explicit novel-edge research opt-in
+- Partial fill modeling DEFAULT ON per institutional realism — 3-zone degradation based on order_qty/bar_volume ratio
+- MC autocorr detection fallback to block-bootstrap is the conservative path (wider CIs = more risk reflection, not less)
+- MC outlier truncation is opt-IN (default `None`) — when activated, reflects worst-month relative caps; documented trade-off: reduces tail-risk reflection of true catastrophic events
+- Exit slippage was already symmetric per audit — Pass C documented + added audit row for visibility; no behavior change
+
+**Carry-forward for next session:**
+- Pass D (~1.5 dev-days): MED+LOW sweep — M1-M8 (volume=0 silence, DST transition, micro contract commission, margin expansion, roll spread itemization, optimizer.py --dry-run, MC regime-aware resampling, MC multi-asset correlation)
+- WFE Discord WARN AlertFactory.warn() wire (Pass B carry-forward) — pick up in Pass D
+- `pbo_p_value` real computation (Pass B carry-forward) — Pass D or future
+- 2 pre-existing system-map drift items (1 API route + 1 scheduler job — pre-date Pass B.1) — Pass D
+- Operator action: `npm run db:migrate` to apply migrations 0146 + 0147 + 0148 (or wait for boot-migration-runner)
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

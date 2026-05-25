@@ -1,0 +1,25 @@
+{
+  "action": "wave.27_5_pass_c_master_closed",
+  "entity_type": "wave",
+  "entity_label": "wave-27-5-pass-c",
+  "status": "success",
+  "decision_authority": "parent-claude",
+  "result": {
+    "high_findings_closed": 5,
+    "sub_tracks": 2,
+    "commits": ["47bdb95", "8dbf3c3", "1f6d193", "PENDING_ARCHITECT_SHA"],
+    "tests_added": 94,
+    "audit_actions_added": 6,
+    "env_vars_added": 5,
+    "migration_added": "0148",
+    "institutional_defaults_flipped": ["compliance_mode_enforce", "partial_fill_enabled"],
+    "remaining_passes_in_wave": 1,
+    "wave_27_5_critical_high_total_closed": 11,
+    "carry_forwards": [
+      "pass_d_med_low_sweep",
+      "wfe_discord_warn_alertfactory_wire",
+      "pbo_p_value_real_computation",
+      "preexisting_system_map_drift"
+    ]
+  }
+}
