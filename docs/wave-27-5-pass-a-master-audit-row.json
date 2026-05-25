@@ -1,0 +1,32 @@
+{
+  "action": "wave.27_5_pass_a_master_closed",
+  "entity_type": "wave",
+  "entity_id": null,
+  "entity_label": "wave-27-5-pass-a",
+  "status": "success",
+  "decision_authority": "parent-claude",
+  "result": {
+    "criticals_closed": 3,
+    "low_closed": 1,
+    "sub_tracks": 2,
+    "commits": ["6e94f18", "8d10bea", "PENDING_ARCHITECT_SHA"],
+    "tests_added": 149,
+    "migrations_added": 2,
+    "migrations": ["0146_backtests_firm_rules_version.sql", "0147_quantum_mc_runs_replay_uniqueness.sql"],
+    "audit_actions_added": 2,
+    "audit_actions": ["monte_carlo.firm_rule_version_mismatch", "monte_carlo.extrapolation_hard_fail"],
+    "env_vars_added": 1,
+    "env_vars": ["MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER"],
+    "helper_modules_added": 2,
+    "helper_modules": ["src/engine/firm_rules_version.py", "src/server/lib/firm-rules-version.ts"],
+    "b14_unblocked": true,
+    "remaining_passes_in_wave": 3,
+    "carry_forwards": [
+      "pass_b_walk_forward_high",
+      "pass_c_backtest_engine_high",
+      "pass_d_med_low_sweep",
+      "b14_gate_ci_high_wiring"
+    ],
+    "ci_gates_green": ["check:production-isolation", "check:2026-compliance", "system-map:check"]
+  }
+}

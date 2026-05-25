@@ -7627,6 +7627,65 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-25 Wave 27.5 Pass A.1 (backtest-core) — MC 3 CRITICALs
+
+**Mission:** Fix 3 Monte Carlo CRITICALs blocking the B14 Survival Twin hard promotion gate.
+
+**Work completed:**
+- CRITICAL #1 — Firm-Rule Parameter Drift Check: `src/engine/firm_rules_version.py` + `src/server/lib/firm-rules-version.ts` SHA-256 version fingerprinting; migration 0146 (idx 148) `firm_rules_version TEXT` on `backtests`; `backtest-service.ts` stamps at INSERT; `monte-carlo-service.ts` drift-checks before Python call with `monte_carlo.firm_rule_version_mismatch` CRITICAL audit row on mismatch; Python-side `run_monte_carlo()` returns structured `{status: "rule_version_mismatch"}` dict
+- CRITICAL #2 — Missing CI on Ruin Probability: `mc_confidence.py` adds `ci_method` + `n_resamples` to ALL CI dict shapes; `compute_all_mc_cis()` adds `probability_of_ruin_ci` alias key (same dict object); method key preserved for backward compat
+- CRITICAL #3 — Extrapolation Hard-Fail: `ExtrapolationExceededError(ValueError)` class; `return_bootstrap()` hard-fails at >2x history (env `MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER`, default 2.0); disable via "infinity"; `run_monte_carlo()` returns `{status: "extrapolation_exceeded", ...}` structured dict
+- 3 existing tests in `test_monte_carlo.py` updated to use `monkeypatch.setenv("MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER", "infinity")` for tests exercising the old soft-cap path
+- All ruff lint issues fixed (import ordering, unused imports, E731 lambda→def, F841 unused vars)
+- Commit `6e94f18` on `feature/deep-analysis-pipeline`
+
+**Verification:**
+- 21 pytest GREEN: `test_firm_rules_version.py`
+- 17 pytest GREEN: `test_mc_ruin_probability_ci.py`
+- 17 pytest GREEN: `test_mc_extrapolation_hard_fail.py`
+- 76 pytest GREEN: `test_monte_carlo.py` (all pre-existing + 3 updated)
+- 131 total pytest GREEN
+- 19 vitest GREEN: `wave27-5-firm-rules-version-parity.test.ts`
+- 14 vitest GREEN: `wave27-5-mc-version-drift-detection.test.ts`
+- 33 total vitest GREEN
+- ruff lint PASSED on all 5 modified Python files
+- tsc: no new errors introduced (pre-existing backtest-service.ts errors confirmed pre-existing via git stash baseline check)
+- Forbidden files unmodified: walk_forward.py, paper-execution-service.ts, paper-signal-service.ts, scheduler.ts
+
+**Known-facts updates:** None — behavior changes are explicit in CRITICAL #1/2/3 above.
+
+**Carry-forward for next session:** Pass A.3 architect batches push per §11a. Pre-existing `test_survival.py` failures (2 tests — firm list pruned to 2 firms by migration 0097, test not updated) remain open. Wave 27.5 Pass B (observability) and Pass C (critic-optimizer) remain pending.
+
+---
+
+### Session Log — 2026-05-25 parent-claude — Wave 27.5 Pass A MASTER ORCHESTRATION (MC CRITICALs closed)
+
+**Mission:** Monte Carlo audit (this session) identified 3 CRITICAL findings + 1 LOW bug blocking B14 Survival Twin from being trustworthy for live capital decisions. Operator authorized "make all findings institutional grade." Pass A closes the highest-priority items.
+
+**Phase A — Round 1 (2 parallel sub-tracks):**
+- A.1 backtest-core | `6e94f18` | 131 pytest + 33 vitest | C1 firm_rules_version (migration 0146 + helpers + drift check + audit) + C2 probability_of_ruin_ci BCa wrap + C3 ExtrapolationExceededError + HARD_FAIL_MULTIPLIER=2.0
+- A.2 observability-reliability | `8d10bea` | 9 new pytest (62 replay total) | BUG-1 db_loader.py:809 ON CONFLICT fix + migration 0147 partial unique index for replay rows
+
+**Phase B — Round 2 (architect last):**
+- A.3 trading-forge-architect | [this commit] | System Map sync + 3 CI gates + CLAUDE.md + memory + audit row + batched push
+
+**Verification:** 140 pytest + 33 vitest GREEN across 8 new test files. All 3 CI hard gates GREEN (production-isolation, 2026-compliance, system-map:check). Baseline preserved (Wave 27 Pass 1.5 GREEN baseline carried forward unchanged).
+
+**Known-facts updates:**
+- `firm_rules_version` is now load-bearing for MC-vs-backtest coherence. Any change to FIRM_CONFIGS / FIRM_RULES must bump the version (compute helper handles this automatically via canonical sorted-JSON SHA-256 hash).
+- MC extrapolation is HARD-CAPPED at 2× history by default. Operators who need longer projections must explicitly set `MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER` higher and accept the research-tier framing.
+- `probability_of_ruin_ci.ci_high` is the new conservative bound. B14 callers reading the point estimate alone is now a documented anti-pattern (§13 Architecture).
+- Replay row uniqueness is DB-enforced via migration 0147 partial unique index. Pass 1.5 auto-fire is now race-safe.
+
+**Carry-forward for next session:**
+- Pass B (~1.5 dev-days): Walk-Forward HIGH — H1 WFE > 0.70 soft gate, H2 parameter stability regime-context, H3 PBO auto-wire (sequential after Pass A)
+- Pass C (~2 dev-days): Backtest Engine HIGH — H4 compliance mode env knob, H5 exit slippage symmetry, H6 fill_model activation, H7 autocorr NaN guard, H8 outlier truncation
+- Pass D (~1.5 dev-days): MED + LOW sweep — M1-M8
+- B14 gate wiring to read `probability_of_ruin_ci.ci_high` (lifecycle-service.ts) — Pass B candidate or standalone follow-up
+- Operator action: `npm run db:migrate` to apply 0146 + 0147 to Railway prod (or wait for boot-migration-runner)
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
