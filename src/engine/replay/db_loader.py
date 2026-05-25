@@ -42,22 +42,34 @@ into the first OOS trade).
 REPLAY_ROW_SCHEMA
 -----------------
 Matches quantum_mc_runs INSERT contract per schema.ts:888-916.
-Idempotency: ON CONFLICT DO NOTHING using (backtest_id, method,
-reproducibility_hash) as the uniqueness guard.  walk_forward_windows.id is stored
-inside governance_labels.cpcv_fold so it participates in the hash but does NOT
-add a new unique-index column to the existing table.
+Idempotency: DB-level partial unique index
+qmc_runs_replay_uniqueness_idx enforces uniqueness on
+(backtest_id, method, reproducibility_hash) WHERE
+governance_labels->>'replay_mode' = 'true'.  The partial
+predicate excludes live cloud QMC rows (valid duplicates by
+design).  Migration: 0146_quantum_mc_runs_replay_uniqueness.sql.
+
+walk_forward_windows.id is stored inside governance_labels.cpcv_fold
+so it participates in the reproducibility_hash but does NOT add a
+new unique-index column to the existing table.
+
+Concurrent-replay safety: the DB constraint is the authoritative
+deduplication gate.  write_replay_row() also performs a
+SELECT-before-INSERT as a belt-and-suspenders application check —
+this avoids roundtripping to the DB when the row is already known
+to exist, but the DB constraint guarantees atomicity under
+concurrent inserts that bypass the app check.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import os
 import uuid as _uuid_mod
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -724,10 +736,19 @@ def write_replay_row(
     without writing to the database.  If apply=True, INSERTs the row and returns
     the new UUID.
 
-    Idempotency: ON CONFLICT DO NOTHING using (backtest_id, method,
-    reproducibility_hash) as the uniqueness guard.  If a row with identical
-    (backtest_id, method, reproducibility_hash) already exists, the INSERT is
-    silently ignored and the existing row's id is returned.
+    Idempotency: DB-level partial unique index
+    qmc_runs_replay_uniqueness_idx (migration 0147) enforces
+    (backtest_id, method, reproducibility_hash) uniqueness for replay
+    rows (governance_labels->>'replay_mode' = 'true').  If a concurrent
+    INSERT races past the SELECT-before-INSERT app check, the DB
+    constraint catches it via ON CONFLICT DO NOTHING — the existing
+    row's id is returned.  Live cloud QMC rows are not covered by the
+    partial index (valid duplicates by design).
+
+    Belt-and-suspenders: write_replay_row also performs a
+    SELECT-before-INSERT to return the existing UUID without a wasted
+    INSERT round-trip.  This does not replace the DB constraint; both
+    layers must be present for concurrent-replay correctness.
 
     Governance labels contract (enforced before insert):
         experimental:    True
@@ -806,7 +827,9 @@ def write_replay_row(
                 %s, %s, %s, %s,
                 NOW()
             )
-            ON CONFLICT (id) DO NOTHING
+            ON CONFLICT (backtest_id, method, reproducibility_hash)
+            WHERE governance_labels->>'replay_mode' = 'true'
+            DO NOTHING
             RETURNING id
         """
 
@@ -832,8 +855,13 @@ def write_replay_row(
             replay_result.get("cloud_job_id"),
         )
 
-        # Check for existing row with same (backtest_id, method, reproducibility_hash)
-        # to support idempotency return
+        # Belt-and-suspenders: SELECT before INSERT so we can return the existing row's
+        # UUID without emitting an INSERT that the DB constraint would silently drop.
+        # This is an application-level convenience — it does NOT replace the DB-level
+        # partial unique index (qmc_runs_replay_uniqueness_idx, migration 0147) which
+        # is the authoritative concurrent-write guard.  A concurrent INSERT that arrives
+        # after this SELECT but before our INSERT will be caught by ON CONFLICT DO NOTHING
+        # and the RETURNING clause will return NULL; the caller then falls back to new_id.
         hash_val = replay_result.get("reproducibility_hash")
         sql_check = """
             SELECT id FROM quantum_mc_runs

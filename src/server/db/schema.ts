@@ -157,6 +157,11 @@ export const backtests = pgTable(
     // {sdr, psi, rws, passed, thresholds, failures, sdr_detail, psi_detail, rws_detail}
     // Null for backtests run without --b15-battery flag. Migration: 0136_b15_parameter_robustness.sql.
     b15Battery: jsonb("b15_battery"),
+    // Wave 27.5 Pass A.1 — CRITICAL #1: Firm-Rule Parameter Drift Check
+    // SHA-256 (16-char hex prefix) of FIRM_CONFIGS + FIRM_RULES at backtest time.
+    // MC engine asserts this matches current rules before running; mismatch → refuse + audit.
+    // Applied migration: 0146_backtests_firm_rules_version.sql (idx 148).
+    firmRulesVersion: text("firm_rules_version"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -913,6 +918,12 @@ export const quantumMcRuns = pgTable("quantum_mc_runs", {
 (table) => [
     index("qmc_runs_backtest_idx").on(table.backtestId),
     index("qmc_runs_method_idx").on(table.method),
+    // qmc_runs_replay_uniqueness_idx: partial unique index added in migration 0147.
+    // Enforces (backtestId, method, reproducibilityHash) uniqueness WHERE
+    // governanceLabels->>'replay_mode' = 'true'.  Declared as a raw SQL partial
+    // index — Drizzle does not support partial indexes natively, so it lives in
+    // the migration file only (not expressible here without a custom SQL index).
+    // See: src/server/db/migrations/0147_quantum_mc_runs_replay_uniqueness.sql
 ]);
 
 export const quantumMcBenchmarks = pgTable("quantum_mc_benchmarks", {
