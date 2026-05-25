@@ -444,6 +444,12 @@ export function deriveEntryIndicator(
   // signal; ARCHETYPE_REGISTRY has break_of_structure already, route via that.
   if (/market.structure(?!.shift)|structure.level|swing.structure|major.structure/.test(cn)) return "archetype:break_of_structure";
 
+  // Wave 26 Pass E.2 (2026-05-25) — top-down bias / HTF trend strategies route
+  // to break_of_structure archetype. Top-down bias = trade in direction of HTF
+  // trend, confirmed by structure break on LTF. Closes top_down_bias_oil_short
+  // straggler from operator's 2026-05-25 ingest.
+  if (/top.down.bias|top.down.trend|htf.bias.trade|directional.bias/.test(cn)) return "archetype:break_of_structure";
+
   // ─── LLM passthrough fallback ───────────────────────────────────────────
   // Concept name didn't match any regex BUT the LLM extracted a known
   // engine-supported entry_indicator. Trust the LLM in this narrow path —
@@ -456,6 +462,8 @@ export function deriveEntryIndicator(
     // Common LLM-vocabulary aliases for archetype indicators
     if (llm === "fair_value_gap" || llm === "fvg") return "archetype:fvg_retrace";
     if (llm === "order_block" || llm === "supply_demand_zone" || llm === "demand_supply_zone") return "archetype:order_block";
+    // Wave 26 Pass E.2 — market_structure / structure_break LLM vocabulary
+    if (llm === "market_structure" || llm === "structure_break" || llm === "bos" || llm === "break_of_structure") return "archetype:break_of_structure";
     if (llm === "liquidity_sweep") return "liquidity_sweep_breakout";
     if (llm === "fibonacci_retracement") return "archetype:ict_ote";
     if (llm === "simple_moving_average" || llm === "exponential_moving_average") return "ema_crossover";
@@ -922,6 +930,28 @@ export async function graduateBucketDirectly(opts: {
     }
   }
 
+  // Wave 26 Pass E.2 (2026-05-25) — volume_profile default-fill. Same pattern
+  // as buffer_ticks. Sensible institutional defaults: profile_window=20 bars
+  // (matches the developing_session_poc 20-bar lookback used elsewhere) and
+  // node_threshold_pct=0.02 (2% volume threshold for LVN/HVN detection).
+  // Env override: VP_PROFILE_WINDOW_DEFAULT / VP_NODE_THRESHOLD_PCT_DEFAULT.
+  if (earlyIndicator === "volume_profile") {
+    if (effectiveEntryParams.profile_window === null || effectiveEntryParams.profile_window === undefined) {
+      const env = process.env.VP_PROFILE_WINDOW_DEFAULT;
+      const fallback = env ? Number.parseInt(env, 10) : 20;
+      if (Number.isFinite(fallback) && fallback >= 5 && fallback <= 100) {
+        effectiveEntryParams.profile_window = fallback;
+      }
+    }
+    if (effectiveEntryParams.node_threshold_pct === null || effectiveEntryParams.node_threshold_pct === undefined) {
+      const env = process.env.VP_NODE_THRESHOLD_PCT_DEFAULT;
+      const fallback = env ? Number.parseFloat(env) : 0.02;
+      if (Number.isFinite(fallback) && fallback > 0 && fallback <= 0.5) {
+        effectiveEntryParams.node_threshold_pct = fallback;
+      }
+    }
+  }
+
   const wideFingerprint = computeWideConceptFingerprintHash({
     market,
     concept_name: conceptName,
@@ -1066,8 +1096,16 @@ export async function graduateBucketDirectly(opts: {
   // ICT/SMC/Wyckoff structural language. Without this, archetype strategies
   // would fail hasRealRules even when prose is correct ("sweep then MSS then
   // enter on FVG retrace" has no close/cross/break literals).
+  // Wave 26 Pass E.2 (2026-05-25) — vocabulary expansion. Gemma 4's LLM prose
+  // uses canonical 2026 SMC/ICT/structure vocabulary that the original Pass 21
+  // keyword set didn't cover: "demand zone" / "supply zone" (order_block synonym),
+  // "lower high" / "higher low" / "swing low broken" (break_of_structure),
+  // "fib" / "fibonacci" / "% retrace" (ict_ote OTE expression), "volume profile" /
+  // "vacuum" / "POI" (volume_profile). Without these tokens hasRealRules=false
+  // and graduation fails with thin_archetype_dsl on RICH LLM prose. Closes 4 of
+  // 7 stragglers from operator's 2026-05-25 29-URL ingest.
   const hasRealRules = extractedEntry.length > 40 &&
-    /(close|cross|break|above|below|enter|trigger|when|rsi\s*[<>]|ema\(|sma\(|sweep|displacement|mss|(^|\W)fvg(\W|$)|retrace|(^|\W)ote(\W|$)|breaker|choch|(^|\W)bos(\W|$)|cisd|killzone|manipulation|order.block|fair.value.gap|liquidity|raid|accumulation|distribution|spring|upthrust|poc|vah|val|imbalance|absorption)/.test(extractedEntry);
+    /(close|cross|break|above|below|enter|trigger|when|rsi\s*[<>]|ema\(|sma\(|sweep|displacement|mss|(^|\W)fvg(\W|$)|retrace|(^|\W)ote(\W|$)|breaker|choch|(^|\W)bos(\W|$)|cisd|killzone|manipulation|order.block|fair.value.gap|liquidity|raid|accumulation|distribution|spring|upthrust|poc|vah|val|imbalance|absorption|demand.zone|supply.zone|(^|\W)poi(\W|$)|lower.high|higher.low|swing.low|swing.high|fib(onacci)?|fibonacci|\d{1,2}%|0\.\d{2,3}|volume.profile|vacuum|impulse|wait.for|identif|setup|enter.on|entry.upon)/.test(extractedEntry);
 
   // Pass 21 v3 corrected³ (2026-05-17): NULL handling for extraction_confidence.
   //
