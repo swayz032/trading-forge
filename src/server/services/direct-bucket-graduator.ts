@@ -450,6 +450,10 @@ export function deriveEntryIndicator(
   // straggler from operator's 2026-05-25 ingest.
   if (/top.down.bias|top.down.trend|htf.bias.trade|directional.bias/.test(cn)) return "archetype:break_of_structure";
 
+  // Wave 26 Pass E.3 — vacuum / VP-imbalance concepts → liquidity_sweep_breakout
+  // (engine doesn't compile bare volume_profile as parametric indicator).
+  if (/vacuum.{0,4}(volume.profile|vp)|volume.profile.{0,4}(imbalance|void)|vp.{0,4}(imbalance|void)/.test(cn)) return "liquidity_sweep_breakout";
+
   // ─── LLM passthrough fallback ───────────────────────────────────────────
   // Concept name didn't match any regex BUT the LLM extracted a known
   // engine-supported entry_indicator. Trust the LLM in this narrow path —
@@ -469,7 +473,12 @@ export function deriveEntryIndicator(
     if (llm === "simple_moving_average" || llm === "exponential_moving_average") return "ema_crossover";
     if (llm === "trendline_breakout" || llm === "trendline_bounce") return "ema_crossover";  // engine analog
     if (llm === "previous_range_pullback" || llm === "break_and_retest") return "session_open_breakout";
-    if (llm === "volume_profile_imbalance") return "volume_profile";
+    // Wave 26 Pass E.3 — volume_profile_imbalance / vacuum VP concepts route
+    // to liquidity_sweep_breakout (engine analog). Engine's pattern_library
+    // doesn't compile bare "volume_profile" as a parametric indicator; the
+    // semantic match for "price racing through low-volume area" is the
+    // liquidity-void/sweep family which the engine DOES support.
+    if (llm === "volume_profile_imbalance" || llm === "volume_profile") return "liquidity_sweep_breakout";
   }
 
   // Fallback to archetype mapping ONLY for ambiguous cases.
@@ -1189,10 +1198,28 @@ export async function graduateBucketDirectly(opts: {
   let mechanicKeywordContextWarnings: string[] = [];
   if (isArchetype && archetypeName && ARCHETYPE_MECHANIC_KEYWORDS[archetypeName]) {
     const spec = ARCHETYPE_MECHANIC_KEYWORDS[archetypeName];
-    // HARD-FAIL only if archetype identifier is missing — that means the
-    // extracted DSL doesn't actually describe this archetype.
     if (!spec.identifier.test(extractedEntry)) {
-      mechanicKeywordErrors = [spec.identifier.source];
+      // Wave 26 Pass E.3 (2026-05-25) — identifier-missing is HARD-FAIL only
+      // when the prose is ALSO thin (hasRealRules=false). When the LLM emitted
+      // RICH prose containing structural vocabulary (sweep / structure / level /
+      // retrace / impulse / demand / supply / etc.) BUT didn't use the literal
+      // archetype-specific token (e.g. "BOS" / "OTE" / "FVG"), demote to
+      // advisory warning. Rationale:
+      //   - The 3-layer cross-validation gate already confirms intent.
+      //   - hasRealRules acts as the hallucination guard (40+ chars + keywords).
+      //   - The archetype identifier is one keyword among the LLM's natural
+      //     vocabulary; modern LLMs paraphrase ("price retraces to 71% level"
+      //     instead of "OTE entry", "swing low broken" instead of "BOS").
+      //   - Pre-Pass-E3 behavior caused 4+ legitimate strategies/27 to be
+      //     rejected from operator's 2026-05-25 ingest with rich correct prose.
+      if (hasRealRules) {
+        // Demote to advisory — log + accept
+        mechanicKeywordContextWarnings = [
+          `identifier_paraphrased: archetype ${archetypeName} identifier regex (${spec.identifier.source}) not literal in prose, but hasRealRules=true — accepting per Pass E.3 demotion`,
+        ];
+      } else {
+        mechanicKeywordErrors = [spec.identifier.source];
+      }
     } else {
       // Identifier present → archetype is real. Log context misses as advisory.
       const contextMissing = spec.context.filter((re) => !re.test(extractedEntry));
