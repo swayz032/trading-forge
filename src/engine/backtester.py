@@ -738,10 +738,20 @@ def _apply_static_styleC_management(
     Returns list of managed trade dicts with updated exit_price, exit_idx, exit_reason.
     """
     from src.engine.context.structural_targets import compute_single_tp
+    # W27.5 P-D.5 (architect close-out): wire check_zero_volume_trade_critical()
+    # into entry/exit candidate paths. Closes the M1 (Pass D.3 — Round 1) hand-off
+    # gap: Pass D.3 created the helper but did not wire it into the trade-management
+    # loop. Env-gated by BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD (default true).
+    from src.engine.data_loader import check_zero_volume_trade_critical, ZeroVolumeOnTradeCriticalBar  # noqa: E501
 
     managed_trades = []
     ts_col = "ts_event"
     has_ts = ts_col in df.columns
+    # W27.5 P-D.5: extract volume once per call; None when column absent (legacy fixtures).
+    _vol_np_static: Optional[np.ndarray] = (
+        df["volume"].to_numpy() if "volume" in df.columns else None
+    )
+    _symbol_static: str = getattr(spec, "symbol", None) or "UNKNOWN"
 
     for _, row in trades_records.iterrows():
         entry_p = float(row["Avg Entry Price"])
@@ -827,6 +837,32 @@ def _apply_static_styleC_management(
             bar_high = float(high_np[bar])
             bar_low = float(low_np[bar])
             bar_open = float(open_np[bar]) if open_np is not None and bar < len(open_np) else bar_low
+
+            # W27.5 P-D.5: zero-volume trade-critical guard. Holiday/data-gap bars
+            # with volume=0 must not produce stop/TP fills. When fail-loud is enabled
+            # (default true), raises ZeroVolumeOnTradeCriticalBar; when disabled,
+            # caller skips this bar (legacy silent-skip preserved for backward-compat).
+            # Pre-checks whether this bar would trigger stop or TP before evaluating.
+            if _vol_np_static is not None and bar < len(_vol_np_static):
+                _stop_or_tp_candidate = (
+                    (not is_short and (bar_low <= trail_stop or bar_high >= tp_price)) or
+                    (is_short and (bar_high >= trail_stop or bar_low <= tp_price))
+                )
+                if _stop_or_tp_candidate:
+                    try:
+                        _bar_ts = str(df[ts_col][bar]) if has_ts else f"idx={bar}"
+                        _skip = check_zero_volume_trade_critical(
+                            bar_volume=float(_vol_np_static[bar]),
+                            bar_timestamp=_bar_ts,
+                            symbol=_symbol_static,
+                            attempted_action="stop_or_tp_trigger",
+                        )
+                        if _skip:
+                            # fail-loud disabled — skip this bar's stop/TP eval
+                            continue
+                    except ZeroVolumeOnTradeCriticalBar:
+                        # fail-loud raised — propagate up to backtester caller
+                        raise
 
             # Conservative intra-bar ordering: check stop BEFORE advancing trail.
             # We cannot know if the high or low came first within a bar, so we

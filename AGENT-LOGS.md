@@ -7837,6 +7837,58 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-25 parent-claude — Wave 27.5 Pass D Round 1 close-out (8 MED + 4 carry-forwards)
+**Mission:** Close Wave 27.5 MED+LOW sweep — M1 zero-vol fail-loud / M2 DST boundary / M3 micro vs mini commission / M4 VIX margin expansion / M5 roll spread itemization / M6 optimizer --dry-run / M7 regime MC / M8 multi-asset MC + WFE Discord WARN + pbo_p_value real + 2 pre-existing system-map drift items. Dispatched 4 parallel subagents Round 1.
+**Sub-tracks shipped (4 parallel commits):**
+- D.1 `3246730` paper-parity: M3 micro vs mini commission scaling per `getContractClass()` + Phase 5 mini visibility audit (56 tests).
+- D.2 `cec10f5` backtest-core: M2 DST boundary + M4 margin VIX expansion (>30 halves, >50 quarters) + M5 roll spread per-symbol itemized tick deduction (41 pytest).
+- D.3 `783ab91` observability: M1 `check_zero_volume_trade_critical()` helper added to `data_loader.py` + M6 `optimizer.py --dry-run` + WFE Discord WARN wire-up + 2 pre-existing system-map drift items closed (29 tests).
+- D.4 `1692ad3` critic-optimizer: M7 regime-aware MC resampling + M8 multi-asset correlation MC + `pbo_p_value` real computation via permutation (60 pytest).
+**Pass D.5 architect close-out (this commit):** zero-volume wire-up Option A — `check_zero_volume_trade_critical()` now invoked in `_apply_static_styleC_management()` per-bar loop before stop/TP triggers fire (uses pre-extracted `_vol_np_static` + spec.symbol; env-gated via `BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD`). System Map sync no-op (Pass D.3 cleared the 2 drift items in Round 1). All 3 CI hard gates GREEN (system-map:check / production-isolation / 2026-compliance).
+**Verification:** 186 new tests (56 + 41 + 29 + 60) GREEN across 4 parallel sub-tracks; zero new regressions vs Pass C baseline. backtester.py `py_compile` clean post-wire-up.
+**Known-facts updates:** Pass D Round 1 closes ALL 8 MED findings + 4 of 4 carry-forwards from Passes A/B/C. Institutional defaults flipped at Pass D: `BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD=true`, `BACKTEST_ROLL_SPREAD_ITEMIZED=true`, VIX-margin-expansion ON by default. 5 new Python modules + 1 new TS helper registered.
+**Carry-forward for next session:** Pass D close-out is complete; see Wave 27.5 MASTER CLOSE entry below.
+
+---
+
+### Session Log — 2026-05-25 parent-claude — Wave 27.5 MASTER CLOSE (19 of 19 findings closed)
+**Mission:** Operator authorized "make all findings institutional grade and enterprise grade and robust — use Claude Code subagents." Audit findings from MC + WF + Backtest Engine + Pass 0 audits identified 19 actionable items (3 CRITICAL + 8 HIGH + 8 MED + 1 LOW). Wave 27.5 closed all 19 in 4 evidence-gated passes with Team Mode dispatch per CLAUDE.md §11.
+**Pass A (3 MC CRITICALs + BUG-1):** C1 firm_rules_version drift + C2 probability_of_ruin_ci BCa + C3 extrapolation HARD_FAIL + L1 db_loader ON CONFLICT. 149 tests, 3 commits.
+**Pass B (3 WF HIGH + B14 ci_high wiring):** H1 WFE > 0.70 floors + H2 walk_forward_regime_context.py 4-class drift classifier + H3 PBO auto-wire + B14 lifecycle gate reads ci_high. 101 tests, 4 commits.
+**Pass C (5 Backtest Engine HIGH):** H4 compliance enforce default + H5 exit slippage symmetry + H6 fill_model activation (3-zone partial fills) + H7 autocorr NaN guard + H8 outlier truncation (opt-IN). 94 tests, 4 commits.
+**Pass D Round 1 (8 MED + 4 carry-forwards):** M1 zero-vol fail-loud + M2 DST boundary + M3 micro/mini commission + M4 VIX margin expansion + M5 roll spread itemization + M6 optimizer --dry-run + M7 regime MC + M8 multi-asset MC + pbo_p_value real + WFE Discord WARN + 2 system-map drift items closed. 186 tests, 4 commits.
+**Pass D.5 (architect master close):** zero-volume wire-up Option A into backtester.py + this AGENT-LOGS + memory + audit rows + CLAUDE.md.
+**Verification:** 530 new tests across 14 commits. All 3 CI hard gates GREEN. Wave 24 + 25 + 26 + 27 + 27.5 baselines preserved. Cumulative session test count exceeds 1000 across Wave 27 + 27.5.
+**Institutional defaults flipped:**
+- `BACKTEST_COMPLIANCE_MODE` → `"enforce"` (was implicit `"shadow"`)
+- `BACKTEST_PARTIAL_FILL_ENABLED` → `true` (was off)
+- `BACKTEST_EXIT_SLIPPAGE_SYMMETRIC` → `true` (was undocumented asymmetric)
+- `BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD` → `true` (was silent skip)
+- `BACKTEST_ROLL_SPREAD_ITEMIZED` → `true` (was bundled in generic slippage)
+- MC default uses `MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER=2.0` (was silent 5× cap)
+- B14 reads `probability_of_ruin_ci.ci_high` (was point estimate)
+- `WFE_HARD_FLOOR=0.70` institutional standard
+**What this unlocks:**
+- B14 Survival Twin gate is institutional-grade for live capital decisions
+- Walk-Forward Efficiency gated at 2026 institutional 0.70 floor
+- Compliance violations now block in backtest (paper/backtest parity for promotion candidates)
+- Phase 5 mini contracts have correct 10× commission scaling ready
+- Multi-asset MC + regime-aware MC available for cross-symbol strategies
+- Pre-existing system-map drift CLEARED (route + scheduler job registered at Pass D.3)
+**Known-facts updates:**
+- All 19 audit findings closed; Wave 27.5 institutional-grade certification achieved per operator mandate
+- 14 commits batched + pushed to feature/deep-analysis-pipeline
+- 14 new env vars across 4 passes; all defaults institutional (opt-OUT for backward compat where finding affects existing behavior)
+- Migrations 0146 + 0147 + 0148 require operator `npm run db:migrate` to apply to Railway prod (or wait for boot-migration-runner)
+**Carry-forward for next session:**
+- Wave 27 Pass 2 (~5 dev-days, evidence-gated): confluence + trade-critique + B15 robustness replay grading — EVIDENCE-GATED on Wave 27 Pass 1.5 weekly Spearman verdict transition from PRELIMINARY → SIGNAL/INCONCLUSIVE/NO_SIGNAL (n ≥ 50 folds, p ≤ 0.05)
+- Wave 27 Pass 3 (~3 dev-days): pattern-aggregator + consistency-tracker replay + harness consolidation — EVIDENCE-GATED on Pass 2 GREEN
+- Wave 27 Pass 4 (B14 Survival Twin replay): blocked pending Python verification of `src/engine/survival/survival_scorer.py` write-free contract
+- Phase 5 readiness check: when Phase 5 mini contracts deploy, add true-mini ContractSpec entries to `config.py` and `shared/firm-config.ts` with 10× point values (Pass D.2 documented this)
+- Operator action: `npm run db:migrate` to apply 0146 + 0147 + 0148 (or wait for boot-migration-runner)
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
