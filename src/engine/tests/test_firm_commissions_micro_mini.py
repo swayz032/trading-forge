@@ -15,8 +15,8 @@ Coverage:
 """
 
 import pytest
-from src.engine.firm_config import FIRM_COMMISSIONS, get_commission_per_side
 
+from src.engine.firm_config import FIRM_COMMISSIONS, get_commission_per_side
 
 # ─── FIRM_COMMISSIONS dict coverage ──────────────────────────────────────────
 

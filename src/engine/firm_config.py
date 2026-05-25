@@ -12,7 +12,6 @@ Don't ignore firm contract caps in backtests.
 
 from __future__ import annotations
 
-
 # ─── Per-Firm Commissions (per side, per contract) ───────────────
 # Source: each firm's fee schedule for 50K accounts.
 
