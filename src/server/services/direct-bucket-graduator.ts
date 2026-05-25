@@ -357,12 +357,13 @@ export function deriveEntryIndicator(
   // pattern_library. Add explicit routes for the newly-graduating archetypes.
   if (/supertrend/.test(cn)) return "supertrend";
   if (/cumulative.delta|cvd.divergence/.test(cn)) return "cumulative_delta";
-  // Wave 26 Pass E.3 fix-up (2026-05-25) — engine's pattern_library doesn't
-  // compile `volume_profile` as a parametric indicator. Route to liquidity_sweep_breakout
-  // (semantic match: VP imbalance / POC / VAH / VAL areas are where institutional
-  // liquidity rests and sweeps occur). All VP-concept strategies stay tradable
-  // via the existing engine archetype that DOES compile.
-  if (/volume.profile|market.profile|(^|_)poc(_|$)|(^|_)vah(_|$)|(^|_)val(_|$)/.test(cn)) return "liquidity_sweep_breakout";
+  // Wave 26 Pass E.3 fix-up² (2026-05-25) — engine's pattern_library compiles
+  // only 13 parametric indicators (see CLAUDE.md §2b). Neither volume_profile
+  // nor liquidity_sweep_breakout are among them. Route VP-concept strategies
+  // to archetype:order_block — institutional zones where price gets absorbed
+  // structurally match VP imbalance/POC/VAH/VAL semantics, AND the archetype
+  // path doesn't require pattern_library compile (structural detector handles it).
+  if (/volume.profile|market.profile|(^|_)poc(_|$)|(^|_)vah(_|$)|(^|_)val(_|$)/.test(cn)) return "archetype:order_block";
   if (/ichimoku/.test(cn)) return "ichimoku_cloud";
   if (/(^|_)dema(_|$)|double.exponential/.test(cn)) return "dema_crossover";
   if (/(^|_)alma(_|$)|arnaud.legoux/.test(cn)) return "alma_filter";
@@ -455,9 +456,9 @@ export function deriveEntryIndicator(
   // straggler from operator's 2026-05-25 ingest.
   if (/top.down.bias|top.down.trend|htf.bias.trade|directional.bias/.test(cn)) return "archetype:break_of_structure";
 
-  // Wave 26 Pass E.3 — vacuum / VP-imbalance concepts → liquidity_sweep_breakout
-  // (engine doesn't compile bare volume_profile as parametric indicator).
-  if (/vacuum.{0,4}(volume.profile|vp)|volume.profile.{0,4}(imbalance|void)|vp.{0,4}(imbalance|void)/.test(cn)) return "liquidity_sweep_breakout";
+  // Wave 26 Pass E.3 fix-up² — vacuum / VP-imbalance concepts → archetype:order_block
+  // (engine's pattern_library doesn't compile liquidity_sweep_breakout either).
+  if (/vacuum.{0,4}(volume.profile|vp)|volume.profile.{0,4}(imbalance|void)|vp.{0,4}(imbalance|void)/.test(cn)) return "archetype:order_block";
 
   // ─── LLM passthrough fallback ───────────────────────────────────────────
   // Concept name didn't match any regex BUT the LLM extracted a known
@@ -478,12 +479,13 @@ export function deriveEntryIndicator(
     if (llm === "simple_moving_average" || llm === "exponential_moving_average") return "ema_crossover";
     if (llm === "trendline_breakout" || llm === "trendline_bounce") return "ema_crossover";  // engine analog
     if (llm === "previous_range_pullback" || llm === "break_and_retest") return "session_open_breakout";
-    // Wave 26 Pass E.3 — volume_profile_imbalance / vacuum VP concepts route
-    // to liquidity_sweep_breakout (engine analog). Engine's pattern_library
-    // doesn't compile bare "volume_profile" as a parametric indicator; the
-    // semantic match for "price racing through low-volume area" is the
-    // liquidity-void/sweep family which the engine DOES support.
-    if (llm === "volume_profile_imbalance" || llm === "volume_profile") return "liquidity_sweep_breakout";
+    // Wave 26 Pass E.3 fix-up² — volume_profile_imbalance / vacuum VP concepts
+    // route to archetype:order_block. Engine's pattern_library doesn't compile
+    // bare volume_profile OR liquidity_sweep_breakout as parametric indicators
+    // (only 13 are supported per CLAUDE.md §2b). Archetype:order_block is the
+    // engine-supported structural detector that matches VP-imbalance semantics
+    // (institutional absorption zones).
+    if (llm === "volume_profile_imbalance" || llm === "volume_profile") return "archetype:order_block";
   }
 
   // Fallback to archetype mapping ONLY for ambiguous cases.
