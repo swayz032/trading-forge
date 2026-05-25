@@ -2109,6 +2109,10 @@ async function runGraduation(
   sourceCount: number,
   distinctProviders: number,
   correlationId?: string,
+  /** Wave 26 Pass D — true for /pending-buckets/:id/graduate operator endpoint
+   *  (manual force-graduate). Bypasses GRADUATION_DAILY_CAP guardrail (which
+   *  exists to stop autonomous scout floods, not operator manual batches). */
+  bypassDailyCap: boolean = false,
 ): Promise<void> {
   try {
     // Read all mentions for this bucket (with scout_layer for tag evidence)
@@ -2229,6 +2233,7 @@ async function runGraduation(
       youtubeUrls: _youtubeUrls,
       redditUrls: _redditUrls,
       correlationId: correlationId ?? null,
+      bypassDailyCap,
     });
 
     // For backward-compat with the rest of the handler (audit + Discord notify)
@@ -2755,7 +2760,7 @@ agentRoutes.post("/pending-buckets/:id/graduate", idempotencyMiddleware, async (
       correlation_id:     correlationId,
     });
 
-    runGraduation(bucketId, bucket.sourceCount, bucket.distinctProviders, correlationId).catch((err) => {
+    runGraduation(bucketId, bucket.sourceCount, bucket.distinctProviders, correlationId, true).catch((err) => {
       logger.error({ err, bucketId }, "operator force-graduate: graduation failed");
     });
 

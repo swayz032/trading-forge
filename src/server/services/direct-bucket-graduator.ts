@@ -788,8 +788,14 @@ export async function graduateBucketDirectly(opts: {
   youtubeUrls: string[];
   redditUrls: string[];
   correlationId?: string | null;
+  /** Wave 26 Pass D (2026-05-25): operator-force-graduate path sets this true
+   *  to sidestep the GRADUATION_DAILY_CAP guardrail. The cap exists to stop
+   *  autonomous scout pipeline floods; operator-explicit manual ingest of a
+   *  URL batch is by definition not a flood — every URL was chosen. Cron drain
+   *  still passes `bypassDailyCap=false` (default) and respects the cap. */
+  bypassDailyCap?: boolean;
 }): Promise<DirectGraduationResult> {
-  const { bucketId, bestMention, bucketMeta, sourceCount, distinctProviders, layersCovered, layerTags, correlationId } = opts;
+  const { bucketId, bestMention, bucketMeta, sourceCount, distinctProviders, layersCovered, layerTags, correlationId, bypassDailyCap = false } = opts;
   const extractedIdea = bestMention.extractedIdea ?? {};
   const market = bucketMeta.market;
 
@@ -980,7 +986,8 @@ export async function graduateBucketDirectly(opts: {
         AND created_at >= NOW()::date`
   );
   const todayGraduated = Number((Array.isArray(todayCount) ? todayCount[0] : (todayCount as any).rows?.[0])?.count ?? 0);
-  if (todayGraduated >= DAILY_CAP) {
+  // Wave 26 Pass D — operator-force-graduate path bypasses cap (see opts.bypassDailyCap docstring).
+  if (todayGraduated >= DAILY_CAP && !bypassDailyCap) {
     logger.warn(
       { bucketId, conceptName, strategyName, todayGraduated, dailyCap: DAILY_CAP },
       `direct-graduator: daily graduation cap reached (${todayGraduated}/${DAILY_CAP}) — bucket stays pending, will re-evaluate next cycle`,
