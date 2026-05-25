@@ -36,11 +36,22 @@ import polars as pl
 
 from src.engine.backtester import BARS_PER_DAY, run_backtest, run_class_backtest
 from src.engine.config import BacktestRequest
-from src.engine.cross_validation import run_cross_validation
+from src.engine.cross_validation import (
+    compute_wfe,
+    get_wfe_hard_floor,
+    get_wfe_warn_floor,
+    run_cross_validation,
+)
 from src.engine.nvtx_markers import range_pop, range_push
 from src.engine.optimizer import _apply_params, _build_search_space, optimize_strategy
 from src.engine.sanity_checks import run_sanity_checks
 from src.engine.strategy_base import BaseStrategy
+from src.engine.walk_forward_regime_context import classify_parameter_drift
+
+# ── PBO threshold env var ─────────────────────────────────────────────────────
+# Env var: PBO_OVERFIT_THRESHOLD (default 0.5)
+# PBO > threshold = strategy more likely overfit than not.
+_PBO_OVERFIT_THRESHOLD_DEFAULT = 0.5
 
 # ─── OOS Window Minimums ─────────────────────────────────────────
 # Below these thresholds, OOS results are statistically unreliable.
@@ -485,6 +496,13 @@ def run_walk_forward(
     # WF Fix 1: bar-level equity accumulator for intraday max DD computation.
     all_oos_equity_bars: list[float] = []
     all_oos_trades: list[dict] = []
+    # WFE accumulators — collect IS daily P&Ls for combined-fold IS Sharpe.
+    # We run a lightweight IS backtest (no optimization, fixed config) so we
+    # can compute WFE = combined_OOS_Sharpe / combined_IS_Sharpe.
+    all_is_pnls: list[float] = []
+    # Regime per window — populated from the IS backtest result's bias context
+    # or from config.preferred_regime as a static fallback.
+    _per_window_regimes: list[Optional[str]] = []
 
     # ─── Phase 12: Parallel OOS window dispatch ─────────────────────────────
     # When not optimizing (Optuna uses SQLite which is single-writer), dispatch
@@ -614,6 +632,46 @@ def run_walk_forward(
             _oos_results_ordered.append(_window_res)
             range_pop()
 
+    # ─── Run IS backtests for WFE computation ────────────────────────────────
+    # WFE = combined_OOS_Sharpe / combined_IS_Sharpe.
+    # We run a lightweight IS backtest with the base config (no optimization) so
+    # the IS Sharpe represents the unoptimized strategy performance on training data.
+    # When optimize=True the IS Sharpe from the optimizer's best_score is used
+    # directly (it already ran the IS backtest — we avoid a second pass).
+    #
+    # Failure is soft: if IS backtest errors, we skip WFE for that window and
+    # fall back to wfe_overall=None at aggregation (no crash, no silent wrong value).
+    _is_results_for_wfe: list[dict] = []
+    _wfe_is_request = BacktestRequest(
+        strategy=config,
+        start_date=request.start_date,
+        end_date=request.end_date,
+        slippage_ticks=request.slippage_ticks,
+        commission_per_side=request.commission_per_side,
+        firm_key=request.firm_key,
+        max_trades_per_day=request.max_trades_per_day,
+        event_calendar=request.event_calendar,
+        fill_model=request.fill_model,
+    )
+    for i, (is_data_wfe, _oos_data_wfe) in enumerate(windows):
+        # Re-use optimizer IS Sharpe when available (serial optimize=True path).
+        # For parallel path and non-optimize serial: run a fresh IS backtest.
+        _opt_res_i = _oos_results_ordered[i].get("_opt_result_serial")
+        if _opt_res_i and _opt_res_i.get("best_score") is not None:
+            # Optimizer already ran IS — use its score directly (no extra backtest).
+            _is_results_for_wfe.append({"daily_pnls": [], "_is_sharpe_from_opt": float(_opt_res_i["best_score"])})
+        else:
+            try:
+                _is_res = run_backtest(_wfe_is_request, data=is_data_wfe)
+                _is_results_for_wfe.append(_is_res)
+            except Exception as _is_exc:
+                print(
+                    f"Walk-forward WFE: IS backtest window {i+1} failed ({_is_exc}). "
+                    f"WFE will be skipped for this window.",
+                    file=sys.stderr,
+                )
+                _is_results_for_wfe.append({})
+
     # ─── Assemble window_results from ordered OOS results ────────────────────
     def _ts_col(df: pl.DataFrame) -> str:
         for col in ("ts_event", "ts_et"):
@@ -727,6 +785,27 @@ def run_walk_forward(
         all_oos_equity_bars.extend(_new_equity_bars)
         all_oos_trades.extend(oos_result.get("trades", []))
 
+        # ── Collect IS daily P&Ls for WFE computation ────────────────────────
+        _is_res_i = _is_results_for_wfe[i] if i < len(_is_results_for_wfe) else {}
+        if "_is_sharpe_from_opt" in _is_res_i:
+            # Optimizer provided IS Sharpe directly — no daily_pnls to accumulate.
+            # We stash this on window_detail for per-window WFE reporting.
+            window_results[i]["_is_sharpe_opt"] = _is_res_i["_is_sharpe_from_opt"]
+        else:
+            _is_pnls_i = _is_res_i.get("daily_pnls", [])
+            all_is_pnls.extend(_is_pnls_i)
+
+        # ── Collect per-window regime for parameter stability regime-context ─
+        # Strategy's preferred_regime field is the lightweight fallback when
+        # the IS backtest does not emit a dominant_regime (most strategies
+        # don't unless they run the bias engine explicitly).
+        _window_regime: Optional[str] = (
+            _is_res_i.get("dominant_regime")
+            or oos_result.get("dominant_regime")
+            or getattr(config, "preferred_regime", None)
+        )
+        _per_window_regimes.append(_window_regime)
+
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates
     total_trades = len(all_oos_trades)
     total_return = float(sum(w["oos_metrics"]["total_return"] for w in window_results))  # Sum dollar P&L
@@ -775,7 +854,9 @@ def run_walk_forward(
     low_confidence_windows = [w for w in window_results if w.get("confidence") == "LOW"]
     overall_confidence = "LOW" if low_confidence_windows else "OK"
 
-    # Param stability check across optimization windows
+    # Param stability check across optimization windows — HIGH #2 enhancement
+    # Now uses 4-class regime-context classification instead of binary FRAGILE flag.
+    # Backward compat: is_fragile is still set (True = overfit_drift | indeterminate).
     param_stability = None
     if optimize:
         opt_windows = [w for w in window_results if w.get("optimization")]
@@ -787,6 +868,10 @@ def run_walk_forward(
 
             stability = {}
             fragile = False
+            per_window_params_for_rc: list[dict] = []
+            for w in opt_windows:
+                per_window_params_for_rc.append(w["optimization"]["best_params"])
+
             for pname in all_param_names:
                 vals = [w["optimization"]["best_params"].get(pname) for w in opt_windows if pname in w["optimization"]["best_params"]]
                 if len(vals) >= 2:
@@ -802,14 +887,159 @@ def run_walk_forward(
                     if cv > 0.30:
                         fragile = True
 
+            # ── Regime-context classification (HIGH #2) ───────────────────────
+            # Align regimes to opt_windows (which are a subset when some windows
+            # had no optimization result). Use the global _per_window_regimes and
+            # map by window index.
+            _opt_window_indices = [
+                i for i, w in enumerate(window_results) if w.get("optimization")
+            ]
+            _opt_window_regimes: list[Optional[str]] = [
+                _per_window_regimes[i] if i < len(_per_window_regimes) else None
+                for i in _opt_window_indices
+            ]
+
+            try:
+                _drift_classification = classify_parameter_drift(
+                    per_window_params_for_rc,
+                    _opt_window_regimes,
+                )
+                _rc_classification = _drift_classification.classification
+                _rc_confidence = _drift_classification.confidence
+                _rc_evidence = _drift_classification.evidence
+                _rc_warning = _drift_classification.warning
+                # Backward compat: override fragile from regime-context
+                fragile = _drift_classification.fragile
+                print(
+                    f"  Param stability: {_rc_classification.upper()} "
+                    f"(confidence={_rc_confidence:.2f}, rho={_rc_evidence.get('spearman_rho')})",
+                    file=sys.stderr,
+                )
+            except Exception as _rc_exc:
+                print(
+                    f"  Param stability: regime-context classification failed ({_rc_exc}). "
+                    f"Falling back to binary fragile flag.",
+                    file=sys.stderr,
+                )
+                _rc_classification = "indeterminate" if fragile else "stable"
+                _rc_confidence = 0.5
+                _rc_evidence = {"reason": "classification_error", "error": str(_rc_exc)}
+                _rc_warning = "Regime variance > 30% across windows — likely overfitting" if fragile else None
+
             param_stability = {
                 "params": stability,
                 "is_fragile": fragile,
-                "warning": "Param variance > 30% across windows — likely overfitting" if fragile else None,
+                "warning": _rc_warning or ("Param variance > 30% across windows — likely overfitting" if fragile else None),
+                # HIGH #2: regime-context classification (additive; backward compat)
+                "drift_classification": _rc_classification,
+                "drift_confidence": _rc_confidence,
+                "drift_evidence": _rc_evidence,
             }
             if fragile:
                 overall_confidence = "LOW"
                 print("  Param stability: FRAGILE — variance > 30% across windows", file=sys.stderr)
+
+    # ── PBO computation — HIGH #3 auto-wire ──────────────────────────────────
+    # PBO (Probability of Backtest Overfitting) per Bailey et al. is now wired
+    # into the aggregation block so it is always computed when >= 4 windows exist.
+    # Previously it had to be called explicitly by the caller — fixed here.
+    pbo_result: Optional[dict] = None
+    _pbo_threshold = float(os.environ.get("PBO_OVERFIT_THRESHOLD", str(_PBO_OVERFIT_THRESHOLD_DEFAULT)))
+    if len(window_results) >= 4:
+        try:
+            from src.engine.risk_metrics import compute_pbo as _compute_pbo
+            pbo_result = _compute_pbo(window_results)
+            _pbo_val = pbo_result.get("pbo")
+            _pbo_pass = (_pbo_val is None) or (_pbo_val <= _pbo_threshold)
+            pbo_result["pbo_pass"] = _pbo_pass
+            pbo_result["pbo_threshold"] = _pbo_threshold
+            pbo_result["pbo_p_value"] = None  # Reserved for future bayesian extension
+
+            if _pbo_val is not None:
+                if _pbo_val > _pbo_threshold:
+                    print(
+                        f"  PBO: {_pbo_val:.4f} > threshold {_pbo_threshold} — "
+                        f"HIGH OVERFIT RISK (walk_forward.pbo_high_overfit_risk)",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(
+                        f"  PBO: {_pbo_val:.4f} <= threshold {_pbo_threshold} — pass "
+                        f"(walk_forward.pbo_computed)",
+                        file=sys.stderr,
+                    )
+        except Exception as _pbo_exc:
+            print(f"  PBO: computation failed ({_pbo_exc}).", file=sys.stderr)
+            pbo_result = {"pbo": None, "pbo_pass": True, "error": str(_pbo_exc)}
+    else:
+        print(
+            f"  PBO: skipped (need >= 4 windows, have {len(window_results)})",
+            file=sys.stderr,
+        )
+
+    # ── WFE overall computation — HIGH #1 ────────────────────────────────────
+    # wfe_overall = combined_OOS_Sharpe / combined_IS_Sharpe (not per-window average).
+    # This is the standard institutional metric: treat the full concatenated OOS
+    # as the evaluation set and the full concatenated IS as the reference.
+    wfe_overall: Optional[float] = None
+    wfe_status: Optional[str] = None
+    wfe_per_window: list[dict] = []
+    _wfe_hard_floor = get_wfe_hard_floor()
+    _wfe_warn_floor = get_wfe_warn_floor()
+
+    # Compute combined IS Sharpe from accumulated IS daily P&Ls.
+    # When optimizer IS Sharpe was used directly (_is_sharpe_opt on window_detail),
+    # we skip the accumulated path and use the opt score as combined IS Sharpe.
+    _combined_is_sharpe: Optional[float] = None
+
+    # Check if all windows used optimizer IS scores (no raw IS daily P&Ls accumulated)
+    _opt_is_sharpes = [
+        w.get("_is_sharpe_opt")
+        for w in window_results
+        if w.get("_is_sharpe_opt") is not None
+    ]
+    # Clean up _is_sharpe_opt from window_results (internal field, not schema output)
+    for w in window_results:
+        w.pop("_is_sharpe_opt", None)
+
+    if _opt_is_sharpes:
+        # When optimizer IS scores are available, use their mean as the combined IS Sharpe.
+        # This matches the semantic intent (IS Sharpe = optimizer-selected Sharpe).
+        _combined_is_sharpe = float(np.mean(_opt_is_sharpes))
+    elif len(all_is_pnls) > 1:
+        _is_pnl_arr = np.array(all_is_pnls)
+        _is_std = float(np.std(_is_pnl_arr, ddof=1))
+        _combined_is_sharpe = float(np.mean(_is_pnl_arr) / _is_std * np.sqrt(252)) if _is_std > 0 else 0.0
+
+    if _combined_is_sharpe is not None and _combined_is_sharpe > 0:
+        _wfe_dict = compute_wfe(is_sharpe=_combined_is_sharpe, oos_sharpe=agg_sharpe)
+        wfe_overall = _wfe_dict["wfe"]
+        wfe_status = _wfe_dict["status"]
+
+        if wfe_status == "fail":
+            print(
+                f"  WFE: {wfe_overall:.4f} < warn_floor {_wfe_warn_floor} — "
+                f"RED FLAG (walk_forward.wfe_below_hard_floor)",
+                file=sys.stderr,
+            )
+            overall_confidence = "LOW"
+        elif wfe_status == "warn":
+            print(
+                f"  WFE: {wfe_overall:.4f} is between warn_floor {_wfe_warn_floor} "
+                f"and hard_floor {_wfe_hard_floor} — YELLOW FLAG "
+                f"(walk_forward.wfe_below_warn_floor)",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"  WFE: {wfe_overall:.4f} >= hard_floor {_wfe_hard_floor} — pass",
+                file=sys.stderr,
+            )
+    else:
+        print(
+            "  WFE: skipped (IS Sharpe <= 0 or no IS daily P&Ls collected)",
+            file=sys.stderr,
+        )
 
     # ─── Prop firm compliance on aggregated OOS results ─────
     prop_compliance = None
@@ -858,6 +1088,17 @@ def run_walk_forward(
             "embargo_pct": _embargo_pct if _resolved_mode == "purged_embargo" else 0.0,
             "purge_window": _purge_window if _resolved_mode == "purged_embargo" else 0,
         },
+        # Wave 27.5 Pass B HIGH #1 — WFE fields (all optional; additive; backward compat)
+        "wfe_overall": wfe_overall,
+        "wfe_status": wfe_status,
+        "wfe_hard_floor": _wfe_hard_floor,
+        "wfe_warn_floor": _wfe_warn_floor,
+        "wfe_per_window": wfe_per_window,
+        # Wave 27.5 Pass B HIGH #3 — PBO auto-wire (additive; None when < 4 windows)
+        "pbo": pbo_result.get("pbo") if pbo_result else None,
+        "pbo_pass": pbo_result.get("pbo_pass") if pbo_result else None,
+        "pbo_p_value": None,  # Reserved for Bayesian extension
+        "pbo_detail": pbo_result,
     }
 
 

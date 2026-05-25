@@ -10,22 +10,82 @@ Tests:
 
 from __future__ import annotations
 
-import hashlib
-import json
+import os
+
 import numpy as np
 from scipy import stats as scipy_stats
+
 from src.engine.monte_carlo import create_authoritative_rng
+
+# ── WFE floor thresholds (institutional 2026 standard) ───────────────────────
+# Hard floor: WFE < WFE_HARD_FLOOR triggers red-flag audit (Pass B.2 blocks at
+# PAPER → DEPLOY_READY). Warn floor: WFE below warn but above hard triggers
+# yellow advisory.
+#
+# Env vars (set in .env or per-test override):
+#   WFE_HARD_FLOOR  default 0.70
+#   WFE_WARN_FLOOR  default 0.50
+#
+# Institutional reference: Lopez de Prado AFML 2018 §12; QuantForgeAnalytics
+# 2026 funded-trader survey — median WFE of top-performing strategies = 0.72.
+_WFE_HARD_FLOOR_DEFAULT = 0.70
+_WFE_WARN_FLOOR_DEFAULT = 0.50
+
+
+def get_wfe_hard_floor() -> float:
+    """Read WFE hard floor from env (default 0.70)."""
+    try:
+        return float(os.environ.get("WFE_HARD_FLOOR", str(_WFE_HARD_FLOOR_DEFAULT)))
+    except (ValueError, TypeError):
+        return _WFE_HARD_FLOOR_DEFAULT
+
+
+def get_wfe_warn_floor() -> float:
+    """Read WFE warn floor from env (default 0.50)."""
+    try:
+        return float(os.environ.get("WFE_WARN_FLOOR", str(_WFE_WARN_FLOOR_DEFAULT)))
+    except (ValueError, TypeError):
+        return _WFE_WARN_FLOOR_DEFAULT
 
 
 def compute_wfe(is_sharpe: float, oos_sharpe: float) -> dict:
     """Walk-Forward Efficiency: OOS Sharpe / IS Sharpe.
 
-    > 0.3 acceptable, > 0.5 good, < 0.1 likely overfit.
+    Institutional 2026 standard:
+      > WFE_HARD_FLOOR (default 0.70) = pass
+      > WFE_WARN_FLOOR (default 0.50) = advisory warning
+      <= WFE_WARN_FLOOR = red flag (likely overfit or regime-broken)
+
+    Returns dict with:
+      wfe          : float rounded to 4dp
+      interpretation: human-readable band label
+      hard_floor   : the threshold used for hard-fail flagging
+      warn_floor   : the threshold used for yellow-flag
+      status       : "pass" | "warn" | "fail" (based on floors)
     """
+    hard_floor = get_wfe_hard_floor()
+    warn_floor = get_wfe_warn_floor()
+
     if is_sharpe <= 0 or np.isnan(is_sharpe):
-        return {"wfe": 0.0, "interpretation": "IS Sharpe <= 0 — cannot compute WFE"}
+        return {
+            "wfe": 0.0,
+            "interpretation": "IS Sharpe <= 0 — cannot compute WFE",
+            "status": "fail",
+            "hard_floor": hard_floor,
+            "warn_floor": warn_floor,
+        }
 
     wfe = oos_sharpe / is_sharpe
+
+    # Status against institutional floors
+    if wfe >= hard_floor:
+        status = "pass"
+    elif wfe >= warn_floor:
+        status = "warn"
+    else:
+        status = "fail"
+
+    # Backward-compat human-readable interpretation
     if wfe > 0.5:
         interp = "good"
     elif wfe > 0.3:
@@ -35,7 +95,13 @@ def compute_wfe(is_sharpe: float, oos_sharpe: float) -> dict:
     else:
         interp = "likely_overfit"
 
-    return {"wfe": round(wfe, 4), "interpretation": interp}
+    return {
+        "wfe": round(wfe, 4),
+        "interpretation": interp,
+        "status": status,
+        "hard_floor": hard_floor,
+        "warn_floor": warn_floor,
+    }
 
 
 def bootstrap_ci(

@@ -616,6 +616,20 @@ def compute_pbo(
 
     Simplified single-strategy version: checks if OOS performance degrades
     relative to what IS ranking would predict.
+
+    Package boundary: this function is wired into walk_forward.py aggregation
+    (Wave 27.5 Pass B HIGH #3). It is always called when >= 4 WF windows are
+    present — callers no longer need to invoke it manually.
+
+    Returns dict with keys:
+      pbo            : float in [0, 1], or None when insufficient windows
+      interpretation : human-readable band label
+      n_combinations : number of C(M, M//2) combos evaluated
+
+    The caller (walk_forward.py) adds:
+      pbo_pass       : bool — pbo <= PBO_OVERFIT_THRESHOLD (default 0.5)
+      pbo_threshold  : the threshold used
+      pbo_p_value    : None (reserved for Bayesian extension)
     """
     from itertools import combinations
 
