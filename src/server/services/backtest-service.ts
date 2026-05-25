@@ -1697,6 +1697,86 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       })();
     }
 
+    // ─── Auto Quantum Replay Grading (fire-and-forget) — Wave 27 Pass 1.5 ───
+    // Invokes Python quantum replay after EVERY qualifying backtest so operators
+    // never need to manually trigger it. Challenger-only governance: rows carry
+    // governance_labels.replay_mode=true and are advisory-only (never block promotion).
+    //
+    // Guard: suppressAutoPromote skips replay backtests to avoid recursive loops.
+    // same tier guard as QMC: non-REJECTED with daily P&Ls required.
+    // Opt-OUT default: QUANTUM_REPLAY_AUTO_FIRE_ENABLED unset or "true" → fires.
+    // In-process circuit breaker (QUANTUM_REPLAY_FAILURE_THRESHOLD, default 5)
+    // prevents thundering-herd on repeated Python/DB failures.
+    if (
+      !config.suppressAutoPromote &&
+      result.tier &&
+      result.tier !== "REJECTED" &&
+      result.daily_pnls?.length > 0
+    ) {
+      void (async () => {
+        try {
+          const { isQuantumReplayEnabled, runQuantumReplayForBacktest } = await import("../lib/quantum-replay-runner.js");
+          if (!isQuantumReplayEnabled()) return;
+          const replayResult = await runQuantumReplayForBacktest(backtestId, correlationId);
+          await db.insert(auditLog).values({
+            action: "quantum_replay.auto_fire_enqueued",
+            entityType: "backtest",
+            entityId: backtestId,
+            status: "success",
+            correlationId: correlationId ?? null,
+            result: {
+              trigger: "post_backtest_auto_fire",
+              backtest_id: backtestId,
+              rows_written: replayResult.rowsWritten,
+              duration_ms: replayResult.durationMs,
+              replay_status: replayResult.status,
+            },
+          });
+        } catch (replayErr) {
+          logger.error({ err: replayErr, backtestId, correlationId }, "quantum replay auto-fire failed (non-blocking)");
+          try {
+            // Check if circuit just opened (failure was the threshold-breaker)
+            const { _getConsecutiveFailuresForTests } = await import("../lib/quantum-replay-runner.js");
+            const failures = _getConsecutiveFailuresForTests();
+            const threshold = Math.max(1, parseInt(process.env.QUANTUM_REPLAY_FAILURE_THRESHOLD ?? "5", 10) || 5);
+            if (failures >= threshold) {
+              logger.error(
+                { backtestId, correlationId, consecutiveFailures: failures, threshold },
+                "quantum-replay-runner: circuit breaker threshold reached — logging circuit_breaker_opened audit row",
+              );
+              await db.insert(auditLog).values({
+                action: "quantum_replay.circuit_breaker_opened",
+                entityType: "backtest",
+                entityId: backtestId,
+                status: "failure",
+                correlationId: correlationId ?? null,
+                result: {
+                  consecutive_failures: failures,
+                  threshold,
+                  backtest_id: backtestId,
+                  error: String(replayErr),
+                },
+              });
+              return;
+            }
+          } catch { /* circuit-breaker-check failure — fall through to generic audit */ }
+          await db.insert(auditLog).values({
+            action: "quantum_replay.auto_fire_failed",
+            entityType: "backtest",
+            entityId: backtestId,
+            status: "failure",
+            correlationId: correlationId ?? null,
+            result: {
+              error: String(replayErr),
+              backtest_id: backtestId,
+            },
+          }).catch((auditErr) => {
+            logger.error({ err: auditErr, backtestId }, "quantum-replay-runner: audit write failed (swallowed)");
+          });
+        }
+      })();
+    }
+
     // ─── Auto Critic Optimization (fire-and-forget) ───
     // Guard: critic needs walk-forward data for param stability analysis.
     // Trigger for any qualifying backtest that has walk-forward results,
