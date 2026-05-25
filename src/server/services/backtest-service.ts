@@ -32,6 +32,8 @@ import { computeResultHash, computeDataHash, computeStrategyHash } from "../lib/
 // TODO: correlation_id not threaded through all call sites in this file.
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { notifyCritical } from "./notification-service.js";
+// Wave 27.5 Pass A.1 — CRITICAL #1: stamp firm rules version fingerprint at backtest creation
+import { computeFirmRulesVersion } from "../lib/firm-rules-version.js";
 
 /**
  * Normalize gate_result from Python into a stable JSONB shape.
@@ -355,6 +357,12 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
   // Insert directly as "running" — single atomic write eliminates the
   // window where a restart could leave the row stuck in "pending" forever.
   // NOTE: pending status removed; if reintroduced, add to scheduler.ts:874 sweeper.
+  // Wave 27.5 Pass A.1 — CRITICAL #1: Stamp firm rules fingerprint at row creation.
+  // MC engine will assert this matches current rules before running any simulation.
+  // Computed here (TS side) so the value is available immediately after insert,
+  // and the Python backtester also writes it independently from Python-side globals.
+  const firmRulesVersionStamp = computeFirmRulesVersion();
+
   const [row] = await db
     .insert(backtests)
     .values({
@@ -366,6 +374,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       endDate: new Date(config.end_date),
       status: "running",
       config: config as unknown as Record<string, unknown>,
+      firmRulesVersion: firmRulesVersionStamp,
     })
     .returning();
 

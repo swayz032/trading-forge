@@ -1037,6 +1037,13 @@
       "when": 1779872800000,
       "tag": "0145_paper_positions_exit_plan",
       "breakpoints": true
+    },
+    {
+      "idx": 148,
+      "version": "7",
+      "when": 1748217600000,
+      "tag": "0146_backtests_firm_rules_version",
+      "breakpoints": true
     }
   ]
 }

@@ -3,17 +3,16 @@
 import numpy as np
 import pytest
 
-from src.engine.monte_carlo import (
-    get_array_module,
-    trade_resample,
-    return_bootstrap,
-    block_bootstrap,
-    arch_stationary_bootstrap,
-    inject_synthetic_stress,
-    run_monte_carlo,
-)
 from src.engine.config import MonteCarloRequest
-
+from src.engine.monte_carlo import (
+    arch_stationary_bootstrap,
+    block_bootstrap,
+    get_array_module,
+    inject_synthetic_stress,
+    return_bootstrap,
+    run_monte_carlo,
+    trade_resample,
+)
 
 # ─── Helpers ──────────────────────────────────────────────────────
 
@@ -94,7 +93,7 @@ class TestReturnBootstrap:
         b = return_bootstrap(daily, n_sims=50, n_days=200, seed=99)
         np.testing.assert_array_equal(a, b)
 
-    def test_custom_n_days(self):
+    def test_custom_n_days(self, monkeypatch):
         """Can simulate more days than original data; n_days > 5× history is capped.
 
         F-9 FIX (2026-05-20): return_bootstrap now caps n_days at 5× history length
@@ -102,10 +101,15 @@ class TestReturnBootstrap:
         prevent degenerate tail estimates from extreme extrapolation.  n_days=500 with
         50 days of history = 10× → capped at 5×50=250.  The test is updated to reflect
         the new contract: shape is (n_sims, min(n_days, 5×n_hist)) when cap applies.
+
+        Wave 27.5 Pass A.1 — CRITICAL #3: hard fail is now at 2× by default.
+        This test disables the hard fail to test the soft-cap behavior specifically.
         """
         import os
+        # Disable hard fail so we test the soft-cap path (backward compat opt-out)
+        monkeypatch.setenv("MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER", "infinity")
         daily = _make_daily_pnls(50)
-        # 500 days with 50 history = 10× — capped at 5×50=250 (default cap)
+        # 500 days with 50 history = 10× — capped at 5×50=250 (default soft cap)
         paths = return_bootstrap(daily, n_sims=100, n_days=500, seed=42)
         max_extrap = float(os.environ.get("MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION", "5.0"))
         expected_days = min(500, int(50 * max_extrap))
@@ -346,7 +350,6 @@ class TestStressInjectionCap:
         rng = np.random.default_rng(99)
         trades = rng.normal(50, 20, size=200)  # Small std, losses well within cap
         max_cap = 200.0
-        original_min = np.min(trades)
         injected = inject_synthetic_stress(trades, max_loss_cap=max_cap, seed=42)
         # Injected values should not be worse than -max_cap
         # (original losses might still exist, but catastrophic injections are capped)
@@ -707,8 +710,6 @@ class TestEODTrailingHWMFix:
 
         # Single simulation path: 3 steps (days)
         # Starting balance $50000, max_dd = $3000 for topstep_50k
-        n_sims = 1
-        n_steps = 3
         cumulative = np.array([[3000.0, 0.0, -3001.0]])  # cumulative P&L steps
 
         result = simulate_firm_survival(cumulative, "topstep_50k", account_size=50000)
@@ -756,7 +757,6 @@ class TestMFFUSlidingWindowConsistency:
         # $3000 / $4300 ≈ 69.8% — OVER 50% → must violate window 2.
         # Full-path total = $4600 + $4300 = $8900; best day = $3000; $3000/$8900 ≈ 33.7% < 50%
         # → old code (full-path check) would NOT flag this. New code (window) must flag it.
-        n_sims = 1
         window_1 = [2000.0] + [200.0] * 13   # 14 days
         window_2 = [3000.0] + [100.0] * 13   # 14 days
         step_pnls = window_1 + window_2
@@ -776,7 +776,6 @@ class TestMFFUSlidingWindowConsistency:
         # Both windows: best day is exactly 40% of window total — under 50% threshold.
         # Window 1: $2000 + $3000/day×13 = $2000 + $39000 total, best=$39000... let's
         # keep it simple: $400/day for 14 days, then $400/day for 14 days = even split.
-        n_sims = 1
         step_pnls = [400.0] * 28
         cumulative = np.array([np.cumsum(step_pnls)])  # (1, 28)
 
@@ -860,11 +859,17 @@ class TestMaxDrawdownP5SignConvention:
 class TestReturnBootstrapExtrapolationWarning:
     """F-9: return_bootstrap must warn to stderr when n_days > 1.5× history length."""
 
-    def test_warns_on_heavy_extrapolation(self, capsys):
-        """n_days = 4× history → warning printed to stderr."""
+    def test_warns_on_heavy_extrapolation(self, capsys, monkeypatch):
+        """n_days = 1.7× history → warning printed to stderr (above 1.5× soft-warn threshold).
+
+        Wave 27.5 Pass A.1 — CRITICAL #3: uses 1.7× instead of 4× to stay below
+        the default 2.0× hard-fail threshold. Hard fail disabled for 4× test in
+        test_hard_cap_applied(). 1.7× is above the 1.5× soft-warn threshold and
+        below the 2.0× hard-fail threshold so the warning fires without an exception.
+        """
         daily = _make_daily_pnls(50)
-        # 50 history days, 200 simulated days → 4× extrapolation (above 1.5× threshold)
-        return_bootstrap(daily, n_sims=10, n_days=200, seed=42)
+        # 50 history days, 85 simulated days → 1.7× extrapolation (above 1.5× warn, below 2× hard-fail)
+        return_bootstrap(daily, n_sims=10, n_days=85, seed=42)
         captured = capsys.readouterr()
         assert "WARNING" in captured.err or "extrapolat" in captured.err.lower(), (
             "Expected extrapolation warning in stderr"
@@ -877,10 +882,16 @@ class TestReturnBootstrapExtrapolationWarning:
         captured = capsys.readouterr()
         assert "extrapolat" not in captured.err.lower()
 
-    def test_hard_cap_applied(self):
-        """n_days >> 5× history must be capped at 5× (default cap)."""
+    def test_hard_cap_applied(self, monkeypatch):
+        """n_days >> 5× history must be capped at 5× when hard fail is disabled.
+
+        Wave 27.5 Pass A.1 — CRITICAL #3: the soft cap at 5× still applies when
+        hard fail is disabled (MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER=infinity).
+        This test opts out of the hard fail to specifically test soft-cap behavior.
+        """
+        monkeypatch.setenv("MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER", "infinity")
         daily = _make_daily_pnls(10)  # 10 history days; cap at 50
-        # Request 1000 days — should be capped at 50
+        # Request 1000 days — should be capped at 50 (5× soft cap)
         paths = return_bootstrap(daily, n_sims=5, n_days=1000, seed=42)
         # Output shape n_days dimension should be capped
         assert paths.shape[1] <= 50, (
@@ -917,8 +928,6 @@ class TestMonteCarloRequestNewFields:
 
     def test_commission_rt_propagated_to_survival(self):
         """When backtest_commission_rt is set, simulate_firm_survival must not log warning."""
-        import logging
-        from src.engine.monte_carlo import simulate_firm_survival
 
         trades = _make_trades(80).tolist()
         daily = _make_daily_pnls(200).tolist()

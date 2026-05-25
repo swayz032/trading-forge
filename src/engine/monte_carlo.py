@@ -17,6 +17,7 @@ from __future__ import annotations
 
 # A1 Determinism: import FIRST, before numpy. Sets BLAS env vars at load time.
 import os as _os
+
 if _os.environ.get("DETERMINISM_MODE", "").lower() == "true":
     from src.engine.determinism import enable_determinism as _enable_det
     _enable_det()
@@ -46,9 +47,37 @@ except ImportError:
 from numpy.random import PCG64DXSM, SeedSequence
 
 from src.engine.config import MonteCarloRequest
-from src.engine.nvtx_markers import annotate, range_push, range_pop
+from src.engine.nvtx_markers import annotate
 
 DEFAULT_NUM_SIMULATIONS = 100_000
+
+
+# ─── Structured Error Types ──────────────────────────────────────
+
+class ExtrapolationExceededError(ValueError):
+    """Raised when return_bootstrap n_days exceeds MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER.
+
+    Wave 27.5 Pass A.1 — CRITICAL #3.
+    Callers that catch this should return the structured error result dict:
+      {"status": "extrapolation_exceeded", "requested_n_days": ..., ...}
+    """
+    def __init__(
+        self,
+        requested_n_days: int,
+        history_len: int,
+        hard_fail_multiplier: float,
+        recommended_n_days: int,
+    ) -> None:
+        self.requested_n_days = requested_n_days
+        self.history_len = history_len
+        self.hard_fail_multiplier = hard_fail_multiplier
+        self.recommended_n_days = recommended_n_days
+        super().__init__(
+            f"MC extrapolation hard-fail: n_days={requested_n_days} exceeds "
+            f"{hard_fail_multiplier}× history ({history_len} days). "
+            f"Reduce to ≤{recommended_n_days} days or set "
+            f"MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER=infinity to opt out."
+        )
 
 
 def create_authoritative_rng(seed: int, n_streams: int = 1) -> list[np.random.Generator]:
@@ -143,20 +172,43 @@ def return_bootstrap(
     # F-9 FIX: warn when n_days extrapolates far beyond available history.
     # IID bootstrap resamples with replacement so extrapolation is technically
     # valid, but the resulting tails become unreliable when n_days >> len(history).
-    # Threshold: warn at > 1.5× history length; hard cap at 5× (env-configurable
-    # via MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION — default 5.0).
+    #
+    # Wave 27.5 Pass A.1 — CRITICAL #3: Hard-fail at HARD_FAIL_MULTIPLIER (default 2.0).
+    # Institutional standard: hard-fail at 2× rather than silently capping at 5×.
+    # MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER env var controls the threshold.
+    # Set to "inf" or "infinity" to disable the hard fail (backward-compat opt-out).
+    # Soft warn at 1.5× and soft cap at MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION (default 5.0)
+    # are preserved ONLY when hard fail is disabled.
     _max_extrap = float(_os.environ.get("MC_RETURN_BOOTSTRAP_MAX_EXTRAPOLATION", "5.0"))
     _warn_threshold = 1.5
+    _hard_fail_env = _os.environ.get("MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER", "2.0").lower()
+    _hard_fail_disabled = _hard_fail_env in ("inf", "infinity", "none", "0")
+    _hard_fail_multiplier = float("inf") if _hard_fail_disabled else float(_hard_fail_env)
     _n_hist = len(daily_returns)
+
     if n_days > _n_hist * _warn_threshold:
         _ratio = n_days / _n_hist
         import sys as _sys
         print(
             f"[return_bootstrap WARNING] n_days={n_days} extrapolates {_ratio:.1f}× "
             f"beyond history length {_n_hist}. Bootstrap tails may be unreliable beyond 1.5× "
-            f"(hard cap: {_max_extrap}×). Operator should verify simulation horizon.",
+            f"(hard fail at: {_hard_fail_multiplier}×, soft cap: {_max_extrap}×). "
+            f"Operator should verify simulation horizon.",
             file=_sys.stderr,
         )
+
+    # CRITICAL #3: Hard-fail before executing bootstrap when extrapolation exceeds limit.
+    # Raises ValueError so run_monte_carlo catches it and returns a structured error result.
+    # This is NOT silently capped — the caller must explicitly request a shorter horizon.
+    if not _hard_fail_disabled and n_days > _n_hist * _hard_fail_multiplier:
+        raise ExtrapolationExceededError(
+            requested_n_days=n_days,
+            history_len=_n_hist,
+            hard_fail_multiplier=_hard_fail_multiplier,
+            recommended_n_days=int(_n_hist * _hard_fail_multiplier),
+        )
+
+    # Soft cap (only reached when hard fail is disabled via env var opt-out)
     if n_days > _n_hist * _max_extrap:
         _capped_days = int(_n_hist * _max_extrap)
         import sys as _sys
@@ -496,9 +548,9 @@ def simulate_firm_survival(
         Dict with eval_pass_rate, funded_survival_6mo, breach_reasons,
         drawdown_percentiles, consistency_fail_rate
     """
+    from src.engine.firm_config import FIRM_COMMISSIONS
     from src.engine.prop_compliance import FIRM_CONFIGS
     from src.engine.prop_sim import DAILY_LOSS_LIMITS
-    from src.engine.firm_config import FIRM_COMMISSIONS
 
     firm = FIRM_CONFIGS.get(firm_key)
 
@@ -867,7 +919,9 @@ def compute_drawdown_stats(paths: np.ndarray, initial_capital: float) -> dict:
         ).astype(np.int64)
 
     pct_levels = [50, 75, 90, 95, 99]
-    _fmt = lambda arr: {f"p{p}": float(np.percentile(arr, p)) for p in pct_levels}
+
+    def _fmt(arr: np.ndarray) -> dict[str, float]:
+        return {f"p{p}": float(np.percentile(arr, p)) for p in pct_levels}
 
     return {
         "max_dd_depth": _fmt(max_dd_depth),
@@ -990,6 +1044,56 @@ def run_monte_carlo(
     """
     start_time = time.perf_counter()
 
+    # ─── CRITICAL #1: Firm-rule version drift check ─────────────────────────
+    # Compute the current firm rules version and compare to what was stored in
+    # the backtest row at backtest time.  If they differ, the prop-firm rules
+    # have changed between runs — MC results would be graded against wrong rules.
+    # Fail-closed: refuse to run, return structured error result, write audit row.
+    _backtest_version = getattr(request, "backtest_firm_rules_version", None)
+    if _backtest_version is not None:
+        try:
+            from src.engine.firm_rules_version import (
+                compute_firm_rules_version as _compute_frv,
+            )
+            _current_version = _compute_frv()
+            if _backtest_version != _current_version:
+                # Write audit row via DB insert (via Python DB helpers if available, else skip)
+                _mismatch_result = {
+                    "status": "rule_version_mismatch",
+                    "backtest_version": _backtest_version,
+                    "current_version": _current_version,
+                    "backtest_id": request.backtest_id,
+                    "error": (
+                        f"Firm rules drifted: backtest used version '{_backtest_version}', "
+                        f"current is '{_current_version}'. "
+                        f"Re-run the backtest to sync firm rules before running MC."
+                    ),
+                }
+                # Attempt DB audit row (best-effort — never block MC error return)
+                try:
+                    from src.engine.audit_writer import write_audit_row_sync
+                    write_audit_row_sync(
+                        action="monte_carlo.firm_rule_version_mismatch",
+                        entity_type="monte_carlo",
+                        entity_id=request.backtest_id,
+                        severity="critical",
+                        payload=_mismatch_result,
+                    )
+                except Exception:
+                    pass  # DB write failure must not block the error return
+                return _mismatch_result
+        except ImportError:
+            pass  # firm_rules_version module not available — skip check
+    elif _backtest_version is None:
+        # Pre-drift-check row — warn but allow (backward compat for old backtest rows)
+        import sys as _sys
+        print(
+            "[run_monte_carlo WARNING] backtest_firm_rules_version is None "
+            "(pre-W27.5 backtest row) — skipping firm rules drift check. "
+            "Re-run backtest to enable drift detection.",
+            file=_sys.stderr,
+        )
+
     xp = get_array_module(request.use_gpu)
     gpu_used = xp is not np
 
@@ -1074,7 +1178,38 @@ def run_monte_carlo(
             max(126, n_days),                    # At least 126 bars for 6-month funded check
             int(len(daily_pnls) * _max_extrap),  # Hard cap to prevent degenerate extrapolation
         )
-        paths = return_bootstrap(daily_arr, request.num_simulations, _survival_horizon, seed=request.seed, xp=xp)
+        # CRITICAL #3: ExtrapolationExceededError is caught here and returned as
+        # a structured error result so the TS bridge gets a parseable JSON error
+        # rather than a Python exception / non-zero exit.
+        try:
+            paths = return_bootstrap(daily_arr, request.num_simulations, _survival_horizon, seed=request.seed, xp=xp)
+        except ExtrapolationExceededError as _extrap_err:
+            # Write audit row (best-effort)
+            try:
+                from src.engine.audit_writer import write_audit_row_sync
+                write_audit_row_sync(
+                    action="monte_carlo.extrapolation_hard_fail",
+                    entity_type="monte_carlo",
+                    entity_id=request.backtest_id,
+                    severity="critical",
+                    payload={
+                        "requested_n_days": _extrap_err.requested_n_days,
+                        "history_len": _extrap_err.history_len,
+                        "hard_fail_multiplier": _extrap_err.hard_fail_multiplier,
+                        "recommended_n_days": _extrap_err.recommended_n_days,
+                    },
+                )
+            except Exception:
+                pass
+            return {
+                "status": "extrapolation_exceeded",
+                "requested_n_days": _extrap_err.requested_n_days,
+                "history_len": _extrap_err.history_len,
+                "hard_fail_multiplier": _extrap_err.hard_fail_multiplier,
+                "recommended_n_days": _extrap_err.recommended_n_days,
+                "error": str(_extrap_err),
+                "backtest_id": request.backtest_id,
+            }
 
     elif request.method == "block_bootstrap":
         computed_block_len = optimal_block_length(trades_arr)
@@ -1255,8 +1390,9 @@ def run_monte_carlo(
             )
 
         # Deflated Sharpe Ratio
-        from src.engine.risk_metrics import compute_deflated_sharpe_ratio
         from scipy import stats as sp_stats
+
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio
         # Annualize trade-level Sharpe: use actual trades/year from daily data
         n_trading_days = len(daily_pnls) if len(daily_pnls) > 0 else 1
         years = n_trading_days / 252.0

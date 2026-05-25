@@ -20,6 +20,8 @@ import { runPythonModule } from "../lib/python-runner.js";
 import { tracer } from "../lib/tracing.js";
 import { captureToDLQ } from "../lib/dlq-service.js";
 import { notifyCritical } from "./notification-service.js";
+// Wave 27.5 Pass A.1 — CRITICAL #1: firm rules version drift detection
+import { computeFirmRulesVersion } from "../lib/firm-rules-version.js";
 
 interface MCOptions {
   numSimulations?: number;
@@ -226,7 +228,55 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
         }
         return 1.5; // safe fallback (1 A+ trade/day system design)
       })(),
+      // Wave 27.5 Pass A.1 — CRITICAL #1: pass stored firm rules version so Python
+      // MC can assert no rule drift has occurred between backtest time and MC time.
+      backtest_firm_rules_version: (bt as any).firmRulesVersion ?? null,
     };
+
+    // ─── CRITICAL #1: Firm-rule version drift check (TS side, pre-Python) ────
+    // We also do this check TS-side so we can write the audit row with full context
+    // (correlationId, strategyId, backtestId) before handing off to Python.
+    {
+      const currentVersion = computeFirmRulesVersion();
+      const storedVersion = (bt as any).firmRulesVersion as string | null | undefined;
+      if (storedVersion != null && storedVersion !== currentVersion) {
+        // Mismatch: firm rules have drifted since the backtest was run.
+        // Audit row written here (TS has the full context); Python also writes its own.
+        await db.insert(auditLog).values({
+          action: "monte_carlo.firm_rule_version_mismatch",
+          entityType: "monte_carlo",
+          entityId: mcId,
+          input: { backtestId, backtestVersion: storedVersion, currentVersion },
+          result: {
+            status: "rule_version_mismatch",
+            backtest_version: storedVersion,
+            current_version: currentVersion,
+          },
+          status: "critical",
+          decisionAuthority: "agent",
+          correlationId: options.correlationId ?? null,
+        });
+        logger.error(
+          { backtestId, mcId, storedVersion, currentVersion },
+          "monte_carlo.firm_rule_version_mismatch: firm rules drifted between backtest and MC — refusing to run",
+        );
+        // Update MC row to failed state
+        await db.update(monteCarloRuns).set({ status: "failed" }).where(eq(monteCarloRuns.id, mcId));
+        throw new Error(
+          `MC refused: firm rules version mismatch. ` +
+          `Backtest was run with rules version '${storedVersion}' ` +
+          `but current rules version is '${currentVersion}'. ` +
+          `Re-run the backtest to sync firm rules before running MC.`,
+        );
+      }
+      if (storedVersion == null) {
+        // Pre-drift-check backtest — warn but allow (backward compat).
+        logger.warn(
+          { backtestId, currentVersion },
+          "monte_carlo: backtest.firm_rules_version is null (pre-W27.5 row) — skipping drift check. Re-run backtest to enable drift detection.",
+        );
+      }
+    }
 
     const result = await runPythonModule<MCResult>({
       module: "src.engine.monte_carlo",

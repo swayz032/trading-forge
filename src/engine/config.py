@@ -514,6 +514,11 @@ class MonteCarloRequest(BaseModel):
     # Pass bt.totalTrades / bt.totalTradingDays from the TS bridge.
     # Consumed by simulate_firm_survival as daily_trades_per_day for commission delta math.
     avg_trades_per_day: float = 1.5
+    # Wave 27.5 Pass A.1 — CRITICAL #1: Firm-rule parameter drift check.
+    # Pass backtests.firm_rules_version from the DB row.  MC asserts this matches
+    # the current compute_firm_rules_version() before running any simulation.
+    # None means the backtest predates the drift-check feature; MC runs with a warning.
+    backtest_firm_rules_version: Optional[str] = None
 
     @field_validator("num_simulations")
     @classmethod

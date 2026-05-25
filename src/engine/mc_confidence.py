@@ -1,7 +1,30 @@
 """Confidence intervals around MC outputs using scipy.stats.bootstrap.
 
+Wave 27.5 Pass A.1 — CRITICAL #2: probability_of_ruin now included in full BCa
+bootstrap pipeline (was computed as scalar with no interval, making B14 binary
+pass/fail with no quantified uncertainty).
+
 Provides statistically rigorous uncertainty bounds on:
-- Survival rate, breach probability, profit factor, Sharpe, max drawdown percentiles
+- survival_rate
+- probability_of_ruin (NEW: full BCa CI — B14 can now read ci_low/ci_high)
+- max_drawdown_p5
+- cvar95
+
+Output contract for each metric in `bca_confidence_intervals`:
+  {
+    "point_estimate": float,    # raw metric value over full MC sample
+    "ci_low": float,            # lower bound of confidence interval
+    "ci_high": float,           # upper bound of confidence interval
+    "confidence_level": float,  # 0.95
+    "ci_method": str,           # "BCa" | "percentile" | "percentile_fallback"
+    "n_resamples": int,         # bootstrap resamples used (default 9999)
+    "standard_error": float,    # bootstrap standard error
+  }
+
+B14 gate SHOULD read `bca_confidence_intervals.probability_of_ruin.ci_high`
+(worst-case upper bound at 95% confidence) rather than the point estimate alone.
+Wiring B14 to use ci_high is deferred to Pass B (Pass B.A2); this pass ships
+the CI data so the gate can consume it without blocking MC runs.
 """
 from __future__ import annotations
 
@@ -33,7 +56,18 @@ def compute_mc_confidence_intervals(
         seed: RNG seed
 
     Returns:
-        {point_estimate, ci_low, ci_high, confidence_level, method, standard_error}
+        Wave 27.5 Pass A.1 — CRITICAL #2 contract:
+        {
+            point_estimate: float,
+            ci_low: float,
+            ci_high: float,
+            confidence_level: float,
+            ci_method: str,       # "BCa" | "percentile" | "percentile_fallback"
+            n_resamples: int,     # number of bootstrap resamples used
+            standard_error: float,
+        }
+        Note: "method" key still included for backward compatibility with
+        existing consumers that read .method. New consumers should read .ci_method.
     """
     rng = np.random.default_rng(seed)
     point = float(statistic_fn(data, axis=0))
@@ -54,7 +88,9 @@ def compute_mc_confidence_intervals(
             "ci_low": ci_low,
             "ci_high": ci_high,
             "confidence_level": confidence_level,
-            "method": "percentile_fallback",
+            "ci_method": "percentile_fallback",
+            "method": "percentile_fallback",  # backward compat
+            "n_resamples": n_resamples,
             "standard_error": se,
         }
 
@@ -72,7 +108,9 @@ def compute_mc_confidence_intervals(
         "ci_low": float(result.confidence_interval.low),
         "ci_high": float(result.confidence_interval.high),
         "confidence_level": confidence_level,
-        "method": method,
+        "ci_method": method,
+        "method": method,  # backward compat
+        "n_resamples": n_resamples,
         "standard_error": float(result.standard_error),
     }
 
@@ -121,13 +159,31 @@ def compute_all_mc_cis(
     n_resamples: int = 9999,
     seed: int = 42,
 ) -> dict[str, dict]:
-    """Compute CIs for all standard MC metrics at once.
+    """Compute BCa CIs for all standard MC metrics at once.
+
+    Wave 27.5 Pass A.1 — CRITICAL #2: probability_of_ruin now has full BCa CI.
+    B14 gate SHOULD read probability_of_ruin_ci.ci_high (worst-case upper bound)
+    for robust promotion decisions; wiring is deferred to Pass B.A2.
 
     Args:
         mc_paths: (n_sims, n_steps) equity paths
+        confidence_level: 0.95 = 95% CI
+        n_resamples: bootstrap resamples (default 9999)
+        seed: RNG seed for reproducibility
 
     Returns:
-        Dict of {metric_name: {point_estimate, ci_low, ci_high, ...}}
+        Dict of {metric_name: CI dict} with the following keys:
+          - survival_rate
+          - probability_of_ruin          (alias: probability_of_ruin_ci)
+          - max_drawdown_p5
+          - cvar95
+
+        Each CI dict has shape:
+          {point_estimate, ci_low, ci_high, confidence_level,
+           ci_method, n_resamples, standard_error}
+
+        probability_of_ruin is ALSO available under key "probability_of_ruin_ci"
+        for clarity at B14 call sites.
     """
     if mc_paths.ndim != 2 or mc_paths.shape[0] == 0:
         return {}
@@ -159,5 +215,10 @@ def compute_all_mc_cis(
             n_resamples=n_resamples,
             seed=seed,
         )
+
+    # CRITICAL #2: expose probability_of_ruin under the explicit "probability_of_ruin_ci"
+    # key so B14 call sites have an unambiguous contract name.  The data is identical to
+    # results["probability_of_ruin"] — this is an alias, not a recomputation.
+    results["probability_of_ruin_ci"] = results["probability_of_ruin"]
 
     return results
