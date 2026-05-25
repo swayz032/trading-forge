@@ -4,6 +4,57 @@
 
 ---
 
+### Session Log — 2026-05-25 backtest-core — Wave 27.5 Pass B.1: WF 3 HIGH findings closed
+
+**Mission:** Close 3 Walk-Forward HIGH advisory findings to institutional grade: H1 WFE > 0.70 not gated, H2 parameter stability lacks regime-context, H3 PBO not auto-wired into aggregation.
+
+**Work completed:**
+
+- **HIGH #1 — WFE floors (13 pytest):**
+  - `cross_validation.py`: added `get_wfe_hard_floor()` (reads `WFE_HARD_FLOOR` env, default 0.70) + `get_wfe_warn_floor()` (reads `WFE_WARN_FLOOR` env, default 0.50). `compute_wfe()` now returns `status` ("pass"|"warn"|"fail"), `hard_floor`, `warn_floor` alongside legacy `wfe` + `interpretation` keys (backward compat preserved).
+  - `walk_forward.py`: collects IS P&Ls across folds for combined IS Sharpe computation; calls `compute_wfe()` after all windows resolve; adds `wfe_overall`/`wfe_status`/`wfe_hard_floor`/`wfe_warn_floor`/`wfe_per_window` to result schema; emits `walk_forward.wfe_below_warn_floor` (yellow) and `walk_forward.wfe_below_hard_floor` (red) audit actions to stderr. WFE uses combined-fold Sharpe (institutional standard), NOT per-fold average.
+  - `walk-forward-schema.ts`: `WFEResultSchema` added (all fields `.optional()`, additive).
+  - NEW `src/engine/tests/test_wfe_floors.py`: 13 pytest covering pass/warn/fail status bands, IS Sharpe ≤ 0 guard, env-var override, backward compat keys.
+
+- **HIGH #2 — Parameter stability regime-context (26 pytest):**
+  - NEW `src/engine/walk_forward_regime_context.py` (~310 lines, pure-functional, no I/O, replay-deterministic):
+    - `ParameterDriftClassification` dataclass: `classification` / `confidence` / `fragile` / `warning` / `evidence`
+    - 14-label `_REGIME_ORDINAL` mapping (classical bullish/neutral/bearish + Wave 25 institutional labels)
+    - `_spearman_rho()` pure Python (no scipy), tied-rank average-rank method, returns None when < 3 points or constant
+    - `classify_parameter_drift()` → 4-class: `stable | regime_driven | overfit_drift | indeterminate`
+    - Backward compat: `fragile=True` when `overfit_drift` or `indeterminate`
+  - `walk_forward.py`: `compute_param_stability()` now calls `classify_parameter_drift()`, stores `drift_classification`/`drift_confidence`/`drift_evidence` alongside legacy `is_fragile`.
+  - `walk-forward-schema.ts`: `ParamDriftClassificationSchema` added (all optional, additive).
+  - NEW `src/engine/tests/test_walk_forward_regime_context.py`: 26 pytest across 8 classes covering bull→bear→sideways regime progression, stable regime jittery params, no regime data, length mismatch, insufficient windows, fragile flag preservation, evidence dict structure.
+
+- **HIGH #3 — PBO auto-wired (14 pytest):**
+  - `walk_forward.py`: `compute_pbo()` auto-called when `len(window_results) >= 4`; result stored as `pbo`/`pbo_pass`/`pbo_p_value` (reserved, None)/`pbo_detail`; `PBO_OVERFIT_THRESHOLD` env (default 0.5); emits `walk_forward.pbo_computed` (info) + `walk_forward.pbo_high_overfit_risk` (warn) audit actions.
+  - `walk-forward-schema.ts`: `PBOResultSchema` added (all fields `.nullable().optional()`, additive).
+  - `risk_metrics.py`: updated `compute_pbo()` docstring for new caller contract.
+  - NEW `src/engine/tests/test_pbo_wired_in_wf.py`: 14 pytest (7 unit + 7 integration fixture tests).
+
+**Verification:**
+- 53 unit pytest GREEN (all 3 test files) before commit
+- Ruff lint: all 6 modified/new Python files pass `--select E,F,W,I --ignore E501,E741,E722`
+- Pre-commit hook: ruff-lint PASSED, metric snapshot PASSED
+- Commit `08105d8` on `feature/deep-analysis-pipeline`
+- `tsc --noEmit`: zero errors in `walk-forward-schema.ts` (pre-existing errors in unrelated scripts preserved)
+
+**Known-facts updates:**
+- WFE institutional floor: 0.70 hard (pass) / 0.50 warn / below 0.50 = fail. Configurable via env vars.
+- WFE uses combined-fold Sharpe (OOS / IS), NOT per-fold average — institutional 2026 standard.
+- `walk_forward_regime_context.py` is pure-functional with no I/O — safe to call in replay-deterministic context.
+- Spearman ρ is computed in pure Python (no scipy) via average-rank method for ties.
+- PBO auto-wires only when >= 4 windows; fewer windows → `pbo: None` in result.
+- Pre-commit stash interaction: ruff `--fix` results must be re-staged (not just run on working tree) before commit; pre-commit stashes unstaged files before running hooks.
+
+**Carry-forward for next session:**
+- Pass B.2 (paper-parity): wire B14 lifecycle gate reading `probability_of_ruin_ci.ci_high` in `lifecycle-service.ts`. DO NOT modify paper-execution-service.ts / paper-signal-service.ts yet (Pass B.2 surface).
+- Pass B.3 (architect close-out): system-map:sync, CLAUDE.md update, DO push.
+- Integration tests (TestPBOWiredIntoWalkForward) take ~60-120s due to ProcessPoolExecutor spawn on Windows — run separately from unit suite.
+
+---
+
 ### Session Log — 2026-05-24 backtest-core — Wave 26 Group A: A/B validation, TS-Python parity CI gate, barVol AVWAP, HOD/LOD persistence, commission cleanup
 
 **Mission:** 5 tasks: (1) run A/B parity harness, (2) automate TS-Python exit-plan parity as CI hard gate, (3) wire barVol into `_apply_adaptive_management()` for true AVWAP, (4) populate HOD/LOD into liquidity_levels, (5) fix pre-existing Tradeify/Alpha Futures commission test failures.

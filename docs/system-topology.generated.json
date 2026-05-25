@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T18:48:03.969Z",
+  "generatedAt": "2026-05-25T19:47:55.453Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,7 +15,7 @@
     ]
   },
   "counts": {
-    "routes": 70,
+    "routes": 71,
     "schedulerJobs": 84,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
@@ -25,6 +25,7 @@
   },
   "routes": [
     "/api/admin",
+    "/api/admin/slumdawg",
     "/api/adversarial-stress",
     "/api/agent",
     "/api/agents",
@@ -922,7 +923,9 @@
       "engineSubsystems": 27,
       "databaseTables": 96
     },
-    "missingRoutes": [],
+    "missingRoutes": [
+      "/api/admin/slumdawg"
+    ],
     "missingSchedulerJobs": [
       "quantum-replay-weekly-analysis"
     ],
