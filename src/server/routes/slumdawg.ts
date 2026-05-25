@@ -266,8 +266,10 @@ slumdawgRoutes.get("/status-now", async (_req, res) => {
   }
 });
 
-// ─── 4) GET /slumdawg/lifecycle/:name? ──────────────────────────────────
-slumdawgRoutes.get("/lifecycle/:name?", async (req, res) => {
+// ─── 4) GET /slumdawg/lifecycle  +  GET /slumdawg/lifecycle/:name ─────────
+// Express 5 / path-to-regexp v8 dropped the `?` optional-param syntax; we
+// register two separate routes that share the same handler.
+const lifecycleHandler = async (req: Request, res: Response) => {
   try {
     const filter = (req.params as Record<string, string | undefined>).name ? sql`AND name ILIKE ${"%" + (req.params as Record<string, string | undefined>).name + "%"}` : sql``;
     const rows = await db.execute(sql`
@@ -311,7 +313,9 @@ slumdawgRoutes.get("/lifecycle/:name?", async (req, res) => {
     logger.error({ err }, "slumdawg lifecycle failed");
     res.status(500).json({ error: "internal_error", baby_jargon_summary: "Can't read the strategy library right now — DB hiccupped." });
   }
-});
+};
+slumdawgRoutes.get("/lifecycle", lifecycleHandler);
+slumdawgRoutes.get("/lifecycle/:name", lifecycleHandler);
 
 // ─── 5) POST /slumdawg/ingest-youtube ───────────────────────────────────
 slumdawgRoutes.post("/ingest-youtube", async (req, res) => {
