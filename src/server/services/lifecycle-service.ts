@@ -37,6 +37,7 @@ import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate } from "../lib/b14-ci-gate.js";
 import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
+import { evaluatePromotionGates, getWfePromotionFloor, getCpcvMinPaths } from "../lib/promotion-gate-orchestrator.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -2585,6 +2586,164 @@ export class LifecycleService {
           logger.warn(
             { strategyId: s.id, err: driftErr },
             "Parameter drift gate: read failed (non-blocking — promotion continues)",
+          );
+        }
+
+        // ── Wave 26 Pass G Pass E Gate Stack: WFE-0.80 + CPCV-15 + WRC + SPA ─
+        // Evaluates 4 additional institutional gates via promotion-gate-orchestrator.
+        // The orchestrator reads pre-fetched backtest data and applies AND logic:
+        //
+        //   Gate 1 (wfe_floor): WFE >= WFE_PROMOTION_FLOOR (default 0.80 — lifted
+        //     from 0.70 per Bailey & Lopez de Prado 2025 conference). Backward-compat:
+        //     strategies already at DEPLOY_READY/PILOT/DEPLOYED not demoted; floor
+        //     applies only to new PAPER → DEPLOY_READY transitions.
+        //
+        //   Gate 2 (cpcv_n_paths): latest CPCV run must have n_paths >= CPCV_MIN_PATHS
+        //     (default 15, env CPCV_MIN_PATHS). Fails-open when no CPCV run yet.
+        //
+        //   Gate 3 (wrc_p): White's Reality Check p_value < 0.05. Fails-open for
+        //     pre-Pass-E backtests that lack wrc_result.
+        //
+        //   Gate 4 (spa_p): Hansen SPA spa_consistent_p < 0.05. Fails-open for
+        //     pre-Pass-E backtests that lack spa_result.
+        //
+        // When ANY gate blocks: write audit `promotion.gate_failed` + continue (skip promotion).
+        // When ALL pass: write audit `promotion.gates_cleared` and proceed.
+        // Note: B14 ci_high gate continues to run via its existing block above; the
+        // orchestrator's b14 result is redundant here but included for the unified
+        // `promotion.gates_cleared` audit row.
+        try {
+          const [latestBtForOrch] = await db
+            .select({
+              walkForwardResults: backtests.walkForwardResults,
+              wrcResult: backtests.wrcResult,
+              spaResult: backtests.spaResult,
+              gateResult: backtests.gateResult,
+            })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          if (latestBtForOrch) {
+            const wfResults = (latestBtForOrch.walkForwardResults as Record<string, unknown> | null) ?? null;
+            const wfeOverall = wfResults?.wfe_overall != null ? Number(wfResults.wfe_overall) : null;
+
+            // CPCV n_paths lives in wf_metadata sub-object
+            const wfMeta = (wfResults?.wf_metadata as Record<string, unknown> | null) ?? null;
+            const cpcvNPaths = wfMeta?.mode === "cpcv" && wfMeta.n_paths != null
+              ? Number(wfMeta.n_paths)
+              : null;
+
+            const wrcData = (latestBtForOrch.wrcResult as Record<string, unknown> | null) ?? null;
+            const wrcPValue = wrcData?.p_value != null ? Number(wrcData.p_value) : null;
+
+            const spaData = (latestBtForOrch.spaResult as Record<string, unknown> | null) ?? null;
+            const spaConsistentP = spaData?.spa_consistent_p != null ? Number(spaData.spa_consistent_p) : null;
+
+            // Run the orchestrator (skipping B14 — already evaluated above)
+            const orchResult = evaluatePromotionGates({
+              ruinCi: null,       // B14 already handled by the dedicated block above
+              wfeOverall,
+              cpcvNPaths,
+              wrcPValue,
+              spaConsistentP,
+            });
+
+            // Remove b14 from orchestrator result to avoid double-counting
+            const gatesToEvaluate: Array<"wfe_floor" | "cpcv_n_paths" | "wrc_p" | "spa_p"> =
+              ["wfe_floor", "cpcv_n_paths", "wrc_p", "spa_p"];
+
+            const orchFailingGates = gatesToEvaluate.filter(
+              (g) => !orchResult.gate_results[g].passed,
+            );
+
+            if (orchFailingGates.length > 0) {
+              // At least one Pass E gate blocked
+              const primaryFail = orchResult.gate_results[orchFailingGates[0]!];
+              logger.warn(
+                {
+                  strategyId: s.id,
+                  failingGates: orchFailingGates,
+                  gateDetails: orchFailingGates.map((g) => ({
+                    gate: g,
+                    value: orchResult.gate_results[g].value,
+                    threshold: orchResult.gate_results[g].threshold,
+                    reason: orchResult.gate_results[g].reason,
+                  })),
+                  transition: "PAPER→DEPLOY_READY",
+                },
+                "Wave 26 Pass G Pass E gates BLOCKED PAPER→DEPLOY_READY promotion",
+              );
+              for (const gate of orchFailingGates) {
+                const gateRes = orchResult.gate_results[gate];
+                await db.insert(auditLog).values({
+                  action: "promotion.gate_failed",
+                  entityId: s.id,
+                  entityType: "strategy",
+                  status: "failure",
+                  decisionAuthority: "gate",
+                  input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                  result: {
+                    gate,
+                    value: gateRes.value,
+                    threshold: gateRes.threshold,
+                    reason: gateRes.reason,
+                    data_available: gateRes.data_available,
+                  },
+                  correlationId,
+                }).catch((auditErr) => {
+                  logger.warn({ strategyId: s.id, gate, err: auditErr }, "Pass E gate_failed audit insert failed (non-blocking)");
+                });
+              }
+              continue;
+            }
+
+            // All Pass E gates cleared — write gates_cleared audit (advisory, not blocking)
+            await db.insert(auditLog).values({
+              action: "promotion.gates_cleared",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "success",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: {
+                wfe_floor: {
+                  value: orchResult.gate_results.wfe_floor.value,
+                  threshold: orchResult.gate_results.wfe_floor.threshold,
+                  data_available: orchResult.gate_results.wfe_floor.data_available,
+                },
+                cpcv_n_paths: {
+                  value: orchResult.gate_results.cpcv_n_paths.value,
+                  threshold: orchResult.gate_results.cpcv_n_paths.threshold,
+                  data_available: orchResult.gate_results.cpcv_n_paths.data_available,
+                },
+                wrc_p: {
+                  value: orchResult.gate_results.wrc_p.value,
+                  threshold: orchResult.gate_results.wrc_p.threshold,
+                  data_available: orchResult.gate_results.wrc_p.data_available,
+                },
+                spa_p: {
+                  value: orchResult.gate_results.spa_p.value,
+                  threshold: orchResult.gate_results.spa_p.threshold,
+                  data_available: orchResult.gate_results.spa_p.data_available,
+                },
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "Pass E gates_cleared audit insert failed (non-blocking)");
+            });
+          }
+        } catch (orchErr) {
+          // Fail-open: orchestrator read failure is non-blocking (same pattern as other gates).
+          logger.warn(
+            { strategyId: s.id, err: orchErr },
+            "Wave 26 Pass G Pass E gate orchestrator: read failed (non-blocking — promotion continues)",
           );
         }
 

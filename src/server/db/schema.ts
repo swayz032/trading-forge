@@ -172,11 +172,11 @@ export const backtests = pgTable(
     complianceMode: text("compliance_mode"),
     // Wave 26 Pass G Pass E — White's Reality Check result
     // { p_value, test_stat, passed, threshold, n_obs, n_bootstrap, block_length, mean_excess_return }
-    // Null for backtests run before Pass E. Migration: 0152_wrc_spa_promotion_gates.sql.
+    // Null for backtests run before Pass E. Migration: 0155_wrc_spa_promotion_gates.sql.
     wrcResult: jsonb("wrc_result"),
     // Wave 26 Pass G Pass E — Hansen's SPA result
     // { spa_lower_p, spa_consistent_p, spa_upper_p, passed, threshold, n_obs, n_bootstrap, block_length }
-    // Null for backtests run before Pass E. Migration: 0152_wrc_spa_promotion_gates.sql.
+    // Null for backtests run before Pass E. Migration: 0155_wrc_spa_promotion_gates.sql.
     spaResult: jsonb("spa_result"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
