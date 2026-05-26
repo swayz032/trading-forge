@@ -1439,3 +1439,206 @@ To prevent runtime duplicate audit rows while preserving both B2 and B3 test con
 1. **Library re-extraction sweep** — 69 fallback_only strategies are the next high-ROI cohort to re-process through Gemma v10. Operator decision on when to schedule (no automatic re-graduation today; queue priority can be biased by `factor_quality` query against `entry_quality.factor_quality`).
 2. **Python `backtester.py` archetype audit-event mirror (Pass A carry-forward)** — TS-side archetype signal audit is live; Python-side live-paper bar loop emission deferred to Pass C.
 3. **Source URL resolution at Gate 3** — `emitThinConfluenceWarning` is currently called with `source_url: null` from the graduator (resolver lookup deferred). Once the graduator hot-path has a strategy-source-resolver call site, wire in real source URL for the Discord WARN.
+
+---
+
+## §2h Wave 27 + 27.5 + 28 + 29 — Quantum + Composite + RL + SHADOW Pipeline Architecture (2026-05-26)
+
+Consolidated architectural reference for the quantum-replay-grading harness (Wave 27), institutional-grade backtest hardening (Wave 27.5), composite-health bus (Wave 28), and the quantum RL bridge + SHADOW lifecycle stage (Wave 29). These four waves together transform Trading Forge from a single-strategy backtester into an institutional-grade challenger ensemble with paper-as-training online learning. **All four waves CLOSED 2026-05-25/26.**
+
+### The 5-stage lifecycle (Wave 29 final shape)
+
+```
+CANDIDATE → TESTING → SHADOW → PAPER (A/B) → DEPLOY_READY → PILOT → DEPLOYED
+              ↓         ↑↑↑       ↓↓                ↓
+          backtest    NEW       TWO TradersPost   Wave 27.5 hard
+          + PBO<15%   stage     paper sub-accts:  gates (B14 ci_high,
+          gate +      catches    Sub1 baseline    WFE, parameter
+          freeze      training-  Sub2 RL-chal.    drift, B15,
+          policy hash serving    (Wave 29 P-C)    compliance)
+                      skew                       + Wave 29 frozen-
+                                                  policy drift gate
+```
+
+### End-to-end data-flow (Wave 27→28→29 integrated)
+
+```
+[Backtest engine fires]
+        │
+        ├──► quantum_mc.py (IAE) ──► quantum_mc_runs ──► replay-grade-quantum.ts (Sunday)
+        │                                                       │
+        │                                                       ▼
+        │                                              Weekly Discord verdict
+        │
+        ├──► walk_forward.py + walk_forward_regime_context.py
+        │                                                       │
+        │                                                       ▼
+        │                              Wave 27.5 Pass B/D hard gates (WFE, drift, PBO, VIX,
+        │                              roll-spread, zero-vol, regime-aware MC, multi-asset MC)
+        │
+        ├──► quantum_rl_agent.py (Wave 29 Pass C — NEW BRIDGE)
+        │      • _load_production_state_at(ts) → 25-feature vector
+        │      • TradingEnv reward shaping (α·ci_high + β·drawdown)
+        │      • LONG/FLAT 2-action only
+        │      • IBM cloud opt-in (Qiskit SamplerV2 — Heron QPU)
+        │      • Braket: stub-only, dropped at our scale (Wave 30+ candidate)
+        │                                                       │
+        │                                                       ▼
+        │                                              quantum_rl_runs (NEW namespace —
+        │                                              separate from quantum_mc_runs
+        │                                              to prevent circular IAE-vs-RL feedback)
+        │
+        └──► strategy-health-aggregator.ts (Wave 28 Pass A)
+               • 13 subsystems (was 12; Wave 29 adds rl_agent slot)
+               • EQUAL_WEIGHTS frozen per OCC/Fed/FDIC April 2026 MRM
+               • SHA-256 weights_version_id (re-hashed for 13-key model)
+               • MIN_COMPOSITE_SUBSYSTEMS=8 floor
+                                                       │
+                                                       ▼
+                                         strategy_health_scores (Wave 28 immutable bus)
+                                                       │
+                                                       ▼
+              ┌────────────────────────────────────────┴─────────────────────────────────┐
+              │                                                                          │
+              ▼                                                                          ▼
+   Wave 28 composite shadow gate                                            Composite Health Tile +
+   (advisory; logs would-have-decided                                       daily 17:00 ET Discord
+   at PAPER → DEPLOY_READY without                                          digest (operator visibility)
+   altering Wave 27.5 hard gate veto)
+              │
+              ▼
+   composite.shadow_evaluation audit
+   + 14-day analyzer → ACTIVATE_PASS_C verdict
+
+[Strategy promoted to PAPER]
+        │
+        └──► A/B paper routing (Wave 29 Pass C.3)
+               • Sub-Account 1 (slumdawg-baseline) ← composite WITHOUT RL
+               • Sub-Account 2 (slumdawg-rl-challenger) ← composite WITH RL
+                                                       │
+                                                       ▼
+                              ab-comparison route + AbSharpeComparisonTile (Wave 29 Pass D.2)
+                              Friday 17:00 ET ab-comparison-weekly-digest (Wave 29 Pass D.3)
+                              Kill switch: 30% Sharpe gap over 20 sessions → RL decision_role:dormant
+
+[Continuous]
+        │
+        ├──► regime-drift-detector (daily 18:00 ET cron, Wave 29 Pass B.3)
+        │      5 consecutive days of institutional_regime ≠ strategies.regime_trained_on
+        │      → auto-demote DEPLOYED → DECLINING → TESTING + Discord WARN
+        │
+        └──► frozen-policy-contract (Wave 29 Pass B.2)
+               SHA-256 hash of {entry_quality + position_size + stop_loss +
+               take_profit + exit_plan_config}; re-promotion requires HMAC override
+               with rationale ≥50 chars or re-run CPCV before resuming
+```
+
+### Three concurrent observability surfaces (post-Wave-29)
+
+1. **IAE Quantum challenger** (Wave 27 + 27.5 Pass A): replay-graded weekly; advisory only
+2. **Composite Health Bus** (Wave 28): 13 subsystems aggregated nightly; shadow-gates promotions but never blocks
+3. **Quantum RL agent** (Wave 29 Pass C): challenger-only routing signal; A/B-tested live on paper; kill switch on Sharpe divergence
+
+### Quantum stack module dependency graph (post-Wave-29)
+
+```
+quantum_rl_agent.py ──┬──► cloud_backend.py (IBM SamplerV2 opt-in via two-gate)
+                      │                              ↑
+                      │                              │
+                      └──► quantum_mc.py ────────────┘
+                              │
+                              ├──► quantum_replay.py (Wave 27 P1; reuses quantum_mc.py pure compute)
+                              │     │
+                              │     └──► db_loader.py → writes quantum_mc_runs.governance_labels.replay_mode=true
+                              │
+                              ├──► surface_code_encoder.py (challenger-only; no DB persistence)
+                              ├──► ising_decoder_wrapper.py (challenger-only; no DB persistence)
+                              └──► quantum_entropy_filter.py (QCNN noise scorer; Wave 29 Pass C.1 optional state feature)
+```
+
+NO circular imports; all modules share `governance_labels: {experimental:true, authoritative:false, decision_role:challenger_only}`. `quantum_rl_runs` namespace separate from `quantum_mc_runs` to prevent circular IAE-vs-RL feedback (audit finding 2026-05-26).
+
+### Namespace separation contract
+
+| Table | Writer | Governance flag | Purpose |
+|---|---|---|---|
+| `quantum_mc_runs` | quantum-mc-service.ts (live) + quantum_replay.py (replay; `governance_labels.replay_mode=true`) | challenger_only | IAE amplitude estimation evidence; Wave 27 replay-grading data source |
+| `quantum_rl_runs` | quantum_rl_agent.py training loop (`governance_labels.training_mode=true`) | challenger_only | RL policy training trajectories; Wave 29 RL training data |
+| `strategy_health_scores` | strategy-health-aggregator.ts (nightly) | observability-only | Composite health bus (13 subsystems aggregated); Wave 28 dashboard tile + daily digest |
+| `lifecycle_shadow_signals` | paper-signal-service.ts (shadow_mode_enabled=true branch) | observability-only | SHADOW stage signal log; A.3 divergence checker reads for SHADOW → PAPER gate |
+
+### Hard gates added across Wave 27→29
+
+| Gate | Stage | Source pass |
+|---|---|---|
+| B14 ci_high < 0.40 | PAPER → DEPLOY_READY | Wave 27.5 Pass A (CI) + Pass B (wiring) |
+| WFE > 0.70 | PAPER → DEPLOY_READY | Wave 27.5 Pass B |
+| Parameter drift overfit_drift + confidence ≥ 0.70 | PAPER → DEPLOY_READY | Wave 27.5 Pass B |
+| Compliance ENFORCE (block at fill time) | every backtest | Wave 27.5 Pass C |
+| Partial-fill model 3-zone | every fill | Wave 27.5 Pass C |
+| Zero-volume trade-critical fail-loud | every bar | Wave 27.5 Pass D |
+| VIX margin expansion | every sizing | Wave 27.5 Pass D |
+| Roll-spread itemization | every roll day | Wave 27.5 Pass D |
+| PBO < 0.15 | TESTING → SHADOW/PAPER | Wave 29 Pass A.2 |
+| Shadow-signal divergence < 5% (≥20 samples) | SHADOW → PAPER | Wave 29 Pass A.3 |
+| Frozen-policy hash drift (HMAC override required) | PAPER → DEPLOY_READY | Wave 29 Pass B.2 |
+| Regime drift auto-demotion (5 consecutive days) | daily cron | Wave 29 Pass B.3 |
+| RL kill switch (30% Sharpe gap, 20 sessions) | daily | Wave 29 Pass C.2 (advisory — flips decision_role:dormant) |
+| DSR ≥ 0.5 (RL policy graduation) | RL training cycle | Wave 29 Pass C.3 |
+| Composite health (observability only — NEVER gates) | nightly | Wave 28 Pass A |
+| Composite shadow gate (advisory — NEVER blocks) | PAPER → DEPLOY_READY | Wave 28 Pass B |
+
+### Migrations registry (Wave 27→29)
+
+| Migration | Wave | Table/Column | Idx |
+|---|---|---|---|
+| 0146 | W27.5 Pass A | `backtests.firm_rules_version` | 148 |
+| 0147 | W27.5 Pass A | partial unique index on `quantum_mc_runs WHERE replay_mode='true'` | 149 |
+| 0148 | W27.5 Pass C | `backtests.compliance_mode` | 150 |
+| 0149 | W28 Pass A | `strategy_health_scores` table | 151 |
+| 0152 | W29 Pass C.1 | `quantum_rl_runs` table | 158 |
+| 0159 | W29 Pass C.3 | `strategies.paper_account_routing` + broker_accounts A/B rows | — |
+| 0160 | W29 Pass A.1 | `lifecycle_shadow_signals` table + `strategies.shadow_mode_enabled` | 160 |
+| 0161 | W29 Pass B.1 | `strategies` 4 new cols (frozen_policy_hash + frozen_policy_set_at + regime_trained_on + frozen_policy_override_count) | 161 |
+
+### Crons added across Wave 27→29
+
+| Cron | Schedule | Pass |
+|---|---|---|
+| `quantum-replay-weekly-analysis` | Sunday 19:00 ET (DST-safe) | W27 Pass 1.5 |
+| `composite-health-daily-digest` | 17:00 ET daily | W28 Pass A.4 |
+| `quantum-rl-training-window` | Hourly off-RTH only (06:00-09:00 + 16:00-18:00 ET) | W29 Pass C.2 |
+| `regime-drift-detector` | 18:00 ET daily | W29 Pass B.3 |
+| `ab-comparison-weekly-digest` | Friday 17:00 ET (DST-safe) | W29 Pass D.3 |
+
+All `_PIPELINE_GATE_EXEMPT` registered (fire even when operator pipeline-paused; institutional observability invariant).
+
+### Env vars added (Wave 27→29)
+
+Wave 27.5 (14 vars including `MC_RETURN_BOOTSTRAP_HARD_FAIL_MULTIPLIER`, `WFE_HARD_FLOOR`, `B14_RUIN_CI_HIGH_THRESHOLD`, `BACKTEST_COMPLIANCE_MODE`, `BACKTEST_PARTIAL_FILL_ENABLED`, `BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD`, `BACKTEST_ROLL_SPREAD_ITEMIZED`, etc.) + Wave 28 (3: `MIN_COMPOSITE_SUBSYSTEMS`, `COMPOSITE_MAX_AGE_HOURS`, `WAVE_28_COMPOSITE_GATING_ENABLED`) + Wave 29 (10: `QUANTUM_RL_REWARD_ALPHA`, `QUANTUM_RL_REWARD_BETA`, `QUANTUM_RL_IBM_CLOUD_OPT_IN`, `QUANTUM_RL_TRAINING_EPOCHS`, `QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT`, `QUANTUM_RL_DSR_FLOOR`, `PBO_OVERFIT_THRESHOLD_PCT`, `SHADOW_DIVERGENCE_THRESHOLD_PCT`, `SHADOW_DIVERGENCE_MIN_SAMPLE`, `ADMIN_OVERRIDE_HMAC_SECRET`).
+
+### Authority boundaries (preserved across all waves)
+
+| Surface | Authority |
+|---|---|
+| Wave 27.5 hard gates (B14 / WFE / parameter drift / B15 / compliance enforce) | **AUTHORITATIVE** — veto promotion |
+| Wave 29 Pass A gates (PBO + shadow divergence) | **AUTHORITATIVE** — veto promotion |
+| Wave 29 Pass B gates (frozen-policy hash + regime drift demotion) | **AUTHORITATIVE** — veto promotion / auto-demote |
+| Wave 28 composite shadow gate | **ADVISORY ONLY** — never blocks |
+| Wave 27 quantum IAE replay verdict | **ADVISORY ONLY** — challenger evidence |
+| Wave 29 Pass C quantum RL agent | **ADVISORY ONLY** — challenger; kill switch flips dormant on Sharpe divergence |
+| Wave 29 Pass D observability surfaces (Prom + SSE + A/B dashboard + weekly digest) | **OBSERVABILITY ONLY** — never gates |
+| Wave 23 framework overlay (Style C exits + risk-derived sizing + 67% DLL + 15:55 ET hard flatten) | **AUTHORITATIVE** — never overridden by ANY downstream system |
+
+### Test cumulative (Wave 27 → 29 close)
+
+| Wave | Tests | Commits |
+|---|---|---|
+| Wave 27 Pass 1 + 1.5 | 139 | 7 |
+| Wave 27.5 Pass A+B+C+D | 530 | 14 |
+| Wave 27 Carry-Forward | ~250 | 8 |
+| Wave 28 Pass A+B | 205 | 6 |
+| Wave 29 Pass C+A+B+D | ~432 | 9 |
+| **Total Wave 27→29** | **~1,556 new tests** | **~44 commits** |
+
+Zero net regressions across all 4 wave families; Wave 23/24/25/26 baselines preserved through every close-out.
