@@ -82,18 +82,54 @@ function auditBidirectionalCompleteness(compiledConfig: {
 
 type FactorSourceLabel = "extracted" | "auto_floor" | "kb_inferred";
 
+// Inline KB map (subset — mirrors archetype-implied-factors.ts for test isolation)
+const _TEST_ARCHETYPE_IMPLIED: Record<string, string[]> = {
+  ict_bias_aligned_continuation: [
+    "market_structure_aligned", "htf_bias_aligned", "fvg_present_or_ob",
+    "liquidity_target_clear", "killzone_active",
+  ],
+  bounce_off_level: ["ma_as_support_resistance", "rejection_pattern_confirmed", "regime_match"],
+};
+function _inferFactors(entryIndicator: string | null | undefined): string[] {
+  if (!entryIndicator) return [];
+  const key = entryIndicator.startsWith("archetype:")
+    ? entryIndicator.slice("archetype:".length).trim()
+    : entryIndicator.trim();
+  return _TEST_ARCHETYPE_IMPLIED[key] ?? [];
+}
+
 function classifyFactorSources(
   rawFactors: string[],
   finalFactors: string[],
-): { factor_sources: Record<string, FactorSourceLabel>; factor_quality: "rich" | "thin" | "fallback_only" } {
+  entryIndicator?: string | null,
+): {
+  factor_sources: Record<string, FactorSourceLabel>;
+  factor_quality: "rich" | "thin" | "fallback_only";
+  mergedFactors: string[];
+} {
   const rawSet = new Set(rawFactors);
-  const sources: Record<string, FactorSourceLabel> = {};
 
-  for (const factor of finalFactors) {
-    sources[factor] = rawSet.has(factor) ? "extracted" : "auto_floor";
+  // Wave 26 Pass H2: inject archetype-implied kb_inferred factors
+  const impliedFactors = _inferFactors(entryIndicator);
+  const mergedSet = new Set(finalFactors);
+  const kbInferredAdded: string[] = [];
+  for (const implied of impliedFactors) {
+    if (!mergedSet.has(implied)) {
+      mergedSet.add(implied);
+      kbInferredAdded.push(implied);
+    }
+  }
+  const mergedFactors = [...mergedSet];
+  const kbInferredSet = new Set(kbInferredAdded);
+
+  const sources: Record<string, FactorSourceLabel> = {};
+  for (const factor of mergedFactors) {
+    if (rawSet.has(factor))       sources[factor] = "extracted";
+    else if (kbInferredSet.has(factor)) sources[factor] = "kb_inferred";
+    else                          sources[factor] = "auto_floor";
   }
 
-  const realCount = finalFactors.filter(
+  const realCount = mergedFactors.filter(
     (f) => sources[f] === "extracted" || sources[f] === "kb_inferred",
   ).length;
 
@@ -106,7 +142,7 @@ function classifyFactorSources(
     factor_quality = "fallback_only";
   }
 
-  return { factor_sources: sources, factor_quality };
+  return { factor_sources: sources, factor_quality, mergedFactors };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -345,8 +381,9 @@ describe("Wave 26 Pass G B2 — Gate 2 static contract: graduator source", () =>
     expect(callSiteIdx).toBeGreaterThan(rawBuildIdx);
   });
 
-  it("classifyFactorSources receives rawConfluenceFactors and confluenceFactors as arguments", () => {
-    expect(GRADUATOR_SRC).toMatch(/classifyFactorSources\s*\(\s*rawConfluenceFactors\s*,\s*confluenceFactors\s*\)/);
+  it("classifyFactorSources call-site passes rawConfluenceFactors, confluenceFactors, and entryIndicator (Wave 26 Pass H2)", () => {
+    // Pass H2 added entryIndicator as a third argument to enable archetype-implied kb_inferred injection
+    expect(GRADUATOR_SRC).toMatch(/classifyFactorSources\s*\(\s*rawConfluenceFactors\s*,\s*confluenceFactors\s*,\s*entryIndicator\s*\)/);
   });
 
   it("entryQualityBlock is typed as EntryQualityWithSources and includes both telemetric fields", () => {

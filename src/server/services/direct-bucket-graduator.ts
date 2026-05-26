@@ -47,6 +47,7 @@ import {
   emitFactorQualityClassified,
   emitThinConfluenceWarning,
 } from "../lib/confluence-quality-audit.js";
+import { inferFactorsFromArchetype } from "../lib/archetype-implied-factors.js";
 
 /**
  * Pass 21 v3 (2026-05-17) — STRUCTURAL ARCHETYPE REGISTRY.
@@ -319,23 +320,77 @@ export interface EntryQualityWithSources {
 /**
  * Builds `factor_sources` and `factor_quality` for an entry_quality block.
  *
- * @param rawFactors   Factors extracted directly by the LLM before floor injection.
- * @param finalFactors Factors after the ≥2 floor guard (may include auto_floor additions).
- * @returns            factor_sources record + factor_quality classification.
+ * Wave 26 Pass H2 (2026-05-26): when `entryIndicator` identifies a known
+ * archetype (starts with "archetype:"), the function derives the archetype's
+ * definitional confluence factors from the KB map and injects any not already
+ * present in `finalFactors` into the returned factor list, tagged `kb_inferred`.
+ * This means a strategy with `entry_indicator: "archetype:ict_bias_aligned_continuation"`
+ * and zero LLM-extracted factors graduates with up to 5 kb_inferred factors
+ * and lands in the `rich` bucket instead of `fallback_only`.
+ *
+ * Tag semantics:
+ *   "extracted"   — LLM emitted this factor from the transcript/source
+ *   "kb_inferred" — KB implied by archetype definition (Pass H2+)
+ *   "auto_floor"  — injected by the ≥2 floor guard (regime_match / structural_setup)
+ *
+ * Operators can audit which factors are real evidence vs KB inference vs filler
+ * via `entry_quality.factor_sources` in the strategy config JSONB.
+ *
+ * @param rawFactors    Factors extracted directly by the LLM before floor injection.
+ * @param finalFactors  Factors after the ≥2 floor guard (may include auto_floor additions).
+ * @param entryIndicator  Optional — e.g. "archetype:ict_bias_aligned_continuation".
+ * @returns             factor_sources record, factor_quality, and merged final factor list.
  */
 export function classifyFactorSources(
   rawFactors: string[],
   finalFactors: string[],
-): { factor_sources: Record<string, FactorSourceLabel>; factor_quality: "rich" | "thin" | "fallback_only" } {
+  entryIndicator?: string | null,
+): {
+  factor_sources: Record<string, FactorSourceLabel>;
+  factor_quality: "rich" | "thin" | "fallback_only";
+  mergedFactors: string[];
+} {
   const rawSet = new Set(rawFactors);
-  const sources: Record<string, FactorSourceLabel> = {};
 
-  for (const factor of finalFactors) {
-    // kb_inferred is reserved for Pass B1 prompt-rewrite enrichment — no source yet
-    sources[factor] = rawSet.has(factor) ? "extracted" : "auto_floor";
+  // ─── Wave 26 Pass H2: archetype-implied factor injection ─────────────────
+  // When entry_indicator identifies a known archetype, derive the implied
+  // confluence factors and merge any that are not already in finalFactors.
+  // These are tagged "kb_inferred" — not extracted, but definitionally correct.
+  const impliedByArchetype: string[] = entryIndicator
+    ? inferFactorsFromArchetype(entryIndicator)
+    : [];
+
+  // Build the merged factor list: start from finalFactors, add implied ones
+  // that are not already present.
+  const mergedSet = new Set(finalFactors);
+  const kbInferredAdded: string[] = [];
+  for (const implied of impliedByArchetype) {
+    if (!mergedSet.has(implied)) {
+      mergedSet.add(implied);
+      kbInferredAdded.push(implied);
+    }
+  }
+  const mergedFactors = [...mergedSet];
+
+  // ─── Classify each factor by source ──────────────────────────────────────
+  const sources: Record<string, FactorSourceLabel> = {};
+  const kbInferredSet = new Set(kbInferredAdded);
+
+  for (const factor of mergedFactors) {
+    if (rawSet.has(factor)) {
+      sources[factor] = "extracted";
+    } else if (kbInferredSet.has(factor)) {
+      sources[factor] = "kb_inferred";
+    } else {
+      sources[factor] = "auto_floor";
+    }
   }
 
-  const realCount = finalFactors.filter(
+  // ─── Quality classification ───────────────────────────────────────────────
+  // "rich" = ≥2 real factors (extracted OR kb_inferred)
+  // "thin" = exactly 1 real factor
+  // "fallback_only" = zero real factors (all auto_floor)
+  const realCount = mergedFactors.filter(
     (f) => sources[f] === "extracted" || sources[f] === "kb_inferred",
   ).length;
 
@@ -348,7 +403,7 @@ export function classifyFactorSources(
     factor_quality = "fallback_only";
   }
 
-  return { factor_sources: sources, factor_quality };
+  return { factor_sources: sources, factor_quality, mergedFactors };
 }
 
 interface Mention {
@@ -451,12 +506,58 @@ const ENGINE_INDICATOR_WHITELIST = new Set([
   "news_fade_mco", "event_driven_fade",
 ]);
 
+// ─── Wave 26 Pass H1 (2026-05-26) — RAW_ARCHETYPES_RESPECTED ─────────────
+// Set of all archetype keys Gemma is known to emit correctly.
+// When llmEntryIndicator is already a known archetype name, we return it
+// immediately WITHOUT running the regex chain (derive_entry_indicator_path:
+// 'gemma_archetype_respected'). This prevents the regex chain from
+// overwriting a correct Gemma emission (e.g. 'ict_bias_aligned_continuation')
+// with a false regex match (e.g. 'break_of_structure').
+const RAW_ARCHETYPES_RESPECTED = new Set<string>([
+  // ICT time-window archetypes
+  "ict_silver_bullet_ny_am", "ict_silver_bullet_london", "ict_silver_bullet_ny_pm",
+  "ict_judas_swing", "ict_ny_lunch_reversal", "ict_midnight_open", "ict_london_raid",
+  "ict_turtle_soup", "ict_ote", "ict_power_of_3", "ict_unicorn", "ict_breaker",
+  "ict_mitigation", "ict_iofed", "smt_reversal", "ict_quarterly_swing",
+  "ict_propulsion", "ict_eqhl_raid", "ict_scalp", "ict_swing", "ict_2022",
+  // Structural primitives
+  "break_of_structure", "change_of_character", "market_structure_shift", "cisd",
+  "fvg_retrace", "order_block", "liquidity_sweep",
+  // W23G.3 short-form aliases
+  "fvg", "judas_swing", "silver_bullet", "breaker_block",
+  // Wyckoff
+  "wyckoff_spring", "wyckoff_upthrust", "wyckoff_accumulation", "wyckoff_distribution",
+  // Wave 26 Pass G archetypes
+  "bounce_off_level", "ict_bias_aligned_continuation",
+  // Sub-layer indicators frequently emitted by ICT-tuned LLMs
+  "liquidity_magnet", "displacement", "htf_bias", "daily_bias",
+  "accumulation", "manipulation", "distribution", "asian_range",
+  "equal_highs", "equal_lows", "false_breakout", "session_open", "reversal",
+  "sma_support", "ema_support", "trendline_bounce", "wick_rejection", "engulfing_rejection",
+]);
+
 export function deriveEntryIndicator(
   conceptName: string,
   fallback: string | null,
   llmEntryIndicator?: string | null,
+  _derivePathOut?: { path?: string },
 ): string | null {
   const cn = conceptName.toLowerCase();
+
+  // ─── Wave 26 Pass H1 (2026-05-26) — GEMMA ARCHETYPE EARLY-RETURN ──────
+  // If Gemma already emitted a known archetype name in entry_indicator,
+  // return `archetype:<name>` immediately WITHOUT running the regex chain.
+  // derive_entry_indicator_path: 'gemma_archetype_respected'.
+  if (llmEntryIndicator) {
+    const rawTrimmed = llmEntryIndicator.trim().toLowerCase();
+    const archetypeKey = rawTrimmed.startsWith("archetype:")
+      ? rawTrimmed.slice("archetype:".length)
+      : rawTrimmed;
+    if (RAW_ARCHETYPES_RESPECTED.has(archetypeKey) || ARCHETYPE_REGISTRY[archetypeKey]) {
+      if (_derivePathOut) _derivePathOut.path = "gemma_archetype_respected";
+      return `archetype:${archetypeKey}`;
+    }
+  }
 
   // ─── Pass 21 v3 (2026-05-17) — STRUCTURAL ARCHETYPE ROUTING ──────────
   // Check ARCHETYPE_REGISTRY FIRST. ICT/SMC/Wyckoff strategies are
@@ -467,6 +568,7 @@ export function deriveEntryIndicator(
   // parametric pattern_library path. Engine compiles via engineSpec field.
   const prettyArchetype = prettifyConcept(conceptName);
   if (ARCHETYPE_REGISTRY[prettyArchetype]) {
+    if (_derivePathOut) _derivePathOut.path = "derived_from_prettify";
     return `archetype:${prettyArchetype}`;
   }
 
@@ -1338,7 +1440,18 @@ export async function graduateBucketDirectly(opts: {
   }
 
   const entryType = deriveEntryType(conceptName, bucketMeta.entryArchetype);
-  const entryIndicator = deriveEntryIndicator(conceptName, bucketMeta.entryArchetype, llmEntryIndicator);
+  // ─── Wave 26 Pass H1 (2026-05-26) — derive_entry_indicator_path audit ──
+  // Capture which path deriveEntryIndicator took so graduation audits reflect
+  // whether Gemma's archetype was respected or overridden by the regex chain.
+  const _derivePathOut: { path?: string } = {};
+  const entryIndicator = deriveEntryIndicator(conceptName, bucketMeta.entryArchetype, llmEntryIndicator, _derivePathOut);
+  const deriveEntryIndicatorPath: string =
+    _derivePathOut.path ??
+    (entryIndicator === null
+      ? "no_match"
+      : entryIndicator.startsWith("archetype:")
+        ? "derived_from_regex"
+        : "derived_from_regex");
 
   // Wave 26 Pass G (2026-05-26) — graduation.archetype_route_taken audit.
   // Fire whenever deriveEntryIndicator routes to a NEW named archetype so
@@ -1367,6 +1480,7 @@ export async function graduateBucketDirectly(opts: {
       result: {
         archetype: routedArchetype,
         route_reason: routeReason,
+        derive_entry_indicator_path: deriveEntryIndicatorPath,
       } as Record<string, unknown>,
       status: "info",
       decisionAuthority: "system",
@@ -2238,20 +2352,30 @@ export async function graduateBucketDirectly(opts: {
   const sourceClaimWinRate: number | null = (extractedIdea as any)?.source_claim_win_rate ?? null;
   const sourceClaimAvgR: number | null = (extractedIdea as any)?.source_claim_avg_r ?? null;
 
-  // ─── Wave 26 Pass G B2 (2026-05-26): GATE 2 — Factor Source Telemetry ─────
+  // ─── Wave 26 Pass G B2 + Pass H2 (2026-05-26): GATE 2 — Factor Source Telemetry ──
   // Classify each confluence factor by its origin: extracted (LLM), auto_floor
-  // (injected by the ≥2 floor guard), or kb_inferred (future Pass B1 enrichment).
+  // (injected by the ≥2 floor guard), or kb_inferred (Wave 26 Pass H2: derived from
+  // archetype's definitional component set via archetype-implied-factors.ts).
+  // Pass H2 injects kb_inferred factors BEFORE quality classification so archetype
+  // strategies land in "rich" based on their definitional evidence, not just what
+  // the LLM happened to name explicitly.
   // Purely additive — legacy rows omit these keys; JSONB column accepts them
   // transparently without a migration.
-  const { factor_sources, factor_quality } = classifyFactorSources(rawConfluenceFactors, confluenceFactors);
+  const {
+    factor_sources,
+    factor_quality,
+    mergedFactors: finalConfluenceFactors,
+  } = classifyFactorSources(rawConfluenceFactors, confluenceFactors, entryIndicator);
 
+  // Use the merged factor list (may include kb_inferred additions from archetype)
+  // as the canonical confluence_factors for the entry_quality block.
   const entryQualityBlock: EntryQualityWithSources = {
-    confluence_factors: confluenceFactors,
+    confluence_factors: finalConfluenceFactors,
     min_factors_satisfied: entryQualityMinFactors,
     source_claim_win_rate: sourceClaimWinRate,
     source_claim_avg_r: sourceClaimAvgR,
     // Empty confluence_factors → legacy_no_confluence so consumer A+ gate bypasses cleanly
-    extraction_provenance: confluenceFactors.length === 0
+    extraction_provenance: finalConfluenceFactors.length === 0
       ? "legacy_no_confluence" as const
       : resolveProvenance(bestMention.scoutLayer ?? undefined, bestMention.sourceProvider),
     // Gate 2 telemetric fields — additive, null-safe for legacy consumers
@@ -2275,7 +2399,7 @@ export async function graduateBucketDirectly(opts: {
       conceptName,
       execTimeframe: timeframe,
       originalMarket: market,
-      confluenceFactors,
+      confluenceFactors: finalConfluenceFactors,
     });
     // Wave 26 Pass F (2026-05-25) — REVISED multi-symbol approach. Instead of
     // packing [MES,MNQ,MCL] into one row (Pass E), graduate as SEPARATE rows
@@ -2299,6 +2423,9 @@ export async function graduateBucketDirectly(opts: {
         // Wave 26 Pass E — bias_timeframe + confirming_indicators in config JSONB
         bias_timeframe: wave25Defaults.configAdditions.bias_timeframe,
         confirming_indicators: wave25Defaults.configAdditions.confirming_indicators,
+        // Wave 26 Pass H1 Bug 3 — traceability fields on leader row
+        source_url:       bestMention.sourceUrl ?? null,
+        source_bucket_id: bucketId,
       },
       // Wave 26 Pass E — Wave 25 Pass 1/2/7 institutional columns auto-set
       // (5-TF columns are set via raw SQL below — Drizzle schema not synced with migration 0138)
@@ -2367,7 +2494,7 @@ export async function graduateBucketDirectly(opts: {
         correlation_id:     correlationId ?? null,
         factor_quality:     factor_quality as "rich" | "thin" | "fallback_only",
         factor_sources:     factor_sources as Record<string, "extracted" | "auto_floor" | "kb_inferred">,
-        confluence_factors: confluenceFactors,
+        confluence_factors: finalConfluenceFactors,
       });
     } catch (helperErr: unknown) {
       logger.warn({ err: String(helperErr), strategyId: inserted.id, strategyName }, "Gate2: emitFactorQualityClassified helper failed (non-blocking)");
@@ -2392,6 +2519,17 @@ export async function graduateBucketDirectly(opts: {
           symbol: variantMarket,
           bucketId,
         });
+        // ─── Wave 26 Pass H1 (2026-05-26) Bug 3 — variant field parity ───────
+        // Variant rows MUST be byte-identical in the entry_quality block (except
+        // symbol/timeframe/derived params) to the leader row. Stamp source_url,
+        // source_bucket_id, and entry_archetype so promotion-gate inputs are
+        // trustworthy for ALL variants, not just the leader.
+        const variantConfig = variantOverlayed.config as Record<string, unknown>;
+        const variantMetadata = (variantConfig.metadata ?? {}) as Record<string, unknown>;
+        const variantEntryArchetype = variantMetadata.entry_archetype
+          ?? (entryIndicator?.startsWith("archetype:")
+              ? entryIndicator.slice("archetype:".length)
+              : undefined);
         const [variantInserted] = await db.insert(strategies).values({
           name: variantName,
           description: thesis,
@@ -2400,10 +2538,16 @@ export async function graduateBucketDirectly(opts: {
           timeframe,
           source: "graduated_bucket",
           config: {
-            ...(variantOverlayed.config as Record<string, unknown>),
+            ...variantConfig,
+            ...(variantEntryArchetype ? {
+              metadata: { ...variantMetadata, entry_archetype: variantEntryArchetype },
+            } : {}),
             entry_quality: entryQualityBlock,
             bias_timeframe: wave25Defaults.configAdditions.bias_timeframe,
             confirming_indicators: wave25Defaults.configAdditions.confirming_indicators,
+            // Wave 26 Pass H1: stamp traceability fields identical to leader
+            source_url:       bestMention.sourceUrl ?? null,
+            source_bucket_id: bucketId,
           },
           useWeightedScoring: wave25Defaults.useWeightedScoring,
           confluenceScoreThreshold: String(wave25Defaults.confluenceScoreThreshold),
@@ -2447,6 +2591,23 @@ export async function graduateBucketDirectly(opts: {
           decisionAuthority: "system",
           correlationId: correlationId ?? null,
         }).catch((e: unknown) => logger.warn({ err: e }, "market_variant audit failed (non-blocking)"));
+        // ─── Wave 26 Pass H1 Bug 3 — variant Gate 2 telemetry ─────────────
+        // Every variant row must call emitFactorQualityClassified() so Prometheus
+        // counters and audit rows are accurate for all graduated strategies, not
+        // just the leader. Fire-and-forget — never blocks graduation.
+        try {
+          emitFactorQualityClassified({
+            strategy_id:        variantInserted.id,
+            strategy_name:      variantName,
+            correlation_id:     correlationId ?? null,
+            factor_quality:     factor_quality as "rich" | "thin" | "fallback_only",
+            factor_sources:     factor_sources as Record<string, "extracted" | "auto_floor" | "kb_inferred">,
+            confluence_factors: finalConfluenceFactors,
+          });
+        } catch (variantGate2Err: unknown) {
+          logger.warn({ err: String(variantGate2Err), variantStrategyId: variantInserted.id, variantName },
+            "Gate2: emitFactorQualityClassified for variant failed (non-blocking)");
+        }
       } catch (variantErr: unknown) {
         // Non-fatal: variant failure doesn't roll back the leader graduation.
         // Operator can re-run the fan-out via the backfill script.
@@ -2466,7 +2627,7 @@ export async function graduateBucketDirectly(opts: {
         appliedOverlay: overlayed.appliedRules,
         overlayWarnings: overlayed.warnings,
         entryQualityProvenance: entryQualityBlock.extraction_provenance,
-        confluenceFactorCount: confluenceFactors.length,
+        confluenceFactorCount: finalConfluenceFactors.length,
         symbolsCount: symbolsArray.length,
       },
       "direct-graduator: strategy created from bucket"
@@ -2587,9 +2748,9 @@ export async function graduateBucketDirectly(opts: {
           strategy_id: inserted.id,
           factor_quality,
           factor_sources,
-          confluence_factors: confluenceFactors,
+          confluence_factors: finalConfluenceFactors,
           raw_factor_count: rawConfluenceFactors.length,
-          final_factor_count: confluenceFactors.length,
+          final_factor_count: finalConfluenceFactors.length,
         } as Record<string, unknown>,
         status: "warning",
         decisionAuthority: "system",
@@ -2600,7 +2761,7 @@ export async function graduateBucketDirectly(opts: {
         severity: "WARNING",
         title: `Library debt: \`${strategyName}\` graduated with auto-floor-only confluence`,
         body: appendFamilyGradePostscript(
-          `Strategy \`${strategyName}\` (id: \`${inserted.id}\`) graduated successfully but ALL ${confluenceFactors.length} confluence factors were auto-injected by the floor guard — the LLM extracted zero real factors from the source. This strategy may rank lower in backtest scheduler queue until re-extracted. factor_quality=fallback_only.`,
+          `Strategy \`${strategyName}\` (id: \`${inserted.id}\`) graduated successfully but ALL ${finalConfluenceFactors.length} confluence factors were auto-injected by the floor guard — the LLM extracted zero real factors from the source. This strategy may rank lower in backtest scheduler queue until re-extracted. factor_quality=fallback_only.`,
           `A new trading strategy was added to the library but the system couldn't confirm what specific signals it uses — it filled in generic defaults instead.`,
           `No action needed now. The system will flag this for re-processing on the next scout cycle.`,
         ),
@@ -2608,13 +2769,13 @@ export async function graduateBucketDirectly(opts: {
           strategy_id: inserted.id,
           strategy_name: strategyName,
           factor_quality,
-          confluence_factors: confluenceFactors,
+          confluence_factors: finalConfluenceFactors,
           factor_sources,
         },
       });
 
       logger.warn(
-        { strategyId: inserted.id, strategyName, factor_quality, factor_sources, confluenceFactors },
+        { strategyId: inserted.id, strategyName, factor_quality, factor_sources, confluenceFactors: finalConfluenceFactors },
         "direct-graduator Gate3: fallback_only factor_quality — graduated with auto-floor confluence only",
       );
 
@@ -2627,7 +2788,7 @@ export async function graduateBucketDirectly(opts: {
           strategy_name:      strategyName,
           correlation_id:     correlationId ?? null,
           factor_quality:     factor_quality as "fallback_only",
-          confluence_factors: confluenceFactors,
+          confluence_factors: finalConfluenceFactors,
           source_url:         null, // graduator does not currently resolve the source URL at this site
           skipAuditRow:       true,
         });
